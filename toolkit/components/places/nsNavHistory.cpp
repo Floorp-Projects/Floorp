@@ -238,6 +238,140 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
+/**
+ * Recalculates invalid frecencies in chunks on the storage thread, optionally
+ * decays frecencies, and notifies history observers on the main thread.
+ */
+class FixAndDecayFrecencyRunnable final : public Runnable
+{
+public:
+  explicit FixAndDecayFrecencyRunnable(Database* aDB, float aDecayRate)
+    : Runnable("places::FixAndDecayFrecencyRunnable")
+    , mDB(aDB)
+    , mDecayRate(aDecayRate)
+    , mDecayReason(mozIStorageStatementCallback::REASON_FINISHED)
+  {}
+
+  NS_IMETHOD
+  Run() override {
+    if (NS_IsMainThread()) {
+      nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
+      NS_ENSURE_STATE(navHistory);
+
+      navHistory->DecayFrecencyCompleted(mDecayReason);
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(!NS_IsMainThread(),
+               "Frecencies should be recalculated on async thread");
+
+    nsCOMPtr<mozIStorageStatement> updateStmt = mDB->GetStatement(
+      "UPDATE moz_places "
+      "SET frecency = CALCULATE_FRECENCY(id) "
+      "WHERE id IN ("
+        "SELECT id FROM moz_places "
+        "WHERE frecency < 0 "
+        "ORDER BY frecency ASC "
+        "LIMIT 400"
+      ")"
+    );
+    NS_ENSURE_STATE(updateStmt);
+    nsresult rv = updateStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<mozIStorageStatement> selectStmt = mDB->GetStatement(
+      "SELECT id FROM moz_places WHERE frecency < 0 "
+      "LIMIT 1"
+    );
+    NS_ENSURE_STATE(selectStmt);
+    bool hasResult = false;
+    rv = selectStmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasResult) {
+      // There are more invalid frecencies to fix. Re-dispatch to the async
+      // storage thread for the next chunk.
+      return NS_DispatchToCurrentThread(this);
+    }
+
+    mozStorageTransaction transaction(mDB->MainConn(), false,
+                                      mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    if (NS_WARN_IF(NS_FAILED(DecayFrecencies()))) {
+      mDecayReason = mozIStorageStatementCallback::REASON_ERROR;
+    }
+
+    // We've finished fixing and decaying frecencies. Trigger frecency updates
+    // for all affected origins.
+    nsCOMPtr<mozIStorageStatement> updateOriginFrecenciesStmt =
+      mDB->GetStatement("DELETE FROM moz_updateoriginsupdate_temp");
+    NS_ENSURE_STATE(updateOriginFrecenciesStmt);
+    rv = updateOriginFrecenciesStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Re-dispatch to the main thread to notify observers.
+    return NS_DispatchToMainThread(this);
+  }
+
+private:
+  nsresult
+  DecayFrecencies()
+  {
+    TimeStamp start = TimeStamp::Now();
+
+    // Globally decay places frecency rankings to estimate reduced frecency
+    // values of pages that haven't been visited for a while, i.e., they do
+    // not get an updated frecency.  A scaling factor of .975 results in .5 the
+    // original value after 28 days.
+    // When changing the scaling factor, ensure that the barrier in
+    // moz_places_afterupdate_frecency_trigger still ignores these changes.
+    nsCOMPtr<mozIStorageStatement> decayFrecency = mDB->GetStatement(
+      "UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate) "
+      "WHERE frecency > 0"
+    );
+    NS_ENSURE_STATE(decayFrecency);
+    nsresult rv = decayFrecency->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
+                                                  static_cast<double>(mDecayRate));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = decayFrecency->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Decay potentially unused adaptive entries (e.g. those that are at 1)
+    // to allow better chances for new entries that will start at 1.
+    nsCOMPtr<mozIStorageStatement> decayAdaptive = mDB->GetStatement(
+      "UPDATE moz_inputhistory SET use_count = use_count * :decay_rate"
+    );
+    NS_ENSURE_STATE(decayAdaptive);
+    rv = decayAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
+                                         static_cast<double>(mDecayRate));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = decayAdaptive->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Delete any adaptive entries that won't help in ordering anymore.
+    nsCOMPtr<mozIStorageStatement> deleteAdaptive = mDB->GetStatement(
+      "DELETE FROM moz_inputhistory WHERE use_count < :use_count"
+    );
+    NS_ENSURE_STATE(deleteAdaptive);
+    rv = deleteAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("use_count"),
+                                          std::pow(static_cast<double>(mDecayRate),
+                                                   ADAPTIVE_HISTORY_EXPIRE_DAYS));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = deleteAdaptive->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    Telemetry::AccumulateTimeDelta(Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS, start);
+
+    return NS_OK;
+  }
+
+  RefPtr<Database> mDB;
+  float mDecayRate;
+  uint16_t mDecayReason;
+};
+
 } // namespace
 
 
@@ -2485,37 +2619,15 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
 
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
-    (void)DecayFrecency();
+    (void)FixAndDecayFrecency();
   }
 
   return NS_OK;
 }
 
-
-class PlacesDecayFrecencyCallback : public AsyncStatementTelemetryTimer
-{
-public:
-  PlacesDecayFrecencyCallback()
-    : AsyncStatementTelemetryTimer(Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS)
-  {
-  }
-
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override
-  {
-    (void)AsyncStatementTelemetryTimer::HandleCompletion(aReason);
-    nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_STATE(navHistory);
-    navHistory->DecayFrecencyCompleted(aReason);
-    return NS_OK;
-  }
-};
-
 nsresult
-nsNavHistory::DecayFrecency()
+nsNavHistory::FixAndDecayFrecency()
 {
-  nsresult rv = FixInvalidFrecencies();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE,
                                           PREF_FREC_DECAY_RATE_DEF);
   if (decayRate > 1.0f) {
@@ -2523,58 +2635,13 @@ nsNavHistory::DecayFrecency()
     decayRate = PREF_FREC_DECAY_RATE_DEF;
   }
 
-  // Globally decay places frecency rankings to estimate reduced frecency
-  // values of pages that haven't been visited for a while, i.e., they do
-  // not get an updated frecency.  A scaling factor of .975 results in .5 the
-  // original value after 28 days.
-  // When changing the scaling factor, ensure that the barrier in
-  // moz_places_afterupdate_frecency_trigger still ignores these changes.
-  nsCOMPtr<mozIStorageAsyncStatement> decayFrecency = mDB->GetAsyncStatement(
-    "UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate) "
-    "WHERE frecency > 0"
-  );
-  NS_ENSURE_STATE(decayFrecency);
-  rv = decayFrecency->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
-                                       static_cast<double>(decayRate));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Decay potentially unused adaptive entries (e.g. those that are at 1)
-  // to allow better chances for new entries that will start at 1.
-  nsCOMPtr<mozIStorageAsyncStatement> decayAdaptive = mDB->GetAsyncStatement(
-    "UPDATE moz_inputhistory SET use_count = use_count * :decay_rate"
-  );
-  NS_ENSURE_STATE(decayAdaptive);
-  rv = decayAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
-                                       static_cast<double>(decayRate));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Delete any adaptive entries that won't help in ordering anymore.
-  nsCOMPtr<mozIStorageAsyncStatement> deleteAdaptive = mDB->GetAsyncStatement(
-    "DELETE FROM moz_inputhistory WHERE use_count < :use_count"
-  );
-  NS_ENSURE_STATE(deleteAdaptive);
-  rv = deleteAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("use_count"),
-                                        std::pow(static_cast<double>(decayRate),
-                                                 ADAPTIVE_HISTORY_EXPIRE_DAYS));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
-  if (!conn) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  mozIStorageBaseStatement *stmts[] = {
-    decayFrecency.get(),
-    decayAdaptive.get(),
-    deleteAdaptive.get()
-  };
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  RefPtr<PlacesDecayFrecencyCallback> cb = new PlacesDecayFrecencyCallback();
-  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), cb, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<FixAndDecayFrecencyRunnable> runnable =
+    new FixAndDecayFrecencyRunnable(mDB, decayRate);
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDB->MainConn());
+  NS_ENSURE_STATE(target);
 
   mDecayFrecencyPendingCount++;
-
-  return NS_OK;
+  return target->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
 void
@@ -3753,11 +3820,9 @@ nsNavHistory::UpdateFrecency(int64_t aPlaceId)
     updateFrecencyStmt.get()
   , updateHiddenStmt.get()
   };
-  RefPtr<AsyncStatementCallbackNotifier> cb =
-    new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), cb,
-                                     getter_AddRefs(ps));
+  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
+                          getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Trigger frecency updates for all affected origins.
@@ -3765,58 +3830,6 @@ nsNavHistory::UpdateFrecency(int64_t aPlaceId)
     mDB->GetAsyncStatement("DELETE FROM moz_updateoriginsupdate_temp");
   NS_ENSURE_STATE(updateOriginFrecenciesStmt);
   rv = updateOriginFrecenciesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-namespace {
-
-class FixInvalidFrecenciesCallback : public AsyncStatementCallbackNotifier
-{
-public:
-  FixInvalidFrecenciesCallback()
-    : AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED)
-  {
-  }
-
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override
-  {
-    nsresult rv = AsyncStatementCallbackNotifier::HandleCompletion(aReason);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (aReason == REASON_FINISHED) {
-      nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
-      NS_ENSURE_STATE(navHistory);
-      navHistory->NotifyManyFrecenciesChanged();
-    }
-    return NS_OK;
-  }
-};
-
-} // namespace
-
-nsresult
-nsNavHistory::FixInvalidFrecencies()
-{
-  nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
-    "UPDATE moz_places "
-    "SET frecency = CALCULATE_FRECENCY(id) "
-    "WHERE frecency < 0"
-  );
-  NS_ENSURE_STATE(stmt);
-
-  RefPtr<FixInvalidFrecenciesCallback> callback =
-    new FixInvalidFrecenciesCallback();
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  (void)stmt->ExecuteAsync(callback, getter_AddRefs(ps));
-
-  // Trigger frecency updates for affected origins.
-  nsCOMPtr<mozIStorageAsyncStatement> updateOriginFrecenciesStmt =
-    mDB->GetAsyncStatement("DELETE FROM moz_updateoriginsupdate_temp");
-  NS_ENSURE_STATE(updateOriginFrecenciesStmt);
-  nsresult rv =
-    updateOriginFrecenciesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
