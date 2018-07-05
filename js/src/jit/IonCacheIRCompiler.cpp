@@ -31,6 +31,8 @@ using mozilla::Maybe;
 namespace js {
 namespace jit {
 
+class AutoSaveLiveRegisters;
+
 // IonCacheIRCompiler compiles CacheIR to IonIC native code.
 class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
 {
@@ -99,7 +101,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
         return ptr;
     }
 
-    void prepareVMCall(MacroAssembler& masm);
+    void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
     MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
@@ -303,8 +305,9 @@ GetReturnAddressToIonCode(JSContext* cx)
     return returnAddr;
 }
 
+// The AutoSaveLiveRegisters parameter is used to ensure registers were saved
 void
-IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm)
+IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&)
 {
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
                                               IonICCallFrameLayout::Size());
@@ -1170,7 +1173,7 @@ IonCacheIRCompiler::emitCallProxyGetByValueResult()
 
     allocator.discardStack(masm);
 
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(idVal);
     masm.Push(obj);
@@ -1200,7 +1203,7 @@ IonCacheIRCompiler::emitCallProxyHasPropResult()
 
     allocator.discardStack(masm);
 
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(idVal);
     masm.Push(obj);
@@ -1320,7 +1323,7 @@ IonCacheIRCompiler::emitCallStringSplitResult()
 
     allocator.discardStack(masm);
 
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(str);
     masm.Push(sep);
@@ -1337,6 +1340,7 @@ IonCacheIRCompiler::emitCallStringSplitResult()
 bool
 IonCacheIRCompiler::emitCompareStringResult()
 {
+    AutoSaveLiveRegisters save(*this);
     AutoOutputRegister output(*this);
 
     Register left = allocator.useRegister(masm, reader.stringOperandId());
@@ -1344,10 +1348,6 @@ IonCacheIRCompiler::emitCompareStringResult()
     JSOp op = reader.jsop();
 
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
 
     allocator.discardStack(masm);
 
@@ -1357,7 +1357,7 @@ IonCacheIRCompiler::emitCompareStringResult()
     masm.jump(&done);
     masm.bind(&slow);
 
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
     masm.Push(right);
     masm.Push(left);
 
@@ -2187,7 +2187,7 @@ IonCacheIRCompiler::emitCallSetArrayLength()
     ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
 
     allocator.discardStack(masm);
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(Imm32(strict));
     masm.Push(val);
@@ -2213,7 +2213,7 @@ IonCacheIRCompiler::emitCallProxySet()
     AutoScratchRegister scratch(allocator, masm);
 
     allocator.discardStack(masm);
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(Imm32(strict));
     masm.Push(val);
@@ -2238,7 +2238,7 @@ IonCacheIRCompiler::emitCallProxySetByValue()
     bool strict = reader.readBool();
 
     allocator.discardStack(masm);
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(Imm32(strict));
     masm.Push(val);
@@ -2259,7 +2259,7 @@ IonCacheIRCompiler::emitMegamorphicSetElement()
     bool strict = reader.readBool();
 
     allocator.discardStack(masm);
-    prepareVMCall(masm);
+    prepareVMCall(masm, save);
 
     masm.Push(Imm32(strict));
     masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));

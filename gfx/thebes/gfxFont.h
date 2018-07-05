@@ -1830,6 +1830,7 @@ public:
 
     bool IsSyntheticBold() const { return mApplySyntheticBold; }
 
+    float AngleForSyntheticOblique() const;
     float SkewForSyntheticOblique() const;
 
     // Amount by which synthetic bold "fattens" the glyphs:
@@ -1949,6 +1950,8 @@ public:
     }
 
     virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(DrawTarget* aTarget) = 0;
+
+    void InitializeScaledFont();
 
     bool KerningDisabled() {
         return mKerningSet && !mKerningEnabled;

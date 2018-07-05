@@ -895,13 +895,6 @@ RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult)
         !(state & states::FOCUSABLE))
       return NS_OK;
 
-    if (nsIAccessibleTraversalRule::PREFILTER_ARIA_HIDDEN & mPreFilter) {
-      if (aAccessible->IsARIAHidden()) {
-        *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-        return NS_OK;
-      }
-    }
-
     if ((nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
         !(state & states::OPAQUE1)) {
       nsIFrame* frame = aAccessible->GetFrame();

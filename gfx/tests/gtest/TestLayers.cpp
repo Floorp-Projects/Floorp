@@ -76,9 +76,6 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer() {
     MOZ_CRASH("Not implemented.");
   }
-  virtual already_AddRefed<BorderLayer> CreateBorderLayer() {
-    MOZ_CRASH("Not implemented.");
-  }
   virtual void SetRoot(Layer* aLayer) {}
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {

@@ -697,6 +697,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
         if (!mAzureScaledFont) {
             return nullptr;
         }
+        InitializeScaledFont();
         mAzureScaledFontUsedClearType = sUseClearType;
     }
 

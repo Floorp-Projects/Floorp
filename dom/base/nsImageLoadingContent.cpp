@@ -17,6 +17,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentList.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
@@ -1735,4 +1736,62 @@ mozilla::net::ReferrerPolicy
 nsImageLoadingContent::GetImageReferrerPolicy()
 {
   return mozilla::net::RP_Unset;
+}
+
+Element*
+nsImageLoadingContent::FindImageMap()
+{
+  nsIContent* thisContent = AsContent();
+  Element* thisElement = thisContent->AsElement();
+
+  nsAutoString useMap;
+  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, useMap);
+  if (useMap.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsAString::const_iterator start, end;
+  useMap.BeginReading(start);
+  useMap.EndReading(end);
+
+  int32_t hash = useMap.FindChar('#');
+  if (hash < 0) {
+    return nullptr;
+  }
+  // useMap contains a '#', set start to point right after the '#'
+  start.advance(hash + 1);
+
+  if (start == end) {
+    return nullptr; // useMap == "#"
+  }
+
+  RefPtr<nsContentList> imageMapList;
+  if (thisElement->IsInUncomposedDoc()) {
+    // Optimize the common case and use document level image map.
+    imageMapList = thisElement->OwnerDoc()->ImageMapList();
+  } else {
+    // Per HTML spec image map should be searched in the element's scope,
+    // so using SubtreeRoot() here.
+    // Because this is a temporary list, we don't need to make it live.
+    imageMapList = new nsContentList(thisElement->SubtreeRoot(),
+                                     kNameSpaceID_XHTML,
+                                     nsGkAtoms::map, nsGkAtoms::map,
+                                     true, /* deep */
+                                     false /* live */);
+  }
+
+  nsAutoString mapName(Substring(start, end));
+
+  uint32_t i, n = imageMapList->Length(true);
+  for (i = 0; i < n; ++i) {
+    nsIContent* map = imageMapList->Item(i);
+    if (map->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                      mapName, eCaseMatters) ||
+        map->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                      mapName, eCaseMatters)) {
+      return map->AsElement();
+    }
+  }
+
+  return nullptr;
 }
