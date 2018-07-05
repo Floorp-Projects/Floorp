@@ -22,6 +22,7 @@
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/SdpAttribute.h"
+#include "signaling/src/sdp/ParsingResultComparer.h"
 
 extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
@@ -4130,6 +4131,22 @@ TEST_P(NewSdpTest, CheckAddDataChannel) {
   ASSERT_TRUE(mediaSection.GetAttributeList().
               HasAttribute(SdpAttribute::kSctpPortAttribute));
   ASSERT_EQ(15000U, mediaSection.GetAttributeList().GetSctpPort());
+}
+
+TEST(NewSdpTestNoFixture, CheckParsingResultComparer) {
+  auto check_comparison = [] (const std::string sdp_string) {
+    SipccSdpParser sipccParser;
+    RsdparsaSdpParser rustParser;
+
+    auto sipccSdp = sipccParser.Parse(sdp_string);
+    auto rustSdp = rustParser.Parse(sdp_string);
+
+    ParsingResultComparer comparer;
+    return comparer.Compare(*rustSdp, *sipccSdp, sdp_string);
+  };
+
+  ASSERT_TRUE(check_comparison(kBasicAudioVideoOffer));
+  ASSERT_TRUE(check_comparison(kH264AudioVideoOffer));
 }
 
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
