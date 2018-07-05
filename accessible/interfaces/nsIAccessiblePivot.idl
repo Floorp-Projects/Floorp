@@ -229,8 +229,7 @@ interface nsIAccessibleTraversalRule : nsISupports
   const unsigned long PREFILTER_INVISIBLE     = 0x00000001;
   const unsigned long PREFILTER_OFFSCREEN     = 0x00000002;
   const unsigned long PREFILTER_NOT_FOCUSABLE = 0x00000004;
-  const unsigned long PREFILTER_ARIA_HIDDEN   = 0x00000008;
-  const unsigned long PREFILTER_TRANSPARENT   = 0x00000010;
+  const unsigned long PREFILTER_TRANSPARENT   = 0x00000008;
 
   /**
    * Pre-filter bitfield to filter out obviously ignorable nodes and lighten

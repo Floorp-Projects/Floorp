@@ -94,14 +94,15 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
     state->mCrossProcessParent = this;
     HostLayerManager* lm = state->mLayerManager;
     CompositorAnimationStorage* animStorage = state->mParent ? state->mParent->GetAnimationStorage() : nullptr;
-    LayerTransactionParent* p = new LayerTransactionParent(lm, this, animStorage, aId);
+    TimeDuration vsyncRate = state->mParent ? state->mParent->GetVsyncInterval() : TimeDuration();
+    LayerTransactionParent* p = new LayerTransactionParent(lm, this, animStorage, aId, vsyncRate);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
     return p;
   }
 
   NS_WARNING("Created child without a matching parent?");
-  LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, aId);
+  LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, aId, TimeDuration());
   p->AddIPDLReference();
   return p;
 }
@@ -243,7 +244,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
-          this, aPipelineId, nullptr, root->CompositorScheduler(), std::move(api), std::move(holder), std::move(animStorage));
+          this, aPipelineId, nullptr, root->CompositorScheduler(), std::move(api), std::move(holder), std::move(animStorage), cbp->GetVsyncInterval());
   parent->AddRef(); // IPDL reference
 
   { // scope lock
@@ -372,7 +373,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
-  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.transactionStart(), aInfo.fwdTime());
+  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(), aInfo.transactionStart(), aInfo.fwdTime());
 }
 
 void

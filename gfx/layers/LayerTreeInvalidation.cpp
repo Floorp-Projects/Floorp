@@ -605,52 +605,6 @@ public:
   IntRect mBounds;
 };
 
-struct BorderLayerProperties : public LayerPropertiesBase
-{
-  explicit BorderLayerProperties(BorderLayer *aLayer)
-    : LayerPropertiesBase(aLayer)
-    , mColors(aLayer->GetColors())
-    , mRect(aLayer->GetRect())
-    , mCorners(aLayer->GetCorners())
-    , mWidths(aLayer->GetWidths())
-  { }
-
-protected:
-  BorderLayerProperties(const BorderLayerProperties& a) = delete;
-  BorderLayerProperties& operator=(const BorderLayerProperties& a) = delete;
-
-public:
-  bool ComputeChangeInternal(const char* aPrefix,
-                             nsIntRegion& aOutRegion,
-                             NotifySubDocInvalidationFunc aCallback) override
-  {
-    BorderLayer* border = static_cast<BorderLayer*>(mLayer.get());
-
-    if (!border->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
-      IntRect result = NewTransformedBoundsForLeaf();
-      result = result.Union(OldTransformedBoundsForLeaf());
-      aOutRegion = result;
-      return true;
-    }
-
-    if (!PodEqual(&mColors[0], &border->GetColors()[0], 4) ||
-        !PodEqual(&mWidths[0], &border->GetWidths()[0], 4) ||
-        !PodEqual(&mCorners[0], &border->GetCorners()[0], 4) ||
-        !mRect.IsEqualEdges(border->GetRect())) {
-      LTI_DUMP(NewTransformedBoundsForLeaf(), "bounds");
-      aOutRegion = NewTransformedBoundsForLeaf();
-      return true;
-    }
-
-    return true;
-  }
-
-  BorderColors mColors;
-  LayerRect mRect;
-  BorderCorners mCorners;
-  BorderWidths mWidths;
-};
-
 static ImageHost* GetImageHost(Layer* aLayer)
 {
   HostLayer* compositor = aLayer->AsHostLayer();
@@ -785,8 +739,6 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot), aIsMask);
     case Layer::TYPE_CANVAS:
       return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
-    case Layer::TYPE_BORDER:
-      return MakeUnique<BorderLayerProperties>(static_cast<BorderLayer*>(aRoot));
     case Layer::TYPE_DISPLAYITEM:
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:

@@ -33,6 +33,9 @@ class imgRequestProxy;
 
 namespace mozilla {
 class AsyncEventDispatcher;
+namespace dom {
+class Element;
+} // namespace Element;
 } // namespace mozilla
 
 #ifdef LoadImage
@@ -74,6 +77,8 @@ public:
   already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentRequestFinalURI();
   void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
+
+  mozilla::dom::Element* FindImageMap();
 
 protected:
   enum ImageLoadType {

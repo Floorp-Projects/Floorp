@@ -2933,7 +2933,7 @@ public:
 
   void SetNavigationTiming(nsDOMNavigationTiming* aTiming);
 
-  Element* FindImageMap(const nsAString& aNormalizedMapName);
+  nsContentList* ImageMapList();
 
   // Add aLink to the set of links that need their status resolved.
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);

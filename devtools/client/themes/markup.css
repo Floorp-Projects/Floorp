@@ -418,13 +418,22 @@ ul.children + .tag-line::before {
   color: var(--theme-selection-color);
 }
 
+.markup-badge[data-display="flex"].interactive,
 .markup-badge[data-display="grid"],
+.markup-badge[data-display="inline-flex"],
+.markup-badge[data-display="inline-grid"],
 .markup-badge[data-event] {
   cursor: pointer;
 }
 
+.markup-badge[data-display="flex"].interactive:focus,
+.markup-badge[data-display="flex"].interactive:hover,
 .markup-badge[data-display="grid"]:focus,
 .markup-badge[data-display="grid"]:hover,
+.markup-badge[data-display="inline-flex"].interactive:focus,
+.markup-badge[data-display="inline-flex"].interactive:hover,
+.markup-badge[data-display="inline-grid"]:focus,
+.markup-badge[data-display="inline-grid"]:hover,
 .markup-badge[data-event]:focus,
 .markup-badge[data-event]:hover {
   background-color: var(--markup-badge-hover-background-color);

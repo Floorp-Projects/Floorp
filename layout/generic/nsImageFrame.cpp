@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsIImageLoadingContent.h"
+#include "nsImageLoadingContent.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsPresContext.h"
@@ -951,13 +952,10 @@ nsImageFrame::GetInnerArea() const
 Element*
 nsImageFrame::GetMapElement() const
 {
-  nsAutoString usemap;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                     nsGkAtoms::usemap,
-                                     usemap)) {
-    return mContent->OwnerDoc()->FindImageMap(usemap);
-  }
-  return nullptr;
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  return imageLoader ?
+    static_cast<nsImageLoadingContent*>(imageLoader.get())->FindImageMap() :
+    nullptr;
 }
 
 // get the offset into the content area of the image where aImg starts if it is a continuation.

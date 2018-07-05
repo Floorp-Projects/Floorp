@@ -270,6 +270,10 @@ accessibility.Checks = class {
    *     True if element is hidden from user, false otherwise.
    */
   isHidden(accessible) {
+    if (!accessible) {
+      return true;
+    }
+
     while (accessible) {
       if (this.hasHiddenAttribute(accessible)) {
         return true;
@@ -295,10 +299,6 @@ accessibility.Checks = class {
    *     |accessible|'s.
    */
   assertVisible(accessible, element, visible) {
-    if (!accessible) {
-      return;
-    }
-
     let hiddenAccessibility = this.isHidden(accessible);
 
     let message;

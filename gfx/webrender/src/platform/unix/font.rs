@@ -60,25 +60,29 @@ extern "C" {
     fn FT_GlyphSlot_Embolden(slot: FT_GlyphSlot);
 }
 
-// Skew factor matching Gecko/FreeType.
-const OBLIQUE_SKEW_FACTOR: f32 = 0.2;
-
-fn get_skew_bounds(bottom: i32, top: i32) -> (f32, f32) {
-    let skew_min = ((bottom as f32 + 0.5) * OBLIQUE_SKEW_FACTOR).floor();
-    let skew_max = ((top as f32 - 0.5) * OBLIQUE_SKEW_FACTOR).ceil();
+fn get_skew_bounds(bottom: i32, top: i32, skew_factor: f32) -> (f32, f32) {
+    let skew_min = ((bottom as f32 + 0.5) * skew_factor).floor();
+    let skew_max = ((top as f32 - 0.5) * skew_factor).ceil();
     (skew_min, skew_max)
 }
 
-fn skew_bitmap(bitmap: &[u8], width: usize, height: usize, left: i32, top: i32) -> (Vec<u8>, usize, i32) {
+fn skew_bitmap(
+    bitmap: &[u8],
+    width: usize,
+    height: usize,
+    left: i32,
+    top: i32,
+    skew_factor: f32,
+) -> (Vec<u8>, usize, i32) {
     let stride = width * 4;
     // Calculate the skewed horizontal offsets of the bottom and top of the glyph.
-    let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top);
+    let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top, skew_factor);
     // Allocate enough extra width for the min/max skew offsets.
     let skew_width = width + (skew_max - skew_min) as usize;
     let mut skew_buffer = vec![0u8; skew_width * height * 4];
     for y in 0 .. height {
         // Calculate a skew offset at the vertical center of the current row.
-        let offset = (top as f32 - y as f32 - 0.5) * OBLIQUE_SKEW_FACTOR - skew_min;
+        let offset = (top as f32 - y as f32 - 0.5) * skew_factor - skew_min;
         // Get a blend factor in 0..256 constant across all pixels in the row.
         let blend = (offset.fract() * 256.0) as u32;
         let src_row = y * stride;
@@ -243,7 +247,7 @@ impl FontContext {
         let mut load_flags = FT_LOAD_DEFAULT;
         let FontInstancePlatformOptions { mut hinting, .. } = font.platform_options.unwrap_or_default();
         // Disable hinting if there is a non-axis-aligned transform.
-        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) ||
+        if font.synthetic_italics.is_enabled() ||
            ((font.transform.scale_x != 0.0 || font.transform.scale_y != 0.0) &&
             (font.transform.skew_x != 0.0 || font.transform.skew_y != 0.0)) {
             hinting = FontHinting::None;
@@ -302,8 +306,8 @@ impl FontContext {
             if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
                 shape = shape.swap_xy();
             }
-            if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+            if font.synthetic_italics.is_enabled() {
+                shape = shape.synthesize_italics(font.synthetic_italics);
             };
             let mut ft_shape = FT_Matrix {
                 xx: (shape.scale_x * 65536.0) as FT_Fixed,
@@ -457,8 +461,12 @@ impl FontContext {
             // An outline glyph's cbox would have already been transformed inside FT_Load_Glyph,
             // so only handle bitmap glyphs which are not handled by FT_Load_Glyph.
             if format == FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP {
-                if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                    let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top);
+                if font.synthetic_italics.is_enabled() {
+                    let (skew_min, skew_max) = get_skew_bounds(
+                        top - height as i32,
+                        top,
+                        font.synthetic_italics.to_skew(),
+                    );
                     left += skew_min as i32;
                     width += (skew_max - skew_min) as u32;
                 }
@@ -743,9 +751,15 @@ impl FontContext {
 
         match format {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
-                if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                    let (skew_buffer, skew_width, skew_left) =
-                        skew_bitmap(&final_buffer, actual_width, actual_height, left, top);
+                if font.synthetic_italics.is_enabled() {
+                    let (skew_buffer, skew_width, skew_left) = skew_bitmap(
+                        &final_buffer,
+                        actual_width,
+                        actual_height,
+                        left,
+                        top,
+                        font.synthetic_italics.to_skew(),
+                    );
                     final_buffer = skew_buffer;
                     actual_width = skew_width;
                     left = skew_left;
