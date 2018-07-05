@@ -126,6 +126,15 @@ public:
     NS_DECL_NSIOBSERVER
 };
 
+static void
+FontListPrefChanged(const char* aPref, void* aData = nullptr)
+{
+    // XXX this could be made to only clear out the cache for the prefs that were changed
+    // but it probably isn't that big a deal.
+    gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
+    gfxFontCache::GetCache()->AgeAllGenerations();
+}
+
 static gfxFontListPrefObserver* gFontListPrefObserver = nullptr;
 
 NS_IMPL_ISUPPORTS(gfxFontListPrefObserver, nsIObserver)
@@ -137,13 +146,10 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
                                  const char      *aTopic,
                                  const char16_t *aData)
 {
-    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) ||
-                 !strcmp(aTopic, LOCALES_CHANGED_TOPIC), "invalid topic");
-    // XXX this could be made to only clear out the cache for the prefs that were changed
-    // but it probably isn't that big a deal.
-    gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
-    gfxFontCache::GetCache()->AgeAllGenerations();
-    if (XRE_IsParentProcess() && !strcmp(aTopic, LOCALES_CHANGED_TOPIC)) {
+    NS_ASSERTION(!strcmp(aTopic, LOCALES_CHANGED_TOPIC), "invalid topic");
+    FontListPrefChanged(nullptr);
+
+    if (XRE_IsParentProcess()) {
         gfxPlatform::ForceGlobalReflow();
     }
     return NS_OK;
@@ -215,7 +221,8 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
                  "There has been font list pref observer already");
     gFontListPrefObserver = new gfxFontListPrefObserver();
     NS_ADDREF(gFontListPrefObserver);
-    Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
+
+    Preferences::RegisterPrefixCallbacks(FontListPrefChanged, kObservedPrefs);
 
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
@@ -237,7 +244,8 @@ gfxPlatformFontList::~gfxPlatformFontList()
     mSharedCmaps.Clear();
     ClearLangGroupPrefFonts();
     NS_ASSERTION(gFontListPrefObserver, "There is no font list pref observer");
-    Preferences::RemoveObservers(gFontListPrefObserver, kObservedPrefs);
+
+    Preferences::UnregisterPrefixCallbacks(FontListPrefChanged, kObservedPrefs);
 
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
