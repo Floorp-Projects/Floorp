@@ -192,6 +192,7 @@ gfxFT2Font::GetScaledFont(DrawTarget *aTarget)
                                                  GetUnscaledFont(),
                                                  GetAdjustedSize(),
                                                  GetCairoScaledFont());
+        InitializeScaledFont();
     }
 
     RefPtr<ScaledFont> scaledFont(mAzureScaledFont);

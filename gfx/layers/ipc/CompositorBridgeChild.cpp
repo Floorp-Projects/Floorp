@@ -156,6 +156,9 @@ CompositorBridgeChild::Destroy()
     mLayerManager = nullptr;
   }
 
+  // Flush async paints before we destroy texture data.
+  FlushAsyncPaints();
+
   if (!mCanSend) {
     // We may have already called destroy but still have lingering references
     // or CompositorBridgeChild::ActorDestroy was called. Ensure that we do our
@@ -181,9 +184,6 @@ CompositorBridgeChild::Destroy()
       static_cast<WebRenderBridgeChild*>(wrBridges[i]);
     wrBridge->Destroy(/* aIsSync */ false);
   }
-
-  // Flush async paints before we destroy texture data.
-  FlushAsyncPaints();
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {

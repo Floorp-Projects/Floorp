@@ -4,7 +4,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 // Constants
 
 const PREFILTER_INVISIBLE = nsIAccessibleTraversalRule.PREFILTER_INVISIBLE;
-const PREFILTER_ARIA_HIDDEN = nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN;
 const PREFILTER_TRANSPARENT = nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT;
 const FILTER_MATCH = nsIAccessibleTraversalRule.FILTER_MATCH;
 const FILTER_IGNORE = nsIAccessibleTraversalRule.FILTER_IGNORE;
@@ -47,7 +46,7 @@ var ObjectTraversalRule =
     return 0;
   },
 
-  preFilter: PREFILTER_INVISIBLE | PREFILTER_ARIA_HIDDEN | PREFILTER_TRANSPARENT,
+  preFilter: PREFILTER_INVISIBLE | PREFILTER_TRANSPARENT,
 
   match(aAccessible) {
     var rv = FILTER_IGNORE;

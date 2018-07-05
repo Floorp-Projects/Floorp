@@ -46,7 +46,6 @@ public:
   already_AddRefed<ColorLayer> CreateColorLayer() override;
   already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
   already_AddRefed<RefLayer> CreateRefLayer() override;
-  already_AddRefed<BorderLayer> CreateBorderLayer() override;
 
   bool AreComponentAlphaLayersEnabled() override;
   bool BlendingRequiresIntermediateSurface() override;

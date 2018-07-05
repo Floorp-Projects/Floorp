@@ -270,9 +270,6 @@ fn is_bitmap_font(ct_font: &CTFont) -> bool {
     (traits & kCTFontColorGlyphsTrait) != 0
 }
 
-// Skew factor matching Gecko/CG.
-const OBLIQUE_SKEW_FACTOR: f32 = 0.25;
-
 impl FontContext {
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         debug!("Test for subpixel AA support: {}", supports_subpixel_aa());
@@ -367,8 +364,8 @@ impl FontContext {
                 let glyph = key.index as CGGlyph;
                 let bitmap = is_bitmap_font(ct_font);
                 let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
-                let transform = if font.flags.intersects(FontInstanceFlags::SYNTHETIC_ITALICS |
-                                                         FontInstanceFlags::TRANSPOSE |
+                let transform = if font.synthetic_italics.is_enabled() ||
+                                   font.flags.intersects(FontInstanceFlags::TRANSPOSE |
                                                          FontInstanceFlags::FLIP_X |
                                                          FontInstanceFlags::FLIP_Y) {
                     let mut shape = FontTransform::identity();
@@ -381,8 +378,8 @@ impl FontContext {
                     if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
                         shape = shape.swap_xy();
                     }
-                    if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                        shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+                    if font.synthetic_italics.is_enabled() {
+                        shape = shape.synthesize_italics(font.synthetic_italics);
                     }
                     Some(CGAffineTransform {
                         a: shape.scale_x as f64,
@@ -512,8 +509,8 @@ impl FontContext {
         if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
             shape = shape.swap_xy();
         }
-        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-            shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+        if font.synthetic_italics.is_enabled() {
+            shape = shape.synthesize_italics(font.synthetic_italics);
         }
         let transform = if !shape.is_identity() {
             Some(CGAffineTransform {
