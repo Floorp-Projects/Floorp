@@ -2657,57 +2657,29 @@ profiler_shutdown()
   }
 }
 
-static bool
-WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
-                         double aSinceTime,
-                         bool aIsShuttingDown)
-{
-  LOG("WriteProfileToJSONWriter");
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  aWriter.Start();
-  {
-    if (!profiler_stream_json_for_this_process(
-          aWriter, aSinceTime, aIsShuttingDown)) {
-      return false;
-    }
-
-    // Don't include profiles from other processes because this is a
-    // synchronous function.
-    aWriter.StartArrayProperty("processes");
-    aWriter.EndArray();
-  }
-  aWriter.End();
-  return true;
-}
-
 UniquePtr<char[]>
 profiler_get_profile(double aSinceTime, bool aIsShuttingDown)
 {
   LOG("profiler_get_profile");
 
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
   SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown)) {
-    return nullptr;
+  b.Start();
+  {
+    if (!profiler_stream_json_for_this_process(b, aSinceTime,
+                                               aIsShuttingDown)) {
+      return nullptr;
+    }
+
+    // Don't include profiles from other processes because this is a
+    // synchronous function.
+    b.StartArrayProperty("processes");
+    b.EndArray();
   }
+  b.End();
+
   return b.WriteFunc()->CopyData();
-}
-
-void
-profiler_get_profile_json_into_lazily_allocated_buffer(
-  const std::function<char*(size_t)> aAllocator,
-  double aSinceTime,
-  bool aIsShuttingDown)
-{
-  LOG("profiler_get_profile_json_into_lazily_allocated_buffer");
-
-  SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown)) {
-    return;
-  }
-
-  b.WriteFunc()->CopyDataIntoLazilyAllocatedBuffer(aAllocator);
 }
 
 void
