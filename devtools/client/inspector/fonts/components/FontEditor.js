@@ -116,7 +116,7 @@ class FontEditor extends PureComponent {
       {},
       dom.summary(
         {},
-        getStr("fontinspector.familiesNotUsedLabel")
+        getStr("fontinspector.familiesUnusedLabel")
       ),
       familiesList
     );
@@ -142,8 +142,8 @@ class FontEditor extends PureComponent {
       ? null
       : dom.details({},
           dom.summary({},
-            dom.span({ className: "label-open" }, getStr("fontinspector.seeMore")),
-            dom.span({ className: "label-close" }, getStr("fontinspector.seeLess"))
+            dom.span({ className: "label-open" }, getStr("fontinspector.showMore")),
+            dom.span({ className: "label-close" }, getStr("fontinspector.showLess"))
           ),
           moreUsedFontsList
         );
