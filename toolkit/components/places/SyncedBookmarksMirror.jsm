@@ -1482,16 +1482,24 @@ class SyncedBookmarksMirror {
 
     MirrorLog.trace("Recording observer notifications for changed annos");
     let annoRows = await this.db.execute(`
-      SELECT itemId, annoName, wasRemoved FROM annosChanged
-      ORDER BY itemId`);
+      SELECT b.id, b.guid, b.lastModified, b.type, p.id AS parentId,
+             p.guid AS parentGuid, c.annoName, c.wasRemoved
+      FROM annosChanged c
+      JOIN moz_bookmarks b ON b.id = c.itemId
+      JOIN moz_bookmarks p ON p.id = b.parent
+      LEFT JOIN moz_places h ON h.id = b.fk
+      ORDER BY p.id, b.position, c.wasRemoved <> 1`);
     for await (let row of yieldingIterator(annoRows)) {
-      let id = row.getResultByName("itemId");
-      let name = row.getResultByName("annoName");
-      if (row.getResultByName("wasRemoved")) {
-        observersToNotify.noteAnnoRemoved(id, name);
-      } else {
-        observersToNotify.noteAnnoSet(id, name);
-      }
+      observersToNotify.noteAnnoChanged({
+        id: row.getResultByName("id"),
+        name: row.getResultByName("annoName"),
+        wasRemoved: !!row.getResultByName("wasRemoved"),
+        guid: row.getResultByName("guid"),
+        lastModified: row.getResultByName("lastModified"),
+        type: row.getResultByName("type"),
+        parentId: row.getResultByName("parentId"),
+        parentGuid: row.getResultByName("parentGuid"),
+      });
     }
 
     MirrorLog.trace("Recording notifications for changed keywords");
@@ -4435,7 +4443,6 @@ class BookmarkObserverRecorder {
     this.bookmarkObserverNotifications = [];
     this.annoObserverNotifications = [];
     this.shouldInvalidateKeywords = false;
-    this.shouldInvalidateLivemarks = false;
   }
 
   /**
@@ -4449,9 +4456,7 @@ class BookmarkObserverRecorder {
     }
     await this.notifyBookmarkObservers();
     await this.notifyAnnoObservers();
-    if (this.shouldInvalidateLivemarks) {
-      await PlacesUtils.livemarks.invalidateCachedLivemarks();
-    }
+    await PlacesUtils.livemarks.invalidateCachedLivemarks();
     await this.updateFrecencies();
   }
 
@@ -4528,23 +4533,30 @@ class BookmarkObserverRecorder {
     });
   }
 
-  noteAnnoSet(id, name) {
-    if (isLivemarkAnno(name)) {
-      this.shouldInvalidateLivemarks = true;
+  noteAnnoChanged(info) {
+    if (info.name != PlacesUtils.LMANNO_FEEDURI &&
+        info.name != PlacesUtils.LMANNO_SITEURI) {
+      throw new TypeError("Can't record change for unsupported anno");
     }
-    this.annoObserverNotifications.push({
-      name: "onItemAnnotationSet",
-      args: [id, name, PlacesUtils.bookmarks.SOURCES.SYNC],
-    });
-  }
-
-  noteAnnoRemoved(id, name) {
-    if (isLivemarkAnno(name)) {
-      this.shouldInvalidateLivemarks = true;
+    if (info.wasRemoved) {
+      this.annoObserverNotifications.push({
+        name: "onItemAnnotationRemoved",
+        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC],
+      });
+    } else {
+      this.annoObserverNotifications.push({
+        name: "onItemAnnotationSet",
+        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC,
+               /* dontUpdateLastModified */ true],
+      });
     }
-    this.annoObserverNotifications.push({
-      name: "onItemAnnotationRemoved",
-      args: [id, name, PlacesUtils.bookmarks.SOURCES.SYNC],
+    this.bookmarkObserverNotifications.push({
+      name: "onItemChanged",
+      isTagging: false,
+      args: [info.id, info.name, /* isAnnotationProperty */ true,
+             /* newValue */ "", info.lastModified, info.type, info.parentId,
+             info.guid, info.parentGuid, /* oldValue */ "",
+             PlacesUtils.bookmarks.SOURCES.SYNC],
     });
   }
 
@@ -4581,11 +4593,6 @@ class BookmarkObserverRecorder {
       MirrorLog.warn("Error notifying observer", ex);
     }
   }
-}
-
-function isLivemarkAnno(name) {
-  return name == PlacesUtils.LMANNO_FEEDURI ||
-         name == PlacesUtils.LMANNO_SITEURI;
 }
 
 /**
