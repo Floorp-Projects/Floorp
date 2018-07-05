@@ -163,8 +163,12 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       // Get the owner actor for this actor (the walker), and find the
       // parent node of this actor from it, creating a standin node if
       // necessary.
-      const parentNodeFront = ctx.marshallPool().ensureParentFront(form.parent);
+      const parentNodeFront = ctx.marshallPool().ensureDOMNodeFront(form.parent);
       this.reparent(parentNodeFront);
+    }
+
+    if (form.host) {
+      this.host = ctx.marshallPool().ensureDOMNodeFront(form.host);
     }
 
     if (form.inlineTextChild) {
@@ -180,6 +184,14 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    */
   parentNode: function() {
     return this._parent;
+  },
+
+  /**
+   * Returns the NodeFront corresponding to the parentNode of this NodeFront, or the
+   * NodeFront corresponding to the host element for shadowRoot elements.
+   */
+  parentOrHost: function() {
+    return this.isShadowRoot ? this.host : this._parent;
   },
 
   /**

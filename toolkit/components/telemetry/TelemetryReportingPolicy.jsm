@@ -17,8 +17,6 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetrySend",
                                "resource://gre/modules/TelemetrySend.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryReportingPolicy::";
@@ -250,7 +248,7 @@ var TelemetryReportingPolicyImpl = {
     // use the general minimum policy version.
     let channel = "";
     try {
-      channel = UpdateUtils.getUpdateChannel(false);
+      channel = TelemetryUtils.getUpdateChannel();
     } catch (e) {
       this._log.error("minimumPolicyVersion - Unable to retrieve the current channel.");
       return minPolicyVersion;

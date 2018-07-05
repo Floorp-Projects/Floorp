@@ -55,7 +55,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
@@ -325,7 +324,7 @@ var Impl = {
 
     let updateChannel = null;
     try {
-      updateChannel = UpdateUtils.getUpdateChannel(false);
+      updateChannel = Utils.getUpdateChannel();
     } catch (e) {
       this._log.trace("_getApplicationSection - Unable to get update channel.", e);
     }

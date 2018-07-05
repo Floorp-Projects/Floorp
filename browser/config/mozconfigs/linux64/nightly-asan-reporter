@@ -20,4 +20,10 @@ export MOZ_PKG_SPECIAL=asan-reporter
 # Need this to add source information into platform.ini
 export MOZILLA_OFFICIAL=1
 
+# Enable Telemetry
+# The channel reported by Telemetry here will be "nightly-asan" as specified
+# in the respective override pref (toolkit.telemetry.overrideUpdateChannel),
+# while the build otherwise identifies as "nightly" to receive its updates.
+export MOZ_TELEMETRY_REPORTING=1
+
 . "$topsrcdir/build/mozconfig.common.override"

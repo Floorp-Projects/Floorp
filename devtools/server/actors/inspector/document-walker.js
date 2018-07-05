@@ -6,6 +6,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
+loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-filter-constants");
 loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
 
@@ -73,6 +74,17 @@ DocumentWalker.prototype = {
   },
 
   parentNode: function() {
+    if (isShadowRoot(this.currentNode)) {
+      this.currentNode = this.currentNode.host;
+      return this.currentNode;
+    }
+
+    const parentNode = this.currentNode.parentNode;
+    // deep-tree-walker currently does not return shadowRoot elements as parentNodes.
+    if (parentNode && isShadowRoot(parentNode)) {
+      this.currentNode = parentNode;
+      return this.currentNode;
+    }
     return this.walker.parentNode();
   },
 

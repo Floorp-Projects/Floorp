@@ -587,6 +587,83 @@ function isShadowAnonymous(node) {
 exports.isShadowAnonymous = isShadowAnonymous;
 
 /**
+ * Determine whether a node is a template element.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isTemplateElement(node) {
+  return node.ownerGlobal && node instanceof node.ownerGlobal.HTMLTemplateElement;
+}
+exports.isTemplateElement = isTemplateElement;
+
+/**
+ * Determine whether a node is a shadow root.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isShadowRoot(node) {
+  const isFragment = node.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+  return isFragment && !!node.host;
+}
+exports.isShadowRoot = isShadowRoot;
+
+/**
+ * Determine whether a node is a shadow host, ie. an element that has a shadowRoot
+ * attached to itself.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isShadowHost(node) {
+  const shadowRoot = node.openOrClosedShadowRoot;
+  return shadowRoot && shadowRoot.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+}
+exports.isShadowHost = isShadowHost;
+
+/**
+ * Determine whether a node is a child of a shadow host. Even if the element has been
+ * assigned to a slot in the attached shadow DOM, the parent node for this element is
+ * still considered to be the "host" element, and we need to walk them differently.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isDirectShadowHostChild(node) {
+  // Pseudo elements are always part of the anonymous tree.
+  if (isBeforePseudoElement(node) || isAfterPseudoElement(node)) {
+    return false;
+  }
+
+  const parentNode = node.parentNode;
+  return parentNode && !!parentNode.openOrClosedShadowRoot;
+}
+exports.isDirectShadowHostChild = isDirectShadowHostChild;
+
+/**
+ * Determine whether a node is a ::before pseudo.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isBeforePseudoElement(node) {
+  return node.nodeName === "_moz_generated_content_before";
+}
+exports.isBeforePseudoElement = isBeforePseudoElement;
+
+/**
+ * Determine whether a node is a ::after pseudo.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isAfterPseudoElement(node) {
+  return node.nodeName === "_moz_generated_content_after";
+}
+exports.isAfterPseudoElement = isAfterPseudoElement;
+
+/**
  * Get the current zoom factor applied to the container window of a given node.
  * Container windows are used as a weakmap key to store the corresponding
  * nsIDOMWindowUtils instance to avoid querying it every time.
