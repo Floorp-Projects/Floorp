@@ -429,9 +429,6 @@ BrowserGlue.prototype = {
       case "notifications-open-settings":
         this._openPreferences("privacy", { origin: "notifOpenSettings" });
         break;
-      case "prefservice:after-app-defaults":
-        this._onAppDefaults();
-        break;
       case "final-ui-startup":
         this._beforeUIStartup();
         break;
@@ -515,7 +512,6 @@ BrowserGlue.prototype = {
         } else if (data == "force-ui-migration") {
           this._migrateUI();
         } else if (data == "force-distribution-customization") {
-          this._distributionCustomizer.applyPrefDefaults();
           this._distributionCustomizer.applyCustomizations();
           // To apply distribution bookmarks use "places-init-complete".
         } else if (data == "force-places-init") {
@@ -621,7 +617,6 @@ BrowserGlue.prototype = {
   _init: function BG__init() {
     let os = Services.obs;
     os.addObserver(this, "notifications-open-settings");
-    os.addObserver(this, "prefservice:after-app-defaults");
     os.addObserver(this, "final-ui-startup");
     os.addObserver(this, "browser-delayed-startup-finished");
     os.addObserver(this, "sessionstore-windows-restored");
@@ -664,7 +659,6 @@ BrowserGlue.prototype = {
   _dispose: function BG__dispose() {
     let os = Services.obs;
     os.removeObserver(this, "notifications-open-settings");
-    os.removeObserver(this, "prefservice:after-app-defaults");
     os.removeObserver(this, "final-ui-startup");
     os.removeObserver(this, "sessionstore-windows-restored");
     os.removeObserver(this, "browser:purge-session-history");
@@ -708,12 +702,6 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "shield-init-complete");
   },
 
-  _onAppDefaults: function BG__onAppDefaults() {
-    // apply distribution customizations (prefs)
-    // other customizations are applied in _beforeUIStartup()
-    this._distributionCustomizer.applyPrefDefaults();
-  },
-
   // runs on startup, before the first command line handler is invoked
   // (i.e. before the first window is opened)
   _beforeUIStartup: function BG__beforeUIStartup() {
@@ -724,7 +712,6 @@ BrowserGlue.prototype = {
     }
 
     // apply distribution customizations
-    // prefs are applied in _onAppDefaults()
     this._distributionCustomizer.applyCustomizations();
 
     // handle any UI migration

@@ -227,11 +227,9 @@ DistributionCustomizer.prototype = {
     if (!this._ini)
       return this._checkCustomizationComplete();
 
-    // nsPrefService loads very early.  Reload prefs so we can set
-    // distribution defaults during the prefservice:after-app-defaults
-    // notification (see applyPrefDefaults below)
-    Services.prefs.QueryInterface(Ci.nsIObserver)
-      .observe(null, "reload-default-prefs", null);
+    if (!this._prefDefaultsApplied) {
+      this.applyPrefDefaults();
+    }
   },
 
   _bookmarksApplied: false,
