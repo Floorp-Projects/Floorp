@@ -76,6 +76,7 @@ nsStyleLinkElement::nsStyleLinkElement()
   : mDontLoadStyle(false)
   , mUpdatesEnabled(true)
   , mLineNumber(1)
+  , mColumnNumber(1)
 {
 }
 
@@ -190,6 +191,18 @@ nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber)
 nsStyleLinkElement::GetLineNumber()
 {
   return mLineNumber;
+}
+
+/* virtual */ void
+nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber)
+{
+  mColumnNumber = aColumnNumber;
+}
+
+/* virtual */ uint32_t
+nsStyleLinkElement::GetColumnNumber()
+{
+  return mColumnNumber;
 }
 
 static uint32_t ToLinkMask(const nsAString& aLink)
@@ -381,7 +394,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                                            thisContent->NodePrincipal(),
                                            info->mTriggeringPrincipal,
                                            doc->GetDocumentURI(),
-                                           mLineNumber, text, &rv)) {
+                                           mLineNumber, mColumnNumber, text,
+                                           &rv)) {
       if (NS_FAILED(rv)) {
         return Err(rv);
       }

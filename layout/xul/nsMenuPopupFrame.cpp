@@ -71,7 +71,7 @@ DOMTimeStamp nsMenuPopupFrame::sLastKeyTime = 0;
 //  if someone changes one, please also change the other.
 uint32_t nsMenuPopupFrame::sTimeoutOfIncrementalSearch = 1000;
 
-const char* kPrefIncrementalSearchTimeout =
+const char kPrefIncrementalSearchTimeout[] =
   "ui.menu.incremental_search.timeout";
 
 // NS_NewMenuPopupFrame

@@ -2016,16 +2016,11 @@ PluginOfflineObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
-static const char* kSettingsPrefs[] =
-    {"javascript.enabled",
-     "dom.ipc.plugins.nativeCursorSupport"};
-
 void
 PluginModuleChromeParent::RegisterSettingsCallbacks()
 {
-    for (size_t i = 0; i < ArrayLength(kSettingsPrefs); i++) {
-        Preferences::RegisterCallback(CachedSettingChanged, kSettingsPrefs[i], this);
-    }
+    Preferences::RegisterCallback(CachedSettingChanged, "javascript.enabled", this);
+    Preferences::RegisterCallback(CachedSettingChanged, "dom.ipc.plugins.nativeCursorSupport", this);
 
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
@@ -2037,9 +2032,8 @@ PluginModuleChromeParent::RegisterSettingsCallbacks()
 void
 PluginModuleChromeParent::UnregisterSettingsCallbacks()
 {
-    for (size_t i = 0; i < ArrayLength(kSettingsPrefs); i++) {
-        Preferences::UnregisterCallback(CachedSettingChanged, kSettingsPrefs[i], this);
-    }
+    Preferences::UnregisterCallback(CachedSettingChanged, "javascript.enabled", this);
+    Preferences::UnregisterCallback(CachedSettingChanged, "dom.ipc.plugins.nativeCursorSupport", this);
 
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
