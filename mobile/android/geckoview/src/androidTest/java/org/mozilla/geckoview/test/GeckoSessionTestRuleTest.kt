@@ -19,6 +19,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
@@ -66,7 +67,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo(true))
     }
 
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     @TimeoutMillis(1000)
     fun noPendingCallbacks() {
         // Make sure we don't have unexpected pending callbacks at the start of a test.
@@ -933,7 +934,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
     }
 
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     @TimeoutMillis(1000)
     @ClosedSessionAtStart
     fun noPendingCallbacks_withSpecificSession() {
@@ -1328,7 +1329,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @TimeoutMillis(1000)
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     fun evaluateJS_canTimeout() {
         sessionRule.session.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
