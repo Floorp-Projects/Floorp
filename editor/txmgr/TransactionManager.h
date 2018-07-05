@@ -48,6 +48,8 @@ public:
     return mRedoStack.GetSize();
   }
 
+  int32_t NumberOfMaximumTransactions() const { return mMaxTransactionCount; }
+
   bool EnableUndoRedo(int32_t aMaxTransactionCount = -1);
   bool DisableUndoRedo()
   {
