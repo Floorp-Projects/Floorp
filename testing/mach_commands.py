@@ -268,6 +268,26 @@ def executable_name(name):
 
 @CommandProvider
 class CheckSpiderMonkeyCommand(MachCommandBase):
+    @Command('jstests', category='testing',
+             description='Run SpiderMonkey JS tests in the JavaScript shell.')
+    @CommandArgument('--shell', help='The shell to be used')
+    @CommandArgument('params', nargs=argparse.REMAINDER,
+                     help="Extra arguments to pass down to the test harness.")
+    def run_jstests(self, shell, params):
+        import subprocess
+
+        self.virtualenv_manager.ensure()
+        python = self.virtualenv_manager.python_path
+
+        js = shell or os.path.join(self.bindir, executable_name('js'))
+        jstest_cmd = [
+            python,
+            os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
+            js,
+            '--jitflags=all',
+        ] + params
+        return subprocess.call(jstest_cmd)
+
     @Command('check-spidermonkey', category='testing',
              description='Run SpiderMonkey tests (JavaScript engine).')
     @CommandArgument('--valgrind', action='store_true',
@@ -295,13 +315,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         jittest_result = subprocess.call(jittest_cmd)
 
         print('running jstests')
-        jstest_cmd = [
-            python,
-            os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
-            js,
-            '--jitflags=all',
-        ]
-        jstest_result = subprocess.call(jstest_cmd)
+        jstest_result = self.run_jstests(js, [])
 
         print('running jsapi-tests')
         jsapi_tests_cmd = [os.path.join(

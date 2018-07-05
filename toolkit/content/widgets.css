@@ -6,4 +6,5 @@
    == Styles ported from XBL <resources>, loaded by "global.css".
    ======================================================================= */
 
+@import url("chrome://global/skin/menu.css");
 @import url("chrome://global/skin/menulist.css");
