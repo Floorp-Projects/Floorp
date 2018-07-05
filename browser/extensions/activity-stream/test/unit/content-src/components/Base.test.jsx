@@ -6,7 +6,7 @@ import {shallow} from "enzyme";
 import {StartupOverlay} from "content-src/components/StartupOverlay/StartupOverlay";
 
 describe("<Base>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Theme: {className: ""}, dispatch: () => {}};
 
   it("should render Base component", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
@@ -33,10 +33,19 @@ describe("<Base>", () => {
     assert.equal(
       wrapper.find(ErrorBoundary).first().prop("className"), "base-content-fallback");
   });
+
+  it("should change body className on updateTheme", () => {
+    const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
+    assert.equal(document.querySelectorAll("body.some-theme").length, 0);
+    wrapper.instance().updateTheme({className: "some-theme"});
+    assert.equal(document.querySelectorAll("body.some-theme").length, 1);
+    wrapper.instance().updateTheme({className: ""});
+    assert.equal(document.querySelectorAll("body.some-theme").length, 0);
+  });
 });
 
 describe("<BaseContent>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Theme: {className: ""}, dispatch: () => {}};
 
   it("should render an ErrorBoundary with a Search child", () => {
     const searchEnabledProps =

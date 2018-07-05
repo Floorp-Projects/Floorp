@@ -77,7 +77,7 @@ body {
 }
 
 // Dark theme
-body[lwt-newtab-brighttext] {
+.dark-theme {
   // General styles
   --newtab-background-color: $grey-80;
   --newtab-border-primary-color: $grey-10-80;

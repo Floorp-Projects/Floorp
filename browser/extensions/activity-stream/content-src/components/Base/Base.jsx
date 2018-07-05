@@ -26,7 +26,10 @@ function addLocaleDataForReactIntl(locale) {
 
 export class _Base extends React.PureComponent {
   componentWillMount() {
-    const {App, locale} = this.props;
+    const {App, locale, Theme} = this.props;
+    if (Theme.className) {
+      this.updateTheme(Theme);
+    }
     this.sendNewTabRehydrated(App);
     addLocaleDataForReactIntl(locale);
   }
@@ -42,17 +45,18 @@ export class _Base extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    this.updateTheme();
+    this.updateTheme({className: ""});
   }
 
-  componentWillUpdate({App}) {
-    this.updateTheme();
+  componentWillUpdate({App, Theme}) {
+    this.updateTheme(Theme);
     this.sendNewTabRehydrated(App);
   }
 
-  updateTheme() {
+  updateTheme(Theme) {
     const bodyClassName = [
       "activity-stream",
+      Theme.className,
       this.props.isFirstrun ? "welcome" : ""
     ].filter(v => v).join(" ");
     global.document.body.className = bodyClassName;
@@ -148,4 +152,4 @@ export class BaseContent extends React.PureComponent {
   }
 }
 
-export const Base = connect(state => ({App: state.App, Prefs: state.Prefs}))(_Base);
+export const Base = connect(state => ({App: state.App, Prefs: state.Prefs, Theme: state.Theme}))(_Base);
