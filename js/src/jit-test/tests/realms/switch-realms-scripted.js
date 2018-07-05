@@ -99,3 +99,15 @@ function testException2() {
     assertEq(ex, 101);
 }
 testException2();
+testException2();
+
+function testException3(x) {
+    var g = newGlobal({sameCompartmentAs: this});
+    g.f1 = function(x) { if (x === max + 2) throw 1; }
+    g.evaluate("function f2(x) { try { return f1(x); } catch(e) {} }");
+    var max = 15;
+    for (var i = 0; i < max; i++)
+        g.f2(x * max + i);
+}
+testException3(0);
+testException3(1);
