@@ -11,7 +11,7 @@ const { Cr } = require("chrome");
 const { ActorPool, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { longStringGrip } = require("devtools/server/actors/object/long-string");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const { assert, dumpn } = DevToolsUtils;
@@ -54,6 +54,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  */
 const ThreadActor = ActorClassWithSpec(threadSpec, {
   initialize: function(parent, global) {
+    Actor.prototype.initialize.call(this, parent.conn);
     this._state = "detached";
     this._frameActors = [];
     this._parent = parent;
@@ -207,6 +208,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     });
   },
 
+  /**
+   * Clean up listeners, debuggees and clear actor pools associated with
+   * the lifetime of this actor. This does not destroy the thread actor,
+   * it resets it. This is used in methods `onReleaseMany` `onDetatch` and
+   * `exit`. The actor is truely destroyed in the `exit method`.
+   */
   destroy: function() {
     dumpn("in ThreadActor.prototype.destroy");
     if (this._state == "paused") {
@@ -243,6 +250,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   exit: function() {
     this.destroy();
     this._state = "exited";
+    // This actor has a slightly different destroy behavior than other
+    // actors using Protocol.js. The thread actor may detach but still
+    // be in use, however detach calls the destroy method, even though it
+    // expects the actor to still be alive. Therefore, we are calling
+    // `Actor.prototype.destroy` in the `exit` method, after its state has
+    // been set to "exited", where we are certain that the actor is no
+    // longer in use.
+    Actor.prototype.destroy.call(this);
   },
 
   // Request handlers
