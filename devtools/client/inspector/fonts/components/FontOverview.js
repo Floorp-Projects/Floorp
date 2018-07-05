@@ -46,23 +46,24 @@ class FontOverview extends PureComponent {
     // If the font editor is enabled, show the fonts in a collapsed accordion.
     // The editor already displays fonts, in another way, rendering twice is not desired.
     if (Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
-      return fonts.length ? Accordion({
-        items: [
-          {
-            header: getStr("fontinspector.renderedFontsInPageHeader"),
-            component: FontList,
-            componentProps: {
-              fonts,
-              fontOptions,
-              onPreviewFonts,
-              onToggleFontHighlight,
-            },
-            opened: false
-          }
-        ]
-      })
-      :
-      null;
+      return fonts.length ?
+        Accordion({
+          items: [
+            {
+              header: getStr("fontinspector.renderedFontsInPageHeader"),
+              component: FontList,
+              componentProps: {
+                fonts,
+                fontOptions,
+                onPreviewFonts,
+                onToggleFontHighlight,
+              },
+              opened: false
+            }
+          ]
+        })
+        :
+        null;
     }
 
     return fonts.length ?

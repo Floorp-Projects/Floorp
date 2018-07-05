@@ -1,20 +1,22 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// See Bug 585991.
-
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup test";
-
 add_task(async function() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
-  const {
-    autocompletePopup: popup,
-    inputNode: input,
-  } = jsterm;
+  const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
+
+  info("Create an autocompletion popup");
+  const [,, doc] = await createHost();
+  const input = doc.createElement("input");
+  doc.body.appendChild(input);
+
+  const autocompleteOptions = {
+    position: "top",
+    autoSelect: true
+  };
+  const popup = new AutocompletePopup(doc, autocompleteOptions);
+  input.focus();
 
   const items = [
     {label: "item0", value: "value0"},

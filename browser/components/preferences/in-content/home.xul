@@ -11,19 +11,23 @@
       class="subcategory"
       hidden="true"
       data-category="paneHome">
-  <label class="header-name" flex="1" data-l10n-id="pane-home-title" />
+  <hbox align="center" flex="1">
+    <hbox align="center" flex="1">
+      <label class="header-name" data-l10n-id="pane-home-title" />
+    </hbox>
+    <button id="restoreDefaultHomePageBtn"
+            class="homepage-button check-home-page-controlled"
+            data-preference-related="browser.startup.homepage"
+            data-l10n-id="home-restore-defaults"
+            preference="pref.browser.homepage.disable_button.restore_default"/>
+  </hbox>
 </hbox>
 
 <groupbox id="homepageGroup"
           data-category="paneHome"
           hidden="true">
   <hbox>
-    <caption flex="1" align="center"><label data-l10n-id="home-new-windows-tabs-header"/></caption>
-    <button id="restoreDefaultHomePageBtn"
-            class="homepage-button check-home-page-controlled"
-            data-preference-related="browser.startup.homepage"
-            data-l10n-id="home-restore-defaults"
-            preference="pref.browser.homepage.disable_button.restore_default"/>
+    <caption><label data-l10n-id="home-new-windows-tabs-header"/></caption>
   </hbox>
   <description data-l10n-id="home-new-windows-tabs-description2" />
 

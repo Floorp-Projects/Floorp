@@ -463,8 +463,8 @@ getCharacterCountCB(AtkText *aText)
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
     HyperTextAccessible* textAcc = accWrap->AsHyperText();
-    return
-      textAcc->IsDefunct() ? 0 : static_cast<gint>(textAcc->CharacterCount());
+    return !textAcc || textAcc->IsDefunct() ?
+        0 : static_cast<gint>(textAcc->CharacterCount());
   }
 
   if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
