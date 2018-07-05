@@ -242,6 +242,11 @@ DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver)
                "We should not register with the refresh driver if we are not"
                " in the document's list of timelines");
     ObserveRefreshDriver(aDriver);
+    // Although we have started observing the refresh driver, it's possible we
+    // could perform a paint before the first refresh driver tick happens.  To
+    // ensure we're in a consistent state in that case we run the first tick
+    // manually.
+    MostRecentRefreshTimeUpdated();
   }
 }
 

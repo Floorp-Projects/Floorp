@@ -101,7 +101,7 @@ def iter_readelf_symbols(target, binary):
 def iter_readelf_dynamic(target, binary):
     for line in get_output(target['readelf'], '-d', binary):
         data = line.split(None, 2)
-        if data and data[0].startswith('0x'):
+        if data and len(data) == 3 and data[0].startswith('0x'):
             yield data[1].rstrip(')').lstrip('('), data[2]
 
 

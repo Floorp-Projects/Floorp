@@ -110,7 +110,10 @@ public:
   /**
    * The name of the preference used to enable/disable the FifoWatcher.
    */
-  static const char* const kPrefName;
+  // The length of this array must match the size of the string constant in
+  // the definition in nsDumpUtils.cpp. A mismatch will result in a compile-time
+  // error.
+  static const char kPrefName[38];
 
   static FifoWatcher* GetSingleton();
 
