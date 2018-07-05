@@ -1358,8 +1358,6 @@ add_old_configure_assignment('MOZ_LTO', lto.enabled)
 add_old_configure_assignment('MOZ_LTO_CFLAGS', lto.flags)
 add_old_configure_assignment('MOZ_LTO_LDFLAGS', lto.ldflags)
 
-imply_option('--enable-linker', 'lld', when='--enable-lto')
-
 # ASAN
 # ==============================================================
 
@@ -1562,7 +1560,7 @@ set_config('CARGO_INCREMENTAL', cargo_incremental)
 
 @depends(target)
 def is_linker_option_enabled(target):
-    if target.kernel not in ('Darwin', 'WINNT', 'SunOS'):
+    if target.kernel not in ('WINNT', 'SunOS'):
         return True
 
 
@@ -1574,21 +1572,40 @@ option('--enable-gold',
 imply_option('--enable-linker', 'gold', when='--enable-gold')
 
 js_option('--enable-linker', nargs=1,
-          help='Select the linker {bfd, gold, lld, lld-*}',
+          help='Select the linker {bfd, gold, ld64, lld, lld-*}',
           when=is_linker_option_enabled)
 
 
 @depends('--enable-linker', c_compiler, developer_options, '--enable-gold',
-         extra_toolchain_flags, when=is_linker_option_enabled)
+         extra_toolchain_flags, target, lto.enabled,
+         when=is_linker_option_enabled)
 @checking('for linker', lambda x: x.KIND)
 @imports('os')
 @imports('shutil')
 def select_linker(linker, c_compiler, developer_options, enable_gold,
-                  toolchain_flags):
+                  toolchain_flags, target, lto):
 
-    linker = linker[0] if linker else None
+    if linker:
+        linker = linker[0]
+    elif lto and c_compiler.type == 'clang' and target.kernel != 'Darwin':
+        # If no linker was explicitly given, and building with clang for non-macOS,
+        # prefer lld. For macOS, we prefer ld64, or whatever the default linker is.
+        linker = 'lld'
+    else:
+        linker = None
 
-    if linker not in ('bfd', 'gold', 'lld', None) and not linker.startswith("lld-"):
+    def is_valid_linker(linker):
+        if target.kernel == 'Darwin':
+            valid_linkers = ('ld64', 'lld')
+        else:
+            valid_linkers = ('bfd', 'gold', 'lld')
+        if linker in valid_linkers:
+            return True
+        if 'lld' in valid_linkers and linker.startswith('lld-'):
+            return True
+        return False
+
+    if linker and not is_valid_linker(linker):
         # Check that we are trying to use a supported linker
         die('Unsupported linker ' + linker)
 
@@ -1598,17 +1615,34 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
 
     def try_linker(linker):
         # Generate the compiler flag
-        linker_flag = ["-fuse-ld=" + linker] if linker else []
+        if linker == 'ld64':
+            linker_flag = ['-fuse-ld=ld']
+        elif linker:
+            linker_flag = ["-fuse-ld=" + linker]
+        else:
+            linker_flag = []
         cmd = cmd_base + linker_flag + version_check
         if toolchain_flags:
             cmd += toolchain_flags
 
-        cmd_output = check_cmd_output(*cmd, onerror=lambda: None)
-        if cmd_output is None:
-            return None
-        cmd_output = cmd_output.decode('utf-8')
+        # ld64 doesn't have anything to print out a version. It does print out
+        # "ld64: For information on command line options please use 'man ld'."
+        # but that would require doing two attempts, one with --version, that
+        # would fail, and another with --help.
+        # Instead, abuse its LD_PRINT_OPTIONS feature to detect a message
+        # specific to it on stderr when it fails to process --version.
+        env = dict(os.environ)
+        env['LD_PRINT_OPTIONS'] = '1'
+        retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
+        cmd_output = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+        if retcode == 1 and 'Logging ld64 options' in stderr:
+            kind = 'ld64'
 
-        if 'GNU ld' in cmd_output:
+        elif retcode != 0:
+            return None
+
+        elif 'GNU ld' in cmd_output:
             # We are using the normal linker
             kind = 'bfd'
 
