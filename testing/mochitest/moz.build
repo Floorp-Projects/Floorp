@@ -13,13 +13,67 @@ DIRS += [
 
 XPI_NAME = 'mochijar'
 
-JAR_MANIFESTS += ['jar.mn']
-
 USE_EXTENSION_MANIFEST = True
 
-FINAL_TARGET_PP_FILES += ['install.rdf']
+FINAL_TARGET_FILES += [
+    'api.js',
+    'manifest.json',
+    'schema.json',
+]
 
-FINAL_TARGET_FILES += ['bootstrap.js']
+FINAL_TARGET_FILES.content += [
+    'browser-harness.xul',
+    'browser-test.js',
+    'chrome-harness.js',
+    'chunkifyTests.js',
+    'harness.xul',
+    'manifestLibrary.js',
+    'mochitest-e10s-utils.js',
+    'nested_setup.js',
+    'redirect.html',
+    'server.js',
+    'shutdown-leaks-collector.js',
+    'ShutdownLeaksCollector.jsm',
+]
+
+FINAL_TARGET_FILES.content.dynamic += [
+    'dynamic/getMyDirectory.sjs',
+]
+
+FINAL_TARGET_FILES.content.static += [
+    'static/harness.css',
+]
+
+FINAL_TARGET_FILES.content.tests.SimpleTest += [
+    '../../docshell/test/chrome/docshell_helpers.js',
+    '../modules/StructuredLog.jsm',
+    '../specialpowers/content/MozillaLogger.js',
+    '../specialpowers/content/specialpowers.js',
+    '../specialpowers/content/specialpowersAPI.js',
+    '../specialpowers/content/SpecialPowersObserverAPI.js',
+    'tests/SimpleTest/AddTask.js',
+    'tests/SimpleTest/AsyncUtilsContent.js',
+    'tests/SimpleTest/ChromePowers.js',
+    'tests/SimpleTest/EventUtils.js',
+    'tests/SimpleTest/ExtensionTestUtils.js',
+    'tests/SimpleTest/iframe-between-tests.html',
+    'tests/SimpleTest/LogController.js',
+    'tests/SimpleTest/MemoryStats.js',
+    'tests/SimpleTest/MockObjects.js',
+    'tests/SimpleTest/NativeKeyCodes.js',
+    'tests/SimpleTest/paint_listener.js',
+    'tests/SimpleTest/setup.js',
+    'tests/SimpleTest/SimpleTest.js',
+    'tests/SimpleTest/test.css',
+    'tests/SimpleTest/TestRunner.js',
+    'tests/SimpleTest/WindowSnapshot.js',
+]
+
+FINAL_TARGET_FILES.content.tests.BrowserTestUtils += [
+    'BrowserTestUtils/content/content-about-page-utils.js',
+    'BrowserTestUtils/content/content-task.js',
+    'BrowserTestUtils/content/content-utils.js',
+]
 
 MOCHITEST_MANIFESTS += [
     'baselinecoverage/plain/mochitest.ini',
