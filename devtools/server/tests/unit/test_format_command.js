@@ -64,25 +64,29 @@ const testcases = [
 ];
 
 const edgecases = [
-  { input: ":", expectedError: "'' is not a valid command" },
-  { input: ":invalid", expectedError: "'invalid' is not a valid command" },
-  { input: ":screenshot :help", expectedError: "invalid command" },
-  { input: ":screenshot --", expectedError: "invalid flag" },
+  { input: ":", expectedError: /'' is not a valid command/ },
+  { input: ":invalid", expectedError: /'invalid' is not a valid command/ },
+  { input: ":screenshot :help", expectedError: /Invalid command/ },
+  { input: ":screenshot --", expectedError: /invalid flag/ },
   {
     input: ":screenshot \"fo\"o bar",
-    expectedError: "String contains unexpected `\"` character"
+    // XXX Bug 1473569 - this should be: /String contains unexpected `\"` character/
+    expectedError: /String does not terminate/
   },
   {
     input: ":screenshot \"foo b\"ar",
-    expectedError: "String contains unexpected `\"` character"
+    // XXX Bug 1473569 - this should be: /String contains unexpected `\"` character/
+    expectedError: /String does not terminate/
   },
-  { input: ": screenshot", expectedError: "'' is not a valid command" },
-  { input: ":screenshot \"file name", expectedError: "String does not terminate" },
+  { input: ": screenshot", expectedError: /'' is not a valid command/ },
+  { input: ":screenshot \"file name", expectedError: /String does not terminate/ },
   {
     input: ":screenshot \"file name --clipboard",
-    expectedError: "String does not terminate before flag \"clipboard\""
+    // XXX Bug 1473569 - this should be:
+    // /String does not terminate before flag \"clipboard\"/
+    expectedError: /String does not terminate before flag clipboard/
   },
-  { input: "::screenshot", expectedError: "':screenshot' is not a valid command" }
+  { input: "::screenshot", expectedError: /':screenshot' is not a valid command/ }
 ];
 
 function run_test() {
@@ -91,6 +95,7 @@ function run_test() {
   });
 
   edgecases.forEach(testcase => {
-    Assert.throws(() => formatCommand(testcase.input), testcase.expectedError);
+    Assert.throws(() => formatCommand(testcase.input), testcase.expectedError,
+      `"${testcase.input}" should throw expected error`);
   });
 }
