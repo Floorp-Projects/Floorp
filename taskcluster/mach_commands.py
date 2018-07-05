@@ -233,8 +233,10 @@ class MachCommands(MachCommandBase):
         try:
             self.setup_logging()
 
-            task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
+            # the target task for this action (or null if it's a group action)
             task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
+            # the target task group for this action
+            task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
             input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
             callback = os.environ.get('ACTION_CALLBACK', None)
             parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
