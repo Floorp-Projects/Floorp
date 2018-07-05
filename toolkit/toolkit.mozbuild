@@ -165,7 +165,7 @@ if CONFIG['ENABLE_MARIONETTE']:
         '/testing/marionette',
     ]
 
-if CONFIG['ENABLE_GECKODRIVER']:
+if CONFIG['ENABLE_GECKODRIVER'] and not CONFIG['MOZ_TSAN']:
     DIRS += ['/testing/geckodriver']
 
 DIRS += [
