@@ -6,45 +6,17 @@
       margin:  0px;
       padding: 0px;
     }
+    img {
+      image-orientation: from-image;
+    }
   </style>
 </head>
 <body>
   <img src="image-orientation-viewbox-no-size.svg">
-
   <script>
-    var orientationInfo = location.search.substring(1).split("&");
-    var angle = orientationInfo[0];
-    var flip = orientationInfo[1] == "flip" ? true : false;
-
-    // Construct a style. "from-image" is special-cased.
-    var orientationStyle;
-    if (angle == "from-image") {
-      orientationStyle = "image-orientation: from-image;";
-    } else {
-      orientationStyle = "image-orientation: "
-                       + angle + "deg"
-                       + (flip ? " flip" : "")
-                       + ";";
+    let fromImage = location.search == "from-image";
+    if (fromImage) {
+      document.querySelector("img").style.imageOrientation = "from-image";
     }
-
-    // Since the SVG image has no intrinsic size, we need to apply an
-    // appropriate size to the <img> element to match the reference.
-    var boxStyle;
-    if (angle == "90" || angle == "270") {
-      boxStyle = "width: 200px; height: 100px;";
-    } else {
-      boxStyle = "width: 100px; height: 200px;";
-    }
-
-    var style = "img { "
-              + orientationStyle
-              + " "
-              + boxStyle
-              + " }\n";
-
-    // Apply the style to the document.
-    var sheet = document.createElement('style');
-    sheet.innerHTML = style;
-    document.body.appendChild(sheet);
   </script>
 </body>

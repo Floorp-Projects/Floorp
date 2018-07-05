@@ -390,7 +390,6 @@ private:
   already_AddRefed<CSSValue> DoGetDisplay();
   already_AddRefed<CSSValue> DoGetContain();
   already_AddRefed<CSSValue> DoGetClip();
-  already_AddRefed<CSSValue> DoGetImageOrientation();
   already_AddRefed<CSSValue> DoGetWillChange();
   already_AddRefed<CSSValue> DoGetOverflow();
   already_AddRefed<CSSValue> DoGetOverflowY();
