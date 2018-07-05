@@ -12,17 +12,18 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 817834";
 
 add_task(async function() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  await testEditedInputHistory(hud);
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
 });
 
-async function testEditedInputHistory(hud) {
-  const jsterm = hud.jsterm;
-  const inputNode = jsterm.inputNode;
+async function performTests() {
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
 
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
-  is(inputNode.selectionStart, 0);
-  is(inputNode.selectionEnd, 0);
+  checkJsTermCursor(jsterm, 0, "Cursor is at expected position");
 
   jsterm.setInputValue('"first item"');
   EventUtils.synthesizeKey("KEY_ArrowUp");

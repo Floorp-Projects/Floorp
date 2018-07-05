@@ -21,15 +21,20 @@ const {
 } = require("devtools/client/webconsole/selectors/history");
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const {
     jsterm,
     ui,
   } = await openNewTabAndConsole(TEST_URI);
 
-  const {
-    autocompletePopup: popup,
-    completeNode,
-  } = jsterm;
+  const { autocompletePopup: popup } = jsterm;
 
   const onPopUpOpen = popup.once("popup-opened");
 
@@ -50,10 +55,10 @@ add_task(async function() {
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
   is(jsterm.getInputValue(), "", "inputNode is empty after KEY_Enter");
-  is(completeNode.value, "", "completeNode is empty");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
 
   const state = ui.consoleOutput.getStore().getState();
   const entries = getHistoryEntries(state);
   is(entries[entries.length - 1], "window.testBug",
      "jsterm history is correct");
-});
+}

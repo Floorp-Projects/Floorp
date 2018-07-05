@@ -12,6 +12,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-autocomplete-in-stackframe.html";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   // Force the old debugger UI since it's directly used (see Bug 1301705)
   await pushPref("devtools.debugger.new-debugger-frontend", false);
 
@@ -93,7 +101,7 @@ add_task(async function() {
   // Test if 'foo2Obj[0].' throws no errors.
   await jstermComplete("foo2Obj[0].");
   is(getPopupLabels(popup).length, 0, "no items for foo2Obj[0]");
-});
+}
 
 function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);

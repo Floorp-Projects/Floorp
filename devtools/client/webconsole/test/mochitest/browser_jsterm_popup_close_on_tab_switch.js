@@ -12,6 +12,14 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
 const TEST_URI_NAVIGATE = "data:text/html;charset=utf-8,<p>testing autocomplete closes";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const popup = hud.jsterm.autocompletePopup;
   const popupShown = once(popup, "popup-opened");
@@ -24,4 +32,4 @@ add_task(async function() {
   await addTab(TEST_URI_NAVIGATE);
 
   ok(!popup.isOpen, "Popup closes on tab switch");
-});
+}
