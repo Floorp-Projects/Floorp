@@ -85,10 +85,17 @@ function extractSymbol(path, symbols) {
   }
 
   if (t.isClassDeclaration(path)) {
+    const {
+      loc,
+      superClass
+    } = path.node;
     symbols.classes.push({
       name: path.node.id.name,
-      parent: path.node.superClass,
-      location: path.node.loc
+      parent: superClass ? {
+        name: t.isMemberExpression(superClass) ? (0, _helpers.getCode)(superClass) : superClass.name,
+        location: superClass.loc
+      } : null,
+      location: loc
     });
   }
 
