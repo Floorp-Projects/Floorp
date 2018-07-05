@@ -39,6 +39,7 @@ const I64Code          = 0x7e;
 const F32Code          = 0x7d;
 const F64Code          = 0x7c;
 const AnyFuncCode      = 0x70;
+const RefCode          = 0x6e;
 const FuncCode         = 0x60;
 const VoidCode         = 0x40;
 
@@ -48,6 +49,8 @@ const BlockCode        = 0x02;
 const EndCode          = 0x0b;
 const CallCode         = 0x10;
 const CallIndirectCode = 0x11;
+const DropCode         = 0x1a;
+const SelectCode       = 0x1b;
 const I32Load          = 0x28;
 const I64Load          = 0x29;
 const F32Load          = 0x2a;
@@ -93,6 +96,7 @@ const I64DivSCode      = 0x7f;
 const I64DivUCode      = 0x80;
 const I64RemSCode      = 0x81;
 const I64RemUCode      = 0x82;
+const RefNull          = 0xd0;
 
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfb;
