@@ -478,6 +478,7 @@ PerformanceInfo
 WorkerDebugger::ReportPerformanceInfo()
 {
   AssertIsOnMainThread();
+
 #if defined(XP_WIN)
   uint32_t pid = GetCurrentProcessId();
 #else
@@ -495,22 +496,29 @@ WorkerDebugger::ReportPerformanceInfo()
       }
     }
   }
-  RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
-  uint16_t count =  perf->GetTotalDispatchCount();
-  uint64_t duration = perf->GetExecutionDuration();
-  RefPtr<nsIURI> uri = mWorkerPrivate->GetResolvedScriptURI();
+
 
   // Workers only produce metrics for a single category - DispatchCategory::Worker.
   // We still return an array of CategoryDispatch so the PerformanceInfo
   // struct is common to all performance counters throughout Firefox.
   FallibleTArray<CategoryDispatch> items;
-  CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
-  if (!items.AppendElement(item, fallible)) {
-    NS_ERROR("Could not complete the operation");
-    return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
+  uint64_t duration = 0;
+  uint16_t count = 0;
+  RefPtr<nsIURI> uri = mWorkerPrivate->GetResolvedScriptURI();
+
+  RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
+  if (perf) {
+    count =  perf->GetTotalDispatchCount();
+    duration = perf->GetExecutionDuration();
+    CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
+    if (!items.AppendElement(item, fallible)) {
+      NS_ERROR("Could not complete the operation");
+      return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
                             true, items);
+    }
+    perf->ResetPerformanceCounters();
   }
-  perf->ResetPerformanceCounters();
+
   return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
                          true, items);
 }
