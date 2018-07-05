@@ -650,8 +650,15 @@ DevTools.prototype = {
       nodeFront = await walker.querySelector(nodeFront, selector);
       if (nodeSelectors.length > 0) {
         const { nodes } = await walker.children(nodeFront);
-        // This is the NodeFront for the document node inside the iframe
-        nodeFront = nodes[0];
+        // If there are remaining selectors to process, they will target a document or a
+        // document-fragment under the current node. Whether the element is a frame or
+        // a web component, it can only contain one document/document-fragment, so just
+        // select the first one available.
+        nodeFront = nodes.find(node => {
+          const { nodeType } = node;
+          return nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+                 nodeType === Node.DOCUMENT_NODE;
+        });
       }
       return querySelectors(nodeFront);
     }

@@ -6,7 +6,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["findCssSelector"];
+var EXPORTED_SYMBOLS = ["findAllCssSelectors", "findCssSelector"];
 
 /**
  * Traverse getBindingParent until arriving upon the bound element
@@ -20,15 +20,42 @@ var EXPORTED_SYMBOLS = ["findCssSelector"];
  *
  */
 function getRootBindingParent(node) {
-  let parent;
   let doc = node.ownerDocument;
   if (!doc) {
     return node;
   }
+
+  if (getShadowRoot(node)) {
+    // If the node is under a shadow root, the shadow host is the "binding
+    // parent" but we can create a CSS selector between the shadow root and the
+    // node, so return immediately.
+    return node;
+  }
+
+  let parent;
   while ((parent = doc.getBindingParent(node))) {
     node = parent;
   }
   return node;
+}
+
+/**
+ * Return the node's parent shadow root if the node in shadow DOM, null
+ * otherwise.
+ */
+function getShadowRoot(node) {
+  let doc = node.ownerDocument;
+  if (!doc) {
+    return null;
+  }
+
+  const parent = doc.getBindingParent(node);
+  const shadowRoot = parent && parent.openOrClosedShadowRoot;
+  if (shadowRoot) {
+    return shadowRoot;
+  }
+
+  return null;
 }
 
 /**
@@ -45,14 +72,32 @@ function positionInNodeList(element, nodeList) {
 }
 
 /**
+ * Retrieve the document or shadow-root containing the provided node. This will
+ * be the topmost element from which the node can be retrieved using
+ * querySelectorAll and consequently where to start creating a css selector.
+ */
+function getDocumentOrShadowRoot(node) {
+  const shadowRoot = getShadowRoot(node);
+  if (shadowRoot) {
+    // If the node is under a shadow root, return the corresponding
+    // document-fragment.
+    return shadowRoot;
+  }
+
+  // Otherwise return the ownerDocument.
+  return node.ownerDocument;
+}
+
+/**
  * Find a unique CSS selector for a given element
  * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
  * and ele.ownerDocument.querySelectorAll(reply).length === 1
  */
 const findCssSelector = function(ele) {
   ele = getRootBindingParent(ele);
-  let document = ele.ownerDocument;
-  if (!document || !document.contains(ele)) {
+
+  let containingDocOrShadow = getDocumentOrShadowRoot(ele);
+  if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
     // findCssSelector received element not inside document.
     return "";
   }
@@ -61,7 +106,7 @@ const findCssSelector = function(ele) {
 
   // document.querySelectorAll("#id") returns multiple if elements share an ID
   if (ele.id &&
-      document.querySelectorAll("#" + cssEscape(ele.id)).length === 1) {
+      containingDocOrShadow.querySelectorAll("#" + cssEscape(ele.id)).length === 1) {
     return "#" + cssEscape(ele.id);
   }
 
@@ -79,37 +124,77 @@ const findCssSelector = function(ele) {
 
   // We might be able to find a unique class name
   let selector, index, matches;
-  if (ele.classList.length > 0) {
-    for (let i = 0; i < ele.classList.length; i++) {
-      // Is this className unique by itself?
-      selector = "." + cssEscape(ele.classList.item(i));
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
-      // Maybe it's unique with a tag name?
-      selector = cssEscape(tagName) + selector;
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
-      // Maybe it's unique using a tag name and nth-child
-      index = positionInNodeList(ele, ele.parentNode.children) + 1;
-      selector = selector + ":nth-child(" + index + ")";
-      matches = document.querySelectorAll(selector);
-      if (matches.length === 1) {
-        return selector;
-      }
+  for (let i = 0; i < ele.classList.length; i++) {
+    // Is this className unique by itself?
+    selector = "." + cssEscape(ele.classList.item(i));
+    matches = containingDocOrShadow.querySelectorAll(selector);
+    if (matches.length === 1) {
+      return selector;
+    }
+    // Maybe it's unique with a tag name?
+    selector = cssEscape(tagName) + selector;
+    matches = containingDocOrShadow.querySelectorAll(selector);
+    if (matches.length === 1) {
+      return selector;
+    }
+    // Maybe it's unique using a tag name and nth-child
+    index = positionInNodeList(ele, ele.parentNode.children) + 1;
+    selector = selector + ":nth-child(" + index + ")";
+    matches = containingDocOrShadow.querySelectorAll(selector);
+    if (matches.length === 1) {
+      return selector;
     }
   }
 
-  // Not unique enough yet.  As long as it's not a child of the document,
-  // continue recursing up until it is unique enough.
-  if (ele.parentNode !== document) {
-    index = positionInNodeList(ele, ele.parentNode.children) + 1;
-    selector = findCssSelector(ele.parentNode) + " > " +
-      cssEscape(tagName) + ":nth-child(" + index + ")";
+  // Not unique enough yet.
+  index = positionInNodeList(ele, ele.parentNode.children) + 1;
+  selector = cssEscape(tagName) + ":nth-child(" + index + ")";
+  if (ele.parentNode !== containingDocOrShadow) {
+    selector = findCssSelector(ele.parentNode) + " > " + selector;
+  }
+  return selector;
+};
+
+/**
+ * If the element is in a frame or under a shadowRoot, return the corresponding
+ * element.
+ */
+function getSelectorParent(node) {
+  const shadowRoot = getShadowRoot(node);
+  if (shadowRoot) {
+    // The element is in a shadowRoot, return the host component.
+    return shadowRoot.host;
   }
 
-  return selector;
+  // Otherwise return the parent frameElement.
+  return node.ownerGlobal.frameElement;
+}
+
+/**
+ * Retrieve the array of CSS selectors corresponding to the provided node.
+ *
+ * The selectors are ordered starting with the root document and ending with the deepest
+ * nested frame. Additional items are used if the node is inside a frame or a shadow root,
+ * each representing the CSS selector for finding the frame or root element in its parent
+ * document.
+ *
+ * This format is expected by DevTools in order to handle the Inspect Node context menu
+ * item.
+ *
+ * @param  {node}
+ *         The node for which the CSS selectors should be computed
+ * @return {Array}
+ *         An array of CSS selectors to find the target node. Several selectors can be
+ *         needed if the element is nested in frames and not directly in the root
+ *         document. The selectors are ordered starting with the root document and
+ *         ending with the deepest nested frame or shadow root.
+ */
+const findAllCssSelectors = function(node) {
+  let selectors = [];
+  while (node) {
+    selectors.unshift(findCssSelector(node));
+    node = getSelectorParent(node);
+  }
+
+  return selectors;
 };
