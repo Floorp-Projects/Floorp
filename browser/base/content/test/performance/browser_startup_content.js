@@ -87,6 +87,19 @@ const whitelist = {
   ]),
 };
 
+// Items on this list are allowed to be loaded but not
+// required, as opposed to items in the main whitelist,
+// which are all required.
+const intermittently_loaded_whitelist = {
+  components: new Set([
+    "nsAsyncShutdown.js",
+  ]),
+  modules: new Set([
+    "resource://gre/modules/sessionstore/Utils.jsm",
+    "resource://gre/modules/TelemetryStopwatch.jsm",
+  ]),
+};
+
 const blacklist = {
   services: new Set([
     "@mozilla.org/base/telemetry-startup;1",
@@ -143,6 +156,10 @@ add_task(async function() {
         return true;
       whitelist[scriptType].delete(c);
       return false;
+    });
+
+    loadedList[scriptType] = loadedList[scriptType].filter(c => {
+      return !intermittently_loaded_whitelist[scriptType].has(c);
     });
 
     is(loadedList[scriptType].length, 0,
