@@ -57,8 +57,6 @@ mozilla.pth:testing/talos
 packages.txt:testing/mozbase/packages.txt
 mozilla.pth:tools
 mozilla.pth:testing/web-platform
-mozilla.pth:testing/web-platform/tests/tools/third_party/html5lib
-mozilla.pth:testing/web-platform/tests/tools/third_party/webencodings
 mozilla.pth:testing/web-platform/tests/tools/wptrunner
 mozilla.pth:testing/web-platform/tests/tools/wptserve
 mozilla.pth:testing/web-platform/tests/tools/six
