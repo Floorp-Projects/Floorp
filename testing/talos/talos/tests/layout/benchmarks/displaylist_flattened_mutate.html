@@ -1,0 +1,56 @@
+<html>
+<head>
+<style>
+  div {
+    opacity: 0.95;
+    width:10px;
+    height:10px;
+    background-color:green;
+    display: inline-block;
+  }
+</style>
+</head>
+<body id="body">
+</body>
+<script>
+
+var start = null;
+var divCount = 2500;
+var maxIterations = 600;
+
+for (var i = 0; i < divCount; i++) {
+  var div = document.createElement("div");
+  div.id = i;
+  document.getElementById("body").appendChild(div);
+}
+
+var iteration = 0;
+function runFrame() {
+  if (document.getElementById(iteration).style.backgroundColor == "red") {
+    document.getElementById(iteration).style.backgroundColor = "green";
+  } else {
+    document.getElementById(iteration).style.backgroundColor = "red";
+  }
+  iteration++;
+  iteration = iteration % divCount;
+  if (--maxIterations == 0) {
+    var end = performance.now();
+    if (window.tpRecordTime) {
+      window.tpRecordTime(end - start, start);
+    }
+    return;
+  }
+
+  window.requestAnimationFrame(runFrame);
+}
+
+addEventListener("load", function() {
+  TalosContentProfiler.resume("displaylist_flattened_mutate.html loaded", true).then(() => {
+    start = performance.now();
+    window.requestAnimationFrame(runFrame);
+  });
+});
+
+</script>
+<script type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
+</html>
