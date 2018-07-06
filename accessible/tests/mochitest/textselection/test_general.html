@@ -18,28 +18,43 @@
     /**
      * Invokers
      */
-    function addSelection(aID, aStartOffset, aEndOffset) {
+    function addSelections(aID, aSelections) {
       this.hyperTextNode = getNode(aID);
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+      this.initialSelectionCount = this.hyperText.selectionCount;
 
+      // Multiple selection changes will be coalesced, so just listen for one.
       this.eventSeq = [
         new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
 
       this.invoke = function addSelection_invoke() {
-        this.hyperText.addSelection(aStartOffset, aEndOffset);
+        for (let [startOffset, endOffset] of aSelections) {
+          this.hyperText.addSelection(startOffset, endOffset);
+        }
       };
 
       this.finalCheck = function addSelection_finalCheck() {
-        is(this.hyperText.selectionCount, 1,
+        is(this.hyperText.selectionCount,
+           aSelections.length + this.initialSelectionCount,
            "addSelection: Wrong selection count for " + aID);
-        var startOffset = {}, endOffset = {};
-        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
 
-        is(startOffset.value, aStartOffset,
-           "addSelection: Wrong start offset for " + aID);
-        is(endOffset.value, aEndOffset,
-           "addSelection: Wrong end offset for " + aID);
+        for (let i in aSelections) {
+          let [expectedStart, expectedEnd] = aSelections[i];
+          let startOffset = {}, endOffset = {};
+          this.hyperText.getSelectionBounds(this.initialSelectionCount + i,
+            startOffset, endOffset);
+
+          is(startOffset.value, Math.min(expectedStart, expectedEnd),
+             "addSelection: Wrong start offset for " + aID);
+          is(endOffset.value, Math.max(expectedStart, expectedEnd),
+             "addSelection: Wrong end offset for " + aID);
+
+          if (i == this.hyperText.selectionCount - 1) {
+            is(this.hyperText.caretOffset, expectedEnd,
+               "addSelection: caretOffset not at selection end for " + aID);
+          }
+        }
       };
 
       this.getID = function addSelection_getID() {
@@ -47,7 +62,8 @@
       };
     }
 
-    function changeSelection(aID, aStartOffset, aEndOffset) {
+    function changeSelection(aID, aIndex, aSelection) {
+      let [startOffset, endOffset] = aSelection;
       this.hyperTextNode = getNode(aID);
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
@@ -56,19 +72,20 @@
       ];
 
       this.invoke = function changeSelection_invoke() {
-        this.hyperText.setSelectionBounds(0, aStartOffset, aEndOffset);
+        this.hyperText.setSelectionBounds(aIndex, startOffset, endOffset);
       };
 
       this.finalCheck = function changeSelection_finalCheck() {
-        is(this.hyperText.selectionCount, 1,
-           "setSelectionBounds: Wrong selection count for " + aID);
-        var startOffset = {}, endOffset = {};
-        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
+        var start = {}, end = {};
+        this.hyperText.getSelectionBounds(aIndex, start, end);
 
-        is(startOffset.value, aStartOffset,
+        is(start.value, Math.min(startOffset, endOffset),
            "setSelectionBounds: Wrong start offset for " + aID);
-        is(endOffset.value, aEndOffset,
+        is(end.value, Math.max(startOffset, endOffset),
            "setSelectionBounds: Wrong end offset for " + aID);
+
+        is(this.hyperText.caretOffset, endOffset,
+           "setSelectionBounds: caretOffset not at selection end for " + aID);
       };
 
       this.getID = function changeSelection_getID() {
@@ -76,7 +93,7 @@
       };
     }
 
-    function removeSelection(aID) {
+    function removeSelections(aID) {
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
@@ -84,7 +101,10 @@
       ];
 
       this.invoke = function removeSelection_invoke() {
-        this.hyperText.removeSelection(0);
+        let selectionCount = this.hyperText.selectionCount;
+        for (let i = 0; i < selectionCount; i++) {
+          this.hyperText.removeSelection(0);
+        }
       };
 
       this.finalCheck = function removeSelection_finalCheck() {
@@ -154,15 +174,22 @@
     function doTests() {
       gQueue = new eventQueue();
 
-      gQueue.push(new addSelection("paragraph", 1, 3));
-      gQueue.push(new changeSelection("paragraph", 2, 4));
-      gQueue.push(new removeSelection("paragraph"));
+      gQueue.push(new addSelections("paragraph", [[1, 3], [6, 10]]));
+      gQueue.push(new changeSelection("paragraph", 0, [2, 4]));
+      gQueue.push(new removeSelections("paragraph"));
+
+      // reverse selection
+      gQueue.push(new addSelections("paragraph", [[1, 3], [10, 6]]));
+      gQueue.push(new removeSelections("paragraph"));
 
       gQueue.push(new synthFocus("textbox", onfocusEventSeq("textbox")));
-      gQueue.push(new changeSelection("textbox", 1, 3));
+      gQueue.push(new changeSelection("textbox", 0, [1, 3]));
+
+      // reverse selection
+      gQueue.push(new changeSelection("textbox", 0, [3, 1]));
 
       gQueue.push(new synthFocus("textarea", onfocusEventSeq("textarea")));
-      gQueue.push(new changeSelection("textarea", 1, 3));
+      gQueue.push(new changeSelection("textarea", 0, [1, 3]));
 
       gQueue.push(new changeDOMSelection("c1", "c1_span1", 0, "c1_span2", 0,
                                          [["c1", 2, 2]]));
@@ -193,7 +220,7 @@
   <pre id="test">
   </pre>
 
-  <p id="paragraph">hello</p>
+  <p id="paragraph">hello world</p>
   <input id="textbox" value="hello"/>
   <textarea id="textarea">hello</textarea>
   <div id="c1">hi<span id="c1_span1"></span><span id="c1_span2"></span>hi</div>
