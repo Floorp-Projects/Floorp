@@ -685,7 +685,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
 
   bool nameSpecified = false;
   if (aName) {
-    CopyUTF8toUTF16(aName, name);
+    CopyUTF8toUTF16(MakeStringSpan(aName), name);
     nameSpecified = true;
   } else {
     name.SetIsVoid(true);

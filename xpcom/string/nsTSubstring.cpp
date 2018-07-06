@@ -12,6 +12,24 @@
 
 #include "nsASCIIMask.h"
 
+// It's not worthwhile to reallocate the buffer and memcpy the
+// contents over when the size difference isn't large. With
+// power-of-two allocation buckets and 64 as the typical inline
+// capacity, considering that above 1000 there performance aspects
+// of realloc and memcpy seem to be absorbed, relative to the old
+// code, by the performance benefits of the new code being exact,
+// we need to choose which transitions of 256 to 128, 512 to 256
+// and 1024 to 512 to allow. As a guess, let's pick the middle
+// one as the the largest potential transition that we forgo. So
+// we'll shrink from 1024 bucket to 512 bucket but not from 512
+// bucket to 256 bucket. We'll decide by comparing the difference
+// of capacities. As bucket differences, the differences are 256
+// and 512. Since the capacities have various overheads, we
+// can't compare with 256 or 512 exactly but it's easier to
+// compare to some number that's between the two, so it's
+// far away from either to ignore the overheads.
+const uint32_t kNsStringBufferShrinkingThreshold = 384;
+
 using double_conversion::DoubleToStringConverter;
 
 template <typename T>
@@ -47,45 +65,71 @@ AsAutoString(const nsTSubstring<T>* aStr)
   return static_cast<const nsTAutoString<T>*>(aStr);
 }
 
-/**
- * this function is called to prepare mData for writing.  the given capacity
- * indicates the required minimum storage size for mData, in sizeof(char_type)
- * increments.  this function returns true if the operation succeeds.  it also
- * returns the old data and old flags members if mData is newly allocated.
- * the old data must be released by the caller.
- */
-template <typename T>
-bool
-nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
-                            DataFlags* aOldDataFlags)
+template<typename T>
+mozilla::Result<uint32_t, nsresult>
+nsTSubstring<T>::StartBulkWrite(size_type aCapacity,
+                                size_type aPrefixToPreserve,
+                                bool aAllowShrinking,
+                                size_type aSuffixLength,
+                                size_type aOldSuffixStart,
+                                size_type aNewSuffixStart)
 {
-  // initialize to no old data
-  *aOldData = nullptr;
-  *aOldDataFlags = DataFlags(0);
+  // Note! Capacity does not include room for the terminating null char.
 
-  size_type curCapacity = Capacity();
+  MOZ_ASSERT(aPrefixToPreserve <= aCapacity,
+             "Requested preservation of an overlong prefix.");
+  MOZ_ASSERT(aNewSuffixStart + aSuffixLength <= aCapacity,
+             "Requesed move of suffix to out-of-bounds location.");
+  // Can't assert aOldSuffixStart, because mLength may not be valid anymore,
+  // since this method allows itself to be called more than once.
 
-  // If |aCapacity > kMaxCapacity|, then our doubling algorithm may not be
-  // able to allocate it.  Just bail out in cases like that.  We don't want
-  // to be allocating 2GB+ strings anyway.
-  static_assert((sizeof(nsStringBuffer) & 0x1) == 0,
-                "bad size for nsStringBuffer");
-  if (!CheckCapacity(aCapacity)) {
-      return false;
+  // If zero capacity is requested, set the string to the special empty
+  // string.
+  if (MOZ_UNLIKELY(!aCapacity)) {
+    ::ReleaseData(this->mData, this->mDataFlags);
+    SetToEmptyBuffer();
+    return 0;
   }
 
+  // Note! Capacity() returns 0 when the string is immutable.
+  size_type curCapacity = Capacity();
+
+  // We've established that aCapacity > 0.
   // |curCapacity == 0| means that the buffer is immutable or 0-sized, so we
   // need to allocate a new buffer. We cannot use the existing buffer even
   // though it might be large enough.
 
-  if (curCapacity != 0) {
-    if (aCapacity <= curCapacity) {
-      this->mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
-      return true;
-    }
+  if (!aAllowShrinking && aCapacity <= curCapacity) {
+    char_traits::move(this->mData + aNewSuffixStart,
+                      this->mData + aOldSuffixStart,
+                      aSuffixLength);
+    return curCapacity;
   }
 
-  if (curCapacity < aCapacity) {
+  char_type* oldData = this->mData;
+  DataFlags oldFlags = this->mDataFlags;
+
+  char_type* newData;
+  DataFlags newDataFlags;
+  size_type newCapacity;
+
+  // If this is an nsTAutoStringN, it's possible that we can use the inline
+  // buffer.
+  if ((this->mClassFlags & ClassFlags::INLINE) &&
+      (aCapacity <= AsAutoString(this)->mInlineCapacity)) {
+    newCapacity = AsAutoString(this)->mInlineCapacity;
+    newData = (char_type*)AsAutoString(this)->mStorage;
+    newDataFlags = DataFlags::TERMINATED | DataFlags::INLINE;
+  } else {
+    // If |aCapacity > kMaxCapacity|, then our doubling algorithm may not be
+    // able to allocate it.  Just bail out in cases like that.  We don't want
+    // to be allocating 2GB+ strings anyway.
+    static_assert((sizeof(nsStringBuffer) & 0x1) == 0,
+                  "bad size for nsStringBuffer");
+    if (MOZ_UNLIKELY(!CheckCapacity(aCapacity))) {
+      return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
+    }
+
     // We increase our capacity so that the allocated buffer grows
     // exponentially, which gives us amortized O(1) appending. Below the
     // threshold, we use powers-of-two. Above the threshold, we grow by at
@@ -113,77 +157,60 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
         mozilla::RoundUpPow2(aCapacity + neededExtraSpace) - neededExtraSpace;
     }
 
-    MOZ_ASSERT(XPCOM_MIN(temp, kMaxCapacity) >= aCapacity,
+    newCapacity = XPCOM_MIN(temp, kMaxCapacity);
+    MOZ_ASSERT(newCapacity >= aCapacity,
                "should have hit the early return at the top");
-    aCapacity = XPCOM_MIN(temp, kMaxCapacity);
-  }
-
-  //
-  // several cases:
-  //
-  //  (1) we have a refcounted shareable buffer (this->mDataFlags &
-  //      DataFlags::REFCOUNTED)
-  //  (2) we have an owned buffer (this->mDataFlags & DataFlags::OWNED)
-  //  (3) we have an inline buffer (this->mDataFlags & DataFlags::INLINE)
-  //  (4) we have a readonly buffer
-  //
-  // requiring that we in some cases preserve the data before creating
-  // a new buffer complicates things just a bit ;-)
-  //
-
-  size_type storageSize = (aCapacity + 1) * sizeof(char_type);
-
-  // case #1
-  if (this->mDataFlags & DataFlags::REFCOUNTED) {
-    nsStringBuffer* hdr = nsStringBuffer::FromData(this->mData);
-    if (!hdr->IsReadonly()) {
-      nsStringBuffer* newHdr = nsStringBuffer::Realloc(hdr, storageSize);
+    // Avoid shrinking if the new buffer size is close to the old. Note that
+    // unsigned underflow is defined behavior.
+    if ((curCapacity - newCapacity) <= kNsStringBufferShrinkingThreshold &&
+        (this->mDataFlags & DataFlags::REFCOUNTED)) {
+      MOZ_ASSERT(aAllowShrinking, "How come we didn't return earlier?");
+      // We're already close enough to the right size.
+      newData = oldData;
+    } else {
+      size_type storageSize = (newCapacity + 1) * sizeof(char_type);
+      // Since we allocate only by powers of 2 we always fit into a full mozjemalloc
+      // bucket, it's not useful to use realloc, which may spend time uselessly
+      // copying too much.
+      nsStringBuffer* newHdr = nsStringBuffer::Alloc(storageSize).take();
       if (!newHdr) {
-        return false;  // out-of-memory (original header left intact)
+        return mozilla::Err(NS_ERROR_OUT_OF_MEMORY); // we are still in a consistent state
       }
 
-      hdr = newHdr;
-      this->mData = (char_type*)hdr->Data();
-      this->mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
-      return true;
+      newData = (char_type*)newHdr->Data();
     }
-  }
-
-  char_type* newData;
-  DataFlags newDataFlags;
-
-  // If this is an nsTAutoStringN whose inline buffer is sufficiently large,
-  // then use it. This helps avoid heap allocations.
-  if ((this->mClassFlags & ClassFlags::INLINE) &&
-      (aCapacity < AsAutoString(this)->mInlineCapacity)) {
-    newData = (char_type*)AsAutoString(this)->mStorage;
-    newDataFlags = DataFlags::TERMINATED | DataFlags::INLINE;
-  } else {
-    // if we reach here then, we must allocate a new buffer.  we cannot
-    // make use of our DataFlags::OWNED or DataFlags::INLINE buffers because
-    // they are not large enough.
-
-    nsStringBuffer* newHdr =
-      nsStringBuffer::Alloc(storageSize).take();
-    if (!newHdr) {
-      return false;  // we are still in a consistent state
-    }
-
-    newData = (char_type*)newHdr->Data();
     newDataFlags = DataFlags::TERMINATED | DataFlags::REFCOUNTED;
   }
 
-  // save old data and flags
-  *aOldData = this->mData;
-  *aOldDataFlags = this->mDataFlags;
+  this->mData = newData;
+  this->mDataFlags = newDataFlags;
 
-  // this->mLength does not change
-  SetData(newData, this->mLength, newDataFlags);
+  if (oldData == newData) {
+    char_traits::move(
+      newData + aNewSuffixStart, oldData + aOldSuffixStart, aSuffixLength);
+  } else {
+    char_traits::copy(newData, oldData, aPrefixToPreserve);
+    char_traits::copy(
+      newData + aNewSuffixStart, oldData + aOldSuffixStart, aSuffixLength);
+    ::ReleaseData(oldData, oldFlags);
+  }
 
-  // though we are not necessarily terminated at the moment, now is probably
-  // still the best time to set DataFlags::TERMINATED.
+  return newCapacity;
+}
 
-  return true;
+template<typename T>
+void
+nsTSubstring<T>::FinishBulkWrite(size_type aLength)
+{
+  MOZ_ASSERT(aLength != UINT32_MAX, "OOM magic value passed as length.");
+  if (aLength) {
+    this->mData[aLength] = char_type(0);
+    this->mLength = aLength;
+  } else {
+    ::ReleaseData(this->mData, this->mDataFlags);
+    SetToEmptyBuffer();
+  }
+  AssertValid();
 }
 
 template <typename T>
@@ -225,48 +252,16 @@ bool
 nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
                                      size_type aFragLen, size_type aNewLen)
 {
-  char_type* oldData;
-  DataFlags oldFlags;
-  if (!MutatePrep(aNewLen, &oldData, &oldFlags)) {
-    return false;  // out-of-memory
+  size_type newSuffixStart = aCutStart + aFragLen;
+  size_type oldSuffixStart = aCutStart + aCutLen;
+  size_type suffixLength = this->mLength - oldSuffixStart;
+
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(
+    aNewLen, aCutStart, false, suffixLength, oldSuffixStart, newSuffixStart);
+  if (r.isErr()) {
+    return false;
   }
-
-  if (oldData) {
-    // determine whether or not we need to copy part of the old string
-    // over to the new string.
-
-    if (aCutStart > 0) {
-      // copy prefix from old string
-      char_traits::copy(this->mData, oldData, aCutStart);
-    }
-
-    if (aCutStart + aCutLen < this->mLength) {
-      // copy suffix from old string to new offset
-      size_type from = aCutStart + aCutLen;
-      size_type fromLen = this->mLength - from;
-      uint32_t to = aCutStart + aFragLen;
-      char_traits::copy(this->mData + to, oldData + from, fromLen);
-    }
-
-    ::ReleaseData(oldData, oldFlags);
-  } else {
-    // original data remains intact
-
-    // determine whether or not we need to move part of the existing string
-    // to make room for the requested hole.
-    if (aFragLen != aCutLen && aCutStart + aCutLen < this->mLength) {
-      uint32_t from = aCutStart + aCutLen;
-      uint32_t fromLen = this->mLength - from;
-      uint32_t to = aCutStart + aFragLen;
-      char_traits::move(this->mData + to, this->mData + from, fromLen);
-    }
-  }
-
-  // add null terminator (mutable this->mData always has room for the null-
-  // terminator).
-  this->mData[aNewLen] = char_type(0);
-  this->mLength = aNewLen;
-
+  FinishBulkWrite(aNewLen);
   return true;
 }
 
@@ -553,20 +548,14 @@ nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
 
   size_type length = aTuple.Length();
 
-  // don't use ReplacePrep here because it changes the length
-  char_type* oldData;
-  DataFlags oldFlags;
-  if (!MutatePrep(length, &oldData, &oldFlags)) {
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(length);
+  if (r.isErr()) {
     return false;
   }
 
-  if (oldData) {
-    ::ReleaseData(oldData, oldFlags);
-  }
-
   aTuple.WriteTo(this->mData, length);
-  this->mData[length] = 0;
-  this->mLength = length;
+
+  FinishBulkWrite(length);
   return true;
 }
 
@@ -762,40 +751,53 @@ nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&)
 {
   // capacity does not include room for the terminating null char
 
-  // if our capacity is reduced to zero, then free our buffer.
-  if (aCapacity == 0) {
-    ::ReleaseData(this->mData, this->mDataFlags);
-    SetToEmptyBuffer();
-    return true;
+  // Sadly, existing callers assume that it's valid to
+  // first call SetCapacity(), then write past mLength
+  // and then call SetLength() with the assumption that
+  // SetLength still preserves the written data past
+  // mLength!!!
+
+  size_type preserve;
+  if (this->mDataFlags & DataFlags::REFCOUNTED) {
+    nsStringBuffer* hdr = nsStringBuffer::FromData(this->mData);
+    preserve = (hdr->StorageSize() / sizeof(char_type)) - 1;
+  } else if (this->mDataFlags & DataFlags::INLINE) {
+    preserve = AsAutoString(this)->mInlineCapacity;
+  } else {
+    preserve = this->mLength;
   }
 
-  char_type* oldData;
-  DataFlags oldFlags;
-  if (!MutatePrep(aCapacity, &oldData, &oldFlags)) {
-    return false;  // out-of-memory
+  if (preserve > aCapacity) {
+    preserve = aCapacity;
   }
 
-  // compute new string length
-  size_type newLen = XPCOM_MIN(this->mLength, aCapacity);
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWrite(aCapacity, preserve);
+  if (r.isErr()) {
+    return false;
+  }
+  if (r.unwrap()) {
+    // In the zero case StartBulkWrite already put the string
+    // in a valid state.
 
-  if (oldData) {
-    // preserve old data
-    if (this->mLength > 0) {
-      char_traits::copy(this->mData, oldData, newLen);
+    // Otherwise, instead of calling FinishBulkWrite,
+    // intentionally replicate the legacy semantics of
+    // this method:
+    // If requested capacity was smaller than the pre-existing
+    // length, set length to the requested capacity and
+    // zero-terminate there. Otherwise, zero-terminate at
+    // the requested capacity. (This latter behavior was
+    // designated as a legacy compatibility measure by the
+    // previous implementation of this method.)
+    if (aCapacity < this->mLength) {
+      // aCapacity not capacity for legacy reasons;
+      // maybe capacity would work, too.
+      this->mLength = aCapacity;
     }
-
-    ::ReleaseData(oldData, oldFlags);
+    // Note that we can't write a terminator at
+    // mData[mLength], because doing so would overwrite
+    // data when this method is called from SetLength.
+    this->mData[aCapacity] = char_type(0);
   }
-
-  // adjust this->mLength if our buffer shrunk down in size
-  if (newLen < this->mLength) {
-    this->mLength = newLen;
-  }
-
-  // always null-terminate here, even if the buffer got longer.  this is
-  // for backwards compat with the old string implementation.
-  this->mData[aCapacity] = char_type(0);
-
   return true;
 }
 
