@@ -35,7 +35,7 @@ class SimpleEdgeRange : public EdgeRange {
     bool addTracerEdges(JSRuntime* rt, void* thing, JS::TraceKind kind, bool wantNames);
 
     bool addEdge(Edge edge) {
-        if (!edge.name || !edges.append(std::move(edge)))
+        if(!edges.append(std::move(edge)))
             return false;
         settle();
         return true;
