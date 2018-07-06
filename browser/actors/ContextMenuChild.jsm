@@ -691,7 +691,23 @@ class ContextMenuChild extends ActorChild {
     context.screenY = aEvent.screenY;
     context.mozInputSource = aEvent.mozInputSource;
 
-    const node = aEvent.composedTarget;
+    let node = aEvent.composedTarget;
+
+    // Set the node to containing <video>/<audio> if the node
+    // is in the videocontrols UA Widget.
+    if (this.content.ShadowRoot) {
+      let n = node;
+      while (n) {
+        if (n instanceof this.content.ShadowRoot) {
+          if (n.host instanceof this.content.HTMLMediaElement) {
+            node = n.host;
+            break;
+          }
+          break;
+        }
+        n = n.parentNode;
+      }
+    }
 
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
