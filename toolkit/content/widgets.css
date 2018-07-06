@@ -6,5 +6,9 @@
    == Styles ported from XBL <resources>, loaded by "global.css".
    ======================================================================= */
 
+@import url("chrome://global/content/autocomplete.css");
+@import url("chrome://global/skin/autocomplete.css");
+@import url("chrome://formautofill-shared/skin/autocomplete-item.css");
+@import url("chrome://formautofill/skin/autocomplete-item.css");
 @import url("chrome://global/skin/menu.css");
 @import url("chrome://global/skin/menulist.css");
