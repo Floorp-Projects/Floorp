@@ -21,7 +21,7 @@
 
 package com.leanplum;
 
-import android.content.Intent;
+import android.os.Build;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 import com.leanplum.internal.Log;
@@ -39,9 +39,15 @@ public class LeanplumPushInstanceIDService extends InstanceIDListenerService {
    */
   @Override
   public void onTokenRefresh() {
-    Log.i("GCM InstanceID token needs an update");
-    // Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
-    Intent intent = new Intent(this, LeanplumPushRegistrationService.class);
-    startService(intent);
+    try {
+      if (Build.VERSION.SDK_INT < 26) {
+        LeanplumNotificationHelper.startPushRegistrationService(this, "GCM");
+      } else {
+        LeanplumNotificationHelper.scheduleJobService(this,
+                LeanplumGcmRegistrationJobService.class, LeanplumGcmRegistrationJobService.JOB_ID);
+      }
+    } catch (Throwable t) {
+      Log.e("Failed to update GCM token.", t);
+    }
   }
 }

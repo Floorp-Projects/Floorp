@@ -24,14 +24,17 @@ package com.leanplum;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -42,7 +45,10 @@ import com.leanplum.internal.JsonConverter;
 import com.leanplum.internal.Log;
 import com.leanplum.utils.BuildUtil;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.TreeSet;
 
 /**
  * LeanplumNotificationHelper helper class for push notifications.
@@ -79,6 +85,79 @@ class LeanplumNotificationHelper {
             Log.w("Failed to post notification, there are no notification channels configured.");
             return null;
         }
+    }
+
+    /**
+     * Starts push registration service to update GCM/FCM InstanceId token.
+     *
+     * @param context Current application context.
+     * @param providerName Name of push notification provider.
+     */
+    static void startPushRegistrationService(Context context, String providerName) {
+        try {
+            if (context == null) {
+                return;
+            }
+            Log.i("Updating " + providerName + " InstanceId token.");
+            // Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
+            Intent intent = new Intent(context, LeanplumPushRegistrationService.class);
+            context.startService(intent);
+        } catch (Throwable t) {
+            Log.e("Couldn't update " + providerName + " InstanceId token.", t);
+        }
+    }
+
+    /**
+     * Schedule JobService to JobScheduler.
+     *
+     * @param context Current application context.
+     * @param clazz JobService class.
+     * @param jobId JobService id.
+     */
+    @TargetApi(21)
+    static void scheduleJobService(Context context, Class clazz, int jobId) {
+        if (context == null) {
+            return;
+        }
+        ComponentName serviceName = new ComponentName(context, clazz);
+        JobScheduler jobScheduler =
+                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        if (jobScheduler != null) {
+            jobId = verifyJobId(jobScheduler.getAllPendingJobs(), jobId);
+            JobInfo startMyServiceJobInfo = new JobInfo.Builder(jobId, serviceName)
+                    .setMinimumLatency(10).build();
+            jobScheduler.schedule(startMyServiceJobInfo);
+        }
+    }
+
+    /**
+     * Verifies that jobId don't present on JobScheduler pending jobs. If jobId present on
+     * JobScheduler pending jobs generates a new one.
+     *
+     * @param allPendingJobs List of current pending jobs.
+     * @param jobId JobService id.
+     * @return jobId if jobId don't present on JobScheduler pending jobs
+     */
+    @TargetApi(21)
+    private static int verifyJobId(List<JobInfo> allPendingJobs, int jobId) {
+        if (allPendingJobs != null && !allPendingJobs.isEmpty()) {
+            TreeSet<Integer> idsSet = new TreeSet<>();
+            for (JobInfo jobInfo : allPendingJobs) {
+                idsSet.add(jobInfo.getId());
+            }
+            if (idsSet.contains(jobId)) {
+                if (idsSet.first() > Integer.MIN_VALUE) {
+                    jobId = idsSet.first() - 1;
+                } else if (idsSet.last() < Integer.MIN_VALUE) {
+                    jobId = idsSet.last() + 1;
+                } else {
+                    while (idsSet.contains(jobId)) {
+                        jobId = new Random().nextInt();
+                    }
+                }
+            }
+        }
+        return jobId;
     }
 
     /**
