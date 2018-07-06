@@ -184,8 +184,8 @@ struct JSContext : public JS::RootingContext,
     js::SharedImmutableStringsCache& sharedImmutableStrings() {
         return runtime_->sharedImmutableStrings();
     }
-    bool isPermanentAtomsInitialized() { return !!runtime_->permanentAtoms; }
-    js::FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms; }
+    bool permanentAtomsPopulated() { return runtime_->permanentAtomsPopulated(); }
+    const js::FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms(); }
     js::WellKnownSymbols& wellKnownSymbols() { return *runtime_->wellKnownSymbols; }
     JS::BuildIdOp buildIdOp() { return runtime_->buildIdOp; }
     const JS::AsmJSCacheOps& asmJSCacheOps() { return runtime_->asmJSCacheOps; }
@@ -278,9 +278,10 @@ struct JSContext : public JS::RootingContext,
     // AutoRealm from which it's called.
     inline js::Handle<js::GlobalObject*> global() const;
 
-    js::AtomSet& atoms(const js::AutoAccessAtomsZone& access) {
-        return runtime_->atoms(access);
+    js::AtomsTable& atoms() {
+        return runtime_->atoms();
     }
+
     const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) {
         return runtime_->atomsZone(access);
     }
@@ -1194,15 +1195,15 @@ class MOZ_RAII AutoLockScriptData
 // accessed by the main thread and by off-thread parsing. There are two
 // situations in which it is safe:
 //
-//  - the current thread holds the exclusive access lock (off-thread parsing may
-//    be running and this must also take the lock for access)
+//  - the current thread holds all atoms table locks (off-thread parsing may be
+//    running and must also take one of these locks for access)
 //
 //  - the GC is running and is collecting the atoms zone (this cannot be started
 //    while off-thread parsing is happening)
 class MOZ_STACK_CLASS AutoAccessAtomsZone
 {
   public:
-    MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockForExclusiveAccess& lock) {}
+    MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockAllAtoms& lock) {}
     MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
 };
 
