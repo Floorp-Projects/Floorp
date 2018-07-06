@@ -731,7 +731,7 @@ var gMainPane = {
       return;
     }
     let url = await FxAccounts.config.promiseSignInURI("dev-edition-setup");
-    let accountsTab = win.gBrowser.addTab(url);
+    let accountsTab = win.gBrowser.addWebTab(url);
     win.gBrowser.selectedTab = accountsTab;
   },
 
