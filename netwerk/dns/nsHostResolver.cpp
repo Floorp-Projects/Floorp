@@ -523,13 +523,12 @@ static const char kPrefThreadIdleTime[] = "network.dns.resolver-thread-extra-idl
 static bool sGetTtlEnabled = false;
 mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
-static void DnsPrefChanged(const char* aPref, void* aClosure)
+static void DnsPrefChanged(const char* aPref, nsHostResolver* aSelf)
 {
     MOZ_ASSERT(NS_IsMainThread(),
                "Should be getting pref changed notification on main thread!");
 
-    DebugOnly<nsHostResolver*> self = static_cast<nsHostResolver*>(aClosure);
-    MOZ_ASSERT(self);
+    MOZ_ASSERT(aSelf);
 
     if (!strcmp(aPref, kPrefGetTtl)) {
 #ifdef DNSQUERY_AVAILABLE

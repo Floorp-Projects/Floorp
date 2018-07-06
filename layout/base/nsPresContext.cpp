@@ -150,15 +150,10 @@ nsPresContext::IsDOMPaintEventPending()
 }
 
 void
-nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
+nsPresContext::PrefChangedCallback(const char* aPrefName, nsPresContext* aPresContext)
 {
-  RefPtr<nsPresContext>  presContext =
-    static_cast<nsPresContext*>(instance_data);
-
-  NS_ASSERTION(presContext, "bad instance data");
-  if (presContext) {
-    presContext->PreferenceChanged(aPrefName);
-  }
+  NS_ASSERTION(aPresContext, "bad instance data");
+  aPresContext->PreferenceChanged(aPrefName);
 }
 
 void

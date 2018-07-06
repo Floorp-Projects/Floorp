@@ -247,12 +247,12 @@ private:
 };
 
 void
-AtomicBoolPrefChangedCallback(const char* aPrefName, void* aClosure)
+AtomicBoolPrefChangedCallback(const char* aPrefName, Atomic<bool>* aClosure)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aClosure);
 
-  *static_cast<Atomic<bool>*>(aClosure) = Preferences::GetBool(aPrefName);
+  *aClosure = Preferences::GetBool(aPrefName);
 }
 
 void

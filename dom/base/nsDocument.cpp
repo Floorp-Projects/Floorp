@@ -12612,9 +12612,9 @@ struct PrefStore
     Preferences::GetCString("urlclassifier.flashSubDocExceptTable", mSubDocDenyExceptionsTables);
   }
 
-  static void UpdateStringPrefs(const char*, void* aClosure)
+  static void UpdateStringPrefs(const char*, PrefStore* aSelf)
   {
-    static_cast<PrefStore*>(aClosure)->UpdateStringPrefs();
+    aSelf->UpdateStringPrefs();
   }
 
   bool mFlashBlockEnabled;

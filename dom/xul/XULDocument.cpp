@@ -2927,12 +2927,11 @@ XULDocument::ResetDocumentDirection()
 }
 
 void
-XULDocument::DirectionChanged(const char* aPrefName, void* aData)
+XULDocument::DirectionChanged(const char* aPrefName, XULDocument* aDoc)
 {
   // Reset the direction and restyle the document if necessary.
-  XULDocument* doc = (XULDocument *)aData;
-  if (doc) {
-      doc->ResetDocumentDirection();
+  if (aDoc) {
+      aDoc->ResetDocumentDirection();
   }
 }
 
