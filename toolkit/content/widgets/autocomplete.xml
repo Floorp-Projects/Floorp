@@ -11,11 +11,6 @@
 
   <binding id="autocomplete"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content sizetopopup="pref">
       <children includes="image|deck|stack|box"/>
 
@@ -648,11 +643,6 @@
   </binding>
 
   <binding id="autocomplete-rich-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>
