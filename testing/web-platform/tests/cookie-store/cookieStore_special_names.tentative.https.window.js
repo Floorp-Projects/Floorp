@@ -1,11 +1,3 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>Cookie Store: cookieStore handles special cookie names correctly (secure context)</title>
-<link rel="help" href="https://github.com/WICG/cookie-store">
-<link rel="author" href="pwnall@chromium.org" title="Victor Costan">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
 'use strict';
 
 ['__Secure-', '__Host-'].forEach(prefix => {
@@ -37,5 +29,3 @@
       `Deleting ${prefix} cookies should not fail in secure context`);
   }, `cookieStore.delete with ${prefix} name on secure origin`);
 });
-
-</script>
