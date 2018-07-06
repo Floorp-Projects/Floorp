@@ -457,7 +457,7 @@ AtomizeAndCopyCharsInner(JSContext* cx, const CharT* tbchars, size_t length, Pin
 
     JSAtom* atom;
     {
-        AutoAtomsZone az(cx, lock);
+        AutoAllocInAtomsZone az(cx);
 
         JSFlatString* flat = NewStringCopyN<NoGC>(cx, tbchars, length);
         if (!flat) {

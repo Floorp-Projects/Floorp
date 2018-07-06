@@ -77,16 +77,16 @@ class JitRuntime
     MainThreadData<uint64_t> nextCompilationId_;
 
     // Shared exception-handler tail.
-    ExclusiveAccessLockWriteOnceData<uint32_t> exceptionTailOffset_;
+    WriteOnceData<uint32_t> exceptionTailOffset_;
 
     // Shared post-bailout-handler tail.
-    ExclusiveAccessLockWriteOnceData<uint32_t> bailoutTailOffset_;
+    WriteOnceData<uint32_t> bailoutTailOffset_;
 
     // Shared profiler exit frame tail.
-    ExclusiveAccessLockWriteOnceData<uint32_t> profilerExitFrameTailOffset_;
+    WriteOnceData<uint32_t> profilerExitFrameTailOffset_;
 
     // Trampoline for entering JIT code.
-    ExclusiveAccessLockWriteOnceData<uint32_t> enterJITOffset_;
+    WriteOnceData<uint32_t> enterJITOffset_;
 
     // Vector mapping frame class sizes to bailout tables.
     struct BailoutTable {
@@ -97,50 +97,50 @@ class JitRuntime
         {}
     };
     typedef Vector<BailoutTable, 4, SystemAllocPolicy> BailoutTableVector;
-    ExclusiveAccessLockWriteOnceData<BailoutTableVector> bailoutTables_;
+    WriteOnceData<BailoutTableVector> bailoutTables_;
 
     // Generic bailout table; used if the bailout table overflows.
-    ExclusiveAccessLockWriteOnceData<uint32_t> bailoutHandlerOffset_;
+    WriteOnceData<uint32_t> bailoutHandlerOffset_;
 
     // Argument-rectifying thunk, in the case of insufficient arguments passed
     // to a function call site.
-    ExclusiveAccessLockWriteOnceData<uint32_t> argumentsRectifierOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> argumentsRectifierReturnOffset_;
+    WriteOnceData<uint32_t> argumentsRectifierOffset_;
+    WriteOnceData<uint32_t> argumentsRectifierReturnOffset_;
 
     // Thunk that invalides an (Ion compiled) caller on the Ion stack.
-    ExclusiveAccessLockWriteOnceData<uint32_t> invalidatorOffset_;
+    WriteOnceData<uint32_t> invalidatorOffset_;
 
     // Thunk that calls the GC pre barrier.
-    ExclusiveAccessLockWriteOnceData<uint32_t> valuePreBarrierOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> stringPreBarrierOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> objectPreBarrierOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> shapePreBarrierOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> objectGroupPreBarrierOffset_;
+    WriteOnceData<uint32_t> valuePreBarrierOffset_;
+    WriteOnceData<uint32_t> stringPreBarrierOffset_;
+    WriteOnceData<uint32_t> objectPreBarrierOffset_;
+    WriteOnceData<uint32_t> shapePreBarrierOffset_;
+    WriteOnceData<uint32_t> objectGroupPreBarrierOffset_;
 
     // Thunk to call malloc/free.
-    ExclusiveAccessLockWriteOnceData<uint32_t> mallocStubOffset_;
-    ExclusiveAccessLockWriteOnceData<uint32_t> freeStubOffset_;
+    WriteOnceData<uint32_t> mallocStubOffset_;
+    WriteOnceData<uint32_t> freeStubOffset_;
 
     // Thunk called to finish compilation of an IonScript.
-    ExclusiveAccessLockWriteOnceData<uint32_t> lazyLinkStubOffset_;
+    WriteOnceData<uint32_t> lazyLinkStubOffset_;
 
     // Thunk to enter the interpreter from JIT code.
-    ExclusiveAccessLockWriteOnceData<uint32_t> interpreterStubOffset_;
+    WriteOnceData<uint32_t> interpreterStubOffset_;
 
     // Thunk used by the debugger for breakpoint and step mode.
-    ExclusiveAccessLockWriteOnceData<JitCode*> debugTrapHandler_;
+    WriteOnceData<JitCode*> debugTrapHandler_;
 
     // Thunk used to fix up on-stack recompile of baseline scripts.
-    ExclusiveAccessLockWriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
-    ExclusiveAccessLockWriteOnceData<void*> baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
+    WriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
+    WriteOnceData<void*> baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 
     // Code for trampolines and VMFunction wrappers.
-    ExclusiveAccessLockWriteOnceData<JitCode*> trampolineCode_;
+    WriteOnceData<JitCode*> trampolineCode_;
 
     // Map VMFunction addresses to the offset of the wrapper in
     // trampolineCode_.
     using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
-    ExclusiveAccessLockWriteOnceData<VMWrapperMap*> functionWrappers_;
+    WriteOnceData<VMWrapperMap*> functionWrappers_;
 
     // Global table of jitcode native address => bytecode address mappings.
     UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
