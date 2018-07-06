@@ -69,7 +69,7 @@
         assert_session_desc_similar(pc2.pendingRemoteDescription, offer);
         assert_equals(pc2.currentRemoteDescription, null);
 
-        assert_equals(states, ['have-remote-offer']);
+        assert_array_equals(states, ['have-remote-offer']);
       });
     });
   }, 'setRemoteDescription with valid offer should succeed');
