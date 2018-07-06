@@ -605,10 +605,17 @@ ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resoluti
     if (!IsCallable(thenVal))
         return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
 
-    // If the `then` property is the original Promise.prototype.then from the
-    // same realm, we skip storing/calling it.
-    if (IsNativeFunction(thenVal, Promise_then))
+    // If the resolution object is a built-in Promise object, possibly from a
+    // different realm in the same compartment, and the `then` property is the
+    // original Promise.prototype.then function from the current realm, we
+    // skip storing/calling it.
+    if (resolution->is<PromiseObject>() &&
+        resolution->as<PromiseObject>().compartment() == cx->compartment() &&
+        IsNativeFunction(thenVal, Promise_then) &&
+        thenVal.toObject().as<JSFunction>().realm() == cx->realm())
+    {
         thenVal = UndefinedValue();
+    }
 
     // Step 12.
     RootedValue promiseVal(cx, ObjectValue(*promise));
@@ -1333,8 +1340,13 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
         RootedValue rejectVal(cx, ObjectValue(*rejectFn));
 
         // Same as above, we return immediately on success.
-        if (Promise_then_impl(cx, thenable, resolveVal, rejectVal, &rval, /* rvalUsed = */ false))
+        Rooted<PromiseObject*> thenablePromise(cx, &thenable.toObject().as<PromiseObject>());
+        RootedObject resultPromise(cx);
+        if (OriginalPromiseThen(cx, thenablePromise, resolveVal, rejectVal, &resultPromise,
+                                CreateDependentPromise::SkipIfCtorUnobservable))
+        {
             return true;
+        }
     }
 
     if (!MaybeGetAndClearException(cx, &rval))
