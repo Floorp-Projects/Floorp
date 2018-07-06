@@ -59,17 +59,4 @@ NS_COUNT(InputIterator& aFirst, const InputIterator& aLast, const T& aValue)
   return result;
 }
 
-template <class InputIterator, class OutputIterator>
-inline OutputIterator&
-copy_string(const InputIterator& aFirst, const InputIterator& aLast,
-            OutputIterator& aResult)
-{
-  typedef nsCharSourceTraits<InputIterator> source_traits;
-  typedef nsCharSinkTraits<OutputIterator>  sink_traits;
-
-  sink_traits::write(aResult, source_traits::read(aFirst),
-                     source_traits::readable_distance(aFirst, aLast));
-  return aResult;
-}
-
 #endif // !defined(nsAlgorithm_h___)

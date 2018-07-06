@@ -438,7 +438,7 @@ nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const nsAString& aPrinterNa
     }
 
     if (path) {
-      CopyUTF8toUTF16(path, filename);
+      CopyUTF8toUTF16(MakeStringSpan(path), filename);
       filename.AppendLiteral("/mozilla.pdf");
     } else {
       filename.AssignLiteral("mozilla.pdf");
