@@ -136,6 +136,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_GetKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
+                   ComputedStyleBorrowed style,
                    nsAtom* name,
                    nsTimingFunctionBorrowed timing_function,
                    RawGeckoKeyframeListBorrowedMut keyframe_list)

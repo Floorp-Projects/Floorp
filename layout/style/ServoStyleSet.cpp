@@ -1159,6 +1159,7 @@ ServoStyleSet::AssertTreeIsClean()
 
 bool
 ServoStyleSet::GetKeyframesForName(const Element& aElement,
+                                   const ComputedStyle& aStyle,
                                    nsAtom* aName,
                                    const nsTimingFunction& aTimingFunction,
                                    nsTArray<Keyframe>& aKeyframes)
@@ -1166,6 +1167,7 @@ ServoStyleSet::GetKeyframesForName(const Element& aElement,
   MOZ_ASSERT(!StylistNeedsUpdate());
   return Servo_StyleSet_GetKeyframesForName(mRawSet.get(),
                                             &aElement,
+                                            &aStyle,
                                             aName,
                                             &aTimingFunction,
                                             &aKeyframes);
