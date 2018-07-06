@@ -19,9 +19,9 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 
-XPCOMUtils.defineLazyGetter(this, "browser", () => {
-  const {browser} = ChromeUtils.import("chrome://marionette/content/browser.js", {});
-  return browser;
+XPCOMUtils.defineLazyModuleGetters(this, {
+  evaluate: "chrome://marionette/content/evaluate.js",
+  browser: "chrome://marionette/content/browser.js",
 });
 
 this.EXPORTED_SYMBOLS = ["assert"];
@@ -38,26 +38,22 @@ const isFirefox = () =>
 this.assert = {};
 
 /**
- * Asserts that an arbitrary object, <var>obj</var> is not acyclic.
+ * Asserts that an arbitrary object is not acyclic.
  *
  * @param {*} obj
- *     Object test.  This assertion is only meaningful if passed
+ *     Object to test.  This assertion is only meaningful if passed
  *     an actual object or array.
  * @param {Error=} [error=JavaScriptError] error
  *     Error to throw if assertion fails.
  * @param {string=} message
- *     Message to use for <var>error</var> if assertion fails.  By default
- *     it will use the error message provided by
- *     <code>JSON.stringify</code>.
+ *     Custom message to use for `error` if assertion fails.
  *
  * @throws {JavaScriptError}
- *     If <var>obj</var> is cyclic.
+ *     If the object is cyclic.
  */
 assert.acyclic = function(obj, msg = "", error = JavaScriptError) {
-  try {
-    JSON.stringify(obj);
-  } catch (e) {
-    throw new error(msg || e);
+  if (evaluate.isCyclic(obj)) {
+    throw new error(msg || "Cyclic object value");
   }
 };
 
