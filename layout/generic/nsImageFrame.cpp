@@ -156,6 +156,7 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, ClassID aID, Kind aKind)
   , mComputedSize(0, 0)
   , mIntrinsicRatio(0, 0)
   , mKind(aKind)
+  , mContentURLRequestRegistered(false)
   , mDisplayingIcon(false)
   , mFirstFrameComplete(false)
   , mReflowCallbackPosted(false)
@@ -224,6 +225,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroy
 
   if (mKind == Kind::ImageElement) {
     MOZ_ASSERT(!mContentURLRequest);
+    MOZ_ASSERT(!mContentURLRequestRegistered);
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     MOZ_ASSERT(imageLoader);
 
@@ -233,6 +235,8 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroy
     imageLoader->RemoveNativeObserver(mListener);
   } else {
     if (mContentURLRequest) {
+      nsLayoutUtils::DeregisterImageRequest(
+        PresContext(), mContentURLRequest, &mContentURLRequestRegistered);
       mContentURLRequest->Cancel(NS_BINDING_ABORTED);
     }
   }
@@ -316,12 +320,7 @@ nsImageFrame::Init(nsIContent* aContent,
       proxy->Clone(mListener,
                    mContent->OwnerDoc(),
                    getter_AddRefs(mContentURLRequest));
-      // Make sure we get the intrinsic size and such ASAP if available.
-      if (SizeIsAvailable(mContentURLRequest)) {
-        nsCOMPtr<imgIContainer> image;
-        mContentURLRequest->GetImage(getter_AddRefs(image));
-        OnSizeAvailable(mContentURLRequest, image);
-      }
+      SetupForContentURLRequest();
     }
   }
 
@@ -335,6 +334,36 @@ nsImageFrame::Init(nsIContent* aContent,
     }
 
     currentRequest->BoostPriority(categoryToBoostPriority);
+  }
+}
+
+void
+nsImageFrame::SetupForContentURLRequest()
+{
+  MOZ_ASSERT(mKind != Kind::ImageElement);
+  if (!mContentURLRequest) {
+    return;
+  }
+
+  uint32_t status = 0;
+  nsresult rv = mContentURLRequest->GetImageStatus(&status);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
+    nsCOMPtr<imgIContainer> image;
+    mContentURLRequest->GetImage(getter_AddRefs(image));
+    OnSizeAvailable(mContentURLRequest, image);
+  }
+
+  if (status & imgIRequest::STATUS_FRAME_COMPLETE) {
+    mFirstFrameComplete = true;
+  }
+
+  if (status & imgIRequest::STATUS_IS_ANIMATED) {
+    nsLayoutUtils::RegisterImageRequest(
+        PresContext(), mContentURLRequest, &mContentURLRequestRegistered);
   }
 }
 
@@ -592,6 +621,12 @@ nsImageFrame::Notify(imgIRequest* aRequest,
 
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     mFirstFrameComplete = true;
+  }
+
+  if (aType == imgINotificationObserver::IS_ANIMATED &&
+      mKind != Kind::ImageElement) {
+    nsLayoutUtils::RegisterImageRequest(
+        PresContext(), mContentURLRequest, &mContentURLRequestRegistered);
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
