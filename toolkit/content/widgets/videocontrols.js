@@ -78,8 +78,6 @@ this.VideoControlsImplPageWidget = class {
 
     this.generateContent();
 
-    this.randomID = 0;
-
     this.Utils = {
       debug: false,
       video: null,
@@ -101,7 +99,6 @@ this.VideoControlsImplPageWidget = class {
       layoutControls: null,
 
       textTracksCount: 0,
-      randomID: 0,
       videoEvents: ["play", "pause", "ended", "volumechange", "loadeddata",
                     "loadstart", "timeupdate", "progress",
                     "playing", "waiting", "canplay", "canplaythrough",
@@ -185,9 +182,6 @@ this.VideoControlsImplPageWidget = class {
       * have already fired, and so we'll need to explicitly check the initial state.
       */
       setupInitialState() {
-        this.randomID = Math.random();
-        this.videocontrols.randomID = this.randomID;
-
         this.setPlayButtonState(this.video.paused);
 
         this.setFullscreenButtonState();
@@ -420,13 +414,6 @@ this.VideoControlsImplPageWidget = class {
         }
 
         this.log("Got event ----> " + aEvent.type);
-
-        // If the binding is detached (or has been replaced by a
-        // newer instance of the binding), nuke our event-listeners.
-        if (this.videocontrols.randomID != this.randomID) {
-          this.terminate();
-          return;
-        }
 
         if (this.videoEvents.includes(aEvent.type)) {
           this.handleVideoEvent(aEvent);
@@ -2047,10 +2034,6 @@ this.VideoControlsImplPageWidget = class {
 
             break;
         }
-
-        if (this.videocontrols.randomID != this.Utils.randomID) {
-          this.terminate();
-        }
       },
 
       terminate() {
@@ -2187,11 +2170,6 @@ this.VideoControlsImplPageWidget = class {
     this.Utils.terminate();
     this.TouchUtils.terminate();
     this.Utils.updateOrientationState(false);
-    // randomID used to be a <field>, which meant that the XBL machinery
-    // undefined the property when the element was unbound. The code in
-    // this file actually depends on this, so now that randomID is an
-    // expando, we need to make sure to explicitly delete it.
-    delete this.randomID;
   }
 
   _setupEventListeners() {
@@ -2224,9 +2202,7 @@ this.NoControlsImplPageWidget = class {
 
     this.generateContent();
 
-    this.randomID = 0;
     this.Utils = {
-      randomID: 0,
       videoEvents: ["play",
                     "playing",
                     "MozNoControlsBlockedVideo"],
@@ -2250,13 +2226,6 @@ this.NoControlsImplPageWidget = class {
       },
 
       handleEvent(aEvent) {
-        // If the binding is detached (or has been replaced by a
-        // newer instance of the binding), nuke our event-listeners.
-        if (this.videocontrols.randomID != this.randomID) {
-          this.terminate();
-          return;
-        }
-
         switch (aEvent.type) {
           case "play":
             this.noControlsOverlay.hidden = true;
@@ -2274,10 +2243,7 @@ this.NoControlsImplPageWidget = class {
       },
 
       blockedVideoHandler() {
-        if (this.videocontrols.randomID != this.randomID) {
-          this.terminate();
-          return;
-        } else if (this.hasError()) {
+        if (this.hasError()) {
           this.noControlsOverlay.hidden = true;
           return;
         }
@@ -2285,10 +2251,7 @@ this.NoControlsImplPageWidget = class {
       },
 
       clickToPlayClickHandler(e) {
-        if (this.videocontrols.randomID != this.randomID) {
-          this.terminate();
-          return;
-        } else if (e.button != 0) {
+        if (e.button != 0) {
           return;
         }
 
@@ -2303,9 +2266,6 @@ this.NoControlsImplPageWidget = class {
         this.document = this.videocontrols.ownerDocument;
         this.window = this.document.defaultView;
         this.shadowRoot = shadowRoot;
-
-        this.randomID = Math.random();
-        this.videocontrols.randomID = this.randomID;
 
         this.controlsContainer = this.shadowRoot.getElementById("controlsContainer");
         this.clickToPlay = this.shadowRoot.getElementById("clickToPlay");
@@ -2338,11 +2298,6 @@ this.NoControlsImplPageWidget = class {
 
   destructor() {
     this.Utils.terminate();
-    // randomID used to be a <field>, which meant that the XBL machinery
-    // undefined the property when the element was unbound. The code in
-    // this file actually depends on this, so now that randomID is an
-    // expando, we need to make sure to explicitly delete it.
-    delete this.randomID;
   }
 
   generateContent() {
