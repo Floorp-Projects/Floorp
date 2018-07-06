@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "mozilla/Maybe.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -277,6 +278,17 @@ void
 IpcResourceUpdateQueue::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey)
 {
   mUpdates.AppendElement(layers::OpAddExternalImage(aExtId, aKey));
+}
+
+void
+IpcResourceUpdateQueue::AddExternalImageForTexture(wr::ExternalImageId aExtId,
+                                                   wr::ImageKey aKey,
+                                                   layers::TextureClient* aTexture)
+{
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aTexture->GetIPDLActor());
+  MOZ_RELEASE_ASSERT(aTexture->GetIPDLActor()->GetIPCChannel() == mWriter.WrBridge()->GetIPCChannel());
+  mUpdates.AppendElement(layers::OpAddExternalImageForTexture(aExtId, aKey, nullptr, aTexture->GetIPDLActor()));
 }
 
 bool
