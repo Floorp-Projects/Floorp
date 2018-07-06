@@ -183,8 +183,7 @@ public:
               JS::Handle<JSObject*> stack,
               JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv);
 
-  static already_AddRefed<Promise>
-  RequestIOActivity(GlobalObject& aGlobal, ErrorResult& aRv);
+  static void RequestIOActivity(GlobalObject& aGlobal);
 };
 
 } // namespace dom
