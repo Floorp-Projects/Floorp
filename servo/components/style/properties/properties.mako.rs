@@ -946,17 +946,25 @@ impl LonghandId {
     }
 
     /// Returns whether this property is animatable.
-    #[inline]
     pub fn is_animatable(self) -> bool {
-        ${static_longhand_id_set("ANIMATABLE", lambda p: p.animatable)}
-        ANIMATABLE.contains(self)
+        match self {
+            % for property in data.longhands:
+            LonghandId::${property.camel_case} => {
+                ${str(property.animatable).lower()}
+            }
+            % endfor
+        }
     }
 
     /// Returns whether this property is animatable in a discrete way.
-    #[inline]
     pub fn is_discrete_animatable(self) -> bool {
-        ${static_longhand_id_set("DISCRETE_ANIMATABLE", lambda p: p.animation_value_type == "discrete")}
-        DISCRETE_ANIMATABLE.contains(self)
+        match self {
+            % for property in data.longhands:
+            LonghandId::${property.camel_case} => {
+                ${str(property.animation_value_type == "discrete").lower()}
+            }
+            % endfor
+        }
     }
 
     /// Converts from a LonghandId to an adequate nsCSSPropertyID.
@@ -977,30 +985,20 @@ impl LonghandId {
         }
     }
 
-    /// Return whether this property is logical.
-    #[inline]
-    pub fn is_logical(&self) -> bool {
-        ${static_longhand_id_set("LOGICAL", lambda p: p.logical)}
-        LOGICAL.contains(*self)
-    }
-
-    /// If this is a logical property, return the corresponding physical one in
-    /// the given writing mode.
-    ///
+    /// If this is a logical property, return the corresponding physical one in the given writing mode.
     /// Otherwise, return unchanged.
-    #[inline]
     pub fn to_physical(&self, wm: WritingMode) -> Self {
         match *self {
             % for property in data.longhands:
-            % if property.logical:
-                LonghandId::${property.camel_case} => {
-                    <%helpers:logical_setter_helper name="${property.name}">
-                    <%def name="inner(physical_ident)">
-                        LonghandId::${to_camel_case(physical_ident)}
-                    </%def>
-                    </%helpers:logical_setter_helper>
-                }
-            % endif
+                % if property.logical:
+                    LonghandId::${property.camel_case} => {
+                        <%helpers:logical_setter_helper name="${property.name}">
+                            <%def name="inner(physical_ident)">
+                                LonghandId::${to_camel_case(physical_ident)}
+                            </%def>
+                        </%helpers:logical_setter_helper>
+                    }
+                % endif
             % endfor
             _ => *self
         }
@@ -1939,15 +1937,14 @@ impl PropertyDeclaration {
     }
 
     /// Returns whether or not the property is set by a system font
+    #[cfg(feature = "gecko")]
     pub fn get_system(&self) -> Option<SystemFont> {
         match *self {
-            % if product == "gecko":
             % for prop in SYSTEM_FONT_LONGHANDS:
                 PropertyDeclaration::${to_camel_case(prop)}(ref prop) => {
                     prop.get_system()
                 }
             % endfor
-            % endif
             _ => None,
         }
     }
@@ -1958,6 +1955,12 @@ impl PropertyDeclaration {
             PropertyDeclaration::LineHeight(LineHeight::Normal) => true,
             _ => false
         }
+    }
+
+    #[cfg(feature = "servo")]
+    /// Dummy method to avoid cfg()s
+    pub fn get_system(&self) -> Option<()> {
+        None
     }
 
     /// Returns whether the declaration may be serialized as part of a shorthand.
@@ -2612,22 +2615,6 @@ impl ComputedValues {
         self.custom_properties.as_ref()
     }
 
-% for prop in data.longhands:
-    /// Gets the computed value of a given property.
-    #[inline(always)]
-    #[allow(non_snake_case)]
-    pub fn clone_${prop.ident}(
-        &self,
-    ) -> longhands::${prop.ident}::computed_value::T {
-        self.get_${prop.style_struct.ident.strip("_")}()
-        % if prop.logical:
-            .clone_${prop.ident}(self.writing_mode)
-        % else:
-            .clone_${prop.ident}()
-        % endif
-    }
-% endfor
-
     /// Writes the value of the given longhand as a string in `dest`.
     ///
     /// Note that the value will usually be the computed value, except for
@@ -2648,10 +2635,20 @@ impl ComputedValues {
         match property_id {
             % for prop in data.longhands:
             LonghandId::${prop.camel_case} => {
-                let value = self.clone_${prop.ident}();
+                let style_struct =
+                    self.get_${prop.style_struct.ident.strip("_")}();
+                let value =
+                    style_struct
+                    % if prop.logical:
+                    .clone_${prop.ident}(self.writing_mode);
+                    % else:
+                    .clone_${prop.ident}();
+                    % endif
+
                 % if prop.predefined_type == "Color":
                 let value = self.resolve_color(value);
                 % endif
+
                 value.to_css(dest)
             }
             % endfor
