@@ -1072,7 +1072,7 @@ class MOZ_RAII AutoLockGCBgAlloc : public AutoLockGC
          * the GC lock.
          */
         if (startBgAlloc)
-            runtime()->gc.startBackgroundAllocTaskIfIdle();
+            runtime()->gc.startBackgroundAllocTaskIfIdle(); // Ignore failure.
     }
 
     /*

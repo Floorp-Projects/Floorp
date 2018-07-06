@@ -3669,7 +3669,11 @@ BackgroundSweepTask::startIfIdle(AutoLockHelperThreadState& lock)
     joinWithLockHeld(lock);
 
     done = false;
-    startWithLockHeld(lock);
+
+    if (!startWithLockHeld(lock)) {
+        AutoUnlockHelperThreadState unlock(lock);
+        runFromMainThread(runtime());
+    }
 }
 
 void
