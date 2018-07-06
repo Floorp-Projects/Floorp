@@ -357,9 +357,17 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
 {
   mozilla::CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
-  bool ok = stub_NtMapViewOfSection.SetDetour(aChildProcess, intcpt,
-                                              "NtMapViewOfSection",
+  bool ok = stub_NtMapViewOfSection.SetDetour(intcpt, "NtMapViewOfSection",
                                               &patched_NtMapViewOfSection);
+  if (!ok) {
+    return false;
+  }
+
+  // Set the child process's copy of stub_NtMapViewOfSection
+  SIZE_T bytesWritten;
+  ok = !!::WriteProcessMemory(aChildProcess, &stub_NtMapViewOfSection,
+                              &stub_NtMapViewOfSection,
+                              sizeof(stub_NtMapViewOfSection), &bytesWritten);
   if (!ok) {
     return false;
   }
@@ -398,8 +406,6 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
   }
 
   ptrdiff_t iatLength = (curIatThunk - firstIatThunk) * sizeof(IMAGE_THUNK_DATA);
-
-  SIZE_T bytesWritten;
 
   { // Scope for prot
     AutoVirtualProtect prot(firstIatThunk, iatLength, PAGE_READWRITE,
