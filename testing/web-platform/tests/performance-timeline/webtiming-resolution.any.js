@@ -1,11 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<script>
 function testTimeResolution(highResTimeFunc, funcString) {
     test(() => {
         const t0 = highResTimeFunc();
@@ -30,6 +22,3 @@ function timeByUserTiming() {
 
 testTimeResolution(timeByPerformanceNow, 'performance.now()');
 testTimeResolution(timeByUserTiming, 'entry.startTime');
-</script>
-</body>
-</html>
