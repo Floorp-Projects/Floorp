@@ -353,14 +353,13 @@ var gMenuBuilder = {
       return;
     }
 
-    if (!gShownMenuItems.has(extension)) {
-      // The onShown event was not fired for the extension, so the extension
-      // does not know that a menu is being shown, and therefore they should
-      // not care whether the extension menu is updated.
-      return;
-    }
-
     if (contextData.onBrowserAction || contextData.onPageAction) {
+      if (contextData.extension.id !== extension.id) {
+        // The extension that just called refresh() is not the owner of the
+        // action whose context menu is showing, so it can't have any items in
+        // the menu anyway and nothing will change.
+        return;
+      }
       // The action menu can only have items from one extension, so remove all
       // items (including the separator) and rebuild the action menu (if any).
       for (let item of this.itemsToCleanUp) {
