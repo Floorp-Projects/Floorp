@@ -360,12 +360,12 @@ public:
                       const nsTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframes)
   {
-    ServoStyleSet* styleSet = aPresContext->StyleSet();
-    MOZ_ASSERT(styleSet);
-    return styleSet->GetKeyframesForName(aElement,
-                                         aName,
-                                         aTimingFunction,
-                                         aKeyframes);
+    return aPresContext->StyleSet()->GetKeyframesForName(
+        aElement,
+        *mComputedStyle,
+        aName,
+        aTimingFunction,
+        aKeyframes);
   }
   void SetKeyframes(KeyframeEffect& aEffect, nsTArray<Keyframe>&& aKeyframes)
   {
@@ -647,13 +647,13 @@ nsAnimationManager::DoUpdateAnimations(
 
   // Build the updated animations list, extracting matching animations from
   // the existing collection as we go.
-  OwningCSSAnimationPtrArray newAnimations;
-  newAnimations = BuildAnimations(mPresContext,
-                                  aTarget,
-                                  aStyleDisplay,
-                                  aBuilder,
-                                  collection,
-                                  mMaybeReferencedAnimations);
+  OwningCSSAnimationPtrArray newAnimations =
+    BuildAnimations(mPresContext,
+                    aTarget,
+                    aStyleDisplay,
+                    aBuilder,
+                    collection,
+                    mMaybeReferencedAnimations);
 
   if (newAnimations.IsEmpty()) {
     if (collection) {
