@@ -1,6 +1,7 @@
 // GENERATED CONTENT - DO NOT EDIT
-// Content of this file was automatically extracted from the Referrer Policy spec.
-// See https://w3c.github.io/webappsec-referrer-policy/
+// Content of this file was automatically extracted from the
+// "Referrer Policy" spec.
+// See: https://w3c.github.io/webappsec-referrer-policy/
 
 enum ReferrerPolicy {
   "",
