@@ -125,6 +125,8 @@
 #include "nsChildContentList.h"
 #include "mozilla/BloomFilter.h"
 
+#include "NodeUbiReporting.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -443,6 +445,12 @@ nsIContent::GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal) const
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.
   return do_AddRef(OwnerDoc()->DefaultStyleAttrURLData());
+}
+
+void
+nsIContent::ConstructUbiNode(void* storage)
+{
+  JS::ubi::Concrete<nsIContent>::construct(storage, this);
 }
 
 //----------------------------------------------------------------------
