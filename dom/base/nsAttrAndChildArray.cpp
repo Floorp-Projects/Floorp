@@ -628,6 +628,19 @@ nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
   return MakeMappedUnique(mapped);
 }
 
+nsresult
+nsAttrAndChildArray::DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement)
+{
+  MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
+
+  // First two args don't matter if the assert holds.
+  RefPtr<nsMappedAttributes> mapped =
+    GetModifiableMapped(nullptr, nullptr, false);
+
+  mapped->SetRuleMapper(aElement.GetAttributeMappingFunction());
+
+  return MakeMappedUnique(mapped);
+}
 
 void
 nsAttrAndChildArray::Compact()
