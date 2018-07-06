@@ -13,12 +13,6 @@
 <body>
   <canvas id='canvas' width=10 height=10/>
 
-  <pre id="untested_idl" style="display: none">
-    interface Event {};
-    interface EventHandler {};
-    interface EventTarget {};
-    interface MediaStreamTrack {};
-  </pre>
   <pre id="idl" style="display: none">
     // https://w3c.github.io/mediacapture-image
 
@@ -164,7 +158,14 @@
     };
 
   </pre>
-  <script>
+<script>
+  'use strict';
+
+  promise_test(async () => {
+    const main = await fetch('/interfaces/mediacapture-main.idl').then(r => r.text());
+    const html = await fetch('/interfaces/html.idl').then(r => r.text());
+    const dom = await fetch('/interfaces/dom.idl').then(r => r.text());
+
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext("2d");
     context.fillStyle = "red";
@@ -172,13 +173,15 @@
     var track = canvas.captureStream().getVideoTracks()[0];
 
     var idl_array = new IdlArray();
-    idl_array.add_untested_idls(
-        document.getElementById("untested_idl").textContent);
     idl_array.add_idls(document.getElementById("idl").textContent);
+    idl_array.add_dependency_idls(main);
+    idl_array.add_dependency_idls(html);
+    idl_array.add_dependency_idls(dom);
     idl_array.add_objects({
       ImageCapturer : [new ImageCapture(track)]
     });
     idl_array.test();
+  }, 'Test mediacapture-image IDL interfaces');
   </script>
   <div id="log"></div>
 </body>
