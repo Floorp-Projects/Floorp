@@ -480,10 +480,12 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kSimulcastAttribute:
         LoadSimulcast(attributeList);
         return;
+      case SdpAttribute::kMaxptimeAttribute:
+        LoadMaxPtime(attributeList);
+        return;
 
       case SdpAttribute::kDtlsMessageAttribute:
       case SdpAttribute::kLabelAttribute:
-      case SdpAttribute::kMaxptimeAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
       case SdpAttribute::kRtcpRsizeAttribute:
       case SdpAttribute::kCandidateAttribute:
@@ -1172,6 +1174,16 @@ RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList)
   SetAttribute(extmaps.release());
 }
 
+void
+RsdparsaSdpAttributeList::LoadMaxPtime(RustAttributeList* attributeList)
+{
+  uint64_t maxPtime = 0;
+  nsresult nr = sdp_get_maxptime(attributeList, &maxPtime);
+  if (NS_SUCCEEDED(nr)) {
+    SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxptimeAttribute,
+                                        maxPtime));
+  }
+}
 
 bool
 RsdparsaSdpAttributeList::IsAllowedHere(SdpAttribute::AttributeType type)

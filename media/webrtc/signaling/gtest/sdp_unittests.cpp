@@ -3274,6 +3274,18 @@ TEST_P(NewSdpTest, CheckSctpmap) {
               sctpmap);
 }
 
+TEST_P(NewSdpTest, CheckMaxPtime) {
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0)
+                          .GetAttributeList()
+                          .HasAttribute(SdpAttribute::kMaxptimeAttribute));
+  ASSERT_EQ(mSdp->GetMediaSection(0).GetAttributeList().GetMaxptime(), 20U);
+}
+
 const std::string kNewSctpportOfferDraft21 =
 "v=0" CRLF
 "o=Mozilla-SIPUA-35.0a1 27987 0 IN IP4 0.0.0.0" CRLF
