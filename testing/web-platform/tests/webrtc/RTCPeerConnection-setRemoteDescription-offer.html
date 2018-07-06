@@ -51,9 +51,11 @@
 
   promise_test(t => {
     const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
     pc1.createDataChannel('datachannel');
 
     const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
 
     const states = [];
     pc2.addEventListener('signalingstatechange', () => states.push(pc2.signalingState));
@@ -70,13 +72,15 @@
         assert_equals(states, ['have-remote-offer']);
       });
     });
-   }, 'setRemoteDescription with valid offer should succeed');
+  }, 'setRemoteDescription with valid offer should succeed');
 
   promise_test(t => {
     const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
     pc1.createDataChannel('datachannel');
 
     const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
 
     const states = [];
     pc2.addEventListener('signalingstatechange', () => states.push(pc2.signalingState));
@@ -98,9 +102,11 @@
 
   promise_test(t => {
     const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
     pc1.createDataChannel('datachannel');
 
     const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
 
     const states = [];
     pc2.addEventListener('signalingstatechange', () => states.push(pc2.signalingState));
@@ -138,6 +144,8 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
+    t.add_cleanup(() => pc.close());
+
     return pc.setRemoteDescription({
       type: 'offer',
       sdp: 'Invalid SDP'
@@ -165,6 +173,7 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
     return pc.createOffer()
     .then(offer => {
       return pc.setLocalDescription(offer)

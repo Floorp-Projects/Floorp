@@ -63,6 +63,8 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
+    t.add_cleanup(() => pc.close());
+
     return pc.createOffer()
     .then(offer =>
       promise_rejects(t, 'InvalidStateError',
@@ -79,6 +81,7 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
@@ -109,6 +112,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
@@ -130,6 +134,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
