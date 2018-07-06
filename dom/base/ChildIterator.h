@@ -305,7 +305,7 @@ public:
     return node && node->IsContent() ? node->AsContent() : nullptr;
   }
 
-  StyleChildrenIterator(const nsIContent* aContent, bool aStartAtBeginning = true)
+  explicit StyleChildrenIterator(const nsIContent* aContent, bool aStartAtBeginning = true)
     : AllChildrenIterator(aContent,
                           nsIContent::eAllChildren |
                           nsIContent::eSkipDocumentLevelNativeAnonymousContent,
