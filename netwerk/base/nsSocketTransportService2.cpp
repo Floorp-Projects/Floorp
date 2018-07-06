@@ -1448,7 +1448,7 @@ nsSocketTransportService::Observe(nsISupports *subject,
         if (!Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false)) {
           return NS_OK;
         }
-        return net::IOActivityMonitor::Init();
+        return net::IOActivityMonitor::Init(Preferences::GetInt(IO_ACTIVITY_INTERVAL_PREF, 0));
     }
 
     if (!strcmp(topic, "last-pb-context-exited")) {
