@@ -29,7 +29,7 @@
 
 #include "gfxVRPuppet.h"
 #include "ipc/VRLayerParent.h"
-#if !defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
 #include "service/VRService.h"
 #endif
 
@@ -78,7 +78,7 @@ VRManager::VRManager()
    * to support everyone else.
    */
 
-#if !defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
   mVRService = VRService::Create();
@@ -157,7 +157,7 @@ VRManager::Shutdown()
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Shutdown();
   }
-#if !defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
   if (mVRService) {
     mVRService->Stop();
   }
@@ -348,7 +348,7 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
   * or interrupt other VR activities.
   */
   if (mVRDisplaysRequested || aMustDispatch) {
-#if !defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
     if (mVRService) {
       mVRService->Start();
     }
