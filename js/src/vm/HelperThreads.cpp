@@ -2108,6 +2108,7 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
         task->parse(cx);
 
         cx->frontendCollectionPool().purge();
+        cx->atomsZoneFreeLists().clear();
     }
 
     // The callback is invoked while we are still off thread.

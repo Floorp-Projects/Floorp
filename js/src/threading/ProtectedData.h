@@ -226,6 +226,7 @@ template <AllowedHelperThread Helper>
 class CheckZone
 {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
+  protected:
     JS::Zone* zone;
 
   public:
@@ -363,6 +364,27 @@ using WriteOnceData = ProtectedDataWriteOnce<CheckUnprotected, T>;
 template <typename T>
 using ExclusiveAccessLockWriteOnceData =
     ProtectedDataWriteOnce<CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::None>, T>;
+
+// Custom check for arena list data that requires the GC lock to be held when
+// accessing the atoms zone if parallel parsing is running, in addition to the
+// usual Zone checks.
+template <AllowedHelperThread Helper>
+class CheckArenaListAccess : public CheckZone<AllowedHelperThread::None>
+{
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
+  public:
+    explicit CheckArenaListAccess(JS::Zone* zone)
+      : CheckZone<AllowedHelperThread::None>(zone) {}
+    void check() const;
+#else
+  public:
+    explicit CheckArenaListAccess(JS::Zone* zone)
+      : CheckZone<AllowedHelperThread::None>(zone) {}
+#endif
+};
+
+template <typename T>
+using ArenaListData = ProtectedDataZoneArg<CheckArenaListAccess<AllowedHelperThread::GCTask>, T>;
 
 #undef DECLARE_ASSIGNMENT_OPERATOR
 #undef DECLARE_ONE_BOOL_OPERATOR

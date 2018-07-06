@@ -22,7 +22,7 @@ Symbol*
 Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash, JSAtom* description,
                     const AutoAccessAtomsZone& access)
 {
-    MOZ_ASSERT(cx->zone() == cx->atomsZone(access));
+    MOZ_ASSERT(cx->inAtomsZone());
 
     // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
     Symbol* p = Allocate<JS::Symbol, NoGC>(cx);
@@ -48,7 +48,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     AutoLockForExclusiveAccess lock(cx);
     Symbol* sym;
     {
-        AutoAtomsZone az(cx, lock);
+        AutoAllocInAtomsZone az(cx);
         sym = newInternal(cx, code, cx->runtime()->randomHashCode(), atom, lock);
     }
     if (sym)
@@ -74,7 +74,7 @@ Symbol::for_(JSContext* cx, HandleString description)
 
     Symbol* sym;
     {
-        AutoAtomsZone az(cx, lock);
+        AutoAllocInAtomsZone az(cx);
         // Rehash the hash of the atom to give the corresponding symbol a hash
         // that is different than the hash of the corresponding atom.
         HashNumber hash = mozilla::HashGeneric(atom->hash());
