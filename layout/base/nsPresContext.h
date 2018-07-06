@@ -1198,7 +1198,7 @@ protected:
   void GetDocumentColorPreferences();
 
   void PreferenceChanged(const char* aPrefName);
-  static void PrefChangedCallback(const char*, void*);
+  static void PrefChangedCallback(const char*, nsPresContext*);
 
   void UpdateAfterPreferencesChanged();
   void DispatchPrefChangedRunnableIfNeeded();

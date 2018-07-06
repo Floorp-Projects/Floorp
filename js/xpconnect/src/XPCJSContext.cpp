@@ -733,9 +733,8 @@ bool
 xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
 
 static void
-ReloadPrefsCallback(const char* pref, void* data)
+ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
 {
-    XPCJSContext* xpccx = static_cast<XPCJSContext*>(data);
     JSContext* cx = xpccx->Context();
 
     bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");

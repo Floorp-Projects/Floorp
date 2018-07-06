@@ -94,7 +94,7 @@ private:
   CachedPrefs();
   ~CachedPrefs();
 
-  static void OnPrefsChange(const char* aPrefName, void* );
+  static void OnPrefsChange(const char* aPrefName, CachedPrefs*);
 
   // Whether channels should be annotated as being on the tracking protection
   // list.
@@ -119,24 +119,22 @@ StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 
 // static
 void
-CachedPrefs::OnPrefsChange(const char* aPref, void* aClosure)
+CachedPrefs::OnPrefsChange(const char* aPref, CachedPrefs* aPrefs)
 {
-  CachedPrefs* prefs = static_cast<CachedPrefs*> (aClosure);
-
   if (!strcmp(aPref, URLCLASSIFIER_SKIP_HOSTNAMES)) {
     nsCString skipHostnames;
     Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES, skipHostnames);
     ToLowerCase(skipHostnames);
-    prefs->SetSkipHostnames(skipHostnames);
+    aPrefs->SetSkipHostnames(skipHostnames);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_WHITELIST)) {
     nsCString trackingWhitelist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST,
                             trackingWhitelist);
-    prefs->SetTrackingWhiteList(trackingWhitelist);
+    aPrefs->SetTrackingWhiteList(trackingWhitelist);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_TABLE)) {
     nsCString trackingBlacklist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE, trackingBlacklist);
-    prefs->SetTrackingBlackList(trackingBlacklist);
+    aPrefs->SetTrackingBlackList(trackingBlacklist);
   }
 }
 
