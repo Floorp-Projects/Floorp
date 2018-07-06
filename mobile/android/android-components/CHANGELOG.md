@@ -1,3 +1,26 @@
+# 0.13
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180704100138 (2018.07.04, 1c235a552c32ba6c97e6030c497c49f72c7d48a8)
+    * Beta: 62.0b5
+    * Release: 61.0
+
+* **service-fxa**, **samples-fxa**: Various improvements to FxA component API (made calls asynchronous and introduced error handling)
+* **browser-toolbar**: Added functionality to observer focus changes (`setOnEditFocusChangeListener`)
+* **concept-tabstray**, **browser-tabstray**, **features-tabs**: New components to provide browser tabs functionality
+* **sample-browser**: Updated to support multiple tabs
+
+* **API changes**:
+  * InlineAutocompleteEditText: `onAutocomplete` was renamed to `applyAutocompleteResult`
+  * Toolbar: `setOnUrlChangeListener` was renamed to `setOnUrlCommitListener`
+
+* Various bugfixes and refactorings (see commits below for details)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.12...v0.13)
+
 # 0.12
 
 * Compiled against:
