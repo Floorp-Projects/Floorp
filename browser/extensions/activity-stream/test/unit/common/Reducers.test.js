@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections, Theme} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -589,16 +589,6 @@ describe("Reducers", () => {
     it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
       const state = Snippets({blockList: [1, 2]}, {type: at.SNIPPETS_BLOCKLIST_CLEARED});
       assert.deepEqual(state.blockList, []);
-    });
-  });
-  describe("Theme", () => {
-    it("should return INITIAL_STATE by default", () => {
-      assert.equal(Theme(undefined, {type: "some_action"}), INITIAL_STATE.Theme);
-    });
-    it("should update Theme data on THEME_UPDATE", () => {
-      const action = {type: at.THEME_UPDATE, data: {className: "new-theme"}};
-      const nextState = Theme(INITIAL_STATE.Theme, action);
-      assert.equal(nextState.className, action.data.className);
     });
   });
 });

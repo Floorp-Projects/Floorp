@@ -681,7 +681,7 @@ function saveMedia() {
         titleKey = "SaveAudioTitle";
 
       saveURL(url, null, titleKey, false, false, makeURI(item.baseURI),
-              null, gDocInfo.isContentWindowPrivate);
+              null, gDocInfo.isContentWindowPrivate, gDocInfo.principal);
     }
   } else {
     selectSaveFolder(function(aDirectory) {

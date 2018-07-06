@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     name='run-missing-tests',
     title='Run Missing Tests',
+    kind='hook',
+    generic=True,
     symbol='rmt',
     description=(
         "Run tests in the selected push that were optimized away, usually by SETA."

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1473515
+-->
+<html>
+<head>
+  <title>Test for Bug 1473515</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1473515">Mozilla Bug 1473515</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<input id="input">
+<textarea id="textarea"></textarea>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editableElements = [
+    document.getElementById("input"),
+    document.getElementById("textarea"),
+  ];
+  for (let editableElement of editableElements) {
+    editableElement.focus();
+    synthesizeKey("a");
+    synthesizeKey("c");
+    synthesizeKey("KEY_ArrowLeft");
+    synthesizeKey("b");
+    let editor = SpecialPowers.wrap(editableElement).editor;
+    let transactionManager = editor.transactionManager;
+    is(transactionManager.numberOfUndoItems, 2,
+       editableElement.tagName + ": Initially, there should be 2 undo items");
+    // Defined as nsITextControlElement::DEFAULT_UNDO_CAP
+    is(transactionManager.maxTransactionCount, 1000,
+       editableElement.tagName + ": Initially, transaction manager should be able to have 1,000 undo items");
+    editableElement.value = "def";
+    is(transactionManager.numberOfUndoItems, 0,
+       editableElement.tagName + ": After setting value, all undo items must be deleted");
+    is(transactionManager.maxTransactionCount, 1000,
+       editableElement.tagName + ": After setting value, maximum transaction count should be restored to the previous value");
+    synthesizeKey("a");
+    synthesizeKey("z", { accelKey: true });
+    is(editableElement.value, "def",
+       editableElement.tagName + ": undo should work after setting value");
+
+    // Disable undo/redo.
+    editor.enableUndo(0);
+    is(transactionManager.maxTransactionCount, 0,
+       editableElement.tagName + ": Transaction manager should not be able to have undo items");
+    editableElement.value = "hij";
+    is(transactionManager.maxTransactionCount, 0,
+       editableElement.tagName + ": Transaction manager should not be able to have undo items after setting value");
+  }
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

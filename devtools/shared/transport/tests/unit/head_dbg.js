@@ -96,7 +96,8 @@ function initTestDebuggerServer() {
     constructor: "ScriptActor",
     type: { global: true, target: true }
   });
-  DebuggerServer.registerModule("xpcshell-test/testactors");
+  const { createRootActor } = require("xpcshell-test/testactors");
+  DebuggerServer.setRootActor(createRootActor);
   // Allow incoming connections.
   DebuggerServer.init();
 }

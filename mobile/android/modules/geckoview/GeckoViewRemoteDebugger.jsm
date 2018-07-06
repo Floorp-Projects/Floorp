@@ -13,8 +13,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
+XPCOMUtils.defineLazyGetter(this, "require", () => {
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  return require;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   const { DebuggerServer } = require("devtools/server/main");
   return DebuggerServer;
 });
@@ -48,7 +52,8 @@ var GeckoViewRemoteDebugger = {
     debug `onEnable`;
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
-    DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
+    const { createRootActor } = require("resource://gre/modules/dbg-browser-actors.js");
+    DebuggerServer.setRootActor(createRootActor);
     DebuggerServer.allowChromeProcess = true;
     DebuggerServer.chromeWindowType = "navigator:geckoview";
 
