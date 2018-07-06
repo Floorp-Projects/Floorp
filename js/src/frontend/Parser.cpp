@@ -69,6 +69,8 @@ using AddDeclaredNamePtr = ParseContext::Scope::AddDeclaredNamePtr;
 using BindingIter = ParseContext::Scope::BindingIter;
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
+using BindingNameVector = Vector<BindingName, 6>;
+
 // Read a token. Report an error and return null() if that token doesn't match
 // to the condition.  Do not use MUST_MATCH_TOKEN_INTERNAL directly.
 #define MUST_MATCH_TOKEN_INTERNAL(cond, modifier, errorReport)                              \
@@ -1773,7 +1775,7 @@ NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
  * the location one past the newly-constructed |BindingName|s.
  */
 static MOZ_MUST_USE BindingName*
-FreshlyInitializeBindings(BindingName* cursor, const Vector<BindingName>& bindings)
+FreshlyInitializeBindings(BindingName* cursor, const BindingNameVector& bindings)
 {
     return std::uninitialized_copy(bindings.begin(), bindings.end(), cursor);
 }
@@ -1781,9 +1783,9 @@ FreshlyInitializeBindings(BindingName* cursor, const Vector<BindingName>& bindin
 Maybe<GlobalScope::Data*>
 NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> vars(context);
-    Vector<BindingName> lets(context);
-    Vector<BindingName> consts(context);
+    BindingNameVector vars(context);
+    BindingNameVector lets(context);
+    BindingNameVector consts(context);
 
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
@@ -1849,10 +1851,10 @@ ParserBase::newGlobalScopeData(ParseContext::Scope& scope)
 Maybe<ModuleScope::Data*>
 NewModuleScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> imports(context);
-    Vector<BindingName> vars(context);
-    Vector<BindingName> lets(context);
-    Vector<BindingName> consts(context);
+    BindingNameVector imports(context);
+    BindingNameVector vars(context);
+    BindingNameVector lets(context);
+    BindingNameVector consts(context);
 
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
@@ -1919,7 +1921,7 @@ ParserBase::newModuleScopeData(ParseContext::Scope& scope)
 Maybe<EvalScope::Data*>
 NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> vars(context);
+    BindingNameVector vars(context);
 
     for (BindingIter bi = scope.bindings(pc); bi; bi++) {
         // Eval scopes only contain 'var' bindings. Make all bindings aliased
@@ -1959,9 +1961,9 @@ ParserBase::newEvalScopeData(ParseContext::Scope& scope)
 Maybe<FunctionScope::Data*>
 NewFunctionScopeData(JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> positionalFormals(context);
-    Vector<BindingName> formals(context);
-    Vector<BindingName> vars(context);
+    BindingNameVector positionalFormals(context);
+    BindingNameVector formals(context);
+    BindingNameVector vars(context);
 
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
     bool hasDuplicateParams = pc->functionBox()->hasDuplicateParameters;
@@ -2058,7 +2060,7 @@ ParserBase::newFunctionScopeData(ParseContext::Scope& scope, bool hasParameterEx
 Maybe<VarScope::Data*>
 NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> vars(context);
+    BindingNameVector vars(context);
 
     bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
 
@@ -2099,8 +2101,8 @@ ParserBase::newVarScopeData(ParseContext::Scope& scope)
 Maybe<LexicalScope::Data*>
 NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
-    Vector<BindingName> lets(context);
-    Vector<BindingName> consts(context);
+    BindingNameVector lets(context);
+    BindingNameVector consts(context);
 
     // Unlike other scopes with bindings which are body-level, it is unknown
     // if pc->sc()->allBindingsClosedOver() is correct at the time of
