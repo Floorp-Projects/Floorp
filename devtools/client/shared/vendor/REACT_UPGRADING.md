@@ -17,7 +17,7 @@ You should start by upgrading our prop-types library to match the latest version
 ```bash
 git clone https://github.com/facebook/react.git
 cd react
-git checkout v16.2.0 # or the version you are targetting
+git checkout v16.4.1 # or the version you are targetting
 ```
 
 ## Preparing to Build
@@ -27,6 +27,7 @@ We need to disable minification and tree shaking as they overcomplicate the upgr
 - Open scripts/rollup/build.js
 - Find a method called `function getRollupOutputOptions()`
 - After `sourcemap: false` add `treeshake: false` and `freeze: false`
+- Remove `freeze: !isProduction,` from the same section.
 - Change this:
 
   ```js
@@ -66,40 +67,6 @@ yarn
 yarn build
 ```
 
-### Package Testing Utilities
-
-Go through `build/packages/react-test-renderer` and in each file remove all code meant for a production build e.g.
-
-Change this:
-
-```js
-if (process.env.NODE_ENV === 'production') {
-  module.exports = require('./cjs/react-test-renderer-shallow.production.min.js');
-} else {
-  module.exports = require('./cjs/react-test-renderer-shallow.development.js');
-}
-```
-
-To this:
-
-```js
-module.exports = require('./cjs/react-test-renderer-shallow.development.js');
-```
-
-**NOTE: Be sure to remove all `process.env` conditions from inside the files in the cjs folder.**
-
-Also in the cjs folder replace the React require paths to point at the current React version:
-
-```js
-var React = require('../../../dist/react.development');
-```
-
-From within `build/packages/react-test-renderer`:
-
-```bash
-browserify shallow.js -o react-test-renderer-shallow.js --standalone ShallowRenderer
-```
-
 ### Copy the Files Into your Firefox Repo
 
 ```bash
@@ -112,7 +79,7 @@ cp build/dist/react.development.js <gecko-dev>/devtools/client/shared/vendor/rea
 cp build/dist/react-dom.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-dev.js
 cp build/dist/react-dom-server.browser.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server-dev.js
 cp build/dist/react-dom-test-utils.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-test-utils-dev.js
-cp build/packages/react-test-renderer/react-test-renderer-shallow.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer-shallow.js
+cp build/dist/react-test-renderer-shallow.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer-shallow.js
 ```
 
 From this point we will no longer need your react repository so feel free to delete it.

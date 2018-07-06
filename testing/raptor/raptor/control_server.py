@@ -117,7 +117,7 @@ class RaptorControlServer():
         self.kill_thread.daemon = True
         self.kill_thread.start()
 
-    def wait_for_quit(self, timeout=75):
+    def wait_for_quit(self, timeout=15):
         """Wait timeout seconds for the process to exit. If it hasn't
         exited by then, kill it.
         """

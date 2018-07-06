@@ -6,7 +6,16 @@ RUST_PROGRAMS += ["geckodriver"]
 
 # https://bugzil.la/1425365
 if CONFIG["OS_ARCH"] != "WINNT":
-    RUST_TESTS = ["geckodriver"]
+    RUST_TESTS = [
+        "geckodriver",
+        "webdriver",
+
+        # TODO: Move to mozbase/rust/moz.build once those crates can be
+        # tested separately.
+        "mozprofile",
+        "mozrunner",
+        "mozversion",
+]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "geckodriver")

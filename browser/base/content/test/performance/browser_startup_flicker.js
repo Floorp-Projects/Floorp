@@ -15,6 +15,7 @@ add_task(async function() {
   // Ensure all the frame data is in the test compartment to avoid traversing
   // a cross compartment wrapper for each pixel.
   let frames = Cu.cloneInto(startupRecorder.data.frames, {});
+  ok(frames.length > 0, "Should have captured some frames.");
 
   let unexpectedRects = 0;
   let alreadyFocused = false;

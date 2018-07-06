@@ -679,6 +679,31 @@ add_task(async function getTopFrecentSites() {
   Assert.equal(links[0].url, testURI, "added visit corresponds to added url");
 });
 
+add_task(async function getTopFrecentSites_no_dedup() {
+  await setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = await provider.getTopSites({topsiteFrecency: 100});
+  Assert.equal(links.length, 0, "empty history yields empty links");
+
+  // Add a visits in reverse order they will be returned in when not deduped.
+  let testURIs = [{uri: "http://www.mozilla.com/"}, {uri: "http://mozilla.com/"}];
+  await PlacesTestUtils.addVisits(testURIs);
+
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 0, "adding a single visit doesn't exceed default threshold");
+
+  links = await provider.getTopSites({topsiteFrecency: 100});
+  Assert.equal(links.length, 1, "adding a visit yields a link");
+  // Plain domain is returned when deduped.
+  Assert.equal(links[0].url, testURIs[1].uri, "added visit corresponds to added url");
+
+  links = await provider.getTopSites({topsiteFrecency: 100, onePerDomain: false});
+  Assert.equal(links.length, 2, "adding a visit yields a link");
+  Assert.equal(links[0].url, testURIs[1].uri, "added visit corresponds to added url");
+  Assert.equal(links[1].url, testURIs[0].uri, "added visit corresponds to added url");
+});
+
 add_task(async function getTopFrecentSites_dedupeWWW() {
   await setUpActivityStreamTest();
 

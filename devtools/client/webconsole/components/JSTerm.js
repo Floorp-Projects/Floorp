@@ -277,7 +277,11 @@ class JSTerm extends Component {
             }
           }
         });
+
         this.editor.appendToLocalElement(this.node);
+        const cm = this.editor.codeMirror;
+        cm.on("paste", (_, event) => this.props.onPaste(event));
+        cm.on("drop", (_, event) => this.props.onPaste(event));
       }
     } else if (this.inputNode) {
       this.inputNode.addEventListener("keypress", this._keyPress);
