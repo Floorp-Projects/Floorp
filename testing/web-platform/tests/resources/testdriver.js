@@ -80,7 +80,7 @@
                         return action();
                     }
                 });
-        };
+        },
 
         /**
          * Triggers a user-initiated click
