@@ -4,6 +4,13 @@
 
 rich-select {
   display: inline-block;
+  position: relative;
+}
+
+/* Focusing on the underlying select element outlines the outer
+rich-select wrapper making it appear like rich-select is focused. */
+rich-select:focus-within {
+  outline: 1px dotted;
 }
 
 /*
@@ -12,6 +19,12 @@ rich-select {
  * in the closed state opens the HTML select dropdown. */
 rich-select > select {
   opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
 
 .rich-option {
