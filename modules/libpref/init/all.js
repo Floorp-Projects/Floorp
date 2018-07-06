@@ -1373,6 +1373,12 @@ pref("dom.event.clipboardevents.enabled",   true);
 pref("dom.event.highrestimestamp.enabled",  true);
 pref("dom.event.coalesce_mouse_move",       true);
 
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+pref("dom.ua_widget.enabled", true);
+#else
+pref("dom.ua_widget.enabled", false);
+#endif
+
 #ifdef NIGHTLY_BUILD
 pref("dom.webcomponents.shadowdom.enabled", true);
 pref("dom.webcomponents.customelements.enabled", true);
