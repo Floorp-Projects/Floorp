@@ -48,11 +48,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AutoplayPermissionManager.h',
+    'AutoplayPermissionRequest.h',
     'TextInputListener.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    'AutoplayRequest.h',
     'HTMLAllCollection.h',
     'HTMLAnchorElement.h',
     'HTMLAreaElement.h',
@@ -223,7 +224,8 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    'AutoplayRequest.cpp',
+    'AutoplayPermissionManager.cpp',
+    'AutoplayPermissionRequest.cpp',
     # Includes npapi.h.
     'PluginDocument.cpp',
 ]
