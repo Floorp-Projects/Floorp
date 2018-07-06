@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIMutableArray.h"
+#include "nsPerformanceMetrics.h"
 #include "nsThreadUtils.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/dom/DocGroup.h"
@@ -37,6 +39,52 @@ CollectPerformanceInfo(nsTArray<PerformanceInfo>& aMetrics)
     WorkerDebugger* debugger = wdm->GetDebuggerAt(i);
     aMetrics.AppendElement(debugger->ReportPerformanceInfo());
   }
+}
+
+nsresult
+NotifyPerformanceInfo(const nsTArray<PerformanceInfo>& aMetrics)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (NS_WARN_IF(!array)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Each PerformanceInfo is converted into a nsIPerformanceMetricsData
+  for (const PerformanceInfo& info : aMetrics) {
+    nsCOMPtr<nsIMutableArray> items = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    if (NS_WARN_IF(!items)) {
+      return rv;
+    }
+    for (const CategoryDispatch& entry : info.items()) {
+      nsCOMPtr<nsIPerformanceMetricsDispatchCategory> item =
+        new PerformanceMetricsDispatchCategory(entry.category(),
+                                               entry.count());
+      rv = items->AppendElement(item);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    nsCOMPtr<nsIPerformanceMetricsData> data;
+    data = new PerformanceMetricsData(info.pid(), info.wid(), info.pwid(),
+                                      info.host(), info.duration(),
+                                      info.worker(), items);
+    rv = array->AppendElement(data);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = obs->NotifyObservers(array, "performance-metrics", nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 } // namespace

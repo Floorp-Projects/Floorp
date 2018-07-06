@@ -160,9 +160,7 @@ public:
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
 
-  static already_AddRefed<Promise>
-  RequestPerformanceMetrics(GlobalObject& aGlobal,
-                            ErrorResult& aRv);
+  static void RequestPerformanceMetrics(GlobalObject& aGlobal);
 
   static void Import(const GlobalObject& aGlobal,
                      const nsAString& aResourceURI,
