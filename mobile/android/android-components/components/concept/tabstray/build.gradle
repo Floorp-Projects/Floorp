@@ -27,7 +27,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 }
 
-archivesBaseName = "concept-tabstray    "
+archivesBaseName = "concept-tabstray"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(

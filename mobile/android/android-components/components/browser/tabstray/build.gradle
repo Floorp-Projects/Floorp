@@ -43,7 +43,7 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
 }
 
-archivesBaseName = "toolbar"
+archivesBaseName = "tabstray"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
