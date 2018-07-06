@@ -1,6 +1,7 @@
 // GENERATED CONTENT - DO NOT EDIT
-// Content of this file was automatically extracted from the Web Audio API spec.
-// See https://webaudio.github.io/web-audio-api/
+// Content of this file was automatically extracted from the
+// "Web Audio API" spec.
+// See: https://webaudio.github.io/web-audio-api/
 
 enum AudioContextState {
   "suspended",
@@ -21,34 +22,35 @@ interface BaseAudioContext : EventTarget {
   readonly attribute AudioContextState state;
   [SameObject, SecureContext]
   readonly attribute AudioWorklet audioWorklet;
-  Promise<void> resume ();
   attribute EventHandler onstatechange;
+
+  AnalyserNode createAnalyser ();
+  BiquadFilterNode createBiquadFilter ();
   AudioBuffer createBuffer (unsigned long numberOfChannels, unsigned long length, float sampleRate);
-  Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
-                                        optional DecodeSuccessCallback successCallback,
-                                        optional DecodeErrorCallback errorCallback);
   AudioBufferSourceNode createBufferSource ();
+  ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
+  ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
   ConstantSourceNode createConstantSource ();
+  ConvolverNode createConvolver ();
+  DelayNode createDelay (optional double maxDelayTime = 1.0);
+  DynamicsCompressorNode createDynamicsCompressor ();
+  GainNode createGain ();
+  IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
+  OscillatorNode createOscillator ();
+  PannerNode createPanner ();
+  PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints);
   ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
                                             optional unsigned long numberOfInputChannels = 2,
                                             optional unsigned long numberOfOutputChannels = 2);
-  AnalyserNode createAnalyser ();
-  GainNode createGain ();
-  DelayNode createDelay (optional double maxDelayTime = 1.0);
-  BiquadFilterNode createBiquadFilter ();
-  IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
-  WaveShaperNode createWaveShaper ();
-  PannerNode createPanner ();
   StereoPannerNode createStereoPanner ();
-  ConvolverNode createConvolver ();
-  ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
-  ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
-  DynamicsCompressorNode createDynamicsCompressor ();
-  OscillatorNode createOscillator ();
-  PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints);
+  WaveShaperNode createWaveShaper ();
+
+  Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
+                                        optional DecodeSuccessCallback successCallback,
+                                        optional DecodeErrorCallback errorCallback);
+  Promise<void> resume ();
 };
 
-[Exposed=Window]
 enum AudioContextLatencyCategory {
     "balanced",
     "interactive",
@@ -69,13 +71,11 @@ interface AudioContext : BaseAudioContext {
     MediaStreamAudioDestinationNode createMediaStreamDestination ();
 };
 
-[Exposed=Window]
 dictionary AudioContextOptions {
   (AudioContextLatencyCategory or double) latencyHint = "interactive";
   float sampleRate;
 };
 
-[Exposed=Window]
 dictionary AudioTimestamp {
   double contextTime;
   DOMHighResTimeStamp performanceTime;
@@ -91,7 +91,6 @@ interface OfflineAudioContext : BaseAudioContext {
   attribute EventHandler oncomplete;
 };
 
-[Exposed=Window]
 dictionary OfflineAudioContextOptions {
   unsigned long numberOfChannels = 1;
   required unsigned long length;
@@ -104,7 +103,6 @@ interface OfflineAudioCompletionEvent : Event {
   readonly attribute AudioBuffer renderedBuffer;
 };
 
-[Exposed=Window]
 dictionary OfflineAudioCompletionEventInit : EventInit {
   required AudioBuffer renderedBuffer;
 };
@@ -148,14 +146,12 @@ interface AudioNode : EventTarget {
   attribute ChannelInterpretation channelInterpretation;
 };
 
-[Exposed=Window]
 enum ChannelCountMode {
   "max",
   "clamped-max",
   "explicit"
 };
 
-[Exposed=Window]
 enum ChannelInterpretation {
   "speakers",
   "discrete"
@@ -228,7 +224,6 @@ interface AudioBufferSourceNode : AudioScheduledSourceNode {
   void start (optional double when = 0,
               optional double offset,
               optional double duration);
-  void stop (optional double when = 0);
 };
 
 dictionary AudioBufferSourceOptions {
@@ -314,7 +309,7 @@ dictionary ChannelMergerOptions : AudioNodeOptions {
 };
 
 [Exposed=Window,
- Constructor (BaseAudioContext context, optional ChannelSplitterNode options)]
+ Constructor (BaseAudioContext context, optional ChannelSplitterOptions options)]
 interface ChannelSplitterNode : AudioNode {
 };
 
@@ -396,7 +391,7 @@ dictionary IIRFilterOptions : AudioNodeOptions {
 };
 
 [Exposed=Window,
- Constructor (BaseAudioContext context, MediaElementAudioSourceOptions options)]
+ Constructor (AudioContext context, MediaElementAudioSourceOptions options)]
 interface MediaElementAudioSourceNode : AudioNode {
   [SameObject] readonly attribute HTMLMediaElement mediaElement;
 };
@@ -406,13 +401,13 @@ dictionary MediaElementAudioSourceOptions {
 };
 
 [Exposed=Window,
- Constructor (BaseAudioContext context, optional AudioNodeOptions options)]
+ Constructor (AudioContext context, optional AudioNodeOptions options)]
 interface MediaStreamAudioDestinationNode : AudioNode {
   readonly attribute MediaStream stream;
 };
 
 [Exposed=Window,
- Constructor (BaseAudioContext context, MediaStreamAudioSourceOptions options)]
+ Constructor (AudioContext context, MediaStreamAudioSourceOptions options)]
 interface MediaStreamAudioSourceNode : AudioNode {
   [SameObject] readonly attribute MediaStream mediaStream;
 };
@@ -558,6 +553,7 @@ interface AudioWorklet : Worklet {
 [Global=(Worklet, AudioWorklet), Exposed=AudioWorklet]
 interface AudioWorkletGlobalScope : WorkletGlobalScope {
   void registerProcessor (DOMString name, VoidFunction processorCtor);
+  readonly attribute unsigned long long currentFrame;
   readonly attribute double currentTime;
   readonly attribute float sampleRate;
 };
@@ -567,21 +563,13 @@ interface AudioParamMap {
   readonly maplike<DOMString, AudioParam>;
 };
 
-enum AudioWorkletProcessorState {
-  "pending",
-  "running",
-  "stopped",
-  "error"
-};
-
 [Exposed=Window,
  SecureContext,
  Constructor (BaseAudioContext context, DOMString name, optional AudioWorkletNodeOptions options)]
 interface AudioWorkletNode : AudioNode {
   readonly attribute AudioParamMap parameters;
   readonly attribute MessagePort port;
-  readonly attribute AudioWorkletProcessorState processorState;
-  attribute EventHandler onprocessorstatechange;
+  attribute EventHandler onprocessorerror;
 };
 
 dictionary AudioWorkletNodeOptions : AudioNodeOptions {
@@ -589,7 +577,7 @@ dictionary AudioWorkletNodeOptions : AudioNodeOptions {
   unsigned long numberOfOutputs = 1;
   sequence<unsigned long> outputChannelCount;
   record<DOMString, double> parameterData;
-  object processorOptions = null;
+  object? processorOptions = null;
 };
 
 [Exposed=AudioWorklet,
@@ -603,4 +591,5 @@ dictionary AudioParamDescriptor {
   float defaultValue = 0;
   float minValue = -3.4028235e38;
   float maxValue = 3.4028235e38;
+  AutomationRate automationRate = "a-rate";
 };
