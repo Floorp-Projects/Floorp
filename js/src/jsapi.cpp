@@ -598,7 +598,7 @@ JS::InitSelfHostedCode(JSContext* cx)
     if (!rt->initSelfHosting(cx))
         return false;
 
-    if (!rt->parentRuntime && !rt->transformToPermanentAtoms(cx))
+    if (!rt->parentRuntime && !rt->initMainAtomsTables(cx))
         return false;
 
     return true;
@@ -1210,14 +1210,6 @@ JS_IdToProtoKey(JSContext* cx, HandleId id)
     return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 
-JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForObject(JSContext* cx, JSObject* obj)
-{
-    AssertHeapIsIdle();
-    assertSameCompartment(cx, obj);
-    return &obj->deprecatedGlobal();
-}
-
 extern JS_PUBLIC_API(bool)
 JS_IsGlobalObject(JSObject* obj)
 {
@@ -1253,9 +1245,17 @@ JS::CurrentGlobalOrNull(JSContext* cx)
 {
     AssertHeapIsIdleOrIterating();
     CHECK_REQUEST(cx);
-    if (!cx->compartment())
+    if (!cx->realm())
         return nullptr;
     return cx->global();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetNonCCWObjectGlobal(JSObject* obj)
+{
+    AssertHeapIsIdle();
+    MOZ_DIAGNOSTIC_ASSERT(!IsCrossCompartmentWrapper(obj));
+    return &obj->nonCCWGlobal();
 }
 
 JS_PUBLIC_API(bool)

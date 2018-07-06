@@ -383,6 +383,12 @@ js::IsFunctionObject(JSObject* obj)
     return obj->is<JSFunction>();
 }
 
+JS_FRIEND_API(bool)
+js::UninlinedIsCrossCompartmentWrapper(const JSObject* obj)
+{
+    return js::IsCrossCompartmentWrapper(obj);
+}
+
 JS_FRIEND_API(JSObject*)
 js::GetGlobalForObjectCrossCompartment(JSObject* obj)
 {

@@ -30,6 +30,9 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Locale",
     "String.prototype.matchAll",
     "Symbol.matchAll",
+    "Symbol.prototype.description",
+    "global",
+    "export-star-as-namespace-from-module",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
@@ -258,14 +261,15 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     if "CanBlockIsFalse" in testRec:
         refTestSkipIf.append(("xulRuntime.shell", "shell can block main thread"))
 
+    # CanBlockIsTrue is set when the test expects that the implementation
+    # can block on the main thread.
+    if "CanBlockIsTrue" in testRec:
+        refTestSkipIf.append(("!xulRuntime.shell", "browser cannot block main thread"))
+
     # Skip non-test files.
     isSupportFile = fileNameEndsWith(testName, "FIXTURE")
     if isSupportFile:
         refTestSkip.append("not a test file")
-
-    # Temporary workaround for <https://github.com/tc39/test262/issues/1527>.
-    if testName.startswith("built-ins/Atomics") and "BigInt" in testRec["features"]:
-        testRec["features"].remove("BigInt")
 
     # Skip tests with unsupported features.
     if "features" in testRec:
@@ -362,6 +366,11 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
                                                                  "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
+
+    # Intl.RelativeTimeFormat isn't yet enabled by default.
+    localIncludesMap[os.path.join("intl402", "RelativeTimeFormat")] = [
+        "test262-intl-relativetimeformat.js"
+    ]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):

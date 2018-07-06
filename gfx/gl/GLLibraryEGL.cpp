@@ -248,6 +248,7 @@ GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
 class AngleErrorReporting {
 public:
     AngleErrorReporting()
+      : mFailureId(nullptr)
     {
       // No static constructor
     }

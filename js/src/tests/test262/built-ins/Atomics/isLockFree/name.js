@@ -11,10 +11,11 @@ includes: [propertyHelper.js]
 features: [Atomics]
 ---*/
 
-assert.sameValue(Atomics.isLockFree.name, "isLockFree");
-
-verifyNotEnumerable(Atomics.isLockFree, "name");
-verifyNotWritable(Atomics.isLockFree, "name");
-verifyConfigurable(Atomics.isLockFree, "name");
+verifyProperty(Atomics.isLockFree, 'name', {
+  value: 'isLockFree',
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

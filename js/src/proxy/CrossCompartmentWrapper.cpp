@@ -491,13 +491,6 @@ CrossCompartmentWrapper::boxedValue_unbox(JSContext* cx, HandleObject wrapper, M
 
 const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
-bool
-js::IsCrossCompartmentWrapper(const JSObject* obj)
-{
-    return IsWrapper(obj) &&
-           !!(Wrapper::wrapperHandler(obj)->flags() & Wrapper::CROSS_COMPARTMENT);
-}
-
 static void
 NukeRemovedCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {

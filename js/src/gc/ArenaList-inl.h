@@ -237,26 +237,63 @@ js::gc::SortedArenaList::toArenaList()
     return ArenaList(segments[0]);
 }
 
-void
-js::gc::ArenaLists::setFreeList(AllocKind i, FreeSpan* span)
-{
 #ifdef DEBUG
-    auto old = freeList(i);
-    if (!old->isEmpty())
-        old->getArena()->checkNoMarkedFreeCells();
+
+bool
+js::gc::FreeLists::allEmpty() const
+{
+    for (auto i : AllAllocKinds()) {
+        if (!isEmpty(i))
+            return false;
+    }
+    return true;
+}
+
+bool
+js::gc::FreeLists::isEmpty(AllocKind kind) const
+{
+    return freeLists_[kind]->isEmpty();
+}
+
 #endif
-    freeLists()[i] = span;
+
+void
+js::gc::FreeLists::clear()
+{
+    for (auto i : AllAllocKinds()) {
+#ifdef DEBUG
+        auto old = freeLists_[i];
+        if (!old->isEmpty())
+            old->getArena()->checkNoMarkedFreeCells();
+#endif
+        freeLists_[i] = &emptySentinel;
+    }
+}
+
+js::gc::TenuredCell*
+js::gc::FreeLists::allocate(AllocKind kind)
+{
+    return freeLists_[kind]->allocate(Arena::thingSize(kind));
 }
 
 void
-js::gc::ArenaLists::clearFreeList(AllocKind i)
+js::gc::FreeLists::unmarkPreMarkedFreeCells(AllocKind kind)
 {
-#ifdef DEBUG
-    auto old = freeList(i);
-    if (!old->isEmpty())
-        old->getArena()->checkNoMarkedFreeCells();
-#endif
-    freeLists()[i] = &emptySentinel;
+    FreeSpan* freeSpan = freeLists_[kind];
+    if (!freeSpan->isEmpty())
+        freeSpan->getArena()->unmarkPreMarkedFreeCells();
+}
+
+JSRuntime*
+js::gc::ArenaLists::runtime()
+{
+    return zone_->runtimeFromMainThread();
+}
+
+JSRuntime*
+js::gc::ArenaLists::runtimeFromAnyThread()
+{
+    return zone_->runtimeFromAnyThread();
 }
 
 js::gc::Arena*
@@ -293,7 +330,7 @@ js::gc::ArenaLists::arenaListsAreEmpty() const
          * The arena cannot be empty if the background finalization is not yet
          * done.
          */
-        if (backgroundFinalizeState(i) != BFS_DONE)
+        if (concurrentUse(i) == ConcurrentUse::BackgroundFinalize)
             return false;
         if (!arenaLists(i).isEmpty())
             return false;
@@ -306,7 +343,7 @@ js::gc::ArenaLists::unmarkAll()
 {
     for (auto i : AllAllocKinds()) {
         /* The background finalization must have stopped at this point. */
-        MOZ_ASSERT(backgroundFinalizeState(i) == BFS_DONE);
+        MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
         for (Arena* arena = arenaLists(i).head(); arena; arena = arena->next)
             arena->unmarkAll();
     }
@@ -315,42 +352,38 @@ js::gc::ArenaLists::unmarkAll()
 bool
 js::gc::ArenaLists::doneBackgroundFinalize(AllocKind kind) const
 {
-    return backgroundFinalizeState(kind) == BFS_DONE;
+    return concurrentUse(kind) != ConcurrentUse::BackgroundFinalize;
 }
 
 bool
 js::gc::ArenaLists::needBackgroundFinalizeWait(AllocKind kind) const
 {
-    return backgroundFinalizeState(kind) != BFS_DONE;
+    return concurrentUse(kind) == ConcurrentUse::BackgroundFinalize;
 }
 
 void
 js::gc::ArenaLists::clearFreeLists()
 {
-    for (auto i : AllAllocKinds())
-        clearFreeList(i);
-}
-
-bool
-js::gc::ArenaLists::arenaIsInUse(Arena* arena, AllocKind kind) const
-{
-    MOZ_ASSERT(arena);
-    return arena == freeList(kind)->getArenaUnchecked();
+    freeLists().clear();
 }
 
 MOZ_ALWAYS_INLINE js::gc::TenuredCell*
-js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind, size_t thingSize)
+js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind)
 {
-    return freeList(thingKind)->allocate(thingSize);
+    return freeLists().allocate(thingKind);
+}
+
+void
+js::gc::ArenaLists::unmarkPreMarkedFreeCells()
+{
+    for (auto i : AllAllocKinds())
+        freeLists().unmarkPreMarkedFreeCells(i);
 }
 
 void
 js::gc::ArenaLists::checkEmptyFreeLists()
 {
-#ifdef DEBUG
-    for (auto i : AllAllocKinds())
-        checkEmptyFreeList(i);
-#endif
+    MOZ_ASSERT(freeLists().allEmpty());
 }
 
 bool
@@ -364,12 +397,6 @@ js::gc::ArenaLists::checkEmptyArenaLists()
     }
 #endif
     return empty;
-}
-
-void
-js::gc::ArenaLists::checkEmptyFreeList(AllocKind kind)
-{
-    MOZ_ASSERT(freeList(kind)->isEmpty());
 }
 
 #endif // gc_ArenaList_inl_h

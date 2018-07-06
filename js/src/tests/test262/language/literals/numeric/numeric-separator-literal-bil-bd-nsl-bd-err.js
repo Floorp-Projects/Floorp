@@ -24,7 +24,7 @@ info: |
     0 1
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 
 features: [numeric-separator-literal]

@@ -1091,8 +1091,7 @@ const StaticStrings::SmallChar StaticStrings::toSmallChar[] = { R7(0) };
 bool
 StaticStrings::init(JSContext* cx)
 {
-    AutoLockForExclusiveAccess lock(cx);
-    AutoAtomsZone az(cx, lock);
+    AutoAllocInAtomsZone az(cx);
 
     static_assert(UNIT_STATIC_LIMIT - 1 <= JSString::MAX_LATIN1_CHAR,
                   "Unit strings must fit in Latin1Char.");

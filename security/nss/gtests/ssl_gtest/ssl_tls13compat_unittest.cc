@@ -82,7 +82,7 @@ class Tls13CompatTest : public TlsConnectStreamTls13 {
         // Only the second record can be a CCS.
         bool expected_match = expected && (i == 1);
         EXPECT_EQ(expected_match,
-                  kTlsChangeCipherSpecType ==
+                  ssl_ct_change_cipher_spec ==
                       records_->record(i).header.content_type());
       }
     }
@@ -307,7 +307,7 @@ TEST_F(TlsConnectTest, TLS13NonCompatModeSessionID) {
 }
 
 static const uint8_t kCannedCcs[] = {
-    kTlsChangeCipherSpecType,
+    ssl_ct_change_cipher_spec,
     SSL_LIBRARY_VERSION_TLS_1_2 >> 8,
     SSL_LIBRARY_VERSION_TLS_1_2 & 0xff,
     0,
@@ -370,14 +370,14 @@ TEST_F(TlsConnectDatagram13, CompatModeDtlsClient) {
   Connect();
 
   ASSERT_EQ(2U, client_records->count());  // CH, Fin
-  EXPECT_EQ(kTlsHandshakeType, client_records->record(0).header.content_type());
-  EXPECT_EQ(kTlsApplicationDataType,
+  EXPECT_EQ(ssl_ct_handshake, client_records->record(0).header.content_type());
+  EXPECT_EQ(ssl_ct_application_data,
             client_records->record(1).header.content_type());
 
   ASSERT_EQ(6U, server_records->count());  // SH, EE, CT, CV, Fin, Ack
-  EXPECT_EQ(kTlsHandshakeType, server_records->record(0).header.content_type());
+  EXPECT_EQ(ssl_ct_handshake, server_records->record(0).header.content_type());
   for (size_t i = 1; i < server_records->count(); ++i) {
-    EXPECT_EQ(kTlsApplicationDataType,
+    EXPECT_EQ(ssl_ct_application_data,
               server_records->record(i).header.content_type());
   }
 }
@@ -422,12 +422,12 @@ TEST_F(TlsConnectDatagram13, CompatModeDtlsServer) {
   client_->Handshake();
 
   ASSERT_EQ(1U, client_records->count());
-  EXPECT_EQ(kTlsHandshakeType, client_records->record(0).header.content_type());
+  EXPECT_EQ(ssl_ct_handshake, client_records->record(0).header.content_type());
 
   ASSERT_EQ(5U, server_records->count());  // SH, EE, CT, CV, Fin
-  EXPECT_EQ(kTlsHandshakeType, server_records->record(0).header.content_type());
+  EXPECT_EQ(ssl_ct_handshake, server_records->record(0).header.content_type());
   for (size_t i = 1; i < server_records->count(); ++i) {
-    EXPECT_EQ(kTlsApplicationDataType,
+    EXPECT_EQ(ssl_ct_application_data,
               server_records->record(i).header.content_type());
   }
 

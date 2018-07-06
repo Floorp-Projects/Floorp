@@ -1429,6 +1429,32 @@ DecodeGlobalType(Decoder& d, const TypeDefVector& types, HasGcTypes gcTypesEnabl
     return true;
 }
 
+void
+wasm::ConvertMemoryPagesToBytes(Limits* memory)
+{
+    CheckedInt<uint32_t> initialBytes = memory->initial;
+    initialBytes *= PageSize;
+
+    static_assert(MaxMemoryInitialPages < UINT16_MAX, "multiplying by PageSize can't overflow");
+    MOZ_ASSERT(initialBytes.isValid(), "can't overflow by above assertion");
+
+    memory->initial = initialBytes.value();
+
+    if (!memory->maximum)
+        return;
+
+    MOZ_ASSERT(*memory->maximum <= MaxMemoryMaximumPages);
+
+    CheckedInt<uint32_t> maximumBytes = *memory->maximum;
+    maximumBytes *= PageSize;
+
+    // Clamp the maximum memory value to UINT32_MAX; it's not semantically
+    // visible since growing will fail for values greater than INT32_MAX.
+    memory->maximum = Some(maximumBytes.isValid() ? maximumBytes.value() : UINT32_MAX);
+
+    MOZ_ASSERT(memory->initial <= *memory->maximum);
+}
+
 static bool
 DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
 {
@@ -1442,22 +1468,10 @@ DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
     if (memory.initial > MaxMemoryInitialPages)
         return d.fail("initial memory size too big");
 
-    CheckedInt<uint32_t> initialBytes = memory.initial;
-    initialBytes *= PageSize;
-    MOZ_ASSERT(initialBytes.isValid());
-    memory.initial = initialBytes.value();
+    if (memory.maximum && *memory.maximum > MaxMemoryMaximumPages)
+        return d.fail("maximum memory size too big");
 
-    if (memory.maximum) {
-        if (*memory.maximum > MaxMemoryMaximumPages)
-            return d.fail("maximum memory size too big");
-
-        CheckedInt<uint32_t> maximumBytes = *memory.maximum;
-        maximumBytes *= PageSize;
-
-        // Clamp the maximum memory value to UINT32_MAX; it's not semantically
-        // visible since growing will fail for values greater than INT32_MAX.
-        memory.maximum = Some(maximumBytes.isValid() ? maximumBytes.value() : UINT32_MAX);
-    }
+    ConvertMemoryPagesToBytes(&memory);
 
     if (memory.shared == Shareable::True && env->sharedMemoryEnabled == Shareable::False)
         return d.fail("shared memory is disabled");
