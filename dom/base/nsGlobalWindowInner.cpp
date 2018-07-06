@@ -17,7 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
-#include "mozilla/dom/AutoplayRequest.h"
+#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -8182,19 +8182,21 @@ GetTopLevelInnerWindow(nsPIDOMWindowInner* aWindow)
   return rootTreeItem->GetDocument()->GetInnerWindow();
 }
 
-already_AddRefed<mozilla::AutoplayRequest>
-nsPIDOMWindowInner::GetAutoplayRequest()
+already_AddRefed<mozilla::AutoplayPermissionManager>
+nsPIDOMWindowInner::GetAutoplayPermissionManager()
 {
-  // The AutoplayRequest is stored on the top level window.
+  // The AutoplayPermissionManager is stored on the top level window.
   nsPIDOMWindowInner* window = GetTopLevelInnerWindow(this);
   if (!window) {
     return nullptr;
   }
-  if (!window->mAutoplayRequest) {
-    window->mAutoplayRequest = AutoplayRequest::Create(nsGlobalWindowInner::Cast(window));
+  if (!window->mAutoplayPermissionManager) {
+    window->mAutoplayPermissionManager =
+      new AutoplayPermissionManager(nsGlobalWindowInner::Cast(window));
   }
-  RefPtr<mozilla::AutoplayRequest> request = window->mAutoplayRequest;
-  return request.forget();
+  RefPtr<mozilla::AutoplayPermissionManager> manager =
+    window->mAutoplayPermissionManager;
+  return manager.forget();
 }
 
 // XXX: Can we define this in a header instead of here?

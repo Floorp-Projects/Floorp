@@ -58,7 +58,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
-#include "mozilla/dom/AutoplayRequest.h"
+#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLAudioElement.h"
@@ -4101,7 +4101,8 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
     return;
   }
 
-  RefPtr<AutoplayRequest> request = AutoplayPolicy::RequestFor(*OwnerDoc());
+  RefPtr<AutoplayPermissionManager> request =
+    AutoplayPolicy::RequestFor(*OwnerDoc());
   if (!request) {
     AsyncRejectPendingPlayPromises(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

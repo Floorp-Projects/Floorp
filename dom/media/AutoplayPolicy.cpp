@@ -9,7 +9,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioContext.h"
-#include "mozilla/dom/AutoplayRequest.h"
+#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "nsContentUtils.h"
@@ -74,7 +74,7 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 }
 
 /* static */
-already_AddRefed<AutoplayRequest>
+already_AddRefed<AutoplayPermissionManager>
 AutoplayPolicy::RequestFor(const nsIDocument& aDocument)
 {
   nsIDocument* document = ApproverDocOf(aDocument);
@@ -85,7 +85,7 @@ AutoplayPolicy::RequestFor(const nsIDocument& aDocument)
   if (!window) {
     return nullptr;
   }
-  return window->GetAutoplayRequest();
+  return window->GetAutoplayPermissionManager();
 }
 
 /* static */ Authorization
