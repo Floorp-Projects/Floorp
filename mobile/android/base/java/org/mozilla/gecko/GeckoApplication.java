@@ -5,8 +5,11 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -73,6 +76,8 @@ public class GeckoApplication extends Application
     private static final String LOG_TAG = "GeckoApplication";
     public static final String ACTION_DEBUG = "org.mozilla.gecko.DEBUG";
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
+
+    private static NotificationChannel defaultNotificationChannel = null;
 
     private boolean mInBackground;
     private boolean mPausedGecko;
@@ -351,6 +356,10 @@ public class GeckoApplication extends Application
 
         IntentHelper.init();
 
+        if (!AppConstants.Versions.preO) {
+            createDefaultNotificationChannel();
+        }
+
         EventDispatcher.getInstance().registerGeckoThreadListener(mListener,
                 "Distribution:GetDirectories",
                 null);
@@ -421,6 +430,20 @@ public class GeckoApplication extends Application
         } catch (Exception e) {
             Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
             return false;
+        }
+    }
+
+    @TargetApi(26)
+    private void createDefaultNotificationChannel() {
+        final String DEFAULT_CHANNEL = AppConstants.MOZ_APP_DISPLAYNAME;
+        final String DEFAULT_NAME = AppConstants.MOZ_APP_DISPLAYNAME;
+        final int DEFAULT_IMPORTANCE = NotificationManager.IMPORTANCE_HIGH;
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        defaultNotificationChannel = notificationManager.getNotificationChannel(DEFAULT_CHANNEL);
+        if (defaultNotificationChannel == null) {
+            defaultNotificationChannel = new NotificationChannel(DEFAULT_CHANNEL, DEFAULT_NAME, DEFAULT_IMPORTANCE);
+            notificationManager.createNotificationChannel(defaultNotificationChannel);
         }
     }
 
@@ -617,6 +640,10 @@ public class GeckoApplication extends Application
                 }
             }
         }
+    }
+
+    public static NotificationChannel getDefaultNotificationChannel() {
+        return defaultNotificationChannel;
     }
 
     public boolean isApplicationInBackground() {

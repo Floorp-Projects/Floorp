@@ -10,9 +10,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -44,7 +41,6 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
@@ -233,8 +229,6 @@ public class BrowserApp extends GeckoApp
     public static final int ACTIVITY_RESULT_TRIPLE_READERVIEW_IGNORE = 4003;
 
     public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
-
-    private static final String EOL_NOTIFIED = "eol_notified";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -1045,45 +1039,6 @@ public class BrowserApp extends GeckoApp
                 .action(R.string.updater_permission_allow)
                 .callback(allowCallback)
                 .buildAndShow();
-    }
-
-    private void conditionallyNotifyEOL() {
-        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-        try {
-            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
-            if (!prefs.contains(EOL_NOTIFIED)) {
-
-                // Launch main App to load SUMO url on EOL notification.
-                final String link = getString(R.string.eol_notification_url,
-                                              AppConstants.MOZ_APP_VERSION,
-                                              AppConstants.OS_TARGET,
-                                              Locales.getLanguageTag(Locale.getDefault()));
-
-                final Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-                intent.setData(Uri.parse(link));
-                final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                final Notification notification = new NotificationCompat.Builder(this)
-                        .setContentTitle(getString(R.string.eol_notification_title))
-                        .setContentText(getString(R.string.eol_notification_summary))
-                        .setSmallIcon(R.drawable.ic_status_logo)
-                        .setAutoCancel(true)
-                        .setContentIntent(pendingIntent)
-                        .build();
-
-                final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                final int notificationID = EOL_NOTIFIED.hashCode();
-                notificationManager.notify(notificationID, notification);
-
-                GeckoSharedPrefs.forProfile(this)
-                                .edit()
-                                .putBoolean(EOL_NOTIFIED, true)
-                                .apply();
-            }
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
-        }
     }
 
     private Class<?> getMediaPlayerManager() {

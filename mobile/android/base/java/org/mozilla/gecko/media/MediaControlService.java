@@ -25,7 +25,9 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
@@ -365,6 +367,7 @@ public class MediaControlService extends Service {
         });
     }
 
+    @SuppressWarnings("NewApi")
     protected void updateNotification(Tab tab) {
         ThreadUtils.assertNotOnUiThread();
 
@@ -375,7 +378,7 @@ public class MediaControlService extends Service {
         final int visibility = tab.isPrivate() ?
             Notification.VISIBILITY_PRIVATE : Notification.VISIBILITY_PUBLIC;
 
-        final Notification notification = new Notification.Builder(this)
+        final Notification.Builder notificationBuilder = new Notification.Builder(this)
             .setSmallIcon(R.drawable.ic_status_logo)
             .setLargeIcon(generateCoverArt(tab))
             .setContentTitle(tab.getTitle())
@@ -387,8 +390,13 @@ public class MediaControlService extends Service {
             .setOngoing(isPlaying)
             .setShowWhen(false)
             .setWhen(0)
-            .setVisibility(visibility)
-            .build();
+            .setVisibility(visibility);
+
+        if (!AppConstants.Versions.preO) {
+            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
+
+        final Notification notification = notificationBuilder.build();
 
         if (isPlaying) {
             startForeground(R.id.mediaControlNotification, notification);
