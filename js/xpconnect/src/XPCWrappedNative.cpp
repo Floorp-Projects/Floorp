@@ -355,7 +355,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(parent),
                    "Xray wrapper being used to parent XPCWrappedNative?");
 
-        MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(parent) == parent,
+        MOZ_ASSERT(JS_IsGlobalObject(parent),
                    "Non-global being used to parent XPCWrappedNative?");
 
         ar.emplace(static_cast<JSContext*>(cx), parent);
