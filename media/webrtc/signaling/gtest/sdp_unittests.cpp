@@ -2074,7 +2074,6 @@ TEST_P(NewSdpTest, CheckIdentity) {
 }
 
 TEST_P(NewSdpTest, CheckDtlsMessage) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
