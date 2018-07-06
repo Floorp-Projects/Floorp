@@ -62,6 +62,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     private interface EventDelegate {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
+        fun onClicked(event: AccessibilityEvent) { }
         fun onFocused(event: AccessibilityEvent) { }
         fun onTextSelectionChanged(event: AccessibilityEvent) { }
         fun onTextChanged(event: AccessibilityEvent) { }
@@ -87,6 +88,7 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onRequestSendAccessibilityEvent(host: ViewGroup, child: View, event: AccessibilityEvent): Boolean {
                 when (event.eventType) {
                     AccessibilityEvent.TYPE_VIEW_FOCUSED -> newDelegate.onFocused(event)
+                    AccessibilityEvent.TYPE_VIEW_CLICKED -> newDelegate.onClicked(event)
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
@@ -191,6 +193,18 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onTextTraversal(event: AccessibilityEvent) {
               assertThat("fromIndex matches", event.fromIndex, equalTo(fromIndex))
               assertThat("toIndex matches", event.toIndex, equalTo(toIndex))
+            }
+        })
+    }
+
+    private fun waitUntilClick(checked: Boolean) {
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onClicked(event: AccessibilityEvent) {
+                assertThat("Checked state matches", event.isChecked, equalTo(checked))
+                var nodeId = getSourceId(event)
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Checkbox node is checked", node.isChecked, equalTo(checked))
             }
         })
     }
@@ -357,5 +371,31 @@ class AccessibilityTest : BaseSessionTest() {
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
                 moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
         waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+    }
+
+    @Test fun testCheckbox() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
+        sessionRule.session.loadString("<label><input id='checkbox' type='checkbox'>many option</label>", "text/html")
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS("$('#checkbox').focus()")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Checkbox node is checkable", node.isCheckable, equalTo(true))
+                assertThat("Checkbox node is clickable", node.isClickable, equalTo(true))
+                assertThat("Checkbox node is focusable", node.isFocusable, equalTo(true))
+                assertThat("Checkbox node is not checked", node.isChecked, equalTo(false))
+                assertThat("Checkbox node has correct role", node.text.toString(), equalTo("many option check button"))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
+        waitUntilClick(true);
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CLICK, null)
+        waitUntilClick(false);
     }
 }

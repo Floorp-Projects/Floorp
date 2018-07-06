@@ -47,9 +47,8 @@
       runner.eventTextMatches(evt, ["many option", "not checked", "check button", "First item", "list", "1 item"]);
 
       evt = await runner.activateCurrent(0,
-        AndroidEvents.VIEW_CLICKED,
         AndroidEvents.VIEW_CLICKED);
-      is(evt[1].checked, true, "checkbox is checked");
+      is(evt.checked, true, "checkbox is checked");
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
@@ -80,9 +79,8 @@
       runner.eventTextMatches(evt, ["Light", "off", "switch"]);
 
       evt = await runner.activateCurrent(0,
-        AndroidEvents.VIEW_CLICKED,
         AndroidEvents.VIEW_CLICKED);
-      is(evt[1].checked, true, "checkbox is checked");
+      is(evt.checked, true, "checkbox is checked");
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
@@ -93,9 +91,8 @@
       runner.eventTextMatches(evt, ["Light", "on", "switch"]);
 
       evt = await runner.activateCurrent(0,
-        AndroidEvents.VIEW_CLICKED,
         AndroidEvents.VIEW_CLICKED);
-      is(evt[1].checked, false, "checkbox is checked");
+      is(evt.checked, false, "checkbox is checked");
 
       evt = await runner.movePrevious("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
@@ -130,9 +127,8 @@
       runner.eventTextMatches(evt, ["many option", "checked", "check button"]);
 
       evt = await runner.activateCurrent(0,
-        AndroidEvents.VIEW_CLICKED,
         AndroidEvents.VIEW_CLICKED);
-      is(evt[1].checked, false, "checkbox is checked");
+      is(evt.checked, false, "checkbox is checked");
 
       evt = await runner.movePrevious("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);

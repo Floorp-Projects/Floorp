@@ -431,6 +431,12 @@ public class SessionAccessibility {
         node.setBoundsInParent(screenBounds);
     }
 
+    private void updateState(final AccessibilityNodeInfo node, final GeckoBundle message) {
+        if (message.containsKey("checked")) {
+            node.setChecked(message.getBoolean("checked"));
+        }
+    }
+
     private void sendAccessibilityEvent(final GeckoBundle message) {
         if (mView == null || !Settings.isEnabled())
             return;
@@ -472,6 +478,11 @@ public class SessionAccessibility {
         if (mVirtualContentNode != null) {
             // Bounds for the virtual content can be updated from any event.
             updateBounds(mVirtualContentNode, message);
+
+            // State for the virtual content can be updated when view is clicked.
+            if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                updateState(mVirtualContentNode, message);
+            }
         }
 
         final AccessibilityEvent accessibilityEvent = obtainEvent(eventType, eventSource);
