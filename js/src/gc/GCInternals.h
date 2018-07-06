@@ -101,8 +101,8 @@ struct MOZ_RAII AutoFinishGC
     }
 };
 
-// This class should be used by any code that needs to exclusive access to the
-// heap in order to trace through it.
+// This class should be used by any code that needs exclusive access to the heap
+// in order to trace through it.
 class MOZ_RAII AutoPrepareForTracing : private AutoFinishGC,
                                        public AutoTraceSession
 {
