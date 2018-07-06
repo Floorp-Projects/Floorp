@@ -20,7 +20,7 @@ from ply import yacc
 
     def nativeType(self, calltype):
         'returns a string representation of the native type
-        calltype must be 'in', 'out', or 'inout'
+        calltype must be 'in', 'out', 'inout', or 'element'
 
 Interface members const/method/attribute conform to the following pattern:
 
@@ -144,7 +144,7 @@ class Builtin(object):
         else:
             const = ''
         return "%s%s %s" % (const, self.nativename,
-                            calltype != 'in' and '*' or '')
+                            '*' if 'out' in calltype else '')
 
     def rustType(self, calltype, shared=False, const=False):
         # We want to rewrite any *mut pointers to *const pointers if constness
@@ -400,8 +400,7 @@ class Typedef(object):
         return self.realtype.isScriptable()
 
     def nativeType(self, calltype):
-        return "%s %s" % (self.name,
-                          calltype != 'in' and '*' or '')
+        return "%s %s" % (self.name, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
         return "%s%s" % (calltype != 'in' and '*mut ' or '',
@@ -440,8 +439,7 @@ class Forward(object):
         return True
 
     def nativeType(self, calltype):
-        return "%s %s" % (self.name,
-                          calltype != 'in' and '* *' or '*')
+        return "%s *%s" % (self.name, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
         if rustBlacklistedForward(self.name):
@@ -459,27 +457,17 @@ class Native(object):
     modifier = None
     specialtype = None
 
+    # A tuple type here means that a custom value is used for each calltype:
+    #   (in, out/inout, array element) respectively.
+    # A `None` here means that the written type should be used as-is.
     specialtypes = {
         'nsid': None,
-        'domstring': 'nsAString',
-        'utf8string': 'nsACString',
-        'cstring': 'nsACString',
-        'astring': 'nsAString',
-        'jsval': 'JS::Value',
+        'domstring': ('const nsAString&', 'nsAString&', 'nsString'),
+        'utf8string': ('const nsACString&', 'nsACString&', 'nsCString'),
+        'cstring': ('const nsACString&', 'nsACString&', 'nsCString'),
+        'astring': ('const nsAString&', 'nsAString&', 'nsString'),
+        'jsval': ('JS::HandleValue', 'JS::MutableHandleValue', 'JS::Value'),
         'promise': '::mozilla::dom::Promise',
-    }
-
-    # Mappings from C++ native name types to rust native names. Types which
-    # aren't listed here are incompatible with rust code.
-    rust_nativenames = {
-        'void': "libc::c_void",
-        'char': "u8",
-        'char16_t': "u16",
-        'nsID': "nsID",
-        'nsIID': "nsIID",
-        'nsCID': "nsCID",
-        'nsAString': "::nsstring::nsAString",
-        'nsACString': "::nsstring::nsACString",
     }
 
     def __init__(self, name, nativename, attlist, location):
@@ -536,44 +524,57 @@ class Native(object):
                 raise IDLError("[shared] only applies to out parameters.")
             const = True
 
-        if self.specialtype not in [None, 'promise'] and calltype == 'in':
+        if isinstance(self.nativename, tuple):
+            if calltype == 'in':
+                return self.nativename[0] + ' '
+            elif 'out' in calltype:
+                return self.nativename[1] + ' '
+            else:
+                return self.nativename[2] + ' '
+
+        # 'in' nsid parameters should be made 'const'
+        if self.specialtype == 'nsid' and calltype == 'in':
             const = True
 
-        if self.specialtype == 'jsval':
-            if calltype == 'out' or calltype == 'inout':
-                return "JS::MutableHandleValue "
-            return "JS::HandleValue "
-
         if self.isRef(calltype):
-            m = '& '
-        elif self.isPtr(calltype):
-            m = '*' + ((self.modifier == 'ptr' and calltype != 'in') and '*' or '')
+            m = '& ' # [ref] is always passed with a single indirection
         else:
-            m = calltype != 'in' and '*' or ''
+            m = '* ' if 'out' in calltype else ''
+            if self.isPtr(calltype):
+                m += '* '
         return "%s%s %s" % (const and 'const ' or '', self.nativename, m)
 
     def rustType(self, calltype, const=False, shared=False):
-        if shared:
-            if calltype != 'out':
-                raise IDLError("[shared] only applies to out parameters.")
-            const = True
+        # For the most part, 'native' types don't make sense in rust, as they
+        # are native C++ types. However, we can support a few types here, as
+        # they're important.
+        #
+        # NOTE: This code doesn't try to perfectly match C++ constness, as
+        # constness doesn't affect ABI, and raw pointers are already unsafe.
 
-        if self.specialtype is not None and calltype == 'in':
-            const = True
+        if self.modifier not in ['ptr', 'ref']:
+            raise RustNoncompat('Rust only supports [ref] / [ptr] native types')
 
-        if self.nativename not in self.rust_nativenames:
-            raise RustNoncompat("native type %s is unsupported" % self.nativename)
-        name = self.rust_nativenames[self.nativename]
+        prefix = '*mut ' if 'out' in calltype else '*const '
+        if 'out' in calltype and self.modifier == 'ptr':
+            prefix += '*mut '
 
-        if self.isRef(calltype):
-            m = const and '&' or '&mut '
-        elif self.isPtr(calltype):
-            m = (const and '*const ' or '*mut ')
-            if self.modifier == 'ptr' and calltype != 'in':
-                m += '*mut '
-        else:
-            m = calltype != 'in' and '*mut ' or ''
-        return "%s%s" % (m, name)
+        if self.specialtype == 'nsid':
+            return prefix + self.nativename
+        if self.specialtype in ['cstring', 'utf8string']:
+            if calltype == 'element':
+                return '::nsstring::nsCString'
+            return prefix + '::nsstring::nsACString'
+        if self.specialtype in ['astring', 'domstring']:
+            if calltype == 'element':
+                return '::nsstring::nsString'
+            return prefix + '::nsstring::nsAString'
+        if self.nativename == 'void':
+            return prefix + 'libc::c_void'
+
+        if self.specialtype:
+            raise RustNoncompat("specialtype %s unsupported" % self.specialtype)
+        raise RustNoncompat("native type %s unsupported" % self.nativename)
 
     def __str__(self):
         return "native %s(%s)\n" % (self.name, self.nativename)
@@ -613,11 +614,11 @@ class WebIDL(object):
         return True  # All DOM objects are script exposed.
 
     def nativeType(self, calltype):
-        return "%s %s" % (self.native, calltype != 'in' and '* *' or '*')
+        return "%s *%s" % (self.native, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
         # Just expose the type as a void* - we can't do any better.
-        return "%s*const libc::c_void" % (calltype != 'in' and '*mut ' or '')
+        return "%s*const libc::c_void" % ('*mut ' if 'out' in calltype else '')
 
     def __str__(self):
         return "webidl %s\n" % self.name
@@ -713,12 +714,11 @@ class Interface(object):
         return True
 
     def nativeType(self, calltype, const=False):
-        return "%s%s %s" % (const and 'const ' or '',
-                            self.name,
-                            calltype != 'in' and '* *' or '*')
+        return "%s%s *%s" % ('const ' if const else '', self.name,
+                            '*' if 'out' in calltype else '')
 
-    def rustType(self, calltype):
-        return "%s*const %s" % (calltype != 'in' and '*mut ' or '',
+    def rustType(self, calltype, const=False):
+        return "%s*const %s" % ('*mut ' if 'out' in calltype else '',
                                 self.name)
 
     def __str__(self):
@@ -1219,12 +1219,19 @@ class Array(object):
         return self.type.isScriptable()
 
     def nativeType(self, calltype, const=False):
-        return "%s%s*" % (const and 'const ' or '',
-                          self.type.nativeType(calltype))
+        # For legacy reasons, we have to add a 'const ' to builtin pointer array
+        # types. (`[array] in string` and `[array] in wstring` parameters)
+        if calltype == 'in' and isinstance(self.type, Builtin) and self.type.isPointer():
+            const = True
+
+        return "%s%s*%s" % ('const ' if const else '',
+                            self.type.nativeType('element'),
+                            '*' if 'out' in calltype else '')
 
     def rustType(self, calltype, const=False):
-        return "%s %s" % (const and '*const' or '*mut',
-                          self.type.rustType(calltype))
+        return "%s%s%s" % ('*mut ' if 'out' in calltype else '',
+                           '*const ' if const else '*mut ',
+                           self.type.rustType('element'))
 
 
 class IDLParser(object):
