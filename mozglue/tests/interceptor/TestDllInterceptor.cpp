@@ -487,6 +487,10 @@ int main()
       TEST_HOOK(kernel32.dll, SetUnhandledExceptionFilter, Ignore, nullptr) &&
 #endif
 #ifdef _M_IX86
+      // Bug 670967: xpcom/base/AvailableMemoryTracker.cpp
+      TEST_HOOK(kernel32.dll, VirtualAlloc, Equals, nullptr) &&
+      TEST_HOOK(kernel32.dll, MapViewOfFile, Equals, nullptr) &&
+      TEST_HOOK(gdi32.dll, CreateDIBSection, Equals, nullptr) &&
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileW) &&
 #endif
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileA) &&
