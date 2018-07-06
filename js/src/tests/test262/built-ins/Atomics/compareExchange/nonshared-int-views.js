@@ -7,19 +7,16 @@ esid: sec-atomics.compareexchange
 description: >
   Test Atomics.compareExchange on non-shared integer TypedArrays
 includes: [testTypedArray.js]
-features: [ArrayBuffer, Atomics, BigInt, TypedArray]
+features: [ArrayBuffer, Atomics, TypedArray]
 ---*/
 
 var buffer = new ArrayBuffer(16);
 var views = intArrayConstructors.slice();
 
-if (typeof BigInt !== "undefined") {
-  views.push(BigInt64Array);
-  views.push(BigUint64Array);
-}
-
 testWithTypedArrayConstructors(function(TA) {
-  assert.throws(TypeError, (() => Atomics.compareExchange(new TA(buffer), 0, 0, 0)));
+  assert.throws(TypeError, function() {
+    Atomics.compareExchange(new TA(buffer), 0, 0, 0);
+  }, '`Atomics.compareExchange(new TA(buffer), 0, 0, 0)` throws TypeError');
 }, views);
 
 reportCompare(0, 0);

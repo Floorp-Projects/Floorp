@@ -1042,8 +1042,8 @@ JitCode*
 JitRuntime::getBaselineDebugModeOSRHandler(JSContext* cx)
 {
     if (!baselineDebugModeOSRHandler_) {
-        AutoLockForExclusiveAccess lock(cx);
-        AutoAtomsZone az(cx, lock);
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(cx->runtime()));
+        AutoAllocInAtomsZone az(cx);
         uint32_t offset;
         if (JitCode* code = generateBaselineDebugModeOSRHandler(cx, &offset)) {
             baselineDebugModeOSRHandler_ = code;

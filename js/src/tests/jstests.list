@@ -46,6 +46,10 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script non262/SIMD/load-sab-b
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
+# Skip Intl.RelativeTimeFormat tests when the addIntlExtras helper isn't available.
+skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/RelativeTimeFormat/jstests.list
+
+
 #####################################
 # Test262 tests disabled on browser #
 #####################################
@@ -446,6 +450,20 @@ skip script test262/built-ins/Function/prototype/toString/well-known-intrinsic-o
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
 skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
+skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1472211
+skip script test262/language/statements/class/super/in-constructor-superproperty-evaluation.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1473228
+skip script test262/intl402/RelativeTimeFormat/prototype/toStringTag/toStringTag.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/length.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/name.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/prop-desc.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -459,20 +477,3 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# Missing feature tag.
-skip script test262/built-ins/Symbol/matchAll/prop-desc.js
-
-# Test deletes "length" property and then expects the property is still present.
-skip script test262/intl402/NumberFormat/length.js
-
-# https://github.com/tc39/test262/issues/1529
-# https://github.com/tc39/test262/issues/1530
-# https://github.com/tc39/test262/issues/1566
-random script test262/built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js
-random script test262/built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js
-random script test262/built-ins/Atomics/wake/count-defaults-to-infinity-missing.js
-random script test262/built-ins/Atomics/wake/count-defaults-to-infinity-undefined.js
-random script test262/built-ins/Atomics/wake/wake-all-on-loc.js
-random script test262/built-ins/Atomics/wake/wake-all.js
-random script test262/built-ins/Atomics/wake/wake-in-order.js
-random script test262/built-ins/Atomics/wake/undefined-index-defaults-to-zero.js

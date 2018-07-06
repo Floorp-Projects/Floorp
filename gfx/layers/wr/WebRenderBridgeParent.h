@@ -209,15 +209,19 @@ private:
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                         wr::TransactionBuilder& aResources);
 
+  bool AddExternalImageForTexture(wr::ExternalImageId aExtId,
+                                  wr::ImageKey aKey,
+                                  TextureHost* aTexture,
+                                  wr::TransactionBuilder& aResources);
+
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
                                     const bool& aAsync);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                        wr::TransactionBuilder& aTxn);
 
-  void AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
-                                         const CompositableHandle& aHandle);
   void RemoveExternalImageId(const ExternalImageId& aImageId);
+  void ReleaseTextureOfImage(const wr::ImageKey& aKey);
 
   LayersId GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
@@ -291,7 +295,7 @@ private:
   // destroyed abnormally and Tab move between different windows.
   std::unordered_set<uint64_t> mActiveAnimations;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mAsyncCompositables;
-  nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mExternalImageIds;
+  nsDataHashtable<nsUint64HashKey, CompositableTextureHostRef> mTextureHosts;
   nsTHashtable<nsUint64HashKey> mSharedSurfaceIds;
 
   TimeDuration mVsyncRate;

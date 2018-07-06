@@ -1,5 +1,4 @@
 // |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
-// Copyright 2015 Microsoft Corporation. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the license found in the LICENSE file.
 
@@ -9,9 +8,10 @@ description: Testing descriptor property of Atomics.store
 includes: [propertyHelper.js]
 features: [Atomics]
 ---*/
-
-verifyWritable(Atomics, "store");
-verifyNotEnumerable(Atomics, "store");
-verifyConfigurable(Atomics, "store");
+verifyProperty(Atomics, 'store', {
+  enumerable: false,
+  writable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

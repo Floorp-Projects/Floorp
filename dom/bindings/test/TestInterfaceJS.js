@@ -23,18 +23,17 @@ TestInterfaceJS.prototype = {
     this._anyArg = anyArg;
     this._objectArg = objectArg;
     this._dictionaryArg = dictionaryArg;
-    this._cachedAttr = 15;
   },
 
   get anyArg() { return this._anyArg; },
   get objectArg() { return this._objectArg; },
-  get dictionaryArg() { return this._dictionaryArg; },
+  getDictionaryArg: function() { return this._dictionaryArg; },
   get anyAttr() { return this._anyAttr; },
   set anyAttr(val) { this._anyAttr = val; },
   get objectAttr() { return this._objectAttr; },
   set objectAttr(val) { this._objectAttr = val; },
-  get dictionaryAttr() { return this._dictionaryAttr; },
-  set dictionaryAttr(val) { this._dictionaryAttr = val; },
+  getDictionaryAttr: function() { return this._dictionaryAttr; },
+  setDictionaryAttr: function(val) { this._dictionaryAttr = val; },
   pingPongAny: function(any) { return any; },
   pingPongObject: function(obj) { return obj; },
   pingPongObjectOrString: function(objectOrString) { return objectOrString; },
@@ -53,10 +52,6 @@ TestInterfaceJS.prototype = {
   pingPongUnionContainingNull: function(x) { return x; },
   pingPongNullableUnion: function(x) { return x; },
   returnBadUnion: function(x) { return 3; },
-
-  get cachedAttr() { return this._cachedAttr; },
-  setCachedAttr: function(n) { this._cachedAttr = n; },
-  clearCachedAttrCache: function () { this.__DOM_IMPL__._clearCachedCachedAttrValue(); },
 
   testSequenceOverload: function(arg) {},
   testSequenceUnion: function(arg) {},

@@ -120,11 +120,6 @@ public:
     return mIsPositioned;
   }
 
-  void SetMaySpanAnonymousSubtrees(bool aMaySpanAnonymousSubtrees)
-  {
-    mMaySpanAnonymousSubtrees = aMaySpanAnonymousSubtrees;
-  }
-
   /**
    * Return true iff this range is part of a Selection object
    * and isn't detached.
@@ -389,10 +384,7 @@ public:
    * fragment.  If this returns nullptr, that means aNode can be neither the
    * start container nor end container of any range.
    */
-  static nsINode* ComputeRootNode(nsINode* aNode)
-  {
-    return ComputeRootNode(aNode, false);
-  }
+  static nsINode* ComputeRootNode(nsINode* aNode);
 
   /**
    * Return true if aStartContainer/aStartOffset and aEndContainer/aEndOffset
@@ -461,7 +453,7 @@ protected:
   void UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking);
   nsINode* IsValidBoundary(nsINode* aNode) const
   {
-    return ComputeRootNode(aNode, mMaySpanAnonymousSubtrees);
+    return ComputeRootNode(aNode);
   }
 
   /**
@@ -475,9 +467,6 @@ protected:
     return aOffset <= INT32_MAX;
   }
   static bool IsValidOffset(nsINode* aNode, uint32_t aOffset);
-
-  static nsINode* ComputeRootNode(nsINode* aNode,
-                                  bool aMaySpanAnonymousSubtrees);
 
   // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
   // and suppress re-registering a range common ancestor node since
@@ -566,7 +555,6 @@ protected:
   RangeBoundary mEnd;
 
   bool mIsPositioned : 1;
-  bool mMaySpanAnonymousSubtrees : 1;
   bool mIsGenerated : 1;
   bool mCalledByJS : 1;
 };

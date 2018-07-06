@@ -33,7 +33,7 @@ class TlsApplicationDataRecorder : public TlsRecordFilter {
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                             const DataBuffer& input,
                                             DataBuffer* output) {
-    if (header.content_type() == kTlsApplicationDataType) {
+    if (header.content_type() == ssl_ct_application_data) {
       buffer_.Append(input);
     }
 

@@ -84,12 +84,12 @@ class MOZ_RAII AutoGCSession : public AutoHeapSession
     mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
 };
 
-class MOZ_RAII AutoTraceSession : public AutoLockForExclusiveAccess,
+class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
                                   public AutoHeapSession
 {
   public:
     explicit AutoTraceSession(JSRuntime* rt)
-      : AutoLockForExclusiveAccess(rt),
+      : AutoLockAllAtoms(rt),
         AutoHeapSession(rt, JS::HeapState::Tracing)
     {}
 };
@@ -101,8 +101,8 @@ struct MOZ_RAII AutoFinishGC
     }
 };
 
-// This class should be used by any code that needs to exclusive access to the
-// heap in order to trace through it.
+// This class should be used by any code that needs exclusive access to the heap
+// in order to trace through it.
 class MOZ_RAII AutoPrepareForTracing : private AutoFinishGC,
                                        public AutoTraceSession
 {
@@ -319,6 +319,9 @@ IsOOMReason(JS::gcreason::Reason reason)
     return reason == JS::gcreason::LAST_DITCH ||
            reason == JS::gcreason::MEM_PRESSURE;
 }
+
+TenuredCell*
+AllocateCellInGC(Zone* zone, AllocKind thingKind);
 
 } /* namespace gc */
 } /* namespace js */

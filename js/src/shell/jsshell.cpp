@@ -91,9 +91,7 @@ GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name)
 bool
 CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, const char* srcName)
 {
-    RootedObject global(cx, JS_GetGlobalForObject(cx, namespaceObj));
-    if (!global)
-        return false;
+    RootedObject global(cx, JS::GetNonCCWObjectGlobal(namespaceObj));
 
     RootedValue val(cx);
     if (!JS_GetProperty(cx, namespaceObj, srcName, &val))

@@ -19,7 +19,7 @@ info: |
     DecimalDigits NumericLiteralSeparator DecimalDigit
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 
 features: [numeric-separator-literal]

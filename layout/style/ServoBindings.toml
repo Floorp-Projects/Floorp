@@ -378,6 +378,7 @@ opaque-types = [
     # have negative regexes.
     "mozilla::gfx::(.{0,4}|.{6,12}|.{14,}|([^F][^o][^n][^t][^V][^a][^r][^i][^a][^t][^i][^o][^n])|([^F][^l][^o][^a][^t]))",
     "mozilla::dom::Sequence",
+    "mozilla::SmallPointerArray",
     "mozilla::dom::Optional",
     "mozilla::dom::OwningNodeOrString_Value",
     "mozilla::dom::Nullable",

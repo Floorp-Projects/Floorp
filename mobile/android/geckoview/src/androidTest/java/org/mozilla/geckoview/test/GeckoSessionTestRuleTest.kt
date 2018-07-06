@@ -4,21 +4,14 @@
 
 package org.mozilla.geckoview.test
 
+import android.os.Handler
+import android.os.Looper
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ChildCrashedException
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutException
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
@@ -66,7 +59,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo(true))
     }
 
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     @TimeoutMillis(1000)
     fun noPendingCallbacks() {
         // Make sure we don't have unexpected pending callbacks at the start of a test.
@@ -933,7 +926,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
     }
 
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     @TimeoutMillis(1000)
     @ClosedSessionAtStart
     fun noPendingCallbacks_withSpecificSession() {
@@ -1328,7 +1321,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @WithDevToolsAPI
     @TimeoutMillis(1000)
-    @Test(expected = TimeoutException::class)
+    @Test(expected = UiThreadUtils.TimeoutException::class)
     fun evaluateJS_canTimeout() {
         sessionRule.session.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
@@ -1677,5 +1670,33 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         sessionRule.session.loadUri(CONTENT_CRASH_URL)
         sessionRule.waitForPageStop()
+    }
+
+    @Test fun waitForResult() {
+        val handler = Handler(Looper.getMainLooper())
+        val result = object : GeckoResult<Int>() {
+            init {
+                handler.postDelayed({
+                    complete(42)
+                }, 100)
+            }
+        }
+
+        val value = sessionRule.waitForResult(result)
+        assertThat("Value should match", value, equalTo(42))
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun waitForResultExceptionally() {
+        val handler = Handler(Looper.getMainLooper())
+        val result = object : GeckoResult<Int>() {
+            init {
+                handler.postDelayed({
+                    completeExceptionally(IllegalStateException("boom"))
+                }, 100)
+            }
+        }
+
+        sessionRule.waitForResult(result)
     }
 }

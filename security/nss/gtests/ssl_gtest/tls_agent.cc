@@ -976,7 +976,7 @@ bool TlsAgent::SendEncryptedRecord(const std::shared_ptr<TlsCipherSpec>& spec,
   LOGV("Encrypting " << buf.len() << " bytes");
   // Ensure that we are doing TLS 1.3.
   EXPECT_GE(expected_version_, SSL_LIBRARY_VERSION_TLS_1_3);
-  TlsRecordHeader header(variant_, expected_version_, kTlsApplicationDataType,
+  TlsRecordHeader header(variant_, expected_version_, ssl_ct_application_data,
                          seq);
   DataBuffer padded = buf;
   padded.Write(padded.len(), ct, 1);
@@ -1105,7 +1105,7 @@ void TlsAgentTestBase::MakeRecord(SSLProtocolVariant variant, uint8_t type,
   if (variant == ssl_variant_stream) {
     index = out->Write(index, version, 2);
   } else if (version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
-             type == kTlsApplicationDataType) {
+             type == ssl_ct_application_data) {
     uint32_t epoch = (sequence_number >> 48) & 0x3;
     uint32_t seqno = sequence_number & ((1ULL << 30) - 1);
     index = out->Write(index, (epoch << 30) | seqno, 4);
@@ -1158,10 +1158,10 @@ void TlsAgentTestBase::MakeTrivialHandshakeRecord(uint8_t hs_type,
                                                   size_t hs_len,
                                                   DataBuffer* out) {
   size_t index = 0;
-  index = out->Write(index, kTlsHandshakeType, 1);  // Content Type
-  index = out->Write(index, 3, 1);                  // Version high
-  index = out->Write(index, 1, 1);                  // Version low
-  index = out->Write(index, 4 + hs_len, 2);         // Length
+  index = out->Write(index, ssl_ct_handshake, 1);  // Content Type
+  index = out->Write(index, 3, 1);                 // Version high
+  index = out->Write(index, 1, 1);                 // Version low
+  index = out->Write(index, 4 + hs_len, 2);        // Length
 
   index = out->Write(index, hs_type, 1);  // Handshake record type.
   index = out->Write(index, hs_len, 3);   // Handshake length

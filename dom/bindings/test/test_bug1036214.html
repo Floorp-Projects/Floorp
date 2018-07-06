@@ -48,15 +48,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     is(Object.getPrototypeOf(t), TestInterfaceJS.prototype, "Prototype setup works correctly");
     is(t.anyArg, any, "anyArg is correct");
     is(t.objectArg, obj, "objectArg is correct");
-    is(t.dictionaryArg.anyMember, 42, "dictionaryArg looks correct");
-    is(t.dictionaryArg.objectMember.answer, 42, "dictionaryArg looks correct");
+    is(t.getDictionaryArg().anyMember, 42, "dictionaryArg looks correct");
+    is(t.getDictionaryArg().objectMember.answer, 42, "dictionaryArg looks correct");
     t.anyAttr = 2;
     is(t.anyAttr, 2, "ping-pong any attribute works");
     t.objAttr = obj2;
     is(t.objAttr, obj2, "ping-pong object attribute works");
-    t.dictionaryAttr = myDict;
-    is(t.dictionaryAttr.anyMember, 42, "ping-pong dictionary attribute works");
-    is(t.dictionaryAttr.objectMember.answer, 42, "ping-pong dictionary attribute works");
+    t.setDictionaryAttr(myDict);
+    is(t.getDictionaryAttr().anyMember, 42, "ping-pong dictionary works");
+    is(t.getDictionaryAttr().objectMember.answer, 42, "ping-pong dictionary works");
 
     is(any, t.pingPongAny(any), "ping-pong works with any");
     is(obj, t.pingPongObject(obj), "ping-pong works with obj");
@@ -88,8 +88,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
       checkThrows(() => new TestInterfaceJS(undefined, undefined, { innerDictionary: { innerObject: xoObj } }), "inner dict param for constructor");
       checkThrows(() => t.anyAttr = xoObj, "anyAttr");
       checkThrows(() => t.objectAttr = xoObj, "objAttr");
-      checkThrows(() => t.dictionaryAttr = { anyMember: xoObj }, "dictionaryAttr any");
-      checkThrows(() => t.dictionaryAttr = { objectMember: xoObj }, "dictionaryAttr object");
+      checkThrows(() => t.setDictionaryAttr({ anyMember: xoObj }), "dictionaryAttr any");
+      checkThrows(() => t.setDictionaryAttr({ objectMember: xoObj }), "dictionaryAttr object");
       checkThrows(() => t.pingPongAny(xoObj), "pingpong any");
       checkThrows(() => t.pingPongObject(xoObj), "pingpong obj");
       checkThrows(() => t.pingPongObjectOrString(xoObj), "pingpong union");

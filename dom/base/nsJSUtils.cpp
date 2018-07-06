@@ -160,7 +160,7 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
              CycleCollectedJSContext::Get()->MicroTaskLevel());
   MOZ_ASSERT(mRetValue.isUndefined());
 
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aGlobal) == aGlobal);
+  MOZ_ASSERT(JS_IsGlobalObject(aGlobal));
   if (MOZ_UNLIKELY(!xpc::Scriptability::Get(aGlobal).Allowed())) {
     mSkip = true;
     mRv = NS_OK;
@@ -472,8 +472,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(aSrcBuf.get());
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aEvaluationGlobal) ==
-             aEvaluationGlobal);
+  MOZ_ASSERT(JS_IsGlobalObject(aEvaluationGlobal));
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == aEvaluationGlobal);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CycleCollectedJSContext::Get() &&

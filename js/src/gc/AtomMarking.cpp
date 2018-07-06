@@ -219,7 +219,7 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing)
     MOZ_ASSERT(!IsInsideNursery(thing));
     MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
 
-    if (!zone->runtimeFromAnyThread()->permanentAtoms)
+    if (!zone->runtimeFromAnyThread()->permanentAtomsPopulated())
         return true;
 
     if (ThingIsPermanent(thing))

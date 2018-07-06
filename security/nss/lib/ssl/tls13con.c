@@ -4812,11 +4812,11 @@ tls13_FormatAdditionalData(
 }
 
 PRInt32
-tls13_LimitEarlyData(sslSocket *ss, SSL3ContentType type, PRInt32 toSend)
+tls13_LimitEarlyData(sslSocket *ss, SSLContentType type, PRInt32 toSend)
 {
     PRInt32 reduced;
 
-    PORT_Assert(type == content_application_data);
+    PORT_Assert(type == ssl_ct_application_data);
     PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
     PORT_Assert(!ss->firstHsDone);
     if (ss->ssl3.cwSpec->epoch != TrafficKeyEarlyApplicationData) {
@@ -4836,7 +4836,7 @@ tls13_LimitEarlyData(sslSocket *ss, SSL3ContentType type, PRInt32 toSend)
 SECStatus
 tls13_ProtectRecord(sslSocket *ss,
                     ssl3CipherSpec *cwSpec,
-                    SSL3ContentType type,
+                    SSLContentType type,
                     const PRUint8 *pIn,
                     PRUint32 contentLen,
                     sslBuffer *wrBuf)
@@ -4877,7 +4877,7 @@ tls13_ProtectRecord(sslSocket *ss,
         *(SSL_BUFFER_NEXT(wrBuf) + contentLen) = type;
 
         /* Create the header (ugly that we have to do it twice). */
-        rv = ssl_InsertRecordHeader(ss, cwSpec, content_application_data,
+        rv = ssl_InsertRecordHeader(ss, cwSpec, ssl_ct_application_data,
                                     &buf, &needsLength);
         if (rv != SECSuccess) {
             return SECFailure;
@@ -4929,7 +4929,7 @@ tls13_UnprotectRecord(sslSocket *ss,
                       ssl3CipherSpec *spec,
                       SSL3Ciphertext *cText,
                       sslBuffer *plaintext,
-                      SSL3ContentType *innerType,
+                      SSLContentType *innerType,
                       SSL3AlertDescription *alert)
 {
     const ssl3BulkCipherDef *cipher_def = spec->cipherDef;
@@ -4956,7 +4956,7 @@ tls13_UnprotectRecord(sslSocket *ss,
 
     /* Verify that the content type is right, even though we overwrite it.
      * Also allow the DTLS short header in TLS 1.3. */
-    if (!(cText->hdr[0] == content_application_data ||
+    if (!(cText->hdr[0] == ssl_ct_application_data ||
           (IS_DTLS(ss) &&
            ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
            (cText->hdr[0] & 0xe0) == 0x20))) {
@@ -5032,12 +5032,12 @@ tls13_UnprotectRecord(sslSocket *ss,
     }
 
     /* Record the type. */
-    *innerType = (SSL3ContentType)plaintext->buf[plaintext->len - 1];
+    *innerType = (SSLContentType)plaintext->buf[plaintext->len - 1];
     --plaintext->len;
 
     /* Check that we haven't received too much 0-RTT data. */
     if (spec->epoch == TrafficKeyEarlyApplicationData &&
-        *innerType == content_application_data) {
+        *innerType == ssl_ct_application_data) {
         if (plaintext->len > spec->earlyDataRemaining) {
             *alert = unexpected_message;
             PORT_SetError(SSL_ERROR_TOO_MUCH_EARLY_DATA);

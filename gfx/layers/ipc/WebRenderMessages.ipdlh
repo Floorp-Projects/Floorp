@@ -51,6 +51,12 @@ struct OpAddExternalImage {
   ImageKey key;
 };
 
+struct OpAddExternalImageForTexture {
+  ExternalImageId externalImageId;
+  ImageKey key;
+  PTexture texture;
+};
+
 struct OpAddCompositorAnimations {
   CompositorAnimations data;
 };
@@ -65,13 +71,12 @@ struct OpRemovePipelineIdForCompositable {
   PipelineId pipelineId;
 };
 
-struct OpAddExternalImageIdForCompositable {
-  ExternalImageId externalImageId;
-  CompositableHandle handle;
-};
-
 struct OpRemoveExternalImageId {
   ExternalImageId externalImageId;
+};
+
+struct OpReleaseTextureOfImage {
+  ImageKey key;
 };
 
 struct OpUpdateAsyncImagePipeline {
@@ -86,8 +91,8 @@ struct OpUpdateAsyncImagePipeline {
 union WebRenderParentCommand {
   OpAddPipelineIdForCompositable;
   OpRemovePipelineIdForCompositable;
-  OpAddExternalImageIdForCompositable;
   OpRemoveExternalImageId;
+  OpReleaseTextureOfImage;
   OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
@@ -171,6 +176,7 @@ union OpUpdateResource {
   OpAddFontInstance;
   OpDeleteFontInstance;
   OpAddExternalImage;
+  OpAddExternalImageForTexture;
 };
 
 } // namespace

@@ -1,5 +1,7 @@
-commit a8f7012587250b32ffb43a3cbd8da8a9f9d1565e
-Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Tue May 22 15:47:50 2018 -0400
+commit e9a5a7f918c0f9c4a9f1224d25a6d55147953225
+Author: test262-automation <40212386+test262-automation@users.noreply.github.com>
+Date:   Tue Jul 3 15:59:58 2018 -0400
 
-    Array.prototype.flatten => Array.prototype.flat (#1569)
+    [javascriptcore-test262-automation] changes from git@github.com:WebKit/webkit.git at sha 949e26452cfa153a7f4afe593da97e2fe9e1b706 on Tue Jul 03 2018 14:35:15 GMT-0400 (Eastern Daylight Time) (#1620)
+    
+    * [javascriptcore-test262-automation] changes from git@github.com:WebKit/webkit.git at sha 949e26452cfa153a7f4afe593da97e2fe9e1b706 on Tue Jul 03 2018 14:35:15 GMT-0400 (Eastern Daylight Time)

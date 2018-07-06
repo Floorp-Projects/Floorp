@@ -7,11 +7,13 @@ esid: sec-atomics.wake
 description: >
   Test Atomics.wake on view values other than TypedArrays
 includes: [testAtomics.js]
-features: [ArrayBuffer, arrow-function, Atomics, DataView, for-of, let, SharedArrayBuffer]
+features: [ArrayBuffer, Atomics, DataView, SharedArrayBuffer, Symbol, TypedArray]
 ---*/
 
-testWithAtomicsNonViewValues(function(view) {
-  assert.throws(TypeError, (() => Atomics.wake(view, 0, 0))); // Even with count == 0
+testWithAtomicsNonViewValues(function(nonView) {
+  assert.throws(TypeError, function() {
+    Atomics.wake(nonView, 0, 0);
+  }, '`Atomics.wake(nonView, 0, 0)` throws TypeError'); // Even with count == 0
 });
 
 reportCompare(0, 0);
