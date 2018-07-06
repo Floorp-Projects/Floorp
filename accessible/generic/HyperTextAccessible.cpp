@@ -1652,7 +1652,7 @@ HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
   index_t startOffset = ConvertMagicOffset(aStartOffset);
   index_t endOffset = ConvertMagicOffset(aEndOffset);
   if (!startOffset.IsValid() || !endOffset.IsValid() ||
-      startOffset > endOffset || endOffset > CharacterCount()) {
+      std::max(startOffset, endOffset) > CharacterCount()) {
     NS_ERROR("Wrong in offset");
     return false;
   }
@@ -1671,21 +1671,27 @@ HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
   if (!range)
     return false;
 
-  if (!OffsetsToDOMRange(startOffset, endOffset, range))
+  if (!OffsetsToDOMRange(std::min(startOffset, endOffset),
+                         std::max(startOffset, endOffset), range))
     return false;
 
-  // If new range was created then add it, otherwise notify selection listeners
-  // that existing selection range was changed.
-  if (aSelectionNum == static_cast<int32_t>(rangeCount)) {
-    IgnoredErrorResult err;
-    domSel->AddRange(*range, err);
-    return !err.Failed();
+  // If this is not a new range, notify selection listeners that the existing
+  // selection range has changed. Otherwise, just add the new range.
+  if (aSelectionNum != static_cast<int32_t>(rangeCount)) {
+    domSel->RemoveRange(*range, IgnoreErrors());
   }
 
-  domSel->RemoveRange(*range, IgnoreErrors());
   IgnoredErrorResult err;
   domSel->AddRange(*range, err);
-  return !err.Failed();
+
+  if (!err.Failed()) {
+    // Changing the direction of the selection assures that the caret
+    // will be at the logical end of the selection.
+    domSel->SetDirection(startOffset < endOffset ? eDirNext : eDirPrevious);
+    return true;
+  }
+
+  return false;
 }
 
 bool

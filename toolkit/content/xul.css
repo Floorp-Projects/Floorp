@@ -176,10 +176,6 @@ editor {
   -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
 }
 
-iframe {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#iframe");
-}
-
 /********** notifications **********/
 
 notificationbox {

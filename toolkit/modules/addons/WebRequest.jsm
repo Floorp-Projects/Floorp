@@ -224,7 +224,7 @@ var ContentPolicyManager = {
   },
 
   receiveMessage(msg) {
-    let browser = ChromeUtils.getClassName(msg.target) == "XULElement" ? msg.target : null;
+    let browser = ChromeUtils.getClassName(msg.target) == "XULFrameElement" ? msg.target : null;
 
     let requestId = `fakeRequest-${++nextFakeRequestId}`;
     for (let id of msg.data.ids) {

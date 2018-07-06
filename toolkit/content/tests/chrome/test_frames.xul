@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window onload="setTimeout(runTest, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+        <script><![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  for (let i = 1; i <= 3; i++) {
+    let frame = document.getElementById("frame" + i);
+    ok(frame instanceof XULFrameElement, "XULFrameElement " + i);
+
+    // Check the various fields to ensure that they have the correct type.
+    ok(frame.docShell instanceof Ci.nsIDocShell, "docShell " + i);
+    ok(frame.webNavigation instanceof Ci.nsIWebNavigation, "webNavigation " + i);
+
+    let contentWindow = frame.contentWindow;
+    let contentDocument = frame.contentDocument;
+    ok(contentWindow instanceof Window, "contentWindow " + i);
+    ok(contentDocument instanceof Document, "contentDocument " + i);
+    is(contentDocument.body.id, "thechildbody" + i, "right document body " + i);
+
+    // These fields should all be read-only.
+    frame.docShell = null;
+    ok(frame.docShell instanceof Ci.nsIDocShell, "docShell after set " + i);
+    frame.webNavigation = null;
+    ok(frame.webNavigation instanceof Ci.nsIWebNavigation, "webNavigation after set " + i);
+    frame.contentWindow = window;
+    is(frame.contentWindow, contentWindow, "contentWindow after set " + i);
+    frame.contentDocument = document;
+    is(frame.contentDocument, contentDocument, "contentDocument after set " + i);
+  }
+
+  // A non-frame element should not have these fields.
+  let button = document.getElementById("nonframe");
+  ok(!(button instanceof XULFrameElement), "XULFrameElement non frame");
+  is(button.docShell, undefined, "docShell non frame");
+  is(button.webNavigation, undefined, "webNavigation non frame");
+  is(button.contentWindow, undefined, "contentWindow non frame");
+  is(button.contentDocument, undefined, "contentDocument non frame");
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+<iframe id="frame1" src="data:text/html,&lt;body id='thechildbody1'&gt;"/>
+<browser id="frame2" src="data:text/html,&lt;body id='thechildbody2'&gt;"/>
+<editor id="frame3" src="data:text/html,&lt;body id='thechildbody3'&gt;"/>
+<button id="nonframe"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<div id="content" style="display: none"></div>
+</body>
+
+</window>

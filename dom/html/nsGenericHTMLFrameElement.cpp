@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
 #include "GeckoProfiler.h"
@@ -22,7 +23,6 @@
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSubDocumentFrame.h"
-#include "nsXULElement.h"
 #include "nsAttrValueOrString.h"
 
 using namespace mozilla;
@@ -194,7 +194,7 @@ nsGenericHTMLFrameElement::SwapFrameLoaders(HTMLIFrameElement& aOtherLoaderOwner
 }
 
 void
-nsGenericHTMLFrameElement::SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
+nsGenericHTMLFrameElement::SwapFrameLoaders(XULFrameElement& aOtherLoaderOwner,
                                             ErrorResult& rv)
 {
   aOtherLoaderOwner.SwapFrameLoaders(this, rv);

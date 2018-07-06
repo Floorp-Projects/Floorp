@@ -215,12 +215,6 @@ public:
      * Web components custom element data.
      */
     RefPtr<CustomElementData> mCustomElementData;
-
-    /**
-     * For XUL to hold either frameloader or opener.
-     */
-    nsCOMPtr<nsISupports> mFrameLoaderOrOpener;
-
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots
