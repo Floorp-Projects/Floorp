@@ -19,7 +19,7 @@ from .registry import register_callback_action
     description=(
         'Cancel the given task'
     ),
-    order=100,
+    order=350,
     context=[{}]
 )
 def cancel_action(parameters, graph_config, input, task_group_id, task_id, task):
