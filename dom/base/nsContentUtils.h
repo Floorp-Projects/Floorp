@@ -3108,6 +3108,18 @@ public:
                                     const mozilla::dom::Sequence<JSObject*>& aTransfer,
                                     JS::MutableHandle<JS::Value> aValue);
 
+  /**
+   * Returns whether or not UA Widget is enabled, controlled by pref
+   * dom.ua_widget.enabled.
+   *
+   * When enabled, UA Widget will replace legacy XBL when rendering JS-implemented
+   * web content widgets (videocontrols/datetimebox/etc.)
+   *
+   * It is really enabled only if Shadow DOM is also enabled.
+   */
+  static bool
+  IsUAWidgetEnabled() { return sIsShadowDOMEnabled && sIsUAWidgetEnabled; }
+
   static bool
   IsShadowDOMEnabled() { return sIsShadowDOMEnabled; }
 
@@ -3427,6 +3439,7 @@ private:
   static bool sIsUpgradableDisplayContentPrefEnabled;
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
+  static bool sIsUAWidgetEnabled;
   static bool sIsShadowDOMEnabled;
   static bool sIsCustomElementsEnabled;
   static bool sSendPerformanceTimingNotifications;
