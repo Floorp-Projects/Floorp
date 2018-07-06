@@ -83,18 +83,21 @@ configurations {
 
 dependencies {
     implementation project(':concept-engine')
+    implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
 
     implementation project(':browser-engine-system')
 
     implementation project(':browser-search')
     implementation project(':browser-session')
+    implementation project(':browser-tabstray')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
 
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
+    implementation project(':feature-tabs')
 
     implementation project(':ui-autocomplete')
 
@@ -117,4 +120,5 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
 
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support.constraint:constraint-layout:1.1.2"
 }

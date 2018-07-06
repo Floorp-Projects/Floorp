@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.AttributeSet
 import android.view.View
+import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.samples.browser.ext.components
@@ -41,6 +43,7 @@ open class BrowserActivity : AppCompatActivity() {
     override fun onCreateView(parent: View?, name: String?, context: Context, attrs: AttributeSet?): View? =
         when (name) {
             EngineView::class.java.name -> components.engine.createView(context, attrs).asView()
+            TabsTray::class.java.name -> BrowserTabsTray(context, attrs)
             else -> super.onCreateView(parent, name, context, attrs)
         }
 }

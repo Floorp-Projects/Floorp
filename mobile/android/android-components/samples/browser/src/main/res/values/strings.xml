@@ -4,4 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="app_name">Sample Browser</string>
+
+    <string name="menu_action_add_tab">Add New Tab</string>
 </resources>

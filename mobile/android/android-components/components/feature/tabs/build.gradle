@@ -30,6 +30,7 @@ kotlin {
 
 dependencies {
     implementation project(':browser-session')
+    implementation project(':concept-engine')
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
     implementation project(':ui-icons')

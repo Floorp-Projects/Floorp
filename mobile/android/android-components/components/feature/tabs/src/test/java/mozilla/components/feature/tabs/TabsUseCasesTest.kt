@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tabs.tabstray.mock
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
@@ -34,5 +35,18 @@ class TabsUseCasesTest {
         useCases.removeSession.invoke(session)
 
         verify(sessionManager).remove(session)
+    }
+
+    @Test
+    fun `AddNewTabUseCase - session will be added to session manager`() {
+        val sessionManager = SessionManager(mock())
+        val useCases = TabsUseCases(sessionManager)
+
+        assertEquals(0, sessionManager.size)
+
+        useCases.addSession.invoke("https://www.mozilla.org")
+
+        assertEquals(1, sessionManager.size)
+        assertEquals("https://www.mozilla.org", sessionManager.selectedSession.url)
     }
 }

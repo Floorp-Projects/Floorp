@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.geckoview.GeckoRuntime
 
 /**
@@ -90,4 +91,7 @@ class Components(private val applicationContext: Context) {
 
         BrowserMenuItemToolbar(listOf(forward, refresh))
     }
+
+    // Tabs
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
 }

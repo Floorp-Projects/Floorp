@@ -11,12 +11,14 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import org.mozilla.samples.browser.ext.components
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarFeature: ToolbarFeature
+    private lateinit var tabsToolbarFeature: TabsToolbarFeature
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_browser, container, false)
@@ -42,6 +44,17 @@ class BrowserFragment : Fragment(), BackHandler {
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId)
+
+        tabsToolbarFeature = TabsToolbarFeature(context!!, toolbar, ::showTabs)
+    }
+
+    private fun showTabs() {
+        // For now we are performing manual fragment transactions here. Once we can use the new
+        // navigation support library we may want to pass navigation graphs around.
+        activity?.supportFragmentManager?.beginTransaction()?.apply {
+            replace(R.id.container, TabsTrayFragment())
+            commit()
+        }
     }
 
     override fun onStart() {
