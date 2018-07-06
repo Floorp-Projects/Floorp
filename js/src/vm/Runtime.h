@@ -717,7 +717,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Set of all live symbols produced by Symbol.for(). All such symbols are
     // allocated in the atoms zone. Reading or writing the symbol registry
     // requires the calling thread to use AutoAccessAtomsZone.
-    js::ExclusiveAccessLockOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
+    js::MainThreadOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
 
   public:
     bool initializeAtoms(JSContext* cx);
@@ -760,10 +760,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     bool activeGCInAtomsZone();
 
-    js::SymbolRegistry& symbolRegistry(const js::AutoAccessAtomsZone& access) {
-        return symbolRegistry_.ref();
-    }
-    js::SymbolRegistry& unsafeSymbolRegistry() {
+    js::SymbolRegistry& symbolRegistry() {
         return symbolRegistry_.ref();
     }
 
@@ -796,7 +793,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // Table of bytecode and other data that may be shared across scripts
     // within the runtime. This may be modified by threads using
-    // AutoLockForExclusiveAccess.
+    // AutoLockScriptData.
   private:
     js::ScriptDataLockData<js::ScriptDataTable> scriptDataTable_;
   public:
