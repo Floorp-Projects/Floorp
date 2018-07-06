@@ -1289,14 +1289,15 @@ var ActivityStreamLinks = {
    * @param {Object} aData
    *          aData.url The url to bookmark
    *          aData.title The title of the page to bookmark
-   * @param {Browser} aBrowser
-   *          a <browser> element
+   * @param {Window} aBrowserWindow
+   *          The current browser chrome window
    *
    * @returns {Promise} Returns a promise set to an object representing the bookmark
    */
-  addBookmark(aData, aBrowser) {
+  addBookmark(aData, aBrowserWindow) {
       const {url, title} = aData;
-      return aBrowser.ownerGlobal.PlacesCommandHook.bookmarkPage(
+      return aBrowserWindow.PlacesCommandHook.bookmarkLink(
+              PlacesUtils.bookmarksMenuFolderId,
               url,
               title);
   },
