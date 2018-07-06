@@ -350,9 +350,23 @@ partial namespace ChromeUtils {
   void requestPerformanceMetrics();
 
   /**
-  * Request IOActivityMonitor to send a notification containing I/O activity
+  * Returns a Promise containing a sequence of I/O activities
   */
-  void requestIOActivity();
+  [Throws]
+  Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
+};
+
+
+/**
+ * Used by requestIOActivity() to return the number of bytes
+ * that were read (rx) and/or written (tx) for a given location.
+ *
+ * Locations can be sockets or files.
+ */
+dictionary IOActivityDataDictionary {
+  ByteString location = "";
+  unsigned long long rx = 0;
+  unsigned long long tx = 0;
 };
 
 /**
