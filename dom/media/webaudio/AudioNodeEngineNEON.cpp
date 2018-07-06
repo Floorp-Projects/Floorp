@@ -162,6 +162,47 @@ AudioBufferInPlaceScale_NEON(float* aBlock,
 }
 
 void
+AudioBufferInPlaceScale_NEON(float* aBlock,
+                             float* aScale,
+                             uint32_t aSize)
+{
+  ASSERT_ALIGNED(aBlock);
+
+  float32x4_t vin0, vin1, vin2, vin3;
+  float32x4_t vout0, vout1, vout2, vout3;
+  float32x4_t vscale0, vscale1, vscale2, vscale3;
+
+  uint32_t dif = aSize % 16;
+  uint32_t vectorSize = aSize - dif;
+  uint32_t i = 0;
+  for (; i < vectorSize; i+=16) {
+    vin0 = vld1q_f32(ADDRESS_OF(aBlock, i));
+    vin1 = vld1q_f32(ADDRESS_OF(aBlock, i+4));
+    vin2 = vld1q_f32(ADDRESS_OF(aBlock, i+8));
+    vin3 = vld1q_f32(ADDRESS_OF(aBlock, i+12));
+
+    vscale0 = vld1q_f32(ADDRESS_OF(aScale, i));
+    vscale1 = vld1q_f32(ADDRESS_OF(aScale, i+4));
+    vscale2 = vld1q_f32(ADDRESS_OF(aScale, i+8));
+    vscale3 = vld1q_f32(ADDRESS_OF(aScale, i+12));
+
+    vout0 = vmulq_f32(vin0, vscale0);
+    vout1 = vmulq_f32(vin1, vscale1);
+    vout2 = vmulq_f32(vin2, vscale2);
+    vout3 = vmulq_f32(vin3, vscale3);
+
+    vst1q_f32(ADDRESS_OF(aBlock, i), vout0);
+    vst1q_f32(ADDRESS_OF(aBlock, i+4), vout1);
+    vst1q_f32(ADDRESS_OF(aBlock, i+8), vout2);
+    vst1q_f32(ADDRESS_OF(aBlock, i+12), vout3);
+  }
+
+  for (unsigned j = 0; j < dif; ++i, ++j) {
+    aBlock[i] *= aScale[i];
+  }
+}
+
+void
 AudioBlockPanStereoToStereo_NEON(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  const float aInputR[WEBAUDIO_BLOCK_SIZE],
                                  float aGainL, float aGainR, bool aIsOnTheLeft,
