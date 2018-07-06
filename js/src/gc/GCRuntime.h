@@ -503,6 +503,8 @@ class GCRuntime
     JSString* tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind);
     static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
+    void setParallelAtomsAllocEnabled(bool enabled);
+
     void bufferGrayRoots();
 
     /*

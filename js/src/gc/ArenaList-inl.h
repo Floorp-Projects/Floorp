@@ -258,14 +258,16 @@ js::gc::FreeLists::isEmpty(AllocKind kind) const
 #endif
 
 void
-js::gc::FreeLists::clear(AllocKind i)
+js::gc::FreeLists::clear()
 {
+    for (auto i : AllAllocKinds()) {
 #ifdef DEBUG
-    auto old = freeLists_[i];
-    if (!old->isEmpty())
-        old->getArena()->checkNoMarkedFreeCells();
+        auto old = freeLists_[i];
+        if (!old->isEmpty())
+            old->getArena()->checkNoMarkedFreeCells();
 #endif
-    freeLists_[i] = &emptySentinel;
+        freeLists_[i] = &emptySentinel;
+    }
 }
 
 js::gc::TenuredCell*
@@ -328,7 +330,7 @@ js::gc::ArenaLists::arenaListsAreEmpty() const
          * The arena cannot be empty if the background finalization is not yet
          * done.
          */
-        if (backgroundFinalizeState(i) != BFS_DONE)
+        if (concurrentUse(i) == ConcurrentUse::BackgroundFinalize)
             return false;
         if (!arenaLists(i).isEmpty())
             return false;
@@ -341,7 +343,7 @@ js::gc::ArenaLists::unmarkAll()
 {
     for (auto i : AllAllocKinds()) {
         /* The background finalization must have stopped at this point. */
-        MOZ_ASSERT(backgroundFinalizeState(i) == BFS_DONE);
+        MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
         for (Arena* arena = arenaLists(i).head(); arena; arena = arena->next)
             arena->unmarkAll();
     }
@@ -350,20 +352,19 @@ js::gc::ArenaLists::unmarkAll()
 bool
 js::gc::ArenaLists::doneBackgroundFinalize(AllocKind kind) const
 {
-    return backgroundFinalizeState(kind) == BFS_DONE;
+    return concurrentUse(kind) != ConcurrentUse::BackgroundFinalize;
 }
 
 bool
 js::gc::ArenaLists::needBackgroundFinalizeWait(AllocKind kind) const
 {
-    return backgroundFinalizeState(kind) != BFS_DONE;
+    return concurrentUse(kind) == ConcurrentUse::BackgroundFinalize;
 }
 
 void
 js::gc::ArenaLists::clearFreeLists()
 {
-    for (auto i : AllAllocKinds())
-        freeLists().clear(i);
+    freeLists().clear();
 }
 
 MOZ_ALWAYS_INLINE js::gc::TenuredCell*

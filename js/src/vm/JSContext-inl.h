@@ -413,14 +413,16 @@ JSContext::enterRealm(JS::Realm* realm)
 }
 
 inline void
-JSContext::enterAtomsZone(const js::AutoLockForExclusiveAccess& lock)
+JSContext::enterAtomsZone()
 {
-    // Only one thread can be in the atoms zone at a time.
-    MOZ_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-
     realm_ = nullptr;
-    zone_ = runtime_->atomsZone(lock);
-    freeLists_ = &zone_->arenas.freeLists();
+    zone_ = runtime_->unsafeAtomsZone();
+    if (helperThread()) {
+        MOZ_ASSERT(!zone_->wasGCStarted());
+        freeLists_ = atomsZoneFreeLists_;
+    } else {
+        freeLists_ = &zone_->arenas.freeLists();
+    }
 }
 
 inline void
@@ -469,8 +471,7 @@ JSContext::leaveRealm(JS::Realm* oldRealm)
 }
 
 inline void
-JSContext::leaveAtomsZone(JS::Realm* oldRealm,
-                          const js::AutoLockForExclusiveAccess& lock)
+JSContext::leaveAtomsZone(JS::Realm* oldRealm)
 {
     setRealm(oldRealm);
 }
@@ -482,6 +483,7 @@ JSContext::setRealm(JS::Realm* realm)
     if (realm) {
         // This thread must have exclusive access to the zone.
         MOZ_ASSERT(CurrentThreadCanAccessZone(realm->zone()));
+        MOZ_ASSERT(!realm->zone()->isAtomsZone());
         zone_ = realm->zone();
         freeLists_ = &zone_->arenas.freeLists();
     } else {

@@ -215,7 +215,7 @@ JitRuntime::startTrampolineCode(MacroAssembler& masm)
 bool
 JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 {
-    AutoAtomsZone az(cx, lock);
+    AutoAllocInAtomsZone az(cx);
 
     JitContext jctx(cx, nullptr);
 
@@ -340,7 +340,7 @@ JitRuntime::debugTrapHandler(JSContext* cx)
         // JitRuntime code stubs are shared across compartments and have to
         // be allocated in the atoms zone.
         AutoLockForExclusiveAccess lock(cx);
-        AutoAtomsZone az(cx, lock);
+        AutoAllocInAtomsZone az(cx);
         debugTrapHandler_ = generateDebugTrapHandler(cx);
     }
     return debugTrapHandler_;

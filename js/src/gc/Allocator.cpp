@@ -6,6 +6,8 @@
 
 #include "gc/Allocator.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
@@ -433,7 +435,7 @@ ArenaLists::refillFreeListAndAllocate(FreeLists& freeLists, AllocKind thingKind,
     mozilla::Maybe<AutoLockGCBgAlloc> maybeLock;
 
     // See if we can proceed without taking the GC lock.
-    if (backgroundFinalizeState(thingKind) != BFS_DONE)
+    if (concurrentUse(thingKind) != ConcurrentUse::None)
         maybeLock.emplace(rt);
 
     ArenaList& al = arenaLists(thingKind);
@@ -500,6 +502,28 @@ Arena::arenaAllocatedDuringGC()
             MOZ_ASSERT(!cell->isMarkedAny());
             cell->markBlack();
         }
+    }
+}
+
+void
+GCRuntime::setParallelAtomsAllocEnabled(bool enabled)
+{
+    atomsZone->arenas.setParallelAllocEnabled(enabled);
+}
+
+void
+ArenaLists::setParallelAllocEnabled(bool enabled)
+{
+    MOZ_ASSERT(zone_->isAtomsZone());
+
+    static const ConcurrentUse states[2] = {
+        ConcurrentUse::None,
+        ConcurrentUse::ParallelAlloc
+    };
+
+    for (auto kind : AllAllocKinds()) {
+        MOZ_ASSERT(concurrentUse(kind) == states[!enabled]);
+        concurrentUse(kind) = states[enabled];
     }
 }
 
