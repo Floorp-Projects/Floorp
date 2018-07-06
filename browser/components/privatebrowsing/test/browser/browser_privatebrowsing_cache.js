@@ -61,7 +61,7 @@ function get_cache_for_private_window() {
 
       ok(true, "The private window got loaded");
 
-      let tab = win.gBrowser.addTab("http://example.org");
+      let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.org");
       win.gBrowser.selectedTab = tab;
       let newTabBrowser = win.gBrowser.getBrowserForTab(tab);
 
