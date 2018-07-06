@@ -176,7 +176,7 @@ this.VideoControlsImplPageWidget = class {
       },
 
       /*
-      * Set the initial state of the controls. The binding is normally created along
+      * Set the initial state of the controls. The UA widget is normally created along
       * with video element, but could be attached at any point (eg, if the video is
       * removed from the document and then reinserted). Thus, some one-time events may
       * have already fired, and so we'll need to explicitly check the initial state.
@@ -203,10 +203,7 @@ this.VideoControlsImplPageWidget = class {
             this.isAudioOnly = true;
           }
 
-          // We have to check again if the media has audio here,
-          // because of bug 718107: switching to fullscreen may
-          // cause the bindings to detach and reattach, hence
-          // unsetting the attribute.
+          // We have to check again if the media has audio here.
           if (!this.isAudioOnly && !this.video.mozHasAudio) {
             this.muteButton.setAttribute("noAudio", "true");
             this.muteButton.setAttribute("disabled", "true");
@@ -214,7 +211,7 @@ this.VideoControlsImplPageWidget = class {
         }
 
         // We should lock the orientation if we are already in
-        // fullscreen and were reattached because of bug 718107.
+        // fullscreen.
         this.updateOrientationState(this.isVideoInFullScreen);
 
         if (this.isAudioOnly) {
@@ -323,16 +320,9 @@ this.VideoControlsImplPageWidget = class {
       },
 
       setupNewLoadState() {
-        // videocontrols.css hides the control bar by default, because if script
-        // is disabled our binding's script is disabled too (bug 449358). Thus,
-        // the controls are broken and we don't want them shown. But if script is
-        // enabled, the code here will run and can explicitly unhide the controls.
-        //
         // For videos with |autoplay| set, we'll leave the controls initially hidden,
         // so that they don't get in the way of the playing video. Otherwise we'll
         // go ahead and reveal the controls now, so they're an obvious user cue.
-        //
-        // (Note: the |controls| attribute is already handled via layout/style/html.css)
         var shouldShow = !this.dynamicControls ||
                          (this.video.paused &&
                          !this.video.autoplay);
@@ -838,15 +828,7 @@ this.VideoControlsImplPageWidget = class {
           this.durationSpan.modifier = "long";
         }
 
-        // "durationValue" property is used by scale binding to
-        // generate accessible name.
-        this.scrubber.durationValue = timeString;
-
         this.scrubber.max = duration;
-        // XXX Can't set increment here, due to bug 473103. Also, doing so causes
-        // snapping when dragging with the mouse, so we can't just set a value for
-        // the arrow-keys.
-        this.scrubber.pageIncrement = Math.round(duration / 10);
       },
 
       pauseVideoDuringDragging() {
@@ -1140,13 +1122,6 @@ this.VideoControlsImplPageWidget = class {
       },
 
       startFade(element, fadeIn, immediate = false) {
-        // Bug 493523, the scrubber doesn't call valueChanged while hidden,
-        // so our dependent state (eg, timestamp in the thumb) will be stale.
-        // As a workaround, update it manually when it first becomes unhidden.
-        if (element == this.controlBar && fadeIn && element.hidden) {
-          this.scrubber.value = this.video.currentTime * 1000;
-        }
-
         let animationProp =
           this.animationProps[element.id];
         if (!animationProp) {
