@@ -6,7 +6,7 @@
 #
 TESTDIR=${1-.}
 COMMAND=${2-run}
-TESTS="aes aesgcm dsa ecdsa hmac tls rng rsa sha tdea"
+TESTS="aes aesgcm dsa ecdsa hmac kas tls rng rsa sha tdea"
 for i in $TESTS
 do
     echo "********************Running $i tests"

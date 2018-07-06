@@ -60,8 +60,8 @@ ssl3_isLikelyV3Hello(const unsigned char *buf)
     }
 
     /* Check for a typical V3 record header. */
-    return (PRBool)(buf[0] >= content_change_cipher_spec &&
-                    buf[0] <= content_application_data &&
+    return (PRBool)(buf[0] >= ssl_ct_change_cipher_spec &&
+                    buf[0] <= ssl_ct_application_data &&
                     buf[1] == MSB(SSL_LIBRARY_VERSION_3_0));
 }
 
@@ -314,7 +314,7 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     contentType = gs->dtlsPacket.buf[gs->dtlsPacketOffset];
     if (dtls_IsLongHeader(ss->version, contentType)) {
         headerLen = 13;
-    } else if (contentType == content_application_data) {
+    } else if (contentType == ssl_ct_application_data) {
         headerLen = 7;
     } else if ((contentType & 0xe0) == 0x20) {
         headerLen = 2;
@@ -463,7 +463,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             SSL_DBG(("%d: SSL3[%d]: resuming handshake",
                      SSL_GETPID(), ss->fd));
             PORT_Assert(!IS_DTLS(ss));
-            rv = ssl3_HandleNonApplicationData(ss, content_handshake,
+            rv = ssl3_HandleNonApplicationData(ss, ssl_ct_handshake,
                                                0, 0, &ss->gs.buf);
         } else {
             /* State for SSLv2 client hello support. */

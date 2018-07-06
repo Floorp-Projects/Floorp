@@ -32,7 +32,7 @@ dtls13_InsertCipherTextHeader(const sslSocket *ss, ssl3CipherSpec *cwSpec,
         return sslBuffer_AppendNumber(wrBuf, seq, 2);
     }
 
-    rv = sslBuffer_AppendNumber(wrBuf, content_application_data, 1);
+    rv = sslBuffer_AppendNumber(wrBuf, ssl_ct_application_data, 1);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -147,7 +147,7 @@ dtls13_SendAck(sslSocket *ss)
     }
 
     ssl_GetXmitBufLock(ss);
-    sent = ssl3_SendRecord(ss, NULL, content_ack,
+    sent = ssl3_SendRecord(ss, NULL, ssl_ct_ack,
                            buf.buf, buf.len, 0);
     ssl_ReleaseXmitBufLock(ss);
     if (sent != buf.len) {
@@ -343,7 +343,7 @@ dtls13_SetupAcks(sslSocket *ss)
  */
 SECStatus
 dtls13_HandleOutOfEpochRecord(sslSocket *ss, const ssl3CipherSpec *spec,
-                              SSL3ContentType rType,
+                              SSLContentType rType,
                               sslBuffer *databuf)
 {
     SECStatus rv;
@@ -360,7 +360,7 @@ dtls13_HandleOutOfEpochRecord(sslSocket *ss, const ssl3CipherSpec *spec,
     SSL_TRC(10, ("%d: DTLS13[%d]: handle out of epoch record: type=%d", SSL_GETPID(),
                  ss->fd, rType));
 
-    if (rType == content_ack) {
+    if (rType == ssl_ct_ack) {
         ssl_GetSSL3HandshakeLock(ss);
         rv = dtls13_HandleAck(ss, &buf);
         ssl_ReleaseSSL3HandshakeLock(ss);
@@ -380,7 +380,7 @@ dtls13_HandleOutOfEpochRecord(sslSocket *ss, const ssl3CipherSpec *spec,
              * retransmitted Finished (e.g., because our ACK got lost.)
              * We just retransmit the previous Finished to let the client
              * complete. */
-            if (rType == content_handshake) {
+            if (rType == ssl_ct_handshake) {
                 if ((ss->sec.isServer) &&
                     (ss->ssl3.hs.ws == idle_handshake)) {
                     PORT_Assert(dtls_TimerActive(ss, ss->ssl3.hs.hdTimer));

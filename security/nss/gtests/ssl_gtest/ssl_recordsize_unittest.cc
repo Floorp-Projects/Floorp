@@ -34,7 +34,7 @@ class TlsRecordMaximum : public TlsRecordFilter {
                                     DataBuffer* output) override {
     std::cerr << "max: " << record << std::endl;
     // Ignore unprotected packets.
-    if (header.content_type() != kTlsApplicationDataType) {
+    if (header.content_type() != ssl_ct_application_data) {
       return KEEP;
     }
 
@@ -187,7 +187,7 @@ class TlsRecordExpander : public TlsRecordFilter {
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                             const DataBuffer& data,
                                             DataBuffer* changed) {
-    if (header.content_type() != kTlsApplicationDataType) {
+    if (header.content_type() != ssl_ct_application_data) {
       return KEEP;
     }
     changed->Allocate(data.len() + expansion_);
@@ -252,7 +252,7 @@ class TlsRecordPadder : public TlsRecordFilter {
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& record, size_t* offset,
                                     DataBuffer* output) override {
-    if (header.content_type() != kTlsApplicationDataType) {
+    if (header.content_type() != ssl_ct_application_data) {
       return KEEP;
     }
 
@@ -262,7 +262,7 @@ class TlsRecordPadder : public TlsRecordFilter {
       return KEEP;
     }
 
-    if (inner_content_type != kTlsApplicationDataType) {
+    if (inner_content_type != ssl_ct_application_data) {
       return KEEP;
     }
 

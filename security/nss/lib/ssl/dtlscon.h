@@ -23,7 +23,7 @@ extern SECStatus dtls_HandleHandshake(sslSocket *ss, DTLSEpoch epoch,
 extern SECStatus dtls_HandleHelloVerifyRequest(sslSocket *ss,
                                                PRUint8 *b, PRUint32 length);
 extern SECStatus dtls_StageHandshakeMessage(sslSocket *ss);
-extern SECStatus dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
+extern SECStatus dtls_QueueMessage(sslSocket *ss, SSLContentType type,
                                    const PRUint8 *pIn, PRInt32 nIn);
 extern SECStatus dtls_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags);
 SECStatus ssl3_DisableNonDTLSSuites(sslSocket *ss);
