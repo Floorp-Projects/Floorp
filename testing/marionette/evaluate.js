@@ -284,6 +284,24 @@ evaluate.toJSON = function(obj, seenEls) {
 };
 
 /**
+ * Tests if an arbitrary object is cyclic.
+ *
+ * @param {*} obj
+ *     Object to test for cyclical references.
+ *
+ * @return {boolean}
+ *     True if object is cyclic, false otherwise.
+ */
+evaluate.isCyclic = function(obj) {
+  try {
+    JSON.stringify(obj);
+    return false;
+  } catch (e) {
+    return true;
+  }
+};
+
+/**
  * `Cu.isDeadWrapper` does not return true for a dead sandbox that
  * was assosciated with and extension popup.  This provides a way to
  * still test for a dead object.

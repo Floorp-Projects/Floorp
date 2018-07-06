@@ -118,3 +118,43 @@ add_test(function test_toJSON_objects() {
 
   run_next_test();
 });
+
+add_test(function test_isCyclic_noncyclic() {
+  for (let type of [true, 42, "foo", [], {}, null, undefined]) {
+    ok(!evaluate.isCyclic(type));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isCyclic_object() {
+  let obj = {};
+  obj.reference = obj;
+  ok(evaluate.isCyclic(obj));
+
+  run_next_test();
+});
+
+add_test(function test_isCyclic_array() {
+  let arr = [];
+  arr.push(arr);
+  ok(evaluate.isCyclic(arr));
+
+  run_next_test();
+});
+
+add_test(function test_isCyclic_arrayInObject() {
+  let arr = [];
+  arr.push(arr);
+  ok(evaluate.isCyclic({arr}));
+
+  run_next_test();
+});
+
+add_test(function test_isCyclic_objectInArray() {
+  let obj = {};
+  obj.reference = obj;
+  ok(evaluate.isCyclic([obj]));
+
+  run_next_test();
+});
