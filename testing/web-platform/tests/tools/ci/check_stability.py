@@ -270,7 +270,7 @@ def run(venv, wpt_args, **kwargs):
         wpt_kwargs["install"] = wpt_kwargs["product"].split(":")[0] == "firefox"
 
         wpt_kwargs["pause_after_test"] = False
-        wpt_kwargs["verify_log_full"] = True
+        wpt_kwargs["verify_log_full"] = False
         if wpt_kwargs["repeat"] == 1:
             wpt_kwargs["repeat"] = 10
 
