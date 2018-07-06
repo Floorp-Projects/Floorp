@@ -91,9 +91,6 @@ CheckGlobalLock<Lock, Helper>::check() const
       case GlobalLock::GCLock:
         MOZ_ASSERT(TlsContext.get()->runtime()->gc.currentThreadHasLockedGC());
         break;
-      case GlobalLock::ExclusiveAccessLock:
-        MOZ_ASSERT(TlsContext.get()->runtime()->currentThreadHasExclusiveAccess());
-        break;
       case GlobalLock::ScriptDataLock:
         MOZ_ASSERT(TlsContext.get()->runtime()->currentThreadHasScriptDataAccess());
         break;
@@ -104,8 +101,6 @@ CheckGlobalLock<Lock, Helper>::check() const
 }
 
 template class CheckGlobalLock<GlobalLock::GCLock, AllowedHelperThread::None>;
-template class CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::None>;
-template class CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::GCTask>;
 template class CheckGlobalLock<GlobalLock::ScriptDataLock, AllowedHelperThread::None>;
 template class CheckGlobalLock<GlobalLock::HelperThreadLock, AllowedHelperThread::None>;
 

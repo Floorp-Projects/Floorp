@@ -203,7 +203,6 @@ AtomStateOffsetToName(const JSAtomState& atomState, size_t offset)
 // per-runtime or per-process. When acquiring more than one of these locks,
 // the acquisition must be done in the order below to avoid deadlocks.
 enum RuntimeLock {
-    ExclusiveAccessLock,
     HelperThreadStateLock,
     GCLock
 };
@@ -219,7 +218,6 @@ void DisableExtraThreads();
 
 using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
-class AutoLockForExclusiveAccess;
 class AutoLockScriptData;
 
 } // namespace js
@@ -461,18 +459,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
   private:
     /*
-     * Lock taken when using per-runtime or per-zone data that could otherwise
-     * be accessed simultaneously by multiple threads.
-     *
-     * Locking this only occurs if there is actually a thread other than the
-     * main thread which could access such data.
-     */
-    js::Mutex exclusiveAccessLock;
-#ifdef DEBUG
-    bool activeThreadHasExclusiveAccess;
-#endif
-
-    /*
      * Lock used to protect the script data table, which can be used by
      * off-thread parsing.
      *
@@ -487,10 +473,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Number of zones which may be operated on by helper threads.
     mozilla::Atomic<size_t> numActiveHelperThreadZones;
 
-    // Any GC activity affecting the heap.
+    // Any activity affecting the heap.
     mozilla::Atomic<JS::HeapState> heapState_;
 
-    friend class js::AutoLockForExclusiveAccess;
     friend class js::AutoLockScriptData;
 
   public:
@@ -502,13 +487,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
 #ifdef DEBUG
-    bool currentThreadHasExclusiveAccess() const {
-        if (!hasHelperThreadZones())
-            return CurrentThreadCanAccessRuntime(this) && activeThreadHasExclusiveAccess;
-
-        return exclusiveAccessLock.ownedByCurrentThread();
-    }
-
     bool currentThreadHasScriptDataAccess() const {
         if (!hasHelperThreadZones())
             return CurrentThreadCanAccessRuntime(this) && activeThreadHasScriptDataAccess;
@@ -715,7 +693,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // Set of all live symbols produced by Symbol.for(). All such symbols are
     // allocated in the atoms zone. Reading or writing the symbol registry
-    // requires the calling thread to use AutoAccessAtomsZone.
+    // can only be done from the main thread.
     js::MainThreadOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
 
     js::WriteOnceData<js::AtomSet*> permanentAtomsDuringInit_;
@@ -768,8 +746,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::WriteOnceData<JSAtomState*> commonNames;
 
     // All permanent atoms in the runtime, other than those in staticStrings.
-    // Unlike |atoms_|, access to this does not require locking because it is
-    // frozen and thus read-only.
+    // Access to this does not require a lock because it is frozen and thus
+    // read-only.
     const js::FrozenAtomSet* permanentAtoms() const {
         MOZ_ASSERT(permanentAtomsPopulated());
         return permanentAtoms_.ref();

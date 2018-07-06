@@ -18,10 +18,10 @@
 
 namespace js {
 
-// Using the atoms zone without holding the exclusive access lock is dangerous
-// because worker threads may be using it simultaneously. Therefore, it's
-// better to skip the atoms zone when iterating over zones. If you need to
-// iterate over the atoms zone, consider taking the exclusive access lock first.
+// Accessing the atoms zone can be dangerous because helper threads may be
+// accessing it concurrently to the main thread, so it's better to skip the
+// atoms zone when iterating over zones. If you need to iterate over the atoms
+// zone, consider using AutoLockAllAtoms.
 enum ZoneSelector {
     WithAtoms,
     SkipAtoms

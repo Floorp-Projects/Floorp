@@ -711,8 +711,7 @@ class GCRuntime
     GCSchedulingTunables tunables;
     GCSchedulingState schedulingState;
 
-    // State used for managing atom mark bitmaps in each zone. Protected by the
-    // exclusive access lock.
+    // State used for managing atom mark bitmaps in each zone.
     AtomMarkingRuntime atomMarking;
 
   private:

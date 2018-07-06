@@ -20,7 +20,6 @@
   _(ShellWorkerThreads,          100) \
   _(ShellArrayBufferMailbox,     100) \
                                       \
-  _(RuntimeExclusiveAccess,      200) \
   _(AtomsTable,                  200) \
                                       \
   _(WasmInitBuiltinThunks,       250) \

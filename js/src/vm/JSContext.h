@@ -72,7 +72,6 @@ struct HelperThread;
 
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
 
-class AutoLockForExclusiveAccess;
 class AutoLockScriptData;
 
 void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
@@ -1117,46 +1116,6 @@ class AutoAssertNoException
     {
         MOZ_ASSERT_IF(!hadException, !cx->isExceptionPending());
     }
-};
-
-class MOZ_RAII AutoLockForExclusiveAccess
-{
-    JSRuntime* runtime;
-
-    void init(JSRuntime* rt) {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt) || CurrentThreadIsParseThread());
-        runtime = rt;
-        if (runtime->hasHelperThreadZones()) {
-            runtime->exclusiveAccessLock.lock();
-        } else {
-            MOZ_ASSERT(!runtime->activeThreadHasExclusiveAccess);
-#ifdef DEBUG
-            runtime->activeThreadHasExclusiveAccess = true;
-#endif
-        }
-    }
-
-  public:
-    explicit AutoLockForExclusiveAccess(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(cx->runtime());
-    }
-    explicit AutoLockForExclusiveAccess(JSRuntime* rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(rt);
-    }
-    ~AutoLockForExclusiveAccess() {
-        if (runtime->hasHelperThreadZones()) {
-            runtime->exclusiveAccessLock.unlock();
-        } else {
-            MOZ_ASSERT(runtime->activeThreadHasExclusiveAccess);
-#ifdef DEBUG
-            runtime->activeThreadHasExclusiveAccess = false;
-#endif
-        }
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII AutoLockScriptData
