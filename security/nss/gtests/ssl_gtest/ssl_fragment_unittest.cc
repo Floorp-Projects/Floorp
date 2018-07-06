@@ -106,8 +106,8 @@ class RecordFragmenter : public PacketFilter {
         }
 
         // Just rewrite the sequence number (CCS only).
-        if (header.content_type() != kTlsHandshakeType) {
-          EXPECT_EQ(kTlsChangeCipherSpecType, header.content_type());
+        if (header.content_type() != ssl_ct_handshake) {
+          EXPECT_EQ(ssl_ct_change_cipher_spec, header.content_type());
           WriteRecord(header, record);
           continue;
         }

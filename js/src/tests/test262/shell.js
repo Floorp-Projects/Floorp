@@ -364,20 +364,27 @@ $ERROR = function $ERROR(message) {
 
 // https://github.com/tc39/test262/blob/master/INTERPRETING.md#host-defined-functions
 ;(function createHostObject(global) {
+    "use strict";
+
+    // Save built-in functions and constructors.
     var FunctionToString = global.Function.prototype.toString;
     var ReflectApply = global.Reflect.apply;
-    var NewGlobal = global.newGlobal;
     var Atomics = global.Atomics;
+    var Error = global.Error;
     var SharedArrayBuffer = global.SharedArrayBuffer;
     var Int32Array = global.Int32Array;
+
+    // Save built-in shell functions.
+    var NewGlobal = global.newGlobal;
     var setSharedArrayBuffer = global.setSharedArrayBuffer;
     var getSharedArrayBuffer = global.getSharedArrayBuffer;
     var evalInWorker = global.evalInWorker;
+    var monotonicNow = global.monotonicNow;
 
     var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
-    var hasMailbox = typeof setSharedArrayBuffer == "function" && typeof getSharedArrayBuffer == "function";
-    var hasEvalInWorker = typeof evalInWorker == "function";
+    var hasMailbox = typeof setSharedArrayBuffer === "function" && typeof getSharedArrayBuffer === "function";
+    var hasEvalInWorker = typeof evalInWorker === "function";
 
     if (!hasCreateIsHTMLDDA && !("document" in global && "all" in global.document))
         throw new Error("no [[IsHTMLDDA]] object available for testing");
@@ -385,8 +392,6 @@ $ERROR = function $ERROR(message) {
     var IsHTMLDDA = hasCreateIsHTMLDDA
                     ? global.createIsHTMLDDA()
                     : global.document.all;
-
-
 
     // The $262.agent framework is not appropriate for browsers yet, and some
     // test cases can't work in browsers (they block the main thread).
@@ -419,19 +424,23 @@ $ERROR = function $ERROR(message) {
             // being run at all.
 
             if (!sabTestable) {
+                let {reportCompare, quit} = global;
+
+                function notAvailable() {
+                    // See comment above.
+                    if (!hasThreads && shellCode) {
+                        reportCompare(0, 0);
+                        quit(0);
+                    }
+                    throw new Error("Agents not available");
+                }
+
                 return {
-                    _notAvailable() {
-                        // See comment above.
-                        if (!hasThreads && shellCode) {
-                            global.reportCompare(0,0);
-                            global.quit(0);
-                        }
-                        throw new Error("Agents not available");
-                    },
-                    start(script) { this._notAvailable() },
-                    broadcast(sab, id) { this._notAvailable() },
-                    getReport() { this._notAvailable() },
-                    sleep(s) { this._notAvailable() }
+                    start(script) { notAvailable() },
+                    broadcast(sab, id) { notAvailable() },
+                    getReport() { notAvailable() },
+                    sleep(s) { notAvailable() },
+                    monotonicNow,
                 }
             }
 
@@ -454,102 +463,110 @@ $ERROR = function $ERROR(message) {
 
             var _worker_prefix =
 // BEGIN WORKER PREFIX
-`if (typeof $262 == 'undefined')
+`if (typeof $262 === 'undefined')
     $262 = {};
-$262.agent = (function () {
+$262.agent = (function (global) {
+    var ReflectApply = global.Reflect.apply;
+    var StringCharCodeAt = global.String.prototype.charCodeAt;
+    var {
+        add: Atomics_add,
+        compareExchange: Atomics_compareExchange,
+        load: Atomics_load,
+        store: Atomics_store,
+        wait: Atomics_wait,
+    } = global.Atomics;
+
+    var {getSharedArrayBuffer} = global;
+
     var _ia = new Int32Array(getSharedArrayBuffer());
     var agent = {
         receiveBroadcast(receiver) {
             var k;
-            while (((k = Atomics.load(_ia, ${_MSG_LOC})) & 1) == 0)
+            while (((k = Atomics_load(_ia, ${_MSG_LOC})) & 1) === 0)
                 ;
             var received_sab = getSharedArrayBuffer();
-            var received_id = Atomics.load(_ia, ${_ID_LOC});
-            Atomics.add(_ia, ${_ACK_LOC}, 1);
-            while (Atomics.load(_ia, ${_MSG_LOC}) == k)
+            var received_id = Atomics_load(_ia, ${_ID_LOC});
+            Atomics_add(_ia, ${_ACK_LOC}, 1);
+            while (Atomics_load(_ia, ${_MSG_LOC}) === k)
                 ;
             receiver(received_sab, received_id);
         },
 
         report(msg) {
-            while (Atomics.compareExchange(_ia, ${_LOCKTXT_LOC}, 0, 1) == 1)
+            while (Atomics_compareExchange(_ia, ${_LOCKTXT_LOC}, 0, 1) === 1)
                 ;
             msg = "" + msg;
             var i = _ia[${_NEXT_LOC}];
             _ia[i++] = msg.length;
             for ( let j=0 ; j < msg.length ; j++ )
-                _ia[i++] = msg.charCodeAt(j);
+                _ia[i++] = ReflectApply(StringCharCodeAt, msg, [j]);
             _ia[${_NEXT_LOC}] = i;
-            Atomics.add(_ia, ${_NUMTXT_LOC}, 1);
-            Atomics.store(_ia, ${_LOCKTXT_LOC}, 0);
+            Atomics_add(_ia, ${_NUMTXT_LOC}, 1);
+            Atomics_store(_ia, ${_LOCKTXT_LOC}, 0);
         },
 
         sleep(s) {
-            Atomics.wait(_ia, ${_SLEEP_LOC}, 0, s);
+            Atomics_wait(_ia, ${_SLEEP_LOC}, 0, s);
         },
 
-        leaving() {}
+        leaving() {},
+
+        monotonicNow: global.monotonicNow,
     };
-    Atomics.add(_ia, ${_RDY_LOC}, 1);
+    Atomics_add(_ia, ${_RDY_LOC}, 1);
     return agent;
-})();`;
+})(this);`;
 // END WORKER PREFIX
 
+            var _numWorkers = 0;
+            var _numReports = 0;
+            var _reportPtr = _FIRST;
+            var {
+                add: Atomics_add,
+                load: Atomics_load,
+                store: Atomics_store,
+                wait: Atomics_wait,
+            } = Atomics;
+            var StringFromCharCode = global.String.fromCharCode;
+
             return {
-                _numWorkers: 0,
-                _numReports: 0,
-                _reportPtr: _FIRST,
-
-                _bailIfNotAvailable() {
-                    if (!sabTestable) {
-                        // See comment above.
-                        if (!hasThreads && shellCode) {
-                            global.reportCompare(0,0);
-                            global.quit(0);
-                        }
-                        throw new Error("Agents not available");
-                    }
-                },
-
                 start(script) {
-                    this._bailIfNotAvailable();
                     setSharedArrayBuffer(_ia.buffer);
-                    var oldrdy = Atomics.load(_ia, _RDY_LOC);
+                    var oldrdy = Atomics_load(_ia, _RDY_LOC);
                     evalInWorker(_worker_prefix + script);
-                    while (Atomics.load(_ia, _RDY_LOC) == oldrdy)
+                    while (Atomics_load(_ia, _RDY_LOC) === oldrdy)
                         ;
-                    this._numWorkers++;
+                    _numWorkers++;
                 },
 
                 broadcast(sab, id) {
-                    this._bailIfNotAvailable();
                     setSharedArrayBuffer(sab);
-                    Atomics.store(_ia, _ID_LOC, id);
-                    Atomics.store(_ia, _ACK_LOC, 0);
-                    Atomics.add(_ia, _MSG_LOC, 1);
-                    while (Atomics.load(_ia, _ACK_LOC) < this._numWorkers)
+                    Atomics_store(_ia, _ID_LOC, id);
+                    Atomics_store(_ia, _ACK_LOC, 0);
+                    Atomics_add(_ia, _MSG_LOC, 1);
+                    while (Atomics_load(_ia, _ACK_LOC) < _numWorkers)
                         ;
-                    Atomics.add(_ia, _MSG_LOC, 1);
+                    Atomics_add(_ia, _MSG_LOC, 1);
                 },
 
                 getReport() {
-                    this._bailIfNotAvailable();
-                    if (this._numReports == Atomics.load(_ia, _NUMTXT_LOC))
+                    if (_numReports === Atomics_load(_ia, _NUMTXT_LOC))
                         return null;
                     var s = "";
-                    var i = this._reportPtr;
+                    var i = _reportPtr;
                     var len = _ia[i++];
                     for ( let j=0 ; j < len ; j++ )
-                        s += String.fromCharCode(_ia[i++]);
-                    this._reportPtr = i;
-                    this._numReports++;
+                        s += StringFromCharCode(_ia[i++]);
+                    _reportPtr = i;
+                    _numReports++;
                     return s;
                 },
 
                 sleep(s) {
-                    this._bailIfNotAvailable();
-                    Atomics.wait(_ia, _SLEEP_LOC, 0, s);
+                    Atomics_wait(_ia, _SLEEP_LOC, 0, s);
                 },
+
+                monotonicNow,
             };
         })()
     };

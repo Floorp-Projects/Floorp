@@ -100,8 +100,11 @@ public:
                                     const CompositableHandle& aHandlee);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
 
-  wr::ExternalImageId AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
   void DeallocExternalImageId(const wr::ExternalImageId& aImageId);
+
+  /// Release TextureClient that is bounded to ImageKey.
+  /// It is used for recycling TextureClient.
+  void ReleaseTextureOfImage(const wr::ImageKey& aKey);
 
   /**
    * Clean this up, finishing with SendShutDown() which will cause __delete__

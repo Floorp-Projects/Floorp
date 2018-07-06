@@ -2447,17 +2447,11 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
     if (object.isPrimitive())
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // Wrappers are parented to their the global in their home compartment. But
-    // when getting the global for a cross-compartment wrapper, we really want
+    // When getting the global for a cross-compartment wrapper, we really want
     // a wrapper for the foreign global. So we need to unwrap before getting the
-    // parent, enter the compartment for the duration of the call, and wrap the
-    // result.
+    // global and then wrap the result.
     Rooted<JSObject*> obj(cx, &object.toObject());
-    obj = js::UncheckedUnwrap(obj);
-    {
-        JSAutoRealm ar(cx, obj);
-        obj = JS_GetGlobalForObject(cx, obj);
-    }
+    obj = JS::GetNonCCWObjectGlobal(js::UncheckedUnwrap(obj));
 
     if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;

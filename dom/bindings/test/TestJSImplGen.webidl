@@ -41,12 +41,13 @@ interface TestJSImplInterface {
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
-  [Cached, Pure]
-  readonly attribute byte cachedByte;
-  [Cached, Constant]
-  readonly attribute byte cachedConstantByte;
-  [Cached, Pure]
-  attribute byte cachedWritableByte;
+  // [Cached] is not supported in JS-implemented WebIDL.
+  //[Cached, Pure]
+  //readonly attribute byte cachedByte;
+  //[Cached, Constant]
+  //readonly attribute byte cachedConstantByte;
+  //[Cached, Pure]
+  //attribute byte cachedWritableByte;
   [Affects=Nothing]
   attribute byte sideEffectFreeByte;
   [Affects=Nothing, DependsOn=DOMState]
@@ -160,8 +161,9 @@ interface TestJSImplInterface {
   void passNullableSelf(TestJSImplInterface? arg);
   attribute TestJSImplInterface nonNullSelf;
   attribute TestJSImplInterface? nullableSelf;
-  [Cached, Pure]
-  readonly attribute TestJSImplInterface cachedSelf;
+  // [Cached] is not supported in JS-implemented WebIDL.
+  //[Cached, Pure]
+  //readonly attribute TestJSImplInterface cachedSelf;
   // Optional arguments
   void passOptionalSelf(optional TestJSImplInterface? arg);
   void passOptionalNonNullSelf(optional TestJSImplInterface arg);
@@ -230,16 +232,17 @@ interface TestJSImplInterface {
   void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
-  [Cached, Pure]
-  readonly attribute sequence<long> readonlySequence;
-  [Cached, Pure]
-  readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
-  [Cached, Pure]
-  readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
-  [Cached, Pure, Frozen]
-  readonly attribute sequence<long> readonlyFrozenSequence;
-  [Cached, Pure, Frozen]
-  readonly attribute sequence<long>? readonlyFrozenNullableSequence;
+  // [Cached] is not supported in JS-implemented WebIDL.
+  //[Cached, Pure]
+  //readonly attribute sequence<long> readonlySequence;
+  //[Cached, Pure]
+  //readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
+  //[Cached, Pure]
+  //readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
+  //[Cached, Pure, Frozen]
+  //readonly attribute sequence<long> readonlyFrozenSequence;
+  //[Cached, Pure, Frozen]
+  //readonly attribute sequence<long>? readonlyFrozenNullableSequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();
@@ -602,18 +605,19 @@ interface TestJSImplInterface {
 
   void passDictionary(optional Dict x);
   void passDictionary2(Dict x);
-  [Cached, Pure]
-  readonly attribute Dict readonlyDictionary;
-  [Cached, Pure]
-  readonly attribute Dict? readonlyNullableDictionary;
-  [Cached, Pure]
-  attribute Dict writableDictionary;
-  [Cached, Pure, Frozen]
-  readonly attribute Dict readonlyFrozenDictionary;
-  [Cached, Pure, Frozen]
-  readonly attribute Dict? readonlyFrozenNullableDictionary;
-  [Cached, Pure, Frozen]
-  attribute Dict writableFrozenDictionary;
+  // [Cached] is not supported in JS-implemented WebIDL.
+  //[Cached, Pure]
+  //readonly attribute Dict readonlyDictionary;
+  //[Cached, Pure]
+  //readonly attribute Dict? readonlyNullableDictionary;
+  //[Cached, Pure]
+  //attribute Dict writableDictionary;
+  //[Cached, Pure, Frozen]
+  //readonly attribute Dict readonlyFrozenDictionary;
+  //[Cached, Pure, Frozen]
+  //readonly attribute Dict? readonlyFrozenNullableDictionary;
+  //[Cached, Pure, Frozen]
+  //attribute Dict writableFrozenDictionary;
   Dict receiveDictionary();
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
@@ -854,6 +858,7 @@ interface TestCImplementedInterface2 {
 [NoInterfaceObject,
  JSImplementation="@mozilla.org/test-js-impl-interface;2"]
 interface TestJSImplNoInterfaceObject {
-  [Cached, Pure]
-  readonly attribute byte cachedByte;
+  // [Cached] is not supported in JS-implemented WebIDL.
+  //[Cached, Pure]
+  //readonly attribute byte cachedByte;
 };

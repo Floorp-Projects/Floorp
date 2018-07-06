@@ -221,20 +221,18 @@ WebRenderBridgeChild::GetNextExternalImageId()
   return id.value();
 }
 
-wr::ExternalImageId
-WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
-{
-  wr::ExternalImageId imageId = GetNextExternalImageId();
-  AddWebRenderParentCommand(
-    OpAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle()));
-  return imageId;
-}
-
 void
 WebRenderBridgeChild::DeallocExternalImageId(const wr::ExternalImageId& aImageId)
 {
   AddWebRenderParentCommand(
     OpRemoveExternalImageId(aImageId));
+}
+
+void
+WebRenderBridgeChild::ReleaseTextureOfImage(const wr::ImageKey& aKey)
+{
+  AddWebRenderParentCommand(
+    OpReleaseTextureOfImage(aKey));
 }
 
 struct FontFileDataSink

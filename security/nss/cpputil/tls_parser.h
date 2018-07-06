@@ -20,13 +20,6 @@
 
 namespace nss_test {
 
-const uint8_t kTlsChangeCipherSpecType = 20;
-const uint8_t kTlsAlertType = 21;
-const uint8_t kTlsHandshakeType = 22;
-const uint8_t kTlsApplicationDataType = 23;
-const uint8_t kTlsAltHandshakeType = 24;
-const uint8_t kTlsAckType = 25;
-
 const uint8_t kTlsHandshakeClientHello = 1;
 const uint8_t kTlsHandshakeServerHello = 2;
 const uint8_t kTlsHandshakeNewSessionTicket = 4;
@@ -60,7 +53,7 @@ const uint8_t kTlsAlertUnrecognizedName = 112;
 const uint8_t kTlsAlertNoApplicationProtocol = 120;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
-    kTlsChangeCipherSpecType,  // Type
+    ssl_ct_change_cipher_spec,  // Type
     0xfe,
     0xff,  // Version
     0x00,

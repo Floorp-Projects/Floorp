@@ -48,7 +48,7 @@ for (const [language, expected] of validLanguageOptions) {
   expect = (expected || 'en') + '-US';
   assert.sameValue(
     new Intl.Locale('en-US', options).toString(),
-    expected,
+    expect,
     `new Intl.Locale('en-US', options).toString() equals the value of ${expect}`
   );
 

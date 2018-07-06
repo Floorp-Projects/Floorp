@@ -1180,9 +1180,6 @@ ProtoKeyToId(JSContext* cx, JSProtoKey key, JS::MutableHandleId idp);
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext* cx, JS::HandleId id);
 
-extern JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForObject(JSContext* cx, JSObject* obj);
-
 extern JS_PUBLIC_API(bool)
 JS_IsGlobalObject(JSObject* obj);
 
@@ -1197,8 +1194,20 @@ JS_ExtensibleLexicalEnvironment(JSObject* obj);
 
 namespace JS {
 
+/**
+ * Get the current realm's global. Returns nullptr if no realm has been
+ * entered.
+ */
 extern JS_PUBLIC_API(JSObject*)
 CurrentGlobalOrNull(JSContext* cx);
+
+/**
+ * Get the global object associated with an object's realm. The object must not
+ * be a cross-compartment wrapper (because CCWs are shared by all realms in the
+ * compartment).
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetNonCCWObjectGlobal(JSObject* obj);
 
 } // namespace JS
 

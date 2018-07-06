@@ -139,6 +139,7 @@ WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
     , mMaxMipmapLevel(1000)
     , mTexCompareMode(LOCAL_GL_NONE)
     , mIsResolved(false)
+    , mResolved_FakeBlack(FakeBlackType::None)
     , mResolved_Swizzle(nullptr)
 {
     mContext->mTextures.insertBack(this);

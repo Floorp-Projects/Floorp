@@ -10,11 +10,6 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="autocomplete-profile-listitem-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <resources>
-      <stylesheet src="chrome://formautofill-shared/skin/autocomplete-item.css"/>
-      <stylesheet src="chrome://formautofill/skin/autocomplete-item.css"/>
-    </resources>
-
     <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
       </constructor>

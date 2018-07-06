@@ -24,6 +24,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/ChildIterator.h"
+#include "mozilla/dom/TreeIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
 
@@ -49,438 +51,6 @@ static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 // This works correctly if and only if CH_SHY <= 255
 static_assert(CH_SHY <= 255, "CH_SHY is not an ascii character");
 
-// nsFindContentIterator is a special iterator that also goes through any
-// existing <textarea>'s or text <input>'s editor to lookup the anonymous DOM
-// content there.
-//
-// Details:
-// 1) We use two iterators: The "outer-iterator" goes through the normal DOM.
-// The "inner-iterator" goes through the anonymous DOM inside the editor.
-//
-// 2) [MaybeSetupInnerIterator] As soon as the outer-iterator's current node is
-// changed, a check is made to see if the node is a <textarea> or a text <input>
-// node. If so, an inner-iterator is created to lookup the anynomous contents of
-// the editor underneath the text control.
-//
-// 3) When the inner-iterator is created, we position the outer-iterator 'after'
-// (or 'before' in backward search) the text control to avoid revisiting that
-// control.
-//
-// 4) As a consequence of searching through text controls, we can be called via
-// FindNext with the current selection inside a <textarea> or a text <input>.
-// This means that we can be given an initial search range that stretches across
-// the anonymous DOM and the normal DOM. To cater for this situation, we split
-// the anonymous part into the inner-iterator and then reposition the outer-
-// iterator outside.
-//
-// 5) The implementation assumes that First() and Next() are only called in
-// find-forward mode, while Last() and Prev() are used in find-backward.
-
-class nsFindContentIterator final : public nsIContentIterator
-{
-public:
-  explicit nsFindContentIterator(bool aFindBackward)
-    : mStartOffset(0)
-    , mEndOffset(0)
-    , mFindBackward(aFindBackward)
-  {
-  }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsFindContentIterator)
-
-  // nsIContentIterator
-  virtual nsresult Init(nsINode* aRoot) override
-  {
-    MOZ_ASSERT_UNREACHABLE("internal error");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  virtual nsresult Init(nsRange* aRange) override
-  {
-    MOZ_ASSERT_UNREACHABLE("internal error");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
-                        nsINode* aEndContainer, uint32_t aEndOffset) override
-  {
-    MOZ_ASSERT_UNREACHABLE("internal error");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  virtual nsresult Init(const RawRangeBoundary& aStart,
-                        const RawRangeBoundary& aEnd) override
-  {
-    MOZ_ASSERT_UNREACHABLE("internal error");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  // Not a range because one of the endpoints may be anonymous.
-  nsresult Init(nsINode* aStartNode, int32_t aStartOffset,
-                nsINode* aEndNode, int32_t aEndOffset);
-  virtual void First() override;
-  virtual void Last() override;
-  virtual void Next() override;
-  virtual void Prev() override;
-  virtual nsINode* GetCurrentNode() override;
-  virtual bool IsDone() override;
-  virtual nsresult PositionAt(nsINode* aCurNode) override;
-
-  void Reset();
-protected:
-  virtual ~nsFindContentIterator() {}
-
-private:
-  static already_AddRefed<nsRange> CreateRange(nsINode* aNode)
-  {
-    RefPtr<nsRange> range = new nsRange(aNode);
-    range->SetMaySpanAnonymousSubtrees(true);
-    return range.forget();
-  }
-
-  nsCOMPtr<nsIContentIterator> mOuterIterator;
-  nsCOMPtr<nsIContentIterator> mInnerIterator;
-  // Can't use a range here, since we want to represent part of the flattened
-  // tree, including native anonymous content.
-  nsCOMPtr<nsINode> mStartNode;
-  int32_t mStartOffset;
-  nsCOMPtr<nsINode> mEndNode;
-  int32_t mEndOffset;
-
-  nsCOMPtr<nsIContent> mStartOuterContent;
-  nsCOMPtr<nsIContent> mEndOuterContent;
-  bool mFindBackward;
-
-  void MaybeSetupInnerIterator();
-  void SetupInnerIterator(nsIContent* aContent);
-};
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFindContentIterator)
-  NS_INTERFACE_MAP_ENTRY(nsIContentIterator)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFindContentIterator)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFindContentIterator)
-
-NS_IMPL_CYCLE_COLLECTION(nsFindContentIterator, mOuterIterator, mInnerIterator,
-                         mStartOuterContent, mEndOuterContent, mEndNode,
-                         mStartNode)
-
-nsresult
-nsFindContentIterator::Init(nsINode* aStartNode, int32_t aStartOffset,
-                            nsINode* aEndNode, int32_t aEndOffset)
-{
-  NS_ENSURE_ARG_POINTER(aStartNode);
-  NS_ENSURE_ARG_POINTER(aEndNode);
-  if (!mOuterIterator) {
-    if (mFindBackward) {
-      // Use post-order in the reverse case, so we get parents before children
-      // in case we want to prevent descending into a node.
-      mOuterIterator = do_CreateInstance(kCContentIteratorCID);
-    } else {
-      // Use pre-order in the forward case, so we get parents before children in
-      // case we want to prevent descending into a node.
-      mOuterIterator = do_CreateInstance(kCPreContentIteratorCID);
-    }
-    NS_ENSURE_ARG_POINTER(mOuterIterator);
-  }
-
-  // Set up the search "range" that we will examine
-  mStartNode = aStartNode;
-  mStartOffset = aStartOffset;
-  mEndNode = aEndNode;
-  mEndOffset = aEndOffset;
-
-  return NS_OK;
-}
-
-void
-nsFindContentIterator::First()
-{
-  Reset();
-}
-
-void
-nsFindContentIterator::Last()
-{
-  Reset();
-}
-
-void
-nsFindContentIterator::Next()
-{
-  if (mInnerIterator) {
-    mInnerIterator->Next();
-    if (!mInnerIterator->IsDone()) {
-      return;
-    }
-
-    // by construction, mOuterIterator is already on the next node
-  } else {
-    mOuterIterator->Next();
-  }
-  MaybeSetupInnerIterator();
-}
-
-void
-nsFindContentIterator::Prev()
-{
-  if (mInnerIterator) {
-    mInnerIterator->Prev();
-    if (!mInnerIterator->IsDone()) {
-      return;
-    }
-
-    // by construction, mOuterIterator is already on the previous node
-  } else {
-    mOuterIterator->Prev();
-  }
-  MaybeSetupInnerIterator();
-}
-
-nsINode*
-nsFindContentIterator::GetCurrentNode()
-{
-  if (mInnerIterator && !mInnerIterator->IsDone()) {
-    return mInnerIterator->GetCurrentNode();
-  }
-  return mOuterIterator->GetCurrentNode();
-}
-
-bool
-nsFindContentIterator::IsDone()
-{
-  if (mInnerIterator && !mInnerIterator->IsDone()) {
-    return false;
-  }
-  return mOuterIterator->IsDone();
-}
-
-static nsIContent&
-AnonymousSubtreeRootParent(nsINode& aNode)
-{
-  MOZ_ASSERT(aNode.IsInNativeAnonymousSubtree());
-
-  nsIContent* current = aNode.GetParent();
-  while (current->IsInNativeAnonymousSubtree()) {
-    current = current->GetParent();
-    MOZ_ASSERT(current, "huh?");
-  }
-  return *current;
-}
-
-nsresult
-nsFindContentIterator::PositionAt(nsINode* aCurNode)
-{
-  nsresult rv = mOuterIterator->PositionAt(aCurNode);
-  if (NS_SUCCEEDED(rv)) {
-    MaybeSetupInnerIterator();
-    return rv;
-  }
-
-  // If this failed, it means that aCurNode is necessarily anonymous.
-  nsIContent& nonAnonNode = AnonymousSubtreeRootParent(*aCurNode);
-  SetupInnerIterator(&nonAnonNode);
-  MOZ_ASSERT(mInnerIterator, "How did we have an anonymous node otherwise?");
-  rv = mInnerIterator->PositionAt(aCurNode);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!mOuterIterator->IsDone()) {
-    if (mFindBackward) {
-      mOuterIterator->Last();
-    } else {
-      mOuterIterator->First();
-    }
-  }
-  return rv;
-}
-
-void
-nsFindContentIterator::Reset()
-{
-  mInnerIterator = nullptr;
-  mStartOuterContent = nullptr;
-  mEndOuterContent = nullptr;
-
-  // As a consequence of searching through text controls, we may have been
-  // initialized with a selection inside a <textarea> or a text <input>.
-
-  // see if the start node is an anonymous text node inside a text control
-  nsCOMPtr<nsIContent> startContent(do_QueryInterface(mStartNode));
-  if (startContent) {
-    mStartOuterContent = startContent->FindFirstNonChromeOnlyAccessContent();
-  }
-
-  // see if the end node is an anonymous text node inside a text control
-  nsCOMPtr<nsIContent> endContent(do_QueryInterface(mEndNode));
-  if (endContent) {
-    mEndOuterContent = endContent->FindFirstNonChromeOnlyAccessContent();
-  }
-
-  // Note: OK to just set up the outer iterator here; if our range has a native
-  // anonymous endpoint we'll end up setting up an inner iterator, and reset the
-  // outer one in the process.
-  nsCOMPtr<nsINode> node = mStartNode;
-  NS_ENSURE_TRUE_VOID(node);
-
-  RefPtr<nsRange> range = CreateRange(node);
-  range->SetStart(*mStartNode, mStartOffset, IgnoreErrors());
-  range->SetEnd(*mEndNode, mEndOffset, IgnoreErrors());
-  mOuterIterator->Init(range);
-
-  if (!mFindBackward) {
-    if (mStartOuterContent != startContent) {
-      // the start node was an anonymous text node
-      SetupInnerIterator(mStartOuterContent);
-      if (mInnerIterator) {
-        mInnerIterator->First();
-      }
-    }
-    if (!mOuterIterator->IsDone()) {
-      mOuterIterator->First();
-    }
-  } else {
-    if (mEndOuterContent != endContent) {
-      // the end node was an anonymous text node
-      SetupInnerIterator(mEndOuterContent);
-      if (mInnerIterator) {
-        mInnerIterator->Last();
-      }
-    }
-    if (!mOuterIterator->IsDone()) {
-      mOuterIterator->Last();
-    }
-  }
-
-  // if we didn't create an inner-iterator, the boundary node could still be
-  // a text control, in which case we also need an inner-iterator straightaway
-  if (!mInnerIterator) {
-    MaybeSetupInnerIterator();
-  }
-}
-
-void
-nsFindContentIterator::MaybeSetupInnerIterator()
-{
-  mInnerIterator = nullptr;
-
-  nsCOMPtr<nsIContent> content =
-    do_QueryInterface(mOuterIterator->GetCurrentNode());
-  if (!content || !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-    return;
-  }
-
-  nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
-  if (!formControl->IsTextControl(true)) {
-    return;
-  }
-
-  SetupInnerIterator(content);
-  if (mInnerIterator) {
-    if (!mFindBackward) {
-      mInnerIterator->First();
-      // finish setup: position mOuterIterator on the actual "next" node (this
-      // completes its re-init, @see SetupInnerIterator)
-      if (!mOuterIterator->IsDone()) {
-        mOuterIterator->First();
-      }
-    } else {
-      mInnerIterator->Last();
-      // finish setup: position mOuterIterator on the actual "previous" node
-      // (this completes its re-init, @see SetupInnerIterator)
-      if (!mOuterIterator->IsDone()) {
-        mOuterIterator->Last();
-      }
-    }
-  }
-}
-
-void
-nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
-{
-  if (!aContent) {
-    return;
-  }
-  NS_ASSERTION(!aContent->IsRootOfNativeAnonymousSubtree(), "invalid call");
-
-  nsITextControlFrame* tcFrame = do_QueryFrame(aContent->GetPrimaryFrame());
-  if (!tcFrame) {
-    return;
-  }
-
-  // don't mess with disabled input fields
-  RefPtr<TextEditor> textEditor = tcFrame->GetTextEditor();
-  if (!textEditor || textEditor->IsDisabled()) {
-    return;
-  }
-
-  RefPtr<dom::Element> rootElement = textEditor->GetRoot();
-
-  if (!rootElement) {
-    return;
-  }
-
-  RefPtr<nsRange> innerRange = CreateRange(aContent);
-  RefPtr<nsRange> outerRange = CreateRange(aContent);
-  if (!innerRange || !outerRange) {
-    return;
-  }
-
-  // now create the inner-iterator
-  mInnerIterator = do_CreateInstance(kCPreContentIteratorCID);
-
-  if (mInnerIterator) {
-    innerRange->SelectNodeContents(*rootElement, IgnoreErrors());
-
-    // fix up the inner bounds, we may have to only lookup a portion
-    // of the text control if the current node is a boundary point
-    if (aContent == mStartOuterContent) {
-      innerRange->SetStart(*mStartNode, mStartOffset, IgnoreErrors());
-    }
-    if (aContent == mEndOuterContent) {
-      innerRange->SetEnd(*mEndNode, mEndOffset, IgnoreErrors());
-    }
-    // Note: we just init here. We do First() or Last() later.
-    mInnerIterator->Init(innerRange);
-
-    // make sure to place the outer-iterator outside the text control so that we
-    // don't go there again.
-    IgnoredErrorResult res1, res2;
-    if (!mFindBackward) { // find forward
-      // cut the outer-iterator after the current node
-      outerRange->SetEnd(*mEndNode, mEndOffset, res1);
-      outerRange->SetStartAfter(*aContent, res2);
-    } else { // find backward
-      // cut the outer-iterator before the current node
-      outerRange->SetStart(*mStartNode, mStartOffset, res1);
-      outerRange->SetEndBefore(*aContent, res2);
-    }
-    if (res1.Failed() || res2.Failed()) {
-      // we are done with the outer-iterator, the inner-iterator will traverse
-      // what we want
-      outerRange->Collapse(true);
-    }
-
-    // Note: we just re-init here, using the segment of our search range that
-    // is yet to be visited. Thus when we later do mOuterIterator->First() [or
-    // mOuterIterator->Last()], we will effectively be on the next node [or
-    // the previous node] _with respect to_ the search range.
-    mOuterIterator->Init(outerRange);
-  }
-}
-
-nsresult
-NS_NewFindContentIterator(bool aFindBackward, nsIContentIterator** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsFindContentIterator* it = new nsFindContentIterator(aFindBackward);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIContentIterator), (void**)aResult);
-}
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFind)
   NS_INTERFACE_MAP_ENTRY(nsIFind)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -505,6 +75,19 @@ nsFind::~nsFind() = default;
 #else
 #define DEBUG_FIND_PRINTF(...) /* nothing */
 #endif
+
+static nsIContent&
+AnonymousSubtreeRootParent(const nsINode& aNode)
+{
+  MOZ_ASSERT(aNode.IsInNativeAnonymousSubtree());
+
+  nsIContent* current = aNode.GetParent();
+  while (current->IsInNativeAnonymousSubtree()) {
+    current = current->GetParent();
+    MOZ_ASSERT(current, "huh?");
+  }
+  return *current;
+}
 
 static void
 DumpNode(const nsINode* aNode)
@@ -578,6 +161,17 @@ IsVisibleNode(const nsINode* aNode)
 }
 
 static bool
+IsTextFormControl(nsIContent& aContent)
+{
+  if (!aContent.IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(&aContent);
+  return formControl->IsTextControl(true);
+}
+
+static bool
 SkipNode(const nsIContent* aContent)
 {
   const nsIContent* content = aContent;
@@ -592,24 +186,29 @@ SkipNode(const nsIContent* aContent)
       return true;
     }
 
+    // Skip NAC in non-form-control.
+    if (content->IsInNativeAnonymousSubtree() &&
+        !IsTextFormControl(AnonymousSubtreeRootParent(*content))) {
+      return true;
+    }
+
     // Only climb to the nearest block node
     if (IsBlockNode(content)) {
       return false;
     }
 
-    content = content->GetParent();
+    content = content->GetFlattenedTreeParent();
   }
 
   return false;
 }
 
 static const nsIContent*
-GetBlockParent(const Text* aNode)
+GetBlockParent(const Text& aNode)
 {
-  // FIXME(emilio): This should use GetFlattenedTreeParent instead to properly
-  // handle Shadow DOM.
-  for (const nsIContent* current = aNode->GetParent(); current;
-       current = current->GetParent()) {
+  for (const nsIContent* current = aNode.GetFlattenedTreeParent();
+       current;
+       current = current->GetFlattenedTreeParent()) {
     if (IsBlockNode(current)) {
       return current;
     }
@@ -619,27 +218,25 @@ GetBlockParent(const Text* aNode)
 
 struct nsFind::State final
 {
-  // Disallow copying because copying the iterator would be a lie.
-  State(const State&) = delete;
-
-  State(bool aFindBackward,
-        const nsRange& aSearchRange,
-        const nsRange& aStartPoint,
-        const nsRange& aEndPoint)
+  State(bool aFindBackward, nsIContent& aRoot, const nsRange& aStartPoint)
     : mFindBackward(aFindBackward)
     , mInitialized(false)
     , mIterOffset(-1)
     , mLastBlockParent(nullptr)
-    , mSearchRange(aSearchRange)
+    , mIterator(aRoot)
     , mStartPoint(aStartPoint)
-    , mEndPoint(aEndPoint)
   {
+  }
+
+  void PositionAt(Text& aNode)
+  {
+    mIterator.Seek(aNode);
   }
 
   Text* GetCurrentNode() const
   {
     MOZ_ASSERT(mInitialized);
-    nsINode* node = mIterator->GetCurrentNode();
+    nsINode* node = mIterator.GetCurrent();
     MOZ_ASSERT(!node || node->IsText());
     return node ? node->GetAsText() : nullptr;
   }
@@ -674,12 +271,10 @@ public:
   // An offset into the text of the first node we're starting to search at.
   int mIterOffset;
   const nsIContent* mLastBlockParent;
-  RefPtr<nsFindContentIterator> mIterator;
+  TreeIterator<StyleChildrenIterator> mIterator;
 
   // These are only needed for the first GetNextNode() call.
-  const nsRange& mSearchRange;
   const nsRange& mStartPoint;
-  const nsRange& mEndPoint;
 };
 
 void
@@ -688,13 +283,9 @@ nsFind::State::Advance()
   MOZ_ASSERT(mInitialized);
 
   while (true) {
-    if (mFindBackward) {
-      mIterator->Prev();
-    } else {
-      mIterator->Next();
-    }
+    nsIContent* current =
+      mFindBackward ? mIterator.GetPrev() : mIterator.GetNext();
 
-    nsINode* current = mIterator->GetCurrentNode();
     if (!current) {
       return;
     }
@@ -715,39 +306,15 @@ nsFind::State::Initialize()
   MOZ_ASSERT(!mInitialized);
   mInitialized = true;
   mIterOffset = mFindBackward ? -1 : 0;
-  mIterator = new nsFindContentIterator(mFindBackward);
 
   // Set up ourselves at the first node we want to start searching at.
-  {
-    nsINode* startNode;
-    nsINode* endNode;
-    uint32_t startOffset;
-    uint32_t endOffset;
-    if (mFindBackward) {
-      startNode = mSearchRange.GetStartContainer();
-      startOffset = mSearchRange.StartOffset();
-      endNode = mStartPoint.GetEndContainer();
-      endOffset = mStartPoint.EndOffset();
-    } else {
-      startNode = mStartPoint.GetStartContainer();
-      startOffset = mStartPoint.StartOffset();
-      endNode = mEndPoint.GetEndContainer();
-      endOffset = mEndPoint.EndOffset();
-    }
-
-    nsresult rv =
-      mIterator->Init(startNode,
-                      static_cast<int32_t>(startOffset),
-                      endNode,
-                      static_cast<int32_t>(endOffset));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    mIterator->Reset();
+  nsINode* beginning = mFindBackward ? mStartPoint.GetEndContainer()
+                                     : mStartPoint.GetStartContainer();
+  if (beginning && beginning->IsContent()) {
+    mIterator.Seek(*beginning->AsContent());
   }
 
-  nsINode* current = mIterator->GetCurrentNode();
+  nsINode* current = mIterator.GetCurrent();
   if (!current) {
     return;
   }
@@ -757,11 +324,8 @@ nsFind::State::Initialize()
     return;
   }
 
-  mLastBlockParent = GetBlockParent(current->AsText());
+  mLastBlockParent = GetBlockParent(*current->AsText());
 
-  // We found a text node at the start, find the offset if we can.
-  nsINode* beginning = mFindBackward ? mStartPoint.GetEndContainer()
-                                     : mStartPoint.GetStartContainer();
   if (current != beginning) {
     return;
   }
@@ -779,7 +343,7 @@ nsFind::State::GetNextNonEmptyTextFragmentInSameBlock()
       return nullptr;
     }
 
-    const nsIContent* blockParent = GetBlockParent(current);
+    const nsIContent* blockParent = GetBlockParent(*current);
     if (!blockParent || blockParent != mLastBlockParent) {
       return nullptr;
     }
@@ -797,7 +361,7 @@ public:
   explicit StateRestorer(State& aState)
     : mState(aState)
     , mIterOffset(aState.mIterOffset)
-    , mCurrNode(aState.mIterator->GetCurrentNode())
+    , mCurrNode(aState.GetCurrentNode())
     , mLastBlockParent(aState.mLastBlockParent)
   {
   }
@@ -805,7 +369,9 @@ public:
   ~StateRestorer()
   {
     mState.mIterOffset = mIterOffset;
-    mState.mIterator->PositionAt(mCurrNode);
+    if (mCurrNode) {
+      mState.PositionAt(*mCurrNode);
+    }
     mState.mLastBlockParent = mLastBlockParent;
   }
 
@@ -813,7 +379,7 @@ private:
   State& mState;
 
   int32_t mIterOffset;
-  nsINode* mCurrNode;
+  Text* mCurrNode;
   const nsIContent* mLastBlockParent;
 };
 
@@ -932,6 +498,14 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
   NS_ENSURE_ARG(aStartPoint);
   NS_ENSURE_ARG(aEndPoint);
   NS_ENSURE_ARG_POINTER(aRangeRet);
+
+  nsIDocument* document =
+    aStartPoint->GetRoot() ? aStartPoint->GetRoot()->OwnerDoc() : nullptr;
+  NS_ENSURE_ARG(document);
+
+  Element* root = document->GetRootElement();
+  NS_ENSURE_ARG(root);
+
   *aRangeRet = 0;
 
   if (!aPatText) {
@@ -977,7 +551,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
   int32_t matchAnchorOffset = 0;
 
   // Get the end point, so we know when to end searches:
-  nsCOMPtr<nsINode> endNode = aEndPoint->GetEndContainer();;
+  nsINode* endNode = aEndPoint->GetEndContainer();
   uint32_t endOffset = aEndPoint->EndOffset();
 
   char16_t c = 0;
@@ -985,7 +559,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
   char16_t prevChar = 0;
   char16_t prevCharInMatch = 0;
 
-  State state(mFindBackward, *aSearchRange, *aStartPoint, *aEndPoint);
+  State state(mFindBackward, *root, *aStartPoint);
   Text* current = nullptr;
 
   while (true) {
@@ -1001,7 +575,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
       // We have a new text content. If its block parent is different from the
       // block parent of the last text content, then we need to clear the match
       // since we don't want to find across block boundaries.
-      const nsIContent* blockParent = GetBlockParent(current);
+      const nsIContent* blockParent = GetBlockParent(*current);
       DEBUG_FIND_PRINTF("New node: old blockparent = %p, new = %p\n",
                         (void*)state.mLastBlockParent, (void*)blockParent);
       if (blockParent != state.mLastBlockParent) {
@@ -1277,9 +851,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
       // Are we going back to a previous node?
       if (matchAnchorNode != state.GetCurrentNode()) {
         frag = nullptr;
-
-        DebugOnly<nsresult> rv = state.mIterator->PositionAt(matchAnchorNode);
-        MOZ_ASSERT(NS_SUCCEEDED(rv), "nsFindContentIterator failed to rewind");
+        state.PositionAt(*matchAnchorNode);
         DEBUG_FIND_PRINTF("Repositioned anchor node\n");
       }
       DEBUG_FIND_PRINTF("Ending a partial match; findex -> %d, mIterOffset -> %d\n",

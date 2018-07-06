@@ -70,7 +70,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   // set up a new CSP instance for each test.
   var csp = Cc["@mozilla.org/cspcontext;1"]
               .createInstance(Ci.nsIContentSecurityPolicy);
-  var policy = "default-src 'none'; " +
+  var policy = "default-src 'none' 'report-sample'; " +
                "report-uri " + REPORT_SERVER_URI +
                                ":" + REPORT_SERVER_PORT +
                                "/test" + id;

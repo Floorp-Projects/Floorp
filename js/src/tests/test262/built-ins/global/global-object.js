@@ -1,3 +1,4 @@
+// |reftest| skip -- global is not supported
 // Copyright (C) 2016 Jordan Harband. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -5,6 +6,7 @@
 esid: sec-other-properties-of-the-global-object-global
 description: "'global' should be the global object"
 author: Jordan Harband
+features: [global]
 ---*/
 
 assert.sameValue(this, global);

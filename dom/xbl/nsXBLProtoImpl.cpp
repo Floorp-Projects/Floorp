@@ -85,7 +85,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
     GetGlobalForObjectCrossCompartment(targetClassObject));
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(scopeObject) == scopeObject);
+  MOZ_ASSERT(JS_IsGlobalObject(scopeObject));
   JSAutoRealm ar(cx, scopeObject);
 
   // Determine the appropriate property holder.

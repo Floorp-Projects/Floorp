@@ -49,7 +49,7 @@ add_task(async function() {
 
   const focusedNode = findElementWithSelector(dbg, ".sources-list .focused");
   const fourthNode = findElement(dbg, "sourceNode", 4);
-  const selectedSource = getSelectedSource(getState()).get("url");
+  const selectedSource = getSelectedSource(getState()).url;
 
   ok(fourthNode.classList.contains("focused"), "4th node is focused");
   ok(selectedSource.includes("nested-source.js"), "nested-source is selected");

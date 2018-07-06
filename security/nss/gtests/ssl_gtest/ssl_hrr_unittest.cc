@@ -76,7 +76,7 @@ class CorrectMessageSeqAfterHrrFilter : public TlsRecordFilter {
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& record, size_t* offset,
                                     DataBuffer* output) {
-    if (filtered_packets() > 0 || header.content_type() != content_handshake) {
+    if (filtered_packets() > 0 || header.content_type() != ssl_ct_handshake) {
       return KEEP;
     }
 
@@ -1014,7 +1014,7 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
     DataBuffer hrr;
     MakeHandshakeMessage(kTlsHandshakeServerHello, hrr_data.data(),
                          hrr_data.len(), &hrr, seq_num);
-    MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3, hrr.data(),
+    MakeRecord(ssl_ct_handshake, SSL_LIBRARY_VERSION_TLS_1_3, hrr.data(),
                hrr.len(), hrr_record, seq_num);
   }
 

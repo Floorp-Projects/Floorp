@@ -15,9 +15,6 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="translationbar" extends="chrome://global/content/bindings/notification.xml#notification">
-    <resources>
-      <stylesheet src="chrome://global/skin/notification.css"/>
-    </resources>
     <content>
       <xul:hbox anonid="details" align="center" flex="1">
         <xul:image class="translate-infobar-element messageImage"

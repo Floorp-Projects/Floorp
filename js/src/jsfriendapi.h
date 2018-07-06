@@ -675,7 +675,7 @@ JS_FRIEND_API(bool)
 IsFunctionObject(JSObject* obj);
 
 JS_FRIEND_API(bool)
-IsCrossCompartmentWrapper(const JSObject* obj);
+UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
 
 static MOZ_ALWAYS_INLINE JS::Compartment*
 GetObjectCompartment(JSObject* obj)
@@ -689,7 +689,7 @@ GetObjectCompartment(JSObject* obj)
 static MOZ_ALWAYS_INLINE JS::Realm*
 GetNonCCWObjectRealm(JSObject* obj)
 {
-    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
+    MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(obj));
     return reinterpret_cast<shadow::Object*>(obj)->group->realm;
 }
 

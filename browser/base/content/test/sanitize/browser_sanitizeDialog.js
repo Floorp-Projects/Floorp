@@ -362,12 +362,12 @@ add_task(async function test_cannot_clear_history() {
   wh.onload = function() {
     // Check that the relevant checkboxes are enabled
     var cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='privacy.cpd.formdata']");
+               "checkbox[preference='privacy.cpd.formdata']");
     ok(cb.length == 1 && !cb[0].disabled, "There is formdata, checkbox to " +
        "clear formdata should be enabled.");
 
     cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='privacy.cpd.history']");
+               "checkbox[preference='privacy.cpd.history']");
     ok(cb.length == 1 && !cb[0].disabled, "There is history, checkbox to " +
        "clear history should be enabled.");
 
@@ -398,7 +398,7 @@ add_task(async function test_no_formdata_history_to_clear() {
                "formdata checkbox checked");
 
     var cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='privacy.cpd.history']");
+               "checkbox[preference='privacy.cpd.history']");
     ok(cb.length == 1 && !cb[0].disabled && cb[0].checked,
        "There is no history, but history checkbox should always be enabled " +
        "and will be checked from previous preference.");
@@ -422,7 +422,7 @@ add_task(async function test_form_entries() {
                "dialog where you could not clear formdata.");
 
     var cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='privacy.cpd.formdata']");
+               "checkbox[preference='privacy.cpd.formdata']");
 
     info("There exists formEntries so the checkbox should be in sync with the pref.");
     is(cb.length, 1, "There is only one checkbox for form data");
@@ -708,7 +708,7 @@ WindowHelper.prototype = {
   checkPrefCheckbox(aPrefName, aCheckState) {
     var pref = "privacy.cpd." + aPrefName;
     var cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='" + pref + "']");
+               "checkbox[preference='" + pref + "']");
     is(cb.length, 1, "found checkbox for " + pref + " preference");
     if (cb[0].checked != aCheckState)
       cb[0].click();
@@ -718,7 +718,7 @@ WindowHelper.prototype = {
    * Makes sure all the checkboxes are checked.
    */
   _checkAllCheckboxesCustom(check) {
-    var cb = this.win.document.querySelectorAll("#itemList > [preference]");
+    var cb = this.win.document.querySelectorAll("checkbox[preference]");
     ok(cb.length > 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
       var pref = this.win.Preferences.get(cb[i].getAttribute("preference"));

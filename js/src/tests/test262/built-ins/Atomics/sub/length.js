@@ -25,10 +25,11 @@ includes: [propertyHelper.js]
 features: [Atomics]
 ---*/
 
-assert.sameValue(Atomics.sub.length, 3);
-
-verifyNotEnumerable(Atomics.sub, "length");
-verifyNotWritable(Atomics.sub, "length");
-verifyConfigurable(Atomics.sub, "length");
+verifyProperty(Atomics.sub, 'length', {
+  value: 3,
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

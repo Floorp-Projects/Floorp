@@ -438,7 +438,7 @@ class JSObject : public js::gc::Cell
     inline js::GlobalObject& nonCCWGlobal() const;
 
     JS::Realm* nonCCWRealm() const {
-        MOZ_ASSERT(!js::IsCrossCompartmentWrapper(this));
+        MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(this));
         return group_->realm();
     }
 

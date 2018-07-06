@@ -203,7 +203,6 @@ AtomStateOffsetToName(const JSAtomState& atomState, size_t offset)
 // per-runtime or per-process. When acquiring more than one of these locks,
 // the acquisition must be done in the order below to avoid deadlocks.
 enum RuntimeLock {
-    ExclusiveAccessLock,
     HelperThreadStateLock,
     GCLock
 };
@@ -219,7 +218,6 @@ void DisableExtraThreads();
 
 using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
-class AutoLockForExclusiveAccess;
 class AutoLockScriptData;
 
 } // namespace js
@@ -461,18 +459,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
   private:
     /*
-     * Lock taken when using per-runtime or per-zone data that could otherwise
-     * be accessed simultaneously by multiple threads.
-     *
-     * Locking this only occurs if there is actually a thread other than the
-     * main thread which could access such data.
-     */
-    js::Mutex exclusiveAccessLock;
-#ifdef DEBUG
-    bool activeThreadHasExclusiveAccess;
-#endif
-
-    /*
      * Lock used to protect the script data table, which can be used by
      * off-thread parsing.
      *
@@ -487,10 +473,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Number of zones which may be operated on by helper threads.
     mozilla::Atomic<size_t> numActiveHelperThreadZones;
 
-    // Any GC activity affecting the heap.
+    // Any activity affecting the heap.
     mozilla::Atomic<JS::HeapState> heapState_;
 
-    friend class js::AutoLockForExclusiveAccess;
     friend class js::AutoLockScriptData;
 
   public:
@@ -502,18 +487,15 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
 #ifdef DEBUG
-    bool currentThreadHasExclusiveAccess() const {
-        if (!hasHelperThreadZones())
-            return CurrentThreadCanAccessRuntime(this) && activeThreadHasExclusiveAccess;
-
-        return exclusiveAccessLock.ownedByCurrentThread();
-    }
-
     bool currentThreadHasScriptDataAccess() const {
         if (!hasHelperThreadZones())
             return CurrentThreadCanAccessRuntime(this) && activeThreadHasScriptDataAccess;
 
         return scriptDataLock.ownedByCurrentThread();
+    }
+
+    bool currentThreadHasAtomsTableAccess() const {
+        return CurrentThreadCanAccessRuntime(this) && atoms_->mainThreadHasAllLocks();
     }
 #endif
 
@@ -706,42 +688,30 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     friend class js::AutoAssertNoContentJS;
 
   private:
-    // Set of all atoms other than those in permanentAtoms and staticStrings.
-    // Reading or writing this set requires the calling thread to use
-    // AutoAccessAtomsZone.
-    js::ExclusiveAccessLockOrGCTaskData<js::AtomSet*> atoms_;
-
-    // Set of all atoms added while the main atoms table is being swept.
-    js::ExclusiveAccessLockOrGCTaskData<js::AtomSet*> atomsAddedWhileSweeping_;
+    // Table of all atoms other than those in permanentAtoms and staticStrings.
+    js::WriteOnceData<js::AtomsTable*> atoms_;
 
     // Set of all live symbols produced by Symbol.for(). All such symbols are
     // allocated in the atoms zone. Reading or writing the symbol registry
-    // requires the calling thread to use AutoAccessAtomsZone.
-    js::ExclusiveAccessLockOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
+    // can only be done from the main thread.
+    js::MainThreadOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
+
+    js::WriteOnceData<js::AtomSet*> permanentAtomsDuringInit_;
+    js::WriteOnceData<js::FrozenAtomSet*> permanentAtoms_;
 
   public:
     bool initializeAtoms(JSContext* cx);
     void finishAtoms();
-    bool atomsAreFinished() const { return !atoms_; }
+    bool atomsAreFinished() const { return !atoms_ && !permanentAtomsDuringInit_; }
 
-    js::AtomSet* atomsForSweeping() {
+    js::AtomsTable* atomsForSweeping() {
         MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
         return atoms_;
     }
 
-    js::AtomSet& atoms(const js::AutoAccessAtomsZone& access) {
+    js::AtomsTable& atoms() {
         MOZ_ASSERT(atoms_);
         return *atoms_;
-    }
-    js::AtomSet& unsafeAtoms() {
-        MOZ_ASSERT(atoms_);
-        return *atoms_;
-    }
-
-    bool createAtomsAddedWhileSweepingTable();
-    void destroyAtomsAddedWhileSweepingTable();
-    js::AtomSet* atomsAddedWhileSweeping() {
-        return atomsAddedWhileSweeping_;
     }
 
     const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) const {
@@ -760,10 +730,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     bool activeGCInAtomsZone();
 
-    js::SymbolRegistry& symbolRegistry(const js::AutoAccessAtomsZone& access) {
-        return symbolRegistry_.ref();
-    }
-    js::SymbolRegistry& unsafeSymbolRegistry() {
+    js::SymbolRegistry& symbolRegistry() {
         return symbolRegistry_.ref();
     }
 
@@ -779,11 +746,27 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::WriteOnceData<JSAtomState*> commonNames;
 
     // All permanent atoms in the runtime, other than those in staticStrings.
-    // Unlike |atoms_|, access to this does not require
-    // AutoLockForExclusiveAccess because it is frozen and thus read-only.
-    js::WriteOnceData<js::FrozenAtomSet*> permanentAtoms;
+    // Access to this does not require a lock because it is frozen and thus
+    // read-only.
+    const js::FrozenAtomSet* permanentAtoms() const {
+        MOZ_ASSERT(permanentAtomsPopulated());
+        return permanentAtoms_.ref();
+    }
 
-    bool transformToPermanentAtoms(JSContext* cx);
+    // The permanent atoms table is populated during initialization.
+    bool permanentAtomsPopulated() const {
+        return permanentAtoms_;
+    }
+
+    // For internal use, return the permanent atoms table while it is being
+    // populated.
+    js::AtomSet* permanentAtomsDuringInit() const {
+        MOZ_ASSERT(!permanentAtoms_);
+        return permanentAtomsDuringInit_.ref();
+    }
+
+    bool initMainAtomsTables(JSContext* cx);
+    void tracePermanentAtoms(JSTracer* trc);
 
     // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
     // these are shared with the parentRuntime, if any.
@@ -796,7 +779,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // Table of bytecode and other data that may be shared across scripts
     // within the runtime. This may be modified by threads using
-    // AutoLockForExclusiveAccess.
+    // AutoLockScriptData.
   private:
     js::ScriptDataLockData<js::ScriptDataTable> scriptDataTable_;
   public:
@@ -863,8 +846,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     mozilla::Atomic<bool> offthreadIonCompilationEnabled_;
     mozilla::Atomic<bool> parallelParsingEnabled_;
 
-#ifdef DEBUG
     mozilla::Atomic<uint32_t> offThreadParsesRunning_;
+#ifdef DEBUG
     mozilla::Atomic<bool> offThreadParsingBlocked_;
 #endif
 
@@ -887,20 +870,24 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return parallelParsingEnabled_;
     }
 
-#ifdef DEBUG
-
-    bool isOffThreadParseRunning() const {
-        return offThreadParsesRunning_;
-    }
-
     void incOffThreadParsesRunning() {
         MOZ_ASSERT(!isOffThreadParsingBlocked());
+        if (!offThreadParsesRunning_)
+            gc.setParallelAtomsAllocEnabled(true);
         offThreadParsesRunning_++;
     }
 
     void decOffThreadParsesRunning() {
         MOZ_ASSERT(isOffThreadParseRunning());
         offThreadParsesRunning_--;
+        if (!offThreadParsesRunning_)
+            gc.setParallelAtomsAllocEnabled(false);
+    }
+
+#ifdef DEBUG
+
+    bool isOffThreadParseRunning() const {
+        return offThreadParsesRunning_;
     }
 
     bool isOffThreadParsingBlocked() const {
@@ -911,11 +898,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         MOZ_ASSERT(!isOffThreadParseRunning());
         offThreadParsingBlocked_ = blocked;
     }
-
-#else
-
-    void incOffThreadParsesRunning() {}
-    void decOffThreadParsesRunning() {}
 
 #endif
 
@@ -1090,7 +1072,7 @@ class MOZ_RAII AutoLockGCBgAlloc : public AutoLockGC
          * the GC lock.
          */
         if (startBgAlloc)
-            runtime()->gc.startBackgroundAllocTaskIfIdle();
+            runtime()->gc.startBackgroundAllocTaskIfIdle(); // Ignore failure.
     }
 
     /*

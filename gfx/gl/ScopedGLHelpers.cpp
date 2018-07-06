@@ -99,6 +99,7 @@ ScopedBindFramebuffer::UnwrapImpl()
 
 ScopedBindTextureUnit::ScopedBindTextureUnit(GLContext* aGL, GLenum aTexUnit)
     : ScopedGLWrapper<ScopedBindTextureUnit>(aGL)
+    , mOldTexUnit(0)
 {
     MOZ_ASSERT(aTexUnit >= LOCAL_GL_TEXTURE0);
     mGL->GetUIntegerv(LOCAL_GL_ACTIVE_TEXTURE, &mOldTexUnit);
@@ -115,6 +116,7 @@ ScopedBindTextureUnit::UnwrapImpl() {
 
 ScopedTexture::ScopedTexture(GLContext* aGL)
     : ScopedGLWrapper<ScopedTexture>(aGL)
+    , mTexture(0)
 {
     mGL->fGenTextures(1, &mTexture);
 }
@@ -129,6 +131,7 @@ ScopedTexture::UnwrapImpl()
 
 ScopedFramebuffer::ScopedFramebuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedFramebuffer>(aGL)
+    , mFB(0)
 {
     mGL->fGenFramebuffers(1, &mFB);
 }
@@ -144,6 +147,7 @@ ScopedFramebuffer::UnwrapImpl()
 
 ScopedRenderbuffer::ScopedRenderbuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
+    , mRB(0)
 {
     mGL->fGenRenderbuffers(1, &mRB);
 }
@@ -363,6 +367,14 @@ ScopedVertexAttribPointer::ScopedVertexAttribPointer(GLContext* aGL,
                                                      GLuint buffer,
                                                      const GLvoid* pointer)
     : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+    , mAttribEnabled(0)
+    , mAttribSize(0)
+    , mAttribStride(0)
+    , mAttribType(0)
+    , mAttribNormalized(0)
+    , mAttribBufferBinding(0)
+    , mAttribPointer(nullptr)
+    , mBoundBuffer(0)
 {
     WrapImpl(index);
     mGL->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, buffer);
@@ -373,6 +385,14 @@ ScopedVertexAttribPointer::ScopedVertexAttribPointer(GLContext* aGL,
 ScopedVertexAttribPointer::ScopedVertexAttribPointer(GLContext* aGL,
                                                      GLuint index)
     : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+    , mAttribEnabled(0)
+    , mAttribSize(0)
+    , mAttribStride(0)
+    , mAttribType(0)
+    , mAttribNormalized(0)
+    , mAttribBufferBinding(0)
+    , mAttribPointer(nullptr)
+    , mBoundBuffer(0)
 {
     WrapImpl(index);
 }
@@ -428,6 +448,11 @@ ScopedVertexAttribPointer::UnwrapImpl()
 
 ScopedPackState::ScopedPackState(GLContext* gl)
     : ScopedGLWrapper<ScopedPackState>(gl)
+    , mAlignment(0)
+    , mPixelBuffer(0)
+    , mRowLength(0)
+    , mSkipPixels(0)
+    , mSkipRows(0)
 {
     mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mAlignment);
 
@@ -466,6 +491,13 @@ ScopedPackState::UnwrapImpl()
 
 ResetUnpackState::ResetUnpackState(GLContext* gl)
     : ScopedGLWrapper<ResetUnpackState>(gl)
+    , mAlignment(0)
+    , mPBO(0)
+    , mRowLength(0)
+    , mImageHeight(0)
+    , mSkipPixels(0)
+    , mSkipRows(0)
+    , mSkipImages(0)
 {
     const auto fnReset = [&](GLenum pname, GLuint val, GLuint* const out_old) {
         mGL->GetUIntegerv(pname, out_old);

@@ -65,7 +65,7 @@ async function checkClickOnNode(toolbox, frameLinkNode) {
   const dbg = await toolbox.getPanelWhenReady("jsdebugger");
   await waitUntil(() => dbg._selectors.getSelectedSource(dbg._getState()));
   is(
-    dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
+    dbg._selectors.getSelectedSource(dbg._getState()).url,
     url,
     "expected source url"
   );

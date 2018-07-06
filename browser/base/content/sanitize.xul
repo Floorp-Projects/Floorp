@@ -94,44 +94,66 @@
              accesskey="&detailsProgressiveDisclosure.accesskey;"
              control="detailsExpander"/>
     </hbox>
-    <listbox id="itemList" rows="7" collapsed="true" persist="collapsed">
-      <listitem label="&itemHistoryAndDownloads.label;"
-                type="checkbox"
-                accesskey="&itemHistoryAndDownloads.accesskey;"
-                preference="privacy.cpd.history"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemFormSearchHistory.label;"
-                type="checkbox"
-                accesskey="&itemFormSearchHistory.accesskey;"
-                preference="privacy.cpd.formdata"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemCookies.label;"
-                type="checkbox"
-                accesskey="&itemCookies.accesskey;"
-                preference="privacy.cpd.cookies"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemCache.label;"
-                type="checkbox"
-                accesskey="&itemCache.accesskey;"
-                preference="privacy.cpd.cache"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemActiveLogins.label;"
-                type="checkbox"
-                accesskey="&itemActiveLogins.accesskey;"
-                preference="privacy.cpd.sessions"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemOfflineApps.label;"
-                type="checkbox"
-                accesskey="&itemOfflineApps.accesskey;"
-                preference="privacy.cpd.offlineApps"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <listitem label="&itemSitePreferences.label;"
-                type="checkbox"
-                accesskey="&itemSitePreferences.accesskey;"
-                preference="privacy.cpd.siteSettings"
-                noduration="true"
-                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-    </listbox>
 
+    <vbox id="itemList" collapsed="true" persist="collapsed">
+    <groupbox orient="horizontal">
+      <caption><label>&historySection.label;</label></caption>
+      <grid flex="1">
+        <columns>
+          <column style="width: &sanitizePrefs2.column.width;"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <checkbox label="&itemHistoryAndDownloads.label;"
+                      accesskey="&itemHistoryAndDownloads.accesskey;"
+                      preference="privacy.cpd.history"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+            <checkbox label="&itemCookies.label;"
+                      accesskey="&itemCookies.accesskey;"
+                      preference="privacy.cpd.cookies"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+          </row>
+          <row>
+            <checkbox label="&itemActiveLogins.label;"
+                      accesskey="&itemActiveLogins.accesskey;"
+                      preference="privacy.cpd.sessions"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+            <checkbox label="&itemCache.label;"
+                      accesskey="&itemCache.accesskey;"
+                      preference="privacy.cpd.cache"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+          </row>
+          <row>
+            <checkbox label="&itemFormSearchHistory.label;"
+                      accesskey="&itemFormSearchHistory.accesskey;"
+                      preference="privacy.cpd.formdata"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+    <groupbox orient="horizontal">
+      <caption><label>&dataSection.label;</label></caption>
+      <grid flex="1">
+        <columns>
+          <column style="width: &sanitizePrefs2.column.width;"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <checkbox label="&itemSitePreferences.label;"
+                      accesskey="&itemSitePreferences.accesskey;"
+                      preference="privacy.cpd.siteSettings"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+            <checkbox label="&itemOfflineApps.label;"
+                      accesskey="&itemOfflineApps.accesskey;"
+                      preference="privacy.cpd.offlineApps"
+                      onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+    </vbox>
   </vbox>
 </dialog>

@@ -340,7 +340,10 @@ TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
     if (!range->init(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
-    return range;
+    // Note: Clang 3.8 (or older) require an explicit construction of the
+    // target UniquePtr type. When we no longer require to support these Clang
+    // versions the return statement can be simplified to |return range;|.
+    return UniquePtr<EdgeRange>(range.release());
 }
 
 template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSContext* cx, bool wantNames) const;

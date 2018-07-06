@@ -29,10 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548193
 
 const testfile = "tests/dom/security/test/csp/file_report.html";
 const reportURI = "http://mochi.test:8888/foo.sjs";
-const policy = "default-src 'none'; report-uri " + reportURI;
+const policy = "default-src 'none' 'report-sample'; report-uri " + reportURI;
 const docUri = "http://mochi.test:8888/tests/dom/security/test/csp/file_testserver.sjs" +
                "?file=tests/dom/security/test/csp/file_report.html" +
-               "&csp=default-src%20%27none%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
+               "&csp=default-src%20%27none%27%20%27report-sample%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
 
 window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
@@ -52,7 +52,7 @@ window.checkResults = function(reportObj) {
 
   is(cspReport["violated-directive"], "default-src", "Incorrect violated-directive");
 
-  is(cspReport["original-policy"], "default-src 'none'; report-uri http://mochi.test:8888/foo.sjs",
+  is(cspReport["original-policy"], "default-src 'none' 'report-sample'; report-uri http://mochi.test:8888/foo.sjs",
      "Incorrect original-policy");
 
   is(cspReport["source-file"], docUri, "Incorrect source-file");

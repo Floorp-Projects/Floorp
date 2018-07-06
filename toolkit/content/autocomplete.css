@@ -12,7 +12,7 @@
   }
 }
 
-richlistitem {
+.autocomplete-richlistbox > richlistitem {
   -moz-box-orient: horizontal;
   overflow: hidden;
 }

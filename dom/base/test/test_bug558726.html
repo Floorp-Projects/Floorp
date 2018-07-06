@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558726
 /** Test for Bug 558726 **/
 
 function runTest() {
-  is(document.getElementById('test_558726_1').innerHTML, '<select name="selecttest"><option value="0">item 1</option></select>x<input name="test" value="test" type="button">','test_558726_1.innerHTML')
+  is(document.getElementById('test_558726_1').innerHTML, '<select name="selecttest"><option value="0">item 1</option></select>x<input type="button" name="test" value="test">','test_558726_1.innerHTML')
   is(document.getElementById('test_558726_2').innerHTML, 'y<input><i style="-moz-user-select: none;">z</i>','test_558726_2.innerHTML')
   SimpleTest.finish();
 }

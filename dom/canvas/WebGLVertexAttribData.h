@@ -53,6 +53,15 @@ public:
     WebGLVertexAttribData()
         : mDivisor(0)
         , mEnabled(false)
+        , mIntegerFunc(false)
+        , mType(0)
+        , mBaseType(0)
+        , mSize(0)
+        , mBytesPerVertex(0)
+        , mNormalized(false)
+        , mStride(0)
+        , mExplicitStride(0)
+        , mByteOffset(0)
     {
         VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
     }
