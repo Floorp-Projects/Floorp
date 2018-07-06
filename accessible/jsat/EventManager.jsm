@@ -150,7 +150,7 @@ this.EventManager.prototype = {
         }
 
         // Blur to document if new position is not explicitly focused.
-        if (!Utils.getState(position).contains(States.FOCUSED)) {
+        if (!position || !Utils.getState(position).contains(States.FOCUSED)) {
           aEvent.accessibleDocument.takeFocus();
         }
 
