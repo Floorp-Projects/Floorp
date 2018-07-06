@@ -10,7 +10,8 @@ function run_test() {
     loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
     Cu.forceGC(); Cu.forceGC(); Cu.forceGC();
 
-    DebuggerServer.registerModule("xpcshell-test/testactors");
+    const { createRootActor } = require("xpcshell-test/testactors");
+    DebuggerServer.setRootActor(createRootActor);
     DebuggerServer.init(() => true);
     DebuggerServer.addTestGlobal(global);
     const client = new DebuggerClient(DebuggerServer.connectPipe());

@@ -60,6 +60,9 @@
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
+// PaintedLayerData::mAssignedDisplayItems is a std::vector, which is non-memmovable
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::PaintedLayerData);
+
 namespace mozilla {
 
 class PaintedDisplayItemLayerUserData;
@@ -768,7 +771,7 @@ public:
    * All the display items that have been assigned to this painted layer.
    * These items get added by Accumulate().
    */
-  nsTArray<AssignedDisplayItem> mAssignedDisplayItems;
+  std::vector<AssignedDisplayItem> mAssignedDisplayItems;
 };
 
 struct NewLayerEntry {
@@ -1706,7 +1709,7 @@ public:
   // Temporary state only valid during the FrameLayerBuilder's lifetime.
   // FLB's mPaintedLayerItems is responsible for cleaning these up when
   // we finish painting to avoid dangling pointers.
-  nsTArray<AssignedDisplayItem> mItems;
+  std::vector<AssignedDisplayItem> mItems;
   nsIFrame* mContainerLayerFrame;
 
   bool mHasExplicitLastPaintOffset;
@@ -1736,7 +1739,7 @@ FrameLayerBuilder::~FrameLayerBuilder()
 {
   GetMaskLayerImageCache()->Sweep();
   for (PaintedDisplayItemLayerUserData* userData : mPaintedLayerItems) {
-    userData->mItems.Clear();
+    userData->mItems.clear();
     userData->mContainerLayerFrame = nullptr;
   }
   MOZ_COUNT_DTOR(FrameLayerBuilder);
@@ -3359,7 +3362,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 
   PaintedDisplayItemLayerUserData* userData = GetPaintedDisplayItemLayerUserData(data->mLayer);
   NS_ASSERTION(userData, "where did our user data go?");
-  userData->mLastItemCount = data->mAssignedDisplayItems.Length();
+  userData->mLastItemCount = data->mAssignedDisplayItems.size();
 
   NewLayerEntry* newLayerEntry = &mNewChildLayers[data->mNewChildLayersIndex];
 
@@ -3647,9 +3650,9 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     MOZ_ASSERT(!aOpacityIndices.IsEmpty());
     aOpacityIndices.RemoveLastElement();
 
-    AssignedDisplayItem item(aItem, aLayerState,
-                             nullptr, aContentRect, aType, hasOpacity);
-    mAssignedDisplayItems.AppendElement(std::move(item));
+    mAssignedDisplayItems.emplace_back(
+      aItem, aLayerState, nullptr, aContentRect, aType, hasOpacity);
+
     return;
   }
 
@@ -3686,12 +3689,12 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     aState->mLayerBuilder->GetOldLayerForFrame(aItem->Frame(),
                                                aItem->GetPerFrameKey(),
                                                currentData);
-  AssignedDisplayItem item(aItem, aLayerState,
-                           oldData, aContentRect, aType, hasOpacity);
-  mAssignedDisplayItems.AppendElement(std::move(item));
+
+  mAssignedDisplayItems.emplace_back(
+    aItem, aLayerState, oldData, aContentRect, aType, hasOpacity);
 
   if (aType == DisplayItemEntryType::PUSH_OPACITY) {
-    aOpacityIndices.AppendElement(mAssignedDisplayItems.Length() - 1);
+    aOpacityIndices.AppendElement(mAssignedDisplayItems.size() - 1);
   }
 
   if (aItem->MustPaintOnContentSide()) {
@@ -4848,7 +4851,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
             paintedLayerData->mLayer = layer;
 
             PaintedDisplayItemLayerUserData* userData = GetPaintedDisplayItemLayerUserData(layer);
-            paintedLayerData->mAssignedDisplayItems.SetCapacity(userData->mLastItemCount);
+            paintedLayerData->mAssignedDisplayItems.reserve(userData->mLastItemCount);
 
             NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
                          "Layer already in list???");
@@ -6152,7 +6155,7 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
 #endif
 
 /* static */ void
-FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aItems,
+FrameLayerBuilder::RecomputeVisibilityForItems(std::vector<AssignedDisplayItem>& aItems,
                                                nsDisplayListBuilder *aBuilder,
                                                const nsIntRegion& aRegionToDraw,
                                                nsRect& aPreviousRectToDraw,
@@ -6175,7 +6178,7 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
   nsRect previousRectToDraw = aPreviousRectToDraw;
   aPreviousRectToDraw = visible.GetBounds();
 
-  for (i = aItems.Length(); i > 0; --i) {
+  for (i = aItems.size(); i > 0; --i) {
     AssignedDisplayItem* cdi = &aItems[i - 1];
     if (!cdi->mItem) {
       continue;
@@ -6310,7 +6313,7 @@ UpdateOpacityNesting(int& aOpacityNesting, DisplayItemEntryType aType)
 }
 
 void
-FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
+FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
                               const nsIntRect& aRect,
                               gfxContext *aContext,
                               nsDisplayListBuilder* aBuilder,
@@ -6337,7 +6340,7 @@ FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
 
   ClipTracker clipTracker(aContext);
 
-  for (uint32_t i = 0; i < aItems.Length(); ++i) {
+  for (uint32_t i = 0; i < aItems.size(); ++i) {
     AssignedDisplayItem& cdi = aItems[i];
     nsDisplayItem* item = cdi.mItem;
 

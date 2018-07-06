@@ -62,61 +62,6 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 var gRegisteredModules = Object.create(null);
 
 /**
- * The ModuleAPI object is passed to modules loaded using the
- * DebuggerServer.registerModule() API.  Modules can use this
- * object to register actor factories.
- * Factories registered through the module API will be removed
- * when the module is unregistered or when the server is
- * destroyed.
- */
-function ModuleAPI() {
-  let activeTargetScopedActors = new Set();
-  let activeGlobalActors = new Set();
-
-  return {
-    // See DebuggerServer.setRootActor for a description.
-    setRootActor(factory) {
-      DebuggerServer.setRootActor(factory);
-    },
-
-    // See DebuggerServer.addGlobalActor for a description.
-    addGlobalActor(factory, name) {
-      DebuggerServer.addGlobalActor(factory, name);
-      activeGlobalActors.add(factory);
-    },
-    // See DebuggerServer.removeGlobalActor for a description.
-    removeGlobalActor(factory) {
-      DebuggerServer.removeGlobalActor(factory);
-      activeGlobalActors.delete(factory);
-    },
-
-    // See DebuggerServer.addTargetScopedActor for a description.
-    addTargetScopedActor(factory, name) {
-      DebuggerServer.addTargetScopedActor(factory, name);
-      activeTargetScopedActors.add(factory);
-    },
-    // See DebuggerServer.removeTargetScopedActor for a description.
-    removeTargetScopedActor(factory) {
-      DebuggerServer.removeTargetScopedActor(factory);
-      activeTargetScopedActors.delete(factory);
-    },
-
-    // Destroy the module API object, unregistering any
-    // factories registered by the module.
-    destroy() {
-      for (const factory of activeTargetScopedActors) {
-        DebuggerServer.removeTargetScopedActor(factory);
-      }
-      activeTargetScopedActors = null;
-      for (const factory of activeGlobalActors) {
-        DebuggerServer.removeGlobalActor(factory);
-      }
-      activeGlobalActors = null;
-    }
-  };
-}
-
-/**
  * Public API
  */
 var DebuggerServer = {
@@ -151,7 +96,7 @@ var DebuggerServer = {
    * actor registered on DebuggerServer.
    */
   get rootlessServer() {
-    return !this.isModuleRegistered("devtools/server/actors/webbrowser");
+    return !this.createRootActor;
   },
 
   /**
@@ -239,7 +184,8 @@ var DebuggerServer = {
     }
 
     if (root) {
-      this.registerModule("devtools/server/actors/webbrowser");
+      const { createRootActor } = require("devtools/server/actors/webbrowser");
+      this.setRootActor(createRootActor);
     }
 
     if (target) {
@@ -269,16 +215,11 @@ var DebuggerServer = {
   /**
    * Register a CommonJS module with the debugger server.
    * @param id string
-   *        The ID of a CommonJS module.  This module must export 'register'
-   *        and 'unregister' functions if no `options` argument is given.
-   *        If `options` is set, the actor is going to be registered
-   *        immediately, but loaded only when a client starts sending packets
-   *        to an actor with the same id.
+   *        The ID of a CommonJS module.
+   *        The actor is going to be registered immediately, but loaded only
+   *        when a client starts sending packets to an actor with the same id.
    *
-   * @param options object (optional)
-   *        This parameter is still optional, but not providing it is
-   *        deprecated and will result in eagerly loading the actor module
-   *        with the memory overhead that entails.
+   * @param options object
    *        An object with 3 mandatory attributes:
    *        - prefix (string):
    *          The prefix of an actor is used to compute:
@@ -306,46 +247,37 @@ var DebuggerServer = {
       return;
     }
 
-    if (options) {
-      // Lazy loaded actors
-      const {prefix, constructor, type} = options;
-      if (typeof (prefix) !== "string") {
-        throw new Error(`Lazy actor definition for '${id}' requires a string ` +
-                        `'prefix' option.`);
-      }
-      if (typeof (constructor) !== "string") {
-        throw new Error(`Lazy actor definition for '${id}' requires a string ` +
-                        `'constructor' option.`);
-      }
-      if (!("global" in type) && !("target" in type)) {
-        throw new Error(`Lazy actor definition for '${id}' requires a dictionary ` +
-                        `'type' option whose attributes can be 'global' or 'target'.`);
-      }
-      const name = prefix + "Actor";
-      const mod = {
-        id: id,
-        prefix: prefix,
-        constructorName: constructor,
-        type: type,
-        globalActor: type.global,
-        targetScopedActor: type.target
-      };
-      gRegisteredModules[id] = mod;
-      if (mod.targetScopedActor) {
-        this.addTargetScopedActor(mod, name);
-      }
-      if (mod.globalActor) {
-        this.addGlobalActor(mod, name);
-      }
-    } else {
-      // Deprecated actors being loaded at startup
-      const moduleAPI = ModuleAPI();
-      const mod = require(id);
-      mod.register(moduleAPI);
-      gRegisteredModules[id] = {
-        module: mod,
-        api: moduleAPI
-      };
+    if (!options) {
+      throw new Error("DebuggerServer.registerModule requires an options argument");
+    }
+    const {prefix, constructor, type} = options;
+    if (typeof (prefix) !== "string") {
+      throw new Error(`Lazy actor definition for '${id}' requires a string ` +
+                      `'prefix' option.`);
+    }
+    if (typeof (constructor) !== "string") {
+      throw new Error(`Lazy actor definition for '${id}' requires a string ` +
+                      `'constructor' option.`);
+    }
+    if (!("global" in type) && !("target" in type)) {
+      throw new Error(`Lazy actor definition for '${id}' requires a dictionary ` +
+                      `'type' option whose attributes can be 'global' or 'target'.`);
+    }
+    const name = prefix + "Actor";
+    const mod = {
+      id,
+      prefix,
+      constructorName: constructor,
+      type,
+      globalActor: type.global,
+      targetScopedActor: type.target
+    };
+    gRegisteredModules[id] = mod;
+    if (mod.targetScopedActor) {
+      this.addTargetScopedActor(mod, name);
+    }
+    if (mod.globalActor) {
+      this.addGlobalActor(mod, name);
     }
   },
 
@@ -371,12 +303,6 @@ var DebuggerServer = {
     }
     if (mod.globalActor) {
       this.removeGlobalActor(mod);
-    }
-
-    if (mod.module) {
-      // Deprecated non-lazy module API
-      mod.module.unregister(mod.api);
-      mod.api.destroy();
     }
 
     delete gRegisteredModules[id];
