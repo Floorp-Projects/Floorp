@@ -15,10 +15,11 @@ dictionary TestInterfaceJSUnionableDictionary {
 interface TestInterfaceJS : EventTarget {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
-  [Cached, Pure] readonly attribute TestInterfaceJSDictionary dictionaryArg;
+  TestInterfaceJSDictionary getDictionaryArg();
   attribute any anyAttr;
   attribute object objectAttr;
-  [Cached, Pure] attribute TestInterfaceJSDictionary dictionaryAttr;
+  TestInterfaceJSDictionary getDictionaryAttr();
+  void setDictionaryAttr(optional TestInterfaceJSDictionary dict);
   any pingPongAny(any arg);
   object pingPongObject(object obj);
   any pingPongObjectOrString((object or DOMString) objOrString);
