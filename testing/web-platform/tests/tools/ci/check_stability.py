@@ -17,7 +17,7 @@ from tools.wpt.virtualenv import Virtualenv
 from tools.wpt.utils import Kwargs
 from tools.wpt.run import create_parser, setup_wptrunner
 from tools.wpt import markdown
-from tools import localpaths
+from tools import localpaths  # noqa: F401
 
 logger = None
 run_step, write_inconsistent, write_results = None, None, None
