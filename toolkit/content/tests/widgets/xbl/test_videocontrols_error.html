@@ -18,8 +18,8 @@
 <pre id="test">
 <script clas="testbody" type="application/javascript">
   const video = document.getElementById("video");
-  const statusOverlay = getElementWithinVideo(video, "statusOverlay");
-  const statusIcon = getElementWithinVideo(video, "statusIcon");
+  const statusOverlay = getAnonElementWithinVideoByAttribute(video, "anonid", "statusOverlay");
+  const statusIcon = getAnonElementWithinVideoByAttribute(video, "anonid", "statusIcon");
 
   add_task(async function setup() {
     await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));

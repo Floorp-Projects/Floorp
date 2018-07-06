@@ -20,8 +20,8 @@
   SimpleTest.waitForExplicitFinish();
 
   const video = document.getElementById("video");
-  const ccBtn = getElementWithinVideo(video, "closedCaptionButton");
-  const ttList = getElementWithinVideo(video, "textTrackList");
+  const ccBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "closedCaptionButton");
+  const ttList = getAnonElementWithinVideoByAttribute(video, "anonid", "textTrackList");
 
   add_task(async function wait_for_media_ready() {
     await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));

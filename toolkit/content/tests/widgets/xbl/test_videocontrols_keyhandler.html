@@ -19,9 +19,9 @@
   SimpleTest.waitForExplicitFinish();
   const video = document.getElementById("video");
 
-  const playButton = getElementWithinVideo(video, "playButton");
-  const scrubber = getElementWithinVideo(video, "scrubber");
-  const volumeStack = getElementWithinVideo(video, "volumeStack");
+  const playButton = getAnonElementWithinVideoByAttribute(video, "anonid", "playButton");
+  const scrubber = getAnonElementWithinVideoByAttribute(video, "anonid", "scrubber");
+  const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
 
   // Setup video
   tests.push(done => {

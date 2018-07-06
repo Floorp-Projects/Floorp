@@ -26,9 +26,14 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-function getElementWithinVideo(video, aValue) {
-  const shadowRoot = SpecialPowers.wrap(video).openOrClosedShadowRoot;
-  return shadowRoot.getElementById(aValue);
+function getAnonElementWithinVideoByAttribute(video, aName, aValue) {
+  // <videocontrols> is the second anonymous child node of <video>, but
+  // the first child node of <audio>.
+  const videoControlIndex = video.nodeName == "VIDEO" ? 1 : 0;
+  const videoControl = InspectorUtils.getChildrenForNode(video, true)[videoControlIndex];
+
+  return videoControl.ownerDocument
+    .getAnonymousElementByAttribute(videoControl, aName, aValue);
 }
 
 function executeTests() {
