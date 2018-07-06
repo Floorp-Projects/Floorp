@@ -17,6 +17,7 @@ job_path_map = {
                   "!resources/*",
                   "!conformance-checkers/",
                   "!.*/OWNERS",
+                  "!.*/META.yml",
                   "!.*/tools/",
                   "!.*/README",
                   "!css/[^/]*$"],
