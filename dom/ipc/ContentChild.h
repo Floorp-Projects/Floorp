@@ -192,7 +192,7 @@ public:
     nsTArray<uint32_t>&& namespaces) override;
 
   mozilla::ipc::IPCResult
-  RecvRequestPerformanceMetrics(const nsID& aID) override;
+  RecvRequestPerformanceMetrics() override;
 
   mozilla::ipc::IPCResult
   RecvReinitRendering(

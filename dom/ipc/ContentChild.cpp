@@ -71,7 +71,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/CaptivePortalService.h"
-#include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
@@ -1393,12 +1392,12 @@ ContentChild::GetResultForRenderingInitFailure(base::ProcessId aOtherPid)
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvRequestPerformanceMetrics(const nsID& aID)
+ContentChild::RecvRequestPerformanceMetrics()
 {
   MOZ_ASSERT(mozilla::StaticPrefs::dom_performance_enable_scheduler_timing());
   nsTArray<PerformanceInfo> info;
   CollectPerformanceInfo(info);
-  SendAddPerformanceMetrics(aID, info);
+  SendAddPerformanceMetrics(info);
   return IPC_OK();
 }
 
