@@ -207,8 +207,8 @@ impl AnimatedProperty {
             % for prop in data.longhands:
             % if prop.animatable:
                 LonghandId::${prop.camel_case} => {
-                    let old_computed = old_style.clone_${prop.ident}();
-                    let new_computed = new_style.clone_${prop.ident}();
+                    let old_computed = old_style.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}();
+                    let new_computed = new_style.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}();
                     AnimatedProperty::${prop.camel_case}(
                     % if prop.is_animatable_with_computed_value:
                         old_computed,
@@ -552,7 +552,9 @@ impl AnimationValue {
             % for prop in data.longhands:
             % if prop.animatable:
             LonghandId::${prop.camel_case} => {
-                let computed = style.clone_${prop.ident}();
+                let computed = computed_values
+                    .get_${prop.style_struct.ident.strip("_")}()
+                    .clone_${prop.ident}();
                 AnimationValue::${prop.camel_case}(
                 % if prop.is_animatable_with_computed_value:
                     computed
