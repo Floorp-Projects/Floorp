@@ -1,12 +1,3 @@
-<!doctype html>
-<html>
-<head>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<script>
-
 test(() => {
   performance.mark('markName');
   performance.measure('measureName');
@@ -28,6 +19,3 @@ test(() => {
     }
   }
 }, 'Test toJSON() in PerformanceEntry');
-</script>
-</body>
-</html>
