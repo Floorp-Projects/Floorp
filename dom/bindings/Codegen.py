@@ -2234,10 +2234,6 @@ def MakeClearCachedValueNativeName(member):
     return "ClearCached%sValue" % MakeNativeName(member.identifier.name)
 
 
-def MakeJSImplClearCachedValueNativeName(member):
-    return "_" + MakeClearCachedValueNativeName(member)
-
-
 def IDLToCIdentifier(name):
     return name.replace("-", "_")
 
@@ -2431,17 +2427,6 @@ class MethodDefiner(PropertyDefiner):
                         "nativeName": ("%s::_Create" % descriptor.name),
                         "methodInfo": False,
                         "length": 2,
-                        "flags": "0",
-                        "condition": MemberCondition()
-                    })
-            elif not unforgeable:
-                for m in clearableCachedAttrs(descriptor):
-                    attrName = MakeNativeName(m.identifier.name)
-                    self.chrome.append({
-                        "name": "_clearCached%sValue" % attrName,
-                        "nativeName": MakeJSImplClearCachedValueNativeName(m),
-                        "methodInfo": False,
-                        "length": "0",
                         "flags": "0",
                         "condition": MemberCondition()
                     })
@@ -12418,11 +12403,6 @@ class CGDescriptor(CGThing):
         if descriptor.concrete and descriptor.wrapperCache and not descriptor.proxy:
             cgThings.append(CGClassObjectMovedHook(descriptor))
 
-        # Generate the _ClearCachedFooValue methods before the property arrays that use them.
-        if descriptor.interface.isJSImplemented():
-            for m in clearableCachedAttrs(descriptor):
-                cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
-
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
@@ -13938,11 +13918,7 @@ class CGBindingRoot(CGThing):
                     # interface object might have a ChromeOnly constructor.
                     (desc.interface.hasInterfaceObject() and
                      (desc.interface.isJSImplemented() or
-                      (ctor and isChromeOnly(ctor)))) or
-                    # JS-implemented interfaces with clearable cached
-                    # attrs have chromeonly _clearFoo methods.
-                    (desc.interface.isJSImplemented() and
-                     any(clearableCachedAttrs(desc))))
+                      (ctor and isChromeOnly(ctor)))))
 
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
@@ -15128,27 +15104,6 @@ def callbackGetterName(attr, descriptor):
 def callbackSetterName(attr, descriptor):
     return "Set" + MakeNativeName(
         descriptor.binaryNameFor(attr.identifier.name))
-
-
-class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
-    def __init__(self, descriptor, attr):
-        if attr.getExtendedAttribute("StoreInSlot"):
-            raise TypeError("[StoreInSlot] is not supported for JS-implemented WebIDL. See bug 1056325.")
-
-        CGAbstractBindingMethod.__init__(self, descriptor,
-                                         MakeJSImplClearCachedValueNativeName(attr),
-                                         JSNativeArguments())
-        self.attr = attr
-
-    def generate_code(self):
-        return CGGeneric(fill(
-            """
-            ${bindingNamespace}::${fnName}(self);
-            args.rval().setUndefined();
-            return true;
-            """,
-            bindingNamespace=toBindingNamespace(self.descriptor.name),
-            fnName=MakeClearCachedValueNativeName(self.attr)))
 
 
 class CGJSImplGetter(CGJSImplMember):
