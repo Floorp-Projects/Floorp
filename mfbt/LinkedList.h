@@ -411,11 +411,13 @@ private:
   typedef typename Traits::ConstRawType ConstRawType;
   typedef typename Traits::ClientType ClientType;
   typedef typename Traits::ConstClientType ConstClientType;
+  typedef LinkedListElement<T>* ElementType;
+  typedef const LinkedListElement<T>* ConstElementType;
 
   LinkedListElement<T> sentinel;
 
 public:
-  template <typename Type>
+  template <typename Type, typename Element>
   class Iterator {
     Type mCurrent;
 
@@ -427,11 +429,11 @@ public:
     }
 
     const Iterator& operator++() {
-      mCurrent = mCurrent->getNext();
+      mCurrent = static_cast<Element>(mCurrent)->getNext();
       return *this;
     }
 
-    bool operator!=(const Iterator<Type>& aOther) const {
+    bool operator!=(const Iterator& aOther) const {
       return mCurrent != aOther.mCurrent;
     }
   };
@@ -536,17 +538,17 @@ public:
    *
    *     for (MyElementType* elt : myList) { ... }
    */
-  Iterator<RawType> begin() {
-    return Iterator<RawType>(getFirst());
+  Iterator<RawType, ElementType> begin() {
+    return Iterator<RawType, ElementType>(getFirst());
   }
-  Iterator<ConstRawType> begin() const {
-    return Iterator<ConstRawType>(getFirst());
+  Iterator<ConstRawType, ConstElementType> begin() const {
+    return Iterator<ConstRawType, ConstElementType>(getFirst());
   }
-  Iterator<RawType> end() {
-    return Iterator<RawType>(nullptr);
+  Iterator<RawType, ElementType> end() {
+    return Iterator<RawType, ElementType>(nullptr);
   }
-  Iterator<ConstRawType> end() const {
-    return Iterator<ConstRawType>(nullptr);
+  Iterator<ConstRawType, ConstElementType> end() const {
+    return Iterator<ConstRawType, ConstElementType>(nullptr);
   }
 
   /*
