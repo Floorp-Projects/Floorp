@@ -5470,9 +5470,9 @@ nsComputedDOMStyle::DummyGetter()
 }
 
 static void
-MarkComputedStyleMapDirty(const char* aPref, void* aData)
+MarkComputedStyleMapDirty(const char* aPref, ComputedStyleMap* aData)
 {
-  static_cast<ComputedStyleMap*>(aData)->MarkDirty();
+  aData->MarkDirty();
 }
 
 void

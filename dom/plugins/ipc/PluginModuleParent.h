@@ -169,7 +169,7 @@ protected:
 
 protected:
     void SetChildTimeout(const int32_t aChildTimeout);
-    static void TimeoutChanged(const char* aPref, void* aModule);
+    static void TimeoutChanged(const char* aPref, PluginModuleParent* aModule);
 
     virtual void UpdatePluginTimeout() {}
 
@@ -519,7 +519,7 @@ private:
 
     virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override;
 
-    static void CachedSettingChanged(const char* aPref, void* aModule);
+    static void CachedSettingChanged(const char* aPref, PluginModuleChromeParent* aModule);
 
     virtual mozilla::ipc::IPCResult
     AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(

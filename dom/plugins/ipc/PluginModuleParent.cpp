@@ -512,6 +512,16 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     return parent.forget();
 }
 
+static const char* gCallbackPrefs[] = {
+    kChildTimeoutPref,
+    kParentTimeoutPref,
+#ifdef XP_WIN
+    kHangUITimeoutPref,
+    kHangUIMinDisplayPref,
+#endif
+    nullptr,
+};
+
 void
 PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 {
@@ -536,12 +546,8 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 
     TimeoutChanged(CHILD_TIMEOUT_PREF, this);
 
-    Preferences::RegisterCallback(TimeoutChanged, kChildTimeoutPref, this);
-    Preferences::RegisterCallback(TimeoutChanged, kParentTimeoutPref, this);
-#ifdef XP_WIN
-    Preferences::RegisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
-    Preferences::RegisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
-#endif
+    Preferences::RegisterCallbacks(TimeoutChanged, gCallbackPrefs,
+                                   static_cast<PluginModuleParent*>(this));
 
     RegisterSettingsCallbacks();
 
@@ -626,12 +632,14 @@ PluginModuleContentParent::PluginModuleContentParent()
   : PluginModuleParent(false)
   , mPluginId(0)
 {
-  Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
+  Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref,
+                                static_cast<PluginModuleParent*>(this));
 }
 
 PluginModuleContentParent::~PluginModuleContentParent()
 {
-    Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref, this);
+    Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref,
+                                    static_cast<PluginModuleParent*>(this));
 }
 
 PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
@@ -702,12 +710,10 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
 
     UnregisterSettingsCallbacks();
 
-    Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
-    Preferences::UnregisterCallback(TimeoutChanged, kParentTimeoutPref, this);
-#ifdef XP_WIN
-    Preferences::UnregisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
-    Preferences::UnregisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
+    Preferences::UnregisterCallbacks(TimeoutChanged, gCallbackPrefs,
+                                     static_cast<PluginModuleParent*>(this));
 
+#ifdef XP_WIN
     if (mHangUIParent) {
         delete mHangUIParent;
         mHangUIParent = nullptr;
@@ -768,33 +774,31 @@ PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
 }
 
 void
-PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
+PluginModuleParent::TimeoutChanged(const char* aPref, PluginModuleParent* aModule)
 {
-    PluginModuleParent* module = static_cast<PluginModuleParent*>(aModule);
-
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifndef XP_WIN
     if (!strcmp(aPref, kChildTimeoutPref)) {
-      MOZ_ASSERT(module->IsChrome());
+      MOZ_ASSERT(aModule->IsChrome());
       // The timeout value used by the parent for children
       int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-      module->SetChildTimeout(timeoutSecs);
+      aModule->SetChildTimeout(timeoutSecs);
 #else
     if (!strcmp(aPref, kChildTimeoutPref) ||
         !strcmp(aPref, kHangUIMinDisplayPref) ||
         !strcmp(aPref, kHangUITimeoutPref)) {
-      MOZ_ASSERT(module->IsChrome());
-      static_cast<PluginModuleChromeParent*>(module)->EvaluateHangUIState(true);
+      MOZ_ASSERT(aModule->IsChrome());
+      static_cast<PluginModuleChromeParent*>(aModule)->EvaluateHangUIState(true);
 #endif // XP_WIN
     } else if (!strcmp(aPref, kParentTimeoutPref)) {
       // The timeout value used by the child for its parent
-      MOZ_ASSERT(module->IsChrome());
+      MOZ_ASSERT(aModule->IsChrome());
       int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
-      Unused << static_cast<PluginModuleChromeParent*>(module)->SendSetParentHangTimeout(timeoutSecs);
+      Unused << static_cast<PluginModuleChromeParent*>(aModule)->SendSetParentHangTimeout(timeoutSecs);
     } else if (!strcmp(aPref, kContentTimeoutPref)) {
-      MOZ_ASSERT(!module->IsChrome());
+      MOZ_ASSERT(!aModule->IsChrome());
       int32_t timeoutSecs = Preferences::GetInt(kContentTimeoutPref, 0);
-      module->SetChildTimeout(timeoutSecs);
+      aModule->SetChildTimeout(timeoutSecs);
     }
 }
 
@@ -2078,10 +2082,9 @@ PluginModuleChromeParent::CachedSettingChanged()
 }
 
 /* static */ void
-PluginModuleChromeParent::CachedSettingChanged(const char* aPref, void* aModule)
+PluginModuleChromeParent::CachedSettingChanged(const char* aPref, PluginModuleChromeParent* aModule)
 {
-    PluginModuleChromeParent *module = static_cast<PluginModuleChromeParent*>(aModule);
-    module->CachedSettingChanged();
+    aModule->CachedSettingChanged();
 }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)

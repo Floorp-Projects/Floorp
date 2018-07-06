@@ -273,9 +273,9 @@ void gfxPrefs::PrefSet(const char* aPref, std::string aValue)
 }
 
 static void
-OnGfxPrefChanged(const char* aPrefname, void* aClosure)
+OnGfxPrefChanged(const char* aPrefname, gfxPrefs::Pref* aPref)
 {
-  reinterpret_cast<gfxPrefs::Pref*>(aClosure)->OnChange();
+  aPref->OnChange();
 }
 
 void gfxPrefs::WatchChanges(const char* aPrefname, Pref* aPref)

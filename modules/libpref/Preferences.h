@@ -34,6 +34,39 @@ class nsPrefBranch;
 
 namespace mozilla {
 
+// A typesafe version of PrefChangeFunc, with its data argument type deduced
+// from the type of the argument passed to RegisterCallback.
+//
+// Note: We specify this as a dependent type TypedPrefChangeFunc<T>::SelfType so
+// that it does not participate in argument type deduction. This allows us to
+// use its implicit conversion constructor, and also allows our Register and
+// Unregister methods to accept non-capturing lambdas (which will not match
+// void(*)(const char*, T*) when used in type deduction) as callback functions.
+template<typename T>
+struct TypedPrefChangeFunc
+{
+  using Type = TypedPrefChangeFunc<T>;
+  using CallbackType = void (*)(const char*, T*);
+
+  MOZ_IMPLICIT TypedPrefChangeFunc(CallbackType aCallback)
+    : mCallback(aCallback)
+  {
+  }
+
+  template<typename F>
+  MOZ_IMPLICIT TypedPrefChangeFunc(F&& aLambda)
+    : mCallback(aLambda)
+  {
+  }
+
+  operator PrefChangedFunc() const
+  {
+    return reinterpret_cast<PrefChangedFunc>(mCallback);
+  }
+
+  CallbackType mCallback;
+};
+
 class PreferenceServiceReporter;
 
 namespace dom {
@@ -307,52 +340,64 @@ public:
   static nsresult RemoveObservers(nsIObserver* aObserver, const char** aPrefs);
 
   // Registers/Unregisters the callback function for the aPref.
-  static nsresult RegisterCallback(PrefChangedFunc aCallback,
-                                   const nsACString& aPref,
-                                   void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return RegisterCallback(aCallback, aPref, aClosure, ExactMatch);
   }
 
-  static nsresult UnregisterCallback(PrefChangedFunc aCallback,
-                                     const nsACString& aPref,
-                                     void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult UnregisterCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return UnregisterCallback(aCallback, aPref, aClosure, ExactMatch);
   }
 
   // Like RegisterCallback, but also calls the callback immediately for
   // initialization.
-  static nsresult RegisterCallbackAndCall(PrefChangedFunc aCallback,
-                                          const nsACString& aPref,
-                                          void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterCallbackAndCall(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return RegisterCallbackAndCall(aCallback, aPref, aClosure, ExactMatch);
   }
 
   // Like RegisterCallback, but registers a callback for a prefix of multiple
   // pref names, not a single pref name.
-  static nsresult RegisterPrefixCallback(PrefChangedFunc aCallback,
-                                         const nsACString& aPref,
-                                         void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterPrefixCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return RegisterCallback(aCallback, aPref, aClosure, PrefixMatch);
   }
 
   // Like RegisterPrefixCallback, but also calls the callback immediately for
   // initialization.
-  static nsresult RegisterPrefixCallbackAndCall(PrefChangedFunc aCallback,
-                                                const nsACString& aPref,
-                                                void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterPrefixCallbackAndCall(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return RegisterCallbackAndCall(aCallback, aPref, aClosure, PrefixMatch);
   }
 
   // Unregister a callback registered with RegisterPrefixCallback or
   // RegisterPrefixCallbackAndCall.
-  static nsresult UnregisterPrefixCallback(PrefChangedFunc aCallback,
-                                           const nsACString& aPref,
-                                           void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult UnregisterPrefixCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const nsACString& aPref,
+    T* aClosure = nullptr)
   {
     return UnregisterCallback(aCallback, aPref, aClosure, PrefixMatch);
   }
@@ -366,83 +411,97 @@ public:
   //
   // Also note that the exact same aPrefs pointer must be passed to the
   // Unregister call as was passed to the Register call.
-  static nsresult RegisterCallbacks(PrefChangedFunc aCallback,
-                                    const char** aPrefs,
-                                    void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterCallbacks(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char** aPrefs,
+    T* aClosure = nullptr)
   {
     return RegisterCallbacks(aCallback, aPrefs, aClosure, ExactMatch);
   }
   static nsresult RegisterCallbacksAndCall(PrefChangedFunc aCallback,
                                            const char** aPrefs,
                                            void* aClosure = nullptr);
-  static nsresult UnregisterCallbacks(PrefChangedFunc aCallback,
-                                      const char** aPrefs,
-                                      void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult UnregisterCallbacks(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char** aPrefs,
+    T* aClosure = nullptr)
   {
     return UnregisterCallbacks(aCallback, aPrefs, aClosure, ExactMatch);
   }
-  static nsresult RegisterPrefixCallbacks(PrefChangedFunc aCallback,
-                                          const char** aPrefs,
-                                          void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult RegisterPrefixCallbacks(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char** aPrefs,
+    T* aClosure = nullptr)
   {
     return RegisterCallbacks(aCallback, aPrefs, aClosure, PrefixMatch);
   }
-  static nsresult UnregisterPrefixCallbacks(PrefChangedFunc aCallback,
-                                            const char** aPrefs,
-                                            void* aClosure = nullptr)
+  template<typename T = void>
+  static nsresult UnregisterPrefixCallbacks(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char** aPrefs,
+    T* aClosure = nullptr)
   {
     return UnregisterCallbacks(aCallback, aPrefs, aClosure, PrefixMatch);
   }
 
-  template<int N>
-  static nsresult RegisterCallback(PrefChangedFunc aCallback,
-                                   const char (&aPref)[N],
-                                   void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult RegisterCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return RegisterCallback(
       aCallback, nsLiteralCString(aPref), aClosure, ExactMatch);
   }
 
-  template<int N>
-  static nsresult UnregisterCallback(PrefChangedFunc aCallback,
-                                     const char (&aPref)[N],
-                                     void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult UnregisterCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return UnregisterCallback(
       aCallback, nsLiteralCString(aPref), aClosure, ExactMatch);
   }
 
-  template<int N>
-  static nsresult RegisterCallbackAndCall(PrefChangedFunc aCallback,
-                                          const char (&aPref)[N],
-                                          void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult RegisterCallbackAndCall(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return RegisterCallbackAndCall(
       aCallback, nsLiteralCString(aPref), aClosure, ExactMatch);
   }
 
-  template<int N>
-  static nsresult RegisterPrefixCallback(PrefChangedFunc aCallback,
-                                         const char (&aPref)[N],
-                                         void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult RegisterPrefixCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return RegisterCallback(
       aCallback, nsLiteralCString(aPref), aClosure, PrefixMatch);
   }
 
-  template<int N>
-  static nsresult RegisterPrefixCallbackAndCall(PrefChangedFunc aCallback,
-                                                const char (&aPref)[N],
-                                                void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult RegisterPrefixCallbackAndCall(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return RegisterCallbackAndCall(
       aCallback, nsLiteralCString(aPref), aClosure, PrefixMatch);
   }
 
-  template<int N>
-  static nsresult UnregisterPrefixCallback(PrefChangedFunc aCallback,
-                                           const char (&aPref)[N],
-                                           void* aClosure = nullptr)
+  template<int N, typename T = void>
+  static nsresult UnregisterPrefixCallback(
+    typename TypedPrefChangeFunc<T>::Type aCallback,
+    const char (&aPref)[N],
+    T* aClosure = nullptr)
   {
     return UnregisterCallback(
       aCallback, nsLiteralCString(aPref), aClosure, PrefixMatch);
