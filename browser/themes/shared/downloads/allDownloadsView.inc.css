@@ -4,7 +4,7 @@
 
 %filter substitution
 
-%define item richlistitem.download
+%define item #downloadsRichListBox > richlistitem
 %define itemFocused @item@[selected]
 
 /*** View and outer controls ***/
@@ -17,7 +17,7 @@
 
 /*** List items ***/
 
-#downloadsRichListBox > richlistitem.download {
+@item@ {
   height: var(--downloads-item-height);
 }
 
