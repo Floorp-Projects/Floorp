@@ -8475,43 +8475,24 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
 
     getThisObj should be code for getting a JSObject* for the binding
-    object.  If this is None, we will auto-generate code based on
-    descriptor to do the right thing.  "" can be passed in if the
-    binding object is already stored in 'obj'.
+    object.  "" can be passed in if the binding object is already stored in
+    'obj'.
 
     callArgs should be code for getting a JS::CallArgs into a variable
     called 'args'.  This can be "" if there is already such a variable
     around.
     """
-    def __init__(self, descriptor, name, args, unwrapFailureCode=None,
-                 getThisObj=None,
+    def __init__(self, descriptor, name, args, getThisObj,
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
-        if unwrapFailureCode is None:
-            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
-        else:
-            self.unwrapFailureCode = unwrapFailureCode
+        self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
 
         if getThisObj == "":
             self.getThisObj = None
         else:
-            if getThisObj is None:
-                if descriptor.interface.isOnGlobalProtoChain():
-                    ensureCondition = "!args.thisv().isNullOrUndefined() && !args.thisv().isObject()"
-                    getThisObj = "args.thisv().isObject() ? &args.thisv().toObject() : js::GetGlobalForObjectCrossCompartment(&args.callee())"
-                else:
-                    ensureCondition = "!args.thisv().isObject()"
-                    getThisObj = "&args.thisv().toObject()"
-                unwrapFailureCode = self.unwrapFailureCode % {'securityError': 'false'}
-                ensureThisObj = CGIfWrapper(CGGeneric(unwrapFailureCode),
-                                            ensureCondition)
-            else:
-                ensureThisObj = None
-            self.getThisObj = CGList(
-                [ensureThisObj,
-                 CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
-                           getThisObj)])
+            self.getThisObj = CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
+                                        getThisObj)
         self.callArgs = callArgs
 
     def definition_body(self):
