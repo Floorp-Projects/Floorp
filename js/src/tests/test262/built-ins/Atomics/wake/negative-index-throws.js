@@ -17,17 +17,27 @@ info: |
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-var sab = new SharedArrayBuffer(1024);
-var int32Array = new Int32Array(sab);
-var poisoned = {
+const i32a = new Int32Array(
+  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
+);
+
+const poisoned = {
   valueOf: function() {
-    throw new Test262Error("should not evaluate this code");
+    throw new Test262Error('should not evaluate this code');
   }
 };
 
-assert.throws(RangeError, () => Atomics.wake(int32Array, -Infinity, poisoned));
-assert.throws(RangeError, () => Atomics.wake(int32Array, -7.999, poisoned));
-assert.throws(RangeError, () => Atomics.wake(int32Array, -1, poisoned));
-assert.throws(RangeError, () => Atomics.wake(int32Array, -300, poisoned));
+assert.throws(RangeError, function() {
+  Atomics.wake(i32a, -Infinity, poisoned);
+}, '`Atomics.wake(i32a, -Infinity, poisoned)` throws RangeError');
+assert.throws(RangeError, function() {
+  Atomics.wake(i32a, -7.999, poisoned);
+}, '`Atomics.wake(i32a, -7.999, poisoned)` throws RangeError');
+assert.throws(RangeError, function() {
+  Atomics.wake(i32a, -1, poisoned);
+}, '`Atomics.wake(i32a, -1, poisoned)` throws RangeError');
+assert.throws(RangeError, function() {
+  Atomics.wake(i32a, -300, poisoned);
+}, '`Atomics.wake(i32a, -300, poisoned)` throws RangeError');
 
 reportCompare(0, 0);

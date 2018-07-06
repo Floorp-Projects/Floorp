@@ -35,6 +35,14 @@ typedef enum {
     ssl_hs_message_hash = 254, /* Not a real message. */
 } SSLHandshakeType;
 
+typedef enum {
+    ssl_ct_change_cipher_spec = 20,
+    ssl_ct_alert = 21,
+    ssl_ct_handshake = 22,
+    ssl_ct_application_data = 23,
+    ssl_ct_ack = 25
+} SSLContentType;
+
 typedef struct SSL3StatisticsStr {
     /* statistics from ssl3_SendClientHello (sch) */
     long sch_sid_cache_hits;

@@ -6,31 +6,38 @@
 esid: sec-atomics.wake
 description: >
   Test that Atomics.wake wakes zero waiters if the count is NaN
+includes: [atomicsHelper.js]
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-$262.agent.start(
-`
-$262.agent.receiveBroadcast(function (sab) {
-  var ia = new Int32Array(sab);
-  $262.agent.report(Atomics.wait(ia, 0, 0, 1000)); // We will timeout eventually
-  $262.agent.leaving();
-})
+const RUNNING = 1;
+const TIMEOUT = $262.agent.timeouts.long;
+
+$262.agent.start(`
+  $262.agent.receiveBroadcast(function(sab) {
+    const i32a = new Int32Array(sab);
+    Atomics.add(i32a, ${RUNNING}, 1);
+
+    $262.agent.report(Atomics.wait(i32a, 0, 0, ${TIMEOUT})); // We will timeout eventually
+    $262.agent.leaving();
+  });
 `);
 
-var ia = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
+const i32a = new Int32Array(
+  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
+);
 
-$262.agent.broadcast(ia.buffer);
-$262.agent.sleep(500); // Give the agent a chance to wait
-assert.sameValue(Atomics.wake(ia, 0, NaN), 0); // Don't actually wake it
-assert.sameValue(getReport(), "timed-out");
+$262.agent.broadcast(i32a.buffer);
+$262.agent.waitUntil(i32a, RUNNING, 1);
 
-function getReport() {
-  var r;
-  while ((r = $262.agent.getReport()) == null) {
-    $262.agent.sleep(100);
-  }
-  return r;
-}
+// Try to yield control to ensure the agent actually started to wait.
+$262.agent.tryYield();
+
+assert.sameValue(Atomics.wake(i32a, 0, NaN), 0, 'Atomics.wake(i32a, 0, NaN) returns 0');
+
+// Try to sleep past the timeout.
+$262.agent.trySleep(TIMEOUT);
+
+assert.sameValue($262.agent.getReport(), 'timed-out', '$262.agent.getReport() returns "timed-out"');
 
 reportCompare(0, 0);

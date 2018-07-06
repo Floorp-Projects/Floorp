@@ -206,14 +206,17 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // This function is adding a new BumpChunk in which all upcoming allocation
     // would be made. Thus, we protect against out-of-bounds the last chunk in
     // which we did our previous allocations.
-    if (!chunks_.empty())
-        chunks_.last()->setRWUntil(Loc::Reserved);
+    auto protectLast = [&]() {
+        if (!chunks_.empty())
+            chunks_.last()->setRWUntil(Loc::Reserved);
+    };
 
     // Look for existing unused BumpChunks to satisfy the request, and pick the
     // first one which is large enough, and move it into the list of used
     // chunks.
     if (!unused_.empty()) {
         if (unused_.begin()->canAlloc(n)) {
+            protectLast();
             chunks_.append(unused_.popFirst());
             chunks_.last()->setRWUntil(Loc::End);
             return true;
@@ -225,6 +228,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
             MOZ_ASSERT(elem->empty());
             if (elem->canAlloc(n)) {
                 BumpChunkList temp = unused_.splitAfter(i.get());
+                protectLast();
                 chunks_.append(temp.popFirst());
                 unused_.appendAll(std::move(temp));
                 chunks_.last()->setRWUntil(Loc::End);
@@ -241,6 +245,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // The last chunk in which allocations are performed should be protected
     // with setRWUntil(Loc::End), but this is not necessary here because any new
     // allocation should be protected as RW already.
+    protectLast();
     chunks_.append(std::move(newChunk));
     incrementCurSize(size);
     return true;

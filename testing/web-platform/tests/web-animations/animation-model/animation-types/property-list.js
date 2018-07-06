@@ -446,12 +446,6 @@ const gCSSProperties = {
       { type: 'discrete', options: [ [ 'pointer', 'wait' ] ] }
     ]
   },
-  'direction': {
-    // https://drafts.csswg.org/css-writing-modes-3/#propdef-direction
-    types: [
-      { type: 'discrete', options: [ [ 'ltr', 'rtl' ] ] }
-    ]
-  },
   'dominant-baseline': {
     // https://drafts.csswg.org/css-inline/#propdef-dominant-baseline
     types: [
@@ -1470,12 +1464,6 @@ const gCSSProperties = {
     // http://dev.w3.org/csswg/css-will-change/#propdef-will-change
     types: [
       { type: 'discrete', options: [ [ 'scroll-position', 'contents' ] ] }
-    ]
-  },
-  'writing-mode': {
-    // https://drafts.csswg.org/css-writing-modes-3/#propdef-writing-mode
-    types: [
-      { type: 'discrete', options: [ [ 'vertical-rl', 'sideways-rl' ] ] }
     ]
   },
   'z-index': {

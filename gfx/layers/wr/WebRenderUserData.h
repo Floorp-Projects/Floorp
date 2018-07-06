@@ -151,9 +151,8 @@ public:
 
 protected:
   void ClearImageKey();
-  void CreateExternalImageIfNeeded();
 
-  wr::MaybeExternalImageId mExternalImageId;
+  RefPtr<TextureClient> mTextureOfImage;
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
   Maybe<wr::PipelineId> mPipelineId;

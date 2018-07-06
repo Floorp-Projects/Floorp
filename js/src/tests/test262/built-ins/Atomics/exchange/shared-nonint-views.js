@@ -13,7 +13,9 @@ features: [Atomics, SharedArrayBuffer, TypedArray]
 var buffer = new SharedArrayBuffer(1024);
 
 testWithTypedArrayConstructors(function(TA) {
-  assert.throws(TypeError, (() => Atomics.exchange(new TA(buffer), 0, 0)));
+  assert.throws(TypeError, function() {
+    Atomics.exchange(new TA(buffer), 0, 0);
+  }, '`Atomics.exchange(new TA(buffer), 0, 0)` throws TypeError');
 }, floatArrayConstructors);
 
 reportCompare(0, 0);

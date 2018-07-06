@@ -56,5 +56,5 @@ add_task(async function() {
   is(dbg.selectors.getActiveSearch(dbg.getState()), null);
 
   const selectedSource = dbg.selectors.getSelectedSource(dbg.getState());
-  ok(selectedSource.get("url").includes("switching-01"));
+  ok(selectedSource.url.includes("switching-01"));
 });

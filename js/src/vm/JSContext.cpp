@@ -116,6 +116,10 @@ JSContext::init(ContextKind kind)
 
         if (!wasm::EnsureSignalHandlers(this))
             return false;
+    } else {
+        atomsZoneFreeLists_ = js_new<FreeLists>();
+        if (!atomsZoneFreeLists_)
+            return false;
     }
 
     // Set the ContextKind last, so that ProtectedData checks will allow us to
@@ -1210,7 +1214,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     kind_(ContextKind::HelperThread),
     helperThread_(nullptr),
     options_(options),
-    arenas_(nullptr),
+    freeLists_(nullptr),
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),
@@ -1322,6 +1326,8 @@ JSContext::~JSContext()
     if (traceLogger)
         DestroyTraceLogger(traceLogger);
 #endif
+
+    js_delete(atomsZoneFreeLists_.ref());
 
     MOZ_ASSERT(TlsContext.get() == this);
     TlsContext.set(nullptr);

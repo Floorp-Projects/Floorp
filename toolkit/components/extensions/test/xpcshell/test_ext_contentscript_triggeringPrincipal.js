@@ -1071,7 +1071,7 @@ add_task(async function test_contentscript_csp() {
   let chaosMode = parseInt(env.get("MOZ_CHAOSMODE"), 16);
   let checkCSPReports = !(chaosMode === 0 || chaosMode & 0x02);
 
-  gContentSecurityPolicy = `default-src 'none'; script-src 'nonce-deadbeef' 'unsafe-eval'; report-uri ${CSP_REPORT_PATH};`;
+  gContentSecurityPolicy = `default-src 'none' 'report-sample'; script-src 'nonce-deadbeef' 'unsafe-eval' 'report-sample'; report-uri ${CSP_REPORT_PATH};`;
 
   let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
   await extension.startup();

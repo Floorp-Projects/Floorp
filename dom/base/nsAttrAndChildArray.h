@@ -126,6 +126,17 @@ public:
     return DoSetMappedAttrStyleSheet(aSheet);
   }
 
+  // Update the rule mapping function on our mapped attributes, if we have any.
+  // We take a nsMappedAttributeElement, not a nsMapRuleToAttributesFunc,
+  // because the latter is defined in a header we can't include here.
+  nsresult UpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement)
+  {
+    if (!mImpl || !mImpl->mMappedAttrs) {
+      return NS_OK;
+    }
+    return DoUpdateMappedAttrRuleMapper(aElement);
+  }
+
   void Compact();
 
   bool CanFitMoreAttrs() const
@@ -223,6 +234,11 @@ private:
    * Guts of SetMappedAttrStyleSheet for the rare case when we have mapped attrs
    */
   nsresult DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet);
+
+  /**
+   * Guts of UpdateMappedAttrRuleMapper for the case  when we have mapped attrs.
+   */
+  nsresult DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement);
 
   struct InternalAttr
   {

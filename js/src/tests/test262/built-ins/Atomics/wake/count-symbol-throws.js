@@ -18,11 +18,12 @@ info: |
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-var sab = new SharedArrayBuffer(4);
-var view = new Int32Array(sab);
+const i32a = new Int32Array(
+  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
+);
 
 assert.throws(TypeError, function() {
-  Atomics.wake(view, 0, Symbol());
-});
+  Atomics.wake(i32a, 0, Symbol());
+}, '`Atomics.wake(i32a, 0, Symbol())` throws TypeError');
 
 reportCompare(0, 0);
