@@ -3318,7 +3318,8 @@ Clone(JSContext* cx, unsigned argc, Value* vp)
         if (!JS_ValueToObject(cx, args[1], &env))
             return false;
     } else {
-        env = js::GetGlobalForObjectCrossCompartment(&args.callee());
+        env = JS::CurrentGlobalOrNull(cx);
+        MOZ_ASSERT(env);
     }
 
     // Should it worry us that we might be getting with wrappers
