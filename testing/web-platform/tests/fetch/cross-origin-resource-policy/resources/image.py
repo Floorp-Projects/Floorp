@@ -18,4 +18,3 @@ def main(request, response):
     response.writer.end_headers()
 
     response.writer.write(body)
-
