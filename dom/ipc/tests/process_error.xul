@@ -31,7 +31,7 @@
 
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
 
-    BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'), true, false);
+    BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'));
   ]]></script>
 
 </window>
