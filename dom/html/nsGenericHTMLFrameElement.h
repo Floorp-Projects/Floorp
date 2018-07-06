@@ -17,7 +17,11 @@
 #include "nsIFrameLoaderOwner.h"
 #include "nsIMozBrowserFrame.h"
 
-class nsXULElement;
+namespace mozilla {
+namespace dom {
+class XULFrameElement;
+}
+}
 
 #define NS_GENERICHTMLFRAMEELEMENT_IID \
 { 0x8190db72, 0xdab0, 0x4d72, \
@@ -73,7 +77,7 @@ public:
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& aError);
 
-  void SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
+  void SwapFrameLoaders(mozilla::dom::XULFrameElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& aError);
 
   void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,

@@ -15,3 +15,5 @@ interface XULFrameElement : XULElement
   readonly attribute WindowProxy? contentWindow;
   readonly attribute Document? contentDocument; 
 };
+
+XULFrameElement implements MozFrameLoaderOwner;
