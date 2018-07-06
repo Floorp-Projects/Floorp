@@ -339,6 +339,10 @@ To enable Hybrid Content Telemetry on ``https://example.mozilla.org``, execute t
 
 Afterwards load the page on ``https://example.mozilla.org`` and it will be able to record Telemetry data.
 
+.. note::
+
+  Manual testing requires a host that handles HTTPS connections, as this kind of collection is only allowed on secure hosts. To allow for local testing, a local proxy capable of handling HTTPS connection is required.
+
 Automated testing
 -----------------
 

@@ -160,7 +160,9 @@ public:
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
 
-  static void RequestPerformanceMetrics(GlobalObject& aGlobal);
+  static already_AddRefed<Promise>
+  RequestPerformanceMetrics(GlobalObject& aGlobal,
+                            ErrorResult& aRv);
 
   static void Import(const GlobalObject& aGlobal,
                      const nsAString& aResourceURI,
@@ -183,7 +185,8 @@ public:
               JS::Handle<JSObject*> stack,
               JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv);
 
-  static void RequestIOActivity(GlobalObject& aGlobal);
+  static already_AddRefed<Promise>
+  RequestIOActivity(GlobalObject& aGlobal, ErrorResult& aRv);
 };
 
 } // namespace dom

@@ -95,6 +95,21 @@ startupRecorder.prototype = {
       return;
     }
 
+    // We only care about the first paint notification for browser windows, and
+    // not other types (for example, the gfx sanity test window)
+    if (topic == firstPaintNotification) {
+      // In the case we're handling xul-window-visible, we'll have been handed
+      // an nsIXULWindow instead of an nsIDOMWindow.
+      if (subject instanceof Ci.nsIXULWindow) {
+        subject = subject.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
+      }
+
+      if (subject.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
+        return;
+      }
+    }
+
     if (topic == "image-drawing" || topic == "image-loading") {
       this.data.images[topic].add(data);
       return;
@@ -104,7 +119,9 @@ startupRecorder.prototype = {
 
     if (topic == firstPaintNotification &&
         Services.prefs.getBoolPref("browser.startup.record", false)) {
-      win = Services.wm.getMostRecentWindow("navigator:browser");
+      // Because of the check for navigator:browser we made earlier, we know
+      // that if we got here, then the subject must be the first browser window.
+      win = subject;
       canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml",
                                             "canvas");
       canvas.mozOpaque = true;

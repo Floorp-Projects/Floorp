@@ -10,7 +10,7 @@ const kHelpButtonId = "appMenu-help-button";
 add_task(async function testUpDownKeys() {
   await gCUITestUtils.openMainMenu();
 
-  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
+  let buttons = PanelView.forNode(PanelUI.mainView)._getNavigableElements();
 
   for (let button of buttons) {
     if (button.disabled)
@@ -39,7 +39,7 @@ add_task(async function testUpDownKeys() {
 add_task(async function testEnterKeyBehaviors() {
   await gCUITestUtils.openMainMenu();
 
-  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
+  let buttons = PanelView.forNode(PanelUI.mainView)._getNavigableElements();
 
   // Navigate to the 'Help' button, which points to a subview.
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -56,7 +56,7 @@ add_task(async function testEnterKeyBehaviors() {
   EventUtils.synthesizeKey("KEY_Enter");
   await promise;
 
-  let helpButtons = PanelView.forNode(PanelUI.helpView).getNavigableElements();
+  let helpButtons = PanelView.forNode(PanelUI.helpView)._getNavigableElements();
   Assert.ok(helpButtons[0].classList.contains("subviewbutton-back"),
     "First button in help view should be a back button");
 
@@ -132,7 +132,7 @@ add_task(async function testLeftRightKeys() {
 add_task(async function testTabKey() {
   await gCUITestUtils.openMainMenu();
 
-  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
+  let buttons = PanelView.forNode(PanelUI.mainView)._getNavigableElements();
 
   for (let button of buttons) {
     if (button.disabled)
@@ -165,7 +165,7 @@ add_task(async function testTabKey() {
 add_task(async function testInterleavedTabAndArrowKeys() {
   await gCUITestUtils.openMainMenu();
 
-  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
+  let buttons = PanelView.forNode(PanelUI.mainView)._getNavigableElements();
   let tab = false;
 
   for (let button of buttons) {
@@ -188,7 +188,7 @@ add_task(async function testInterleavedTabAndArrowKeys() {
 add_task(async function testSpaceDownAfterTabNavigation() {
   await gCUITestUtils.openMainMenu();
 
-  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
+  let buttons = PanelView.forNode(PanelUI.mainView)._getNavigableElements();
   let button;
 
   for (button of buttons) {

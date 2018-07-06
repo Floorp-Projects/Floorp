@@ -79,12 +79,12 @@ class App extends Component {
       return;
     }
 
-    const inputField = this.node.querySelector(".jsterm-input-node");
+    const input = event.target;
 
     // Cleanup function if notification is closed by the user.
     const removeCallback = (eventType) => {
       if (eventType == "removed") {
-        inputField.removeEventListener("keyup", pasteKeyUpHandler);
+        input.removeEventListener("keyup", pasteKeyUpHandler);
         dispatch(actions.removeNotification("selfxss-notification"));
       }
     };
@@ -99,18 +99,17 @@ class App extends Component {
       removeCallback
     ));
 
-    // Remove notification automatically when the user
-    // types "allow pasting".
-    function pasteKeyUpHandler() {
-      const value = inputField.value || inputField.textContent;
+    // Remove notification automatically when the user types "allow pasting".
+    const pasteKeyUpHandler = (e) => {
+      const value = e.target.value;
       if (value.includes(SELF_XSS_OK)) {
         dispatch(actions.removeNotification("selfxss-notification"));
-        inputField.removeEventListener("keyup", pasteKeyUpHandler);
+        input.removeEventListener("keyup", pasteKeyUpHandler);
         WebConsoleUtils.usageCount = WebConsoleUtils.CONSOLE_ENTRY_THRESHOLD;
       }
-    }
+    };
 
-    inputField.addEventListener("keyup", pasteKeyUpHandler);
+    input.addEventListener("keyup", pasteKeyUpHandler);
   }
 
   // Rendering

@@ -76,7 +76,7 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   }
   this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
 
-  this._tooltip.setContent(this._list);
+  this._tooltip.setContent(this._list, { height: Infinity });
 
   this.onClick = this.onClick.bind(this);
   this._list.addEventListener("click", this.onClick);
