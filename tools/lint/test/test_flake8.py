@@ -80,5 +80,10 @@ def test_lint_excluded_file(lint, paths):
     assert len(results) == 0
 
 
+def test_lint_uses_custom_extensions(lint, paths):
+    assert len(lint(paths('ext'))) == 1
+    assert len(lint(paths('ext/bad.configure'))) == 1
+
+
 if __name__ == '__main__':
     mozunit.main()
