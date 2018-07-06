@@ -856,7 +856,7 @@ private:
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport) override;
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration) override;
-  mozilla::ipc::IPCResult RecvAddPerformanceMetrics(const nsID& aID, nsTArray<PerformanceInfo>&& aMetrics) override;
+  mozilla::ipc::IPCResult RecvAddPerformanceMetrics(nsTArray<PerformanceInfo>&& aMetrics) override;
 
   virtual bool
   DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;

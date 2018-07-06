@@ -345,10 +345,9 @@ partial namespace ChromeUtils {
   object createError(DOMString message, optional object? stack = null);
 
   /**
-   * Request performance metrics to the current process & all content processes.
+   * Request performance metrics to the current process & all ontent processes.
    */
-  [Throws]
-  Promise<sequence<PerformanceInfoDictionary>> requestPerformanceMetrics();
+  void requestPerformanceMetrics();
 
   /**
   * Returns a Promise containing a sequence of I/O activities
@@ -357,25 +356,6 @@ partial namespace ChromeUtils {
   Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
 };
 
-/**
- * Dictionaries duplicating IPDL types in dom/ipc/DOMTypes.ipdlh
- * Used by requestPerformanceMetrics
- */
-dictionary CategoryDispatchDictionary
-{
-  unsigned short category = 0;
-  unsigned short count = 0;
-};
-
-dictionary PerformanceInfoDictionary {
-  DOMString host = "";
-  unsigned long pid = 0;
-  unsigned long long wid = 0;
-  unsigned long long pwid = 0;
-  unsigned long long duration = 0;
-  boolean worker = false;
-  sequence<CategoryDispatchDictionary> items = [];
-};
 
 /**
  * Used by requestIOActivity() to return the number of bytes
