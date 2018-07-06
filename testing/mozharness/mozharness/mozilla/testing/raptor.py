@@ -170,25 +170,42 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
         # mozharness/base/script.py.self.platform_name will return one of:
         # 'linux64', 'linux', 'macosx', 'win64', 'win32'
 
+        base_url = "http://commondatastorage.googleapis.com/chromium-browser-snapshots"
+
+        # note: temporarily use a specified chromium revision number to download; however
+        # in the future we will be using a fetch task to get a new chromium (Bug 1476372)
+
         if 'mac' in self.platform_name():
-            chrome_archive_file = "googlechrome.dmg"
-            chrome_url = "https://dl.google.com/chrome/mac/stable/GGRO/%s" % chrome_archive_file
-            self.chrome_path = os.path.join(self.chrome_dest, 'Google Chrome.app',
-                                            'Contents', 'MacOS', 'Google Chrome')
+            # for now hardcoding a revision; but change this to update to newer version; from:
+            # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE
+            chromium_rev = "575625"
+            chrome_archive_file = "chrome-mac.zip"
+            chrome_url = "%s/Mac/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
+            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-mac', 'Chromium.app',
+                                            'Contents', 'MacOS', 'Chromium')
 
         elif 'linux' in self.platform_name():
-            chrome_archive_file = "google-chrome-stable_current_amd64.deb"
-            chrome_url = "https://dl.google.com/linux/direct/%s" % chrome_archive_file
-            self.chrome_path = os.path.join(self.chrome_dest, 'opt', 'google',
-                                            'chrome', 'google-chrome')
+            # for now hardcoding a revision; but change this to update to newer version; from:
+            # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE
+            chromium_rev = "575640"
+            chrome_archive_file = "chrome-linux.zip"
+            chrome_url = "%s/Linux_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
+            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-linux', 'chrome')
 
         else:
             # windows 7/10
+            # for now hardcoding a revision; but change this to update to newer version; from:
+            # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE
+            chromium_rev = "575637"
+            chrome_archive_file = "chrome-win32.zip"  # same zip name for win32/64
+
+            # url is different for win32/64
             if '64' in self.platform_name():
-                chrome_archive_file = "standalonesetup64.exe"
+                chrome_url = "%s/Win_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
             else:
-                chrome_archive_file = "standalonesetup.exe"
-            chrome_url = "https://dl.google.com/chrome/install/%s" % chrome_archive_file
+                chrome_url = "%s/Win_x32/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
+
+            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-win32', 'Chrome.exe')
 
         chrome_archive = os.path.join(self.chrome_dest, chrome_archive_file)
 
@@ -205,28 +222,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             self.download_file(chrome_url, parent_dir=self.chrome_dest)
 
         commands = []
-
-        if 'mac' in self.platform_name():
-            # open the chrome dmg to have it mounted
-            commands.append(["open", chrome_archive_file])
-
-            # then extract/copy app from mnt to our folder
-            commands.append(["cp", "-r", "/Volumes/Google Chrome/Google Chrome.app", "."])
-
-        elif 'linux' in self.platform_name():
-            # on linux in order to avoid needing sudo, we unpack the google chrome deb
-            # manually using ar, and then unpack the contents of the ar after that
-            commands.append(["ar", "x", chrome_archive_file])
-
-            # now we have the google chrome .deb file unpacked using ar, we need to
-            # unpack the tar.xz file that was inside the .deb
-            commands.append(['tar', '-xJf',
-                            os.path.join(self.chrome_dest, 'data.tar.xz'),
-                            '-C', self.chrome_dest])
-
-        else:
-            # TODO: Bug 1473389 - finish this for windows 7 (x32) and winows 10 (x64)
-            pass
+        commands.append(['unzip', '-q', '-o', chrome_archive_file, '-d', self.chrome_dest])
 
         # now run the commands to unpack / install google chrome
         for next_command in commands:
