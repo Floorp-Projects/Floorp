@@ -945,13 +945,13 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync())) {
         genObj = GetGeneratorObjectForFrame(cx, frame);
         if (genObj) {
-            if (!genObj->isClosed() && genObj->isSuspended()) {
+            if (!genObj->isBeforeInitialYield() && !genObj->isClosed() && genObj->isSuspended()) {
                 yieldAwaitIndex =
                     genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
                 genObj->setRunning();
             } else {
                 // We're returning or throwing, not yielding or awaiting. The
-                // generator is already closed.
+                // generator is already closed, if it was ever exposed at all.
                 genObj = nullptr;
             }
         }
@@ -1439,19 +1439,6 @@ static bool
 CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleValue>& maybeThisv,
                      ResumeMode resumeMode, MutableHandleValue vp)
 {
-    if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame()) {
-        // Don't let a { return: ... } resumption value make a generator
-        // function violate the iterator protocol. The return value from
-        // such a frame must have the form { done: <bool>, value: <anything> }.
-        RootedFunction callee(cx, frame.callee());
-        if (callee->isGenerator()) {
-            if (!CheckGeneratorResumptionValue(cx, vp)) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_YIELD);
-                return false;
-            }
-        }
-    }
-
     if (maybeThisv.isSome()) {
         const HandleValue& thisv = maybeThisv.ref();
         if (resumeMode == ResumeMode::Return && vp.isPrimitive()) {
@@ -1467,6 +1454,45 @@ CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleVa
         }
     }
     return true;
+}
+
+static void
+AdjustGeneratorResumptionValue(JSContext* cx, AbstractFramePtr frame,
+                               ResumeMode& resumeMode, MutableHandleValue vp)
+{
+    if (resumeMode == ResumeMode::Return &&
+        frame &&
+        frame.isFunctionFrame() &&
+        frame.callee()->isGenerator())
+    {
+        // Treat `{return: <value>}` like a `return` statement. For generators,
+        // that means doing the work below. It's only what the debuggee would
+        // do for an ordinary `return` statement--using a few bytecode
+        // instructions--and it's simpler to do the work manually than to count
+        // on that bytecode sequence existing in the debuggee, somehow jump to
+        // it, and then avoid re-entering the debugger from it.
+        Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+        if (genObj && !genObj->isBeforeInitialYield()) {
+            // 1.  `return <value>` creates and returns a new object,
+            //     `{value: <value>, done: true}`.
+            JSObject *pair = CreateIterResultObject(cx, vp, true);
+            if (!pair) {
+                // Out of memory in debuggee code. Arrange for this to propagate.
+                MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
+                cx->clearPendingException();
+                resumeMode = ResumeMode::Throw;
+                return;
+            }
+            vp.setObject(*pair);
+
+            // 2.  The generator must be closed.
+            GeneratorObject::finalSuspend(genObj);
+        } else {
+            // We're before the initial yield. Carry on with the forced return.
+            // The debuggee will see a call to a generator returning the
+            // non-generator value *vp.
+        }
+    }
 }
 
 ResumeMode
@@ -1581,6 +1607,7 @@ Debugger::leaveDebugger(Maybe<AutoRealm>& ar,
         resumeMode = ResumeMode::Terminate;
         vp.setUndefined();
     }
+    AdjustGeneratorResumptionValue(cx, frame, resumeMode, vp);
 
     return resumeMode;
 }

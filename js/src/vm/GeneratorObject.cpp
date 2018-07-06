@@ -273,37 +273,6 @@ GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global)
     return true;
 }
 
-MOZ_MUST_USE bool
-js::CheckGeneratorResumptionValue(JSContext* cx, HandleValue v)
-{
-    // yield/return value should be an Object.
-    if (!v.isObject())
-        return false;
-
-    JSObject* obj = &v.toObject();
-
-    // It should have `done` data property with boolean value.
-    Value doneVal;
-    if (!GetPropertyPure(cx, obj, NameToId(cx->names().done), &doneVal))
-        return false;
-    if (!doneVal.isBoolean())
-        return false;
-
-    // It should have `value` data property, but the type doesn't matter
-    JSObject* ignored;
-    PropertyResult prop;
-    if (!LookupPropertyPure(cx, obj, NameToId(cx->names().value), &ignored, &prop))
-        return false;
-    if (!prop)
-        return false;
-    if (!prop.isNativeProperty())
-        return false;
-    if (!prop.shape()->hasDefaultGetter())
-        return false;
-
-    return true;
-}
-
 bool
 GeneratorObject::isAfterYield()
 {
