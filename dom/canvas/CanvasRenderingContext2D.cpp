@@ -3997,6 +3997,12 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
   CanvasBidiProcessor()
     : nsBidiPresUtils::BidiProcessor()
+    , mCtx(nullptr)
+    , mFontgrp(nullptr)
+    , mAppUnitsPerDevPixel(0)
+    , mOp(CanvasRenderingContext2D::TextDrawOperation::FILL)
+    , mTextRunFlags()
+    , mDoMeasureBoundingBox(false)
   {
     if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
       mMissingFonts = new gfxMissingFontRecorder();
