@@ -558,8 +558,10 @@ public:
   size_t sizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t n = 0;
-    for (ConstRawType t = getFirst(); t; t = t->getNext()) {
+    ConstRawType t = getFirst();
+    while (t) {
       n += aMallocSizeOf(t);
+      t = static_cast<const LinkedListElement<T>*>(t)->getNext();
     }
     return n;
   }
