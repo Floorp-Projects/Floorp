@@ -124,6 +124,7 @@ def lint(paths, config, **lintargs):
         os.path.join(bindir, 'flake8'),
         '--format', '{"path":"%(path)s","lineno":%(row)s,'
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
+        '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
     ]
 
     fix_cmdargs = [

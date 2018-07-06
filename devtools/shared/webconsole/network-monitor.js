@@ -1251,6 +1251,7 @@ NetworkMonitor.prototype = {
         charset: charset,
         sentBody: null,
         url: channel.URI.spec,
+        headersSize: null,
         // needed for host specific security info
         hostname: channel.URI.host,
         discardRequestBody: !this.saveRequestAndResponseBodies,

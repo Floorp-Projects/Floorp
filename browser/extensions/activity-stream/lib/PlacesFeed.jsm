@@ -293,7 +293,7 @@ class PlacesFeed {
         break;
       }
       case at.BOOKMARK_URL:
-        NewTabUtils.activityStreamLinks.addBookmark(action.data, action._target.browser);
+        NewTabUtils.activityStreamLinks.addBookmark(action.data, action._target.browser.ownerGlobal);
         break;
       case at.DELETE_BOOKMARK_BY_ID:
         NewTabUtils.activityStreamLinks.deleteBookmark(action.data);

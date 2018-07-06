@@ -269,6 +269,16 @@
             "description": "The cipher suite used in this request if state is \"secure\".",
             "optional": true
           },
+          "keaGroupName": {
+            "type": "string",
+            "description": "The key exchange algorithm used in this request if state is \"secure\".",
+            "optional": true
+          },
+          "signatureSchemeName": {
+            "type": "string",
+            "description": "The signature scheme used in this request if state is \"secure\".",
+            "optional": true
+          },
           "certificates": {
             "description": "Certificate data if state is \"secure\".  Will only contain one entry unless <code>certificateChain</code> is passed as an option.",
             "type": "array",

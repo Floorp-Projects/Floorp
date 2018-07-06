@@ -30,8 +30,9 @@ types.addDictType("browsingContextTarget.listframes", {
 types.addDictType("browsingContextTarget.window", {
   id: "string",
   parentID: "nullable:string",
-  url: "string",
-  title: "string"
+  url: "nullable:string", // should be present if not destroying
+  title: "nullable:string", // should be present if not destroying
+  destroy: "nullable:boolean" // not present if not destroying
 });
 
 types.addDictType("browsingContextTarget.workers", {
@@ -110,6 +111,28 @@ const browsingContextTargetSpecPrototype = {
       response: {}
     }
   },
+  events: {
+    tabNavigated: {
+      type: "tabNavigated",
+      url: Option(0, "string"),
+      title: Option(0, "string"),
+      nativeConsoleAPI: Option(0, "boolean"),
+      state: Option(0, "string"),
+      isFrameSwitching: Option(0, "boolean")
+    },
+    frameUpdate: {
+      type: "frameUpdate",
+      frames: Option(0, "nullable:array:browsingContextTarget.window"),
+      selected: Option(0, "nullable:number"),
+      destroyAll: Option(0, "nullable:boolean")
+    },
+    tabDetached: {
+      type: "tabDetached"
+    },
+    workerListChanged: {
+      type: "workerListChanged"
+    }
+  }
 };
 
 const browsingContextTargetSpec = generateActorSpec(browsingContextTargetSpecPrototype);
