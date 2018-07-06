@@ -2921,14 +2921,7 @@ js::TenuringTracer::insertIntoObjectFixupList(RelocationOverlay* entry) {
 template <typename T>
 inline T*
 js::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
-    TenuredCell* t = zone->arenas.allocateFromFreeList(kind, Arena::thingSize(kind));
-    if (!t) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        t = runtime()->gc.refillFreeListInGC(zone, kind);
-        if (!t)
-            oomUnsafe.crash(ChunkSize, "Failed to allocate object while tenuring.");
-    }
-    return static_cast<T*>(static_cast<Cell*>(t));
+    return static_cast<T*>(static_cast<Cell*>(AllocateCellInGC(zone, kind)));
 }
 
 JSObject*
@@ -3135,14 +3128,7 @@ js::TenuringTracer::moveToTenured(JSString* src)
     Zone* zone = src->zone();
     zone->tenuredStrings++;
 
-    TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
-    if (!t) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        t = runtime()->gc.refillFreeListInGC(zone, dstKind);
-        if (!t)
-            oomUnsafe.crash(ChunkSize, "Failed to allocate string while tenuring.");
-    }
-    JSString* dst = reinterpret_cast<JSString*>(t);
+    JSString* dst = allocTenured<JSString>(zone, dstKind);
     tenuredSize += moveStringToTenured(dst, src, dstKind);
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);

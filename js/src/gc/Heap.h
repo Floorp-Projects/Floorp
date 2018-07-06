@@ -421,6 +421,8 @@ class Arena
     void unmarkAll();
     void unmarkPreMarkedFreeCells();
 
+    void arenaAllocatedDuringGC();
+
 #ifdef DEBUG
     void checkNoMarkedFreeCells();
 #endif
