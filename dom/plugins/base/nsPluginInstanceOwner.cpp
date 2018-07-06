@@ -1471,6 +1471,19 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(Event* aFocusEvent)
 
 nsresult nsPluginInstanceOwner::ProcessKeyPress(Event* aKeyEvent)
 {
+  // ProcessKeyPress() may be called twice with same eKeyPress event.  One is
+  // by the event listener in the default event group and the other is by the
+  // event listener in the system event group.  When this is called in the
+  // latter case and the event must be fired in the default event group too,
+  // we don't need to do nothing anymore.
+  // XXX Do we need to check whether the document is in chrome?  In strictly
+  //     speaking, it must be yes.  However, our UI must not use plugin in
+  //     chrome.
+  if (!aKeyEvent->WidgetEventPtr()->mFlags.mOnlySystemGroupDispatchInContent &&
+      aKeyEvent->WidgetEventPtr()->mFlags.mInSystemGroup) {
+    return NS_OK;
+  }
+
 #ifdef XP_MACOSX
   return DispatchKeyToPlugin(aKeyEvent);
 #else
@@ -2548,6 +2561,7 @@ nsPluginInstanceOwner::Destroy()
   content->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this, false);
   content->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, false);
   content->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, true);
+  content->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("drop"), this, true);
@@ -2875,7 +2889,11 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
                              false);
   aContent->AddEventListener(NS_LITERAL_STRING("mouseout"), this, false,
                              false);
+  // "keypress" event should be handled when it's in the default event group
+  // if the event is fired in content.  Otherwise, it should be handled when
+  // it's in the system event group.
   aContent->AddEventListener(NS_LITERAL_STRING("keypress"), this, true);
+  aContent->AddSystemEventListener(NS_LITERAL_STRING("keypress"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("drop"), this, true);
