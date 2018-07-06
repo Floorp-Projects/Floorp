@@ -399,6 +399,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
                      newState.iterationStart !== oldState.iterationStart ||
                      newState.duration !== oldState.duration ||
                      newState.endDelay !== oldState.endDelay ||
+                     newState.direction !== oldState.direction ||
                      newState.playbackRate !== oldState.playbackRate;
         break;
       }
