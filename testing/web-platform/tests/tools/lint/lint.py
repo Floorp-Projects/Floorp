@@ -263,6 +263,52 @@ def check_css_globally_unique(repo_root, paths):
     return errors
 
 
+def check_meta_yml(repo_root, paths):
+    """
+    Checks that all top-level directories have META.yml files.
+
+    :param repo_root: the repository root
+    :param paths: list of all paths
+    :returns: a list of errors found in ``paths``
+
+    """
+    # dirs represents whether there's a META.yml file, value is a boolean.
+    dirs = {}
+    errors = []
+    reviewer_in_subdirs = [
+        ".well-known",
+        "css",
+        "css/vendor-imports",
+    ]
+
+    for path in paths:
+        if os.name == "nt":
+            path = path.replace("\\", "/")
+
+        source_file = SourceFile(repo_root, path, "/")
+        if not source_file.dir_path:
+            continue  # Skip top-level files
+        parts = source_file.dir_path.split(os.path.sep)
+
+        level = 0
+        for dir in reviewer_in_subdirs:
+            if path.startswith(dir):
+                level = dir.count("/") + 1
+        if len(parts) <= level:
+            continue
+        key = "/".join(parts[:level + 1])
+        if key not in dirs:
+            dirs[key] = False
+        if path.endswith("/META.yml") and len(parts) == level + 1:
+            dirs[key] = True
+
+    for dir in dirs:
+        if dirs[dir] is False:
+            errors.append(("MISSING-META-YML", "Directory is missing META.yml file.", dir, None))
+
+    return errors
+
+
 def parse_whitelist(f):
     """
     Parse the whitelist file given by `f`, and return the parsed structure.
@@ -426,6 +472,26 @@ def check_regexp_line(repo_root, path, f):
 
     return errors
 
+meta_yml_extensions_pattern = re.compile(b"^[a-zA-z0-9_]+:$")
+meta_yml_item_pattern = re.compile(b"^  - [a-zA-Z0-9-]+$")
+
+def check_meta_yml_contents(repo_root, path, contents):
+    errors = []
+    for i, line in enumerate(contents.splitlines()):
+        if i == 0:
+            if line != b"suggested_reviewers:":
+                errors.append(("INVALID-META-YML", "First line was not `suggested_reviewers:`", path, i+1))
+        else:
+            if meta_yml_extensions_pattern.match(line):
+                break  # Allow extensions in META.yml without having to update the linter.
+            if not meta_yml_item_pattern.match(line):
+                errors.append(("INVALID-META-YML", "Expected item with username", path, i+1))
+
+    if i < 1:
+        errors.append(("INVALID-META-YML", "Expected item with username", path, i+1))
+
+    return errors
+
 def check_parsed(repo_root, path, f):
     source_file = SourceFile(repo_root, path, "/", contents=f.read())
 
@@ -441,6 +507,9 @@ def check_parsed(repo_root, path, f):
             not source_file.name_is_reference and
             not source_file.spec_links):
             return [("MISSING-LINK", "Testcase file must have a link to a spec", path, None)]
+
+    if source_file.filename == "META.yml":
+        return check_meta_yml_contents(repo_root, path, source_file.contents)
 
     if source_file.name_is_non_test:
         return []
@@ -460,7 +529,9 @@ def check_parsed(repo_root, path, f):
     for reftest_node in source_file.reftest_nodes:
         href = reftest_node.attrib.get("href", "").strip(space_chars)
         parts = urlsplit(href)
-        if (parts.scheme or parts.netloc) and parts != urlsplit("about:blank"):
+        if parts == urlsplit("about:blank"):
+            continue
+        if parts.scheme or parts.netloc:
             errors.append(("ABSOLUTE-URL-REF",
                      "Reference test with a reference file specified via an absolute URL: '%s'" % href, path, None))
             continue
@@ -902,7 +973,7 @@ def lint(repo_root, paths, output_format):
     return sum(itervalues(error_count))
 
 path_lints = [check_path_length, check_worker_collision, check_ahem_copy]
-all_paths_lints = [check_css_globally_unique]
+all_paths_lints = [check_css_globally_unique, check_meta_yml]
 file_lints = [check_regexp_line, check_parsed, check_python_ast, check_script_metadata]
 
 # Don't break users of the lint that don't have git installed.
