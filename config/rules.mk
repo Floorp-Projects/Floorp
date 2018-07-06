@@ -1031,7 +1031,7 @@ endif # HOST_RUST_PROGRAMS
 
 $(SOBJS):
 	$(REPORT_BUILD)
-	$(AS) -o $@ $(SFLAGS) $($(notdir $<)_FLAGS) -c $<
+	$(AS) $(ASOUTOPTION)$@ $(SFLAGS) $($(notdir $<)_FLAGS) -c $<
 
 $(CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)
