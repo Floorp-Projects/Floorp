@@ -598,7 +598,7 @@ JS::InitSelfHostedCode(JSContext* cx)
     if (!rt->initSelfHosting(cx))
         return false;
 
-    if (!rt->parentRuntime && !rt->transformToPermanentAtoms(cx))
+    if (!rt->parentRuntime && !rt->initMainAtomsTables(cx))
         return false;
 
     return true;

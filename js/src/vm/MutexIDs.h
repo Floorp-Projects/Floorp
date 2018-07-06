@@ -21,6 +21,7 @@
   _(ShellArrayBufferMailbox,     100) \
                                       \
   _(RuntimeExclusiveAccess,      200) \
+  _(AtomsTable,                  200) \
                                       \
   _(WasmInitBuiltinThunks,       250) \
   _(WasmLazyStubsTier1,          250) \
