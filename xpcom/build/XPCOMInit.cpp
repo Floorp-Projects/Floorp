@@ -504,6 +504,10 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   // We are not shutting down
   gXPCOMShuttingDown = false;
 
+  // Initialize the available memory tracker before other threads have had a
+  // chance to start up, because the initialization is not thread-safe.
+  mozilla::AvailableMemoryTracker::Init();
+
 #ifdef XP_UNIX
   // Discover the current value of the umask, and save it where
   // nsSystemInfo::Init can retrieve it when necessary.  There is no way
@@ -715,7 +719,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   mozilla::ScriptPreloader::GetSingleton();
   mozilla::scache::StartupCache::GetSingleton();
-  mozilla::AvailableMemoryTracker::Init();
+  mozilla::AvailableMemoryTracker::Activate();
 
   // Notify observers of xpcom autoregistration start
   NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY,
