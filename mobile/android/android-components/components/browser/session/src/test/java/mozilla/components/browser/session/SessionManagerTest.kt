@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.mock
@@ -12,6 +13,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -243,6 +245,7 @@ class SessionManagerTest {
         val session2 = Session("https://www.firefox.com")
         val session3 = Session("https://wiki.mozilla.org")
         val session4 = Session("https://github.com/mozilla-mobile/android-components")
+        session4.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
 
         manager.add(session1)
         manager.add(session2)
@@ -344,5 +347,32 @@ class SessionManagerTest {
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+    }
+
+    @Test
+    fun `removeSessions retains customtab sessions`() {
+        val manager = SessionManager(mock())
+
+        val session1 = Session("https://www.mozilla.org")
+        val session2 = Session("https://getPocket.com")
+        val session3 = Session("https://www.firefox.com")
+        session2.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(session3)
+
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
+
+        assertEquals(3, manager.size)
+
+        manager.removeSessions()
+
+        assertEquals(1, manager.size)
+        assertEquals(session2, manager.all[0])
+
+        verify(observer).onAllSessionsRemoved()
+        verifyNoMoreInteractions(observer)
     }
 }

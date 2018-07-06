@@ -21,7 +21,7 @@ class SessionManager(
     private var selectedIndex: Int = NO_SELECTION
 
     /**
-     * Returns the number of values.
+     * Returns the number of session including CustomTab sessions.
      */
     val size: Int
         get() = synchronized(values) { values.size }
@@ -44,7 +44,7 @@ class SessionManager(
         get() = synchronized(values) { values.filter { !it.isCustomTabSession() } }
 
     /**
-     * Returns a list of all active sessions.
+     * Returns a list of all active sessions (including CustomTab sessions).
      */
     val all: List<Session>
         get() = synchronized(values) { values.toList() }
@@ -145,17 +145,26 @@ class SessionManager(
     }
 
     /**
-     * Removes all sessions.
+     * Removes all sessions but CustomTab sessions.
      */
-    fun removeAll() = synchronized(values) {
-        values.forEach { session ->
-            unlink(session)
+    fun removeSessions() = synchronized(values) {
+        sessions.forEach {
+            unlink(it)
+            values.remove(it)
         }
 
+        selectedIndex = NO_SELECTION
+        notifyObservers { onAllSessionsRemoved() }
+    }
+
+    /**
+     * Removes all sessions including CustomTab sessions.
+     */
+    fun removeAll() = synchronized(values) {
+        values.forEach { unlink(it) }
         values.clear()
 
         selectedIndex = NO_SELECTION
-
         notifyObservers { onAllSessionsRemoved() }
     }
 
@@ -205,9 +214,9 @@ class SessionManager(
 
         /**
          * All sessions have been removed. Note that this will callback will be invoked whenever
-         * <code>removeAll()</code> has been called on the <code>SessionManager</code>. This
-         * callback will NOT be invoked when just the last session has been removed by calling
-         * <code>remove()</code> on the <code>SessionManager</code>.
+         * <code>removeAll()</code> or <code>removeSessions</code> have been called on the
+         * <code>SessionManager</code>. This callback will NOT be invoked when just the last
+         * session has been removed by calling <code>remove()</code> on the <code>SessionManager</code>.
          */
         fun onAllSessionsRemoved() = Unit
     }
