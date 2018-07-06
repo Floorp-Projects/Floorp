@@ -291,6 +291,7 @@ public:
       mValue(value)
   {}
 
+  // TODO: remove this, Bug 1469702
   explicit SdpDtlsMessageAttribute(const std::string& unparsed)
     : SdpAttribute(kDtlsMessageAttribute),
       mRole(kClient)
@@ -303,6 +304,8 @@ public:
   }
 
   virtual void Serialize(std::ostream& os) const override;
+
+  // TODO: remove this, Bug 1469702
   bool Parse(std::istream& is, std::string* error);
 
   Role mRole;

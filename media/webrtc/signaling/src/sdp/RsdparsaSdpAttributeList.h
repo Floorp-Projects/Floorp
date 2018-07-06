@@ -123,6 +123,7 @@ private:
   void LoadIdentity(RustAttributeList* attributeList);
   void LoadIceOptions(RustAttributeList* attributeList);
   void LoadFingerprint(RustAttributeList* attributeList);
+  void LoadDtlsMessage(RustAttributeList* attributeList);
   void LoadSetup(RustAttributeList* attributeList);
   void LoadSsrc(RustAttributeList* attributeList);
   void LoadRtpmap(RustAttributeList* attributeList);
