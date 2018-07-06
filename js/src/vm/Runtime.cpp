@@ -123,10 +123,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     scriptEnvironmentPreparer(nullptr),
     ctypesActivityCallback(nullptr),
     windowProxyClass_(nullptr),
-    exclusiveAccessLock(mutexid::RuntimeExclusiveAccess),
-#ifdef DEBUG
-    activeThreadHasExclusiveAccess(false),
-#endif
     scriptDataLock(mutexid::RuntimeScriptData),
 #ifdef DEBUG
     activeThreadHasScriptDataAccess(false),
