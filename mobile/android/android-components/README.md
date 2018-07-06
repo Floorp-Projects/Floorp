@@ -165,6 +165,8 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Ktx**](components/support/ktx/README.md) - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
+* ⚪ [**Test**](components/support/test/README.md) - A collection of helpers for testing components.
+
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
 # Sample apps

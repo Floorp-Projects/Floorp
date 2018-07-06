@@ -6,6 +6,7 @@ package mozilla.components.browser.tabstray
 
 import android.widget.LinearLayout
 import mozilla.components.browser.session.Session
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

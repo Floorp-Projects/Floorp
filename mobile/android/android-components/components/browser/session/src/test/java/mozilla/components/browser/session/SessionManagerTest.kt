@@ -4,9 +4,9 @@
 
 package mozilla.components.browser.session
 
-import mozilla.components.browser.session.helper.mock
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

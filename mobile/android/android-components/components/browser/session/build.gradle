@@ -32,6 +32,7 @@ dependencies {
     // consumer to have to manually import "utils".
     api project(':support-utils')
 
+    testImplementation project(':support-test')
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"

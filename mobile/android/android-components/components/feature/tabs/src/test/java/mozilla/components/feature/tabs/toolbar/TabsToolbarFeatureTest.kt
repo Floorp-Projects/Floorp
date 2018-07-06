@@ -5,10 +5,10 @@
 package mozilla.components.feature.tabs.toolbar
 
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.feature.tabs.tabstray.mock
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -23,11 +23,3 @@ class TabsToolbarFeatureTest {
         verify(toolbar).addBrowserAction(any())
     }
 }
-
-private fun <T> any(): T {
-    Mockito.any<T>()
-    return uninitialized()
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun <T> uninitialized(): T = null as T

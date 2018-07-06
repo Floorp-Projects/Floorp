@@ -104,6 +104,9 @@ project(':service-telemetry').projectDir = new File('components/service/telemetr
 include ':support-ktx'
 project(':support-ktx').projectDir = new File(rootDir, 'components/support/ktx')
 
+include ':support-test'
+project(':support-test').projectDir = new File(rootDir, 'components/support/test')
+
 include ':support-utils'
 project(':support-utils').projectDir = new File(rootDir, 'components/support/utils')
 

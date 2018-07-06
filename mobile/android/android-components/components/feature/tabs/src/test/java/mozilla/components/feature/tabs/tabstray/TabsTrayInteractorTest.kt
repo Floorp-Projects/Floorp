@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs.tabstray
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify

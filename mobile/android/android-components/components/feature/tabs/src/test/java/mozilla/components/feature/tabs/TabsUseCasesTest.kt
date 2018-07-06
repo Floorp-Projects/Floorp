@@ -6,8 +6,8 @@ package mozilla.components.feature.tabs
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.tabs.tabstray.mock
 import org.junit.Assert.assertEquals
+import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify

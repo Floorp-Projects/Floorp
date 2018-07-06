@@ -9,11 +9,11 @@ import android.view.View
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -197,9 +197,3 @@ private class MockedTabsTray : TabsTray {
 
     override fun notifyObservers(block: TabsTray.Observer.() -> Unit) {}
 }
-
-/**
- * Dynamically create a mock object. This method is helpful when creating mocks of classes using
- * generics.
- */
-inline fun <reified T : Any> mock(): T = Mockito.mock(T::class.java)!!

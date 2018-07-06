@@ -45,6 +45,7 @@ dependencies {
     // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
     testImplementation project(':concept-engine')
 
+    testImplementation project(':support-test')
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"

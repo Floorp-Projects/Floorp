@@ -9,11 +9,11 @@ import android.view.View
 import android.widget.TextView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.support.test.mock
 import mozilla.components.support.utils.observer.ObserverRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -107,9 +107,3 @@ class TabViewHolderTest {
         verify(observer).onTabClosed(session)
     }
 }
-
-/**
- * Dynamically create a mock object. This method is helpful when creating mocks of classes using
- * generics.
- */
-inline fun <reified T : Any> mock(): T = Mockito.mock(T::class.java)!!
