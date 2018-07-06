@@ -196,20 +196,6 @@ WebRenderImageHost::SetCurrentTextureHost(TextureHost* aTexture)
     return;
   }
 
-  if (mWrBridge &&
-      !mUseAsyncImagePipeline &&
-      !!mCurrentTextureHost &&
-      mCurrentTextureHost != aTexture &&
-      mCurrentTextureHost->AsWebRenderTextureHost()) {
-    MOZ_ASSERT(mWrBridge->AsyncImageManager());
-    wr::PipelineId piplineId = mWrBridge->PipelineId();
-    wr::Epoch epoch = mWrBridge->WrEpoch();
-    mWrBridge->AsyncImageManager()->HoldExternalImage(
-      piplineId,
-      epoch,
-      mCurrentTextureHost->AsWebRenderTextureHost());
-  }
-
   mCurrentTextureHost = aTexture;
 }
 
