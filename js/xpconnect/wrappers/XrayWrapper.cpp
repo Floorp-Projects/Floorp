@@ -142,7 +142,7 @@ XrayAwareCalleeGlobal(JSObject* fun)
   MOZ_ASSERT(IsXrayWrapper(&v.toObject()));
 
   JSObject* xrayTarget = js::UncheckedUnwrap(&v.toObject());
-  return js::GetGlobalForObjectCrossCompartment(xrayTarget);
+  return JS::GetNonCCWObjectGlobal(xrayTarget);
 }
 
 JSObject*
