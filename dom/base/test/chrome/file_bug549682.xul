@@ -143,7 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     var wn = document.getElementById('ifr').contentWindow
       .getInterface(Ci.nsIWebNavigation);
     ok(wn, "Should have webnavigation");
-    var cfmm = wn.getInterface(Ci.nsIContentFrameMessageManager);
+    var cfmm = wn.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIContentFrameMessageManager);
     ok(cfmm, "Should have content messageManager");
 
     var didGetSyncMessage = false;

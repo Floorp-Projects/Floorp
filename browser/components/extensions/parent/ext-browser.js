@@ -34,7 +34,7 @@ const getSender = (extension, target, sender) => {
     // page-open listener below).
     tabId = sender.tabId;
     delete sender.tabId;
-  } else if (ExtensionCommon.instanceOf(target, "XULElement") ||
+  } else if (ExtensionCommon.instanceOf(target, "XULFrameElement") ||
              ExtensionCommon.instanceOf(target, "HTMLIFrameElement")) {
     tabId = tabTracker.getBrowserData(target).tabId;
   }

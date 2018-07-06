@@ -74,6 +74,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsICSSDeclaration.h"
 #include "nsLayoutUtils.h"
+#include "XULFrameElement.h"
 #include "XULPopupElement.h"
 
 #include "mozilla/dom/XULElementBinding.h"
@@ -176,6 +177,13 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
       nodeInfo->Equals(nsGkAtoms::panel) ||
       nodeInfo->Equals(nsGkAtoms::tooltip)) {
     return NS_NewXULPopupElement(nodeInfo.forget());
+  }
+
+  if (nodeInfo->Equals(nsGkAtoms::iframe) ||
+      nodeInfo->Equals(nsGkAtoms::browser) ||
+      nodeInfo->Equals(nsGkAtoms::editor)) {
+    already_AddRefed<mozilla::dom::NodeInfo> frameni = nodeInfo.forget();
+    return new XULFrameElement(frameni);
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());
