@@ -260,6 +260,15 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   return true;
 }
 
+RefPtr<TextureClient>
+ImageClientSingle::GetForwardedTexture()
+{
+  if (mBuffers.Length() == 0) {
+    return nullptr;
+  }
+  return mBuffers[0].mTextureClient;
+}
+
 bool
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
