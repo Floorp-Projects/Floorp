@@ -20,11 +20,11 @@ add_task(async function() {
   });
   await win2Promise;
 
-  var tab1 = win1.gBrowser.addTab(URL);
+  var tab1 = BrowserTestUtils.addTab(win1.gBrowser, URL);
   await BrowserTestUtils.browserLoaded(win1.gBrowser.getBrowserForTab(tab1));
   var browser1 = gBrowser.getBrowserForTab(tab1);
 
-  var tab2 = win2.gBrowser.addTab(URL);
+  var tab2 = BrowserTestUtils.addTab(win2.gBrowser, URL);
   await BrowserTestUtils.browserLoaded(win2.gBrowser.getBrowserForTab(tab2));
   var browser2 = gBrowser.getBrowserForTab(tab2);
 

@@ -116,7 +116,7 @@ function promiseNewWindow() {
 }
 
 async function createTabWithStorageData(urls, win = window) {
-  let tab = win.gBrowser.addTab();
+  let tab = BrowserTestUtils.addTab(win.gBrowser);
   let browser = tab.linkedBrowser;
 
   for (let url of urls) {

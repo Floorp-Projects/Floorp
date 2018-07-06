@@ -12,7 +12,7 @@ add_task(async function test() {
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_protocolhandler_page.html";
 
   let doTest = async function(aIsPrivateMode, aWindow) {
-    let tab = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab(testURI);
+    let tab = aWindow.gBrowser.selectedTab = BrowserTestUtils.addTab(aWindow.gBrowser, testURI);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     let promiseFinished = PromiseUtils.defer();
