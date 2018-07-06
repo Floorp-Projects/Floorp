@@ -28,7 +28,6 @@ export default class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   connectedCallback() {
-    this.tabIndex = 0;
     this.appendChild(this.popupBox);
     this.render();
   }
