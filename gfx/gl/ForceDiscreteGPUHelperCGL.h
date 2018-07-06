@@ -18,6 +18,7 @@ class ForceDiscreteGPUHelperCGL
 
 public:
     ForceDiscreteGPUHelperCGL()
+        : mPixelFormatObj(nullptr)
     {
         // the code in this function is taken from Chromium, src/ui/gfx/gl/gl_context_cgl.cc, r122013
         // BSD-style license, (c) The Chromium Authors

@@ -247,6 +247,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mCurrentImage(0)
     , mIterationCallback(nullptr)
     , mIterationCallbackData(nullptr)
+    , mTileSize(0)
     , mRows(0)
     , mColumns(0)
     , mGL(aGL)
