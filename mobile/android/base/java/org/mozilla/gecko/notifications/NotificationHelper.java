@@ -23,6 +23,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -231,6 +232,7 @@ public final class NotificationHelper implements BundleEventListener {
         return res;
     }
 
+    @SuppressWarnings("NewApi")
     private void showNotification(final GeckoBundle message) {
         ThreadUtils.assertOnUiThread();
 
@@ -247,6 +249,10 @@ public final class NotificationHelper implements BundleEventListener {
         final int[] light = message.getIntArray(LIGHT_ATTR);
         if (light != null && light.length == 3) {
             builder.setLights(light[0], light[1], light[2]);
+        }
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
         }
 
         final boolean ongoing = message.getBoolean(ONGOING_ATTR);

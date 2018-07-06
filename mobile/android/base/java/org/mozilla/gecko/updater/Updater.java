@@ -6,6 +6,7 @@
 package org.mozilla.gecko.updater;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -28,6 +29,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoUpdateReceiver;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.permissions.Permissions;
@@ -211,6 +214,7 @@ public class Updater {
         }
     }
 
+    @SuppressLint("NewApi")
     private void showPermissionNotification() {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.fromParts("package", context.getPackageName(), null));
@@ -220,20 +224,24 @@ public class Updater {
         NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle()
                 .bigText(getString(R.string.updater_permission_text));
 
-        Notification notification = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setContentTitle(getString(R.string.updater_permission_title))
                 .setContentText(getString(R.string.updater_permission_text))
                 .setStyle(bigTextStyle)
                 .setAutoCancel(true)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setColor(ContextCompat.getColor(context, R.color.rejection_red))
-                .setContentIntent(pendingIntent)
-                .build();
+                .setContentIntent(pendingIntent);
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         NotificationManagerCompat.from(context)
-                .notify(R.id.updateServicePermissionNotification, notification);
+                .notify(R.id.updateServicePermissionNotification, builder.build());
     }
 
+    @SuppressLint("NewApi")
     private void startDownload(UpdateInfo info, int flags) {
         AutoDownloadPolicy policy = prefs.getAutoDownloadPolicy();
 
@@ -266,6 +274,10 @@ public class Updater {
             builder.setContentTitle(getString(R.string.updater_start_title));
             builder.setContentText(getString(R.string.updater_start_select));
             builder.setContentIntent(contentIntent);
+
+            if (!AppConstants.Versions.preO) {
+                builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            }
 
             notificationManager.notify(notificationId, builder.build());
 
@@ -303,6 +315,10 @@ public class Updater {
             builder.setContentTitle(getString(R.string.updater_apply_title));
             builder.setContentText(getString(R.string.updater_apply_select));
             builder.setContentIntent(contentIntent);
+
+            if (!AppConstants.Versions.preO) {
+                builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            }
 
             notificationManager.notify(notificationId, builder.build());
         }
@@ -432,6 +448,7 @@ public class Updater {
         showDownloadNotification(null);
     }
 
+    @SuppressLint("NewApi")
     private void showDownloadNotification(File downloadFile) {
 
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE);
@@ -453,10 +470,15 @@ public class Updater {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent);
 
+        if (!AppConstants.Versions.preO) {
+            notifBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
+
         notifBuilder.setProgress(100, 0, true);
         notificationManager.notify(notificationId, notifBuilder.build());
     }
 
+    @SuppressLint("NewApi")
     private void showDownloadFailure() {
         // Let the user restart the update process with a new JobIntentService
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE);
@@ -469,6 +491,10 @@ public class Updater {
         builder.setContentTitle(getString(R.string.updater_downloading_title_failed));
         builder.setContentText(getString(R.string.updater_downloading_retry));
         builder.setContentIntent(contentIntent);
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         notificationManager.notify(notificationId, builder.build());
     }

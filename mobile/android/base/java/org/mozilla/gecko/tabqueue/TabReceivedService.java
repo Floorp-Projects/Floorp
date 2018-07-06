@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,6 +22,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
@@ -39,6 +41,7 @@ public class TabReceivedService extends JobIntentService {
 
     private static final int MAX_NOTIFICATION_COUNT = 1000;
 
+    @SuppressLint("NewApi")
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
         // JobIntentServices doesn't keep the process alive so
@@ -64,6 +67,10 @@ public class TabReceivedService extends JobIntentService {
         builder.setAutoCancel(true);
         builder.setContentText(uri);
         builder.setContentIntent(contentIntent);
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         // Trigger "heads-up" notification mode on supported Android versions.
         builder.setPriority(NotificationCompat.PRIORITY_HIGH);

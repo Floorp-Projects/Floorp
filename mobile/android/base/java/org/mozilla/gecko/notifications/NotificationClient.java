@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.notifications;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -18,6 +19,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
@@ -136,6 +138,7 @@ public final class NotificationClient implements NotificationListener {
      * @param contentIntent  Intent used when the notification is clicked
      * @param deleteIntent   Intent used when the notification is closed
      */
+    @SuppressLint("NewApi")
     private void add(final String name, final String imageUrl, final String host,
                      final String alertTitle, final String alertText,
                      final PendingIntent contentIntent, final PendingIntent deleteIntent) {
@@ -150,6 +153,10 @@ public final class NotificationClient implements NotificationListener {
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(alertText)
                         .setSummaryText(host));
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         // Fetch icon.
         if (!imageUrl.isEmpty()) {
@@ -210,6 +217,7 @@ public final class NotificationClient implements NotificationListener {
      * @param progressMax   max progress of item being updated
      * @param alertText     text of the notification
      */
+    @SuppressLint("NewApi")
     public void update(final String name, final long progress,
                        final long progressMax, final String alertText) {
         Notification notification;
@@ -220,14 +228,18 @@ public final class NotificationClient implements NotificationListener {
             return;
         }
 
-        notification = new NotificationCompat.Builder(mContext)
+        final Notification.Builder notificationBuilder = new Notification.Builder(mContext)
                 .setContentText(alertText)
                 .setSmallIcon(notification.icon)
                 .setWhen(notification.when)
                 .setContentIntent(notification.contentIntent)
-                .setProgress((int) progressMax, (int) progress, false)
-                .build();
+                .setProgress((int) progressMax, (int) progress, false);
 
+        if (!AppConstants.Versions.preO) {
+            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
+
+        notification = notificationBuilder.build();
         add(name, notification);
     }
 
