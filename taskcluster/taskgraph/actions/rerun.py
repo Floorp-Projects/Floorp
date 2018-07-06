@@ -32,7 +32,7 @@ RERUN_STATES = ('exception', 'failed')
         'This only works on failed or exception tasks in the original taskgraph,'
         ' and is CoT friendly.'
     ),
-    order=1,
+    order=300,
     context=[{}],
     schema={
         'type': 'object',

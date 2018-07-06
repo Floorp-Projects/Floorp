@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
     description=('Take the label of the current task, '
                  'and trigger the task with that label '
                  'on previous pushes in the same project.'),
-    order=0,
+    order=200,
     context=[{}],  # This will be available for all tasks
     schema={
         'type': 'object',

@@ -34,7 +34,7 @@ task. You may need to wait for it to begin running.
     description=(
         'Create a a copy of the task that you can interact with'
     ),
-    order=1,
+    order=50,
     context=[{'worker-implementation': 'docker-worker'}],
     schema={
         'type': 'object',

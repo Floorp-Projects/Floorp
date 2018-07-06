@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
         'Purge any caches associated with this task '
         'across all workers of the same workertype as the task.'
     ),
-    order=100,
+    order=450,
     context=[{'worker-implementation': 'docker-worker'}]
 )
 def purge_caches_action(parameters, graph_config, input, task_group_id, task_id, task):
