@@ -417,6 +417,7 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define homeDir (param "HOME_PATH"))
   (define tempDir (param "DARWIN_USER_TEMP_DIR"))
+  (define cacheDir (param "DARWIN_USER_CACHE_DIR"))
   (define pluginPath (param "PLUGIN_BINARY_PATH"))
 
   (if (string=? shouldLog "TRUE")
@@ -571,6 +572,10 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   (define (tempDir-regex tempDir-relative-regex)
     (regex (string-append "^" (regex-quote tempDir)) tempDir-relative-regex))
 
+  ; Utility for allowing access to specific files within the cache dir
+  (define (cache-literal cache-relative-literal)
+    (literal (string-append cacheDir cache-relative-literal)))
+
   ; Read-only paths
   (allow file-read*
       (literal "/")
@@ -643,7 +648,9 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (global-name "com.apple.inputmethodkit.launcher")
       (global-name "com.apple.inputmethodkit.getxpcendpoint")
       (global-name "com.apple.decalog4.incoming")
-      (global-name "com.apple.windowserver.active"))
+      (global-name "com.apple.windowserver.active")
+      (global-name "com.apple.trustd.agent")
+      (global-name "com.apple.ocspd"))
   ; bug 1475707
   (if (= macosMinorVersion 9)
      (allow mach-lookup (global-name "com.apple.xpcd")))
@@ -765,6 +772,19 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (literal "/Library/PreferencePanes/Flash Player.prefPane")
       (home-library-literal "/PreferencePanes/Flash Player.prefPane")
       (home-library-regex "/Application Support/Macromedia/ss\.(cfg|cfn|sgn)$"))
+
+  (allow file-read*
+      (literal "/Library/Preferences/com.apple.security.plist")
+      (subpath "/private/var/db/mds"))
+  ; Tests revealed file-write-{data,create,flags} required for some encrypted
+  ; video playback. Allowing file-write* to match system profiles.
+  (allow file-read* file-write*
+      (cache-literal "/mds/mds.lock")
+      (cache-literal "/mds/mdsDirectory.db_")
+      (cache-literal "/mds/mdsDirectory.db_")
+      (cache-literal "/mds/mdsObject.db")
+      (cache-literal "/mds/mdsObject.db_")
+      (require-all (vnode-type REGULAR-FILE)))
 
   (allow network-bind (local ip))
 
