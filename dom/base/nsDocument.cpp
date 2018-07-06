@@ -275,6 +275,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
+#include "NodeUbiReporting.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1575,6 +1576,13 @@ nsIDocument::IsAboutPage() const
   }
   return isAboutScheme;
 }
+
+void
+nsIDocument::ConstructUbiNode(void* storage)
+{
+  JS::ubi::Concrete<nsIDocument>::construct(storage, this);
+}
+
 
 nsDocument::~nsDocument()
 {
