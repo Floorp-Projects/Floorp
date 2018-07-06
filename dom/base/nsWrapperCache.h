@@ -41,7 +41,7 @@ class nsWindowRoot;
 // This may waste space for some other nsWrapperCache-derived objects that have
 // a 32-bit field as their first member, but those objects are unlikely to be as
 // numerous or performance-critical as DOM nodes.
-#if defined(_M_X64) || defined(__LP64__)
+#ifdef HAVE_64BIT_BUILD
 static_assert(sizeof(void*) == 8, "These architectures should be 64-bit");
 #define BOOL_FLAGS_ON_WRAPPER_CACHE
 #else
