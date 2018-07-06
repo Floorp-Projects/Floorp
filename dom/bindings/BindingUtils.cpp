@@ -2430,7 +2430,7 @@ GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
     }
   }
 
-  mGlobalJSObject = js::GetGlobalForObjectCrossCompartment(obj);
+  mGlobalJSObject = JS::GetNonCCWObjectGlobal(obj);
 }
 
 nsISupports*
@@ -3696,7 +3696,7 @@ GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
 
   if (protoID != prototypes::id::_ID_Count) {
     ProtoAndIfaceCache& protoAndIfaceCache =
-      *GetProtoAndIfaceCache(js::GetGlobalForObjectCrossCompartment(newTarget));
+      *GetProtoAndIfaceCache(JS::GetNonCCWObjectGlobal(newTarget));
     aDesiredProto.set(protoAndIfaceCache.EntrySlotMustExist(protoID));
     if (newTarget != originalNewTarget) {
       return JS_WrapObject(aCx, aDesiredProto);
