@@ -2460,6 +2460,13 @@ public:
     this->AppendElements(aOther);
   }
 
+  AutoTArray(self_type&& aOther)
+    : nsTArray<E>()
+  {
+    Init();
+    this->SwapElements(aOther);
+  }
+
   explicit AutoTArray(const base_type& aOther)
     : mAlign()
   {
@@ -2491,6 +2498,12 @@ public:
   self_type& operator=(const self_type& aOther)
   {
     base_type::operator=(aOther);
+    return *this;
+  }
+
+  self_type& operator=(self_type&& aOther)
+  {
+    base_type::operator=(std::move(aOther));
     return *this;
   }
 
