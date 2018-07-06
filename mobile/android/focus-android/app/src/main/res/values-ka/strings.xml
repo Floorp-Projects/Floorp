@@ -70,7 +70,7 @@
   <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_analytics_summary">გამოიყენება მონაცემთა აღრიცხვისთვის, დამუშავებისა და ისეთი მოქმედებების შესამოწმებლად, როგორიცაა თითის შეხება და გვერდის გადაადგილება</string>
   <string name="preference_privacy_block_social">სოც. ქსელების ელემენტების შეზღუდვა</string>
-  <string name="preference_privacy_block_social_summary">საიტებზე ჩაშენებულია, თქვენს გადაადგილებაზე თვალყურის მისადევნებლად ისეთი ელემენტების სახით, როგორიცაა მოწონების, ან გაზიარების ღილაკები</string>
+  <string name="preference_privacy_block_social_summary">თქვენს გადაადგილებაზე თვალყურის მისადევნებლად, საიტებზე განთავსებულია მოწონების, ან გაზიარების ღილაკების სახით</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
   <string name="preference_privacy_category_cookies">ფუნთუშების შეზღუდვა</string>

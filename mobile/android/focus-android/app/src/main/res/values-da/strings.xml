@@ -189,8 +189,15 @@
   <string name="site_security_icon_content_description">Sikkerhed for webstedet</string>
   <string name="preference_autocomplete_duplicate_url_error">URL\'en findes allerede</string>
   <string name="find_in_page">Find på side</string>
+  <string name="find_in_page_input">Find på siden</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d af %2$d</string>
+  <string name="accessibility_next_result">Find næste</string>
+  <string name="accessibility_previous_result">Find foregående</string>
+  <string name="accessibility_dismiss_find_in_page">Deaktiver find på siden</string>
   <string name="http_auth_dialog_title">Godkendelse påkrævet</string>
   <string name="http_auth_dialog_username">Brugernavn</string>
   <string name="http_auth_dialog_password">Adgangskode</string>
   <string name="preference_performance_request_desktop_site">Anmod om desktopversion</string>
+  <string name="custom_tab_copy_url_action">URL kopieret</string>
 </resources>

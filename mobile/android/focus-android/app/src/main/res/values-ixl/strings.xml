@@ -4,7 +4,7 @@
   <string name="action_ok">B\'a\'n kuxhtu\'</string>
   <string name="action_save">Kola</string>
   <string name="urlbar_hint">Chuka as moj la aaq\'ku\' ka\'t b\'ii</string>
-  <string name="teaser">" "</string>
+  <string name="teaser">A\' kuxhe\' la ixaansa tib\' as eetz kuxhtu\'.\nXaanen stuul. Josq\'ii. Ka\'pu.</string>
   <string name="feedback_erase">Sojsamal ve\'t unq\'a vee\' uve\' chukel kan.</string>
   <string name="search_hint">Chuka %1$s</string>
   <string name="menu_share">Q\'ajsab\'en…</string>
@@ -147,6 +147,7 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Kamal nisa\' uva\' la b\'anb\'e uma\'t kam uva\' la jajon.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Ye\' kat oleb\'i ti\' ijajat ti jikil</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>U vaa\' ni teq\'otzan uma\'l va\'lexh ti\' uva\' ye\' jik b\'anel tuche\' moj a\'e\' q\'a ni jalpun u tatinb\'ale\'.</li>"\n  "<li>Asoj acha\'vik kuxh ooktza\' b\'axa, as kamal cheel kuxh ye\' nisa\' ijaj tib\' la ka\'pu xamtel.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">At uma\'l Kam ni pale\' as ti\'kole\' uve\' ye\' ni jaje\'.</string>
   <string name="contextmenu_link_share">La jatxb\'en u vaa\'</string>
   <string name="contextmenu_link_copy">La eeq\'o tzan ivatz u vaa\'</string>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">Гизү тарихыгыз бетерелде.</string>
   <string name="search_hint">%1$s дип эзләү</string>
   <string name="menu_share">Уртаклашу…</string>
+  <string name="menu_report_site_issue">Сайттагы проблема турында хәбәр итү</string>
   <string name="menu_open_with_default_browser2">%1$s белән ачу</string>
   <string name="menu_open_with_a_browser2">... белән ачу</string>
   <string name="menu_add_to_home_screen">Өй экранына кую</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Гизү тарихын бетерү</string>
   <string name="text_selection_search_action">Хосусый эзләү</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1076;&#1080;&#1083;&#1073;&#1077;&#1075;&#1241;&#1085;&#1077; &#1057;&#1077;&#1079;&#1085;&#1077;&#1187; &#1082;&#1091;&#1083;&#1075;&#1072; &#1090;&#1072;&#1087;&#1096;&#1099;&#1088;&#1072;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1040;&#1085;&#1099; &#1093;&#1086;&#1089;&#1091;&#1089;&#1099;&#1081; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088; &#1073;&#1091;&#1083;&#1072;&#1088;&#1072;&#1082; &#1082;&#1091;&#1083;&#1083;&#1072;&#1085;&#1099;&#1087;, &#1090;&#1199;&#1073;&#1241;&#1085;&#1076;&#1241;&#1075;&#1077;&#1083;&#1241;&#1088;&#1085;&#1077; &#1101;&#1096;&#1083;&#1241;&#1087; &#1073;&#1091;&#1083;&#1072;:\n  "<ul>"\n    "<li>&#1058;&#1091;&#1088;&#1099;&#1076;&#1072;&#1085;-&#1090;&#1091;&#1088;&#1099; &#1082;&#1091;&#1096;&#1099;&#1084;&#1090;&#1072; &#1101;&#1095;&#1077;&#1085;&#1076;&#1241; &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; &#1087;&#1241;&#1088;&#1241;&#1074;&#1077;&#1079;&#1076;&#1241; &#1075;&#1080;&#1079;&#1199;</li>"\n    "<li>&#1050;&#1199;&#1079;&#1241;&#1090;&#1199;&#1095;&#1077;-&#1090;&#1088;&#1077;&#1082;&#1077;&#1088;&#1083;&#1072;&#1088;&#1085;&#1099; &#1073;&#1083;&#1086;&#1082;&#1083;&#1072;&#1091; (&#1103;&#1080;&#1089;&#1241;, &#1082;&#1257;&#1081;&#1083;&#1241;&#1199;&#1083;&#1241;&#1088;&#1085;&#1077; &#1103;&#1187;&#1072;&#1088;&#1090;&#1099;&#1087;, &#1072;&#1083;&#1072;&#1088;&#1085;&#1099; &#1088;&#1257;&#1093;&#1089;&#1241;&#1090; &#1080;&#1090;&#1199;)</li>"\n    "<li>&#1050;&#1091;&#1082;&#1080;&#1083;&#1072;&#1088;&#1085;&#1099;, &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; &#1075;&#1080;&#1079;&#1199; &#1090;&#1072;&#1088;&#1080;&#1093;&#1083;&#1072;&#1088;&#1099;&#1085; &#1175;&#1080;&#1187;&#1077;&#1083; &#1075;&#1077;&#1085;&#1241; &#1073;&#1077;&#1090;&#1077;&#1088;&#1077;&#1087; &#1072;&#1090;&#1091;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#1090;&#1072;&#1088;&#1072;&#1092;&#1099;&#1085;&#1085;&#1072;&#1085; &#1175;&#1080;&#1090;&#1077;&#1096;&#1090;&#1077;&#1088;&#1077;&#1083;&#1241;. &#1041;&#1077;&#1079;&#1085;&#1077;&#1187; &#1084;&#1080;&#1089;&#1089;&#1080;&#1103;&#1073;&#1077;&#1079; &#8212; &#1089;&#1241;&#1083;&#1072;&#1084;&#1241;&#1090; &#1211;&#1241;&#1084; &#1072;&#1095;&#1099;&#1082; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1085;&#1099; &#1199;&#1089;&#1090;&#1077;&#1088;&#1199;.<br/>\n<a href="%2$s">&#1050;&#1199;&#1073;&#1088;&#1241;&#1082; &#1073;&#1077;&#1083;&#1199;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Хосусыйлык &amp; Хәвефсезлек</string>
+  <string name="preference_privacy_and_security_summary">Күзәтүчеләр, кукилар, бирелгәннәрне сайлау</string>
+  <string name="preference_search_summary">Стандарт итү, автотөгәлләү</string>
+  <string name="preference_mozilla_summary">%1$s турында, ярдәм</string>
+  <string name="preference_category_tracking_protection">Күзәтелүдән саклау</string>
+  <string name="preference_category_web_content">Web-эчтәлек</string>
+  <string name="preference_category_switching_apps">Кушымталарны алыштыру</string>
+  <string name="preference_category_general">Гомуми</string>
+  <string name="preference_category_data_collection_use">Мәгълүмат туплау һәм аны куллану</string>
   <string name="preference_category_search">Эзләү</string>
   <string name="preference_search_engine_default">Стандарт</string>
   <string name="preference_state_on">Кабызылган</string>
@@ -39,16 +49,19 @@
   <string name="preference_autocomplete_action_add">+ Үзгә URL өстәү</string>
   <string name="preference_autocomplete_title_add">Үзгә URL өстәү</string>
   <string name="custom_autocomplete_quick_add">Үзгә URL өстәү</string>
+  <string name="preference_category_cookies">Кукилар һәм сайт бирелгәннәре</string>
+  <string name="preference_category_data_choices">Бирелгәннәрне сайлау</string>
   <string name="preference_autocomplete_title_remove">Үзгә URL\'ларны бетерү</string>
   <string name="preference_autocomplete_learn_more">Күбрәк өйрәнү</string>
   <string name="preference_autocomplete_custom_summary">Автотөгәлләү өчен кулланучы үзе сайлаган URL\'ларны өстәү яки алар белән идарә итү.</string>
   <string name="preference_autocomplete_add_title">Өстәләчәк URL</string>
   <string name="preference_autocomplete_add_hint">URL\'ны ябыштырыгыз яки языгыз</string>
+  <string name="preference_autocomplete_add_example2">Мисал: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Мисал: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Яңа үзгә URL өстәлде.</string>
   <string name="preference_autocomplete_menu_remove">Бетерү</string>
   <string name="preference_autocomplete_action_remove_content_description">Бетерү</string>
-  <string name="preference_autocomplete_add_error">Кертелгән URL\'ны яңадан тикшерегез.</string>
+  <string name="preference_autocomplete_add_error">Кертелгән URL\'ны тагын бер кат тикшерегез.</string>
   <string name="preference_language">Тел</string>
   <string name="preference_language_systemdefault">Система теле</string>
   <string name="preference_category_privacy">Хосусыйлык</string>
@@ -57,12 +70,12 @@
   <string name="preference_privacy_block_analytics">Аналитика күзәтүчеләрен блоклау</string>
   <string name="preference_privacy_block_analytics_summary">Басу һәм скроллинг кебек хәрәкәтләрне җыю, анализлау һәм үлчәү өчен кулланылалар</string>
   <string name="preference_privacy_block_social">Социаль челтәр күзәтүчеләрен блоклау</string>
-  <string name="preference_privacy_block_social_summary">Сез зиярат иткән сайтларны күзәтү һәм \"Уртаклашу\" төймәләре кебек мөмкинлекләрне күрсәтү өчен сайтларга куелалар</string>
+  <string name="preference_privacy_block_social_summary">Сез зиярат иткән сайтларны күзәтү һәм «Уртаклашу» төймәләре кебек мөмкинлекләрне күрсәтү өчен сайтларга куелалар</string>
   <string name="preference_privacy_block_content">Башка эчтәлек күзәтүчеләрен блоклау</string>
   <string name="preference_privacy_block_content_summary2">Моны кабызу кайбер сәхифәләрнең көтелгәнчә эшләмәвенә сәбәп була ала</string>
   <string name="preference_privacy_category_cookies">Кукиларны блоклау</string>
   <string name="preference_privacy_should_block_cookies_no_option">Юк</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Чит-ят кукиларны гына блоклау</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Өченче тараф кукиларын гына блоклау</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Әйе</string>
   <string name="preference_privacy_secure_mode">Күренмәслек</string>
   <string name="preference_privacy_stealth_summary">Кушымталарны алмаштырганда веб-сәхифәләрне яшерү</string>
@@ -175,4 +188,16 @@
   <string name="security_popup_security_verified">Раслаучы: %1$s</string>
   <string name="site_security_icon_content_description">Сайт хәвефсезлеге</string>
   <string name="preference_autocomplete_duplicate_url_error">URL инде бар</string>
+  <string name="find_in_page">Биттә табу</string>
+  <string name="find_in_page_input">Биттә табу</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d дан %1$d</string>
+  <string name="accessibility_next_result">Алдагы нәтиҗәне табу</string>
+  <string name="accessibility_previous_result">Арттагы нәтиҗәне табу</string>
+  <string name="accessibility_dismiss_find_in_page">Биттә эзләүне тәмамлау</string>
+  <string name="http_auth_dialog_title">Теркәлү таләп ителә</string>
+  <string name="http_auth_dialog_username">Кулланучы исеме</string>
+  <string name="http_auth_dialog_password">Серсүз</string>
+  <string name="preference_performance_request_desktop_site">Сайтның тулы версиясен сорау</string>
+  <string name="custom_tab_copy_url_action">URL копияләнде</string>
 </resources>

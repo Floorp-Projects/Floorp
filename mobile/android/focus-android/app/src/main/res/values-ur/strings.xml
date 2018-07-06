@@ -8,6 +8,7 @@
   <string name="feedback_erase">آپ کے برائوزنگ سابقات مٹا دیئے گئے ہیں۔</string>
   <string name="search_hint">۔%1$s کے لئے تلاش کریں</string>
   <string name="menu_share">شیئر کریں…</string>
+  <string name="menu_report_site_issue">سائٹ مسلہ رپورٹ کریں</string>
   <string name="menu_open_with_default_browser2">%1$s میں کھولیں</string>
   <string name="menu_open_with_a_browser2">…میں کھولیں</string>
   <string name="menu_add_to_home_screen">ابتدائی اسکرین پر اظافہ کریں</string>
@@ -25,14 +26,20 @@
   <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
   <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#1570;&#1662; &#1705;&#1608; &#1705;&#1606;&#1657;&#1585;&#1608;&#1604; &#1583;&#1740;&#1578;&#1740; &#1729;&#1746; "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#1575;&#1587;&#1705;&#1608; &#1606;&#1580;&#1740; &#1576;&#1585;&#1575;&#1574;&#1608;&#1586;&#1585; &#1705;&#1740; &#1591;&#1585;&#1581; &#1575;&#1587;&#1578;&#1593;&#1605;&#1575;&#1604; &#1705;&#1585;&#1740;&#1722;:\n  "<ul>" \n    "<li>" &#1575;&#1662;&#1604;&#1740; &#1705;&#1740;&#1588;&#1606; &#1605;&#1740;&#1722; &#1729;&#1740; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586; &#1705;&#1585;&#1740;&#1722; "</li>"\n    "<li>"&#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1576;&#1604;&#1575;&#1705; &#1705;&#1585;&#1740;&#1722; (&#1740;&#1575; &#1587;&#1657;&#1740;&#1606;&#1711;&#1608;&#1722; &#1705;&#1740; &#1578;&#1575;&#1586;&#1729; &#1705;&#1575;&#1585;&#1740; &#1705;&#1585; &#1705;&#1746; &#1657;&#1585;&#1740;&#1705;&#1585;&#1585;&#1648; &#1705;&#1608; &#1575;&#1580;&#1575;&#1586;&#1578; &#1583;&#1740;&#1722;)&#1748; "</li>"\n    "<li>" &#1705;&#1608;&#1705;&#1740;&#1586; &#1705;&#1746; &#1587;&#1575;&#1578;&#1726; &#1578;&#1604;&#1575;&#1588; &#1575;&#1608;&#1585; &#1576;&#1585;&#1575;&#1572;&#1586;&#1606;&#1711; &#1587;&#1575;&#1576;&#1602;&#1575;&#1578; &#1705;&#1608; &#1576;&#1726;&#1740; &#1581;&#1584;&#1601; &#1705;&#1585;&#1606;&#1746; &#1705;&#1740;&#1604;&#1740;&#1746; &#1605;&#1657;&#1575;&#1574;&#1740;&#1722; "</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1705;&#1740; &#1662;&#1740;&#1583;&#1575;&#1608;&#1575;&#1585; &#1729;&#1746;&#1748; &#1726;&#1605;&#1575;&#1585;&#1740; &#1605;&#1729;&#1605; &#1575;&#1740;&#1705; &#1589;&#1581;&#1578; &#1605;&#1606;&#1583; &#1705;&#1726;&#1604;&#1746; &#1575;&#1606;&#1657;&#1585;&#1606;&#1740;&#1657; &#1705;&#1608; &#1601;&#1585;&#1608;&#1593;&#1648; &#1583;&#1740;&#1606;&#1575; &#1729;&#1746;&#1748; Mozilla<br/>\n<a href="%2$s">" &#1605;&#1586;&#1740;&#1583; &#1587;&#1740;&#1705;&#1726;&#1740;&#1722; "</a></p>]]></string>
-  <string name="preference_category_search">تلاش</string>
+  <string name="preference_privacy_and_security_header">رازداری اور سلامتی</string>
+  <string name="preference_category_tracking_protection">سراغ کاری حفاظت</string>
+  <string name="preference_category_web_content">ویب مواد</string>
+  <string name="preference_category_general">عمومی</string>
+  <string name="preference_category_search">تلاش کریں</string>
   <string name="preference_search_engine_default">طے شدہ</string>
   <string name="preference_state_on">چالو</string>
   <string name="preference_state_off">بند</string>
   <string name="preference_subitem_autocomplete">URL خودکار تکميل</string>
   <string name="preference_switch_autocomplete">خودکار تکميل</string>
   <string name="preference_category_autocomplete_preinstalled">طے شدہ URL فہرست</string>
+  <string name="preference_category_autocomplete_custom_urls">مخصوص URLs</string>
   <string name="preference_autocomplete_subitem_customlist">مخصوص URLs</string>
+  <string name="preference_category_cookies">کوکیاں اور سائٹ کے کواِئف</string>
   <string name="preference_autocomplete_title_remove">مخصوص URL ہٹائیں</string>
   <string name="preference_autocomplete_learn_more">مزید سیکھیں</string>
   <string name="preference_autocomplete_add_title">URL اظافہ کرنے کے لیئے</string>
@@ -51,6 +58,8 @@
   <string name="preference_privacy_block_social">سماجی ٹریکرز بلاک کریں</string>
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
   <string name="preference_privacy_block_content_summary2">اہل بنانے کی وجہ سے شاید چند صفحات غیر متوقع برتائو کر سکتے ہیں</string>
+  <string name="preference_privacy_should_block_cookies_no_option">نہیں</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ہاں</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
   <string name="preference_privacy_stealth_summary">اہپس تبدیل کرنے وقت ویب صفحات کو چھپائیں</string>
   <string name="preference_category_performance">کارکردگی</string>
@@ -131,7 +140,7 @@
   <string name="firstrun_shortcut_text">%1$s میں جلد ہی اپنی پسندیدہ سائٹ پر واپس آئیں۔ صرف %1$s مینو سے \"ابتدائی اسکرین پر شامل کریں\" کا انخاب کریں۔</string>
   <string name="firstrun_privacy_title">رازداری کو عادت بنائیں</string>
   <string name="firstrun_close_button">ٹھیک ہے، مجھے سمجھ آگئی ہے!</string>
-  <string name="firstrun_skip_button">چھوڈیں</string>
+  <string name="firstrun_skip_button">چھوڑ دیں</string>
   <string name="firstrun_next_button">آگے</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">اظافہ کریں</string>
@@ -144,4 +153,15 @@
   <string name="gv_prompt_clear">صاف کریں</string>
   <string name="security_popup_secure_connection">قابل بھروسا کنکشن</string>
   <string name="security_popup_insecure_connection">غیر مھفوظ کنکشن</string>
+  <string name="security_popup_security_verified">توثیق کردہ برائے: %1$s</string>
+  <string name="site_security_icon_content_description">سائٹ سلامتی</string>
+  <string name="find_in_page">صفحے میں ڈھونڈیں</string>
+  <string name="find_in_page_input">صفحہ میں ڈھونڈیں</string>
+  <string name="find_in_page_result">%2$d/%1$d</string>
+  <string name="accessibility_next_result">اگلا نتیجہ تلاش کریں</string>
+  <string name="accessibility_previous_result">پچھلا نتیجہ تلاش کرین</string>
+  <string name="http_auth_dialog_username">صارف نام</string>
+  <string name="http_auth_dialog_password">پاس ورڈ</string>
+  <string name="preference_performance_request_desktop_site">ڈیسک ٹاپ سائٹ کی درخواست کریں</string>
+  <string name="custom_tab_copy_url_action">نقل شدہ URL</string>
 </resources>

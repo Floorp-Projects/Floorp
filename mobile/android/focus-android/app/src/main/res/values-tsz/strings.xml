@@ -26,6 +26,7 @@
   <string name="shortcut_erase_short_label">Kéntitani</string>
   <string name="shortcut_erase_long_label">Jirinhantskwani kéntita</string>
   <string name="text_selection_search_action">Jirinhakuari</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s T\'uri xanhatatakurhis&#239;nka.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Eska jirikurhiparini &#250;ra:\n  "<ul>"\n    "<li>Jirinhants&#239; &#237;ni &#250;ratarakwarhu</li>"\n    "<li>Estakutiechani kwarhukua (o jimpanhiranta p&#233;kurhintskwaechani ks jiankua estakutiechani)</li>"\n    "<li>K&#233;ntita exepakwa jirinhantskwa ka miantskwa ampe</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#250;s&#239;nti. Eska k\'&#233;ri xurukwa s&#233;simintu &#225;nchikurhini jawaka juchaeri &#250;kwaesti.<br/>\n<a href="%2$s">S&#225;nteru jorhenani</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Kwatakwa &amp; Jískakwa</string>
   <string name="preference_privacy_and_security_summary">Estakupani, exepakwa, erakukwaecha</string>
   <string name="preference_search_summary">Pént\'ani, karakurhikwani</string>
@@ -192,6 +193,8 @@
   <string name="find_in_page_result">%1$d/%2$d</string>
   <string name="accessibility_find_in_page_result">%1$d ankuri %2$d</string>
   <string name="accessibility_next_result">Máteru exentskata</string>
+  <string name="accessibility_previous_result">Máteru jirinhantskwani exentsï</string>
+  <string name="accessibility_dismiss_find_in_page">Mirikurhi jirinhantskwani</string>
   <string name="http_auth_dialog_title">Mitintskwa wétarhisïnti</string>
   <string name="http_auth_dialog_username">Jakankurhikwa</string>
   <string name="http_auth_dialog_password">Mítintskwa</string>

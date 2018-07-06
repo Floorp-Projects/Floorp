@@ -8,6 +8,7 @@
   <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
   <string name="search_hint">Tìm kiếm %1$s</string>
   <string name="menu_share">Chia sẻ…</string>
+  <string name="menu_report_site_issue">Báo cáo vấn đề về trang</string>
   <string name="menu_open_with_default_browser2">Mở bằng %1$s</string>
   <string name="menu_open_with_a_browser2">Mở bằng…</string>
   <string name="menu_add_to_home_screen">Thêm vào màn hình chính</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Xóa lịch sử duyệt web</string>
   <string name="text_selection_search_action">Tìm kiếm riêng tư hơn</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gi&#250;p b&#7841;n ki&#7875;m so&#225;t.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"S&#7917; d&#7909;ng n&#243; nh&#432; m&#7897;t tr&#236;nh duy&#7879;t ri&#234;ng t&#432;:\n  "<ul>"\n    "<li>T&#236;m ki&#7871;m v&#224; duy&#7879;t ngay trong &#7913;ng d&#7909;ng</li>"\n    "<li>Ch&#7863;n c&#225;c tr&#236;nh theo d&#245;i (ho&#7863;c c&#7853;p nh&#7853;t c&#224;i &#273;&#7863;t &#273;&#7875; cho ph&#233;p c&#225;c tr&#236;nh theo d&#245;i)</li>"\n    "<li>X&#243;a cookie c&#361;ng nh&#432; l&#7883;ch s&#7917; t&#236;m ki&#7871;m v&#224; duy&#7879;t web khi xong phi&#234;n l&#224;m vi&#7879;c</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#273;&#432;&#7907;c s&#7843;n xu&#7845;t b&#7903;i Mozilla. Nhi&#7879;m v&#7909; c&#7911;a ch&#250;ng t&#244;i l&#224; th&#250;c &#273;&#7849;y m&#7897;t Internet l&#224;nh m&#7841;nh, c&#7903;i m&#7903;.<br/>\n<a href="%2$s">T&#236;m hi&#7875;u th&#234;m</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
+  <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
+  <string name="preference_search_summary">Đặt mặc định, tự đồng điền</string>
+  <string name="preference_mozilla_summary">Giới thiệu về %1$s, trợ giúp</string>
+  <string name="preference_category_tracking_protection">Trình chống theo dõi</string>
+  <string name="preference_category_web_content">Nội dung web</string>
+  <string name="preference_category_switching_apps">Chuyển đổi ứng dụng</string>
+  <string name="preference_category_general">Chung</string>
+  <string name="preference_category_data_collection_use">Thu thập &amp; sử dụng dữ liệu</string>
   <string name="preference_category_search">Tìm kiếm</string>
   <string name="preference_search_engine_default">Mặc định</string>
   <string name="preference_state_on">Bật</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
   <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
   <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
+  <string name="preference_category_cookies">Cookie và dữ liệu trang</string>
+  <string name="preference_category_data_choices">Lựa chọn dữ liệu</string>
   <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
   <string name="preference_autocomplete_learn_more">Tìm hiểu thêm</string>
   <string name="preference_autocomplete_custom_summary">Thêm và quản lý các URL tùy chỉnh tự động điền.</string>
   <string name="preference_autocomplete_add_title">URL muốn thêm</string>
   <string name="preference_autocomplete_add_hint">Dán hoặc nhập URL</string>
+  <string name="preference_autocomplete_add_example2">Ví dụ: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Ví dụ: example.com</string>
   <string name="preference_autocomplete_add_confirmation">URL tùy chỉnh mới đã được thêm vào.</string>
   <string name="preference_autocomplete_menu_remove">Loại bỏ</string>
@@ -175,4 +188,16 @@
   <string name="security_popup_security_verified">Xác minh bởi: %1$s</string>
   <string name="site_security_icon_content_description">Bảo mật trang web</string>
   <string name="preference_autocomplete_duplicate_url_error">URL đã tồn tại</string>
+  <string name="find_in_page">Tìm trong trang</string>
+  <string name="find_in_page_input">Tìm trong trang</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d trong số %2$d</string>
+  <string name="accessibility_next_result">Tìm kiếm kết quả tiếp theo</string>
+  <string name="accessibility_previous_result">Tìm kiếm kết quả trước đó</string>
+  <string name="accessibility_dismiss_find_in_page">Loại bỏ tìm kiếm trong trang</string>
+  <string name="http_auth_dialog_title">Yêu cầu xác thực</string>
+  <string name="http_auth_dialog_username">Tên đăng nhập</string>
+  <string name="http_auth_dialog_password">Mật khẩu</string>
+  <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
+  <string name="custom_tab_copy_url_action">Đã sao chép URL</string>
 </resources>
