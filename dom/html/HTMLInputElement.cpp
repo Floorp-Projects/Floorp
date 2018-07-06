@@ -4832,18 +4832,26 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
     // We're no longer an image input.  Cancel our image requests, if we have
     // any.
     CancelImageRequests(aNotify);
-  } else if (aNotify && mType == NS_FORM_INPUT_IMAGE) {
-    // We just got switched to be an image input; we should see
-    // whether we have an image to load;
-    nsAutoString src;
-    if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
-      // Mark channel as urgent-start before load image if the image load is
-      // initaiated by a user interaction.
-      mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
-      LoadImage(src, false, aNotify, eImageLoadType_Normal,
-                mSrcTriggeringPrincipal);
+    // And we should update our mapped attribute mapping function.
+    mAttrsAndChildren.UpdateMappedAttrRuleMapper(*this);
+  } else if (mType == NS_FORM_INPUT_IMAGE) {
+    if (aNotify) {
+      // We just got switched to be an image input; we should see
+      // whether we have an image to load;
+      nsAutoString src;
+      if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+        // Mark channel as urgent-start before load image if the image load is
+        // initaiated by a user interaction.
+        mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
+
+        LoadImage(src, false, aNotify, eImageLoadType_Normal,
+                  mSrcTriggeringPrincipal);
+      }
     }
+
+    // And we should update our mapped attribute mapping function.
+    mAttrsAndChildren.UpdateMappedAttrRuleMapper(*this);
   }
 
   if (mType == NS_FORM_INPUT_PASSWORD && IsInComposedDoc()) {
@@ -5595,18 +5603,14 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void
-HTMLInputElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        MappedDeclarations& aDecls)
+HTMLInputElement::ImageInputMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                                  MappedDeclarations& aDecls)
 {
-  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
-  if (value && value->Type() == nsAttrValue::eEnum &&
-      value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
-    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aDecls);
-    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aDecls);
-    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aDecls);
-    // Images treat align as "float"
-    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aDecls);
-  }
+  nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aDecls);
+  // Images treat align as "float"
+  nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aDecls);
 
   nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aDecls);
 }
@@ -5645,7 +5649,6 @@ HTMLInputElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },
-    { &nsGkAtoms::type },
     { nullptr },
   };
 
@@ -5662,7 +5665,15 @@ HTMLInputElement::IsAttributeMapped(const nsAtom* aAttribute) const
 nsMapRuleToAttributesFunc
 HTMLInputElement::GetAttributeMappingFunction() const
 {
-  return &MapAttributesIntoRule;
+  // GetAttributeChangeHint guarantees that changes to mType will trigger a
+  // reframe, and we update the mapping function in our mapped attrs when our
+  // type changes, so it's safe to condition our attribute mapping function on
+  // mType.
+  if (mType == NS_FORM_INPUT_IMAGE) {
+    return &ImageInputMapAttributesIntoRule;
+  }
+
+  return &MapCommonAttributesInto;
 }
 
 
