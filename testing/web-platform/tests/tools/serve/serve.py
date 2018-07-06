@@ -289,6 +289,9 @@ done();
         if key == b"script":
             attribute = value.decode('utf-8').replace("\\", "\\\\").replace('"', '\\"')
             return 'importScripts("%s")' % attribute
+        if key == b"title":
+            value = value.decode('utf-8').replace("\\", "\\\\").replace('"', '\\"')
+            return 'self.META_TITLE = "%s";' % value
         return None
 
 
