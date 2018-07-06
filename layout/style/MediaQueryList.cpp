@@ -199,5 +199,15 @@ MediaQueryList::MaybeNotify()
   DispatchEvent(*event);
 }
 
+size_t
+MediaQueryList::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  // mMediaList is reference counted, but it's created and primarily owned
+  // by this MediaQueryList object.
+  n += mMediaList->SizeOfIncludingThis(aMallocSizeOf);
+  return n;
+}
+
 } // namespace dom
 } // namespace mozilla
