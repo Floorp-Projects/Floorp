@@ -57,6 +57,7 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
@@ -82,6 +83,7 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
     return pc.createOffer({ offerToReceiveAudio: true })
     .then(offer =>
       pc.setLocalDescription({ type: 'offer' })
@@ -102,7 +104,10 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
     const pc2 = new RTCPeerConnection();
+
+    t.add_cleanup(() => pc2.close());
 
     return generateOffer({ pc, data: true })
     .then(offer =>
@@ -116,6 +121,7 @@
     // last offer, setLocalDescription would reject when setting
     // with the first offer
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
     return pc.createOffer({ offerToReceiveAudio: true })
     .then(offer1 =>
       pc.createOffer({ offerToReceiveVideo: true })
@@ -128,6 +134,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));

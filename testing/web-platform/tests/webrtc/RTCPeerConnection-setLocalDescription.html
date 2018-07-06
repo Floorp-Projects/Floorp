@@ -45,6 +45,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
@@ -73,6 +74,7 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
 
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
@@ -93,7 +95,6 @@
 
           assert_array_equals(states, ['have-remote-offer', 'stable', 'have-local-offer']);
         })));
-
   }, 'Switching role from answerer to offerer after going back to stable state should succeed');
 
   promise_test(async t => {
