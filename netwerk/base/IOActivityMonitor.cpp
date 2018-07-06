@@ -10,14 +10,12 @@
 #include "nsSocketTransport2.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/Services.h"
 #include "prerror.h"
 #include "prio.h"
 #include "prmem.h"
 #include <vector>
 
-using namespace mozilla;
 using namespace mozilla::net;
 
 mozilla::StaticRefPtr<IOActivityMonitor> gInstance;
@@ -280,57 +278,145 @@ nsNetMon_AcceptRead(PRFileDesc *listenSock,
 
 
 //
+// Class IOActivityData
+//
+NS_IMPL_ISUPPORTS(IOActivityData, nsIIOActivityData);
+
+NS_IMETHODIMP
+IOActivityData::GetLocation(nsACString& aLocation) {
+  aLocation = mActivity.location;
+  return NS_OK;
+};
+
+NS_IMETHODIMP
+IOActivityData::GetRx(int32_t* aRx) {
+  *aRx = mActivity.rx;
+  return NS_OK;
+};
+
+NS_IMETHODIMP
+IOActivityData::GetTx(int32_t* aTx) {
+  *aTx = mActivity.tx;
+  return NS_OK;
+};
+
+//
+// Class NotifyIOActivity
+//
+// Runnable that takes the activities per FD and location
+// and converts them into IOActivity elements.
+//
+// These elements get notified.
+//
+class NotifyIOActivity : public mozilla::Runnable {
+
+public:
+  static already_AddRefed<nsIRunnable>
+  Create(Activities& aActivities, const mozilla::MutexAutoLock& aProofOfLock)
+  {
+    RefPtr<NotifyIOActivity> runnable = new NotifyIOActivity();
+
+    for (auto iter = aActivities.Iter(); !iter.Done(); iter.Next()) {
+      IOActivity* activity = iter.Data();
+      if (!activity->Inactive()) {
+        if (NS_WARN_IF(!runnable->mActivities.AppendElement(*activity, mozilla::fallible))) {
+          return nullptr;
+        }
+      }
+    }
+    nsCOMPtr<nsIRunnable> result(runnable);
+    return result.forget();
+  }
+
+  NS_IMETHODIMP
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mActivities.Length() == 0) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (!obs) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    if (NS_WARN_IF(!array)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    for (unsigned long i = 0; i < mActivities.Length(); i++) {
+      nsCOMPtr<nsIIOActivityData> data = new IOActivityData(mActivities[i]);
+      nsresult rv = array->AppendElement(data);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    obs->NotifyObservers(array, NS_IO_ACTIVITY, nullptr);
+    return NS_OK;
+  }
+
+private:
+  explicit NotifyIOActivity()
+    : mozilla::Runnable("NotifyIOActivity")
+  {
+  }
+
+  FallibleTArray<IOActivity> mActivities;
+};
+
+
+//
 // Class IOActivityMonitor
 //
-NS_IMPL_ISUPPORTS(IOActivityMonitor, nsINamed)
+NS_IMPL_ISUPPORTS(IOActivityMonitor, nsITimerCallback, nsINamed)
 
 IOActivityMonitor::IOActivityMonitor()
-  : mLock("IOActivityMonitor::mLock")
+  : mInterval(PR_INTERVAL_NO_TIMEOUT)
+  , mLock("IOActivityMonitor::mLock")
 {
   RefPtr<IOActivityMonitor> mon(gInstance);
   MOZ_ASSERT(!mon, "multiple IOActivityMonitor instances!");
 }
 
-// static
-void
-IOActivityMonitor::RequestActivities(dom::Promise* aPromise)
+NS_IMETHODIMP
+IOActivityMonitor::Notify(nsITimer* aTimer)
 {
-  MOZ_ASSERT(aPromise);
-  RefPtr<IOActivityMonitor> mon(gInstance);
-  if (!IsActive()) {
-    aPromise->MaybeReject(NS_ERROR_FAILURE);
-    return;
-  }
-  mon->RequestActivitiesInternal(aPromise);
+  return NotifyActivities();
 }
 
-void
-IOActivityMonitor::RequestActivitiesInternal(dom::Promise* aPromise)
+// static
+nsresult
+IOActivityMonitor::NotifyActivities()
 {
-  nsresult result = NS_OK;
-  FallibleTArray<dom::IOActivityDataDictionary> activities;
+  RefPtr<IOActivityMonitor> mon(gInstance);
+  if (!IsActive()) {
+    return NS_ERROR_FAILURE;
+  }
+  return mon->NotifyActivities_Internal();
+}
 
-  {
-    mozilla::MutexAutoLock lock(mLock);
-    // Remove inactive activities
-    for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
-      dom::IOActivityDataDictionary* activity = &iter.Data();
-      if (activity->mRx == 0 && activity->mTx == 0) {
-        iter.Remove();
-      } else {
-        if (NS_WARN_IF(!activities.AppendElement(iter.Data(), fallible))) {
-          result = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-      }
+nsresult
+IOActivityMonitor::NotifyActivities_Internal()
+{
+  mozilla::MutexAutoLock lock(mLock);
+  nsCOMPtr<nsIRunnable> ev = NotifyIOActivity::Create(mActivities, lock);
+  nsresult rv = SystemGroup::EventTargetFor(TaskCategory::Performance)->Dispatch(ev.forget());
+  if (NS_FAILED(rv)) {
+    NS_WARNING("NS_DispatchToMainThread failed");
+    return rv;
+  }
+  // Reset the counters, remove inactive activities
+  for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
+    IOActivity* activity = iter.Data();
+    if (activity->Inactive()) {
+      iter.Remove();
+    } else {
+      activity->Reset();
     }
   }
-
-  if (NS_WARN_IF(NS_FAILED(result))) {
-    aPromise->MaybeReject(result);
-    return;
-  }
-  aPromise->MaybeResolve(activities);
+  return NS_OK;
 }
 
 // static
@@ -348,13 +434,13 @@ IOActivityMonitor::IsActive()
 }
 
 nsresult
-IOActivityMonitor::Init()
+IOActivityMonitor::Init(int32_t aInterval)
 {
   if (IsActive()) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   RefPtr<IOActivityMonitor> mon = new IOActivityMonitor();
-  nsresult rv = mon->InitInternal();
+  nsresult rv = mon->Init_Internal(aInterval);
   if (NS_SUCCEEDED(rv)) {
     gInstance = mon;
   }
@@ -362,7 +448,7 @@ IOActivityMonitor::Init()
 }
 
 nsresult
-IOActivityMonitor::InitInternal()
+IOActivityMonitor::Init_Internal(int32_t aInterval)
 {
   // wraps the socket APIs
   if (!sNetActivityMonitorLayerMethodsPtr) {
@@ -382,7 +468,20 @@ IOActivityMonitor::InitInternal()
     sNetActivityMonitorLayerMethodsPtr = &sNetActivityMonitorLayerMethods;
   }
 
-  return NS_OK;
+  mInterval = aInterval;
+
+  // if the interval is 0, the timer is not fired
+  // and calls are done explicitely via NotifyActivities
+  if (mInterval == 0) {
+    return NS_OK;
+  }
+
+  // create and fire the timer
+  mTimer = NS_NewTimer();
+  if (!mTimer) {
+    return NS_ERROR_FAILURE;
+  }
+  return mTimer->InitWithCallback(this, mInterval, nsITimer::TYPE_REPEATING_SLACK);
 }
 
 nsresult
@@ -392,13 +491,16 @@ IOActivityMonitor::Shutdown()
   if (!mon) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return mon->ShutdownInternal();
+  return mon->Shutdown_Internal();
 }
 
 nsresult
-IOActivityMonitor::ShutdownInternal()
+IOActivityMonitor::Shutdown_Internal()
 {
   mozilla::MutexAutoLock lock(mLock);
+  if (mTimer) {
+    mTimer->Cancel();
+  }
   mActivities.Clear();
   gInstance = nullptr;
   return NS_OK;
@@ -459,15 +561,13 @@ IOActivityMonitor::MonitorFile(PRFileDesc *aFd, const char* aPath)
   return NS_OK;
 }
 
-bool
-IOActivityMonitor::IncrementActivity(const nsACString& aLocation, uint32_t aRx, uint32_t aTx)
+IOActivity*
+IOActivityMonitor::GetActivity(const nsACString& aLocation)
 {
   mLock.AssertCurrentThreadOwns();
   if (auto entry = mActivities.Lookup(aLocation)) {
     // already registered
-    entry.Data().mTx += aTx;
-    entry.Data().mRx += aRx;
-    return true;
+    return entry.Data();
   }
   // Creating a new IOActivity. Notice that mActivities will
   // grow indefinitely, which is OK since we won't have
@@ -475,15 +575,13 @@ IOActivityMonitor::IncrementActivity(const nsACString& aLocation, uint32_t aRx, 
   // want to assert we have at the most 1000 entries
   MOZ_ASSERT(mActivities.Count() < MAX_ACTIVITY_ENTRIES);
 
-  dom::IOActivityDataDictionary activity;
-  activity.mLocation.Assign(aLocation);
-  activity.mTx = aTx;
-  activity.mRx = aRx;
-
+  // Entries are removed in the timer when they are inactive.
+  IOActivity* activity = new IOActivity(aLocation);
   if (NS_WARN_IF(!mActivities.Put(aLocation, activity, fallible))) {
-    return false;
+    delete activity;
+    return nullptr;
   }
-  return true;
+  return activity;
 }
 
 nsresult
@@ -493,7 +591,7 @@ IOActivityMonitor::Write(const nsACString& aLocation, uint32_t aAmount)
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
-  return mon->WriteInternal(aLocation, aAmount);
+  return mon->Write_Internal(aLocation, aAmount);
 }
 
 nsresult
@@ -507,12 +605,14 @@ IOActivityMonitor::Write(PRFileDesc *fd, uint32_t aAmount)
 }
 
 nsresult
-IOActivityMonitor::WriteInternal(const nsACString& aLocation, uint32_t aAmount)
+IOActivityMonitor::Write_Internal(const nsACString& aLocation, uint32_t aAmount)
 {
   mozilla::MutexAutoLock lock(mLock);
-  if (!IncrementActivity(aLocation, aAmount, 0)) {
+  IOActivity* activity = GetActivity(aLocation);
+  if (!activity) {
     return NS_ERROR_FAILURE;
   }
+  activity->tx += aAmount;
   return NS_OK;
 }
 
@@ -533,15 +633,17 @@ IOActivityMonitor::Read(const nsACString& aLocation, uint32_t aAmount)
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
-  return mon->ReadInternal(aLocation, aAmount);
+  return mon->Read_Internal(aLocation, aAmount);
 }
 
 nsresult
-IOActivityMonitor::ReadInternal(const nsACString& aLocation, uint32_t aAmount)
+IOActivityMonitor::Read_Internal(const nsACString& aLocation, uint32_t aAmount)
 {
   mozilla::MutexAutoLock lock(mLock);
-  if (!IncrementActivity(aLocation, 0, aAmount)) {
+  IOActivity* activity = GetActivity(aLocation);
+  if (!activity) {
     return NS_ERROR_FAILURE;
   }
+  activity->rx += aAmount;
   return NS_OK;
 }
