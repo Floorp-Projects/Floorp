@@ -115,7 +115,7 @@ def test_lint_no_files(caplog):
 def test_lint_ignored_file(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["broken_ignored.html"], "normal")
+            rv = lint(_dummy_repo, ["tests/broken_ignored.html"], "normal")
             assert rv == 0
             assert not mocked_check_path.called
             assert not mocked_check_file_contents.called
@@ -126,7 +126,7 @@ def test_lint_not_existing_file(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
             # really long path-linted filename
-            name = "a" * 256 + ".html"
+            name = "tests/a" * 256 + ".html"
             rv = lint(_dummy_repo, [name], "normal")
             assert rv == 0
             assert not mocked_check_path.called
@@ -137,20 +137,22 @@ def test_lint_not_existing_file(caplog):
 def test_lint_passing(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["okay.html"], "normal")
+            rv = lint(_dummy_repo, ["tests/okay.html",
+                                    "tests/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert caplog.text == ""
 
 
 def test_lint_failing(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["broken.html"], "normal")
+            rv = lint(_dummy_repo, ["tests/broken.html",
+                                    "tests/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "TRAILING WHITESPACE" in caplog.text
     assert "broken.html:1" in caplog.text
 
@@ -158,30 +160,33 @@ def test_lint_failing(caplog):
 def test_ref_existent_relative(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/existent_relative.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/existent_relative.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert caplog.text == ""
 
 
 def test_ref_existent_root_relative(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/existent_root_relative.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/existent_root_relative.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert caplog.text == ""
 
 
 def test_ref_non_existent_relative(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/non_existent_relative.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/non_existent_relative.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "NON-EXISTENT-REF" in caplog.text
     assert "ref/non_existent_relative.html" in caplog.text
     assert "non_existent_file.html" in caplog.text
@@ -190,10 +195,11 @@ def test_ref_non_existent_relative(caplog):
 def test_ref_non_existent_root_relative(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/non_existent_root_relative.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/non_existent_root_relative.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "NON-EXISTENT-REF" in caplog.text
     assert "ref/non_existent_root_relative.html" in caplog.text
     assert "/non_existent_file.html" in caplog.text
@@ -203,10 +209,11 @@ def test_ref_non_existent_root_relative(caplog):
 def test_ref_absolute_url(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/absolute.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/absolute.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "ABSOLUTE-URL-REF" in caplog.text
     assert "http://example.com/reference.html" in caplog.text
     assert "ref/absolute.html" in caplog.text
@@ -215,20 +222,22 @@ def test_ref_absolute_url(caplog):
 def test_about_blank_as_ref(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["about_blank-ref.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/about_blank-ref.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 0
-            assert not mocked_check_path.called
-            assert not mocked_check_file_contents.called
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert caplog.text == ""
 
 
 def test_ref_same_file_empty(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/same_file_empty.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/same_file_empty.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "SAME-FILE-REF" in caplog.text
     assert "same_file_empty.html" in caplog.text
 
@@ -236,23 +245,26 @@ def test_ref_same_file_empty(caplog):
 def test_ref_same_file_path(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["ref/same_file_path.html"], "normal")
+            rv = lint(_dummy_repo, ["ref/same_file_path.html",
+                                    "ref/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 1
-            assert mocked_check_file_contents.call_count == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert "SAME-FILE-REF" in caplog.text
     assert "same_file_path.html" in caplog.text
 
 
 def test_manual_path_testharness(caplog):
-    rv = lint(_dummy_repo, ["tests/relative-testharness-manual.html"], "normal")
+    rv = lint(_dummy_repo, ["tests/relative-testharness-manual.html",
+                            "tests/META.yml"], "normal")
     assert rv == 2
     assert "TESTHARNESS-PATH" in caplog.text
     assert "TESTHARNESSREPORT-PATH" in caplog.text
 
 
 def test_css_visual_path_testharness(caplog):
-    rv = lint(_dummy_repo, ["css/css-unique/relative-testharness.html"], "normal")
+    rv = lint(_dummy_repo, ["css/css-unique/relative-testharness.html",
+                            "css/css-unique/META.yml"], "normal")
     assert rv == 3
     assert "CONTENT-VISUAL" in caplog.text
     assert "TESTHARNESS-PATH" in caplog.text
@@ -260,7 +272,8 @@ def test_css_visual_path_testharness(caplog):
 
 
 def test_css_manual_path_testharness(caplog):
-    rv = lint(_dummy_repo, ["css/css-unique/relative-testharness-interact.html"], "normal")
+    rv = lint(_dummy_repo, ["css/css-unique/relative-testharness-interact.html",
+                            "css/css-unique/META.yml"], "normal")
     assert rv == 3
     assert "CONTENT-MANUAL" in caplog.text
     assert "TESTHARNESS-PATH" in caplog.text
@@ -270,133 +283,227 @@ def test_css_manual_path_testharness(caplog):
 def test_lint_passing_and_failing(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["broken.html", "okay.html"], "normal")
+            rv = lint(_dummy_repo, ["tests/broken.html",
+                                    "tests/okay.html",
+                                    "tests/META.yml"], "normal")
             assert rv == 1
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert "TRAILING WHITESPACE" in caplog.text
-    assert "broken.html:1" in caplog.text
-    assert "okay.html" not in caplog.text
+    assert "tests/broken.html:1" in caplog.text
+    assert "tests/okay.html" not in caplog.text
 
 
 def test_check_css_globally_unique_identical_test(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/match/a.html", "css/css-unique/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/match/a.html",
+                                    "css/css-unique/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_different_test(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/not-match/a.html", "css/css-unique/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/not-match/a.html",
+                                    "css/css-unique/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert "CSS-COLLIDING-TEST-NAME" in caplog.text
 
 
 def test_check_css_globally_unique_different_spec_test(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/selectors/a.html", "css/css-unique/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/selectors/a.html",
+                                    "css/css-unique/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_support_ignored(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/support/a.html", "css/css-unique/support/tools/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/support/a.html",
+                                    "css/css-unique/support/tools/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_support_identical(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/support/a.html", "css/css-unique/match/support/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/support/a.html",
+                                    "css/css-unique/match/support/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_support_different(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/not-match/support/a.html", "css/css-unique/support/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/not-match/support/a.html",
+                                    "css/css-unique/support/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert "CSS-COLLIDING-SUPPORT-NAME" in caplog.text
 
 
 def test_check_css_globally_unique_test_support(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/support/a.html", "css/css-unique/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/support/a.html",
+                                    "css/css-unique/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_ref_identical(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/a-ref.html", "css/css-unique/match/a-ref.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/a-ref.html",
+                                    "css/css-unique/match/a-ref.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_ref_different(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/not-match/a-ref.html", "css/css-unique/a-ref.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/not-match/a-ref.html",
+                                    "css/css-unique/a-ref.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert "CSS-COLLIDING-REF-NAME" in caplog.text
 
 
 def test_check_css_globally_unique_test_ref(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/a-ref.html", "css/css-unique/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/a-ref.html",
+                                    "css/css-unique/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_ignored(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/tools/a.html", "css/css-unique/not-match/tools/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/tools/a.html",
+                                    "css/css-unique/not-match/tools/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
+            assert mocked_check_path.call_count == 3
+            assert mocked_check_file_contents.call_count == 3
     assert caplog.text == ""
 
 
 def test_check_css_globally_unique_ignored_dir(caplog):
     with _mock_lint("check_path") as mocked_check_path:
         with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css/css-unique/support/a.html"], "normal")
+            rv = lint(_dummy_repo, ["css/css-unique/support/a.html",
+                                    "css/css-unique/META.yml"], "normal")
             assert rv == 0
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
+    assert caplog.text == ""
+
+
+# Test file            META.yml file       Errors
+# tests/okay.html      -                 1
+# tests/foo/okay.html  -                 1
+# tests/okay.html      tests/META.yml      0
+# tests/foo/okay.html  tests/META.yml      0
+# tests/okay.html      tests/foo/META.yml  1
+# tests/foo/okay.html  tests/foo/META.yml  1
+
+def test_check_meta_yml_test_l1_no_meta_yml(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/okay.html"], "normal")
+            assert rv == 1
             assert mocked_check_path.call_count == 1
             assert mocked_check_file_contents.call_count == 1
+    assert "MISSING-META-YML" in caplog.text
+
+def test_check_meta_yml_test_l2_no_meta_yml(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/foo/okay.html"], "normal")
+            assert rv == 1
+            assert mocked_check_path.call_count == 1
+            assert mocked_check_file_contents.call_count == 1
+    assert "MISSING-META-YML" in caplog.text
+
+def test_check_meta_yml_test_l1_meta_yml_l1(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/okay.html",
+                                    "tests/META.yml"], "normal")
+            assert rv == 0
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
     assert caplog.text == ""
+
+def test_check_meta_yml_test_l2_meta_yml_l1(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/foo/okay.html",
+                                    "tests/META.yml"], "normal")
+            assert rv == 0
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
+    assert caplog.text == ""
+
+def test_check_meta_yml_test_l1_meta_yml_l2(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/okay.html",
+                                    "tests/foo/META.yml"], "normal")
+            assert rv == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
+    assert "MISSING-META-YML" in caplog.text
+
+def test_check_meta_yml_test_l2_meta_yml_l2(caplog):
+    with _mock_lint("check_path") as mocked_check_path:
+        with _mock_lint("check_file_contents") as mocked_check_file_contents:
+            rv = lint(_dummy_repo, ["tests/foo/okay.html",
+                                    "tests/foo/META.yml"], "normal")
+            assert rv == 1
+            assert mocked_check_path.call_count == 2
+            assert mocked_check_file_contents.call_count == 2
+    assert "MISSING-META-YML" in caplog.text
+
+
 
 
 def test_all_filesystem_paths():
