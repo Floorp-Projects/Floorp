@@ -13,7 +13,6 @@
   // The following helper functions are called from RTCPeerConnection-helper.js:
   //   generateOffer
   //   assert_session_desc_similar
-  //   test_state_change_event
 
   /*
     4.3.2.  Interface Definition
@@ -60,7 +59,8 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    test_state_change_event(t, pc, ['have-remote-offer', 'stable']);
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return generateOffer({ data: true })
     .then(offer => pc.setRemoteDescription(offer))
@@ -77,6 +77,8 @@
       assert_equals(pc.remoteDescription, null);
       assert_equals(pc.pendingRemoteDescription, null);
       assert_equals(pc.currentRemoteDescription, null);
+
+      assert_array_equals(states, ['have-remote-offer', 'stable']);
     });
   }, 'setRemoteDescription(rollback) in have-remote-offer state should revert to stable state');
 

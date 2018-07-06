@@ -14,7 +14,6 @@
   //   generateOffer
   //   generateAnswer
   //   assert_session_desc_similar
-  //   test_state_change_event
 
   /*
     4.3.2.  Interface Definition
@@ -80,7 +79,9 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-local-offer', 'have-remote-pranswer']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -100,13 +101,17 @@
           assert_session_desc_similar(pc.remoteDescription, pranswer);
           assert_session_desc_similar(pc.pendingRemoteDescription, pranswer);
           assert_equals(pc.currentRemoteDescription, null);
+
+          assert_array_equals(states, ['have-local-offer', 'have-remote-pranswer']);
         });
       }));
   }, 'setRemoteDescription(pranswer) from have-local-offer state should succeed');
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-local-offer', 'have-remote-pranswer']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -116,13 +121,18 @@
         const pranswer = { type: 'pranswer', sdp: answer.sdp };
 
         return pc.setRemoteDescription(pranswer)
-        .then(() => pc.setRemoteDescription(pranswer));
+        .then(() => pc.setRemoteDescription(pranswer))
+        .then(() => {
+          assert_array_equals(states, ['have-local-offer', 'have-remote-pranswer']);
+        });
       }));
   }, 'setRemoteDescription(pranswer) multiple times should succeed');
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-local-offer', 'have-remote-pranswer', 'stable']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -143,6 +153,8 @@
           assert_session_desc_similar(pc.remoteDescription, answer);
           assert_session_desc_similar(pc.currentRemoteDescription, answer);
           assert_equals(pc.pendingRemoteDescription, null);
+
+          assert_array_equals(states, ['have-local-offer', 'have-remote-pranswer', 'stable']);
         });
       }));
   }, 'setRemoteDescription(answer) from have-remote-pranswer state should succeed');

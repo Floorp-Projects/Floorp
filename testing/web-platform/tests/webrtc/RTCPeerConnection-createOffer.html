@@ -15,7 +15,6 @@
   //   generateAnswer()
   //   countAudioLine()
   //   countVideoLine()
-  //   test_state_change_event()
   //   assert_session_desc_similar()
 
   /*
@@ -43,7 +42,9 @@
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-local-offer']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveAudio: true })
     .then(offer =>
@@ -53,6 +54,8 @@
         assert_session_desc_similar(pc.localDescription, offer);
         assert_session_desc_similar(pc.pendingLocalDescription, offer);
         assert_equals(pc.currentLocalDescription, null);
+
+        assert_array_equals(states, ['have-local-offer']);
       }));
   }, 'createOffer() and then setLocalDescription() should succeed');
 

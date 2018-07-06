@@ -14,7 +14,6 @@
   //   generateOffer
   //   generateAnswer
   //   assert_session_desc_similar
-  //   test_state_change_event
 
   /*
     4.3.2.  Interface Definition
@@ -81,7 +80,9 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-remote-offer', 'have-local-pranswer']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -103,13 +104,17 @@
           assert_equals(pc.currentLocalDescription, null);
 
           assert_equals(pc.pendingRemoteDescription, null);
+
+          assert_array_equals(states, ['have-remote-offer', 'have-local-pranswer']);
         });
       }));
   }, 'setLocalDescription(pranswer) should succeed');
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-remote-offer', 'have-local-pranswer']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -119,13 +124,18 @@
         const pranswer = { type: 'pranswer', sdp: answer.sdp };
 
         return pc.setLocalDescription(pranswer)
-        .then(() => pc.setLocalDescription(pranswer));
+        .then(() => pc.setLocalDescription(pranswer))
+        .then(() => {
+          assert_array_equals(states, ['have-remote-offer', 'have-local-pranswer']);
+        });
       }));
   }, 'setLocalDescription(pranswer) can be applied multiple times while still in have-local-pranswer');
 
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-remote-offer', 'have-local-pranswer', 'stable']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -146,6 +156,8 @@
 
           assert_equals(pc.pendingLocalDescription, null);
           assert_equals(pc.pendingRemoteDescription, null);
+
+          assert_array_equals(states, ['have-remote-offer', 'have-local-pranswer', 'stable']);
         });
       }));
   }, 'setLocalDescription(answer) from have-local-pranswer state should succeed');
