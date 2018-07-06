@@ -2335,6 +2335,34 @@ sha_get_hashType(int hashbits)
     return hashType;
 }
 
+HASH_HashType
+hash_string_to_hashType(const char * src)
+{
+    HASH_HashType shaAlg = HASH_AlgNULL;
+    if (strncmp(src, "SHA-1", 5) == 0) {
+         shaAlg = HASH_AlgSHA1;
+    } else if (strncmp(src, "SHA-224", 7) == 0) {
+        shaAlg = HASH_AlgSHA224;
+    } else if (strncmp(src, "SHA-256", 7) == 0) {
+        shaAlg = HASH_AlgSHA256;
+    } else if (strncmp(src, "SHA-384", 7) == 0) {
+        shaAlg = HASH_AlgSHA384;
+    } else if (strncmp(src, "SHA-512", 7) == 0) {
+        shaAlg = HASH_AlgSHA512;
+    } else if (strncmp(src, "SHA1", 4) == 0) {
+         shaAlg = HASH_AlgSHA1;
+    } else if (strncmp(src, "SHA224", 6) == 0) {
+        shaAlg = HASH_AlgSHA224;
+    } else if (strncmp(src, "SHA256", 6) == 0) {
+        shaAlg = HASH_AlgSHA256;
+    } else if (strncmp(src, "SHA384", 6) == 0) {
+        shaAlg = HASH_AlgSHA384;
+    } else if (strncmp(src, "SHA512", 6) == 0) {
+        shaAlg = HASH_AlgSHA512;
+    }
+    return shaAlg;
+}
+
 /*
  * Perform the ECDSA Key Pair Generation Test.
  *
@@ -2628,17 +2656,8 @@ ecdsa_siggen_test(char *reqfn)
             *dst = '\0';
             src++; /* skip the comma */
             /* set the SHA Algorithm */
-            if (strncmp(src, "SHA-1", 5) == 0) {
-                shaAlg = HASH_AlgSHA1;
-            } else if (strncmp(src, "SHA-224", 7) == 0) {
-                shaAlg = HASH_AlgSHA224;
-            } else if (strncmp(src, "SHA-256", 7) == 0) {
-                shaAlg = HASH_AlgSHA256;
-            } else if (strncmp(src, "SHA-384", 7) == 0) {
-                shaAlg = HASH_AlgSHA384;
-            } else if (strncmp(src, "SHA-512", 7) == 0) {
-                shaAlg = HASH_AlgSHA512;
-            } else {
+            shaAlg = hash_string_to_hashType(src);
+            if (shaAlg == HASH_AlgNULL){
                 fprintf(ecdsaresp, "ERROR: Unable to find SHAAlg type");
                 goto loser;
             }
@@ -2798,17 +2817,8 @@ ecdsa_sigver_test(char *reqfn)
             *dst = '\0';
             src++; /* skip the comma */
             /* set the SHA Algorithm */
-            if (strncmp(src, "SHA-1", 5) == 0) {
-                shaAlg = HASH_AlgSHA1;
-            } else if (strncmp(src, "SHA-224", 7) == 0) {
-                shaAlg = HASH_AlgSHA224;
-            } else if (strncmp(src, "SHA-256", 7) == 0) {
-                shaAlg = HASH_AlgSHA256;
-            } else if (strncmp(src, "SHA-384", 7) == 0) {
-                shaAlg = HASH_AlgSHA384;
-            } else if (strncmp(src, "SHA-512", 7) == 0) {
-                shaAlg = HASH_AlgSHA512;
-            } else {
+            shaAlg = hash_string_to_hashType(src);
+            if (shaAlg == HASH_AlgNULL) {
                 fprintf(ecdsaresp, "ERROR: Unable to find SHAAlg type");
                 goto loser;
             }
@@ -2954,6 +2964,922 @@ loser:
         PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
     }
     fclose(ecdsareq);
+}
+
+/*
+ * Perform the ECDH Functional Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+#define MAX_ECC_PARAMS 256
+void
+ecdh_functional(char *reqfn, PRBool response)
+{
+    char buf[256];   /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "Qx = <144 hex digits>\n".
+                         */
+    FILE *ecdhreq;  /* input stream from the REQUEST file */
+    FILE *ecdhresp; /* output stream to the RESPONSE file */
+    char curve[16];  /* "nistxddd" */
+    unsigned char hashBuf[HASH_LENGTH_MAX];
+    ECParams *ecparams[MAX_ECC_PARAMS] = {NULL};
+    ECPrivateKey *ecpriv = NULL;
+    ECParams *current_ecparams = NULL;
+    SECItem pubkey;
+    SECItem ZZ;
+    unsigned int i;
+    unsigned int len = 0;
+    unsigned int uit_len = 0;
+    int current_curve = -1;
+    HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
+
+    ecdhreq = fopen(reqfn, "r");
+    ecdhresp = stdout;
+    strcpy(curve, "nist");
+    pubkey.data = NULL;
+    while (fgets(buf, sizeof buf, ecdhreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') {
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        if (buf[0] == '[') {
+            /* [Ex] */
+            if (buf[1] == 'E' && buf[3] == ']') {
+                current_curve = buf[2] - 'A';
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            /* [Curve selected: x-nnn */
+            if (strncmp(buf, "[Curve ", 7) == 0) {
+                const char *src;
+                char *dst;
+                SECItem *encodedparams;
+
+                if ((current_curve < 0) || (current_curve > MAX_ECC_PARAMS)) {
+                    fprintf(stderr, "No curve type defined\n");
+                    goto loser;
+                }
+
+                src = &buf[1];
+                /* skip passed the colon */
+                while (*src && *src != ':') src++;
+                if (*src != ':') {
+                    fprintf(stderr,
+                        "No colon in curve selected statement\n%s", buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                dst = &curve[4];
+                *dst++ = tolower(*src);
+                src += 2; /* skip the hyphen */
+                *dst++ = *src++;
+                *dst++ = *src++;
+                *dst++ = *src++;
+                *dst = '\0';
+                if (ecparams[current_curve] != NULL) {
+                    PORT_FreeArena(ecparams[current_curve]->arena, PR_FALSE);
+                    ecparams[current_curve] = NULL;
+                }
+                encodedparams = getECParams(curve);
+                if (encodedparams == NULL) {
+                    fprintf(stderr, "Unknown curve %s.", curve);
+                    goto loser;
+                }
+                if (EC_DecodeParams(encodedparams, &ecparams[current_curve])
+                                                        != SECSuccess) {
+                    fprintf(stderr, "Curve %s not supported.\n", curve);
+                    goto loser;
+                }
+                SECITEM_FreeItem(encodedparams, PR_TRUE);
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            /* [Ex - SHAxxx] */
+            if (buf[1] == 'E' && buf[3] == ' ') {
+                const char *src;
+                current_curve = buf[2] - 'A';
+                if ((current_curve < 0) || (current_curve > 256)) {
+                    fprintf(stderr, "bad curve type defined (%c)\n", buf[2]);
+                    goto loser;
+                }
+                    current_ecparams = ecparams[current_curve];
+                if (current_ecparams == NULL) {
+                    fprintf(stderr, "no curve defined for type %c defined\n",
+                            buf[2]);
+                    goto loser;
+                }
+                /* skip passed the colon */
+                src = &buf[1];
+                while (*src && *src != '-') src++;
+                if (*src != '-') {
+                    fprintf(stderr,
+                        "No data in curve selected statement\n%s",buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                hash = hash_string_to_hashType(src);
+                if (hash == HASH_AlgNULL){
+                    fprintf(ecdhresp, "ERROR: Unable to find SHAAlg type");
+                    goto loser;
+                }
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        /* COUNT = ... */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            fputs(buf, ecdhresp);
+            if (current_ecparams == NULL) {
+                fprintf(stderr, "no curve defined for type %c defined\n",
+                            buf[2]);
+                goto loser;
+            }
+            len = (current_ecparams->fieldID.size + 7) >> 3;
+            if (pubkey.data != NULL) {
+                PORT_Free(pubkey.data);
+                pubkey.data = NULL;
+            }
+            SECITEM_AllocItem(NULL, &pubkey, EC_GetPointSize(current_ecparams));
+            if (pubkey.data == NULL) {
+                goto loser;
+            }
+            pubkey.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+            continue;
+        }
+        /* QeCAVSx = ... */
+        if (strncmp(buf, "QeCAVSx", 7) == 0) {
+            fputs(buf, ecdhresp);
+            i = 7;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(&pubkey.data[1], len, &buf[i]);
+            continue;
+        }
+        /* QeCAVSy = ... */
+        if (strncmp(buf, "QeCAVSy", 7) == 0) {
+            fputs(buf, ecdhresp);
+            i = 7;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(&pubkey.data[1 + len], len, &buf[i]);
+            if (current_ecparams == NULL) {
+                fprintf(stderr, "no curve defined\n");
+                goto loser;
+            }
+            /* validate CAVS public key */
+            if (EC_ValidatePublicKey(current_ecparams, &pubkey) != SECSuccess) {
+                fprintf(stderr,"BAD key detected\n");
+                goto loser;
+            }
+
+            /* generate ECC key pair */
+            if (EC_NewKey(current_ecparams, &ecpriv) != SECSuccess) {
+                fprintf(stderr,"Failed to generate new key\n");
+                goto loser;
+            }
+            /* validate UIT generated public key */
+            if (EC_ValidatePublicKey(current_ecparams, &ecpriv->publicValue) !=
+                    SECSuccess) {
+                fprintf(stderr,"generate key did not validate\n");
+                goto loser;
+            }
+            /* output UIT public key */
+            uit_len = ecpriv->publicValue.len;
+            if (uit_len % 2 == 0) {
+                fprintf(stderr,"generate key had invalid public value len\n");
+                goto loser;
+            }
+            uit_len = (uit_len - 1) / 2;
+            if (ecpriv->publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
+                fprintf(stderr,"generate key was compressed\n");
+                goto loser;
+            }
+            fputs("QeIUTx = ", ecdhresp);
+            to_hex_str(buf, &ecpriv->publicValue.data[1], uit_len);
+            fputs(buf, ecdhresp);
+            fputc('\n', ecdhresp);
+            fputs("QeIUTy = ", ecdhresp);
+            to_hex_str(buf, &ecpriv->publicValue.data[1 + uit_len], uit_len);
+            fputs(buf, ecdhresp);
+            fputc('\n', ecdhresp);
+            /* ECDH */
+            if (ECDH_Derive(&pubkey,current_ecparams, &ecpriv->privateValue,
+                        PR_FALSE, &ZZ) != SECSuccess) {
+                fprintf(stderr,"Derive failed\n");
+                goto loser;
+            }
+            /* output hash of ZZ */
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
+                fprintf(stderr,"hash of derived key failed\n");
+                goto loser;
+            }
+            SECITEM_FreeItem(&ZZ, PR_FALSE);
+            fputs("HashZZ = ", ecdhresp);
+            to_hex_str(buf, hashBuf, fips_hashLen(hash));
+            fputs(buf, ecdhresp);
+            fputc('\n', ecdhresp);
+            fputc('\n', ecdhresp);
+            PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+            ecpriv = NULL;
+            continue;
+        }
+    }
+loser:
+    if (ecpriv != NULL) {
+        PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+    }
+    for (i=0; i < MAX_ECC_PARAMS; i++) {
+        if (ecparams[i] != NULL) {
+            PORT_FreeArena(ecparams[i]->arena, PR_FALSE);
+            ecparams[i] = NULL;
+        }
+    }
+    if (pubkey.data != NULL) {
+        PORT_Free(pubkey.data);
+    }
+    fclose(ecdhreq);
+}
+
+#define MATCH_OPENSSL 1 
+/*
+ * Perform the ECDH Validity Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+ecdh_verify(char *reqfn, PRBool response)
+{
+    char buf[256];   /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "Qx = <144 hex digits>\n".
+                         */
+    FILE *ecdhreq;  /* input stream from the REQUEST file */
+    FILE *ecdhresp; /* output stream to the RESPONSE file */
+    char curve[16];  /* "nistxddd" */
+    unsigned char hashBuf[HASH_LENGTH_MAX];
+    unsigned char cavsHashBuf[HASH_LENGTH_MAX];
+    unsigned char private_data[MAX_ECKEY_LEN];
+    ECParams *ecparams[MAX_ECC_PARAMS] =  {NULL};
+    ECParams *current_ecparams = NULL;
+    SECItem pubkey;
+    SECItem ZZ;
+    SECItem private_value;
+    unsigned int i;
+    unsigned int len = 0;
+    int current_curve = -1;
+    HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
+
+    ecdhreq = fopen(reqfn, "r");
+    ecdhresp = stdout;
+    strcpy(curve, "nist");
+    pubkey.data = NULL;
+    while (fgets(buf, sizeof buf, ecdhreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') {
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        if (buf[0] == '[') {
+            /* [Ex] */
+            if (buf[1] == 'E' && buf[3] == ']') {
+                current_curve = buf[2] - 'A';
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            /* [Curve selected: x-nnn */
+            if (strncmp(buf, "[Curve ", 7) == 0) {
+                const char *src;
+                char *dst;
+                SECItem *encodedparams;
+
+                if ((current_curve < 0) || (current_curve > MAX_ECC_PARAMS)) {
+                    fprintf(stderr, "No curve type defined\n");
+                    goto loser;
+                }
+
+                src = &buf[1];
+                /* skip passed the colon */
+                while (*src && *src != ':') src++;
+                if (*src != ':') {
+                    fprintf(stderr,
+                        "No colon in curve selected statement\n%s", buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                dst = &curve[4];
+                *dst++ = tolower(*src);
+                src += 2; /* skip the hyphen */
+                *dst++ = *src++;
+                *dst++ = *src++;
+                *dst++ = *src++;
+                *dst = '\0';
+                if (ecparams[current_curve] != NULL) {
+                    PORT_FreeArena(ecparams[current_curve]->arena, PR_FALSE);
+                    ecparams[current_curve] = NULL;
+                }
+                encodedparams = getECParams(curve);
+                if (encodedparams == NULL) {
+                    fprintf(stderr, "Unknown curve %s.\n", curve);
+                    goto loser;
+                }
+                if (EC_DecodeParams(encodedparams, &ecparams[current_curve])
+                                                        != SECSuccess) {
+                    fprintf(stderr, "Curve %s not supported.\n", curve);
+                    goto loser;
+                }
+                SECITEM_FreeItem(encodedparams, PR_TRUE);
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            /* [Ex - SHAxxx] */
+            if (buf[1] == 'E' && buf[3] == ' ') {
+                const char *src;
+                current_curve = buf[2] - 'A';
+                if ((current_curve < 0) || (current_curve > 256)) {
+                    fprintf(stderr, "bad curve type defined (%c)\n", buf[2]);
+                    goto loser;
+                }
+                    current_ecparams = ecparams[current_curve];
+                if (current_ecparams == NULL) {
+                    fprintf(stderr, "no curve defined for type %c defined\n",
+                            buf[2]);
+                    goto loser;
+                }
+                /* skip passed the colon */
+                src = &buf[1];
+                while (*src && *src != '-') src++;
+                if (*src != '-') {
+                    fprintf(stderr,
+                        "No data in curve selected statement\n%s",buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                hash = hash_string_to_hashType(src);
+                if (hash == HASH_AlgNULL){
+                    fprintf(ecdhresp, "ERROR: Unable to find SHAAlg type");
+                    goto loser;
+                }
+                fputs(buf, ecdhresp);
+                continue;
+            }
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        /* COUNT = ... */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            fputs(buf, ecdhresp);
+            if (current_ecparams == NULL) {
+                fprintf(stderr, "no curve defined for type %c defined\n",
+                            buf[2]);
+                goto loser;
+            }
+            len = (current_ecparams->fieldID.size + 7) >> 3;
+            if (pubkey.data != NULL) {
+                PORT_Free(pubkey.data);
+                pubkey.data = NULL;
+            }
+            SECITEM_AllocItem(NULL, &pubkey, EC_GetPointSize(current_ecparams));
+            if (pubkey.data == NULL) {
+                goto loser;
+            }
+            pubkey.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+            continue;
+        }
+        /* QeCAVSx = ... */
+        if (strncmp(buf, "QeCAVSx", 7) == 0) {
+            fputs(buf, ecdhresp);
+            i = 7;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(&pubkey.data[1], len, &buf[i]);
+            continue;
+        }
+        /* QeCAVSy = ... */
+        if (strncmp(buf, "QeCAVSy", 7) == 0) {
+            fputs(buf, ecdhresp);
+            i = 7;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(&pubkey.data[1 + len], len, &buf[i]);
+            continue;
+        }
+        if (strncmp(buf, "deIUT", 5) == 0) {
+            fputs(buf, ecdhresp);
+            i = 5;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(private_data, len, &buf[i]);
+            private_value.data = private_data;
+            private_value.len = len;
+            continue;
+        }
+        if (strncmp(buf, "QeIUTx", 6) == 0) {
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        if (strncmp(buf, "QeIUTy", 6) == 0) {
+            fputs(buf, ecdhresp);
+            continue;
+        }
+        if (strncmp(buf, "CAVSHashZZ", 10) == 0) {
+            fputs(buf, ecdhresp);
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(cavsHashBuf, fips_hashLen(hash), &buf[i]);
+            if (current_ecparams == NULL) {
+                fprintf(stderr, "no curve defined for type defined\n");
+                goto loser;
+            }
+            /* validate CAVS public key */
+            if (EC_ValidatePublicKey(current_ecparams, &pubkey) != SECSuccess) {
+#ifdef MATCH_OPENSSL
+		fprintf(ecdhresp, "Result = F\n");
+#else
+		fprintf(ecdhresp, "Result = F # key didn't validate\n");
+#endif
+                continue;
+            }
+
+            /* ECDH */
+            if (ECDH_Derive(&pubkey, current_ecparams, &private_value,
+                        PR_FALSE, &ZZ) != SECSuccess) {
+                fprintf(stderr,"Derive failed\n");
+                goto loser;
+            }
+            /* output  ZZ */
+#ifndef MATCH_OPENSSL
+            fputs("Z = ", ecdhresp);
+            to_hex_str(buf, ZZ.data, ZZ.len);
+            fputs(buf, ecdhresp);
+            fputc('\n', ecdhresp);
+#endif
+
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
+                fprintf(stderr,"hash of derived key failed\n");
+                goto loser;
+            }
+            SECITEM_FreeItem(&ZZ, PR_FALSE);
+#ifndef MATCH_NIST
+            fputs("IUTHashZZ = ", ecdhresp);
+            to_hex_str(buf, hashBuf, fips_hashLen(hash));
+            fputs(buf, ecdhresp);
+            fputc('\n', ecdhresp);
+#endif
+            if (memcmp(hashBuf, cavsHashBuf, fips_hashLen(hash)) != 0) {
+#ifdef MATCH_OPENSSL
+		fprintf(ecdhresp, "Result = F\n");
+#else
+		fprintf(ecdhresp, "Result = F # hash doesn't match\n");
+#endif
+            } else {
+		fprintf(ecdhresp, "Result = P\n");
+            }
+#ifndef MATCH_OPENSSL
+            fputc('\n', ecdhresp);
+#endif
+            continue;
+        }
+    }
+loser:
+    for (i=0; i < MAX_ECC_PARAMS; i++) {
+        if (ecparams[i] != NULL) {
+            PORT_FreeArena(ecparams[i]->arena, PR_FALSE);
+            ecparams[i] = NULL;
+        }
+    }
+    if (pubkey.data != NULL) {
+        PORT_Free(pubkey.data);
+    }
+    fclose(ecdhreq);
+}
+
+/*
+ * Perform the DH Functional Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+#define MAX_ECC_PARAMS 256
+void
+dh_functional(char *reqfn, PRBool response)
+{
+    char buf[1024];   /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "YephCAVS = <512 hex digits>\n".
+                         */
+    FILE *dhreq;  /* input stream from the REQUEST file */
+    FILE *dhresp; /* output stream to the RESPONSE file */
+    unsigned char hashBuf[HASH_LENGTH_MAX];
+    DSAPrivateKey *dsapriv = NULL;
+    PQGParams pqg = { 0 };
+    unsigned char pubkeydata[DSA_MAX_P_BITS/8];
+    SECItem pubkey;
+    SECItem ZZ;
+    unsigned int i,j;
+    unsigned int pgySize;
+    HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
+
+    dhreq = fopen(reqfn, "r");
+    dhresp = stdout;
+    while (fgets(buf, sizeof buf, dhreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') {
+            fputs(buf, dhresp);
+            continue;
+        }
+        if (buf[0] == '[') {
+            /* [Fx - SHAxxx] */
+            if (buf[1] == 'F' && buf[3] == ' ') {
+                const char *src;
+                /* skip passed the colon */
+                src = &buf[1];
+                while (*src && *src != '-') src++;
+                if (*src != '-') {
+                    fprintf(stderr, "No hash specified\n%s",buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                hash = hash_string_to_hashType(src);
+                if (hash == HASH_AlgNULL){
+                    fprintf(dhresp, "ERROR: Unable to find SHAAlg type");
+                    goto loser;
+                }
+                /* clear the PQG parameters */
+                if (pqg.prime.data) { /* P */
+                    SECITEM_ZfreeItem(&pqg.prime, PR_FALSE);
+                }
+                if (pqg.subPrime.data) { /* Q */
+                    SECITEM_ZfreeItem(&pqg.subPrime, PR_FALSE);
+                }
+                if (pqg.base.data) { /* G */
+                    SECITEM_ZfreeItem(&pqg.base, PR_FALSE);
+                }
+                pgySize = DSA_MAX_P_BITS / 8; /* change if more key sizes are supported in CAVS */
+                SECITEM_AllocItem(NULL, &pqg.prime, pgySize);
+                SECITEM_AllocItem(NULL, &pqg.base, pgySize);
+                pqg.prime.len = pqg.base.len = pgySize;
+
+                /* set q to the max allows */
+                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS/ 8);
+                pqg.subPrime.len = DSA_MAX_Q_BITS / 8;
+                fputs(buf, dhresp);
+                continue;
+            }
+            fputs(buf, dhresp);
+            continue;
+        }
+        if (buf[0] == 'P') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.prime.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.prime.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.prime.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* Q = ... */
+        if (buf[0] == 'Q') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.subPrime.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.subPrime.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.subPrime.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* G = ... */
+        if (buf[0] == 'G') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.base.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.base.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.base.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* COUNT = ... */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* YephemCAVS = ... */
+        if (strncmp(buf, "YephemCAVS", 10) == 0) {
+            fputs(buf, dhresp);
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(pubkeydata, pqg.prime.len, &buf[i]);
+            pubkey.data = pubkeydata;
+            pubkey.len = pqg.prime.len;
+
+            /* generate FCC key pair, nist uses pqg rather then pg,
+             * so use DSA to generate the key */
+            if (DSA_NewKey(&pqg, &dsapriv) != SECSuccess) {
+                fprintf(stderr,"Failed to generate new key\n");
+                goto loser;
+            }
+            fputs("XephemIUT = ", dhresp);
+            to_hex_str(buf, dsapriv->privateValue.data, dsapriv->privateValue.len);
+            fputs(buf, dhresp);
+            fputc('\n', dhresp);
+            fputs("YephemIUT = ", dhresp);
+            to_hex_str(buf, dsapriv->publicValue.data, dsapriv->publicValue.len);
+            fputs(buf, dhresp);
+            fputc('\n', dhresp);
+            /* DH */
+            if (DH_Derive(&pubkey,&pqg.prime, &dsapriv->privateValue,
+                        &ZZ, pqg.prime.len) != SECSuccess) {
+                fprintf(stderr,"Derive failed\n");
+                goto loser;
+            }
+            /* output hash of ZZ */
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
+                fprintf(stderr,"hash of derived key failed\n");
+                goto loser;
+            }
+            SECITEM_FreeItem(&ZZ, PR_FALSE);
+            fputs("HashZZ = ", dhresp);
+            to_hex_str(buf, hashBuf, fips_hashLen(hash));
+            fputs(buf, dhresp);
+            fputc('\n', dhresp);
+            fputc('\n', dhresp);
+            PORT_FreeArena(dsapriv->params.arena, PR_TRUE);
+            dsapriv = NULL;
+            continue;
+        }
+    }
+loser:
+    if (dsapriv != NULL) {
+        PORT_FreeArena(dsapriv->params.arena, PR_TRUE);
+    }
+    fclose(dhreq);
+}
+
+#define MATCH_OPENSSL 1 
+/*
+ * Perform the DH Validity Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+dh_verify(char *reqfn, PRBool response)
+{
+    char buf[1024];   /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "YephCAVS = <512 hex digits>\n".
+                         */
+    FILE *dhreq;  /* input stream from the REQUEST file */
+    FILE *dhresp; /* output stream to the RESPONSE file */
+    unsigned char hashBuf[HASH_LENGTH_MAX];
+    unsigned char cavsHashBuf[HASH_LENGTH_MAX];
+    PQGParams pqg = { 0 };
+    unsigned char pubkeydata[DSA_MAX_P_BITS/8];
+    unsigned char privkeydata[DSA_MAX_P_BITS/8];
+    SECItem pubkey;
+    SECItem privkey;
+    SECItem ZZ;
+    unsigned int i,j;
+    unsigned int pgySize;
+    HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
+
+    dhreq = fopen(reqfn, "r");
+    dhresp = stdout;
+    while (fgets(buf, sizeof buf, dhreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') {
+            fputs(buf, dhresp);
+            continue;
+        }
+        if (buf[0] == '[') {
+            /* [Fx - SHAxxx] */
+            if (buf[1] == 'F' && buf[3] == ' ') {
+                const char *src;
+                /* skip passed the colon */
+                src = &buf[1];
+                while (*src && *src != '-') src++;
+                if (*src != '-') {
+                    fprintf(stderr, "No hash specified\n%s",buf);
+                    goto loser;
+                }
+                src++;
+                /* skip to the first non-space */
+                while (*src && *src == ' ') src++;
+                hash = hash_string_to_hashType(src);
+                if (hash == HASH_AlgNULL){
+                    fprintf(dhresp, "ERROR: Unable to find SHAAlg type");
+                    goto loser;
+                }
+                /* clear the PQG parameters */
+                if (pqg.prime.data) { /* P */
+                    SECITEM_ZfreeItem(&pqg.prime, PR_FALSE);
+                }
+                if (pqg.subPrime.data) { /* Q */
+                    SECITEM_ZfreeItem(&pqg.subPrime, PR_FALSE);
+                }
+                if (pqg.base.data) { /* G */
+                    SECITEM_ZfreeItem(&pqg.base, PR_FALSE);
+                }
+                pgySize = DSA_MAX_P_BITS / 8; /* change if more key sizes are supported in CAVS */
+                SECITEM_AllocItem(NULL, &pqg.prime, pgySize);
+                SECITEM_AllocItem(NULL, &pqg.base, pgySize);
+                pqg.prime.len = pqg.base.len = pgySize;
+
+                /* set q to the max allows */
+                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS/ 8);
+                pqg.subPrime.len = DSA_MAX_Q_BITS / 8;
+                fputs(buf, dhresp);
+                continue;
+            }
+            fputs(buf, dhresp);
+            continue;
+        }
+        if (buf[0] == 'P') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.prime.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.prime.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.prime.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* Q = ... */
+        if (buf[0] == 'Q') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.subPrime.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.subPrime.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.subPrime.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* G = ... */
+        if (buf[0] == 'G') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j = 0; j < pqg.base.len; i += 2, j++) {
+                if (!isxdigit(buf[i])) {
+                    pqg.base.len = j;
+                    break;
+                }
+                hex_to_byteval(&buf[i], &pqg.base.data[j]);
+            }
+
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* COUNT = ... */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            fputs(buf, dhresp);
+            continue;
+        }
+
+        /* YephemCAVS = ... */
+        if (strncmp(buf, "YephemCAVS", 10) == 0) {
+            fputs(buf, dhresp);
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(pubkeydata, pqg.prime.len, &buf[i]);
+            pubkey.data = pubkeydata;
+            pubkey.len = pqg.prime.len;
+            continue;
+        }
+        /* XephemUIT = ... */
+        if (strncmp(buf, "XephemIUT", 9) == 0) {
+            fputs(buf, dhresp);
+            i = 9;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(privkeydata, pqg.subPrime.len, &buf[i]);
+            privkey.data = privkeydata;
+            privkey.len = pqg.subPrime.len;
+            continue;
+        }
+        /* YephemUIT = ... */
+        if (strncmp(buf, "YephemIUT", 9) == 0) {
+            fputs(buf, dhresp);
+            continue;
+        }
+        /* CAVSHashZZ = ... */
+        if (strncmp(buf, "CAVSHashZZ", 10) == 0) {
+            fputs(buf, dhresp);
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            from_hex_str(cavsHashBuf, fips_hashLen(hash), &buf[i]);
+            /* do the DH operation*/
+            if (DH_Derive(&pubkey,&pqg.prime, &privkey,
+                        &ZZ, pqg.prime.len) != SECSuccess) {
+                fprintf(stderr,"Derive failed\n");
+                goto loser;
+            }
+            /* output  ZZ */
+#ifndef MATCH_OPENSSL
+            fputs("Z = ", dhresp);
+            to_hex_str(buf, ZZ.data, ZZ.len);
+            fputs(buf, dhresp);
+            fputc('\n', dhresp);
+#endif
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
+                fprintf(stderr,"hash of derived key failed\n");
+                goto loser;
+            }
+            SECITEM_FreeItem(&ZZ, PR_FALSE);
+#ifndef MATCH_NIST_
+            fputs("IUTHashZZ = ", dhresp);
+            to_hex_str(buf, hashBuf, fips_hashLen(hash));
+            fputs(buf, dhresp);
+            fputc('\n', dhresp);
+#endif
+            if (memcmp(hashBuf, cavsHashBuf, fips_hashLen(hash)) != 0) {
+		fprintf(dhresp, "Result = F\n");
+            } else {
+		fprintf(dhresp, "Result = P\n");
+            }
+#ifndef MATCH_OPENSSL
+            fputc('\n', dhresp);
+#endif
+            continue;
+        }
+    }
+loser:
+    fclose(dhreq);
 }
 
 PRBool
@@ -5342,17 +6268,8 @@ rsa_siggen_test(char *reqfn)
                 i++;
             }
             /* set the SHA Algorithm */
-            if (strncmp(&buf[i], "SHA1", 4) == 0) {
-                shaAlg = HASH_AlgSHA1;
-            } else if (strncmp(&buf[i], "SHA224", 6) == 0) {
-                shaAlg = HASH_AlgSHA224;
-            } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
-                shaAlg = HASH_AlgSHA256;
-            } else if (strncmp(&buf[i], "SHA384", 6) == 0) {
-                shaAlg = HASH_AlgSHA384;
-            } else if (strncmp(&buf[i], "SHA512", 6) == 0) {
-                shaAlg = HASH_AlgSHA512;
-            } else {
+            shaAlg = hash_string_to_hashType(&buf[i]);
+            if (shaAlg == HASH_AlgNULL) {
                 fprintf(rsaresp, "ERROR: Unable to find SHAAlg type");
                 goto loser;
             }
@@ -5537,17 +6454,8 @@ rsa_sigver_test(char *reqfn)
                 i++;
             }
             /* set the SHA Algorithm */
-            if (strncmp(&buf[i], "SHA1", 4) == 0) {
-                shaAlg = HASH_AlgSHA1;
-            } else if (strncmp(&buf[i], "SHA224", 6) == 0) {
-                shaAlg = HASH_AlgSHA224;
-            } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
-                shaAlg = HASH_AlgSHA256;
-            } else if (strncmp(&buf[i], "SHA384", 6) == 0) {
-                shaAlg = HASH_AlgSHA384;
-            } else if (strncmp(&buf[i], "SHA512", 6) == 0) {
-                shaAlg = HASH_AlgSHA512;
-            } else {
+            shaAlg = hash_string_to_hashType(&buf[i]);
+            if (shaAlg == HASH_AlgNULL) {
                 fprintf(rsaresp, "ERROR: Unable to find SHAAlg type");
                 goto loser;
             }
@@ -6106,6 +7014,34 @@ main(int argc, char **argv)
         } else if (strcmp(argv[2], "sigver") == 0) {
             /* Signature Verification Test */
             ecdsa_sigver_test(argv[3]);
+        }
+        /*************/
+        /*   ECDH   */
+        /*************/
+    } else if (strcmp(argv[1], "ecdh") == 0) {
+        /* argv[2]={init|resp}-{func|verify} argv[3]=<test name>.req */
+        if (strcmp(argv[2], "init-func") == 0) {
+            ecdh_functional(argv[3], 0);
+        } else if (strcmp(argv[2], "resp-func") == 0) {
+            ecdh_functional(argv[3], 1);
+        } else if (strcmp(argv[2], "init-verify") == 0) {
+            ecdh_verify(argv[3], 0);
+        } else if (strcmp(argv[2], "resp-verify") == 0) {
+            ecdh_verify(argv[3], 1);
+        }
+        /*************/
+        /*   DH   */
+        /*************/
+    } else if (strcmp(argv[1], "dh") == 0) {
+        /* argv[2]={init|resp}-{func|verify} argv[3]=<test name>.req */
+        if (strcmp(argv[2], "init-func") == 0) {
+            dh_functional(argv[3], 0);
+        } else if (strcmp(argv[2], "resp-func") == 0) {
+            dh_functional(argv[3], 1);
+        } else if (strcmp(argv[2], "init-verify") == 0) {
+            dh_verify(argv[3], 0);
+        } else if (strcmp(argv[2], "resp-verify") == 0) {
+            dh_verify(argv[3], 1);
         }
         /*************/
         /*   RNG     */

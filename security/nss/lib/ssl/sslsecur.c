@@ -971,7 +971,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
          * 1-RTT later.
          */
         ssl_GetSpecReadLock(ss);
-        len = tls13_LimitEarlyData(ss, content_application_data, len);
+        len = tls13_LimitEarlyData(ss, ssl_ct_application_data, len);
         ssl_ReleaseSpecReadLock(ss);
     }
 

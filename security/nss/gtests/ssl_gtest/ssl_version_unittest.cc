@@ -158,7 +158,7 @@ TEST_P(TlsConnectGeneric, AlertBeforeServerHello) {
   static const uint8_t kWarningAlert[] = {kTlsAlertWarning,
                                           kTlsAlertUnrecognizedName};
   DataBuffer alert;
-  TlsAgentTestBase::MakeRecord(variant_, kTlsAlertType,
+  TlsAgentTestBase::MakeRecord(variant_, ssl_ct_alert,
                                SSL_LIBRARY_VERSION_TLS_1_0, kWarningAlert,
                                PR_ARRAY_SIZE(kWarningAlert), &alert);
   client_->adapter()->PacketReceived(alert);

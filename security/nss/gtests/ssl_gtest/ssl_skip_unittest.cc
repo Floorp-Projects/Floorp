@@ -32,7 +32,7 @@ class TlsHandshakeSkipFilter : public TlsRecordFilter {
   virtual PacketFilter::Action FilterRecord(
       const TlsRecordHeader& record_header, const DataBuffer& input,
       DataBuffer* output) {
-    if (record_header.content_type() != kTlsHandshakeType) {
+    if (record_header.content_type() != ssl_ct_handshake) {
       return KEEP;
     }
 
