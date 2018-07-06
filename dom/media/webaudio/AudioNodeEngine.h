@@ -210,6 +210,18 @@ void AudioBufferInPlaceScale(float* aBlock,
                              uint32_t aSize);
 
 /**
+ * a-rate in place gain.
+ */
+void AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
+                            float aScale[WEBAUDIO_BLOCK_SIZE]);
+/**
+ * a-rate in place gain.
+ */
+void AudioBufferInPlaceScale(float* aBlock,
+                             float* aScale,
+                             uint32_t aSize);
+
+/**
  * Upmix a mono input to a stereo output, scaling the two output channels by two
  * different gain value.
  * This algorithm is specified in the WebAudio spec.

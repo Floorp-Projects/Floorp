@@ -229,6 +229,13 @@ AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
+AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
+                       float aScale[WEBAUDIO_BLOCK_SIZE])
+{
+  AudioBufferInPlaceScale(aBlock, aScale, WEBAUDIO_BLOCK_SIZE);
+}
+
+void
 AudioBufferInPlaceScale(float* aBlock,
                         float aScale,
                         uint32_t aSize)
@@ -252,6 +259,30 @@ AudioBufferInPlaceScale(float* aBlock,
 
   for (uint32_t i = 0; i < aSize; ++i) {
     *aBlock++ *= aScale;
+  }
+}
+
+void
+AudioBufferInPlaceScale(float* aBlock,
+                        float* aScale,
+                        uint32_t aSize)
+{
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) {
+    AudioBufferInPlaceScale_NEON(aBlock, aScale, aSize);
+    return;
+  }
+#endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBufferInPlaceScale_SSE(aBlock, aScale, aSize);
+    return;
+  }
+#endif
+
+  for (uint32_t i = 0; i < aSize; ++i) {
+    *aBlock++ *= *aScale++;
   }
 }
 

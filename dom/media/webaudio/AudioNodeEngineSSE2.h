@@ -26,6 +26,10 @@ void
 AudioBufferInPlaceScale_SSE(float* aBlock,
                             float aScale,
                             uint32_t aSize);
+void
+AudioBufferInPlaceScale_SSE(float* aBlock,
+                            float* aScale,
+                            uint32_t aSize);
 
 void
 AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],

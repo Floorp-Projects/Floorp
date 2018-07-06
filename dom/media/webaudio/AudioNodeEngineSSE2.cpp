@@ -149,6 +149,38 @@ AudioBufferInPlaceScale_SSE(float* aBlock,
 }
 
 void
+AudioBufferInPlaceScale_SSE(float* aBlock,
+                            float* aScale,
+                            uint32_t aSize)
+{
+  __m128 vout0, vout1, vout2, vout3,
+         vgain0, vgain1, vgain2, vgain3,
+         vin0, vin1, vin2, vin3;
+
+  ASSERT_ALIGNED16(aBlock);
+  ASSERT_MULTIPLE16(aSize);
+
+  for (unsigned i = 0; i < aSize; i+=16) {
+    vin0 = _mm_load_ps(&aBlock[i]);
+    vin1 = _mm_load_ps(&aBlock[i + 4]);
+    vin2 = _mm_load_ps(&aBlock[i + 8]);
+    vin3 = _mm_load_ps(&aBlock[i + 12]);
+    vgain0 = _mm_load_ps(&aScale[i]);
+    vgain1 = _mm_load_ps(&aScale[i + 4]);
+    vgain2 = _mm_load_ps(&aScale[i + 8]);
+    vgain3 = _mm_load_ps(&aScale[i + 12]);
+    vout0 = _mm_mul_ps(vin0, vgain0);
+    vout1 = _mm_mul_ps(vin1, vgain1);
+    vout2 = _mm_mul_ps(vin2, vgain2);
+    vout3 = _mm_mul_ps(vin3, vgain3);
+    _mm_store_ps(&aBlock[i], vout0);
+    _mm_store_ps(&aBlock[i + 4], vout1);
+    _mm_store_ps(&aBlock[i + 8], vout2);
+    _mm_store_ps(&aBlock[i + 12], vout3);
+  }
+}
+
+void
 AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                 const float aInputR[WEBAUDIO_BLOCK_SIZE],
                                 float aGainL, float aGainR, bool aIsOnTheLeft,
