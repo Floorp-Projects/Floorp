@@ -585,7 +585,7 @@ JSRuntime::initMainAtomsTables(JSContext* cx)
 template <typename CharT>
 MOZ_NEVER_INLINE static JSAtom*
 PermanentlyAtomizeAndCopyChars(JSContext* cx,
-                               Maybe<AtomSet::AddPtr> zonePtr,
+                               Maybe<AtomSet::AddPtr>& zonePtr,
                                const CharT* tbchars, size_t length,
                                const Maybe<uint32_t>& indexValue,
                                const AtomHasher::Lookup& lookup);
@@ -739,7 +739,7 @@ AtomizeAndCopyChars(JSContext* cx, const Latin1Char* tbchars, size_t length, Pin
 template <typename CharT>
 MOZ_NEVER_INLINE static JSAtom*
 PermanentlyAtomizeAndCopyChars(JSContext* cx,
-                               Maybe<AtomSet::AddPtr> zonePtr,
+                               Maybe<AtomSet::AddPtr>& zonePtr,
                                const CharT* tbchars, size_t length,
                                const Maybe<uint32_t>& indexValue,
                                const AtomHasher::Lookup& lookup)
