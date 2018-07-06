@@ -14,7 +14,6 @@
   //   generateOffer()
   //   generateAnswer()
   //   assert_session_desc_similar()
-  //   test_state_change_event()
 
   /*
     4.3.2.  Interface Definition
@@ -60,7 +59,9 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    test_state_change_event(t, pc, ['have-local-offer', 'stable']);
+
+    const states = [];
+    pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
     return pc.createOffer({ offerToReceiveVideo: true })
     .then(offer =>
@@ -79,6 +80,8 @@
 
           assert_equals(pc.pendingLocalDescription, null);
           assert_equals(pc.pendingRemoteDescription, null);
+
+          assert_array_equals(states, ['have-local-offer', 'stable']);
         })));
   }, 'setRemoteDescription() with valid state and answer should succeed');
 
