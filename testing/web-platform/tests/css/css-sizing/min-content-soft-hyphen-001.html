@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<title>The min-content inline size shold wrap at a soft-hyphen, and include its advance</title>
+<link rel="help" href="https://www.w3.org/TR/css-sizing-3/#valdef-width-min-content">
+<link rel="match" href="min-content-soft-hyphen-001-ref.html">
+
+<style>
+div {
+  width: min-content;
+  border: 5px blue solid;
+}
+</style>
+
+<!--
+This test relies on an undefined behavior and may fail if some
+conditions do not stand.
+
+The reference file of this test uses U+002D. Although `&shy;`
+being rendered as U+002D is not defined, and most UA actually
+use U+2010 when the font has a glyph for it, it looks like in
+most common fonts the glyph for U+2010 and U+002D match, so
+the use of U+002D seems to work in most cases.
+-->
+<div>0123&shy;45</div>
