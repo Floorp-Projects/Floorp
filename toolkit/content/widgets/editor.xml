@@ -117,23 +117,9 @@
       <property name="editortype"
                 onget="return this.getAttribute('editortype');"
                 onset="this.setAttribute('editortype', val); return val;"/>
-      <property name="webNavigation"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
-                readonly="true"/>
-      <property name="contentDocument" readonly="true"
-                onget="return this.webNavigation.document;"/>
-      <property name="docShell" readonly="true">
-        <getter><![CDATA[
-          let {frameLoader} = this;
-          return frameLoader ? frameLoader.docShell : null;
-        ]]></getter>
-      </property>
       <property name="currentURI"
                 readonly="true"
                 onget="return this.webNavigation.currentURI;"/>
-      <property name="contentWindow"
-                readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);"/>
       <property name="contentWindowAsCPOW"
                 readonly="true"
                 onget="return this.contentWindow;"/>

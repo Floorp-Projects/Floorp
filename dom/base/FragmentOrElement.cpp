@@ -754,10 +754,6 @@ FragmentOrElement::nsExtendedDOMSlots::nsExtendedDOMSlots() = default;
 
 FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots()
 {
-  RefPtr<nsFrameLoader> frameLoader = do_QueryObject(mFrameLoaderOrOpener);
-  if (frameLoader) {
-    frameLoader->Destroy();
-  }
 }
 
 void
@@ -775,11 +771,6 @@ FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots()
     mCustomElementData->Unlink();
     mCustomElementData = nullptr;
   }
-  RefPtr<nsFrameLoader> frameLoader = do_QueryObject(mFrameLoaderOrOpener);
-  if (frameLoader) {
-    frameLoader->Destroy();
-  }
-  mFrameLoaderOrOpener = nullptr;
 }
 
 void
@@ -806,9 +797,6 @@ FragmentOrElement::nsExtendedDOMSlots::TraverseExtendedSlots(nsCycleCollectionTr
   if (mCustomElementData) {
     mCustomElementData->Traverse(aCb);
   }
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mFrameLoaderOrOpener");
-  aCb.NoteXPCOMChild(mFrameLoaderOrOpener);
 }
 
 FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
