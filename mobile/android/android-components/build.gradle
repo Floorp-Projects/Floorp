@@ -159,7 +159,7 @@ subprojects {
                 }
             }
 
-            if (project.hasProperty("coverage")) {
+            if (project.hasProperty("coverage") && project.name != "support-test") {
                 tasks.withType(Test) {
                     jacoco.includeNoLocationClasses = true
                     doLast { jacocoTestReport.execute() }
