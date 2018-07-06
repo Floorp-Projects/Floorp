@@ -1,4 +1,4 @@
-add_task(async function testRestoreDefaultsBtn() {
+add_task(async function testRestoreDefaultsBtn_visible() {
   const before = SpecialPowers.Services.prefs.getStringPref("browser.newtabpage.activity-stream.feeds.section.topstories.options", "");
 
   await SpecialPowers.pushPrefEnv({set: [
@@ -40,7 +40,7 @@ add_task(async function testRestoreDefaultsBtn() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function testRestoreDefaultsBtn() {
+add_task(async function testRestoreDefaultsBtn_hidden() {
   const before = SpecialPowers.Services.prefs.getStringPref("browser.newtabpage.activity-stream.feeds.section.topstories.options", "");
 
   await SpecialPowers.pushPrefEnv({set: [
@@ -50,6 +50,10 @@ add_task(async function testRestoreDefaultsBtn() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences#home", false);
   let browser = tab.linkedBrowser;
+
+  await BrowserTestUtils.waitForCondition(() => ContentTask.spawn(browser, {},
+    () => content.document.getElementById("restoreDefaultHomePageBtn") !== null),
+    "Wait for the button to be added to the page");
 
   await BrowserTestUtils.waitForCondition(() => ContentTask.spawn(browser, {},
     () => content.document.querySelector("[data-subcategory='topsites'] checkbox") !== null),
