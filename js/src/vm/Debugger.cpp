@@ -1422,8 +1422,11 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoRealm>& ar, MutableHandleValue
             if (js::Call(cx, fval, object, exc, &rv)) {
                 if (vp) {
                     ResumeMode resumeMode = ResumeMode::Continue;
-                    if (processResumptionValue(ar, frame, thisVForCheck, rv, resumeMode, *vp))
+                    if (processResumptionValueNoUncaughtExceptionHook(ar, frame, thisVForCheck, rv,
+                                                                      resumeMode, *vp))
+                    {
                         return resumeMode;
+                    }
                 } else {
                     return ResumeMode::Continue;
                 }
@@ -1634,9 +1637,10 @@ GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
 }
 
 bool
-Debugger::processResumptionValue(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                 const Maybe<HandleValue>& maybeThisv, HandleValue rval,
-                                 ResumeMode& resumeMode, MutableHandleValue vp)
+Debugger::processResumptionValueNoUncaughtExceptionHook(
+    Maybe<AutoRealm>& ar, AbstractFramePtr frame,
+    const Maybe<HandleValue>& maybeThisv, HandleValue rval,
+    ResumeMode& resumeMode, MutableHandleValue vp)
 {
     JSContext* cx = ar->context();
 

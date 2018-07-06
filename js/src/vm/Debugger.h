@@ -607,7 +607,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *
      * Precondition: ar is entered. We are in the debugger compartment.
      *
-     * Postcondition: This called ar.leave(). See handleUncaughtException.
+     * Postcondition: This called ar.reset(). See handleUncaughtException.
      *
      * If `success` is false, the hook failed. If an exception is pending in
      * ar.context(), return handleUncaughtException(ar, vp, callhook).
@@ -644,9 +644,19 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                                 bool success, ResumeMode resumeMode,
                                                 MutableHandleValue vp);
 
-    bool processResumptionValue(mozilla::Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
-                                ResumeMode& resumeMode, MutableHandleValue vp);
+    /*
+     * Like processHandlerResult, but if `rval` is not a valid resumption value,
+     * don't call the uncaughtExceptionHook. Just return false.
+     *
+     * This is used to process the return value of the uncaughtExceptionHook
+     * itself, to avoid the possibility of triggering it again.
+     */
+    bool processResumptionValueNoUncaughtExceptionHook(mozilla::Maybe<AutoRealm>& ar,
+                                                       AbstractFramePtr frame,
+                                                       const mozilla::Maybe<HandleValue>& maybeThis,
+                                                       HandleValue rval,
+                                                       ResumeMode& resumeMode,
+                                                       MutableHandleValue vp);
 
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
