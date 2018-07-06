@@ -285,8 +285,8 @@ struct JSContext : public JS::RootingContext,
         return runtime_->atomsZone(access);
     }
 
-    js::SymbolRegistry& symbolRegistry(const js::AutoAccessAtomsZone& access) {
-        return runtime_->symbolRegistry(access);
+    js::SymbolRegistry& symbolRegistry() {
+        return runtime_->symbolRegistry();
     }
 
     // Methods to access runtime data that must be protected by locks.

@@ -363,8 +363,9 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     {
         AutoLockForExclusiveAccess lock(this);
         rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
-        rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf, lock);
     }
+
+    rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 
     if (!parentRuntime) {
         rtSizes->atomsTable += mallocSizeOf(staticStrings);

@@ -5400,7 +5400,7 @@ UpdateAtomsBitmap(JSRuntime* runtime)
 
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
-    runtime->unsafeSymbolRegistry().sweep();
+    runtime->symbolRegistry().sweep();
     for (RealmsIter realm(runtime); !realm.done(); realm.next())
         realm->sweepVarNames();
 }
