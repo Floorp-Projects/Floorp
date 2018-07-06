@@ -35,15 +35,6 @@ typedef PRUint16 ssl3CipherSuite;
 
 #define MAX_FRAGMENT_LENGTH 16384
 
-typedef enum {
-    content_change_cipher_spec = 20,
-    content_alert = 21,
-    content_handshake = 22,
-    content_application_data = 23,
-    content_alt_handshake = 24,
-    content_ack = 25
-} SSL3ContentType;
-
 typedef enum { change_cipher_spec_choice = 1 } SSL3ChangeCipherSpecChoice;
 
 typedef enum { alert_warning = 1,

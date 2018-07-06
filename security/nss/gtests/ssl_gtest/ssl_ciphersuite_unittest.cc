@@ -282,7 +282,7 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   } else {
     epoch = 0;
   }
-  TlsAgentTestBase::MakeRecord(variant_, kTlsApplicationDataType, version_,
+  TlsAgentTestBase::MakeRecord(variant_, ssl_ct_application_data, version_,
                                payload, sizeof(payload), &record,
                                (epoch << 48) | record_limit());
   client_->SendDirect(record);
