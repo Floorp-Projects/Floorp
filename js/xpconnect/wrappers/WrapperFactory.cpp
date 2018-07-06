@@ -257,7 +257,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
                 return;
             }
 
-            RootedObject currentScope(cx, JS_GetGlobalForObject(cx, obj));
+            RootedObject currentScope(cx, JS::GetNonCCWObjectGlobal(obj));
             if (MOZ_UNLIKELY(wrapScope != currentScope)) {
                 // The wrapper claims it wants to be in the new scope, but
                 // currently has a reflection that lives in the old scope. This

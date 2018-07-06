@@ -1840,7 +1840,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     options.setIntroductionType("js shell evaluate")
            .setFileAndLine("@evaluate", 1);
 
-    global = JS_GetGlobalForObject(cx, &args.callee());
+    global = JS::CurrentGlobalOrNull(cx);
     MOZ_ASSERT(global);
 
     if (args.length() == 2) {
