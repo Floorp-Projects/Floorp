@@ -765,6 +765,9 @@ ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uint32_t 
 MOZ_MUST_USE bool
 DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 
+void
+ConvertMemoryPagesToBytes(Limits* memory);
+
 // Validate an entire module, returning true if the module was validated
 // successfully. If Validate returns false:
 //  - if *error is null, the caller should report out-of-memory

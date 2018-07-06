@@ -332,7 +332,7 @@ async function checkClickOnNode(hud, toolbox, frameLinkNode) {
 
   const dbg = toolbox.getPanel("jsdebugger");
   is(
-    dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
+    dbg._selectors.getSelectedSource(dbg._getState()).url,
     url,
     "expected source url"
   );

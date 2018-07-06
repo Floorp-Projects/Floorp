@@ -2,13 +2,19 @@
 <meta charset="utf-8">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<body>
 <script>
 const t = async_test("Test window.find / nsFind");
 
-function testFindable(isFindable, textToFind, docText, description) {
+function testFindable(isFindable, textToFind, buildDoc, description) {
   try{
     const iframe = document.querySelector("iframe")
-    iframe.contentDocument.documentElement.innerHTML = docText;
+    iframe.contentDocument.documentElement.innerHTML =
+      (typeof buildDoc == "string") ? buildDoc : "";
+
+    if (typeof buildDoc == "function")
+      buildDoc(iframe.contentDocument);
+
     iframe.contentWindow.getSelection().removeAllRanges();
     assert_equals(
       isFindable,
@@ -35,7 +41,7 @@ const BLOCK_LIKE_DISPLAY_VALUES = [
   "flex",
 ];
 
-window.runTests = t.step_func_done(function() {
+let runTests = t.step_func_done(function() {
   testFindable(true, "me and me", `
     me <div style="display: contents">and</div> me
   `, "display: contents");
@@ -77,6 +83,43 @@ window.runTests = t.step_func_done(function() {
       </div>
     </div>
   `);
+
+  testFindable(true, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.attachShadow({ mode: "open" }).innerHTML = `
+      Wohoo, this is Shadow text, yay!
+    `;
+    document.documentElement.appendChild(div);
+  }, "In Shadow DOM");
+
+  testFindable(true, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.appendChild(document.createTextNode(
+      "Wohoo, this is Shadow text, yay!"
+    ));
+    div.attachShadow({ mode: "open" }).innerHTML = `<slot></slot>`;
+    document.documentElement.appendChild(div);
+  }, "Slotted content in Shadow DOM");
+
+  // TODO(emilio): Even though this works (as in, find(..) returns true), the
+  // selection here doesn't end up selecting the shadow content.
+  //
+  // This should work in an ideal world.
+  testFindable(true, "Shadow text", function(document) {
+    let div = document.createElement("div");
+    div.appendChild(document.createTextNode("text, yay!"));
+    div.attachShadow({ mode: "open" }).innerHTML = `This is Shadow <slot></slot>`;
+    document.documentElement.appendChild(div);
+  }, "Mixed shadow and non-shadow text");
 });
+
+SpecialPowers.pushPrefEnv(
+  {"set":[['dom.webcomponents.shadowdom.enabled', true]]},
+  t.step_func(function() {
+    let iframe = document.createElement("iframe");
+    iframe.onload = runTests;
+    iframe.srcdoc = "<!doctype html><html></html>";
+    document.body.appendChild(iframe);
+  }));
 </script>
-<iframe onload="runTests()" srcdoc="<!doctype html><html></html>"></iframe>
+</body>

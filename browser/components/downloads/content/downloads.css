@@ -4,17 +4,17 @@
 
 /*** Downloads Panel ***/
 
-richlistitem[type="download"] {
+#downloadsListBox > richlistitem {
   -moz-binding: url('chrome://browser/content/downloads/download.xml#download');
 }
 
-richlistitem[type="download"]:not([selected]) button {
+#downloadsListBox > richlistitem:not([selected]) button {
   /* Only focus buttons in the selected item. */
   -moz-user-focus: none;
 }
 
-richlistitem[type="download"].download-state[state="1"]:not([exists]) > .downloadButtonArea,
-richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbarseparator {
+#downloadsListBox > richlistitem.download-state[state="1"]:not([exists]) > .downloadButtonArea,
+#downloadsListBox > richlistitem.download-state[state="1"]:not([exists]) > toolbarseparator {
   display: none;
 }
 
@@ -49,15 +49,15 @@ richlistitem[type="download"].download-state[state="1"]:not([exists]) > toolbars
  *
  * We might be able to do away with this workaround once bug 653881 is fixed.
  */
-richlistitem.download {
+#downloadsRichListBox > richlistitem {
   -moz-binding: none;
 }
 
-richlistitem.download[active] {
+#downloadsRichListBox > richlistitem[active] {
   -moz-binding: url("chrome://browser/content/downloads/download.xml#download");
 }
 
-richlistitem.download button {
+#downloadsRichListBox > richlistitem button {
   /* These buttons should never get focus, as that would "disable"
      the downloads view controller (it's only used when the richlistbox
      is focused). */

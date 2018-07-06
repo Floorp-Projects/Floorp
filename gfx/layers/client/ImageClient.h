@@ -73,6 +73,8 @@ public:
 
   uint32_t GetLastUpdateGenerationCounter() { return mLastUpdateGenerationCounter; }
 
+  virtual RefPtr<TextureClient> GetForwardedTexture() { return nullptr; }
+
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
@@ -103,6 +105,8 @@ public:
   virtual void FlushAllImages() override;
 
   ImageClientSingle* AsImageClientSingle() override { return this; }
+
+  virtual RefPtr<TextureClient> GetForwardedTexture() override;
 
   bool IsEmpty() { return mBuffers.IsEmpty(); }
 

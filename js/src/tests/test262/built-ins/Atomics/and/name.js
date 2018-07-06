@@ -11,10 +11,11 @@ includes: [propertyHelper.js]
 features: [Atomics]
 ---*/
 
-assert.sameValue(Atomics.and.name, "and");
-
-verifyNotEnumerable(Atomics.and, "name");
-verifyNotWritable(Atomics.and, "name");
-verifyConfigurable(Atomics.and, "name");
+verifyProperty(Atomics.and, 'name', {
+  value: 'and',
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

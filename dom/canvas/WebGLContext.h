@@ -1012,9 +1012,9 @@ private:
     realGLboolean mDitherEnabled;
     realGLboolean mRasterizerDiscardEnabled;
     realGLboolean mScissorTestEnabled;
-    realGLboolean mDepthTestEnabled;
+    realGLboolean mDepthTestEnabled = 0;
     realGLboolean mStencilTestEnabled;
-    GLenum mGenerateMipmapHint;
+    GLenum mGenerateMipmapHint = 0;
 
     bool ValidateCapabilityEnum(GLenum cap, const char* info);
     realGLboolean* GetStateTrackingSlot(GLenum cap);
@@ -1299,7 +1299,7 @@ protected:
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
-    GLenum mPrimRestartTypeBytes;
+    GLenum mPrimRestartTypeBytes = 0;
 
 public:
     void DrawArrays(GLenum mode, GLint first, GLsizei count) {
@@ -1455,9 +1455,9 @@ protected:
     template<typename WebGLObjectType>
     void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);
 
-    GLuint mActiveTexture;
-    GLenum mDefaultFB_DrawBuffer0;
-    GLenum mDefaultFB_ReadBuffer;
+    GLuint mActiveTexture = 0;
+    GLenum mDefaultFB_DrawBuffer0 = 0;
+    GLenum mDefaultFB_ReadBuffer = 0;
 
     // glGetError sources:
     bool mEmitContextLostErrorOnce;
@@ -1470,22 +1470,22 @@ protected:
     webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
     // some GL constants
-    uint32_t mGLMaxTextureUnits;
+    uint32_t mGLMaxTextureUnits = 0;
 
-    uint32_t mGLMaxVertexAttribs;
-    uint32_t mGLMaxFragmentUniformVectors;
-    uint32_t mGLMaxVertexUniformVectors;
-    uint32_t mGLMaxVaryingVectors;
+    uint32_t mGLMaxVertexAttribs = 0;
+    uint32_t mGLMaxFragmentUniformVectors = 0;
+    uint32_t mGLMaxVertexUniformVectors = 0;
+    uint32_t mGLMaxVaryingVectors = 0;
 
-    uint32_t mGLMaxTransformFeedbackSeparateAttribs;
-    uint32_t mGLMaxUniformBufferBindings;
+    uint32_t mGLMaxTransformFeedbackSeparateAttribs = 0;
+    uint32_t mGLMaxUniformBufferBindings = 0;
 
-    uint32_t mGLMaxVertexTextureImageUnits;
-    uint32_t mGLMaxFragmentTextureImageUnits;
-    uint32_t mGLMaxCombinedTextureImageUnits;
+    uint32_t mGLMaxVertexTextureImageUnits = 0;
+    uint32_t mGLMaxFragmentTextureImageUnits = 0;
+    uint32_t mGLMaxCombinedTextureImageUnits = 0;
 
-    uint32_t mGLMaxColorAttachments;
-    uint32_t mGLMaxDrawBuffers;
+    uint32_t mGLMaxColorAttachments = 0;
+    uint32_t mGLMaxDrawBuffers = 0;
 
     uint32_t mGLMaxViewportDims[2];
 
@@ -1500,11 +1500,11 @@ protected:
 
     // Texture sizes are often not actually the GL values. Let's be explicit that these
     // are implementation limits.
-    uint32_t mGLMaxTextureSize;
-    uint32_t mGLMaxCubeMapTextureSize;
-    uint32_t mGLMax3DTextureSize;
-    uint32_t mGLMaxArrayTextureLayers;
-    uint32_t mGLMaxRenderbufferSize;
+    uint32_t mGLMaxTextureSize = 0;
+    uint32_t mGLMaxCubeMapTextureSize = 0;
+    uint32_t mGLMax3DTextureSize = 0;
+    uint32_t mGLMaxArrayTextureLayers = 0;
+    uint32_t mGLMaxRenderbufferSize = 0;
 
 public:
     GLuint MaxVertexAttribs() const {
@@ -1854,16 +1854,16 @@ protected:
     WebGLRefPtr<WebGLVertexArray> mDefaultVertexArray;
 
     // PixelStore parameters
-    uint32_t mPixelStore_UnpackImageHeight;
-    uint32_t mPixelStore_UnpackSkipImages;
-    uint32_t mPixelStore_UnpackRowLength;
-    uint32_t mPixelStore_UnpackSkipRows;
-    uint32_t mPixelStore_UnpackSkipPixels;
-    uint32_t mPixelStore_UnpackAlignment;
-    uint32_t mPixelStore_PackRowLength;
-    uint32_t mPixelStore_PackSkipRows;
-    uint32_t mPixelStore_PackSkipPixels;
-    uint32_t mPixelStore_PackAlignment;
+    uint32_t mPixelStore_UnpackImageHeight = 0;
+    uint32_t mPixelStore_UnpackSkipImages = 0;
+    uint32_t mPixelStore_UnpackRowLength = 0;
+    uint32_t mPixelStore_UnpackSkipRows = 0;
+    uint32_t mPixelStore_UnpackSkipPixels = 0;
+    uint32_t mPixelStore_UnpackAlignment = 0;
+    uint32_t mPixelStore_PackRowLength = 0;
+    uint32_t mPixelStore_PackSkipRows = 0;
+    uint32_t mPixelStore_PackSkipPixels = 0;
+    uint32_t mPixelStore_PackAlignment = 0;
 
     CheckedUint32 GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
                                 uint32_t depth, uint8_t bytesPerPixel);
@@ -1872,10 +1872,10 @@ protected:
                           uint8_t bytesPerPixel, uint32_t* const out_rowStride,
                           uint32_t* const out_endOffset);
 
-    GLenum mPixelStore_ColorspaceConversion;
-    bool mPixelStore_FlipY;
-    bool mPixelStore_PremultiplyAlpha;
-    bool mPixelStore_RequireFastPath;
+    GLenum mPixelStore_ColorspaceConversion = 0;
+    bool mPixelStore_FlipY = false;
+    bool mPixelStore_PremultiplyAlpha = false;
+    bool mPixelStore_RequireFastPath = false;
 
     ////////////////////////////////////
     class FakeBlackTexture {
@@ -1915,26 +1915,26 @@ protected:
     uint8_t mGenericVertexAttrib0Data[sizeof(float) * 4];
     CacheMapInvalidator mGenericVertexAttribTypeInvalidator;
 
-    GLuint mFakeVertexAttrib0BufferObject;
-    size_t mFakeVertexAttrib0BufferObjectSize;
-    bool mFakeVertexAttrib0DataDefined;
+    GLuint mFakeVertexAttrib0BufferObject = 0;
+    size_t mFakeVertexAttrib0BufferObjectSize = 0;
+    bool mFakeVertexAttrib0DataDefined = false;
     uint8_t mFakeVertexAttrib0Data[sizeof(float) * 4];
 
     JSObject* GetVertexAttribFloat32Array(JSContext* cx, GLuint index);
     JSObject* GetVertexAttribInt32Array(JSContext* cx, GLuint index);
     JSObject* GetVertexAttribUint32Array(JSContext* cx, GLuint index);
 
-    GLint mStencilRefFront;
-    GLint mStencilRefBack;
-    GLuint mStencilValueMaskFront;
-    GLuint mStencilValueMaskBack;
-    GLuint mStencilWriteMaskFront;
-    GLuint mStencilWriteMaskBack;
-    uint8_t mColorWriteMask; // bitmask
-    realGLboolean mDepthWriteMask;
+    GLint mStencilRefFront = 0;
+    GLint mStencilRefBack = 0;
+    GLuint mStencilValueMaskFront = 0;
+    GLuint mStencilValueMaskBack = 0;
+    GLuint mStencilWriteMaskFront = 0;
+    GLuint mStencilWriteMaskBack = 0;
+    uint8_t mColorWriteMask = 0; // bitmask
+    realGLboolean mDepthWriteMask = 0;
     GLfloat mColorClearValue[4];
-    GLint mStencilClearValue;
-    GLfloat mDepthClearValue;
+    GLint mStencilClearValue = 0;
+    GLfloat mDepthClearValue = 0.0;
 
     GLint mViewportX;
     GLint mViewportY;
@@ -1942,7 +1942,7 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    GLfloat mLineWidth;
+    GLfloat mLineWidth = 0.0;
 
     WebGLContextLossHandler mContextLossHandler;
     bool mAllowContextRestore;
@@ -1969,13 +1969,13 @@ protected:
     bool mNeedsFakeNoAlpha;
     bool mNeedsFakeNoDepth;
     bool mNeedsFakeNoStencil;
-    bool mNeedsFakeNoStencil_UserFBs;
+    bool mNeedsFakeNoStencil_UserFBs = false;
 
-    mutable uint8_t mDriverColorMask;
-    bool mDriverDepthTest;
-    bool mDriverStencilTest;
+    mutable uint8_t mDriverColorMask = 0;
+    bool mDriverDepthTest = false;
+    bool mDriverStencilTest = false;
 
-    bool mNeedsIndexValidation;
+    bool mNeedsIndexValidation = false;
 
     const bool mAllowFBInvalidation;
 
@@ -1986,7 +1986,7 @@ protected:
     const uint8_t mMsaaSamples;
     mutable gfx::IntSize mRequestedSize;
     mutable UniquePtr<gl::MozFramebuffer> mDefaultFB;
-    mutable bool mDefaultFB_IsInvalid;
+    mutable bool mDefaultFB_IsInvalid = false;
     mutable UniquePtr<gl::MozFramebuffer> mResolvedDefaultFB;
 
     // --

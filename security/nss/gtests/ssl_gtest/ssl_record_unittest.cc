@@ -111,7 +111,7 @@ class RecordReplacer : public TlsRecordFilter {
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& data,
                                     DataBuffer* changed) override {
-    EXPECT_EQ(kTlsApplicationDataType, header.content_type());
+    EXPECT_EQ(ssl_ct_application_data, header.content_type());
     changed->Allocate(size_);
 
     for (size_t i = 0; i < size_; ++i) {

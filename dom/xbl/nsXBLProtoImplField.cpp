@@ -297,7 +297,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
                                       JS::Handle<JSObject*> aTargetClassObject)
 {
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
-  JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
+  JS::Rooted<JSObject*> globalObject(aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
   JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScopeOrGlobal(aCx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 

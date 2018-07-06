@@ -59,8 +59,7 @@ class Symbol : public js::gc::TenuredCell
     void operator=(const Symbol&) = delete;
 
     static Symbol*
-    newInternal(JSContext* cx, SymbolCode code, js::HashNumber hash,
-                JSAtom* description, const js::AutoAccessAtomsZone& access);
+    newInternal(JSContext* cx, SymbolCode code, js::HashNumber hash, JSAtom* description);
 
   public:
     static Symbol* new_(JSContext* cx, SymbolCode code, JSString* description);

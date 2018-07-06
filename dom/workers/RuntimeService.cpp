@@ -903,7 +903,8 @@ Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
     MOZ_CRASH("There should be no edges from the debuggee to the debugger.");
   }
 
-  JSObject* originGlobal = js::GetGlobalForObjectCrossCompartment(obj);
+  // Note: the JS engine unwraps CCWs before calling this callback.
+  JSObject* originGlobal = JS::GetNonCCWObjectGlobal(obj);
 
   const js::Wrapper* wrapper = nullptr;
   if (IsWorkerDebuggerGlobal(originGlobal) ||
