@@ -644,12 +644,9 @@ this.VideoControlsImplPageWidget = class {
           case "resizevideocontrols":
             this.adjustControlSize();
             break;
-          // See comment at onFullscreenChange on bug 718107.
-          /*
           case "fullscreenchange":
             this.onFullscreenChange();
             break;
-          */
           case "keypress":
             this.keyHandler(aEvent);
             break;
@@ -1186,6 +1183,10 @@ this.VideoControlsImplPageWidget = class {
         }
 
         if (fadeIn) {
+          if (element == this.controlBar) {
+            this.controlsSpacer.removeAttribute("hideCursor");
+          }
+
           // hidden state should be controlled by adjustControlSize
           if (element.isAdjustableControl && element.hiddenByAdjustment) {
             return;
@@ -1196,21 +1197,17 @@ this.VideoControlsImplPageWidget = class {
             return;
           }
 
-          if (element == this.controlBar) {
-            this.controlsSpacer.removeAttribute("hideCursor");
-          }
-
           // Unhide
           element.hidden = false;
         } else {
-          // No need to fade out if the element is already no visible.
-          if (element.hidden) {
-            return;
-          }
-
           if (element == this.controlBar && !this.hasError() &&
               this.document.mozFullScreenElement == this.video) {
             this.controlsSpacer.setAttribute("hideCursor", true);
+          }
+
+          // No need to fade out if the element is already no visible.
+          if (element.hidden) {
+            return;
           }
         }
 
@@ -1307,34 +1304,15 @@ this.VideoControlsImplPageWidget = class {
         }
       },
 
-      // XXX This should be the place where we update the control states and
-      // screen orientation upon entering/leaving fullscreen.
-      // Sadly because of bug 718107 as soon as this function exits
-      // the attached binding gets destructored and a new binding is then created.
-      // We therefore don't do anything here and leave it to the new binding to
-      // set state correctly from its constructor.
-      /*
       onFullscreenChange() {
-        // Constructor and destructor will lock/unlock the orientation exactly
-        // once. Doing so here again will cause the videocontrols to
-        // lock-unlock-lock the orientation when entering the fullscreen.
         this.updateOrientationState(this.isVideoInFullScreen);
 
-        // This is already broken by bug 718107 (controls will be hidden
-        // as soon as the video enters fullscreen).
-        // We can think about restoring the behavior here once the bug is
-        // fixed, or we could simply acknowledge the current behavior
-        // after-the-fact and try not to fix this.
         if (this.isVideoInFullScreen) {
-          this._hideControlsTimeout =
-            this.window.setTimeout(() => this._hideControlsFn(), this.HIDE_CONTROLS_TIMEOUT_MS);
+          this.startFadeOut(this.controlBar, true);
         }
 
-        // Constructor will handle this correctly on the new DOM content in
-        // the new binding.
         this.setFullscreenButtonState();
       },
-      */
 
       updateOrientationState(lock) {
         if (!this.video.mozOrientationLockEnabled) {
@@ -1950,8 +1928,7 @@ this.VideoControlsImplPageWidget = class {
 
           { el: this.videocontrols, type: "resizevideocontrols" },
 
-          // See comment at onFullscreenChange on bug 718107.
-          // { el: this.document, type: "fullscreenchange" },
+          { el: this.document, type: "fullscreenchange" },
           { el: this.video, type: "keypress", capture: true },
 
           // Prevent any click event within media controls from dispatching through to video.
