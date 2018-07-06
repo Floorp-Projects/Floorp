@@ -13,7 +13,7 @@ class nsIDocument;
 
 namespace mozilla {
 
-class AutoplayRequest;
+class AutoplayPermissionManager;
 
 namespace dom {
 
@@ -48,9 +48,9 @@ public:
   // Returns whether a given AudioContext is allowed to play.
   static bool IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext);
 
-  // Returns the AutoplayRequest that a given document must request on
+  // Returns the AutoplayPermissionManager that a given document must request on
   // for autoplay permission.
-  static already_AddRefed<AutoplayRequest> RequestFor(
+  static already_AddRefed<AutoplayPermissionManager> RequestFor(
     const nsIDocument& aDocument);
 };
 

@@ -45,7 +45,6 @@ typedef uint8_t AudibleState;
 
 namespace mozilla {
 class AbstractThread;
-class AutoplayRequest;
 class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class DOMMediaStream;
