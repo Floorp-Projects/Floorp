@@ -1253,9 +1253,17 @@ JS::CurrentGlobalOrNull(JSContext* cx)
 {
     AssertHeapIsIdleOrIterating();
     CHECK_REQUEST(cx);
-    if (!cx->compartment())
+    if (!cx->realm())
         return nullptr;
     return cx->global();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetNonCCWObjectGlobal(JSObject* obj)
+{
+    AssertHeapIsIdle();
+    MOZ_DIAGNOSTIC_ASSERT(!IsCrossCompartmentWrapper(obj));
+    return &obj->nonCCWGlobal();
 }
 
 JS_PUBLIC_API(bool)
