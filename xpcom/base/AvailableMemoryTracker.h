@@ -14,10 +14,15 @@ namespace AvailableMemoryTracker {
 // platforms to react to low-memory situations and on Windows it implements
 // the full functionality used to monitor how much memory is available.
 //
-// Init() requires the observer service to be already available so cannot be
-// called too early during initialization.
+// Init() must be called before any other threads have started, because it
+// modifies the in-memory implementations of some DLL functions in
+// non-thread-safe ways.
+//
+// The hooks don't do anything until Activate() is called.  It's an error to
+// call Activate() without first calling Init().
 
 void Init();
+void Activate();
 
 } // namespace AvailableMemoryTracker
 } // namespace mozilla
