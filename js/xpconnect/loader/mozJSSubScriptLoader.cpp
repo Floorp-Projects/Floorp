@@ -186,6 +186,8 @@ EvalScript(JSContext* cx,
            bool preloadCache,
            MutableHandleScript script)
 {
+    MOZ_ASSERT(!js::IsWrapper(targetObj));
+
     if (JS_IsGlobalObject(targetObj)) {
         if (!JS::CloneAndExecuteScript(cx, script, retval)) {
             return false;
@@ -209,7 +211,7 @@ EvalScript(JSContext* cx,
             // determine which JSM the target belongs to and have to assume it
             // is in our JSM.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-            JSObject* targetGlobal = js::GetGlobalForObjectCrossCompartment(targetObj);
+            JSObject* targetGlobal = JS::GetNonCCWObjectGlobal(targetObj);
             MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(targetGlobal),
                                   "Don't load subscript into target in a shared-global JSM");
 #endif
@@ -615,6 +617,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     targetObj = JS_FindCompilationScope(cx, targetObj);
     if (!targetObj || !loadScope)
         return NS_ERROR_FAILURE;
+
+    MOZ_ASSERT(!js::IsWrapper(targetObj),
+               "JS_FindCompilationScope must unwrap");
 
     if (js::GetObjectCompartment(loadScope) != js::GetObjectCompartment(targetObj))
         loadScope = nullptr;
