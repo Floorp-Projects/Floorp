@@ -365,17 +365,18 @@ js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind)
 
 // ///////////  Arena -> Thing Allocator  //////////////////////////////////////
 
-void
+bool
 GCRuntime::startBackgroundAllocTaskIfIdle()
 {
     AutoLockHelperThreadState helperLock;
     if (allocTask.isRunningWithLockHeld(helperLock))
-        return;
+        return true;
 
     // Join the previous invocation of the task. This will return immediately
     // if the thread has never been started.
     allocTask.joinWithLockHeld(helperLock);
-    allocTask.startWithLockHeld(helperLock);
+
+    return allocTask.startWithLockHeld(helperLock);
 }
 
 /* static */ TenuredCell*
