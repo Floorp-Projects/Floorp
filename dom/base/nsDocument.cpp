@@ -2600,12 +2600,7 @@ nsIDocument::IsSynthesized() {
 bool
 nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
 {
-  JS::Rooted<JSObject*> obj(aCx, aObject);
-
-  JSAutoRealm ar(aCx, obj);
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
+  nsCOMPtr<nsPIDOMWindowInner> window = xpc::WindowGlobalOrNull(aObject);
 
   nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
   if (!doc) {

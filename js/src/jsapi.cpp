@@ -1210,14 +1210,6 @@ JS_IdToProtoKey(JSContext* cx, HandleId id)
     return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 
-JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForObject(JSContext* cx, JSObject* obj)
-{
-    AssertHeapIsIdle();
-    assertSameCompartment(cx, obj);
-    return &obj->deprecatedGlobal();
-}
-
 extern JS_PUBLIC_API(bool)
 JS_IsGlobalObject(JSObject* obj)
 {

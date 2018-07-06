@@ -101,7 +101,7 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
 
 #ifdef DEBUG
   {
-    JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
+    JS::Rooted<JSObject*> globalObject(aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
     MOZ_ASSERT(xpc::IsInContentXBLScope(globalObject) ||
                globalObject == xpc::GetXBLScope(aCx, globalObject));
     MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == globalObject);
