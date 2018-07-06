@@ -1210,7 +1210,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     kind_(ContextKind::HelperThread),
     helperThread_(nullptr),
     options_(options),
-    arenas_(nullptr),
+    freeLists_(nullptr),
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),

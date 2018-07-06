@@ -320,6 +320,9 @@ IsOOMReason(JS::gcreason::Reason reason)
            reason == JS::gcreason::MEM_PRESSURE;
 }
 
+TenuredCell*
+AllocateCellInGC(Zone* zone, AllocKind thingKind);
+
 } /* namespace gc */
 } /* namespace js */
 

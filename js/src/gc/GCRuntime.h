@@ -532,9 +532,6 @@ class GCRuntime
     Arena* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind,
                          ShouldCheckThresholds checkThresholds, const AutoLockGC& lock);
 
-
-    void arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena);
-
     // Allocator internals
     MOZ_MUST_USE bool gcIfNeededAtAllocation(JSContext* cx);
     template <typename T>
