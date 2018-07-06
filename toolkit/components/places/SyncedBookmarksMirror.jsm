@@ -105,6 +105,7 @@ XPCOMUtils.defineLazyGetter(this, "LocalItemsSQLFragment", () => `
            s.isSyncable, s.level + 1
     FROM moz_bookmarks b
     JOIN localItems s ON s.id = b.parent
+    WHERE b.guid <> '${PlacesUtils.bookmarks.rootGuid}'
   )
 `);
 
@@ -421,6 +422,11 @@ class SyncedBookmarksMirror {
     if (!hasChanges) {
       MirrorLog.debug("No changes detected in both mirror and Places");
       return {};
+    }
+
+    if (!(await this.validLocalRoots())) {
+      throw new SyncedBookmarksMirror.ConsistencyError(
+        "Local tree has misparented root");
     }
 
     // The flow ID is used to correlate telemetry events for each sync.
@@ -791,8 +797,7 @@ class SyncedBookmarksMirror {
                                                           childRecordId });
           continue;
         }
-        if (childGuid == PlacesUtils.bookmarks.rootGuid ||
-            PlacesUtils.bookmarks.userContentRoots.includes(childGuid)) {
+        if (childGuid == PlacesUtils.bookmarks.rootGuid) {
           MirrorLog.warn("Ignoring move for root", childGuid);
           continue;
         }
@@ -809,8 +814,7 @@ class SyncedBookmarksMirror {
     // treatment. We ignore the four syncable roots, since they're already in
     // the mirror.
     let parentGuid = validateGuid(record.parentid);
-    if (parentGuid == PlacesUtils.bookmarks.rootGuid &&
-        !PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
+    if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
         await this.db.executeCached(`
           INSERT OR IGNORE INTO structure(guid, parentGuid, position)
           VALUES(:guid, :parentGuid, -1)`,
@@ -874,8 +878,7 @@ class SyncedBookmarksMirror {
       return;
     }
 
-    if (guid == PlacesUtils.bookmarks.rootGuid ||
-        PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
+    if (guid == PlacesUtils.bookmarks.rootGuid) {
       MirrorLog.warn("Ignoring tombstone for root", guid);
       return;
     }
@@ -1053,6 +1056,30 @@ class SyncedBookmarksMirror {
       AS hasChanges
     `);
     return !!rows[0].getResultByName("hasChanges");
+  }
+
+  /**
+   * Ensures that all local roots are parented correctly. Misparented roots
+   * (bug 1453994, bug 1472127) might produce an invalid tree, so we check
+   * before merging, and rely on Places to reparent any invalid roots after
+   * the next restart or maintenance run.
+   *
+   * @return {Boolean}
+   *         `true` if the Places root, and four syncable roots, are parented
+   *         correctly.
+   */
+  async validLocalRoots() {
+    let rows = await this.db.execute(`
+      SELECT EXISTS(SELECT 1 FROM moz_bookmarks
+                    WHERE guid = '${PlacesUtils.bookmarks.rootGuid}' AND
+                          parent = 0) AND
+             (SELECT COUNT(*) FROM moz_bookmarks b
+              JOIN moz_bookmarks p ON p.id = b.parent
+              WHERE b.guid IN (${PlacesUtils.bookmarks.userContentRoots.map(
+                v => `'${v}'`)}) AND
+                    p.guid = '${PlacesUtils.bookmarks.rootGuid}') =
+             ${PlacesUtils.bookmarks.userContentRoots.length} AS areValid`);
+    return !!rows[0].getResultByName("areValid");
   }
 
   /**
@@ -1482,16 +1509,24 @@ class SyncedBookmarksMirror {
 
     MirrorLog.trace("Recording observer notifications for changed annos");
     let annoRows = await this.db.execute(`
-      SELECT itemId, annoName, wasRemoved FROM annosChanged
-      ORDER BY itemId`);
+      SELECT b.id, b.guid, b.lastModified, b.type, p.id AS parentId,
+             p.guid AS parentGuid, c.annoName, c.wasRemoved
+      FROM annosChanged c
+      JOIN moz_bookmarks b ON b.id = c.itemId
+      JOIN moz_bookmarks p ON p.id = b.parent
+      LEFT JOIN moz_places h ON h.id = b.fk
+      ORDER BY p.id, b.position, c.wasRemoved <> 1`);
     for await (let row of yieldingIterator(annoRows)) {
-      let id = row.getResultByName("itemId");
-      let name = row.getResultByName("annoName");
-      if (row.getResultByName("wasRemoved")) {
-        observersToNotify.noteAnnoRemoved(id, name);
-      } else {
-        observersToNotify.noteAnnoSet(id, name);
-      }
+      observersToNotify.noteAnnoChanged({
+        id: row.getResultByName("id"),
+        name: row.getResultByName("annoName"),
+        wasRemoved: !!row.getResultByName("wasRemoved"),
+        guid: row.getResultByName("guid"),
+        lastModified: row.getResultByName("lastModified"),
+        type: row.getResultByName("type"),
+        parentId: row.getResultByName("parentId"),
+        parentGuid: row.getResultByName("parentGuid"),
+      });
     }
 
     MirrorLog.trace("Recording notifications for changed keywords");
@@ -3477,6 +3512,7 @@ class BookmarkMerger {
    */
   resolveTwoWayValueConflict(mergedGuid, localNode, remoteNode) {
     if (PlacesUtils.bookmarks.userContentRoots.includes(mergedGuid)) {
+      // Don't update root titles or other properties.
       return BookmarkMergeState.local;
     }
     if (!remoteNode.needsMerge) {
@@ -3538,6 +3574,18 @@ class BookmarkMerger {
                     "${remoteParentNode} into ${mergedNode}",
                     { remoteChildNode, remoteParentNode, mergedNode });
 
+    if (PlacesUtils.bookmarks.userContentRoots.includes(remoteChildNode.guid)) {
+      // Remote child is a root. We always prefer local roots, since remote
+      // roots might be misparented, and we checked that the local roots were
+      // correct before merging. We can just bail here: if the root is parented
+      // correctly, we won't reupload anything, since we never upload the Places
+      // root; if not, we'll flag the wrong parent for reupload.
+      MirrorLog.trace("Ignoring remote root ${remoteChildNode} in " +
+                      "${remoteParentNode}", { remoteChildNode,
+                                               remoteParentNode });
+      return true;
+    }
+
     // Make sure the remote child isn't locally deleted.
     let structureChange = await this.checkForLocalStructureChangeOfRemoteNode(
       mergedNode, remoteParentNode, remoteChildNode);
@@ -3554,8 +3602,9 @@ class BookmarkMerger {
     // The remote child isn't locally deleted. Does it exist in the local tree?
     let localChildNode = this.localTree.nodeForGuid(remoteChildNode.guid);
     if (!localChildNode) {
-      // Remote child doesn't exist locally, either. Try to find a content
-      // match in the containing folder, and dedupe the local item if we can.
+      // Remote child is not a root, and doesn't exist locally. Try to find a
+      // content match in the containing folder, and dedupe the local item if
+      // we can.
       MirrorLog.trace("Remote child ${remoteChildNode} doesn't exist " +
                       "locally; looking for local content match",
                       { remoteChildNode });
@@ -3682,6 +3731,18 @@ class BookmarkMerger {
                     "${localParentNode} into ${mergedNode}",
                     { localChildNode, localParentNode, mergedNode });
 
+    if (PlacesUtils.bookmarks.userContentRoots.includes(localChildNode.guid)) {
+      // Local child is a root, which may or may not exist remotely. We know
+      // local roots are parented correctly, so we merge them unconditionally.
+      // Places maintenance also bumps the change counter when fixing incorrect
+      // parents, so we'll flag the merged root node for reupload.
+      let remoteRootNode = this.remoteTree.nodeForGuid(localChildNode.guid);
+      let mergedRootNode = await this.mergeNode(localChildNode.guid,
+                                                localChildNode, remoteRootNode);
+      mergedNode.mergedChildren.push(mergedRootNode);
+      return true;
+    }
+
     // Now, we know we haven't seen the local child before, and it's not in
     // this folder on the server. Check if the child is remotely deleted.
     let structureChange = await this.checkForRemoteStructureChangeOfLocalNode(
@@ -3697,8 +3758,9 @@ class BookmarkMerger {
     // exists in the remote tree.
     let remoteChildNode = this.remoteTree.nodeForGuid(localChildNode.guid);
     if (!remoteChildNode) {
-      // Local child doesn't exist remotely, either. Try to find a content
-      // match in the containing folder, and dedupe the local item if we can.
+      // Local child is not a root, and doesn't exist remotely. Try to find a
+      // content match in the containing folder, and dedupe the local item if
+      // we can.
       MirrorLog.trace("Local child ${localChildNode} doesn't exist " +
                       "remotely; looking for remote content match",
                       { localChildNode });
@@ -3947,6 +4009,12 @@ class BookmarkMerger {
    */
   async checkForLocalStructureChangeOfRemoteNode(mergedNode, remoteParentNode,
                                                  remoteNode) {
+    if (PlacesUtils.bookmarks.userContentRoots.includes(remoteNode.guid)) {
+      // Should never happen. We should have seen and ignored remote roots.
+      throw new TypeError(
+        "Shouldn't check remote syncable root for structure changes");
+    }
+
     if (!remoteNode.isSyncable) {
       // If the remote node is known to be non-syncable, we unconditionally
       // delete it from the server, even if it's syncable locally.
@@ -4041,6 +4109,12 @@ class BookmarkMerger {
    */
   async checkForRemoteStructureChangeOfLocalNode(mergedNode, localParentNode,
                                                  localNode) {
+    if (PlacesUtils.bookmarks.userContentRoots.includes(localNode.guid)) {
+      // Should never happen. We should have merged local roots unconditionally.
+      throw new TypeError(
+        "Shouldn't check local syncable root for structure changes");
+    }
+
     if (!localNode.isSyncable) {
       // If the local node is known to be non-syncable, we unconditionally
       // delete it from Places, even if it's syncable remotely. This is
@@ -4435,7 +4509,6 @@ class BookmarkObserverRecorder {
     this.bookmarkObserverNotifications = [];
     this.annoObserverNotifications = [];
     this.shouldInvalidateKeywords = false;
-    this.shouldInvalidateLivemarks = false;
   }
 
   /**
@@ -4449,9 +4522,7 @@ class BookmarkObserverRecorder {
     }
     await this.notifyBookmarkObservers();
     await this.notifyAnnoObservers();
-    if (this.shouldInvalidateLivemarks) {
-      await PlacesUtils.livemarks.invalidateCachedLivemarks();
-    }
+    await PlacesUtils.livemarks.invalidateCachedLivemarks();
     await this.updateFrecencies();
   }
 
@@ -4528,23 +4599,30 @@ class BookmarkObserverRecorder {
     });
   }
 
-  noteAnnoSet(id, name) {
-    if (isLivemarkAnno(name)) {
-      this.shouldInvalidateLivemarks = true;
+  noteAnnoChanged(info) {
+    if (info.name != PlacesUtils.LMANNO_FEEDURI &&
+        info.name != PlacesUtils.LMANNO_SITEURI) {
+      throw new TypeError("Can't record change for unsupported anno");
     }
-    this.annoObserverNotifications.push({
-      name: "onItemAnnotationSet",
-      args: [id, name, PlacesUtils.bookmarks.SOURCES.SYNC],
-    });
-  }
-
-  noteAnnoRemoved(id, name) {
-    if (isLivemarkAnno(name)) {
-      this.shouldInvalidateLivemarks = true;
+    if (info.wasRemoved) {
+      this.annoObserverNotifications.push({
+        name: "onItemAnnotationRemoved",
+        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC],
+      });
+    } else {
+      this.annoObserverNotifications.push({
+        name: "onItemAnnotationSet",
+        args: [info.id, info.name, PlacesUtils.bookmarks.SOURCES.SYNC,
+               /* dontUpdateLastModified */ true],
+      });
     }
-    this.annoObserverNotifications.push({
-      name: "onItemAnnotationRemoved",
-      args: [id, name, PlacesUtils.bookmarks.SOURCES.SYNC],
+    this.bookmarkObserverNotifications.push({
+      name: "onItemChanged",
+      isTagging: false,
+      args: [info.id, info.name, /* isAnnotationProperty */ true,
+             /* newValue */ "", info.lastModified, info.type, info.parentId,
+             info.guid, info.parentGuid, /* oldValue */ "",
+             PlacesUtils.bookmarks.SOURCES.SYNC],
     });
   }
 
@@ -4581,11 +4659,6 @@ class BookmarkObserverRecorder {
       MirrorLog.warn("Error notifying observer", ex);
     }
   }
-}
-
-function isLivemarkAnno(name) {
-  return name == PlacesUtils.LMANNO_FEEDURI ||
-         name == PlacesUtils.LMANNO_SITEURI;
 }
 
 /**

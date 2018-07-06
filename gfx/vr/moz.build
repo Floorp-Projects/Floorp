@@ -54,6 +54,7 @@ SOURCES += [
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     DIRS += [
         'openvr',
+        'service',
     ]
     SOURCES += [
         'gfxVROpenVR.cpp',

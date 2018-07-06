@@ -10,7 +10,7 @@
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
-#include "nsIRootBox.h"
+#include "nsIPopupContainer.h"
 #include "nsIContent.h"
 #include "nsFrameManager.h"
 #include "mozilla/BasicEvents.h"
@@ -22,8 +22,8 @@ using namespace mozilla;
 //#define DEBUG_REFLOW
 
 // static
-nsIRootBox*
-nsIRootBox::GetRootBox(nsIPresShell* aShell)
+nsIPopupContainer*
+nsIPopupContainer::GetPopupContainer(nsIPresShell* aShell)
 {
   if (!aShell) {
     return nullptr;
@@ -37,11 +37,20 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
     rootFrame = rootFrame->PrincipalChildList().FirstChild();
   }
 
-  nsIRootBox* rootBox = do_QueryFrame(rootFrame);
+  nsIPopupContainer* rootBox = do_QueryFrame(rootFrame);
+
+  // If the rootBox was not found yet this may be a top level non-XUL document.
+  if (rootFrame && !rootBox) {
+    // In a non-XUL document the rootFrame here will be a nsHTMLScrollFrame,
+    // get the nsCanvasFrame (which is the popup container) from it.
+    rootFrame = rootFrame->GetContentInsertionFrame();
+    rootBox = do_QueryFrame(rootFrame);
+  }
+
   return rootBox;
 }
 
-class nsRootBoxFrame final : public nsBoxFrame, public nsIRootBox
+class nsRootBoxFrame final : public nsBoxFrame, public nsIPopupContainer
 {
 public:
 
@@ -221,11 +230,9 @@ nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
   // popupset.  Since the anonymous content is associated with the
   // nsDocElementBoxFrame, we'll get a new popupset when the new doc
   // element box frame is created.
-  if (!mPopupSetFrame || !aPopupSet) {
-    mPopupSetFrame = aPopupSet;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Popup set is already defined! Only 1 allowed.");
-  }
+  MOZ_ASSERT(!aPopupSet || !mPopupSetFrame,
+             "Popup set is already defined! Only 1 allowed.");
+  mPopupSetFrame = aPopupSet;
 }
 
 Element*
@@ -241,7 +248,7 @@ nsRootBoxFrame::SetDefaultTooltip(Element* aTooltip)
 }
 
 NS_QUERYFRAME_HEAD(nsRootBoxFrame)
-  NS_QUERYFRAME_ENTRY(nsIRootBox)
+  NS_QUERYFRAME_ENTRY(nsIPopupContainer)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP

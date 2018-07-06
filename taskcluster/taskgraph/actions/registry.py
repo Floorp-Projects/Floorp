@@ -52,7 +52,7 @@ def hash_taskcluster_yml(filename):
 
 def register_callback_action(name, title, symbol, description, order=10000,
                              context=[], available=lambda parameters: True,
-                             schema=None, kind='task', generic=True):
+                             schema=None, kind='task', generic=True, cb_name=None):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -110,6 +110,12 @@ def register_callback_action(name, title, symbol, description, order=10000,
         transitional purposes.
     generic : boolean
         For kind=hook, whether this is a generic action or has its own permissions.
+    cb_name : string
+        The name under which this function should be registered, defaulting to
+        `name`.  This is used to generation actionPerm for non-generic hook
+        actions, and thus appears in ci-configuration and various role and hook
+        names.  Unlike `name`, which can appear multiple times, cb_name must be
+        unique among all registered callbacks.
 
     Returns
     -------
@@ -123,7 +129,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
     title = title.strip()
     description = description.strip()
 
-    def register_callback(cb):
+    def register_callback(cb, cb_name=cb_name):
         assert isinstance(name, basestring), 'name must be a string'
         assert isinstance(order, int), 'order must be an integer'
         assert kind in ('task', 'hook'), 'kind must be task or hook'
@@ -135,13 +141,15 @@ def register_callback_action(name, title, symbol, description, order=10000,
         assert isinstance(symbol, basestring), 'symbol must be a string'
 
         assert not mem['registered'], 'register_callback_action must be used as decorator'
-        assert cb.__name__ not in callbacks, 'callback name {} is not unique'.format(cb.__name__)
+        if not cb_name:
+            cb_name = name
+        assert cb_name not in callbacks, 'callback name {} is not unique'.format(cb_name)
 
         def action_builder(parameters, graph_config):
             if not available(parameters):
                 return None
 
-            actionPerm = 'generic' if generic else name
+            actionPerm = 'generic' if generic else cb_name
 
             # gather up the common decision-task-supplied data for this action
             repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
@@ -166,8 +174,9 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 'name': name,
                 'title': title,
                 'description': description,
+                # target taskGroupId (the task group this decision task is creating)
                 'taskGroupId': task_group_id,
-                'cb_name': cb.__name__,
+                'cb_name': cb_name,
                 'symbol': symbol,
             }
 
@@ -193,7 +202,9 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 if taskcluster_yml['version'] != 1:
                     raise Exception(
                         'actions.json must be updated to work with .taskcluster.yml')
-                if not isinstance(taskcluster_yml['tasks'], list):
+
+                tasks = taskcluster_yml['tasks']
+                if not isinstance(tasks, list):
                     raise Exception(
                         '.taskcluster.yml "tasks" must be a list for action tasks')
 
@@ -206,7 +217,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                             'push': push,
                             'action': action,
                         },
-                        'in': taskcluster_yml['tasks'][0],
+                        'in': tasks[0],
                     },
                 })
 
@@ -241,8 +252,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         # and pass everything else through from our own context
                         "user": {
                             'input': {'$eval': 'input'},
-                            'taskId': {'$eval': 'taskId'},
-                            'taskGroupId': {'$eval': 'taskGroupId'},
+                            'taskId': {'$eval': 'taskId'},  # target taskId (or null)
+                            'taskGroupId': {'$eval': 'taskGroupId'},  # target task group
                         }
                     },
                 })
@@ -252,7 +263,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
         actions.append(Action(order, action_builder))
 
         mem['registered'] = True
-        callbacks[cb.__name__] = cb
+        callbacks[cb_name] = cb
     return register_callback
 
 
@@ -303,7 +314,7 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
         create.testing = True
         taskcluster.testing = True
 
-    # fetch the task, if taskId was given
+    # fetch the target task, if taskId was given
     # FIXME: many actions don't need this, so move this fetch into the callbacks
     # that do need it
     if task_id:

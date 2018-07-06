@@ -302,7 +302,8 @@ protected:
   /**
    * Creates bookmark roots in a new DB.
    */
-  nsresult EnsureBookmarkRoots(const int32_t startPosition);
+  nsresult EnsureBookmarkRoots(const int32_t startPosition,
+                               bool shouldReparentRoots);
 
   /**
    * Initializes additionale SQLite functions, defined in SQLFunctions.h

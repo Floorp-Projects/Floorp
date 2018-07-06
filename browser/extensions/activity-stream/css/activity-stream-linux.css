@@ -66,7 +66,7 @@ body {
   --newtab-snippets-background-color: #FFF;
   --newtab-snippets-hairline-color: transparent; }
 
-.dark-theme {
+body[lwt-newtab-brighttext] {
   --newtab-background-color: #2A2A2E;
   --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
   --newtab-border-secondary-color: rgba(249, 249, 250, 0.1);
@@ -1357,7 +1357,7 @@ main {
     height: 122px;
     overflow: hidden;
     position: relative; }
-    .dark-theme .card-outer .card-preview-image-outer {
+    [lwt-newtab-brighttext] .card-outer .card-preview-image-outer {
       background-color: #4A4A4F; }
     .card-outer .card-preview-image-outer::after {
       border-bottom: 1px solid var(--newtab-card-hairline-color);
@@ -1680,7 +1680,7 @@ main {
   .asrouter-admin .message-item.current .message-id span {
     background: #FFE900;
     padding: 2px 5px; }
-    .dark-theme .asrouter-admin .message-item.current .message-id span {
+    [lwt-newtab-brighttext] .asrouter-admin .message-item.current .message-id span {
       color: #000; }
   .asrouter-admin .message-item.blocked .message-id,
   .asrouter-admin .message-item.blocked .message-summary {

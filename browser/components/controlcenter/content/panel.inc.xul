@@ -109,7 +109,8 @@
       <!-- Permissions Section -->
       <hbox class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
-        <vbox id="identity-popup-permissions-content" flex="1">
+        <vbox id="identity-popup-permissions-content" flex="1" role="group"
+              aria-labelledby="identity-popup-permissions-headline">
           <hbox>
             <label id="identity-popup-permissions-headline"
                    class="identity-popup-headline"

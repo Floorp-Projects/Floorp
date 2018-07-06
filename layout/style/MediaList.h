@@ -25,14 +25,6 @@ class StyleSheet;
 
 namespace dom {
 
-// XXX This class doesn't use the branch dispatch approach that we use
-//     elsewhere for stylo, but instead just relies on virtual call.
-//     That's because this class should not be critical to performance,
-//     and using branch dispatch would make it much more complicated.
-//     Performance critical path should hold a subclass of this class
-//     directly. We may want to determine in the future whether the
-//     above is correct.
-
 class MediaList final : public nsISupports
                       , public nsWrapperCache
 {

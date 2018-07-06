@@ -28,7 +28,8 @@ function run_test() {
     /this is undefined/,
     "closeAllListeners should throw if createRootActor hasn't been added");
 
-  DebuggerServer.registerModule("xpcshell-test/testactors");
+  const { createRootActor } = require("xpcshell-test/testactors");
+  DebuggerServer.setRootActor(createRootActor);
 
   // Now they should work.
   DebuggerServer.createListener();

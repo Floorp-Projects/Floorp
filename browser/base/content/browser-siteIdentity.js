@@ -989,6 +989,7 @@ var gIdentityHandler = {
     let container = document.createElement("hbox");
     container.setAttribute("class", "identity-popup-permission-item");
     container.setAttribute("align", "center");
+    container.setAttribute("role", "group");
 
     let img = document.createElement("image");
     img.classList.add("identity-popup-permission-icon");
@@ -1021,6 +1022,8 @@ var gIdentityHandler = {
     nameLabel.setAttribute("flex", "1");
     nameLabel.setAttribute("class", "identity-popup-permission-label");
     nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
+    let nameLabelId = "identity-popup-permission-label-" + aPermission.id;
+    nameLabel.setAttribute("id", nameLabelId);
 
     let isPolicyPermission = aPermission.scope == SitePermissions.SCOPE_POLICY;
 
@@ -1030,7 +1033,7 @@ var gIdentityHandler = {
       let block = document.createElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
       menulist.setAttribute("sizetopopup", "none");
-      menulist.setAttribute("class", "identity-popup-popup-menulist");
+      menulist.setAttribute("class", "identity-popup-popup-menulist subviewkeynav");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
       for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
@@ -1064,6 +1067,7 @@ var gIdentityHandler = {
       container.appendChild(img);
       container.appendChild(nameLabel);
       container.appendChild(menulist);
+      container.setAttribute("aria-labelledby", nameLabelId);
       block.appendChild(container);
 
       return block;
@@ -1072,6 +1076,8 @@ var gIdentityHandler = {
     let stateLabel = document.createElement("label");
     stateLabel.setAttribute("flex", "1");
     stateLabel.setAttribute("class", "identity-popup-permission-state-label");
+    let stateLabelId = "identity-popup-permission-state-label-" + aPermission.id;
+    stateLabel.setAttribute("id", stateLabelId);
     let {state, scope} = aPermission;
     // If the user did not permanently allow this device but it is currently
     // used, set the variables to display a "temporarily allowed" info.
@@ -1084,6 +1090,7 @@ var gIdentityHandler = {
     container.appendChild(img);
     container.appendChild(nameLabel);
     container.appendChild(stateLabel);
+    container.setAttribute("aria-labelledby", nameLabelId + " " + stateLabelId);
 
     /* We return the permission item here without a remove button if the permission is a
        SCOPE_POLICY permission. Policy permissions cannot be removed/changed for the duration
@@ -1093,7 +1100,7 @@ var gIdentityHandler = {
     }
 
     let button = document.createElement("button");
-    button.setAttribute("class", "identity-popup-permission-remove-button");
+    button.setAttribute("class", "identity-popup-permission-remove-button subviewkeynav");
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
     button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
@@ -1149,7 +1156,7 @@ var gIdentityHandler = {
 
     let text = document.createElement("label");
     text.setAttribute("flex", "1");
-    text.setAttribute("class", "identity-popup-permission-label text-link");
+    text.setAttribute("class", "identity-popup-permission-label text-link subviewkeynav");
 
     let popupCount = gBrowser.selectedBrowser.blockedPopups.length;
     let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");
