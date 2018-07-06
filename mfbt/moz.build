@@ -103,6 +103,7 @@ EXPORTS.mozilla = [
     'UniquePtr.h',
     'UniquePtrExtensions.h',
     'Unused.h',
+    'Utf8.h',
     'Variant.h',
     'Vector.h',
     'WeakPtr.h',
@@ -146,6 +147,7 @@ UNIFIED_SOURCES += [
     'SHA1.cpp',
     'TaggedAnonymousMemory.cpp',
     'Unused.cpp',
+    'Utf8.cpp',
 ]
 
 DEFINES['IMPL_MFBT'] = True
