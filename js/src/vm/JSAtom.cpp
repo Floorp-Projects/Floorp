@@ -255,15 +255,14 @@ class AtomsTable::AutoLock
     Mutex* lock = nullptr;
 
   public:
-    explicit AutoLock(JSRuntime* rt, Mutex& aLock)
-    {
+    MOZ_ALWAYS_INLINE explicit AutoLock(JSRuntime* rt, Mutex& aLock) {
         if (rt->hasHelperThreadZones()) {
             lock = &aLock;
             lock->lock();
         }
     }
 
-    ~AutoLock() {
+    MOZ_ALWAYS_INLINE ~AutoLock() {
         if (lock)
             lock->unlock();
     }
@@ -324,7 +323,7 @@ AtomsTable::unlockAll()
 #endif
 }
 
-inline size_t
+MOZ_ALWAYS_INLINE size_t
 AtomsTable::getPartitionIndex(const AtomHasher::Lookup& lookup)
 {
     size_t index = lookup.hash >> (32 - PartitionShift);
@@ -584,8 +583,10 @@ JSRuntime::initMainAtomsTables(JSContext* cx)
 }
 
 template <typename CharT>
-static JSAtom*
-PermanentlyAtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length,
+MOZ_NEVER_INLINE static JSAtom*
+PermanentlyAtomizeAndCopyChars(JSContext* cx,
+                               Maybe<AtomSet::AddPtr> zonePtr,
+                               const CharT* tbchars, size_t length,
                                const Maybe<uint32_t>& indexValue,
                                const AtomHasher::Lookup& lookup);
 
@@ -628,12 +629,14 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
     // atoms table is being created. In this case all atoms created are added to
     // the permanent atoms table.
     if (!cx->permanentAtomsPopulated())
-        return PermanentlyAtomizeAndCopyChars(cx, tbchars, length, indexValue, lookup);
+        return PermanentlyAtomizeAndCopyChars(cx, zonePtr, tbchars, length, indexValue, lookup);
 
     AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
     if (pp) {
         JSAtom* atom = pp->asPtr(cx);
-        if (zonePtr && !zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))) {
+        if (zonePtr &&
+            MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))))
+        {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -656,7 +659,9 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
 
     cx->atomMarking().inlinedMarkAtom(cx, atom);
 
-    if (zonePtr && !zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))) {
+    if (zonePtr &&
+        MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))))
+    {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -715,7 +720,7 @@ AtomsTable::atomizeAndCopyChars(JSContext* cx,
     // since then can't GC; therefore the atoms table has not been modified and
     // p is still valid.
     AtomSet* addSet = part.atomsAddedWhileSweeping ? part.atomsAddedWhileSweeping : &atoms;
-    if (!addSet->add(p, AtomStateEntry(atom, bool(pin)))) {
+    if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, bool(pin))))) {
         ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
         return nullptr;
     }
@@ -732,8 +737,10 @@ AtomizeAndCopyChars(JSContext* cx, const Latin1Char* tbchars, size_t length, Pin
                     const Maybe<uint32_t>& indexValue);
 
 template <typename CharT>
-static JSAtom*
-PermanentlyAtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length,
+MOZ_NEVER_INLINE static JSAtom*
+PermanentlyAtomizeAndCopyChars(JSContext* cx,
+                               Maybe<AtomSet::AddPtr> zonePtr,
+                               const CharT* tbchars, size_t length,
                                const Maybe<uint32_t>& indexValue,
                                const AtomHasher::Lookup& lookup)
 {
@@ -760,11 +767,18 @@ PermanentlyAtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t lengt
         return nullptr;
     }
 
+    if (zonePtr &&
+        MOZ_UNLIKELY(!cx->zone()->atomCache().add(*zonePtr, AtomStateEntry(atom, false))))
+    {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     return atom;
 }
 
 template <typename CharT>
-static JSAtom*
+MOZ_ALWAYS_INLINE static JSAtom*
 AllocateNewAtom(JSContext* cx, const CharT* tbchars, size_t length, PinningBehavior pin,
                 const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup)
 {

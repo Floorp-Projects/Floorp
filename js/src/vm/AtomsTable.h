@@ -169,11 +169,11 @@ class AtomsTable
     bool init();
 
     template <typename CharT>
-    JSAtom* atomizeAndCopyChars(JSContext* cx,
-                                const CharT* tbchars, size_t length,
-                                PinningBehavior pin,
-                                const mozilla::Maybe<uint32_t>& indexValue,
-                                const AtomHasher::Lookup& lookup);
+    MOZ_ALWAYS_INLINE JSAtom* atomizeAndCopyChars(JSContext* cx,
+                                                  const CharT* tbchars, size_t length,
+                                                  PinningBehavior pin,
+                                                  const mozilla::Maybe<uint32_t>& indexValue,
+                                                  const AtomHasher::Lookup& lookup);
 
     void pinExistingAtom(JSContext* cx, JSAtom* atom);
 
@@ -197,7 +197,7 @@ class AtomsTable
 
   private:
     // Map a key to a partition based on its hash.
-    size_t getPartitionIndex(const AtomHasher::Lookup& lookup);
+    MOZ_ALWAYS_INLINE size_t getPartitionIndex(const AtomHasher::Lookup& lookup);
 
     void tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms);
     void mergeAtomsAddedWhileSweeping(Partition& partition);
