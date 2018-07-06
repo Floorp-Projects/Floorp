@@ -21,7 +21,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/ServiceWorkerCleanUp.jsm");
-ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -1983,38 +1982,12 @@ SpecialPowersAPI.prototype = {
     return this._sendSyncMessage("SPCleanUpSTSData", {origin, flags: flags || 0});
   },
 
-  requestDumpCoverageCounters(cb) {
-    // We want to avoid a roundtrip between child and parent.
-    if (!PerTestCoverageUtils.enabled) {
-      return Promise.resolve();
-    }
-
-    return new Promise(resolve => {
-      let messageListener = _ => {
-        this._removeMessageListener("SPRequestDumpCoverageCounters", messageListener);
-        resolve();
-      };
-
-      this._addMessageListener("SPRequestDumpCoverageCounters", messageListener);
-      this._sendAsyncMessage("SPRequestDumpCoverageCounters", {});
-    });
+  requestDumpCoverageCounters() {
+    this._sendSyncMessage("SPRequestDumpCoverageCounters", {});
   },
 
-  requestResetCoverageCounters(cb) {
-    // We want to avoid a roundtrip between child and parent.
-    if (!PerTestCoverageUtils.enabled) {
-      return Promise.resolve();
-    }
-
-    return new Promise(resolve => {
-      let messageListener = _ => {
-        this._removeMessageListener("SPRequestResetCoverageCounters", messageListener);
-        resolve();
-      };
-
-      this._addMessageListener("SPRequestResetCoverageCounters", messageListener);
-      this._sendAsyncMessage("SPRequestResetCoverageCounters", {});
-    });
+  requestResetCoverageCounters() {
+    this._sendSyncMessage("SPRequestResetCoverageCounters", {});
   },
 
   _nextExtensionID: 0,
