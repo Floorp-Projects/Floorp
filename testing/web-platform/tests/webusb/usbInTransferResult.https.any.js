@@ -1,7 +1,6 @@
-<!DOCTYPE html>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: script=/webusb/resources/fake-devices.js
+// META: script=/webusb/resources/usb-helpers.js
+// META: global=sharedworker
 'use strict';
 
 test(t => {
@@ -28,4 +27,3 @@ test(t => {
 test(t => {
   assert_throws(TypeError(), () => new USBInTransferResult());
 }, 'Cannot construct USBInTransferResult without a status');
-</script>
