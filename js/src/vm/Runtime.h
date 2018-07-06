@@ -515,6 +515,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
         return scriptDataLock.ownedByCurrentThread();
     }
+
+    bool currentThreadHasAtomsTableAccess() const {
+        return CurrentThreadCanAccessRuntime(this) && atoms_->mainThreadHasAllLocks();
+    }
 #endif
 
     JS::HeapState heapState() const {
@@ -706,42 +710,30 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     friend class js::AutoAssertNoContentJS;
 
   private:
-    // Set of all atoms other than those in permanentAtoms and staticStrings.
-    // Reading or writing this set requires the calling thread to use
-    // AutoAccessAtomsZone.
-    js::ExclusiveAccessLockOrGCTaskData<js::AtomSet*> atoms_;
-
-    // Set of all atoms added while the main atoms table is being swept.
-    js::ExclusiveAccessLockOrGCTaskData<js::AtomSet*> atomsAddedWhileSweeping_;
+    // Table of all atoms other than those in permanentAtoms and staticStrings.
+    js::WriteOnceData<js::AtomsTable*> atoms_;
 
     // Set of all live symbols produced by Symbol.for(). All such symbols are
     // allocated in the atoms zone. Reading or writing the symbol registry
     // requires the calling thread to use AutoAccessAtomsZone.
     js::MainThreadOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
 
+    js::WriteOnceData<js::AtomSet*> permanentAtomsDuringInit_;
+    js::WriteOnceData<js::FrozenAtomSet*> permanentAtoms_;
+
   public:
     bool initializeAtoms(JSContext* cx);
     void finishAtoms();
-    bool atomsAreFinished() const { return !atoms_; }
+    bool atomsAreFinished() const { return !atoms_ && !permanentAtomsDuringInit_; }
 
-    js::AtomSet* atomsForSweeping() {
+    js::AtomsTable* atomsForSweeping() {
         MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
         return atoms_;
     }
 
-    js::AtomSet& atoms(const js::AutoAccessAtomsZone& access) {
+    js::AtomsTable& atoms() {
         MOZ_ASSERT(atoms_);
         return *atoms_;
-    }
-    js::AtomSet& unsafeAtoms() {
-        MOZ_ASSERT(atoms_);
-        return *atoms_;
-    }
-
-    bool createAtomsAddedWhileSweepingTable();
-    void destroyAtomsAddedWhileSweepingTable();
-    js::AtomSet* atomsAddedWhileSweeping() {
-        return atomsAddedWhileSweeping_;
     }
 
     const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) const {
@@ -776,11 +768,27 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::WriteOnceData<JSAtomState*> commonNames;
 
     // All permanent atoms in the runtime, other than those in staticStrings.
-    // Unlike |atoms_|, access to this does not require
-    // AutoLockForExclusiveAccess because it is frozen and thus read-only.
-    js::WriteOnceData<js::FrozenAtomSet*> permanentAtoms;
+    // Unlike |atoms_|, access to this does not require locking because it is
+    // frozen and thus read-only.
+    const js::FrozenAtomSet* permanentAtoms() const {
+        MOZ_ASSERT(permanentAtomsPopulated());
+        return permanentAtoms_.ref();
+    }
 
-    bool transformToPermanentAtoms(JSContext* cx);
+    // The permanent atoms table is populated during initialization.
+    bool permanentAtomsPopulated() const {
+        return permanentAtoms_;
+    }
+
+    // For internal use, return the permanent atoms table while it is being
+    // populated.
+    js::AtomSet* permanentAtomsDuringInit() const {
+        MOZ_ASSERT(!permanentAtoms_);
+        return permanentAtomsDuringInit_.ref();
+    }
+
+    bool initMainAtomsTables(JSContext* cx);
+    void tracePermanentAtoms(JSTracer* trc);
 
     // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
     // these are shared with the parentRuntime, if any.

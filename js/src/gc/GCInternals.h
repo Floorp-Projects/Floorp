@@ -84,12 +84,12 @@ class MOZ_RAII AutoGCSession : public AutoHeapSession
     mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
 };
 
-class MOZ_RAII AutoTraceSession : public AutoLockForExclusiveAccess,
+class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
                                   public AutoHeapSession
 {
   public:
     explicit AutoTraceSession(JSRuntime* rt)
-      : AutoLockForExclusiveAccess(rt),
+      : AutoLockAllAtoms(rt),
         AutoHeapSession(rt, JS::HeapState::Tracing)
     {}
 };

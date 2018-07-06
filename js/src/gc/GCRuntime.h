@@ -870,7 +870,7 @@ class GCRuntime
     MainThreadOrGCTaskData<JS::Zone*> currentSweepGroup;
     MainThreadData<UniquePtr<SweepAction<GCRuntime*, FreeOp*, SliceBudget&>>> sweepActions;
     MainThreadOrGCTaskData<JS::Zone*> sweepZone;
-    MainThreadData<mozilla::Maybe<AtomSet::Enum>> maybeAtomsToSweep;
+    MainThreadData<mozilla::Maybe<AtomsTable::SweepIterator>> maybeAtomsToSweep;
     MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
     MainThreadData<bool> abortSweepAfterCurrentGroup;
 
