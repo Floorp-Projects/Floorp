@@ -286,19 +286,64 @@ evaluate.toJSON = function(obj, seenEls) {
 /**
  * Tests if an arbitrary object is cyclic.
  *
- * @param {*} obj
+ * Element prototypes are by definition acyclic, even when they
+ * contain cyclic references.  This is because `evaluate.toJSON`
+ * ensures they are marshaled as web elements.
+ *
+ * @param {*} value
  *     Object to test for cyclical references.
  *
  * @return {boolean}
  *     True if object is cyclic, false otherwise.
  */
-evaluate.isCyclic = function(obj) {
-  try {
-    JSON.stringify(obj);
+evaluate.isCyclic = function(value, stack = []) {
+  let t = Object.prototype.toString.call(value);
+
+  // null
+  if (t == "[object Undefined]" || t == "[object Null]") {
     return false;
-  } catch (e) {
+
+  // primitives
+  } else if (t == "[object Boolean]" ||
+      t == "[object Number]" ||
+      t == "[object String]") {
+    return false;
+
+  // HTMLElement, SVGElement, XULElement, et al.
+  } else if (element.isElement(value)) {
+    return false;
+
+  // Array, NodeList, HTMLCollection, et al.
+  } else if (element.isCollection(value)) {
+    if (stack.includes(value)) {
+      return true;
+    }
+    stack.push(value);
+
+    for (let i = 0; i < value.length; i++) {
+      if (evaluate.isCyclic(value[i], stack)) {
+        return true;
+      }
+    }
+
+    stack.pop();
+    return false;
+  }
+
+  // arbitrary objects
+  if (stack.includes(value)) {
     return true;
   }
+  stack.push(value);
+
+  for (let prop in value) {
+    if (evaluate.isCyclic(value[prop], stack)) {
+      return true;
+    }
+  }
+
+  stack.pop();
+  return false;
 };
 
 /**
