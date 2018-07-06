@@ -47,7 +47,7 @@ def list_group(task_group_id, session):
         'Cancel all running and pending tasks created by the decision task '
         'this action task is associated with.'
     ),
-    order=100,
+    order=400,
     context=[]
 )
 def cancel_all_action(parameters, graph_config, input, task_group_id, task_id, task):
