@@ -67,7 +67,7 @@ promise_test(async testCase => {
   assert_equals(cookie.value, 'cookie-value');
 
   await async_cleanup(() => cookieStore.delete('cookie-name'));
-}, 'cookieStore.set with expires in the future');
+}, 'cookieStore.set with expires set to a future timestamp');
 
 promise_test(async testCase => {
   const tenYears = 10 * 365 * 24 * 60 * 60 * 1000;
@@ -80,7 +80,34 @@ promise_test(async testCase => {
   assert_equals(cookie, null);
 
   await async_cleanup(() => cookieStore.delete('cookie-name'));
-}, 'cookieStore.set with expires in the past');
+}, 'cookieStore.set with expires set to a past timestamp');
+
+promise_test(async testCase => {
+  const tenYears = 10 * 365 * 24 * 60 * 60 * 1000;
+  const tenYearsFromNow = Date.now() + tenYears;
+  await cookieStore.delete('cookie-name');
+
+  await cookieStore.set(
+      'cookie-name', 'cookie-value', { expires: new Date(tenYearsFromNow) });
+  const cookie = await cookieStore.get('cookie-name');
+  assert_equals(cookie.name, 'cookie-name');
+  assert_equals(cookie.value, 'cookie-value');
+
+  await async_cleanup(() => cookieStore.delete('cookie-name'));
+}, 'cookieStore.set with expires set to a future Date');
+
+promise_test(async testCase => {
+  const tenYears = 10 * 365 * 24 * 60 * 60 * 1000;
+  const tenYearsAgo = Date.now() - tenYears;
+  await cookieStore.delete('cookie-name');
+
+  await cookieStore.set(
+      'cookie-name', 'cookie-value', { expires: new Date(tenYearsAgo) });
+  const cookie = await cookieStore.get('cookie-name');
+  assert_equals(cookie, null);
+
+  await async_cleanup(() => cookieStore.delete('cookie-name'));
+}, 'cookieStore.set with expires set to a past Date');
 
 promise_test(async testCase => {
   const tenYears = 10 * 365 * 24 * 60 * 60 * 1000;
