@@ -420,7 +420,7 @@ JSContext::enterAtomsZone(const js::AutoLockForExclusiveAccess& lock)
 
     realm_ = nullptr;
     zone_ = runtime_->atomsZone(lock);
-    arenas_ = &zone_->arenas;
+    freeLists_ = &zone_->arenas.freeLists();
 }
 
 inline void
@@ -483,10 +483,10 @@ JSContext::setRealm(JS::Realm* realm)
         // This thread must have exclusive access to the zone.
         MOZ_ASSERT(CurrentThreadCanAccessZone(realm->zone()));
         zone_ = realm->zone();
-        arenas_ = &zone_->arenas;
+        freeLists_ = &zone_->arenas.freeLists();
     } else {
         zone_ = nullptr;
-        arenas_ = nullptr;
+        freeLists_ = nullptr;
     }
 }
 

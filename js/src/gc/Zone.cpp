@@ -33,7 +33,7 @@ JS::Zone::Zone(JSRuntime* rt)
     debuggers(this, nullptr),
     uniqueIds_(this),
     suppressAllocationMetadataBuilder(this, false),
-    arenas(rt, this),
+    arenas(this),
     types(this),
     gcWeakMapList_(this),
     compartments_(),

@@ -237,26 +237,61 @@ js::gc::SortedArenaList::toArenaList()
     return ArenaList(segments[0]);
 }
 
+#ifdef DEBUG
+
+bool
+js::gc::FreeLists::allEmpty() const
+{
+    for (auto i : AllAllocKinds()) {
+        if (!isEmpty(i))
+            return false;
+    }
+    return true;
+}
+
+bool
+js::gc::FreeLists::isEmpty(AllocKind kind) const
+{
+    return freeLists_[kind]->isEmpty();
+}
+
+#endif
+
 void
-js::gc::ArenaLists::setFreeList(AllocKind i, FreeSpan* span)
+js::gc::FreeLists::clear(AllocKind i)
 {
 #ifdef DEBUG
-    auto old = freeList(i);
+    auto old = freeLists_[i];
     if (!old->isEmpty())
         old->getArena()->checkNoMarkedFreeCells();
 #endif
-    freeLists()[i] = span;
+    freeLists_[i] = &emptySentinel;
+}
+
+js::gc::TenuredCell*
+js::gc::FreeLists::allocate(AllocKind kind)
+{
+    return freeLists_[kind]->allocate(Arena::thingSize(kind));
 }
 
 void
-js::gc::ArenaLists::clearFreeList(AllocKind i)
+js::gc::FreeLists::unmarkPreMarkedFreeCells(AllocKind kind)
 {
-#ifdef DEBUG
-    auto old = freeList(i);
-    if (!old->isEmpty())
-        old->getArena()->checkNoMarkedFreeCells();
-#endif
-    freeLists()[i] = &emptySentinel;
+    FreeSpan* freeSpan = freeLists_[kind];
+    if (!freeSpan->isEmpty())
+        freeSpan->getArena()->unmarkPreMarkedFreeCells();
+}
+
+JSRuntime*
+js::gc::ArenaLists::runtime()
+{
+    return zone_->runtimeFromMainThread();
+}
+
+JSRuntime*
+js::gc::ArenaLists::runtimeFromAnyThread()
+{
+    return zone_->runtimeFromAnyThread();
 }
 
 js::gc::Arena*
@@ -328,29 +363,26 @@ void
 js::gc::ArenaLists::clearFreeLists()
 {
     for (auto i : AllAllocKinds())
-        clearFreeList(i);
-}
-
-bool
-js::gc::ArenaLists::arenaIsInUse(Arena* arena, AllocKind kind) const
-{
-    MOZ_ASSERT(arena);
-    return arena == freeList(kind)->getArenaUnchecked();
+        freeLists().clear(i);
 }
 
 MOZ_ALWAYS_INLINE js::gc::TenuredCell*
-js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind, size_t thingSize)
+js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind)
 {
-    return freeList(thingKind)->allocate(thingSize);
+    return freeLists().allocate(thingKind);
+}
+
+void
+js::gc::ArenaLists::unmarkPreMarkedFreeCells()
+{
+    for (auto i : AllAllocKinds())
+        freeLists().unmarkPreMarkedFreeCells(i);
 }
 
 void
 js::gc::ArenaLists::checkEmptyFreeLists()
 {
-#ifdef DEBUG
-    for (auto i : AllAllocKinds())
-        checkEmptyFreeList(i);
-#endif
+    MOZ_ASSERT(freeLists().allEmpty());
 }
 
 bool
@@ -364,12 +396,6 @@ js::gc::ArenaLists::checkEmptyArenaLists()
     }
 #endif
     return empty;
-}
-
-void
-js::gc::ArenaLists::checkEmptyFreeList(AllocKind kind)
-{
-    MOZ_ASSERT(freeList(kind)->isEmpty());
 }
 
 #endif // gc_ArenaList_inl_h
