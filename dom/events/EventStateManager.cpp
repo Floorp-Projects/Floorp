@@ -1898,7 +1898,8 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       // Use our targetContent, now that we've determined it, as the
       // parent object of the DataTransfer.
-      dataTransfer->SetParentObject(targetContent);
+      nsCOMPtr<nsIContent> parentContent = targetContent->FindFirstNonChromeOnlyAccessContent();
+      dataTransfer->SetParentObject(parentContent);
 
       sLastDragOverFrame = nullptr;
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();

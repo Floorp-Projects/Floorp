@@ -66,7 +66,9 @@ public class SpeechSynthesisService  {
     }
 
     private static Set<Locale> getAvailableLanguages() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // While this method was introduced in 21, it seems that it
+            // has not been implemented in the speech service side until 23.
             return sTTS.getAvailableLanguages();
         }
         Set<Locale> locales = new HashSet<Locale>();

@@ -25,14 +25,12 @@
 #include "nsGkAtoms.h"
 #include "nsStringFwd.h"
 #include "nsStyledElement.h"
-#include "nsIFrameLoaderOwner.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/FromParser.h"
 
 class nsIDocument;
-class nsFrameLoader;
 class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;
@@ -398,8 +396,6 @@ public:
                            bool aPreallocateChildren) const override;
     virtual mozilla::EventStates IntrinsicState() const override;
 
-    void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
-
     virtual void RecompileScriptEventListeners() override;
 
     // This function should ONLY be used by BindToTree implementations.
@@ -631,14 +627,6 @@ public:
                                const nsAString& aValue,
                                mozilla::ErrorResult& rv);
     // Style() inherited from nsStyledElement
-    already_AddRefed<nsFrameLoader> GetFrameLoader();
-    void InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader);
-    void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
-                          mozilla::ErrorResult& rv);
-    void SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
-                          mozilla::ErrorResult& rv);
-    void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
-                          mozilla::ErrorResult& rv);
 
     nsINode* GetScopeChainParent() const override
     {
@@ -660,8 +648,6 @@ protected:
     NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);
 
     nsresult AddPopupListener(nsAtom* aName);
-
-    void LoadSrc();
 
     /**
      * The nearest enclosing content node with a binding

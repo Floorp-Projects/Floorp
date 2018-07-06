@@ -13,7 +13,6 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -74,11 +73,11 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsICSSDeclaration.h"
 #include "nsLayoutUtils.h"
+#include "XULFrameElement.h"
 #include "XULPopupElement.h"
 
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/BoxObject.h"
-#include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/XULCommandEvent.h"
@@ -96,33 +95,6 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
 #define NS_DISPATCH_XUL_COMMAND     (1 << 0)
-
-class nsXULElementTearoff final : public nsIFrameLoaderOwner
-{
-  ~nsXULElementTearoff() {}
-
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsXULElementTearoff)
-
-  explicit nsXULElementTearoff(nsXULElement* aElement)
-    : mElement(aElement)
-  {
-  }
-
-  NS_FORWARD_NSIFRAMELOADEROWNER(static_cast<nsXULElement*>(mElement.get())->)
-private:
-  RefPtr<nsXULElement> mElement;
-};
-
-NS_IMPL_CYCLE_COLLECTION(nsXULElementTearoff, mElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULElementTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULElementTearoff)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULElementTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
-NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 //----------------------------------------------------------------------
 // nsXULElement
@@ -176,6 +148,13 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
       nodeInfo->Equals(nsGkAtoms::panel) ||
       nodeInfo->Equals(nsGkAtoms::tooltip)) {
     return NS_NewXULPopupElement(nodeInfo.forget());
+  }
+
+  if (nodeInfo->Equals(nsGkAtoms::iframe) ||
+      nodeInfo->Equals(nsGkAtoms::browser) ||
+      nodeInfo->Equals(nsGkAtoms::editor)) {
+    already_AddRefed<mozilla::dom::NodeInfo> frameni = nodeInfo.forget();
+    return new XULFrameElement(frameni);
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());
@@ -319,8 +298,6 @@ NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
     NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
-    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFrameLoaderOwner,
-                                   new nsXULElementTearoff(this))
 NS_INTERFACE_MAP_END_INHERITING(nsStyledElement)
 
 //----------------------------------------------------------------------
@@ -783,13 +760,6 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
       AddTooltipSupport();
   }
 
-  if (aDocument) {
-      NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-                   "Missing a script blocker!");
-      // We're in a document now.  Kick off the frame load.
-      LoadSrc();
-  }
-
   return rv;
 }
 
@@ -814,11 +784,6 @@ nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
     nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     if (slots) {
         slots->mControllers = nullptr;
-        RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-        if (frameLoader) {
-            frameLoader->Destroy();
-        }
-        slots->mFrameLoaderOrOpener = nullptr;
     }
 
     nsStyledElement::UnbindFromTree(aDeep, aNullParent);
@@ -1054,10 +1019,6 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     UpdateBrightTitlebarForeground(document);
                 }
             }
-
-            if (aName == nsGkAtoms::src && document) {
-                LoadSrc();
-            }
         } else {
             if (mNodeInfo->Equals(nsGkAtoms::window)) {
                 if (aName == nsGkAtoms::hidechrome) {
@@ -1168,11 +1129,6 @@ nsXULElement::DestroyContent()
     nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     if (slots) {
         slots->mControllers = nullptr;
-        RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-        if (frameLoader) {
-            frameLoader->Destroy();
-        }
-        slots->mFrameLoaderOrOpener = nullptr;
     }
 
     nsStyledElement::DestroyContent();
@@ -1355,133 +1311,6 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?
     return OwnerDoc()->GetBoxObjectFor(this, rv);
-}
-
-void
-nsXULElement::LoadSrc()
-{
-    // Allow frame loader only on objects for which a container box object
-    // can be obtained.
-    if (!IsAnyOfXULElements(nsGkAtoms::browser, nsGkAtoms::editor,
-                            nsGkAtoms::iframe)) {
-        return;
-    }
-    if (!IsInUncomposedDoc() ||
-        !OwnerDoc()->GetRootElement() ||
-        OwnerDoc()->GetRootElement()->
-            NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
-        return;
-    }
-    RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-    if (!frameLoader) {
-        // Check if we have an opener we need to be setting
-        nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-        nsCOMPtr<nsPIDOMWindowOuter> opener = do_QueryInterface(slots->mFrameLoaderOrOpener);
-        if (!opener) {
-            // If we are a primary xul-browser, we want to take the opener property!
-            nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
-            if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
-                            nsGkAtoms::_true, eIgnoreCase) && window) {
-                opener = window->TakeOpenerForInitialContentBrowser();
-            }
-        }
-
-        // false as the last parameter so that xul:iframe/browser/editor
-        // session history handling works like dynamic html:iframes.
-        // Usually xul elements are used in chrome, which doesn't have
-        // session history at all.
-        frameLoader = nsFrameLoader::Create(this, opener, false);
-        slots->mFrameLoaderOrOpener = ToSupports(frameLoader);
-        if (NS_WARN_IF(!frameLoader)) {
-            return;
-        }
-
-        (new AsyncEventDispatcher(this,
-                                  NS_LITERAL_STRING("XULFrameLoaderCreated"),
-                                  CanBubble::eYes))->RunDOMEventWhenSafe();
-    }
-
-    frameLoader->LoadFrame(false);
-}
-
-already_AddRefed<nsFrameLoader>
-nsXULElement::GetFrameLoader()
-{
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (!slots)
-        return nullptr;
-
-    RefPtr<nsFrameLoader> loader = do_QueryObject(slots->mFrameLoaderOrOpener);
-    return loader.forget();
-}
-
-void
-nsXULElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
-{
-    nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-    MOZ_ASSERT(!slots->mFrameLoaderOrOpener, "A frameLoader or opener is present when calling PresetOpenerWindow");
-
-    slots->mFrameLoaderOrOpener = aWindow;
-}
-
-void
-nsXULElement::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
-{
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    MOZ_ASSERT(slots);
-
-    slots->mFrameLoaderOrOpener = ToSupports(aNewFrameLoader);
-}
-
-void
-nsXULElement::SwapFrameLoaders(HTMLIFrameElement& aOtherLoaderOwner,
-                               ErrorResult& rv)
-{
-    if (!GetExistingDOMSlots()) {
-        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-        return;
-    }
-
-    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(ToSupports(this));
-    aOtherLoaderOwner.SwapFrameLoaders(flo, rv);
-}
-
-void
-nsXULElement::SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
-                               ErrorResult& rv)
-{
-    if (&aOtherLoaderOwner == this) {
-        // nothing to do
-        return;
-    }
-
-    if (!GetExistingDOMSlots()) {
-        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-        return;
-    }
-
-    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(ToSupports(this));
-    aOtherLoaderOwner.SwapFrameLoaders(flo, rv);
-}
-
-void
-nsXULElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
-                               mozilla::ErrorResult& rv)
-{
-    if (!GetExistingDOMSlots()) {
-        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-        return;
-    }
-
-    RefPtr<nsFrameLoader> loader = GetFrameLoader();
-    RefPtr<nsFrameLoader> otherLoader = aOtherLoaderOwner->GetFrameLoader();
-    if (!loader || !otherLoader) {
-        rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-        return;
-    }
-
-    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(ToSupports(this));
-    rv = loader->SwapWithOtherLoader(otherLoader, flo, aOtherLoaderOwner);
 }
 
 NS_IMETHODIMP
