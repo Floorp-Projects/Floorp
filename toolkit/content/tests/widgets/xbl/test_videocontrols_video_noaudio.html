@@ -18,8 +18,8 @@
 <pre id="test">
 <script clas="testbody" type="application/javascript">
   const video = document.getElementById("video");
-  const muteButton = getElementWithinVideo(video, "muteButton");
-  const volumeStack = getElementWithinVideo(video, "volumeStack");
+  const muteButton = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+  const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
 
   add_task(async function setup() {
     await new Promise(resolve => window.addEventListener("load", resolve));

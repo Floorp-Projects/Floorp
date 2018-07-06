@@ -62,13 +62,13 @@ let expectingEvents;
 let expectingEventPromise;
 
 async function isMuteButtonMuted() {
-  const muteButton = getElementWithinVideo(video, "muteButton");
+  const muteButton = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
   await new Promise(SimpleTest.executeSoon);
   return muteButton.getAttribute("muted") === "true";
 }
 
 async function isVolumeSliderShowingCorrectVolume(expectedVolume) {
-  const volumeControl = getElementWithinVideo(video, "volumeControl");
+  const volumeControl = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeControl");
   await new Promise(SimpleTest.executeSoon);
   is(+volumeControl.value, expectedVolume * 100, "volume slider should match expected volume");
 }
@@ -394,7 +394,7 @@ add_task(async function ensure_fullscreen_cursor() {
   video.mozRequestFullScreen();
   await waitForEvent("mozfullscreenchange");
 
-  const controlsSpacer = getElementWithinVideo(video, "controlsSpacer");
+  const controlsSpacer = getAnonElementWithinVideoByAttribute(video, "anonid", "controlsSpacer");
   is(controlsSpacer.hasAttribute("hideCursor"), true, "Cursor is hidden");
 
   // Wiggle the mouse a bit
