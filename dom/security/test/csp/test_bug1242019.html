@@ -32,7 +32,7 @@ SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
     data_uri = "";
     data_uri = aMsg.message.substr(data_start);
     // this will either match the elipsis after the URI or the . at the end of the message
-    data_uri = data_uri.substr(0, data_uri.indexOf("."));
+    data_uri = data_uri.substr(0, data_uri.indexOf("…"));
     if (data_uri == "") {
       return;
     }
