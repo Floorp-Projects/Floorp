@@ -15,6 +15,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 #include <algorithm>
 #include <ctype.h>
@@ -44,6 +45,7 @@ using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
+using mozilla::Utf8Unit;
 
 struct ReservedWordInfo
 {
@@ -2612,6 +2614,7 @@ TokenKindToString(TokenKind tt)
 }
 #endif
 
+template class frontend::TokenStreamCharsBase<Utf8Unit>;
 template class frontend::TokenStreamCharsBase<char16_t>;
 
 template class frontend::TokenStreamChars<char16_t, frontend::TokenStreamAnyCharsAccess>;

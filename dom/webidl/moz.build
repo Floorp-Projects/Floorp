@@ -677,6 +677,7 @@ WEBIDL_FILES = [
     'MimeTypeArray.webidl',
     'MouseEvent.webidl',
     'MouseScrollEvent.webidl',
+    'MozFrameLoaderOwner.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
     'NamedNodeMap.webidl',

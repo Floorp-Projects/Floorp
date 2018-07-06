@@ -57,23 +57,4 @@
     </implementation>
   </binding>
 
-  <binding id="iframe">
-    <implementation>
-      <property name="docShell" readonly="true">
-        <getter><![CDATA[
-          let {frameLoader} = this;
-          return frameLoader ? frameLoader.docShell : null;
-        ]]></getter>
-      </property>
-      <property name="contentWindow"
-                readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);"/>
-      <property name="webNavigation"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
-                readonly="true"/>
-      <property name="contentDocument" readonly="true"
-                onget="return this.webNavigation.document;"/>
-    </implementation>
-  </binding>
-
 </bindings>

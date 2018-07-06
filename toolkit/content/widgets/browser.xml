@@ -181,21 +181,6 @@
         ]]></setter>
       </property>
 
-      <field name="_docShell">null</field>
-
-      <property name="docShell" readonly="true">
-        <getter><![CDATA[
-          if (this._docShell)
-            return this._docShell;
-
-          let {frameLoader} = this;
-          if (!frameLoader)
-            return null;
-          this._docShell = frameLoader.docShell;
-          return this._docShell;
-        ]]></getter>
-      </property>
-
       <field name="_loadContext">null</field>
 
       <property name="loadContext" readonly="true">
@@ -314,23 +299,6 @@
 
       </property>
 
-      <field name="_webNavigation">null</field>
-
-      <property name="webNavigation"
-                readonly="true">
-        <getter>
-        <![CDATA[
-          if (!this._webNavigation) {
-            if (!this.docShell) {
-              return null;
-            }
-            this._webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
-          }
-          return this._webNavigation;
-        ]]>
-        </getter>
-      </property>
-
       <field name="_webBrowserFind">null</field>
 
       <property name="webBrowserFind"
@@ -425,12 +393,6 @@
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
 
-      <field name="_contentWindow">null</field>
-
-      <property name="contentWindow"
-                readonly="true"
-                onget="return this._contentWindow || (this._contentWindow = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow));"/>
-
       <property name="contentWindowAsCPOW"
                 readonly="true"
                 onget="return this.contentWindow;"/>
@@ -441,10 +403,6 @@
 
       <property name="markupDocumentViewer"
                 onget="return this.docShell.contentViewer;"
-                readonly="true"/>
-
-      <property name="contentDocument"
-                onget="return this.webNavigation.document;"
                 readonly="true"/>
 
       <property name="contentDocumentAsCPOW"
@@ -1373,10 +1331,7 @@
           // because these notifications are dispatched again once the docshells
           // are swapped.
           var fieldsToSwap = [
-            "_docShell",
             "_webBrowserFind",
-            "_contentWindow",
-            "_webNavigation"
           ];
 
           if (this.isRemoteBrowser) {
