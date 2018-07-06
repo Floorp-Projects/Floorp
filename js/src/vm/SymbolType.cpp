@@ -19,10 +19,10 @@ using JS::Symbol;
 using namespace js;
 
 Symbol*
-Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash, JSAtom* description,
-                    const AutoAccessAtomsZone& access)
+Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash, JSAtom* description)
 {
-    MOZ_ASSERT(cx->inAtomsZone());
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+    AutoAllocInAtomsZone az(cx);
 
     // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
     Symbol* p = Allocate<JS::Symbol, NoGC>(cx);
@@ -43,14 +43,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
             return nullptr;
     }
 
-    // Lock to allocate. If symbol allocation becomes a bottleneck, this can
-    // probably be replaced with an assertion that we're on the main thread.
-    AutoLockForExclusiveAccess lock(cx);
-    Symbol* sym;
-    {
-        AutoAllocInAtomsZone az(cx);
-        sym = newInternal(cx, code, cx->runtime()->randomHashCode(), atom, lock);
-    }
+    Symbol* sym = newInternal(cx, code, cx->runtime()->randomHashCode(), atom);
     if (sym)
         cx->markAtom(sym);
     return sym;
@@ -63,33 +56,28 @@ Symbol::for_(JSContext* cx, HandleString description)
     if (!atom)
         return nullptr;
 
-    AutoLockForExclusiveAccess lock(cx);
-
-    SymbolRegistry& registry = cx->symbolRegistry(lock);
+    SymbolRegistry& registry = cx->symbolRegistry();
     SymbolRegistry::AddPtr p = registry.lookupForAdd(atom);
     if (p) {
         cx->markAtom(*p);
         return *p;
     }
 
-    Symbol* sym;
-    {
-        AutoAllocInAtomsZone az(cx);
-        // Rehash the hash of the atom to give the corresponding symbol a hash
-        // that is different than the hash of the corresponding atom.
-        HashNumber hash = mozilla::HashGeneric(atom->hash());
-        sym = newInternal(cx, SymbolCode::InSymbolRegistry, hash, atom, lock);
-        if (!sym)
-            return nullptr;
+    // Rehash the hash of the atom to give the corresponding symbol a hash
+    // that is different than the hash of the corresponding atom.
+    HashNumber hash = mozilla::HashGeneric(atom->hash());
+    Symbol* sym = newInternal(cx, SymbolCode::InSymbolRegistry, hash, atom);
+    if (!sym)
+        return nullptr;
 
-        // p is still valid here because we have held the lock since the
-        // lookupForAdd call, and newInternal can't GC.
-        if (!registry.add(p, sym)) {
-            // SystemAllocPolicy does not report OOM.
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
+    // p is still valid here because we only access the symbol registry from the
+    // main thread, and newInternal can't GC.
+    if (!registry.add(p, sym)) {
+        // SystemAllocPolicy does not report OOM.
+        ReportOutOfMemory(cx);
+        return nullptr;
     }
+
     cx->markAtom(sym);
     return sym;
 }

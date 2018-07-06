@@ -199,7 +199,7 @@ class JitRuntime
   public:
     JitRuntime();
     ~JitRuntime();
-    MOZ_MUST_USE bool initialize(JSContext* cx, js::AutoLockForExclusiveAccess& lock);
+    MOZ_MUST_USE bool initialize(JSContext* cx);
 
     static void Trace(JSTracer* trc, const js::AutoAccessAtomsZone& access);
     static void TraceJitcodeGlobalTableForMinorGC(JSTracer* trc);

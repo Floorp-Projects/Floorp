@@ -130,10 +130,6 @@ Realm::init(JSContext* cx)
 jit::JitRuntime*
 JSRuntime::createJitRuntime(JSContext* cx)
 {
-    // The shared stubs are created in the atoms zone, which may be
-    // accessed by other threads with an exclusive context.
-    AutoLockForExclusiveAccess atomsLock(cx);
-
     MOZ_ASSERT(!jitRuntime_);
 
     if (!CanLikelyAllocateMoreExecutableMemory()) {
@@ -151,7 +147,7 @@ JSRuntime::createJitRuntime(JSContext* cx)
     jitRuntime_ = jrt;
 
     AutoEnterOOMUnsafeRegion noOOM;
-    if (!jitRuntime_->initialize(cx, atomsLock)) {
+    if (!jitRuntime_->initialize(cx)) {
         // Handling OOM here is complicated: if we delete jitRuntime_ now, we
         // will destroy the ExecutableAllocator, even though there may still be
         // JitCode instances holding references to ExecutablePools.
