@@ -48,6 +48,7 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
+#include "mozilla/dom/XULFrameElementBinding.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
@@ -3868,6 +3869,10 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
           definition->mLocalName == nsGkAtoms::panel ||
           definition->mLocalName == nsGkAtoms::tooltip) {
         cb = XULPopupElement_Binding::GetConstructorObject;
+      } else if (definition->mLocalName == nsGkAtoms::iframe ||
+                 definition->mLocalName == nsGkAtoms::browser ||
+                 definition->mLocalName == nsGkAtoms::editor) {
+        cb = XULFrameElement_Binding::GetConstructorObject;
       } else {
         cb = XULElement_Binding::GetConstructorObject;
       }

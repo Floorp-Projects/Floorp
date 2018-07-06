@@ -24,6 +24,7 @@ if CONFIG['MOZ_XUL']:
     ]
 
     EXPORTS.mozilla.dom += [
+        'XULFrameElement.h',
         'XULPopupElement.h',
     ]
 
@@ -37,6 +38,7 @@ if CONFIG['MOZ_XUL']:
         'nsXULPrototypeDocument.cpp',
         'nsXULSortService.cpp',
         'XULDocument.cpp',
+        'XULFrameElement.cpp',
         'XULPopupElement.cpp',
     ]
 
