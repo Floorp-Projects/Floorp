@@ -340,6 +340,13 @@ IsWrapper(const JSObject* obj)
     return IsProxy(obj) && GetProxyHandler(obj)->family() == &Wrapper::family;
 }
 
+inline bool
+IsCrossCompartmentWrapper(const JSObject* obj)
+{
+    return IsWrapper(obj) &&
+           (Wrapper::wrapperHandler(obj)->flags() & Wrapper::CROSS_COMPARTMENT);
+}
+
 // Given a JSObject, returns that object stripped of wrappers. If
 // stopAtWindowProxy is true, then this returns the WindowProxy if it was
 // previously wrapped. Otherwise, this returns the first object for which
