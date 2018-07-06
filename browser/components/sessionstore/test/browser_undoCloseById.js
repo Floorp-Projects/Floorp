@@ -8,7 +8,7 @@
 ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
 
 async function openAndCloseTab(window, url) {
-  let tab = window.gBrowser.addTab(url);
+  let tab = BrowserTestUtils.addTab(window.gBrowser, url);
   await promiseBrowserLoaded(tab.linkedBrowser, true, url);
   await TabStateFlusher.flush(tab.linkedBrowser);
   await promiseRemoveTabAndSessionState(tab);

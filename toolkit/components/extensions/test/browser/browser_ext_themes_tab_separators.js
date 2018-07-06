@@ -18,7 +18,7 @@ add_task(async function test_support_tab_separators() {
 
   info("Checking background tab separator color");
 
-  let tab = gBrowser.addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   Assert.equal(window.getComputedStyle(tab, "::before").borderLeftColor,
                `rgb(${hexToRGB(TAB_SEPARATOR_COLOR).join(", ")})`,
