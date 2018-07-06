@@ -2208,7 +2208,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       rv = ioParamBlock->GetString(0, &profileNamePtr);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      CopyUTF16toUTF8(profileNamePtr, profileName);
+      CopyUTF16toUTF8(MakeStringSpan(profileNamePtr), profileName);
       free(profileNamePtr);
 
       lock->Unlock();

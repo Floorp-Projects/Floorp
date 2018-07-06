@@ -316,7 +316,7 @@ nsDOMOfflineResourceList::IndexedGetter(uint32_t aIndex, bool& aFound,
   }
 
   aFound = true;
-  CopyUTF8toUTF16(mCachedKeys[aIndex], aURI);
+  CopyUTF8toUTF16(mozilla::MakeStringSpan(mCachedKeys[aIndex]), aURI);
 }
 
 void
