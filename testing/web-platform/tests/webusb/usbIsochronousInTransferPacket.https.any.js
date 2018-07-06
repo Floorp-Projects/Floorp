@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: global=sharedworker
 'use strict';
 
 test(t => {
@@ -30,4 +27,3 @@ test(t => {
 test(t => {
   assert_throws(TypeError(), () => new USBIsochronousInTransferPacket());
 }, 'Cannot construct USBIsochronousInTransferPacket without a status');
-</script>

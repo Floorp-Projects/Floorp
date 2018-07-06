@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="resources/fake-devices.js"></script>
-<script src="resources/usb-helpers.js"></script>
-<script>
+// META: script=/webusb/resources/fake-devices.js
+// META: script=/webusb/resources/usb-helpers.js
+// META: global=sharedworker
 'use strict';
 
 function assertRejectsWithNotFoundError(promise) {
@@ -12,7 +9,7 @@ function assertRejectsWithNotFoundError(promise) {
 
 function assertRejectsWithNotOpenError(promise) {
   return assertRejectsWithError(
-      promise, 'InvalidStateError', 'The device must be opened first.')
+      promise, 'InvalidStateError', 'The device must be opened first.');
 }
 
 function assertRejectsWithNotConfiguredError(promise) {
@@ -340,7 +337,7 @@ usb_test(() => {
       assert_equals(result.status, 'ok');
       assert_equals(result.bytesWritten, 8);
       return device.close();
-    })
+    });
   });
 }, 'can issue OUT control transfer');
 
@@ -651,4 +648,3 @@ usb_test(() => {
       .then(() => assertRejectsWithNotFoundError(device.reset()));
   });
 }, 'resetDevice rejects when called on a disconnected device');
-</script>
