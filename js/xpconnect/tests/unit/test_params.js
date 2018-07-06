@@ -163,6 +163,8 @@ function test_component(contractid) {
                                ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator(standardComparator));
   doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
                                  [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator(interfaceComparator));
+  doIsTest("testJsvalArray", [{ cheese: 'whiz', apple: 8 }, [1, 5, '3'], /regex/], 3,
+                             ['apple', 2.2e10, 3.3e30, { only: "wheedle", except: {} }], 4, arrayComparator(standardComparator));
 
   // Test typed arrays and ArrayBuffer aliasing.
   var arrayBuffer = new ArrayBuffer(16);
