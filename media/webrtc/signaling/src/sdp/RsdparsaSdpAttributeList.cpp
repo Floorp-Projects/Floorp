@@ -408,6 +408,9 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kIceOptionsAttribute:
         LoadIceOptions(attributeList);
         return;
+      case SdpAttribute::kDtlsMessageAttribute:
+        LoadDtlsMessage(attributeList);
+        return;
       case SdpAttribute::kFingerprintAttribute:
         LoadFingerprint(attributeList);
         return;
@@ -484,7 +487,6 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
         LoadMaxPtime(attributeList);
         return;
 
-      case SdpAttribute::kDtlsMessageAttribute:
       case SdpAttribute::kLabelAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
       case SdpAttribute::kRtcpRsizeAttribute:
@@ -585,6 +587,25 @@ RsdparsaSdpAttributeList::LoadFingerprint(RustAttributeList* attributeList)
     fingerprints->PushEntry(algorithm, fingerprintBytes);
   }
   SetAttribute(fingerprints.release());
+}
+
+void
+RsdparsaSdpAttributeList::LoadDtlsMessage(RustAttributeList* attributeList)
+{
+  RustSdpAttributeDtlsMessage rustDtlsMessage;
+  nsresult nr = sdp_get_dtls_message(attributeList, &rustDtlsMessage);
+  if (NS_SUCCEEDED(nr)) {
+    SdpDtlsMessageAttribute::Role role;
+    if (rustDtlsMessage.role == RustSdpAttributeDtlsMessageType::kClient) {
+      role = SdpDtlsMessageAttribute::kClient;
+    } else {
+      role = SdpDtlsMessageAttribute::kServer;
+    }
+
+    std::string value = convertStringView(rustDtlsMessage.value);
+
+    SetAttribute(new SdpDtlsMessageAttribute(role, value));
+  }
 }
 
 void
