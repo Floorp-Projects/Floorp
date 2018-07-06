@@ -1175,21 +1175,8 @@ XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
                    xpcObjectHelper& helper, const nsIID* iid,
                    bool allowNativeWrapper, JS::MutableHandle<JS::Value> rval)
 {
-  if (!NativeInterface2JSObjectAndThrowIfFailed(cx, scope, rval, helper, iid,
-                                                allowNativeWrapper)) {
-    return false;
-  }
-
-#ifdef DEBUG
-  JSObject* jsobj = rval.toObjectOrNull();
-  if (jsobj &&
-      js::GetGlobalForObjectCrossCompartment(jsobj) == jsobj) {
-    NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                 "Why did we recreate this wrapper?");
-  }
-#endif
-
-  return true;
+  return NativeInterface2JSObjectAndThrowIfFailed(cx, scope, rval, helper, iid,
+                                                  allowNativeWrapper);
 }
 
 bool
@@ -2298,9 +2285,8 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
   const DOMJSClass* domClass = GetDOMClass(aObj);
 
   // DOM things are always parented to globals.
-  JS::Rooted<JSObject*> oldParent(aCx,
-                                  js::GetGlobalForObjectCrossCompartment(aObj));
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(oldParent) == oldParent);
+  JS::Rooted<JSObject*> oldParent(aCx, JS::GetNonCCWObjectGlobal(aObj));
+  MOZ_ASSERT(JS_IsGlobalObject(oldParent));
 
   JS::Rooted<JSObject*> newParent(aCx,
                                   domClass->mGetAssociatedGlobal(aCx, aObj));

@@ -792,8 +792,9 @@ nsChromeOuterWindowProxy::singleton;
 static JSObject*
 NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
 {
+  MOZ_ASSERT(JS_IsGlobalObject(global));
+
   JSAutoRealm ar(cx, global);
-  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(global) == global);
 
   js::WrapperOptions options;
   options.setClass(&OuterWindowProxyClass);
@@ -1858,7 +1859,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 
       SetWrapper(outerObject);
 
-      MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(outerObject) == newInnerGlobal);
+      MOZ_ASSERT(JS::GetNonCCWObjectGlobal(outerObject) == newInnerGlobal);
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outerObject);
