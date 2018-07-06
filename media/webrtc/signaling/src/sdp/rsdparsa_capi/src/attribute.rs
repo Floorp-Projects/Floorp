@@ -1,5 +1,5 @@
 use std::slice;
-use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t};
+use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t, uint64_t};
 
 use rsdparsa::SdpSession;
 use rsdparsa::attribute_type::*;
@@ -177,6 +177,16 @@ pub unsafe extern "C" fn sdp_get_iceoptions(attributes: *const Vec<SdpAttribute>
     let attr = get_attribute((*attributes).as_slice(), RustSdpAttributeType::IceOptions);
     if let Some(&SdpAttribute::IceOptions(ref options)) = attr {
         *ret = options;
+        return NS_OK;
+    }
+    NS_ERROR_INVALID_ARG
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_maxptime(attributes: *const Vec<SdpAttribute>, ret: *mut uint64_t) -> nsresult {
+    let attr = get_attribute((*attributes).as_slice(), RustSdpAttributeType::MaxPtime);
+    if let Some(&SdpAttribute::MaxPtime(ref max_ptime)) = attr {
+        *ret = *max_ptime;
         return NS_OK;
     }
     NS_ERROR_INVALID_ARG
