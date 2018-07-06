@@ -2949,6 +2949,7 @@ exports.CSS_PROPERTIES = {
       "rotate",
       "scale",
       "translate",
+      "offset-path",
       "scroll-behavior",
       "scroll-snap-type-x",
       "scroll-snap-type-y",
@@ -9330,6 +9331,10 @@ exports.PREFERENCES = [
   [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
+  ],
+  [
+    "offset-path",
+    "layout.css.motion-path.enabled"
   ],
   [
     "rotate",
