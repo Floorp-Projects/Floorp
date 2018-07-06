@@ -187,7 +187,7 @@ var StarUI = {
     }
   },
 
-  async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl, aIsCurrentBrowser = true) {
+  async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
     if (this.panel.state != "closed") {
@@ -229,7 +229,7 @@ var StarUI = {
         gNavigatorBundle.getString("editBookmark.removeBookmarks.accesskey"));
     }
 
-    this._setIconAndPreviewImage(aIsCurrentBrowser);
+    this._setIconAndPreviewImage();
 
     this.beginBatch();
 
@@ -256,16 +256,10 @@ var StarUI = {
     this.panel.openPopup(this._anchorElement, "bottomcenter topright");
   },
 
-  _setIconAndPreviewImage(aIsCurrentBrowser) {
+  _setIconAndPreviewImage() {
     let faviconImage = this._element("editBookmarkPanelFavicon");
     faviconImage.removeAttribute("iconloadingprincipal");
     faviconImage.removeAttribute("src");
-
-    document.mozSetImageElement("editBookmarkPanelImageCanvas", null);
-
-    if (!aIsCurrentBrowser) {
-      return;
-    }
 
     let tab = gBrowser.selectedTab;
     if (tab.hasAttribute("image") && !tab.hasAttribute("busy")) {
@@ -388,19 +382,10 @@ var StarUI = {
 var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the current browser.
-   *
-   * @param [optional] aUrl
-   *        Option to provide a URL to bookmark rather than the current page
-   * @param [optional] aTitle
-   *        Option to provide a title for a bookmark to use rather than the
-   *        getting the current page's title
    */
-  async bookmarkPage(aUrl = null, aTitle = null) {
+  async bookmarkPage() {
     let browser = gBrowser.selectedBrowser;
-    // If aUrl is provided, we want to bookmark that url rather than the
-    // the current page
-    let isCurrentBrowser = !aUrl;
-    let url = aUrl ? new URL(aUrl) : new URL(browser.currentURI.spec);
+    let url = new URL(browser.currentURI.spec);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
@@ -411,7 +396,7 @@ var PlacesCommandHook = {
       let charset = null;
 
       let isErrorPage = false;
-      if (!aUrl && browser.documentURI) {
+      if (browser.documentURI) {
         isErrorPage = /^about:(neterror|certerror|blocked)/.test(browser.documentURI.spec);
       }
 
@@ -422,10 +407,10 @@ var PlacesCommandHook = {
             info.title = entry.title;
           }
         } else {
-          info.title = aTitle || browser.contentTitle;
+          info.title = browser.contentTitle;
         }
         info.title = info.title || url.href;
-        charset = aUrl ? null : browser.characterSet;
+        charset = browser.characterSet;
       } catch (e) {
         Cu.reportError(e);
       }
@@ -440,8 +425,9 @@ var PlacesCommandHook = {
       info.guid = await PlacesTransactions.NewBookmark(info).transact();
 
       // Set the character-set
-      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(browser))
-         PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
+      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+        PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
+      }
     }
 
     // Revert the contents of the location bar
@@ -455,7 +441,7 @@ var PlacesCommandHook = {
 
     let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
-    await StarUI.showEditBookmarkPopup(node, isNewBookmark, url, isCurrentBrowser);
+    await StarUI.showEditBookmarkPopup(node, isNewBookmark, url);
   },
 
   /**
