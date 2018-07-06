@@ -106,6 +106,7 @@ public:
                           const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   void ResponsiveContentDensityChanged();
+  void SetupForContentURLRequest();
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
@@ -377,6 +378,7 @@ private:
   nsSize mIntrinsicRatio;
 
   const Kind mKind;
+  bool mContentURLRequestRegistered;
   bool mDisplayingIcon;
   bool mFirstFrameComplete;
   bool mReflowCallbackPosted;
