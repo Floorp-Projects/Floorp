@@ -122,6 +122,20 @@ OSXVersion::GetVersionNumber()
   return mOSXVersion;
 }
 
+bool
+GetRealPath(std::string& aOutputPath, const char* aInputPath)
+{
+  char* resolvedPath = realpath(aInputPath, nullptr);
+  if (resolvedPath == nullptr) {
+    return false;
+  }
+
+  aOutputPath = resolvedPath;
+  free(resolvedPath);
+
+  return !aOutputPath.empty();
+}
+
 namespace mozilla {
 
 bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
@@ -132,7 +146,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 
   // Used for the Flash sandbox. Declared here so that they
   // stay in scope until sandbox_init_with_parameters is called.
-  std::string flashTempDir, flashPath;
+  std::string flashCacheDir, flashTempDir, flashPath;
 
   if (aInfo.type == MacSandboxType_Plugin &&
       aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
@@ -153,20 +167,28 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
     params.push_back(getenv("HOME"));
 
     params.push_back("PLUGIN_BINARY_PATH");
-    flashPath = realpath(aInfo.pluginInfo.pluginBinaryPath.c_str(), nullptr);
-    if (flashPath.empty()) {
+    if (!GetRealPath(flashPath, aInfo.pluginInfo.pluginBinaryPath.c_str())) {
       return false;
     }
     params.push_back(flashPath.c_str());
 
-    // User temp dir
-    params.push_back("DARWIN_USER_TEMP_DIR");
-    char tempDir[PATH_MAX];
-    if (!confstr(_CS_DARWIN_USER_TEMP_DIR, tempDir, sizeof(tempDir))) {
+    // User cache dir
+    params.push_back("DARWIN_USER_CACHE_DIR");
+    char confStrBuf[PATH_MAX];
+    if (!confstr(_CS_DARWIN_USER_CACHE_DIR, confStrBuf, sizeof(confStrBuf))) {
       return false;
     }
-    flashTempDir = realpath(tempDir, nullptr);
-    if (flashTempDir.empty()) {
+    if (!GetRealPath(flashCacheDir, confStrBuf)) {
+      return false;
+    }
+    params.push_back(flashCacheDir.c_str());
+
+    // User temp dir
+    params.push_back("DARWIN_USER_TEMP_DIR");
+    if (!confstr(_CS_DARWIN_USER_TEMP_DIR, confStrBuf, sizeof(confStrBuf))) {
+      return false;
+    }
+    if (!GetRealPath(flashTempDir, confStrBuf)) {
       return false;
     }
     params.push_back(flashTempDir.c_str());
