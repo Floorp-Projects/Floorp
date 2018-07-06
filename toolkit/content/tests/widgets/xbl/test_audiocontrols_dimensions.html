@@ -17,7 +17,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
   const audio = document.getElementById("audio");
-  const controlBar = getElementWithinVideo(audio, "controlBar");
+  const controlBar = getAnonElementWithinVideoByAttribute(audio, "anonid", "controlBar");
 
   add_task(async function setup() {
     await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});

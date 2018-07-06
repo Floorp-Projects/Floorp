@@ -75,15 +75,15 @@
     const videoWidth = video.clientWidth;
 
     const videoSizeMsg = `size:${videoRect.width}x${videoRect.height} -`;
-    const controlBar = getElementWithinVideo(video, "controlBar");
-    const playBtn = getElementWithinVideo(video, "playButton");
-    const scrubber = getElementWithinVideo(video, "scrubberStack");
-    const positionDurationBox = getElementWithinVideo(video, "positionDurationBox");
+    const controlBar = getAnonElementWithinVideoByAttribute(video, "anonid", "controlBar");
+    const playBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "playButton");
+    const scrubber = getAnonElementWithinVideoByAttribute(video, "anonid", "scrubberStack");
+    const positionDurationBox = getAnonElementWithinVideoByAttribute(video, "anonid", "positionDurationBox");
     const durationLabel = positionDurationBox.getElementsByTagName("span")[0];
-    const muteBtn = getElementWithinVideo(video, "muteButton");
-    const volumeStack = getElementWithinVideo(video, "volumeStack");
-    const fullscreenBtn = getElementWithinVideo(video, "fullscreenButton");
-    const clickToPlay = getElementWithinVideo(video, "clickToPlay");
+    const muteBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+    const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
+    const fullscreenBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "fullscreenButton");
+    const clickToPlay = getAnonElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
 
 
     // Controls should show/hide according to the priority
