@@ -38,11 +38,6 @@ interface TestInterfaceJS : EventTarget {
   (TestInterfaceJS or long)? pingPongNullableUnion((TestInterfaceJS or long)? something);
   (Location or TestInterfaceJS) returnBadUnion();
 
-  [Cached, Pure]
-  readonly attribute short cachedAttr;
-  void setCachedAttr(short n);
-  void clearCachedAttrCache();
-
   // Test for sequence overloading and union behavior
   void testSequenceOverload(sequence<DOMString> arg);
   void testSequenceOverload(DOMString arg);
