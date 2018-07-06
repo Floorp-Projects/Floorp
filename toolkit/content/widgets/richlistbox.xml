@@ -11,10 +11,6 @@
 
   <binding id="richlistbox"
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/richlistbox.css"/>
-    </resources>
-
     <content>
       <children includes="listheader"/>
       <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
@@ -515,10 +511,6 @@
     <content>
       <children/>
     </content>
-
-    <resources>
-      <stylesheet src="chrome://global/skin/richlistbox.css"/>
-    </resources>
 
     <implementation>
       <field name="selectedByMouseOver">false</field>

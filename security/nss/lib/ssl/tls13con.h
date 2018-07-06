@@ -28,7 +28,7 @@ typedef enum {
 SECStatus tls13_UnprotectRecord(
     sslSocket *ss, ssl3CipherSpec *spec,
     SSL3Ciphertext *cText, sslBuffer *plaintext,
-    SSL3ContentType *innerType,
+    SSLContentType *innerType,
     SSL3AlertDescription *alert);
 
 #if defined(WIN32)
@@ -64,7 +64,7 @@ void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
                       SSL3AlertDescription desc);
 SECStatus tls13_SetupClientHello(sslSocket *ss);
 SECStatus tls13_MaybeDo0RTTHandshake(sslSocket *ss);
-PRInt32 tls13_LimitEarlyData(sslSocket *ss, SSL3ContentType type, PRInt32 toSend);
+PRInt32 tls13_LimitEarlyData(sslSocket *ss, SSLContentType type, PRInt32 toSend);
 PRBool tls13_AllowPskCipher(const sslSocket *ss,
                             const ssl3CipherSuiteDef *cipher_def);
 PRBool tls13_PskSuiteEnabled(sslSocket *ss);
@@ -94,7 +94,7 @@ tls13ExtensionStatus tls13_ExtensionStatus(PRUint16 extension,
                                            SSLHandshakeType message);
 SECStatus tls13_ProtectRecord(sslSocket *ss,
                               ssl3CipherSpec *cwSpec,
-                              SSL3ContentType type,
+                              SSLContentType type,
                               const PRUint8 *pIn,
                               PRUint32 contentLen,
                               sslBuffer *wrBuf);

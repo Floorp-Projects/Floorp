@@ -56,6 +56,11 @@ public:
     return mSheet;
   }
 
+  void SetRuleMapper(nsMapRuleToAttributesFunc aRuleMapper)
+  {
+    mRuleMapper = aRuleMapper;
+  }
+
   const nsAttrName* NameAt(uint32_t aPos) const
   {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");

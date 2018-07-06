@@ -1045,6 +1045,12 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                  (member.getExtendedAttribute("StoreInSlot") or
                   member.getExtendedAttribute("Cached"))) or
                 member.isMaplikeOrSetlike()):
+                if self.isJSImplemented() and not member.isMaplikeOrSetlike():
+                    raise WebIDLError("Interface %s is JS-implemented and we "
+                                      "don't support [Cached] or [StoreInSlot] "
+                                      "on JS-implemented interfaces" %
+                                      self.identifier.name,
+                                      [self.location, member.location])
                 if member.slotIndices is None:
                     member.slotIndices = dict()
                 member.slotIndices[self.identifier.name] = self.totalMembersInSlots

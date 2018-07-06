@@ -26,6 +26,7 @@
 #include "nsGenericHTMLElement.h"
 
 #include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
 #include "nsIDocument.h"
@@ -1340,15 +1341,25 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   while (rectVisibility == nsRectVisibility_kAboveViewport) {
     frameTraversal->Next();
     frame = frameTraversal->CurrentItem();
-    if (!frame)
+    if (!frame) {
       return false;
-
-    if (!frame->GetRect().IsEmpty()) {
-      rectVisibility =
-        aPresShell->GetRectVisibility(frame,
-                                      nsRect(nsPoint(0,0), frame->GetSize()),
-                                      minDistance);
     }
+
+    // We don't really want to start on NAC, because we may skip iterating
+    // actual non-anonymous children that matter.
+    while (frame->GetContent() &&
+           frame->GetContent()->IsInNativeAnonymousSubtree()) {
+      frame = frame->GetParent();
+    }
+
+    if (frame->GetRect().IsEmpty()) {
+      continue;
+    }
+
+    rectVisibility =
+      aPresShell->GetRectVisibility(frame,
+                                    nsRect(nsPoint(0,0), frame->GetSize()),
+                                    minDistance);
   }
 
   if (frame) {

@@ -123,7 +123,7 @@ class TlsDropDatagram13 : public TlsConnectDatagram13,
 
     void Init(const std::shared_ptr<TlsAgent>& agent) {
       records_ = std::make_shared<TlsRecordRecorder>(agent);
-      ack_ = std::make_shared<TlsRecordRecorder>(agent, content_ack);
+      ack_ = std::make_shared<TlsRecordRecorder>(agent, ssl_ct_ack);
       ack_->EnableDecryption();
       drop_ = std::make_shared<SelectiveRecordDropFilter>(agent, 0, false);
       chain_ = std::make_shared<ChainedPacketFilter>(
@@ -670,7 +670,7 @@ TEST_P(TlsDropDatagram13, SendOutOfOrderAppWithHandshakeKey) {
   ASSERT_NE(nullptr, spec.get());
   ASSERT_EQ(2, spec->epoch());
   ASSERT_TRUE(client_->SendEncryptedRecord(spec, 0x0002000000000002,
-                                           kTlsApplicationDataType,
+                                           ssl_ct_application_data,
                                            DataBuffer(buf, sizeof(buf))));
 
   // Now have the server consume the bogus message.
@@ -696,7 +696,7 @@ TEST_P(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
   ASSERT_NE(nullptr, spec.get());
   ASSERT_EQ(2, spec->epoch());
   ASSERT_TRUE(client_->SendEncryptedRecord(spec, 0x0002000000000002,
-                                           kTlsHandshakeType,
+                                           ssl_ct_handshake,
                                            DataBuffer(buf, sizeof(buf))));
   server_->Handshake();
   EXPECT_EQ(2UL, server_filters_.ack_->count());
@@ -899,7 +899,7 @@ class TlsReplaceFirstRecordWithJunk : public TlsRecordFilter {
     }
     replaced_ = true;
     TlsRecordHeader out_header(header.variant(), header.version(),
-                               kTlsApplicationDataType,
+                               ssl_ct_application_data,
                                header.sequence_number());
 
     static const uint8_t junk[] = {1, 2, 3, 4};

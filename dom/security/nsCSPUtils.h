@@ -126,6 +126,7 @@ inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir)
   macro(CSP_NONE,            "'none'") \
   macro(CSP_NONCE,           "'nonce-") \
   macro(CSP_REQUIRE_SRI_FOR, "require-sri-for") \
+  macro(CSP_REPORT_SAMPLE,   "'report-sample'") \
   macro(CSP_STRICT_DYNAMIC,  "'strict-dynamic'")
 
 enum CSPKeyword {
@@ -238,6 +239,9 @@ class nsCSPBaseSrc {
     virtual void invalidate() const
       { mInvalidated = true; }
 
+    virtual bool isReportSample() const
+      { return false; }
+
   protected:
     // invalidate srcs if 'script-dynamic' is present or also invalidate
     // unsafe-inline' if nonce- or hash-source specified
@@ -336,6 +340,8 @@ class nsCSPKeywordSrc : public nsCSPBaseSrc {
       }
     }
 
+    bool isReportSample() const override
+      { return mKeyword == CSP_REPORT_SAMPLE; }
   private:
     CSPKeyword mKeyword;
 };
@@ -474,6 +480,8 @@ class nsCSPDirective {
     bool visitSrcs(nsCSPSrcVisitor* aVisitor) const;
 
     virtual void getDirName(nsAString& outStr) const;
+
+    bool hasReportSampleKeyword() const;
 
   protected:
     CSPDirective            mDirective;
@@ -678,8 +686,9 @@ class nsCSPPolicy {
 
     void getReportURIs(nsTArray<nsString> &outReportURIs) const;
 
-    void getDirectiveStringForContentType(nsContentPolicyType aContentType,
-                                          nsAString& outDirective) const;
+    void getDirectiveStringAndReportSampleForContentType(nsContentPolicyType aContentType,
+                                                         nsAString& outDirective,
+                                                         bool* aReportSample) const;
 
     void getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const;
 

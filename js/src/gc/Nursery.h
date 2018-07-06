@@ -102,6 +102,7 @@ class TenuringTracer : public JSTracer
   private:
     inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
     inline void insertIntoStringFixupList(gc::RelocationOverlay* entry);
+
     template <typename T>
     inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
 

@@ -123,10 +123,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     scriptEnvironmentPreparer(nullptr),
     ctypesActivityCallback(nullptr),
     windowProxyClass_(nullptr),
-    exclusiveAccessLock(mutexid::RuntimeExclusiveAccess),
-#ifdef DEBUG
-    activeThreadHasExclusiveAccess(false),
-#endif
     scriptDataLock(mutexid::RuntimeScriptData),
 #ifdef DEBUG
     activeThreadHasScriptDataAccess(false),
@@ -156,10 +152,10 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     beingDestroyed_(false),
     allowContentJS_(true),
     atoms_(nullptr),
-    atomsAddedWhileSweeping_(nullptr),
+    permanentAtomsDuringInit_(nullptr),
+    permanentAtoms_(nullptr),
     staticStrings(nullptr),
     commonNames(nullptr),
-    permanentAtoms(nullptr),
     wellKnownSymbols(nullptr),
     jitSupportsFloatingPoint(false),
     jitSupportsUnalignedAccesses(false),
@@ -360,16 +356,13 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 {
     rtSizes->object += mallocSizeOf(this);
 
-    {
-        AutoLockForExclusiveAccess lock(this);
-        rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
-        rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf, lock);
-    }
+    rtSizes->atomsTable += atoms().sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 
     if (!parentRuntime) {
         rtSizes->atomsTable += mallocSizeOf(staticStrings);
         rtSizes->atomsTable += mallocSizeOf(commonNames);
-        rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
+        rtSizes->atomsTable += permanentAtoms()->sizeOfIncludingThis(mallocSizeOf);
     }
 
     JSContext* cx = mainContextFromAnyThread();
@@ -774,34 +767,6 @@ JSRuntime::activeGCInAtomsZone()
     Zone* zone = unsafeAtomsZone();
     return (zone->needsIncrementalBarrier() && !gc.isVerifyPreBarriersEnabled()) ||
            zone->wasGCStarted();
-}
-
-bool
-JSRuntime::createAtomsAddedWhileSweepingTable()
-{
-    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
-    MOZ_ASSERT(!atomsAddedWhileSweeping_);
-
-    atomsAddedWhileSweeping_ = js_new<AtomSet>();
-    if (!atomsAddedWhileSweeping_)
-        return false;
-
-    if (!atomsAddedWhileSweeping_->init()) {
-        destroyAtomsAddedWhileSweepingTable();
-        return false;
-    }
-
-    return true;
-}
-
-void
-JSRuntime::destroyAtomsAddedWhileSweepingTable()
-{
-    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
-    MOZ_ASSERT(atomsAddedWhileSweeping_);
-
-    js_delete(atomsAddedWhileSweeping_.ref());
-    atomsAddedWhileSweeping_ = nullptr;
 }
 
 void

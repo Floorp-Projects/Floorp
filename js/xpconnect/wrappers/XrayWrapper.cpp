@@ -127,7 +127,7 @@ XrayAwareCalleeGlobal(JSObject* fun)
 
   if (!js::FunctionHasNativeReserved(fun)) {
       // Just a normal function, no Xrays involved.
-      return js::GetGlobalForObjectCrossCompartment(fun);
+      return JS::GetNonCCWObjectGlobal(fun);
   }
 
   // The functions we expect here have the Xray wrapper they're associated with
@@ -142,7 +142,7 @@ XrayAwareCalleeGlobal(JSObject* fun)
   MOZ_ASSERT(IsXrayWrapper(&v.toObject()));
 
   JSObject* xrayTarget = js::UncheckedUnwrap(&v.toObject());
-  return js::GetGlobalForObjectCrossCompartment(xrayTarget);
+  return JS::GetNonCCWObjectGlobal(xrayTarget);
 }
 
 JSObject*

@@ -8,6 +8,7 @@ exports.isAwaitExpression = isAwaitExpression;
 exports.isYieldExpression = isYieldExpression;
 exports.isObjectShorthand = isObjectShorthand;
 exports.getObjectExpressionValue = getObjectExpressionValue;
+exports.getCode = getCode;
 exports.getVariableNames = getVariableNames;
 exports.getComments = getComments;
 exports.getSpecifiers = getSpecifiers;
@@ -75,6 +76,10 @@ function getObjectExpressionValue(node) {
   const code = (0, _generator2.default)(value).code;
   const shouldWrap = t.isObjectExpression(value);
   return shouldWrap ? `(${code})` : code;
+}
+
+function getCode(node) {
+  return (0, _generator2.default)(node).code;
 }
 
 function getVariableNames(path) {

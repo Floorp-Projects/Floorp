@@ -412,16 +412,6 @@ const getSelectedSource = exports.getSelectedSource = (0, _reselect.createSelect
     return;
   }
 
-  const source = sources[selectedLocation.sourceId]; // TODO: remove this when the immutable refactor lands in m-c
-
-  if (_devtoolsEnvironment.isTesting) {
-    const testSource = _objectSpread({}, source, {
-      get: field => source[field]
-    });
-
-    return testSource;
-  }
-
-  return source;
+  return sources[selectedLocation.sourceId];
 });
 exports.default = update;

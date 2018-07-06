@@ -25,7 +25,7 @@ struct DtoaState;
 
 namespace js {
 
-class AutoAtomsZone;
+class AutoAllocInAtomsZone;
 class AutoRealm;
 
 namespace jit {
@@ -72,7 +72,6 @@ struct HelperThread;
 
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
 
-class AutoLockForExclusiveAccess;
 class AutoLockScriptData;
 
 void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
@@ -128,7 +127,11 @@ struct JSContext : public JS::RootingContext,
 
     js::ThreadData<JS::ContextOptions> options_;
 
-    js::ThreadData<js::gc::ArenaLists*> arenas_;
+    // Free lists for allocating in the current zone.
+    js::ThreadData<js::gc::FreeLists*> freeLists_;
+
+    // Free lists for parallel allocation in the atoms zone on helper threads.
+    js::ThreadData<js::gc::FreeLists*> atomsZoneFreeLists_;
 
   public:
     // This is used by helper threads to change the runtime their context is
@@ -137,7 +140,15 @@ struct JSContext : public JS::RootingContext,
 
     bool isMainThreadContext() const { return kind_ == js::ContextKind::MainThread; }
 
-    inline js::gc::ArenaLists* arenas() const { return arenas_; }
+    js::gc::FreeLists& freeLists() {
+        MOZ_ASSERT(freeLists_);
+        return *freeLists_;
+    }
+
+    js::gc::FreeLists& atomsZoneFreeLists() {
+        MOZ_ASSERT(atomsZoneFreeLists_);
+        return *atomsZoneFreeLists_;
+    }
 
     template <typename T>
     bool isInsideCurrentZone(T thing) const {
@@ -172,8 +183,8 @@ struct JSContext : public JS::RootingContext,
     js::SharedImmutableStringsCache& sharedImmutableStrings() {
         return runtime_->sharedImmutableStrings();
     }
-    bool isPermanentAtomsInitialized() { return !!runtime_->permanentAtoms; }
-    js::FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms; }
+    bool permanentAtomsPopulated() { return runtime_->permanentAtomsPopulated(); }
+    const js::FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms(); }
     js::WellKnownSymbols& wellKnownSymbols() { return *runtime_->wellKnownSymbols; }
     JS::BuildIdOp buildIdOp() { return runtime_->buildIdOp; }
     const JS::AsmJSCacheOps& asmJSCacheOps() { return runtime_->asmJSCacheOps; }
@@ -206,9 +217,9 @@ struct JSContext : public JS::RootingContext,
   private:
     inline void setRealm(JS::Realm* realm);
     inline void enterRealm(JS::Realm* realm);
-    inline void enterAtomsZone(const js::AutoLockForExclusiveAccess& lock);
+    inline void enterAtomsZone();
 
-    friend class js::AutoAtomsZone;
+    friend class js::AutoAllocInAtomsZone;
     friend class js::AutoRealm;
 
   public:
@@ -220,8 +231,7 @@ struct JSContext : public JS::RootingContext,
     inline void setRealmForJitExceptionHandler(JS::Realm* realm);
 
     inline void leaveRealm(JS::Realm* oldRealm);
-    inline void leaveAtomsZone(JS::Realm* oldRealm,
-                               const js::AutoLockForExclusiveAccess& lock);
+    inline void leaveAtomsZone(JS::Realm* oldRealm);
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
@@ -267,16 +277,19 @@ struct JSContext : public JS::RootingContext,
     // AutoRealm from which it's called.
     inline js::Handle<js::GlobalObject*> global() const;
 
-    // Methods to access runtime data that must be protected by locks.
-    js::AtomSet& atoms(const js::AutoAccessAtomsZone& access) {
-        return runtime_->atoms(access);
+    js::AtomsTable& atoms() {
+        return runtime_->atoms();
     }
+
     const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) {
         return runtime_->atomsZone(access);
     }
-    js::SymbolRegistry& symbolRegistry(const js::AutoAccessAtomsZone& access) {
-        return runtime_->symbolRegistry(access);
+
+    js::SymbolRegistry& symbolRegistry() {
+        return runtime_->symbolRegistry();
     }
+
+    // Methods to access runtime data that must be protected by locks.
     js::ScriptDataTable& scriptDataTable(js::AutoLockScriptData& lock) {
         return runtime_->scriptDataTable(lock);
     }
@@ -1105,46 +1118,6 @@ class AutoAssertNoException
     }
 };
 
-class MOZ_RAII AutoLockForExclusiveAccess
-{
-    JSRuntime* runtime;
-
-    void init(JSRuntime* rt) {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt) || CurrentThreadIsParseThread());
-        runtime = rt;
-        if (runtime->hasHelperThreadZones()) {
-            runtime->exclusiveAccessLock.lock();
-        } else {
-            MOZ_ASSERT(!runtime->activeThreadHasExclusiveAccess);
-#ifdef DEBUG
-            runtime->activeThreadHasExclusiveAccess = true;
-#endif
-        }
-    }
-
-  public:
-    explicit AutoLockForExclusiveAccess(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(cx->runtime());
-    }
-    explicit AutoLockForExclusiveAccess(JSRuntime* rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(rt);
-    }
-    ~AutoLockForExclusiveAccess() {
-        if (runtime->hasHelperThreadZones()) {
-            runtime->exclusiveAccessLock.unlock();
-        } else {
-            MOZ_ASSERT(runtime->activeThreadHasExclusiveAccess);
-#ifdef DEBUG
-            runtime->activeThreadHasExclusiveAccess = false;
-#endif
-        }
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class MOZ_RAII AutoLockScriptData
 {
     JSRuntime* runtime;
@@ -1181,15 +1154,15 @@ class MOZ_RAII AutoLockScriptData
 // accessed by the main thread and by off-thread parsing. There are two
 // situations in which it is safe:
 //
-//  - the current thread holds the exclusive access lock (off-thread parsing may
-//    be running and this must also take the lock for access)
+//  - the current thread holds all atoms table locks (off-thread parsing may be
+//    running and must also take one of these locks for access)
 //
 //  - the GC is running and is collecting the atoms zone (this cannot be started
 //    while off-thread parsing is happening)
 class MOZ_STACK_CLASS AutoAccessAtomsZone
 {
   public:
-    MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockForExclusiveAccess& lock) {}
+    MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockAllAtoms& lock) {}
     MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
 };
 

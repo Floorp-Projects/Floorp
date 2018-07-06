@@ -131,7 +131,7 @@ PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input,
     // spec to another active cipher spec (KeyUpdate for instance) AND writes
     // are consolidated across that change, this code could use the wrong
     // sequence numbers when re-encrypting records with the old keys.
-    if (header.content_type() == kTlsApplicationDataType) {
+    if (header.content_type() == ssl_ct_application_data) {
       in_sequence_number_ =
           (std::max)(in_sequence_number_, header.sequence_number() + 1);
     }
@@ -194,7 +194,7 @@ PacketFilter::Action TlsRecordFilter::FilterRecord(
 
   uint64_t seq_num;
   if (header.is_dtls() || !cipher_spec_ ||
-      header.content_type() != kTlsApplicationDataType) {
+      header.content_type() != ssl_ct_application_data) {
     seq_num = header.sequence_number();
   } else {
     seq_num = out_sequence_number_++;
@@ -277,7 +277,7 @@ bool TlsRecordHeader::Parse(bool is_dtls13, uint64_t seqno, TlsParser* parser,
 
 #ifndef UNSAFE_FUZZER_MODE
     // Deal with the 7 octet header.
-    if (content_type_ == kTlsApplicationDataType) {
+    if (content_type_ == ssl_ct_application_data) {
       uint32_t tmp;
       if (!parser->Read(&tmp, 4)) {
         return false;
@@ -298,7 +298,7 @@ bool TlsRecordHeader::Parse(bool is_dtls13, uint64_t seqno, TlsParser* parser,
       }
       // Need to use the low 5 bits of the first octet too.
       tmp |= (content_type_ & 0x1f) << 8;
-      content_type_ = kTlsApplicationDataType;
+      content_type_ = ssl_ct_application_data;
       sequence_number_ = ParseSequenceNumber(seqno, tmp, 12, 1);
 
       if (!parser->ReadFromMark(&header_, parser->consumed() - mark, mark)) {
@@ -308,9 +308,9 @@ bool TlsRecordHeader::Parse(bool is_dtls13, uint64_t seqno, TlsParser* parser,
     }
 
     // The full 13 octet header can only be used for a few types.
-    EXPECT_TRUE(content_type_ == kTlsAlertType ||
-                content_type_ == kTlsHandshakeType ||
-                content_type_ == kTlsAckType);
+    EXPECT_TRUE(content_type_ == ssl_ct_alert ||
+                content_type_ == ssl_ct_handshake ||
+                content_type_ == ssl_ct_ack);
 #endif
   }
 
@@ -347,7 +347,7 @@ size_t TlsRecordHeader::WriteHeader(DataBuffer* buffer, size_t offset,
                                     size_t body_len) const {
   offset = buffer->Write(offset, content_type_, 1);
   if (is_dtls() && version_ >= SSL_LIBRARY_VERSION_TLS_1_3 &&
-      content_type() == kTlsApplicationDataType) {
+      content_type() == ssl_ct_application_data) {
     // application_data records in TLS 1.3 have a different header format.
     // Always use the long header here for simplicity.
     uint32_t e = (sequence_number_ >> 48) & 0x3;
@@ -377,7 +377,7 @@ bool TlsRecordFilter::Unprotect(const TlsRecordHeader& header,
                                 const DataBuffer& ciphertext,
                                 uint8_t* inner_content_type,
                                 DataBuffer* plaintext) {
-  if (!cipher_spec_ || header.content_type() != kTlsApplicationDataType) {
+  if (!cipher_spec_ || header.content_type() != ssl_ct_application_data) {
     *inner_content_type = header.content_type();
     *plaintext = ciphertext;
     return true;
@@ -411,7 +411,7 @@ bool TlsRecordFilter::Protect(const TlsRecordHeader& header,
                               uint8_t inner_content_type,
                               const DataBuffer& plaintext,
                               DataBuffer* ciphertext, size_t padding) {
-  if (!cipher_spec_ || header.content_type() != kTlsApplicationDataType) {
+  if (!cipher_spec_ || header.content_type() != ssl_ct_application_data) {
     *ciphertext = plaintext;
     return true;
   }
@@ -453,8 +453,7 @@ PacketFilter::Action TlsHandshakeFilter::FilterRecord(
     const TlsRecordHeader& record_header, const DataBuffer& input,
     DataBuffer* output) {
   // Check that the first byte is as requested.
-  if ((record_header.content_type() != kTlsHandshakeType) &&
-      (record_header.content_type() != kTlsAltHandshakeType)) {
+  if (record_header.content_type() != ssl_ct_handshake) {
     return KEEP;
   }
 

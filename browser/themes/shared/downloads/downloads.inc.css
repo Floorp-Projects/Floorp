@@ -6,7 +6,7 @@
 
 %define keyfocus #downloadsPanel[keyfocus]
 %define notKeyfocus #downloadsPanel:not([keyfocus])
-%define item richlistitem[type="download"]
+%define item #downloadsListBox > richlistitem
 %define itemFinished @item@[state="1"]
 %define itemNotFinished @item@:not([state="1"])
 %define itemFocused #downloadsListBox:focus > @item@[selected]
@@ -112,17 +112,17 @@
 /*** List items and similar elements in the summary ***/
 
 #downloadsSummary,
-richlistitem[type="download"] {
+@item@ {
   height: var(--downloads-item-height);
 }
 
-richlistitem[type="download"] {
+@item@ {
   border-bottom: 1px solid var(--panel-separator-color);
   background: transparent;
   color: inherit;
 }
 
-richlistitem[type="download"]:last-child {
+@item@:last-child {
   border-bottom: none;
 }
 

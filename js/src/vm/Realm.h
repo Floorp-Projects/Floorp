@@ -7,6 +7,7 @@
 #ifndef vm_Realm_h
 #define vm_Realm_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -916,18 +917,16 @@ class AutoRealm
     AutoRealm& operator=(const AutoRealm&) = delete;
 };
 
-class MOZ_RAII AutoAtomsZone
+class MOZ_RAII AutoAllocInAtomsZone
 {
     JSContext* const cx_;
     JS::Realm* const origin_;
-    const AutoLockForExclusiveAccess& lock_;
-
-    AutoAtomsZone(const AutoAtomsZone&) = delete;
-    AutoAtomsZone& operator=(const AutoAtomsZone&) = delete;
+    AutoAllocInAtomsZone(const AutoAllocInAtomsZone&) = delete;
+    AutoAllocInAtomsZone& operator=(const AutoAllocInAtomsZone&) = delete;
 
   public:
-    inline AutoAtomsZone(JSContext* cx, AutoLockForExclusiveAccess& lock);
-    inline ~AutoAtomsZone();
+    inline explicit AutoAllocInAtomsZone(JSContext* cx);
+    inline ~AutoAllocInAtomsZone();
 };
 
 // Enter a realm directly. Only use this where there's no target GC thing

@@ -16,7 +16,7 @@ info: |
     NonZeroDigit NumericLiteralSeparator_opt DecimalDigits
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 
 features: [numeric-separator-literal]

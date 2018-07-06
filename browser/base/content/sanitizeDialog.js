@@ -194,7 +194,7 @@ var gSanitizePromptDialog = {
    * Check if all of the history items have been selected like the default status.
    */
   hasNonSelectedItems() {
-    let checkboxes = document.querySelectorAll("#itemList > [preference]");
+    let checkboxes = document.querySelectorAll("checkbox[preference]");
     for (let i = 0; i < checkboxes.length; ++i) {
       let pref = Preferences.get(checkboxes[i].getAttribute("preference"));
       if (!pref.value)

@@ -344,6 +344,15 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         }
         break;
       }
+      case OpUpdateResource::TOpAddExternalImageForTexture: {
+        const auto& op = cmd.get_OpAddExternalImageForTexture();
+        CompositableTextureHostRef texture;
+        texture = TextureHost::AsTextureHost(op.textureParent());
+        if (!AddExternalImageForTexture(op.externalImageId(), op.key(), texture, aUpdates)) {
+          return false;
+        }
+        break;
+      }
       case OpUpdateResource::TOpAddRawFont: {
         const auto& op = cmd.get_OpAddRawFont();
         wr::Vec<uint8_t> bytes;
@@ -426,29 +435,54 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
       return true;
     }
   } else {
-    MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aExtId)).get());
-
-    RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(aExtId));
-    if (!host) {
-      gfxCriticalNote << "CompositableHost does not exist for extId:" << wr::AsUint64(aExtId);
-      return false;
-    }
-    if (!gfxEnv::EnableWebRenderRecording()) {
-      TextureHost* texture = host->GetAsTextureHostForComposite();
-      if (!texture) {
-        gfxCriticalNote << "TextureHost does not exist for extId:" << wr::AsUint64(aExtId);
-        return false;
-      }
-      WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
-      if (wrTexture) {
-        wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
-                                       wrTexture->GetExternalImageKey());
-        return true;
-      }
-    }
-    dSurf = host->GetAsSurface();
+    gfxCriticalNote << "DataSourceSurface of SharedSurfaces does not exist for extId:" << wr::AsUint64(aExtId);
+    return false;
   }
 
+  DataSourceSurface::MappedSurface map;
+  if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+    gfxCriticalNote << "DataSourceSurface failed to map for Image for extId:" << wr::AsUint64(aExtId);
+    return false;
+  }
+
+  IntSize size = dSurf->GetSize();
+  wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
+  wr::Vec<uint8_t> data;
+  data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
+  aResources.AddImage(keys[0], descriptor, data);
+  dSurf->Unmap();
+
+  return true;
+}
+
+bool
+WebRenderBridgeParent::AddExternalImageForTexture(wr::ExternalImageId aExtId,
+                                                  wr::ImageKey aKey,
+                                                  TextureHost* aTexture,
+                                                  wr::TransactionBuilder& aResources)
+{
+  Range<wr::ImageKey> keys(&aKey, 1);
+  // Check if key is obsoleted.
+  if (keys[0].mNamespace != mIdNamespace) {
+    return true;
+  }
+
+  if(!aTexture) {
+    gfxCriticalNote << "TextureHost does not exist for extId:" << wr::AsUint64(aExtId);
+    return false;
+  }
+
+  if (!gfxEnv::EnableWebRenderRecording()) {
+    WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
+    if (wrTexture) {
+      wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
+                                     wrTexture->GetExternalImageKey());
+      MOZ_ASSERT(!mTextureHosts.Get(wr::AsUint64(aKey), nullptr));
+      mTextureHosts.Put(wr::AsUint64(aKey), CompositableTextureHostRef(aTexture));
+      return true;
+    }
+  }
+  RefPtr<DataSourceSurface> dSurf = aTexture->GetAsSurface();
   if (!dSurf) {
     gfxCriticalNote << "TextureHost does not return DataSourceSurface for extId:" << wr::AsUint64(aExtId);
     return false;
@@ -847,15 +881,14 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         RemovePipelineIdForCompositable(op.pipelineId(), aTxn);
         break;
       }
-      case WebRenderParentCommand::TOpAddExternalImageIdForCompositable: {
-        const OpAddExternalImageIdForCompositable& op = cmd.get_OpAddExternalImageIdForCompositable();
-        AddExternalImageIdForCompositable(op.externalImageId(),
-                                          op.handle());
-        break;
-      }
       case WebRenderParentCommand::TOpRemoveExternalImageId: {
         const OpRemoveExternalImageId& op = cmd.get_OpRemoveExternalImageId();
         RemoveExternalImageId(op.externalImageId());
+        break;
+      }
+      case WebRenderParentCommand::TOpReleaseTextureOfImage: {
+        const OpReleaseTextureOfImage& op = cmd.get_OpReleaseTextureOfImage();
+        ReleaseTextureOfImage(op.key());
         break;
       }
       case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
@@ -1065,33 +1098,6 @@ WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPi
 }
 
 void
-WebRenderBridgeParent::AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
-                                                         const CompositableHandle& aHandle)
-{
-  if (mDestroyed) {
-    return;
-  }
-  MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
-
-  RefPtr<CompositableHost> host = FindCompositable(aHandle);
-  WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
-
-  MOZ_ASSERT(wrHost);
-  if (!wrHost) {
-    gfxCriticalNote << "Incompatible CompositableHost for external image at WebRenderBridgeParent.";
-  }
-
-  if (!wrHost) {
-    return;
-  }
-
-  wrHost->SetWrBridge(this);
-  mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
-
-  return;
-}
-
-void
 WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
 {
   if (mDestroyed) {
@@ -1101,18 +1107,27 @@ WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
   uint64_t imageId = wr::AsUint64(aImageId);
   if (mSharedSurfaceIds.EnsureRemoved(imageId)) {
     mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, aImageId);
+  }
+}
+
+void
+WebRenderBridgeParent::ReleaseTextureOfImage(const wr::ImageKey& aKey)
+{
+  if (mDestroyed) {
     return;
   }
 
-  WebRenderImageHost* wrHost = mExternalImageIds.Get(imageId).get();
-  if (!wrHost) {
-    return;
+  uint64_t id = wr::AsUint64(aKey);
+  CompositableTextureHostRef texture;
+  WebRenderTextureHost* wrTexture = nullptr;
+
+  if (mTextureHosts.Get(id, &texture)) {
+    wrTexture = texture->AsWebRenderTextureHost();
   }
-
-  wrHost->ClearWrBridge();
-  mExternalImageIds.Remove(imageId);
-
-  return;
+  if (wrTexture) {
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, wrTexture);
+  }
+  mTextureHosts.Remove(id);
 }
 
 mozilla::ipc::IPCResult
@@ -1639,10 +1654,14 @@ WebRenderBridgeParent::ClearResources()
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
-  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->ClearWrBridge();
+  for (auto iter = mTextureHosts.Iter(); !iter.Done(); iter.Next()) {
+    WebRenderTextureHost* wrTexture = iter.Data()->AsWebRenderTextureHost();
+    MOZ_ASSERT(wrTexture);
+    if (wrTexture) {
+      mAsyncImageManager->HoldExternalImage(mPipelineId, wrEpoch, wrTexture);
+    }
   }
-  mExternalImageIds.Clear();
+  mTextureHosts.Clear();
   for (auto iter = mAsyncCompositables.Iter(); !iter.Done(); iter.Next()) {
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     RefPtr<WebRenderImageHost> host = iter.Data();

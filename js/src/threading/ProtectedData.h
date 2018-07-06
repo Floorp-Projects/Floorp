@@ -226,6 +226,7 @@ template <AllowedHelperThread Helper>
 class CheckZone
 {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
+  protected:
     JS::Zone* zone;
 
   public:
@@ -260,7 +261,6 @@ using ZoneOrGCTaskOrIonCompileData =
 enum class GlobalLock
 {
     GCLock,
-    ExclusiveAccessLock,
     ScriptDataLock,
     HelperThreadLock
 };
@@ -278,18 +278,6 @@ class CheckGlobalLock
 template <typename T>
 using GCLockData =
     ProtectedDataNoCheckArgs<CheckGlobalLock<GlobalLock::GCLock, AllowedHelperThread::None>, T>;
-
-// Data which may only be accessed while holding the exclusive access lock.
-template <typename T>
-using ExclusiveAccessLockData =
-    ProtectedDataNoCheckArgs<CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::None>, T>;
-
-// Data which may only be accessed while holding the exclusive access lock or
-// by GC helper thread tasks (at which point a foreground thread should be
-// holding the exclusive access lock, though we do not check this).
-template <typename T>
-using ExclusiveAccessLockOrGCTaskData =
-    ProtectedDataNoCheckArgs<CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::GCTask>, T>;
 
 // Data which may only be accessed while holding the script data lock.
 template <typename T>
@@ -359,10 +347,26 @@ class ProtectedDataWriteOnce
 template <typename T>
 using WriteOnceData = ProtectedDataWriteOnce<CheckUnprotected, T>;
 
-// Data that is written once, and only while holding the exclusive access lock.
+// Custom check for arena list data that requires the GC lock to be held when
+// accessing the atoms zone if parallel parsing is running, in addition to the
+// usual Zone checks.
+template <AllowedHelperThread Helper>
+class CheckArenaListAccess : public CheckZone<AllowedHelperThread::None>
+{
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
+  public:
+    explicit CheckArenaListAccess(JS::Zone* zone)
+      : CheckZone<AllowedHelperThread::None>(zone) {}
+    void check() const;
+#else
+  public:
+    explicit CheckArenaListAccess(JS::Zone* zone)
+      : CheckZone<AllowedHelperThread::None>(zone) {}
+#endif
+};
+
 template <typename T>
-using ExclusiveAccessLockWriteOnceData =
-    ProtectedDataWriteOnce<CheckGlobalLock<GlobalLock::ExclusiveAccessLock, AllowedHelperThread::None>, T>;
+using ArenaListData = ProtectedDataZoneArg<CheckArenaListAccess<AllowedHelperThread::GCTask>, T>;
 
 #undef DECLARE_ASSIGNMENT_OPERATOR
 #undef DECLARE_ONE_BOOL_OPERATOR

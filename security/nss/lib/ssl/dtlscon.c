@@ -120,7 +120,7 @@ ssl3_DisableNonDTLSSuites(sslSocket *ss)
  * Called from dtls_QueueMessage()
  */
 static DTLSQueuedMessage *
-dtls_AllocQueuedMessage(ssl3CipherSpec *cwSpec, SSL3ContentType type,
+dtls_AllocQueuedMessage(ssl3CipherSpec *cwSpec, SSLContentType ct,
                         const unsigned char *data, PRUint32 len)
 {
     DTLSQueuedMessage *msg;
@@ -138,7 +138,7 @@ dtls_AllocQueuedMessage(ssl3CipherSpec *cwSpec, SSL3ContentType type,
 
     msg->len = len;
     msg->cwSpec = cwSpec;
-    msg->type = type;
+    msg->type = ct;
     /* Safe if we are < 1.3, since the refct is
      * already very high. */
     ssl_CipherSpecAddRef(cwSpec);
@@ -517,7 +517,7 @@ loser:
  *              ssl3_SendChangeCipherSpecs()
  */
 SECStatus
-dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
+dtls_QueueMessage(sslSocket *ss, SSLContentType ct,
                   const PRUint8 *pIn, PRInt32 nIn)
 {
     SECStatus rv = SECSuccess;
@@ -528,7 +528,7 @@ dtls_QueueMessage(sslSocket *ss, SSL3ContentType type,
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
     spec = ss->ssl3.cwSpec;
-    msg = dtls_AllocQueuedMessage(spec, type, pIn, nIn);
+    msg = dtls_AllocQueuedMessage(spec, ct, pIn, nIn);
 
     if (!msg) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
@@ -562,7 +562,7 @@ dtls_StageHandshakeMessage(sslSocket *ss)
     if (!ss->sec.ci.sendBuf.buf || !ss->sec.ci.sendBuf.len)
         return rv;
 
-    rv = dtls_QueueMessage(ss, content_handshake,
+    rv = dtls_QueueMessage(ss, ssl_ct_handshake,
                            ss->sec.ci.sendBuf.buf, ss->sec.ci.sendBuf.len);
 
     /* Whether we succeeded or failed, toss the old handshake data. */
@@ -696,7 +696,7 @@ dtls_FragmentHandshake(sslSocket *ss, DTLSQueuedMessage *msg)
     PORT_Assert(msg->len >= DTLS_HS_HDR_LEN);
 
     /* DTLS only supports fragmenting handshaking messages. */
-    PORT_Assert(msg->type == content_handshake);
+    PORT_Assert(msg->type == ssl_ct_handshake);
 
     msgSeq = (msg->data[4] << 8) | msg->data[5];
 
@@ -848,7 +848,7 @@ dtls_TransmitMessageFlight(sslSocket *ss)
          * be quite fragmented.  Adding an extra flush here would push new
          * messages into new records and reduce fragmentation. */
 
-        if (msg->type == content_handshake) {
+        if (msg->type == ssl_ct_handshake) {
             rv = dtls_FragmentHandshake(ss, msg);
         } else {
             PORT_Assert(!tls13_MaybeTls13(ss));
@@ -1327,9 +1327,9 @@ dtls_IsLongHeader(SSL3ProtocolVersion version, PRUint8 firstOctet)
 {
 #ifndef UNSAFE_FUZZER_MODE
     return version < SSL_LIBRARY_VERSION_TLS_1_3 ||
-           firstOctet == content_handshake ||
-           firstOctet == content_ack ||
-           firstOctet == content_alert;
+           firstOctet == ssl_ct_handshake ||
+           firstOctet == ssl_ct_ack ||
+           firstOctet == ssl_ct_alert;
 #else
     return PR_TRUE;
 #endif
@@ -1359,7 +1359,7 @@ dtls_ReadEpoch(const ssl3CipherSpec *crSpec, const PRUint8 *hdr)
     }
 
     /* dtls_GatherData should ensure that this works. */
-    PORT_Assert(hdr[0] == content_application_data);
+    PORT_Assert(hdr[0] == ssl_ct_application_data);
 
     /* This uses the same method as is used to recover the sequence number in
      * dtls_ReadSequenceNumber, except that the maximum value is set to the

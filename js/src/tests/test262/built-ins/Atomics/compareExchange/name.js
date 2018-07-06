@@ -11,10 +11,11 @@ includes: [propertyHelper.js]
 features: [Atomics]
 ---*/
 
-assert.sameValue(Atomics.compareExchange.name, "compareExchange");
-
-verifyNotEnumerable(Atomics.compareExchange, "name");
-verifyNotWritable(Atomics.compareExchange, "name");
-verifyConfigurable(Atomics.compareExchange, "name");
+verifyProperty(Atomics.compareExchange, 'name', {
+  value: 'compareExchange',
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

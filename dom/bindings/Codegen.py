@@ -2234,10 +2234,6 @@ def MakeClearCachedValueNativeName(member):
     return "ClearCached%sValue" % MakeNativeName(member.identifier.name)
 
 
-def MakeJSImplClearCachedValueNativeName(member):
-    return "_" + MakeClearCachedValueNativeName(member)
-
-
 def IDLToCIdentifier(name):
     return name.replace("-", "_")
 
@@ -2431,17 +2427,6 @@ class MethodDefiner(PropertyDefiner):
                         "nativeName": ("%s::_Create" % descriptor.name),
                         "methodInfo": False,
                         "length": 2,
-                        "flags": "0",
-                        "condition": MemberCondition()
-                    })
-            elif not unforgeable:
-                for m in clearableCachedAttrs(descriptor):
-                    attrName = MakeNativeName(m.identifier.name)
-                    self.chrome.append({
-                        "name": "_clearCached%sValue" % attrName,
-                        "nativeName": MakeJSImplClearCachedValueNativeName(m),
-                        "methodInfo": False,
-                        "length": "0",
                         "flags": "0",
                         "condition": MemberCondition()
                     })
@@ -5409,7 +5394,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("${sourceDescription}"));
                   return nullptr;
                 }
-                globalObj = js::GetGlobalForObjectCrossCompartment(unwrappedVal);
+                globalObj = JS::GetNonCCWObjectGlobal(unwrappedVal);
                 """,
                 sourceDescription=sourceDescription)
         elif isCallbackReturnValue == "Callback":
@@ -8490,43 +8475,24 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
 
     getThisObj should be code for getting a JSObject* for the binding
-    object.  If this is None, we will auto-generate code based on
-    descriptor to do the right thing.  "" can be passed in if the
-    binding object is already stored in 'obj'.
+    object.  "" can be passed in if the binding object is already stored in
+    'obj'.
 
     callArgs should be code for getting a JS::CallArgs into a variable
     called 'args'.  This can be "" if there is already such a variable
     around.
     """
-    def __init__(self, descriptor, name, args, unwrapFailureCode=None,
-                 getThisObj=None,
+    def __init__(self, descriptor, name, args, getThisObj,
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
-        if unwrapFailureCode is None:
-            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
-        else:
-            self.unwrapFailureCode = unwrapFailureCode
+        self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
 
         if getThisObj == "":
             self.getThisObj = None
         else:
-            if getThisObj is None:
-                if descriptor.interface.isOnGlobalProtoChain():
-                    ensureCondition = "!args.thisv().isNullOrUndefined() && !args.thisv().isObject()"
-                    getThisObj = "args.thisv().isObject() ? &args.thisv().toObject() : js::GetGlobalForObjectCrossCompartment(&args.callee())"
-                else:
-                    ensureCondition = "!args.thisv().isObject()"
-                    getThisObj = "&args.thisv().toObject()"
-                unwrapFailureCode = self.unwrapFailureCode % {'securityError': 'false'}
-                ensureThisObj = CGIfWrapper(CGGeneric(unwrapFailureCode),
-                                            ensureCondition)
-            else:
-                ensureThisObj = None
-            self.getThisObj = CGList(
-                [ensureThisObj,
-                 CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
-                           getThisObj)])
+            self.getThisObj = CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
+                                        getThisObj)
         self.callArgs = callArgs
 
     def definition_body(self):
@@ -12418,11 +12384,6 @@ class CGDescriptor(CGThing):
         if descriptor.concrete and descriptor.wrapperCache and not descriptor.proxy:
             cgThings.append(CGClassObjectMovedHook(descriptor))
 
-        # Generate the _ClearCachedFooValue methods before the property arrays that use them.
-        if descriptor.interface.isJSImplemented():
-            for m in clearableCachedAttrs(descriptor):
-                cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
-
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
@@ -13938,11 +13899,7 @@ class CGBindingRoot(CGThing):
                     # interface object might have a ChromeOnly constructor.
                     (desc.interface.hasInterfaceObject() and
                      (desc.interface.isJSImplemented() or
-                      (ctor and isChromeOnly(ctor)))) or
-                    # JS-implemented interfaces with clearable cached
-                    # attrs have chromeonly _clearFoo methods.
-                    (desc.interface.isJSImplemented() and
-                     any(clearableCachedAttrs(desc))))
+                      (ctor and isChromeOnly(ctor)))))
 
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
@@ -15128,27 +15085,6 @@ def callbackGetterName(attr, descriptor):
 def callbackSetterName(attr, descriptor):
     return "Set" + MakeNativeName(
         descriptor.binaryNameFor(attr.identifier.name))
-
-
-class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
-    def __init__(self, descriptor, attr):
-        if attr.getExtendedAttribute("StoreInSlot"):
-            raise TypeError("[StoreInSlot] is not supported for JS-implemented WebIDL. See bug 1056325.")
-
-        CGAbstractBindingMethod.__init__(self, descriptor,
-                                         MakeJSImplClearCachedValueNativeName(attr),
-                                         JSNativeArguments())
-        self.attr = attr
-
-    def generate_code(self):
-        return CGGeneric(fill(
-            """
-            ${bindingNamespace}::${fnName}(self);
-            args.rval().setUndefined();
-            return true;
-            """,
-            bindingNamespace=toBindingNamespace(self.descriptor.name),
-            fnName=MakeClearCachedValueNativeName(self.attr)))
 
 
 class CGJSImplGetter(CGJSImplMember):

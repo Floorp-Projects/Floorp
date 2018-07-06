@@ -263,8 +263,7 @@ IDBFactory::CreateForJSInternal(JSContext* aCx,
   MOZ_ASSERT(aPrincipalInfo);
   MOZ_ASSERT(aPrincipalInfo->type() != PrincipalInfo::T__None);
   MOZ_ASSERT(aFactory);
-  MOZ_ASSERT(JS_GetGlobalForObject(aCx, aOwningObject) == aOwningObject,
-             "Not a global object!");
+  MOZ_ASSERT(JS_IsGlobalObject(aOwningObject));
 
   if (aPrincipalInfo->type() != PrincipalInfo::TContentPrincipalInfo &&
       aPrincipalInfo->type() != PrincipalInfo::TSystemPrincipalInfo) {

@@ -65,7 +65,7 @@ class TlsAlertRecorder : public TlsRecordFilter {
     if (level_ != 255) {  // Already captured.
       return KEEP;
     }
-    if (header.content_type() != kTlsAlertType) {
+    if (header.content_type() != ssl_ct_alert) {
       return KEEP;
     }
 
@@ -426,13 +426,15 @@ class TlsPreCCSHeaderInjector : public TlsRecordFilter {
   virtual PacketFilter::Action FilterRecord(
       const TlsRecordHeader& record_header, const DataBuffer& input,
       size_t* offset, DataBuffer* output) override {
-    if (record_header.content_type() != kTlsChangeCipherSpecType) return KEEP;
+    if (record_header.content_type() != ssl_ct_change_cipher_spec) {
+      return KEEP;
+    }
 
     std::cerr << "Injecting Finished header before CCS\n";
     const uint8_t hhdr[] = {kTlsHandshakeFinished, 0x00, 0x00, 0x0c};
     DataBuffer hhdr_buf(hhdr, sizeof(hhdr));
     TlsRecordHeader nhdr(record_header.variant(), record_header.version(),
-                         kTlsHandshakeType, 0);
+                         ssl_ct_handshake, 0);
     *offset = nhdr.Write(output, *offset, hhdr_buf);
     *offset = record_header.Write(output, *offset, input);
     return CHANGE;

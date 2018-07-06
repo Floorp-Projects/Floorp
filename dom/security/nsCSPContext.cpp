@@ -563,10 +563,13 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
         *outAllowsInline = false;
       }
       nsAutoString violatedDirective;
-      mPolicies[i]->getDirectiveStringForContentType(aContentType, violatedDirective);
+      bool reportSample = false;
+      mPolicies[i]->getDirectiveStringAndReportSampleForContentType(aContentType,
+                                                                    violatedDirective,
+                                                                    &reportSample);
       reportInlineViolation(aContentType,
                             aNonce,
-                            content,
+                            reportSample ? content : EmptyString(),
                             violatedDirective,
                             i,
                             aLineNumber,
@@ -613,13 +616,16 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
                               keyword, nonceOrHash, false))                    \
     {                                                                          \
       nsAutoString violatedDirective;                                          \
-      mPolicies[p]->getDirectiveStringForContentType(                          \
+      bool reportSample = false;                                               \
+      mPolicies[p]->getDirectiveStringAndReportSampleForContentType(           \
                         nsIContentPolicy::TYPE_ ## contentPolicyType,          \
-                        violatedDirective);                                    \
+                        violatedDirective, &reportSample);                     \
       this->AsyncReportViolation(selfISupports, nullptr, violatedDirective, p, \
                                  NS_LITERAL_STRING(observerTopic),             \
-                                 aSourceFile, aScriptSample, aLineNum,         \
-                                 aColumnNum);                                  \
+                                 aSourceFile,                                  \
+                                 reportSample                                  \
+                                   ? aScriptSample : EmptyString(),            \
+                                 aLineNum, aColumnNum);                        \
     }                                                                          \
     PR_END_MACRO;                                                              \
     break
@@ -1001,7 +1007,7 @@ nsCSPContext::SendReports(
     report.mCsp_report.mLine_number.Value() = aViolationEventInit.mLineNumber;
   }
 
-  if (aViolationEventInit.mLineNumber != 0) {
+  if (aViolationEventInit.mColumnNumber != 0) {
     report.mCsp_report.mColumn_number.Construct();
     report.mCsp_report.mColumn_number.Value() = aViolationEventInit.mColumnNumber;
   }
@@ -1265,7 +1271,7 @@ class CSPReportSenderRunnable final : public Runnable
           rv = blockedURI->SchemeIs("data", &isData);
           if (NS_SUCCEEDED(rv) && isData) {
             blockedDataStr.Truncate(40);
-            blockedDataStr.AppendASCII("...");
+            blockedDataStr.AppendASCII("…");
           }
         }
       } else if (blockedString) {
