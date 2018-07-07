@@ -1,11 +1,7 @@
-load 306911-crash.xul
 load 306911-grid-testcases.xul
 load 306911-grid-testcases2.xul
 load 311710-1.xul
 load 312784-1.xul
 load 313173-1.html
 load 321066-1.xul
-load 321073-1.xul
-load 382750-1.xul
-load 400790-1.xul
 load 423802-crash.xul
