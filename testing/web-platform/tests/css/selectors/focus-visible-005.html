@@ -7,15 +7,17 @@
   <link rel="help" href="https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo" />
   <script src="/resources/testharness.js"></script>
   <script src="/resources/testharnessreport.js"></script>
+  <script src="/resources/testdriver.js"></script>
+  <script src="/resources/testdriver-vendor.js"></script>
   <style>
     :focus-visible {
-      outline: darkgreen dotted 1px; /* fallback for Edge */
-      outline: darkgreen auto 5px;
+      outline: red dotted 1px; /* fallback for Edge */
+      outline: red auto 5px;
     }
 
     :focus:not(:focus-visible) {
       outline: 0;
-      background-color: tomato;
+      background-color: darkseagreen;
     }
   </style>
 </head>
@@ -34,12 +36,12 @@
       el.focus();
     });
     async_test(function(t) {
-      el.addEventListener("focus", t.step_func(() => {
-        assert_equals(getComputedStyle(el).outlineColor, "rgb(0, 100, 0)");
+      el.addEventListener("focus", t.step_func(function() {
+        assert_equals(getComputedStyle(el).outlineStyle, "none");
         t.done();
       }));
-      el.focus();
-    }, "Programmatic focus should always match :focus-visible");
+      test_driver.click(button);
+    }, "Programmatic focus after click should not match :focus-visible");
   </script>
 </body>
 </html>
