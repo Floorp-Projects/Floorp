@@ -238,13 +238,6 @@ nsChromeRegistryContent::Observe(nsISupports* aSubject, const char* aTopic,
   CONTENT_NOT_IMPLEMENTED();
 }
 
-NS_IMETHODIMP
-nsChromeRegistryContent::GetXULOverlays(nsIURI *aChromeURL,
-                                        nsISimpleEnumerator **aResult)
-{
-  CONTENT_NOT_IMPLEMENTED();
-}
-
 void
 nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
                                          int lineno, char *const * argv,
@@ -265,13 +258,6 @@ void
 nsChromeRegistryContent::ManifestSkin(ManifestProcessingContext& cx,
                                       int lineno,
                                       char *const * argv, int flags)
-{
-  CONTENT_NOTREACHED();
-}
-
-void
-nsChromeRegistryContent::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                         char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }

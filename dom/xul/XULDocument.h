@@ -106,10 +106,6 @@ public:
      * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
      */
     nsresult OnPrototypeLoadDone(bool aResumeWalk);
-    /**
-     * Callback notifying when a document could not be parsed properly.
-     */
-    bool OnDocumentParserError();
 
     // nsINode interface overrides
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
@@ -174,8 +170,6 @@ public:
     void Persist(const nsAString& aId, const nsAString& aAttr,
                  ErrorResult& aRv);
     using nsDocument::GetBoxObjectFor;
-    void LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
-                     ErrorResult& aRv);
 
 protected:
     virtual ~XULDocument();
@@ -201,10 +195,6 @@ protected:
                            nsIPrincipal* aDocumentPrincipal,
                            nsIParser** aResult);
 
-    nsresult
-    LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic, bool* aShouldReturn,
-                        bool* aFailureFromContent);
-
     nsresult ApplyPersistentAttributes();
     nsresult ApplyPersistentAttributesInternal();
     nsresult ApplyPersistentAttributesToElements(const nsAString &aID,
@@ -220,13 +210,6 @@ protected:
     ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
                                  Element* aListener,
                                  nsAtom* aAttr);
-
-    nsresult
-    BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
-                                        int32_t aNameSpaceID,
-                                        nsAtom* aAttribute,
-                                        nsAtom* aPrefix,
-                                        const nsAString& aValue);
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
@@ -275,12 +258,6 @@ protected:
      */
     bool                       mStillWalking;
 
-    /**
-     * These two values control where persistent attributes get applied.
-     */
-    bool                           mRestrictPersistence;
-    nsTHashtable<nsStringHashKey>  mPersistenceIds;
-
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     uint32_t mPendingSheets;
@@ -323,22 +300,6 @@ protected:
     friend class ContextStack;
     ContextStack mContextStack;
 
-    enum State { eState_Master, eState_Overlay };
-    State mState;
-
-    /**
-     * An array of overlay nsIURIs that have yet to be resolved. The
-     * order of the array is significant: overlays at the _end_ of the
-     * array are resolved before overlays earlier in the array (i.e.,
-     * it is a stack).
-     *
-     * In the current implementation the order the overlays are loaded
-     * in is as follows: first overlays from xul-overlay PIs, in the
-     * same order as in the document, then the overlays from the chrome
-     * registry.
-     */
-    nsTArray<nsCOMPtr<nsIURI> > mUnloadedOverlays;
-
     /**
      * Load the transcluded script at the specified URI. If the
      * prototype construction must 'block' until the load has
@@ -359,13 +320,6 @@ protected:
     nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                         Element** aResult,
                                         bool aIsRoot);
-
-    /**
-     * Create a hook-up element to which content nodes can be attached for
-     * later resolution.
-     */
-    nsresult CreateOverlayElement(nsXULPrototypeElement* aPrototype,
-                                  Element** aResult);
 
     /**
      * Add attributes from the prototype to the element.
@@ -450,30 +404,6 @@ protected:
     friend class BroadcasterHookup;
 
 
-    /**
-     * Used to hook up overlays
-     */
-    class OverlayForwardReference : public nsForwardReference
-    {
-    protected:
-        XULDocument* mDocument;      // [WEAK]
-        nsCOMPtr<Element> mOverlay; // [OWNER]
-        bool mResolved;
-
-        nsresult Merge(Element* aTargetNode, Element* aOverlayNode, bool aNotify);
-
-    public:
-        OverlayForwardReference(XULDocument* aDocument, Element* aOverlay)
-            : mDocument(aDocument), mOverlay(aOverlay), mResolved(false) {}
-
-        virtual ~OverlayForwardReference();
-
-        virtual Phase GetPhase() override { return eConstruction; }
-        virtual Result Resolve() override;
-    };
-
-    friend class OverlayForwardReference;
-
     // The out params of FindBroadcaster only have values that make sense when
     // the method returns NS_FINDBROADCASTER_FOUND.  In all other cases, the
     // values of the out params should not be relied on (though *aListener and
@@ -495,23 +425,11 @@ protected:
                                  Element *aListener,
                                  const nsAString &aAttr);
 
-    // FIXME: This should probably be renamed, there's nothing guaranteeing that
-    // aChild is an Element as far as I can tell!
-    static
-    nsresult
-    InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify);
-
     /**
      * The current prototype that we are walking to construct the
      * content model.
      */
     RefPtr<nsXULPrototypeDocument> mCurrentPrototype;
-
-    /**
-     * The master document (outermost, .xul) prototype, from which
-     * all subdocuments get their security principals.
-     */
-    RefPtr<nsXULPrototypeDocument> mMasterPrototype;
 
     /**
      * Owning references to all of the prototype documents that were
@@ -548,22 +466,6 @@ protected:
                           nsIContent* aPINode);
 
     /**
-     * Inserts the passed <?xul-overlay ?> PI at the specified index.
-     * Schedules the referenced overlay URI for further processing.
-     */
-    nsresult
-    InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
-                       nsINode* aParent,
-                       nsINode* aBeforeThis,
-                       nsIContent* aPINode);
-
-    /**
-     * Add overlays from the chrome registry to the set of unprocessed
-     * overlays still to do.
-     */
-    nsresult AddChromeOverlays();
-
-    /**
      * Resume (or initiate) an interrupted (or newly prepared)
      * prototype walk.
      */
@@ -575,12 +477,6 @@ protected:
      * all referenced stylesheets finished loading.
      */
     nsresult DoneWalking();
-
-    /**
-     * Report that an overlay failed to load
-     * @param aURI the URI of the overlay that failed to load
-     */
-    void ReportMissingOverlay(nsIURI* aURI);
 
     class CachedChromeStreamListener : public nsIStreamListener {
     protected:
@@ -600,30 +496,10 @@ protected:
 
     friend class CachedChromeStreamListener;
 
-
-    class ParserObserver : public nsIRequestObserver {
-    protected:
-        RefPtr<XULDocument> mDocument;
-        RefPtr<nsXULPrototypeDocument> mPrototype;
-        virtual ~ParserObserver();
-
-    public:
-        ParserObserver(XULDocument* aDocument,
-                       nsXULPrototypeDocument* aPrototype);
-
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIREQUESTOBSERVER
-    };
-
-    friend class ParserObserver;
-
     /**
      * A map from a broadcaster element to a list of listener elements.
      */
     PLDHashTable* mBroadcasterMap;
-
-    nsAutoPtr<nsInterfaceHashtable<nsURIHashKey,nsIObserver> > mOverlayLoadObservers;
-    nsAutoPtr<nsInterfaceHashtable<nsURIHashKey,nsIObserver> > mPendingOverlayLoadNotifications;
 
     bool mInitialLayoutComplete;
 

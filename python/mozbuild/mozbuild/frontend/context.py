@@ -1519,7 +1519,7 @@ VARIABLES = {
         This variable only has an effect when building with MSVC.
         """),
 
-    'HOST_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
+    'HOST_SOURCES': (ContextDerivedTypedList(Path, StrictOrderingOnAppendList), list,
         """Source code files to compile with the host compiler.
 
         This variable contains a list of source code files to compile.

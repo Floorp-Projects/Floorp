@@ -15,7 +15,7 @@ scripts:
 # bundle: Build all assets for activity stream
   bundle:
     locales: pontoon-to-json --src locales --dest data
-    webpack: webpack --config webpack.system-addon.config.js --display-optimization-bailout
+    webpack: webpack --config webpack.system-addon.config.js
     css: node-sass --source-map true --source-map-contents content-src/styles -o css
     html: rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js
 

@@ -680,6 +680,10 @@ SERVO_BINDING_FUNC(Servo_MediaList_AppendMedium, void,
                    RawServoMediaListBorrowed list, const nsACString* new_medium)
 SERVO_BINDING_FUNC(Servo_MediaList_DeleteMedium, bool,
                    RawServoMediaListBorrowed list, const nsACString* old_medium)
+SERVO_BINDING_FUNC(Servo_MediaList_SizeOfIncludingThis, size_t,
+                   mozilla::MallocSizeOf malloc_size_of,
+                   mozilla::MallocSizeOf malloc_enclosing_size_of,
+                   RawServoMediaListBorrowed list)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports2, bool,

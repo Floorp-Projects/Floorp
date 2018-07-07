@@ -4,15 +4,10 @@
 
 include $(topsrcdir)/config/config.mk
 
-# In the current moz.build world, we need to override essentially every
-# variable to limit ourselves to what we need to build the clang plugin.
-ifneq ($(HOST_OS_ARCH),WINNT)
-DSO_LDOPTS := -shared
-endif
+HOST_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
 
-ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
-# Use the host compiler instead of the target compiler.
-CXX := $(HOST_CXX)
+ifneq ($(HOST_OS_ARCH),WINNT)
+HOST_LDFLAGS += -shared
 endif
 
 # Use the default OS X deployment target to enable using the libc++ headers

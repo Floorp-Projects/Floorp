@@ -29,6 +29,9 @@ export class _Base extends React.PureComponent {
     const {App, locale} = this.props;
     this.sendNewTabRehydrated(App);
     addLocaleDataForReactIntl(locale);
+    if (this.props.isFirstrun) {
+      global.document.body.classList.add("welcome");
+    }
   }
 
   componentDidMount() {
@@ -53,7 +56,9 @@ export class _Base extends React.PureComponent {
   updateTheme() {
     const bodyClassName = [
       "activity-stream",
-      this.props.isFirstrun ? "welcome" : ""
+      // If we skipped the about:welcome overlay and removed the CSS class
+      // we don't want to add it back to the Activity Stream view
+      document.body.classList.contains("welcome") ? "welcome" : ""
     ].filter(v => v).join(" ");
     global.document.body.className = bodyClassName;
   }

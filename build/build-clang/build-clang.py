@@ -325,12 +325,31 @@ def prune_final_dir_for_clang_tidy(final_dir):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', required=True,
+                        type=argparse.FileType('r'),
+                        help="Clang configuration file")
+    parser.add_argument('-b', '--base-dir', required=False,
+                        help="Base directory for code and build artifacts")
+    parser.add_argument('--clean', required=False,
+                        action='store_true',
+                        help="Clean the build directory")
+    parser.add_argument('--skip-tar', required=False,
+                        action='store_true',
+                        help="Skip tar packaging stage")
+
+    args = parser.parse_args()
+
     # The directories end up in the debug info, so the easy way of getting
     # a reproducible build is to run it in a know absolute directory.
     # We use a directory that is registered as a volume in the Docker image.
-    base_dir = "/builds/worker/workspace/moz-toolchain"
 
-    if is_windows():
+    if args.base_dir:
+        base_dir = args.base_dir
+    elif os.environ.get('MOZ_AUTOMATION') and not is_windows():
+        base_dir = "/builds/worker/workspace/moz-toolchain"
+    else:
+        # Handles both the Windows automation case and the local build case
         # TODO: Because Windows taskcluster builds are run with distinct
         # user IDs for each job, we can't store things in some globally
         # accessible directory: one job will run, checkout LLVM to that
@@ -339,10 +358,21 @@ if __name__ == "__main__":
         # delete it.  So on Windows, we build in the task-specific home
         # directory; we will eventually add -fdebug-prefix-map options
         # to the LLVM build to bring back reproducibility.
-        base_dir = os.path.join(os.getcwd(), 'llvm-sources')
+        base_dir = os.path.join(os.getcwd(), 'build-clang')
 
     source_dir = base_dir + "/src"
     build_dir = base_dir + "/build"
+
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    elif os.listdir(base_dir) and not os.path.exists(os.path.join(base_dir, '.build-clang')):
+        raise ValueError("Base directory %s exists and is not a build-clang directory. "
+                         "Supply a non-existent or empty directory with --base-dir" % base_dir)
+    open(os.path.join(base_dir, '.build-clang'), 'a').close()
+
+    if args.clean:
+        shutil.rmtree(build_dir)
+        os.sys.exit(0)
 
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
@@ -365,23 +395,7 @@ if __name__ == "__main__":
         cc_name = "clang-cl"
         cxx_name = "clang-cl"
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', required=True,
-                        type=argparse.FileType('r'),
-                        help="Clang configuration file")
-    parser.add_argument('--clean', required=False,
-                        action='store_true',
-                        help="Clean the build directory")
-    parser.add_argument('--skip-tar', required=False,
-                        action='store_true',
-                        help="Skip tar packaging stage")
-
-    args = parser.parse_args()
     config = json.load(args.config)
-
-    if args.clean:
-        shutil.rmtree(build_dir)
-        os.sys.exit(0)
 
     llvm_revision = config["llvm_revision"]
     llvm_repo = config["llvm_repo"]

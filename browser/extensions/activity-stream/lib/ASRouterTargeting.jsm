@@ -1,5 +1,7 @@
 ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+  "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.import("resource://gre/modules/Console.jsm");
@@ -26,6 +28,28 @@ const TargetingGetters = {
   },
   get hasFxAccount() {
     return Services.prefs.prefHasUserValue(FXA_USERNAME_PREF);
+  },
+  get addonsInfo() {
+    return AddonManager.getActiveAddons(["extension", "service"])
+      .then(({addons, fullData}) => {
+        const info = {};
+        for (const addon of addons) {
+          info[addon.id] = {
+            version: addon.version,
+            type: addon.type,
+            isSystem: addon.isSystem,
+            isWebExtension: addon.isWebExtension
+          };
+          if (fullData) {
+            Object.assign(info[addon.id], {
+              name: addon.name,
+              userDisabled: addon.userDisabled,
+              installDate: addon.installDate
+            });
+          }
+        }
+        return {addons: info, isFullData: fullData};
+      });
   },
   // Temporary targeting function for the purposes of running the simplified onboarding experience
   get isInExperimentCohort() {

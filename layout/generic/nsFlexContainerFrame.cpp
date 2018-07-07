@@ -4055,6 +4055,12 @@ ResolveFlexContainerMainSize(const ReflowInput& aReflowInput,
     return std::min(aTentativeMainSize, largestLineOuterSize);
   }
 
+  // Column-oriented case, with size-containment:
+  // Behave as if we had no content and just use our MinBSize.
+  if (aReflowInput.mStyleDisplay->IsContainSize()) {
+    return aReflowInput.ComputedMinBSize();
+  }
+
   // Column-oriented case, with auto BSize:
   // Resolve auto BSize to the largest FlexLine length, clamped to our
   // computed min/max main-size properties.
@@ -4111,6 +4117,12 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
       return aAvailableBSizeForContent;
     }
     return std::min(effectiveComputedBSize, aSumLineCrossSizes);
+  }
+
+  // Row-oriented case, with size-containment:
+  // Behave as if we had no content and just use our MinBSize.
+  if (aReflowInput.mStyleDisplay->IsContainSize()) {
+    return aReflowInput.ComputedMinBSize();
   }
 
   // Row-oriented case (cross axis is block axis), with auto BSize:
@@ -4615,9 +4627,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                     aMainGapSize,
                     placeholderKids, lines);
 
-  if (lines.getFirst()->IsEmpty() &&
-      !lines.getFirst()->getNext()) {
-    // We have no flex items, our parent should synthesize a baseline if needed.
+  if ((lines.getFirst()->IsEmpty() && !lines.getFirst()->getNext()) ||
+      aReflowInput.mStyleDisplay->IsContainSize()) {
+    // If have no flex items, or if we  are size contained and
+    // want to behave as if we have none, our parent
+    // should synthesize a baseline if needed.
     AddStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);
   } else {
     RemoveStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);
@@ -5291,8 +5305,9 @@ nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   DISPLAY_MIN_WIDTH(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
-    mCachedMinISize = IntrinsicISize(aRenderingContext,
-                                     nsLayoutUtils::MIN_ISIZE);
+    mCachedMinISize = StyleDisplay()->IsContainSize()
+      ? 0
+      : IntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
   }
 
   return mCachedMinISize;
@@ -5303,8 +5318,9 @@ nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
-    mCachedPrefISize = IntrinsicISize(aRenderingContext,
-                                      nsLayoutUtils::PREF_ISIZE);
+    mCachedPrefISize = StyleDisplay()->IsContainSize()
+      ? 0
+      : IntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
   }
 
   return mCachedPrefISize;

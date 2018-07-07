@@ -507,7 +507,6 @@ Document.prototype.importNode = function(externalNode, deep) {};
 
 /** @param {string} uri */
 Document.prototype.load = function(uri) {};
-Document.prototype.loadOverlay;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.open

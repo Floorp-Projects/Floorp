@@ -160,3 +160,33 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.assertIn("timeouts", self.marionette.session_capabilities)
         self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)
         self.assertDictEqual(self.marionette._send_message("getTimeouts"), timeouts)
+
+    def test_unhandled_prompt_behavior(self):
+        behaviors = [
+            "accept",
+            "accept and notify",
+            "dismiss",
+            "dismiss and notify",
+            "ignore"
+        ]
+
+        for behavior in behaviors:
+            print("valid unhandled prompt behavior {}".format(behavior))
+            self.delete_session()
+            self.marionette.start_session({"unhandledPromptBehavior": behavior})
+            self.assertEqual(self.marionette.session_capabilities["unhandledPromptBehavior"],
+                             behavior)
+
+        # Default value
+        self.delete_session()
+        self.marionette.start_session()
+        self.assertEqual(self.marionette.session_capabilities["unhandledPromptBehavior"],
+                         "dismiss and notify")
+
+        # Invalid values
+        self.delete_session()
+        for behavior in [None, "", "ACCEPT", True, 42, {}, []]:
+            print("invalid unhandled prompt behavior {}".format(behavior))
+            with self.assertRaisesRegexp(SessionNotCreatedException, "InvalidArgumentError"):
+                self.marionette.start_session({"unhandledPromptBehavior": behavior})
+

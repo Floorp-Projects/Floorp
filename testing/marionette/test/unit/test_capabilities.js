@@ -13,6 +13,7 @@ const {
   PageLoadStrategy,
   Proxy,
   Timeouts,
+  UnhandledPromptBehavior,
 } = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
 
 add_test(function test_Timeouts_ctor() {
@@ -362,6 +363,16 @@ add_test(function test_Proxy_fromJSON() {
   p.noProxy = ["2001:db8::1"];
   let manual = {proxyType: "manual", "noProxy": ["[2001:db8::1]"]};
   deepEqual(p, Proxy.fromJSON(manual));
+
+  run_next_test();
+});
+
+add_test(function test_UnhandledPromptBehavior() {
+  equal(UnhandledPromptBehavior.Accept, "accept");
+  equal(UnhandledPromptBehavior.AcceptAndNotify, "accept and notify");
+  equal(UnhandledPromptBehavior.Dismiss, "dismiss");
+  equal(UnhandledPromptBehavior.DismissAndNotify, "dismiss and notify");
+  equal(UnhandledPromptBehavior.Ignore, "ignore");
 
   run_next_test();
 });

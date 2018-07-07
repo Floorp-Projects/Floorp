@@ -65,6 +65,7 @@ module.exports = function(config) {
     files: [PATHS.testEntryFile],
     preprocessors,
     webpack: {
+      mode: "none",
       devtool: "inline-source-map",
       // This loader allows us to override required files in tests
       resolveLoader: {alias: {inject: path.join(__dirname, "loaders/inject-loader")}},

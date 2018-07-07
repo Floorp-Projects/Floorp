@@ -63,6 +63,8 @@ public:
 
   void Disconnect();
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
 private:
   void RecomputeMatches();
 

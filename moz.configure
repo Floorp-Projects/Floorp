@@ -227,6 +227,8 @@ library_name_info = library_name_info_template(target)
 
 set_config('DLL_PREFIX', library_name_info.dll.prefix)
 set_config('DLL_SUFFIX', library_name_info.dll.suffix)
+set_config('HOST_DLL_PREFIX', host_library_name_info.dll.prefix)
+set_config('HOST_DLL_SUFFIX', host_library_name_info.dll.suffix)
 set_config('LIB_PREFIX', library_name_info.lib.prefix)
 set_config('LIB_SUFFIX', library_name_info.lib.suffix)
 set_config('RUST_LIB_PREFIX', library_name_info.rust_lib.prefix)
@@ -304,7 +306,8 @@ set_config('MOZ_UI_LOCALE', depends('--enable-ui-locale')(lambda x: x))
 
 # clang-plugin location
 # ==============================================================
-@depends(library_name_info, check_build_environment, when='--enable-clang-plugin')
+@depends(host_library_name_info, check_build_environment,
+         when='--enable-clang-plugin')
 def clang_plugin_path(library_name_info, build_env):
     topobjdir = build_env.topobjdir
     if topobjdir.endswith('/js/src'):

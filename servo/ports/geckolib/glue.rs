@@ -3846,6 +3846,32 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
     write_locked_arc(list, |list: &mut MediaList| list.delete_medium(&context, old_medium))
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_MediaList_SizeOfIncludingThis(
+    malloc_size_of: GeckoMallocSizeOf,
+    malloc_enclosing_size_of: GeckoMallocSizeOf,
+    list: RawServoMediaListBorrowed,
+) -> usize {
+    use malloc_size_of::MallocSizeOf;
+    use malloc_size_of::MallocUnconditionalShallowSizeOf;
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+
+    let mut ops = MallocSizeOfOps::new(
+        malloc_size_of.unwrap(),
+        Some(malloc_enclosing_size_of.unwrap()),
+        None
+    );
+
+    Locked::<MediaList>::as_arc(&list).with_arc(|list| {
+        let mut n = 0;
+        n += list.unconditional_shallow_size_of(&mut ops);
+        n += list.read_with(&guard).size_of(&mut ops);
+        n
+    })
+}
+
 macro_rules! get_longhand_from_id {
     ($id:expr) => {
         match PropertyId::from_nscsspropertyid($id) {
