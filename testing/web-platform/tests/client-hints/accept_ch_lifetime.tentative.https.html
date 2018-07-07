@@ -37,14 +37,6 @@ promise_test(t => {
   });
 }, "Precondition: Test that the browser does not have client hints preferences cached");
 
-// Fetching this webpage should cause user-agent to persist client hint
-// preferences for the origin.
-var win = window.open("resources/accept_ch_lifetime.html");
-assert_not_equals(win, null, "Popup windows not allowed?");
-
-// Open a new window. Verify that the user agent attaches the client hints.
-var verify_win = window.open("resources/expect_client_hints_headers.html");
-assert_not_equals(verify_win, null, "Popup windows not allowed?");
 async_test(t => {
   window.addEventListener('message', function(e) {
     if(!e.source.location.pathname.includes("expect_client_hints_headers.html")) {
@@ -57,6 +49,18 @@ async_test(t => {
 })
 }, "Loading of resources/expect_client_hints_headers.html did not finish.");
 
+
+function acceptChLifetimeLoaded() {
+  // Open a new window. Verify that the user agent attaches the client hints.
+  var verify_win = window.open("expect_client_hints_headers.html");
+  assert_not_equals(verify_win, null, "Popup windows not allowed?");
+}
+
+// Fetching this webpage should cause user-agent to persist client hint
+// preferences for the origin.
+var win = window.open("resources/accept_ch_lifetime.html");
+assert_not_equals(win, null, "Popup windows not allowed?");
+win.addEventListener('load', acceptChLifetimeLoaded, false);
 
 </script>
 </body>

@@ -37,15 +37,6 @@ promise_test(t => {
   });
 }, "Precondition: Test that the browser does not have client hints preferences cached");
 
-// Fetching this webpage should NOT cause user-agent to persist client hint
-// preferences for the origin.
-var win = window.open("resources/accept_ch.html");
-assert_not_equals(win, null, "Popup windows not allowed?");
-
-// Open a new window. Verify that the user agent does not attach the client
-// hints.
-var verify_win = window.open("resources/do_not_expect_client_hints_headers.html");
-assert_not_equals(verify_win, null, "Popup windows not allowed?");
 async_test(t => {
   window.addEventListener('message', function(e) {
     if(!e.source.location.pathname.includes("do_not_expect_client_hints_headers.html")) {
@@ -58,7 +49,19 @@ async_test(t => {
   })
 }, "Loading of resources/do_not_expect_client_hints_headers.html did not finish.");
 
-</script>
+function acceptChLoaded() {
+  // Open a new window. Verify that the user agent does not attach the client
+  // hints.
+  var verify_win = window.open("do_not_expect_client_hints_headers.html");
+  assert_not_equals(verify_win, null, "Popup windows not allowed?");
+}
 
+// Fetching this webpage should NOT cause user-agent to persist client hint
+// preferences for the origin.
+var win = window.open("resources/accept_ch.html");
+assert_not_equals(win, null, "Popup windows not allowed?");
+win.addEventListener('load', acceptChLoaded, false);
+
+</script>
 </body>
 </html>
