@@ -1476,7 +1476,13 @@ static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
 static void
-NotifyCallbacks(const char* aPrefName);
+NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref = nullptr);
+
+static void
+NotifyCallbacks(const char* aPrefName, const PrefWrapper& aPref)
+{
+  NotifyCallbacks(aPrefName, &aPref);
+}
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
@@ -1536,14 +1542,25 @@ pref_HashTableLookup(const char* aPrefName)
   return entry->mPref;
 }
 
+// While notifying preference callbacks, this holds the wrapper for the
+// preference being notified, in order to optimize lookups.
+//
+// Note: Callbacks and lookups only happen on the main thread, so this is safe
+// to use without locking.
+static const PrefWrapper* gCallbackPref;
+
 Maybe<PrefWrapper>
 pref_Lookup(const char* aPrefName)
 {
   Maybe<PrefWrapper> result;
 
+  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+
   AddAccessCount(aPrefName);
 
-  if (Pref* pref = pref_HashTableLookup(aPrefName)) {
+  if (gCallbackPref && strcmp(aPrefName, gCallbackPref->Name()) == 0) {
+    result.emplace(*gCallbackPref);
+  } else if (Pref* pref = pref_HashTableLookup(aPrefName)) {
     result.emplace(pref);
   }
 
@@ -1602,7 +1619,7 @@ pref_SetPref(const char* aPrefName,
     if (aKind == PrefValueKind::User && XRE_IsParentProcess()) {
       Preferences::HandleDirty();
     }
-    NotifyCallbacks(aPrefName);
+    NotifyCallbacks(aPrefName, PrefWrapper(pref));
   }
 
   return NS_OK;
@@ -1630,9 +1647,12 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 }
 
 static void
-NotifyCallbacks(const char* aPrefName)
+NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref)
 {
   bool reentered = gCallbacksInProgress;
+
+  gCallbackPref = aPref;
+  auto cleanup = MakeScopeExit([]() { gCallbackPref = nullptr; });
 
   // Nodes must not be deleted while gCallbacksInProgress is true.
   // Nodes that need to be deleted are marked for deletion by nulling
@@ -4124,13 +4144,18 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   //
   if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
     gHashTable->RemoveEntry(entry);
+    pref = nullptr;
   }
 
   // Note: we don't have to worry about HandleDirty() because we are setting
   // prefs in the content process that have come from the parent process.
 
   if (valueChanged) {
-    NotifyCallbacks(prefName);
+    if (pref) {
+      NotifyCallbacks(prefName, PrefWrapper(pref));
+    } else {
+      NotifyCallbacks(prefName);
+    }
   }
 }
 
@@ -4949,7 +4974,7 @@ Preferences::Lock(const char* aPrefName)
 
   if (!pref->IsLocked()) {
     pref->SetIsLocked(true);
-    NotifyCallbacks(aPrefName);
+    NotifyCallbacks(aPrefName, PrefWrapper(pref));
   }
 
   return NS_OK;
@@ -4968,7 +4993,7 @@ Preferences::Unlock(const char* aPrefName)
 
   if (pref->IsLocked()) {
     pref->SetIsLocked(false);
-    NotifyCallbacks(aPrefName);
+    NotifyCallbacks(aPrefName, PrefWrapper(pref));
   }
 
   return NS_OK;
