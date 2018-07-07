@@ -31,18 +31,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
     <richlistitem id="richlistbox_item8"><label value="Item 8"/></richlistitem>
   </richlistbox>
 
-  <listbox id="listbox" rows="2">
-    <listitem id="listbox_item0" label="Item 0" hidden="true"/>
-    <listitem id="listbox_item1" label="Item 1"/>
-    <listitem id="listbox_item2" label="Item 2"/>
-    <listitem id="listbox_item3" label="Item 3"/>
-    <listitem id="listbox_item4" label="Item 4"/>
-    <listitem id="listbox_item5" label="Item 5"/>
-    <listitem id="listbox_item6" label="Item 6"/>
-    <listitem id="listbox_item7" label="Item 7"/>
-    <listitem id="listbox_item8" label="Item 8"/>
-  </listbox>
-
   <box orient="horizontal">
     <arrowscrollbox id="hscrollbox" clicktoscroll="true" orient="horizontal"
      smoothscroll="false" style="max-width:80px;" flex="1">
@@ -108,50 +96,6 @@ function sendWheelAndWait(aScrollTaget, aX, aY, aEvent, aChecker)
     // So, this test may detect regressions with timeout.
     continueTestsIfScrolledAsExpected(aChecker);
   });
-}
-
-function* testListbox(id)
-{
-  var listbox = document.getElementById(id);
-
-  function* helper(aStart, aDelta, aIntDelta, aDeltaMode)
-  {
-    listbox.scrollToIndex(aStart);
-    var expectedPos = aStart;
-    if (aIntDelta) {
-      if (aDeltaMode == WheelEvent.DOM_DELTA_PAGE) {
-        expectedPos += aIntDelta > 0 ? listbox.getNumberOfVisibleRows() :
-                                       -listbox.getNumberOfVisibleRows();
-      } else {
-        expectedPos += aIntDelta;
-      }
-    }
-    yield sendWheelAndWait(listbox, 10, 10,
-                           { deltaMode: aDeltaMode, deltaY: aDelta,
-                             lineOrPageDeltaY: aIntDelta },
-                           ()=>{ return listbox.getIndexOfFirstVisibleRow() == expectedPos; });
-    is(listbox.getIndexOfFirstVisibleRow(), expectedPos,
-       "testListbox(" + id +  "): vertical, starting " + aStart +
-         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
-         " aDeltaMode " + aDeltaMode);
-
-    // Check that horizontal scrolling has no effect
-    listbox.scrollToIndex(aStart);
-    yield sendWheelAndWait(listbox, 10, 10,
-                           { deltaMode: aDeltaMode, deltaX: aDelta,
-                             lineOrPageDeltaX: aIntDelta }, ()=>{ return true; });
-    is(listbox.getIndexOfFirstVisibleRow(), aStart,
-       "testListbox(" + id +  "): horizontal, starting " + aStart +
-         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
-         " aDeltaMode " + aDeltaMode);
-  }
-  for (let i = 0; i < deltaModes.length; i++) {
-    let delta = (deltaModes[i] == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
-    yield* helper(5, -delta,  0, deltaModes[i]);
-    yield* helper(5, -delta, -1, deltaModes[i]);
-    yield* helper(5,  delta,  1, deltaModes[i]);
-    yield* helper(5,  delta,  0, deltaModes[i]);
-  }
 }
 
 function* testRichListbox(id)
@@ -360,7 +304,6 @@ async function prepareRunningTests()
 function* testBody()
 {
   yield* testRichListbox("richlistbox");
-  yield* testListbox("listbox");
   yield* testArrowScrollbox("hscrollbox");
   yield* testArrowScrollbox("vscrollbox");
 }
