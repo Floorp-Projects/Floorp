@@ -307,7 +307,6 @@ NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForNewChrome()
 {
   mPackagesHash.Clear();
-  mOverlayHash.Clear();
   mOverrideTable.Clear();
 
   mDynamicRegistration = false;
@@ -543,54 +542,6 @@ nsChromeRegistryChrome::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a
   }
 }
 
-void
-nsChromeRegistryChrome::OverlayListEntry::AddURI(nsIURI* aURI)
-{
-  int32_t i = mArray.Count();
-  while (i--) {
-    bool equals;
-    if (NS_SUCCEEDED(aURI->Equals(mArray[i], &equals)) && equals)
-      return;
-  }
-
-  mArray.AppendObject(aURI);
-}
-
-void
-nsChromeRegistryChrome::OverlayListHash::Add(nsIURI* aBase, nsIURI* aOverlay)
-{
-  OverlayListEntry* entry = mTable.PutEntry(aBase);
-  if (entry)
-    entry->AddURI(aOverlay);
-}
-
-const nsCOMArray<nsIURI>*
-nsChromeRegistryChrome::OverlayListHash::GetArray(nsIURI* aBase)
-{
-  OverlayListEntry* entry = mTable.GetEntry(aBase);
-  if (!entry)
-    return nullptr;
-
-  return &entry->mArray;
-}
-
-#ifdef MOZ_XUL
-NS_IMETHODIMP
-nsChromeRegistryChrome::GetXULOverlays(nsIURI *aChromeURL,
-                                       nsISimpleEnumerator **aResult)
-{
-  nsCOMPtr<nsIURI> chromeURLWithoutHash;
-  if (aChromeURL) {
-    aChromeURL->CloneIgnoringRef(getter_AddRefs(chromeURLWithoutHash));
-  }
-  const nsCOMArray<nsIURI>* parray = mOverlayHash.GetArray(chromeURLWithoutHash);
-  if (!parray)
-    return NS_NewEmptyEnumerator(aResult);
-
-  return NS_NewArrayEnumerator(aResult, *parray);
-}
-#endif // MOZ_XUL
-
 nsIURI*
 nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
 {
@@ -755,33 +706,6 @@ nsChromeRegistryChrome::ManifestSkin(ManifestProcessingContext& cx, int lineno,
                                   mSelectedSkin);
     SendManifestEntry(chromePackage);
   }
-}
-
-void
-nsChromeRegistryChrome::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                        char *const * argv, int flags)
-{
-  char* base = argv[0];
-  char* overlay = argv[1];
-
-  nsCOMPtr<nsIURI> baseuri = cx.ResolveURI(base);
-  nsCOMPtr<nsIURI> overlayuri = cx.ResolveURI(overlay);
-  if (!baseuri || !overlayuri) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "During chrome registration, unable to create URI.");
-    return;
-  }
-
-  if (!CanLoadResource(overlayuri)) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Cannot register non-local URI '%s' as an overlay.", overlay);
-    return;
-  }
-
-  nsCOMPtr<nsIURI> baseuriWithoutHash;
-  baseuri->CloneIgnoringRef(getter_AddRefs(baseuriWithoutHash));
-
-  mOverlayHash.Add(baseuriWithoutHash, overlayuri);
 }
 
 void

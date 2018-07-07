@@ -426,8 +426,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsAtom* aAttrName, bool* aDefer)
 
     nsPIDOMWindowInner *window;
     Element *root = doc->GetRootElement();
-    if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay) &&
-        (window = doc->GetInnerWindow())) {
+    if ((!root || root == this) && (window = doc->GetInnerWindow())) {
 
         nsCOMPtr<EventTarget> piTarget = do_QueryInterface(window);
 

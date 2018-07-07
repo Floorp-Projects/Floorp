@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, faham",
   "prefs_home_header": "Kandungan Halaman Utama Firefox",
   "prefs_home_description": "Pilih kandungan yang mahu dalam skrin Halaman Utama Firefox.",
-  "prefs_section_rows_option": "{num} rows",
+  "prefs_section_rows_option": "{num} baris",
   "prefs_search_header": "Carian Web",
   "prefs_topsites_description": "Laman yang anda kerap lawati",
   "prefs_topstories_description2": "Kandungan hebat dalam seluruh web, khas untuk anda",

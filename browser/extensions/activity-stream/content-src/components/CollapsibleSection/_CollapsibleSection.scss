@@ -89,12 +89,12 @@
 
     color: var(--newtab-text-conditional-color);
     font-size: 13px;
-    margin-bottom: 16px;
+    margin-bottom: 26px;
     position: relative;
+    display: flex;
 
     .section-disclaimer-text {
       display: inline-block;
-      min-height: $min-button-height;
       width: calc(100% - #{$max-button-width});
 
       @media (max-width: $break-point-medium) {
@@ -113,10 +113,10 @@
       border: 1px solid $grey-40;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 2px;
       max-width: $max-button-width;
       min-height: $min-button-height;
       inset-inline-end: 0;
+      align-self: center;
 
       &:hover:not(.dismiss) {
         box-shadow: $shadow-primary;

@@ -13,7 +13,10 @@ export class _StartupOverlay extends React.PureComponent {
     this.removeOverlay = this.removeOverlay.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
 
-    this.state = {emailInput: ""};
+    this.state = {
+      emailInput: "",
+      overlayRemoved: false
+    };
     this.initScene();
   }
 
@@ -31,6 +34,7 @@ export class _StartupOverlay extends React.PureComponent {
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.
       document.body.classList.remove("welcome");
+      this.setState({overlayRemoved: true});
     }, 400);
   }
 
@@ -56,9 +60,16 @@ export class _StartupOverlay extends React.PureComponent {
     error.classList.add("active");
     e.target.classList.add("invalid");
     e.preventDefault(); // Override built-in form validation popup
+    e.target.focus();
   }
 
   render() {
+    // When skipping the onboarding tour we show AS but we are still on
+    // about:welcome, prop.isFirstrun is true and StartupOverlay is rendered
+    if (this.state.overlayRemoved) {
+      return null;
+    }
+
     let termsLink = (<a href="https://accounts.firefox.com/legal/terms" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_terms_of_service" /></a>);
     let privacyLink = (<a href="https://accounts.firefox.com/legal/privacy" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_privacy_notice" /></a>);
     return (

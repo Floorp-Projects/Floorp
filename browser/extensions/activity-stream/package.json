@@ -68,7 +68,8 @@
     "shelljs": "0.8.1",
     "simple-git": "1.92.0",
     "sinon": "4.5.0",
-    "webpack": "3.10.0",
+    "webpack": "4.15.0",
+    "webpack-cli": "3.0.8",
     "yamscripts": "0.0.3"
   },
   "engines": {
@@ -93,7 +94,7 @@
     "mochitest-debug": "(cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/extensions/activity-stream/test/functional/mochitest)",
     "bundle": "npm-run-all bundle:*",
     "bundle:locales": "pontoon-to-json --src locales --dest data",
-    "bundle:webpack": "webpack --config webpack.system-addon.config.js --display-optimization-bailout",
+    "bundle:webpack": "webpack --config webpack.system-addon.config.js",
     "bundle:css": "node-sass --source-map true --source-map-contents content-src/styles -o css",
     "bundle:html": "rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js",
     "buildmc": "npm-run-all buildmc:*",

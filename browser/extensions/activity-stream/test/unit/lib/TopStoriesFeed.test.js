@@ -953,8 +953,7 @@ describe("Top Stories Feed", () => {
       instance.cache.get = () => ({domainAffinities});
 
       await instance.loadCachedData();
-      assert.isUndefined(this.affinityProvider);
-
+      assert.isUndefined(instance.affinityProvider);
       instance.personalized = true;
       await instance.loadCachedData();
       assert.isDefined(instance.affinityProvider);
