@@ -122,19 +122,3 @@ add_task(async function itemsInTheCollectionBeforeShiftClicking() {
     BrowserTestUtils.removeTab(tab5);
 });
 
-add_task(async function shiftHasHigherPrecOverCtrl() {
-    const tab1 = await addTab();
-    const tab2 = await addTab();
-
-    await BrowserTestUtils.switchTab(gBrowser, tab1);
-
-    is(gBrowser.multiSelectedTabsCount, 0, "No tab is multi-selected");
-
-    info("Click on tab2 with both Ctrl/Cmd and Shift down");
-    await triggerClickOn(tab2, { ctrlKey: true, shiftKey: true });
-
-    is(gBrowser.multiSelectedTabsCount, 2, "Both tab1 and tab2 are multi-selected");
-
-    BrowserTestUtils.removeTab(tab1);
-    BrowserTestUtils.removeTab(tab2);
-});
