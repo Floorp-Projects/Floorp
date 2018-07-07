@@ -143,7 +143,7 @@ window.busy-determined #action-busy-undetermined {
 %endif
 }
 
-.devtools-horizontal-splitter {
+splitter.devtools-horizontal-splitter {
   position: relative;
   border-bottom: 1px solid #aaa;
 }
