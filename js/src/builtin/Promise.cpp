@@ -40,9 +40,6 @@ enum PromiseHandler {
     PromiseHandlerIdentity = 0,
     PromiseHandlerThrower,
 
-    // Original Promise.prototype.then which comes from the same realm.
-    PromiseHandlerThen,
-
     // ES 2018 draft 25.5.5.4-5.
     PromiseHandlerAsyncFunctionAwaitedFulfilled,
     PromiseHandlerAsyncFunctionAwaitedRejected,
@@ -93,14 +90,33 @@ enum ReactionJobSlots {
 };
 
 enum ThenableJobSlots {
+    // The handler to use as the Promise reaction. It is a callable object
+    // that's guaranteed to be from the same compartment as the
+    // PromiseReactionJob.
     ThenableJobSlot_Handler = 0,
+
+    // JobData - a, potentially CCW-wrapped, dense list containing data
+    // required for proper execution of the reaction.
     ThenableJobSlot_JobData,
 };
 
 enum ThenableJobDataIndices {
+    // The Promise to resolve using the given thenable.
     ThenableJobDataIndex_Promise = 0,
+
+    // The thenable to use as the receiver when calling the `then` function.
     ThenableJobDataIndex_Thenable,
+
     ThenableJobDataLength,
+};
+
+enum BuiltinThenableJobSlots {
+    // The Promise to resolve using the given thenable.
+    BuiltinThenableJobSlot_Promise = 0,
+
+    // The thenable to use as the receiver when calling the built-in `then`
+    // function.
+    BuiltinThenableJobSlot_Thenable,
 };
 
 enum PromiseAllDataHolderSlots {
@@ -559,6 +575,10 @@ static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(JSContext* cx,
                                                           HandleValue thenable,
                                                           HandleValue thenVal);
 
+static MOZ_MUST_USE bool EnqueuePromiseResolveThenableBuiltinJob(JSContext* cx,
+                                                                 HandleObject promiseToResolve,
+                                                                 HandleObject thenable);
+
 static bool Promise_then(JSContext* cx, unsigned argc, Value* vp);
 static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled,
                               HandleValue onRejected, MutableHandleValue rval, bool rvalUsed);
@@ -609,18 +629,29 @@ ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resoluti
     // different realm in the same compartment, and the `then` property is the
     // original Promise.prototype.then function from the current realm, we
     // skip storing/calling it.
+    // And additionally require that |promise| itself is also a built-in
+    // Promise object from the same compartment, so the fast path doesn't need
+    // to cope with wrappers.
+    bool isBuiltinThen = false;
     if (resolution->is<PromiseObject>() &&
         resolution->as<PromiseObject>().compartment() == cx->compartment() &&
         IsNativeFunction(thenVal, Promise_then) &&
-        thenVal.toObject().as<JSFunction>().realm() == cx->realm())
+        thenVal.toObject().as<JSFunction>().realm() == cx->realm() &&
+        promise->is<PromiseObject>() &&
+        promise->as<PromiseObject>().compartment() == cx->compartment())
     {
-        thenVal = UndefinedValue();
+        isBuiltinThen = true;
     }
 
     // Step 12.
-    RootedValue promiseVal(cx, ObjectValue(*promise));
-    if (!EnqueuePromiseResolveThenableJob(cx, promiseVal, resolutionVal, thenVal))
-        return false;
+    if (!isBuiltinThen) {
+        RootedValue promiseVal(cx, ObjectValue(*promise));
+        if (!EnqueuePromiseResolveThenableJob(cx, promiseVal, resolutionVal, thenVal))
+            return false;
+    } else {
+        if (!EnqueuePromiseResolveThenableBuiltinJob(cx, promise, resolution))
+            return false;
+    }
 
     // Step 13.
     return true;
@@ -739,7 +770,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     }
 
     // Create the JS function to call when the job is triggered.
-    RootedAtom funName(cx, cx->names().empty);
+    HandlePropertyName funName = cx->names().empty;
     RootedFunction job(cx, NewNativeFunction(cx, PromiseReactionJob, 0, funName,
                                              gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
     if (!job)
@@ -948,7 +979,7 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // Step 3 (omitted).
 
     // Step 4.
-    RootedAtom funName(cx, cx->names().empty);
+    HandlePropertyName funName = cx->names().empty;
     RootedFunction executor(cx, NewNativeFunction(cx, GetCapabilitiesExecutor, 2, funName,
                                                   gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
     if (!executor)
@@ -1280,28 +1311,14 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
  * Callback for resolving a thenable, to be invoked by the embedding during
  * its processing of the Promise job queue.
  *
- * See http://www.ecma-international.org/ecma-262/7.0/index.html#sec-jobs-and-job-queues
+ * See https://tc39.github.io/ecma262/#sec-jobs-and-job-queues
  *
  * A PromiseResolveThenableJob is set as the native function of an extended
  * JSFunction object, with all information required for the job's
  * execution stored in the function's extended slots.
  *
- * Usage of the function's extended slots is as follows:
- * ThenableJobSlot_Handler: The handler to use as the Promise reaction.
- *                          This can be PromiseHandlerIdentity,
- *                          PromiseHandlerThrower, PromiseHandlerThen, or a
- *                          callable. In the latter case, it's guaranteed to be
- *                          an object from the same compartment as the
- *                          PromiseReactionJob.
- * ThenableJobSlot_JobData: JobData - a, potentially CCW-wrapped, dense list
- *                          containing data required for proper execution of
- *                          the reaction.
- *
- * The JobData list has the following entries:
- * ThenableJobDataSlot_Promise: The Promise to resolve using the given
- *                              thenable.
- * ThenableJobDataSlot_Thenable: The thenable to use as the receiver when
- *                               calling the `then` function.
+ * Usage of the function's extended slots is described in the ThenableJobSlots
+ * enum.
  */
 static bool
 PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
@@ -1310,9 +1327,8 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
 
     RootedFunction job(cx, &args.callee().as<JSFunction>());
     RootedValue then(cx, job->getExtendedSlot(ThenableJobSlot_Handler));
-    MOZ_ASSERT(then.isObject() || then.isInt32());
-    MOZ_ASSERT_IF(then.isObject(), !IsWrapper(&then.toObject()));
-    MOZ_ASSERT_IF(then.isInt32(), then.toInt32() == PromiseHandlerThen);
+    MOZ_ASSERT(then.isObject());
+    MOZ_ASSERT(!IsWrapper(&then.toObject()));
     RootedNativeObject jobArgs(cx, &job->getExtendedSlot(ThenableJobSlot_JobData)
                                     .toObject().as<NativeObject>());
 
@@ -1326,28 +1342,14 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 2.
+    FixedInvokeArgs<2> args2(cx);
+    args2[0].setObject(*resolveFn);
+    args2[1].setObject(*rejectFn);
+
+    // In difference to the usual pattern, we return immediately on success.
     RootedValue rval(cx);
-    if (then.isObject()) {
-        FixedInvokeArgs<2> args2(cx);
-        args2[0].setObject(*resolveFn);
-        args2[1].setObject(*rejectFn);
-
-        // In difference to the usual pattern, we return immediately on success.
-        if (Call(cx, then, thenable, args2, &rval))
-            return true;
-    } else {
-        RootedValue resolveVal(cx, ObjectValue(*resolveFn));
-        RootedValue rejectVal(cx, ObjectValue(*rejectFn));
-
-        // Same as above, we return immediately on success.
-        Rooted<PromiseObject*> thenablePromise(cx, &thenable.toObject().as<PromiseObject>());
-        RootedObject resultPromise(cx);
-        if (OriginalPromiseThen(cx, thenablePromise, resolveVal, rejectVal, &resultPromise,
-                                CreateDependentPromise::SkipIfCtorUnobservable))
-        {
-            return true;
-        }
-    }
+    if (Call(cx, then, thenable, args2, &rval))
+        return true;
 
     if (!MaybeGetAndClearException(cx, &rval))
         return false;
@@ -1360,13 +1362,64 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /**
+ * Specialization of PromiseResolveThenableJob when the `thenable` is a
+ * built-in Promise object and the `then` property is the built-in
+ * `Promise.prototype.then` function.
+ *
+ * A PromiseResolveBuiltinThenableJob is set as the native function of an
+ * extended JSFunction object, with all information required for the job's
+ * execution stored in the function's extended slots.
+ *
+ * Usage of the function's extended slots is described in the
+ * BuiltinThenableJobSlots enum.
+ */
+static bool
+PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedFunction job(cx, &args.callee().as<JSFunction>());
+    RootedObject promise(cx, &job->getExtendedSlot(BuiltinThenableJobSlot_Promise).toObject());
+    RootedObject thenable(cx, &job->getExtendedSlot(BuiltinThenableJobSlot_Thenable).toObject());
+
+    assertSameCompartment(cx, promise, thenable);
+    MOZ_ASSERT(promise->is<PromiseObject>());
+    MOZ_ASSERT(thenable->is<PromiseObject>());
+
+    // Step 1.
+    RootedObject resolveFn(cx);
+    RootedObject rejectFn(cx);
+    if (!CreateResolvingFunctions(cx, promise, &resolveFn, &rejectFn))
+        return false;
+
+    // Step 2.
+    RootedValue resolveVal(cx, ObjectValue(*resolveFn));
+    RootedValue rejectVal(cx, ObjectValue(*rejectFn));
+
+    // In difference to the usual pattern, we return immediately on success.
+    RootedObject resultPromise(cx);
+    if (OriginalPromiseThen(cx, thenable.as<PromiseObject>(), resolveVal, rejectVal,
+                            &resultPromise, CreateDependentPromise::SkipIfCtorUnobservable))
+    {
+        return true;
+    }
+
+    RootedValue exception(cx);
+    if (!MaybeGetAndClearException(cx, &exception))
+        return false;
+
+    FixedInvokeArgs<1> rejectArgs(cx);
+    rejectArgs[0].set(exception);
+
+    return Call(cx, rejectVal, UndefinedHandleValue, rejectArgs, &exception);
+}
+
+/**
  * Tells the embedding to enqueue a Promise resolve thenable job, based on
  * three parameters:
  * promiseToResolve_ - The promise to resolve, obviously.
  * thenable_ - The thenable to resolve the Promise with.
- * thenVal - The `then` function to invoke with the `thenable` as the receiver,
- *           or undefined if thenVal was the original Promise.prototype.then
- *           from the same realm.
+ * thenVal - The `then` function to invoke with the `thenable` as the receiver.
  */
 static MOZ_MUST_USE bool
 EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
@@ -1381,29 +1434,21 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     // That guarantees that the embedding ends up with the right entry global.
     // This is relevant for some html APIs like fetch that derive information
     // from said global.
-    RootedObject then(cx);
-    mozilla::Maybe<AutoRealm> ar;
+    RootedObject then(cx, CheckedUnwrap(&thenVal.toObject()));
+    AutoRealm ar(cx, then);
 
-    if (thenVal.isObject()) {
-        then = CheckedUnwrap(&thenVal.toObject());
-        ar.emplace(cx, then);
-    }
-
-    RootedAtom funName(cx, cx->names().empty);
+    HandlePropertyName funName = cx->names().empty;
     RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
                                              gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
     if (!job)
         return false;
 
     // Store the `then` function on the callback.
-    if (then)
-        job->setExtendedSlot(ThenableJobSlot_Handler, ObjectValue(*then));
-    else
-        job->setExtendedSlot(ThenableJobSlot_Handler, Int32Value(PromiseHandlerThen));
+    job->setExtendedSlot(ThenableJobSlot_Handler, ObjectValue(*then));
 
     // Create a dense array to hold the data needed for the reaction job to
     // work.
-    // See the doc comment for PromiseResolveThenableJob for the layout.
+    // The layout is described in the ThenableJobDataIndices enum.
     RootedArrayObject data(cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataLength));
     if (!data ||
         data->ensureDenseElements(cx, 0, ThenableJobDataLength) != DenseElementResult::Success)
@@ -1430,6 +1475,34 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
 
     RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
     return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
+}
+
+/**
+ * Tells the embedding to enqueue a Promise resolve thenable built-in job,
+ * based on two parameters:
+ * promiseToResolve - The promise to resolve, obviously.
+ * thenable - The thenable to resolve the Promise with.
+ */
+static MOZ_MUST_USE bool
+EnqueuePromiseResolveThenableBuiltinJob(JSContext* cx, HandleObject promiseToResolve,
+                                        HandleObject thenable)
+{
+    assertSameCompartment(cx, promiseToResolve, thenable);
+    MOZ_ASSERT(promiseToResolve->is<PromiseObject>());
+    MOZ_ASSERT(thenable->is<PromiseObject>());
+
+    HandlePropertyName funName = cx->names().empty;
+    RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveBuiltinThenableJob, 0, funName,
+                                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+    if (!job)
+        return false;
+
+    // Store the promise and the thenable on the reaction job.
+    job->setExtendedSlot(BuiltinThenableJobSlot_Promise, ObjectValue(*promiseToResolve));
+    job->setExtendedSlot(BuiltinThenableJobSlot_Thenable, ObjectValue(*thenable));
+
+    RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
+    return cx->runtime()->enqueuePromiseJob(cx, job, promiseToResolve, incumbentGlobal);
 }
 
 static MOZ_MUST_USE bool
