@@ -4,11 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SharedLibrary('clang-plugin')
+HostSharedLibrary('clang-plugin')
 
-SOURCES += ['!ThirdPartyPaths.cpp']
+HOST_SOURCES += ['!ThirdPartyPaths.cpp']
 
-UNIFIED_SOURCES += [
+HOST_SOURCES += [
     'ArithmeticArgChecker.cpp',
     'AssertAssignmentChecker.cpp',
     'CanRunScriptChecker.cpp',
@@ -43,12 +43,12 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [
+    HOST_SOURCES += [
         'LoadLibraryUsageChecker.cpp',
     ]
 
 if CONFIG['ENABLE_MOZSEARCH_PLUGIN']:
-    UNIFIED_SOURCES += [
+    HOST_SOURCES += [
         'mozsearch-plugin/FileOperations.cpp',
         'mozsearch-plugin/JSONFormatter.cpp',
         'mozsearch-plugin/MozsearchIndexer.cpp',
@@ -62,13 +62,13 @@ third_party_paths.inputs = [
     '/tools/rewriting/ThirdPartyPaths.txt',
 ]
 
-DisableStlWrapping()
-NoVisibilityFlags()
+HOST_COMPILE_FLAGS['STL'] = []
+HOST_COMPILE_FLAGS['VISIBILITY'] = []
 
 # libc++ is required to build plugins against clang on OS X.
 if CONFIG['HOST_OS_ARCH'] == 'Darwin':
-    CXXFLAGS += ['-stdlib=libc++']
-    LDFLAGS += ['-lc++']
+    HOST_CXXFLAGS += ['-stdlib=libc++']
+    HOST_LDFLAGS += ['-lc++']
 
 DIRS += [
     'tests',
@@ -83,21 +83,7 @@ else:
     extra_cxxflags = ['-fno-rtti', '-fno-exceptions']
 
 if CONFIG['LLVM_CXXFLAGS']:
-    COMPILE_FLAGS['OS_CXXFLAGS'] = CONFIG['LLVM_CXXFLAGS'] + extra_cxxflags
-
-COMPILE_FLAGS['CLANG_PLUGIN'] = []
-COMPILE_FLAGS['OPTIMIZE'] = []
-COMPILE_FLAGS['DEBUG'] = []
-COMPILE_FLAGS['OS_COMPILE_CXXFLAGS'] = []
-
-LINK_FLAGS['OS'] = CONFIG['LLVM_LDFLAGS'] + CONFIG['CLANG_LDFLAGS']
-# The ldflags above override most other categories.
-for var in ('LINKER', 'OPTIMIZE'):
-    LINK_FLAGS[var] = []
-
-if CONFIG['HOST_OS_ARCH'] == 'Linux' and CONFIG['OS_ARCH'] == 'Darwin':
-    # Don't pass OSX linker arguments.
-    LINK_FLAGS['FIX_LINK_PATHS'] = []
+    HOST_COMPILE_FLAGS['HOST_CXXFLAGS'] = CONFIG['LLVM_CXXFLAGS'] + extra_cxxflags
 
 # Avoid -DDEBUG=1 on the command line, which conflicts with a #define
 # DEBUG(...) in llvm headers.

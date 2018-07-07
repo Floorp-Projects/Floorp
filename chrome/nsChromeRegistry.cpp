@@ -108,9 +108,6 @@ NS_INTERFACE_MAP_BEGIN(nsChromeRegistry)
   NS_INTERFACE_MAP_ENTRY(nsIChromeRegistry)
   NS_INTERFACE_MAP_ENTRY(nsIXULChromeRegistry)
   NS_INTERFACE_MAP_ENTRY(nsIToolkitChromeRegistry)
-#ifdef MOZ_XUL
-  NS_INTERFACE_MAP_ENTRY(nsIXULOverlayProvider)
-#endif
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChromeRegistry)

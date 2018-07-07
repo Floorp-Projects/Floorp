@@ -60,7 +60,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_edit_button": "Upravit tuto stránku",
   "topsites_form_add_header": "Nová top stránka",
   "topsites_form_edit_header": "Upravit top stránku",
-  "topsites_form_title_label": "Nadpis",
+  "topsites_form_title_label": "Název stránky",
   "topsites_form_title_placeholder": "Zadejte název",
   "topsites_form_url_label": "URL",
   "topsites_form_image_url_label": "URL adresa vlastního obrázku",

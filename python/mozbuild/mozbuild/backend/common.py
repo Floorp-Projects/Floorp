@@ -28,6 +28,7 @@ from mozbuild.frontend.data import (
     GeneratedSources,
     GnProjectData,
     HostLibrary,
+    HostGeneratedSources,
     HostRustLibrary,
     IPDLCollection,
     RustLibrary,
@@ -154,7 +155,7 @@ class CommonBackend(BuildBackend):
             self._binaries.shared_libraries.append(obj)
             return False
 
-        elif isinstance(obj, GeneratedSources):
+        elif isinstance(obj, (GeneratedSources, HostGeneratedSources)):
             self._handle_generated_sources(obj.files)
             return False
 

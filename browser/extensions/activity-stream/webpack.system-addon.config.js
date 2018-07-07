@@ -6,6 +6,7 @@ const absolute = relPath => path.join(__dirname, relPath);
 const resourcePathRegEx = /^resource:\/\/activity-stream\//;
 
 module.exports = {
+  mode: "none",
   entry: absolute("content-src/activity-stream.jsx"),
   output: {
     path: absolute("data/content"),

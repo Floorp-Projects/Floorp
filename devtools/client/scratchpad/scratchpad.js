@@ -1118,63 +1118,69 @@ var Scratchpad = {
    *        get the following arguments:
    *        1) the nsresult status code for the import operation.
    *        2) the data that was read from the file, if any.
+   * @return Promise resolved with array of callback args
    */
   importFromFile: function SP_importFromFile(aFile, aSilentError, aCallback) {
-    // Prevent file type detection.
-    const channel = NetUtil.newChannel({
-      uri: NetUtil.newURI(aFile),
-      loadingNode: window.document,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
-    channel.contentType = "application/javascript";
+    return new Promise(resolve => {
+      // Prevent file type detection.
+      const channel = NetUtil.newChannel({
+        uri: NetUtil.newURI(aFile),
+        loadingNode: window.document,
+        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+      });
+      channel.contentType = "application/javascript";
 
-    this.notificationBox.removeAllNotifications(false);
+      this.notificationBox.removeAllNotifications(false);
 
-    NetUtil.asyncFetch(channel, (aInputStream, aStatus) => {
-      let content = null;
+      NetUtil.asyncFetch(channel, (aInputStream, aStatus) => {
+        let content = null;
 
-      if (Components.isSuccessCode(aStatus)) {
-        const charsets = this._getApplicableCharsets();
-        content = NetUtil.readInputStreamToString(aInputStream,
-                                                  aInputStream.available());
-        content = this._getUnicodeContent(content, charsets);
-        if (!content) {
-          const message = this.strings.formatStringFromName(
-            "importFromFile.convert.failed",
-            [ charsets.join(", ") ],
-            1);
-          this.notificationBox.appendNotification(
-            message,
-            "file-import-convert-failed",
-            null,
-            this.notificationBox.PRIORITY_CRITICAL_MEDIUM,
-            null);
-          if (aCallback) {
-            aCallback.call(this, aStatus, content);
+        if (Components.isSuccessCode(aStatus)) {
+          const charsets = this._getApplicableCharsets();
+          content = NetUtil.readInputStreamToString(aInputStream,
+            aInputStream.available());
+          content = this._getUnicodeContent(content, charsets);
+          if (!content) {
+            const message = this.strings.formatStringFromName(
+              "importFromFile.convert.failed",
+              [charsets.join(", ")],
+              1);
+            this.notificationBox.appendNotification(
+              message,
+              "file-import-convert-failed",
+              null,
+              this.notificationBox.PRIORITY_CRITICAL_MEDIUM,
+              null);
+            if (aCallback) {
+              aCallback.call(this, aStatus, content);
+            }
+            resolve([aStatus, content]);
+            return;
           }
-          return;
-        }
-        // Check to see if the first line is a mode-line comment.
-        const line = content.split("\n")[0];
-        const modeline = this._scanModeLine(line);
-        const chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
+          // Check to see if the first line is a mode-line comment.
+          const line = content.split("\n")[0];
+          const modeline = this._scanModeLine(line);
+          const chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
 
-        if (chrome && modeline["-sp-context"] === "browser") {
-          this.setBrowserContext();
-        }
+          if (chrome && modeline["-sp-context"] === "browser") {
+            this.setBrowserContext();
+          }
 
-        this.editor.setText(content);
-        this.editor.clearHistory();
-        this.dirty = false;
-        document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
-      } else if (!aSilentError) {
-        window.alert(this.strings.GetStringFromName("openFile.failed"));
-      }
-      this.setFilename(aFile.path);
-      this.setRecentFile(aFile);
-      if (aCallback) {
-        aCallback.call(this, aStatus, content);
-      }
+          this.editor.setText(content);
+          this.editor.clearHistory();
+          this.dirty = false;
+          document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
+        } else if (!aSilentError) {
+          window.alert(this.strings.GetStringFromName("openFile.failed"));
+        }
+        this.setFilename(aFile.path);
+        this.setRecentFile(aFile);
+        if (aCallback) {
+          aCallback.call(this, aStatus, content);
+        }
+        resolve([aStatus, content]);
+      });
     });
   },
 
@@ -1404,24 +1410,28 @@ var Scratchpad = {
    *
    * @param function aCallback
    *        Optional function you want to call when file is saved
+   * @return Promise
    */
   saveFile: function SP_saveFile(aCallback) {
     if (!this.filename) {
       return this.saveFileAs(aCallback);
     }
 
-    const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(this.filename);
+    return new Promise(resolve => {
+      const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      file.initWithPath(this.filename);
 
-    this.exportToFile(file, true, false, aStatus => {
-      if (Components.isSuccessCode(aStatus)) {
-        this.dirty = false;
-        document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
-        this.setRecentFile(file);
-      }
-      if (aCallback) {
-        aCallback(aStatus);
-      }
+      this.exportToFile(file, true, false, aStatus => {
+        if (Components.isSuccessCode(aStatus)) {
+          this.dirty = false;
+          document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
+          this.setRecentFile(file);
+        }
+        if (aCallback) {
+          aCallback(aStatus);
+        }
+        resolve(aStatus);
+      });
     });
   },
 
@@ -1430,30 +1440,34 @@ var Scratchpad = {
    *
    * @param function aCallback
    *        Optional function you want to call when file is saved
+   * @return Promise
    */
   saveFileAs: function SP_saveFileAs(aCallback) {
-    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    const fpCallback = aResult => {
-      if (aResult != Ci.nsIFilePicker.returnCancel) {
-        this.setFilename(fp.file.path);
-        this.exportToFile(fp.file, true, false, aStatus => {
-          if (Components.isSuccessCode(aStatus)) {
-            this.dirty = false;
-            this.setRecentFile(fp.file);
-          }
-          if (aCallback) {
-            aCallback(aStatus);
-          }
-        });
-      }
-    };
+    return new Promise(resolve => {
+      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      const fpCallback = aResult => {
+        if (aResult != Ci.nsIFilePicker.returnCancel) {
+          this.setFilename(fp.file.path);
+          this.exportToFile(fp.file, true, false, aStatus => {
+            if (Components.isSuccessCode(aStatus)) {
+              this.dirty = false;
+              this.setRecentFile(fp.file);
+            }
+            if (aCallback) {
+              aCallback(aStatus);
+            }
+            resolve(aStatus);
+          });
+        }
+      };
 
-    fp.init(window, this.strings.GetStringFromName("saveFileAs"),
-            Ci.nsIFilePicker.modeSave);
-    fp.defaultString = "scratchpad.js";
-    fp.appendFilter("JavaScript Files", "*.js; *.jsm; *.json");
-    fp.appendFilter("All Files", "*.*");
-    fp.open(fpCallback);
+      fp.init(window, this.strings.GetStringFromName("saveFileAs"),
+        Ci.nsIFilePicker.modeSave);
+      fp.defaultString = "scratchpad.js";
+      fp.appendFilter("JavaScript Files", "*.js; *.jsm; *.json");
+      fp.appendFilter("All Files", "*.*");
+      fp.open(fpCallback);
+    });
   },
 
   /**

@@ -10,6 +10,7 @@ using the buildmc:html npm task.
 `;
 
 module.exports = Object.assign({}, webpackConfig, {
+  mode: "none",
   target: "node",
   devtool: "sourcemap",
   entry: path.join(__dirname, srcPath),

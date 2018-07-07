@@ -65,6 +65,13 @@ public:
   void DeleteMedium(const nsAString& aMedium, ErrorResult& aRv);
   void AppendMedium(const nsAString& aMedium, ErrorResult& aRv);
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 protected:
   MediaList(const nsAString& aMedia, CallerType);
   MediaList();

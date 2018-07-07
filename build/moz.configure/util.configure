@@ -19,20 +19,13 @@ def configure_error(message):
     their inputs from moz.configure usage.'''
     raise ConfigureError(message)
 
-# A wrapper to obtain a process' output that returns the output generated
-# by running the given command if it exits normally, and streams that
-# output to log.debug and calls die or the given error callback if it
-# does not.
 
-
+# A wrapper to obtain a process' output and return code.
+# Returns a tuple (retcode, stdout, stderr).
 @imports(_from='__builtin__', _import='unicode')
 @imports('subprocess')
-@imports('sys')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.shellutil', _import='quote')
-def check_cmd_output(*args, **kwargs):
-    onerror = kwargs.pop('onerror', None)
-
+def get_cmd_output(*args, **kwargs):
     # subprocess on older Pythons can't handle unicode keys or values in
     # environment dicts. Normalize automagically so callers don't have to
     # deal with this.
@@ -49,12 +42,24 @@ def check_cmd_output(*args, **kwargs):
 
         kwargs['env'] = normalized_env
 
+    log.debug('Executing: `%s`', quote(*args))
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, **kwargs)
+    stdout, stderr = proc.communicate()
+    return proc.wait(), stdout, stderr
+
+
+# A wrapper to obtain a process' output that returns the output generated
+# by running the given command if it exits normally, and streams that
+# output to log.debug and calls die or the given error callback if it
+# does not.
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='mozbuild.shellutil', _import='quote')
+def check_cmd_output(*args, **kwargs):
+    onerror = kwargs.pop('onerror', None)
+
     with log.queue_debug():
-        log.debug('Executing: `%s`', quote(*args))
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, **kwargs)
-        stdout, stderr = proc.communicate()
-        retcode = proc.wait()
+        retcode, stdout, stderr = get_cmd_output(*args, **kwargs)
         if retcode == 0:
             return stdout
 

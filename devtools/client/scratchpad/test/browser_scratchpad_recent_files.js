@@ -32,24 +32,24 @@ var gFileContent02 = "hello.world.02('bug651942');";
 var gFileContent03 = "hello.world.03('bug651942');";
 var gFileContent04 = "hello.world.04('bug651942');";
 
-function startTest() {
+async function startTest() {
   gScratchpad = gScratchpadWindow.Scratchpad;
 
-  gFile01 = createAndLoadTemporaryFile(gFile01, gFileName01, gFileContent01);
-  gFile02 = createAndLoadTemporaryFile(gFile02, gFileName02, gFileContent02);
-  gFile03 = createAndLoadTemporaryFile(gFile03, gFileName03, gFileContent03);
+  gFile01 = await createAndLoadTemporaryFile(gFileName01, gFileContent01);
+  gFile02 = await createAndLoadTemporaryFile(gFileName02, gFileContent02);
+  gFile03 = await createAndLoadTemporaryFile(gFileName03, gFileContent03);
 }
 
 // Test to see if the three files we created in the 'startTest()'-method have
 // been added to the list of recent files.
-function testAddedToRecent() {
+async function testAddedToRecent() {
   lists.recentFiles01 = gScratchpad.getRecentFiles();
 
   is(lists.recentFiles01.length, 3,
      "Temporary files created successfully and added to list of recent files.");
 
   // Create a 4th file, this should clear the oldest file.
-  gFile04 = createAndLoadTemporaryFile(gFile04, gFileName04, gFileContent04);
+  gFile04 = await createAndLoadTemporaryFile(gFileName04, gFileContent04);
 }
 
 // We have opened a 4th file. Test to see if the oldest recent file was removed,
@@ -175,35 +175,27 @@ function testClearedAll() {
   finishTest();
 }
 
-function createAndLoadTemporaryFile(aFile, aFileName, aFileContent) {
+async function createAndLoadTemporaryFile(aFileName, aFileContent) {
+  info(`Create file: ${aFileName}`);
+
   // Create a temporary file.
-  aFile = FileUtils.getFile("TmpD", [aFileName]);
+  const aFile = FileUtils.getFile("TmpD", [aFileName]);
   aFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // Write the temporary file.
-  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
-             .createInstance(Ci.nsIFileOutputStream);
-  fout.init(aFile.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
-            0o644, fout.DEFER_OPEN);
+  await OS.File.writeAtomic(aFile.path, aFileContent);
 
   gScratchpad.setFilename(aFile.path);
-  gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsIFile), true,
-                            fileImported);
-  gScratchpad.saveFile(fileSaved);
-
-  return aFile;
-}
-
-function fileImported(aStatus) {
-  ok(Components.isSuccessCode(aStatus),
+  let [status] = await gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsIFile), true);
+  ok(Components.isSuccessCode(status),
      "the temporary file was imported successfully with Scratchpad");
-}
-
-function fileSaved(aStatus) {
-  ok(Components.isSuccessCode(aStatus),
+  status = await gScratchpad.saveFile();
+  ok(Components.isSuccessCode(status),
      "the temporary file was saved successfully with Scratchpad");
-
   checkIfMenuIsPopulated();
+
+  info(`File created: ${aFileName}`);
+  return aFile;
 }
 
 function checkIfMenuIsPopulated() {
@@ -245,47 +237,57 @@ var PreferenceObserver = {
     this._initialized = true;
   },
 
-  observe: function PO_observe(aMessage, aTopic, aData) {
+  observe: async function PO_observe(aMessage, aTopic, aData) {
     if (aTopic != "nsPref:changed") {
       return;
     }
 
-    switch (this.timesFired) {
-      case 0:
-        this.timesFired = 1;
-        break;
-      case 1:
-        this.timesFired = 2;
-        break;
-      case 2:
-        this.timesFired = 3;
-        testAddedToRecent();
-        break;
-      case 3:
-        this.timesFired = 4;
-        testOverwriteRecent();
-        break;
-      case 4:
-        this.timesFired = 5;
-        testOpenOldestRecent();
-        break;
-      case 5:
-        this.timesFired = 6;
-        testHideMenu();
-        break;
-      case 6:
-        this.timesFired = 7;
-        testChangedMaxRecent();
-        break;
-      case 7:
-        this.timesFired = 8;
-        testOpenDeletedFile();
-        break;
-      case 8:
-        this.timesFired = 9;
-        testClearedAll();
-        break;
+    if (this._inProgress) {
+      await this._inProgress;
     }
+
+    this._inProgress = new Promise(async resolve => {
+      info(`Times fired: ${this.timesFired}`);
+      switch (this.timesFired) {
+        case 0:
+          this.timesFired = 1;
+          break;
+        case 1:
+          this.timesFired = 2;
+          break;
+        case 2:
+          this.timesFired = 3;
+          await testAddedToRecent();
+          break;
+        case 3:
+          this.timesFired = 4;
+          testOverwriteRecent();
+          break;
+        case 4:
+          this.timesFired = 5;
+          testOpenOldestRecent();
+          break;
+        case 5:
+          this.timesFired = 6;
+          testHideMenu();
+          break;
+        case 6:
+          this.timesFired = 7;
+          testChangedMaxRecent();
+          break;
+        case 7:
+          this.timesFired = 8;
+          testOpenDeletedFile();
+          break;
+        case 8:
+          this.timesFired = 9;
+          testClearedAll();
+          break;
+      }
+
+      this._inProgress = null;
+      resolve();
+    });
   },
 
   uninit: function PO_uninit() {

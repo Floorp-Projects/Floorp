@@ -41,11 +41,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
                      const char16_t *someData) override;
 
-#ifdef MOZ_XUL
-  NS_IMETHOD GetXULOverlays(nsIURI *aURI,
-                            nsISimpleEnumerator **_retval) override;
-#endif
-
   // If aChild is non-null then it is a new child to notify. If aChild is
   // null, then we have installed new chrome and we are resetting all of our
   // children's registered chrome.
@@ -114,40 +109,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
     nsProviderArray  skins;
   };
 
-  class OverlayListEntry : public nsURIHashKey
-  {
-   public:
-    typedef nsURIHashKey::KeyType        KeyType;
-    typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
-
-    explicit OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
-    OverlayListEntry(OverlayListEntry&& toMove) : nsURIHashKey(std::move(toMove)),
-                                                  mArray(std::move(toMove.mArray)) { }
-    ~OverlayListEntry() { }
-
-    void AddURI(nsIURI* aURI);
-
-    nsCOMArray<nsIURI> mArray;
-  };
-
-  class OverlayListHash
-  {
-   public:
-    OverlayListHash() { }
-    ~OverlayListHash() { }
-
-    void Add(nsIURI* aBase, nsIURI* aOverlay);
-    void Clear() { mTable.Clear(); }
-    const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);
-
-   private:
-    nsTHashtable<OverlayListEntry> mTable;
-  };
-
-  // Hashes on the file to be overlaid (chrome://browser/content/browser.xul)
-  // to a list of overlays
-  OverlayListHash mOverlayHash;
-
   bool mProfileLoaded;
   bool mDynamicRegistration;
 
@@ -162,8 +123,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                               char *const * argv, int flags) override;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
                             char *const * argv, int flags) override;
-  virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) override;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, int flags) override;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,

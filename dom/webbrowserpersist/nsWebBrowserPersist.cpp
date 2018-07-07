@@ -83,7 +83,6 @@ struct nsWebBrowserPersist::DocData
     nsCOMPtr<nsIURI> mBaseURI;
     nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
     nsCOMPtr<nsIURI> mFile;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsCString mCharset;
 };
 
@@ -100,6 +99,7 @@ struct nsWebBrowserPersist::URIData
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mDataPath;
     nsCOMPtr<nsIURI> mRelativeDocumentURI;
+    nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
     nsCString mRelativePathToData;
     nsCString mCharset;
 
@@ -604,12 +604,6 @@ nsWebBrowserPersist::SerializeNextFile()
     }
 
     if (urisToPersist > 0) {
-        nsCOMPtr<nsIPrincipal> docPrincipal;
-        //XXXgijs I *think* this is already always true, but let's be sure.
-        MOZ_ASSERT(mDocList.Length() > 0,
-            "Should have the document for any walked URIs to persist!");
-        nsresult rv = mDocList.ElementAt(0)->mDocument->
-            GetPrincipal(getter_AddRefs(docPrincipal));
         NS_ENSURE_SUCCESS_VOID(rv);
         // Persist each file in the uri map. The document(s)
         // will be saved after the last one of these is saved.
@@ -637,7 +631,7 @@ nsWebBrowserPersist::SerializeNextFile()
 
             // The Referrer Policy doesn't matter here since the referrer is
             // nullptr.
-            rv = SaveURIInternal(uri, docPrincipal, 0, nullptr,
+            rv = SaveURIInternal(uri, data->mTriggeringPrincipal, 0, nullptr,
                                  mozilla::net::RP_Unset, nullptr, nullptr,
                                  fileAsURI, true, mIsPrivate);
             // If SaveURIInternal fails, then it will have called EndDownload,
@@ -1714,7 +1708,7 @@ NS_IMETHODIMP
 nsWebBrowserPersist::OnWalk::VisitResource(nsIWebBrowserPersistDocument* aDoc,
                                            const nsACString& aURI)
 {
-    return mParent->StoreURI(nsAutoCString(aURI).get());
+    return mParent->StoreURI(nsAutoCString(aURI).get(), aDoc);
 }
 
 NS_IMETHODIMP
@@ -1725,14 +1719,14 @@ nsWebBrowserPersist::OnWalk::VisitDocument(nsIWebBrowserPersistDocument* aDoc,
     nsAutoCString uriSpec;
     nsresult rv = aSubDoc->GetDocumentURI(uriSpec);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mParent->StoreURI(uriSpec.get(), false, &data);
+    rv = mParent->StoreURI(uriSpec.get(), aDoc, false, &data);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!data) {
         // If the URI scheme isn't persistable, then don't persist.
         return NS_OK;
     }
     data->mIsSubFrame = true;
-    return mParent->SaveSubframeContent(aSubDoc, uriSpec, data);
+    return mParent->SaveSubframeContent(aSubDoc, aDoc, uriSpec, data);
 }
 
 
@@ -2466,7 +2460,8 @@ nsWebBrowserPersist::CalcTotalProgress()
 
 nsresult
 nsWebBrowserPersist::StoreURI(
-    const char *aURI, bool aNeedsPersisting, URIData **aData)
+    const char *aURI, nsIWebBrowserPersistDocument *aDoc,
+    bool aNeedsPersisting, URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
@@ -2477,12 +2472,13 @@ nsWebBrowserPersist::StoreURI(
                             mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return StoreURI(uri, aNeedsPersisting, aData);
+    return StoreURI(uri, aDoc, aNeedsPersisting, aData);
 }
 
 nsresult
 nsWebBrowserPersist::StoreURI(
-    nsIURI *aURI, bool aNeedsPersisting, URIData **aData)
+    nsIURI *aURI, nsIWebBrowserPersistDocument *aDoc,
+    bool aNeedsPersisting, URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aURI);
     if (aData)
@@ -2507,7 +2503,7 @@ nsWebBrowserPersist::StoreURI(
     }
 
     URIData *data = nullptr;
-    MakeAndStoreLocalFilenameInURIMap(aURI, aNeedsPersisting, &data);
+    MakeAndStoreLocalFilenameInURIMap(aURI, aDoc, aNeedsPersisting, &data);
     if (aData)
     {
         *aData = data;
@@ -2612,6 +2608,7 @@ nsWebBrowserPersist::DocumentEncoderExists(const char *aContentType)
 nsresult
 nsWebBrowserPersist::SaveSubframeContent(
     nsIWebBrowserPersistDocument *aFrameContent,
+    nsIWebBrowserPersistDocument *aParentDocument,
     const nsCString& aURISpec,
     URIData *aData)
 {
@@ -2685,7 +2682,7 @@ nsWebBrowserPersist::SaveSubframeContent(
         toWalk->mDataPath = frameDataURI;
         mWalkStack.AppendElement(std::move(toWalk));
     } else {
-        rv = StoreURI(aURISpec.get());
+        rv = StoreURI(aURISpec.get(), aParentDocument);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2719,7 +2716,7 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
 // we store the current location as the key (absolutized version of domnode's attribute's value)
 nsresult
 nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
-    nsIURI *aURI, bool aNeedsPersisting, URIData **aData)
+    nsIURI *aURI, nsIWebBrowserPersistDocument *aDoc, bool aNeedsPersisting, URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
@@ -2761,6 +2758,8 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     data->mRelativePathToData = mCurrentRelativePathToData;
     data->mRelativeDocumentURI = mTargetBaseURI;
     data->mCharset = mCurrentCharset;
+
+    aDoc->GetPrincipal(getter_AddRefs(data->mTriggeringPrincipal));
 
     if (aNeedsPersisting)
         mCurrentThingsToPersist++;
