@@ -7774,10 +7774,6 @@ var RestoreLastSessionObserver = {
                                           Ci.nsISupportsWeakReference])
 };
 
-function restoreLastSession() {
-  SessionStore.restoreLastSession();
-}
-
 /* Observes menus and adjusts their size for better
  * usability when opened via a touch screen. */
 var MenuTouchModeObserver = {
