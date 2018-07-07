@@ -148,6 +148,13 @@ MatchUnicodeString(const UNICODE_STRING& aStr, bool (*aPredicate)(WCHAR))
 inline bool
 Contains12DigitHexString(const UNICODE_STRING& aLeafName)
 {
+  // Quick check: If the string is too short, don't bother
+  // (We need at least 12 hex digits, one char for '.', and 3 for extension)
+  const USHORT kMinLen = (12 + 1 + 3) * sizeof(wchar_t);
+  if (aLeafName.Length < kMinLen) {
+    return false;
+  }
+
   uint16_t start, end;
   if (!FindCharInUnicodeString(aLeafName, L'.', start)) {
     return false;
@@ -173,6 +180,13 @@ Contains12DigitHexString(const UNICODE_STRING& aLeafName)
 inline bool
 IsFileNameAtLeast16HexDigits(const UNICODE_STRING& aLeafName)
 {
+  // Quick check: If the string is too short, don't bother
+  // (We need 16 hex digits, one char for '.', and 3 for extension)
+  const USHORT kMinLen = (16 + 1 + 3) * sizeof(wchar_t);
+  if (aLeafName.Length < kMinLen) {
+    return false;
+  }
+
   uint16_t dotIndex;
   if (!FindCharInUnicodeString(aLeafName, L'.', dotIndex)) {
     return false;
