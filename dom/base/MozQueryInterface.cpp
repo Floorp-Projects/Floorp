@@ -28,6 +28,21 @@ CompareIIDs(const nsIID& aA, const nsIID &aB)
   return memcmp((void*)&aA.m0, (void*)&aB.m0, IID_SIZE);
 }
 
+struct IIDComparator
+{
+  bool
+  LessThan(const nsIID& aA, const nsIID &aB) const
+  {
+    return CompareIIDs(aA, aB) < 0;
+  }
+
+  bool
+  Equals(const nsIID& aA, const nsIID &aB) const
+  {
+    return aA.Equals(aB);
+  }
+};
+
 /* static */
 MozQueryInterface*
 ChromeUtils::GenerateQI(const GlobalObject& aGlobal, const Sequence<OwningStringOrIID>& aInterfaces, ErrorResult& aRv)
@@ -83,10 +98,10 @@ ChromeUtils::GenerateQI(const GlobalObject& aGlobal, const Sequence<OwningString
     ifaces.AppendElement(*iid->GetID());
   }
 
-  MOZ_ASSERT(!ifaces.Contains(NS_GET_IID(nsISupports), CompareIIDs));
+  MOZ_ASSERT(!ifaces.Contains(NS_GET_IID(nsISupports), IIDComparator()));
   ifaces.AppendElement(NS_GET_IID(nsISupports));
 
-  ifaces.Sort(CompareIIDs);
+  ifaces.Sort(IIDComparator());
 
   return new MozQueryInterface(std::move(ifaces));
 }
@@ -94,7 +109,12 @@ ChromeUtils::GenerateQI(const GlobalObject& aGlobal, const Sequence<OwningString
 bool
 MozQueryInterface::QueriesTo(const nsIID& aIID) const
 {
-  return mInterfaces.ContainsSorted(aIID, CompareIIDs);
+  // We use BinarySearchIf here because nsTArray::ContainsSorted requires
+  // twice as many comparisons.
+  size_t result;
+  return BinarySearchIf(mInterfaces, 0, mInterfaces.Length(),
+                        [&] (const nsIID& aOther) { return CompareIIDs(aIID, aOther); },
+                        &result);
 }
 
 void
