@@ -4,14 +4,9 @@
 
 /* ===== components.css ==================================================
    ==
-   == THESE STYLES WILL BE MOVED TO "widgets.css".
+   == THESE STYLES HAVE BEEN MOVED TO "widgets.css".
    ==
-   == These are loaded as UA syles, but eventually they will become
-   == document styles in "widgets.css". See bug 1463820 for details.
+   == This file exists to allow debugging regressions more easily using
+   == just artifact builds, and will be removed in bug 1470873.
    ==
    ======================================================================= */
-
-@import url("chrome://global/skin/dropmarker.css");
-@import url("chrome://global/skin/groupbox.css");
-@import url("chrome://global/skin/toolbar.css");
-@import url("chrome://global/skin/splitter.css");
