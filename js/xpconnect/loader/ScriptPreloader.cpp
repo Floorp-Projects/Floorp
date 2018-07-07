@@ -1160,12 +1160,18 @@ ScriptPreloader::CachedScript::GetJSScript(JSContext* cx)
         return mScript;
     }
 
+    if (!HasRange()) {
+        // We've already executed the script, and thrown it away. But it wasn't
+        // in the cache at startup, so we don't have any data to decode. Give
+        // up.
+        return nullptr;
+    }
+
     // If we have no script at this point, the script was too small to decode
     // off-thread, or it was needed before the off-thread compilation was
     // finished, and is small enough to decode on the main thread rather than
     // wait for the off-thread decoding to finish. In either case, we decode
     // it synchronously the first time it's needed.
-    MOZ_ASSERT(HasRange());
 
     auto start = TimeStamp::Now();
     LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
