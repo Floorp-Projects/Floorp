@@ -39,6 +39,9 @@
   <string name="preference_category_autocomplete_preinstalled">طے شدہ URL فہرست</string>
   <string name="preference_category_autocomplete_custom_urls">مخصوص URLs</string>
   <string name="preference_autocomplete_subitem_customlist">مخصوص URLs</string>
+  <string name="preference_autocomplete_action_add">تخصیصی URL کا + اظافہ کریں</string>
+  <string name="preference_autocomplete_title_add">تخصیصی URL کا اظافہ کریں</string>
+  <string name="custom_autocomplete_quick_add">تخصیصی URL کا اظافہ کریں</string>
   <string name="preference_category_cookies">کوکیاں اور سائٹ کے کواِئف</string>
   <string name="preference_autocomplete_title_remove">مخصوص URL ہٹائیں</string>
   <string name="preference_autocomplete_learn_more">مزید سیکھیں</string>
@@ -48,6 +51,7 @@
   <string name="preference_autocomplete_add_confirmation">نئے تخصیصی URL کا اظافہ کر دیا گیا ہے۔</string>
   <string name="preference_autocomplete_menu_remove">ہٹائیں</string>
   <string name="preference_autocomplete_action_remove_content_description">ہٹائیں</string>
+  <string name="preference_autocomplete_add_error">درج شدہ URL دو دفعہ پڑتال کریں۔</string>
   <string name="preference_language">زبان</string>
   <string name="preference_language_systemdefault">نظام طے شدہ</string>
   <string name="preference_category_privacy">رازداری</string>
@@ -58,6 +62,7 @@
   <string name="preference_privacy_block_social">سماجی ٹریکرز بلاک کریں</string>
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
   <string name="preference_privacy_block_content_summary2">اہل بنانے کی وجہ سے شاید چند صفحات غیر متوقع برتائو کر سکتے ہیں</string>
+  <string name="preference_privacy_category_cookies">کوکیز بلاک کری٘ں</string>
   <string name="preference_privacy_should_block_cookies_no_option">نہیں</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ہاں</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
@@ -65,6 +70,7 @@
   <string name="preference_category_performance">کارکردگی</string>
   <string name="preference_performance_block_webfonts">ویب فونٹس بلاک کریں</string>
   <string name="preference_performance_block_webfonts_summary">نتیجتن اسکی شاید آئیکن یا تصاویر گایب ہو سکتی ہے</string>
+  <string name="preference_performance_block_javascript">JavaScript بلاک کریں</string>
   <string name="preference_default_browser2">%1$s و طےشدہ براؤزر بنائیں</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">استعمال شدہ کوائف ارسال کریں</string>
@@ -83,6 +89,7 @@
   <string name="search_add_manually_example">مثلاٰ؛ example.com/search/?q=%s</string>
   <string name="search_add_confirmation">نیا تلاش انجن شامل کر دیا گیا۔</string>
   <string name="search_add_error_empty_name">تلاش انجن کا نام داخل کریں</string>
+  <string name="search_add_error_duplicate_name">ایک تنصیب شدہ تلاش کے انجن پہلے ہی اس نام کا استعمال کر رہا ہے۔</string>
   <string name="search_add_error_empty_search">ایک سٹرنگ داخل کریں</string>
   <string name="content_description_clear_input">ان پٹ صاف کریں</string>
   <string name="content_description_dismiss_input">برخاست کریں</string>
@@ -155,11 +162,13 @@
   <string name="security_popup_insecure_connection">غیر مھفوظ کنکشن</string>
   <string name="security_popup_security_verified">توثیق کردہ برائے: %1$s</string>
   <string name="site_security_icon_content_description">سائٹ سلامتی</string>
+  <string name="preference_autocomplete_duplicate_url_error">URLپہلے ہی موجود ہے</string>
   <string name="find_in_page">صفحے میں ڈھونڈیں</string>
   <string name="find_in_page_input">صفحہ میں ڈھونڈیں</string>
   <string name="find_in_page_result">%2$d/%1$d</string>
   <string name="accessibility_next_result">اگلا نتیجہ تلاش کریں</string>
   <string name="accessibility_previous_result">پچھلا نتیجہ تلاش کرین</string>
+  <string name="http_auth_dialog_title">توثیق درکار ہے</string>
   <string name="http_auth_dialog_username">صارف نام</string>
   <string name="http_auth_dialog_password">پاس ورڈ</string>
   <string name="preference_performance_request_desktop_site">ڈیسک ٹاپ سائٹ کی درخواست کریں</string>

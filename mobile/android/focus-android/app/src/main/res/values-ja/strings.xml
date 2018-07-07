@@ -91,7 +91,7 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
   <string name="preference_privacy_notice">プライバシー通知</string>
   <string name="preference_about">%1$s について</string>
-  <string name="preference_search_installed_search_engines">インストールされた検索エンジン</string>
+  <string name="preference_search_installed_search_engines">選択可能な検索エンジン</string>
   <string name="preference_search_restore">既定の検索エンジンを復元</string>
   <string name="preference_search_add2">+ 別の検索エンジンを追加</string>
   <string name="preference_search_remove_title">検索エンジンを削除</string>
@@ -103,7 +103,7 @@
   <string name="search_add_manually_example">入力例: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">新しい検索エンジンが追加されました。</string>
   <string name="search_add_error_empty_name">検索エンジン名を入力</string>
-  <string name="search_add_error_duplicate_name">インストールされている検索エンジンの中に同名のものが存在します。</string>
+  <string name="search_add_error_duplicate_name">同名の検索エンジンがすでにインストールされています。</string>
   <string name="search_add_error_empty_search">検索語を入力</string>
   <string name="search_add_error_format">検索語が入力例の書式とマッチしているか確認してください</string>
   <string name="content_description_clear_input">入力内容を消去</string>
@@ -176,9 +176,9 @@
   <string name="tabs_tray_action_erase">閲覧履歴を消去</string>
   <string name="download_firefox">Firefox をダウンロード</string>
   <string name="your_rights_content1">%1$s は Mozilla や他の貢献者によって開発されているフリーでオープンソースのソフトウェアです。</string>
-  <string name="your_rights_content2"><![CDATA["%1$s は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" やその他オープンソースライセンスの条件に基づいて使用可能となっています。"]]></string>
-  <string name="your_rights_content3"><![CDATA["Mozilla、Firefox、%1$s の名称やロゴを含む、Mozilla Foundation や第三者の商標に関するいかなる権利やライセンスもあなたには与えられていません。詳しい情報は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12371;&#12385;&#12425;</a>" をご覧ください。"]]></string>
-  <string name="your_rights_content4"><![CDATA["%1$s の追加ソースコードは様々な他のフリーでオープンソースの "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12521;&#12452;&#12475;&#12531;&#12473;</a>" に基いて公開されています。"]]></string>
+  <string name="your_rights_content2"><![CDATA["%1$s は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" およびその他オープンソースライセンスの条件に基づいて使用することができます。"]]></string>
+  <string name="your_rights_content3"><![CDATA["ユーザーには、Mozilla、Firefox、%1$s の名称やロゴを含む Mozilla Foundation または第三者の商標に関するいかなる権利やライセンスも付与されていません。詳しい情報は "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#21830;&#27161;&#12509;&#12522;&#12471;&#12540;</a>" をご覧ください。"]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s の追加のソースコードは様々な他のフリーでオープンソースの "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#12521;&#12452;&#12475;&#12531;&#12473;</a>" に基づいて公開されています。"]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s は Disconnect, Inc. によって提供されているブロックリストも "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" の下で単独のリソースとして使用しており、それらは "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#12371;&#12385;&#12425;</a>" から入手可能です。"]]></string>
   <string name="gv_prompt_username_hint">ユーザー名</string>
   <string name="gv_prompt_password_hint">パスワード</string>
@@ -198,6 +198,6 @@
   <string name="http_auth_dialog_title">認証が必要です</string>
   <string name="http_auth_dialog_username">ユーザー名</string>
   <string name="http_auth_dialog_password">パスワード</string>
-  <string name="preference_performance_request_desktop_site">デスクトップサイトを見る</string>
+  <string name="preference_performance_request_desktop_site">デスクトップ版を見る</string>
   <string name="custom_tab_copy_url_action">URL をコピーしました</string>
 </resources>

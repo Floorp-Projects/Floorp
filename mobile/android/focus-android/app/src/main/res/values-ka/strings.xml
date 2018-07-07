@@ -198,6 +198,6 @@
   <string name="http_auth_dialog_title">საჭიროებს ანგარიშის მონაცემებს</string>
   <string name="http_auth_dialog_username">მომხმარებლის სახელი</string>
   <string name="http_auth_dialog_password">პაროლი</string>
-  <string name="preference_performance_request_desktop_site">საიტის სრული ვერსიის მოთხოვნა</string>
+  <string name="preference_performance_request_desktop_site">სრული საიტის მოთხოვნა</string>
   <string name="custom_tab_copy_url_action">URL დაკოპირდა</string>
 </resources>
