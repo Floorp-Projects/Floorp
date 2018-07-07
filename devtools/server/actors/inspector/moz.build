@@ -6,6 +6,7 @@
 
 DevToolsModules(
   'css-logic.js',
+  'custom-element-watcher.js',
   'document-walker.js',
   'event-parsers.js',
   'inspector.js',
