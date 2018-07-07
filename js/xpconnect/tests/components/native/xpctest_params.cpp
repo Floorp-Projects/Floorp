@@ -223,13 +223,6 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceArray(uint32_t aLength, nsIXPCTestIn
     BUFFER_METHOD_IMPL(nsIXPCTestInterfaceA*, 0, TAKE_OWNERSHIP_INTERFACE);
 }
 
-NS_IMETHODIMP nsXPCTestParams::TestJsvalArray(uint32_t aLength, JS::Value *a,
-                                              uint32_t* bLength, JS::Value **b,
-                                              uint32_t* rvLength, JS::Value **rv)
-{
-    BUFFER_METHOD_IMPL(JS::Value, 0, TAKE_OWNERSHIP_NOOP);
-}
-
 NS_IMETHODIMP nsXPCTestParams::TestSizedString(uint32_t aLength, const char * a,
                                                uint32_t* bLength, char * *b,
                                                uint32_t* rvLength, char * *rv)

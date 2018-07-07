@@ -11,7 +11,7 @@
 // re-export libc so it can be used by the procedural macro.
 pub extern crate libc;
 
-pub use nsstring::{nsACString, nsAString, nsCString, nsString};
+pub use nsstring::{nsACString, nsAString};
 
 pub use nserror::{nsresult, NsresultExt, NS_ERROR_NO_INTERFACE, NS_OK};
 
