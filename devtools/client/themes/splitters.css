@@ -29,7 +29,7 @@
   --devtools-splitter-color: #42484f;
 }
 
-.devtools-horizontal-splitter,
+splitter.devtools-horizontal-splitter,
 .devtools-side-splitter {
   -moz-appearance: none;
   background-image: none;
@@ -47,7 +47,7 @@
   z-index: 1;
 }
 
-.devtools-horizontal-splitter {
+splitter.devtools-horizontal-splitter {
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
 
