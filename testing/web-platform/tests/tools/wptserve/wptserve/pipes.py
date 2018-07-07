@@ -8,7 +8,7 @@ import time
 import uuid
 from six.moves import StringIO
 
-from six import text_type, binary_type, string_types
+from six import text_type, binary_type
 
 def resolve_content(response):
     return b"".join(item for item in response.iter_content(read_file=True))
@@ -480,7 +480,7 @@ def template(request, content, escape_type="html"):
                     "unexpected token type %s (token '%r'), expected ident or arguments" % (ttype, field)
                 )
 
-        assert isinstance(value, (int, string_types)), tokens
+        assert isinstance(value, (int, (binary_type, text_type))), tokens
 
         if variable is not None:
             variables[variable] = value
