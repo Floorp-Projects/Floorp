@@ -299,7 +299,7 @@ function mouseWillTriggerFocus(element)
                                          element.type == "password")) {
       return true;
     }
-  } else if (element.localName == "listbox") {
+  } else if (element.localName == "richlistbox") {
     return true;
   }
 
@@ -457,7 +457,7 @@ function startTest()
 
     mouseOnElement(element, getById("t" + idx), true, "mouse on element t" + idx);
     var expectedWindow = (element.ownerGlobal == gChildWindow) ? gChildWindow : window;
-    if (element.localName == "listbox" && expectedWindow == window &&
+    if (element.localName == "richlistbox" && expectedWindow == window &&
         navigator.platform.indexOf("Mac") == 0) {
       // after focusing a listbox on Mac, clear the focus before continuing.
       setFocusTo(null, window);
@@ -1634,9 +1634,9 @@ SimpleTest.waitForFocus(startTest);
 <hbox id="innerbox">
   <button id="t4" accesskey="h" label="no tabindex"/>
   <button id="o1" accesskey="i" label="tabindex = -1" tabindex="-1"/>
-  <listbox id="t5" label="tabindex = 0" tabindex="0" rows="1">
-    <listitem/>
-  </listbox>
+  <richlistbox id="t5" label="tabindex = 0" tabindex="0" width="50">
+    <richlistitem height="10"/>
+  </richlistbox>
   <button id="t1" label="tabindex = 2" tabindex="2"/>
 </hbox>
 <hbox>
@@ -1649,9 +1649,9 @@ SimpleTest.waitForFocus(startTest);
   <button id="t7" style="-moz-user-focus: normal;" label="no tabindex"/>
   <button id="o3" style="-moz-user-focus: normal;" label="tabindex = -1" tabindex="-1"/>
   <button id="t8" style="-moz-user-focus: normal;" label="tabindex = 0" tabindex="0"/>
-  <listbox id="t3" style="-moz-user-focus: normal;" label="tabindex = 2" tabindex="2" rows="1">
-    <listitem/>
-  </listbox>
+  <richlistbox id="t3" style="-moz-user-focus: normal;" label="tabindex = 2" tabindex="2" width="50">
+    <richlistitem height="10"/>
+  </richlistbox>
 </hbox>
 <hbox>
   <button accesskey="p" style="display: none;"/> <button accesskey="q" style="visibility: collapse;"/>
@@ -1709,7 +1709,7 @@ SimpleTest.waitForFocus(startTest);
 <checkbox id="o5"/><checkbox id="o7"/><hbox><checkbox id="o9"/></hbox>
 <checkbox id="o13"/><checkbox id="o15"/><checkbox id="o17"/><checkbox id="o19"/><checkbox id="o21"/><checkbox id="o23"/><checkbox id="o25"/>
 <checkbox id="n2"/><checkbox id="n4"/>
-<listbox id="last" width="20" rows="1"/>
+<richlistbox id="last" width="20" height="20"/>
 
 <iframe id="ifa" width="40" height="60" style="-moz-user-focus: ignore;" type="content"
         src="data:text/html,&lt;input id=fra size='2'&gt;&lt;input id='fra-b' size='2'&gt;
