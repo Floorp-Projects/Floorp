@@ -69,7 +69,6 @@ TestParams.prototype = {
   testStringArray: f_is,
   testWstringArray: f_is,
   testInterfaceArray: f_is,
-  testJsvalArray: f_is,
   testSizedString: f_is,
   testSizedWstring: f_is,
   testInterfaceIs: f_is,
