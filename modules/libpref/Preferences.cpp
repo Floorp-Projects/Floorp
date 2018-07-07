@@ -452,7 +452,9 @@ struct PrefsSizes
 };
 }
 
-static ArenaAllocator<8192, 1> gPrefNameArena;
+static StaticRefPtr<SharedPrefMap> gSharedMap;
+
+static ArenaAllocator<4096, 1> gPrefNameArena;
 
 class PrefWrapper;
 
@@ -501,7 +503,14 @@ public:
   void SetIsLocked(bool aValue)
   {
     mIsLocked = aValue;
-    mHasChangedSinceInit = true;
+    OnChanged();
+  }
+
+  void OnChanged()
+  {
+    if (gSharedMap) {
+      mHasChangedSinceInit = true;
+    }
   }
 
   bool IsSticky() const { return mIsSticky; }
@@ -554,7 +563,7 @@ public:
   bool MustSendToContentProcesses() const
   {
     MOZ_ASSERT(XRE_IsParentProcess());
-    return mHasUserValue || mHasChangedSinceInit;
+    return mHasChangedSinceInit;
   }
 
   // Other operations.
@@ -674,7 +683,7 @@ public:
       userValueChanged = true;
     }
 
-    mHasChangedSinceInit = true;
+    OnChanged();
 
     if (userValueChanged || (defaultValueChanged && !mHasUserValue)) {
       *aValueChanged = true;
@@ -723,14 +732,13 @@ public:
   {
     mUserValue.Clear(Type());
     mHasUserValue = false;
-    mHasChangedSinceInit = true;
+    OnChanged();
   }
 
   nsresult SetDefaultValue(PrefType aType,
                            PrefValue aValue,
                            bool aIsSticky,
                            bool aIsLocked,
-                           bool aFromInit,
                            bool* aValueChanged)
   {
     // Types must always match when setting the default value.
@@ -747,9 +755,7 @@ public:
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
         mHasDefaultValue = true;
-        if (!aFromInit) {
-          mHasChangedSinceInit = true;
-        }
+        OnChanged();
         if (aIsSticky) {
           mIsSticky = true;
         }
@@ -792,9 +798,7 @@ public:
       mUserValue.Replace(mHasUserValue, Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
-      if (!aFromInit) {
-        mHasChangedSinceInit = true;
-      }
+      OnChanged();
       if (!IsLocked()) {
         *aValueChanged = true;
       }
@@ -1288,8 +1292,6 @@ private:
 
 static PLDHashTable* gHashTable;
 
-static StaticRefPtr<SharedPrefMap> gSharedMap;
-
 // The callback list contains all the priority callbacks followed by the
 // non-priority callbacks. gLastPriorityNode records where the first part ends.
 static CallbackNode* gFirstCallback = nullptr;
@@ -1579,7 +1581,29 @@ NotifyCallbacks(const char* aPrefName, const PrefWrapper& aPref)
   NotifyCallbacks(aPrefName, &aPref);
 }
 
-#define PREF_HASHTABLE_INITIAL_LENGTH 1024
+// The approximate number of preferences in the dynamic hashtable for the parent
+// and content processes, respectively. These numbers are used to determine the
+// initial size of the dynamic preference hashtables, and should be chosen to
+// avoid rehashing during normal usage. The actual number of preferences will,
+// or course, change over time, but these numbers only need to be within a
+// binary order of magnitude of the actual values to remain effective.
+//
+// The number for the parent process should reflect the total number of
+// preferences in the database, since the parent process needs to initially
+// build a dynamic hashtable of the entire preference database. The number for
+// the child process should reflect the number of preferences which are likely
+// to change after the startup of the first content process, since content
+// processes only store changed preferences on top of a snapshot of the database
+// created at startup.
+//
+// Note: The capacity of a hashtable doubles when its length reaches an exact
+// power of two. A table with an initial length of 64 is twice as large as one
+// with an initial length of 63. This is important in content processes, where
+// lookup speed is less critical and we pay the price of the additional overhead
+// for each content process. So the initial content length should generally be
+// *under* the next power-of-two larger than its expected length.
+constexpr size_t kHashTableInitialLengthParent = 3000;
+constexpr size_t kHashTableInitialLengthContent = 64;
 
 static PrefSaveData
 pref_savePrefs()
@@ -1737,7 +1761,7 @@ pref_SetPref(const char* aPrefName,
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
     rv = pref->SetDefaultValue(
-      aType, aValue, aIsSticky, aIsLocked, aFromInit, &valueChanged);
+      aType, aValue, aIsSticky, aIsLocked, &valueChanged);
   } else {
     MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
     rv = pref->SetUserValue(aType, aValue, aFromInit, &valueChanged);
@@ -3839,8 +3863,11 @@ Preferences::GetInstanceForService()
   sPreferences = new Preferences();
 
   MOZ_ASSERT(!gHashTable);
-  gHashTable = new PLDHashTable(
-    &pref_HashTableOps, sizeof(PrefEntry), PREF_HASHTABLE_INITIAL_LENGTH);
+  gHashTable =
+    new PLDHashTable(&pref_HashTableOps,
+                     sizeof(PrefEntry),
+                     (XRE_IsParentProcess() ? kHashTableInitialLengthParent
+                                            : kHashTableInitialLengthContent));
 
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
@@ -4172,7 +4199,7 @@ Preferences::ResetPrefs()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
+  gHashTable->ClearAndPrepareForLength(kHashTableInitialLengthParent);
   gPrefNameArena.Clear();
 
   return InitInitialObjects(/* isStartup */ false).isOk() ? NS_OK
@@ -4752,6 +4779,28 @@ Preferences::InitInitialObjects(bool aIsStartup)
   // Initialize static prefs before prefs from data files so that the latter
   // will override the former.
   StaticPrefs::InitAll(aIsStartup);
+
+  if (!XRE_IsParentProcess()) {
+    MOZ_ASSERT(gSharedMap);
+
+    // We got our initial preference values from the content process, so we
+    // don't need to add them to the DB. For static var caches, though, the
+    // current preference values may differ from their static defaults. So we
+    // still need to notify callbacks for each of our shared prefs which have
+    // user values.
+    //
+    // While it is technically also possible for the default values to have
+    // changed at runtime, and therefore not match the static defaults, we don't
+    // support that for static preferences in this configuration, and therefore
+    // ignore the possibility.
+    for (auto& pref : gSharedMap->Iter()) {
+      if (pref.HasUserValue() || pref.IsLocked()) {
+        NotifyCallbacks(pref.Name(), PrefWrapper(pref));
+      }
+    }
+
+    return Ok();
+  }
 
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
@@ -5749,9 +5798,12 @@ static void
 InitVarCachePref(const nsACString& aName,
                  bool* aCache,
                  bool aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
+  if (aSetValue) {
+    SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5763,9 +5815,12 @@ static void
 InitVarCachePref(const nsACString& aName,
                  Atomic<bool, Order>* aCache,
                  bool aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
+  if (aSetValue) {
+    SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5777,9 +5832,12 @@ MOZ_MAYBE_UNUSED static void
 InitVarCachePref(const nsACString& aName,
                  int32_t* aCache,
                  int32_t aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5791,9 +5849,12 @@ static void
 InitVarCachePref(const nsACString& aName,
                  Atomic<int32_t, Order>* aCache,
                  int32_t aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5804,10 +5865,13 @@ static void
 InitVarCachePref(const nsACString& aName,
                  uint32_t* aCache,
                  uint32_t aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_int32_t(PromiseFlatCString(aName).get(),
-                  static_cast<int32_t>(aDefaultValue));
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(),
+                    static_cast<int32_t>(aDefaultValue));
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5819,10 +5883,13 @@ static void
 InitVarCachePref(const nsACString& aName,
                  Atomic<uint32_t, Order>* aCache,
                  uint32_t aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_int32_t(PromiseFlatCString(aName).get(),
-                  static_cast<int32_t>(aDefaultValue));
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(),
+                    static_cast<int32_t>(aDefaultValue));
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5834,9 +5901,12 @@ MOZ_MAYBE_UNUSED static void
 InitVarCachePref(const nsACString& aName,
                  float* aCache,
                  float aDefaultValue,
-                 bool aIsStartup)
+                 bool aIsStartup,
+                 bool aSetValue)
 {
-  SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
+  if (aSetValue) {
+    SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
@@ -5846,27 +5916,35 @@ InitVarCachePref(const nsACString& aName,
 /* static */ void
 StaticPrefs::InitAll(bool aIsStartup)
 {
-// For prefs like these:
-//
-//   PREF("foo.bar.baz", bool, true)
-//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
-//
-// we generate registration calls:
-//
-//   SetPref_bool("foo.bar.baz", true);
-//   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
-//                    aIsStartup);
-//
-// The SetPref_*() functions have a type suffix to avoid ambiguity between
-// prefs having int32_t and float default values. That suffix is not needed for
-// the InitVarCachePref() functions because they take a pointer parameter,
-// which prevents automatic int-to-float coercion.
-#define PREF(name, cpp_type, value) SetPref_##cpp_type(name, value);
+  // For prefs like these:
+  //
+  //   PREF("foo.bar.baz", bool, true)
+  //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+  //
+  // we generate registration calls:
+  //
+  //   if (isParent)
+  //     SetPref_bool("foo.bar.baz", true);
+  //   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
+  //                    aIsStartup);
+  //
+  // The SetPref_*() functions have a type suffix to avoid ambiguity between
+  // prefs having int32_t and float default values. That suffix is not needed
+  // for the InitVarCachePref() functions because they take a pointer parameter,
+  // which prevents automatic int-to-float coercion.
+  //
+  // In content processes, we rely on the parent to send us the correct initial
+  // values via shared memory, so we do not re-initialize them here.
+  bool isParent = XRE_IsParentProcess();
+#define PREF(name, cpp_type, value)                                            \
+  if (isParent)                                                                \
+    SetPref_##cpp_type(name, value);
 #define VARCACHE_PREF(name, id, cpp_type, value)                               \
   InitVarCachePref(NS_LITERAL_CSTRING(name),                                   \
                    &StaticPrefs::sVarCache_##id,                               \
                    value,                                                      \
-                   aIsStartup);
+                   aIsStartup,                                                 \
+                   isParent);
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
