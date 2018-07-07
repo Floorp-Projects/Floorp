@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[ProbablyShortLivingWrapper]
 interface MediaQueryList : EventTarget {
   readonly attribute DOMString media;
   readonly attribute boolean matches;
