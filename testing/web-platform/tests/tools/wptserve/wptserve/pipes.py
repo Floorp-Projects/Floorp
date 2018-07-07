@@ -5,11 +5,10 @@ import hashlib
 import os
 import re
 import time
-import types
 import uuid
 from six.moves import StringIO
 
-from six import text_type, binary_type
+from six import text_type, binary_type, string_types
 
 def resolve_content(response):
     return b"".join(item for item in response.iter_content(read_file=True))
@@ -393,6 +392,7 @@ class SubFunctions(object):
 
     @staticmethod
     def file_hash(request, algorithm, path):
+        algorithm = algorithm.decode("ascii")
         if algorithm not in SubFunctions.supported_algorithms:
             raise ValueError("Unsupported encryption algorithm: '%s'" % algorithm)
 
@@ -425,6 +425,7 @@ def template(request, content, escape_type="html"):
         tokens = deque(tokens)
 
         token_type, field = tokens.popleft()
+        field = field.decode("ascii")
 
         if token_type == "var":
             variable = field
@@ -479,7 +480,7 @@ def template(request, content, escape_type="html"):
                     "unexpected token type %s (token '%r'), expected ident or arguments" % (ttype, field)
                 )
 
-        assert isinstance(value, (int,) + types.StringTypes), tokens
+        assert isinstance(value, (int, string_types)), tokens
 
         if variable is not None:
             variables[variable] = value
@@ -491,7 +492,7 @@ def template(request, content, escape_type="html"):
         #TODO: read the encoding of the response
         return escape_func(text_type(value)).encode("utf-8")
 
-    template_regexp = re.compile(r"{{([^}]*)}}")
+    template_regexp = re.compile(br"{{([^}]*)}}")
     new_content = template_regexp.sub(config_replacement, content)
 
     return new_content
