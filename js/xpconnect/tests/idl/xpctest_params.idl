@@ -82,12 +82,6 @@ interface nsIXPCTestParams : nsISupports {
                                              out unsigned long rvLength, out nsIIDPtr rvIID,
                                              [retval, array, size_is(rvLength), iid_is(rvIID)] out nsQIResult rv);
 
-  // Test arrays of jsvals
-  void                  testJsvalArray(in unsigned long aLength, [array, size_is(aLength)] in jsval a,
-                                       inout unsigned long bLength, [array, size_is(bLength)] inout jsval b,
-                                       out unsigned long rvLength, [retval, array, size_is(rvLength)] out jsval rv);
-
-
   // Test for out dipper parameters
   void                 testOutAString(out AString o);
 
