@@ -41,19 +41,16 @@ class TestHeader(TestUsingServer):
         self.assertEqual(resp.info()["X-Test"], "1, 2")
 
 class TestSlice(TestUsingServer):
-    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_both_bounds(self):
         resp = self.request("/document.txt", query="pipe=slice(1,10)")
         expected = open(os.path.join(doc_root, "document.txt"), 'rb').read()
         self.assertEqual(resp.read(), expected[1:10])
 
-    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_no_upper(self):
         resp = self.request("/document.txt", query="pipe=slice(1)")
         expected = open(os.path.join(doc_root, "document.txt"), 'rb').read()
         self.assertEqual(resp.read(), expected[1:])
 
-    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_no_lower(self):
         resp = self.request("/document.txt", query="pipe=slice(null,10)")
         expected = open(os.path.join(doc_root, "document.txt"), 'rb').read()
