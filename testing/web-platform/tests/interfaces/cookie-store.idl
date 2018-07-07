@@ -108,4 +108,5 @@ partial interface Window {
 
 partial interface ServiceWorkerGlobalScope {
   [Replaceable, SameObject] readonly attribute CookieStore cookieStore;
+  attribute EventHandler oncookiechange;
 };
