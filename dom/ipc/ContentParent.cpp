@@ -2921,9 +2921,12 @@ ContentParent::Observe(nsISupports* aSubject,
       BLACKLIST_ENTRY(u"app.update.lastUpdateTime."),
       BLACKLIST_ENTRY(u"datareporting.policy."),
       BLACKLIST_ENTRY(u"browser.safebrowsing.provider."),
+      BLACKLIST_ENTRY(u"browser.shell."),
+      BLACKLIST_ENTRY(u"browser.slowstartup."),
       BLACKLIST_ENTRY(u"extensions.getAddons.cache."),
       BLACKLIST_ENTRY(u"media.gmp-manager."),
       BLACKLIST_ENTRY(u"media.gmp-gmpopenh264."),
+      BLACKLIST_ENTRY(u"privacy.sanitize."),
     };
 #undef BLACKLIST_ENTRY
 
