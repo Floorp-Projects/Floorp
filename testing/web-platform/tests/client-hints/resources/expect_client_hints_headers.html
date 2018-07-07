@@ -9,11 +9,11 @@
 // of client hints it receives in the request headers.
 
 fetch("../echo_client_hints_received.py").then(r => {
-  if(r.status == 200 && r.headers.has("device-memory-received") == "device-memory-received") {
+  if(r.status == 200 && r.headers.has("device-memory-received")) {
     window.top.opener.postMessage('PASS', '*');
   }
   else {
-    window.top.opener.postMessage('FAIL '+ ex.message, '*');
+    window.top.opener.postMessage('FAIL', '*');
   }
 });
 
