@@ -768,10 +768,13 @@ pref("media.gmp-provider.enabled", true);
 // The default color scheme in reader mode (light, dark, auto)
 // auto = color automatically adjusts according to ambient light level
 // (auto only works on platforms where the 'devicelight' event is enabled)
-pref("reader.color_scheme", "auto");
+// auto doesn't work: https://bugzilla.mozilla.org/show_bug.cgi?id=1472957
+// pref("reader.color_scheme", "auto");
+pref("reader.color_scheme", "light");
 
 // Color scheme values available in reader mode UI.
-pref("reader.color_scheme.values", "[\"dark\",\"auto\",\"light\"]");
+// pref("reader.color_scheme.values", "[\"dark\",\"auto\",\"light\"]");
+pref("reader.color_scheme.values", "[\"dark\",\"sepia\",\"light\"]");
 
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", false);
