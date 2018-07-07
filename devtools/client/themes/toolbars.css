@@ -198,7 +198,7 @@
   background-color: transparent;
 }
 
-.devtools-horizontal-splitter,
+splitter.devtools-horizontal-splitter,
 .devtools-side-splitter {
   background-color: var(--theme-splitter-color);
 }
