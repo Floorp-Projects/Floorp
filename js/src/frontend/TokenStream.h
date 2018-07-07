@@ -60,23 +60,41 @@
  * for it.  (ParserBase isn't the only instance of this, but it's certainly the
  * biggest case of it.)  Ergo, TokenStreamAnyChars.
  *
- * == TokenStreamCharsBase<CharT> → ∅ ==
+ * == TokenStreamCharsShared → ∅ ==
  *
- * Certain data structures in tokenizing are character-type-specific:
+ * Some functionality has meaning independent of character type, yet has no use
+ * *unless* you know the character type in actual use.  It *could* live in
+ * TokenStreamAnyChars, but it makes more sense to live in a separate class
+ * that character-aware token information can simply inherit.
+ *
+ * This class currently exists only to contain a char16_t buffer, transiently
+ * used to accumulate strings in tricky cases that can't just be read directly
+ * from source text.  It's not used outside character-aware tokenizing, so it
+ * doesn't make sense in TokenStreamAnyChars.
+ *
+ * == TokenStreamCharsBase<CharT> → TokenStreamCharsShared ==
+ *
+ * Certain data structures in tokenizing are character-type-specific: namely,
  * the various pointers identifying the source text (including current offset
- * and end) , and the temporary vector into which characters are read/written
- * in certain cases (think writing out the actual codepoints identified by an
- * identifier containing a Unicode escape, to create the atom for the
- * identifier: |a\u0062c| versus |abc|, for example).
+ * and end).
  *
  * Additionally, some functions operating on this data are defined the same way
- * no matter what character type you have -- the offset being |offset - start|
- * no matter whether those two variables are single- or double-byte pointers.
+ * no matter what character type you have (e.g. current offset in code units
+ * into the source text) or share a common interface regardless of character
+ * type (e.g. consume the next code unit if it has a given value).
  *
  * All such functionality lives in TokenStreamCharsBase<CharT>.
  *
+ * == SpecializedTokenStreamCharsBase<CharT> → TokenStreamCharsBase<CharT> ==
+ *
+ * Certain tokenizing functionality is specific to a single character type.
+ * For example, JS's UTF-16 encoding recognizes no coding errors, because lone
+ * surrogates are not an error; but a UTF-8 encoding must recognize a variety
+ * of validation errors.  Such functionality is defined only in the appropriate
+ * SpecializedTokenStreamCharsBase specialization.
+ *
  * == GeneralTokenStreamChars<CharT, AnyCharsAccess> →
- *    TokenStreamCharsBase<CharT> ==
+ *    SpecializedTokenStreamCharsBase<CharT> ==
  *
  * Some functionality operates differently on different character types, just
  * as for TokenStreamCharsBase, but additionally requires access to character-
@@ -1279,6 +1297,29 @@ TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const c
     return true;
 }
 
+template<typename CharT>
+class SpecializedTokenStreamCharsBase;
+
+template<>
+class SpecializedTokenStreamCharsBase<char16_t>
+  : public TokenStreamCharsBase<char16_t>
+{
+    using CharsBase = TokenStreamCharsBase<char16_t>;
+
+  protected:
+    using CharsBase::CharsBase;
+};
+
+template<>
+class SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>
+  : public TokenStreamCharsBase<mozilla::Utf8Unit>
+{
+    using CharsBase = TokenStreamCharsBase<mozilla::Utf8Unit>;
+
+  protected:
+    using CharsBase::CharsBase;
+};
+
 /** A small class encapsulating computation of the start-offset of a Token. */
 class TokenStart
 {
@@ -1302,9 +1343,10 @@ class TokenStart
 
 template<typename CharT, class AnyCharsAccess>
 class GeneralTokenStreamChars
-  : public TokenStreamCharsBase<CharT>
+  : public SpecializedTokenStreamCharsBase<CharT>
 {
     using CharsBase = TokenStreamCharsBase<CharT>;
+    using SpecializedCharsBase = SpecializedTokenStreamCharsBase<CharT>;
 
     Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
 
@@ -1335,7 +1377,7 @@ class GeneralTokenStreamChars
     using typename CharsBase::SourceUnits;
 
   protected:
-    using CharsBase::CharsBase;
+    using SpecializedCharsBase::SpecializedCharsBase;
 
     TokenStreamAnyChars& anyCharsAccess() {
         return AnyCharsAccess::anyChars(this);
