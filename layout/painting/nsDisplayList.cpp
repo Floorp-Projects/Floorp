@@ -9838,6 +9838,8 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
     recordSmall(NS_LITERAL_CSTRING("fr"), frMs);
     recordSmall(NS_LITERAL_CSTRING("r"), rMs);
   }
+
+  Telemetry::Accumulate(Telemetry::PAINT_BUILD_LAYERS_TIME, flbMs);
 }
 
 PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric)
