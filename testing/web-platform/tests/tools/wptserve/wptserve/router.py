@@ -1,8 +1,8 @@
 import itertools
 import re
-import types
 
 from .logger import get_logger
+from six import string_types
 
 any_method = object()
 
@@ -135,7 +135,7 @@ class Router(object):
                         object and the response object.
 
         """
-        if type(methods) in types.StringTypes or methods in (any_method, "*"):
+        if isinstance(methods, string_types) or methods in (any_method, "*"):
             methods = [methods]
         for method in methods:
             self.routes.append((method, compile_path_match(path), handler))
