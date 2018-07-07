@@ -73,21 +73,13 @@ int ParentMain()
   mozilla::CrossProcessDllInterceptor intcpt(childProcess.get());
   intcpt.Init("TestDllInterceptorCrossProcess.exe");
 
-  if (!gOrigReturnResult.Set(intcpt, "ReturnResult", &ReturnResultHook)) {
+  if (!gOrigReturnResult.Set(childProcess.get(), intcpt, "ReturnResult",
+                             &ReturnResultHook)) {
     printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to add hook\n");
     return 1;
   }
 
   printf("TEST-PASS | DllInterceptorCrossProcess | Hook added\n");
-
-  // Let's save the original hook
-  SIZE_T bytesWritten;
-  if (!::WriteProcessMemory(childProcess.get(), &gOrigReturnResult,
-                            &gOrigReturnResult, sizeof(gOrigReturnResult),
-                            &bytesWritten)) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to write original function pointer\n");
-    return 1;
-  }
 
   if (::ResumeThread(childMainThread.get()) == static_cast<DWORD>(-1)) {
     printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to resume child thread\n");
