@@ -3381,6 +3381,16 @@
     "high": 1000,
     "n_buckets": 50
   },
+  "PAINT_BUILD_LAYERS_TIME" : {
+    "record_in_processes": ["content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","mwoodrow@mozilla.com"],
+    "bug_numbers": [1473908],
+    "expires_in_version": "never",
+    "description": "Time spent in building layers in milliseconds",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50
+  },
   "PAINT_RASTERIZE_TIME" : {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
