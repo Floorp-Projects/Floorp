@@ -8,7 +8,7 @@ import sys
 import threading
 import time
 import traceback
-from six import string_types
+from six import binary_type, text_type
 
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
@@ -80,7 +80,7 @@ class RequestRewriter(object):
         :param output_path: Path to replace the input path with in
                             the request.
         """
-        if isinstance(methods, string_types):
+        if isinstance(methods, (binary_type, text_type)):
             methods = [methods]
         self.rules[input_path] = (methods, output_path)
 
