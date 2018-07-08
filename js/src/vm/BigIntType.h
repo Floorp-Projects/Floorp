@@ -81,6 +81,18 @@ class BigInt final : public js::gc::TenuredCell
     static BigInt* pow(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
     static BigInt* neg(JSContext* cx, Handle<BigInt*> x);
 
+    // Type-checking versions of arithmetic operations. These methods
+    // must be called with at least one BigInt operand. Binary
+    // operations with throw a TypeError if one of the operands is not a
+    // BigInt value.
+    static bool add(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool sub(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool mul(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool div(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool mod(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool pow(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
+    static bool neg(JSContext* cx, Handle<Value> operand, MutableHandle<Value> res);
+
     static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
 
