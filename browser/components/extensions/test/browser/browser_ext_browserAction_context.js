@@ -760,6 +760,89 @@ add_task(async function testMultipleWindows() {
   });
 });
 
+add_task(async function testDefaultBadgeTextColor() {
+  await runTests({
+    manifest: {
+      "browser_action": {
+        "default_icon": "default.png",
+        "default_popup": "default.html",
+        "default_title": "Default Title",
+      },
+    },
+
+    "files": {
+      "default.png": imageBuffer,
+      "window1.png": imageBuffer,
+      "window2.png": imageBuffer,
+    },
+
+    getTests: function(tabs, windows) {
+      let details = [
+        {"icon": browser.runtime.getURL("default.png"),
+         "popup": browser.runtime.getURL("default.html"),
+         "title": "Default Title",
+         "badge": "",
+         "badgeBackgroundColor": [0xd9, 0x00, 0x00, 0xFF],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff],
+         "enabled": true},
+        {"badgeBackgroundColor": [0xff, 0xff, 0x00, 0xFF],
+         "badgeTextColor": [0x00, 0x00, 0x00, 0xff]},
+        {"badgeBackgroundColor": [0x00, 0x00, 0xff, 0xFF],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff]},
+        {"badgeBackgroundColor": [0xff, 0xff, 0xff, 0x00],
+         "badgeTextColor": [0x00, 0x00, 0x00, 0xff]},
+        {"badgeBackgroundColor": [0x00, 0x00, 0xff, 0xFF],
+         "badgeTextColor": [0xff, 0x00, 0xff, 0xff]},
+        {"badgeBackgroundColor": [0xff, 0xff, 0xff, 0x00]},
+        {"badgeBackgroundColor": [0x00, 0x00, 0x00, 0x00],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff]},
+      ];
+
+      return [
+        async expect => {
+          browser.test.log("Initial state, expect default properties.");
+          expect(null, null, null, details[0]);
+        },
+        async expect => {
+          browser.test.log("Set a global light bgcolor, expect black text.");
+          browser.browserAction.setBadgeBackgroundColor({color: "#ff0"});
+          expect(null, null, details[1], details[0]);
+        },
+        async expect => {
+          browser.test.log("Set a window-specific dark bgcolor, expect white text.");
+          let windowId = windows[0];
+          browser.browserAction.setBadgeBackgroundColor({windowId, color: "#00f"});
+          expect(null, details[2], details[1], details[0]);
+        },
+        async expect => {
+          browser.test.log("Set a tab-specific transparent-white bgcolor, expect black text.");
+          let tabId = tabs[0];
+          browser.browserAction.setBadgeBackgroundColor({tabId, color: "#fff0"});
+          expect(details[3], details[2], details[1], details[0]);
+        },
+        async expect => {
+          browser.test.log("Set a window-specific text color, expect it in the tab.");
+          let windowId = windows[0];
+          browser.browserAction.setBadgeTextColor({windowId, color: "#f0f"});
+          expect(details[5], details[4], details[1], details[0]);
+        },
+        async expect => {
+          browser.test.log("Remove the window-specific text color, expect black again.");
+          let windowId = windows[0];
+          browser.browserAction.setBadgeTextColor({windowId, color: null});
+          expect(details[3], details[2], details[1], details[0]);
+        },
+        async expect => {
+          browser.test.log("Set a tab-specific transparent-black bgcolor, expect white text.");
+          let tabId = tabs[0];
+          browser.browserAction.setBadgeBackgroundColor({tabId, color: "#0000"});
+          expect(details[6], details[2], details[1], details[0]);
+        },
+      ];
+    },
+  });
+});
+
 add_task(async function testNavigationClearsData() {
   let url = "http://example.com/";
   let default_title = "Default title";
