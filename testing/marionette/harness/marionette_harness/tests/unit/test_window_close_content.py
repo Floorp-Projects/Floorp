@@ -123,7 +123,7 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
 
               let win = BrowserWindowTracker.getTopWindow();
               win.addEventListener("TabBrowserDiscarded", ev => {
-                marionetteScriptFinished(true);
+                arguments[0](true);
               }, { once: true});
               win.gBrowser.discardBrowser(win.gBrowser.tabs[1].linkedBrowser);
             """)
