@@ -644,7 +644,7 @@ xul|*.radio-label-box {
   width: 240px;
 }
 
-*|*.category {
+*|*#categories > *|*.category {
   min-height: 48px;
   -moz-appearance: none;
   color: var(--in-content-category-text);
@@ -654,28 +654,28 @@ xul|*.radio-label-box {
   transition: background-color 150ms;
 }
 
-*|*.category:hover {
+*|*#categories > *|*.category:hover {
   background-color: var(--in-content-category-background-hover);
   border-radius: 2px;
 }
 
-*|*.category:hover:active {
+*|*#categories > *|*.category:hover:active {
   background-color: var(--in-content-category-background-active);
 }
 
-*|*.category[selected],
-*|*.category.selected {
+*|*#categories > *|*.category[selected],
+*|*#categories > *|*.category.selected {
   color: var(--in-content-category-text-selected);
   background: none;
 }
 
-*|*.category[selected]:hover,
-*|*.category.selected:hover {
+*|*#categories > *|*.category[selected]:hover,
+*|*#categories > *|*.category.selected:hover {
   background-color: var(--in-content-category-background-selected-hover);
 }
 
-*|*.category[selected]:hover:active,
-*|*.category.selected:hover:active {
+*|*#categories > *|*.category[selected]:hover:active,
+*|*#categories > *|*.category.selected:hover:active {
   color: var(--in-content-category-text-selected-active);
   background-color: var(--in-content-category-background-selected-active);
 }
@@ -714,7 +714,7 @@ xul|*.radio-label-box {
     display: none;
   }
 
-  .category {
+  #categories > .category {
     padding-inline-start: 13px; /* make category icons align center */
     margin-inline-end: 33px;
   }
