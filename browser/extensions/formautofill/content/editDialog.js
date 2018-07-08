@@ -7,6 +7,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "formAutofillStorage",

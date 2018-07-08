@@ -17,14 +17,17 @@ const Cm = Components.manager;
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AddressResult",
                                "resource://formautofill/ProfileAutoCompleteResult.jsm");
 ChromeUtils.defineModuleGetter(this, "CreditCardResult",
                                "resource://formautofill/ProfileAutoCompleteResult.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofill",
+                               "resource://formautofill/FormAutofill.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillHandler",
                                "resource://formautofill/FormAutofillHandler.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
@@ -35,7 +38,12 @@ const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
 const autocompleteController = Cc["@mozilla.org/autocomplete/controller;1"]
                              .getService(Ci.nsIAutoCompleteController);
 
-const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME, FIELD_STATES} = FormAutofillUtils;
+XPCOMUtils.defineLazyGetter(this, "ADDRESSES_COLLECTION_NAME",
+                            () => FormAutofillUtils.ADDRESSES_COLLECTION_NAME);
+XPCOMUtils.defineLazyGetter(this, "CREDITCARDS_COLLECTION_NAME",
+                            () => FormAutofillUtils.CREDITCARDS_COLLECTION_NAME);
+XPCOMUtils.defineLazyGetter(this, "FIELD_STATES",
+                            () => FormAutofillUtils.FIELD_STATES);
 
 // Register/unregister a constructor as a factory.
 function AutocompleteFactory() {}
@@ -75,7 +83,7 @@ AutocompleteFactory.prototype = {
  * @implements {nsIAutoCompleteSearch}
  */
 function AutofillProfileAutoCompleteSearch() {
-  FormAutofillUtils.defineLazyLogGetter(this, "AutofillProfileAutoCompleteSearch");
+  FormAutofill.defineLazyLogGetter(this, "AutofillProfileAutoCompleteSearch");
 }
 AutofillProfileAutoCompleteSearch.prototype = {
   classID: Components.ID("4f9f1e4c-7f2c-439e-9c9e-566b68bc187d"),
@@ -105,8 +113,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let allFieldNames = activeSection.allFieldNames;
     let filledRecordGUID = activeSection.filledRecordGUID;
     let searchPermitted = isAddressField ?
-                          FormAutofillUtils.isAutofillAddressesEnabled :
-                          FormAutofillUtils.isAutofillCreditCardsEnabled;
+                          FormAutofill.isAutofillAddressesEnabled :
+                          FormAutofill.isAutofillCreditCardsEnabled;
     let AutocompleteResult = isAddressField ? AddressResult : CreditCardResult;
     let pendingSearchResult = null;
 
@@ -221,7 +229,7 @@ let ProfileAutocomplete = {
       return;
     }
 
-    FormAutofillUtils.defineLazyLogGetter(this, "ProfileAutocomplete");
+    FormAutofill.defineLazyLogGetter(this, "ProfileAutocomplete");
     this.debug("ensureRegistered");
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
@@ -342,7 +350,7 @@ var FormAutofillContent = {
   _activeItems: {},
 
   init() {
-    FormAutofillUtils.defineLazyLogGetter(this, "FormAutofillContent");
+    FormAutofill.defineLazyLogGetter(this, "FormAutofillContent");
 
     Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
     Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
@@ -353,8 +361,8 @@ var FormAutofillContent = {
     // autocomplete is registered before the focusin so register it in this case as long as the
     // pref is true.
     let shouldEnableAutofill = autofillEnabled === undefined &&
-                               (FormAutofillUtils.isAutofillAddressesEnabled ||
-                               FormAutofillUtils.isAutofillCreditCardsEnabled);
+                               (FormAutofill.isAutofillAddressesEnabled ||
+                               FormAutofill.isAutofillCreditCardsEnabled);
     if (autofillEnabled || shouldEnableAutofill) {
       ProfileAutocomplete.ensureRegistered();
     }
@@ -390,7 +398,7 @@ var FormAutofillContent = {
     try {
       this.debug("Notifying form early submission");
 
-      if (!FormAutofillUtils.isAutofillEnabled) {
+      if (!FormAutofill.isAutofillEnabled) {
         this.debug("Form Autofill is disabled");
         return true;
       }

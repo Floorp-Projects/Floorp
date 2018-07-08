@@ -10,14 +10,16 @@ var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CreditCard",
   "resource://gre/modules/CreditCard.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "insecureWarningEnabled", "security.insecure_field_warning.contextual.enabled");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 class ProfileAutoCompleteResult {
   constructor(searchString, focusedFieldName, allFieldNames, matchingProfiles, {

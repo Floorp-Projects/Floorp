@@ -15,15 +15,17 @@ var EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillHeuristics",
                                "resource://formautofill/FormAutofillHeuristics.jsm");
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const {FIELD_STATES} = FormAutofillUtils;
 
@@ -552,7 +554,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isEnabled() {
-    return FormAutofillUtils.isAutofillAddressesEnabled;
+    return FormAutofill.isAutofillAddressesEnabled;
   }
 
   isRecordCreatable(record) {
@@ -770,7 +772,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   }
 
   isEnabled() {
-    return FormAutofillUtils.isAutofillCreditCardsEnabled;
+    return FormAutofill.isAutofillCreditCardsEnabled;
   }
 
   isRecordCreatable(record) {
