@@ -46,17 +46,20 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def createBookmarkInMenu(self):
         error = self.runAsyncCode("""
-          let url = arguments[0];
-          let title = arguments[1];
+          // let url = arguments[0];
+          // let title = arguments[1];
+          // let resolve = arguments[arguments.length - 1];
+          let [url, title, resolve] = arguments;
           PlacesUtils.bookmarks.insert({
             parentGuid: PlacesUtils.bookmarks.menuGuid, url, title
-          }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
+          }).then(() => resolve(false), resolve);
         """, script_args=(self._bookmarkURL, self._bookmarkText))
         if error:
             print(error)
 
     def createBookmarksOnToolbar(self):
         error = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           let children = [];
           for (let i = 1; i <= 5; i++) {
             children.push({url: `about:rights?p=${i}`, title: `Bookmark ${i}`});
@@ -64,13 +67,14 @@ class TestFirefoxRefresh(MarionetteTestCase):
           PlacesUtils.bookmarks.insertTree({
             guid: PlacesUtils.bookmarks.toolbarGuid,
             children
-          }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
+          }).then(() => resolve(false), resolve);
         """)
         if error:
             print(error)
 
     def createHistory(self):
         error = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           PlacesUtils.history.insert({
             url: arguments[0],
             title: arguments[1],
@@ -78,8 +82,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
               date: new Date(Date.now() - 5000),
               referrer: "about:mozilla"
             }]
-          }).then(() => marionetteScriptFinished(false),
-                  ex => marionetteScriptFinished("Unexpected error in adding visit: " + ex));
+          }).then(() => resolve(false),
+                  ex => resolve("Unexpected error in adding visit: " + ex));
         """, script_args=(self._historyURL, self._historyTitle))
         if error:
             print(error)
@@ -93,14 +97,15 @@ class TestFirefoxRefresh(MarionetteTestCase):
             firstUsed: (Date.now() - 5000) * 1000,
           };
           let finished = false;
+          let resolve = arguments[arguments.length - 1];
           global.FormHistory.update(updateDefinition, {
             handleError(error) {
               finished = true;
-              marionetteScriptFinished(error);
+              resolve(error);
             },
             handleCompletion() {
               if (!finished) {
-                marionetteScriptFinished(false);
+                resolve(false);
               }
             }
           });
@@ -112,6 +117,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         if not self._formAutofillAvailable:
             return
         self._formAutofillAddressGuid = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           const TEST_ADDRESS_1 = {
             "given-name": "John",
             "additional-name": "R.",
@@ -127,7 +133,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           };
           return global.formAutofillStorage.initialize().then(() => {
             return global.formAutofillStorage.addresses.add(TEST_ADDRESS_1);
-          }).then(marionetteScriptFinished);
+          }).then(resolve);
         """)
 
     def createCookie(self):
@@ -140,6 +146,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def createSession(self):
         self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           const COMPLETE_STATE = Ci.nsIWebProgressListener.STATE_STOP +
                                  Ci.nsIWebProgressListener.STATE_IS_NETWORK;
           let {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
@@ -156,7 +163,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
                   expectedURLs.splice(expectedURLs.indexOf(uriLoaded), 1);
                   if (!expectedURLs.length) {
                     gBrowser.removeTabsProgressListener(this);
-                    marionetteScriptFinished();
+                    resolve();
                   }
                 });
               }
@@ -179,11 +186,12 @@ class TestFirefoxRefresh(MarionetteTestCase):
         # This script will write an entry to the login manager and create
         # a signedInUser.json in the profile dir.
         self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
           let storage = new FxAccountsStorageManager();
           let data = {email: "test@test.com", uid: "uid", keyFetchToken: "top-secret"};
           storage.initialize(data);
-          storage.finalize().then(marionetteScriptFinished);
+          storage.finalize().then(resolve);
         """)
 
     def checkPassword(self):
@@ -206,10 +214,10 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def checkBookmarkInMenu(self):
         titleInBookmarks = self.runAsyncCode("""
-          let url = arguments[0];
+          let [url, resolve] = arguments;
           PlacesUtils.bookmarks.fetch({url}).then(
-            bookmark => marionetteScriptFinished(bookmark ? bookmark.title : ""),
-            ex => marionetteScriptFinished(ex)
+            bookmark => resolve(bookmark ? bookmark.title : ""),
+            ex => resolve(ex)
           );
         """, script_args=(self._bookmarkURL,))
         self.assertEqual(titleInBookmarks, self._bookmarkText)
@@ -224,14 +232,15 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def checkHistory(self):
         historyResult = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           PlacesUtils.history.fetch(arguments[0]).then(pageInfo => {
             if (!pageInfo) {
-              marionetteScriptFinished("No visits found");
+              resolve("No visits found");
             } else {
-              marionetteScriptFinished(pageInfo);
+              resolve(pageInfo);
             }
           }).catch(e => {
-            marionetteScriptFinished("Unexpected error in fetching page: " + e);
+            resolve("Unexpected error in fetching page: " + e);
           });
         """, script_args=(self._historyURL,))
         if type(historyResult) == str:
@@ -242,6 +251,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def checkFormHistory(self):
         formFieldResults = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           let results = [];
           global.FormHistory.search(["value"], {fieldname: arguments[0]}, {
             handleError(error) {
@@ -251,7 +261,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               results.push(result);
             },
             handleCompletion() {
-              marionetteScriptFinished(results);
+              resolve(results);
             },
           });
         """, script_args=(self._formHistoryFieldName,))
@@ -268,11 +278,12 @@ class TestFirefoxRefresh(MarionetteTestCase):
                 formFieldResults[0]['value'], self._formHistoryValue)
 
         formHistoryCount = self.runAsyncCode("""
+          let [resolve] = arguments;
           let count;
           let callbacks = {
             handleResult: rv => count = rv,
             handleCompletion() {
-              marionetteScriptFinished(count);
+              resolve(count);
             },
           };
           global.FormHistory.count({}, callbacks);
@@ -285,9 +296,10 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return
 
         formAutofillResults = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1];
           return global.formAutofillStorage.initialize().then(() => {
             return global.formAutofillStorage.addresses.getAll()
-          }).then(marionetteScriptFinished);
+          }).then(resolve);
         """,)
         if type(formAutofillResults) == str:
             self.fail(formAutofillResults)
@@ -343,13 +355,14 @@ class TestFirefoxRefresh(MarionetteTestCase):
             pass
 
         tabURIs = self.runAsyncCode("""
+          let resolve = arguments[arguments.length - 1]
           let mm = gBrowser.selectedBrowser.messageManager;
 
           let {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
           window.addEventListener("SSWindowStateReady", function testSSPostReset() {
             window.removeEventListener("SSWindowStateReady", testSSPostReset, false);
             Promise.all(gBrowser.browsers.map(b => TabStateFlusher.flush(b))).then(function() {
-              marionetteScriptFinished([... gBrowser.browsers].map(b => b.currentURI && b.currentURI.spec));
+              resolve([... gBrowser.browsers].map(b => b.currentURI && b.currentURI.spec));
             });
           }, false);
 
@@ -370,6 +383,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
     def checkSync(self, hasMigrated):
         result = self.runAsyncCode("""
           Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
+          let resolve = arguments[arguments.length - 1];
           let prefs = new global.Preferences("services.sync.");
           let storage = new FxAccountsStorageManager();
           let result = {};
@@ -379,9 +393,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return storage.finalize();
           }).then(() => {
             result.prefUsername = prefs.get("username");
-            marionetteScriptFinished(result);
+            resolve(result);
           }).catch(err => {
-            marionetteScriptFinished(err.toString());
+            resolve(err.toString());
           });
         """)
         if type(result) != dict:
