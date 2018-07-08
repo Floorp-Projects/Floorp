@@ -337,7 +337,7 @@ button.warning {
   border-color: var(--in-content-border-focus);
 }
 
-.addon {
+richlistbox.list > richlistitem.addon {
   color: var(--in-content-text-color);
   border-bottom: 1px solid var(--in-content-box-border-color);
   padding: 5px;
@@ -564,7 +564,7 @@ button.warning {
   --view-highlight-color: #F2F2F2;
 }
 
-.addon[selected] {
+.list > .addon[selected] {
   background-color: var(--in-content-page-background);
   color: var(--in-content-page-color);
   padding-inline-start: 1px; /* compensate the 4px border */
@@ -582,7 +582,7 @@ button.warning {
 
 /*** item - uninstalled ***/
 
-.addon[status="uninstalled"] {
+.list > .addon[status="uninstalled"] {
   border: none;
 }
 
