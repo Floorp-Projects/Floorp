@@ -42,12 +42,6 @@ android {
     }
 }
 
-kotlin {
-    experimental {
-        coroutines "enable"
-    }
-}
-
 
 dependencies {
     implementation project(':service-fxa')   

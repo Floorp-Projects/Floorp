@@ -21,12 +21,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    kotlin {
-        experimental {
-            coroutines 'enable'
-        }
-    }
 }
 
 dependencies {
