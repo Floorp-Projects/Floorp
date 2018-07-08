@@ -12,10 +12,12 @@ var EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "LabelUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
@@ -801,7 +803,7 @@ this.FormAutofillHeuristics = {
     let isSelectElem = elementTagName == "SELECT";
     let regExpListCache = this._getRegExpListCache(
       isAutoCompleteOff,
-      FormAutofillUtils.isAutofillCreditCardsAvailable,
+      FormAutofill.isAutofillCreditCardsAvailable,
       isSelectElem
     );
     if (regExpListCache) {
@@ -816,7 +818,7 @@ this.FormAutofillHeuristics = {
     ];
     let regexps = isAutoCompleteOff ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF : Object.keys(this.RULES);
 
-    if (!FormAutofillUtils.isAutofillCreditCardsAvailable) {
+    if (!FormAutofill.isAutofillCreditCardsAvailable) {
       regexps = regexps.filter(name => !FormAutofillUtils.isCreditCardField(name));
     }
 
@@ -835,7 +837,7 @@ this.FormAutofillHeuristics = {
     this._setRegExpListCache(
       regexps,
       isAutoCompleteOff,
-      FormAutofillUtils.isAutofillCreditCardsAvailable,
+      FormAutofill.isAutofillCreditCardsAvailable,
       isSelectElem
     );
 
