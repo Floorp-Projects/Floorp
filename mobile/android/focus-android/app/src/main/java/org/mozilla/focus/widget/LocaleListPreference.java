@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.AsyncTask;
 import android.preference.ListPreference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -17,6 +18,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
 
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.text.Collator;
 import java.util.Arrays;
@@ -27,10 +29,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import kotlin.Pair;
+
 public class LocaleListPreference extends ListPreference {
     private static final String LOG_TAG = "GeckoLocaleList";
 
     private static final Map<String, String> languageCodeToNameMap = new HashMap<>();
+
     static {
         // Only ICU 57 actually contains the Asturian name for Asturian, even Android 7.1 is still
         // shipping with ICU 56, so we need to override the Asturian name (otherwise displayName will
@@ -61,15 +66,15 @@ public class LocaleListPreference extends ListPreference {
     /**
      * With thanks to <http://stackoverflow.com/a/22679283/22003> for the
      * initial solution.
-     *
+     * <p>
      * This class encapsulates an approach to checking whether a script
      * is usable on a device. We attempt to draw a character from the
      * script (e.g., ব). If the fonts on the device don't have the correct
      * glyph, Android typically renders whitespace (rather than .notdef).
-     *
+     * <p>
      * Pass in part of the name of the locale in its local representation,
      * and a whitespace character; this class performs the graphical comparison.
-     *
+     * <p>
      * See Bug 1023451 Comment 24 for extensive explanation.
      */
     private static class CharacterValidator {
@@ -121,6 +126,7 @@ public class LocaleListPreference extends ListPreference {
 
     private volatile Locale entriesLocale;
     private CharacterValidator characterValidator;
+    private BuildLocaleListTask buildLocaleListTask;
 
     public LocaleListPreference(Context context) {
         this(context, null);
@@ -139,7 +145,32 @@ public class LocaleListPreference extends ListPreference {
         // or other Unicode codepoint.
         this.characterValidator = new CharacterValidator(" ");
 
-        buildList();
+        initializeLocaleList();
+    }
+
+    private void initializeLocaleList() {
+        final Locale currentLocale = Locale.getDefault();
+        Log.d(LOG_TAG, "Building locales list. Current locale: " + currentLocale);
+
+        if (currentLocale.equals(this.entriesLocale) && getEntries() != null) {
+            Log.v(LOG_TAG, "No need to build list.");
+            return;
+        }
+
+        this.entriesLocale = currentLocale;
+
+        String defaultLanguage = getContext().getString(R.string.preference_language_systemdefault);
+        this.buildLocaleListTask = new BuildLocaleListTask(this, defaultLanguage,
+                characterValidator, LocaleManager.getPackagedLocaleTags(getContext()));
+        this.buildLocaleListTask.execute();
+    }
+
+    @Override
+    protected void onPrepareForRemoval() {
+        super.onPrepareForRemoval();
+        if (buildLocaleListTask != null) {
+            buildLocaleListTask.cancel(true);
+        }
     }
 
     private static final class LocaleDescriptor implements Comparable<LocaleDescriptor> {
@@ -176,8 +207,15 @@ public class LocaleListPreference extends ListPreference {
             // for Bug 1014602, but it won't generalize to all locales.
             final byte directionality = Character.getDirectionality(displayName.charAt(0));
             if (directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT) {
-                this.nativeName = displayName.substring(0, 1).toUpperCase(locale) +
-                        displayName.substring(1);
+                String firstLetter = displayName.substring(0, 1);
+
+                // Android OS creates an instance of Transliterator to convert the first letter
+                // of the Greek locale. See CaseMapper.toUpperCase(Locale locale, String s, int count)
+                // Since it's already in upper case, we don't need it
+                if (!Character.isUpperCase(firstLetter.charAt(0))) {
+                    firstLetter = firstLetter.toUpperCase(locale);
+                }
+                this.nativeName = firstLetter + displayName.substring(1);
                 return;
             }
 
@@ -199,7 +237,7 @@ public class LocaleListPreference extends ListPreference {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof  LocaleDescriptor) {
+            if (obj instanceof LocaleDescriptor) {
                 return compareTo((LocaleDescriptor) obj) == 0;
             } else {
                 return false;
@@ -222,7 +260,7 @@ public class LocaleListPreference extends ListPreference {
          * this method.
          *
          * @return true if this locale can be used for displaying UI
-         *         on this device without known issues.
+         * on this device without known issues.
          */
         public boolean isUsable(CharacterValidator validator) {
             // Oh, for Java 7 switch statements.
@@ -256,34 +294,6 @@ public class LocaleListPreference extends ListPreference {
 
             return true;
         }
-    }
-
-    /**
-     * Not every locale we ship can be used on every device, due to
-     * font or rendering constraints.
-     *
-     * This method filters down the list before generating the descriptor array.
-     */
-    private LocaleDescriptor[] getUsableLocales() {
-        final Collection<String> shippingLocales = LocaleManager.getPackagedLocaleTags(getContext());
-
-        final int initialCount = shippingLocales.size();
-        final Set<LocaleDescriptor> locales = new HashSet<>(initialCount);
-        for (String tag : shippingLocales) {
-            final LocaleDescriptor descriptor = new LocaleDescriptor(tag);
-
-            if (!descriptor.isUsable(this.characterValidator)) {
-                Log.w(LOG_TAG, "Skipping locale " + tag + " on this device.");
-                continue;
-            }
-
-            locales.add(descriptor);
-        }
-
-        final int usableCount = locales.size();
-        final LocaleDescriptor[] descriptors = locales.toArray(new LocaleDescriptor[usableCount]);
-        Arrays.sort(descriptors, 0, usableCount);
-        return descriptors;
     }
 
     @Override
@@ -320,37 +330,78 @@ public class LocaleListPreference extends ListPreference {
         return new LocaleDescriptor(value).getDisplayName();
     }
 
-    private void buildList() {
-        final Locale currentLocale = Locale.getDefault();
-        Log.d(LOG_TAG, "Building locales list. Current locale: " + currentLocale);
+    static final class BuildLocaleListTask extends AsyncTask<Void, Void, Pair<String[], String[]>> {
 
-        if (currentLocale.equals(this.entriesLocale) &&
-                getEntries() != null) {
-            Log.v(LOG_TAG, "No need to build list.");
-            return;
+        private final WeakReference<ListPreference> weakListPreference;
+        private final CharacterValidator characterValidator;
+        private final Collection<String> shippingLocales;
+        private final String systemDefaultLanguage;
+
+        BuildLocaleListTask(ListPreference listPreference, String systemDefaultLanguage,
+                            CharacterValidator characterValidator, Collection<String> shippingLocales) {
+            this.characterValidator = characterValidator;
+            this.shippingLocales = shippingLocales;
+            this.systemDefaultLanguage = systemDefaultLanguage;
+            this.weakListPreference = new WeakReference<>(listPreference);
         }
 
-        final LocaleDescriptor[] descriptors = getUsableLocales();
-        final int count = descriptors.length;
+        @Override
+        protected Pair<String[], String[]> doInBackground(Void... voids) {
+            final LocaleDescriptor[] descriptors = getUsableLocales();
+            final int count = descriptors.length;
 
-        this.entriesLocale = currentLocale;
+            // We leave room for "System default".
+            final String[] entries = new String[count + 1];
+            final String[] values = new String[count + 1];
 
-        // We leave room for "System default".
-        final String[] entries = new String[count + 1];
-        final String[] values = new String[count + 1];
+            entries[0] = systemDefaultLanguage;
+            values[0] = "";
 
-        entries[0] = getContext().getString(R.string.preference_language_systemdefault);
-        values[0] = "";
-
-        for (int i = 0; i < count; ++i) {
-            final String displayName = descriptors[i].getDisplayName();
-            final String tag = descriptors[i].getTag();
-            Log.v(LOG_TAG, displayName + " => " + tag);
-            entries[i + 1] = displayName;
-            values[i + 1] = tag;
+            for (int i = 0; i < count; ++i) {
+                final String displayName = descriptors[i].getDisplayName();
+                final String tag = descriptors[i].getTag();
+                Log.v(LOG_TAG, displayName + " => " + tag);
+                entries[i + 1] = displayName;
+                values[i + 1] = tag;
+            }
+            return new Pair<>(entries, values);
         }
 
-        setEntries(entries);
-        setEntryValues(values);
+        /**
+         * Not every locale we ship can be used on every device, due to
+         * font or rendering constraints.
+         * <p>
+         * This method filters down the list before generating the descriptor array.
+         */
+        private LocaleDescriptor[] getUsableLocales() {
+            final int initialCount = shippingLocales.size();
+            final Set<LocaleDescriptor> locales = new HashSet<>(initialCount);
+            for (String tag : shippingLocales) {
+                final LocaleDescriptor descriptor = new LocaleDescriptor(tag);
+                if (!descriptor.isUsable(this.characterValidator)) {
+                    Log.w(LOG_TAG, "Skipping locale " + tag + " on this device.");
+                    continue;
+                }
+
+                locales.add(descriptor);
+            }
+            final int usableCount = locales.size();
+            final LocaleDescriptor[] descriptors = locales.toArray(new LocaleDescriptor[usableCount]);
+            Arrays.sort(descriptors, 0, usableCount);
+            return descriptors;
+        }
+
+        @Override
+        protected void onPostExecute(Pair<String[], String[]> pair) {
+            if (isCancelled()) {
+                return;
+            }
+
+            final ListPreference preference = weakListPreference.get();
+            if (preference != null) {
+                preference.setEntries(pair.getFirst());
+                preference.setEntryValues(pair.getSecond());
+            }
+        }
     }
 }
