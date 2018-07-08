@@ -144,11 +144,12 @@ class AwsyTestCase(MarionetteTestCase):
         # NB: we could do this w/ a signal or the fifo queue too
         self.logger.info("starting gc...")
         gc_script = """
+            let [resolve] = arguments;
             Cu.import("resource://gre/modules/Services.jsm");
             Services.obs.notifyObservers(null, "child-mmu-request", null);
 
             let memMgrSvc = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
-            memMgrSvc.minimizeMemoryUsage(() => marionetteScriptFinished("gc done!"));
+            memMgrSvc.minimizeMemoryUsage(() => {resolve("gc done!");});
             """
         result = None
         try:
@@ -187,10 +188,11 @@ class AwsyTestCase(MarionetteTestCase):
                                replace('/', '\\\\'))
 
         checkpoint_script = r"""
+            let [resolve] = arguments;
             let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
             dumper.dumpMemoryReportsToNamedFile(
                 "%s",
-                () => marionetteScriptFinished("memory report done!"),
+                () => resolve("memory report done!"),
                 null,
                 /* anonymize */ false);
             """ % checkpoint_path

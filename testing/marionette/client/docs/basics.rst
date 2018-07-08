@@ -168,13 +168,14 @@ running asynchronous JavaScript:
                                   script_args=[2, 3])
    assert result == 5
 
-The async method works the same way, except it won't return until a special
-`marionetteScriptFinished()` function is called:
+The async method works the same way, except it won't return until the
+`resolve()` function is called:
 
 .. parsed-literal::
    result = client.execute_async_script("""
+       let [resolve] = arguments;
        setTimeout(function() {
-         marionetteScriptFinished("all done");
+         resolve("all done");
        }, arguments[0]);
    """, script_args=[1000])
    assert result == "all done"

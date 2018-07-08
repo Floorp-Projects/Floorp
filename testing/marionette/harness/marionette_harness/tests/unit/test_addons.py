@@ -30,10 +30,12 @@ class TestAddons(MarionetteTestCase):
     def all_addon_ids(self):
         with self.marionette.using_context("chrome"):
             addons = self.marionette.execute_async_script("""
+              let [resolve] = arguments;
               Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
               AddonManager.getAllAddons().then(function(addons) {
                 let ids = addons.map(x => x.id);
-                marionetteScriptFinished(ids);
+                resolve(ids);
               });
             """)
 
@@ -43,11 +45,13 @@ class TestAddons(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             for addon in (self.all_addon_ids - self.preinstalled_addons):
                 addon_id = self.marionette.execute_async_script("""
+                  let [resolve] = arguments;
                   Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
                   return new Promise(await resolve => {
                     let addon = await AddonManager.getAddonByID(arguments[0]);
                     addon.uninstall();
-                    marionetteScriptFinished(addon.id);
+                    resolve(addon.id);
                   });
                 """, script_args=(addon,))
                 self.assertEqual(addon_id, addon,

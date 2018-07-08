@@ -19,14 +19,14 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertEqual(1, self.marionette.execute_async_script("arguments[arguments.length-1](1);"))
 
     def test_execute_async_ours(self):
-        self.assertEqual(1, self.marionette.execute_async_script("marionetteScriptFinished(1);"))
+        self.assertEqual(1, self.marionette.execute_async_script("arguments[0](1);"))
 
     def test_execute_async_timeout(self):
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
 
     def test_execute_async_unique_timeout(self):
-        self.assertEqual(2, self.marionette.execute_async_script("setTimeout(function() {marionetteScriptFinished(2);}, 2000);", script_timeout=5000))
-        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(function() {marionetteScriptFinished(3);}, 2000);")
+        self.assertEqual(2, self.marionette.execute_async_script("setTimeout(() => arguments[0](2), 2000);", script_timeout=5000))
+        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(() => arguments[0](3), 2000);")
 
     def test_no_timeout(self):
         self.marionette.timeout.script = 10
@@ -43,7 +43,7 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, unload)
 
     def test_check_window(self):
-        self.assertTrue(self.marionette.execute_async_script("marionetteScriptFinished(window !=null && window != undefined);"))
+        self.assertTrue(self.marionette.execute_async_script("arguments[0](window != null && window != undefined);"))
 
     def test_same_context(self):
         var1 = 'testing'
@@ -52,10 +52,10 @@ class TestExecuteAsyncContent(MarionetteTestCase):
             return this.testvar;
             """.format(var1)), var1)
         self.assertEqual(self.marionette.execute_async_script(
-            "marionetteScriptFinished(this.testvar);", new_sandbox=False), var1)
+            "arguments[0](this.testvar);", new_sandbox=False), var1)
 
     def test_execute_no_return(self):
-        self.assertEqual(self.marionette.execute_async_script("marionetteScriptFinished()"), None)
+        self.assertEqual(self.marionette.execute_async_script("arguments[0]()"), None)
 
     def test_execute_js_exception(self):
         try:
@@ -81,29 +81,31 @@ class TestExecuteAsyncContent(MarionetteTestCase):
 
     def test_script_finished(self):
         self.assertTrue(self.marionette.execute_async_script("""
-            marionetteScriptFinished(true);
+            arguments[0](true);
             """))
 
     def test_execute_permission(self):
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, """
 let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
-marionetteScriptFinished(4);
+arguments[0](4);
 """)
 
     def test_sandbox_reuse(self):
         # Sandboxes between `execute_script()` invocations are shared.
         self.marionette.execute_async_script("this.foobar = [23, 42];"
-                                             "marionetteScriptFinished();")
+                                             "arguments[0]();")
         self.assertEqual(self.marionette.execute_async_script(
-            "marionetteScriptFinished(this.foobar);", new_sandbox=False), [23, 42])
+            "arguments[0](this.foobar);", new_sandbox=False), [23, 42])
 
     def test_sandbox_refresh_arguments(self):
         self.marionette.execute_async_script("this.foobar = [arguments[0], arguments[1]];"
-                                             "marionetteScriptFinished();",
+                                             "let resolve = "
+                                                 "arguments[arguments.length - 1];"
+                                             "resolve();",
                                              script_args=[23, 42])
         self.assertEqual(self.marionette.execute_async_script(
-            "marionetteScriptFinished(this.foobar);", new_sandbox=False),
+            "arguments[0](this.foobar);", new_sandbox=False),
                          [23, 42])
 
     # Functions defined in higher privilege scopes, such as the privileged
@@ -131,7 +133,7 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
     def test_execute_permission(self):
         self.assertEqual(5, self.marionette.execute_async_script("""
 var c = Components.classes;
-marionetteScriptFinished(5);
+arguments[0](5);
 """))
 
     def test_execute_async_js_exception(self):
