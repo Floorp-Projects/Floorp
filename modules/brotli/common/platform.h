@@ -4,34 +4,6 @@
    See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
-/* Macros for compiler / platform specific features and build options. */
-
-#ifndef BROTLI_COMMON_PLATFORM_H_
-#define BROTLI_COMMON_PLATFORM_H_
-
-#include <string.h>  /* memcpy */
-#include <stdlib.h>  /* malloc, free */
-
-#include <brotli/port.h>
-#include <brotli/types.h>
-
-#if defined OS_LINUX || defined OS_CYGWIN
-#include <endian.h>
-#elif defined OS_FREEBSD
-#include <machine/endian.h>
-#elif defined OS_MACOSX
-#include <machine/endian.h>
-/* Let's try and follow the Linux convention */
-#define BROTLI_X_BYTE_ORDER BYTE_ORDER
-#define BROTLI_X_LITTLE_ENDIAN LITTLE_ENDIAN
-#define BROTLI_X_BIG_ENDIAN BIG_ENDIAN
-#endif
-
-#if defined(BROTLI_ENABLE_LOG) || defined(BROTLI_DEBUG)
-#include <assert.h>
-#include <stdio.h>
-#endif
-
 /* Macros for compiler / platform specific features and build options.
 
    Build options are:
@@ -48,55 +20,164 @@
     * BROTLI_ENABLE_LOG enables asserts and dumps various state information
 */
 
-#if BROTLI_MODERN_COMPILER || __has_attribute(always_inline)
-#define BROTLI_ATTRIBUTE_ALWAYS_INLINE __attribute__ ((always_inline))
+#ifndef BROTLI_COMMON_PLATFORM_H_
+#define BROTLI_COMMON_PLATFORM_H_
+
+#include <string.h>  /* memcpy */
+#include <stdlib.h>  /* malloc, free */
+
+#include <brotli/port.h>
+#include <brotli/types.h>
+
+#if defined(OS_LINUX) || defined(OS_CYGWIN)
+#include <endian.h>
+#elif defined(OS_FREEBSD)
+#include <machine/endian.h>
+#elif defined(OS_MACOSX)
+#include <machine/endian.h>
+/* Let's try and follow the Linux convention */
+#define BROTLI_X_BYTE_ORDER BYTE_ORDER
+#define BROTLI_X_LITTLE_ENDIAN LITTLE_ENDIAN
+#define BROTLI_X_BIG_ENDIAN BIG_ENDIAN
+#endif
+
+#if defined(BROTLI_ENABLE_LOG) || defined(BROTLI_DEBUG)
+#include <assert.h>
+#include <stdio.h>
+#endif
+
+/* The following macros were borrowed from https://github.com/nemequ/hedley
+ * with permission of original author - Evan Nemerson <evan@nemerson.com> */
+
+/* >>> >>> >>> hedley macros */
+
+/* Define "BROTLI_PREDICT_TRUE" and "BROTLI_PREDICT_FALSE" macros for capable
+   compilers.
+
+To apply compiler hint, enclose the branching condition into macros, like this:
+
+  if (BROTLI_PREDICT_TRUE(zero == 0)) {
+    // main execution path
+  } else {
+    // compiler should place this code outside of main execution path
+  }
+
+OR:
+
+  if (BROTLI_PREDICT_FALSE(something_rare_or_unexpected_happens)) {
+    // compiler should place this code outside of main execution path
+  }
+
+*/
+#if BROTLI_GNUC_HAS_BUILTIN(__builtin_expect, 3, 0, 0) || \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0) ||               \
+    BROTLI_SUNPRO_VERSION_CHECK(5, 12, 0) ||              \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) ||                  \
+    BROTLI_IBM_VERSION_CHECK(10, 1, 0) ||                 \
+    BROTLI_TI_VERSION_CHECK(7, 3, 0) ||                   \
+    BROTLI_TINYC_VERSION_CHECK(0, 9, 27)
+#define BROTLI_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
+#define BROTLI_PREDICT_FALSE(x) (__builtin_expect(x, 0))
 #else
-#define BROTLI_ATTRIBUTE_ALWAYS_INLINE
+#define BROTLI_PREDICT_FALSE(x) (x)
+#define BROTLI_PREDICT_TRUE(x) (x)
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
-#define BROTLI_ATTRIBUTE_VISIBILITY_HIDDEN
-#elif BROTLI_MODERN_COMPILER || __has_attribute(visibility)
-#define BROTLI_ATTRIBUTE_VISIBILITY_HIDDEN \
-    __attribute__ ((visibility ("hidden")))
-#else
-#define BROTLI_ATTRIBUTE_VISIBILITY_HIDDEN
-#endif
-
-#ifndef BROTLI_INTERNAL
-#define BROTLI_INTERNAL BROTLI_ATTRIBUTE_VISIBILITY_HIDDEN
-#endif
-
-#ifndef _MSC_VER
-#if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
-    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
-#define BROTLI_INLINE inline BROTLI_ATTRIBUTE_ALWAYS_INLINE
-#else
-#define BROTLI_INLINE
-#endif
-#else  /* _MSC_VER */
-#define BROTLI_INLINE __forceinline
-#endif  /* _MSC_VER */
-
-#if BROTLI_MODERN_COMPILER || __has_attribute(unused)
-#define BROTLI_UNUSED_FUNCTION static BROTLI_INLINE __attribute__ ((unused))
-#else
-#define BROTLI_UNUSED_FUNCTION static BROTLI_INLINE
-#endif
-
-#if !defined(__cplusplus) && !defined(c_plusplus) && \
-    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) && \
+    !defined(__cplusplus)
 #define BROTLI_RESTRICT restrict
-#elif BROTLI_GCC_VERSION > 295 || defined(__llvm__)
+#elif BROTLI_GNUC_VERSION_CHECK(3, 1, 0) ||                         \
+    BROTLI_MSVC_VERSION_CHECK(14, 0, 0) ||                          \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0) ||                         \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) ||                            \
+    BROTLI_IBM_VERSION_CHECK(10, 1, 0) ||                           \
+    BROTLI_PGI_VERSION_CHECK(17, 10, 0) ||                          \
+    BROTLI_TI_VERSION_CHECK(8, 0, 0) ||                             \
+    BROTLI_IAR_VERSION_CHECK(8, 0, 0) ||                            \
+    (BROTLI_SUNPRO_VERSION_CHECK(5, 14, 0) && defined(__cplusplus))
 #define BROTLI_RESTRICT __restrict
+#elif BROTLI_SUNPRO_VERSION_CHECK(5, 3, 0) && !defined(__cplusplus)
+#define BROTLI_RESTRICT _Restrict
 #else
 #define BROTLI_RESTRICT
 #endif
 
-#if BROTLI_MODERN_COMPILER || __has_attribute(noinline)
-#define BROTLI_NOINLINE __attribute__((noinline))
+#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) || \
+    (defined(__cplusplus) && (__cplusplus >= 199711L))
+#define BROTLI_MAYBE_INLINE inline
+#elif defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__) || \
+    BROTLI_ARM_VERSION_CHECK(6, 2, 0)
+#define BROTLI_MAYBE_INLINE __inline__
+#elif BROTLI_MSVC_VERSION_CHECK(12, 0, 0) || \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) || BROTLI_TI_VERSION_CHECK(8, 0, 0)
+#define BROTLI_MAYBE_INLINE __inline
+#else
+#define BROTLI_MAYBE_INLINE
+#endif
+
+#if BROTLI_GNUC_HAS_ATTRIBUTE(always_inline, 4, 0, 0) ||                       \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0) ||                                    \
+    BROTLI_SUNPRO_VERSION_CHECK(5, 11, 0) ||                                   \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) ||                                       \
+    BROTLI_IBM_VERSION_CHECK(10, 1, 0) ||                                      \
+    BROTLI_TI_VERSION_CHECK(8, 0, 0) ||                                        \
+    (BROTLI_TI_VERSION_CHECK(7, 3, 0) && defined(__TI_GNU_ATTRIBUTE_SUPPORT__))
+#define BROTLI_INLINE BROTLI_MAYBE_INLINE __attribute__((__always_inline__))
+#elif BROTLI_MSVC_VERSION_CHECK(12, 0, 0)
+#define BROTLI_INLINE BROTLI_MAYBE_INLINE __forceinline
+#elif BROTLI_TI_VERSION_CHECK(7, 0, 0) && defined(__cplusplus)
+#define BROTLI_INLINE BROTLI_MAYBE_INLINE _Pragma("FUNC_ALWAYS_INLINE;")
+#elif BROTLI_IAR_VERSION_CHECK(8, 0, 0)
+#define BROTLI_INLINE BROTLI_MAYBE_INLINE _Pragma("inline=forced")
+#else
+#define BROTLI_INLINE BROTLI_MAYBE_INLINE
+#endif
+
+#if BROTLI_GNUC_HAS_ATTRIBUTE(noinline, 4, 0, 0) ||                            \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0) ||                                    \
+    BROTLI_SUNPRO_VERSION_CHECK(5, 11, 0) ||                                   \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) ||                                       \
+    BROTLI_IBM_VERSION_CHECK(10, 1, 0) ||                                      \
+    BROTLI_TI_VERSION_CHECK(8, 0, 0) ||                                        \
+    (BROTLI_TI_VERSION_CHECK(7, 3, 0) && defined(__TI_GNU_ATTRIBUTE_SUPPORT__))
+#define BROTLI_NOINLINE __attribute__((__noinline__))
+#elif BROTLI_MSVC_VERSION_CHECK(13, 10, 0)
+#define BROTLI_NOINLINE __declspec(noinline)
+#elif BROTLI_PGI_VERSION_CHECK(10, 2, 0)
+#define BROTLI_NOINLINE _Pragma("noinline")
+#elif BROTLI_TI_VERSION_CHECK(6, 0, 0) && defined(__cplusplus)
+#define BROTLI_NOINLINE _Pragma("FUNC_CANNOT_INLINE;")
+#elif BROTLI_IAR_VERSION_CHECK(8, 0, 0)
+#define BROTLI_NOINLINE _Pragma("inline=never")
 #else
 #define BROTLI_NOINLINE
+#endif
+
+/* BROTLI_INTERNAL could be defined to override visibility, e.g. for tests. */
+#if !defined(BROTLI_INTERNAL)
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define BROTLI_INTERNAL
+#elif BROTLI_GNUC_VERSION_CHECK(3, 3, 0) ||                         \
+    BROTLI_TI_VERSION_CHECK(8, 0, 0) ||                             \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0) ||                         \
+    BROTLI_ARM_VERSION_CHECK(4, 1, 0) ||                            \
+    BROTLI_IBM_VERSION_CHECK(13, 1, 0) ||                           \
+    BROTLI_SUNPRO_VERSION_CHECK(5, 11, 0) ||                        \
+    (BROTLI_TI_VERSION_CHECK(7, 3, 0) &&                            \
+     defined(__TI_GNU_ATTRIBUTE_SUPPORT__) && defined(__TI_EABI__))
+#define BROTLI_INTERNAL __attribute__ ((visibility ("hidden")))
+#else
+#define BROTLI_INTERNAL
+#endif
+#endif
+
+/* <<< <<< <<< end of hedley macros. */
+
+#if BROTLI_GNUC_HAS_ATTRIBUTE(unused, 2, 7, 0) || \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0)
+#define BROTLI_UNUSED_FUNCTION static BROTLI_INLINE __attribute__ ((unused))
+#else
+#define BROTLI_UNUSED_FUNCTION static BROTLI_INLINE
 #endif
 
 #if (defined(__ARM_ARCH) && (__ARM_ARCH == 7)) || \
@@ -121,12 +202,16 @@
 #define BROTLI_TARGET_POWERPC64
 #endif
 
+#if defined(__riscv) && defined(__riscv_xlen) && __riscv_xlen == 64
+#define BROTLI_TARGET_RISCV64
+#endif
+
 #if defined(BROTLI_BUILD_64_BIT)
 #define BROTLI_64_BITS 1
 #elif defined(BROTLI_BUILD_32_BIT)
 #define BROTLI_64_BITS 0
 #elif defined(BROTLI_TARGET_X64) || defined(BROTLI_TARGET_ARMV8) || \
-    defined(BROTLI_TARGET_POWERPC64)
+    defined(BROTLI_TARGET_POWERPC64) || defined(BROTLI_TARGET_RISCV64)
 #define BROTLI_64_BITS 1
 #else
 #define BROTLI_64_BITS 0
@@ -167,16 +252,17 @@
 #define BROTLI_BIG_ENDIAN 0
 #endif
 
-#ifdef BROTLI_X_BYTE_ORDER
+#if defined(BROTLI_X_BYTE_ORDER)
 #undef BROTLI_X_BYTE_ORDER
 #undef BROTLI_X_LITTLE_ENDIAN
 #undef BROTLI_X_BIG_ENDIAN
 #endif
 
-#ifdef BROTLI_BUILD_PORTABLE
+#if defined(BROTLI_BUILD_PORTABLE)
 #define BROTLI_ALIGNED_READ (!!1)
 #elif defined(BROTLI_TARGET_X86) || defined(BROTLI_TARGET_X64) || \
-     defined(BROTLI_TARGET_ARMV7) || defined(BROTLI_TARGET_ARMV8)
+    defined(BROTLI_TARGET_ARMV7) || defined(BROTLI_TARGET_ARMV8) || \
+    defined(BROTLI_TARGET_RISCV64)
 /* Allow unaligned read only for white-listed CPUs. */
 #define BROTLI_ALIGNED_READ (!!0)
 #else
@@ -306,34 +392,9 @@ static BROTLI_INLINE void BROTLI_UNALIGNED_STORE64LE(void* p, uint64_t v) {
 }
 #endif  /* BROTLI_LITTLE_ENDIAN */
 
-/* Define "BROTLI_PREDICT_TRUE" and "BROTLI_PREDICT_FALSE" macros for capable
-   compilers.
-
-To apply compiler hint, enclose the branching condition into macros, like this:
-
-  if (BROTLI_PREDICT_TRUE(zero == 0)) {
-    // main execution path
-  } else {
-    // compiler should place this code outside of main execution path
-  }
-
-OR:
-
-  if (BROTLI_PREDICT_FALSE(something_rare_or_unexpected_happens)) {
-    // compiler should place this code outside of main execution path
-  }
-
-*/
-#if BROTLI_MODERN_COMPILER || __has_builtin(__builtin_expect)
-#define BROTLI_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
-#define BROTLI_PREDICT_FALSE(x) (__builtin_expect(x, 0))
-#else
-#define BROTLI_PREDICT_FALSE(x) (x)
-#define BROTLI_PREDICT_TRUE(x) (x)
-#endif
-
 /* BROTLI_IS_CONSTANT macros returns true for compile-time constants. */
-#if BROTLI_MODERN_COMPILER || __has_builtin(__builtin_constant_p)
+#if BROTLI_GNUC_HAS_BUILTIN(__builtin_constant_p, 3, 0, 1) || \
+    BROTLI_INTEL_VERSION_CHECK(16, 0, 0)
 #define BROTLI_IS_CONSTANT(x) (!!__builtin_constant_p(x))
 #else
 #define BROTLI_IS_CONSTANT(x) (!!0)
@@ -345,7 +406,7 @@ OR:
 #define BROTLI_HAS_UBFX (!!0)
 #endif
 
-#ifdef BROTLI_ENABLE_LOG
+#if defined(BROTLI_ENABLE_LOG)
 #define BROTLI_DCHECK(x) assert(x)
 #define BROTLI_LOG(x) printf x
 #else
@@ -363,7 +424,8 @@ static BROTLI_INLINE void BrotliDump(const char* f, int l, const char* fn) {
 #define BROTLI_DUMP() (void)(0)
 #endif
 
-#if (BROTLI_MODERN_COMPILER || defined(__llvm__)) && \
+/* TODO: add appropriate icc/sunpro/arm/ibm/ti checks. */
+#if (BROTLI_GNUC_VERSION_CHECK(3, 0, 0) || defined(__llvm__)) && \
     !defined(BROTLI_BUILD_NO_RBIT)
 #if defined(BROTLI_TARGET_ARMV7) || defined(BROTLI_TARGET_ARMV8)
 /* TODO: detect ARMv6T2 and enable this code for it. */
