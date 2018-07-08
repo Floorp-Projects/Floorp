@@ -159,7 +159,7 @@ button.warning {
   padding-top: 31px;
 }
 
-.category[disabled] {
+#categories > .category[disabled] {
   overflow: hidden;
   height: 0;
   min-height: 0;
@@ -168,7 +168,7 @@ button.warning {
   transition-duration: 1s, 0.8s;
 }
 
-.category:not([disabled]) {
+#categories > .category:not([disabled]) {
   transition-property: min-height, opacity;
   transition-duration: 1s, 0.8s;
 }
