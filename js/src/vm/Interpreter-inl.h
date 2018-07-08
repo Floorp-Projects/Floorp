@@ -447,7 +447,7 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
 }
 
 static MOZ_ALWAYS_INLINE bool
-NegOperation(JSContext* cx, HandleValue val, MutableHandleValue res)
+NegOperation(JSContext* cx, MutableHandleValue val, MutableHandleValue res)
 {
     /*
      * When the operand is int jsval, INT32_FITS_IN_JSVAL(i) implies
