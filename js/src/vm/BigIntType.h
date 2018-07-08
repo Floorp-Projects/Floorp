@@ -73,6 +73,13 @@ class BigInt final : public js::gc::TenuredCell
     static void init();
 
     static BigInt* copy(JSContext* cx, Handle<BigInt*> x);
+    static BigInt* add(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* sub(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* mul(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* div(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* mod(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* pow(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
+    static BigInt* neg(JSContext* cx, Handle<BigInt*> x);
 
     static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
