@@ -27,6 +27,10 @@
           "targeting": {
             "type": "string",
             "description": "a JEXL expression representing targeting information"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "A string representing what the trigger to show this message is."
           }
         },
         "required": ["id", "template", "content"]
