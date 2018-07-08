@@ -17,7 +17,7 @@ CHECKPOINTS = [
         'name': "After tabs open [+30s, forced GC]",
         'path': "memory-report-TabsOpenForceGC-4.json.gz",
         'name_filter': 'Web Content', # We only want the content process
-        'count': 1 # We only care about the first one
+        'median': True, # We want the median from all content processes
     },
 ]
 
