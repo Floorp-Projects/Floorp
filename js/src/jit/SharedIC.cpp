@@ -719,7 +719,7 @@ DoBinaryArithFallback(JSContext* cx, void* payload, ICBinaryArith_Fallback* stub
             return false;
         break;
       case JSOP_POW:
-        if (!math_pow_handle(cx, lhsCopy, rhsCopy, ret))
+        if (!PowValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_BITOR: {
