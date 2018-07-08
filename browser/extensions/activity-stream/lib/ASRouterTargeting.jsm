@@ -33,15 +33,11 @@ const TargetingGetters = {
   }
 };
 
-function EnvironmentTargeting(target) {
-  return {isFirstRun: target.url === "about:welcome"};
-}
-
 this.ASRouterTargeting = {
   Environment: TargetingGetters,
 
   isMatch(filterExpression, target, context = this.Environment) {
-    return FilterExpressions.eval(filterExpression, {...context, ...EnvironmentTargeting(target)});
+    return FilterExpressions.eval(filterExpression, context);
   },
 
   /**
@@ -58,7 +54,20 @@ this.ASRouterTargeting = {
     let candidate;
     while (!match && arrayOfItems.length) {
       candidate = removeRandomItemFromArray(arrayOfItems);
-      if (candidate && (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))) {
+      if (candidate && !candidate.trigger && (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))) {
+        match = candidate;
+      }
+    }
+    return match;
+  },
+
+  async findMatchingMessageWithTrigger(messages, target, trigger, context) {
+    const arrayOfItems = [...messages];
+    let match;
+    let candidate;
+    while (!match && arrayOfItems.length) {
+      candidate = removeRandomItemFromArray(arrayOfItems);
+      if (candidate && candidate.trigger === trigger && (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))) {
         match = candidate;
       }
     }

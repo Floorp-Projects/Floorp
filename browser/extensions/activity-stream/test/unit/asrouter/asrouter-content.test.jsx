@@ -43,6 +43,7 @@ describe("ASRouterUISurface", () => {
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     fakeDocument = {
+      location: {href: ""},
       _listeners: new Set(),
       _visibilityState: "hidden",
       get visibilityState() {

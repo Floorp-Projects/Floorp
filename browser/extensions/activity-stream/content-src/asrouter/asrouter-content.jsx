@@ -172,7 +172,13 @@ export class ASRouterUISurface extends React.PureComponent {
 
   componentWillMount() {
     ASRouterUtils.addListener(this.onMessageFromParent);
-    ASRouterUtils.sendMessage({type: "CONNECT_UI_REQUEST"});
+
+    // If we are loading about:welcome we want to trigger the onboarding messages
+    if (this.props.document.location.href === "about:welcome") {
+      ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: "firstRun"}});
+    } else {
+      ASRouterUtils.sendMessage({type: "CONNECT_UI_REQUEST"});
+    }
   }
 
   componentWillUnmount() {
