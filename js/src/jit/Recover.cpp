@@ -802,7 +802,7 @@ RPow::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedValue result(cx);
 
     MOZ_ASSERT(base.isNumber() && power.isNumber());
-    if (!js::math_pow_handle(cx, base, power, &result))
+    if (!js::PowValues(cx, &base, &power, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -829,7 +829,7 @@ RPowHalf::recover(JSContext* cx, SnapshotIterator& iter) const
     power.setNumber(0.5);
 
     MOZ_ASSERT(base.isNumber());
-    if (!js::math_pow_handle(cx, base, power, &result))
+    if (!js::PowValues(cx, &base, &power, &result))
         return false;
 
     iter.storeInstructionResult(result);
