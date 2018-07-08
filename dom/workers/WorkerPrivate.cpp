@@ -1884,8 +1884,6 @@ WorkerPrivate::Thaw(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
 
-  MOZ_ASSERT(mParentFrozen);
-
   // Shared workers are resumed if any of their owning documents are thawed.
   // It can happen that mSharedWorkers is empty but this thread has not been
   // unregistered yet.
