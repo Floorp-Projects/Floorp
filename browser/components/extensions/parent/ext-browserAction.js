@@ -72,7 +72,8 @@ this.browserAction = class extends ExtensionAPI {
       enabled: true,
       title: options.default_title || extension.name,
       badgeText: "",
-      badgeBackgroundColor: null,
+      badgeBackgroundColor: [0xd9, 0, 0, 255],
+      badgeDefaultColor: [255, 255, 255, 255],
       badgeTextColor: null,
       popup: options.default_popup || "",
       area: browserAreas[options.default_area || "navbar"],
@@ -442,21 +443,11 @@ this.browserAction = class extends ExtensionAPI {
         node.setAttribute("disabled", "true");
       }
 
-      let {badgeBackgroundColor, badgeTextColor} = tabData;
-      let badgeStyle = [];
-      if (badgeBackgroundColor) {
-        let [r, g, b, a] = badgeBackgroundColor;
-        badgeStyle.push(`background-color: rgba(${r}, ${g}, ${b}, ${a / 255})`);
-      }
-      if (badgeTextColor) {
-        let [r, g, b, a] = badgeTextColor;
-        badgeStyle.push(`color: rgba(${r}, ${g}, ${b}, ${a / 255})`);
-      }
-      if (badgeStyle.length) {
-        node.setAttribute("badgeStyle", badgeStyle.join("; "));
-      } else {
-        node.removeAttribute("badgeStyle");
-      }
+      let serializeColor = ([r, g, b, a]) => `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+      node.setAttribute("badgeStyle", [
+        `background-color: ${serializeColor(tabData.badgeBackgroundColor)}`,
+        `color: ${serializeColor(this.getTextColor(tabData))}`,
+      ].join("; "));
 
       let style = this.iconData.get(tabData.icon);
       node.setAttribute("style", style);
@@ -569,10 +560,12 @@ this.browserAction = class extends ExtensionAPI {
    * @param {Object} details
    *        An object with optional `tabId` or `windowId` properties.
    * @param {string} prop
-   *        String property to set. Should should be one of "icon", "title", "badgeText"
+   *        String property to set. Should should be one of "icon", "title", "badgeText",
    *        "popup", "badgeBackgroundColor", "badgeTextColor" or "enabled".
    * @param {string} value
    *        Value for prop.
+   * @returns {Object}
+   *        The object to which the property has been set.
    */
   setProperty(details, prop, value) {
     let {target, values} = this.getContextData(details);
@@ -583,6 +576,54 @@ this.browserAction = class extends ExtensionAPI {
     }
 
     this.updateOnChange(target);
+    return values;
+  }
+
+  /**
+   * Determines the text badge color to be used in a tab, window, or globally.
+   *
+   * @param {Object} values
+   *        The values associated with the tab or window, or global values.
+   * @returns {ColorArray}
+   */
+  getTextColor(values) {
+    // If a text color has been explicitly provided, use it.
+    let {badgeTextColor} = values;
+    if (badgeTextColor) {
+      return badgeTextColor;
+    }
+
+    // Otherwise, check if the default color to be used has been cached previously.
+    let {badgeDefaultColor} = values;
+    if (badgeDefaultColor) {
+      return badgeDefaultColor;
+    }
+
+    // Choose a color among white and black, maximizing contrast with background
+    // according to https://www.w3.org/TR/WCAG20-TECHS/G18.html#G18-procedure
+    let [r, g, b] = values.badgeBackgroundColor.slice(0, 3).map(function(channel) {
+      channel /= 255;
+      if (channel <= 0.03928) {
+        return channel / 12.92;
+      }
+      return ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // The luminance is 0 for black, 1 for white, and `lum` for the background color.
+    // Since `0 <= lum`, the contrast ratio for black is `c0 = (lum + 0.05) / 0.05`.
+    // Since `lum <= 1`, the contrast ratio for white is `c1 = 1.05 / (lum + 0.05)`.
+    // We want to maximize contrast, so black is chosen if `c1 < c0`, that is, if
+    // `1.05 * 0.05 < (L + 0.05) ** 2`. Otherwise white is chosen.
+    let channel = 1.05 * 0.05 < (lum + 0.05) ** 2 ? 0 : 255;
+    let result = [channel, channel, channel, 255];
+
+    // Cache the result as high as possible in the prototype chain
+    while (!Object.getOwnPropertyDescriptor(values, "badgeDefaultColor")) {
+      values = Object.getPrototypeOf(values);
+    }
+    values.badgeDefaultColor = result;
+    return result;
   }
 
   /**
@@ -692,12 +733,18 @@ this.browserAction = class extends ExtensionAPI {
 
         setBadgeBackgroundColor: function(details) {
           let color = parseColor(details.color, "background");
-          browserAction.setProperty(details, "badgeBackgroundColor", color);
+          let values = browserAction.setProperty(details, "badgeBackgroundColor", color);
+          if (color === null) {
+            // Let the default text color inherit after removing background color
+            delete values.badgeDefaultColor;
+          } else {
+            // Invalidate a cached default color calculated with the old background
+            values.badgeDefaultColor = null;
+          }
         },
 
         getBadgeBackgroundColor: function(details, callback) {
-          let color = browserAction.getProperty(details, "badgeBackgroundColor");
-          return color || [0xd9, 0, 0, 255];
+          return browserAction.getProperty(details, "badgeBackgroundColor");
         },
 
         setBadgeTextColor: function(details) {
@@ -705,9 +752,9 @@ this.browserAction = class extends ExtensionAPI {
           browserAction.setProperty(details, "badgeTextColor", color);
         },
 
-        getBadgeTextColor: function(details, callback) {
-          let color = browserAction.getProperty(details, "badgeTextColor");
-          return color || [255, 255, 255, 255];
+        getBadgeTextColor: function(details) {
+          let {values} = browserAction.getContextData(details);
+          return browserAction.getTextColor(values);
         },
 
         openPopup: function() {
