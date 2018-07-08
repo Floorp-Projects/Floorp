@@ -66,6 +66,14 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
 private:
+  void LastRelease() final
+  {
+    auto listElement = static_cast<LinkedListElement<MediaQueryList>*>(this);
+    if (listElement->isInList()) {
+      listElement->remove();
+    }
+  }
+
   void RecomputeMatches();
 
   // We only need a pointer to the document to support lazy
