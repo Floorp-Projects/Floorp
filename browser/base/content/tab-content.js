@@ -94,6 +94,7 @@ var LightweightThemeChildListenerStub = {
     addEventListener("LightweightTheme:Support", this, false, true);
     addMessageListener("LightweightTheme:Update", this);
     sendAsyncMessage("LightweightTheme:Request");
+    this.init = null;
   },
 
   handleEvent(event) {
@@ -121,6 +122,7 @@ var AboutReaderListener = {
     addEventListener("pagehide", this, false);
     addMessageListener("Reader:ToggleReaderMode", this);
     addMessageListener("Reader:PushState", this);
+    this.init = null;
   },
 
   receiveMessage(message) {
@@ -264,6 +266,7 @@ var ContentSearchMediator = {
   init(chromeGlobal) {
     chromeGlobal.addEventListener("ContentSearchClient", this, true, true);
     addMessageListener("ContentSearch", this);
+    this.init = null;
   },
 
   handleEvent(event) {
@@ -399,6 +402,7 @@ var DOMFullscreenHandler = {
     addEventListener("MozDOMFullscreen:NewOrigin", this);
     addEventListener("MozDOMFullscreen:Exit", this);
     addEventListener("MozDOMFullscreen:Exited", this);
+    this.init = null;
   },
 
   get _windowUtils() {
@@ -484,6 +488,7 @@ DOMFullscreenHandler.init();
 var UserContextIdNotifier = {
   init() {
     addEventListener("DOMWindowCreated", this);
+    this.init = null;
   },
 
   uninit() {

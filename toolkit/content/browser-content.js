@@ -84,6 +84,7 @@ var Printing = {
     this.MESSAGES.forEach(msgName => addMessageListener(msgName, this));
     addEventListener("PrintingError", this, true);
     addEventListener("printPreviewUpdate", this, true);
+    this.init = null;
   },
 
   handleEvent(event) {
@@ -134,6 +135,7 @@ var FindBar = {
     Services.els.addSystemEventListener(global, "keypress", this, false);
     Services.els.addSystemEventListener(global, "mouseup", this, false);
     this._initShortcutData();
+    this.init = null;
   },
 
   receiveMessage(msg) {
@@ -378,6 +380,7 @@ var AudioPlaybackListener = {
     addEventListener("unload", () => {
       AudioPlaybackListener.uninit();
     });
+    this.init = null;
   },
 
   uninit() {
@@ -455,6 +458,7 @@ var UnselectedTabHoverObserver = {
     addMessageListener("Browser:UnselectedTabHover", this);
     addEventListener("UnselectedTabHover:Enable", this);
     addEventListener("UnselectedTabHover:Disable", this);
+    this.init = null;
   },
   receiveMessage(message) {
     Services.obs.notifyObservers(content.window, "unselected-tab-hover",
@@ -517,6 +521,7 @@ let AutoComplete = {
 
     XPCOMUtils.defineLazyProxy(this, "popup", () => new AutoCompletePopup(global),
                                {QueryInterface: null});
+    this.init = null;
   },
 
   handleEvent(event) {
@@ -568,6 +573,7 @@ let ExtFind = {
     addMessageListener("ext-Finder:CollectResults", this);
     addMessageListener("ext-Finder:HighlightResults", this);
     addMessageListener("ext-Finder:clearHighlighting", this);
+    this.init = null;
   },
 
   _findContent: null,
