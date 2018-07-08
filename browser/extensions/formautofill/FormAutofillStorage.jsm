@@ -130,7 +130,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CreditCard",
                                "resource://gre/modules/CreditCard.jsm");
@@ -138,6 +138,8 @@ ChromeUtils.defineModuleGetter(this, "JSONFile",
                                "resource://gre/modules/JSONFile.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillNameUtils",
                                "resource://formautofill/FormAutofillNameUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "MasterPassword",
                                "resource://formautofill/MasterPassword.jsm");
 ChromeUtils.defineModuleGetter(this, "PhoneNumber",
@@ -249,7 +251,7 @@ class AutofillRecords {
    *        The schema version for the new record.
    */
   constructor(store, collectionName, validFields, validComputedFields, schemaVersion) {
-    FormAutofillUtils.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
+    FormAutofill.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
 
     this.VALID_FIELDS = validFields;
     this.VALID_COMPUTED_FIELDS = validComputedFields;
@@ -1231,7 +1233,7 @@ class Addresses extends AutofillRecords {
   }
 
   _recordReadProcessor(address) {
-    if (address.country && !FormAutofillUtils.supportedCountries.includes(address.country)) {
+    if (address.country && !FormAutofill.supportedCountries.includes(address.country)) {
       delete address.country;
       delete address["country-name"];
     }
@@ -1296,7 +1298,7 @@ class Addresses extends AutofillRecords {
     // Compute tel
     if (!("tel-national" in address)) {
       if (address.tel) {
-        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofillUtils.DEFAULT_REGION);
+        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofill.DEFAULT_REGION);
         if (tel) {
           if (tel.countryCode) {
             address["tel-country-code"] = tel.countryCode;
@@ -1385,8 +1387,10 @@ class Addresses extends AutofillRecords {
     // Only values included in the region list will be saved.
     let hasLocalizedName = false;
     try {
-      let localizedName = Services.intl.getRegionDisplayNames(undefined, [country]);
-      hasLocalizedName = localizedName != country;
+      if (country) {
+        let localizedName = Services.intl.getRegionDisplayNames(undefined, [country]);
+        hasLocalizedName = localizedName != country;
+      }
     } catch (e) {}
 
     if (country && hasLocalizedName) {
@@ -1402,7 +1406,7 @@ class Addresses extends AutofillRecords {
     if (address.tel || TEL_COMPONENTS.some(c => !!address[c])) {
       FormAutofillUtils.compressTel(address);
 
-      let possibleRegion = address.country || FormAutofillUtils.DEFAULT_REGION;
+      let possibleRegion = address.country || FormAutofill.DEFAULT_REGION;
       let tel = PhoneNumber.Parse(address.tel, possibleRegion);
 
       if (tel && tel.internationalNumber) {
