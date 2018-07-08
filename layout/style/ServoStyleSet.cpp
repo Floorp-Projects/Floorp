@@ -172,10 +172,6 @@ template<typename Functor>
 void
 EnumerateShadowRoots(const nsIDocument& aDoc, const Functor& aCb)
 {
-  if (!aDoc.IsShadowDOMEnabled()) {
-    return;
-  }
-
   const nsIDocument::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
   for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowRoot* root = iter.Get()->GetKey();
