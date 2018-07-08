@@ -90,6 +90,7 @@ var AboutBlockedSiteListener = {
   init(chromeGlobal) {
     addMessageListener("DeceptiveBlockedDetails", this);
     chromeGlobal.addEventListener("AboutBlockedLoaded", this, false, true);
+    this.init = null;
   },
 
   get isBlockedSite() {
@@ -126,6 +127,7 @@ this.AboutNetAndCertErrorListener = {
     chromeGlobal.addEventListener("AboutNetErrorOpenCaptivePortal", this, false, true);
     chromeGlobal.addEventListener("AboutNetErrorSetAutomatic", this, false, true);
     chromeGlobal.addEventListener("AboutNetErrorResetPreferences", this, false, true);
+    this.init = null;
   },
 
   isAboutNetError(doc) {
@@ -216,6 +218,7 @@ var PluginContentStub = {
       addMessageListener(msg, this);
     }
     Services.obs.addObserver(this, "decoder-doctor-notification");
+    this.init = null;
   },
 
   uninit() {
@@ -261,6 +264,7 @@ var PageMetadataMessenger = {
   init() {
     addMessageListener("PageMetadata:GetPageData", this);
     addMessageListener("PageMetadata:GetMicroformats", this);
+    this.init = null;
   },
   receiveMessage(message) {
     switch (message.name) {
