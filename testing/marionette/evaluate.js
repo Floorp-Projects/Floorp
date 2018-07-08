@@ -28,7 +28,6 @@ const CALLBACK = "__webDriverCallback";
 const COMPLETE = "__webDriverComplete";
 const DEFAULT_TIMEOUT = 10000; // ms
 const FINISH = "finish";
-const MARIONETTE_SCRIPT_FINISHED = "marionetteScriptFinished";
 
 /** @namespace */
 this.evaluate = {};
@@ -43,7 +42,7 @@ this.evaluate = {};
  * through the `arguments` object available in the script context,
  * and if the script is executed asynchronously with the `async`
  * option, an additional last argument that is synonymous to the
- * `marionetteScriptFinished` global is appended, and can be accessed
+ * name `resolve` is appended, and can be accessed
  * through `arguments[arguments.length - 1]`.
  *
  * The `timeout` option specifies the duration for how long the
@@ -51,7 +50,7 @@ this.evaluate = {};
  * An interrupted script will cause a {@link ScriptTimeoutError} to occur.
  *
  * The `async` option indicates that the script will not return
- * until the `marionetteScriptFinished` global callback is invoked,
+ * until the `resolve` callback is invoked,
  * which is analogous to the last argument of the `arguments` object.
  *
  * The `file` option is used in error messages to provide information
@@ -73,9 +72,6 @@ this.evaluate = {};
  *     File location of the program in the client.
  * @param {number=} [line=0] line
  *     Line number of th eprogram in the client.
- * @param {string=} sandboxName
- *     Name of the sandbox.  Elevated system privileges, equivalent to
- *     chrome space, will be given if it is <tt>system</tt>.
  * @param {number=} [timeout=DEFAULT_TIMEOUT] timeout
  *     Duration in milliseconds before interrupting the script.
  *
@@ -94,7 +90,6 @@ evaluate.sandbox = function(sb, script, args = [],
       async = false,
       file = "dummy file",
       line = 0,
-      sandboxName = null,
       timeout = DEFAULT_TIMEOUT,
     } = {}) {
   let scriptTimeoutID, timeoutHandler, unloadHandler;
@@ -121,12 +116,6 @@ evaluate.sandbox = function(sb, script, args = [],
     }
 
     src += `(function() { ${script} }).apply(null, ${ARGUMENTS})`;
-
-    // marionetteScriptFinished is not WebDriver conformant,
-    // hence it is only exposed to immutable sandboxes
-    if (sandboxName) {
-      sb[MARIONETTE_SCRIPT_FINISHED] = sb[CALLBACK];
-    }
 
     // timeout and unload handlers
     scriptTimeoutID = setTimeout(timeoutHandler, timeout);
