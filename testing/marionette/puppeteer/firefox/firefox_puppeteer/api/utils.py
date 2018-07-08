@@ -53,6 +53,7 @@ class Utils(BaseLib):
 
         with self.marionette.using_context('chrome'):
             result = self.marionette.execute_async_script("""
+              let resolve = arguments[arguments.length - 1];
               var {Sanitizer} = Components.utils.import("resource:///modules/Sanitizer.jsm", {});
 
               var data_type = arguments[0];
@@ -67,9 +68,9 @@ class Utils(BaseLib):
 
               // Sanitize and wait for the promise to resolve
               Sanitizer.sanitize(itemsToClear).then(() => {
-                marionetteScriptFinished(true);
+                resolve(true);
               }, aError => {
-                marionetteScriptFinished(false);
+                resolve(false);
               });
             """, script_args=[data_type])
 

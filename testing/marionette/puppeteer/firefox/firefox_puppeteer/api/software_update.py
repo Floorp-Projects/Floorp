@@ -368,15 +368,17 @@ class SoftwareUpdate(BaseLib):
         :returns: The URL of the update snippet
         """
         url = self.marionette.execute_async_script("""
+          let resolve = arguments[arguments.length - 1];
           Components.utils.import("resource://gre/modules/UpdateUtils.jsm");
           let res = UpdateUtils.formatUpdateURL(arguments[0]);
+
           // Format the URL by replacing placeholders
           // In 56 we switched the method to be async.
           // For now, support both approaches.
           if (res.then) {
-            res.then(marionetteScriptFinished);
+            res.then(resolve);
           } else {
-            marionetteScriptFinished(res);
+            resolve(res);
           }
         """, script_args=[self.update_url])
 

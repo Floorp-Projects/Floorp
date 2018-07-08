@@ -1737,8 +1737,9 @@ class Marionette(object):
             marionette.timeout.script = 10
             result = self.marionette.execute_async_script('''
               // this script waits 5 seconds, and then returns the number 1
+              let [resolve] = arguments;
               setTimeout(function() {
-                marionetteScriptFinished(1);
+                resolve(1);
               }, 5000);
             ''')
             assert result == 1
