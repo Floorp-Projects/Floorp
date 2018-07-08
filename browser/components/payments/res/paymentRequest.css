@@ -90,6 +90,11 @@ payment-dialog > footer {
   flex: 1 1 auto;
   margin: 5px;
 }
+
+#total > currency-amount > .currency-code {
+  color: GrayText;
+}
+
 #view-all {
   flex: 0 1 auto;
 }
