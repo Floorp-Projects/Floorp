@@ -1612,43 +1612,63 @@ AddOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
                 return false;
         }
         res.setString(str);
-    } else {
-        double l, r;
-        if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))
-            return false;
-        res.setNumber(l + r);
+        return true;
     }
 
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
+        return false;
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::add(cx, lhs, rhs, res);
+#endif
+
+    res.setNumber(lhs.toNumber() + rhs.toNumber());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
 SubOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
-    double d1, d2;
-    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
         return false;
-    res.setNumber(d1 - d2);
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::sub(cx, lhs, rhs, res);
+#endif
+
+    res.setNumber(lhs.toNumber() - rhs.toNumber());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
 MulOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
-    double d1, d2;
-    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
         return false;
-    res.setNumber(d1 * d2);
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::mul(cx, lhs, rhs, res);
+#endif
+
+    res.setNumber(lhs.toNumber() * rhs.toNumber());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
 DivOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
-    double d1, d2;
-    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
         return false;
-    res.setNumber(NumberDiv(d1, d2));
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::div(cx, lhs, rhs, res);
+#endif
+
+    res.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
     return true;
 }
 
@@ -1663,27 +1683,30 @@ ModOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
         return true;
     }
 
-    double d1, d2;
-    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
         return false;
 
-    res.setNumber(NumberMod(d1, d2));
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::mod(cx, lhs, rhs, res);
+#endif
+
+    res.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
 PowOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
-    double x;
-    if (!ToNumber(cx, lhs, &x))
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs))
         return false;
 
-    double y;
-    if (!ToNumber(cx, rhs, &y))
-        return false;
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt())
+        return BigInt::pow(cx, lhs, rhs, res);
+#endif
 
-    double z = ecmaPow(x, y);
-    res.setNumber(z);
+    res.setNumber(ecmaPow(lhs.toNumber(), rhs.toNumber()));
     return true;
 }
 
