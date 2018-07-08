@@ -772,43 +772,100 @@ struct nsTArray_TypedBase<JS::Heap<E>, Derived>
 
 namespace detail {
 
-template<class Item, class Comparator>
-struct ItemComparatorEq
-{
-  const Item& mItem;
-  const Comparator& mComp;
-  ItemComparatorEq(const Item& aItem, const Comparator& aComp)
-    : mItem(aItem)
-    , mComp(aComp)
-  {}
-  template<class T>
-  int operator()(const T& aElement) const {
-    if (mComp.Equals(aElement, mItem)) {
-      return 0;
-    }
+// These helpers allow us to differentiate between tri-state comparator
+// functions and classes with LessThan() and Equal() methods. If an object, when
+// called as a function with two instances of our element type, returns an int,
+// we treat it as a tri-state comparator.
+//
+// T is the type of the comparator object we want to check. U is the array
+// element type that we'll be comparing.
+//
+// V is never passed, and is only used to allow us to specialize on the return
+// value of the comparator function.
+template <typename T, typename U, typename V = int>
+struct IsCompareMethod : mozilla::FalseType {};
 
-    return mComp.LessThan(aElement, mItem) ? 1 : -1;
+template <typename T, typename U>
+struct IsCompareMethod<T, U, decltype(mozilla::DeclVal<T>()(mozilla::DeclVal<U>(), mozilla::DeclVal<U>()))>
+  : mozilla::TrueType {};
+
+// These two wrappers allow us to use either a tri-state comparator, or an
+// object with Equals() and LessThan() methods interchangeably. They provide a
+// tri-state Compare() method, and Equals() method, and a LessThan() method.
+//
+// Depending on the type of the underlying comparator, they either pass these
+// through directly, or synthesize them from the methods available on the
+// comparator.
+//
+// Callers should always use the most-specific of these methods that match their
+// purpose.
+
+// Comparator wrapper for a tri-state comparator function
+template <typename T, typename U, bool IsCompare = IsCompareMethod<T, U>::value>
+struct CompareWrapper
+{
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4180) /* Silence "qualifier applied to function type has no meaning" warning */
+#endif
+  MOZ_IMPLICIT CompareWrapper(const T& aComparator)
+    : mComparator(aComparator)
+  {}
+
+  template <typename A, typename B>
+  int Compare(A& aLeft, B& aRight) const
+  {
+    return mComparator(aLeft, aRight);
   }
+
+  template <typename A, typename B>
+  bool Equals(A& aLeft, B& aRight) const
+  {
+    return Compare(aLeft, aRight) == 0;
+  }
+
+  template <typename A, typename B>
+  bool LessThan(A& aLeft, B& aRight) const
+  {
+    return Compare(aLeft, aRight) < 0;
+  }
+
+  const T& mComparator;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 };
 
-template<class Item, class Comparator>
-struct ItemComparatorFirstElementGT
+// Comparator wrapper for a class with Equals() and LessThan() methods.
+template <typename T, typename U>
+struct CompareWrapper<T, U, false>
 {
-  const Item& mItem;
-  const Comparator& mComp;
-  ItemComparatorFirstElementGT(const Item& aItem, const Comparator& aComp)
-    : mItem(aItem)
-    , mComp(aComp)
+  MOZ_IMPLICIT CompareWrapper(const T& aComparator)
+    : mComparator(aComparator)
   {}
-  template<class T>
-  int operator()(const T& aElement) const {
-    if (mComp.LessThan(aElement, mItem) ||
-        mComp.Equals(aElement, mItem)) {
-      return 1;
-    } else {
-      return -1;
+
+  template <typename A, typename B>
+  int Compare(A& aLeft, B& aRight) const
+  {
+    if (Equals(aLeft, aRight)) {
+      return 0;
     }
+    return LessThan(aLeft, aRight) ? -1 : 1;
   }
+
+  template <typename A, typename B>
+  bool Equals(A& aLeft, B& aRight) const
+  {
+    return mComparator.Equals(aLeft, aRight);
+  }
+
+  template <typename A, typename B>
+  bool LessThan(A& aLeft, B& aRight) const
+  {
+    return mComparator.LessThan(aLeft, aRight);
+  }
+
+  const T& mComparator;
 };
 
 } // namespace detail
@@ -1167,10 +1224,12 @@ public:
   index_type IndexOf(const Item& aItem, index_type aStart,
                      const Comparator& aComp) const
   {
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
+
     const elem_type* iter = Elements() + aStart;
     const elem_type* iend = Elements() + Length();
     for (; iter != iend; ++iter) {
-      if (aComp.Equals(*iter, aItem)) {
+      if (comp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
     }
@@ -1200,11 +1259,13 @@ public:
   index_type LastIndexOf(const Item& aItem, index_type aStart,
                          const Comparator& aComp) const
   {
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
+
     size_type endOffset = aStart >= Length() ? Length() : aStart + 1;
     const elem_type* iend = Elements() - 1;
     const elem_type* iter = iend + endOffset;
     for (; iter != iend; --iter) {
-      if (aComp.Equals(*iter, aItem)) {
+      if (comp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
     }
@@ -1236,10 +1297,20 @@ public:
   index_type BinaryIndexOf(const Item& aItem, const Comparator& aComp) const
   {
     using mozilla::BinarySearchIf;
-    typedef ::detail::ItemComparatorEq<Item, Comparator> Cmp;
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     size_t index;
-    bool found = BinarySearchIf(*this, 0, Length(), Cmp(aItem, aComp), &index);
+    bool found = BinarySearchIf(
+      *this, 0, Length(),
+      // Note: We pass the Compare() args here in reverse order and negate the
+      // results for compatibility reasons. Some existing callers use Equals()
+      // functions with first arguments which match aElement but not aItem, or
+      // second arguments that match aItem but not aElement. To accommodate
+      // those callers, we preserve the argument order of the older version of
+      // this API. These callers, however, should be fixed, and this special
+      // case removed.
+      [&] (const elem_type& aElement) { return -comp.Compare(aElement, aItem); },
+      &index);
     return found ? index : NoIndex;
   }
 
@@ -1534,10 +1605,12 @@ public:
                                    const Comparator& aComp) const
   {
     using mozilla::BinarySearchIf;
-    typedef ::detail::ItemComparatorFirstElementGT<Item, Comparator> Cmp;
+    ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     size_t index;
-    BinarySearchIf(*this, 0, Length(), Cmp(aItem, aComp), &index);
+    BinarySearchIf(*this, 0, Length(),
+                   [&] (const elem_type& aElement) { return comp.Compare(aElement, aItem) <= 0 ? 1 : -1; },
+                   &index);
     return index;
   }
 
@@ -2033,7 +2106,7 @@ public:
     const Comparator* c = reinterpret_cast<const Comparator*>(aData);
     const elem_type* a = static_cast<const elem_type*>(aE1);
     const elem_type* b = static_cast<const elem_type*>(aE2);
-    return c->LessThan(*a, *b) ? -1 : (c->Equals(*a, *b) ? 0 : 1);
+    return c->Compare(*a, *b);
   }
 
   // This method sorts the elements of the array.  It uses the LessThan
@@ -2042,8 +2115,10 @@ public:
   template<class Comparator>
   void Sort(const Comparator& aComp)
   {
+    ::detail::CompareWrapper<Comparator, elem_type> comp(aComp);
+
     NS_QuickSort(Elements(), Length(), sizeof(elem_type),
-                 Compare<Comparator>, const_cast<Comparator*>(&aComp));
+                 Compare<decltype(comp)>, &comp);
   }
 
   // A variation on the Sort method defined above that assumes that

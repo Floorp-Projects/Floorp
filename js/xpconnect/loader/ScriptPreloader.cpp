@@ -89,10 +89,22 @@ ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
         ShallowHeapSizeOfIncludingThis(MallocSizeOf),
         "Memory used by the script cache service itself.");
 
-    MOZ_COLLECT_REPORT(
-        "explicit/script-preloader/non-heap/memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
-        mCacheData.nonHeapSizeOfExcludingThis(),
-        "The memory-mapped startup script cache file.");
+    // Since the mem-mapped cache file is mapped into memory, we want to report
+    // it as explicit memory somewhere. But since the child cache is shared
+    // between all processes, we don't want to report it as explicit memory for
+    // all of them. So we report it as explicit only in the parent process, and
+    // non-explicit everywhere else.
+    if (XRE_IsParentProcess()) {
+        MOZ_COLLECT_REPORT(
+            "explicit/script-preloader/non-heap/memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
+            mCacheData.nonHeapSizeOfExcludingThis(),
+            "The memory-mapped startup script cache file.");
+    } else {
+        MOZ_COLLECT_REPORT(
+            "script-preloader-memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
+            mCacheData.nonHeapSizeOfExcludingThis(),
+            "The memory-mapped startup script cache file.");
+    }
 
     return NS_OK;
 }
@@ -405,6 +417,12 @@ ScriptPreloader::FinishContentStartup()
     if (mChildActor) {
         mChildActor->SendScriptsAndFinalize(mScripts);
     }
+}
+
+bool
+ScriptPreloader::WillWriteScripts()
+{
+    return Active() && (XRE_IsParentProcess() || mChildActor);
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult>
@@ -797,11 +815,21 @@ ScriptPreloader::Run()
 
 void
 ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
-                            JS::HandleScript jsscript)
+                            JS::HandleScript jsscript, bool isRunOnce)
 {
+    if (!Active()) {
+        if (isRunOnce) {
+            if (auto script = mScripts.Get(cachePath)) {
+                script->mIsRunOnce = true;
+                script->MaybeDropScript();
+            }
+        }
+        return;
+    }
+
     // Don't bother trying to cache any URLs with cache-busting query
     // parameters.
-    if (!Active() || cachePath.FindChar('?') >= 0) {
+    if (cachePath.FindChar('?') >= 0) {
         return;
     }
 
@@ -812,8 +840,11 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
     }
 
     auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, jsscript);
+    if (isRunOnce) {
+        script->mIsRunOnce = true;
+    }
 
-    if (!script->mScript) {
+    if (!script->MaybeDropScript() && !script->mScript) {
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
@@ -1113,6 +1144,10 @@ ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer&
 bool
 ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
 {
+    auto cleanup = MakeScopeExit([&] () {
+        MaybeDropScript();
+    });
+
     JSAutoRealm ar(cx, mScript);
     JS::RootedScript jsscript(cx, mScript);
 
@@ -1137,12 +1172,18 @@ ScriptPreloader::CachedScript::GetJSScript(JSContext* cx)
         return mScript;
     }
 
+    if (!HasRange()) {
+        // We've already executed the script, and thrown it away. But it wasn't
+        // in the cache at startup, so we don't have any data to decode. Give
+        // up.
+        return nullptr;
+    }
+
     // If we have no script at this point, the script was too small to decode
     // off-thread, or it was needed before the off-thread compilation was
     // finished, and is small enough to decode on the main thread rather than
     // wait for the off-thread decoding to finish. In either case, we decode
     // it synchronously the first time it's needed.
-    MOZ_ASSERT(HasRange());
 
     auto start = TimeStamp::Now();
     LOG(Info, "Decoding script %s on main thread...\n", mURL.get());

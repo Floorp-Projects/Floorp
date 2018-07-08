@@ -94,6 +94,11 @@ public:
   }
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
+  bool IsProcessScoped() const override
+  {
+    return true;
+  }
+
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
 protected:
