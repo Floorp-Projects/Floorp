@@ -142,7 +142,7 @@ DBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
       (bool (*)(const char *, DBusError *))
       dlsym(RTLD_DEFAULT, "dbus_validate_bus_name");
     if (!sDBusValidateBusName) {
-      return false
+      return false;
     }
 
     if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
