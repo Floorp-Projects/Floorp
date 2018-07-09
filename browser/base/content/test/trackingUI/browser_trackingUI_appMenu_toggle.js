@@ -8,6 +8,8 @@ ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this
 // Test that the app menu toggle correctly flips the TP pref in
 // normal windows and private windows.
 add_task(async function testGlobalToggle() {
+  await SpecialPowers.pushPrefEnv({set: [["privacy.trackingprotection.appMenuToggle.enabled", true]]});
+
   async function runTest(privateWindow) {
     let win = await BrowserTestUtils.openNewBrowserWindow({private: privateWindow});
 

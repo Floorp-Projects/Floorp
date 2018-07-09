@@ -1492,6 +1492,11 @@ pref("media.gmp-provider.enabled", true);
 pref("privacy.trackingprotection.ui.enabled", true);
 pref("privacy.trackingprotection.introCount", 0);
 pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tracking-protection/start/");
+#ifdef NIGHTLY_BUILD
+pref("privacy.trackingprotection.appMenuToggle.enabled", true);
+#else
+pref("privacy.trackingprotection.appMenuToggle.enabled", false);
+#endif
 
 // Always enable newtab segregation using containers
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);
