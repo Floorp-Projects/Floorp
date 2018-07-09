@@ -16,8 +16,8 @@ richlistbox[disabled="true"] {
 }
 
 richlistitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 richlistbox:focus > richlistitem[selected="true"] {
@@ -25,17 +25,34 @@ richlistbox:focus > richlistitem[selected="true"] {
   color: HighlightText;
 }
 
-richlistbox.theme-listbox > richlistitem {
-  border: 1px solid transparent;
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"] {
+  outline: 1px dotted Highlight;
+  outline-offset: -1px;
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="true"] {
+  outline: 1px dotted #F3D982; /* TODO: find a suitable system color */
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+  outline: 1px dotted #F3D982;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+  outline: 1px dotted Highlight;
+  outline-offset: -1px;
 }
 
 richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {
-  background-color: -moz-mac-secondaryhighlight;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 richlistbox.theme-listbox > richlistitem > label {
   margin: 0px;
+  padding-top: 0px;
   padding-bottom: 1px;
   padding-inline-start: 4px;
+  padding-inline-end: 0px;
   white-space: nowrap;
 }

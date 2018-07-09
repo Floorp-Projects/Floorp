@@ -16,7 +16,7 @@
   <vbox style="width: 24em;margin: 5px;">
     <label id="info.txt"/>
     <vbox>
-      <listbox id="list" rows="4" flex="1"/>
+      <richlistbox id="list" class="theme-listbox" height="80"/>
     </vbox>
   </vbox>
 </dialog>

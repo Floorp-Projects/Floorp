@@ -34,3 +34,127 @@ richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="t
   outline: 1px dotted #F3D982; /* TODO: find a suitable system color */
 }
 
+richlistbox.theme-listbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+  outline: 1px dotted #F3D982;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+  outline: 1px dotted Highlight;
+  outline-offset: -1px;
+}
+
+richlistbox.theme-listbox > richlistitem[selected="true"] {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+richlistbox.theme-listbox > richlistitem > label {
+  margin: 0px;
+  padding-top: 0px;
+  padding-bottom: 1px;
+  padding-inline-start: 4px;
+  padding-inline-end: 0px;
+  white-space: nowrap;
+}
+
+@media (-moz-windows-default-theme) {
+  richlistbox.theme-listbox > richlistitem {
+    --listitem-selectedColor: rgb(217,217,217);
+    --listitem-selectedBorder: var(--listitem-selectedColor);
+    --listitem-selectedBottomBorder: rgb(204,204,204);
+    --listitem-selectedBackground: var(--listitem-selectedColor);
+    --listitem-selectedImage: none;
+    --listitem-selectedCurrentBorder: rgb(123,195,255);
+    --listitem-selectedFocusColor: rgb(205,232,255);
+    --listitem-selectedFocusBorder: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusBottomBorder: rgb(165,214,255);
+    --listitem-selectedFocusBackground: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusImage: none;
+    --listitem-selectedFocusCurrentBorder: var(--listitem-selectedFocusColor);
+    --listitem-selectedFocusCurrentBottomBorder: var(--listitem-selectedFocusBottomBorder);
+    --listitem-selectedFocusCurrentBackground: var(--listitem-selectedFocusColor);
+
+    color: -moz-FieldText;
+    margin-inline-start: 1px;
+    margin-inline-end: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border-width: 1px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+  richlistbox.theme-listbox > richlistitem[selected="true"] {
+    border-top-color: var(--listitem-selectedBorder);
+    border-right-color: var(--listitem-selectedBorder);
+    border-left-color: var(--listitem-selectedBorder);
+    border-bottom-color: var(--listitem-selectedBottomBorder);
+    background-image: var(--listitem-selectedImage);
+    background-color: var(--listitem-selectedBackground);
+    color: -moz-DialogText;
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
+    border-top-color: var(--listitem-selectedFocusBorder);
+    border-right-color: var(--listitem-selectedFocusBorder);
+    border-left-color: var(--listitem-selectedFocusBorder);
+    border-bottom-color: var(--listitem-selectedFocusBottomBorder);
+    background-image: var(--listitem-selectedFocusImage);
+    background-color: var(--listitem-selectedFocusBackground);
+    color: -moz-DialogText;
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+    border-color: var(--listitem-selectedCurrentBorder);
+    outline: none;
+  }
+
+  richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+    border-top-color: var(--listitem-selectedFocusCurrentBorder);
+    border-right-color: var(--listitem-selectedFocusCurrentBorder);
+    border-left-color: var(--listitem-selectedFocusCurrentBorder);
+    border-bottom-color: var(--listitem-selectedFocusCurrentBottomBorder);
+    background-color: var(--listitem-selectedFocusCurrentBackground);
+    outline: none;
+  }
+
+  @media (-moz-os-version: windows-win7) {
+    richlistbox.theme-listbox > richlistitem {
+      --listitem-selectedBottomBorder: var(--listitem-selectedColor);
+      --listitem-selectedBackground: rgba(190,190,190,.15);
+      --listitem-selectedImage: linear-gradient(rgba(190,190,190,.1), rgba(190,190,190,.4));
+      --listitem-selectedCurrentBorder: rgb(125,162,206);
+      --listitem-selectedFocusColor: rgb(132,172,221);
+      --listitem-selectedFocusBottomBorder: var(--listitem-selectedFocusColor);
+      --listitem-selectedFocusBackground: rgba(131,183,249,.02);
+      --listitem-selectedFocusImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.375));
+      --listitem-selectedFocusCurrentBackground: rgba(131,183,249,.15);
+
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1px 0 1px rgba(255,255,255,.2);
+    }
+  }
+
+  @media (-moz-os-version: windows-win8) {
+    richlistbox.theme-listbox > richlistitem {
+      --listitem-selectedBottomBorder: var(--listitem-selectedColor);
+      --listitem-selectedBackground: rgba(190,190,190,.15);
+      --listitem-selectedImage: linear-gradient(rgba(190,190,190,.4), rgba(190,190,190,.4));
+      --listitem-selectedCurrentBorder: rgb(125,162,206);
+      --listitem-selectedFocusColor: rgb(132,172,221);
+      --listitem-selectedFocusBottomBorder: var(--listitem-selectedFocusColor);
+      --listitem-selectedFocusBackground: rgba(131,183,249,.02);
+      --listitem-selectedFocusImage: linear-gradient(rgba(131,183,249,.375), rgba(131,183,249,.375));
+      --listitem-selectedFocusCurrentBackground: rgba(131,183,249,.15);
+    }
+  }
+}
