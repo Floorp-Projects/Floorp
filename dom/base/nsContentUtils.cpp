@@ -2231,20 +2231,6 @@ nsContentUtils::InProlog(nsINode *aNode)
   return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
 }
 
-nsIDocument*
-nsContentUtils::GetDocumentFromCaller()
-{
-  AutoJSContext cx;
-
-  nsCOMPtr<nsPIDOMWindowInner> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(cx)));
-  if (!win) {
-    return nullptr;
-  }
-
-  return win->GetExtantDoc();
-}
-
 bool
 nsContentUtils::IsCallerChrome()
 {

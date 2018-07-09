@@ -40,53 +40,6 @@
 }
 
 
-/* Progressive disclosure button */
-#detailsExpanderWrapper {
-  padding: 0;
-  margin-top: 6px;
-  margin-bottom: 6px;
-  margin-inline-start: -4px;
-  margin-inline-end: 0;
-}
-
-.expander-up,
-.expander-down {
-  min-width: 0;
-  padding: 2px 0;
-  padding-inline-start: 2px;
-}
-
-.expander-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.expander-down:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
-}
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
-}
-
-
-/* Make the item list the same width as the warning box */
-#itemList {
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-}
-
-/* Without this a useless scrollbar appears in the listbox when its rows
-   attribute is set to the total number of listitems, as it is currently.  See
-   bug 489958 comment 14 and bug 491788. */
-#itemList > listitem {
-  padding: 1px 0;
-}
-
-
 /* Align the last dialog button with the end of the warning box */
 .dialog-button-box {
   margin-inline-end: 0;

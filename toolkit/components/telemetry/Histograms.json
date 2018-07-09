@@ -2465,6 +2465,14 @@
     "description": "Upgrading display content Channel Disposition",
     "labels": ["cancel", "disk", "netOk", "netEarlyFail", "netLateFail"]
   },
+  "HTTP_CHANNEL_ONSTART_SUCCESS" : {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Successfully started HTTP channels",
+    "bug_numbers": [1473333],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

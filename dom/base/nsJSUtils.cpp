@@ -62,24 +62,6 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
   return true;
 }
 
-nsIScriptGlobalObject *
-nsJSUtils::GetStaticScriptGlobal(JSObject* aObj)
-{
-  if (!aObj)
-    return nullptr;
-  return xpc::WindowGlobalOrNull(aObj);
-}
-
-nsIScriptContext *
-nsJSUtils::GetStaticScriptContext(JSObject* aObj)
-{
-  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aObj);
-  if (!nativeGlobal)
-    return nullptr;
-
-  return nativeGlobal->GetScriptContext();
-}
-
 uint64_t
 nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
 {

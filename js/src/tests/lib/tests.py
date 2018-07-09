@@ -145,7 +145,9 @@ def get_cpu_count():
 class RefTestCase(object):
     """A test case consisting of a test and an expected result."""
 
-    def __init__(self, path):
+    def __init__(self, root, path, extra_helper_paths=None, wpt=None):
+        # str:  path of the tests root dir
+        self.root = root
         # str:  path of JS file relative to tests root dir
         self.path = path
         # [str]: Extra options to pass to the shell
@@ -177,30 +179,39 @@ class RefTestCase(object):
         # Anything occuring after -- in the test header.
         self.comment = None
 
-    @staticmethod
-    def prefix_command(path):
-        """Return the '-f shell.js' options needed to run a test with the given
-        path."""
+        self.extra_helper_paths = extra_helper_paths or []
+        self.wpt = wpt
+
+    def prefix_command(self):
+        """Return the '-f' options needed to run a test with the given path."""
+        path = self.path
         prefix = []
         while path != '':
             assert path != '/'
             path = os.path.dirname(path)
-            shell_path = os.path.join(path, 'shell.js')
-            prefix.append(shell_path)
-            prefix.append('-f')
-
+            shell_path = os.path.join(self.root, path, 'shell.js')
+            if os.path.exists(shell_path):
+                prefix.append(shell_path)
+                prefix.append('-f')
         prefix.reverse()
+
+        for extra_path in self.extra_helper_paths:
+            prefix.append('-f')
+            prefix.append(extra_path)
+
         return prefix
 
+    def abs_path(self):
+        return os.path.join(self.root, self.path)
+
     def get_command(self, prefix):
-        cmd = prefix + self.jitflags + self.options \
-            + RefTestCase.prefix_command(self.path)
+        cmd = prefix + self.jitflags + self.options + self.prefix_command()
         if self.test_reflect_stringify is not None:
-            cmd += [self.test_reflect_stringify, "--check", self.path]
+            cmd += [self.test_reflect_stringify, "--check", self.abs_path()]
         elif self.is_module:
-            cmd += ["--module", self.path]
+            cmd += ["--module", self.abs_path()]
         else:
-            cmd += ["-f", self.path]
+            cmd += ["-f", self.abs_path()]
         return cmd
 
     def __str__(self):
