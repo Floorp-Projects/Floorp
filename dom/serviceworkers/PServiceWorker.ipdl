@@ -4,6 +4,9 @@
 
 include protocol PBackground;
 
+include ClientIPCTypes;
+include DOMTypes;
+
 namespace mozilla {
 namespace dom {
 
@@ -13,6 +16,8 @@ protocol PServiceWorker
 
 parent:
   async Teardown();
+
+  async PostMessage(ClonedMessageData aClonedData, ClientInfoAndState aSource);
 
 child:
   async __delete__();
