@@ -7,6 +7,7 @@ var TrackingProtection = {
   MAX_INTROS: 20,
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
+  PREF_APP_MENU_TOGGLE: "privacy.trackingprotection.appMenuToggle.enabled",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
   container: null,
@@ -33,6 +34,8 @@ var TrackingProtection = {
     this.container = $("#tracking-protection-container");
     this.content = $("#tracking-protection-content");
     this.icon = $("#tracking-protection-icon");
+    this.appMenuContainer = $("#appMenu-tp-container");
+    this.appMenuSeparator = $("#appMenu-tp-separator");
     this.broadcaster = $("#trackingProtectionBroadcaster");
 
     this.enableTooltip =
@@ -45,8 +48,22 @@ var TrackingProtection = {
       gNavigatorBundle.getString("trackingProtection.toggle.disable.pbmode.tooltip");
 
     this.updateEnabled();
+
+    this.updateAppMenuToggle = () => {
+      if (Services.prefs.getBoolPref(this.PREF_APP_MENU_TOGGLE, false)) {
+        this.appMenuContainer.removeAttribute("hidden");
+        this.appMenuSeparator.removeAttribute("hidden");
+      } else {
+        this.appMenuContainer.setAttribute("hidden", "true");
+        this.appMenuSeparator.setAttribute("hidden", "true");
+      }
+    };
+
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
+    Services.prefs.addObserver(this.PREF_APP_MENU_TOGGLE, this.updateAppMenuToggle);
+
+    this.updateAppMenuToggle();
 
     this.activeTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
@@ -60,6 +77,7 @@ var TrackingProtection = {
   uninit() {
     Services.prefs.removeObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.removeObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
+    Services.prefs.removeObserver(this.PREF_APP_MENU_TOGGLE, this.updateAppMenuToggle);
   },
 
   observe() {
