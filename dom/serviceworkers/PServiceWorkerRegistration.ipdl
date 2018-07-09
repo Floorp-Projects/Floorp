@@ -4,6 +4,8 @@
 
 include protocol PBackground;
 
+include IPCServiceWorkerRegistrationDescriptor;
+
 namespace mozilla {
 namespace dom {
 
@@ -13,6 +15,8 @@ protocol PServiceWorkerRegistration
 
 parent:
   async Teardown();
+
+  async Update() returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
 child:
   async __delete__();

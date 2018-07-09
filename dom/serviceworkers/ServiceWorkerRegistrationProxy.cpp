@@ -170,5 +170,66 @@ ServiceWorkerRegistrationProxy::RevokeActor(ServiceWorkerRegistrationParent* aAc
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
+namespace {
+
+class UpdateCallback final : public ServiceWorkerUpdateFinishCallback
+{
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
+
+  ~UpdateCallback() = default;
+
+public:
+  explicit UpdateCallback(RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise)
+    : mPromise(std::move(aPromise))
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+  }
+
+  void
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
+  {
+    mPromise->Resolve(aInfo->Descriptor(), __func__);
+  }
+
+  void
+  UpdateFailed(ErrorResult& aResult) override
+  {
+    mPromise->Reject(CopyableErrorResult(aResult), __func__);
+  }
+};
+
+} // anonymous namespace
+
+RefPtr<ServiceWorkerRegistrationPromise>
+ServiceWorkerRegistrationProxy::Update()
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationProxy> self = this;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> promise =
+    new ServiceWorkerRegistrationPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
+    [self, promise] () mutable {
+      auto scopeExit = MakeScopeExit([&] {
+        promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      });
+
+      NS_ENSURE_TRUE_VOID(self->mReg);
+
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      NS_ENSURE_TRUE_VOID(swm);
+
+      RefPtr<UpdateCallback> cb = new UpdateCallback(std::move(promise));
+      swm->Update(self->mReg->Principal(), self->mReg->Scope(), cb);
+
+      scopeExit.release();
+    });
+
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -27,6 +27,9 @@ class ServiceWorkerRegistrationParent final : public PServiceWorkerRegistrationP
   mozilla::ipc::IPCResult
   RecvTeardown() override;
 
+  mozilla::ipc::IPCResult
+  RecvUpdate(UpdateResolver&& aResolver) override;
+
 public:
   ServiceWorkerRegistrationParent();
   ~ServiceWorkerRegistrationParent();

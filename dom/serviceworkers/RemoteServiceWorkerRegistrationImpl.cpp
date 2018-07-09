@@ -11,6 +11,9 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::IPCResult;
+using mozilla::ipc::ResponseRejectReason;
+
 RemoteServiceWorkerRegistrationImpl::~RemoteServiceWorkerRegistrationImpl()
 {
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
@@ -54,7 +57,28 @@ void
 RemoteServiceWorkerRegistrationImpl::Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
                                             ServiceWorkerFailureCallback&& aFailureCB)
 {
-  // TODO
+  if (!mActor) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  mActor->SendUpdate(
+    [successCB = std::move(aSuccessCB), aFailureCB]
+    (const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult& aResult) {
+      if (aResult.type() == IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::TCopyableErrorResult) {
+        // application layer error
+        auto& rv = aResult.get_CopyableErrorResult();
+        MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
+        aFailureCB(CopyableErrorResult(rv));
+        return;
+      }
+      // success
+      auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
+      successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
+    }, [aFailureCB] (ResponseRejectReason aReason) {
+      // IPC layer error
+      aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    });
 }
 
 void

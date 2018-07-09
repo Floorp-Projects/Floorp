@@ -29,6 +29,24 @@ ServiceWorkerRegistrationParent::RecvTeardown()
   return IPC_OK();
 }
 
+IPCResult
+ServiceWorkerRegistrationParent::RecvUpdate(UpdateResolver&& aResolver)
+{
+  if (!mProxy) {
+    aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return IPC_OK();
+  }
+
+  mProxy->Update()->Then(GetCurrentThreadSerialEventTarget(), __func__,
+    [aResolver] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      aResolver(aDescriptor.ToIPC());
+    }, [aResolver] (const CopyableErrorResult& aResult) {
+      aResolver(aResult);
+    });
+
+  return IPC_OK();
+}
+
 ServiceWorkerRegistrationParent::ServiceWorkerRegistrationParent()
   : mDeleteSent(false)
 {
