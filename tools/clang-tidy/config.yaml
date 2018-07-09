@@ -52,6 +52,8 @@ clang_checkers:
     publish: !!bool yes
   - name: misc-swapped-arguments
     publish: !!bool yes
+  - name: misc-unused-alias-decls
+    publish: !!bool yes
   - name: misc-unused-raii
     publish: !!bool yes
   - name: misc-unused-using-decls
