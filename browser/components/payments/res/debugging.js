@@ -42,6 +42,7 @@ let REQUEST_1 = {
         },
       },
     ],
+    shippingAddressErrors: {},
     shippingOptions: [
       {
         id: "123",
@@ -107,6 +108,7 @@ let REQUEST_2 = {
         },
       },
     ],
+    shippingAddressErrors: {},
     shippingOptions: [
       {
         id: "123",
