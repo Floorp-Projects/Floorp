@@ -15,7 +15,8 @@ Test that rendering a dominator tree error is handled correctly.
         <script src="head.js" type="application/javascript"></script>
 
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              ok(React, "Should get React");
              ok(Heap, "Should get Heap");
@@ -38,7 +39,7 @@ Test that rendering a dominator tree error is handled correctly.
              ok(container.querySelector(".error"), "Should render an error view");
              ok(container.textContent.includes(errorMessage),
                 "Should see our error message");
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();

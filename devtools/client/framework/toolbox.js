@@ -576,7 +576,12 @@ Toolbox.prototype = {
 
       this.emit("ready");
       this._resolveIsOpen();
-    }.bind(this))().catch(console.error);
+    }.bind(this))().catch(e => {
+      console.error("Exception while opening the toolbox", String(e), e);
+      // While the exception stack is correctly printed in the Browser console when
+      // passing `e` to console.error, it is not on the stdout, so print it via dump.
+      dump(e.stack + "\n");
+    });
   },
 
   /**

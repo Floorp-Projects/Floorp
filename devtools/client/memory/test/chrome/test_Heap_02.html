@@ -14,12 +14,12 @@ Test that the currently selected view is rendered.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              ok(React, "Should get React");
              ok(Heap, "Should get Heap");
 
-             const errorMessage = "Something went wrong!";
              const container = document.getElementById("container");
 
              // Dominator tree view.
@@ -66,7 +66,7 @@ Test that the currently selected view is rendered.
 
              ok(container.querySelector("[data-state=initial]"),
                 "With no snapshot, nor a diffing, should render initial prompt.");
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();

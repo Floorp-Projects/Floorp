@@ -14,7 +14,8 @@ Test that we show the "hey you're not recording allocation stacks" message at th
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              const container = document.getElementById("container");
 
@@ -109,7 +110,7 @@ Test that we show the "hey you're not recording allocation stacks" message at th
 
              ok(!container.querySelector(".no-allocation-stacks"),
                 "When there isn't census data, we should not show the message");
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();

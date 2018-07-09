@@ -9200,7 +9200,8 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
-                         gfxContext* aMaskContext)
+                         gfxContext* aMaskContext,
+                         bool* aMaskPainted)
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
@@ -9214,7 +9215,10 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
                                                   nullptr,
                                                   mHandleOpacity, imgParmas);
   ComputeMaskGeometry(params);
-  nsSVGIntegrationUtils::PaintMask(params);
+  bool painted = nsSVGIntegrationUtils::PaintMask(params);
+  if (aMaskPainted) {
+    *aMaskPainted = painted;
+  }
 
   nsDisplayMaskGeometry::UpdateDrawResult(this, imgParmas.result);
 
