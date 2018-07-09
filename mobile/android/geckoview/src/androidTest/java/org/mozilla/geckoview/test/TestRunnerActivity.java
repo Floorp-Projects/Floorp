@@ -51,8 +51,8 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onNewSession(GeckoSession session, String uri, GeckoResponse<GeckoSession> response) {
-            response.respond(createSession(session.getSettings()));
+        public GeckoResult<GeckoSession> onNewSession(GeckoSession session, String uri) {
+            return GeckoResult.fromValue(createSession(session.getSettings()));
         }
     };
 
