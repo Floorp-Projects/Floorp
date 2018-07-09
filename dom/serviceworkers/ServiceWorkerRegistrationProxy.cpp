@@ -172,6 +172,78 @@ ServiceWorkerRegistrationProxy::RevokeActor(ServiceWorkerRegistrationParent* aAc
 
 namespace {
 
+class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
+{
+  RefPtr<GenericPromise::Private> mPromise;
+
+  ~UnregisterCallback() = default;
+
+public:
+  explicit UnregisterCallback(GenericPromise::Private* aPromise)
+    : mPromise(aPromise)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+  }
+
+  NS_IMETHOD
+  UnregisterSucceeded(bool aState) override
+  {
+    mPromise->Resolve(aState, __func__);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  UnregisterFailed() override
+  {
+    mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
+    return NS_OK;
+  }
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
+
+} // anonymous namespace
+
+RefPtr<GenericPromise>
+ServiceWorkerRegistrationProxy::Unregister()
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationProxy> self = this;
+  RefPtr<GenericPromise::Private> promise =
+    new GenericPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
+    [self, promise] () mutable {
+      nsresult rv = NS_ERROR_DOM_INVALID_STATE_ERR;
+      auto scopeExit = MakeScopeExit([&] {
+        promise->Reject(rv, __func__);
+      });
+
+      NS_ENSURE_TRUE_VOID(self->mReg);
+
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      NS_ENSURE_TRUE_VOID(swm);
+
+      RefPtr<UnregisterCallback> cb = new UnregisterCallback(promise);
+
+      rv = swm->Unregister(self->mReg->Principal(), cb,
+                           NS_ConvertUTF8toUTF16(self->mReg->Scope()));
+      NS_ENSURE_SUCCESS_VOID(rv);
+
+
+      scopeExit.release();
+    });
+
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
+namespace {
+
 class UpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
   RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;

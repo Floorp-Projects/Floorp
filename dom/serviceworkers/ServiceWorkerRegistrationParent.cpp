@@ -29,6 +29,36 @@ ServiceWorkerRegistrationParent::RecvTeardown()
   return IPC_OK();
 }
 
+namespace {
+
+void
+ResolveUnregister(PServiceWorkerRegistrationParent::UnregisterResolver&& aResolver,
+                  bool aSuccess, nsresult aRv)
+{
+  aResolver(Tuple<const bool&, const CopyableErrorResult&>(
+    aSuccess, CopyableErrorResult(aRv)));
+}
+
+} // anonymous namespace
+
+IPCResult
+ServiceWorkerRegistrationParent::RecvUnregister(UnregisterResolver&& aResolver)
+{
+  if (!mProxy) {
+    ResolveUnregister(std::move(aResolver), false, NS_ERROR_DOM_INVALID_STATE_ERR);
+    return IPC_OK();
+  }
+
+  mProxy->Unregister()->Then(GetCurrentThreadSerialEventTarget(), __func__,
+    [aResolver] (bool aSuccess) mutable {
+      ResolveUnregister(std::move(aResolver), aSuccess, NS_OK);
+    }, [aResolver] (nsresult aRv) mutable {
+      ResolveUnregister(std::move(aResolver), false, aRv);
+    });
+
+  return IPC_OK();
+}
+
 IPCResult
 ServiceWorkerRegistrationParent::RecvUpdate(UpdateResolver&& aResolver)
 {
