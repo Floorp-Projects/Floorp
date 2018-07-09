@@ -71,7 +71,8 @@ class BackendTupfile(object):
     """Represents a generated Tupfile.
     """
 
-    def __init__(self, objdir, environment, topsrcdir, topobjdir, dry_run):
+    def __init__(self, objdir, environment, topsrcdir, topobjdir, dry_run,
+                 default_group):
         self.topsrcdir = topsrcdir
         self.objdir = objdir
         self.relobjdir = mozpath.relpath(objdir, topobjdir)
@@ -96,6 +97,8 @@ class BackendTupfile(object):
         self.host_library = None
         self.exports = set()
 
+        self._default_group = default_group
+
         # These files are special, ignore anything that generates them or
         # depends on them.
         self._skip_files = [
@@ -116,9 +119,12 @@ class BackendTupfile(object):
             self.rules_included = True
 
     def rule(self, cmd, inputs=None, outputs=None, display=None,
-             extra_inputs=None, extra_outputs=None, check_unchanged=False):
+             extra_inputs=None, output_group=None, check_unchanged=False):
         inputs = inputs or []
         outputs = outputs or []
+
+        if output_group is None:
+            output_group = self._default_group
 
         for f in inputs + outputs:
             if any(f.endswith(skip_file) for skip_file in self._skip_files):
@@ -138,21 +144,19 @@ class BackendTupfile(object):
         else:
             caret_text = flags
 
-        self.write(': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(extra_outputs)s\n' % {
+        self.write(': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(output_group)s\n' % {
             'inputs': ' '.join(inputs),
             'extra_inputs': ' | ' + ' '.join(extra_inputs) if extra_inputs else '',
             'display': '^%s^ ' % caret_text if caret_text else '',
             'cmd': ' '.join(cmd),
             'outputs': ' '.join(outputs),
-            'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
+            'output_group': ' ' + output_group if output_group else '',
         })
 
         self.outputs.update(outputs)
 
     def symlink_rule(self, source, output=None, output_group=None):
         outputs = [output] if output else [mozpath.basename(source)]
-        if output_group:
-            outputs.append(output_group)
 
         # The !tup_ln macro does a symlink or file copy (depending on the
         # platform) without shelling out to a subprocess.
@@ -160,6 +164,7 @@ class BackendTupfile(object):
             cmd=['!tup_ln'],
             inputs=[source],
             outputs=outputs,
+            output_group=output_group
         )
 
     def gen_sources_rules(self, extra_inputs):
@@ -261,6 +266,7 @@ class TupBackend(CommonBackend):
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
         self._shlibs = '$(MOZ_OBJ_ROOT)/<shlibs>'
+        self._default_group = '$(MOZ_OBJ_ROOT)/<default>'
 
     def _get_mozconfig_env(self, config):
         env = {}
@@ -277,7 +283,7 @@ class TupBackend(CommonBackend):
 
     def build(self, config, output, jobs, verbose, what=None):
         if not what:
-            what = [self.environment.topobjdir]
+            what = ['%s/<default>' % config.topobjdir]
         args = [self.environment.substs['TUP'], 'upd'] + what
         if self.environment.substs.get('MOZ_AUTOMATION'):
             args += ['--quiet']
@@ -305,7 +311,7 @@ class TupBackend(CommonBackend):
             self._backend_files[objdir] = \
                     BackendTupfile(objdir, self.environment,
                                    self.environment.topsrcdir, self.environment.topobjdir,
-                                   self.dry_run)
+                                   self.dry_run, self._default_group)
         return self._backend_files[objdir]
 
     def _get_backend_file_for(self, obj):
@@ -386,7 +392,7 @@ class TupBackend(CommonBackend):
             inputs=inputs,
             extra_inputs=extra_inputs,
             outputs=[shlib.lib_name],
-            extra_outputs=[self._shlibs],
+            output_group=self._shlibs,
             display='LINK %o'
         )
         backend_file.symlink_rule(mozpath.join(backend_file.objdir,
@@ -788,7 +794,7 @@ class TupBackend(CommonBackend):
                 command,
                 inputs=sorted(inputs),
                 outputs=outputs,
-                extra_outputs=[self._rust_libs],
+                output_group=self._rust_libs,
                 extra_inputs=[self._installed_files],
                 display='%s %s' % (header, display_name(invocation)),
             )
@@ -859,9 +865,9 @@ class TupBackend(CommonBackend):
 
             if any(f.endswith(('automation.py', 'source-repo.h', 'buildid.h'))
                    for f in obj.outputs):
-                extra_outputs = [self._early_generated_files]
+                output_group = self._early_generated_files
             else:
-                extra_outputs = [self._installed_files] if obj.required_for_compile else []
+                output_group = self._installed_files if obj.required_for_compile else None
                 full_inputs += [self._early_generated_files]
 
             extra_inputs = []
@@ -884,7 +890,7 @@ class TupBackend(CommonBackend):
                 inputs=full_inputs,
                 extra_inputs=extra_inputs,
                 outputs=outputs,
-                extra_outputs=extra_outputs,
+                output_group=output_group,
                 check_unchanged=True,
             )
 
@@ -1045,7 +1051,7 @@ class TupBackend(CommonBackend):
                 display='XPIDL %s' % module,
                 cmd=cmd,
                 outputs=outputs,
-                extra_outputs=[self._installed_files],
+                output_group=self._installed_files,
                 check_unchanged=True,
             )
 
@@ -1138,7 +1144,7 @@ class TupBackend(CommonBackend):
             display='IPDL code generation',
             cmd=cmd,
             outputs=outputs,
-            extra_outputs=[self._installed_files],
+            output_group=self._installed_files,
             check_unchanged=True,
         )
         backend_file.sources['.cpp'].extend(u[0] for u in unified_ipdl_cppsrcs_mapping)
@@ -1171,7 +1177,7 @@ class TupBackend(CommonBackend):
             cmd=cmd,
             inputs=webidls.all_non_static_basenames(),
             outputs=outputs,
-            extra_outputs=[self._installed_files],
+            output_group=self._installed_files,
             check_unchanged=True,
         )
         backend_file.sources['.cpp'].extend(u[0] for u in unified_source_mapping)
