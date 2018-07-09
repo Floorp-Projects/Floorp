@@ -30,8 +30,6 @@ toolkit.jar:
    skin/classic/global/toolbarbutton.css
    skin/classic/global/tree.css
 *  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
-   skin/classic/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
-   skin/classic/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
 
    skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
    skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)

@@ -6879,6 +6879,9 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     LOG(("nsHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32 "]\n",
          this, request, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
+    Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
+                          NS_SUCCEEDED(mStatus));
+
     if (mRaceCacheWithNetwork) {
         LOG(("  racingNetAndCache - mFirstResponseSource:%d fromCache:%d fromNet:%d\n",
              static_cast<int32_t>(mFirstResponseSource), request == mCachePump, request == mTransactionPump));
