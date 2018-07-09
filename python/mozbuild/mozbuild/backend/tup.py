@@ -89,7 +89,6 @@ class BackendTupfile(object):
         self.sources = defaultdict(list)
         self.host_sources = defaultdict(list)
         self.variables = {}
-        self.rust_library = None
         self.static_lib = None
         self.shared_lib = None
         self.programs = []
@@ -262,11 +261,19 @@ class TupBackend(CommonBackend):
         # in Tup. Express these as a group dependency.
         self._early_generated_files = '$(MOZ_OBJ_ROOT)/<early-generated-files>'
 
+        self._shlibs = '$(MOZ_OBJ_ROOT)/<shlibs>'
+        self._gtests = '$(MOZ_OBJ_ROOT)/<gtest>'
+        self._default_group = '$(MOZ_OBJ_ROOT)/<default>'
+
+        # The two rust libraries in the tree share many prerequisites, so we need
+        # to prune common dependencies and therefore build all rust from the same
+        # Tupfile.
+        self._rust_outputs = set()
+        self._rust_backend_file = self._get_backend_file('toolkit/library/rust')
+
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
-        self._shlibs = '$(MOZ_OBJ_ROOT)/<shlibs>'
-        self._default_group = '$(MOZ_OBJ_ROOT)/<default>'
 
     def _get_mozconfig_env(self, config):
         env = {}
@@ -332,8 +339,9 @@ class TupBackend(CommonBackend):
     def _gen_shared_library(self, backend_file):
         shlib = backend_file.shared_lib
 
-        if backend_file.objdir.endswith('gtest') and shlib.name == 'libxul.so':
-            return
+        output_group = self._shlibs
+        if 'toolkit/library/gtest' in backend_file.objdir:
+            output_group = self._gtests
 
         if shlib.cxx_link:
             mkshlib = (
@@ -392,7 +400,7 @@ class TupBackend(CommonBackend):
             inputs=inputs,
             extra_inputs=extra_inputs,
             outputs=[shlib.lib_name],
-            output_group=self._shlibs,
+            output_group=output_group,
             display='LINK %o'
         )
         backend_file.symlink_rule(mozpath.join(backend_file.objdir,
@@ -400,7 +408,7 @@ class TupBackend(CommonBackend):
                                   output=mozpath.join(self.environment.topobjdir,
                                                       shlib.install_target,
                                                       shlib.lib_name),
-                                  output_group=self._shlibs)
+                                  output_group=output_group)
 
     def _gen_programs(self, backend_file):
         for p in backend_file.programs:
@@ -585,7 +593,7 @@ class TupBackend(CommonBackend):
         elif isinstance(obj, VariablePassthru):
             backend_file.variables = obj.variables
         elif isinstance(obj, RustLibrary):
-            backend_file.rust_library = obj
+            self._gen_rust_rules(obj, backend_file)
         elif isinstance(obj, StaticLibrary):
             backend_file.static_lib = obj
         elif isinstance(obj, SharedLibrary):
@@ -623,8 +631,7 @@ class TupBackend(CommonBackend):
                                      self._gen_static_library),
                                     (backend_file.programs, self._gen_programs),
                                     (backend_file.host_programs, self._gen_host_programs),
-                                    (backend_file.host_library, self._gen_host_library),
-                                    (backend_file.rust_library, self._gen_rust)):
+                                    (backend_file.host_library, self._gen_host_library)):
                 if var:
                     backend_file.export_shell()
                     gen_method(backend_file)
@@ -679,8 +686,7 @@ class TupBackend(CommonBackend):
             ]
         return cargo_flags
 
-    def _get_cargo_env(self, backend_file):
-        lib = backend_file.rust_library
+    def _get_cargo_env(self, lib, backend_file):
         env = {
             'CARGO_TARGET_DIR': mozpath.normpath(mozpath.join(lib.objdir,
                                                               lib.target_dir)),
@@ -790,31 +796,30 @@ class TupBackend(CommonBackend):
             invocation['full-deps'] = set(inputs)
             invocation['full-deps'].update(invocation['outputs'])
 
-            backend_file.rule(
-                command,
-                inputs=sorted(inputs),
-                outputs=outputs,
-                output_group=self._rust_libs,
-                extra_inputs=[self._installed_files],
-                display='%s %s' % (header, display_name(invocation)),
-            )
+            output_key = tuple(outputs)
+            if output_key not in self._rust_outputs:
+                self._rust_outputs.add(output_key)
+                self._rust_backend_file.rule(
+                    command,
+                    inputs=sorted(inputs),
+                    outputs=outputs,
+                    output_group=self._rust_libs,
+                    extra_inputs=[self._installed_files],
+                    display='%s %s' % (header, display_name(invocation)),
+                )
 
-            for dst, link in invocation['links'].iteritems():
-                backend_file.symlink_rule(link, dst, self._rust_libs)
+                for dst, link in invocation['links'].iteritems():
+                    self._rust_outputs.add(output_key)
+                    self._rust_backend_file.symlink_rule(link, dst,
+                                                         self._rust_libs)
 
         for val in enumerate(invocations):
             _process(*val)
 
 
-    def _gen_rust(self, backend_file):
-        # TODO (bug 1468547): The gtest rust library depends on many of the same
-        # libraries as the main rust library, so we'll need to handle these all
-        # at once in order to build the gtest rust library.
-        if 'toolkit/library/gtest' in backend_file.objdir:
-            return
-
-        cargo_flags = self._get_cargo_flags(backend_file.rust_library)
-        cargo_env = self._get_cargo_env(backend_file)
+    def _gen_rust_rules(self, obj, backend_file):
+        cargo_flags = self._get_cargo_flags(obj)
+        cargo_env = self._get_cargo_env(obj, backend_file)
 
         output_lines = []
         def accumulate_output(line):
