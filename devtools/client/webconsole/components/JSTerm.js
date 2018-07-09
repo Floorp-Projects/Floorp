@@ -10,7 +10,6 @@ const Services = require("Services");
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
-loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "Debugger", "Debugger");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
@@ -320,19 +319,16 @@ class JSTerm extends Component {
    * The JavaScript evaluation response handler.
    *
    * @private
-   * @param function [callback]
-   *        Optional function to invoke when the evaluation result is added to
-   *        the output.
    * @param object response
    *        The message received from the server.
    */
-  async _executeResultCallback(callback, response) {
+  async _executeResultCallback(response) {
     if (!this.hud) {
-      return;
+      return null;
     }
     if (response.error) {
       console.error("Evaluation error " + response.error + ": " + response.message);
-      return;
+      return null;
     }
     let errorMessage = response.exceptionMessage;
 
@@ -373,7 +369,7 @@ class JSTerm extends Component {
           const results = await processScreenshot(this.hud.window, args, value);
           this.screenshotNotify(results);
           // early return as screenshot notify has dispatched all necessary messages
-          return;
+          return null;
       }
     }
 
@@ -381,13 +377,14 @@ class JSTerm extends Component {
     if (!errorMessage && result && typeof result == "object" &&
       result.type == "undefined" &&
       helperResult && !helperHasRawOutput) {
-      callback && callback();
-      return;
+      return null;
     }
 
     if (this.hud.consoleOutput) {
-      this.hud.consoleOutput.dispatchMessageAdd(response, true).then(callback);
+      return this.hud.consoleOutput.dispatchMessageAdd(response, true);
     }
+
+    return null;
   }
 
   inspectObjectActor(objectActor) {
@@ -408,19 +405,13 @@ class JSTerm extends Component {
   /**
    * Execute a string. Execution happens asynchronously in the content process.
    *
-   * @param string [executeString]
+   * @param {String} executeString
    *        The string you want to execute. If this is not provided, the current
    *        user input is used - taken from |this.getInputValue()|.
-   * @param function [callback]
-   *        Optional function to invoke when the result is displayed.
-   *        This is deprecated - please use the promise return value instead.
-   * @returns Promise
+   * @returns {Promise}
    *          Resolves with the message once the result is displayed.
    */
-  async execute(executeString, callback) {
-    const deferred = defer();
-    const resultCallback = msg => deferred.resolve(msg);
-
+  async execute(executeString) {
     // attempt to execute the content of the inputNode
     executeString = executeString || this.getInputValue();
     if (!executeString) {
@@ -441,22 +432,23 @@ class JSTerm extends Component {
     }
 
     const { ConsoleCommand } = require("devtools/client/webconsole/types");
-    const message = new ConsoleCommand({
+    const cmdMessage = new ConsoleCommand({
       messageText: executeString,
     });
-    this.hud.proxy.dispatchMessageAdd(message);
-
-    const onResult = this._executeResultCallback.bind(this, resultCallback);
+    this.hud.proxy.dispatchMessageAdd(cmdMessage);
 
     const options = {
       frame: this.SELECTED_FRAME,
-      selectedNodeActor: selectedNodeActor,
+      selectedNodeActor,
     };
 
     const mappedString = await this.hud.owner.getMappedExpression(executeString);
-    this.requestEvaluation(mappedString, options).then(onResult, onResult);
-
-    return deferred.promise;
+    // Even if requestEvaluation rejects (because of webConsoleClient.evaluateJSAsync),
+    // we still need to pass the error response to executeResultCallback.
+    const onEvaluated = this.requestEvaluation(mappedString, options)
+      .then(res => res, res => res);
+    const response = await onEvaluated;
+    return this._executeResultCallback(response);
   }
 
   /**
@@ -485,29 +477,6 @@ class JSTerm extends Component {
    */
   requestEvaluation(str, options = {}) {
     const toolbox = gDevTools.getToolbox(this.hud.owner.target);
-    const deferred = defer();
-
-    function onResult(response) {
-      if (!response.error) {
-        deferred.resolve(response);
-      } else {
-        deferred.reject(response);
-      }
-    }
-
-    let frameActor = null;
-    if ("frame" in options) {
-      frameActor = this.getFrameActor(options.frame);
-    }
-
-    const evalOptions = {
-      bindObjectActor: options.bindObjectActor,
-      frameActor: frameActor,
-      selectedNodeActor: options.selectedNodeActor,
-      selectedObjectActor: options.selectedObjectActor,
-    };
-
-    this.webConsoleClient.evaluateJSAsync(str, onResult, evalOptions);
 
     // Send telemetry event. If we are in the browser toolbox we send -1 as the
     // toolbox session id.
@@ -516,7 +485,19 @@ class JSTerm extends Component {
       "session_id": toolbox ? toolbox.sessionId : -1
     });
 
-    return deferred.promise;
+    let frameActor = null;
+    if ("frame" in options) {
+      frameActor = this.getFrameActor(options.frame);
+    }
+
+    const evalOptions = {
+      bindObjectActor: options.bindObjectActor,
+      frameActor,
+      selectedNodeActor: options.selectedNodeActor,
+      selectedObjectActor: options.selectedObjectActor,
+    };
+
+    return this.webConsoleClient.evaluateJSAsync(str, null, evalOptions);
   }
 
   /**
