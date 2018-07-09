@@ -56,3 +56,8 @@ richlistbox.theme-listbox > richlistitem > label {
   padding-inline-end: 0px;
   white-space: nowrap;
 }
+
+listheader {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
