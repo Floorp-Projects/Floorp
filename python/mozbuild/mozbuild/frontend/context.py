@@ -451,6 +451,7 @@ class CompileFlags(BaseCompileFlags):
             ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
+            ('PROFILE_GEN_DYN_CFLAGS', None, ('PROFILE_GEN_DYN_CFLAGS',)),
             ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
              ('CFLAGS',)),
             ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
