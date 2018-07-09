@@ -6620,6 +6620,9 @@ class _Base extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent 
     }
     this.sendNewTabRehydrated(App);
     addLocaleDataForReactIntl(locale);
+    if (this.props.isFirstrun) {
+      global.document.body.classList.add("welcome");
+    }
   }
 
   componentDidMount() {
@@ -6642,7 +6645,10 @@ class _Base extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent 
   }
 
   updateTheme(Theme) {
-    const bodyClassName = ["activity-stream", Theme.className, this.props.isFirstrun ? "welcome" : ""].filter(v => v).join(" ");
+    const bodyClassName = ["activity-stream",
+    // If we skipped the about:welcome overlay and removed the CSS class
+    // we don't want to add it back to the Activity Stream view
+    document.body.classList.contains("welcome") ? "welcome" : "", Theme.className].filter(v => v).join(" ");
     global.document.body.className = bodyClassName;
   }
 
@@ -8720,7 +8726,10 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
     this.initScene = this.initScene.bind(this);
     this.removeOverlay = this.removeOverlay.bind(this);
 
-    this.state = { emailInput: "" };
+    this.state = {
+      emailInput: "",
+      overlayRemoved: false
+    };
     this.initScene();
   }
 
@@ -8738,6 +8747,7 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.
       document.body.classList.remove("welcome");
+      this.setState({ overlayRemoved: true });
     }, 400);
   }
 
@@ -8756,6 +8766,12 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
   }
 
   render() {
+    // When skipping the onboarding tour we show AS but we are still on
+    // about:welcome, prop.isFirstrun is true and StartupOverlay is rendered
+    if (this.state.overlayRemoved) {
+      return null;
+    }
+
     let termsLink = __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
       "a",
       { href: "https://accounts.firefox.com/legal/terms", target: "_blank", rel: "noopener noreferrer" },
