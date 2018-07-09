@@ -70,16 +70,6 @@ nsJSUtils::GetStaticScriptGlobal(JSObject* aObj)
   return xpc::WindowGlobalOrNull(aObj);
 }
 
-nsIScriptContext *
-nsJSUtils::GetStaticScriptContext(JSObject* aObj)
-{
-  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aObj);
-  if (!nativeGlobal)
-    return nullptr;
-
-  return nativeGlobal->GetScriptContext();
-}
-
 uint64_t
 nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
 {
