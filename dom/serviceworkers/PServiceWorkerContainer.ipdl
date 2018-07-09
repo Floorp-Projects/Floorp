@@ -24,6 +24,9 @@ parent:
   async GetRegistration(IPCClientInfo aClientInfo, nsCString aURL)
         returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
+  async GetRegistrations(IPCClientInfo aClientInfo)
+        returns (IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult aResult);
+
 child:
   async __delete__();
 };

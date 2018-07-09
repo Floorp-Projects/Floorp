@@ -40,5 +40,16 @@ union IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult
   CopyableErrorResult;
 };
 
+struct IPCServiceWorkerRegistrationDescriptorList
+{
+  IPCServiceWorkerRegistrationDescriptor[] values;
+};
+
+union IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult
+{
+  IPCServiceWorkerRegistrationDescriptorList;
+  CopyableErrorResult;
+};
+
 } // namespace dom
 } // namespace mozilla
