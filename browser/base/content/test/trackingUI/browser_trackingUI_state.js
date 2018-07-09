@@ -69,6 +69,7 @@ function testBenignPageWithException() {
   info("Non-tracking content must not be blocked");
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
+  ok(TrackingProtection.content.hasAttribute("hasException"), "content has exception attribute");
   ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
   ok(!TrackingProtection.icon.hasAttribute("tooltiptext"), "icon: no tooltip");
 
@@ -192,11 +193,22 @@ async function testTrackingProtectionDisabled(tab) {
   testBenignPage();
 
   info("Load a test page not containing tracking elements which has an exception.");
+  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(tab.ownerGlobal);
   let uri = Services.io.newURI("https://example.org/");
-  Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
+  if (isPrivateBrowsing) {
+    PrivateBrowsingUtils.addToTrackingAllowlist(uri);
+  } else {
+    Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
+  }
+
   await promiseTabLoadEvent(tab, uri.spec);
   testBenignPageWithException();
-  Services.perms.remove(uri, "trackingprotection");
+
+  if (isPrivateBrowsing) {
+    PrivateBrowsingUtils.removeFromTrackingAllowlist(uri);
+  } else {
+    Services.perms.remove(uri, "trackingprotection");
+  }
 
   info("Load a test page containing tracking elements");
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
