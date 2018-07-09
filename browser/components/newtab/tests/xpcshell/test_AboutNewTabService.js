@@ -129,6 +129,33 @@ add_task(async function test_default_url() {
   cleanup();
 });
 
+add_task(async function test_welcome_url() {
+  await setupASPrerendered();
+
+  Assert.equal(aboutNewTabService.activityStreamPrerender, true,
+    "Prerendering is enabled by default.");
+  Assert.equal(aboutNewTabService.welcomeURL, ACTIVITY_STREAM_URL,
+    "Newtab welcomeURL set to un-prerendered AS when prerendering enabled and debug disabled.");
+  await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_PRERENDER_PREF, false,
+    "A notification occurs after changing the prerender pref to false.");
+  Assert.equal(aboutNewTabService.welcomeURL, aboutNewTabService.defaultURL,
+    "Newtab welcomeURL is equal to defaultURL when prerendering disabled and debug disabled.");
+
+  // Only debug variants aren't available on release/beta
+  if (!IS_RELEASE_OR_BETA) {
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_DEBUG_PREF, true,
+      "A notification occurs after changing the debug pref to true.");
+    Assert.equal(aboutNewTabService.welcomeURL, aboutNewTabService.welcomeURL,
+      "Newtab welcomeURL is equal to defaultURL when prerendering disabled and debug enabled.");
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_PRERENDER_PREF, true,
+      "A notification occurs after changing the prerender pref to true.");
+    Assert.equal(aboutNewTabService.welcomeURL, ACTIVITY_STREAM_DEBUG_URL,
+      "Newtab welcomeURL set to un-prerendered debug AS when prerendering enabled and debug enabled");
+  }
+
+  cleanup();
+});
+
 add_task(function test_locale() {
   Assert.equal(aboutNewTabService.activityStreamLocale, "en-US",
     "The locale for testing should be en-US");

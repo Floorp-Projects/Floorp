@@ -24,6 +24,11 @@ interface nsIAboutNewTabService : nsISupports
   attribute ACString defaultURL;
 
   /**
+   * Returns the about:welcome URL.
+   */
+  attribute ACString welcomeURL;
+
+  /**
    * Returns true if opening the New Tab page will notify the user of a change.
    */
   attribute bool willNotifyUser;
