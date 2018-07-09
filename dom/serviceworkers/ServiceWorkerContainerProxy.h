@@ -36,6 +36,9 @@ public:
   RefPtr<ServiceWorkerRegistrationListPromise>
   GetRegistrations(const ClientInfo& aClientInfo);
 
+  RefPtr<ServiceWorkerRegistrationPromise>
+  GetReady(const ClientInfo& aClientInfo);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerContainerProxy);
 };
 
