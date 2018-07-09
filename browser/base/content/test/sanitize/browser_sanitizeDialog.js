@@ -59,9 +59,6 @@ add_task(async function default_state() {
   wh.onload = function() {
     // Select "Last Hour"
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-    // Hide details
-    if (!this.getItemList().collapsed)
-      this.toggleDetails();
     this.acceptDialog();
   };
   wh.open();
@@ -87,15 +84,6 @@ add_task(async function test_cancel() {
   wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.checkPrefCheckbox("history", false);
-    this.checkDetails(false);
-
-    // Show details
-    this.toggleDetails();
-    this.checkDetails(true);
-
-    // Hide details
-    this.toggleDetails();
-    this.checkDetails(false);
     this.cancelDialog();
   };
   wh.onunload = async function() {
@@ -276,16 +264,6 @@ add_task(async function test_everything() {
        "with a predefined timespan");
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
     this.checkPrefCheckbox("history", true);
-    this.checkDetails(true);
-
-    // Hide details
-    this.toggleDetails();
-    this.checkDetails(false);
-
-    // Show details
-    this.toggleDetails();
-    this.checkDetails(true);
-
     this.acceptDialog();
   };
   wh.onunload = async function() {
@@ -440,111 +418,6 @@ add_task(async function test_form_entries() {
   await wh.promiseClosed;
 });
 
-
-/**
- * Ensure that toggling details persists
- * across dialog openings.
- */
-add_task(async function test_toggling_details_persists() {
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Check all items and select "Everything"
-      this.checkAllCheckboxes();
-      this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-
-      // Hide details
-      this.toggleDetails();
-      this.checkDetails(false);
-      this.acceptDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should remain closed because all items are checked.
-      this.checkDetails(false);
-
-      // Uncheck history.
-      this.checkPrefCheckbox("history", false);
-      this.acceptDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should be open because not all items are checked.
-      this.checkDetails(true);
-
-      // Modify the Site Preferences item state (bug 527820)
-      this.checkAllCheckboxes();
-      this.checkPrefCheckbox("siteSettings", false);
-      this.acceptDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should be open because not all items are checked.
-      this.checkDetails(true);
-
-      // Hide details
-      this.toggleDetails();
-      this.checkDetails(false);
-      this.cancelDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should be open because not all items are checked.
-      this.checkDetails(true);
-
-      // Select another duration
-      this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-      // Hide details
-      this.toggleDetails();
-      this.checkDetails(false);
-      this.acceptDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should not be open because "Last Hour" is selected
-      this.checkDetails(false);
-
-      this.cancelDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-  {
-    let wh = new WindowHelper();
-    wh.onload = function() {
-      // Details should have remained closed
-      this.checkDetails(false);
-
-      // Show details
-      this.toggleDetails();
-      this.checkDetails(true);
-      this.cancelDialog();
-    };
-    wh.open();
-    await wh.promiseClosed;
-  }
-});
-
 // Test for offline cache deletion
 add_task(async function test_offline_cache() {
   // Prepare stuff, we will work with www.example.com
@@ -567,8 +440,6 @@ add_task(async function test_offline_cache() {
   let wh = new WindowHelper();
   wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-    // Show details
-    this.toggleDetails();
     // Clear only offlineApps
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("offlineApps", true);
@@ -617,8 +488,6 @@ add_task(async function test_offline_apps_permissions() {
   let wh = new WindowHelper();
   wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-    // Show details
-    this.toggleDetails();
     // Clear only offlineApps
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("siteSettings", true);
@@ -667,36 +536,6 @@ WindowHelper.prototype = {
   },
 
   /**
-   * Ensures that the details progressive disclosure button and the item list
-   * hidden by it match up.  Also makes sure the height of the dialog is
-   * sufficient for the item list and warning panel.
-   *
-   * @param aShouldBeShown
-   *        True if you expect the details to be shown and false if hidden
-   */
-  checkDetails(aShouldBeShown) {
-    let button = this.getDetailsButton();
-    let list = this.getItemList();
-    let hidden = list.hidden || list.collapsed;
-    is(hidden, !aShouldBeShown,
-       "Details should be " + (aShouldBeShown ? "shown" : "hidden") +
-       " but were actually " + (hidden ? "hidden" : "shown"));
-    let dir = hidden ? "down" : "up";
-    is(button.className, "expander-" + dir,
-       "Details button should be " + dir + " because item list is " +
-       (hidden ? "" : "not ") + "hidden");
-    let height = 0;
-    if (!hidden) {
-      ok(list.boxObject.height > 30, "listbox has sufficient size");
-      height += list.boxObject.height;
-    }
-    if (this.isWarningPanelVisible())
-      height += this.getWarningPanel().boxObject.height;
-    ok(height < this.win.innerHeight,
-       "Window should be tall enough to fit warning panel and item list");
-  },
-
-  /**
    * (Un)checks a history scope checkbox (browser & download history,
    * form history, etc.).
    *
@@ -736,24 +575,10 @@ WindowHelper.prototype = {
   },
 
   /**
-   * @return The details progressive disclosure button
-   */
-  getDetailsButton() {
-    return this.win.document.getElementById("detailsExpander");
-  },
-
-  /**
    * @return The dialog's duration dropdown
    */
   getDurationDropdown() {
     return this.win.document.getElementById("sanitizeDurationChoice");
-  },
-
-  /**
-   * @return The item list hidden by the details progressive disclosure button
-   */
-  getItemList() {
-    return this.win.document.getElementById("itemList");
   },
 
   /**
@@ -857,13 +682,6 @@ WindowHelper.prototype = {
          "Warning panel should not be visible for non-TIMESPAN_EVERYTHING");
     }
   },
-
-  /**
-   * Toggles the details progressive disclosure button.
-   */
-  toggleDetails() {
-    this.getDetailsButton().click();
-  }
 };
 
 function promiseSanitizationComplete() {
