@@ -168,6 +168,8 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   , mSkipWaitingFlag(false)
   , mHandlesFetch(Unknown)
 {
+  MOZ_ASSERT_IF(ServiceWorkerParentInterceptEnabled(),
+                XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread
   mOriginAttributes = mPrincipal->OriginAttributesRef();

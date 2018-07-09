@@ -19,6 +19,8 @@ ServiceWorkerUpdaterChild::ServiceWorkerUpdaterChild(GenericPromise* aPromise,
   // TODO: remove the main thread restriction after fixing bug 1364821.
   MOZ_ASSERT(NS_IsMainThread());
 
+  MOZ_DIAGNOSTIC_ASSERT(!ServiceWorkerParentInterceptEnabled());
+
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(aSuccessRunnable);
   MOZ_ASSERT(aFailureRunnable);

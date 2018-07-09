@@ -91,6 +91,10 @@ ServiceWorkerManagerService::PropagateRegistration(
 {
   AssertIsOnBackgroundThread();
 
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
+
   DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
@@ -133,6 +137,10 @@ ServiceWorkerManagerService::PropagateSoftUpdate(
 {
   AssertIsOnBackgroundThread();
 
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
+
   DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
@@ -161,6 +169,10 @@ ServiceWorkerManagerService::PropagateUnregister(
                                             const nsAString& aScope)
 {
   AssertIsOnBackgroundThread();
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
 
   RefPtr<dom::ServiceWorkerRegistrar> service =
     dom::ServiceWorkerRegistrar::Get();
@@ -197,6 +209,10 @@ ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
 {
   AssertIsOnBackgroundThread();
 
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
+
   DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
@@ -221,6 +237,10 @@ void
 ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID)
 {
   AssertIsOnBackgroundThread();
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
 
   RefPtr<dom::ServiceWorkerRegistrar> service =
     dom::ServiceWorkerRegistrar::Get();
@@ -254,6 +274,8 @@ ServiceWorkerManagerService::ProcessUpdaterActor(ServiceWorkerUpdaterParent* aAc
                                                  uint64_t aParentId)
 {
   AssertIsOnBackgroundThread();
+
+  MOZ_DIAGNOSTIC_ASSERT(!ServiceWorkerParentInterceptEnabled());
 
   nsAutoCString suffix;
   aOriginAttributes.CreateSuffix(suffix);
