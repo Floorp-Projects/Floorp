@@ -1,0 +1,23 @@
+<script>
+window.requestIdleCallback(function(){
+  document.documentElement.style.display="none";
+  document.documentElement.getBoundingClientRect();
+  document.documentElement.style.display="";
+});
+</script>
+<style>
+body {
+  -webkit-border-radius: 16px;
+  overflow-x: hidden;
+  -webkit-filter: blur(0px);
+  width: 1em;
+}
+:root {
+  scroll-snap-destination: left top 36%;
+}
+#a {
+  overflow: scroll;
+  clip-path: url(#x);
+}
+</style>
+<dl id="a">|<dialog open>

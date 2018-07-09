@@ -154,6 +154,33 @@ addMessageListener("devtools:test:setStyle", function(msg) {
 });
 
 /**
+ * Set multiple styles to the node for the given selector at once.
+ * @param {Object} data
+ * - {String} selector The CSS selector to get the node (can be a "super"
+ *   selector).
+ * - {Object} properties
+ *            e.g. {
+ *              opacity: 0,
+ *              color: "red",
+ *              animationTimingFunction: "linear",
+ *            }
+ */
+addMessageListener("devtools:test:setMultipleStyles", function(msg) {
+  const {selector, properties} = msg.data;
+  const node = superQuerySelector(selector);
+  if (!node) {
+    return;
+  }
+
+  for (const propertyName in properties) {
+    const propertyValue = properties[propertyName];
+    node.style[propertyName] = propertyValue;
+  }
+
+  sendAsyncMessage("devtools:test:setMultipleStyles");
+});
+
+/**
  * Set a given attribute value on a node.
  * @param {Object} data
  * - {String} selector The CSS selector to get the node (can be a "super"
