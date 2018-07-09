@@ -78,6 +78,9 @@ class Settings private constructor(context: Context) {
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
 
+    fun shouldUseBiometrics(): Boolean =
+            preferences.getBoolean(getPreferenceKey(R.string.pref_key_biometric), false)
+
     fun shouldUseSecureMode(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_secure), false)
 

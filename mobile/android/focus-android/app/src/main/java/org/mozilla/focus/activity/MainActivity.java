@@ -154,6 +154,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
+
+        if (Settings.getInstance(this).shouldUseBiometrics()) {
+            // Keep the view obscured until the user authenticates
+        }
     }
 
     @Override
