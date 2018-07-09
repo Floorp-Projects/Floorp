@@ -1,0 +1,5 @@
+. "$topsrcdir/browser/config/mozconfigs/win64/debug"
+
+export CC="cl.exe"
+export CXX="cl.exe"
+export LINKER="link.exe"
