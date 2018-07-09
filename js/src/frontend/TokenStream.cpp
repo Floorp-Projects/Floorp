@@ -1877,6 +1877,32 @@ SourceUnits<char16_t>::consumeRestOfSingleLineComment()
     }
 }
 
+template<>
+void
+SourceUnits<Utf8Unit>::consumeRestOfSingleLineComment()
+{
+    while (MOZ_LIKELY(!atEnd())) {
+        const Utf8Unit unit = peekCodeUnit();
+        if (IsSingleUnitLineTerminator(unit))
+            return;
+
+        if (MOZ_LIKELY(IsAscii(unit))) {
+            consumeKnownCodeUnit(unit);
+            continue;
+        }
+
+        PeekedCodePoint<Utf8Unit> peeked = peekCodePoint();
+        if (peeked.isNone())
+            return;
+
+        char32_t c = peeked.codePoint();
+        if (MOZ_UNLIKELY(c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR))
+            return;
+
+        consumeKnownCodePoint(peeked);
+    }
+}
+
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int32_t unit, TokenStart start,

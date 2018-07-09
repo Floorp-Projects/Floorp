@@ -1111,6 +1111,16 @@ PeekCodePoint(const mozilla::Utf8Unit* const ptr, const mozilla::Utf8Unit* const
     return PeekedCodePoint<mozilla::Utf8Unit>(codePoint.value(), len);
 }
 
+inline bool
+IsSingleUnitLineTerminator(mozilla::Utf8Unit unit)
+{
+    // BEWARE: The Unicode line/paragraph separators don't fit in a single
+    //         UTF-8 code unit, so this test is exact for Utf8Unit but inexact
+    //         for UTF-8 as a whole.  Users must handle |unit| as start of a
+    //         Unicode LineTerminator themselves!
+    return unit == mozilla::Utf8Unit('\n') || unit == mozilla::Utf8Unit('\r');
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
