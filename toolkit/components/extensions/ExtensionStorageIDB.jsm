@@ -372,35 +372,37 @@ this.ExtensionStorageIDB = {
       let promise;
 
       if (context.childManager) {
-        // Create a promise object that is not tied to the current extension context, because
-        // we are caching it for the entire life of the extension in the current process (and
-        // the promise returned by context.childManager.callParentAsyncFunction would become
-        // a dead object when the context.cloneScope has been destroyed).
-        promise = (async () => {
-          // Ask the parent process if the new backend is enabled for the
-          // running extension.
-          let result = await context.childManager.callParentAsyncFunction(
-            "storage.local.IDBBackend.selectBackend", []
-          );
+        return context.childManager.callParentAsyncFunction(
+          "storage.local.IDBBackend.selectBackend", []
+        ).then(parentResult => {
+          let result;
 
-          if (!result.backendEnabled) {
-            return {backendEnabled: false};
+          if (!parentResult.backendEnabled) {
+            result = {backendEnabled: false};
+          } else {
+            result = {
+              ...parentResult,
+              // In the child process, we need to deserialize the storagePrincipal
+              // from the StructuredCloneHolder used to send it across the processes.
+              storagePrincipal: parentResult.storagePrincipal.deserialize(this),
+            };
           }
 
-          return {
-            ...result,
-            // In the child process, we need to deserialize the storagePrincipal
-            // from the StructuredCloneHolder used to send it across the processes.
-            storagePrincipal: result.storagePrincipal.deserialize(this),
-          };
-        })();
-      } else {
-        // If migrating to the IDB backend is not enabled by the preference, then we
-        // don't need to migrate any data and the new backend is not enabled.
-        if (!this.isBackendEnabled) {
-          return Promise.resolve({backendEnabled: false});
-        }
+          // Cache the result once we know that it has been resolved. The promise returned by
+          // context.childManager.callParentAsyncFunction will be dead when context.cloneScope
+          // is destroyed. To keep a promise alive in the cache, we wrap the result in an
+          // independent promise.
+          this.selectedBackendPromises.set(extension, Promise.resolve(result));
 
+          return result;
+        });
+      }
+
+      // If migrating to the IDB backend is not enabled by the preference, then we
+      // don't need to migrate any data and the new backend is not enabled.
+      if (!this.isBackendEnabled) {
+        promise = Promise.resolve({backendEnabled: false});
+      } else {
         // In the main process, lazily create a storagePrincipal isolated in a
         // reserved user context id (its purpose is ensuring that the IndexedDB storage used
         // by the browser.storage.local API is not directly accessible from the extension code).
