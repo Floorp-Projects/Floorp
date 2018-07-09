@@ -11,6 +11,11 @@ describe("<StartupOverlay>", () => {
     wrapper = mountWithIntl(<StartupOverlay dispatch={dispatch} />);
   });
 
+  it("should not render if state.show is false", () => {
+    wrapper.setState({overlayRemoved: true});
+    assert.isTrue(wrapper.isEmptyRender());
+  });
+
   it("should emit UserEvent SKIPPED_SIGNIN when you click the skip button", () => {
     let skipButton = wrapper.find(".skip-button");
     assert.ok(skipButton.exists());
