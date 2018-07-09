@@ -184,3 +184,37 @@ function promiseButtonShown(id) {
     return bounds.width > 0 && bounds.height > 0;
   }, `Waiting for button ${id} to have non-0 size`);
 }
+
+async function simulateDropAndCheck(win, dropTarget, urls) {
+  let dragData = [[{type: "text/plain", data: urls.join("\n")}]];
+  let list = await Downloads.getList(Downloads.ALL);
+
+  let added = new Set();
+  let succeeded = new Set();
+  await new Promise(resolve => {
+    let view = {
+      onDownloadAdded(download) {
+        added.add(download.source.url);
+      },
+      onDownloadChanged(download) {
+        if (!added.has(download.source.url)) {
+          return;
+        }
+        if (!download.succeeded) {
+          return;
+        }
+        succeeded.add(download.source.url);
+        if (succeeded.size == urls.length) {
+          list.removeView(view).then(resolve);
+        }
+      }
+    };
+    list.addView(view).then(function() {
+      EventUtils.synthesizeDrop(dropTarget, dropTarget, dragData, "link", win);
+    });
+  });
+
+  for (let url of urls) {
+    ok(added.has(url), url + " is added to download");
+  }
+}
