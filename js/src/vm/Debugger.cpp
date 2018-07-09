@@ -1385,26 +1385,6 @@ GetResumptionProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, 
 }
 
 static bool
-ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, ResumeMode& resumeMode,
-                             MutableHandleValue vp)
-{
-    int hits = 0;
-    if (rv.isObject()) {
-        RootedObject obj(cx, &rv.toObject());
-        if (!GetResumptionProperty(cx, obj, cx->names().return_, ResumeMode::Return, resumeMode, vp, &hits))
-            return false;
-        if (!GetResumptionProperty(cx, obj, cx->names().throw_, ResumeMode::Throw, resumeMode, vp, &hits))
-            return false;
-    }
-
-    if (hits != 1) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
-        return false;
-    }
-    return true;
-}
-
-static bool
 ParseResumptionValue(JSContext* cx, HandleValue rval, ResumeMode& resumeMode, MutableHandleValue vp)
 {
     if (rval.isUndefined()) {
@@ -1417,7 +1397,21 @@ ParseResumptionValue(JSContext* cx, HandleValue rval, ResumeMode& resumeMode, Mu
         vp.setUndefined();
         return true;
     }
-    return ParseResumptionValueAsObject(cx, rval, resumeMode, vp);
+
+    int hits = 0;
+    if (rval.isObject()) {
+        RootedObject obj(cx, &rval.toObject());
+        if (!GetResumptionProperty(cx, obj, cx->names().return_, ResumeMode::Return, resumeMode, vp, &hits))
+            return false;
+        if (!GetResumptionProperty(cx, obj, cx->names().throw_, ResumeMode::Throw, resumeMode, vp, &hits))
+            return false;
+    }
+
+    if (hits != 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
+        return false;
+    }
+    return true;
 }
 
 static bool
