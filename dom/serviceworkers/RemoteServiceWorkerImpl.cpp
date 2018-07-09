@@ -6,9 +6,12 @@
 
 #include "RemoteServiceWorkerImpl.h"
 
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientState.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "ServiceWorkerChild.h"
+#include "ServiceWorkerCloneData.h"
 
 namespace mozilla {
 namespace dom {
@@ -67,7 +70,19 @@ RemoteServiceWorkerImpl::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                                      const ClientInfo& aClientInfo,
                                      const ClientState& aClientState)
 {
-  // TODO
+  NS_ASSERT_OWNINGTHREAD(RemoteServiceWorkerImpl);
+  if (!mActor) {
+    return;
+  }
+
+  ClonedMessageData data;
+  if (!aData->BuildClonedMessageDataForBackgroundChild(mActor->Manager(),
+                                                       data)) {
+    return;
+  }
+
+  mActor->SendPostMessage(data, ClientInfoAndState(aClientInfo.ToIPC(),
+                                                   aClientState.ToIPC()));
 }
 
 RemoteServiceWorkerImpl::RemoteServiceWorkerImpl(const ServiceWorkerDescriptor& aDescriptor)
