@@ -14,6 +14,7 @@
 #define NOTIFICATION_CLOSE_EVENT_NAME "notificationclose"
 
 class nsIInterceptedChannel;
+class nsIWorkerDebugger;
 
 namespace mozilla {
 

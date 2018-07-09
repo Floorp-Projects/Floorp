@@ -287,6 +287,35 @@ protected:
 
   virtual mozilla::ipc::IPCResult
   RecvStorageActivity(const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual PServiceWorkerParent*
+  AllocPServiceWorkerParent(const IPCServiceWorkerDescriptor&) override;
+
+  virtual bool
+  DeallocPServiceWorkerParent(PServiceWorkerParent*) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPServiceWorkerConstructor(PServiceWorkerParent* aActor,
+                                const IPCServiceWorkerDescriptor& aDescriptor) override;
+
+  virtual PServiceWorkerContainerParent*
+  AllocPServiceWorkerContainerParent() override;
+
+  virtual bool
+  DeallocPServiceWorkerContainerParent(PServiceWorkerContainerParent*) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPServiceWorkerContainerConstructor(PServiceWorkerContainerParent* aActor) override;
+
+  virtual PServiceWorkerRegistrationParent*
+  AllocPServiceWorkerRegistrationParent(const IPCServiceWorkerRegistrationDescriptor&) override;
+
+  virtual bool
+  DeallocPServiceWorkerRegistrationParent(PServiceWorkerRegistrationParent*) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPServiceWorkerRegistrationConstructor(PServiceWorkerRegistrationParent* aActor,
+                                            const IPCServiceWorkerRegistrationDescriptor& aDescriptor) override;
 };
 
 } // namespace ipc
