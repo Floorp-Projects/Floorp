@@ -85,7 +85,25 @@ void
 RemoteServiceWorkerRegistrationImpl::Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
                                                 ServiceWorkerFailureCallback&& aFailureCB)
 {
-  // TODO
+  if (!mActor) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  mActor->SendUnregister(
+    [successCB = std::move(aSuccessCB), aFailureCB]
+    (Tuple<bool, CopyableErrorResult>&& aResult) {
+    if (Get<1>(aResult).Failed()) {
+      // application layer error
+      aFailureCB(Get<1>(aResult));
+      return;
+    }
+    // success
+    successCB(Get<0>(aResult));
+  }, [aFailureCB] (ResponseRejectReason aReason) {
+    // IPC layer error
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+  });
 }
 
 RemoteServiceWorkerRegistrationImpl::RemoteServiceWorkerRegistrationImpl(const ServiceWorkerRegistrationDescriptor& aDescriptor)

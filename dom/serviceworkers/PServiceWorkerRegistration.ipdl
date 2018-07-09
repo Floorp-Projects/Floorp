@@ -16,6 +16,7 @@ protocol PServiceWorkerRegistration
 parent:
   async Teardown();
 
+  async Unregister() returns (bool aSuccess, CopyableErrorResult aRv);
   async Update() returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
 child:
