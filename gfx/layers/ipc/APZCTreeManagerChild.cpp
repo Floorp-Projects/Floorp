@@ -51,6 +51,7 @@ APZCTreeManagerChild::Destroy()
     mInputBridge->Destroy();
     mInputBridge = nullptr;
   }
+  Send__delete__(this);
 }
 
 void
