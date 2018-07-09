@@ -5321,6 +5321,15 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (lParam) {
         auto lParamString = reinterpret_cast<const wchar_t*>(lParam);
         if (!wcscmp(lParamString, L"ImmersiveColorSet")) {
+          // This might be the Win10 dark mode setting; only way to tell
+          // is to actually force a theme change, since we don't get
+          // WM_THEMECHANGED or WM_SYSCOLORCHANGE when that happens.
+          if (IsWin10OrLater() && mWindowType == eWindowType_toplevel) {
+            nsIPresShell* presShell = mWidgetListener->GetPresShell();
+            if (presShell) {
+              presShell->ThemeChanged();
+            }
+          }
           // WM_SYSCOLORCHANGE is not dispatched for accent color changes
           OnSysColorChanged();
           break;

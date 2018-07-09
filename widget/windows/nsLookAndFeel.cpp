@@ -62,6 +62,38 @@ static int32_t GetSystemParam(long flag, int32_t def)
     return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
+static nsresult
+SystemWantsDarkTheme(int32_t& darkThemeEnabled)
+{
+  if (!IsWin10OrLater()) {
+    darkThemeEnabled = 0;
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIWindowsRegKey> personalizeKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = personalizeKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+    NS_LITERAL_STRING("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"),
+    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint32_t lightThemeEnabled;
+  rv = personalizeKey->ReadIntValue(NS_LITERAL_STRING("AppsUseLightTheme"),
+                                    &lightThemeEnabled);
+  if (NS_SUCCEEDED(rv)) {
+    darkThemeEnabled = !lightThemeEnabled;
+  }
+
+  return rv;
+}
+
 nsLookAndFeel::nsLookAndFeel()
   : nsXPLookAndFeel()
   , mUseAccessibilityTheme(0)
@@ -572,6 +604,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ContextMenuOffsetVertical:
     case eIntID_ContextMenuOffsetHorizontal:
         aResult = 2;
+        break;
+    case eIntID_SystemUsesDarkTheme:
+        res = SystemWantsDarkTheme(aResult);
         break;
     default:
         aResult = 0;
