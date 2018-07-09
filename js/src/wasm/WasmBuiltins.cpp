@@ -811,8 +811,8 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
     _(ecmaPow, MathPow)            \
 
 #define DEFINE_UNARY_FLOAT_WRAPPER(func, _)        \
-    static float func##_uncached_f32(float x) {    \
-        return float(func##_uncached(double(x)));  \
+    static float func##_impl_f32(float x) {    \
+        return float(func##_impl(double(x)));  \
     }
 
 #define DEFINE_BINARY_FLOAT_WRAPPER(func, _)       \
@@ -860,8 +860,8 @@ PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives)
         return false;
 
 #define ADD_UNARY_OVERLOADS(funcName, native)                                             \
-    ADD_OVERLOAD(funcName##_uncached, native, Args_Double_Double)                         \
-    ADD_OVERLOAD(funcName##_uncached_f32, native, Args_Float32_Float32)
+    ADD_OVERLOAD(funcName##_impl, native, Args_Double_Double)                         \
+    ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32)
 
 #define ADD_BINARY_OVERLOADS(funcName, native)                                            \
     ADD_OVERLOAD(funcName, native, Args_Double_DoubleDouble)                              \

@@ -7594,64 +7594,64 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD* ins)
     void* funptr = nullptr;
     switch (ins->mir()->function()) {
       case MMathFunction::Log:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log_impl);
         break;
       case MMathFunction::Sin:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sin_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sin_impl);
         break;
       case MMathFunction::Cos:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cos_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cos_impl);
         break;
       case MMathFunction::Exp:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_exp_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_exp_impl);
         break;
       case MMathFunction::Tan:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tan_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tan_impl);
         break;
       case MMathFunction::ATan:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atan_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atan_impl);
         break;
       case MMathFunction::ASin:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asin_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asin_impl);
         break;
       case MMathFunction::ACos:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acos_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acos_impl);
         break;
       case MMathFunction::Log10:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log10_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log10_impl);
         break;
       case MMathFunction::Log2:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log2_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log2_impl);
         break;
       case MMathFunction::Log1P:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log1p_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_log1p_impl);
         break;
       case MMathFunction::ExpM1:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_expm1_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_expm1_impl);
         break;
       case MMathFunction::CosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cosh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cosh_impl);
         break;
       case MMathFunction::SinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sinh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_sinh_impl);
         break;
       case MMathFunction::TanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tanh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_tanh_impl);
         break;
       case MMathFunction::ACosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acosh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_acosh_impl);
         break;
       case MMathFunction::ASinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asinh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_asinh_impl);
         break;
       case MMathFunction::ATanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atanh_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_atanh_impl);
         break;
       case MMathFunction::Trunc:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_trunc_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_trunc_impl);
         break;
       case MMathFunction::Cbrt:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cbrt_uncached);
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_cbrt_impl);
         break;
       case MMathFunction::Floor:
         funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_floor_impl);
@@ -8970,7 +8970,7 @@ CodeGenerator::visitSinCos(LSinCos *lir)
     masm.passABIArg(MoveOperand(params, 0, MoveOperand::EFFECTIVE_ADDRESS),
                                 MoveOp::GENERAL);
 
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::math_sincos_uncached));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::math_sincos_impl));
 
     masm.loadDouble(Address(masm.getStackPointer(), 0), outputCos);
     masm.loadDouble(Address(masm.getStackPointer(), sizeof(double)), outputSin);
