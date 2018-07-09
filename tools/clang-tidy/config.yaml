@@ -44,6 +44,8 @@ clang_checkers:
     # Name with clang tidy 6.0. We are currently using 5.0
     # - name: bugprone-forward-declaration-namespace
     publish: !!bool yes
+  - name: misc-macro-repeated-side-effects
+    publish: !!bool yes
   - name: misc-suspicious-missing-comma
     publish: !!bool yes
   - name: misc-suspicious-semicolon
