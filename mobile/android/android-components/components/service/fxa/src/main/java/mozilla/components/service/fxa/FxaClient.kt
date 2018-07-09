@@ -9,6 +9,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.NativeLibrary
 import com.sun.jna.PointerType
+import kotlinx.coroutines.experimental.newSingleThreadContext
 
 @Suppress("FunctionNaming", "TooManyFunctions")
 internal interface FxaClient : Library {
@@ -16,6 +17,7 @@ internal interface FxaClient : Library {
         private const val JNA_LIBRARY_NAME = "fxa_client"
         private val JNA_NATIVE_LIB: Any
         internal val INSTANCE: FxaClient
+        internal val THREAD_CONTEXT = newSingleThreadContext("fxaClientThread")
 
         init {
             System.loadLibrary("crypto")
