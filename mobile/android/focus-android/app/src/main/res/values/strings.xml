@@ -251,6 +251,13 @@
      to other displays. However we try to keep this description short and brief to avoid confusion. -->
     <string name="preference_privacy_stealth_summary">Hide webpages when switching apps</string>
 
+    <string name="preference_category_security">Security</string>
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Use biometrics to unlock app</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session. -->
+    <string name="preference_security_biometric_summary">Your fingerprint can unlock Firefox Focus if a URL is already opened in the app.</string>
+
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
