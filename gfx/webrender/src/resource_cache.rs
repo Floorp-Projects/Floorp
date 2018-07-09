@@ -5,7 +5,7 @@
 use api::{AddFont, BlobImageResources, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
 use api::{ClearCache, ColorF, DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
-use api::{Epoch, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
+use api::{FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType};
 use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, IdNamespace};
@@ -32,7 +32,8 @@ use render_backend::FrameId;
 use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
 use render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
-use std::cmp;
+use std::collections::hash_map::ValuesMut;
+use std::{cmp, mem};
 use std::fmt::Debug;
 use std::hash::Hash;
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -85,7 +86,6 @@ pub struct ImageProperties {
     pub descriptor: ImageDescriptor,
     pub external_image: Option<ExternalImageData>,
     pub tiling: Option<TileSize>,
-    pub epoch: Epoch,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -99,9 +99,7 @@ enum State {
 struct ImageResource {
     data: ImageData,
     descriptor: ImageDescriptor,
-    epoch: Epoch,
     tiling: Option<TileSize>,
-    dirty_rect: Option<DeviceUintRect>,
 }
 
 #[derive(Clone, Debug)]
@@ -137,7 +135,7 @@ impl ImageTemplates {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CachedImageInfo {
     texture_cache_handle: TextureCacheHandle,
-    epoch: Epoch,
+    dirty_rect: Option<DeviceUintRect>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -168,6 +166,24 @@ pub fn intersect_for_tile(
     })
 }
 
+fn merge_dirty_rect(
+    prev_dirty_rect: &Option<DeviceUintRect>,
+    dirty_rect: &Option<DeviceUintRect>,
+    descriptor: &ImageDescriptor,
+) -> Option<DeviceUintRect> {
+    // It is important to never assume an empty dirty rect implies a full reupload here,
+    // although we are able to do so elsewhere. We store the descriptor's full rect instead
+    // There are update sequences which could cause us to forget the correct dirty regions
+    // regions if we cleared the dirty rect when we received None, e.g.:
+    //      1) Update with no dirty rect. We want to reupload everything.
+    //      2) Update with dirty rect B. We still want to reupload everything, not just B.
+    //      3) Perform the upload some time later.
+    match (dirty_rect, prev_dirty_rect) {
+        (&Some(ref rect), &Some(ref prev_rect)) => Some(rect.union(&prev_rect)),
+        (&Some(ref rect), &None) => Some(*rect),
+        (&None, _) => Some(descriptor.full_rect()),
+    }
+}
 
 impl<K, V, U> ResourceClassCache<K, V, U>
 where
@@ -190,13 +206,25 @@ where
         self.resources.insert(key, value);
     }
 
+    pub fn remove(&mut self, key: &K) {
+        self.resources.remove(key);
+    }
+
     pub fn get_mut(&mut self, key: &K) -> &mut V {
         self.resources.get_mut(key)
             .expect("Didn't find a cached resource with that ID!")
     }
 
+    pub fn try_get_mut(&mut self, key: &K) -> Option<&mut V> {
+        self.resources.get_mut(key)
+    }
+
     pub fn entry(&mut self, key: K) -> Entry<K, V> {
         self.resources.entry(key)
+    }
+
+    pub fn values_mut(&mut self) -> ValuesMut<K, V> {
+        self.resources.values_mut()
     }
 
     pub fn clear(&mut self) {
@@ -225,6 +253,13 @@ where
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+struct CachedImageKey {
+    pub rendering: ImageRendering,
+    pub tile: Option<TileOffset>,
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -243,12 +278,25 @@ impl ImageRequest {
             tile: Some(offset),
         }
     }
+
+    pub fn is_untiled_auto(&self) -> bool {
+        self.tile.is_none() && self.rendering == ImageRendering::Auto
+    }
 }
 
 impl Into<BlobImageRequest> for ImageRequest {
     fn into(self) -> BlobImageRequest {
         BlobImageRequest {
             key: self.key,
+            tile: self.tile,
+        }
+    }
+}
+
+impl Into<CachedImageKey> for ImageRequest {
+    fn into(self) -> CachedImageKey {
+        CachedImageKey {
+            rendering: self.rendering,
             tile: self.tile,
         }
     }
@@ -261,7 +309,15 @@ pub enum ImageCacheError {
     OverLimitSize,
 }
 
-type ImageCache = ResourceClassCache<ImageRequest, Result<CachedImageInfo, ImageCacheError>, ()>;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+enum ImageResult {
+    UntiledAuto(CachedImageInfo),
+    Multi(ResourceClassCache<CachedImageKey, CachedImageInfo, ()>),
+    Err(ImageCacheError),
+}
+
+type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
 pub type FontInstanceMap = Arc<RwLock<FastHashMap<FontInstanceKey, FontInstance>>>;
 
 #[derive(Default)]
@@ -510,14 +566,11 @@ impl ResourceCache {
                 tiling,
             );
         }
-        let dirty_rect = Some(descriptor.full_rect());
 
         let resource = ImageResource {
             descriptor,
             data,
-            epoch: Epoch(0),
             tiling,
-            dirty_rect,
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -548,24 +601,31 @@ impl ResourceCache {
                 .update(image_key, Arc::clone(blob), dirty_rect);
         }
 
+        // Each cache entry stores its own copy of the image's dirty rect. This allows them to be
+        // updated independently.
+        match self.cached_images.try_get_mut(&image_key) {
+            Some(&mut ImageResult::UntiledAuto(ref mut entry)) => {
+                entry.dirty_rect = merge_dirty_rect(&entry.dirty_rect, &dirty_rect, &descriptor);
+            }
+            Some(&mut ImageResult::Multi(ref mut entries)) => {
+                for entry in entries.values_mut() {
+                    entry.dirty_rect = merge_dirty_rect(&entry.dirty_rect, &dirty_rect, &descriptor);
+                }
+            }
+            _ => {}
+        }
+
         *image = ImageResource {
             descriptor,
             data,
-            epoch: Epoch(image.epoch.0 + 1),
             tiling,
-            dirty_rect: match (dirty_rect, image.dirty_rect) {
-                (Some(rect), Some(prev_rect)) => Some(rect.union(&prev_rect)),
-                (Some(rect), None) => Some(rect),
-                (None, _) => None,
-            },
         };
     }
 
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
         let value = self.resources.image_templates.remove(image_key);
 
-        self.cached_images
-            .clear_keys(|request| request.key == image_key);
+        self.cached_images.remove(&image_key);
 
         match value {
             Some(image) => if image.data.is_blob() {
@@ -606,41 +666,76 @@ impl ResourceCache {
             // The image or tiling size is too big for hardware texture size.
             warn!("Dropping image, image:(w:{},h:{}, tile:{}) is too big for hardware!",
                   template.descriptor.size.width, template.descriptor.size.height, template.tiling.unwrap_or(0));
-            self.cached_images.insert(request, Err(ImageCacheError::OverLimitSize));
+            self.cached_images.insert(request.key, ImageResult::Err(ImageCacheError::OverLimitSize));
             return;
         }
 
-        // If this image exists in the texture cache, *and* the epoch
-        // in the cache matches that of the template, then it is
-        // valid to use as-is.
-        let (entry, needs_update) = match self.cached_images.entry(request) {
-            Occupied(entry) => {
-                let info = entry.into_mut();
-                let needs_update = info.as_mut().unwrap().epoch != template.epoch;
-                info.as_mut().unwrap().epoch = template.epoch;
-                (info, needs_update)
-            }
-            Vacant(entry) => (
-                entry.insert(Ok(
-                    CachedImageInfo {
-                        epoch: template.epoch,
-                        texture_cache_handle: TextureCacheHandle::new(),
+        let storage = match self.cached_images.entry(request.key) {
+            Occupied(e) => {
+                // We might have an existing untiled entry, and need to insert
+                // a second entry. In such cases we need to move the old entry
+                // out first, replacing it with a dummy entry, and then creating
+                // the tiled/multi-entry variant.
+                let entry = e.into_mut();
+                if !request.is_untiled_auto() {
+                    let untiled_entry = match entry {
+                        &mut ImageResult::UntiledAuto(ref mut entry) => {
+                            Some(mem::replace(entry, CachedImageInfo {
+                                texture_cache_handle: TextureCacheHandle::new(),
+                                dirty_rect: None,
+                            }))
+                        }
+                        _ => None
+                    };
+
+                    if let Some(untiled_entry) = untiled_entry {
+                        let mut entries = ResourceClassCache::new();
+                        let untiled_key = CachedImageKey {
+                            rendering: ImageRendering::Auto,
+                            tile: None,
+                        };
+                        entries.insert(untiled_key, untiled_entry);
+                        *entry = ImageResult::Multi(entries);
                     }
-                )),
-                true,
-            ),
+                }
+                entry
+            }
+            Vacant(entry) => {
+                entry.insert(if request.is_untiled_auto() {
+                    ImageResult::UntiledAuto(CachedImageInfo {
+                        texture_cache_handle: TextureCacheHandle::new(),
+                        dirty_rect: Some(template.descriptor.full_rect()),
+                    })
+                } else {
+                    ImageResult::Multi(ResourceClassCache::new())
+                })
+            }
+        };
+
+        // If this image exists in the texture cache, *and* the dirty rect
+        // in the cache is empty, then it is valid to use as-is.
+        let entry = match *storage {
+            ImageResult::UntiledAuto(ref mut entry) => entry,
+            ImageResult::Multi(ref mut entries) => {
+                entries.entry(request.into())
+                    .or_insert(CachedImageInfo {
+                        texture_cache_handle: TextureCacheHandle::new(),
+                        dirty_rect: Some(template.descriptor.full_rect()),
+                    })
+            },
+            ImageResult::Err(_) => panic!("Errors should already have been handled"),
         };
 
         let needs_upload = self.texture_cache
-            .request(&entry.as_ref().unwrap().texture_cache_handle, gpu_cache);
+            .request(&entry.texture_cache_handle, gpu_cache);
 
         let dirty_rect = if needs_upload {
             // the texture cache entry has been evicted, treat it as all dirty
-            Some(template.descriptor.full_rect())
-        } else if needs_update {
-            template.dirty_rect
-        } else {
+            None
+        } else if entry.dirty_rect.is_none() {
             return
+        } else {
+            entry.dirty_rect
         };
 
         if !self.pending_image_requests.insert(request) {
@@ -666,6 +761,7 @@ impl ResourceCache {
                     if let Some(dirty) = dirty_rect {
                         if intersect_for_tile(dirty, actual_size, tile_size, tile_offset).is_none() {
                             // don't bother requesting unchanged tiles
+                            entry.dirty_rect = None;
                             self.pending_image_requests.remove(&request);
                             return
                         }
@@ -849,11 +945,15 @@ impl ResourceCache {
 
         // TODO(Jerry): add a debug option to visualize the corresponding area for
         // the Err() case of CacheItem.
-        match *self.cached_images.get(&request) {
-            Ok(ref image_info) => {
+        match *self.cached_images.get(&request.key) {
+            ImageResult::UntiledAuto(ref image_info) => {
                 Ok(self.texture_cache.get(&image_info.texture_cache_handle))
             }
-            Err(_) => {
+            ImageResult::Multi(ref entries) => {
+                let image_info = entries.get(&request.into());
+                Ok(self.texture_cache.get(&image_info.texture_cache_handle))
+            }
+            ImageResult::Err(_) => {
                 Err(())
             }
         }
@@ -888,7 +988,6 @@ impl ResourceCache {
                 descriptor: image_template.descriptor,
                 external_image,
                 tiling: image_template.tiling,
-                epoch: image_template.epoch,
             }
         })
     }
@@ -934,8 +1033,6 @@ impl ResourceCache {
     }
 
     fn update_texture_cache(&mut self, gpu_cache: &mut GpuCache) {
-        let mut keys_to_clear_dirty_rect = FastHashSet::default();
-
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
@@ -974,7 +1071,11 @@ impl ResourceCache {
                 }
             };
 
-            let entry = self.cached_images.get_mut(&request).as_mut().unwrap();
+            let entry = match *self.cached_images.get_mut(&request.key) {
+                ImageResult::UntiledAuto(ref mut entry) => entry,
+                ImageResult::Multi(ref mut entries) => entries.get_mut(&request.into()),
+                ImageResult::Err(_) => panic!("Update requested for invalid entry")
+            };
             let mut descriptor = image_template.descriptor.clone();
             let local_dirty_rect;
 
@@ -982,12 +1083,10 @@ impl ResourceCache {
                 let tile_size = image_template.tiling.unwrap();
                 let clipped_tile_size = compute_tile_size(&descriptor, tile_size, tile);
 
-                local_dirty_rect = if let Some(ref rect) = image_template.dirty_rect {
-                    keys_to_clear_dirty_rect.insert(request.key.clone());
-
+                local_dirty_rect = if let Some(rect) = entry.dirty_rect.take() {
                     // We should either have a dirty rect, or we are re-uploading where the dirty
                     // rect is ignored anyway.
-                    let intersection = intersect_for_tile(*rect, clipped_tile_size, tile_size, tile);
+                    let intersection = intersect_for_tile(rect, clipped_tile_size, tile_size, tile);
                     debug_assert!(intersection.is_some() ||
                                   self.texture_cache.needs_upload(&entry.texture_cache_handle));
                     intersection
@@ -1010,7 +1109,7 @@ impl ResourceCache {
 
                 descriptor.size = clipped_tile_size;
             } else {
-                local_dirty_rect = image_template.dirty_rect.take();
+                local_dirty_rect = entry.dirty_rect.take();
             }
 
             let filter = match request.rendering {
@@ -1052,11 +1151,6 @@ impl ResourceCache {
                 UvRectKind::Rect,
             );
         }
-
-        for key in keys_to_clear_dirty_rect.drain() {
-            let image_template = self.resources.image_templates.get_mut(key).unwrap();
-            image_template.dirty_rect.take();
-        }
     }
 
     pub fn end_frame(&mut self) {
@@ -1088,7 +1182,7 @@ impl ResourceCache {
             .images
             .retain(|key, _| key.0 != namespace);
         self.cached_images
-            .clear_keys(|request| request.key.0 == namespace);
+            .clear_keys(|key| key.0 == namespace);
 
         self.resources.font_instances
             .write()
@@ -1151,7 +1245,6 @@ enum PlainFontTemplate {
 struct PlainImageTemplate {
     data: String,
     descriptor: ImageDescriptor,
-    epoch: Epoch,
     tiling: Option<TileSize>,
 }
 
@@ -1350,7 +1443,6 @@ impl ResourceCache {
                         },
                         descriptor: template.descriptor.clone(),
                         tiling: template.tiling,
-                        epoch: template.epoch,
                     })
                 })
                 .collect(),
@@ -1475,8 +1567,6 @@ impl ResourceCache {
                 data,
                 descriptor: template.descriptor,
                 tiling: template.tiling,
-                epoch: template.epoch,
-                dirty_rect: None,
             });
         }
 
