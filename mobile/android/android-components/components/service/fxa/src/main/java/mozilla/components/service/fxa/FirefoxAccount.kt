@@ -15,7 +15,7 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
         this.rawPointer = result
     }
 
-    override fun destroyPointer(p: RawFxAccount) {
+    override fun destroy(p: RawFxAccount) {
         FxaClient.INSTANCE.fxa_free(p)
     }
 

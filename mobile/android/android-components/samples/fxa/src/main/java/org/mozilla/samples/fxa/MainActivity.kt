@@ -45,6 +45,11 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        account?.close()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val action = intent.action
