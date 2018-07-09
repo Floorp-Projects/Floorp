@@ -12,6 +12,9 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="updateheader" extends="chrome://global/content/bindings/wizard.xml#wizard-header">
+    <resources>
+      <stylesheet src="chrome://global/skin/wizard.css"/>
+    </resources>
     <content>
       <xul:hbox class="wizard-header update-header" flex="1">
         <xul:vbox class="wizard-header-box-1">
