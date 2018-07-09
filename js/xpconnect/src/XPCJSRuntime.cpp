@@ -1887,10 +1887,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         KIND_HEAP, rtStats.runtime.interpreterStack,
         "JS interpreter frames.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/math-cache"),
-        KIND_HEAP, rtStats.runtime.mathCache,
-        "The math cache.");
-
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/shared-immutable-strings-cache"),
         KIND_HEAP, rtStats.runtime.sharedImmutableStringsCache,
         "Immutable strings (such as JS scripts' source text) shared across all JSRuntimes.");

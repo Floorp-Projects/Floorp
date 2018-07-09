@@ -512,12 +512,10 @@ IonBuilder::inlineMathFunction(CallInfo& callInfo, MMathFunction::Function funct
     if (!IsNumberType(callInfo.getArg(0)->type()))
         return InliningStatus_NotInlined;
 
-    const MathCache* cache = TlsContext.get()->caches().maybeGetMathCache();
-
     callInfo.fun()->setImplicitlyUsedUnchecked();
     callInfo.thisArg()->setImplicitlyUsedUnchecked();
 
-    MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), function, cache);
+    MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), function);
     current->add(ins);
     current->push(ins);
     return InliningStatus_Inlined;
@@ -1155,8 +1153,7 @@ IonBuilder::inlineMathFloor(CallInfo& callInfo)
             if (MNearbyInt::HasAssemblerSupport(RoundingMode::Down)) {
                 ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType, RoundingMode::Down);
             } else {
-                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor,
-                                         /* cache */ nullptr);
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor);
             }
 
             current->add(ins);
@@ -1209,8 +1206,7 @@ IonBuilder::inlineMathCeil(CallInfo& callInfo)
             if (MNearbyInt::HasAssemblerSupport(RoundingMode::Up)) {
                 ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType, RoundingMode::Up);
             } else {
-                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil,
-                                         /* cache */ nullptr);
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil);
             }
 
             current->add(ins);
@@ -1281,8 +1277,7 @@ IonBuilder::inlineMathRound(CallInfo& callInfo)
 
     if (IsFloatingPointType(argType) && returnType == MIRType::Double) {
         callInfo.setImplicitlyUsedUnchecked();
-        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Round,
-                                                /* cache */ nullptr);
+        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Round);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -1526,8 +1521,7 @@ IonBuilder::inlineMathTrunc(CallInfo& callInfo)
                 ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType,
                                       RoundingMode::TowardsZero);
             } else {
-                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Trunc,
-                                         /* cache */ nullptr);
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Trunc);
             }
 
             current->add(ins);
