@@ -31,6 +31,10 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'user32.dll',
     ]
 
+    if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
+        SOURCES += ['cygprofile.cpp']
+        SOURCES['cygprofile.cpp'].pgo_generate_only = True
+
     if CONFIG['CC_TYPE'] == "msvc":
         CFLAGS += ['-guard:cf']
         CXXFLAGS += ['-guard:cf']
