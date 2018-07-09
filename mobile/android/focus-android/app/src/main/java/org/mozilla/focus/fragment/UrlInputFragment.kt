@@ -18,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.webkit.URLUtil
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
@@ -485,7 +486,9 @@ class UrlInputFragment :
 
     private fun onCommit() {
         val input = urlView.autocompleteResult.formattedText.let {
-            if (it.isEmpty()) urlView?.text.toString() else it
+            if (it.isEmpty() || !URLUtil.isValidUrl(urlView?.text.toString())) {
+                urlView?.text.toString()
+            } else it
         }
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
