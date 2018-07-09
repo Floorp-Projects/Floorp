@@ -16,7 +16,7 @@ atomic_refcell = "0.1"
 cssparser = "0.24.0"
 cstr = "0.1.2"
 env_logger = { version = "0.5", default-features = false }
-euclid = "0.17"
+euclid = "0.18"
 geckoservo = {path = "../../../ports/geckolib"}
 libc = "0.2"
 log = {version = "0.4", features = ["release_max_level_info"]}

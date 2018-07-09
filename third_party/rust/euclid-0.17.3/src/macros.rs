@@ -18,12 +18,7 @@ macro_rules! define_matrix {
         $(#[$attr])*
         pub struct $name<T, $($phantom),+> {
             $(pub $field: T,)+
-
-            // Keep this (secretly) public for the few cases where we would like to
-            // create static constants which currently can't be initialized with a
-            // function.
-            #[doc(hidden)]
-            pub _unit: PhantomData<($($phantom),+)>
+            _unit: PhantomData<($($phantom),+)>
         }
 
         impl<T: Clone, $($phantom),+> Clone for $name<T, $($phantom),+> {
@@ -64,21 +59,21 @@ macro_rules! define_matrix {
             }
         }
 
-        impl<T, $($phantom),+> ::core::cmp::Eq for $name<T, $($phantom),+>
-            where T: ::core::cmp::Eq {}
+        impl<T, $($phantom),+> ::std::cmp::Eq for $name<T, $($phantom),+>
+            where T: ::std::cmp::Eq {}
 
-        impl<T, $($phantom),+> ::core::cmp::PartialEq for $name<T, $($phantom),+>
-            where T: ::core::cmp::PartialEq
+        impl<T, $($phantom),+> ::std::cmp::PartialEq for $name<T, $($phantom),+>
+            where T: ::std::cmp::PartialEq
         {
             fn eq(&self, other: &Self) -> bool {
                 true $(&& self.$field == other.$field)+
             }
         }
 
-        impl<T, $($phantom),+> ::core::hash::Hash for $name<T, $($phantom),+>
-            where T: ::core::hash::Hash
+        impl<T, $($phantom),+> ::std::hash::Hash for $name<T, $($phantom),+>
+            where T: ::std::hash::Hash
         {
-            fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+            fn hash<H: ::std::hash::Hasher>(&self, h: &mut H) {
                 $(self.$field.hash(h);)+
             }
         }

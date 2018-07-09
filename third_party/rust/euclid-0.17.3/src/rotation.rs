@@ -9,9 +9,9 @@
 
 use approxeq::ApproxEq;
 use num_traits::{Float, FloatConst, One, Zero};
-use core::fmt;
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
-use core::marker::PhantomData;
+use std::fmt;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
+use std::marker::PhantomData;
 use trig::Trig;
 use {TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D, Vector3D, point2, point3, vec3};
 use {TypedTransform2D, TypedTransform3D, UnknownUnit};
@@ -740,7 +740,7 @@ where
 
 #[test]
 fn simple_rotation_2d() {
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
     let ri = Rotation2D::identity();
     let r90 = Rotation2D::radians(FRAC_PI_2);
     let rm90 = Rotation2D::radians(-FRAC_PI_2);
@@ -773,7 +773,7 @@ fn simple_rotation_2d() {
 
 #[test]
 fn simple_rotation_3d_in_2d() {
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
     let ri = Rotation3D::identity();
     let r90 = Rotation3D::around_z(Angle::radians(FRAC_PI_2));
     let rm90 = Rotation3D::around_z(Angle::radians(-FRAC_PI_2));
@@ -806,7 +806,7 @@ fn simple_rotation_3d_in_2d() {
 
 #[test]
 fn pre_post() {
-    use core::f32::consts::FRAC_PI_2;
+    use std::f32::consts::FRAC_PI_2;
     let r1 = Rotation3D::around_x(Angle::radians(FRAC_PI_2));
     let r2 = Rotation3D::around_y(Angle::radians(FRAC_PI_2));
     let r3 = Rotation3D::around_z(Angle::radians(FRAC_PI_2));
@@ -822,16 +822,16 @@ fn pre_post() {
     let p1 = r1.post_rotate(&r2).post_rotate(&r3).rotate_point3d(&p);
     let p2 = t1.post_mul(&t2).post_mul(&t3).transform_point3d(&p);
 
-    assert!(p1.approx_eq(&p2.unwrap()));
+    assert!(p1.approx_eq(&p2));
 
     // Check that changing the order indeed matters.
     let p3 = t3.post_mul(&t1).post_mul(&t2).transform_point3d(&p);
-    assert!(!p1.approx_eq(&p3.unwrap()));
+    assert!(!p1.approx_eq(&p3));
 }
 
 #[test]
 fn to_transform3d() {
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
     let rotations = [
         Rotation3D::identity(),
         Rotation3D::around_x(Angle::radians(FRAC_PI_2)),
@@ -856,7 +856,7 @@ fn to_transform3d() {
         for point in &points {
             let p1 = rotation.rotate_point3d(point);
             let p2 = rotation.to_transform().transform_point3d(point);
-            assert!(p1.approx_eq(&p2.unwrap()));
+            assert!(p1.approx_eq(&p2));
         }
     }
 }
@@ -931,7 +931,7 @@ fn slerp() {
 
 #[test]
 fn around_axis() {
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
 
     // Two sort of trivial cases:
     let r1 = Rotation3D::around_axis(vec3(1.0, 1.0, 0.0), Angle::radians(PI));
@@ -956,7 +956,7 @@ fn around_axis() {
 
 #[test]
 fn from_euler() {
-    use core::f32::consts::FRAC_PI_2;
+    use std::f32::consts::FRAC_PI_2;
 
     // First test simple separate yaw pitch and roll rotations, because it is easy to come
     // up with the corresponding quaternion.
@@ -1001,7 +1001,7 @@ fn from_euler() {
 
 #[test]
 fn wrap_angles() {
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
     assert!(Angle::radians(0.0).positive().radians.approx_eq(&0.0));
     assert!(
         Angle::radians(FRAC_PI_2)
