@@ -4,7 +4,7 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
@@ -62,15 +62,13 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 if (sessionRule.currentCall.counter == 1) {
                     assertThat("URI should be " + testUri, uri, equalTo(testUri));
                 } else {
                     assertThat("URI should be about:neterror", uri, startsWith("about:neterror"));
                 }
-                response.respond(false)
+                return null
             }
 
             @AssertCalled(count = 1)

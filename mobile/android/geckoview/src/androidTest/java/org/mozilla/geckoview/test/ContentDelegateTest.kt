@@ -4,7 +4,7 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
@@ -43,9 +43,8 @@ class ContentDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int,
-                                       response: GeckoResponse<Boolean>) {
-                response.respond(false)
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                return null
             }
 
             @AssertCalled(false)
