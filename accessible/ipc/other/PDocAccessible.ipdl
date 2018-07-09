@@ -70,7 +70,8 @@ parent:
                                  int32_t aOldStartOffset, int32_t aOldEndOffset,
                                  uint64_t aPosition,
                                  int32_t aStartOffset, int32_t aEndOffset,
-                                 int16_t aReason, bool aFromUservcEvent);
+                                 int16_t aReason, int16_t aBoundaryType,
+                                 bool aFromUservcEvent);
 
   /*
    * Tell the parent document to bind the existing document as a new child
