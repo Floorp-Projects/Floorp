@@ -3,5 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 mod gl;
+pub mod query_gl;
 
 pub use self::gl::*;
+pub use self::query_gl as query;

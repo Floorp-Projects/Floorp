@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode, ColorF};
-use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode};
+use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode};
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, TileOffset};
 use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTransform, LayoutVector2D};
 use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets};
@@ -284,7 +284,6 @@ pub enum BrushKind {
     },
     Image {
         request: ImageRequest,
-        current_epoch: Epoch,
         alpha_type: AlphaType,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
@@ -1577,7 +1576,6 @@ impl PrimitiveStore {
                         sub_rect,
                         stretch_size,
                         ref mut tile_spacing,
-                        ref mut current_epoch,
                         ref mut source,
                         ref mut opacity_binding,
                         ref mut visible_tiles,
@@ -1590,7 +1588,6 @@ impl PrimitiveStore {
 
                         // Set if we need to request the source image from the cache this frame.
                         if let Some(image_properties) = image_properties {
-                            *current_epoch = image_properties.epoch;
                             is_tiled = image_properties.tiling.is_some();
 
                             // If the opacity changed, invalidate the GPU cache so that
@@ -2276,7 +2273,8 @@ impl PrimitiveStore {
             prim_screen_rect.intersection(&prim_run_context.clip_chain.combined_outer_screen_rect);
         let clip_chain = prim_run_context.clip_chain.nodes.clone();
         if cfg!(debug_assertions) && Some(prim_index) == self.chase_id {
-            println!("\tbase combined outer rect {:?}", combined_outer_rect);
+            println!("\tbase screen {:?}, combined clip chain {:?}",
+                prim_screen_rect, prim_run_context.clip_chain.combined_outer_screen_rect);
         }
 
         let prim_coordinate_system_id = prim_run_context.scroll_node.coordinate_system_id;
@@ -2694,6 +2692,20 @@ impl PrimitiveStore {
                 .map(|inv_parent| {
                     inv_parent.pre_mul(&scroll_node.world_content_transform)
                 });
+
+            if run.is_chasing(self.chase_id) {
+                println!("\teffective clip chain from {:?} {}",
+                    scroll_node.coordinate_system_id,
+                    if pic_context.apply_local_clip_rect { "(applied)" } else { "" },
+                );
+                let iter = ClipChainNodeIter { current: clip_chain.nodes.clone() };
+                for node in iter {
+                    println!("\t\t{:?} {:?}",
+                        node.work_item.coordinate_system_id,
+                        node.local_clip_rect,
+                    );
+                }
+            }
 
             let clip_chain_rect = if pic_context.apply_local_clip_rect {
                 get_local_clip_rect_for_nodes(scroll_node, clip_chain)
