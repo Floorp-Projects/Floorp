@@ -1233,6 +1233,34 @@ gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
     return result + GetAdvanceForGlyphs(ligatureRange);
 }
 
+gfxFloat
+gfxTextRun::GetMinAdvanceWidth(Range aRange)
+{
+    MOZ_ASSERT(aRange.end <= GetLength(), "Substring out of range");
+
+    Range ligatureRange = aRange;
+    ShrinkToLigatureBoundaries(&ligatureRange);
+
+    gfxFloat result = std::max(
+        ComputePartialLigatureWidth(Range(aRange.start, ligatureRange.start),
+                                    nullptr),
+        ComputePartialLigatureWidth(Range(ligatureRange.end, aRange.end),
+                                    nullptr));
+
+    // XXX Do we need to take spacing into account? When each grapheme cluster
+    // takes its own line, we shouldn't be adding spacings around them.
+    gfxFloat clusterAdvance = 0;
+    for (uint32_t i = ligatureRange.start; i < ligatureRange.end; ++i) {
+        clusterAdvance += GetAdvanceForGlyph(i);
+        if (i + 1 == ligatureRange.end || IsClusterStart(i + 1)) {
+            result = std::max(result, clusterAdvance);
+            clusterAdvance = 0;
+        }
+    }
+
+    return result;
+}
+
 bool
 gfxTextRun::SetLineBreaks(Range aRange,
                           bool aLineBreakBefore, bool aLineBreakAfter,
