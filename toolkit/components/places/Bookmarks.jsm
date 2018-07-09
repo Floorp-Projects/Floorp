@@ -1704,6 +1704,17 @@ async function moveBookmark(db, item, oldIndex, newParent, newIndex, lastModifie
                                    syncChangeDelta);
   }
 
+  if (syncChangeDelta) {
+    // Sync stores child indices in the parent's record, so we only bump the
+    // item's counter if we're updating at least one more property in
+    // addition to the index and last modified time.
+    let needsSyncChange = tuples.size > 2;
+    if (needsSyncChange) {
+      tuples.set("syncChangeDelta", { value: syncChangeDelta,
+                                      fragment: "syncChangeCounter = syncChangeCounter + :syncChangeDelta" });
+    }
+  }
+
   await db.executeCached(
     `UPDATE moz_bookmarks
      SET ${Array.from(tuples.keys()).map(v => tuples.get(v).fragment || `${v} = :${v}`).join(", ")}
