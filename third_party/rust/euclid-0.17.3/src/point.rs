@@ -15,9 +15,9 @@ use size::TypedSize2D;
 use num::*;
 use num_traits::{Float, NumCast};
 use vector::{TypedVector2D, TypedVector3D, vec2, vec3};
-use core::fmt;
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
-use core::marker::PhantomData;
+use std::fmt;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::marker::PhantomData;
 
 define_matrix! {
     /// A 2d Point tagged with a unit.
@@ -68,8 +68,8 @@ impl<T, U> TypedPoint2D<T, U> {
     #[inline]
     pub fn new(x: T, y: T) -> Self {
         TypedPoint2D {
-            x,
-            y,
+            x: x,
+            y: y,
             _unit: PhantomData,
         }
     }
@@ -286,16 +286,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// as one would expect from a simple cast, but this behavior does not always make sense
     /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
     #[inline]
-    pub fn cast<NewT: NumCast + Copy>(&self) -> TypedPoint2D<NewT, U> {
-        self.try_cast().unwrap()
-    }
-
-    /// Fallible cast from one numeric representation to another, preserving the units.
-    ///
-    /// When casting from floating point to integer coordinates, the decimals are truncated
-    /// as one would expect from a simple cast, but this behavior does not always make sense
-    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
-    pub fn try_cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint2D<NewT, U>> {
+    pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint2D<NewT, U>> {
         match (NumCast::from(self.x), NumCast::from(self.y)) {
             (Some(x), Some(y)) => Some(point2(x, y)),
             _ => None,
@@ -307,13 +298,13 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// Cast into an `f32` point.
     #[inline]
     pub fn to_f32(&self) -> TypedPoint2D<f32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `f64` point.
     #[inline]
     pub fn to_f64(&self) -> TypedPoint2D<f64, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `usize` point, truncating decimals if any.
@@ -323,7 +314,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_usize(&self) -> TypedPoint2D<usize, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `u32` point, truncating decimals if any.
@@ -333,7 +324,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_u32(&self) -> TypedPoint2D<u32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an i32 point, truncating decimals if any.
@@ -343,7 +334,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_i32(&self) -> TypedPoint2D<i32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an i64 point, truncating decimals if any.
@@ -353,7 +344,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_i64(&self) -> TypedPoint2D<i64, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 }
 
@@ -464,9 +455,9 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
         TypedPoint3D {
-            x,
-            y,
-            z,
+            x: x,
+            y: y,
+            z: z,
             _unit: PhantomData,
         }
     }
@@ -659,17 +650,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// as one would expect from a simple cast, but this behavior does not always make sense
     /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
     #[inline]
-    pub fn cast<NewT: NumCast + Copy>(&self) -> TypedPoint3D<NewT, U> {
-        self.try_cast().unwrap()
-    }
-
-    /// Fallible cast from one numeric representation to another, preserving the units.
-    ///
-    /// When casting from floating point to integer coordinates, the decimals are truncated
-    /// as one would expect from a simple cast, but this behavior does not always make sense
-    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
-    #[inline]
-    pub fn try_cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint3D<NewT, U>> {
+    pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint3D<NewT, U>> {
         match (
             NumCast::from(self.x),
             NumCast::from(self.y),
@@ -685,13 +666,13 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// Cast into an `f32` point.
     #[inline]
     pub fn to_f32(&self) -> TypedPoint3D<f32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `f64` point.
     #[inline]
     pub fn to_f64(&self) -> TypedPoint3D<f64, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `usize` point, truncating decimals if any.
@@ -701,7 +682,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_usize(&self) -> TypedPoint3D<usize, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `u32` point, truncating decimals if any.
@@ -711,7 +692,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_u32(&self) -> TypedPoint3D<u32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `i32` point, truncating decimals if any.
@@ -721,7 +702,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_i32(&self) -> TypedPoint3D<i32, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 
     /// Cast into an `i64` point, truncating decimals if any.
@@ -731,7 +712,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// the desired conversion behavior.
     #[inline]
     pub fn to_i64(&self) -> TypedPoint3D<i64, U> {
-        self.cast()
+        self.cast().unwrap()
     }
 }
 

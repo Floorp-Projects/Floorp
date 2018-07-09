@@ -7,8 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
-
 use super::{UnknownUnit, Angle};
 use approxeq::ApproxEq;
 use homogen::HomogeneousVector;
@@ -19,9 +17,9 @@ use rect::TypedRect;
 use transform2d::TypedTransform2D;
 use scale::TypedScale;
 use num::{One, Zero};
-use core::ops::{Add, Mul, Sub, Div, Neg};
-use core::marker::PhantomData;
-use core::fmt;
+use std::ops::{Add, Mul, Sub, Div, Neg};
+use std::marker::PhantomData;
+use std::fmt;
 use num_traits::NumCast;
 
 define_matrix! {
@@ -53,7 +51,6 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
     /// For example, the translation terms m41, m42, m43 on the last row with the
     /// row-major convention) are the 13rd, 14th and 15th parameters.
     #[inline]
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     pub fn row_major(
             m11: T, m12: T, m13: T, m14: T,
             m21: T, m22: T, m23: T, m24: T,
@@ -61,10 +58,10 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
             m41: T, m42: T, m43: T, m44: T)
          -> Self {
         TypedTransform3D {
-            m11, m12, m13, m14,
-            m21, m22, m23, m24,
-            m31, m32, m33, m34,
-            m41, m42, m43, m44,
+            m11: m11, m12: m12, m13: m13, m14: m14,
+            m21: m21, m22: m22, m23: m23, m24: m24,
+            m31: m31, m32: m32, m33: m33, m34: m34,
+            m41: m41, m42: m42, m43: m43, m44: m44,
             _unit: PhantomData,
         }
     }
@@ -74,7 +71,6 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
     /// For example, the translation terms m41, m42, m43 on the last column with the
     /// column-major convention) are the 4th, 8th and 12nd parameters.
     #[inline]
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     pub fn column_major(
             m11: T, m21: T, m31: T, m41: T,
             m12: T, m22: T, m32: T, m42: T,
@@ -82,10 +78,10 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
             m14: T, m24: T, m34: T, m44: T)
          -> Self {
         TypedTransform3D {
-            m11, m12, m13, m14,
-            m21, m22, m23, m24,
-            m31, m32, m33, m34,
-            m41, m42, m43, m44,
+            m11: m11, m12: m12, m13: m13, m14: m14,
+            m21: m21, m22: m22, m23: m23, m24: m24,
+            m31: m31, m32: m32, m33: m33, m34: m34,
+            m41: m41, m42: m42, m43: m43, m44: m44,
             _unit: PhantomData,
         }
     }
@@ -418,23 +414,19 @@ where T: Copy + Clone +
         HomogeneousVector::new(x, y, z, w)
     }
 
-    /// Returns the given 2d point transformed by this transform, if the transform makes sense,
-    /// or `None` otherwise.
+    /// Returns the given 2d point transformed by this transform.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
-    ///
     #[inline]
-    pub fn transform_point2d(&self, p: &TypedPoint2D<T, Src>) -> Option<TypedPoint2D<T, Dst>> {
+    pub fn transform_point2d(&self, p: &TypedPoint2D<T, Src>) -> TypedPoint2D<T, Dst> {
         //Note: could use `transform_point2d_homogeneous()` but it would waste the calculus of `z`
-        let w = p.x * self.m14 + p.y * self.m24 + self.m44;
-        if w > T::zero() {
-            let x = p.x * self.m11 + p.y * self.m21 + self.m41;
-            let y = p.x * self.m12 + p.y * self.m22 + self.m42;
 
-            Some(TypedPoint2D::new(x / w, y / w))
-        } else {
-            None
-        }
+        let x = p.x * self.m11 + p.y * self.m21 + self.m41;
+        let y = p.x * self.m12 + p.y * self.m22 + self.m42;
+        let w = p.x * self.m14 + p.y * self.m24 + self.m44;
+
+
+        TypedPoint2D::new(x / w, y / w)
     }
 
     /// Returns the given 2d vector transformed by this matrix.
@@ -463,12 +455,11 @@ where T: Copy + Clone +
         HomogeneousVector::new(x, y, z, w)
     }
 
-    /// Returns the given 3d point transformed by this transform, if the transform makes sense,
-    /// or `None` otherwise.
+    /// Returns the given 3d point transformed by this transform.
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
     #[inline]
-    pub fn transform_point3d(&self, p: &TypedPoint3D<T, Src>) -> Option<TypedPoint3D<T, Dst>> {
+    pub fn transform_point3d(&self, p: &TypedPoint3D<T, Src>) -> TypedPoint3D<T, Dst> {
         self.transform_point3d_homogeneous(p).to_point3d()
     }
 
@@ -485,14 +476,14 @@ where T: Copy + Clone +
     }
 
     /// Returns a rectangle that encompasses the result of transforming the given rectangle by this
-    /// transform, if the transform makes sense for it, or `None` otherwise.
-    pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> Option<TypedRect<T, Dst>> {
-        Some(TypedRect::from_points(&[
-            self.transform_point2d(&rect.origin)?,
-            self.transform_point2d(&rect.top_right())?,
-            self.transform_point2d(&rect.bottom_left())?,
-            self.transform_point2d(&rect.bottom_right())?,
-        ]))
+    /// transform.
+    pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
+        TypedRect::from_points(&[
+            self.transform_point2d(&rect.origin),
+            self.transform_point2d(&rect.top_right()),
+            self.transform_point2d(&rect.bottom_left()),
+            self.transform_point2d(&rect.bottom_right()),
+        ])
     }
 
     /// Create a 3d translation transform
@@ -692,12 +683,7 @@ impl<T: Copy, Src, Dst> TypedTransform3D<T, Src, Dst> {
 
 impl<T0: NumCast + Copy, Src, Dst> TypedTransform3D<T0, Src, Dst> {
     /// Cast from one numeric representation to another, preserving the units.
-    pub fn cast<T1: NumCast + Copy>(&self) -> TypedTransform3D<T1, Src, Dst> {
-        self.try_cast().unwrap()
-    }
-
-    /// Fallible cast from one numeric representation to another, preserving the units.
-    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<TypedTransform3D<T1, Src, Dst>> {
+    pub fn cast<T1: NumCast + Copy>(&self) -> Option<TypedTransform3D<T1, Src, Dst>> {
         match (NumCast::from(self.m11), NumCast::from(self.m12),
                NumCast::from(self.m13), NumCast::from(self.m14),
                NumCast::from(self.m21), NumCast::from(self.m22),
@@ -717,14 +703,6 @@ impl<T0: NumCast + Copy, Src, Dst> TypedTransform3D<T0, Src, Dst> {
             },
             _ => None
         }
-    }
-}
-
-impl <T, Src, Dst> Default for TypedTransform3D<T, Src, Dst>
-    where T: Copy + PartialEq + One + Zero
-{
-    fn default() -> Self {
-        Self::identity()
     }
 }
 
@@ -749,7 +727,7 @@ mod tests {
     use Angle;
     use super::*;
 
-    use core::f32::consts::{FRAC_PI_2, PI};
+    use std::f32::consts::{FRAC_PI_2, PI};
 
     type Mf32 = Transform3D<f32>;
 
@@ -764,8 +742,8 @@ mod tests {
         assert_eq!(t1, t2);
         assert_eq!(t1, t3);
 
-        assert_eq!(t1.transform_point3d(&point3(1.0, 1.0, 1.0)), Some(point3(2.0, 3.0, 4.0)));
-        assert_eq!(t1.transform_point2d(&point2(1.0, 1.0)), Some(point2(2.0, 3.0)));
+        assert_eq!(t1.transform_point3d(&point3(1.0, 1.0, 1.0)), point3(2.0, 3.0, 4.0));
+        assert_eq!(t1.transform_point2d(&point2(1.0, 1.0)), point2(2.0, 3.0));
 
         assert_eq!(t1.post_mul(&t1), Mf32::create_translation(2.0, 4.0, 6.0));
 
@@ -781,8 +759,8 @@ mod tests {
         assert_eq!(r1, r2);
         assert_eq!(r1, r3);
 
-        assert!(r1.transform_point3d(&point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(2.0, -1.0, 3.0)));
-        assert!(r1.transform_point2d(&point2(1.0, 2.0)).unwrap().approx_eq(&point2(2.0, -1.0)));
+        assert!(r1.transform_point3d(&point3(1.0, 2.0, 3.0)).approx_eq(&point3(2.0, -1.0, 3.0)));
+        assert!(r1.transform_point2d(&point2(1.0, 2.0)).approx_eq(&point2(2.0, -1.0)));
 
         assert!(r1.post_mul(&r1).approx_eq(&Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
 
@@ -798,8 +776,8 @@ mod tests {
         assert_eq!(s1, s2);
         assert_eq!(s1, s3);
 
-        assert!(s1.transform_point3d(&point3(2.0, 2.0, 2.0)).unwrap().approx_eq(&point3(4.0, 6.0, 8.0)));
-        assert!(s1.transform_point2d(&point2(2.0, 2.0)).unwrap().approx_eq(&point2(4.0, 6.0)));
+        assert!(s1.transform_point3d(&point3(2.0, 2.0, 2.0)).approx_eq(&point3(4.0, 6.0, 8.0)));
+        assert!(s1.transform_point2d(&point2(2.0, 2.0)).approx_eq(&point2(4.0, 6.0)));
 
         assert_eq!(s1.post_mul(&s1), Mf32::create_scale(4.0, 9.0, 16.0));
 
@@ -894,10 +872,10 @@ mod tests {
 
         let p1 = point2(1000.0, 2000.0);
         let p2 = m1.transform_point2d(&p1);
-        assert_eq!(p2, Some(point2(1100.0, 2200.0)));
+        assert!(p2.eq(&point2(1100.0, 2200.0)));
 
-        let p3 = m2.transform_point2d(&p2.unwrap());
-        assert_eq!(p3, Some(p1));
+        let p3 = m2.transform_point2d(&p2);
+        assert!(p3.eq(&p1));
     }
 
     #[test]
@@ -917,18 +895,18 @@ mod tests {
 
         let a = point3(1.0, 1.0, 1.0);
 
-        assert!(r.post_mul(&t).transform_point3d(&a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
-        assert!(t.post_mul(&r).transform_point3d(&a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
-        assert!(t.post_mul(&r).transform_point3d(&a).unwrap().approx_eq(&r.transform_point3d(&t.transform_point3d(&a).unwrap()).unwrap()));
+        assert!(r.post_mul(&t).transform_point3d(&a).approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.post_mul(&r).transform_point3d(&a).approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.post_mul(&r).transform_point3d(&a).approx_eq(&r.transform_point3d(&t.transform_point3d(&a))));
 
-        assert!(r.pre_mul(&t).transform_point3d(&a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
-        assert!(t.pre_mul(&r).transform_point3d(&a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
-        assert!(t.pre_mul(&r).transform_point3d(&a).unwrap().approx_eq(&t.transform_point3d(&r.transform_point3d(&a).unwrap()).unwrap()));
+        assert!(r.pre_mul(&t).transform_point3d(&a).approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.pre_mul(&r).transform_point3d(&a).approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.pre_mul(&r).transform_point3d(&a).approx_eq(&t.transform_point3d(&r.transform_point3d(&a))));
     }
 
     #[test]
     fn test_size_of() {
-        use core::mem::size_of;
+        use std::mem::size_of;
         assert_eq!(size_of::<Transform3D<f32>>(), 16*size_of::<f32>());
         assert_eq!(size_of::<Transform3D<f64>>(), 16*size_of::<f64>());
     }
@@ -945,8 +923,8 @@ mod tests {
                                  -2.5, 6.0, 1.0, 1.0);
 
         let p = point3(1.0, 3.0, 5.0);
-        let p1 = m2.pre_mul(&m1).transform_point3d(&p).unwrap();
-        let p2 = m2.transform_point3d(&m1.transform_point3d(&p).unwrap()).unwrap();
+        let p1 = m2.pre_mul(&m1).transform_point3d(&p);
+        let p2 = m2.transform_point3d(&m1.transform_point3d(&p));
         assert!(p1.approx_eq(&p2));
     }
 
@@ -965,12 +943,12 @@ mod tests {
         let v1 = vec3(10.0, -10.0, 3.0);
         assert_eq!(v1, m.transform_vector3d(&v1));
         // While it does apply to points.
-        assert_ne!(Some(v1.to_point()), m.transform_point3d(&v1.to_point()));
+        assert!(v1.to_point() != m.transform_point3d(&v1.to_point()));
 
         // same thing with 2d vectors/points
         let v2 = vec2(10.0, -5.0);
         assert_eq!(v2, m.transform_vector2d(&v2));
-        assert_ne!(Some(v2.to_point()), m.transform_point2d(&v2.to_point()));
+        assert!(v2.to_point() != m.transform_point2d(&v2.to_point()));
     }
 
     #[test]
@@ -1008,17 +986,5 @@ mod tests {
             m.transform_point3d_homogeneous(&point3(1.0, 2.0, 4.0)),
             HomogeneousVector::new(8.0, 7.0, 4.0, 15.0),
         );
-    }
-
-    #[test]
-    pub fn test_perspective_division() {
-        let p = point2(1.0, 2.0);
-        let mut m = Mf32::identity();
-        assert!(m.transform_point2d(&p).is_some());
-        m.m44 = 0.0;
-        assert_eq!(None, m.transform_point2d(&p));
-        m.m44 = 1.0;
-        m.m24 = -1.0;
-        assert_eq!(None, m.transform_point2d(&p));
     }
 }

@@ -32,17 +32,13 @@ macro_rules! trig {
             /// Note that it does not deal with the case where both x and y are 0.
             #[inline]
             fn fast_atan2(y: $ty, x: $ty) -> $ty {
-                // This macro is used with f32 and f64 and clippy warns about the extra
-                // precision with f32.
-                #![cfg_attr(feature = "cargo-clippy", allow(excessive_precision))]
-
                 // See https://math.stackexchange.com/questions/1098487/atan2-faster-approximation#1105038
-                use core::$ty::consts;
+                use std::$ty::consts;
                 let x_abs = x.abs();
                 let y_abs = y.abs();
                 let a = x_abs.min(y_abs) / x_abs.max(y_abs);
                 let s = a * a;
-                let mut result = ((-0.046_496_474_9 * s + 0.159_314_22) * s - 0.327_622_764) * s * a + a;
+                let mut result = ((-0.0464964749 * s + 0.15931422) * s - 0.327622764) * s * a + a;
                 if y_abs > x_abs {
                     result = consts::FRAC_PI_2 - result;
                 }
