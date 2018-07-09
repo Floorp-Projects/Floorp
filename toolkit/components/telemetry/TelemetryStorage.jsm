@@ -12,6 +12,7 @@ ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
@@ -163,6 +164,18 @@ var TelemetryStorage = {
    */
   loadArchivedPing(id) {
     return TelemetryStorageImpl.loadArchivedPing(id);
+  },
+
+  /**
+   * Remove an archived ping from disk.
+   *
+   * @param {string} id The ping's id.
+   * @param {number} timestampCreated The ping's creation timestamp.
+   * @param {string} type The ping's type.
+   * @return {promise<object>} Promise that is resolved when the ping is removed.
+   */
+  removeArchivedPing(id, timestampCreated, type) {
+    return TelemetryStorageImpl._removeArchivedPing(id, timestampCreated, type);
   },
 
   /**
@@ -679,8 +692,10 @@ var TelemetryStorageImpl = {
    */
   async loadArchivedPing(id) {
     let idAsObject = {id};
+    TelemetryStopwatch.start("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
     const data = this._archivedPings.get(id);
     if (!data) {
+      TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
       this._log.trace("loadArchivedPing - no ping with id: " + id);
       return Promise.reject(new Error("TelemetryStorage.loadArchivedPing - no ping with id " + id));
     }
@@ -695,6 +710,7 @@ var TelemetryStorageImpl = {
         Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
                  .add(Math.floor(fileSize / 1024 / 1024));
         Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
+        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
         await OS.File.remove(path, {ignoreAbsent: true});
         throw new Error("loadArchivedPing - exceeded the maximum ping size: " + fileSize);
       }
@@ -708,6 +724,7 @@ var TelemetryStorageImpl = {
       ping = await this.loadPingFile(pathCompressed, /* compressed*/ true);
     } catch (ex) {
       if (!ex.becauseNoSuchFile) {
+        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
         throw ex;
       }
       // If that fails, look for the uncompressed version.
@@ -716,6 +733,7 @@ var TelemetryStorageImpl = {
       ping = await this.loadPingFile(path, /* compressed*/ false);
     }
 
+    TelemetryStopwatch.finish("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
     return ping;
   },
 
@@ -1311,8 +1329,10 @@ var TelemetryStorageImpl = {
 
   async loadPendingPing(id) {
     this._log.trace("loadPendingPing - id: " + id);
+    TelemetryStopwatch.start("TELEMETRY_PENDING_LOAD_MS");
     let info = this._pendingPings.get(id);
     if (!info) {
+      TelemetryStopwatch.cancel("TELEMETRY_PENDING_LOAD_MS");
       this._log.trace("loadPendingPing - unknown id " + id);
       throw new Error("TelemetryStorage.loadPendingPing - no ping with id " + id);
     }
@@ -1323,6 +1343,7 @@ var TelemetryStorageImpl = {
       fileSize = (await OS.File.stat(info.path)).size;
     } catch (e) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
+        TelemetryStopwatch.cancel("TELEMETRY_PENDING_LOAD_MS");
         throw e;
       }
       // Fall through and let |loadPingFile| report the error.
@@ -1334,6 +1355,7 @@ var TelemetryStorageImpl = {
       Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
                .add(Math.floor(fileSize / 1024 / 1024));
       Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
+      TelemetryStopwatch.cancel("TELEMETRY_PENDING_LOAD_MS");
 
       // Currently we don't have the ping type available without loading the ping from disk.
       // Bug 1384903 will fix that.
@@ -1352,6 +1374,7 @@ var TelemetryStorageImpl = {
       } else if (e instanceof PingParseError) {
         Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_PARSE").add();
       }
+      TelemetryStopwatch.cancel("TELEMETRY_PENDING_LOAD_MS");
 
       // Remove the ping from the cache, so we don't try to load it again.
       this._pendingPings.delete(id);
@@ -1359,6 +1382,7 @@ var TelemetryStorageImpl = {
       throw e;
     }
 
+    TelemetryStopwatch.finish("TELEMETRY_PENDING_LOAD_MS");
     return ping;
   },
 
