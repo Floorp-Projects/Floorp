@@ -40,39 +40,6 @@
 }
 
 
-/* Progressive disclosure button */
-#detailsExpanderWrapper {
-  padding: 0;
-  margin: 6px 0;
-}
-
-.expander-up,
-.expander-down {
-  min-width: 0;
-  margin: 0;
-}
-
-.expander-up > .button-box,
-.expander-down > .button-box {
-  padding: 0;
-}
-
-.expander-up {
-  list-style-image: url("chrome://global/skin/icons/collapse.png");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/icons/expand.png");
-}
-
-
-/* Make the item list the same width as the warning box */
-#itemList {
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-}
-
-
 /* Align the last dialog button with the end of the warning box */
 .dialog-button-box {
   margin-inline-end: 0;

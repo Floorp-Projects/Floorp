@@ -83,19 +83,6 @@
 
     <separator class="thin"/>
 
-    <hbox id="detailsExpanderWrapper" align="center">
-      <button type="image"
-              id="detailsExpander"
-              class="expander-down"
-              persist="class"
-              oncommand="gSanitizePromptDialog.toggleItemList();"/>
-      <label id="detailsExpanderLabel"
-             value="&detailsProgressiveDisclosure.label;"
-             accesskey="&detailsProgressiveDisclosure.accesskey;"
-             control="detailsExpander"/>
-    </hbox>
-
-    <vbox id="itemList" collapsed="true" persist="collapsed">
     <groupbox orient="horizontal">
       <caption><label>&historySection.label;</label></caption>
       <grid flex="1">
@@ -154,6 +141,5 @@
         </rows>
       </grid>
     </groupbox>
-    </vbox>
   </vbox>
 </dialog>
