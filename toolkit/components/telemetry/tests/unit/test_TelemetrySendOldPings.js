@@ -352,7 +352,7 @@ add_task(async function test_pendingPingsQuota() {
   await TelemetrySend.testWaitOnOutgoingPings();
   await TelemetryStorage.testPendingQuotaTaskPromise();
 
-  // Remove the pending optout ping generated when flipping FHR upload off.
+  // Remove the pending deletion ping generated when flipping FHR upload off.
   await TelemetryStorage.testClearPendingPings();
 
   let expectedPrunedPings = [];

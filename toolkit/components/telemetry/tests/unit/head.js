@@ -165,9 +165,6 @@ function decodeRequestPayload(request) {
     payload = JSON.parse((new TextDecoder()).decode(bytes));
   }
 
-  // Check for canary value
-  Assert.notEqual(OPTOUT_KNOWN_CLIENTID, payload.clientId, "Known clientId should never appear in a ping on the server");
-
   return payload;
 }
 
