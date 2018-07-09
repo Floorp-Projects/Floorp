@@ -59,6 +59,7 @@ from ..frontend.data import (
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
+    PgoGenerateOnlySources,
     Program,
     RustLibrary,
     HostSharedLibrary,
@@ -479,6 +480,10 @@ class RecursiveMakeBackend(CommonBackend):
                 f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
+        elif isinstance(obj, PgoGenerateOnlySources):
+            assert obj.canonical_suffix == '.cpp'
+            for f in sorted(obj.files):
+                backend_file.write('PGO_GEN_ONLY_CPPSRCS += %s\n' % f)
         elif isinstance(obj, (HostSources, HostGeneratedSources)):
             suffix_map = {
                 '.c': 'HOST_CSRCS',
@@ -1299,7 +1304,7 @@ class RecursiveMakeBackend(CommonBackend):
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
 
-        objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
+        objs, pgo_gen_objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
 
         if obj.KIND == 'target':
             obj_target = obj.name
@@ -1309,13 +1314,19 @@ class RecursiveMakeBackend(CommonBackend):
             is_unit_test = isinstance(obj, BaseProgram) and obj.is_unit_test
             profile_gen_objs = []
 
-            if (self.environment.substs.get('MOZ_PGO') and
-                self.environment.substs.get('GNU_CC')):
+            doing_pgo = self.environment.substs.get('MOZ_PGO')
+            obj_suffix_change_needed = (self.environment.substs.get('GNU_CC') or
+                                        self.environment.substs.get('CLANG_CL'))
+            if doing_pgo and obj_suffix_change_needed:
                 # We use a different OBJ_SUFFIX for the profile generate phase on
-                # linux. These get picked up via OBJS_VAR_SUFFIX in config.mk.
+                # systems where the pgo generate phase requires instrumentation
+                # that can only be removed by recompiling objects. These get
+                # picked up via OBJS_VAR_SUFFIX in config.mk.
                 if not is_unit_test and not isinstance(obj, SimpleProgram):
                     profile_gen_objs = [o if o in no_pgo_objs else '%s.%s' %
                                         (mozpath.splitext(o)[0], 'i_o') for o in objs]
+                    profile_gen_objs += ['%s.%s' % (mozpath.splitext(o)[0], 'i_o')
+                                         for o in pgo_gen_objs]
 
             def write_obj_deps(target, objs_ref, pgo_objs_ref):
                 if pgo_objs_ref:
