@@ -124,7 +124,32 @@ RemoteServiceWorkerContainerImpl::GetRegistrations(const ClientInfo& aClientInfo
                                                    ServiceWorkerRegistrationListCallback&& aSuccessCB,
                                                    ServiceWorkerFailureCallback&& aFailureCB) const
 {
-  // TODO
+  if (!mActor) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  mActor->SendGetRegistrations(aClientInfo.ToIPC(),
+   [successCB = std::move(aSuccessCB), aFailureCB]
+   (const IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult& aResult) {
+      if (aResult.type() == IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult::TCopyableErrorResult) {
+        // application layer error
+        auto& rv = aResult.get_CopyableErrorResult();
+        MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
+        aFailureCB(CopyableErrorResult(rv));
+        return;
+      }
+      // success
+      auto& ipcList = aResult.get_IPCServiceWorkerRegistrationDescriptorList();
+      nsTArray<ServiceWorkerRegistrationDescriptor> list(ipcList.values().Length());
+      for (auto& ipcDesc : ipcList.values()) {
+        list.AppendElement(ServiceWorkerRegistrationDescriptor(ipcDesc));
+      }
+      successCB(std::move(list));
+    }, [aFailureCB] (ResponseRejectReason aReason) {
+      // IPC layer error
+      aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    });
 }
 
 void

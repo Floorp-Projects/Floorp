@@ -73,6 +73,30 @@ ServiceWorkerContainerParent::RecvGetRegistration(const IPCClientInfo& aClientIn
   return IPC_OK();
 }
 
+IPCResult
+ServiceWorkerContainerParent::RecvGetRegistrations(const IPCClientInfo& aClientInfo,
+                                                   GetRegistrationsResolver&& aResolver)
+{
+  if (!mProxy) {
+    aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return IPC_OK();
+  }
+
+  mProxy->GetRegistrations(ClientInfo(aClientInfo))->Then(
+    GetCurrentThreadSerialEventTarget(), __func__,
+    [aResolver] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aList) {
+      IPCServiceWorkerRegistrationDescriptorList ipcList;
+      for (auto& desc : aList) {
+        ipcList.values().AppendElement(desc.ToIPC());
+      }
+      aResolver(std::move(ipcList));
+    }, [aResolver] (const CopyableErrorResult& aResult) {
+      aResolver(aResult);
+    });
+
+  return IPC_OK();
+}
+
 ServiceWorkerContainerParent::ServiceWorkerContainerParent()
 {
 }

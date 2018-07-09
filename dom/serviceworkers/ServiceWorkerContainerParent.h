@@ -37,6 +37,10 @@ class ServiceWorkerContainerParent final : public PServiceWorkerContainerParent
                       const nsCString& aURL,
                       GetRegistrationResolver&& aResolver) override;
 
+  mozilla::ipc::IPCResult
+  RecvGetRegistrations(const IPCClientInfo& aClientInfo,
+                       GetRegistrationsResolver&& aResolver) override;
+
 public:
   ServiceWorkerContainerParent();
   ~ServiceWorkerContainerParent();
