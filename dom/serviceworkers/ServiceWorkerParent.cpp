@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerParent.h"
 
+#include "ServiceWorkerProxy.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -14,20 +16,45 @@ using mozilla::ipc::IPCResult;
 void
 ServiceWorkerParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  // TODO
+  if (mProxy) {
+    mProxy->RevokeActor(this);
+    mProxy = nullptr;
+  }
 }
 
 IPCResult
 ServiceWorkerParent::RecvTeardown()
 {
-  // TODO
+  MaybeSendDelete();
   return IPC_OK();
+}
+
+ServiceWorkerParent::ServiceWorkerParent()
+  : mDeleteSent(false)
+{
+}
+
+ServiceWorkerParent::~ServiceWorkerParent()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
 }
 
 void
 ServiceWorkerParent::Init(const IPCServiceWorkerDescriptor& aDescriptor)
 {
-  // TODO
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
+  mProxy = new ServiceWorkerProxy(ServiceWorkerDescriptor(aDescriptor));
+  mProxy->Init(this);
+}
+
+void
+ServiceWorkerParent::MaybeSendDelete()
+{
+  if (mDeleteSent) {
+    return;
+  }
+  mDeleteSent = true;
+  Unused << Send__delete__(this);
 }
 
 } // namespace dom
