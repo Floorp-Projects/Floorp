@@ -14,6 +14,7 @@
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/EventDispatcher.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIConsoleService.h"
 #include "nsScriptError.h"
 #include "WorkerRunnable.h"
@@ -88,7 +89,6 @@ public:
         NS_ASSERTION(global, "This should never be null!");
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsIScriptGlobalObject* sgo;
 
         if (aWorkerPrivate) {
           WorkerGlobalScope* globalScope = nullptr;
@@ -129,10 +129,10 @@ public:
             status = nsEventStatus_eIgnore;
           }
         }
-        else if ((sgo = nsJSUtils::GetStaticScriptGlobal(global))) {
+        else if (nsGlobalWindowInner* win = xpc::WindowOrNull(global)) {
           MOZ_ASSERT(NS_IsMainThread());
 
-          if (NS_FAILED(sgo->HandleScriptError(init, &status))) {
+          if (NS_FAILED(win->HandleScriptError(init, &status))) {
             NS_WARNING("Failed to dispatch main thread error event!");
             status = nsEventStatus_eIgnore;
           }
@@ -342,7 +342,6 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       NS_ASSERTION(global, "This should never be null!");
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsIScriptGlobalObject* sgo;
 
       if (aWorkerPrivate) {
         WorkerGlobalScope* globalScope = nullptr;
@@ -383,10 +382,10 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
           status = nsEventStatus_eIgnore;
         }
       }
-      else if ((sgo = nsJSUtils::GetStaticScriptGlobal(global))) {
+      else if (nsGlobalWindowInner* win = xpc::WindowOrNull(global)) {
         MOZ_ASSERT(NS_IsMainThread());
 
-        if (NS_FAILED(sgo->HandleScriptError(init, &status))) {
+        if (NS_FAILED(win->HandleScriptError(init, &status))) {
           NS_WARNING("Failed to dispatch main thread error event!");
           status = nsEventStatus_eIgnore;
         }
