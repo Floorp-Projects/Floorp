@@ -6,7 +6,7 @@ package mozilla.components.service.fxa
 
 import kotlinx.coroutines.experimental.launch
 
-class FirefoxAccount(override var rawPointer: FxaClient.RawFxAccount?) : RustObject<FxaClient.RawFxAccount>() {
+class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxAccount>() {
 
     constructor(config: Config, clientId: String): this(null) {
         val e = Error.ByReference()
@@ -15,7 +15,7 @@ class FirefoxAccount(override var rawPointer: FxaClient.RawFxAccount?) : RustObj
         this.rawPointer = result
     }
 
-    override fun destroyPointer(p: FxaClient.RawFxAccount) {
+    override fun destroyPointer(p: RawFxAccount) {
         FxaClient.INSTANCE.fxa_free(p)
     }
 

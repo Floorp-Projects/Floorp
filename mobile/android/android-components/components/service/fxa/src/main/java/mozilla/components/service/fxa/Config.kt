@@ -4,9 +4,9 @@
 
 package mozilla.components.service.fxa
 
-class Config(override var rawPointer: FxaClient.RawConfig?) : RustObject<FxaClient.RawConfig>() {
+class Config(override var rawPointer: RawConfig?) : RustObject<RawConfig>() {
 
-    override fun destroyPointer(p: FxaClient.RawConfig) {
+    override fun destroyPointer(p: RawConfig) {
         FxaClient.INSTANCE.fxa_config_free(p)
     }
 

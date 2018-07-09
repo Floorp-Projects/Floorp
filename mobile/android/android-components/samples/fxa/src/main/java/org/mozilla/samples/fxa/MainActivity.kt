@@ -13,7 +13,6 @@ import android.content.Intent
 import android.widget.TextView
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
-import mozilla.components.service.fxa.FxaClient
 import mozilla.components.service.fxa.FxaResult
 import mozilla.components.service.fxa.OAuthInfo
 import mozilla.components.service.fxa.Profile
@@ -28,10 +27,6 @@ open class MainActivity : AppCompatActivity() {
         const val CLIENT_ID = "12cc4070a481bc73"
         const val REDIRECT_URL = "fxaclient://android.redirect"
         const val CONFIG_URL = "https://latest.dev.lcip.org"
-
-        init {
-            FxaClient.init()
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

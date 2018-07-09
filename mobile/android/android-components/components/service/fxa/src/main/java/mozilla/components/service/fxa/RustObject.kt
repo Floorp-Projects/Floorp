@@ -29,7 +29,7 @@ abstract class RustObject<T> : Closeable {
         return p
     }
 
-    protected abstract fun destroyPointer(p: T)
+    abstract fun destroyPointer(p: T)
 
     override fun close() {
         if (this.rawPointer != null) {
