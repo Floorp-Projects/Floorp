@@ -39,7 +39,7 @@ ServiceWorkerRegistrationProxy::UpdateStateOnBGThread(const ServiceWorkerRegistr
   if (!mActor) {
     return;
   }
-  // TODO: send update
+  Unused << mActor->SendUpdateState(aDescriptor.ToIPC());
 }
 
 void

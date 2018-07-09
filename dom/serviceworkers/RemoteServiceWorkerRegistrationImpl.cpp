@@ -161,5 +161,13 @@ RemoteServiceWorkerRegistrationImpl::RevokeActor(ServiceWorkerRegistrationChild*
   }
 }
 
+void
+RemoteServiceWorkerRegistrationImpl::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  if (mOuter) {
+    mOuter->UpdateState(aDescriptor);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

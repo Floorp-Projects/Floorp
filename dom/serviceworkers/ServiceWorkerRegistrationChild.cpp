@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::IPCResult;
+
 void
 ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason)
 {
@@ -23,6 +25,15 @@ ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason)
     mOwner->RevokeActor(this);
     MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   }
+}
+
+IPCResult
+ServiceWorkerRegistrationChild::RecvUpdateState(const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  if (mOwner) {
+    mOwner->UpdateState(ServiceWorkerRegistrationDescriptor(aDescriptor));
+  }
+  return IPC_OK();
 }
 
 void

@@ -21,6 +21,8 @@ parent:
 
 child:
   async __delete__();
+
+  async UpdateState(IPCServiceWorkerRegistrationDescriptor aDescriptor);
 };
 
 } // namespace dom
