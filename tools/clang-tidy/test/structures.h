@@ -93,3 +93,5 @@ char *strncat(char *s1, const char *s2, std::size_t n);
 
 void free(void *ptr);
 void *malloc(std::size_t size);
+
+void *memset(void *b, int c, std::size_t len);
