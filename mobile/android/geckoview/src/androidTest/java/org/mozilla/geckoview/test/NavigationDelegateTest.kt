@@ -18,6 +18,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -131,8 +132,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String,
-                                      response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
         })
     }
@@ -317,8 +318,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String,
-                                      response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
         })
     }
@@ -366,8 +367,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String,
-                                      response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
         })
 
@@ -400,8 +401,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String,
-                                      response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
         })
     }
@@ -453,8 +454,9 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                return null
             }
         })
     }
@@ -482,8 +484,9 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                return null
             }
         })
     }
@@ -493,8 +496,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-                response.respond(newSession)
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
+                return GeckoResult.fromValue(newSession)
             }
         })
 
@@ -591,13 +594,14 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 0)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
         })
     }
 
     @WithDevToolsAPI
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
@@ -607,8 +611,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-                response.respond(sessionRule.createOpenSession())
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
+                return GeckoResult.fromValue(sessionRule.createOpenSession())
             }
         })
 

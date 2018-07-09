@@ -570,9 +570,8 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onNewSession(final GeckoSession session, final String uri, GeckoResponse<GeckoSession> response) {
+        public GeckoResult<GeckoSession> onNewSession(final GeckoSession session, final String uri) {
             GeckoSession newSession = new GeckoSession(session.getSettings());
-            response.respond(newSession);
 
             Intent intent = new Intent(GeckoViewActivity.this, SessionActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
@@ -581,6 +580,8 @@ public class GeckoViewActivity extends AppCompatActivity {
             intent.putExtra("session", newSession);
 
             startActivity(intent);
+
+            return GeckoResult.fromValue(newSession);
         }
     }
 
