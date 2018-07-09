@@ -72,6 +72,9 @@ public:
   void
   RevokeActor(ServiceWorkerRegistrationParent* aActor);
 
+  RefPtr<GenericPromise>
+  Unregister();
+
   RefPtr<ServiceWorkerRegistrationPromise>
   Update();
 
