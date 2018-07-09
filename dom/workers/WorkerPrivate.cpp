@@ -35,6 +35,7 @@
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/WorkerTimelineMarker.h"
 #include "nsCycleCollector.h"
+#include "nsGlobalWindowInner.h"
 #include "nsNetUtil.h"
 #include "nsIMemoryReporter.h"
 #include "nsIPermissionManager.h"
@@ -2982,12 +2983,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     // See if we're being called from a window.
     nsCOMPtr<nsPIDOMWindowInner> globalWindow = aWindow;
     if (!globalWindow) {
-      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
-        nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(aCx));
-      if (scriptGlobal) {
-        globalWindow = do_QueryInterface(scriptGlobal);
-        MOZ_ASSERT(globalWindow);
-      }
+      globalWindow = xpc::CurrentWindowOrNull(aCx);
     }
 
     nsCOMPtr<nsIDocument> document;

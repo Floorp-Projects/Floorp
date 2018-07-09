@@ -179,7 +179,7 @@ ThreadedDriver::~ThreadedDriver()
   if (mThread) {
     nsCOMPtr<nsIRunnable> event =
       new MediaStreamGraphShutdownThreadRunnable(mThread.forget());
-    GraphImpl()->Dispatch(event.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, event.forget());
   }
 }
 
