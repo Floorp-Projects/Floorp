@@ -387,6 +387,7 @@ class Linkable(ContextDerived):
         'linked_libraries',
         'linked_system_libs',
         'no_pgo_sources',
+        'pgo_gen_only_sources',
         'no_pgo',
         'sources',
     )
@@ -399,6 +400,7 @@ class Linkable(ContextDerived):
         self.lib_defines = Defines(context, {})
         self.sources = defaultdict(list)
         self.no_pgo_sources = []
+        self.pgo_gen_only_sources = set()
         self.no_pgo = False
 
     def link_library(self, obj):
@@ -456,6 +458,10 @@ class Linkable(ContextDerived):
     @property
     def objs(self):
         return self._get_objs(self.source_files())
+
+    @property
+    def pgo_gen_only_objs(self):
+        return self._get_objs(self.pgo_gen_only_sources)
 
 
 class BaseProgram(Linkable):
@@ -949,6 +955,15 @@ class Sources(BaseSources):
 
     def __init__(self, context, files, canonical_suffix):
         BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class PgoGenerateOnlySources(BaseSources):
+    """Represents files to be compiled during the build.
+
+    These files are only used during the PGO generation phase."""
+
+    def __init__(self, context, files):
+        BaseSources.__init__(self, context, files, '.cpp')
 
 
 class GeneratedSources(BaseSources):

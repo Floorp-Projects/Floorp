@@ -57,6 +57,7 @@ from .data import (
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
+    PgoGenerateOnlySources,
     WebIDLCollection,
     Program,
     RustLibrary,
@@ -842,6 +843,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
+        pgo_generate_only = set()
         all_flags = {}
         for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
             srcs = sources[symbol]
@@ -858,6 +860,19 @@ class TreeMetadataEmitter(LoggingMixin):
                     flags = context_srcs[f]
                     if flags:
                         all_flags[full_path] = flags
+                    # Files for the generation phase of PGO are unusual, so
+                    # it's not unreasonable to require them to be special.
+                    if flags.pgo_generate_only:
+                        if not isinstance(f, Path):
+                            raise SandboxValidationError('pgo_generate_only file'
+                                'must not be a generated file: %s' % f, context)
+                        if mozpath.splitext(f)[1] != '.cpp':
+                            raise SandboxValidationError('pgo_generate_only file'
+                                'must be a .cpp file: %s' % f, context)
+                        if flags.no_pgo:
+                            raise SandboxValidationError('pgo_generate_only files'
+                                'cannot be marked no_pgo: %s' % f, context)
+                        pgo_generate_only.add(f)
 
                 if isinstance(f, SourcePath) and not os.path.exists(full_path):
                     raise SandboxValidationError('File listed in %s does not '
@@ -870,6 +885,8 @@ class TreeMetadataEmitter(LoggingMixin):
         no_pgo = context.get('NO_PGO')
         no_pgo_sources = [f for f, flags in all_flags.iteritems()
                           if flags.no_pgo]
+        pgo_gen_only_sources = set(f for f, flags in all_flags.iteritems()
+                                   if flags.pgo_generate_only)
         if no_pgo:
             if no_pgo_sources:
                 raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo '
@@ -932,6 +949,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
             for srcs, cls in ((sources[variable], klass),
                               (gen_sources[variable], gen_klass)):
+                if variable == 'SOURCES' and pgo_gen_only_sources:
+                    srcs = [s for s in srcs if s not in pgo_gen_only_sources]
                 # Now sort the files to let groupby work.
                 sorted_files = sorted(srcs, key=canonical_suffix_for_file)
                 for canonical_suffix, files in itertools.groupby(
@@ -955,6 +974,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 for target_var in ('SOURCES', 'UNIFIED_SOURCES'):
                     for suffix, srcs in ctxt_sources[target_var].items():
                         linkable.sources[suffix] += srcs
+                if pgo_gen_only_sources:
+                    linkable.pgo_gen_only_sources = pgo_gen_only_sources
                 if no_pgo_sources:
                     linkable.no_pgo_sources = no_pgo_sources
                 elif no_pgo:
@@ -967,6 +988,9 @@ class TreeMetadataEmitter(LoggingMixin):
             if flags.flags:
                 ext = mozpath.splitext(f)[1]
                 yield PerSourceFlag(context, f, flags.flags)
+
+        if pgo_generate_only:
+            yield PgoGenerateOnlySources(context, pgo_generate_only)
 
         # If there are any C++ sources, set all the linkables defined here
         # to require the C++ linker.
