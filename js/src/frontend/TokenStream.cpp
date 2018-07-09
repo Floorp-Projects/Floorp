@@ -601,21 +601,6 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
         ungetCodeUnit(units[numUnits]);
 }
 
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::ungetLineTerminator()
-{
-    this->sourceUnits.ungetCodeUnit();
-
-    char16_t last = this->sourceUnits.peekCodeUnit();
-    MOZ_ASSERT(SourceUnits::isRawEOLChar(last));
-
-    if (last == '\n')
-        this->sourceUnits.ungetOptionalCRBeforeLF();
-
-    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
-}
-
 template<typename CharT>
 size_t
 SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
@@ -1623,13 +1608,16 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
 
     auto ProcessNonAsciiCodePoint = [this](int32_t lead) {
         MOZ_ASSERT(lead != EOF);
+        MOZ_ASSERT(!this->isAsciiCodePoint(lead));
 
-        int32_t codePoint;
-        if (!this->getNonAsciiCodePoint(lead, &codePoint))
+        char32_t codePoint;
+        if (!this->getNonAsciiCodePointDontNormalize(lead, &codePoint))
             return false;
 
-        if (codePoint == '\n') {
-            this->ungetLineTerminator();
+        if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
+                         codePoint == unicode::PARA_SEPARATOR))
+        {
+            this->sourceUnits.ungetLineOrParagraphSeparator();
             this->reportError(JSMSG_UNTERMINATED_REGEXP);
             return false;
         }

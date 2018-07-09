@@ -1097,6 +1097,9 @@ class SourceUnits
             ptr--;
     }
 
+    /** Unget U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR. */
+    inline void ungetLineOrParagraphSeparator();
+
     void ungetCodeUnit() {
         MOZ_ASSERT(!atStart(), "can't unget if currently at start");
         MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
@@ -1145,6 +1148,33 @@ class SourceUnits
     /** Next char to get. */
     const CharT* ptr;
 };
+
+template<>
+inline void
+SourceUnits<char16_t>::ungetLineOrParagraphSeparator()
+{
+#ifdef DEBUG
+    char16_t prev = previousCodeUnit();
+#endif
+    MOZ_ASSERT(prev == unicode::LINE_SEPARATOR || prev == unicode::PARA_SEPARATOR);
+
+    ungetCodeUnit();
+}
+
+template<>
+inline void
+SourceUnits<mozilla::Utf8Unit>::ungetLineOrParagraphSeparator()
+{
+    unskipCodeUnits(3);
+
+    MOZ_ASSERT(ptr[0].toUint8() == 0xE2);
+    MOZ_ASSERT(ptr[1].toUint8() == 0x80);
+
+#ifdef DEBUG
+    uint8_t last = ptr[2].toUint8();
+#endif
+    MOZ_ASSERT(last == 0xA8 || last == 0xA9);
+}
 
 class TokenStreamCharsShared
 {
@@ -1656,13 +1686,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         if (codePoint == '\n')
             anyCharsAccess().undoInternalUpdateLineInfoForEOL();
     }
-
-    /**
-     * Unget a just-gotten LineTerminator sequence: '\r', '\n', '\r\n', or
-     * a Unicode line/paragraph separator, also undoing line/column information
-     * changes reflecting that LineTerminator.
-     */
-    void ungetLineTerminator();
 
     /**
      * Consume code points til EOL/EOF following the start of a single-line
