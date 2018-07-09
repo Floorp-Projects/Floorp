@@ -145,7 +145,7 @@ MathCache::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     return mallocSizeOf(this);
 }
 
-typedef double (*UnaryMathFunctionType)(MathCache* cache, double);
+typedef double (*UnaryMathFunctionType)(double);
 
 template <UnaryMathFunctionType F>
 static bool
@@ -155,13 +155,9 @@ math_function(JSContext* cx, HandleValue val, MutableHandleValue res)
     if (!ToNumber(cx, val, &x))
         return false;
 
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
     // NB: Always stored as a double so the math function can be inlined
     // through MMathFunction.
-    double z = F(mathCache, x);
+    double z = F(x);
     res.setDouble(z);
     return true;
 }
@@ -227,7 +223,7 @@ js::math_acos_uncached(double x)
 bool
 js::math_acos(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_acos_impl>(cx, argc, vp);
+    return math_function<math_acos_uncached>(cx, argc, vp);
 }
 
 double
@@ -247,7 +243,7 @@ js::math_asin_uncached(double x)
 bool
 js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_asin_impl>(cx, argc, vp);
+    return math_function<math_asin_uncached>(cx, argc, vp);
 }
 
 double
@@ -267,7 +263,7 @@ js::math_atan_uncached(double x)
 bool
 js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_atan_impl>(cx, argc, vp);
+    return math_function<math_atan_uncached>(cx, argc, vp);
 }
 
 double
@@ -373,7 +369,7 @@ js::math_cos_uncached(double x)
 bool
 js::math_cos(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cos_impl>(cx, argc, vp);
+    return math_function<math_cos_uncached>(cx, argc, vp);
 }
 
 double
@@ -393,7 +389,7 @@ js::math_exp_uncached(double x)
 bool
 js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_exp_impl>(cx, argc, vp);
+    return math_function<math_exp_uncached>(cx, argc, vp);
 }
 
 double
@@ -501,13 +497,13 @@ js::math_log_uncached(double x)
 bool
 js::math_log_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    return math_function<math_log_impl>(cx, val, res);
+    return math_function<math_log_uncached>(cx, val, res);
 }
 
 bool
 js::math_log(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log_impl>(cx, argc, vp);
+    return math_function<math_log_uncached>(cx, argc, vp);
 }
 
 double
@@ -827,13 +823,13 @@ js::math_sin_uncached(double x)
 bool
 js::math_sin_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    return math_function<math_sin_impl>(cx, val, res);
+    return math_function<math_sin_uncached>(cx, val, res);
 }
 
 bool
 js::math_sin(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sin_impl>(cx, argc, vp);
+    return math_function<math_sin_uncached>(cx, argc, vp);
 }
 
 void
@@ -873,6 +869,13 @@ js::math_sincos_impl(MathCache* mathCache, double x, double *sin, double *cos)
 }
 
 double
+js::math_sqrt_uncached(double x)
+{
+    AutoUnsafeCallWithABI unsafe;
+    return sqrt(x);
+}
+
+double
 js::math_sqrt_impl(MathCache* cache, double x)
 {
     AutoUnsafeCallWithABI unsafe;
@@ -882,13 +885,13 @@ js::math_sqrt_impl(MathCache* cache, double x)
 bool
 js::math_sqrt_handle(JSContext* cx, HandleValue number, MutableHandleValue result)
 {
-    return math_function<math_sqrt_impl>(cx, number, result);
+    return math_function<math_sqrt_uncached>(cx, number, result);
 }
 
 bool
 js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sqrt_impl>(cx, argc, vp);
+    return math_function<math_sqrt_uncached>(cx, argc, vp);
 }
 
 double
@@ -908,7 +911,7 @@ js::math_tan_uncached(double x)
 bool
 js::math_tan(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_tan_impl>(cx, argc, vp);
+    return math_function<math_tan_uncached>(cx, argc, vp);
 }
 
 double
@@ -928,7 +931,7 @@ js::math_log10_uncached(double x)
 bool
 js::math_log10(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log10_impl>(cx, argc, vp);
+    return math_function<math_log10_uncached>(cx, argc, vp);
 }
 
 double
@@ -948,7 +951,7 @@ js::math_log2_uncached(double x)
 bool
 js::math_log2(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log2_impl>(cx, argc, vp);
+    return math_function<math_log2_uncached>(cx, argc, vp);
 }
 
 double
@@ -968,7 +971,7 @@ js::math_log1p_uncached(double x)
 bool
 js::math_log1p(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log1p_impl>(cx, argc, vp);
+    return math_function<math_log1p_uncached>(cx, argc, vp);
 }
 
 double
@@ -988,7 +991,7 @@ js::math_expm1_uncached(double x)
 bool
 js::math_expm1(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_expm1_impl>(cx, argc, vp);
+    return math_function<math_expm1_uncached>(cx, argc, vp);
 }
 
 double
@@ -1008,7 +1011,7 @@ js::math_cosh_uncached(double x)
 bool
 js::math_cosh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cosh_impl>(cx, argc, vp);
+    return math_function<math_cosh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1028,7 +1031,7 @@ js::math_sinh_uncached(double x)
 bool
 js::math_sinh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sinh_impl>(cx, argc, vp);
+    return math_function<math_sinh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1048,7 +1051,7 @@ js::math_tanh_uncached(double x)
 bool
 js::math_tanh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_tanh_impl>(cx, argc, vp);
+    return math_function<math_tanh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1068,7 +1071,7 @@ js::math_acosh_uncached(double x)
 bool
 js::math_acosh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_acosh_impl>(cx, argc, vp);
+    return math_function<math_acosh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1088,7 +1091,7 @@ js::math_asinh_uncached(double x)
 bool
 js::math_asinh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_asinh_impl>(cx, argc, vp);
+    return math_function<math_asinh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1108,7 +1111,7 @@ js::math_atanh_uncached(double x)
 bool
 js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_atanh_impl>(cx, argc, vp);
+    return math_function<math_atanh_uncached>(cx, argc, vp);
 }
 
 double
@@ -1302,7 +1305,7 @@ js::math_cbrt_uncached(double x)
 bool
 js::math_cbrt(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cbrt_impl>(cx, argc, vp);
+    return math_function<math_cbrt_uncached>(cx, argc, vp);
 }
 
 static bool
