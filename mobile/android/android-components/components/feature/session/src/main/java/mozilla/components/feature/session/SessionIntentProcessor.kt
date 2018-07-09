@@ -15,11 +15,15 @@ typealias IntentHandler = (Intent) -> Boolean
 
 /**
  * Processor for intents which should trigger session-related actions.
+ *
+ * @param openNewTab Whether a processed Intent should open a new tab or open URLs in the currently
+ *                   selected tab.
  */
 class SessionIntentProcessor(
     private val sessionUseCases: SessionUseCases,
     private val sessionManager: SessionManager,
-    useDefaultHandlers: Boolean = true
+    useDefaultHandlers: Boolean = true,
+    private val openNewTab: Boolean = true
 ) {
     private val defaultActionViewHandler = { intent: Intent ->
         val safeIntent = SafeIntent(intent)
@@ -39,8 +43,13 @@ class SessionIntentProcessor(
             }
 
             else -> {
-                // TODO support loadUrlInNewTab: https://github.com/mozilla-mobile/android-components/issues/136
-                sessionUseCases.loadUrl.invoke(url)
+                val session = if (openNewTab) {
+                    Session(url).also { sessionManager.add(it, selected = true) }
+                } else {
+                    sessionManager.selectedSession
+                }
+
+                sessionUseCases.loadUrl.invoke(url, session)
                 true
             }
         }
@@ -83,6 +92,6 @@ class SessionIntentProcessor(
     }
 
     companion object {
-        public const val ACTIVE_SESSION_ID = "activeSessionId"
+        const val ACTIVE_SESSION_ID = "activeSessionId"
     }
 }

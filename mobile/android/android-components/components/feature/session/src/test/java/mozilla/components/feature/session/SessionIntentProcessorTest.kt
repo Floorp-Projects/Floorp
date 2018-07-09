@@ -38,7 +38,7 @@ class SessionIntentProcessorTest {
     @Before
     fun setup() {
         `when`(sessionManager.selectedSession).thenReturn(session)
-        `when`(sessionManager.getOrCreateEngineSession()).thenReturn(engineSession)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
     }
 
     @Test
@@ -47,11 +47,25 @@ class SessionIntentProcessorTest {
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
 
+        val engineSession = mock(EngineSession::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(anySession())).thenReturn(engineSession)
+
         `when`(intent.dataString).thenReturn("")
         handler.process(intent)
         verify(engineSession, never()).loadUrl("")
 
         `when`(intent.dataString).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org")
+    }
+
+    @Test
+    fun testProcessWithDefaultHandlersUsingSelectedSession() {
+        val handler = SessionIntentProcessor(useCases, sessionManager, true, false)
+        val intent = mock(Intent::class.java)
+        `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
+        `when`(intent.dataString).thenReturn("http://mozilla.org")
+
         handler.process(intent)
         verify(engineSession).loadUrl("http://mozilla.org")
     }
@@ -74,10 +88,10 @@ class SessionIntentProcessorTest {
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
 
         var handlerInvoked = false
-        handler.registerHandler(Intent.ACTION_SEND, { _ ->
+        handler.registerHandler(Intent.ACTION_SEND) { _ ->
             handlerInvoked = true
             true
-        })
+        }
 
         handler.process(intent)
         assertTrue(handlerInvoked)
