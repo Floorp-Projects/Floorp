@@ -1,4 +1,4 @@
-# 0.13
+# 0.13 (2018-07-06)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -21,7 +21,7 @@
 * Various bugfixes and refactorings (see commits below for details)
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.12...v0.13)
 
-# 0.12
+# 0.12 (2018-06-29)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -38,7 +38,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.11...v0.12)
 
-# 0.11
+# 0.11 (2018-06-22)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -56,7 +56,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.10...v0.11)
 
-# 0.10
+# 0.10 (2018-06-14)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -72,7 +72,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.9...v0.10)
 
-# 0.9
+# 0.9 (2018-06-06)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -88,7 +88,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.8...v0.9)
 
-# 0.8
+# 0.8 (2018-05-30)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -105,7 +105,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.7...v0.8)
 
-# 0.7
+# 0.7 (2018-05-24)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -125,7 +125,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.6...v0.7)
 
-# 0.6
+# 0.6 (2018-05-16)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -144,7 +144,7 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.5.1...v0.6)
 
-# 0.5.1
+# 0.5.1 (2018-05-03)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -166,11 +166,11 @@
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.4...v0.5)
 
-# 0.5
+# 0.5 (2018-05-02)
 
 _Due to a packaging bug this release is not usable. Please use 0.5.1 instead._
 
-# 0.4
+# 0.4 (2018-04-19)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -185,7 +185,7 @@ _Due to a packaging bug this release is not usable. Please use 0.5.1 instead._
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.3...v0.4)
 
-# 0.3
+# 0.3 (2018-04-05)
 
 * Compiled against:
   * Android support libraries 27.1.1
@@ -198,7 +198,7 @@ _Due to a packaging bug this release is not usable. Please use 0.5.1 instead._
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.2.2...v0.3)
 
-# 0.2.2
+# 0.2.2 (2018-03-27)
 
 * Compiled against:
   * Android support libraries 27.1.0
