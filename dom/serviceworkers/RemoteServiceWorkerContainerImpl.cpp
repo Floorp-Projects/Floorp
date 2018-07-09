@@ -94,7 +94,29 @@ RemoteServiceWorkerContainerImpl::GetRegistration(const ClientInfo& aClientInfo,
                                                   ServiceWorkerRegistrationCallback&& aSuccessCB,
                                                   ServiceWorkerFailureCallback&& aFailureCB) const
 {
-  // TODO
+  if (!mActor) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  mActor->SendGetRegistration(aClientInfo.ToIPC(), nsCString(aURL),
+    [successCB = std::move(aSuccessCB), aFailureCB]
+    (const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult& aResult) {
+      if (aResult.type() == IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::TCopyableErrorResult) {
+        auto& rv = aResult.get_CopyableErrorResult();
+        // If rv is a failure then this is an application layer error.  Note,
+        // though, we also reject with NS_OK to indicate that we just didn't
+        // find a registration.
+        aFailureCB(CopyableErrorResult(rv));
+        return;
+      }
+      // success
+      auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
+      successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
+    }, [aFailureCB] (ResponseRejectReason aReason) {
+      // IPC layer error
+      aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    });
 }
 
 void
