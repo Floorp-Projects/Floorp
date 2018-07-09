@@ -398,7 +398,7 @@ class JSTerm extends Component {
   }
 
   screenshotNotify(results) {
-    const wrappedResults = results.map(result => ({ result }));
+    const wrappedResults = results.map(message => ({ message, type: "logMessage" }));
     this.hud.consoleOutput.dispatchMessagesAdd(wrappedResults);
   }
 
