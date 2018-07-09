@@ -23,6 +23,7 @@
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/StorageActivityService.h"
@@ -72,6 +73,9 @@ using mozilla::dom::FileSystemBase;
 using mozilla::dom::FileSystemRequestParent;
 using mozilla::dom::MessagePortParent;
 using mozilla::dom::PMessagePortParent;
+using mozilla::dom::PServiceWorkerParent;
+using mozilla::dom::PServiceWorkerContainerParent;
+using mozilla::dom::PServiceWorkerRegistrationParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::WebAuthnTransactionParent;
 using mozilla::AssertIsOnMainThread;
@@ -1047,6 +1051,65 @@ IPCResult
 BackgroundParentImpl::RecvStorageActivity(const PrincipalInfo& aPrincipalInfo)
 {
   dom::StorageActivityService::SendActivity(aPrincipalInfo);
+  return IPC_OK();
+}
+
+PServiceWorkerParent*
+BackgroundParentImpl::AllocPServiceWorkerParent(const IPCServiceWorkerDescriptor&)
+{
+  return dom::AllocServiceWorkerParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPServiceWorkerParent(PServiceWorkerParent* aActor)
+{
+  return dom::DeallocServiceWorkerParent(aActor);
+}
+
+IPCResult
+BackgroundParentImpl::RecvPServiceWorkerConstructor(PServiceWorkerParent* aActor,
+                                                    const IPCServiceWorkerDescriptor& aDescriptor)
+{
+  dom::InitServiceWorkerParent(aActor, aDescriptor);
+  return IPC_OK();
+}
+
+PServiceWorkerContainerParent*
+BackgroundParentImpl::AllocPServiceWorkerContainerParent()
+{
+  return dom::AllocServiceWorkerContainerParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor)
+{
+  return dom::DeallocServiceWorkerContainerParent(aActor);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPServiceWorkerContainerConstructor(PServiceWorkerContainerParent* aActor)
+{
+  dom::InitServiceWorkerContainerParent(aActor);
+  return IPC_OK();
+}
+
+PServiceWorkerRegistrationParent*
+BackgroundParentImpl::AllocPServiceWorkerRegistrationParent(const IPCServiceWorkerRegistrationDescriptor&)
+{
+  return dom::AllocServiceWorkerRegistrationParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPServiceWorkerRegistrationParent(PServiceWorkerRegistrationParent* aActor)
+{
+  return dom::DeallocServiceWorkerRegistrationParent(aActor);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPServiceWorkerRegistrationConstructor(PServiceWorkerRegistrationParent* aActor,
+                                                                const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  dom::InitServiceWorkerRegistrationParent(aActor, aDescriptor);
   return IPC_OK();
 }
 

@@ -10,12 +10,15 @@
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsTArray.h"
 
+class nsIURI;
+
 namespace mozilla {
 
-class ErrorResult;
+class CopyableErrorResult;
 
 namespace dom {
 
+class ClientInfo;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 
