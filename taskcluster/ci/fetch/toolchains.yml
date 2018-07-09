@@ -214,12 +214,12 @@ grcov-osx-x86_64:
     sha256: 3db4ef6c0dfaf35d39c9cacf19c60c482dae9413b5fe3bf343fa26667451c893
     size: 919638
 
-grcov-win-i686:
+grcov-win-x86_64:
   description: grcov binary release
   treeherder:
-    symbol: grcov-win-i686
+    symbol: grcov-win-x86_64
   run:
     using: fetch-url
-    url: https://github.com/mozilla/grcov/releases/download/v0.2.3/grcov-win-i686.tar.bz2
-    sha256: 87c3c22cd1bb99d9c41b6a6f9e20b6c655a580021776f1a532297f5e8315ad9b
-    size: 919079
+    url: https://github.com/mozilla/grcov/releases/download/v0.2.3/grcov-win-x86_64.tar.bz2
+    sha256: baede397959ec6f5e0c9630c8e9e1e59ebe723ec95acea9bb204511a886e0f2f
+    size: 1009309
