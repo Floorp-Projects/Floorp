@@ -34,29 +34,6 @@ listbox:focus > listitem[selected="true"] {
    color: HighlightText;
 }
 
-/* ::::: listheader ::::: */
-
-listheader {
-  -moz-appearance: treeheadercell;
-  -moz-box-align: center;
-  color: -moz-DialogText;
-  padding: 0 4px;
-}
-
-listheader[sortable="true"]:hover:active {
-  padding-top: 1px;
-  padding-inline-start: 5px;
-  padding-inline-end: 4px;
-}
-
-.listheader-icon {
-  margin-inline-end: 2px;
-}
-
-.listheader-label {
-  margin: 0px !important;
-}
-
 /* ::::: listcell ::::: */
 
 .listcell-label {

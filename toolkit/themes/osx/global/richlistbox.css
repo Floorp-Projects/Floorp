@@ -39,3 +39,7 @@ richlistbox.theme-listbox > richlistitem > label {
   padding-inline-start: 4px;
   white-space: nowrap;
 }
+
+listheader {
+  color: -moz-DialogText;
+}

@@ -43,11 +43,7 @@ gridlikecol {
 }
 
 gridlikeheader {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
   -moz-box-ordinal-group: 2147483646;
-}
-
-gridlikeheader {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   border: 2px solid;
