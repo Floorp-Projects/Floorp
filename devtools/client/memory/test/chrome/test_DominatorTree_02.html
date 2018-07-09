@@ -16,7 +16,8 @@ Test that we show a link to load more children when some (but not all) are loade
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              const container = document.getElementById("container");
 
@@ -29,16 +30,17 @@ Test that we show a link to load more children when some (but not all) are loade
              const expanded = new Set();
              expanded.add(root.nodeId);
 
-             await renderComponent(DominatorTreeComponent(immutableUpdate(TEST_DOMINATOR_TREE_PROPS, {
-               dominatorTree: immutableUpdate(TEST_DOMINATOR_TREE_PROPS.dominatorTree, {
-                 expanded,
-                 root,
-               }),
-             })), container);
+             await renderComponent(DominatorTreeComponent(immutableUpdate(
+                TEST_DOMINATOR_TREE_PROPS, {
+                   dominatorTree: immutableUpdate(TEST_DOMINATOR_TREE_PROPS.dominatorTree, {
+                     expanded,
+                     root,
+                   }),
+                })), container);
 
              ok(container.querySelector(".more-children"),
                 "Should get a link to load more children");
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();

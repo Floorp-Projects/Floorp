@@ -97,7 +97,6 @@ class JSTerm extends Component {
 
     this._keyPress = this._keyPress.bind(this);
     this._inputEventHandler = this._inputEventHandler.bind(this);
-    this._focusEventHandler = this._focusEventHandler.bind(this);
     this._blurEventHandler = this._blurEventHandler.bind(this);
 
     this.SELECTED_FRAME = -1;
@@ -130,14 +129,6 @@ class JSTerm extends Component {
      * @type string
      */
     this.lastInputValue = "";
-
-    /**
-     * Tells if the input node changed since the last focus.
-     *
-     * @private
-     * @type boolean
-     */
-    this._inputChanged = false;
 
     /**
      * Tells if the autocomplete popup was navigated since the last open.
@@ -287,7 +278,6 @@ class JSTerm extends Component {
       this.inputNode.addEventListener("keypress", this._keyPress);
       this.inputNode.addEventListener("input", this._inputEventHandler);
       this.inputNode.addEventListener("keyup", this._inputEventHandler);
-      this.inputNode.addEventListener("focus", this._focusEventHandler);
       this.focus();
     }
 
@@ -623,7 +613,6 @@ class JSTerm extends Component {
 
     this.lastInputValue = newValue;
     this.resizeInput();
-    this._inputChanged = true;
     this.emit("set-input-value");
   }
 
@@ -648,7 +637,6 @@ class JSTerm extends Component {
       this.resizeInput();
       this.complete(this.COMPLETE_HINT_ONLY);
       this.lastInputValue = this.getInputValue();
-      this._inputChanged = true;
     }
   }
 
@@ -757,7 +745,6 @@ class JSTerm extends Component {
           this.acceptProposedCompletion();
         } else {
           this.execute();
-          this._inputChanged = false;
         }
         event.preventDefault();
         break;
@@ -875,8 +862,10 @@ class JSTerm extends Component {
             this.lastCompletion &&
             this.acceptProposedCompletion()) {
           event.preventDefault();
-        } else if (this._inputChanged) {
-          this.updateCompleteNode(l10n.getStr("Autocomplete.blank"));
+        } else if (!this.hasEmptyInput()) {
+          if (!event.shiftKey) {
+            this.insertStringAtCursor("\t");
+          }
           event.preventDefault();
         }
         break;
@@ -885,14 +874,6 @@ class JSTerm extends Component {
     }
   }
   /* eslint-enable complexity */
-
-  /**
-   * The inputNode "focus" event handler.
-   * @private
-   */
-  _focusEventHandler() {
-    this._inputChanged = false;
-  }
 
   /**
    * Go up/down the history stack of input values.
@@ -924,6 +905,15 @@ class JSTerm extends Component {
     }
 
     return false;
+  }
+
+  /**
+   * Test for empty input.
+   *
+   * @return boolean
+   */
+  hasEmptyInput() {
+    return this.getInputValue() === "";
   }
 
   /**
@@ -1279,20 +1269,30 @@ class JSTerm extends Component {
 
     const currentItem = this.autocompletePopup.selectedItem;
     if (currentItem && this.lastCompletion.value) {
-      const suffix =
-        currentItem.label.substring(this.lastCompletion.matchProp.length);
-      const cursor = this.inputNode.selectionStart;
-      const value = this.getInputValue();
-      this.setInputValue(value.substr(0, cursor) +
-        suffix + value.substr(cursor));
-      const newCursor = cursor + suffix.length;
-      this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
+      this.insertStringAtCursor(
+        currentItem.label.substring(this.lastCompletion.matchProp.length)
+      );
       updated = true;
     }
 
     this.clearCompletion();
 
     return updated;
+  }
+
+  /**
+   * Insert a string into the console at the cursor location,
+   * moving the cursor to the end of the string.
+   *
+   * @param string str
+   */
+  insertStringAtCursor(str) {
+    const cursor = this.inputNode.selectionStart;
+    const value = this.getInputValue();
+    this.setInputValue(value.substr(0, cursor) +
+      str + value.substr(cursor));
+    const newCursor = cursor + str.length;
+    this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
   }
 
   /**
@@ -1359,7 +1359,6 @@ class JSTerm extends Component {
       this.inputNode.removeEventListener("keypress", this._keyPress);
       this.inputNode.removeEventListener("input", this._inputEventHandler);
       this.inputNode.removeEventListener("keyup", this._inputEventHandler);
-      this.inputNode.removeEventListener("focus", this._focusEventHandler);
       this.hud.window.removeEventListener("blur", this._blurEventHandler);
     }
 
