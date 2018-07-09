@@ -11,6 +11,8 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
+  - name: bugprone-suspicious-memset-usage
+    publish: !!bool yes
   - name: clang-analyzer-cplusplus.NewDelete
     publish: !!bool yes
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
