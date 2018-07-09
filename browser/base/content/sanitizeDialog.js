@@ -116,12 +116,8 @@ var gSanitizePromptDialog = {
   /**
    * If the panel that displays a warning when the duration is "Everything" is
    * not set up, sets it up.  Otherwise does nothing.
-   *
-   * @param aDontShowItemList Whether only the warning message should be updated.
-   *                          True means the item list visibility status should not
-   *                          be changed.
    */
-  prepareWarning(aDontShowItemList) {
+  prepareWarning() {
     // If the date and time-aware locale warning string is ever used again,
     // initialize it here.  Currently we use the no-visits warning string,
     // which does not include date and time.  See bug 480169 comment 48.
@@ -129,8 +125,6 @@ var gSanitizePromptDialog = {
     var warningStringID;
     if (this.hasNonSelectedItems()) {
       warningStringID = "sanitizeSelectedWarning";
-      if (!aDontShowItemList)
-        this.showItemList();
     } else {
       warningStringID = "sanitizeEverythingWarning2";
     }
@@ -162,7 +156,7 @@ var gSanitizePromptDialog = {
     } catch (e) { }
 
     // Update the warning prompt if needed
-    this.prepareWarning(true);
+    this.prepareWarning();
 
     return undefined;
   },
@@ -202,47 +196,4 @@ var gSanitizePromptDialog = {
     }
     return false;
   },
-
-  /**
-   * Show the history items list.
-   */
-  showItemList() {
-    var itemList = document.getElementById("itemList");
-    var expanderButton = document.getElementById("detailsExpander");
-
-    if (itemList.collapsed) {
-      expanderButton.className = "expander-up";
-      itemList.setAttribute("collapsed", "false");
-      if (document.documentElement.boxObject.height)
-        window.resizeBy(0, itemList.boxObject.height);
-    }
-  },
-
-  /**
-   * Hide the history items list.
-   */
-  hideItemList() {
-    var itemList = document.getElementById("itemList");
-    var expanderButton = document.getElementById("detailsExpander");
-
-    if (!itemList.collapsed) {
-      expanderButton.className = "expander-down";
-      window.resizeBy(0, -itemList.boxObject.height);
-      itemList.setAttribute("collapsed", "true");
-    }
-  },
-
-  /**
-   * Called by the item list expander button to toggle the list's visibility.
-   */
-  toggleItemList() {
-    var itemList = document.getElementById("itemList");
-
-    if (itemList.collapsed)
-      this.showItemList();
-    else
-      this.hideItemList();
-  }
-
-
 };

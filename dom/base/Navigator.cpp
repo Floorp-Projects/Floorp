@@ -1518,8 +1518,7 @@ Navigator::HasUserMediaSupport(JSContext* /* unused */,
 already_AddRefed<nsPIDOMWindowInner>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindowInner> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(aGlobal));
+  nsCOMPtr<nsPIDOMWindowInner> win = xpc::WindowOrNull(aGlobal);
   return win.forget();
 }
 
