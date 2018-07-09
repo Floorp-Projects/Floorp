@@ -1532,12 +1532,14 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoRealm>& ar, MutableHandleValue
             if (js::Call(cx, fval, object, exc, &rv)) {
                 if (vp) {
                     ResumeMode resumeMode = ResumeMode::Continue;
-                    if (processResumptionValueNoUncaughtExceptionHook(ar, frame, thisVForCheck, rv,
-                                                                      resumeMode, *vp))
-                    {
-                        return resumeMode;
-                    }
+                    if (!ParseResumptionValue(cx, rv, resumeMode, *vp))
+                        return reportUncaughtException(ar);
+                    return leaveDebugger(ar, frame, thisVForCheck, CallUncaughtExceptionHook::No,
+                                         resumeMode, *vp);
                 } else {
+                    // Caller is something like onGarbageCollectionHook that
+                    // doesn't allow Debugger to control debuggee resumption.
+                    // The return value from uncaughtExceptionHook is ignored.
                     return ResumeMode::Continue;
                 }
             }
@@ -1563,44 +1565,21 @@ Debugger::handleUncaughtException(Maybe<AutoRealm>& ar)
     return handleUncaughtExceptionHelper(ar, nullptr, mozilla::Nothing(), NullFramePtr());
 }
 
-bool
-Debugger::processResumptionValueNoUncaughtExceptionHook(
-    Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-    const Maybe<HandleValue>& maybeThisv, HandleValue rval,
-    ResumeMode& resumeMode, MutableHandleValue vp)
-{
-    JSContext* cx = ar->context();
-
-    if (!ParseResumptionValue(cx, rval, resumeMode, vp) ||
-        !unwrapDebuggeeValue(cx, vp) ||
-        !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
-    {
-        return false;
-    }
-
-    ar.reset();
-    if (!cx->compartment()->wrap(cx, vp)) {
-        resumeMode = ResumeMode::Terminate;
-        vp.setUndefined();
-    }
-
-    return true;
-}
-
 ResumeMode
-Debugger::processParsedHandlerResultHelper(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                           const Maybe<HandleValue>& maybeThisv, bool success,
-                                           ResumeMode resumeMode, MutableHandleValue vp)
+Debugger::leaveDebugger(Maybe<AutoRealm>& ar,
+                        AbstractFramePtr frame,
+                        const Maybe<HandleValue>& maybeThisv,
+                        CallUncaughtExceptionHook callHook,
+                        ResumeMode resumeMode,
+                        MutableHandleValue vp)
 {
-    if (!success)
-        return handleUncaughtException(ar, vp, maybeThisv, frame);
-
     JSContext* cx = ar->context();
-
     if (!unwrapDebuggeeValue(cx, vp) ||
         !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
     {
-        return handleUncaughtException(ar, vp, maybeThisv, frame);
+        if (callHook == CallUncaughtExceptionHook::Yes)
+            return handleUncaughtException(ar, vp, maybeThisv, frame);
+        return reportUncaughtException(ar);
     }
 
     ar.reset();
@@ -1626,7 +1605,10 @@ Debugger::processParsedHandlerResult(Maybe<AutoRealm>& ar, AbstractFramePtr fram
         return ResumeMode::Terminate;
     }
 
-    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
+    if (!success)
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
+
+    return leaveDebugger(ar, frame, maybeThisv, CallUncaughtExceptionHook::Yes, resumeMode, vp);
 }
 
 ResumeMode
@@ -1647,9 +1629,9 @@ Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success, const Value& 
 
     RootedValue rootRv(cx, rv);
     ResumeMode resumeMode = ResumeMode::Continue;
-    success = ParseResumptionValue(cx, rootRv, resumeMode, vp);
-
-    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
+    if (!ParseResumptionValue(cx, rootRv, resumeMode, vp))
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
+    return leaveDebugger(ar, frame, maybeThisv, CallUncaughtExceptionHook::Yes, resumeMode, vp);
 }
 
 
