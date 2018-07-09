@@ -57,7 +57,9 @@
   <string name="preference_privacy_block_analytics">વિશ્લેષણાત્મક ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_block_analytics_summary">ટેપીંગ અને સ્ક્રોલિંગ જેવી પ્રવૃત્તિઓ એકત્રિત કરવા, પૃથ્થકરણ અને માપવા માટે વપરાય છે</string>
   <string name="preference_privacy_block_social">સામાજિક ટ્રેકર્સને અવરોધિત કરો</string>
+  <string name="preference_privacy_block_social_summary">સાઇટ્સ પર એમ્બેડ કરેલા તમારી મુલાકાતોને ટ્રૅક કરવા અને શેર કરો બટનો જેવી કાર્યક્ષમતા દર્શાવવા માટે</string>
   <string name="preference_privacy_block_content">અન્ય સામગ્રી ટ્રેકર્સને અવરોધિત કરો</string>
+  <string name="preference_privacy_block_content_summary2">સક્રિય કરવાથી કેટલાક પૃષ્ઠો અનપેક્ષિત રૂપે વર્તન કરી શકે છે</string>
   <string name="preference_privacy_category_cookies">કૂકીઝને અવરોધિત કરો</string>
   <string name="preference_privacy_should_block_cookies_no_option">ના</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">માત્ર 3-પક્ષ કૂકીઝને અવરોધિત કરો</string>
@@ -129,24 +131,33 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n   "<li>&#2724;&#2734;&#2750;&#2736;&#2759; &#2694; &#2744;&#2736;&#2728;&#2750;&#2734;&#2750;&#2690;&#2728;&#2759; &#2710;&#2763;&#2738;&#2741;&#2750; &#2734;&#2750;&#2719;&#2759; &#2732;&#2752;&#2716;&#2750; &#2744;&#2763;&#2731;&#2765;&#2719;&#2741;&#2759;&#2736;&#2728;&#2759; &#2744;&#2765;&#2725;&#2750;&#2730;&#2751;&#2724; &#2709;&#2736;&#2741;&#2750;&#2728;&#2752; &#2716;&#2736;&#2754;&#2736; &#2730;&#2721;&#2752; &#2742;&#2709;&#2759; &#2715;&#2759;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">સુરક્ષિત જોડાણ નિષ્ફળ</string>
   <string name="error_generic_title">ઊફ્ફ</string>
+  <string name="error_generic_message">અમે કોઈ કારણસર આ પૃષ્ઠને લોડ કરી શકતા નથી.</string>
   <string name="contextmenu_link_share">લિંક વહેંચો</string>
   <string name="contextmenu_link_copy">લિંક સરનામાની નકલ કરો</string>
   <string name="contextmenu_image_share">છબી વહેંચો</string>
   <string name="contextmenu_image_copy">છબી સરનામાંની નકલ કરો</string>
   <string name="contextmenu_image_save">છબી સાચવો</string>
   <string name="contextmenu_open_in_new_tab">નવી ટેબમાં લિંક ખોલો</string>
+  <string name="contextmenu_image_warning"><![CDATA["જ્યારે તમે %1$s ઇતિહાસને કાઢી નાખો ત્યારે સાચવેલા અને વહેંચાયેલ છબીઓ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2709;&#2750;&#2722;&#2752; &#2728;&#2750;&#2710;&#2741;&#2750;&#2734;&#2750;&#2690; &#2694;&#2741;&#2742;&#2759; &#2728;&#2745;&#2752;&#2690;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">તમારી ગોપનીયતા વધારો</string>
+  <string name="firstrun_defaultbrowser_text2">ખાનગી બ્રાઉઝિંગ આગલા સ્તર પર લો. જાહેરાતો અને અન્ય સામગ્રીને અવરોધિત કરો કે જે તમને સાઇટ્સ પર ટ્રૅક કરી શકે છે અને પૃષ્ઠ લોડ વખતને નીચે કરી શકે છે.</string>
   <string name="firstrun_search_title">તમારી શોધ, તમારી રીત</string>
+  <string name="firstrun_search_text">કંઈક અલગ શોધી રહ્યાં છો? સેટિંગ્સમાં બીજુ મૂળભૂત શોધ એંજિન પસંદ કરો.</string>
+  <string name="firstrun_shortcut_title">તમારી મુખ્ય સ્ક્રીન પર શૉર્ટકટ્સ ઉમેરો</string>
+  <string name="firstrun_shortcut_text">%1$s માં તમારી મનપસંદ સાઇટ્સ પર ઝડપથી પાછા આવો. ફક્ત %1$s મેનૂમાંથી \"મુખ્ય સ્ક્રીન પર ઉમેરો\" પસંદ કરો.</string>
   <string name="firstrun_privacy_title">ગોપનીયતા એક આદત બનાવો</string>
+  <string name="firstrun_privacy_text">તમારા મૂળભૂત બ્રાઉઝર તરીકે %1$s સેટ કરો અને જ્યારે તમે અન્ય એપ્લિકેશનોથી વેબપૃષ્ઠો ખોલશો ત્યારે ખાનગી બ્રાઉઝિંગના લાભો મેળવો.</string>
   <string name="firstrun_close_button">OK, સમજાઇ ગયું!</string>
   <string name="firstrun_skip_button">છોડો</string>
   <string name="firstrun_next_button">આગળ</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">ઉમેરો</string>
   <string name="dialog_addtohomescreen_action_cancel">રદ કરો</string>
+  <string name="dialog_addtohomescreen_tracking_protection">શોર્ટકટ ટ્રેકિંગ પ્રોટેક્શન અક્ષમ સાથે ખુલશે</string>
   <string name="notification_browsing_session_channel_name">ખાનગી બ્રાઉઝિંગ સત્ર</string>
   <string name="tabs_tray_action_erase">બ્રાઉઝિંગ ઇતિહાસને કાઢી નાખો</string>
   <string name="download_firefox">Firefox ડાઉનલોડ કરો</string>
+  <string name="your_rights_content3"><![CDATA["તમને Mozilla Foundation અથવા Mozilla, Firefox અથવા %1$s ના નામો અથવા લોગો સહિત કોઈ પણ પક્ષના ટ્રેડમાર્ક્સ માટે કોઈ અધિકારો અથવા લાઇસેંસ આપવામાં આવ્યાં નથી. વધારાની માહિતી "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2693;&#2745;&#2752;&#2690;</a>મળી શકે છે.]]></string>
   <string name="gv_prompt_username_hint">વપરાશકર્તા નામ</string>
   <string name="gv_prompt_password_hint">પાસવર્ડ</string>
   <string name="gv_prompt_clear">સાફ કરો</string>
