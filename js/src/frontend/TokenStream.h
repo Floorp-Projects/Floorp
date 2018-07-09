@@ -1318,6 +1318,7 @@ class SpecializedTokenStreamCharsBase<char16_t>
     using CharsBase = TokenStreamCharsBase<char16_t>;
 
   protected:
+    using TokenStreamCharsShared::isAsciiCodePoint;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
 
     using typename CharsBase::SourceUnits;
@@ -1331,6 +1332,28 @@ class SpecializedTokenStreamCharsBase<char16_t>
      * comment is an error.
      */
     void infallibleConsumeRestOfSingleLineComment();
+
+    /**
+     * Given |lead| already consumed, consume and return the code point encoded
+     * starting from it.  Infallible because lone surrogates in JS encode a
+     * "code point" of the same value.
+     */
+    char32_t infallibleGetNonAsciiCodePointDontNormalize(char16_t lead) {
+        MOZ_ASSERT(!isAsciiCodePoint(lead));
+        MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == lead);
+
+        // Handle single-unit code points and lone trailing surrogates.
+        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(lead)) ||
+            // Or handle lead surrogates not paired with trailing surrogates.
+            MOZ_UNLIKELY(this->sourceUnits.atEnd() ||
+                         !unicode::IsTrailSurrogate(this->sourceUnits.peekCodeUnit())))
+        {
+            return lead;
+        }
+
+        // Otherwise it's a multi-unit code point.
+        return unicode::UTF16Decode(lead, this->sourceUnits.getCodeUnit());
+    }
 
   protected:
     // These APIs are in both SpecializedTokenStreamCharsBase specializations
@@ -1525,6 +1548,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
     using SpecializedCharsBase::infallibleConsumeRestOfSingleLineComment;
+    using SpecializedCharsBase::infallibleGetNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
     using GeneralCharsBase::ungetCodeUnit;
@@ -1534,6 +1558,18 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
   protected:
     using GeneralCharsBase::GeneralCharsBase;
+
+    /**
+     * Given the non-ASCII |lead| code unit just consumed, consume and return a
+     * complete non-ASCII code point.  Line/column updates are not performed,
+     * and line breaks are returned as-is without normalization.
+     */
+    MOZ_MUST_USE bool getNonAsciiCodePointDontNormalize(char16_t lead, char32_t* codePoint) {
+        // There are no encoding errors in 16-bit JS, so implement this so that
+        // the compiler knows it, too.
+        *codePoint = infallibleGetNonAsciiCodePointDontNormalize(lead);
+        return true;
+    }
 
     // Try to get the next code point, normalizing '\r', '\r\n', '\n', and the
     // Unicode line/paragraph separators into '\n'.  Also updates internal
@@ -1726,6 +1762,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::getCodeUnit;
     using SpecializedChars::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
+    using SpecializedChars::getNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchCodeUnit;
     using GeneralCharsBase::matchUnicodeEscapeIdent;
