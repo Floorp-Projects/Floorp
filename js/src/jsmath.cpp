@@ -192,7 +192,7 @@ js::math_abs(JSContext* cx, unsigned argc, Value* vp)
 }
 
 double
-js::math_acos_uncached(double x)
+js::math_acos_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::acos(x);
@@ -201,11 +201,11 @@ js::math_acos_uncached(double x)
 bool
 js::math_acos(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_acos_uncached>(cx, argc, vp);
+    return math_function<math_acos_impl>(cx, argc, vp);
 }
 
 double
-js::math_asin_uncached(double x)
+js::math_asin_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::asin(x);
@@ -214,11 +214,11 @@ js::math_asin_uncached(double x)
 bool
 js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_asin_uncached>(cx, argc, vp);
+    return math_function<math_asin_impl>(cx, argc, vp);
 }
 
 double
-js::math_atan_uncached(double x)
+js::math_atan_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::atan(x);
@@ -227,7 +227,7 @@ js::math_atan_uncached(double x)
 bool
 js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_atan_uncached>(cx, argc, vp);
+    return math_function<math_atan_impl>(cx, argc, vp);
 }
 
 double
@@ -317,7 +317,7 @@ js::math_clz32(JSContext* cx, unsigned argc, Value* vp)
 }
 
 double
-js::math_cos_uncached(double x)
+js::math_cos_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return cos(x);
@@ -326,11 +326,11 @@ js::math_cos_uncached(double x)
 bool
 js::math_cos(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cos_uncached>(cx, argc, vp);
+    return math_function<math_cos_impl>(cx, argc, vp);
 }
 
 double
-js::math_exp_uncached(double x)
+js::math_exp_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::exp(x);
@@ -339,7 +339,7 @@ js::math_exp_uncached(double x)
 bool
 js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_exp_uncached>(cx, argc, vp);
+    return math_function<math_exp_impl>(cx, argc, vp);
 }
 
 double
@@ -432,7 +432,7 @@ js::math_fround(JSContext* cx, unsigned argc, Value* vp)
 
 
 double
-js::math_log_uncached(double x)
+js::math_log_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::log(x);
@@ -441,13 +441,13 @@ js::math_log_uncached(double x)
 bool
 js::math_log_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    return math_function<math_log_uncached>(cx, val, res);
+    return math_function<math_log_impl>(cx, val, res);
 }
 
 bool
 js::math_log(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log_uncached>(cx, argc, vp);
+    return math_function<math_log_impl>(cx, argc, vp);
 }
 
 double
@@ -751,7 +751,7 @@ js::math_round(JSContext* cx, unsigned argc, Value* vp)
 }
 
 double
-js::math_sin_uncached(double x)
+js::math_sin_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return sin(x);
@@ -760,17 +760,17 @@ js::math_sin_uncached(double x)
 bool
 js::math_sin_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    return math_function<math_sin_uncached>(cx, val, res);
+    return math_function<math_sin_impl>(cx, val, res);
 }
 
 bool
 js::math_sin(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sin_uncached>(cx, argc, vp);
+    return math_function<math_sin_impl>(cx, argc, vp);
 }
 
 void
-js::math_sincos_uncached(double x, double *sin, double *cos)
+js::math_sincos_impl(double x, double *sin, double *cos)
 {
     AutoUnsafeCallWithABI unsafe;
 #if defined(HAVE_SINCOS)
@@ -778,13 +778,13 @@ js::math_sincos_uncached(double x, double *sin, double *cos)
 #elif defined(HAVE___SINCOS)
     __sincos(x, sin, cos);
 #else
-    *sin = js::math_sin_uncached(x);
-    *cos = js::math_cos_uncached(x);
+    *sin = js::math_sin_impl(x);
+    *cos = js::math_cos_impl(x);
 #endif
 }
 
 double
-js::math_sqrt_uncached(double x)
+js::math_sqrt_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return sqrt(x);
@@ -793,17 +793,17 @@ js::math_sqrt_uncached(double x)
 bool
 js::math_sqrt_handle(JSContext* cx, HandleValue number, MutableHandleValue result)
 {
-    return math_function<math_sqrt_uncached>(cx, number, result);
+    return math_function<math_sqrt_impl>(cx, number, result);
 }
 
 bool
 js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sqrt_uncached>(cx, argc, vp);
+    return math_function<math_sqrt_impl>(cx, argc, vp);
 }
 
 double
-js::math_tan_uncached(double x)
+js::math_tan_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return tan(x);
@@ -812,11 +812,11 @@ js::math_tan_uncached(double x)
 bool
 js::math_tan(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_tan_uncached>(cx, argc, vp);
+    return math_function<math_tan_impl>(cx, argc, vp);
 }
 
 double
-js::math_log10_uncached(double x)
+js::math_log10_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::log10(x);
@@ -825,11 +825,11 @@ js::math_log10_uncached(double x)
 bool
 js::math_log10(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log10_uncached>(cx, argc, vp);
+    return math_function<math_log10_impl>(cx, argc, vp);
 }
 
 double
-js::math_log2_uncached(double x)
+js::math_log2_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::log2(x);
@@ -838,11 +838,11 @@ js::math_log2_uncached(double x)
 bool
 js::math_log2(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log2_uncached>(cx, argc, vp);
+    return math_function<math_log2_impl>(cx, argc, vp);
 }
 
 double
-js::math_log1p_uncached(double x)
+js::math_log1p_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::log1p(x);
@@ -851,11 +851,11 @@ js::math_log1p_uncached(double x)
 bool
 js::math_log1p(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_log1p_uncached>(cx, argc, vp);
+    return math_function<math_log1p_impl>(cx, argc, vp);
 }
 
 double
-js::math_expm1_uncached(double x)
+js::math_expm1_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::expm1(x);
@@ -864,11 +864,11 @@ js::math_expm1_uncached(double x)
 bool
 js::math_expm1(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_expm1_uncached>(cx, argc, vp);
+    return math_function<math_expm1_impl>(cx, argc, vp);
 }
 
 double
-js::math_cosh_uncached(double x)
+js::math_cosh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::cosh(x);
@@ -877,11 +877,11 @@ js::math_cosh_uncached(double x)
 bool
 js::math_cosh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cosh_uncached>(cx, argc, vp);
+    return math_function<math_cosh_impl>(cx, argc, vp);
 }
 
 double
-js::math_sinh_uncached(double x)
+js::math_sinh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::sinh(x);
@@ -890,12 +890,12 @@ js::math_sinh_uncached(double x)
 bool
 js::math_sinh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sinh_uncached>(cx, argc, vp);
+    return math_function<math_sinh_impl>(cx, argc, vp);
 }
 
 
 double
-js::math_tanh_uncached(double x)
+js::math_tanh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::tanh(x);
@@ -904,11 +904,11 @@ js::math_tanh_uncached(double x)
 bool
 js::math_tanh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_tanh_uncached>(cx, argc, vp);
+    return math_function<math_tanh_impl>(cx, argc, vp);
 }
 
 double
-js::math_acosh_uncached(double x)
+js::math_acosh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::acosh(x);
@@ -917,11 +917,11 @@ js::math_acosh_uncached(double x)
 bool
 js::math_acosh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_acosh_uncached>(cx, argc, vp);
+    return math_function<math_acosh_impl>(cx, argc, vp);
 }
 
 double
-js::math_asinh_uncached(double x)
+js::math_asinh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::asinh(x);
@@ -930,11 +930,11 @@ js::math_asinh_uncached(double x)
 bool
 js::math_asinh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_asinh_uncached>(cx, argc, vp);
+    return math_function<math_asinh_impl>(cx, argc, vp);
 }
 
 double
-js::math_atanh_uncached(double x)
+js::math_atanh_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::atanh(x);
@@ -943,7 +943,7 @@ js::math_atanh_uncached(double x)
 bool
 js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_atanh_uncached>(cx, argc, vp);
+    return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
 double
@@ -1050,7 +1050,7 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 }
 
 double
-js::math_trunc_uncached(double x)
+js::math_trunc_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::trunc(x);
@@ -1070,7 +1070,7 @@ js::math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
     if (!ToNumber(cx, v, &x))
         return false;
 
-    r.setNumber(math_trunc_uncached(x));
+    r.setNumber(math_trunc_impl(x));
     return true;
 }
 
@@ -1087,7 +1087,7 @@ js::math_trunc(JSContext* cx, unsigned argc, Value* vp)
 }
 
 double
-js::math_sign_uncached(double x)
+js::math_sign_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
 
@@ -1104,7 +1104,7 @@ js::math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
     if (!ToNumber(cx, v, &x))
         return false;
 
-    r.setNumber(math_sign_uncached(x));
+    r.setNumber(math_sign_impl(x));
     return true;
 }
 
@@ -1121,7 +1121,7 @@ js::math_sign(JSContext* cx, unsigned argc, Value* vp)
 }
 
 double
-js::math_cbrt_uncached(double x)
+js::math_cbrt_impl(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::cbrt(x);
@@ -1130,7 +1130,7 @@ js::math_cbrt_uncached(double x)
 bool
 js::math_cbrt(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_cbrt_uncached>(cx, argc, vp);
+    return math_function<math_cbrt_impl>(cx, argc, vp);
 }
 
 static bool
