@@ -18,17 +18,17 @@ function testCompletion(hud) {
   const jsterm = hud.jsterm;
   const input = jsterm.inputNode;
 
+  // With empty input, tab through
   jsterm.setInputValue("");
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.completeNode.value, "<- no result", "<- no result - matched");
-  is(input.value, "", "inputnode is empty - matched");
-  ok(hasFocus(input), "input is still focused");
+  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
+  ok(!hasFocus(input), "input isn't focused anymore");
+  jsterm.focus();
 
-  // Any thing which is not in property autocompleter
+  // With non-empty input, insert a tab
   jsterm.setInputValue("window.Bug583816");
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.completeNode.value, "                <- no result",
-     "completenode content - matched");
-  is(input.value, "window.Bug583816", "inputnode content - matched");
+  is(jsterm.getInputValue(), "window.Bug583816\t",
+     "input content - matched");
   ok(hasFocus(input), "input is still focused");
 }

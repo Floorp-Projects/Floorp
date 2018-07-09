@@ -878,6 +878,72 @@ add_task(async function test_onLivemarkDeleted() {
   }
 });
 
+add_task(async function test_async_onItemMoved_moveToFolder() {
+  _("Items moved via `moveToFolder` should be tracked");
+
+  try {
+    await tracker.stop();
+
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.menuGuid,
+      children: [{
+        guid: "bookmarkAAAA",
+        title: "A",
+        url: "http://example.com/a",
+      }, {
+        guid: "bookmarkBBBB",
+        title: "B",
+        url: "http://example.com/b",
+      }, {
+        guid: "bookmarkCCCC",
+        title: "C",
+        url: "http://example.com/c",
+      }, {
+        guid: "bookmarkDDDD",
+        title: "D",
+        url: "http://example.com/d",
+      }],
+    });
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      children: [{
+        guid: "bookmarkEEEE",
+        title: "E",
+        url: "http://example.com/e",
+      }],
+    });
+
+    await startTracking();
+
+    _("Move (A B D) to the toolbar");
+    await PlacesUtils.bookmarks.moveToFolder(
+      ["bookmarkAAAA", "bookmarkBBBB", "bookmarkDDDD"],
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.DEFAULT_INDEX);
+
+    // Moving multiple bookmarks between two folders should track the old
+    // folder, new folder, and moved bookmarks.
+    await verifyTrackedItems(["menu", "toolbar", "bookmarkAAAA",
+      "bookmarkBBBB", "bookmarkDDDD"]);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    await resetTracker();
+
+    _("Reorder toolbar children: (D A B E)");
+    await PlacesUtils.bookmarks.moveToFolder(
+      ["bookmarkDDDD", "bookmarkAAAA", "bookmarkBBBB"],
+      PlacesUtils.bookmarks.toolbarGuid,
+      0);
+
+    // Reordering bookmarks in a folder should only track the folder, not the
+    // bookmarks.
+    await verifyTrackedItems(["toolbar"]);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+  } finally {
+    _("Clean up.");
+    await cleanup();
+  }
+});
+
 add_task(async function test_async_onItemMoved_update() {
   _("Items moved via the asynchronous API should be tracked");
 

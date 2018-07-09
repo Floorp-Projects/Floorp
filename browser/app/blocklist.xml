@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1528408770328" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1530716488758" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -153,7 +153,7 @@
         </targetApplication>
       </versionRange>
     </emItem>
-    <emItem blockID="i53" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
+    <emItem blockID="i142" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
       <prefs/>
       <versionRange minVersion="4.2" maxVersion="4.2" severity="3"/>
       <versionRange minVersion="2.0.3" maxVersion="2.0.3" severity="3"/>
@@ -1847,9 +1847,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i19" id="{46551EC9-40F0-4e47-8E18-8E5CF550CFB8}">
+    <emItem blockID="i1900" id="{46551EC9-40F0-4e47-8E18-8E5CF550CFB8}">
       <prefs/>
       <versionRange minVersion="1.1b1" maxVersion="1.1b1" severity="1"/>
+      <versionRange minVersion="3.0.0" maxVersion="3.1.1" severity="1"/>
     </emItem>
     <emItem blockID="i59" id="ghostviewer@youtube2.com">
       <prefs/>

@@ -3253,7 +3253,6 @@ TEST_P(NewSdpTest, CheckSimulcast) {
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())

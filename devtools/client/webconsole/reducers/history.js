@@ -53,8 +53,16 @@ function appendToHistory(state, prefsState, expression) {
   state = {...state};
   state.entries = [...state.entries];
 
-  // Append new expression
-  state.entries[state.index++] = expression;
+  // Append new expression only if it isn't the same as
+  // the one recently added.
+  // If it's the same don't forget to remove the current
+  // input value that has been appended in updatePlaceholder.
+  if (expression.trim() != state.entries[state.index - 1]) {
+    state.entries[state.index++] = expression;
+  } else if (state.index < state.entries.length) {
+    state.entries.pop();
+  }
+
   state.placeHolder = state.entries.length;
 
   // Remove entries if the limit is reached

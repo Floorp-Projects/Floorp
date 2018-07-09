@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Bug 1433534 tracks cleaning up the TODOs in the file
-
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/RsdparsaSdpMediaSection.h"
 

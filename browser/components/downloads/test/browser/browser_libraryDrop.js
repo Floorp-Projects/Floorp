@@ -3,9 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.defineModuleGetter(this, "HttpServer",
-  "resource://testing-common/httpd.js");
-
 registerCleanupFunction(async function() {
   await task_resetState();
   await PlacesUtils.history.clear();
@@ -15,46 +12,10 @@ add_task(async function test_indicatorDrop() {
   let EventUtils = {};
   Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
-  async function drop(win, urls) {
-    let dragData = [[{type: "text/plain", data: urls.join("\n")}]];
-
-    let listBox = win.document.getElementById("downloadsRichListBox");
-    ok(listBox, "download list box present");
-
-    let list = await Downloads.getList(Downloads.ALL);
-
-    let added = new Set();
-    let succeeded = new Set();
-    await new Promise(resolve => {
-      let view = {
-        onDownloadAdded(download) {
-          added.add(download.source.url);
-        },
-        onDownloadChanged(download) {
-          if (!added.has(download.source.url))
-            return;
-          if (!download.succeeded)
-            return;
-          succeeded.add(download.source.url);
-          if (succeeded.size == urls.length) {
-            list.removeView(view).then(resolve);
-          }
-        }
-      };
-      list.addView(view).then(function() {
-        EventUtils.synthesizeDrop(listBox, listBox, dragData, "link", win);
-      });
-    });
-
-    for (let url of urls) {
-      ok(added.has(url), url + " is added to download");
-    }
-  }
-
   // Ensure that state is reset in case previous tests didn't finish.
   await task_resetState();
 
-  setDownloadDir();
+  await setDownloadDir();
 
   startServer();
 
@@ -63,8 +24,13 @@ add_task(async function test_indicatorDrop() {
     win.close();
   });
 
-  await drop(win, [httpUrl("file1.txt")]);
-  await drop(win, [httpUrl("file1.txt"),
-                   httpUrl("file2.txt"),
-                   httpUrl("file3.txt")]);
+  let listBox = win.document.getElementById("downloadsRichListBox");
+  ok(listBox, "download list box present");
+
+  await simulateDropAndCheck(win, listBox, [httpUrl("file1.txt")]);
+  await simulateDropAndCheck(win, listBox, [
+    httpUrl("file1.txt"),
+    httpUrl("file2.txt"),
+    httpUrl("file3.txt"),
+  ]);
 });
