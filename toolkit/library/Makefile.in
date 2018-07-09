@@ -13,3 +13,9 @@ gtestxul:
 	$(MAKE) -C $(DEPTH) toolkit/library/gtest/target LINK_GTEST_DURING_COMPILE=1
 
 DUMP_SYMBOLS_FLAGS = --count-ctors
+
+ifdef CLANG_CL
+ifdef MOZ_PROFILE_ORDER_FILE
+PGO_LDFLAGS += -ORDER:@$(MOZ_PROFILE_ORDER_FILE)
+endif
+endif
