@@ -115,5 +115,22 @@ ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor)
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
+void
+ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+                                const ClientInfo& aClientInfo,
+                                const ClientState& aClientState)
+{
+  AssertIsOnBackgroundThread();
+  RefPtr<ServiceWorkerProxy> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
+    [self, data = std::move(aData), aClientInfo, aClientState] () mutable {
+      if (!self->mInfo) {
+        return;
+      }
+      self->mInfo->PostMessage(std::move(data), aClientInfo, aClientState);
+    });
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+}
+
 } // namespace dom
 } // namespace mozilla

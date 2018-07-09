@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace dom {
 
+class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
 class ServiceWorkerParent;
 
@@ -55,6 +56,11 @@ public:
 
   void
   RevokeActor(ServiceWorkerParent* aActor);
+
+  void
+  PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+              const ClientInfo& aClientInfo,
+              const ClientState& aState);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerProxy);
 };

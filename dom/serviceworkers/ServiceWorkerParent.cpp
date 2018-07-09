@@ -6,11 +6,16 @@
 
 #include "ServiceWorkerParent.h"
 
+#include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerProxy.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientState.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 namespace mozilla {
 namespace dom {
 
+using mozilla::dom::ipc::StructuredCloneData;
 using mozilla::ipc::IPCResult;
 
 void
@@ -26,6 +31,19 @@ IPCResult
 ServiceWorkerParent::RecvTeardown()
 {
   MaybeSendDelete();
+  return IPC_OK();
+}
+
+IPCResult
+ServiceWorkerParent::RecvPostMessage(const ClonedMessageData& aClonedData,
+                                     const ClientInfoAndState& aSource)
+{
+  RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
+  data->CopyFromClonedMessageDataForBackgroundParent(aClonedData);
+
+  mProxy->PostMessage(std::move(data), ClientInfo(aSource.info()),
+                      ClientState::FromIPC(aSource.state()));
+
   return IPC_OK();
 }
 
