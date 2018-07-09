@@ -126,5 +126,32 @@ ServiceWorkerContainerProxy::GetRegistrations(const ClientInfo& aClientInfo)
   return promise;
 }
 
+RefPtr<ServiceWorkerRegistrationPromise>
+ServiceWorkerContainerProxy::GetReady(const ClientInfo& aClientInfo)
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<ServiceWorkerRegistrationPromise::Private> promise =
+    new ServiceWorkerRegistrationPromise::Private(__func__);
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
+    [aClientInfo, promise] () mutable {
+      auto scopeExit = MakeScopeExit([&] {
+        promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      });
+
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      NS_ENSURE_TRUE_VOID(swm);
+
+      swm->WhenReady(aClientInfo)->ChainTo(promise.forget(), __func__);
+
+      scopeExit.release();
+    });
+
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  return promise;
+}
+
 } // namespace dom
 } // namespace mozilla
