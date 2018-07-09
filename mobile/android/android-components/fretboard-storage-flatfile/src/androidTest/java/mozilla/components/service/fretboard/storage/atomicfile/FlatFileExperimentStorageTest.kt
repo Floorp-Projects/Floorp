@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
-class AtomicFileExperimentStorageTest {
+class FlatFileExperimentStorageTest {
     @Test
     fun testSave() {
         val experiments = listOf(
@@ -30,7 +30,7 @@ class AtomicFileExperimentStorageTest {
         )
         val atomicFile = AtomicFile(File(InstrumentationRegistry.getContext().filesDir, "experiments.json"))
         assertFalse(atomicFile.baseFile.exists())
-        AtomicFileExperimentStorage(atomicFile).save(experiments)
+        FlatFileExperimentStorage(atomicFile).save(experiments)
         assertTrue(atomicFile.baseFile.exists())
         val experimentsJson = JSONObject(String(atomicFile.readFully()))
         checkSavedExperimentsJson(experimentsJson)
@@ -63,7 +63,7 @@ class AtomicFileExperimentStorageTest {
         file.writer().use {
             it.write("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}]}""")
         }
-        val experiments = AtomicFileExperimentStorage(AtomicFile(file)).retrieve()
+        val experiments = FlatFileExperimentStorage(AtomicFile(file)).retrieve()
         assertEquals(1, experiments.size)
         assertEquals("sample-id", experiments[0].id)
         assertEquals("sample-description", experiments[0].description)
@@ -79,7 +79,7 @@ class AtomicFileExperimentStorageTest {
     @Test
     fun testRetrieveFileNotFound() {
         val file = File(InstrumentationRegistry.getContext().filesDir, "missingFile.json")
-        val experiments = AtomicFileExperimentStorage(AtomicFile(file)).retrieve()
+        val experiments = FlatFileExperimentStorage(AtomicFile(file)).retrieve()
         assertEquals(0, experiments.size)
     }
 }

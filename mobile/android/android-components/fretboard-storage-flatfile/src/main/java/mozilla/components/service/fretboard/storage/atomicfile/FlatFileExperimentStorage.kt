@@ -9,7 +9,7 @@ import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentStorage
 import java.io.FileNotFoundException
 
-class AtomicFileExperimentStorage(private val atomicFile: AtomicFile) : ExperimentStorage {
+class FlatFileExperimentStorage(private val atomicFile: AtomicFile) : ExperimentStorage {
     override fun retrieve(): List<Experiment> {
         try {
             val experimentsJson = String(atomicFile.readFully())
