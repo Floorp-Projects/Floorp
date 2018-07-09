@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test;
 
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResponse;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -50,11 +51,10 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onLoadRequest(GeckoSession session, String uri, int target,
-                                  int flags,
-                                  GeckoResponse<Boolean> response) {
+        public GeckoResult<Boolean> onLoadRequest(GeckoSession session, String uri, int target,
+                                                  int flags) {
             // Allow Gecko to load all URIs
-            response.respond(false);
+            return GeckoResult.fromValue(false);
         }
 
         @Override
