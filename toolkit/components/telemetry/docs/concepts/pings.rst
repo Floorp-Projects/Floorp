@@ -26,4 +26,4 @@ Important examples are:
 * :doc:`crash <../data/crash-ping>` - a ping that is captured and sent after a Firefox process crashes.
 * :doc:`new-profile <../data/new-profile-ping>` - sent on the first run of a new profile.
 * :doc:`update <../data/update-ping>` - sent right after an update is downloaded.
-* :doc:`optout <../data/optout-ping>` - sent when FHR upload is disabled
+* :doc:`deletion <../data/deletion-ping>` - sent when FHR upload is disabled, requesting deletion of the data associated with this user.
