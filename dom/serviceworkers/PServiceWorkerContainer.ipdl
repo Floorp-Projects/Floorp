@@ -21,6 +21,9 @@ parent:
                  ServiceWorkerUpdateViaCache aUpdateViaCache)
         returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
+  async GetRegistration(IPCClientInfo aClientInfo, nsCString aURL)
+        returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
+
 child:
   async __delete__();
 };

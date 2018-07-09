@@ -30,6 +30,9 @@ public:
            const nsCString& aScriptURL,
            ServiceWorkerUpdateViaCache aUpdateViaCache);
 
+  RefPtr<ServiceWorkerRegistrationPromise>
+  GetRegistration(const ClientInfo& aClientInfo, const nsCString& aURL);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerContainerProxy);
 };
 
