@@ -120,8 +120,8 @@ let pdfjsWebApp, pdfjsWebAppOptions;
   pdfjsWebAppOptions = __webpack_require__(8);
 }
 {
-  __webpack_require__(32);
-  __webpack_require__(35);
+  __webpack_require__(33);
+  __webpack_require__(36);
 }
 ;
 ;
@@ -313,9 +313,9 @@ var _pdf_viewer = __webpack_require__(24);
 
 var _secondary_toolbar = __webpack_require__(29);
 
-var _toolbar = __webpack_require__(30);
+var _toolbar = __webpack_require__(31);
 
-var _view_history = __webpack_require__(31);
+var _view_history = __webpack_require__(32);
 
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
@@ -1346,7 +1346,10 @@ function loadAndEnablePDFBug(enabledTabs) {
   let appConfig = PDFViewerApplication.appConfig;
   return (0, _pdfjsLib.loadScript)(appConfig.debuggerScriptPath).then(function () {
     PDFBug.enable(enabledTabs);
-    PDFBug.init({ OPS: _pdfjsLib.OPS }, appConfig.mainContainer);
+    PDFBug.init({
+      OPS: _pdfjsLib.OPS,
+      createObjectURL: _pdfjsLib.createObjectURL
+    }, appConfig.mainContainer);
   });
 }
 function webViewerInitialized() {
@@ -6531,6 +6534,9 @@ class BaseViewer {
     if (this.removePageBorders) {
       this.viewer.classList.add('removePageBorders');
     }
+    Promise.resolve().then(() => {
+      this.eventBus.dispatch('baseviewerinit', { source: this });
+    });
   }
   get pagesCount() {
     return this._pages.length;
@@ -8057,6 +8063,8 @@ var _base_viewer = __webpack_require__(25);
 
 var _pdf_cursor_tools = __webpack_require__(4);
 
+var _pdf_single_page_viewer = __webpack_require__(30);
+
 var _ui_utils = __webpack_require__(2);
 
 class SecondaryToolbar {
@@ -8162,6 +8170,15 @@ class SecondaryToolbar {
     this._bindScrollModeListener(options);
     this._bindSpreadModeListener(options);
     this.eventBus.on('resize', this._setMaxHeight.bind(this));
+    this.eventBus.on('baseviewerinit', evt => {
+      if (evt.source instanceof _pdf_single_page_viewer.PDFSinglePageViewer) {
+        this.toolbarButtonContainer.classList.add('hiddenScrollModeButtons');
+        this.toolbarButtonContainer.classList.add('hiddenSpreadModeButtons');
+      } else {
+        this.toolbarButtonContainer.classList.remove('hiddenScrollModeButtons');
+        this.toolbarButtonContainer.classList.remove('hiddenSpreadModeButtons');
+      }
+    });
   }
   get isOpen() {
     return this.opened;
@@ -8178,8 +8195,7 @@ class SecondaryToolbar {
     this.pageNumber = 0;
     this.pagesCount = 0;
     this._updateUIState();
-    this.eventBus.dispatch('resetscrollmode', { source: this });
-    this.eventBus.dispatch('resetspreadmode', { source: this });
+    this.eventBus.dispatch('secondarytoolbarreset', { source: this });
   }
   _updateUIState() {
     this.items.firstPage.disabled = this.pageNumber <= 1;
@@ -8235,9 +8251,13 @@ class SecondaryToolbar {
           buttons.scrollWrappedButton.classList.add('toggled');
           break;
       }
+      const isScrollModeHorizontal = evt.mode === _base_viewer.ScrollMode.HORIZONTAL;
+      buttons.spreadNoneButton.disabled = isScrollModeHorizontal;
+      buttons.spreadOddButton.disabled = isScrollModeHorizontal;
+      buttons.spreadEvenButton.disabled = isScrollModeHorizontal;
     }
     this.eventBus.on('scrollmodechanged', scrollModeChanged);
-    this.eventBus.on('resetscrollmode', evt => {
+    this.eventBus.on('secondarytoolbarreset', evt => {
       if (evt.source === this) {
         scrollModeChanged({ mode: _base_viewer.ScrollMode.VERTICAL });
       }
@@ -8261,7 +8281,7 @@ class SecondaryToolbar {
       }
     }
     this.eventBus.on('spreadmodechanged', spreadModeChanged);
-    this.eventBus.on('resetspreadmode', evt => {
+    this.eventBus.on('secondarytoolbarreset', evt => {
       if (evt.source === this) {
         spreadModeChanged({ mode: _base_viewer.SpreadMode.NONE });
       }
@@ -8307,6 +8327,131 @@ exports.SecondaryToolbar = SecondaryToolbar;
 
 /***/ }),
 /* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PDFSinglePageViewer = undefined;
+
+var _base_viewer = __webpack_require__(25);
+
+var _ui_utils = __webpack_require__(2);
+
+var _pdfjsLib = __webpack_require__(3);
+
+class PDFSinglePageViewer extends _base_viewer.BaseViewer {
+  constructor(options) {
+    super(options);
+    this.eventBus.on('pagesinit', evt => {
+      this._ensurePageViewVisible();
+    });
+  }
+  get _setDocumentViewerElement() {
+    return (0, _pdfjsLib.shadow)(this, '_setDocumentViewerElement', this._shadowViewer);
+  }
+  _resetView() {
+    super._resetView();
+    this._previousPageNumber = 1;
+    this._shadowViewer = document.createDocumentFragment();
+  }
+  _ensurePageViewVisible() {
+    let pageView = this._pages[this._currentPageNumber - 1];
+    let previousPageView = this._pages[this._previousPageNumber - 1];
+    let viewerNodes = this.viewer.childNodes;
+    switch (viewerNodes.length) {
+      case 0:
+        this.viewer.appendChild(pageView.div);
+        break;
+      case 1:
+        if (viewerNodes[0] !== previousPageView.div) {
+          throw new Error('_ensurePageViewVisible: Unexpected previously visible page.');
+        }
+        if (pageView === previousPageView) {
+          break;
+        }
+        this._shadowViewer.appendChild(previousPageView.div);
+        this.viewer.appendChild(pageView.div);
+        this.container.scrollTop = 0;
+        break;
+      default:
+        throw new Error('_ensurePageViewVisible: Only one page should be visible at a time.');
+    }
+    this._previousPageNumber = this._currentPageNumber;
+  }
+  _scrollUpdate() {
+    if (this._updateScrollDown) {
+      this._updateScrollDown();
+    }
+    super._scrollUpdate();
+  }
+  _scrollIntoView({ pageDiv, pageSpot = null, pageNumber = null }) {
+    if (pageNumber) {
+      this._setCurrentPageNumber(pageNumber);
+    }
+    let scrolledDown = this._currentPageNumber >= this._previousPageNumber;
+    let previousLocation = this._location;
+    this._ensurePageViewVisible();
+    (0, _ui_utils.scrollIntoView)(pageDiv, pageSpot);
+    this._updateScrollDown = () => {
+      this.scroll.down = scrolledDown;
+      delete this._updateScrollDown;
+    };
+    setTimeout(() => {
+      if (this._location === previousLocation) {
+        if (this._updateScrollDown) {
+          this._updateScrollDown();
+        }
+        this.update();
+      }
+    }, 0);
+  }
+  _getVisiblePages() {
+    if (!this.pagesCount) {
+      return { views: [] };
+    }
+    let pageView = this._pages[this._currentPageNumber - 1];
+    let element = pageView.div;
+    let view = {
+      id: pageView.id,
+      x: element.offsetLeft + element.clientLeft,
+      y: element.offsetTop + element.clientTop,
+      view: pageView
+    };
+    return {
+      first: view,
+      last: view,
+      views: [view]
+    };
+  }
+  update() {
+    let visible = this._getVisiblePages();
+    let visiblePages = visible.views,
+        numVisiblePages = visiblePages.length;
+    if (numVisiblePages === 0) {
+      return;
+    }
+    this._resizeBuffer(numVisiblePages);
+    this.renderingQueue.renderHighestPriority(visible);
+    this._updateLocation(visible.first);
+    this.eventBus.dispatch('updateviewarea', {
+      source: this,
+      location: this._location
+    });
+  }
+  get _isScrollModeHorizontal() {
+    return (0, _pdfjsLib.shadow)(this, '_isScrollModeHorizontal', false);
+  }
+  _updateScrollMode() {}
+  _updateSpreadMode() {}
+}
+exports.PDFSinglePageViewer = PDFSinglePageViewer;
+
+/***/ }),
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8491,7 +8636,7 @@ class Toolbar {
 exports.Toolbar = Toolbar;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8575,7 +8720,7 @@ class ViewHistory {
 exports.ViewHistory = ViewHistory;
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8586,11 +8731,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FirefoxCom = exports.DownloadManager = undefined;
 
-__webpack_require__(33);
+__webpack_require__(34);
 
 var _pdfjsLib = __webpack_require__(3);
 
-var _preferences = __webpack_require__(34);
+var _preferences = __webpack_require__(35);
 
 var _app = __webpack_require__(1);
 
@@ -8654,12 +8799,12 @@ class DownloadManager {
     });
   }
   download(blob, url, filename) {
-    let blobUrl = URL.createObjectURL(blob);
+    let blobUrl = _pdfjsLib.URL.createObjectURL(blob);
     let onResponse = err => {
       if (err && this.onerror) {
         this.onerror(err);
       }
-      URL.revokeObjectURL(blobUrl);
+      _pdfjsLib.URL.revokeObjectURL(blobUrl);
     };
     FirefoxCom.request('download', {
       blobUrl,
@@ -8822,7 +8967,7 @@ exports.DownloadManager = DownloadManager;
 exports.FirefoxCom = FirefoxCom;
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8920,7 +9065,7 @@ exports.FirefoxCom = FirefoxCom;
 })(undefined);
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9041,7 +9186,7 @@ class BasePreferences {
 exports.BasePreferences = BasePreferences;
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
