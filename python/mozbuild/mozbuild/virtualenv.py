@@ -550,14 +550,14 @@ class VirtualenvManager(object):
         pip = os.path.join(self.bin_path, 'pip')
         subprocess.check_call([pip] + args, stderr=subprocess.STDOUT, cwd=self.topsrcdir)
 
-    def activate_pipenv(self, pipfile=None, args=None, populate=False):
+    def activate_pipenv(self, pipfile=None, populate=False, python=None):
         """Activate a virtual environment managed by pipenv
 
         If ``pipfile`` is not ``None`` then the Pipfile located at the path
         provided will be used to create the virtual environment. If
         ``populate`` is ``True`` then the virtual environment will be
-        populated from the manifest file. The optional ``args`` list will be
-        passed to the pipenv commands.
+        populated from the manifest file. The optional ``python`` argument
+        indicates the version of Python for pipenv to use.
         """
         pipenv = os.path.join(self.bin_path, 'pipenv')
         env = os.environ.copy()
@@ -566,22 +566,39 @@ class VirtualenvManager(object):
             b'WORKON_HOME': str(os.path.normpath(os.path.join(self.topobjdir, '_virtualenvs'))),
         })
 
-        args = args or []
+        if python is not None:
+            env[b'PIPENV_DEFAULT_PYTHON_VERSION'] = python
+            env[b'PIPENV_PYTHON'] = python
+
+        def ensure_venv():
+            """Create virtual environment if needed and return path"""
+            venv = get_venv()
+            if venv is not None:
+                return venv
+            if python is not None:
+                subprocess.check_call(
+                    [pipenv, '--python', python],
+                    stderr=subprocess.STDOUT,
+                    env=env)
+            return get_venv()
+
+        def get_venv():
+            """Return path to virtual environment or None"""
+            try:
+                return subprocess.check_output(
+                    [pipenv, '--venv'],
+                    stderr=subprocess.STDOUT,
+                    env=env).rstrip()
+            except subprocess.CalledProcessError:
+                # virtual environment does not exist
+                return None
 
         if pipfile is not None:
             # Install from Pipfile
             env[b'PIPENV_PIPFILE'] = str(pipfile)
-            args.append('install')
+            subprocess.check_call([pipenv, 'install'], stderr=subprocess.STDOUT, env=env)
 
-        subprocess.check_call(
-            [pipenv] + args,
-            stderr=subprocess.STDOUT,
-            env=env)
-
-        self.virtualenv_root = subprocess.check_output(
-            [pipenv, '--venv'],
-            stderr=subprocess.STDOUT,
-            env=env).rstrip()
+        self.virtualenv_root = ensure_venv()
 
         if populate:
             # Populate from the manifest
