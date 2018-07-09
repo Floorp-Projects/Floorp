@@ -225,27 +225,40 @@ public class GeckoSession extends LayerSession
                     });
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
-                    delegate.onNewSession(GeckoSession.this, uri,
-                        new GeckoResponse<GeckoSession>() {
-                            @Override
-                            public void respond(GeckoSession session) {
-                                if (session == null) {
-                                    callback.sendSuccess(null);
-                                    return;
-                                }
+                    final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
+                    if (result == null) {
+                        callback.sendSuccess(null);
+                        return;
+                    }
 
-                                if (session.isOpen()) {
-                                    throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
-                                }
-
-                                if (GeckoSession.this.mWindow == null) {
-                                    callback.sendError("Session is not attached to a window");
-                                } else {
-                                    session.open(GeckoSession.this.mWindow.runtime);
-                                    callback.sendSuccess(session.getId());
-                                }
+                    result.then(new GeckoResult.OnValueListener<GeckoSession, Void>() {
+                        @Override
+                        public GeckoResult<Void> onValue(GeckoSession session) throws Throwable {
+                            if (session == null) {
+                                callback.sendSuccess(null);
+                                return null;
                             }
-                        });
+
+                            if (session.isOpen()) {
+                                throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
+                            }
+
+                            if (GeckoSession.this.mWindow == null) {
+                                callback.sendError("Session is not attached to a window");
+                            } else {
+                                session.open(GeckoSession.this.mWindow.runtime);
+                                callback.sendSuccess(session.getId());
+                            }
+
+                            return null;
+                        }
+                    }, new GeckoResult.OnExceptionListener<Void>() {
+                        @Override
+                        public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                            callback.sendError(exception.getMessage());
+                            return null;
+                        }
+                    });
                 }
             }
         };
@@ -2256,9 +2269,11 @@ public class GeckoSession extends LayerSession
         * @param session The GeckoSession that initiated the callback.
         * @param uri The URI to be loaded.
         *
-        * @param response A Response which will hold the returned GeckoSession
+        * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
+         *        which case the request for a new window by web content will fail. e.g.,
+         *        <code>window.open()</code> will return null.
         */
-        void onNewSession(GeckoSession session, String uri, GeckoResponse<GeckoSession> response);
+        @Nullable GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession session, @NonNull String uri);
     }
 
     /**

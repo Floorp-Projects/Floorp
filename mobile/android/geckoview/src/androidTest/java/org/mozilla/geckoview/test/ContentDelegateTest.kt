@@ -48,7 +48,8 @@ class ContentDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
 
             @AssertCalled(count = 1)

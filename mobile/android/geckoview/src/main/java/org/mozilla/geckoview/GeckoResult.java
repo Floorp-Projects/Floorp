@@ -162,15 +162,13 @@ public class GeckoResult<T> {
     }
 
     /**
-     * Construct a result from another result. Listeners are not copied.
+     * This constructs a result that is chained to the specified result.
      *
-      * @param from The {@link GeckoResult} to copy.
+     * @param from The {@link GeckoResult} to copy.
      */
     public GeckoResult(GeckoResult<T> from) {
         this();
-        mComplete = from.mComplete;
-        mValue = from.mValue;
-        mError = from.mError;
+        completeFrom(from);
     }
 
     /**
