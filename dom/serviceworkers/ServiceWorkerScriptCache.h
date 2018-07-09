@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ServiceWorkerScriptCache_h
 #define mozilla_dom_ServiceWorkerScriptCache_h
 
+#include "nsIRequest.h"
 #include "nsString.h"
 
 class nsILoadGroup;
