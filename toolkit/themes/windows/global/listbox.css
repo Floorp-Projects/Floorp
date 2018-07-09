@@ -46,54 +46,6 @@ listbox:focus > listitem[selected="true"] {
   color: HighlightText;
 }
 
-/* ::::: listheader ::::: */
-
-listheader {
-  -moz-appearance: treeheadercell;
-  -moz-box-align: center;
-  color: -moz-DialogText;
-  padding: 0 4px;
-}
-
-listheader[sortable="true"]:hover:active {
-  padding-top: 1px;
-  padding-bottom: 0px;
-  padding-inline-start: 5px;
-  padding-inline-end: 4px;
-}
-
-.listheader-icon {
-  margin-inline-end: 2px;
-}
-
-.listheader-label {
-  margin: 0px !important;
-}
-
-/* ..... sort direction icon ..... */
-
-.listheader-sortdirection {
-  list-style-image: none;
-}
-
-.listheader-sortdirection[sortDirection="ascending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-asc.png");
-}
-
-.listheader-sortdirection[sortDirection="descending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc.png");
-}
-
-@media (-moz-windows-classic) {
-  .listheader-sortdirection[sortDirection="ascending"] {
-    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
-  }
-
-  .listheader-sortdirection[sortDirection="descending"] {
-    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
-  }
-}
-
 /* ::::: listcell ::::: */
 
 .listcell-label {
