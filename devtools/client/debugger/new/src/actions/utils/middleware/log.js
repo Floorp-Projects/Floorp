@@ -7,30 +7,31 @@ exports.log = log;
 
 var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* global window */
 const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES", "REMOVE_BREAKPOINT"];
 
 function cloneAction(action) {
   action = action || {};
-  action = _objectSpread({}, action); // ADD_TAB, ...
+  action = { ...action
+  }; // ADD_TAB, ...
 
   if (action.source && action.source.text) {
-    const source = _objectSpread({}, action.source, {
+    const source = { ...action.source,
       text: ""
-    });
-
+    };
     action.source = source;
   }
 
   if (action.sources) {
     const sources = action.sources.slice(0, 20).map(source => {
       const url = !source.url || source.url.includes("data:") ? "" : source.url;
-      return _objectSpread({}, source, {
+      return { ...source,
         url
-      });
+      };
     });
     action.sources = sources;
   } // LOAD_SOURCE_TEXT
@@ -41,10 +42,9 @@ function cloneAction(action) {
   }
 
   if (action.value && action.value.text) {
-    const value = _objectSpread({}, action.value, {
+    const value = { ...action.value,
       text: ""
-    });
-
+    };
     action.value = value;
   }
 
@@ -65,14 +65,14 @@ function formatFrame(frame) {
 }
 
 function formatPause(pause) {
-  return _objectSpread({}, pause, {
+  return { ...pause,
     pauseInfo: {
       why: pause.why
     },
     scopes: [],
     frames: pause.frames.map(formatFrame),
     loadedObjects: []
-  });
+  };
 }
 
 function serializeAction(action) {

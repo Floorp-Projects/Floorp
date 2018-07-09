@@ -28,10 +28,9 @@ var _actions2 = _interopRequireDefault(_actions);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getCallSiteAtLocation(callSites, location) {
   return callSites.find(callSite => (0, _lodash.isEqualWith)(callSite.location, location, (cloc, loc) => {
     return loc.line === cloc.start.line && loc.column >= cloc.start.column && loc.column <= cloc.end.column;
@@ -227,7 +226,7 @@ function getCallSites(symbols, breakpoints) {
 
   return callSites.filter(({
     location
-  }) => location.start.line === location.end.line).map(callSite => _objectSpread({}, callSite, {
+  }) => location.start.line === location.end.line).map(callSite => ({ ...callSite,
     breakpoint: findBreakpoint(callSite)
   }));
 }

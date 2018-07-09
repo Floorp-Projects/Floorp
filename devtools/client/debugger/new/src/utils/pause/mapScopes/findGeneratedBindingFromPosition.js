@@ -139,11 +139,9 @@ async function findGeneratedImportDeclaration(applicableBindings, importName) {
 
   let result = null;
 
-  for (const _ref of applicableBindings) {
-    const {
-      binding
-    } = _ref;
-
+  for (const {
+    binding
+  } of applicableBindings) {
     if (binding.loc.type === "ref") {
       continue;
     }

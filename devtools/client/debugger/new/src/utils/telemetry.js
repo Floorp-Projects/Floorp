@@ -11,10 +11,49 @@ var _telemetry2 = _interopRequireDefault(_telemetry);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/**
+ * Usage:
+ *
+ * import { recordEvent } from "src/utils/telemetry";
+ *
+ * // Event without extra properties
+ * recordEvent("add_breakpoint");
+ *
+ * // Event with extra properties
+ * recordEvent("pause", {
+ *   "reason": "debugger-statement",
+ *   "collapsed_callstacks": 1
+ * });
+ *
+ * // If the properties are in multiple code paths and you can't send them all
+ * // in one go you will need to use the full telemetry API.
+ *
+ * import { Telemetry } from "devtools-modules";
+ *
+ * const telemetry = new Telemetry();
+ *
+ * // Prepare the event and define which properties to expect.
+ * //
+ * // NOTE: You CAN send properties before preparing the event.
+ * //
+ * telemetry.preparePendingEvent("devtools.main", "pause", "debugger", null, [
+ *   "reason", "collapsed_callstacks"
+ * ]);
+ *
+ * // Elsewhere in another codepath send the reason property
+ * telemetry.addEventProperty(
+ *   "devtools.main", "pause", "debugger", null, "reason", "debugger-statement"
+ * );
+ *
+ * // Elsewhere in another codepath send the collapsed_callstacks property
+ * telemetry.addEventProperty(
+ *   "devtools.main", "pause", "debugger", null, "collapsed_callstacks", 1
+ * );
+ */
 const telemetry = new _telemetry2.default();
 /**
  * @memberof utils/telemetry
@@ -30,8 +69,9 @@ function recordEvent(eventName, fields = {}) {
   /* eslint-disable camelcase */
 
 
-  telemetry.recordEvent("devtools.main", eventName, "debugger", null, _objectSpread({
-    session_id: sessionId
-  }, fields));
+  telemetry.recordEvent("devtools.main", eventName, "debugger", null, {
+    session_id: sessionId,
+    ...fields
+  });
   /* eslint-enable camelcase */
 }

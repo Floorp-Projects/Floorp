@@ -30,16 +30,15 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 let ASTs = new Map();
 
 function _parse(code, opts) {
-  return babylon.parse(code, _objectSpread({}, opts, {
+  return babylon.parse(code, { ...opts,
     tokens: true
-  }));
+  });
 }
 
 const sourceOptions = {
@@ -89,9 +88,10 @@ function vueParser({
   source,
   line
 }) {
-  return parse(source, _objectSpread({
-    startLine: line
-  }, sourceOptions.original));
+  return parse(source, {
+    startLine: line,
+    ...sourceOptions.original
+  });
 }
 
 function parseVueScript(code) {
@@ -142,10 +142,9 @@ function getAst(sourceId) {
     const options = sourceOptions[type];
     ast = parse(source.text, options);
   } else if (contentType && contentType.match(/typescript/)) {
-    const options = _objectSpread({}, sourceOptions.original, {
+    const options = { ...sourceOptions.original,
       plugins: [...sourceOptions.original.plugins.filter(p => p !== "flow" && p !== "decorators" && p !== "decorators2" && (p !== "jsx" || contentType.match(/typescript-jsx/))), "decorators", "typescript"]
-    });
-
+    };
     ast = parse(source.text, options);
   }
 
