@@ -153,12 +153,80 @@
         opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (2)");
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(lastFocusTarget, anchor, "Should have focused anchor element. (2)");
+
+        host.remove();
+        input.remove();
+        input2.remove();
+      }
+
+      function testTabbingThroughNestedShadowDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = "<button id='button'>X</button><br id='br'><div id='h1'></div><div id='h2'></div>";
+        var button = sr0.getElementById("button");
+        button.onfocus = focusLogger;
+
+        var h1 = sr0.getElementById("h1");
+        var sr1 = h1.attachShadow({mode: "open"});
+        sr1.innerHTML = "h1 <input id='h11' placeholder='click me and press tab'><input id='h12' placeholder='and then tab again'>";
+        var input11 = sr1.getElementById("h11");
+        input11.onfocus = focusLogger;
+        var input12 = sr1.getElementById("h12");
+        input12.onfocus = focusLogger;
+
+        var h2 = sr0.getElementById("h2");
+        var sr2 = h2.attachShadow({mode: "open"});
+        sr2.innerHTML = "h2 <input id='h21'><input id='h22'>";
+        var input21 = sr2.getElementById("h21");
+        input21.onfocus = focusLogger;
+        var input22 = sr2.getElementById("h22");
+        input22.onfocus = focusLogger;
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, button, "[nested shadow] Should have focused button element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input11, "[nested shadow] Should have focused input element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input12, "[nested shadow] Should have focused input element. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input21, "[nested shadow] Should have focused input element. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input22, "[nested shadow] Should have focused input element. (4)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input21, "[nested shadow] Should have focused input element. (5)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input12, "[nested shadow] Should have focused input element. (6)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input11, "[nested shadow] Should have focused input element. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, button, "[nested shadow] Should have focused button element. (8)");
+
+        // Back to beginning, outside of Shadow DOM.
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
       }
 
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
         testTabbingThroughSimpleShadowDOM();
+        testTabbingThroughNestedShadowDOM();
 
         opener.didRunTests();
         window.close();
