@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ServiceWorkerContainerProxy.h"
+
+#include "mozilla/ipc/BackgroundParent.h"
+
+namespace mozilla {
+namespace dom {
+
+using mozilla::ipc::AssertIsOnBackgroundThread;
+
+ServiceWorkerContainerProxy::~ServiceWorkerContainerProxy()
+{
+  // Any thread
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
+}
+
+ServiceWorkerContainerProxy::ServiceWorkerContainerProxy(ServiceWorkerContainerParent* aActor)
+  : mActor(aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+
+  // The container does not directly listen for updates, so we don't need
+  // to immediately initialize.  The controllerchange event comes via the
+  // ClientSource associated with the ServiceWorkerContainer's bound global.
+}
+
+void
+ServiceWorkerContainerProxy::RevokeActor(ServiceWorkerContainerParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
+  mActor = nullptr;
+}
+
+} // namespace dom
+} // namespace mozilla

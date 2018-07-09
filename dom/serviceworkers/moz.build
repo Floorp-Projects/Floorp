@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerContainerChild.cpp',
     'ServiceWorkerContainerImpl.cpp',
     'ServiceWorkerContainerParent.cpp',
+    'ServiceWorkerContainerProxy.cpp',
     'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerImpl.cpp',
