@@ -8,10 +8,6 @@ exports.createSource = createSource;
 exports.createPause = createPause;
 exports.createBreakpointLocation = createBreakpointLocation;
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -62,10 +58,10 @@ function createSource(source, {
 function createPause(packet, response) {
   // NOTE: useful when the debugger is already paused
   const frame = packet.frame || response.frames[0];
-  return _objectSpread({}, packet, {
+  return { ...packet,
     frame: createFrame(frame),
     frames: response.frames.map(createFrame)
-  });
+  };
 } // Firefox only returns `actualLocation` if it actually changed,
 // but we want it always to exist. Format `actualLocation` if it
 // exists, otherwise use `location`.

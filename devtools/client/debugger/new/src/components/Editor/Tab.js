@@ -36,10 +36,9 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 class Tab extends _react.PureComponent {
   constructor(...args) {
     var _temp;
@@ -71,51 +70,51 @@ class Tab extends _react.PureComponent {
     const isPrettySource = (0, _source.isPretty)(sourceTab);
     const tabMenuItems = (0, _tabs.getTabMenuItems)();
     const items = [{
-      item: _objectSpread({}, tabMenuItems.closeTab, {
+      item: { ...tabMenuItems.closeTab,
         click: () => closeTab(sourceTab.url)
-      })
+      }
     }, {
-      item: _objectSpread({}, tabMenuItems.closeOtherTabs, {
+      item: { ...tabMenuItems.closeOtherTabs,
         click: () => closeTabs(otherTabURLs)
-      }),
+      },
       hidden: () => tabSources.size === 1
     }, {
-      item: _objectSpread({}, tabMenuItems.closeTabsToEnd, {
+      item: { ...tabMenuItems.closeTabsToEnd,
         click: () => {
           const tabIndex = tabSources.findIndex(t => t.id == tab);
           closeTabs(tabURLs.filter((t, i) => i > tabIndex));
         }
-      }),
+      },
       hidden: () => tabSources.size === 1 || tabSources.some((t, i) => t === tab && tabSources.size - 1 === i)
     }, {
-      item: _objectSpread({}, tabMenuItems.closeAllTabs, {
+      item: { ...tabMenuItems.closeAllTabs,
         click: () => closeTabs(tabURLs)
-      })
+      }
     }, {
       item: {
         type: "separator"
       }
     }, {
-      item: _objectSpread({}, tabMenuItems.copyToClipboard, {
+      item: { ...tabMenuItems.copyToClipboard,
         disabled: selectedSource.id !== tab,
         click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.text)
-      })
+      }
     }, {
-      item: _objectSpread({}, tabMenuItems.copySourceUri2, {
+      item: { ...tabMenuItems.copySourceUri2,
         click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(sourceTab.url))
-      })
+      }
     }];
     items.push({
-      item: _objectSpread({}, tabMenuItems.showSource, {
+      item: { ...tabMenuItems.showSource,
         click: () => showSource(tab)
-      })
+      }
     });
 
     if (!isPrettySource) {
       items.push({
-        item: _objectSpread({}, tabMenuItems.prettyPrint, {
+        item: { ...tabMenuItems.prettyPrint,
           click: () => togglePrettyPrint(tab)
-        })
+        }
       });
     }
 

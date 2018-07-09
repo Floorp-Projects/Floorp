@@ -1888,13 +1888,13 @@ menuseparator {
   background: var(--theme-highlight-blue);
 }
 
-.source-footer .blackbox-summary {
+.source-footer .blackbox-summary,
+.source-footer .mapped-source {
   color: var(--theme-body-color);
+  padding-left: 2.5px;
 }
 
 .source-footer .mapped-source {
-  color: var(--theme-body-color);
-  padding: 2.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -34,10 +34,14 @@ var _sourceMaps = require("../../utils/source-maps");
 
 var _selectors = require("../../selectors/index");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/**
+ * Redux actions for the sources state
+ * @module actions/sources
+ */
 const setSelectedLocation = exports.setSelectedLocation = (source, location) => ({
   type: "SET_SELECTED_LOCATION",
   source,
@@ -73,9 +77,9 @@ function selectSourceURL(url, options = {}) {
 
     if (source) {
       const sourceId = source.id;
-      const location = (0, _location.createLocation)(_objectSpread({}, options.location, {
+      const location = (0, _location.createLocation)({ ...options.location,
         sourceId
-      }));
+      });
       await dispatch(selectLocation(location));
     } else {
       dispatch(setPendingSelectedLocation(url, options));
@@ -110,6 +114,8 @@ function selectLocation(location) {
     getState,
     client
   }) => {
+    const currentSource = (0, _selectors.getSelectedSource)(getState());
+
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
       // shut down too fast and it tries to display a default source.
@@ -145,7 +151,13 @@ function selectLocation(location) {
     }
 
     dispatch((0, _ast.setSymbols)(loadedSource.id));
-    dispatch((0, _ast.setOutOfScopeLocations)());
+    dispatch((0, _ast.setOutOfScopeLocations)()); // If a new source is selected update the file search results
+
+    const newSource = (0, _selectors.getSelectedSource)(getState());
+
+    if (currentSource && currentSource !== newSource) {
+      dispatch((0, _ui.updateActiveFileSearch)());
+    }
   };
 }
 /**
@@ -160,6 +172,8 @@ function selectSpecificLocation(location) {
     getState,
     client
   }) => {
+    const currentSource = (0, _selectors.getSelectedSource)(getState());
+
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
       // shut down too fast and it tries to display a default source.
@@ -190,7 +204,13 @@ function selectSpecificLocation(location) {
 
     const sourceId = loadedSource.id;
     dispatch((0, _ast.setSymbols)(sourceId));
-    dispatch((0, _ast.setOutOfScopeLocations)());
+    dispatch((0, _ast.setOutOfScopeLocations)()); // If a new source is selected update the file search results
+
+    const newSource = (0, _selectors.getSelectedSource)(getState());
+
+    if (currentSource && currentSource !== newSource) {
+      dispatch((0, _ui.updateActiveFileSearch)());
+    }
   };
 }
 /**
@@ -235,7 +255,8 @@ function jumpToMappedLocation(location) {
       pairedLocation = await sourceMaps.getOriginalLocation(location, source);
     }
 
-    return dispatch(selectLocation(_objectSpread({}, pairedLocation)));
+    return dispatch(selectLocation({ ...pairedLocation
+    }));
   };
 }
 

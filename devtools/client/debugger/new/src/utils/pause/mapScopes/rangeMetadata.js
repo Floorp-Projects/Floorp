@@ -12,10 +12,9 @@ var _positionCmp = require("./positionCmp");
 
 var _filtering = require("./filtering");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 async function loadRangeMetadata(source, frame, originalAstScopes, sourceMaps) {
   const originalRanges = await sourceMaps.getOriginalRanges(frame.location.sourceId, source.url);
   const sortedOriginalAstBindings = [];
@@ -67,10 +66,11 @@ async function loadRangeMetadata(source, frame, originalAstScopes, sourceMaps) {
       });
     }
 
-    return _objectSpread({
+    return {
       type,
-      singleDeclaration
-    }, range);
+      singleDeclaration,
+      ...range
+    };
   });
 }
 
