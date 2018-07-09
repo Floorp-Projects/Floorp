@@ -1359,20 +1359,6 @@ telemetry:
     record_in_processes:
       - 'main'
 
-  data_upload_optin:
-    bug_numbers:
-      - 1445921
-    description: >
-      User opted into sending Telemetry data again.
-    expires: "never"
-    kind: boolean
-    notification_emails:
-      - jrediger@mozilla.com
-      - telemetry-client-dev@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
 telemetry.discarded:
   accumulations:
     bug_numbers:

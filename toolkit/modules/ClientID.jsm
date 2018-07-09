@@ -56,7 +56,7 @@ var ClientID = Object.freeze({
     return ClientIDImpl.getClientID();
   },
 
-  /**
+/**
    * Get the client id synchronously without hitting the disk.
    * This returns:
    *  - the current on-disk client id if it was already loaded
@@ -65,31 +65,6 @@ var ClientID = Object.freeze({
    */
   getCachedClientID() {
     return ClientIDImpl.getCachedClientID();
-  },
-
-  /**
-   * Set a specific client id asynchronously, writing it to disk
-   * and updating the cached version.
-   *
-   * Should only ever be used when a known client ID value should be set.
-   * Use `resetClientID` to generate a new random one if required.
-   *
-   * @return {Promise<string>} The stable client ID.
-   */
-  setClientID(id) {
-    return ClientIDImpl.setClientID(id);
-  },
-
-  /**
-   * Reset the client id asynchronously, writing it to disk
-   * and updating the cached version.
-   *
-   * Should only be used if a reset is explicitely requested by the user.
-   *
-   * @return {Promise<string>} A new stable client ID.
-   */
-  resetClientID() {
-    return ClientIDImpl.resetClientID();
   },
 
   /**
@@ -105,7 +80,6 @@ var ClientIDImpl = {
   _clientID: null,
   _loadClientIdTask: null,
   _saveClientIdTask: null,
-  _removeClientIdTask: null,
   _logger: null,
 
   _loadClientID() {
@@ -124,9 +98,6 @@ var ClientIDImpl = {
    * If no Client ID is found, we generate a new one.
    */
   async _doLoadClientID() {
-    // If there's a removal in progress, let's wait for it
-    await this._removeClientIdTask;
-
     // Try to load the client id from the DRS state file.
     try {
       let state = await CommonUtils.readJSON(gStateFilePath);
@@ -219,40 +190,6 @@ var ClientIDImpl = {
     await this._loadClientIdTask;
     await this._saveClientIdTask;
     this._clientID = null;
-  },
-
-  async setClientID(id) {
-    if (!this.updateClientID(id)) {
-      throw ("Invalid client ID: " + id);
-    }
-
-    this._saveClientIdTask = this._saveClientID();
-    await this._saveClientIdTask;
-    return this._clientID;
-  },
-
-  async _doRemoveClientID() {
-    // Reset stored id.
-    this._clientID = null;
-
-    // Clear the client id from the preference cache.
-    Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
-
-    // Remove the client id from disk
-    await OS.File.remove(gStateFilePath, {ignoreAbsent: true});
-  },
-
-  async resetClientID() {
-    // Wait for the removal.
-    // Asynchronous calls to getClientID will also be blocked on this.
-    this._removeClientIdTask = this._doRemoveClientID();
-    let clear = () => this._removeClientIdTask = null;
-    this._removeClientIdTask.then(clear, clear);
-
-    await this._removeClientIdTask;
-
-    // Generate a new id.
-    return this.getClientID();
   },
 
   /**
