@@ -65,6 +65,7 @@ const TELEMETRY_REPORTED_PATTERNS = new Set([
 // In case of a conflict, the first matching rate by insertion order is used.
 const MODULE_SAMPLE_RATES = new Map([
   [/^(?:chrome|resource):\/\/devtools/, 1],
+  [/^moz-extension:\/\//, 0],
 ]);
 
 /**
@@ -98,15 +99,17 @@ class BrowserErrorReporter {
 
   constructor(options = {}) {
     // Test arguments for mocks and changing behavior
-    this.fetch = options.fetch || defaultFetch;
-    this.now = options.now || null;
-    this.chromeOnly = options.chromeOnly !== undefined ? options.chromeOnly : true;
-    this.registerListener = (
-      options.registerListener || (() => Services.console.registerListener(this))
-    );
-    this.unregisterListener = (
-      options.unregisterListener || (() => Services.console.unregisterListener(this))
-    );
+    const defaultOptions = {
+      fetch: defaultFetch,
+      now: null,
+      chromeOnly: true,
+      sampleRates: MODULE_SAMPLE_RATES,
+      registerListener: () => Services.console.registerListener(this),
+      unregisterListener: () => Services.console.unregisterListener(this),
+    };
+    for (const [key, defaultValue] of Object.entries(defaultOptions)) {
+      this[key] = key in options ? options[key] : defaultValue;
+    }
 
     XPCOMUtils.defineLazyGetter(this, "appBuildIdDate", BrowserErrorReporter.getAppBuildIdDate);
 
@@ -270,7 +273,7 @@ class BrowserErrorReporter {
 
     // Sample the amount of errors we send out
     let sampleRate = Number.parseFloat(this.sampleRatePref);
-    for (const [regex, rate] of MODULE_SAMPLE_RATES) {
+    for (const [regex, rate] of this.sampleRates) {
       if (message.sourceName.match(regex)) {
         sampleRate = rate;
         break;
