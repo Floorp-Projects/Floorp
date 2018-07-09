@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerManagerService.cpp',
     'ServiceWorkerParent.cpp',
     'ServiceWorkerPrivate.cpp',
+    'ServiceWorkerProxy.cpp',
     'ServiceWorkerRegisterJob.cpp',
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
