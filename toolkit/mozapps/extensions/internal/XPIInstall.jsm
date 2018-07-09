@@ -649,7 +649,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
     addon.hasEmbeddedWebExtension = manifest.hasEmbeddedWebExtension == "true";
 
     if (addon.optionsType &&
-        addon.optionsType != AddonManager.OPTIONS_INLINE_BROWSER &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE_BROWSER &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
       throw new Error("Install manifest specifies unknown optionsType: " + addon.optionsType);
     }
