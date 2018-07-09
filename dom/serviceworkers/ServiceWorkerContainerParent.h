@@ -13,9 +13,12 @@ namespace mozilla {
 namespace dom {
 
 class IPCServiceWorkerDescriptor;
+class ServiceWorkerContainerProxy;
 
 class ServiceWorkerContainerParent final : public PServiceWorkerContainerParent
 {
+  RefPtr<ServiceWorkerContainerProxy> mProxy;
+
   // PServiceWorkerContainerParent
   void
   ActorDestroy(ActorDestroyReason aReason) override;
@@ -24,8 +27,8 @@ class ServiceWorkerContainerParent final : public PServiceWorkerContainerParent
   RecvTeardown() override;
 
 public:
-  ServiceWorkerContainerParent() = default;
-  ~ServiceWorkerContainerParent() = default;
+  ServiceWorkerContainerParent();
+  ~ServiceWorkerContainerParent();
 
   void
   Init();

@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/PServiceWorkerContainerParent.h"
+#include "ServiceWorkerContainerParent.h"
+
+#include "ServiceWorkerContainerProxy.h"
 
 namespace mozilla {
 namespace dom {
@@ -14,20 +16,32 @@ using mozilla::ipc::IPCResult;
 void
 ServiceWorkerContainerParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  // TODO
+  if (mProxy) {
+    mProxy->RevokeActor(this);
+    mProxy = nullptr;
+  }
 }
 
 IPCResult
 ServiceWorkerContainerParent::RecvTeardown()
 {
-  // TODO
+  Unused << Send__delete__(this);
   return IPC_OK();
+}
+
+ServiceWorkerContainerParent::ServiceWorkerContainerParent()
+{
+}
+
+ServiceWorkerContainerParent::~ServiceWorkerContainerParent()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
 }
 
 void
 ServiceWorkerContainerParent::Init()
 {
-  // TODO
+  mProxy = new ServiceWorkerContainerProxy(this);
 }
 
 } // namespace dom
