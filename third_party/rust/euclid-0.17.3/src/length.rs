@@ -15,11 +15,11 @@ use num_traits::{NumCast, Saturating};
 use num::One;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use core::cmp::Ordering;
-use core::ops::{Add, Div, Mul, Neg, Sub};
-use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
-use core::marker::PhantomData;
-use core::fmt;
+use std::cmp::Ordering;
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
+use std::marker::PhantomData;
+use std::fmt;
 
 /// A one-dimensional distance, with value represented by `T` and unit of measurement `Unit`.
 ///
@@ -35,7 +35,7 @@ use core::fmt;
 ///
 /// [`TypedScale`]: struct.TypedScale.html
 #[repr(C)]
-pub struct Length<T, Unit>(pub T, #[doc(hidden)] pub PhantomData<Unit>);
+pub struct Length<T, Unit>(pub T, PhantomData<Unit>);
 
 impl<T: Clone, Unit> Clone for Length<T, Unit> {
     fn clone(&self) -> Self {
@@ -211,12 +211,7 @@ impl<U, T: Clone + Neg<Output = T>> Neg for Length<T, U> {
 
 impl<Unit, T0: NumCast + Clone> Length<T0, Unit> {
     /// Cast from one numeric representation to another, preserving the units.
-    pub fn cast<T1: NumCast + Clone>(&self) -> Length<T1, Unit> {
-        self.try_cast().unwrap()
-    }
-
-    /// Fallible cast from one numeric representation to another, preserving the units.
-    pub fn try_cast<T1: NumCast + Clone>(&self) -> Option<Length<T1, Unit>> {
+    pub fn cast<T1: NumCast + Clone>(&self) -> Option<Length<T1, Unit>> {
         NumCast::from(self.get()).map(Length::new)
     }
 }
@@ -268,7 +263,7 @@ mod tests {
 
     use num_traits::Saturating;
     use scale::TypedScale;
-    use core::f32::INFINITY;
+    use std::f32::INFINITY;
 
     enum Inch {}
     enum Mm {}
@@ -466,7 +461,7 @@ mod tests {
     fn test_cast() {
         let length_as_i32: Length<i32, Cm> = Length::new(5);
 
-        let result: Length<f32, Cm> = length_as_i32.cast();
+        let result: Length<f32, Cm> = length_as_i32.cast().unwrap();
 
         let length_as_f32: Length<f32, Cm> = Length::new(5.0);
         assert_eq!(result, length_as_f32);

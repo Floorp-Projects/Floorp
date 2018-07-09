@@ -12,9 +12,9 @@ use vector::{TypedVector2D, TypedVector3D};
 
 use num::{One, Zero};
 
-use core::fmt;
-use core::marker::PhantomData;
-use core::ops::Div;
+use std::fmt;
+use std::marker::PhantomData;
+use std::ops::Div;
 
 
 define_matrix! {
@@ -37,29 +37,21 @@ impl<T, U> HomogeneousVector<T, U> {
 }
 
 
-impl<T: Copy + Div<T, Output=T> + Zero + PartialOrd, U> HomogeneousVector<T, U> {
+impl<T: Copy + Div<T, Output=T>, U> HomogeneousVector<T, U> {
     /// Convert into Cartesian 2D point.
     ///
-    /// Returns None if the point is on or behind the W=0 hemisphere.
+    /// Note: possible division by zero.
     #[inline]
-    pub fn to_point2d(&self) -> Option<TypedPoint2D<T, U>> {
-        if self.w > T::zero() {
-            Some(TypedPoint2D::new(self.x / self.w, self.y / self.w))
-        } else {
-            None
-        }
+    pub fn to_point2d(&self) -> TypedPoint2D<T, U> {
+        TypedPoint2D::new(self.x / self.w, self.y / self.w)
     }
 
     /// Convert into Cartesian 3D point.
     ///
-    /// Returns None if the point is on or behind the W=0 hemisphere.
+    /// Note: possible division by zero.
     #[inline]
-    pub fn to_point3d(&self) -> Option<TypedPoint3D<T, U>> {
-        if self.w > T::zero() {
-            Some(TypedPoint3D::new(self.x / self.w, self.y / self.w, self.z / self.w))
-        } else {
-            None
-        }
+    pub fn to_point3d(&self) -> TypedPoint3D<T, U> {
+        TypedPoint3D::new(self.x / self.w, self.y / self.w, self.z / self.w)
     }
 }
 
@@ -111,13 +103,7 @@ mod homogeneous {
 
     #[test]
     fn roundtrip() {
-        assert_eq!(Some(Point2D::new(1.0, 2.0)), HomogeneousVector::from(Point2D::new(1.0, 2.0)).to_point2d());
-        assert_eq!(Some(Point3D::new(1.0, -2.0, 0.1)), HomogeneousVector::from(Point3D::new(1.0, -2.0, 0.1)).to_point3d());
-    }
-
-    #[test]
-    fn negative() {
-        assert_eq!(None, HomogeneousVector::<f32, ()>::new(1.0, 2.0, 3.0, 0.0).to_point2d());
-        assert_eq!(None, HomogeneousVector::<f32, ()>::new(1.0, -2.0, -3.0, -2.0).to_point3d());
+        assert_eq!(Point2D::new(1.0, 2.0), HomogeneousVector::from(Point2D::new(1.0, 2.0)).to_point2d());
+        assert_eq!(Point3D::new(1.0, -2.0, 0.1), HomogeneousVector::from(Point3D::new(1.0, -2.0, 0.1)).to_point3d());
     }
 }
