@@ -6,13 +6,64 @@
 
 #include "mozilla/dom/PServiceWorkerContainerChild.h"
 
+#include "RemoteServiceWorkerContainerImpl.h"
+
 namespace mozilla {
 namespace dom {
 
 void
 ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason)
 {
-  // TODO
+  if (mWorkerHolderToken) {
+    mWorkerHolderToken->RemoveListener(this);
+    mWorkerHolderToken = nullptr;
+  }
+
+  if (mOwner) {
+    mOwner->RevokeActor(this);
+    MOZ_DIAGNOSTIC_ASSERT(!mOwner);
+  }
+}
+
+void
+ServiceWorkerContainerChild::WorkerShuttingDown()
+{
+  MaybeStartTeardown();
+}
+
+ServiceWorkerContainerChild::ServiceWorkerContainerChild(WorkerHolderToken* aWorkerHolderToken)
+  : mWorkerHolderToken(aWorkerHolderToken)
+  , mOwner(nullptr)
+  , mTeardownStarted(false)
+{
+  if (mWorkerHolderToken) {
+    mWorkerHolderToken->AddListener(this);
+  }
+}
+
+void
+ServiceWorkerContainerChild::SetOwner(RemoteServiceWorkerContainerImpl* aOwner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mOwner);
+  MOZ_DIAGNOSTIC_ASSERT(aOwner);
+  mOwner = aOwner;
+}
+
+void
+ServiceWorkerContainerChild::RevokeOwner(RemoteServiceWorkerContainerImpl* aOwner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(mOwner);
+  MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
+  mOwner = nullptr;
+}
+
+void
+ServiceWorkerContainerChild::MaybeStartTeardown()
+{
+  if (mTeardownStarted) {
+    return;
+  }
+  mTeardownStarted = true;
 }
 
 } // namespace dom

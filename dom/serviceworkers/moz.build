@@ -28,6 +28,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'RemoteServiceWorkerContainerImpl.cpp',
     'RemoteServiceWorkerImpl.cpp',
     'ServiceWorker.cpp',
     'ServiceWorkerActors.cpp',
