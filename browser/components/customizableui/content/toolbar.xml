@@ -65,10 +65,6 @@
         ]]></body>
       </method>
 
-      <property name="toolbarName"
-                onget="return this.getAttribute('toolbarname');"
-                onset="this.setAttribute('toolbarname', val); return val;"/>
-
       <property name="customizationTarget" readonly="true">
         <getter><![CDATA[
           if (this._customizationTarget)
