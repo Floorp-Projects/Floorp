@@ -34,10 +34,7 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.settings);
-        if (!AppConstants.isGeckoBuild()) {
-            getPreferenceScreen()
-                    .removePreference(findPreference(getString(R.string.pref_key_advanced_screen)));
-        }
+        getPreferenceScreen().removePreference(findPreference(getString(R.string.pref_key_advanced_screen)));
     }
 
     @Override

@@ -210,7 +210,7 @@ public class WebViewProvider {
         private void applyAppSettings() {
             geckoRuntime.getSettings().setJavaScriptEnabled(!Settings.getInstance(getContext()).shouldBlockJavaScript());
             geckoRuntime.getSettings().setWebFontsEnabled(!Settings.getInstance(getContext()).shouldBlockWebFonts());
-            geckoRuntime.getSettings().setRemoteDebuggingEnabled(Settings.getInstance(getContext()).shouldEnableRemoteDebugging());
+            geckoRuntime.getSettings().setRemoteDebuggingEnabled(false);
             final int cookiesValue;
             if (Settings.getInstance(getContext()).shouldBlockCookies() && Settings.getInstance(getContext()).shouldBlockThirdPartyCookies()) {
                 cookiesValue = GeckoRuntimeSettings.COOKIE_ACCEPT_NONE;
