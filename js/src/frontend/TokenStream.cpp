@@ -1329,20 +1329,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
             if (unit != '\\' || !matchUnicodeEscapeIdent(&codePoint))
                 break;
         } else {
-            int32_t cp;
-            if (!getNonAsciiCodePoint(unit, &cp))
+            // |restoreNextRawCharAddress| undoes all gets, and this function
+            // doesn't update line/column info.
+            char32_t cp;
+            if (!getNonAsciiCodePointDontNormalize(unit, &cp))
                 return false;
 
-            codePoint = AssertedCast<uint32_t>(cp);
-
-            if (!unicode::IsIdentifierPart(codePoint)) {
-                if (MOZ_UNLIKELY(codePoint == '\n')) {
-                    // |restoreNextRawCharAddress| will undo all gets, but we
-                    // have to revert a line/column update manually.
-                    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
-                }
+            codePoint = cp;
+            if (!unicode::IsIdentifierPart(codePoint))
                 break;
-            }
         }
 
         if (!appendCodePointToCharBuffer(codePoint))
