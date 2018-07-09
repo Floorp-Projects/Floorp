@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerRegistrationParent.h"
 
+#include "ServiceWorkerRegistrationProxy.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -14,20 +16,45 @@ using mozilla::ipc::IPCResult;
 void
 ServiceWorkerRegistrationParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  // TODO
+  if (mProxy) {
+    mProxy->RevokeActor(this);
+    mProxy = nullptr;
+  }
 }
 
 IPCResult
 ServiceWorkerRegistrationParent::RecvTeardown()
 {
-  // TODO
+  MaybeSendDelete();
   return IPC_OK();
+}
+
+ServiceWorkerRegistrationParent::ServiceWorkerRegistrationParent()
+  : mDeleteSent(false)
+{
+}
+
+ServiceWorkerRegistrationParent::~ServiceWorkerRegistrationParent()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
 }
 
 void
 ServiceWorkerRegistrationParent::Init(const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  // TODO
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy);
+  mProxy = new ServiceWorkerRegistrationProxy(ServiceWorkerRegistrationDescriptor(aDescriptor));
+  mProxy->Init(this);
+}
+
+void
+ServiceWorkerRegistrationParent::MaybeSendDelete()
+{
+  if (mDeleteSent) {
+    return;
+  }
+  mDeleteSent = true;
+  Unused << Send__delete__(this);
 }
 
 } // namespace dom
