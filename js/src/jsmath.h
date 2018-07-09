@@ -124,6 +124,9 @@ extern bool
 math_min(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
+math_sqrt_uncached(double x);
+
+extern double
 math_sqrt_impl(MathCache* cache, double x);
 
 extern bool
