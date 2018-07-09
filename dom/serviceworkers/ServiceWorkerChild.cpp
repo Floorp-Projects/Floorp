@@ -12,7 +12,57 @@ namespace dom {
 void
 ServiceWorkerChild::ActorDestroy(ActorDestroyReason aReason)
 {
-  // TODO
+  if (mWorkerHolderToken) {
+    mWorkerHolderToken->RemoveListener(this);
+    mWorkerHolderToken = nullptr;
+  }
+
+  if (mOwner) {
+    mOwner->RevokeActor(this);
+    MOZ_DIAGNOSTIC_ASSERT(!mOwner);
+  }
+}
+
+void
+ServiceWorkerChild::WorkerShuttingDown()
+{
+  MaybeStartTeardown();
+}
+
+ServiceWorkerChild::ServiceWorkerChild(WorkerHolderToken* aWorkerHolderToken)
+  : mWorkerHolderToken(aWorkerHolderToken)
+  , mOwner(nullptr)
+  , mTeardownStarted(false)
+{
+  if (mWorkerHolderToken) {
+    mWorkerHolderToken->AddListener(this);
+  }
+}
+
+void
+ServiceWorkerChild::SetOwner(RemoteServiceWorkerImpl* aOwner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mOwner);
+  MOZ_DIAGNOSTIC_ASSERT(aOwner);
+  mOwner = aOwner;
+}
+
+void
+ServiceWorkerChild::RevokeOwner(RemoteServiceWorkerImpl* aOwner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(mOwner);
+  MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
+  mOwner = nullptr;
+}
+
+void
+ServiceWorkerChild::MaybeStartTeardown()
+{
+  if (mTeardownStarted) {
+    return;
+  }
+  mTeardownStarted = true;
+  Unused << SendTeardown();
 }
 
 } // namespace dom
