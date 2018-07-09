@@ -34,6 +34,7 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.settings);
+        // TODO: #2869 Enable Debugging and Expose Advanced Setting
         getPreferenceScreen().removePreference(findPreference(getString(R.string.pref_key_advanced_screen)));
     }
 
