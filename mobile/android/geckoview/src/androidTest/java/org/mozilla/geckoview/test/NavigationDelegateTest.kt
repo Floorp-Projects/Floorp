@@ -4,7 +4,7 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
@@ -101,16 +101,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should not be null", where, notNullValue())
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
-                response.respond(false)
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -296,13 +294,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
-                response.respond(false)
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -347,13 +343,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
-                response.respond(false)
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -383,13 +377,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI should match", uri, endsWith(HELLO2_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
-                response.respond(false)
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -418,10 +410,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int,
-                                       flags: Int,
-                                       response: GeckoResponse<Boolean>) {
-                response.respond(uri.endsWith(HELLO_HTML_PATH))
+                                       where: Int, flags: Int): GeckoResult<Boolean> {
+                return GeckoResult.fromValue(uri.endsWith(HELLO_HTML_PATH))
             }
         })
 
@@ -454,10 +444,12 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat("Where should be correct", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -481,10 +473,12 @@ class NavigationDelegateTest : BaseSessionTest() {
             // We get two onLoadRequest calls for the link click,
             // one when loading the URL and one when opening a new window.
             @AssertCalled(count = 2, order = [1])
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat("Where should be correct", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+                return null
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -574,9 +568,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean> {
                 // Pretend we handled the target="_blank" link click.
-                response.respond(uri.endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                return GeckoResult.fromValue(uri.endsWith(NEW_SESSION_CHILD_HTML_PATH))
             }
         })
 
@@ -588,9 +583,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Assert that onNewSession was not called for the link click.
         sessionRule.session.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
                 assertThat("URI must match", uri,
                            endsWith(forEachCall(NEW_SESSION_CHILD_HTML_PATH, NEW_SESSION_HTML_PATH)))
+                return null
             }
 
             @AssertCalled(count = 0)
