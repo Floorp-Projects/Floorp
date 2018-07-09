@@ -33,6 +33,9 @@ public:
   RefPtr<ServiceWorkerRegistrationPromise>
   GetRegistration(const ClientInfo& aClientInfo, const nsCString& aURL);
 
+  RefPtr<ServiceWorkerRegistrationListPromise>
+  GetRegistrations(const ClientInfo& aClientInfo);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerContainerProxy);
 };
 
