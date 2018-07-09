@@ -6985,26 +6985,6 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for checking if the pending pings are over-quota"
   },
-  "TELEMETRY_PENDING_LOAD_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 20,
-    "bug_numbers": [1033860],
-    "description": "Time (ms) it takes for loading pending pings from disk"
-  },
-  "TELEMETRY_ARCHIVE_LOAD_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 20,
-    "bug_numbers": [1033860],
-    "description": "Time (ms) it takes for loading archived pings from disk"
-  },
   "TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
