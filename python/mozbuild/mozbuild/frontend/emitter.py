@@ -1074,6 +1074,18 @@ class TreeMetadataEmitter(LoggingMixin):
                     not context.config.substs.get('MOZ_NO_DEBUG_RTL')):
                 rtl_flag += 'd'
             computed_flags.resolve_flags('RTL', [rtl_flag])
+            # For PGO clang-cl builds, we generate order files in the
+            # profile generate phase that are subsequently used to link the
+            # final library.  We need to provide flags to the compiler to
+            # have it instrument functions for generating the data for the
+            # order file.  We'd normally put flags like these in
+            # PROFILE_GEN_CFLAGS or the like, but we need to only use the
+            # flags in contexts where we're compiling code for xul.
+            code_for_xul = context.get('FINAL_LIBRARY', 'notxul') == 'xul'
+            if context.config.substs.get('CLANG_CL') and code_for_xul:
+                computed_flags.resolve_flags('PROFILE_GEN_DYN_CFLAGS',
+                                             ['-Xclang',
+                                              '-finstrument-functions-after-inlining'])
             if not context.config.substs.get('CROSS_COMPILE'):
                 computed_host_flags.resolve_flags('RTL', [rtl_flag])
 
