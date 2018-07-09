@@ -1584,7 +1584,6 @@ template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public GeneralTokenStreamChars<char16_t, AnyCharsAccess>
 {
-  private:
     using CharsBase = TokenStreamCharsBase<char16_t>;
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<char16_t>;
     using GeneralCharsBase = GeneralTokenStreamChars<char16_t, AnyCharsAccess>;
@@ -1718,6 +1717,22 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         infallibleConsumeRestOfSingleLineComment();
         return true;
     }
+};
+
+template<class AnyCharsAccess>
+class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
+  : public GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
+{
+    using CharsBase = TokenStreamCharsBase<mozilla::Utf8Unit>;
+    using SpecializedCharsBase = SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>;
+    using GeneralCharsBase = GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
+    using Self = TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
+
+  protected:
+    // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
+
+  protected:
+    using GeneralCharsBase::GeneralCharsBase;
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
