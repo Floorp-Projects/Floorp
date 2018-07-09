@@ -224,7 +224,7 @@ profiledbuild::
 	$(MAKE) maybe_clobber_profiledbuild
 	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
 	$(call BUILDSTATUS,TIER_START pgo_profile_use)
-	$(MAKE) default MOZ_PROFILE_USE=1
+	$(MAKE) default MOZ_PROFILE_USE=1 $(if $(CLANG_CL),MOZ_PROFILE_ORDER_FILE=$(topobjdir)/cygprofile.txt)
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
 
 # Change default target to PGO build if PGO is enabled.
