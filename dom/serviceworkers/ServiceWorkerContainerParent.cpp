@@ -29,6 +29,29 @@ ServiceWorkerContainerParent::RecvTeardown()
   return IPC_OK();
 }
 
+IPCResult
+ServiceWorkerContainerParent::RecvRegister(const IPCClientInfo& aClientInfo,
+                                           const nsCString& aScopeURL,
+                                           const nsCString& aScriptURL,
+                                           const ServiceWorkerUpdateViaCache& aUpdateViaCache,
+                                           RegisterResolver&& aResolver)
+{
+  if (!mProxy) {
+    aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return IPC_OK();
+  }
+
+  mProxy->Register(ClientInfo(aClientInfo), aScopeURL, aScriptURL, aUpdateViaCache)->Then(
+    GetCurrentThreadSerialEventTarget(), __func__,
+    [aResolver] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      aResolver(aDescriptor.ToIPC());
+    }, [aResolver] (const CopyableErrorResult& aResult) {
+      aResolver(aResult);
+    });
+
+  return IPC_OK();
+}
+
 ServiceWorkerContainerParent::ServiceWorkerContainerParent()
 {
 }

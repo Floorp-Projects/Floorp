@@ -26,6 +26,12 @@ class ServiceWorkerContainerParent final : public PServiceWorkerContainerParent
   mozilla::ipc::IPCResult
   RecvTeardown() override;
 
+  mozilla::ipc::IPCResult
+  RecvRegister(const IPCClientInfo& aClientInfo, const nsCString& aScopeURL,
+               const nsCString& aScriptURL,
+               const ServiceWorkerUpdateViaCache& aUpdateViaCache,
+               RegisterResolver&& aResolver) override;
+
 public:
   ServiceWorkerContainerParent();
   ~ServiceWorkerContainerParent();

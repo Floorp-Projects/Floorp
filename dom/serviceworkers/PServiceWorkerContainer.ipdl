@@ -4,6 +4,9 @@
 
 include protocol PBackground;
 
+include ClientIPCTypes;
+include IPCServiceWorkerRegistrationDescriptor;
+
 namespace mozilla {
 namespace dom {
 
@@ -13,6 +16,10 @@ protocol PServiceWorkerContainer
 
 parent:
   async Teardown();
+
+  async Register(IPCClientInfo aClientInfo, nsCString aScopeURL, nsCString aScriptURL,
+                 ServiceWorkerUpdateViaCache aUpdateViaCache)
+        returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
 child:
   async __delete__();

@@ -15,6 +15,7 @@ namespace dom {
 
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::PBackgroundChild;
+using mozilla::ipc::ResponseRejectReason;
 
 RemoteServiceWorkerContainerImpl::~RemoteServiceWorkerContainerImpl()
 {
@@ -61,7 +62,30 @@ RemoteServiceWorkerContainerImpl::Register(const ClientInfo& aClientInfo,
                                            ServiceWorkerRegistrationCallback&& aSuccessCB,
                                            ServiceWorkerFailureCallback&& aFailureCB) const
 {
-  // TODO
+  if (!mActor) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  mActor->SendRegister(
+    aClientInfo.ToIPC(), nsCString(aScopeURL), nsCString(aScriptURL),
+    aUpdateViaCache,
+    [successCB = std::move(aSuccessCB), aFailureCB]
+    (const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult& aResult) {
+      if (aResult.type() == IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::TCopyableErrorResult) {
+        // application layer error
+        auto& rv = aResult.get_CopyableErrorResult();
+        MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
+        aFailureCB(CopyableErrorResult(rv));
+        return;
+      }
+      // success
+      auto& ipcDesc = aResult.get_IPCServiceWorkerRegistrationDescriptor();
+      successCB(ServiceWorkerRegistrationDescriptor(ipcDesc));
+    }, [aFailureCB] (ResponseRejectReason aReason) {
+      // IPC layer error
+      aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    });
 }
 
 void

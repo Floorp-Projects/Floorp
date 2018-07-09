@@ -25,6 +25,11 @@ public:
   void
   RevokeActor(ServiceWorkerContainerParent* aActor);
 
+  RefPtr<ServiceWorkerRegistrationPromise>
+  Register(const ClientInfo& aClientInfo, const nsCString& aScopeURL,
+           const nsCString& aScriptURL,
+           ServiceWorkerUpdateViaCache aUpdateViaCache);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerContainerProxy);
 };
 
