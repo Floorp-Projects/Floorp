@@ -10,8 +10,6 @@
 
   <binding id="toolbar">
     <implementation>
-      <field name="overflowedDuringConstruction">null</field>
-
       <constructor><![CDATA[
           let scope = {};
           ChromeUtils.import("resource:///modules/CustomizableUI.jsm", scope);
