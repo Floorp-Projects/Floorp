@@ -13,9 +13,13 @@ namespace mozilla {
 namespace dom {
 
 class IPCServiceWorkerRegistrationDescriptor;
+class ServiceWorkerRegistrationProxy;
 
 class ServiceWorkerRegistrationParent final : public PServiceWorkerRegistrationParent
 {
+  RefPtr<ServiceWorkerRegistrationProxy> mProxy;
+  bool mDeleteSent;
+
   // PServiceWorkerRegistrationParent
   void
   ActorDestroy(ActorDestroyReason aReason) override;
@@ -24,11 +28,14 @@ class ServiceWorkerRegistrationParent final : public PServiceWorkerRegistrationP
   RecvTeardown() override;
 
 public:
-  ServiceWorkerRegistrationParent() = default;
-  ~ServiceWorkerRegistrationParent() = default;
+  ServiceWorkerRegistrationParent();
+  ~ServiceWorkerRegistrationParent();
 
   void
   Init(const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  void
+  MaybeSendDelete();
 };
 
 } // namespace dom
