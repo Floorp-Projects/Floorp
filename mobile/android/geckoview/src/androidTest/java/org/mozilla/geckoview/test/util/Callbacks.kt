@@ -58,8 +58,8 @@ class Callbacks private constructor() {
             return null
         }
 
-        override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-            response.respond(null)
+        override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+            return null;
         }
     }
 

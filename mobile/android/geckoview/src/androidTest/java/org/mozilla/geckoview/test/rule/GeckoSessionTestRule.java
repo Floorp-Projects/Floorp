@@ -112,7 +112,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStop", GeckoSession.class, boolean.class);
             sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
-                    "onNewSession", GeckoSession.class, String.class, GeckoResponse.class);
+                    "onNewSession", GeckoSession.class, String.class);
             sOnCrash = GeckoSession.ContentDelegate.class.getMethod(
                     "onCrash", GeckoSession.class);
         } catch (final NoSuchMethodException e) {
@@ -1182,34 +1182,50 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     }
                 }
 
-                if (call != null && sOnNewSession.equals(method)) {
-                    // We're delegating an onNewSession call.
-                    // Make sure we wait on the newly opened session, if any.
-                    final GeckoSession oldSession = (GeckoSession) args[0];
-                    @SuppressWarnings("unchecked")
-                    final GeckoResponse<GeckoSession> realResponse =
-                            (GeckoResponse<GeckoSession>) args[2];
-                    args[2] = new GeckoResponse<GeckoSession>() {
-                        @Override
-                        public void respond(final GeckoSession newSession) {
-                            realResponse.respond(newSession);
-                            // `realResponse` has opened the session at this point, so wait on it.
-                            if (oldSession.isOpen() && newSession != null) {
-                                GeckoSessionTestRule.this.waitForOpenSession(newSession);
-                            }
-                        }
-                    };
-                }
-
+                Object returnValue = null;
                 try {
                     mCurrentMethodCall = call;
-                    return method.invoke((call != null) ? call.target
+                    returnValue = method.invoke((call != null) ? call.target
                                                         : Callbacks.Default.INSTANCE, args);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     throw unwrapRuntimeException(e);
                 } finally {
                     mCurrentMethodCall = null;
                 }
+
+                if (call == null || returnValue == null || !sOnNewSession.equals(method)) {
+                    return returnValue;
+                }
+
+                // We're delegating an onNewSession call.
+                // Make sure we wait on the newly opened session, if any.
+                final GeckoSession oldSession = (GeckoSession) args[0];
+
+                @SuppressWarnings("unchecked")
+                final GeckoResult<GeckoSession> result = (GeckoResult<GeckoSession>)returnValue;
+                final GeckoResult<GeckoSession> tmpResult = new GeckoResult<>();
+                result.then(new OnValueListener<GeckoSession, Void>() {
+                    @Override
+                    public GeckoResult<Void> onValue(final GeckoSession newSession) throws Throwable {
+                        tmpResult.complete(newSession);
+
+                        // GeckoSession has already hooked up its then() listener earlier,
+                        // so ours will run after. We can wait for the session to
+                        // open here.
+                        tmpResult.then(new OnValueListener<GeckoSession, Void>() {
+                            @Override
+                            public GeckoResult<Void> onValue(GeckoSession newSession) throws Throwable {
+                                if (oldSession.isOpen() && newSession != null) {
+                                    GeckoSessionTestRule.this.waitForOpenSession(newSession);
+                                }
+                                return null;
+                            }
+                        });
+                        return null;
+                    }
+                });
+
+                return tmpResult;
             }
         };
 
