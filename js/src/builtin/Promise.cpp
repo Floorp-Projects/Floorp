@@ -1660,9 +1660,9 @@ static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction);
 
-static MOZ_MUST_USE bool BlockOnPromise(JSContext* cx, HandleValue promise,
-                                        HandleObject blockedPromise,
-                                        HandleValue onFulfilled, HandleValue onRejected);
+static MOZ_MUST_USE bool
+BlockOnPromise(JSContext* cx, HandleValue promise, HandleObject blockedPromise,
+               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined);
 
 static JSFunction*
 GetResolveFunctionFromReject(JSFunction* reject)
@@ -2346,7 +2346,7 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
 
         // Step q.
         RootedValue resolveFunVal(cx, ObjectValue(*resolveFunc));
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal, true))
             return false;
 
         // Step r.
@@ -2504,6 +2504,11 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     MOZ_ASSERT(C->isConstructor());
     RootedValue CVal(cx, ObjectValue(*C));
 
+    // BlockOnPromise fast path requires the passed onFulfilled function
+    // doesn't return an object value, because otherwise the skipped promise
+    // creation is detectable due to missing property lookups.
+    bool isDefaultResolveFn = IsNativeFunction(resolve, ResolvePromiseFunction);
+
     RootedValue nextValue(cx);
     RootedValue resolveFunVal(cx, ObjectValue(*resolve));
     RootedValue rejectFunVal(cx, ObjectValue(*reject));
@@ -2540,8 +2545,11 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
             return false;
 
         // Step i.
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal,
+                            isDefaultResolveFn))
+        {
             return false;
+        }
     }
 
     MOZ_ASSERT_UNREACHABLE("Shouldn't reach the end of PerformPromiseRace");
@@ -3602,7 +3610,7 @@ PerformPromiseThenWithReaction(JSContext* cx, Handle<PromiseObject*> promise,
  */
 static MOZ_MUST_USE bool
 BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromise_,
-               HandleValue onFulfilled, HandleValue onRejected)
+               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined)
 {
     RootedObject promiseObj(cx, ToObject(cx, promiseVal));
     if (!promiseObj)
@@ -3625,7 +3633,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         if (!C)
             return false;
 
-        RootedObject resultPromise(cx, blockedPromise_);
+        RootedObject resultPromise(cx);
         RootedObject resolveFun(cx);
         RootedObject rejectFun(cx);
 
@@ -3633,7 +3641,21 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         // rejected promises list.
         bool addToDependent = true;
 
-        if (C == PromiseCtor && resultPromise->is<PromiseObject>()) {
+        // Skip the creation of a built-in Promise object if:
+        // 1. `C` is the built-in Promise constructor.
+        // 2. The `onFulfilled` handler doesn't return an object, which
+        //    ensures no side-effects take place in ResolvePromiseInternal.
+        // 3. The blocked promise is a built-in Promise object.
+        // 4. The blocked promise doesn't use the default resolving functions,
+        //    which in turn means RunResolutionFunction when called from
+        //    PromiseRectionJob won't try to resolve the promise.
+        if (C == PromiseCtor &&
+            onFulfilledReturnsUndefined &&
+            blockedPromise_->is<PromiseObject>() &&
+            !PromiseHasAnyFlag(blockedPromise_->as<PromiseObject>(),
+                               PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
+        {
+            resultPromise.set(blockedPromise_);
             addToDependent = false;
         } else {
             // 25.4.5.3., step 4.
