@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
-#include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
@@ -62,7 +61,8 @@ class DataStorageItem;
  *   anticipation of shutdown, all persistent data is synchronously written to
  *   the backing file. The worker thread responsible for these writes is then
  *   disabled to prevent further writes to that file (the delayed-write timer
- *   is cancelled when this happens).
+ *   is cancelled when this happens). Note that the "worker thread" is actually
+ *   a single thread shared between all DataStorage instances.
  * - For testing purposes, the preference "test.datastorage.write_timer_ms" can
  *   be set to cause the asynchronous writing of data to happen more quickly.
  * - To prevent unbounded memory and disk use, the number of entries in each
@@ -215,7 +215,6 @@ private:
   DataStorageTable  mPersistentDataTable;
   DataStorageTable  mTemporaryDataTable;
   DataStorageTable  mPrivateDataTable;
-  nsCOMPtr<nsIThread> mWorkerThread;
   nsCOMPtr<nsIFile> mBackingFile;
   nsCOMPtr<nsITimer> mTimer; // All uses after init must be on the worker thread
   uint32_t mTimerDelay; // in milliseconds
