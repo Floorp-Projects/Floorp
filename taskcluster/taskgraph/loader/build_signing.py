@@ -10,7 +10,9 @@ from taskgraph.loader.single_dep import loader as base_loader
 # patch because it required some heavy changes in single_dep.
 NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS = (
     'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
+    'build-win32-msvc/debug', 'build-win32-msvc/opt',
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
+    'build-win64-msvc/debug', 'build-win64-msvc/opt',
     'build-win32-devedition/opt', 'build-win64-devedition/opt',
     'build-win64-ccov/debug',
     'build-linux/opt', 'build-linux64/opt', 'build-macosx64/opt',
