@@ -10,6 +10,7 @@ with Files("**"):
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ServiceWorker.h',
+    'ServiceWorkerActors.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
@@ -28,9 +29,13 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'ServiceWorker.cpp',
+    'ServiceWorkerActors.cpp',
+    'ServiceWorkerChild.cpp',
     'ServiceWorkerCloneData.cpp',
     'ServiceWorkerContainer.cpp',
+    'ServiceWorkerContainerChild.cpp',
     'ServiceWorkerContainerImpl.cpp',
+    'ServiceWorkerContainerParent.cpp',
     'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerImpl.cpp',
@@ -42,13 +47,16 @@ UNIFIED_SOURCES += [
     'ServiceWorkerManagerChild.cpp',
     'ServiceWorkerManagerParent.cpp',
     'ServiceWorkerManagerService.cpp',
+    'ServiceWorkerParent.cpp',
     'ServiceWorkerPrivate.cpp',
     'ServiceWorkerRegisterJob.cpp',
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
+    'ServiceWorkerRegistrationChild.cpp',
     'ServiceWorkerRegistrationDescriptor.cpp',
     'ServiceWorkerRegistrationImpl.cpp',
     'ServiceWorkerRegistrationInfo.cpp',
+    'ServiceWorkerRegistrationParent.cpp',
     'ServiceWorkerScriptCache.cpp',
     'ServiceWorkerUnregisterJob.cpp',
     'ServiceWorkerUpdateJob.cpp',
@@ -60,7 +68,10 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'IPCServiceWorkerDescriptor.ipdlh',
     'IPCServiceWorkerRegistrationDescriptor.ipdlh',
+    'PServiceWorker.ipdl',
+    'PServiceWorkerContainer.ipdl',
     'PServiceWorkerManager.ipdl',
+    'PServiceWorkerRegistration.ipdl',
     'PServiceWorkerUpdater.ipdl',
     'ServiceWorkerRegistrarTypes.ipdlh',
 ]

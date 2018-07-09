@@ -27,13 +27,18 @@ include protocol PMIDIPort;
 include protocol PQuota;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
+include protocol PServiceWorker;
+include protocol PServiceWorkerContainer;
 include protocol PServiceWorkerManager;
+include protocol PServiceWorkerRegistration;
 include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
 include protocol PVsync;
 
 include DOMTypes;
 include IPCBlob;
+include IPCServiceWorkerDescriptor;
+include IPCServiceWorkerRegistrationDescriptor;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
@@ -41,6 +46,7 @@ include ProtocolTypes;
 include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
 
 using mozilla::dom::cache::Namespace
   from "mozilla/dom/cache/Types.h";
@@ -81,7 +87,10 @@ sync protocol PBackground
   manages PQuota;
   manages PChildToParentStream;
   manages PParentToChildStream;
+  manages PServiceWorker;
+  manages PServiceWorkerContainer;
   manages PServiceWorkerManager;
+  manages PServiceWorkerRegistration;
   manages PWebAuthnTransaction;
   manages PUDPSocket;
   manages PVsync;
@@ -151,6 +160,12 @@ parent:
   // This method is used to propagate storage activities from the child actor
   // to the parent actor. See StorageActivityService.
   async StorageActivity(PrincipalInfo principalInfo);
+
+  async PServiceWorker(IPCServiceWorkerDescriptor aDescriptor);
+
+  async PServiceWorkerContainer();
+
+  async PServiceWorkerRegistration(IPCServiceWorkerRegistrationDescriptor aDescriptor);
 
 child:
   async PCache();
