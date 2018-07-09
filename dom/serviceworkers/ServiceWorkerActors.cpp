@@ -19,7 +19,7 @@ namespace dom {
 PServiceWorkerChild*
 AllocServiceWorkerChild()
 {
-  return new ServiceWorkerChild();
+  MOZ_CRASH("should not be called");
 }
 
 bool
