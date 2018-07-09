@@ -206,6 +206,10 @@ TEST_F(psm_DataStorageTest, Shutdown)
   // get intermittent failures with the day not matching.
   int64_t microsecondsPerDay = 24 * 60 * 60 * int64_t(PR_USEC_PER_SEC);
   int32_t nowInDays = int32_t(PR_Now() / microsecondsPerDay);
+  // Simulate shutdown (we have to "send" both notifications - the first one
+  // dispatches an event to write out the backing file while the second one
+  // ensures this event runs and shuts down the background thread).
+  storage->Observe(nullptr, "profile-change-teardown", nullptr);
   storage->Observe(nullptr, "profile-before-change", nullptr);
   nsCOMPtr<nsIFile> backingFile;
   EXPECT_EQ(NS_OK, NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,

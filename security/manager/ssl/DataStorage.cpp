@@ -13,6 +13,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -20,6 +21,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"
+#include "nsIThread.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
@@ -35,6 +37,109 @@ static const uint32_t sMaxScore = UINT32_MAX;
 static const uint32_t sMaxDataEntries = 1024;
 static const int64_t sOneDayInMicroseconds = int64_t(24 * 60 * 60) *
                                              PR_USEC_PER_SEC;
+
+namespace {
+
+// DataStorageSharedThread provides one shared thread that every DataStorage
+// instance can use to do background work (reading/writing files and scheduling
+// timers). This means we don't have to have one thread per DataStorage
+// instance. The shared thread is initialized when the first DataStorage
+// instance is initialized (Initialize is idempotent, so it's safe to call
+// multiple times in any case).
+// When Gecko shuts down, it will send a "profile-change-teardown" notification
+// followed by "profile-before-change". As a result of the first event, all
+// DataStorage instances will dispatch an event to write out their backing data.
+// As a result of the second event, the shared thread will be shut down, which
+// ensures that these events actually run (this has to happen in two phases to
+// ensure that all DataStorage instances get a chance to dispatch their event
+// before the background thread gets shut down) (again Shutdown is idempotent,
+// so it's safe to call multiple times).
+// In some cases (e.g. xpcshell), no profile notifications will be sent, so
+// instead we rely on the notifications "xpcom-shutdown" and
+// "xpcom-shutdown-threads", respectively.
+class DataStorageSharedThread final
+{
+public:
+  static nsresult Initialize();
+  static nsresult Shutdown();
+  static nsresult Dispatch(nsIRunnable* event);
+
+private:
+  DataStorageSharedThread()
+    : mThread(nullptr)
+  { }
+
+  virtual ~DataStorageSharedThread()
+  { }
+
+  nsCOMPtr<nsIThread> mThread;
+};
+
+StaticMutex sDataStorageSharedThreadMutex;
+static DataStorageSharedThread* gDataStorageSharedThread;
+static bool gDataStorageSharedThreadShutDown = false;
+
+nsresult
+DataStorageSharedThread::Initialize()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  StaticMutexAutoLock lock(sDataStorageSharedThreadMutex);
+
+  // If this happens, we initialized a DataStorage after shutdown notifications
+  // were sent, so don't re-initialize the shared thread.
+  if (gDataStorageSharedThreadShutDown) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!gDataStorageSharedThread) {
+    gDataStorageSharedThread = new DataStorageSharedThread();
+    nsresult rv = NS_NewNamedThread("DataStorage",
+      getter_AddRefs(gDataStorageSharedThread->mThread));
+    if (NS_FAILED(rv)) {
+      gDataStorageSharedThread = nullptr;
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+DataStorageSharedThread::Shutdown()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  StaticMutexAutoLock lock(sDataStorageSharedThreadMutex);
+
+  if (!gDataStorageSharedThread) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(gDataStorageSharedThread->mThread);
+  if (!gDataStorageSharedThread->mThread) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = gDataStorageSharedThread->mThread->Shutdown();
+  gDataStorageSharedThread->mThread = nullptr;
+  gDataStorageSharedThreadShutDown = true;
+  delete gDataStorageSharedThread;
+  gDataStorageSharedThread = nullptr;
+
+  return rv;
+}
+
+nsresult
+DataStorageSharedThread::Dispatch(nsIRunnable* event)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  StaticMutexAutoLock lock(sDataStorageSharedThreadMutex);
+  if (!gDataStorageSharedThread || !gDataStorageSharedThread->mThread) {
+    return NS_ERROR_FAILURE;
+  }
+  return gDataStorageSharedThread->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+}
+
+} // unnamed namespace
 
 namespace mozilla {
 
@@ -207,11 +312,11 @@ DataStorage::SetCachedStorageEntries(
     entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
     for (auto& e : aEntries) {                       \
       if (entry.filename().Equals(e.filename())) {   \
-        entry.items() = std::move(e.items());             \
+        entry.items() = std::move(e.items());        \
         break;                                       \
       }                                              \
     }                                                \
-    entries.AppendElement(std::move(entry));              \
+    entries.AppendElement(std::move(entry));         \
   }
 #include "mozilla/DataStorageList.h"
 #undef DATA_STORAGE
@@ -268,7 +373,7 @@ DataStorage::Init(bool& aDataWillPersist,
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(!aItems);
 
-    rv = NS_NewNamedThread("DataStorage", getter_AddRefs(mWorkerThread));
+    rv = DataStorageSharedThread::Initialize();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -304,16 +409,23 @@ DataStorage::Init(bool& aDataWillPersist,
   os->AddObserver(this, "last-pb-context-exited", false);
   // Observe shutdown; save data and prevent any further writes.
   // In the parent process, we need to write to the profile directory, so
-  // we should listen for profile-before-change so that we can safely
-  // write to the profile.  In the content process however we don't have
-  // access to the profile directory and profile notifications are not
-  // dispatched, so we need to clean up on xpcom-shutdown.
+  // we should listen for profile-change-teardown and profile-before-change so
+  // that we can safely write to the profile. In the content process however we
+  // don't have access to the profile directory and profile notifications are
+  // not dispatched, so we need to clean up on xpcom-shutdown.
+  // Note that because all DataStorage instances share one background thread, we
+  // have to perform this shutdown in two stages. In the first stage
+  // ("profile-change-teardown"), all instances dispatch their write events. In
+  // the second stage ("profile-before-change"), the shared thread completes
+  // these events and shuts down.
   if (XRE_IsParentProcess()) {
+    os->AddObserver(this, "profile-change-teardown", false);
     os->AddObserver(this, "profile-before-change", false);
   }
   // In the Parent process, this is a backstop for xpcshell and other cases
   // where profile-before-change might not get sent.
-  os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  os->AddObserver(this, "xpcom-shutdown", false);
+  os->AddObserver(this, "xpcom-shutdown-threads", false);
 
   // For test purposes, we can set the write timer to be very fast.
   mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
@@ -575,7 +687,7 @@ DataStorage::AsyncReadData(bool& aHaveProfileDir,
     return rv;
   }
 
-  rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);
+  rv = DataStorageSharedThread::Dispatch(job);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -897,7 +1009,7 @@ DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/)
   }
 
   RefPtr<Writer> job(new Writer(output, this));
-  nsresult rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);
+  nsresult rv = DataStorageSharedThread::Dispatch(job);
   mPendingWrite = false;
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -956,7 +1068,7 @@ DataStorage::AsyncSetTimer(const MutexAutoLock& /*aProofOfLock*/)
   mPendingWrite = true;
   nsCOMPtr<nsIRunnable> job =
     NewRunnableMethod("DataStorage::SetTimer", this, &DataStorage::SetTimer);
-  nsresult rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);
+  nsresult rv = DataStorageSharedThread::Dispatch(job);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1009,7 +1121,7 @@ DataStorage::DispatchShutdownTimer(const MutexAutoLock& /*aProofOfLock*/)
 
   nsCOMPtr<nsIRunnable> job = NewRunnableMethod(
     "DataStorage::ShutdownTimer", this, &DataStorage::ShutdownTimer);
-  nsresult rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);
+  nsresult rv = DataStorageSharedThread::Dispatch(job);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1041,41 +1153,41 @@ DataStorage::Observe(nsISupports* /*aSubject*/, const char* aTopic,
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  nsresult rv;
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     MutexAutoLock lock(mMutex);
     mPrivateDataTable.Clear();
-  } else if (strcmp(aTopic, "profile-before-change") == 0 ||
-             (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0 &&
-              XRE_IsParentProcess())) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    // per bug 1271402, this should be safe to run multiple times
-    {
-      MutexAutoLock lock(mMutex);
-      rv = AsyncWriteData(lock);
-      mShuttingDown = true;
-      Unused << NS_WARN_IF(NS_FAILED(rv));
-      if (mTimer) {
-        rv = DispatchShutdownTimer(lock);
-        Unused << NS_WARN_IF(NS_FAILED(rv));
-      }
-    }
-    // Run the thread to completion and prevent any further events
-    // being scheduled to it. The thread may need the lock, so we can't
-    // hold it here.
-    rv = mWorkerThread->Shutdown();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    sDataStorages->Clear();
-  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    MOZ_ASSERT(!XRE_IsParentProcess());
-    sDataStorages->Clear();
   } else if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     MutexAutoLock lock(mMutex);
     mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
                                       sDataStorageDefaultTimerDelay);
+  }
+
+  if (!XRE_IsParentProcess()) {
+    if (strcmp(aTopic, "xpcom-shutdown") == 0) {
+      sDataStorages->Clear();
+    }
+    return NS_OK;
+  }
+
+  // Saving data at shutdown involves two phases. The first phase dispatches the
+  // events to write the data out. The second phase runs those events and shuts
+  // down the background thread. This ensures all DataStorage instances have an
+  // opportunity to dispatch their events before the thread goes away.
+  if (strcmp(aTopic, "profile-change-teardown") == 0 ||
+      strcmp(aTopic, "xpcom-shutdown") == 0) {
+    MutexAutoLock lock(mMutex);
+    if (!mShuttingDown) {
+      nsresult rv = AsyncWriteData(lock);
+      mShuttingDown = true;
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+      if (mTimer) {
+        Unused << DispatchShutdownTimer(lock);
+      }
+    }
+    sDataStorages->Clear();
+  } else if (strcmp(aTopic, "profile-before-change") == 0 ||
+             strcmp(aTopic, "xpcom-shutdown-threads") == 0) {
+    DataStorageSharedThread::Shutdown();
   }
 
   return NS_OK;
