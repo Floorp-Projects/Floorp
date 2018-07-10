@@ -584,6 +584,8 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             const char16_t* chars = JS_GetTwoByteExternalStringChars(str);
             ws->AssignLiteral(chars, length);
         } else {
+            // We don't bother checking for a dynamic-atom external string,
+            // because we'd just need to copy out of it anyway.
             if (!AssignJSString(cx, *ws, str))
                 return false;
         }

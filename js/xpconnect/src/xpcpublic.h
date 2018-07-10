@@ -12,6 +12,7 @@
 #include "js/GCAPI.h"
 #include "js/Proxy.h"
 
+#include "nsAtom.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
@@ -266,6 +267,28 @@ public:
         return true;
     }
 
+    static inline bool
+    DynamicAtomToJSVal(JSContext* cx, nsDynamicAtom* atom,
+                       JS::MutableHandleValue rval)
+    {
+        bool sharedAtom;
+        JSString* str = JS_NewMaybeExternalString(cx, atom->GetUTF16String(),
+                                                  atom->GetLength(),
+                                                  &sDynamicAtomFinalizer,
+                                                  &sharedAtom);
+        if (!str)
+            return false;
+        if (sharedAtom) {
+            // We only have non-owning atoms in DOMString for now.
+            // nsDynamicAtom::AddRef is always-inline and defined in a
+            // translation unit we can't get to here.  So we need to go through
+            // nsAtom::AddRef to call it.
+            static_cast<nsAtom*>(atom)->AddRef();
+        }
+        rval.setString(str);
+        return true;
+    }
+
     static MOZ_ALWAYS_INLINE bool IsLiteral(JSString* str)
     {
         return JS_IsExternalString(str) &&
@@ -279,11 +302,15 @@ public:
     }
 
 private:
-    static const JSStringFinalizer sLiteralFinalizer, sDOMStringFinalizer;
+    static const JSStringFinalizer
+      sLiteralFinalizer, sDOMStringFinalizer, sDynamicAtomFinalizer;
 
     static void FinalizeLiteral(const JSStringFinalizer* fin, char16_t* chars);
 
     static void FinalizeDOMString(const JSStringFinalizer* fin, char16_t* chars);
+
+    static void FinalizeDynamicAtom(const JSStringFinalizer* fin,
+                                    char16_t* chars);
 
     XPCStringConvert() = delete;
 };
@@ -364,6 +391,10 @@ bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
     if (str.HasLiteral()) {
         return XPCStringConvert::StringLiteralToJSVal(cx, str.Literal(),
                                                       str.LiteralLength(), rval);
+    }
+
+    if (str.HasAtom()) {
+        return XPCStringConvert::DynamicAtomToJSVal(cx, str.Atom(), rval);
     }
 
     // It's an actual XPCOM string
