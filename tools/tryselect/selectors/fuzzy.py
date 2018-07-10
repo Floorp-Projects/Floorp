@@ -19,7 +19,7 @@ from six import string_types
 from .. import preset as pset
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks
-from ..vcs import VCSHelper
+from ..push import check_working_directory, push_to_try, vcs
 
 terminal = Terminal()
 
@@ -221,10 +221,8 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         print(FZF_NOT_FOUND)
         return 1
 
-    vcs = VCSHelper.create()
-    vcs.check_working_directory(push)
-
-    all_tasks = generate_tasks(parameters, full, root=vcs.root)
+    check_working_directory(push)
+    all_tasks = generate_tasks(parameters, full, root=vcs.path)
 
     if paths:
         all_tasks = filter_by_paths(all_tasks, paths)
@@ -281,5 +279,5 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         args.extend(["query={}".format(q) for q in queries])
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
-    return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
-                           closed_tree=kwargs["closed_tree"])
+    return push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
+                       closed_tree=kwargs["closed_tree"])
