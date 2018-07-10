@@ -32,6 +32,14 @@ PERF_SUITES = [
     { 'name': "Images", 'node': "explicit/images/" }
 ]
 
+def median(values):
+    sorted_ = sorted(values)
+    med = int(len(sorted_) / 2)
+
+    if len(sorted_) % 2:
+        return sorted_[med]
+    return (sorted_[med - 1] + sorted_[med]) / 2
+
 def update_checkpoint_paths(checkpoint_files, checkpoints):
     """
     Updates checkpoints with memory report file fetched in data_path
@@ -85,15 +93,15 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
         memory_report_path = os.path.join(data_path, checkpoint['path'])
 
         name_filter = checkpoint.get('name_filter', None)
-        count = checkpoint.get('count', 0)
+        if checkpoint.get('median'):
+            process = median
+        else:
+            process = sum
 
         if node != "resident":
             totals = parse_about_memory.calculate_memory_report_values(
                                             memory_report_path, node, name_filter)
-            if count:
-                value = sum(totals.values()[:count])
-            else:
-                value = sum(totals.values())
+            value = process(totals.values())
         else:
             # For "resident" we really want RSS of the chrome ("Main") process
             # and USS of the child processes. We'll still call it resident
