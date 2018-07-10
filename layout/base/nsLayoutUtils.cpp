@@ -2322,8 +2322,12 @@ nsLayoutUtils::RoundGfxRectToAppRect(const Rect &aRect, float aFactor)
   ConstrainToCoordValues(scaledRect.y, scaledRect.height);
 
   /* Now typecast everything back.  This is guaranteed to be safe. */
-  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
-                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
+  if (aRect.IsEmpty()) {
+    return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()), 0, 0);
+  } else {
+    return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                  nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
+  }
 }
 
 nsRect
@@ -2338,8 +2342,12 @@ nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
   ConstrainToCoordValues(scaledRect.y, scaledRect.height);
 
   /* Now typecast everything back.  This is guaranteed to be safe. */
-  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
-                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
+  if (aRect.IsEmpty()) {
+    return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()), 0, 0);
+  } else {
+    return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                  nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
+  }
 }
 
 
