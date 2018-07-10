@@ -773,7 +773,6 @@ fn parse_single_direction(to_parse: &str) -> Result<SdpSingleDirection, SdpParse
     }
 }
 
-
 fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let port = to_parse.parse()?;
     if port > 65535 {
@@ -1102,6 +1101,7 @@ fn parse_fmtp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                               parameters: parameters,
                           }))
 }
+
 fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let mut tokens = to_parse.split_whitespace();
     let semantics = match tokens.next() {
@@ -1998,7 +1998,30 @@ fn test_parse_attribute_rtcp() {
 
 #[test]
 fn test_parse_attribute_rtcp_fb() {
-    assert!(parse_attribute("rtcp-fb:101 ccm fir").is_ok())
+    assert!(parse_attribute("rtcp-fb:101 ack rpsi").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ack app").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ccm").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ccm fir").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ccm tmmbr").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ccm tstr").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 ccm vbcm").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 nack").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 nack sli").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 nack pli").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 nack rpsi").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 nack app").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 trr-int 1").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 goog-remb").is_ok());
+    assert!(parse_attribute("rtcp-fb:101 transport-cc").is_ok());
+
+    assert!(parse_attribute("rtcp-fb:101 unknown").is_err());
+    assert!(parse_attribute("rtcp-fb:101 ack").is_err());
+    assert!(parse_attribute("rtcp-fb:101 ccm unknwon").is_err());
+    assert!(parse_attribute("rtcp-fb:101 nack unknown").is_err());
+    assert!(parse_attribute("rtcp-fb:101 trr-int").is_err());
+    assert!(parse_attribute("rtcp-fb:101 trr-int a").is_err());
+    assert!(parse_attribute("rtcp-fb:101 goog-remb unknown").is_err());
+    assert!(parse_attribute("rtcp-fb:101 transport-cc unknown").is_err());
 }
 
 #[test]

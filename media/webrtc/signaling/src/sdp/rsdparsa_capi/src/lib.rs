@@ -109,7 +109,7 @@ pub unsafe extern "C" fn sdp_get_origin(session: *const SdpSession) ->  RustSdpO
 
 #[no_mangle]
 pub unsafe extern "C" fn session_view(session: *const SdpSession) -> StringView {
-    StringView::from((*session).get_session().as_str())
+    StringView::from((*session).get_session())
 }
 
 #[no_mangle]

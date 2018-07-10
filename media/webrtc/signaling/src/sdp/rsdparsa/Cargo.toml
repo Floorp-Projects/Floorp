@@ -5,3 +5,14 @@ authors = ["Nils Ohlmeier <github@ohlmeier.org>"]
 
 [features]
 default = []
+# serializability
+serialize = ["serde", "serde_derive"]
+
+[dependencies]
+# clippy = {version = "*", optional = true}
+log = {version = "*"}
+serde = {version = "1.0" , optional = true}
+serde_derive = {version = "1.0" , optional = true}
+
+[dev-dependencies]
+# serde_json = {version = "1.0"}

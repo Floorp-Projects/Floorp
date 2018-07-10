@@ -1734,6 +1734,11 @@ dependencies = [
 [[package]]
 name = "rsdparsa"
 version = "0.1.0"
+dependencies = [
+ "log 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.66 (git+https://github.com/servo/serde?branch=deserialize_from_enums8)",
+]
 
 [[package]]
 name = "rsdparsa_capi"
