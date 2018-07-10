@@ -32,10 +32,9 @@
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
       is(evt[0].editable, true, "focused item is editable");
       is(evt[1].focused, true, "a11y focused item is focused");
+      is(evt[1].className, "android.widget.EditText", "editable class");
       runner.eventTextMatches(evt[1],
-        ["Text content test document",
-         "Please refrain from Mayoneggs during this salmonella scare.",
-         "text area"]);
+        ["Please refrain from Mayoneggs during this salmonella scare."]);
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_FOCUSED,
@@ -46,7 +45,7 @@
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
-      runner.eventTextMatches(evt, ["entry"]);
+      is(evt.className, "android.widget.EditText", "editable class");
       runner.isFocused("html");
 
       evt = await runner.activateCurrent(0,
@@ -66,7 +65,7 @@
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
-      runner.eventTextMatches(evt, ["entry"]);
+      is(evt.className, "android.widget.EditText", "editable class");
       runner.isFocused("html");
 
       // XXX: TEXT_SELECTION_CHANGED should be fired here
