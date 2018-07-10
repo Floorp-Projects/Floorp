@@ -484,8 +484,8 @@ WorkerDebugger::ReportPerformanceInfo()
 #else
   uint32_t pid = getpid();
 #endif
-  uint64_t wid = mWorkerPrivate->WindowID();
-  uint64_t pwid = wid;
+  bool isTopLevel= false;
+  uint64_t pwid = 0;
   nsPIDOMWindowInner* win = mWorkerPrivate->GetWindow();
   if (win) {
     nsPIDOMWindowOuter* outer = win->GetOuterWindow();
@@ -493,6 +493,7 @@ WorkerDebugger::ReportPerformanceInfo()
       nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
       if (top) {
         pwid = top->WindowID();
+        isTopLevel = pwid == mWorkerPrivate->WindowID();
       }
     }
   }
@@ -513,14 +514,14 @@ WorkerDebugger::ReportPerformanceInfo()
     CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
-                            true, items);
+      return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
+                            true, isTopLevel, items);
     }
     perf->ResetPerformanceCounters();
   }
 
-  return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
-                         true, items);
+  return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
+                         true, isTopLevel, items);
 }
 
 } // dom namespace
