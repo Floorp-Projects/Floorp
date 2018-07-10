@@ -1,5 +1,7 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 
+#[macro_use]
+extern crate log;
 #[cfg(feature="serialize")]
 #[macro_use]
 extern crate serde_derive;
@@ -138,7 +140,7 @@ impl SdpSession {
         &self.origin
     }
 
-    pub fn get_session(&self) -> &String {
+    pub fn get_session(&self) -> &str {
         &self.session
     }
 
@@ -170,20 +172,8 @@ impl SdpSession {
         self.media.extend(v)
     }
 
-    pub fn has_timing(&self) -> bool {
-        self.timing.is_some()
-    }
-
-    pub fn has_attributes(&self) -> bool {
-        !self.attribute.is_empty()
-    }
-
     pub fn get_attribute(&self, t: SdpAttributeType) -> Option<&SdpAttribute> {
        self.attribute.iter().filter(|a| SdpAttributeType::from(*a) == t).next()
-    }
-
-    pub fn has_media(&self) -> bool {
-        !self.media.is_empty()
     }
 
     pub fn add_media(&mut self, media_type: SdpMediaValue, direction: SdpAttribute, port: u32,
@@ -212,7 +202,7 @@ impl SdpSession {
 }
 
 fn parse_session(value: &str) -> Result<SdpType, SdpParserInternalError> {
-    println!("session: {}", value);
+    trace!("session: {}", value);
     Ok(SdpType::Session(String::from(value)))
 }
 
@@ -228,7 +218,7 @@ fn parse_version(value: &str) -> Result<SdpType, SdpParserInternalError> {
         return Err(SdpParserInternalError::Generic(format!("version type contains unsupported value {}",
                                                            ver)));
     };
-    println!("version: {}", ver);
+    trace!("version: {}", ver);
     Ok(SdpType::Version(ver))
 }
 
@@ -300,7 +290,7 @@ fn parse_origin(value: &str) -> Result<SdpType, SdpParserInternalError> {
         session_version,
         unicast_addr,
     };
-    println!("{}", o);
+    trace!("origin: {}", o);
     Ok(SdpType::Origin(o))
 }
 
@@ -362,7 +352,7 @@ fn parse_connection(value: &str) -> Result<SdpType, SdpParserInternalError> {
                                                        .to_string()));
     }
     let c = SdpConnection { addr, ttl, amount };
-    println!("connection: {}", c.addr);
+    trace!("connection: {}", c.addr);
     Ok(SdpType::Connection(c))
 }
 
@@ -417,7 +407,7 @@ fn parse_bandwidth(value: &str) -> Result<SdpType, SdpParserInternalError> {
         "TIAS" => SdpBandwidth::Tias(bandwidth),
         _ => SdpBandwidth::Unknown(String::from(bv[0]), bandwidth),
     };
-    println!("bandwidth: {}, {}", bv[0], bandwidth);
+    trace!("bandwidth: {}, {}", bv[0], bandwidth);
     Ok(SdpType::Bandwidth(bw))
 }
 
@@ -448,7 +438,7 @@ fn parse_timing(value: &str) -> Result<SdpType, SdpParserInternalError> {
     let start = tv[0].parse::<u64>()?;
     let stop = tv[1].parse::<u64>()?;
     let t = SdpTiming { start, stop };
-    println!("timing: {}, {}", t.start, t.stop);
+    trace!("timing: {}, {}", t.start, t.stop);
     Ok(SdpType::Timing(t))
 }
 
@@ -626,23 +616,23 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
         line_number: 0,
     };
 
-    if !session.has_timing() {
+    if !session.timing.is_some() {
         return Err(SdpParserError::Sequence {
                        message: "Missing timing type".to_string(),
                        line_number: 0,
                    });
     }
 
-    if !session.has_media() {
+    if session.media.is_empty() {
         return Err(SdpParserError::Sequence {
-                       message: "Missing media setion".to_string(),
+                       message: "Missing media section".to_string(),
                        line_number: 0,
                    });
     }
 
     if session.get_connection().is_none() {
         for msection in &session.media {
-            if !msection.has_connection() {
+            if msection.get_connection().is_none() {
                 return Err(SdpParserError::Sequence {
                     message: "Each media section must define a connection
                               if it is not defined on session level".to_string(),
@@ -917,7 +907,7 @@ fn parse_sdp_vector(lines: &[SdpLine]) -> Result<SdpSession, SdpParserError> {
             SdpType::Uri(_) |
             SdpType::Zone(_) => (),
         };
-        if sdp_session.has_media() {
+        if !sdp_session.media.is_empty() {
             break;
         };
     }
@@ -1006,7 +996,7 @@ pub fn parse_sdp(sdp: &str, fail_on_warning: bool) -> Result<SdpSession, SdpPars
     session.warnings = warnings;
 
     for warning in &session.warnings {
-        println!("Warning: {}", &warning);
+        warn!("Warning: {}", &warning);
     }
 
     Ok(session)
