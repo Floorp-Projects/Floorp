@@ -23,6 +23,14 @@ ChromeUtils.defineModuleGetter(this, "PrintingContent",
 ChromeUtils.defineModuleGetter(this, "RemoteFinder",
   "resource://gre/modules/RemoteFinder.jsm");
 
+var global = this;
+
+XPCOMUtils.defineLazyProxy(this, "PopupBlocking", () => {
+  let tmp = {};
+  ChromeUtils.import("resource://gre/modules/PopupBlocking.jsm", tmp);
+  return new tmp.PopupBlocking(global);
+});
+
 XPCOMUtils.defineLazyProxy(this, "SelectionSourceContent",
   "resource://gre/modules/SelectionSourceContent.jsm");
 
@@ -31,8 +39,6 @@ XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
   ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
   return new tmp.DateTimePickerContent(this);
 });
-
-var global = this;
 
 
 // Lazily load the finder code
@@ -57,132 +63,7 @@ Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, tru
 
 addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
 
-var PopupBlocking = {
-  popupData: null,
-  popupDataInternal: null,
-
-  init() {
-    addEventListener("DOMPopupBlocked", this, true);
-    addEventListener("pageshow", this, true);
-    addEventListener("pagehide", this, true);
-
-    addMessageListener("PopupBlocking:UnblockPopup", this);
-    addMessageListener("PopupBlocking:GetBlockedPopupList", this);
-  },
-
-  receiveMessage(msg) {
-    switch (msg.name) {
-      case "PopupBlocking:UnblockPopup": {
-        let i = msg.data.index;
-        if (this.popupData && this.popupData[i]) {
-          let data = this.popupData[i];
-          let internals = this.popupDataInternal[i];
-          let dwi = internals.requestingWindow;
-
-          // If we have a requesting window and the requesting document is
-          // still the current document, open the popup.
-          if (dwi && dwi.document == internals.requestingDocument) {
-            dwi.open(data.popupWindowURIspec, data.popupWindowName, data.popupWindowFeatures);
-          }
-        }
-        break;
-      }
-
-      case "PopupBlocking:GetBlockedPopupList": {
-        let popupData = [];
-        let length = this.popupData ? this.popupData.length : 0;
-
-        // Limit 15 popup URLs to be reported through the UI
-        length = Math.min(length, 15);
-
-        for (let i = 0; i < length; i++) {
-          let popupWindowURIspec = this.popupData[i].popupWindowURIspec;
-
-          if (popupWindowURIspec == global.content.location.href) {
-            popupWindowURIspec = "<self>";
-          } else {
-            // Limit 500 chars to be sent because the URI will be cropped
-            // by the UI anyway, and data: URIs can be significantly larger.
-            popupWindowURIspec = popupWindowURIspec.substring(0, 500);
-          }
-
-          popupData.push({popupWindowURIspec});
-        }
-
-        sendAsyncMessage("PopupBlocking:ReplyGetBlockedPopupList", {popupData});
-        break;
-      }
-    }
-  },
-
-  handleEvent(ev) {
-    switch (ev.type) {
-      case "DOMPopupBlocked":
-        return this.onPopupBlocked(ev);
-      case "pageshow":
-        return this._removeIrrelevantPopupData();
-      case "pagehide":
-        return this._removeIrrelevantPopupData(ev.target);
-    }
-    return undefined;
-  },
-
-  onPopupBlocked(ev) {
-    if (!this.popupData) {
-      this.popupData = [];
-      this.popupDataInternal = [];
-    }
-
-    let obj = {
-      popupWindowURIspec: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
-      popupWindowFeatures: ev.popupWindowFeatures,
-      popupWindowName: ev.popupWindowName
-    };
-
-    let internals = {
-      requestingWindow: ev.requestingWindow,
-      requestingDocument: ev.requestingWindow.document,
-    };
-
-    this.popupData.push(obj);
-    this.popupDataInternal.push(internals);
-    this.updateBlockedPopups(true);
-  },
-
-  _removeIrrelevantPopupData(removedDoc = null) {
-    if (this.popupData) {
-      let i = 0;
-      let oldLength = this.popupData.length;
-      while (i < this.popupData.length) {
-        let {requestingWindow, requestingDocument} = this.popupDataInternal[i];
-        // Filter out irrelevant reports.
-        if (requestingWindow && requestingWindow.document == requestingDocument &&
-            requestingDocument != removedDoc) {
-          i++;
-        } else {
-          this.popupData.splice(i, 1);
-          this.popupDataInternal.splice(i, 1);
-        }
-      }
-      if (this.popupData.length == 0) {
-        this.popupData = null;
-        this.popupDataInternal = null;
-      }
-      if (!this.popupData || oldLength > this.popupData.length) {
-        this.updateBlockedPopups(false);
-      }
-    }
-  },
-
-  updateBlockedPopups(freshPopup) {
-    sendAsyncMessage("PopupBlocking:UpdateBlockedPopups",
-      {
-        count: this.popupData ? this.popupData.length : 0,
-        freshPopup
-      });
-  },
-};
-PopupBlocking.init();
+addEventListener("DOMPopupBlocked", PopupBlocking, true);
 
 var Printing = {
   MESSAGES: [

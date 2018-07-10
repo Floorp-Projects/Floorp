@@ -221,6 +221,7 @@ EXTRA_JS_MODULES += [
     'PageMenu.jsm',
     'PageMetadata.jsm',
     'PermissionsUtils.jsm',
+    'PopupBlocking.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
     'PrintingContent.jsm',
