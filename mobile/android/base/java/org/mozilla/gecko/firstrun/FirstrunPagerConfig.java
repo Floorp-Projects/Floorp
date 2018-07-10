@@ -6,95 +6,94 @@
 package org.mozilla.gecko.firstrun;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.Experiments;
+import android.support.annotation.NonNull;
+
+import org.mozilla.gecko.mma.MmaDelegate;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class FirstrunPagerConfig {
-    public static final String LOGTAG = "FirstrunPagerConfig";
+class FirstrunPagerConfig {
+    static final String LOGTAG = "FirstrunPagerConfig";
 
-    public static final String KEY_IMAGE = "imageRes";
-    public static final String KEY_TEXT = "textRes";
-    public static final String KEY_SUBTEXT = "subtextRes";
+    static final String KEY_IMAGE = "panelImage";
+    static final String KEY_MESSAGE = "panelMessage";
+    static final String KEY_SUBTEXT = "panelDescription";
 
-   public static List<FirstrunPanelConfig> getDefault(Context context) {
+    static List<FirstrunPanelConfig> getDefault(Context context, final boolean useLocalValues) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
-       panels.add(SimplePanelConfigs.welcomePanelConfig);
-       panels.add(SimplePanelConfigs.privatePanelConfig);
-       panels.add(SimplePanelConfigs.customizePanelConfig);
-       panels.add(SimplePanelConfigs.syncPanelConfig);
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.WELCOME, useLocalValues));
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.CUSTOMIZE, useLocalValues));
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.SYNC, useLocalValues));
 
         return panels;
     }
 
-    public static List<FirstrunPanelConfig> forFxAUser(Context context) {
+    static List<FirstrunPanelConfig> forFxAUser(Context context, final boolean useLocalValues) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
-        panels.add(SimplePanelConfigs.welcomePanelConfig);
-        panels.add(SimplePanelConfigs.privatePanelConfig);
-        panels.add(SimplePanelConfigs.customizeLastPanelConfig);
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.WELCOME, useLocalValues));
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
+        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_CUSTOMIZE, useLocalValues));
 
         return panels;
     }
 
-    public static List<FirstrunPanelConfig> getRestricted() {
+    static List<FirstrunPanelConfig> getRestricted(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
-        panels.add(new FirstrunPanelConfig(RestrictedWelcomePanel.class.getName(), RestrictedWelcomePanel.TITLE_RES));
+        panels.add(new FirstrunPanelConfig(RestrictedWelcomePanel.class.getName(),
+                context.getString(RestrictedWelcomePanel.TITLE_RES)));
         return panels;
     }
 
-    public static class FirstrunPanelConfig {
-
+    static class FirstrunPanelConfig {
         private String classname;
-        private int titleRes;
+        private String title;
         private Bundle args;
 
-        public FirstrunPanelConfig(String resource, int titleRes) {
-            this(resource, titleRes, -1, -1, -1, true);
+        FirstrunPanelConfig(String resource, String title) {
+            this(resource, title, null, null, null, true);
         }
 
-        public FirstrunPanelConfig(String classname, int titleRes, int imageRes, int textRes, int subtextRes) {
-            this(classname, titleRes, imageRes, textRes, subtextRes, false);
-        }
-
-        private FirstrunPanelConfig(String classname, int titleRes, int imageRes, int textRes, int subtextRes, boolean isCustom) {
+        private FirstrunPanelConfig(String classname, String title, Bitmap image, String message,
+                                    String subtext, boolean isCustom) {
             this.classname = classname;
-            this.titleRes = titleRes;
+            this.title = title;
 
             if (!isCustom) {
-                this.args = new Bundle();
-                this.args.putInt(KEY_IMAGE, imageRes);
-                this.args.putInt(KEY_TEXT, textRes);
-                this.args.putInt(KEY_SUBTEXT, subtextRes);
+                args = new Bundle();
+                args.putParcelable(KEY_IMAGE, image);
+                args.putString(KEY_MESSAGE, message);
+                args.putString(KEY_SUBTEXT, subtext);
             }
         }
 
-        public String getClassname() {
-            return this.classname;
+        static FirstrunPanelConfig getConfiguredPanel(@NonNull Context context,
+                                                      PanelConfig.TYPE wantedPanelConfig,
+                                                      final boolean useLocalValues) {
+            PanelConfig panelConfig;
+            if (useLocalValues) {
+                panelConfig = new LocalFirstRunPanelProvider().getPanelConfig(context, wantedPanelConfig, useLocalValues);
+            } else {
+                panelConfig = new RemoteFirstRunPanelConfig().getPanelConfig(context, wantedPanelConfig, useLocalValues);
+            }
+            return new FirstrunPanelConfig(panelConfig.getClassName(), panelConfig.getTitle(),
+                    panelConfig.getImage(), panelConfig.getMessage(), panelConfig.getText(), false);
         }
 
-        public int getTitleRes() {
-            return this.titleRes;
+
+        String getClassname() {
+            return classname;
         }
 
-        public Bundle getArgs() {
+        String getTitle() {
+            return title;
+        }
+
+        Bundle getArgs() {
             return args;
         }
-    }
-
-    private static class SimplePanelConfigs {
-        public static final FirstrunPanelConfig welcomePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_welcome, R.drawable.firstrun_welcome, R.string.firstrun_urlbar_message, R.string.firstrun_urlbar_subtext);
-        public static final FirstrunPanelConfig privatePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_privacy, R.drawable.firstrun_private, R.string.firstrun_privacy_message, R.string.firstrun_privacy_subtext);
-        public static final FirstrunPanelConfig customizePanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_customize, R.drawable.firstrun_data, R.string.firstrun_customize_message, R.string.firstrun_customize_subtext);
-        public static final FirstrunPanelConfig customizeLastPanelConfig = new FirstrunPanelConfig(LastPanel.class.getName(), R.string.firstrun_panel_title_customize, R.drawable.firstrun_data, R.string.firstrun_customize_message, R.string.firstrun_customize_subtext);
-
-        public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
-
     }
 }

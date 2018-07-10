@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::ColorF;
-use query::{GpuTimer, NamedTag};
+use device::query::{GpuTimer, NamedTag};
 use std::collections::vec_deque::VecDeque;
 use std::f32;
 use time::precise_time_ns;
@@ -13,7 +13,7 @@ cfg_if! {
         use api::ColorU;
         use debug_render::DebugRenderer;
         use euclid::{Point2D, Rect, Size2D, vec2};
-        use query::GpuSampler;
+        use device::query::GpuSampler;
         use internal_types::FastHashMap;
         use renderer::MAX_VERTEX_TEXTURE_WIDTH;
         use std::mem;

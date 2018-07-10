@@ -121,6 +121,13 @@ var TelemetryUtils = {
   }),
 
   /**
+   * A fixed valid client ID used when Telemetry upload is disabled.
+   */
+  get knownClientID() {
+    return "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
+  },
+
+  /**
    * True if this is a content process.
    */
   get isContentProcess() {

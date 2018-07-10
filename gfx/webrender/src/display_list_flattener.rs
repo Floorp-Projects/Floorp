@@ -5,7 +5,7 @@
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, Epoch, ExtendMode, ExternalScrollId};
+use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, ExtendMode, ExternalScrollId};
 use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint};
 use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
@@ -150,9 +150,6 @@ pub struct DisplayListFlattener<'a> {
     /// The map of all font instances.
     font_instances: FontInstanceMap,
 
-    /// Used to track the latest flattened epoch for each pipeline.
-    pipeline_epochs: Vec<(PipelineId, Epoch)>,
-
     /// A set of pipelines that the caller has requested be made available as
     /// output textures.
     output_pipelines: &'a FastHashSet<PipelineId>,
@@ -207,8 +204,6 @@ impl<'a> DisplayListFlattener<'a> {
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
         let root_pipeline = scene.pipelines.get(&root_pipeline_id).unwrap();
 
-        let root_epoch = scene.pipeline_epochs[&root_pipeline_id];
-
         let background_color = root_pipeline
             .background_color
             .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
@@ -218,7 +213,6 @@ impl<'a> DisplayListFlattener<'a> {
             clip_scroll_tree,
             font_instances,
             config: *frame_builder_config,
-            pipeline_epochs: Vec::new(),
             output_pipelines,
             id_to_index_mapper: ClipIdToIndexMapper::default(),
             hit_testing_runs: recycle_vec(old_builder.hit_testing_runs),
@@ -243,8 +237,7 @@ impl<'a> DisplayListFlattener<'a> {
         debug_assert!(flattener.picture_stack.is_empty());
 
         new_scene.root_pipeline_id = Some(root_pipeline_id);
-        new_scene.pipeline_epochs.insert(root_pipeline_id, root_epoch);
-        new_scene.pipeline_epochs.extend(flattener.pipeline_epochs.drain(..));
+        new_scene.pipeline_epochs = scene.pipeline_epochs.clone();
         new_scene.pipelines = scene.pipelines.clone();
 
         FrameBuilder::with_display_list_flattener(
@@ -528,9 +521,6 @@ impl<'a> DisplayListFlattener<'a> {
                 reference_frame_relative_offset
             ),
         );
-
-        let epoch = self.scene.pipeline_epochs[&iframe_pipeline_id];
-        self.pipeline_epochs.push((iframe_pipeline_id, epoch));
 
         let bounds = item.rect();
         let origin = *reference_frame_relative_offset + bounds.origin.to_vector();
@@ -1892,7 +1882,6 @@ impl<'a> DisplayListFlattener<'a> {
                     rendering: image_rendering,
                     tile: None,
                 },
-                current_epoch: Epoch::invalid(),
                 alpha_type,
                 stretch_size,
                 tile_spacing,

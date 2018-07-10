@@ -55,7 +55,7 @@ fn render_blob(
     };
 
     let mut dirty_rect = dirty_rect.unwrap_or(DeviceUintRect::new(
-        DeviceUintPoint::origin(),
+        descriptor.offset.to_u32(),
         descriptor.size,
     ));
 

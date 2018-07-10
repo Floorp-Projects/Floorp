@@ -15,8 +15,7 @@ add_task(async function test_homepage_get_without_set() {
     },
   });
 
-  let defaultHomepage = Services.prefs.getComplexValue(
-    "browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+  let defaultHomepage = Services.prefs.getStringPref("browser.startup.homepage");
 
   await extension.startup();
   let homepage = await extension.awaitMessage("homepage");

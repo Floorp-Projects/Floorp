@@ -224,6 +224,7 @@ Authorized content can use the following functions:
 .. code-block:: js
 
   Mozilla.ContentTelemetry.canUpload();
+  Mozilla.ContentTelemetry.initPromise();
   Mozilla.ContentTelemetry.registerEvents(category, eventData);
   Mozilla.ContentTelemetry.recordEvent(category, method, object, value, extra);
 
@@ -254,6 +255,15 @@ Example:
   if (Mozilla.ContentTelemetry.canUpload()) {
     // ... perform the data collection here using another measurement system.
   }
+
+``Mozilla.ContentTelemetry.initPromise()``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: js
+
+  Mozilla.ContentTelemetry.initPromise();
+
+This function returns a Promise that gets resolved as soon as Hybrid Content Telemetry is correctly initialized and the value from ``canUpload`` can be reliably read.
 
 ``Mozilla.ContentTelemetry.registerEvents()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

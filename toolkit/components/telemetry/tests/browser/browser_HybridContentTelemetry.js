@@ -339,7 +339,7 @@ add_task(async function test_hybrid_content_recording() {
 add_task(async function test_can_upload() {
   const testHost = "https://example.org";
 
-  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, false]]});
+  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]]});
 
   // Give the test host enough privileges to use the API and open the test page.
   let testHttpsUri = Services.io.newURI(testHost);
@@ -349,19 +349,23 @@ add_task(async function test_can_upload() {
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   // Check that CanUpload reports the correct value.
-  await ContentTask.spawn(newTab.linkedBrowser, {}, () => {
+  await ContentTask.spawn(newTab.linkedBrowser, {}, async function() {
     let contentWin = Cu.waiveXrays(content);
+
+    await contentWin.Mozilla.ContentTelemetry.initPromise();
+
     // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(!canUpload, "CanUpload must report 'false' if the preference has that value.");
+    ok(canUpload, "CanUpload must report 'true' if the preference has that value.");
   });
 
   // Flip the pref and check again.
-  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]]});
-  await ContentTask.spawn(newTab.linkedBrowser, {}, () => {
+  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, false]]});
+  await ContentTask.spawn(newTab.linkedBrowser, {}, async function() {
     let contentWin = Cu.waiveXrays(content);
+    await contentWin.Mozilla.ContentTelemetry.initPromise();
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(canUpload, "CanUpload must report 'true' if the preference has that value.");
+    ok(!canUpload, "CanUpload must report 'false' if the preference has that value.");
   });
 
   // Cleanup permissions and remove the tab.
