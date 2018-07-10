@@ -718,13 +718,18 @@ public:
   GetIntlUtils(mozilla::ErrorResult& aRv);
 
   void
-  AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin);
+  AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin, bool aOverwritten = true);
 
-  const nsTArray<nsString>&
-  GetFirstPartyStorageAccessGrantedOrigins() const;
+  void
+  GetFirstPartyStorageAccessGrantedOrigins(nsTArray<nsString>& aOrigins);
 
   bool
-  IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const;
+  IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI);
+
+  static void
+  SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aPrincipal,
+                                                             const nsCString& aParentOrigin,
+                                                             const nsCString& aGrantedOrigin);
 
 public:
   void Alert(nsIPrincipal& aSubjectPrincipal,
@@ -1068,6 +1073,15 @@ protected:
                       mozilla::dom::CallerType aCallerType,
                       mozilla::ErrorResult& aError);
 
+  void
+  ReleaseFirstPartyStorageAccessGrantedOrigins();
+
+  void
+  SaveFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin);
+
+  void
+  MaybeRestoreFirstPartyStorageAccessGrantedOrigins();
+
   // Array of idle observers that are notified of idle events.
   nsTObserverArray<IdleObserverHolder> mIdleObservers;
 
@@ -1114,6 +1128,9 @@ protected:
 
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetParentInternal();
+
+  // Get the parent principal, returns null if this is a toplevel window.
+  nsIPrincipal* GetTopLevelStorageAreaPrincipal();
 
 public:
   // popup tracking
@@ -1485,7 +1502,12 @@ protected:
 
   nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>> mDocumentFlushedResolvers;
 
-  nsTArray<nsString> mStorageGrantedOrigins;
+  struct StorageGrantedOrigin {
+    nsString mOrigin;
+    bool mOverwritten;
+  };
+  nsTArray<StorageGrantedOrigin> mStorageGrantedOrigins;
+  bool mStorageGrantedOriginPopulated;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
