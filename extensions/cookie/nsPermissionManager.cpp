@@ -2535,15 +2535,23 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerator **aEnum)
 {
-  nsCOMArray<nsIPermission> array;
-
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(PermissionAvailable(principal, nullptr));
+  return GetAllForPrincipal(principal, aEnum);
+}
 
-  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(principal, rv);
+NS_IMETHODIMP
+nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
+                                        nsISimpleEnumerator** aEnum)
+{
+  nsCOMArray<nsIPermission> array;
+
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, nullptr));
+
+  nsresult rv;
+  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(aPrincipal, rv);
   if (!key) {
     MOZ_ASSERT(NS_FAILED(rv));
     return rv;
@@ -2559,7 +2567,7 @@ NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerato
       }
 
       nsCOMPtr<nsIPermission> permission =
-        nsPermission::Create(principal,
+        nsPermission::Create(aPrincipal,
                              mTypeArray.ElementAt(permEntry.mType),
                              permEntry.mPermission,
                              permEntry.mExpireType,
