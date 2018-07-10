@@ -4583,12 +4583,6 @@ nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
     UpdateDrawResult(ImgDrawResult::SUCCESS);
   }
 
-  // XXX(seth): Right now we ignore aParameters.Scale() and
-  // aParameters.Offset(), because FrameLayerBuilder already applies
-  // aParameters.Scale() via the layer's post-transform, and
-  // aParameters.Offset() is always zero.
-  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
-
   // It's possible (for example, due to downscale-during-decode) that the
   // ImageContainer this ImageLayer is holding has a different size from the
   // intrinsic size of the image. For this reason we compute the transform using
@@ -4606,7 +4600,8 @@ nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
     LayoutDeviceIntRect::FromAppUnitsToNearest(GetDestRect(), factor));
 
   const LayoutDevicePoint p = destRect.TopLeft();
-  Matrix transform = Matrix::Translation(p.x, p.y);
+  Matrix transform = Matrix::Translation(p.x + aParameters.mOffset.x,
+                                         p.y + aParameters.mOffset.y);
   transform.PreScale(destRect.width / containerSize.width,
                      destRect.height / containerSize.height);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));

@@ -866,10 +866,7 @@ RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList)
     return;
   }
   auto rustGroups = MakeUnique<RustSdpAttributeGroup[]>(numGroup);
-  nsresult nr = sdp_get_groups(attributeList, numGroup, rustGroups.get());
-  if (NS_FAILED(nr)) {
-    return;
-  }
+  sdp_get_groups(attributeList, numGroup, rustGroups.get());
   auto groups = MakeUnique<SdpGroupAttributeList>();
   for(size_t i = 0; i < numGroup; i++) {
     RustSdpAttributeGroup& group = rustGroups[i];
