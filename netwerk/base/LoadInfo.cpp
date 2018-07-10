@@ -1430,5 +1430,13 @@ LoadInfo::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI)
   return mFirstPartyStorageAccessGrantedOrigins.Contains(origin);
 }
 
+void
+LoadInfo::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin)
+{
+  if (!mFirstPartyStorageAccessGrantedOrigins.Contains(aOrigin)) {
+    mFirstPartyStorageAccessGrantedOrigins.AppendElement(aOrigin);
+  }
+}
+
 } // namespace net
 } // namespace mozilla
