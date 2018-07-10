@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'testDeflateStringToUTF8Buffer.cpp',
     'testDifferentNewTargetInvokeConstructor.cpp',
     'testErrorCopying.cpp',
+    'testErrorLineOfContext.cpp',
     'testException.cpp',
     'testExecuteInJSMEnvironment.cpp',
     'testExternalArrayBuffer.cpp',

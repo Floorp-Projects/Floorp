@@ -270,7 +270,7 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
     "errorMessage": "SyntaxError: redeclaration of let a",
     "errorMessageName": "JSMSG_REDECLARED_VAR",
     "sourceName": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
-    "lineText": "  let a, a;\n",
+    "lineText": "  let a, a;",
     "lineNumber": 2,
     "columnNumber": 9,
     "category": "content javascript",
