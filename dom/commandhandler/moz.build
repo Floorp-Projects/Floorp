@@ -7,6 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Embedding: APIs")
 
+EXPORTS += [
+    'nsCommandParams.h',
+]
+
 XPIDL_SOURCES += [
     'nsICommandManager.idl',
     'nsICommandParams.idl',

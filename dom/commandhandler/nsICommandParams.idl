@@ -11,6 +11,11 @@
  *
  */
 
+
+%{C++
+class nsCommandParams;
+%}
+
 [scriptable, builtinclass, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
 interface nsICommandParams : nsISupports
 {
@@ -75,6 +80,15 @@ interface nsICommandParams : nsISupports
    * Remove the specified parameter from the list.
    */
   void        removeValue(in string name);
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsCommandParams.h.  Consumers need to #include that header.
+   */
+  inline nsCommandParams* AsCommandParams();
+  inline const nsCommandParams* AsCommandParams() const;
+%}
 };
 
 // {f7fa4581-238e-11d5-a73c-ab64fb68f2bc}
