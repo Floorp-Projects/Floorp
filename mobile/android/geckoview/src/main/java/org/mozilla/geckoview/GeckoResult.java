@@ -2,7 +2,6 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,11 +16,17 @@ import java.util.ArrayList;
 public class GeckoResult<T> {
     private static final String LOGTAG = "GeckoResult";
 
+    public static final class UncaughtException extends RuntimeException {
+        public UncaughtException(final Throwable cause) {
+            super(cause);
+        }
+    }
+
     private boolean mComplete;
     private T mValue;
     private Throwable mError;
-
-    private ArrayList<Runnable> mListeners = null;
+    private boolean mIsUncaughtError;
+    private ArrayList<Runnable> mListeners;
 
     /**
      * This constructs an incomplete GeckoResult. Call {@link #complete(Object)} or
@@ -101,7 +106,7 @@ public class GeckoResult<T> {
      * @param <U>
      * @return
      */
-    public synchronized @NonNull <U> GeckoResult<U> then(@NonNull final OnValueListener<T, U> valueListener) {
+    public @NonNull <U> GeckoResult<U> then(@NonNull final OnValueListener<T, U> valueListener) {
         return then(valueListener, null);
     }
 
@@ -113,7 +118,7 @@ public class GeckoResult<T> {
      * @param <U> The type contained in the returned {@link GeckoResult}
      * @return
      */
-    public synchronized @NonNull <U> GeckoResult<U> then(@NonNull final OnExceptionListener<U> exceptionListener) {
+    public @NonNull <U> GeckoResult<U> then(@NonNull final OnExceptionListener<U> exceptionListener) {
         return then(null, exceptionListener);
     }
 
@@ -129,30 +134,41 @@ public class GeckoResult<T> {
      *                          {@link GeckoResult} is completed with an {@link Throwable}.
      * @param <U> The type contained in the returned {@link GeckoResult}
      */
-    public synchronized @NonNull <U> GeckoResult<U> then(@Nullable final OnValueListener<T, U> valueListener,
-                                                         @Nullable final OnExceptionListener<U> exceptionListener) {
+    public @NonNull <U> GeckoResult<U> then(@Nullable final OnValueListener<T, U> valueListener,
+                                            @Nullable final OnExceptionListener<U> exceptionListener) {
         if (valueListener == null && exceptionListener == null) {
             throw new IllegalArgumentException("At least one listener should be non-null");
         }
 
         final GeckoResult<U> result = new GeckoResult<U>();
-        final Runnable listener = new Runnable() {
+        then(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (valueListener != null && haveValue()) {
-                        result.completeFrom(valueListener.onValue(mValue));
-                    } else if (exceptionListener != null && haveError()) {
+                    if (haveValue()) {
+                        result.completeFrom(valueListener != null ? valueListener.onValue(mValue)
+                                                                  : null);
+                    } else if (!haveError()) {
+                        // Listener called without completion?
+                        throw new AssertionError();
+                    } else if (exceptionListener != null) {
                         result.completeFrom(exceptionListener.onException(mError));
+                    } else {
+                        result.mIsUncaughtError = mIsUncaughtError;
+                        result.completeExceptionally(mError);
                     }
                 } catch (Throwable e) {
                     if (!result.mComplete) {
+                        result.mIsUncaughtError = true;
                         result.completeExceptionally(e);
                     }
                 }
             }
-        };
+        });
+        return result;
+    }
 
+    private synchronized void then(@NonNull final Runnable listener) {
         if (mComplete) {
             dispatchLocked(listener);
         } else {
@@ -161,8 +177,6 @@ public class GeckoResult<T> {
             }
             mListeners.add(listener);
         }
-
-        return result;
     }
 
     private void dispatchLocked() {
@@ -170,18 +184,22 @@ public class GeckoResult<T> {
             throw new IllegalStateException("Cannot dispatch unless result is complete");
         }
 
-        if (mListeners == null) {
+        if (mListeners == null && !mIsUncaughtError) {
             return;
         }
 
         ThreadUtils.getUiHandler().post(new Runnable() {
             @Override
             public void run() {
-                for (final Runnable listener : mListeners) {
-                    listener.run();
+                if (mListeners != null) {
+                    for (final Runnable listener : mListeners) {
+                        listener.run();
+                    }
+                } else if (mIsUncaughtError) {
+                    // We have no listeners to forward the uncaught exception to;
+                    // rethrow the exception to make it visible.
+                    throw new UncaughtException(mError);
                 }
-
-                mListeners = null;
             }
         });
     }
@@ -210,17 +228,15 @@ public class GeckoResult<T> {
             return;
         }
 
-        other.then(new OnValueListener<T, Void>() {
+        other.then(new Runnable() {
             @Override
-            public GeckoResult<Void> onValue(T value) {
-                complete(value);
-                return null;
-            }
-        }, new OnExceptionListener<Void>() {
-            @Override
-            public GeckoResult<Void> onException(Throwable error) {
-                completeExceptionally(error);
-                return null;
+            public void run() {
+                if (other.haveValue()) {
+                    complete(other.mValue);
+                } else {
+                    mIsUncaughtError = other.mIsUncaughtError;
+                    completeExceptionally(other.mError);
+                }
             }
         });
     }
