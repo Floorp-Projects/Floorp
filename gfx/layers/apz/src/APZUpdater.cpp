@@ -455,7 +455,7 @@ APZUpdater::RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable>
 bool
 APZUpdater::UsingWebRenderUpdaterThread() const
 {
-  return (mIsUsingWebRender && gfxPrefs::WebRenderAsyncSceneBuild());
+  return mIsUsingWebRender;
 }
 
 /*static*/ already_AddRefed<APZUpdater>
@@ -564,8 +564,6 @@ apz_register_updater(mozilla::wr::WrWindowId aWindowId)
 void
 apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId)
 {
-  // This should never get called unless async scene building is enabled.
-  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
   mozilla::layers::APZUpdater::PrepareForSceneSwap(aWindowId);
 }
 
@@ -573,8 +571,6 @@ void
 apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
                     mozilla::wr::WrPipelineInfo aInfo)
 {
-  // This should never get called unless async scene building is enabled.
-  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
   mozilla::layers::APZUpdater::CompleteSceneSwap(aWindowId, aInfo);
   wr_pipeline_info_delete(aInfo);
 }
@@ -582,19 +578,12 @@ apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
 void
 apz_run_updater(mozilla::wr::WrWindowId aWindowId)
 {
-  // This should never get called unless async scene building is enabled.
-  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
   mozilla::layers::APZUpdater::ProcessPendingTasks(aWindowId);
 }
 
 void
 apz_deregister_updater(mozilla::wr::WrWindowId aWindowId)
 {
-  // Run anything that's still left. Note that this function gets called even
-  // if async scene building is off, but in that case we don't want to do
-  // anything (because the updater thread will be the compositor thread, and
-  // this will be called on the scene builder thread).
-  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
-    mozilla::layers::APZUpdater::ProcessPendingTasks(aWindowId);
-  }
+  // Run anything that's still left.
+  mozilla::layers::APZUpdater::ProcessPendingTasks(aWindowId);
 }
