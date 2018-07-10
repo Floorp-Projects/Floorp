@@ -105,7 +105,6 @@ private:
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
            LoadTainting aTainting,
-           const nsTArray<nsString>& aFirstPartyStorageAccessGrantedOrigins,
            bool aUpgradeInsecureRequests,
            bool aBrowserUpgradeInsecureRequests,
            bool aBrowserWouldUpgradeInsecureRequests,
@@ -174,7 +173,6 @@ private:
   nsSecurityFlags                  mSecurityFlags;
   nsContentPolicyType              mInternalContentPolicyType;
   LoadTainting                     mTainting;
-  nsTArray<nsString>               mFirstPartyStorageAccessGrantedOrigins;
   bool                             mUpgradeInsecureRequests;
   bool                             mBrowserUpgradeInsecureRequests;
   bool                             mBrowserWouldUpgradeInsecureRequests;

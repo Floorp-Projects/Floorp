@@ -139,12 +139,18 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
 // static
 already_AddRefed<CacheStorage>
 CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                                 nsIPrincipal* aPrincipal,
+                                 nsIPrincipal* aPrincipal, bool aStorageDisabled,
                                  bool aForceTrustedOrigin, ErrorResult& aRv)
 {
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (aStorageDisabled) {
+    NS_WARNING("CacheStorage has been disabled.");
+    RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
 
   PrincipalInfo principalInfo;
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
@@ -164,7 +170,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 
   RefPtr<CacheStorage> ref = new CacheStorage(aNamespace, aGlobal,
-                                              principalInfo, nullptr);
+                                                principalInfo, nullptr);
   return ref.forget();
 }
 
@@ -176,6 +182,12 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (!aWorkerPrivate->IsStorageAllowed()) {
+    NS_WARNING("CacheStorage is not allowed.");
+    RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
 
   if (aWorkerPrivate->GetOriginAttributes().mPrivateBrowsingId > 0) {
     NS_WARNING("CacheStorage not supported during private browsing.");
@@ -243,6 +255,7 @@ CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   ErrorResult rv;
   RefPtr<CacheStorage> storage =
     CreateOnMainThread(DEFAULT_NAMESPACE, xpc::NativeGlobal(aGlobal), principal,
+                       false, /* private browsing */
                        true,  /* force trusted */
                        rv);
   if (NS_WARN_IF(rv.MaybeSetPendingException(aCx))) {
@@ -306,11 +319,6 @@ CacheStorage::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
   if (NS_WARN_IF(NS_FAILED(mStatus))) {
     aRv.Throw(mStatus);
     return nullptr;
@@ -345,11 +353,6 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
   if (NS_WARN_IF(NS_FAILED(mStatus))) {
     aRv.Throw(mStatus);
     return nullptr;
@@ -373,11 +376,6 @@ already_AddRefed<Promise>
 CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  if (!HasStorageAccess()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
 
   if (NS_WARN_IF(NS_FAILED(mStatus))) {
     aRv.Throw(mStatus);
@@ -403,11 +401,6 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
   if (NS_WARN_IF(NS_FAILED(mStatus))) {
     aRv.Throw(mStatus);
     return nullptr;
@@ -431,11 +424,6 @@ already_AddRefed<Promise>
 CacheStorage::Keys(ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  if (!HasStorageAccess()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
 
   if (NS_WARN_IF(NS_FAILED(mStatus))) {
     aRv.Throw(mStatus);
@@ -487,14 +475,9 @@ CacheStorage::Constructor(const GlobalObject& aGlobal,
     }
   }
 
-  if (privateBrowsing) {
-    RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
-    return ref.forget();
-  }
-
   // Create a CacheStorage object bypassing the trusted origin checks
   // since this is a chrome-only constructor.
-  return CreateOnMainThread(ns, global, aPrincipal,
+  return CreateOnMainThread(ns, global, aPrincipal, privateBrowsing,
                             true /* force trusted origin */, aRv);
 }
 
@@ -584,28 +567,6 @@ OpenMode
 CacheStorage::GetOpenMode() const
 {
   return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
-}
-
-bool
-CacheStorage::HasStorageAccess() const
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-    if (NS_WARN_IF(!window)) {
-      return true;
-    }
-
-    nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForWindow(window);
-    return access > nsContentUtils::StorageAccess::ePrivateBrowsing;
-  }
-
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  return workerPrivate->IsStorageAllowed();
 }
 
 } // namespace cache

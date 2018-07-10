@@ -23,7 +23,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/URLExtraData.h"
 #include <algorithm>
 
@@ -12416,60 +12415,8 @@ nsIDocument::NotifyUserGestureActivation()
             LogLevel::Debug,
             ("Document %p has been activated by user.", this));
     doc->mUserGestureActivated = true;
-    doc->MaybeAllowStorageForOpener();
     doc = doc->GetSameTypeParentDocument();
   }
-}
-
-void
-nsIDocument::MaybeAllowStorageForOpener()
-{
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
-    return;
-  }
-
-  // This will probably change for project fission, but currently this document
-  // and the opener are on the same process. In the future, we should make this
-  // part async.
-
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (NS_WARN_IF(!inner)) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
-  if (NS_WARN_IF(!outer)) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outerOpener = outer->GetOpener();
-  if (NS_WARN_IF(!outerOpener)) {
-    return;
-  }
-
-  nsPIDOMWindowInner* openerInner = outerOpener->GetCurrentInnerWindow();
-  if (NS_WARN_IF(!openerInner)) {
-    return;
-  }
-
-  // No 3rd party.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
-                                                   nullptr)) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri = GetDocumentURI();
-  if (NS_WARN_IF(!uri)) {
-    return;
-  }
-
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsGlobalWindowInner::Cast(openerInner)->AddFirstPartyStorageAccessGrantedFor(origin);
 }
 
 bool

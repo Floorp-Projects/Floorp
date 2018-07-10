@@ -152,9 +152,6 @@ public:
   void
   ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
-
   nsresult
   CreateSharedWorker(const GlobalObject& aGlobal,
                      const nsAString& aScriptURL,
