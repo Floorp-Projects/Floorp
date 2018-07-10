@@ -468,6 +468,7 @@ child:
 
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
+    async RemoveAllPermissions();
 
     async FlushMemory(nsString reason);
 

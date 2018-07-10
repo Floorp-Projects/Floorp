@@ -2118,8 +2118,30 @@ nsPermissionManager::CloseDB(bool aRebuildOnSuccess)
 }
 
 nsresult
+nsPermissionManager::RemoveAllFromIPC()
+{
+  MOZ_ASSERT(IsChildProcess());
+
+  // Remove from memory and notify immediately. Since the in-memory
+  // database is authoritative, we do not need confirmation from the
+  // on-disk database to notify observers.
+  RemoveAllFromMemory();
+
+  return NS_OK;
+}
+
+nsresult
 nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
 {
+  ENSURE_NOT_CHILD_PROCESS;
+
+  // Let's broadcast the removeAll() to any content process.
+  nsTArray<ContentParent*> parents;
+  ContentParent::GetAll(parents);
+  for (ContentParent* parent : parents) {
+    Unused << parent->SendRemoveAllPermissions();
+  }
+
   // Remove from memory and notify immediately. Since the in-memory
   // database is authoritative, we do not need confirmation from the
   // on-disk database to notify observers.
