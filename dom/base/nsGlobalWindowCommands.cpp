@@ -10,6 +10,7 @@
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsCommandParams.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "mozilla/ArrayUtils.h"
@@ -734,8 +735,9 @@ nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIConten
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_DATA);
   int32_t copyFlags = nsIContentViewerEdit::COPY_IMAGE_DATA |
                       nsIContentViewerEdit::COPY_IMAGE_HTML;
-  if (aParams)
-    aParams->GetLongValue("imageCopy", &copyFlags);
+  if (aParams) {
+    copyFlags = aParams->AsCommandParams()->GetInt("imageCopy");
+  }
   return aEdit->CopyImage(copyFlags);
 }
 
@@ -775,22 +777,23 @@ nsClipboardGetContentsCommand::DoClipboardCommand(const char *aCommandName, nsIC
 {
   NS_ENSURE_ARG(aParams);
 
+  nsCommandParams* params = aParams->AsCommandParams();
+
   nsAutoCString mimeType("text/plain");
 
   nsAutoCString format;
-  if (NS_SUCCEEDED(aParams->GetCStringValue("format", format))) {
+  if (NS_SUCCEEDED(params->GetCString("format", format))) {
     mimeType.Assign(format);
   }
 
-  bool selectionOnly = false;
-  aParams->GetBooleanValue("selection_only", &selectionOnly);
-
   nsAutoString contents;
-  nsresult rv = aEdit->GetContents(mimeType.get(), selectionOnly, contents);
-  if (NS_FAILED(rv))
+  nsresult rv =
+    aEdit->GetContents(mimeType.get(), params->GetBool("selection_only"),
+                       contents);
+  if (NS_FAILED(rv)) {
     return rv;
-
-  return aParams->SetStringValue("result", contents);
+  }
+  return params->SetString("result", contents);
 }
 
 #if 0   // Remove unless needed again, bug 204777
@@ -960,17 +963,16 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  int32_t x;
-  int32_t y;
+  nsCommandParams* params = aParams->AsCommandParams();
 
-  nsresult rv = aParams->GetLongValue("x", &x);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult error;
+  int32_t x = params->GetInt("x", error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
-
-  rv = aParams->GetLongValue("y", &y);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  int32_t y = params->GetInt("y", error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
 
   LayoutDeviceIntPoint point(x, y);

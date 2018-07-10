@@ -10,12 +10,12 @@
 #include "mozilla/FlushType.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Selection.h"
+#include "nsCommandParams.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIClipboard.h"
-#include "nsICommandParams.h"
 #include "nsID.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
@@ -99,7 +99,7 @@ UndoCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -158,7 +158,7 @@ RedoCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -220,7 +220,7 @@ ClearUndoCommand::GetCommandStateParams(const char* aCommandName,
   nsresult rv = IsCommandEnabled(aCommandName, aCommandRefCon, &enabled);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aParams->SetBooleanValue(STATE_ENABLED, enabled);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, enabled);
 }
 
 /******************************************************************************
@@ -278,7 +278,7 @@ CutCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -342,7 +342,7 @@ CutOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -395,7 +395,7 @@ CopyCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -460,7 +460,7 @@ CopyOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -521,7 +521,7 @@ CopyAndCollapseToEndCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -579,7 +579,7 @@ PasteCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -627,8 +627,8 @@ PasteTransferableCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISupports> supports;
-  aParams->GetISupportsValue("transferable", getter_AddRefs(supports));
+  nsCOMPtr<nsISupports> supports =
+    aParams->AsCommandParams()->GetISupports("transferable");
   if (NS_WARN_IF(!supports)) {
     return NS_ERROR_FAILURE;
   }
@@ -653,8 +653,8 @@ PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISupports> supports;
-  aParams->GetISupportsValue("transferable", getter_AddRefs(supports));
+  nsCOMPtr<nsISupports> supports =
+    aParams->AsCommandParams()->GetISupports("transferable");
   if (NS_WARN_IF(!supports)) {
     return NS_ERROR_FAILURE;
   }
@@ -668,8 +668,8 @@ PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
 
-  return aParams->SetBooleanValue(STATE_ENABLED,
-                                  textEditor->CanPasteTransferable(trans));
+  return aParams->AsCommandParams()->SetBool(
+           STATE_ENABLED, textEditor->CanPasteTransferable(trans));
 }
 
 /******************************************************************************
@@ -723,7 +723,8 @@ SwitchTextDirectionCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canSwitchTextDirection = true;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canSwitchTextDirection);
-  return aParams->SetBooleanValue(STATE_ENABLED, canSwitchTextDirection);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED,
+                                             canSwitchTextDirection);
 }
 
 /******************************************************************************
@@ -820,7 +821,7 @@ DeleteCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -884,7 +885,7 @@ SelectAllCommand::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -1050,7 +1051,7 @@ SelectionMoveCommands::GetCommandStateParams(const char* aCommandName,
 {
   bool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
 }
 
 /******************************************************************************
@@ -1114,7 +1115,7 @@ InsertPlaintextCommand::DoCommandParams(const char* aCommandName,
 
   // Get text to insert from command params
   nsAutoString text;
-  nsresult rv = aParams->GetStringValue(STATE_DATA, text);
+  nsresult rv = aParams->AsCommandParams()->GetString(STATE_DATA, text);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1143,7 +1144,7 @@ InsertPlaintextCommand::GetCommandStateParams(const char* aCommandName,
 
   bool aIsEnabled = false;
   IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->SetBooleanValue(STATE_ENABLED, aIsEnabled);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
 }
 
 /******************************************************************************
@@ -1205,7 +1206,7 @@ InsertParagraphCommand::GetCommandStateParams(const char* aCommandName,
 
   bool aIsEnabled = false;
   IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->SetBooleanValue(STATE_ENABLED, aIsEnabled);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
 }
 
 /******************************************************************************
@@ -1269,7 +1270,7 @@ InsertLineBreakCommand::GetCommandStateParams(const char* aCommandName,
 
   bool aIsEnabled = false;
   IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->SetBooleanValue(STATE_ENABLED, aIsEnabled);
+  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
 }
 
 /******************************************************************************
@@ -1339,7 +1340,7 @@ PasteQuotationCommand::GetCommandStateParams(const char* aCommandName,
   MOZ_ASSERT(textEditor);
   bool enabled = false;
   textEditor->CanPaste(nsIClipboard::kGlobalClipboard, &enabled);
-  aParams->SetBooleanValue(STATE_ENABLED, enabled);
+  aParams->AsCommandParams()->SetBool(STATE_ENABLED, enabled);
   return NS_OK;
 }
 

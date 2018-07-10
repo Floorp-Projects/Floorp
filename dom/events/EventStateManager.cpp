@@ -31,6 +31,7 @@
 #include "IMEContentObserver.h"
 #include "WheelHandlingHelper.h"
 
+#include "nsCommandParams.h"
 #include "nsCOMPtr.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
@@ -5635,12 +5636,11 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
             nsCOMPtr<nsICommandController> commandController = do_QueryInterface(controller);
             NS_ENSURE_STATE(commandController);
 
-            nsCOMPtr<nsICommandParams> params = do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            rv = params->SetISupportsValue("transferable", aEvent->mTransferable);
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            RefPtr<nsCommandParams> params = new nsCommandParams();
+            rv = params->SetISupports("transferable", aEvent->mTransferable);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
             rv = commandController->DoCommandWithParams(cmd, params);
           }
           break;
@@ -5653,18 +5653,13 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
             return NS_ERROR_FAILURE;
           }
 
-          nsCOMPtr<nsICommandParams> params =
-            do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
+          RefPtr<nsCommandParams> params = new nsCommandParams();
+          rv = params->SetInt("x", aEvent->mRefPoint.x);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
 
-          rv = params->SetLongValue("x", aEvent->mRefPoint.x);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          rv = params->SetLongValue("y", aEvent->mRefPoint.y);
+          rv = params->SetInt("y", aEvent->mRefPoint.y);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
