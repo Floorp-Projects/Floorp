@@ -1,0 +1,12 @@
+This directory is for adding short performance tests that will be tracked in
+Talos and receive regression alerts.
+
+To add a test:
+
+1)  Create a test HTML file which includes <script src="util.js"></script>
+2)  In that file, have an onload handler which does the following:
+   i) Any pre-test setup needed.
+  ii) A call to perf_start().
+ iii) The test steps.
+  iv) A call to perf_finish().
+3)  Add your test to the perf_reftest_singletons.manifest file.

@@ -47,6 +47,21 @@ XPCStringConvert::FinalizeDOMString(const JSStringFinalizer* fin, char16_t* char
 const JSStringFinalizer XPCStringConvert::sDOMStringFinalizer =
     { XPCStringConvert::FinalizeDOMString };
 
+// static
+void
+XPCStringConvert::FinalizeDynamicAtom(const JSStringFinalizer* fin,
+                                      char16_t* chars)
+{
+    nsDynamicAtom* atom = nsDynamicAtom::FromChars(chars);
+    // nsDynamicAtom::Release is always-inline and defined in a translation unit
+    // we can't get to here.  So we need to go through nsAtom::Release to call
+    // it.
+    static_cast<nsAtom*>(atom)->Release();
+}
+
+const JSStringFinalizer XPCStringConvert::sDynamicAtomFinalizer =
+    { XPCStringConvert::FinalizeDynamicAtom };
+
 // convert a readable to a JSString, copying string data
 // static
 bool

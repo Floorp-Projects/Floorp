@@ -15,3 +15,11 @@
 % http://localhost/tests/perf-reftest-singletons/nth-index-2.html
 
 % http://localhost/tests/perf-reftest-singletons/bidi-resolution-1.html
+
+% http://localhost/tests/perf-reftest-singletons/id-getter-1.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-2.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-3.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-4.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-5.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-6.html
+% http://localhost/tests/perf-reftest-singletons/id-getter-7.html
