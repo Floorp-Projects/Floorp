@@ -3279,6 +3279,25 @@ NextWindowID()
   return (processBits << kWindowIDWindowBits) | windowBits;
 }
 
+// This code goes here rather than nsGlobalWindow.cpp because nsGlobalWindow.cpp
+// can't include ContentChild.h since it includes windows.h.
+void
+SendFirstPartyStorageAccessGrantedForOriginToParentProcess(nsIPrincipal* aPrincipal,
+                                                           const nsACString& aParentOrigin,
+                                                           const nsACString& aGrantedOrigin)
+{
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+
+  // This is not really secure, because here we have the content process sending
+  // the request of storing a permission.
+  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(aPrincipal),
+                                                            nsCString(aParentOrigin),
+                                                            nsCString(aGrantedOrigin));
+}
+
 mozilla::ipc::IPCResult
 ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                     const uint32_t& aAction)
