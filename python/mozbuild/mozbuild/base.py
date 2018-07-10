@@ -757,11 +757,11 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.virtualenv_manager.install_pip_package(path, vendored=True)
         return pipenv
 
-    def activate_pipenv(self, pipfile=None, populate=False, python=None):
+    def activate_pipenv(self, pipfile=None, args=None, populate=False):
         if pipfile is not None and not os.path.exists(pipfile):
             raise Exception('Pipfile not found: %s.' % pipfile)
         self.ensure_pipenv()
-        self.virtualenv_manager.activate_pipenv(pipfile, populate, python)
+        self.virtualenv_manager.activate_pipenv(pipfile, args, populate)
 
 
 class MachCommandBase(MozbuildObject):
