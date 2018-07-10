@@ -56,6 +56,13 @@ public class GeckoResultTest {
         mDone = false;
     }
 
+    @Test(expected = RuntimeException.class)
+    public void createWithoutLooper() {
+        // Without @UiThreadTest this will be run in a worker
+        // thread that does not have a Looper.
+        new GeckoResult<Integer>();
+    }
+
     @Test
     @UiThreadTest
     public void thenWithResult() {
@@ -163,6 +170,33 @@ public class GeckoResultTest {
 
         thread.start();
         waitUntilDone();
+    }
+
+    @Test
+    @UiThreadTest
+    public void dispatchOnInitialThread() throws InterruptedException {
+        final Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                final Thread dispatchThread = Thread.currentThread();
+
+                GeckoResult.fromValue(42).then(new OnValueListener<Integer, Void>() {
+                    @Override
+                    public GeckoResult<Void> onValue(Integer value) throws Throwable {
+                        assertThat("Thread should match", Thread.currentThread(),
+                                equalTo(dispatchThread));
+                        Looper.myLooper().quit();
+                        return null;
+                    }
+                });
+
+                Looper.loop();
+            }
+        });
+
+        thread.start();
+        thread.join();
     }
 
     @Test
