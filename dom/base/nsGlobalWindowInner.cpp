@@ -5204,17 +5204,8 @@ nsGlobalWindowInner::GetCaches(ErrorResult& aRv)
   if (!mCacheStorage) {
     bool forceTrustedOrigin =
       GetOuterWindow()->GetServiceWorkersTestingEnabled();
-
-    nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForWindow(this);
-
-    // We don't block the cache API when being told to only allow storage for the
-    // current session.
-    bool storageBlocked = access <= nsContentUtils::StorageAccess::ePrivateBrowsing;
-
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
                                                      this, GetPrincipal(),
-                                                     storageBlocked,
                                                      forceTrustedOrigin, aRv);
   }
 
