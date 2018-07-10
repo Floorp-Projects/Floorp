@@ -623,9 +623,26 @@ ReparentFrameInternal(nsIFrame* aFrame, nsContainerFrame* aOldParent,
 }
 
 static bool
-ShouldMarkReparentedFramesDirty(nsIFrame* aNewParent,
-                                ReparentingDirection aDirection)
+ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                         nsContainerFrame* aOldParent,
+#endif
+                         nsIFrame* aNewParent,
+                         ReparentingDirection aDirection)
 {
+#ifdef DEBUG
+  MOZ_ASSERT(aOldParent->FirstInFlow() == aNewParent->FirstInFlow(),
+             "Reparenting should be between continuations of the same frame");
+  if (aOldParent->FirstInFlow() == aNewParent->FirstInFlow()) {
+    auto IndexInFlow =
+      [](const nsIFrame* f) {
+        int i = 0; while ((f = f->GetPrevInFlow())) { ++i; } return i;
+      };
+    MOZ_ASSERT((IndexInFlow(aOldParent) < IndexInFlow(aNewParent)) ==
+               (aDirection == ReparentingDirection::Forwards),
+               "Parents not in expected order");
+  }
+#endif
   return (aDirection == ReparentingDirection::Backwards) &&
          (aNewParent->GetStateBits() & NS_FRAME_IS_DIRTY);
 }
@@ -639,7 +656,11 @@ static void
 ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
               nsContainerFrame* aNewParent, ReparentingDirection aDirection)
 {
-  const bool markDirty = ShouldMarkReparentedFramesDirty(aNewParent, aDirection);
+  const bool markDirty = ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                                                         aOldParent,
+#endif
+                                                         aNewParent, aDirection);
   ReparentFrameInternal(aFrame, aOldParent, aNewParent, markDirty);
 }
 
@@ -647,7 +668,11 @@ static void
 ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
                nsContainerFrame* aNewParent, ReparentingDirection aDirection)
 {
-  const bool markDirty = ShouldMarkReparentedFramesDirty(aNewParent, aDirection);
+  const bool markDirty = ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                                                         aOldParent,
+#endif
+                                                         aNewParent, aDirection);
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     ReparentFrameInternal(e.get(), aOldParent, aNewParent, markDirty);
   }
