@@ -241,8 +241,10 @@ public final class GeckoRuntime implements Parcelable {
     /**
      * Get the profile directory for this runtime. This is where Gecko stores
      * internal data.
+     *
+     * @return Profile directory
      */
-    public File getProfileDir() {
+    @NonNull public File getProfileDir() {
         return GeckoThread.getActiveProfile().getDir();
     }
 
