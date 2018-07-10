@@ -179,8 +179,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         bool allowsInlineScript = true;
         rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                   EmptyString(), // aNonce
-                                  true,         // aParserCreated
-                                  nullptr, // aContent
+                                  true,          // aParserCreated
+                                  nullptr,       // aElement,
+                                  EmptyString(), // aContent
                                   0,             // aLineNumber
                                   0,             // aColumnNumber
                                   &allowsInlineScript);
