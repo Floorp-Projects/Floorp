@@ -11486,7 +11486,7 @@
   },
   "FX_SANITIZE_TOTAL": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11495,7 +11495,7 @@
   },
   "FX_SANITIZE_CACHE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11504,7 +11504,7 @@
   },
   "FX_SANITIZE_COOKIES_2": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11513,7 +11513,7 @@
   },
   "FX_SANITIZE_HISTORY": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11522,7 +11522,7 @@
   },
   "FX_SANITIZE_FORMDATA": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11531,7 +11531,7 @@
   },
   "FX_SANITIZE_DOWNLOADS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11540,7 +11540,7 @@
   },
   "FX_SANITIZE_SESSIONS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11549,7 +11549,7 @@
   },
   "FX_SANITIZE_SITESETTINGS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -11558,7 +11558,7 @@
   },
   "FX_SANITIZE_OPENWINDOWS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "jhofmann@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
