@@ -11,7 +11,9 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -131,6 +133,7 @@ public class SessionAccessibility {
                             info.setSource(mView, virtualDescendantId);
                             info.setVisibleToUser(mView.isShown());
                             info.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
+                            info.setClassName(mView.getClass().getName());
                             info.setEnabled(true);
                             info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
                             info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
@@ -321,6 +324,7 @@ public class SessionAccessibility {
     private AccessibilityEvent obtainEvent(final int eventType, final int sourceId) {
         AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
         event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
+        event.setClassName(SessionAccessibility.class.getName());
         event.setSource(mView, sourceId);
 
         return event;
@@ -333,8 +337,6 @@ public class SessionAccessibility {
                 event.getText().add(textArray[i] != null ? textArray[i] : "");
         }
 
-        if (message.containsKey("className"))
-            event.setClassName(message.getString("className"));
         event.setContentDescription(message.getString("description", ""));
         event.setEnabled(message.getBoolean("enabled", true));
         event.setChecked(message.getBoolean("checked"));
@@ -361,10 +363,8 @@ public class SessionAccessibility {
         node.setFocusable(message.getBoolean("focusable"));
         node.setFocused(message.getBoolean("focused"));
         if (Build.VERSION.SDK_INT >= 18) {
-            node.setEditable(message.getBoolean("editable"));
+          node.setEditable(message.getBoolean("editable"));
         }
-
-        node.setClassName(message.getString("className", "android.view.View"));
 
         final String[] textArray = message.getStringArray("text");
         StringBuilder sb = new StringBuilder();
@@ -382,29 +382,21 @@ public class SessionAccessibility {
             node.addAction(AccessibilityNodeInfo.ACTION_CLICK);
         }
 
-        if (message.containsKey("hint")) {
-            Bundle bundle = node.getExtras();
-            bundle.putCharSequence("AccessibilityNodeInfo.hint", message.getString("hint"));
-        }
-    }
-
-    private void updateBounds(final AccessibilityNodeInfo node, final GeckoBundle message) {
         final GeckoBundle bounds = message.getBundle("bounds");
-        if (bounds == null) {
-            return;
+        if (bounds != null) {
+            Rect screenBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
+                                         bounds.getInt("right"), bounds.getInt("bottom"));
+            node.setBoundsInScreen(screenBounds);
+
+            final Matrix matrix = new Matrix();
+            final float[] origin = new float[2];
+            mSession.getClientToScreenMatrix(matrix);
+            matrix.mapPoints(origin);
+
+            screenBounds.offset((int) -origin[0], (int) -origin[1]);
+            node.setBoundsInParent(screenBounds);
         }
 
-        Rect screenBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
-                                     bounds.getInt("right"), bounds.getInt("bottom"));
-        node.setBoundsInScreen(screenBounds);
-
-        final Matrix matrix = new Matrix();
-        final float[] origin = new float[2];
-        mSession.getClientToScreenMatrix(matrix);
-        matrix.mapPoints(origin);
-
-        screenBounds.offset((int) -origin[0], (int) -origin[1]);
-        node.setBoundsInParent(screenBounds);
     }
 
     private void sendAccessibilityEvent(final GeckoBundle message) {
@@ -443,11 +435,6 @@ public class SessionAccessibility {
             }
             mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
             populateNodeInfoFromJSON(mVirtualContentNode, message);
-        }
-
-        if (mVirtualContentNode != null) {
-            // Bounds for the virtual content can be updated from any event.
-            updateBounds(mVirtualContentNode, message);
         }
 
         final AccessibilityEvent accessibilityEvent = obtainEvent(eventType, eventSource);
