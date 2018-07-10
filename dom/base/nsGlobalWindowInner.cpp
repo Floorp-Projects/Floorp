@@ -18,7 +18,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/AutoplayRequest.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -8189,14 +8188,11 @@ nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedFor(const nsAString& aOri
     return;
   }
 
-  ContentChild* cc = ContentChild::GetSingleton();
-  MOZ_ASSERT(cc);
-
-  // This is not really secure, because here we have the content process sending
-  // the request of storing a permission.
-  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(principal),
-                                                            parentOrigin,
-                                                            grantedOrigin);
+  // We have this external function because ContentChild includes windows.h and
+  // for this reason it cannot be included here.
+  SendFirstPartyStorageAccessGrantedForOriginToParentProcess(principal,
+                                                             parentOrigin,
+                                                             grantedOrigin);
 }
 
 /* static */ void
@@ -8480,8 +8476,15 @@ nsPIDOMWindowInner::GetAutoplayRequest()
 // XXX: Can we define this in a header instead of here?
 namespace mozilla {
 namespace dom {
+
 extern uint64_t
 NextWindowID();
+
+extern void
+SendFirstPartyStorageAccessGrantedForOriginToParentProcess(nsIPrincipal* aPrincipal,
+                                                           const nsACString& aParentOrigin,
+                                                           const nsACString& aGrantedOrigin);
+
 } // namespace dom
 } // namespace mozilla
 
