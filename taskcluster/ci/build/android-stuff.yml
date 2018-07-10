@@ -55,6 +55,7 @@ android-test-ccov/opt:
         kind: build
         tier: 1
         symbol: A(test-ccov)
+    run-on-projects: [mozilla-central]
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
