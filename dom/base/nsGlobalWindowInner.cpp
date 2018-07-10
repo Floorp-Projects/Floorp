@@ -36,6 +36,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/dom/WindowOrientationObserver.h"
 #endif
+#include "mozilla/StaticPrefs.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
@@ -8032,6 +8033,34 @@ nsGlobalWindowInner::GetRegionalPrefsLocales(nsTArray<nsString>& aLocales)
   for (const auto& loc : rpLocales) {
     aLocales.AppendElement(NS_ConvertUTF8toUTF16(loc));
   }
+}
+
+void
+nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin)
+{
+  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
+
+  if (mStorageGrantedOrigins.Contains(aOrigin)) {
+    mStorageGrantedOrigins.AppendElement(aOrigin);
+  }
+}
+
+bool
+nsGlobalWindowInner::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const
+{
+  MOZ_ASSERT(aURI);
+
+  if (mStorageGrantedOrigins.IsEmpty()) {
+    return false;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return mStorageGrantedOrigins.Contains(origin);
 }
 
 IntlUtils*
