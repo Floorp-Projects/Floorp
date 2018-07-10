@@ -131,25 +131,27 @@ toolbar[mode="text"] .toolbarbutton-text {
   margin: 3px 5px !important;
 }
 
-toolbar[is="printpreview-toolbar"] .navigate-button {
+/* ::::: print preview ::::: */
+
+.print-preview-navigate-button {
   min-width: 1.9em;
 }
 
-toolbar[is="printpreview-toolbar"] .navigate-button > .toolbarbutton-icon {
+.print-preview-navigate-button > .toolbarbutton-icon {
   display: none;
 }
 
-toolbar[is="printpreview-toolbar"] .toolbar-portrait-page {
+#print-preview-portrait-button {
   list-style-image: url("chrome://global/skin/icons/Print-preview.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-toolbar[is="printpreview-toolbar"] .toolbar-landscape-page {
+#print-preview-landscape-button {
   list-style-image: url("chrome://global/skin/icons/Print-preview.png");
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-toolbar[is="printpreview-toolbar"] #pageNumber {
+#print-preview-pageNumber {
   width: 3ch;
 }
 
