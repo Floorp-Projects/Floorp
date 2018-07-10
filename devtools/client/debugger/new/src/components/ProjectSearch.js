@@ -47,10 +47,9 @@ var _SearchInput2 = _interopRequireDefault(_SearchInput);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getFilePath(item, index) {
   return item.type === "RESULT" ? `${item.sourceId}-${index || "$"}` : `${item.sourceId}-${item.line}-${item.column}-${index || "$"}`;
 }
@@ -84,7 +83,8 @@ class ProjectSearch extends _react.Component {
     this.isProjectSearchEnabled = () => this.props.activeSearch === "project";
 
     this.selectMatchItem = matchItem => {
-      this.props.selectLocation(_objectSpread({}, matchItem));
+      this.props.selectLocation({ ...matchItem
+      });
       this.props.doSearchForHighlight(this.state.inputValue, (0, _editor.getEditor)(), matchItem.line, matchItem.column);
     };
 
@@ -92,12 +92,13 @@ class ProjectSearch extends _react.Component {
       const {
         results
       } = this.props;
-      return results.toJS().map(result => _objectSpread({
-        type: "RESULT"
-      }, result, {
-        matches: result.matches.map(m => _objectSpread({
-          type: "MATCH"
-        }, m))
+      return results.toJS().map(result => ({
+        type: "RESULT",
+        ...result,
+        matches: result.matches.map(m => ({
+          type: "MATCH",
+          ...m
+        }))
       })).filter(result => result.filepath && result.matches.length > 0);
     };
 

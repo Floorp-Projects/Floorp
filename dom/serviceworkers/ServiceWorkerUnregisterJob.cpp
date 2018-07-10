@@ -6,7 +6,10 @@
 
 #include "ServiceWorkerUnregisterJob.h"
 
+#include "mozilla/Unused.h"
 #include "nsIPushService.h"
+#include "nsThreadUtils.h"
+#include "ServiceWorkerManager.h"
 
 namespace mozilla {
 namespace dom {

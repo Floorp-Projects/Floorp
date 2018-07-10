@@ -18,10 +18,9 @@ var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getLocation(frame, isGeneratedSource) {
   return isGeneratedSource ? frame.generatedLocation || frame.location : frame.location;
 }
@@ -33,10 +32,10 @@ function getSourceForFrame(sources, frame, isGeneratedSource) {
 
 function appendSource(sources, frame, selectedSource) {
   const isGeneratedSource = selectedSource && !(0, _devtoolsSourceMap.isOriginalId)(selectedSource.id);
-  return _objectSpread({}, frame, {
+  return { ...frame,
     location: getLocation(frame, isGeneratedSource),
     source: getSourceForFrame(sources, frame, isGeneratedSource)
-  });
+  };
 }
 
 function formatCallStackFrames(frames, sources, selectedSource) {

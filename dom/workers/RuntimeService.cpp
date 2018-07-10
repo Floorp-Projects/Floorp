@@ -2642,6 +2642,7 @@ LogViolationDetailsRunnable::MainThreadRun()
         "Call to eval() or related function blocked by CSP.");
     if (mWorkerPrivate->GetReportCSPViolations()) {
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
+                               nullptr, // triggering element
                                mFileName, scriptSample, mLineNum, mColumnNum,
                                EmptyString(), EmptyString());
     }

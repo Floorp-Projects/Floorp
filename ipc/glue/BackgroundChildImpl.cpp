@@ -31,6 +31,7 @@
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/MessagePortChild.h"
+#include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
@@ -86,6 +87,9 @@ using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
 using mozilla::dom::LocalStorage;
+using mozilla::dom::PServiceWorkerChild;
+using mozilla::dom::PServiceWorkerContainerChild;
+using mozilla::dom::PServiceWorkerRegistrationChild;
 using mozilla::dom::StorageDBChild;
 
 using mozilla::dom::WebAuthnTransactionChild;
@@ -673,6 +677,42 @@ BackgroundChildImpl::DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelCh
   RefPtr<net::HttpBackgroundChannelChild> child =
     dont_AddRef(static_cast<net::HttpBackgroundChannelChild*>(aActor));
   return true;
+}
+
+PServiceWorkerChild*
+BackgroundChildImpl::AllocPServiceWorkerChild(const IPCServiceWorkerDescriptor&)
+{
+  return dom::AllocServiceWorkerChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPServiceWorkerChild(PServiceWorkerChild* aActor)
+{
+  return dom::DeallocServiceWorkerChild(aActor);
+}
+
+PServiceWorkerContainerChild*
+BackgroundChildImpl::AllocPServiceWorkerContainerChild()
+{
+  return dom::AllocServiceWorkerContainerChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPServiceWorkerContainerChild(PServiceWorkerContainerChild* aActor)
+{
+  return dom::DeallocServiceWorkerContainerChild(aActor);
+}
+
+PServiceWorkerRegistrationChild*
+BackgroundChildImpl::AllocPServiceWorkerRegistrationChild(const IPCServiceWorkerRegistrationDescriptor&)
+{
+  return dom::AllocServiceWorkerRegistrationChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPServiceWorkerRegistrationChild(PServiceWorkerRegistrationChild* aActor)
+{
+  return dom::DeallocServiceWorkerRegistrationChild(aActor);
 }
 
 mozilla::ipc::IPCResult

@@ -22,6 +22,8 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "FormAutofill",
+                               "resource://formautofill/FormAutofill.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
 
@@ -68,8 +70,8 @@ let PaymentFrameScript = {
   exposeUtilityFunctions() {
     let waivedContent = Cu.waiveXrays(content);
     let PaymentDialogUtils = {
-      DEFAULT_REGION: FormAutofillUtils.DEFAULT_REGION,
-      supportedCountries: FormAutofillUtils.supportedCountries,
+      DEFAULT_REGION: FormAutofill.DEFAULT_REGION,
+      supportedCountries: FormAutofill.supportedCountries,
 
       getAddressLabel(address) {
         return FormAutofillUtils.getAddressLabel(address);

@@ -36,10 +36,9 @@ var _selectors = require("../../../selectors/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getMappedLocation(mappedLocation, selectedSource) {
   return selectedSource && (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id) ? mappedLocation.generatedLocation : mappedLocation.location;
 }
@@ -49,9 +48,9 @@ class Breakpoint extends _react.PureComponent {
     var _temp;
 
     return _temp = super(...args), this.onContextMenu = e => {
-      (0, _BreakpointsContextMenu2.default)(_objectSpread({}, this.props, {
+      (0, _BreakpointsContextMenu2.default)({ ...this.props,
         contextMenuEvent: e
-      }));
+      });
     }, this.selectBreakpoint = () => {
       const {
         breakpoint,

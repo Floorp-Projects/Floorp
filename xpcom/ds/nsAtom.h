@@ -172,6 +172,11 @@ public:
     return reinterpret_cast<const char16_t*>(this + 1);
   }
 
+  static nsDynamicAtom* FromChars(char16_t* chars)
+  {
+    return reinterpret_cast<nsDynamicAtom*>(chars) - 1;
+  }
+
 private:
   friend class nsAtomTable;
   friend class nsAtomSubTable;

@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include IPCServiceWorkerRegistrationDescriptor;
+
+namespace mozilla {
+namespace dom {
+
+protocol PServiceWorkerRegistration
+{
+  manager PBackground;
+
+parent:
+  async Teardown();
+
+  async Unregister() returns (bool aSuccess, CopyableErrorResult aRv);
+  async Update() returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
+
+child:
+  async __delete__();
+
+  async UpdateState(IPCServiceWorkerRegistrationDescriptor aDescriptor);
+};
+
+} // namespace dom
+} // namespace mozilla

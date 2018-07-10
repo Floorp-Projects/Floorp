@@ -244,6 +244,24 @@ protected:
 
   virtual PMIDIManagerChild* AllocPMIDIManagerChild() override;
   virtual bool DeallocPMIDIManagerChild(PMIDIManagerChild*) override;
+
+  virtual PServiceWorkerChild*
+  AllocPServiceWorkerChild(const IPCServiceWorkerDescriptor&) override;
+
+  virtual bool
+  DeallocPServiceWorkerChild(PServiceWorkerChild*) override;
+
+  virtual PServiceWorkerContainerChild*
+  AllocPServiceWorkerContainerChild() override;
+
+  virtual bool
+  DeallocPServiceWorkerContainerChild(PServiceWorkerContainerChild*) override;
+
+  virtual PServiceWorkerRegistrationChild*
+  AllocPServiceWorkerRegistrationChild(const IPCServiceWorkerRegistrationDescriptor&) override;
+
+  virtual bool
+  DeallocPServiceWorkerRegistrationChild(PServiceWorkerRegistrationChild*) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final
