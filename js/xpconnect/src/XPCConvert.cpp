@@ -1668,10 +1668,45 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             free(elements);
             break;
         }
+
+        // Clear the JS::Value to `undefined`
+        case nsXPTType::T_JSVAL:
+            ((JS::Value*)aValue)->setUndefined();
+            break;
     }
 
     // Null out the pointer if we have it.
     if (aType.HasPointerRepr()) {
         *(void**)aValue = nullptr;
+    }
+}
+
+/***************************************************************************/
+
+// Implementation of xpc::InitializeValue.
+
+void
+xpc::InitializeValue(const nsXPTType& aType, void* aValue)
+{
+    switch (aType.Tag()) {
+        // Types which require custom, specific initialization.
+        case nsXPTType::T_JSVAL:
+            new (aValue) JS::Value();
+            MOZ_ASSERT(reinterpret_cast<JS::Value*>(aValue)->isUndefined());
+            break;
+
+        case nsXPTType::T_ASTRING:
+        case nsXPTType::T_DOMSTRING:
+            new (aValue) nsString();
+            break;
+        case nsXPTType::T_CSTRING:
+        case nsXPTType::T_UTF8STRING:
+            new (aValue) nsCString();
+            break;
+
+        // The remaining types all have valid states where all bytes are '0'.
+        default:
+            memset(aValue, 0, aType.Stride());
+            break;
     }
 }
