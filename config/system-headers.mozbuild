@@ -1342,6 +1342,7 @@ if CONFIG['ENABLE_BIGINT']:
 
 if CONFIG['MOZ_WAYLAND']:
     system_headers += [
+        'xkbcommon/xkbcommon.h',
         'wayland-client.h',
         'wayland-egl.h',
     ]
