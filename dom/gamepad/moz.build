@@ -58,7 +58,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'android/AndroidGamepad.cpp'
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+elif CONFIG['OS_ARCH'] == 'Linux':
     UNIFIED_SOURCES += [
         'linux/LinuxGamepad.cpp'
     ]

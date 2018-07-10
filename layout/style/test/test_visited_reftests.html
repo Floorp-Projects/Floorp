@@ -90,7 +90,10 @@ var gTests = [
   "== mathml-links.html mathml-links-ref.html",
   "== placeholder-1.html placeholder-1-ref.html",
   "== visited-inherit-1.html visited-inherit-1-ref.html",
-  "== transition-on-visited.html transition-on-visited-ref.html"
+  "== transition-on-visited.html transition-on-visited-ref.html",
+  "== logical-box-border-color-visited-link-001.html logical-box-border-color-visited-link-ref.html",
+  // TODO: test should equal the reference after implementing logical border shorthands.
+  "!= logical-box-border-color-visited-link-002.html logical-box-border-color-visited-link-ref.html",
 ];
 
 // We record the maximum number of times we had to look at a test before

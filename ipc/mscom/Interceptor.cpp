@@ -104,8 +104,10 @@ public:
   void Unlock()
   {
     MOZ_ASSERT(mLiveSet);
-    mLiveSet->Unlock();
-    mLiveSet = nullptr;
+    if (mLiveSet) {
+      mLiveSet->Unlock();
+      mLiveSet = nullptr;
+    }
   }
 
   LiveSetAutoLock(const LiveSetAutoLock& aOther) = delete;

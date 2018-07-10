@@ -391,12 +391,12 @@ linux64-android-gradle-dependencies:
         # Aliases aren't allowed for toolchains depending on toolchains.
         - linux64-android-sdk-linux-repack
 
-linux64-rust-1.26:
+linux64-rust-1.27:
     description: "rust repack"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(rust-1.26)
+        symbol: TL(rust-1.27)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -407,7 +407,7 @@ linux64-rust-1.26:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.26.2',
+            '--channel', '1.27.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
