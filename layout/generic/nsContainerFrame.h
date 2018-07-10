@@ -674,7 +674,8 @@ protected:
    */
   static void ReparentFloatsForInlineChild(nsIFrame* aOurBlock,
                                            nsIFrame* aFrame,
-                                           bool aReparentSiblings);
+                                           bool aReparentSiblings,
+                                           ReparentingDirection aDirection);
 
   // ==========================================================================
   /*
