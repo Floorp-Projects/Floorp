@@ -6,7 +6,7 @@ package mozilla.components.service.fxa
 
 import java.io.Closeable
 import com.sun.jna.Pointer
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.launch
 
 /**
  * Base class that wraps an non-optional [Pointer] representing a pointer to a Rust object.
@@ -33,7 +33,7 @@ abstract class RustObject<T> : Closeable {
     protected abstract fun destroy(p: T)
 
     override fun close() {
-        runBlocking(FxaClient.THREAD_CONTEXT) {
+        synchronized(FxaClient.INSTANCE) {
             if (rawPointer != null) {
                 destroy(consumePointer())
             }
@@ -49,6 +49,31 @@ abstract class RustObject<T> : Closeable {
                 return stringPtr.getString(0, "utf8")
             } finally {
                 FxaClient.INSTANCE.fxa_str_free(stringPtr)
+            }
+        }
+
+        fun <U> safeAsync(callback: (Error.ByReference) -> U): FxaResult<U> {
+            val result = FxaResult<U>()
+            val e = Error.ByReference()
+            launch {
+                synchronized(FxaClient.INSTANCE) {
+                    val ret = callback(e)
+                    if (e.isFailure()) {
+                        result.completeExceptionally(FxaException.fromConsuming(e))
+                    } else {
+                        result.complete(ret)
+                    }
+                }
+            }
+            return result
+        }
+
+        fun <U> safeSync(callback: (Error.ByReference) -> U): U {
+            val e = Error.ByReference()
+            return synchronized(FxaClient.INSTANCE) {
+                val ret = callback(e)
+                if (e.isFailure()) throw FxaException.fromConsuming(e)
+                ret
             }
         }
     }
