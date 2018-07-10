@@ -1,35 +1,38 @@
-AntiTracking.runTest("BroadcastChannel",
+AntiTracking.runTest("IndexedDB",
+  // blocking callback
   async _ => {
     try {
-      new BroadcastChannel("hello");
-      ok(false, "BroadcastChannel cannot be used!");
+      indexedDB.open("test", "1");
+      ok(false, "IDB should be blocked");
     } catch (e) {
-      ok(true, "BroadcastChannel cannot be used!");
+      ok(true, "IDB should be blocked");
       is(e.name, "SecurityError", "We want a security error message.");
     }
   },
+  // non-blocking callback
   async _ => {
-    new BroadcastChannel("hello");
-    ok(true, "BroadcastChannel be used");
+    indexedDB.open("test", "1");
+    ok(true, "IDB should be allowed");
   },
+  // Cleanup callback
   async _ => {
     await new Promise(resolve => {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
   });
 
-AntiTracking.runTest("BroadcastChannel in workers",
+AntiTracking.runTest("IndexedDB in workers",
   async _ => {
-    function blockingCode() {
+    function blockCode() {
       try {
-        new BroadcastChannel("hello");
+        indexedDB.open("test", "1");
         postMessage(false);
       } catch (e) {
         postMessage(e.name == "SecurityError");
       }
     }
 
-    let blob = new Blob([blockingCode.toString() + "; blockingCode();"]);
+    let blob = new Blob([blockCode.toString() + "; blockCode();"]);
     ok(blob, "Blob has been created");
 
     let blobURL = URL.createObjectURL(blob);
@@ -45,12 +48,12 @@ AntiTracking.runTest("BroadcastChannel in workers",
     });
   },
   async _ => {
-    function nonBlockingCode() {
-      new BroadcastChannel("hello");
-      postMessage(true);
+    function nonBlockCode() {
+      indexedDB.open("test", "1");
+      postMessage(false);
     }
 
-    let blob = new Blob([nonBlockingCode.toString() + "; nonBlockingCode();"]);
+    let blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
 
     let blobURL = URL.createObjectURL(blob);
