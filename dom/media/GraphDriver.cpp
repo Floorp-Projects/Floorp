@@ -194,7 +194,8 @@ public:
   {
     MOZ_ASSERT(!mDriver->ThreadRunning());
     LOG(LogLevel::Debug,
-        ("Starting a new system driver for graph %p", mDriver->mGraphImpl));
+        ("Starting a new system driver for graph %p",
+         mDriver->mGraphImpl.get()));
 
     RefPtr<GraphDriver> previousDriver;
     {
@@ -232,7 +233,8 @@ void
 ThreadedDriver::Start()
 {
   MOZ_ASSERT(!ThreadRunning());
-  LOG(LogLevel::Debug, ("Starting thread for a SystemClockDriver  %p", mGraphImpl));
+  LOG(LogLevel::Debug,
+      ("Starting thread for a SystemClockDriver  %p", mGraphImpl.get()));
   Unused << NS_WARN_IF(mThread);
   MOZ_ASSERT(!mThread); // Ensure we haven't already started it
 
@@ -803,7 +805,7 @@ AudioCallbackDriver::Revive()
   } else {
     LOG(LogLevel::Debug,
         ("Starting audio threads for MediaStreamGraph %p from a new thread.",
-         mGraphImpl));
+         mGraphImpl.get()));
     RefPtr<AsyncCubebTask> initEvent =
       new AsyncCubebTask(this, AsyncCubebOperation::INIT);
     initEvent->Dispatch();
