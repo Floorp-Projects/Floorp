@@ -201,7 +201,8 @@ class FFSetup(object):
         if upload_dir and self.test_config.get('gecko_profile'):
             self.gecko_profile = GeckoProfile(upload_dir,
                                               self.browser_config,
-                                              self.test_config)
+                                              self.test_config,
+                                              str(os.getenv('MOZ_WEBRENDER')) == '1')
             self.gecko_profile.update_env(self.env)
 
     def clean(self):
