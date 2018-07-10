@@ -59,7 +59,7 @@ internal interface FxaClient : Library {
     fun fxa_get_sync_keys(fxa: RawFxAccount, e: Error.ByReference): SyncKeys.Raw
 
     fun fxa_complete_oauth_flow(fxa: RawFxAccount, code: String, state: String, e: Error.ByReference): OAuthInfo.Raw
-    fun fxa_get_oauth_token(fxa: RawFxAccount, scope: String, e: Error.ByReference): OAuthInfo.Raw
+    fun fxa_get_oauth_token(fxa: RawFxAccount, scope: String, e: Error.ByReference): OAuthInfo.Raw?
 
     fun fxa_config_free(config: RawConfig)
     fun fxa_str_free(string: Pointer)

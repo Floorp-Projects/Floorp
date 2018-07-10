@@ -65,6 +65,7 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
         return safeAsync { e ->
             val scope = scopes.joinToString(" ")
             val p = FxaClient.INSTANCE.fxa_get_oauth_token(validPointer(), scope, e)
+                    ?: throw FxaException.Unauthorized("Restart OAuth flow")
             OAuthInfo(p)
         }
     }

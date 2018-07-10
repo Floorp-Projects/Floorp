@@ -16,7 +16,7 @@ class FxaResult<T> {
     private val mListeners: ArrayList<Listener<T>> = ArrayList()
 
     private interface Listener<T> {
-        fun onValue(value: T?)
+        fun onValue(value: T)
 
         fun onException(exception: Exception)
     }
@@ -28,12 +28,11 @@ class FxaResult<T> {
      */
     private fun completeFrom(other: FxaResult<T>?) {
         if (other == null) {
-            complete(null)
             return
         }
 
         other.then(object : OnValueListener<T, Void> {
-            override fun onValue(value: T?): FxaResult<Void>? {
+            override fun onValue(value: T): FxaResult<Void>? {
                 complete(value)
                 return null
             }
@@ -51,9 +50,9 @@ class FxaResult<T> {
      * @param fn A lambda expression with the same method signature as [OnValueListener],
      * called when the [FxaResult] is completed with a value.
      */
-    fun <U> then(fn: (value: T?) -> FxaResult<U>?): FxaResult<U> {
+    fun <U> then(fn: (value: T) -> FxaResult<U>?): FxaResult<U> {
         val listener = object : OnValueListener<T, U> {
-            override fun onValue(value: T?): FxaResult<U>? = fn(value)
+            override fun onValue(value: T): FxaResult<U>? = fn(value)
         }
         return then(listener, null)
     }
@@ -67,9 +66,9 @@ class FxaResult<T> {
      * @param efn A lambda expression with the same method signature as [OnExceptionListener],
      * called when the [FxaResult] is completed with an exception.
      */
-    fun <U> then(vfn: (value: T?) -> FxaResult<U>?, efn: (exception: Exception) -> FxaResult<U>?): FxaResult<U> {
+    fun <U> then(vfn: (value: T) -> FxaResult<U>?, efn: (exception: Exception) -> FxaResult<U>?): FxaResult<U> {
         val valueListener = object : OnValueListener<T, U> {
-            override fun onValue(value: T?): FxaResult<U>? = vfn(value)
+            override fun onValue(value: T): FxaResult<U>? = vfn(value)
         }
 
         val exceptionListener = object : OnExceptionListener<U> {
@@ -89,17 +88,22 @@ class FxaResult<T> {
      * [FxaResult] is completed with an [Exception].
      */
     @Synchronized
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught")
     fun <U> then(valueListener: OnValueListener<T, U>, exceptionListener: OnExceptionListener<U>?): FxaResult<U> {
         val result = FxaResult<U>()
         val listener = object : Listener<T> {
-            override fun onValue(value: T?) {
-                result.completeFrom(valueListener.onValue(value))
+            override fun onValue(value: T) {
+                try {
+                    result.completeFrom(valueListener.onValue(value))
+                } catch (ex: Exception) {
+                    result.completeFrom(FxaResult.fromException(ex))
+                }
             }
 
             override fun onException(exception: Exception) {
                 if (exceptionListener == null) {
-                    return
+                    // Do not swallow thrown exceptions if a listener is not present
+                    throw exception
                 }
 
                 result.completeFrom(exceptionListener.onException(exception))
@@ -124,7 +128,7 @@ class FxaResult<T> {
      * @throws IllegalStateException
      */
     @Synchronized
-    fun complete(value: T?) {
+    fun complete(value: T) {
         if (mComplete) {
             throw IllegalStateException("result is already complete")
         }
@@ -132,7 +136,7 @@ class FxaResult<T> {
         mValue = value
         mComplete = true
 
-        ArrayList(mListeners).forEach { it.onValue(mValue) }
+        ArrayList(mListeners).forEach { it.onValue(value) }
     }
 
     /**
@@ -170,7 +174,7 @@ class FxaResult<T> {
          * @return A new [FxaResult], used for chaining results together.
          * May be null.
          */
-        fun onValue(value: T?): FxaResult<U>?
+        fun onValue(value: T): FxaResult<U>?
     }
 
     /**

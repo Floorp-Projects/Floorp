@@ -12,7 +12,7 @@ class FxaResultTest {
 
     @Test
     fun thenWithResult() {
-        FxaResult.fromValue(42).then { value: Int? ->
+        FxaResult.fromValue(42).then { value: Int ->
             assertEquals(value, 42)
             FxaResult<Void>()
         }
@@ -20,7 +20,7 @@ class FxaResultTest {
 
     @Test
     fun thenWithException() {
-        FxaResult.fromException<Void>(Exception("exception message")).then({ value: Void? ->
+        FxaResult.fromException<Void>(Exception("exception message")).then({ value: Void ->
             assertNull("valueListener should not be called", value)
             FxaResult<Void>()
         }, { value: Exception ->
@@ -30,11 +30,25 @@ class FxaResultTest {
     }
 
     @Test
+    fun thenWithThrownException() {
+        FxaResult.fromValue(42).then { _: Int ->
+            throw Exception("exception message")
+            FxaResult<Void>()
+        }.then({
+            fail("valueListener should not be called")
+            FxaResult<Void>()
+        }, { value: Exception ->
+            assertEquals(value.message, "exception message")
+            FxaResult()
+        })
+    }
+
+    @Test
     fun resultChaining() {
-        FxaResult.fromValue(42).then { value: Int? ->
+        FxaResult.fromValue(42).then { value: Int ->
             assertEquals(value, 42)
             FxaResult.fromValue("string")
-        }.then { value: String? ->
+        }.then { value: String ->
             assertEquals(value, "string")
             FxaResult.fromException<Void>(Exception("exception message"))
         }.then({
