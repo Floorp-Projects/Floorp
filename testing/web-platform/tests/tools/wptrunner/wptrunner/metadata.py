@@ -235,12 +235,47 @@ class ExpectedUpdater(object):
 
     def update_from_log(self, log_file):
         self.run_info = None
+        try:
+            data = json.load(log_file)
+        except Exception:
+            pass
+        else:
+            if "action" not in data and "results" in data:
+                self.update_from_wptreport_log(data)
+                return
+
+        log_file.seek(0)
+        self.update_from_raw_log(log_file)
+
+    def update_from_raw_log(self, log_file):
         action_map = self.action_map
         for line in log_file:
             data = json.loads(line)
             action = data["action"]
             if action in action_map:
                 action_map[action](data)
+
+    def update_from_wptreport_log(self, data):
+        action_map = self.action_map
+        action_map["suite_start"]({"run_info": data["run_info"]})
+        for test in data["results"]:
+            action_map["test_start"]({"test": test["test"]})
+            for subtest in test["subtests"]:
+                action_map["test_status"]({"test": test["test"],
+                                           "subtest": subtest["name"],
+                                           "status": subtest["status"],
+                                           "expected": subtest.get("expected")})
+            action_map["test_end"]({"test": test["test"],
+                                    "status": test["status"],
+                                    "expected": test.get("expected")})
+            if "asserts" in test:
+                asserts = test["asserts"]
+                action_map["assertion_count"]({"test": test["test"],
+                                               "count": asserts["count"],
+                                               "min_expected": asserts["min"],
+                                               "max_expected": asserts["max"]})
+        for item in data.get("lsan_leaks", []):
+            action_map["lsan_leak"](item)
 
     def suite_start(self, data):
         self.run_info = data["run_info"]
