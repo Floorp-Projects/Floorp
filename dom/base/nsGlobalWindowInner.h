@@ -717,6 +717,12 @@ public:
   mozilla::dom::IntlUtils*
   GetIntlUtils(mozilla::ErrorResult& aRv);
 
+  void
+  AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin);
+
+  bool
+  IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const;
+
 public:
   void Alert(nsIPrincipal& aSubjectPrincipal,
              mozilla::ErrorResult& aError);
@@ -1475,6 +1481,8 @@ protected:
   nsTArray<RefPtr<mozilla::dom::Promise>> mPendingPromises;
 
   nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>> mDocumentFlushedResolvers;
+
+  nsTArray<nsString> mStorageGrantedOrigins;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
