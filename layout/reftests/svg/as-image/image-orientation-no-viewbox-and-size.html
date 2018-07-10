@@ -6,13 +6,10 @@
       margin:  0px;
       padding: 0px;
     }
-    p:before {
-      content: url(image-exif-270-deg-flip.jpg);
-    }
   </style>
 </head>
 <body>
-  <p></p>
+  <img src="image-orientation-no-viewbox-and-size.svg">
 
   <script>
     var orientationInfo = location.search.substring(1).split("&");
@@ -22,9 +19,9 @@
     // Construct a style. "from-image" is special-cased.
     var style;
     if (angle == "from-image") {
-      style = "p { image-orientation: from-image; }\n";
+      style = "img { image-orientation: from-image; }\n";
     } else {
-      style = "p { image-orientation: "
+      style = "img { image-orientation: "
             + angle + "deg"
             + (flip ? " flip" : "")
             + "; }\n";

@@ -161,12 +161,6 @@ enum class StyleHyphens : uint8_t {
   Auto,
 };
 
-// image-orientation
-enum class StyleImageOrientation : uint8_t {
-  None,
-  FromImage,
-};
-
 // <shape-radius> for <basic-shape>
 enum class StyleShapeRadius : uint8_t {
   ClosestSide,

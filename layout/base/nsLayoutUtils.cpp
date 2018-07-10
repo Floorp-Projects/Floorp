@@ -7171,13 +7171,18 @@ nsLayoutUtils::GetWholeImageDestination(const nsSize& aWholeImageSize,
 
 /* static */ already_AddRefed<imgIContainer>
 nsLayoutUtils::OrientImage(imgIContainer* aContainer,
-                           const StyleImageOrientation& aOrientation)
+                           const nsStyleImageOrientation& aOrientation)
 {
   MOZ_ASSERT(aContainer, "Should have an image container");
   nsCOMPtr<imgIContainer> img(aContainer);
 
-  if (aOrientation == StyleImageOrientation::FromImage) {
+  if (aOrientation.IsFromImage()) {
     img = ImageOps::Orient(img, img->GetOrientation());
+  } else if (!aOrientation.IsDefault()) {
+    Angle angle = aOrientation.Angle();
+    Flip flip  = aOrientation.IsFlipped() ? Flip::Horizontal
+                                          : Flip::Unflipped;
+    img = ImageOps::Orient(img, Orientation(angle, flip));
   }
 
   return img.forget();

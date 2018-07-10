@@ -25,14 +25,19 @@
   <div></div>
 
   <script>
-    var fromImage = location.search == "from-image";
+    var orientation = location.search.substring(1).split("&");
+    var angle = orientation[0];
+    var flip = orientation[1] == "flip" ? true : false;
 
-    // Construct a style.
+    // Construct a style. "from-image" is special-cased.
     var style;
-    if (fromImage) {
+    if (angle == "from-image") {
       style = "div { image-orientation: from-image; }\n";
     } else {
-      style = "div { image-orientation: none; }\n";
+      style = "div { image-orientation: "
+            + angle + "deg"
+            + (flip ? " flip" : "")
+            + "; }\n";
     }
 
     // Apply the style to the document.

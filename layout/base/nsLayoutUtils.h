@@ -61,6 +61,7 @@ class nsPIDOMWindowOuter;
 class imgIRequest;
 class nsIDocument;
 struct nsStyleFont;
+struct nsStyleImageOrientation;
 struct nsOverflowAreas;
 
 namespace mozilla {
@@ -74,7 +75,6 @@ class WritingMode;
 class DisplayItemClip;
 class EffectSet;
 struct ActiveScrolledRoot;
-enum class StyleImageOrientation : uint8_t;
 namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
@@ -1990,7 +1990,7 @@ public:
    */
   static already_AddRefed<imgIContainer>
   OrientImage(imgIContainer* aContainer,
-              const mozilla::StyleImageOrientation& aOrientation);
+              const nsStyleImageOrientation& aOrientation);
 
   /**
    * Determine if any corner radius is of nonzero size

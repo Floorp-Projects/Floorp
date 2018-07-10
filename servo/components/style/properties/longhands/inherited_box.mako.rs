@@ -76,12 +76,11 @@ ${helpers.single_keyword(
     spec="https://drafts.csswg.org/css-images/#propdef-image-rendering",
 )}
 
-${helpers.single_keyword(
-    "image-orientation",
-    "none from-image",
-    products="gecko",
-    gecko_enum_prefix="StyleImageOrientation",
-    animation_value_type="discrete",
-    gecko_pref="layout.css.image-orientation.enabled",
-    spec="https://drafts.csswg.org/css-images/#propdef-image-orientation",
-)}
+${helpers.predefined_type("image-orientation",
+                          "ImageOrientation",
+                          "computed::ImageOrientation::zero()",
+                          products="gecko",
+                          animation_value_type="discrete",
+                          gecko_pref="layout.css.image-orientation.enabled",
+                          spec="https://drafts.csswg.org/css-images/#propdef-image-orientation, \
+                    /// additional values in https://developer.mozilla.org/en-US/docs/Web/CSS/image-orientation")}
