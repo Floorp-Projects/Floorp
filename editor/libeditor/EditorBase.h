@@ -672,14 +672,6 @@ public:
     */
   void SyncRealTimeSpell();
 
- /**
-   * This method re-initializes the selection and caret state that are for
-   * current editor state. When editor session is destroyed, it always reset
-   * selection state even if this has no focus.  So if destroying editor,
-   * we have to call this method for focused editor to set selection state.
-   */
- void ReinitializeSelection(Element& aElement);
-
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
