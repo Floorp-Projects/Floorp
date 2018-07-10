@@ -22,21 +22,14 @@
 #define LAST_KNOWN_IOMETHODS_VERSION 3
 
 /**
- * By default use the unix-excl VFS, for the following reasons:
- * 1. It improves compatibility with NFS shares, whose implementation
- *    is incompatible with SQLite's locking requirements.
- *    Bug 433129 attempted to automatically identify such file-systems,
- *    but a reliable way was not found and the fallback locking is slower than
- *    POSIX locking, so we do not want to do it by default.
- * 2. It allows wal mode to avoid the memory mapped -shm file, reducing the
- *    likelihood of SIGBUS failures when disk space is exhausted.
- * 3. It provides some protection from third party database tampering while a
- *    connection is open.
- * This preference allows to revert to the "unix" VFS, that is not exclusive,
- * thus it can be used by developers to query a database through the Sqlite
- * command line while it's already in use.
- */
-#define PREF_MULTI_PROCESS_ACCESS "storage.multiProcessAccess.enabled"
+ * This preference is a workaround to allow users/sysadmins to identify
+ * that the profile exists on an NFS share whose implementation
+ * is incompatible with SQLite's default locking implementation.
+ * Bug 433129 attempted to automatically identify such file-systems,
+ * but a reliable way was not found and it was determined that the fallback
+ * locking is slower than POSIX locking, so we do not want to do it by default.
+*/
+#define PREF_NFS_FILESYSTEM   "storage.nfs_filesystem"
 
 namespace {
 
@@ -872,22 +865,22 @@ const char *GetVFSName()
 sqlite3_vfs* ConstructTelemetryVFS()
 {
 #if defined(XP_WIN)
-#define EXPECTED_VFS      "win32"
-#define EXPECTED_VFS_EXCL "win32"
+#define EXPECTED_VFS     "win32"
+#define EXPECTED_VFS_NFS "win32"
 #else
-#define EXPECTED_VFS      "unix"
-#define EXPECTED_VFS_EXCL "unix-excl"
+#define EXPECTED_VFS     "unix"
+#define EXPECTED_VFS_NFS "unix-excl"
 #endif
 
   bool expected_vfs;
   sqlite3_vfs *vfs;
-  if (Preferences::GetBool(PREF_MULTI_PROCESS_ACCESS, false)) {
-    // Use the non-exclusive VFS.
+  if (Preferences::GetBool(PREF_NFS_FILESYSTEM)) {
+    vfs = sqlite3_vfs_find(EXPECTED_VFS_NFS);
+    expected_vfs = (vfs != nullptr);
+  }
+  else {
     vfs = sqlite3_vfs_find(nullptr);
     expected_vfs = vfs->zName && !strcmp(vfs->zName, EXPECTED_VFS);
-  } else {
-    vfs = sqlite3_vfs_find(EXPECTED_VFS_EXCL);
-    expected_vfs = (vfs != nullptr);
   }
   if (!expected_vfs) {
     return nullptr;
