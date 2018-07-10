@@ -52,13 +52,22 @@ nsCommandParams::GetBooleanValue(const char* aName, bool* aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
+  ErrorResult error;
+  *aRetVal = GetBool(aName, error);
+  return error.StealNSResult();
+}
+
+bool
+nsCommandParams::GetBool(const char* aName, ErrorResult& aRv) const
+{
+  MOZ_ASSERT(!aRv.Failed());
+
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eBooleanType) {
-    *aRetVal = foundEntry->mData.mBoolean;
-    return NS_OK;
+    return foundEntry->mData.mBoolean;
   }
-  *aRetVal = false;
-  return NS_ERROR_FAILURE;
+  aRv.Throw(NS_ERROR_FAILURE);
+  return false;
 }
 
 NS_IMETHODIMP
@@ -66,13 +75,22 @@ nsCommandParams::GetLongValue(const char* aName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
+  ErrorResult error;
+  *aRetVal = GetInt(aName, error);
+  return error.StealNSResult();
+}
+
+int32_t
+nsCommandParams::GetInt(const char* aName, ErrorResult& aRv) const
+{
+  MOZ_ASSERT(!aRv.Failed());
+
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eLongType) {
-    *aRetVal = foundEntry->mData.mLong;
-    return NS_OK;
+    return foundEntry->mData.mLong;
   }
-  *aRetVal = false;
-  return NS_ERROR_FAILURE;
+  aRv.Throw(NS_ERROR_FAILURE);
+  return 0;
 }
 
 NS_IMETHODIMP
@@ -80,17 +98,32 @@ nsCommandParams::GetDoubleValue(const char* aName, double* aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
+  ErrorResult error;
+  *aRetVal = GetDouble(aName, error);
+  return error.StealNSResult();
+}
+
+double
+nsCommandParams::GetDouble(const char* aName, ErrorResult& aRv) const
+{
+  MOZ_ASSERT(!aRv.Failed());
+
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eDoubleType) {
-    *aRetVal = foundEntry->mData.mDouble;
-    return NS_OK;
+    return foundEntry->mData.mDouble;
   }
-  *aRetVal = 0.0;
-  return NS_ERROR_FAILURE;
+  aRv.Throw(NS_ERROR_FAILURE);
+  return 0.0;
 }
 
 NS_IMETHODIMP
 nsCommandParams::GetStringValue(const char* aName, nsAString& aRetVal)
+{
+  return GetString(aName, aRetVal);
+}
+
+nsresult
+nsCommandParams::GetString(const char* aName, nsAString& aRetVal) const
 {
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eWStringType) {
@@ -104,6 +137,12 @@ nsCommandParams::GetStringValue(const char* aName, nsAString& aRetVal)
 
 NS_IMETHODIMP
 nsCommandParams::GetCStringValue(const char* aName, nsACString& aRetVal)
+{
+  return GetCString(aName, aRetVal);
+}
+
+nsresult
+nsCommandParams::GetCString(const char* aName, nsACString& aRetVal) const
 {
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eStringType) {
@@ -120,17 +159,38 @@ nsCommandParams::GetISupportsValue(const char* aName, nsISupports** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
+  ErrorResult error;
+  nsCOMPtr<nsISupports> result = GetISupports(aName, error);
+  if (result) {
+    result.forget(aRetVal);
+  } else {
+    *aRetVal = nullptr;
+  }
+  return error.StealNSResult();
+}
+
+already_AddRefed<nsISupports>
+nsCommandParams::GetISupports(const char* aName, ErrorResult& aRv) const
+{
+  MOZ_ASSERT(!aRv.Failed());
+
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eISupportsType) {
-    NS_IF_ADDREF(*aRetVal = foundEntry->mISupports.get());
-    return NS_OK;
+    nsCOMPtr<nsISupports> result = foundEntry->mISupports;
+    return result.forget();
   }
-  *aRetVal = nullptr;
-  return NS_ERROR_FAILURE;
+  aRv.Throw(NS_ERROR_FAILURE);
+  return nullptr;
 }
 
 NS_IMETHODIMP
 nsCommandParams::SetBooleanValue(const char* aName, bool aValue)
+{
+  return SetBool(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetBool(const char* aName, bool aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eBooleanType);
   if (!foundEntry) {
@@ -143,6 +203,12 @@ nsCommandParams::SetBooleanValue(const char* aName, bool aValue)
 NS_IMETHODIMP
 nsCommandParams::SetLongValue(const char* aName, int32_t aValue)
 {
+  return SetInt(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetInt(const char* aName, int32_t aValue)
+{
   HashEntry* foundEntry = GetOrMakeEntry(aName, eLongType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -153,6 +219,12 @@ nsCommandParams::SetLongValue(const char* aName, int32_t aValue)
 
 NS_IMETHODIMP
 nsCommandParams::SetDoubleValue(const char* aName, double aValue)
+{
+  return SetDouble(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetDouble(const char* aName, double aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eDoubleType);
   if (!foundEntry) {
@@ -165,6 +237,12 @@ nsCommandParams::SetDoubleValue(const char* aName, double aValue)
 NS_IMETHODIMP
 nsCommandParams::SetStringValue(const char* aName, const nsAString& aValue)
 {
+  return SetString(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetString(const char* aName, const nsAString& aValue)
+{
   HashEntry* foundEntry = GetOrMakeEntry(aName, eWStringType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -176,6 +254,12 @@ nsCommandParams::SetStringValue(const char* aName, const nsAString& aValue)
 NS_IMETHODIMP
 nsCommandParams::SetCStringValue(const char* aName, const nsACString& aValue)
 {
+  return SetCString(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetCString(const char* aName, const nsACString& aValue)
+{
   HashEntry* foundEntry = GetOrMakeEntry(aName, eStringType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -186,6 +270,12 @@ nsCommandParams::SetCStringValue(const char* aName, const nsACString& aValue)
 
 NS_IMETHODIMP
 nsCommandParams::SetISupportsValue(const char* aName, nsISupports* aValue)
+{
+  return SetISupports(aName, aValue);
+}
+
+nsresult
+nsCommandParams::SetISupports(const char* aName, nsISupports* aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eISupportsType);
   if (!foundEntry) {
@@ -203,9 +293,10 @@ nsCommandParams::RemoveValue(const char* aName)
 }
 
 nsCommandParams::HashEntry*
-nsCommandParams::GetNamedEntry(const char* aName)
+nsCommandParams::GetNamedEntry(const char* aName) const
 {
-  return static_cast<HashEntry*>(mValuesHash.Search((void*)aName));
+  return static_cast<HashEntry*>(
+           const_cast<PLDHashTable&>(mValuesHash).Search((void*)aName));
 }
 
 nsCommandParams::HashEntry*
