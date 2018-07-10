@@ -4799,23 +4799,6 @@ EditorBase::FinalizeSelection()
   return NS_OK;
 }
 
-void
-EditorBase::ReinitializeSelection(Element& aElement)
-{
-  if (NS_WARN_IF(Destroyed())) {
-    return;
-  }
-
-  OnFocus(&aElement);
-
-  nsPresContext* context = GetPresContext();
-  if (NS_WARN_IF(!context)) {
-    return;
-  }
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContentForIME();
-  IMEStateManager::OnFocusInEditor(context, focusedContent, *this);
-}
-
 Element*
 EditorBase::GetEditorRoot()
 {
