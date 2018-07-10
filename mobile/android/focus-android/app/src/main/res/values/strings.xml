@@ -251,12 +251,13 @@
      to other displays. However we try to keep this description short and brief to avoid confusion. -->
     <string name="preference_privacy_stealth_summary">Hide webpages when switching apps</string>
 
-    <string name="preference_category_security">Security</string>
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
-    <string name="preference_security_biometric">Use biometrics to unlock app</string>
+    <string name="preference_security_biometric">Use fingerprint to unlock app</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session. -->
     <string name="preference_security_biometric_summary">Your fingerprint can unlock Firefox Focus if a URL is already opened in the app.</string>
+
+    <string name="preference_category_security">Security</string>
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
@@ -626,4 +627,27 @@ be temporary, and you can try again later.</li>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Unlock %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Touch the fingerprint sensor to continue.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">New Session</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Fingerprint icon</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Fingerprint not recognized. Try again.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Finger moved too fast. Try again.</string>
+
 </resources>

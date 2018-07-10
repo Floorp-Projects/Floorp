@@ -23,6 +23,9 @@
 
     <dimen name="firstrun_card_width">300dp</dimen>
     <dimen name="firstrun_card_height">460dp</dimen>
+    
+    <dimen name="fingerprint_icon_size">64dp</dimen>
+    <dimen name="fingerprint_status_layout_margin_vertical">48dp</dimen>
 
     <dimen name="tabs_button_text_size">12dp</dimen>
 

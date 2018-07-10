@@ -15,11 +15,13 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.architecture.NonNullObserver;
+import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
@@ -35,6 +37,7 @@ import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.viewmodel.MainViewModel;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
+
 
 import java.util.List;
 
@@ -153,10 +156,6 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        }
-
-        if (Settings.getInstance(this).shouldUseBiometrics()) {
-            // Keep the view obscured until the user authenticates
         }
     }
 
