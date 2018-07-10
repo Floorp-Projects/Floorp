@@ -17,7 +17,6 @@ import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
