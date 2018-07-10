@@ -8089,9 +8089,17 @@ nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrig
     }
   }
 
+  bool wasAllowed =
+    nsContentUtils::StorageDisabledByAntiTracking(this, nullptr, nullptr);
+
   StorageGrantedOrigin* data = mStorageGrantedOrigins.AppendElement();
   data->mOrigin = aOrigin;
   data->mOverwritten = aOverwritten;
+
+  if (!wasAllowed &&
+      nsContentUtils::StorageDisabledByAntiTracking(this, nullptr, nullptr)) {
+    PropagateFirstPartyStorageAccessGrantedToWorkers(this);
+  }
 }
 
 void
