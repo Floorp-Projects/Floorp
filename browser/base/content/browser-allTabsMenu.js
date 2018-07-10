@@ -18,11 +18,15 @@ var gTabsPanel = {
     hiddenTabsView: "allTabsMenu-hiddenTabsView",
   },
   _initialized: false,
+  _initializedElements: false,
 
   initElements() {
+    if (this._initializedElements) return;
+
     for (let [name, id] of Object.entries(this.kElements)) {
       this[name] = document.getElementById(id);
     }
+    this._initializedElements = true;
   },
 
   init() {
@@ -124,9 +128,16 @@ var gTabsPanel = {
     this._initialized = true;
   },
 
+  get canOpen() {
+    this.initElements();
+    return isElementVisible(this.allTabsButton);
+  },
+
   showAllTabsPanel() {
     this.init();
-    PanelUI.showSubView(this.kElements.allTabsView, this.allTabsButton);
+    if (this.canOpen) {
+      PanelUI.showSubView(this.kElements.allTabsView, this.allTabsButton);
+    }
   },
 
   hideAllTabsPanel() {
@@ -136,6 +147,9 @@ var gTabsPanel = {
 
   showHiddenTabsPanel() {
     this.init();
+    if (!this.canOpen) {
+      return;
+    }
     this.allTabsView.addEventListener("ViewShown", (e) => {
       PanelUI.showSubView(this.kElements.hiddenTabsView, this.hiddenTabsButton);
     }, {once: true});
