@@ -9,6 +9,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HeadlessShell: "resource:///modules/HeadlessShell.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -554,7 +555,7 @@ nsBrowserContentHandler.prototype = {
     try {
       var choice = prefb.getIntPref("browser.startup.page");
       if (choice == 1 || choice == 3)
-        startPage = this.startPage;
+        startPage = HomePage.get();
     } catch (e) {
       Cu.reportError(e);
     }
@@ -570,17 +571,6 @@ nsBrowserContentHandler.prototype = {
       return overridePage + "|" + startPage;
 
     return overridePage || startPage || "about:blank";
-  },
-
-  get startPage() {
-    var uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                             Ci.nsIPrefLocalizedString).data;
-    if (!uri) {
-      Services.prefs.clearUserPref("browser.startup.homepage");
-      uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                           Ci.nsIPrefLocalizedString).data;
-    }
-    return uri;
   },
 
   mFeatures: null,

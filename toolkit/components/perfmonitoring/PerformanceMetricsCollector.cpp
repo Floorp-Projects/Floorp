@@ -80,7 +80,7 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
     data->mPid = result.pid();
     data->mWindowId = result.windowId();
     data->mHost.Assign(result.host());
-    data->mDuration = result.pid();
+    data->mDuration = result.duration();
     data->mIsWorker = result.isWorker();
     data->mIsTopLevel = result.isTopLevel();
     data->mItems = items;

@@ -46,8 +46,6 @@ var CustomizationHandler = {
     if (aDetails.changed) {
       gURLBar = document.getElementById("urlbar");
 
-      gHomeButton.updateTooltip();
-
       if (AppConstants.platform != "macosx")
         updateEditUIVisibility();
 

@@ -13,9 +13,9 @@
 use super::UnknownUnit;
 use length::Length;
 use num::Zero;
-use std::fmt;
-use std::ops::Add;
-use std::marker::PhantomData;
+use core::fmt;
+use core::ops::Add;
+use core::marker::PhantomData;
 
 /// A group of side offsets, which correspond to top/left/bottom/right for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
@@ -45,10 +45,10 @@ impl<T: Copy, U> TypedSideOffsets2D<T, U> {
     /// Constructor taking a scalar for each side.
     pub fn new(top: T, right: T, bottom: T, left: T) -> Self {
         TypedSideOffsets2D {
-            top: top,
-            right: right,
-            bottom: bottom,
-            left: left,
+            top,
+            right,
+            bottom,
+            left,
             _unit: PhantomData,
         }
     }

@@ -10,6 +10,7 @@ if (typeof Mozilla == "undefined") {
   "use strict";
 
   var _canUpload = false;
+  var _initPromise = null;
 
   if (typeof Mozilla.ContentTelemetry == "undefined") {
     /**
@@ -47,16 +48,22 @@ if (typeof Mozilla == "undefined") {
    * respect user Privacy choices.
    */
   function _registerInternalPolicyHandler() {
-    // Register the handler that will update the policy boolean.
-    function policyChangeHandler(updatedPref) {
-      if (!("detail" in updatedPref) ||
-          !("canUpload" in updatedPref.detail) ||
-          typeof updatedPref.detail.canUpload != "boolean") {
-        return;
+    // Create a promise to wait on for HCT to be completely initialized.
+    _initPromise = new Promise(resolveInit => {
+      // Register the handler that will update the policy boolean.
+      function policyChangeHandler(updatedPref) {
+        if (!("detail" in updatedPref) ||
+            !("canUpload" in updatedPref.detail) ||
+            typeof updatedPref.detail.canUpload != "boolean") {
+          return;
+        }
+        _canUpload = updatedPref.detail.canUpload;
+        // Resolve the setup promise the first time we receive a message
+        // from the chrome.
+        resolveInit();
       }
-      _canUpload = updatedPref.detail.canUpload;
-    }
-    document.addEventListener("mozTelemetryPolicyChange", policyChangeHandler);
+      document.addEventListener("mozTelemetryPolicyChange", policyChangeHandler);
+    });
 
     // Make sure the chrome is initialized.
     _sendMessageToChrome("init");
@@ -64,6 +71,10 @@ if (typeof Mozilla == "undefined") {
 
   Mozilla.ContentTelemetry.canUpload = function() {
     return _canUpload;
+  };
+
+  Mozilla.ContentTelemetry.initPromise = function() {
+    return _initPromise;
   };
 
   Mozilla.ContentTelemetry.registerEvents = function(category, eventData) {

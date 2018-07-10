@@ -437,33 +437,6 @@ function installTestEngine() {
 }
 
 /**
- * Set a localized preference on the default branch
- * @param aPrefName
- *        The name of the pref to set.
- */
-function setLocalizedDefaultPref(aPrefName, aValue) {
-  let value = "data:text/plain," + BROWSER_SEARCH_PREF + aPrefName + "=" + aValue;
-  Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
-          .setCharPref(aPrefName, value);
-}
-
-/**
- * Installs two test engines, sets them as default for US vs. general.
- */
-function setUpGeoDefaults() {
-  const kSecondTestEngineName = "A second test engine";
-
-  setLocalizedDefaultPref("defaultenginename", "Test search engine");
-  setLocalizedDefaultPref("defaultenginename.US", "A second test engine");
-
-  useHttpServer();
-  return addTestEngines([
-    { name: kTestEngineName, xmlFileName: "engine.xml" },
-    { name: kSecondTestEngineName, xmlFileName: "engine2.xml" },
-  ]);
-}
-
-/**
  * Returns a promise that is resolved when an observer notification from the
  * search service fires with the specified data.
  *

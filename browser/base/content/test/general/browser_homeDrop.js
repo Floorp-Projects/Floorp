@@ -4,10 +4,7 @@
 add_task(async function() {
   let HOMEPAGE_PREF = "browser.startup.homepage";
 
-  let homepageStr = Cc["@mozilla.org/supports-string;1"]
-                    .createInstance(Ci.nsISupportsString);
-  homepageStr.data = "about:mozilla";
-  await pushPrefs([HOMEPAGE_PREF, homepageStr, Ci.nsISupportsString]);
+  await pushPrefs([HOMEPAGE_PREF, "about:mozilla"]);
 
   let EventUtils = {};
   Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);

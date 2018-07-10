@@ -17,15 +17,14 @@ import com.robotium.solo.Solo;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
-import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.firstrun.OnboardingHelper;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
 import java.net.HttpURLConnection;
@@ -126,7 +125,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         final Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.putExtra("args", "-no-remote -profile " + config.get("profile"));
         // Don't show the first run experience.
-        intent.putExtra(BrowserApp.EXTRA_SKIP_STARTPANE, true);
+        intent.putExtra(OnboardingHelper.EXTRA_SKIP_STARTPANE, true);
 
         final String envString = config.get("envvars");
         if (!TextUtils.isEmpty(envString)) {

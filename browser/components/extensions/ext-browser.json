@@ -143,6 +143,14 @@
       ["geckoProfiler"]
     ]
   },
+  "search": {
+    "url": "chrome://browser/content/parent/ext-search.js",
+    "schema": "chrome://browser/content/schemas/search.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["search"]
+    ]
+  },
   "sessions": {
     "url": "chrome://browser/content/parent/ext-sessions.js",
     "schema": "chrome://browser/content/schemas/sessions.json",

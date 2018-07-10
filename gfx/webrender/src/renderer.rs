@@ -39,7 +39,7 @@ use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use query::GpuProfiler;
+use device::query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
@@ -83,7 +83,7 @@ cfg_if! {
         use api::ColorU;
         use debug_render::DebugRenderer;
         use profiler::{Profiler, ChangeIndicator};
-        use query::GpuTimer;
+        use device::query::GpuTimer;
     }
 }
 
