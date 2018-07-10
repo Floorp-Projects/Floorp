@@ -115,7 +115,7 @@
 #include "nsSandboxFlags.h"
 #include "FrameLayerBuilder.h"
 #include "VRManagerChild.h"
-#include "nsICommandParams.h"
+#include "nsCommandParams.h"
 #include "nsISHistory.h"
 #include "nsQueryObject.h"
 #include "nsIHttpChannel.h"
@@ -2206,11 +2206,8 @@ TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
     return IPC_OK();
   }
 
-  nsCOMPtr<nsICommandParams> params =
-    do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  rv = params->SetISupportsValue("transferable", trans);
+  RefPtr<nsCommandParams> params = new nsCommandParams();
+  rv = params->SetISupports("transferable", trans);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ourDocShell->DoCommandWithParams("cmd_pasteTransferable", params);
