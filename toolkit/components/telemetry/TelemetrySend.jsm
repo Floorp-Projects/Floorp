@@ -222,6 +222,18 @@ var TelemetrySend = {
   },
 
   /**
+   * Check if sending is disabled. If Telemetry is not allowed to upload,
+   * pings are not sent to the server.
+   * If trying to send a deletion ping, don't block it.
+   *
+   * @param {Object} [ping=null] A ping to be checked.
+   * @return {Boolean} True if pings can be send to the servers, false otherwise.
+   */
+  sendingEnabled(ping = null) {
+    return TelemetrySendImpl.sendingEnabled(ping)
+  },
+
+  /**
    * Notify that we can start submitting data to the servers.
    */
   notifyCanUpload() {
@@ -1224,10 +1236,9 @@ var TelemetrySendImpl = {
   },
 
   /**
-   * Check if sending is disabled. If FHR is not allowed to upload,
-   * pings are not sent to the server (Telemetry is a sub-feature of FHR). If trying
-   * to send a deletion ping, don't block it.
-   * If unified telemetry is off, don't send pings if Telemetry is disabled.
+   * Check if sending is disabled. If Telemetry is not allowed to upload,
+   * pings are not sent to the server.
+   * If trying to send a deletion ping, don't block it.
    *
    * @param {Object} [ping=null] A ping to be checked.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
