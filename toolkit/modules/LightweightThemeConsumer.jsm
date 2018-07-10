@@ -8,6 +8,9 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
+
 const toolkitVariableMap = [
   ["--lwt-accent-color", {
     lwtProperty: "accentcolor",
@@ -139,12 +142,16 @@ LightweightThemeConsumer.prototype = {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
-    const parsedData = JSON.parse(aData);
-    if (parsedData && parsedData.window && parsedData.window !== outerWindowID) {
+    let parsedData = JSON.parse(aData);
+    if (!parsedData) {
+      parsedData = { theme: null };
+    }
+
+    if (parsedData.window && parsedData.window !== outerWindowID) {
       return;
     }
 
-    this._update(parsedData);
+    this._update(parsedData.theme);
   },
 
   receiveMessage({ name, target }) {
@@ -175,33 +182,35 @@ LightweightThemeConsumer.prototype = {
   },
 
   _update(aData) {
-    if (!aData) {
-      aData = { headerURL: "", footerURL: "", textcolor: "", accentcolor: "" };
-      this._lastData = aData;
-    } else {
-      this._lastData = aData;
+    this._lastData = aData;
+    if (aData) {
       aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
+    }
+
+    let active = this._active = !!aData && aData.id !== DEFAULT_THEME_ID;
+
+    if (!aData) {
+      aData = {};
     }
 
     let root = this._doc.documentElement;
 
-    if (aData.headerURL) {
+    if (active && aData.headerURL) {
       root.setAttribute("lwtheme-image", "true");
     } else {
       root.removeAttribute("lwtheme-image");
     }
 
-    let active = aData.accentcolor || aData.headerURL;
-    this._active = active;
-
-    if (aData.icons) {
-      let activeIcons = active ? Object.keys(aData.icons).join(" ") : "";
+    if (active && aData.icons) {
+      let activeIcons = Object.keys(aData.icons).join(" ");
       root.setAttribute("lwthemeicons", activeIcons);
-      for (let [name, value] of Object.entries(aData.icons)) {
-        _setImage(root, active, name, value);
-      }
     } else {
       root.removeAttribute("lwthemeicons");
+    }
+
+    for (let icon of ICONS) {
+      let value = aData.icons ? aData.icons[`--${icon}-icon`] : null;
+      _setImage(root, active, `--${icon}-icon`, value);
     }
 
     _setImage(root, active, "--lwt-header-image", aData.headerURL);
