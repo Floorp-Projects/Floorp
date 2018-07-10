@@ -1913,8 +1913,6 @@ protected:
   InternalGetAttrNameFromQName(const nsAString& aStr,
                                nsAutoString* aNameToUse = nullptr) const;
 
-  nsIFrame* GetStyledFrame();
-
   virtual Element* GetNameSpaceElement() override
   {
     return this;
