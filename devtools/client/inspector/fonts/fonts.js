@@ -670,13 +670,21 @@ class FontInspector {
     }
 
     if (!this.store || !this.isSelectedNodeValid()) {
-      this.store.dispatch(resetFontEditor());
-
       if (this.inspector.selection.isPseudoElementNode()) {
         const noPseudoWarning = getStr("fontinspector.noPseduoWarning");
+        this.store.dispatch(resetFontEditor());
         this.store.dispatch(updateWarningMessage(noPseudoWarning));
+        return;
       }
 
+      // If the selection is a TextNode, switch selection to be its parent node.
+      if (this.inspector.selection.isTextNode()) {
+        const selection = this.inspector.selection;
+        selection.setNodeFront(selection.nodeFront.parentNode());
+        return;
+      }
+
+      this.store.dispatch(resetFontEditor());
       return;
     }
 
