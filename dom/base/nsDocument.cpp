@@ -12638,6 +12638,12 @@ nsIDocument::HasBeenUserGestureActivated()
   return mUserGestureActivated;
 }
 
+bool
+nsIDocument::IsExtensionPage() const
+{
+  return BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
+}
+
 nsIDocument*
 nsIDocument::GetSameTypeParentDocument()
 {

@@ -3439,6 +3439,10 @@ public:
   // document in the document tree.
   bool HasBeenUserGestureActivated();
 
+  // This document is a WebExtension page, it might be a background page, a
+  // popup, a visible tab, a visible iframe ...e.t.c.
+  bool IsExtensionPage() const;
+
   bool HasScriptsBlockedBySandbox();
 
   bool InlineScriptAllowedByCSP();
