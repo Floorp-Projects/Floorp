@@ -115,7 +115,6 @@
 #include "nsDebugImpl.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
-#include "nsGlobalWindowInner.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
@@ -5749,16 +5748,5 @@ ContentParent::RecvBHRThreadHang(const HangDetails& aDetails)
       new nsHangDetails(HangDetails(aDetails));
     obs->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPrincipal,
-                                                           const nsCString& aParentOrigin,
-                                                           const nsCString& aGrantedOrigin)
-{
-  nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(aPrincipal,
-                                                                                  aParentOrigin,
-                                                                                  aGrantedOrigin);
   return IPC_OK();
 }

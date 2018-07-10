@@ -2045,14 +2045,9 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
     isTrackingResource = httpChannel->GetIsTrackingResource();
   }
 
+  // Get originAttributes.
   OriginAttributes attrs;
-  bool firstPartyStorageAccessGranted = false;
   if (aChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-      firstPartyStorageAccessGranted = true;
-    }
-
     NS_GetOriginAttributes(aChannel, attrs);
   }
 
@@ -2060,8 +2055,8 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
   nsAutoCString result;
   GetCookieStringInternal(aHostURI, isForeign, isTrackingResource,
-                          firstPartyStorageAccessGranted, isSafeTopLevelNav,
-                          isSameSiteForeign, aHttpBound, attrs, result);
+                          isSafeTopLevelNav, isSameSiteForeign,
+                          aHttpBound, attrs, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
 }
@@ -2151,20 +2146,15 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
     isTrackingResource = httpChannel->GetIsTrackingResource();
   }
 
+  // Get originAttributes.
   OriginAttributes attrs;
-  bool firstPartyStorageAccessGranted = false;
   if (aChannel) {
     NS_GetOriginAttributes(aChannel, attrs);
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-      firstPartyStorageAccessGranted = true;
-    }
   }
 
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
-  SetCookieStringInternal(aHostURI, isForeign, isTrackingResource,
-                          firstPartyStorageAccessGranted, cookieString,
+  SetCookieStringInternal(aHostURI, isForeign, isTrackingResource, cookieString,
                           serverTime, aFromHttp, attrs, aChannel);
   return NS_OK;
 }
@@ -2173,7 +2163,6 @@ void
 nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
                                          bool                    aIsForeign,
                                          bool                    aIsTrackingResource,
-                                         bool                    aFirstPartyStorageAccessGranted,
                                          nsDependentCString     &aCookieHeader,
                                          const nsCString        &aServerTime,
                                          bool                    aFromHttp,
@@ -2217,7 +2206,6 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
                                          mThirdPartySession,
                                          mThirdPartyNonsecureSession, aHostURI,
                                          aIsForeign, aIsTrackingResource,
-                                         aFirstPartyStorageAccessGranted,
                                          aCookieHeader.get(), priorCookieCount,
                                          aOriginAttrs);
 
@@ -3151,7 +3139,6 @@ void
 nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
                                   bool aIsForeign,
                                   bool aIsTrackingResource,
-                                  bool aFirstPartyStorageAccessGranted,
                                   bool aIsSafeTopLevelNav,
                                   bool aIsSameSiteForeign,
                                   bool aHttpBound,
@@ -3194,7 +3181,6 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
                                          mThirdPartySession,
                                          mThirdPartyNonsecureSession, aHostURI,
                                          aIsForeign, aIsTrackingResource,
-                                         aFirstPartyStorageAccessGranted,
                                          nullptr, priorCookieCount,
                                          aOriginAttrs);
 
@@ -3328,7 +3314,6 @@ void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
                                          bool aIsTrackingResource,
-                                         bool aFirstPartyStorageAccessGranted,
                                          bool aIsSafeTopLevelNav,
                                          bool aIsSameSiteForeign,
                                          bool aHttpBound,
@@ -3337,9 +3322,8 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
 {
   AutoTArray<nsCookie*, 8> foundCookieList;
   GetCookiesForURI(aHostURI, aIsForeign, aIsTrackingResource,
-                   aFirstPartyStorageAccessGranted, aIsSafeTopLevelNav,
-                   aIsSameSiteForeign, aHttpBound, aOriginAttrs,
-                   foundCookieList);
+                   aIsSafeTopLevelNav, aIsSameSiteForeign, aHttpBound,
+                   aOriginAttrs, foundCookieList);
 
   nsCookie* cookie;
   for (uint32_t i = 0; i < foundCookieList.Length(); ++i) {
@@ -4178,7 +4162,6 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
                             nsIURI                 *aHostURI,
                             bool                    aIsForeign,
                             bool                    aIsTrackingResource,
-                            bool                    aFirstPartyStorageAccessGranted,
                             const char             *aCookieHeader,
                             const int               aNumOfCookies,
                             const OriginAttributes &aOriginAttrs)
@@ -4201,9 +4184,8 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
   }
 
   // No cookies allowed if this request comes from a tracker, in a 3rd party
-  // context, when anti-tracking protection is enabled and when we don't have
-  // access to the first-party cookie jar.
-  if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
+  // context, when anti-tracking protection is enabled.
+  if (aIsForeign && aIsTrackingResource &&
       StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
       return STATUS_REJECTED;
   }

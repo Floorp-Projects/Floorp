@@ -1,7 +1,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 AntiTracking.runTest("Set/Get Cookies",
-  // Blocking callback
   async _ => {
     is(document.cookie, "", "No cookies for me");
 
@@ -15,8 +14,6 @@ AntiTracking.runTest("Set/Get Cookies",
 
     is(document.cookie, "", "Still no cookies for me");
   },
-
-  // Non blocking callback
   async _ => {
     is(document.cookie, "", "No cookies for me");
 
@@ -28,11 +25,11 @@ AntiTracking.runTest("Set/Get Cookies",
     });
 
     ok(document.cookie.length, "Some Cookies for me");
-  },
-
-  // Cleanup callback
-  async _ => {
-    await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
-    });
   });
+
+registerCleanupFunction(async _ => {
+  // cache removed.
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+  });
+});

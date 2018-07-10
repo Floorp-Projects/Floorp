@@ -94,7 +94,6 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mXHRParamsAllowed(false)
   , mPrincipalIsSystem(false)
   , mStorageAllowed(false)
-  , mFirstPartyStorageAccessGranted(false)
   , mServiceWorkersTestingInWindow(false)
 {
   MOZ_COUNT_CTOR(WorkerLoadInfo);
@@ -155,7 +154,6 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mXHRParamsAllowed = aOther.mXHRParamsAllowed;
   mPrincipalIsSystem = aOther.mPrincipalIsSystem;
   mStorageAllowed = aOther.mStorageAllowed;
-  mFirstPartyStorageAccessGranted = aOther.mFirstPartyStorageAccessGranted;
   mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
   mOriginAttributes = aOther.mOriginAttributes;
   mParentController = aOther.mParentController;

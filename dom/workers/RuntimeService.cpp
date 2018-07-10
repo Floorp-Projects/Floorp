@@ -53,7 +53,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
@@ -2238,21 +2237,6 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   }
 }
 
-void
-RuntimeService::PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
-
-  nsTArray<WorkerPrivate*> workers;
-  GetWorkersForWindow(aWindow, workers);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    workers[index]->PropagateFirstPartyStorageAccessGranted();
-  }
-}
-
 nsresult
 RuntimeService::CreateSharedWorker(const GlobalObject& aGlobal,
                                    const nsAString& aScriptURL,
@@ -2846,18 +2830,6 @@ ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
     runtime->ResumeWorkersForWindow(aWindow);
-  }
-}
-
-void
-PropagateFirstPartyStorageAccessGrantedToWorkers(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
-
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->PropagateFirstPartyStorageAccessGranted(aWindow);
   }
 }
 

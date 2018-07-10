@@ -107,23 +107,13 @@ interface nsIPermissionManager : nsISupports
            [optional] in int64_t expireTime);
 
   /**
-   * Deprecated! Use getAllForPrincipal!
    * Get all custom permissions for a given URI. This will return
    * an enumerator of all permissions which are not set to default
-   * and which belong to the matching principal of the given URI.
+   * and which belong to the matching prinicpal of the given URI.
    *
    * @param uri  the URI to get all permissions for
    */
   nsISimpleEnumerator getAllForURI(in nsIURI uri);
-
-  /**
-   * Get all custom permissions for a given nsIPrincipal. This will return an
-   * enumerator of all permissions which are not set to default and which
-   * belong to the matching principal of the given nsIPrincipal.
-   *
-   * @param principal  the URI to get all permissions for
-   */
-  nsISimpleEnumerator getAllForPrincipal(in nsIPrincipal principal);
 
   /**
    * Add permission information for a given principal.

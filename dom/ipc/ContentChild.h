@@ -411,8 +411,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvAddPermission(const IPC::Permission& permission) override;
 
-  virtual mozilla::ipc::IPCResult RecvRemoveAllPermissions() override;
-
   virtual mozilla::ipc::IPCResult RecvFlushMemory(const nsString& reason) override;
 
   virtual mozilla::ipc::IPCResult RecvActivateA11y(const uint32_t& aMainChromeTid,
@@ -847,11 +845,6 @@ private:
 
 uint64_t
 NextWindowID();
-
-void
-SendFirstPartyStorageAccessGrantedForOriginToParentProcess(nsIPrincipal* aPrincipal,
-                                                           const nsACString& aParentOrigin,
-                                                           const nsACString& aGrantedOrigin);
 
 } // namespace dom
 } // namespace mozilla

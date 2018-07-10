@@ -10,12 +10,7 @@ AntiTracking.runTest("BroadcastChannel",
   },
   async _ => {
     new BroadcastChannel("hello");
-    ok(true, "BroadcastChannel be used");
-  },
-  async _ => {
-    await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
-    });
+    ok(true, "BroadcastChannel can be used");
   });
 
 AntiTracking.runTest("BroadcastChannel in workers",
@@ -63,10 +58,5 @@ AntiTracking.runTest("BroadcastChannel in workers",
       worker.onmessage = function(e) {
         resolve();
       };
-    });
-  },
-  async _ => {
-    await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
   });

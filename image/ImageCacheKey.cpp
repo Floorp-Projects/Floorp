@@ -142,8 +142,9 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
   // If this document has been marked as tracker, let's use its address to make
   // a unique cache key.
   if (!pointer && aDocument &&
-      nsContentUtils::StorageDisabledByAntiTracking(aDocument->GetInnerWindow(),
-                                                    nullptr, aURI)) {
+      nsContentUtils::StorageDisabledByAntiTracking(nullptr,
+                                                    aDocument->GetChannel(),
+                                                    aURI)) {
     pointer = aDocument;
   }
 

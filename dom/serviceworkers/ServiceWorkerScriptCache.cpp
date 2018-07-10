@@ -77,6 +77,7 @@ CreateCacheStorage(JSContext* aCx, nsIPrincipal* aPrincipal, ErrorResult& aRv,
   // to revalidate is not available now.
   return CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
                                           sandboxGlobalObject, aPrincipal,
+                                          false /* private browsing */,
                                           true /* force trusted origin */,
                                           aRv);
 }
