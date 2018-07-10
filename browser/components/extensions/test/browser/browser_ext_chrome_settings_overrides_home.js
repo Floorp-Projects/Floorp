@@ -22,8 +22,7 @@ const NOT_CONTROLLABLE = "not_controllable";
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 
 const getHomePageURL = () => {
-  return Services.prefs.getComplexValue(
-    HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
+  return Services.prefs.getStringPref(HOMEPAGE_URL_PREF);
 };
 
 function isConfirmed(id) {

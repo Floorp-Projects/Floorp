@@ -13,9 +13,9 @@ use num::One;
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::marker::PhantomData;
+use core::fmt;
+use core::ops::{Add, Div, Mul, Neg, Sub};
+use core::marker::PhantomData;
 use {TypedPoint2D, TypedRect, TypedSize2D, TypedVector2D};
 
 /// A scaling factor between two different units of measurement.
@@ -38,7 +38,7 @@ use {TypedPoint2D, TypedRect, TypedSize2D, TypedVector2D};
 /// let one_foot_in_mm: Length<f32, Mm> = one_foot * mm_per_inch;
 /// ```
 #[repr(C)]
-pub struct TypedScale<T, Src, Dst>(pub T, PhantomData<(Src, Dst)>);
+pub struct TypedScale<T, Src, Dst>(pub T, #[doc(hidden)] pub PhantomData<(Src, Dst)>);
 
 #[cfg(feature = "serde")]
 impl<'de, T, Src, Dst> Deserialize<'de> for TypedScale<T, Src, Dst>
@@ -123,7 +123,12 @@ impl<T: Clone + Sub<T, Output = T>, Src, Dst> Sub for TypedScale<T, Src, Dst> {
 
 impl<T: NumCast + Clone, Src, Dst0> TypedScale<T, Src, Dst0> {
     /// Cast from one numeric representation to another, preserving the units.
-    pub fn cast<T1: NumCast + Clone>(&self) -> Option<TypedScale<T1, Src, Dst0>> {
+    pub fn cast<T1: NumCast + Clone>(&self) -> TypedScale<T1, Src, Dst0> {
+        self.try_cast().unwrap()
+    }
+
+    /// Fallible cast from one numeric representation to another, preserving the units.
+    pub fn try_cast<T1: NumCast + Clone>(&self) -> Option<TypedScale<T1, Src, Dst0>> {
         NumCast::from(self.get()).map(TypedScale::new)
     }
 }

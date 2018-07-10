@@ -15,9 +15,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
@@ -31,8 +28,8 @@ public class FirstrunAnimationContainer extends LinearLayout {
     // After 57, the pref name will be changed. Thus all user since 57 will check this new pref.
     public static final String PREF_FIRSTRUN_ENABLED = GeckoPreferences.NON_PREF_PREFIX + "startpane_enabled_after_57";
 
-    public static interface OnFinishListener {
-        public void onFinish();
+    public interface OnFinishListener {
+        void onFinish();
     }
 
     private FirstrunPager pager;
@@ -46,15 +43,21 @@ public class FirstrunAnimationContainer extends LinearLayout {
         super(context, attrs);
     }
 
-    public void load(Context appContext, FragmentManager fm) {
+    public void load(Context appContext, FragmentManager fm, final boolean useLocalValues) {
         visible = true;
-        pager = (FirstrunPager) findViewById(R.id.firstrun_pager);
-        pager.load(appContext, fm, new OnFinishListener() {
+        pager = findViewById(R.id.firstrun_pager);
+        pager.load(appContext, fm, useLocalValues, new OnFinishListener() {
             @Override
             public void onFinish() {
                 hide();
             }
         });
+
+        if (useLocalValues) {
+            MmaDelegate.track(MmaDelegate.ONBOARDING_DEFAULT_VALUES);
+        } else {
+            MmaDelegate.track(MmaDelegate.ONBOARDING_REMOTE_VALUES);
+        }
     }
 
     public boolean isVisible() {

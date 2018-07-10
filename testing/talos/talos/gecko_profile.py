@@ -25,7 +25,7 @@ class GeckoProfile(object):
 
     This allow to collect Gecko profiling data and to zip results in one file.
     """
-    def __init__(self, upload_dir, browser_config, test_config):
+    def __init__(self, upload_dir, browser_config, test_config, webrender_enabled):
         self.upload_dir = upload_dir
         self.browser_config, self.test_config = browser_config, test_config
         self.cleanup = True
@@ -38,6 +38,8 @@ class GeckoProfile(object):
         gecko_profile_interval = test_config.get('gecko_profile_interval', 1)
         gecko_profile_entries = test_config.get('gecko_profile_entries', 1000000)
         gecko_profile_threads = 'GeckoMain,Compositor'
+        if webrender_enabled:
+            gecko_profile_threads += ',WR,Renderer'
 
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
@@ -82,7 +84,8 @@ class GeckoProfile(object):
         env.update({
             'MOZ_PROFILER_STARTUP': '1',
             'MOZ_PROFILER_STARTUP_INTERVAL': str(self.option('interval')),
-            'MOZ_PROFILER_STARTUP_ENTRIES': str(self.option('entries'))
+            'MOZ_PROFILER_STARTUP_ENTRIES': str(self.option('entries')),
+            'MOZ_PROFILER_STARTUP_FILTERS': str(self.option('threads'))
         })
 
     def _save_gecko_profile(self, cycle, symbolicator, missing_symbols_zip,

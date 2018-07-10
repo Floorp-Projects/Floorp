@@ -2,5 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Do NOT localize or otherwise change these values
-browser.startup.homepage=about:home
+DIST_INSTALL = False
+
+SimplePrograms(['Injector'])
+
+TEST_HARNESS_FILES.gtest += ['!Injector.exe']

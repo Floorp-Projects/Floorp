@@ -40,20 +40,16 @@ function postMessageToWorker(tab, message) {
 }
 
 add_task(async function test() {
-  SpecialPowers.setBoolPref('dom.performance.enable_scheduler_timing', true);
+  SpecialPowers.setBoolPref("dom.performance.enable_scheduler_timing", true);
   waitForExplicitFinish();
 
   // Load 3 pages and wait. The 3rd one has a worker
   let page1 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: 'about:about', forceNewProcess: false
+    gBrowser, opening: "about:about", forceNewProcess: false
   });
 
   let page2 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: 'about:memory', forceNewProcess: false
-  });
-
-  let page3 = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser, opening: "about:performance", forceNewProcess: true
+    gBrowser, opening: "about:memory", forceNewProcess: false
   });
 
   // load a 4th tab with a worker
@@ -108,10 +104,23 @@ add_task(async function test() {
     Assert.ok(parentProcessEvent, "parent process sent back some events");
     Assert.ok(isTopLevel, "example.com as a top level window");
     Assert.ok(aboutMemoryFound, "about:memory");
+
+    // Doing a second call, we shoud get bigger values
+    let previousWorkerDuration = workerDuration;
+    let previousWorkerTotal = workerTotal;
+    let previousDuration = duration;
+    let previousTotal = total;
+
+    results = await ChromeUtils.requestPerformanceMetrics();
+    exploreResults(results);
+
+    Assert.ok(workerDuration > previousWorkerDuration, "Worker duration should be positive");
+    Assert.ok(workerTotal > previousWorkerTotal, "Worker count should be positive");
+    Assert.ok(duration > previousDuration, "Duration should be positive");
+    Assert.ok(total > previousTotal, "Should get a positive count");
   });
 
   BrowserTestUtils.removeTab(page1);
   BrowserTestUtils.removeTab(page2);
-  BrowserTestUtils.removeTab(page3);
-  SpecialPowers.clearUserPref('dom.performance.enable_scheduler_timing');
+  SpecialPowers.clearUserPref("dom.performance.enable_scheduler_timing");
 });

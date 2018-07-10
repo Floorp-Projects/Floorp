@@ -9,6 +9,9 @@
 #if (defined(_MSC_VER) || defined(__MINGW32__))  && (defined(_M_IX86) || defined(_M_X64))
 
 #include <windows.h>
+#ifdef ENABLE_TESTS
+#include <winternl.h>
+#endif // ENABLE_TESTS
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
@@ -24,6 +27,14 @@ enum DllBlocklistInitFlags
 MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
 MFBT_API void DllBlocklist_WriteNotes(HANDLE file);
 MFBT_API bool DllBlocklist_CheckStatus();
+
+#ifdef ENABLE_TESTS
+typedef void (*DllLoadHookType)(bool aDllLoaded, NTSTATUS aNtStatus,
+                                HANDLE aDllBase, PUNICODE_STRING aDllName);
+MFBT_API void DllBlocklist_SetDllLoadHook(DllLoadHookType aHook);
+typedef void (*CreateThreadHookType)(bool aWasAllowed, void *aStartAddress);
+MFBT_API void DllBlocklist_SetCreateThreadHook(CreateThreadHookType aHook);
+#endif // ENABLE_TESTS
 
 // Forward declaration
 namespace mozilla {

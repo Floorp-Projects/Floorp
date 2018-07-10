@@ -256,7 +256,7 @@ nsresult u8_vec_get(const U8Vec* vec, size_t index, uint8_t* ret);
 
 void sdp_free_string(char* string);
 
-nsresult parse_sdp(const char* sdp, uint32_t length, bool fail_on_warning,
+nsresult parse_sdp(StringView sdp, bool fail_on_warning,
                    RustSdpSession** ret, RustSdpError** err);
 RustSdpSession* sdp_new_reference(RustSdpSession* aSess);
 void sdp_free_session(RustSdpSession* ret);
@@ -335,6 +335,7 @@ size_t sdp_get_fmtp(const RustAttributeList* aList, size_t listSize,
 int64_t sdp_get_ptime(const RustAttributeList* aList);
 int64_t sdp_get_max_msg_size(const RustAttributeList* aList);
 int64_t sdp_get_sctp_port(const RustAttributeList* aList);
+nsresult sdp_get_maxptime(const RustAttributeList* aList, uint64_t* aMaxPtime);
 
 RustSdpAttributeFlags sdp_get_attribute_flags(const RustAttributeList* aList);
 

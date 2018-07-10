@@ -436,7 +436,6 @@ where
             Perspective(ref d) => {
                 let m = create_perspective_matrix(d.to_pixel_length(None)?);
                 m.cast()
-                    .expect("Casting from f32 to f64 should be successful")
             },
             Scale3D(sx, sy, sz) => Transform3D::create_scale(sx.into(), sy.into(), sz.into()),
             Scale(sx, sy) => Transform3D::create_scale(sx.into(), sy.unwrap_or(sx).into(), 1.),
@@ -570,7 +569,7 @@ pub fn get_normalized_vector_and_angle<T: Zero>(
         // rotation to not be applied, so we use identity matrix (i.e. rotate3d(0, 0, 1, 0)).
         (0., 0., 1., T::zero())
     } else {
-        let vector = vector.normalize();
+        let vector = vector.robust_normalize();
         (vector.x, vector.y, vector.z, angle)
     }
 }

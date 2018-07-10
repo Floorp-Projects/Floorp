@@ -17,4 +17,5 @@ CppUnitTests([
 if CONFIG['OS_ARCH'] == 'WINNT':
     TEST_DIRS += [
         'interceptor',
+        'gtest',
     ]

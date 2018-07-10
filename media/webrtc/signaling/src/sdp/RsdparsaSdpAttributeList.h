@@ -144,6 +144,7 @@ private:
   void LoadRemoteCandidates(RustAttributeList* attributeList);
   void LoadRids(RustAttributeList* attributeList);
   void LoadExtmap(RustAttributeList* attributeList);
+  void LoadMaxPtime(RustAttributeList* attributeList);
 
   void WarnAboutMisplacedAttribute(SdpAttribute::AttributeType type,
                                    uint32_t lineNumber,

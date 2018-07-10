@@ -129,8 +129,6 @@ DocGroup::ReportPerformanceInfo()
     }
   }
 
-  // setting back all counters to zero
-  mPerformanceCounter->ResetPerformanceCounters();
   return PerformanceInfo(host, pid, pwid, duration, false, isTopLevel, items);
 }
 

@@ -380,6 +380,7 @@ private:
 
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
   JS::AutoHideScriptedCaller mCallerOverride;
+  AutoProfilerLabel mAutoProfilerLabel;
 };
 
 /*

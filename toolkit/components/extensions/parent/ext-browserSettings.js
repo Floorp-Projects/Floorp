@@ -217,8 +217,7 @@ this.browserSettings = class extends ExtensionAPI {
         homepageOverride: getSettingsAPI(
           extension.id, HOMEPAGE_OVERRIDE_SETTING,
           () => {
-            return Services.prefs.getComplexValue(
-              HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
+            return Services.prefs.getStringPref(HOMEPAGE_URL_PREF);
           }, undefined, true),
         imageAnimationBehavior: getSettingsAPI(
           extension.id, "imageAnimationBehavior",

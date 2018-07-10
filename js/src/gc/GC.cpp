@@ -305,7 +305,7 @@ namespace TuningDefaults {
     static const bool DynamicHeapGrowthEnabled = false;
 
     /* JSGC_HIGH_FREQUENCY_TIME_LIMIT */
-    static const auto HighFrequencyThreshold = mozilla::TimeDuration::FromSeconds(1);
+    static const auto HighFrequencyThreshold = 1; // in seconds
 
     /* JSGC_HIGH_FREQUENCY_LOW_LIMIT */
     static const uint64_t HighFrequencyLowLimitBytes = 100 * 1024 * 1024;
@@ -345,8 +345,6 @@ namespace TuningDefaults {
         Nursery::NurseryChunkUsableSize / 4;
 
 }}} // namespace js::gc::TuningDefaults
-
-static const auto ONE_SECOND = mozilla::TimeDuration::FromSeconds(1);
 
 /*
  * We start to incremental collection for a zone when a proportion of its
@@ -1572,7 +1570,7 @@ GCSchedulingTunables::GCSchedulingTunables()
     allocThresholdFactorAvoidInterrupt_(TuningDefaults::AllocThresholdFactorAvoidInterrupt),
     zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
     dynamicHeapGrowthEnabled_(TuningDefaults::DynamicHeapGrowthEnabled),
-    highFrequencyThreshold_(TuningDefaults::HighFrequencyThreshold),
+    highFrequencyThreshold_(mozilla::TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
     highFrequencyLowLimitBytes_(TuningDefaults::HighFrequencyLowLimitBytes),
     highFrequencyHighLimitBytes_(TuningDefaults::HighFrequencyHighLimitBytes),
     highFrequencyHeapGrowthMax_(TuningDefaults::HighFrequencyHeapGrowthMax),
@@ -1624,7 +1622,7 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
         highFrequencyThreshold_ =
-            TuningDefaults::HighFrequencyThreshold;
+            mozilla::TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
         setHighFrequencyLowLimit(TuningDefaults::HighFrequencyLowLimitBytes);
@@ -2125,6 +2123,8 @@ GCRuntime::shouldCompact()
     // if we are currently animating, unless the user is inactive or we're
     // responding to memory pressure.
 
+    static const auto oneSecond = mozilla::TimeDuration::FromSeconds(1);
+
     if (invocationKind != GC_SHRINK || !isCompactingGCEnabled())
         return false;
 
@@ -2135,7 +2135,9 @@ GCRuntime::shouldCompact()
     }
 
     const auto &lastAnimationTime = rt->lastAnimationTime.ref();
-    return !isIncremental || lastAnimationTime.IsNull() || lastAnimationTime + ONE_SECOND < mozilla::TimeStamp::Now();
+    return !isIncremental
+        || lastAnimationTime.IsNull()
+        || lastAnimationTime + oneSecond < mozilla::TimeStamp::Now();
 }
 
 bool
@@ -3229,8 +3231,6 @@ ArenaLists::queueForegroundThingsForSweep()
     gcScriptArenasToUpdate = arenaListsToSweep(AllocKind::SCRIPT);
 }
 
-const mozilla::TimeStamp SliceBudget::unlimitedDeadline = mozilla::TimeStamp::Now() + mozilla::TimeDuration::Forever();
-
 SliceBudget::SliceBudget()
   : timeBudget(UnlimitedTimeBudget), workBudget(UnlimitedWorkBudget)
 {
@@ -4046,6 +4046,7 @@ bool
 GCRuntime::shouldPreserveJITCode(Realm* realm, const mozilla::TimeStamp &currentTime,
                                  JS::gcreason::Reason reason, bool canAllocateMoreCode)
 {
+    static const auto oneSecond = mozilla::TimeDuration::FromSeconds(1);
 
     if (cleanUpEverything)
         return false;
@@ -4058,7 +4059,7 @@ GCRuntime::shouldPreserveJITCode(Realm* realm, const mozilla::TimeStamp &current
         return true;
 
     const auto &lastAnimationTime = realm->lastAnimationTime.ref();
-    if (!lastAnimationTime.IsNull() && lastAnimationTime + ONE_SECOND >= currentTime)
+    if (!lastAnimationTime.IsNull() && lastAnimationTime + oneSecond >= currentTime)
         return true;
 
     if (reason == JS::gcreason::DEBUG_GC)
