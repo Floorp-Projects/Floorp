@@ -1139,9 +1139,25 @@ class SourceUnits
                c == unicode::PARA_SEPARATOR;
     }
 
-    // Returns the offset of the next EOL, but stops once 'max' characters
-    // have been scanned (*including* the char at startOffset_).
-    size_t findEOLMax(size_t start, size_t max);
+    /**
+     * The maximum radius of code around the location of an error that should
+     * be included in a syntax error message -- this many code units to either
+     * side.  The resulting window of data is then accordinngly trimmed so that
+     * the window contains only validly-encoded data.
+     *
+     * Because this number is the same for both UTF-8 and UTF-16, windows in
+     * UTF-8 may contain fewer code points than windows in UTF-16.  As we only
+     * use this for error messages, we don't particularly care.
+     */
+    static constexpr size_t WindowRadius = ErrorMetadata::lineOfContextRadius;
+
+    /**
+     * From absolute offset |offset|, find an absolute offset, no further than
+     * |WindowRadius| code units away from |offset|, such that all code units
+     * from |offset| to that offset encode valid, non-LineTerminator code
+     * points.
+     */
+    size_t findWindowEnd(size_t offset);
 
   private:
     /** Base of buffer. */

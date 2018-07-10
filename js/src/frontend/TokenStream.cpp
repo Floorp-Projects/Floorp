@@ -45,6 +45,7 @@ using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
+using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
 
 struct ReservedWordInfo
@@ -621,27 +622,57 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
         ungetCodeUnit(units[numUnits]);
 }
 
-template<typename CharT>
+template<>
 size_t
-SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
+SourceUnits<char16_t>::findWindowEnd(size_t offset)
 {
-    const CharT* p = codeUnitPtrAt(start);
+    const char16_t* const initial = codeUnitPtrAt(offset);
+    const char16_t* p = initial;
 
-    size_t n = 0;
+    auto HalfWindowSize = [&initial, &p]() { return PointerRangeSize(initial, p); };
+
     while (true) {
-        if (p >= limit_)
+        MOZ_ASSERT(p <= limit_);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p >= limit_ || HalfWindowSize() >= WindowRadius)
             break;
-        if (n >= max)
-            break;
-        n++;
+
+        char16_t c = *p;
 
         // This stops at U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR in
         // string and template literals.  These code points do affect line and
         // column coordinates, even as they encode their literal values.
-        if (isRawEOLChar(*p++))
+        if (isRawEOLChar(c))
             break;
+
+        // Don't allow invalid UTF-16 in post-context.  (Current users don't
+        // require this, and this behavior isn't currently imposed on
+        // pre-context, but these facts might change someday.)
+
+        if (MOZ_UNLIKELY(unicode::IsTrailSurrogate(c)))
+            break;
+
+        // Optimistically consume the code unit, ungetting it below if needed.
+        p++;
+
+        // If it's not a surrogate at all, keep going.
+        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
+            continue;
+
+        // Retract if the lead surrogate would stand alone at the end of the
+        // window.
+        if (HalfWindowSize() >= WindowRadius || // split pair
+            p >= limit_ || // half-pair at end of source
+            !unicode::IsTrailSurrogate(*p)) // no paired trail surrogate
+        {
+            p--;
+            break;
+        }
+
+        p++;
     }
-    return start + n;
+
+    return offset + HalfWindowSize();
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -825,7 +856,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::internalComputeLineOfContext(Err
     if (err->lineNumber != anyChars.lineno)
         return true;
 
-    constexpr size_t windowRadius = ErrorMetadata::lineOfContextRadius;
+    constexpr size_t windowRadius = SourceUnits::WindowRadius;
 
     // The window must start within the current line, no earlier than
     // |windowRadius| characters before |offset|.
@@ -841,7 +872,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::internalComputeLineOfContext(Err
 
     // The window must end no further than |windowRadius| after |offset| within
     // the current line.
-    size_t windowEnd = this->sourceUnits.findEOLMax(offset, windowRadius);
+    size_t windowEnd = this->sourceUnits.findWindowEnd(offset);
     size_t windowLength = windowEnd - windowStart;
     MOZ_ASSERT(windowLength <= windowRadius * 2);
 
