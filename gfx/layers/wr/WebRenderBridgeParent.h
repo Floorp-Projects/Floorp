@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_WebRenderBridgeParent_h
 #define mozilla_layers_WebRenderBridgeParent_h
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include "CompositableHost.h"           // for CompositableHost, ImageCompositeNotificationInfo
@@ -294,9 +295,9 @@ private:
   // mActiveAnimations is used to avoid leaking animations when WebRenderBridgeParent is
   // destroyed abnormally and Tab move between different windows.
   std::unordered_set<uint64_t> mActiveAnimations;
-  nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mAsyncCompositables;
-  nsDataHashtable<nsUint64HashKey, CompositableTextureHostRef> mTextureHosts;
-  nsTHashtable<nsUint64HashKey> mSharedSurfaceIds;
+  std::unordered_map<uint64_t, RefPtr<WebRenderImageHost>> mAsyncCompositables;
+  std::unordered_map<uint64_t, CompositableTextureHostRef> mTextureHosts;
+  std::unordered_set<uint64_t> mSharedSurfaceIds;
 
   TimeDuration mVsyncRate;
   TimeStamp mPreviousFrameTimeStamp;
