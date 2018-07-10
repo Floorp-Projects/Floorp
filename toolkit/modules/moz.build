@@ -180,6 +180,7 @@ EXTRA_JS_MODULES += [
     'addons/WebRequestUpload.jsm',
     'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
+    'AutoCompletePopupContent.jsm',
     'AutoScrollController.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',
