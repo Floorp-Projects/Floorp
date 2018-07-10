@@ -108,6 +108,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "nsPrintfCString.h"
@@ -11257,54 +11258,60 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     }
   }
 
-  // Inherit the touch-action flags from the parent, if there is one. We do this
-  // because of how the touch-action on a frame combines the touch-action from
-  // ancestor DOM elements. Refer to the documentation in TouchActionHelper.cpp
-  // for details; this code is meant to be equivalent to that code, but woven
-  // into the top-down recursive display list building process.
-  CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInfo::eInvisibleToHitTest;
-  if (nsDisplayCompositorHitTestInfo* parentInfo = aBuilder->GetCompositorHitTestInfo()) {
-    inheritedTouchAction = (parentInfo->HitTestInfo() & CompositorHitTestInfo::eTouchActionMask);
+  nsIDocShell* docShell = nullptr;
+  if (PresShell()->GetDocument()) {
+    docShell = PresShell()->GetDocument()->GetDocShell();
   }
-
-  nsIFrame* touchActionFrame = this;
-  if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {
-    touchActionFrame = do_QueryFrame(scrollFrame);
-    // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
-    // reset them back to zero to allow panning on the scrollframe unless we
-    // encounter an element that disables it that's inside the scrollframe.
-    // This is equivalent to the |considerPanning| variable in
-    // TouchActionHelper.cpp, but for a top-down traversal.
-    CompositorHitTestInfo panMask = CompositorHitTestInfo::eTouchActionPanXDisabled
-                                  | CompositorHitTestInfo::eTouchActionPanYDisabled;
-    inheritedTouchAction &= ~panMask;
-  }
-
-  result |= inheritedTouchAction;
-
-  const uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
-  // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
-  // so we can eliminate some combinations of things.
-  if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
-    // nothing to do
-  } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
-    result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
-  } else {
-    // This path handles the cases none | [pan-x || pan-y] and so both
-    // double-tap and pinch zoom are disabled in here.
-    result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
-            | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
-
-    if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
-      result |= CompositorHitTestInfo::eTouchActionPanXDisabled;
+  if (dom::TouchEvent::PrefEnabled(docShell)) {
+    // Inherit the touch-action flags from the parent, if there is one. We do this
+    // because of how the touch-action on a frame combines the touch-action from
+    // ancestor DOM elements. Refer to the documentation in TouchActionHelper.cpp
+    // for details; this code is meant to be equivalent to that code, but woven
+    // into the top-down recursive display list building process.
+    CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInfo::eInvisibleToHitTest;
+    if (nsDisplayCompositorHitTestInfo* parentInfo = aBuilder->GetCompositorHitTestInfo()) {
+      inheritedTouchAction = (parentInfo->HitTestInfo() & CompositorHitTestInfo::eTouchActionMask);
     }
-    if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
-      result |= CompositorHitTestInfo::eTouchActionPanYDisabled;
+
+    nsIFrame* touchActionFrame = this;
+    if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {
+      touchActionFrame = do_QueryFrame(scrollFrame);
+      // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
+      // reset them back to zero to allow panning on the scrollframe unless we
+      // encounter an element that disables it that's inside the scrollframe.
+      // This is equivalent to the |considerPanning| variable in
+      // TouchActionHelper.cpp, but for a top-down traversal.
+      CompositorHitTestInfo panMask = CompositorHitTestInfo::eTouchActionPanXDisabled
+                                    | CompositorHitTestInfo::eTouchActionPanYDisabled;
+      inheritedTouchAction &= ~panMask;
     }
-    if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
-      // all the touch-action disabling flags will already have been set above
-      MOZ_ASSERT((result & CompositorHitTestInfo::eTouchActionMask)
-               == CompositorHitTestInfo::eTouchActionMask);
+
+    result |= inheritedTouchAction;
+
+    const uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
+    // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
+    // so we can eliminate some combinations of things.
+    if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
+      // nothing to do
+    } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
+      result |= CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
+    } else {
+      // This path handles the cases none | [pan-x || pan-y] and so both
+      // double-tap and pinch zoom are disabled in here.
+      result |= CompositorHitTestInfo::eTouchActionPinchZoomDisabled
+              | CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled;
+
+      if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
+        result |= CompositorHitTestInfo::eTouchActionPanXDisabled;
+      }
+      if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
+        result |= CompositorHitTestInfo::eTouchActionPanYDisabled;
+      }
+      if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
+        // all the touch-action disabling flags will already have been set above
+        MOZ_ASSERT((result & CompositorHitTestInfo::eTouchActionMask)
+                 == CompositorHitTestInfo::eTouchActionMask);
+      }
     }
   }
 
