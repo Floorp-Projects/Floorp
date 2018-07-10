@@ -213,6 +213,7 @@ public class GeckoSession extends LayerSession
                     result.then(new GeckoResult.OnValueListener<Boolean, Void>() {
                         @Override
                         public GeckoResult<Void> onValue(Boolean value) throws Throwable {
+                            ThreadUtils.assertOnUiThread();
                             callback.sendSuccess(value);
                             return null;
                         }
@@ -234,6 +235,7 @@ public class GeckoSession extends LayerSession
                     result.then(new GeckoResult.OnValueListener<GeckoSession, Void>() {
                         @Override
                         public GeckoResult<Void> onValue(GeckoSession session) throws Throwable {
+                            ThreadUtils.assertOnUiThread();
                             if (session == null) {
                                 callback.sendSuccess(null);
                                 return null;

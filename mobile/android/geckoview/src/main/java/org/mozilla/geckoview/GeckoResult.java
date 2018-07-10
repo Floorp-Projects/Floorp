@@ -2,6 +2,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -148,6 +149,7 @@ public class GeckoResult<T> {
         }
     }
 
+    private Handler mHandler;
     private boolean mComplete;
     private T mValue;
     private Throwable mError;
@@ -159,6 +161,11 @@ public class GeckoResult<T> {
      * {@link #completeExceptionally(Throwable)} in order to fulfill the result.
      */
     public GeckoResult() {
+        if (ThreadUtils.isOnUiThread()) {
+            mHandler = ThreadUtils.getUiHandler();
+        } else {
+            mHandler = new Handler();
+        }
     }
 
     /**
@@ -250,8 +257,10 @@ public class GeckoResult<T> {
 
     /**
      * Adds listeners to be called when the {@link GeckoResult} is completed either with
-     * a value or {@link Throwable}. Listeners will be invoked on the main thread. If the
-     * result is already complete when this method is called, listeners will be invoked in
+     * a value or {@link Throwable}. Listeners will be invoked on the thread where the
+     * {@link GeckoResult} was created, which must have a {@link Looper} installed.
+     *
+     * If the result is already complete when this method is called, listeners will be invoked in
      * a future {@link Looper} iteration.
      *
      * @param valueListener An instance of {@link OnValueListener}, called when the
@@ -315,7 +324,7 @@ public class GeckoResult<T> {
             return;
         }
 
-        ThreadUtils.getUiHandler().post(new Runnable() {
+        mHandler.post(new Runnable() {
             @Override
             public void run() {
                 if (mListeners != null) {
@@ -336,7 +345,7 @@ public class GeckoResult<T> {
             throw new IllegalStateException("Cannot dispatch unless result is complete");
         }
 
-        ThreadUtils.getUiHandler().post(new Runnable() {
+        mHandler.post(new Runnable() {
             @Override
             public void run() {
                 runnable.run();
