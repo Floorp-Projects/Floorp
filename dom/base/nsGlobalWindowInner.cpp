@@ -8091,6 +8091,17 @@ nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrig
       nsContentUtils::StorageDisabledByAntiTracking(this, nullptr, nullptr)) {
     PropagateFirstPartyStorageAccessGrantedToWorkers(this);
   }
+
+  // Let's store the origin in the loadInfo as well.
+  if (mDoc) {
+    nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
+    if (channel) {
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+      if (loadInfo) {
+        loadInfo->AddFirstPartyStorageAccessGrantedFor(aOrigin);
+      }
+    }
+  }
 }
 
 void
