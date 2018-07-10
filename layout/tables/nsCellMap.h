@@ -193,8 +193,7 @@ public:
                         nsCellMap& aCellMap,
                         uint32_t   aRowGroupStart,
                         uint32_t   aYPos,
-                        uint32_t   aXPos,
-                        bool       aIsBEndIEnd = false);
+                        uint32_t   aXPos);
 
   void SetBCBorderEdge(mozilla::LogicalSide aEdge,
                        nsCellMap&    aCellMap,
