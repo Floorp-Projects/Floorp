@@ -195,7 +195,7 @@ var WinTaskbarJumpList =
     return Object.keys(this._pendingStatements).length > 0;
   },
 
-  _buildList: function WTBJL__buildList() {
+  async _buildList() {
     if (this._hasPendingStatements()) {
       // We were requested to update the list while another update was in
       // progress, this could happen at shutdown, idle or privatebrowsing.
@@ -214,7 +214,7 @@ var WinTaskbarJumpList =
       return;
     }
 
-    if (!this._startBuild())
+    if (!await this._startBuild())
       return;
 
     if (this._showTasks)
@@ -234,13 +234,12 @@ var WinTaskbarJumpList =
    * Taskbar api wrappers
    */
 
-  _startBuild: function WTBJL__startBuild() {
-    var removedItems = Cc["@mozilla.org/array;1"].
-                       createInstance(Ci.nsIMutableArray);
+  async _startBuild() {
     this._builder.abortListBuild();
-    if (this._builder.initListBuild(removedItems)) {
+    let URIsToRemove = await this._builder.initListBuild();
+    if (URIsToRemove.length > 0) {
       // Prior to building, delete removed items from history.
-      this._clearHistory(removedItems);
+      this._clearHistory(URIsToRemove);
       return true;
     }
     return false;
@@ -422,20 +421,15 @@ var WinTaskbarJumpList =
     });
   },
 
-  _clearHistory: function WTBJL__clearHistory(items) {
-    if (!items)
-      return;
-    var URIsToRemove = [];
-    var e = items.enumerate();
-    while (e.hasMoreElements()) {
-      let oldItem = e.getNext().QueryInterface(Ci.nsIJumpListShortcut);
-      if (oldItem) {
-        try { // in case we get a bad uri
-          let uriSpec = oldItem.app.getParameter(0);
-          URIsToRemove.push(Services.io.newURI(uriSpec));
-        } catch (err) { }
+  _clearHistory: function WTBJL__clearHistory(uriSpecsToRemove) {
+    let URIsToRemove = uriSpecsToRemove.map(spec => {
+      try { // in case we get a bad uri
+        return Services.io.newURI(spec);
+      } catch (e) {
+        return null;
       }
-    }
+    }).filter(uri => !!uri);
+
     if (URIsToRemove.length > 0) {
       PlacesUtils.history.remove(URIsToRemove).catch(Cu.reportError);
     }
