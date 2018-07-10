@@ -10,6 +10,8 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
+  "resource://gre/modules/AutoCompletePopupContent.jsm");
 ChromeUtils.defineModuleGetter(this, "AutoScrollController",
   "resource://gre/modules/AutoScrollController.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
@@ -22,6 +24,10 @@ ChromeUtils.defineModuleGetter(this, "PrintingContent",
   "resource://gre/modules/PrintingContent.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteFinder",
   "resource://gre/modules/RemoteFinder.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "formFill",
+                                   "@mozilla.org/satchel/form-fill-controller;1",
+                                   "nsIFormFillController");
 
 var global = this;
 
@@ -499,201 +505,45 @@ addEventListener("MozApplicationManifest", function(e) {
   sendAsyncMessage("MozApplicationManifest", info);
 }, false);
 
-let AutoCompletePopup = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
-
+let AutoComplete = {
   _connected: false,
 
-  MESSAGES: [
-    "FormAutoComplete:HandleEnter",
-    "FormAutoComplete:PopupClosed",
-    "FormAutoComplete:PopupOpened",
-    "FormAutoComplete:RequestFocus",
-  ],
-
   init() {
-    addEventListener("unload", this);
-    addEventListener("DOMContentLoaded", this);
+    addEventListener("unload", this, {once: true});
+    addEventListener("DOMContentLoaded", this, {once: true});
     // WebExtension browserAction is preloaded and does not receive DCL, wait
     // on pageshow so we can hookup the formfill controller.
-    addEventListener("pageshow", this, true);
+    addEventListener("pageshow", this, {capture: true, once: true});
 
-    for (let messageName of this.MESSAGES) {
-      addMessageListener(messageName, this);
-    }
-
-    this._input = null;
-    this._popupOpen = false;
-  },
-
-  destroy() {
-    if (this._connected) {
-      let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
-                         .getService(Ci.nsIFormFillController);
-      controller.detachFromBrowser(docShell);
-      this._connected = false;
-    }
-
-    removeEventListener("pageshow", this);
-    removeEventListener("unload", this);
-    removeEventListener("DOMContentLoaded", this);
-
-    for (let messageName of this.MESSAGES) {
-      removeMessageListener(messageName, this);
-    }
-  },
-
-  connect() {
-    if (this._connected) {
-      return;
-    }
-    // We need to wait for a content viewer to be available
-    // before we can attach our AutoCompletePopup handler,
-    // since nsFormFillController assumes one will exist
-    // when we call attachToBrowser.
-
-    // Hook up the form fill autocomplete controller.
-    let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
-                       .getService(Ci.nsIFormFillController);
-    controller.attachToBrowser(docShell,
-                               this.QueryInterface(Ci.nsIAutoCompletePopup));
-    this._connected = true;
+    XPCOMUtils.defineLazyProxy(this, "popup", () => new AutoCompletePopup(global),
+                               {QueryInterface: null});
   },
 
   handleEvent(event) {
     switch (event.type) {
-      case "pageshow": {
-        removeEventListener("pageshow", this);
-        this.connect();
-        break;
+    case "DOMContentLoaded":
+    case "pageshow":
+      // We need to wait for a content viewer to be available
+      // before we can attach our AutoCompletePopup handler,
+      // since nsFormFillController assumes one will exist
+      // when we call attachToBrowser.
+      if (!this._connected) {
+        formFill.attachToBrowser(docShell, this.popup);
+        this._connected = true;
       }
+      break;
 
-      case "DOMContentLoaded": {
-        removeEventListener("DOMContentLoaded", this);
-        this.connect();
-        break;
+    case "unload":
+      if (this._connected) {
+        formFill.detachFromBrowser(docShell);
+        this._connected = false;
       }
-
-      case "unload": {
-        this.destroy();
-        break;
-      }
+      break;
     }
-  },
-
-  receiveMessage(message) {
-    switch (message.name) {
-      case "FormAutoComplete:HandleEnter": {
-        this.selectedIndex = message.data.selectedIndex;
-
-        let controller = Cc["@mozilla.org/autocomplete/controller;1"]
-                           .getService(Ci.nsIAutoCompleteController);
-        controller.handleEnter(message.data.isPopupSelection);
-        break;
-      }
-
-      case "FormAutoComplete:PopupClosed": {
-        this._popupOpen = false;
-        break;
-      }
-
-      case "FormAutoComplete:PopupOpened": {
-        this._popupOpen = true;
-        break;
-      }
-
-      case "FormAutoComplete:RequestFocus": {
-        if (this._input) {
-          this._input.focus();
-        }
-        break;
-      }
-    }
-  },
-
-  get input() { return this._input; },
-  get overrideValue() { return null; },
-  set selectedIndex(index) {
-    sendAsyncMessage("FormAutoComplete:SetSelectedIndex", { index });
-  },
-  get selectedIndex() {
-    // selectedIndex getter must be synchronous because we need the
-    // correct value when the controller is in controller::HandleEnter.
-    // We can't easily just let the parent inform us the new value every
-    // time it changes because not every action that can change the
-    // selectedIndex is trivial to catch (e.g. moving the mouse over the
-    // list).
-    return sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
-  },
-  get popupOpen() {
-    return this._popupOpen;
-  },
-
-  openAutocompletePopup(input, element) {
-    if (this._popupOpen || !input) {
-      return;
-    }
-
-    let rect = BrowserUtils.getElementBoundingScreenRect(element);
-    let window = element.ownerGlobal;
-    let dir = window.getComputedStyle(element).direction;
-    let results = this.getResultsFromController(input);
-
-    sendAsyncMessage("FormAutoComplete:MaybeOpenPopup",
-                     { results, rect, dir });
-    this._input = input;
-  },
-
-  closePopup() {
-    // We set this here instead of just waiting for the
-    // PopupClosed message to do it so that we don't end
-    // up in a state where the content thinks that a popup
-    // is open when it isn't (or soon won't be).
-    this._popupOpen = false;
-    sendAsyncMessage("FormAutoComplete:ClosePopup", {});
-  },
-
-  invalidate() {
-    if (this._popupOpen) {
-      let results = this.getResultsFromController(this._input);
-      sendAsyncMessage("FormAutoComplete:Invalidate", { results });
-    }
-  },
-
-  selectBy(reverse, page) {
-    this._index = sendSyncMessage("FormAutoComplete:SelectBy", {
-      reverse,
-      page
-    });
-  },
-
-  getResultsFromController(inputField) {
-    let results = [];
-
-    if (!inputField) {
-      return results;
-    }
-
-    let controller = inputField.controller;
-    if (!(controller instanceof Ci.nsIAutoCompleteController)) {
-      return results;
-    }
-
-    for (let i = 0; i < controller.matchCount; ++i) {
-      let result = {};
-      result.value = controller.getValueAt(i);
-      result.label = controller.getLabelAt(i);
-      result.comment = controller.getCommentAt(i);
-      result.style = controller.getStyleAt(i);
-      result.image = controller.getImageAt(i);
-      results.push(result);
-    }
-
-    return results;
   },
 };
 
-AutoCompletePopup.init();
+AutoComplete.init();
 
 addEventListener("mozshowdropdown", event => {
   if (!event.isTrusted)
