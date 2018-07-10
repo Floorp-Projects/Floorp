@@ -70,7 +70,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   static already_AddRefed<Promise>
-  Fetch(Worklet* aWorklet, const nsAString& aModuleURL, CallerType aCallerType,
+  Fetch(Worklet* aWorklet, const nsAString& aModuleURL,
+        const WorkletOptions& aOptions, CallerType aCallerType,
         ErrorResult& aRv)
   {
     MOZ_ASSERT(aWorklet);
@@ -124,6 +125,7 @@ public:
     request.SetAsUSVString().Rebind(aModuleURL.Data(), aModuleURL.Length());
 
     RequestInit init;
+    init.mCredentials.Construct(aOptions.mCredentials);
 
     RefPtr<Promise> fetchPromise =
       FetchRequest(global, request, init, aCallerType, aRv);
@@ -510,11 +512,13 @@ Worklet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 already_AddRefed<Promise>
-Worklet::Import(const nsAString& aModuleURL, CallerType aCallerType,
-                ErrorResult& aRv)
+Worklet::AddModule(const nsAString& aModuleURL,
+                   const WorkletOptions& aOptions,
+                   CallerType aCallerType,
+                   ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return WorkletFetchHandler::Fetch(this, aModuleURL, aCallerType, aRv);
+  return WorkletFetchHandler::Fetch(this, aModuleURL, aOptions, aCallerType, aRv);
 }
 
 /* static */ already_AddRefed<WorkletGlobalScope>

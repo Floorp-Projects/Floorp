@@ -24,6 +24,7 @@ class Promise;
 class Worklet;
 class WorkletFetchHandler;
 class WorkletGlobalScope;
+struct WorkletOptions;
 class WorkletThread;
 enum class CallerType : uint32_t;
 
@@ -83,8 +84,9 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise>
-  Import(const nsAString& aModuleURL, CallerType aCallerType,
-         ErrorResult& aRv);
+  AddModule(const nsAString& aModuleURL,
+            const WorkletOptions& aOptions,
+            CallerType aCallerType, ErrorResult& aRv);
 
   WorkletType Type() const
   {
