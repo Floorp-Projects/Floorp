@@ -294,7 +294,7 @@ var ctrlTab = {
     var showAllLabel = gNavigatorBundle.getString("ctrlTab.listAllTabs.label");
     this.showAllButton._label.setAttribute("value",
       PluralForm.get(this.tabCount, showAllLabel).replace("#1", this.tabCount));
-    this.showAllButton.hidden = !allTabs.canOpen;
+    this.showAllButton.hidden = !gTabsPanel.canOpen;
   },
 
   updatePreview: function ctrlTab_updatePreview(aPreview, aTab) {
@@ -570,7 +570,7 @@ var ctrlTab = {
         break;
       case "popupshowing":
         if (event.target.id == "menu_viewPopup")
-          document.getElementById("menu_showAllTabs").hidden = !allTabs.canOpen;
+          document.getElementById("menu_showAllTabs").hidden = !gTabsPanel.canOpen;
         break;
     }
   },
@@ -626,29 +626,5 @@ var ctrlTab = {
       key_showAllTabs.removeAttribute("disabled");
     else
       key_showAllTabs.setAttribute("disabled", "true");
-  }
-};
-
-
-/**
- * All Tabs menu
- */
-var allTabs = {
-  get toolbarButton() {
-    return document.getElementById("alltabs-button");
-  },
-
-  get canOpen() {
-    return isElementVisible(this.toolbarButton);
-  },
-
-  open: function allTabs_open() {
-    if (this.canOpen) {
-      // Without setTimeout, the menupopup won't stay open when invoking
-      // "View > Show All Tabs" and the menu bar auto-hides.
-      setTimeout(() => {
-        this.toolbarButton.open = true;
-      }, 0);
-    }
   }
 };
