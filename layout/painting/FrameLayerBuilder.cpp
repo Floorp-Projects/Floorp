@@ -659,6 +659,8 @@ public:
    * mDispatchToContentHitRegion.
    */
   nsRegion mVerticalPanRegion;
+
+  bool mCollapsedTouchActions = false;
   /**
    * Scaled versions of the bounds of mHitRegion and mMaybeHitRegion.
    * We store these because FindPaintedLayerFor() needs to consume them
@@ -3877,8 +3879,15 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
 
   auto touchFlags = hitTestInfo & CompositorHitTestInfo::eTouchActionMask;
   if (touchFlags) {
-    // something was disabled
-    if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
+    // If there are multiple touch-action areas, there are multiple elements with
+    // touch-action properties. We don't know what the relationship is between
+    // those elements in terms of DOM ancestry, and so we don't know how to
+    // combine the regions properly. Instead, we just add all the areas to the
+    // dispatch-to-content region, so that the APZ knows to check with the
+    // main thread. See bug 1286957.
+    if (mCollapsedTouchActions) {
+      mDispatchToContentHitRegion.OrWith(area);
+    } else if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
       // everything was disabled, so touch-action:none
       mNoActionRegion.OrWith(area);
     } else {
@@ -3914,18 +3923,24 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
     }
   }
 
-  // If there are multiple touch-action areas, there are multiple elements with
-  // touch-action properties. We don't know what the relationship is between
-  // those elements in terms of DOM ancestry, and so we don't know how to
-  // combine the regions properly. Instead, we just add all the areas to the
-  // dispatch-to-content region, so that the APZ knows to check with the
-  // main thread. See bug 1286957.
-  const int alreadyHadRegions = mNoActionRegion.GetNumRects() +
-    mHorizontalPanRegion.GetNumRects() +
-    mVerticalPanRegion.GetNumRects();
+  if (!mCollapsedTouchActions) {
+    // If there are multiple touch-action areas, there are multiple elements with
+    // touch-action properties. We don't know what the relationship is between
+    // those elements in terms of DOM ancestry, and so we don't know how to
+    // combine the regions properly. Instead, we just add all the areas to the
+    // dispatch-to-content region, so that the APZ knows to check with the
+    // main thread. See bug 1286957.
+    const int alreadyHadRegions = mNoActionRegion.GetNumRects() +
+      mHorizontalPanRegion.GetNumRects() +
+      mVerticalPanRegion.GetNumRects();
 
-  if (alreadyHadRegions > 1) {
-    mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
+    if (alreadyHadRegions > 1) {
+      mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
+      mNoActionRegion.SetEmpty();
+      mHorizontalPanRegion.SetEmpty();
+      mVerticalPanRegion.SetEmpty();
+      mCollapsedTouchActions = true;
+    }
   }
 
   // Avoid quadratic performance as a result of the region growing to include
