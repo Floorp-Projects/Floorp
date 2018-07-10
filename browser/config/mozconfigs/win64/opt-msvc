@@ -1,0 +1,5 @@
+. "$topsrcdir/browser/config/mozconfigs/win64/nightly"
+
+export CC="cl.exe"
+export CXX="cl.exe"
+export LINKER="link.exe"
