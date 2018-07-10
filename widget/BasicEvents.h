@@ -932,7 +932,8 @@ public:
         mFlags.mComposed = mMessage == eEditorInput;
         break;
       case eFocusEventClass:
-        mFlags.mComposed = mMessage == eBlur || mMessage == eFocus;
+        mFlags.mComposed = mMessage == eBlur || mMessage == eFocus ||
+                           mMessage == eFocusOut || mMessage == eFocusIn;
         break;
       case eKeyboardEventClass:
         mFlags.mComposed = mMessage == eKeyDown || mMessage == eKeyUp ||

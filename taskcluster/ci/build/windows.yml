@@ -765,6 +765,134 @@ win32-mingw32/opt:
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
 
+win32-msvc/debug:
+    description: "Win32 MSVC Debug"
+    index:
+        product: firefox
+        job-name: win32-msvc-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: Bmsvc
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win32.py
+            - builds/taskcluster_sub_win32/debug.py
+        extra-config:
+            mozconfig_variant: 'debug-msvc'
+    run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-sccache
+
+win32-msvc/opt:
+    description: "Win32 MSVC Opt"
+    index:
+        product: firefox
+        job-name: win32-msvc-opt
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: Bmsvc
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win32.py
+            - builds/taskcluster_sub_win32/opt.py
+        extra-config:
+            mozconfig_variant: 'opt-msvc'
+    run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-sccache
+
+win64-msvc/debug:
+    description: "Win64 MSVC Debug"
+    index:
+        product: firefox
+        job-name: win64-msvc-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: Bmsvc
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/debug.py
+        extra-config:
+            mozconfig_variant: 'debug-msvc'
+    run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-sccache
+
+win64-msvc/opt:
+    description: "Win64 MSVC Opt"
+    index:
+        product: firefox
+        job-name: win64-msvc-opt
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: Bmsvc
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
+        extra-config:
+            mozconfig_variant: 'opt-msvc'
+    run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-sccache
+
 win32-mingw32/debug:
     description: "Win32 MinGW Debug"
     index:

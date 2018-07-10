@@ -10,8 +10,6 @@
 
   <binding id="toolbar">
     <implementation>
-      <field name="overflowedDuringConstruction">null</field>
-
       <constructor><![CDATA[
           let scope = {};
           ChromeUtils.import("resource:///modules/CustomizableUI.jsm", scope);
@@ -66,10 +64,6 @@
           return this.ownerDocument.getElementById(aId);
         ]]></body>
       </method>
-
-      <property name="toolbarName"
-                onget="return this.getAttribute('toolbarname');"
-                onset="this.setAttribute('toolbarname', val); return val;"/>
 
       <property name="customizationTarget" readonly="true">
         <getter><![CDATA[
