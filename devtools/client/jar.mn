@@ -257,6 +257,7 @@ devtools.jar:
     skin/images/pane-expand.svg (themes/images/pane-expand.svg)
     skin/images/help.svg (themes/images/help.svg)
     skin/images/read-only.svg (themes/images/read-only.svg)
+    skin/images/reveal.svg (themes/images/reveal.svg)
 
     # Debugger
     skin/images/debugger/angular.svg (themes/images/debugger/angular.svg)
