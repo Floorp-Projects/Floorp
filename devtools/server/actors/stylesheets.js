@@ -776,8 +776,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
       const isChrome =
         Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      const styleSheets =
-        isChrome ? InspectorUtils.getAllStyleSheets(doc) : doc.styleSheets;
+      const documentOnly = !isChrome;
+      const styleSheets = InspectorUtils.getAllStyleSheets(doc, documentOnly);
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         const sheet = styleSheets[i];

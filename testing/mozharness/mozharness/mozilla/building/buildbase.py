@@ -439,6 +439,7 @@ class BuildOptionParser(object):
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
+        'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
         'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
