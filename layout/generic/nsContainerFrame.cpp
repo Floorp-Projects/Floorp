@@ -1595,7 +1595,8 @@ nsContainerFrame::MoveInlineOverflowToChildList(nsIFrame* aLineContainer)
       // container if the container has prev continuation.
       if (aLineContainer->GetPrevContinuation()) {
         ReparentFloatsForInlineChild(aLineContainer,
-                                     prevOverflowFrames->FirstChild(), true);
+                                     prevOverflowFrames->FirstChild(), true,
+                                     ReparentingDirection::Forwards);
       }
       // When pushing and pulling frames we need to check for whether
       // any views need to be reparented.
@@ -1748,7 +1749,8 @@ nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
 /* static */ void
 nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
                                                nsIFrame* aFrame,
-                                               bool aReparentSiblings)
+                                               bool aReparentSiblings,
+                                               ReparentingDirection aDirection)
 {
   // XXXbz this would be better if it took a nsFrameList or a frame
   // list slice....
@@ -1769,7 +1771,7 @@ nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
 
   while (true) {
-    ourBlock->ReparentFloats(aFrame, frameBlock, false);
+    ourBlock->ReparentFloats(aFrame, frameBlock, false, aDirection);
 
     if (!aReparentSiblings)
       return;
@@ -1784,7 +1786,8 @@ nsContainerFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
     // trust that the frames in the sibling chain all have the same parent,
     // because lazy reparenting may be going on. If we find a different
     // parent we need to redo our analysis.
-    ReparentFloatsForInlineChild(aOurLineContainer, next, aReparentSiblings);
+    ReparentFloatsForInlineChild(aOurLineContainer, next, aReparentSiblings,
+                                 aDirection);
     return;
   }
 }
