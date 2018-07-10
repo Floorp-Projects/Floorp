@@ -2118,30 +2118,8 @@ nsPermissionManager::CloseDB(bool aRebuildOnSuccess)
 }
 
 nsresult
-nsPermissionManager::RemoveAllFromIPC()
-{
-  MOZ_ASSERT(IsChildProcess());
-
-  // Remove from memory and notify immediately. Since the in-memory
-  // database is authoritative, we do not need confirmation from the
-  // on-disk database to notify observers.
-  RemoveAllFromMemory();
-
-  return NS_OK;
-}
-
-nsresult
 nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
 {
-  ENSURE_NOT_CHILD_PROCESS;
-
-  // Let's broadcast the removeAll() to any content process.
-  nsTArray<ContentParent*> parents;
-  ContentParent::GetAll(parents);
-  for (ContentParent* parent : parents) {
-    Unused << parent->SendRemoveAllPermissions();
-  }
-
   // Remove from memory and notify immediately. Since the in-memory
   // database is authoritative, we do not need confirmation from the
   // on-disk database to notify observers.
@@ -2557,23 +2535,15 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerator **aEnum)
 {
+  nsCOMArray<nsIPermission> array;
+
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetAllForPrincipal(principal, aEnum);
-}
+  MOZ_ASSERT(PermissionAvailable(principal, nullptr));
 
-NS_IMETHODIMP
-nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
-                                        nsISimpleEnumerator** aEnum)
-{
-  nsCOMArray<nsIPermission> array;
-
-  MOZ_ASSERT(PermissionAvailable(aPrincipal, nullptr));
-
-  nsresult rv;
-  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(aPrincipal, rv);
+  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(principal, rv);
   if (!key) {
     MOZ_ASSERT(NS_FAILED(rv));
     return rv;
@@ -2589,7 +2559,7 @@ nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
       }
 
       nsCOMPtr<nsIPermission> permission =
-        nsPermission::Create(aPrincipal,
+        nsPermission::Create(principal,
                              mTypeArray.ElementAt(permEntry.mType),
                              permEntry.mPermission,
                              permEntry.mExpireType,
