@@ -1038,19 +1038,14 @@ case "${host}" in
     ;;
 esac
 
-# GCC >= 4.4 supports UTF16 string literals. The CFLAGS and CXXFLAGS may change in the future.
+# GCC >= 4.4 supports UTF16 string literals. As of ICU 62, both C and C++ files require them.
 if test "$CHECK_UTF16_STRING_RESULT" = "unknown"; then
     if test "$GCC" = yes; then
-        OLD_CFLAGS="${CFLAGS}"
-        CFLAGS="${CFLAGS} -std=gnu99"
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-static const char16_t test[] = u"This is a UTF16 literal string.";
+static const unsigned short test[] = u"This is a UTF16 literal string.";
         ]], [[]])],[CC_UTF16_STRING=1],[CC_UTF16_STRING=0])
         if test "$CC_UTF16_STRING" = 1; then
-            UCONFIG_CFLAGS="${UCONFIG_CFLAGS} -std=gnu99"
             CHECK_UTF16_STRING_RESULT="C only";
-        else
-            CFLAGS="${OLD_CFLAGS}"
         fi
     fi
     if test "$GXX" = yes; then

@@ -2231,8 +2231,6 @@ window._gBrowser = {
       ContextualIdentityService.setTabStyle(t);
     }
 
-    t.setAttribute("onerror", "this.removeAttribute('image');");
-
     if (aSkipBackgroundNotify) {
       t.setAttribute("skipbackgroundnotify", true);
     }

@@ -2958,6 +2958,13 @@ public:
                                             nsIURI* aURI);
 
   /*
+   * Returns true if this window/channel is a 3rd party context.
+   */
+  static bool IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
+                                          nsIChannel* aChannel,
+                                          nsIURI* aURI);
+
+  /*
    * Serializes a HTML nsINode into its markup representation.
    */
   static bool SerializeNodeToMarkup(nsINode* aRoot,

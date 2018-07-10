@@ -8,7 +8,7 @@ om{
                 "&Z<ch<<<Ch<<<CH<dh<<<Dh<<<DH<kh<<<Kh<<<KH<ny<<<Ny<<<NY<ph<<<Ph<<<PH<"
                 "sh<<<Sh"
             }
-            Version{"33"}
+            Version{"33.1"}
         }
     }
 }

@@ -97,7 +97,7 @@
       <ProgramDataBaseFileName>.\x86\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icudt61.dll</OutputFile>
+      <OutputFile>..\..\bin\icudt62.dll</OutputFile>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <ProgramDatabaseFile>.\x86\Release\icudt.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
@@ -116,7 +116,7 @@
       <ProgramDataBaseFileName>.\x86\Debug/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icudt61.dll</OutputFile>
+      <OutputFile>..\..\bin\icudt62.dll</OutputFile>
       <ProgramDatabaseFile>.\x86\Debug/icudt.pdb</ProgramDatabaseFile>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -136,7 +136,7 @@
       <ProgramDataBaseFileName>.\x64\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icudt61.dll</OutputFile>
+      <OutputFile>..\..\bin64\icudt62.dll</OutputFile>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <ProgramDatabaseFile>.\x64\Release\icudt.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icudt.lib</ImportLibrary>
@@ -153,7 +153,7 @@
       <ProgramDataBaseFileName>.\x64\Debug/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icudt61.dll</OutputFile>
+      <OutputFile>..\..\bin64\icudt62.dll</OutputFile>
       <ProgramDatabaseFile>.\x64\Debug/icudt.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icudt.lib</ImportLibrary>
     </Link>
