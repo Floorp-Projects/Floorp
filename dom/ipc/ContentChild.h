@@ -848,6 +848,11 @@ private:
 uint64_t
 NextWindowID();
 
+void
+SendFirstPartyStorageAccessGrantedForOriginToParentProcess(nsIPrincipal* aPrincipal,
+                                                           const nsACString& aParentOrigin,
+                                                           const nsACString& aGrantedOrigin);
+
 } // namespace dom
 } // namespace mozilla
 
