@@ -9,7 +9,133 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 /**
- * GeckoResult is a class that represents an asynchronous result.
+ * GeckoResult is a class that represents an asynchronous result. The result is initially pending,
+ * and at a later time, the result may be completed with {@link #complete a value} or {@link
+ * #completeExceptionally an exception} depending on the outcome of the asynchronous operation. For
+ * example,<pre>
+ * public GeckoResult&lt;Integer&gt; divide(final int dividend, final int divisor) {
+ *     final GeckoResult&lt;Integer&gt; result = new GeckoResult&lt;&gt;();
+ *     (new Thread(() -&gt; {
+ *         if (divisor != 0) {
+ *             result.complete(dividend / divisor);
+ *         } else {
+ *             result.completeExceptionally(new ArithmeticException("Dividing by zero"));
+ *         }
+ *     })).start();
+ *     return result;
+ * }</pre>
+ * <p>
+ * To retrieve the completed value or exception, use one of the {@link #then} methods to register
+ * listeners on the result. All listeners are run on the application main thread. For example, to
+ * retrieve a completed value,<pre>
+ * divide(42, 2).then(new GeckoResult.OnValueListener&lt;Integer, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final Integer value) {
+ *         // value == 21
+ *     }
+ * }, new GeckoResult.OnExceptionListener&lt;Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) {
+ *         // Not called
+ *     }
+ * });</pre>
+ * <p>
+ * And to retrieve a completed exception,<pre>
+ * divide(42, 0).then(new GeckoResult.OnValueListener&lt;Integer, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final Integer value) {
+ *         // Not called
+ *     }
+ * }, new GeckoResult.OnExceptionListener&lt;Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) {
+ *         // exception instanceof ArithmeticException
+ *     }
+ * });</pre>
+ * <p>
+ * {@link #then} calls may be chained to complete multiple asynchonous operations in sequence.
+ * This example takes an integer, converts it to a String, and appends it to another String,<pre>
+ * divide(42, 2).then(new GeckoResult.OnValueListener&lt;Integer, String&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;String&gt; onValue(final Integer value) {
+ *         return GeckoResult.fromValue(value.toString());
+ *     }
+ * }).then(new GeckoResult.OnValueListener&lt;String, String&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;String&gt; onValue(final String value) {
+ *         return GeckoResult.fromValue("42 / 2 = " + value);
+ *     }
+ * }).then(new GeckoResult.OnValueListener&lt;String, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final String value) {
+ *         // value == "42 / 2 = 21"
+ *         return null;
+ *     }
+ * });</pre>
+ * <p>
+ * Chaining works with exception listeners as well. For example,<pre>
+ * divide(42, 0).then(new GeckoResult.OnExceptionListener&lt;String&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) {
+ *         return "foo";
+ *     }
+ * }).then(new GeckoResult.OnValueListener&lt;String, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final String value) {
+ *         // value == "foo"
+ *     }
+ * });</pre>
+ * <p>
+ * A completed value/exception will propagate down the chain even if an intermediate step does not
+ * have a value/exception listener. For example,<pre>
+ * divide(42, 0).then(new GeckoResult.OnValueListener&lt;Integer, String&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;String&gt; onValue(final Integer value) {
+ *         // Not called
+ *     }
+ * }).then(new GeckoResult.OnExceptionListener&lt;Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) {
+ *         // exception instanceof ArithmeticException
+ *     }
+ * });</pre>
+ * <p>
+ * However, any propagated value will be coerced to null. For example,<pre>
+ * divide(42, 2).then(new GeckoResult.OnExceptionListener&lt;String&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;String&gt; onException(final Throwable exception) {
+ *         // Not called
+ *     }
+ * }).then(new GeckoResult.OnValueListener&lt;String, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final String value) {
+ *         // value == null
+ *     }
+ * });</pre>
+ * <p>
+ * Any exception thrown by a listener are automatically used to complete the result. At the end of
+ * every chain, there is an implicit exception listener that rethrows any uncaught and unhandled
+ * exception as {@link UncaughtException}. The following example will cause {@link
+ * UncaughtException} to be thrown because {@code BazException} is uncaught and unhandled at the
+ * end of the chain,<pre>
+ * GeckoResult.fromValue(42).then(new GeckoResult.OnValueListener&lt;Integer, Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onValue(final Integer value) throws FooException {
+ *         throw new FooException();
+ *     }
+ * }).then(new GeckoResult.OnExceptionListener&lt;Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) throws Exception {
+ *         // exception instanceof FooException
+ *         throw new BarException();
+ *     }
+ * }).then(new GeckoResult.OnExceptionListener&lt;Void&gt;() {
+ *     &#64;Override
+ *     public GeckoResult&lt;Void&gt; onException(final Throwable exception) throws Throwable {
+ *         // exception instanceof BarException
+ *         return new BazException();
+ *     }
+ * });</pre>
  *
  * @param <T> The type of the value delivered via the GeckoResult.
  */
@@ -29,14 +155,14 @@ public class GeckoResult<T> {
     private ArrayList<Runnable> mListeners;
 
     /**
-     * This constructs an incomplete GeckoResult. Call {@link #complete(Object)} or
+     * Construct an incomplete GeckoResult. Call {@link #complete(Object)} or
      * {@link #completeExceptionally(Throwable)} in order to fulfill the result.
      */
     public GeckoResult() {
     }
 
     /**
-     * This constructs a result from another result. Listeners are not copied.
+     * Construct a result from another result. Listeners are not copied.
      *
       * @param from The {@link GeckoResult} to copy.
      */
@@ -48,9 +174,10 @@ public class GeckoResult<T> {
     }
 
     /**
-     * This constructs a result that is completed with the specified value.
+     * Construct a result that is completed with the specified value.
      *
      * @param value The value used to complete the newly created result.
+     * @param <U> Type for the result.
      * @return The completed {@link GeckoResult}
      */
     public static @NonNull <U> GeckoResult<U> fromValue(@Nullable final U value) {
@@ -60,10 +187,11 @@ public class GeckoResult<T> {
     }
 
     /**
-     * This constructs a result that is completed with the specified {@link Throwable}.
+     * Construct a result that is completed with the specified {@link Throwable}.
      * May not be null.
      *
      * @param error The exception used to complete the newly created result.
+     * @param <T> Type for the result if the result had been completed without exception.
      * @return The completed {@link GeckoResult}
      */
     public static @NonNull <T> GeckoResult<T> fromException(@NonNull final Throwable error) {
@@ -103,8 +231,8 @@ public class GeckoResult<T> {
      *
      * @param valueListener An instance of {@link OnValueListener}, called when the
      *                      {@link GeckoResult} is completed with a value.
-     * @param <U>
-     * @return
+     * @param <U> Type of the new result that is returned by the listener.
+     * @return A new {@link GeckoResult} that the listener will complete.
      */
     public @NonNull <U> GeckoResult<U> then(@NonNull final OnValueListener<T, U> valueListener) {
         return then(valueListener, null);
@@ -115,8 +243,8 @@ public class GeckoResult<T> {
      *
      * @param exceptionListener An instance of {@link OnExceptionListener}, called when the
      *                          {@link GeckoResult} is completed with an {@link Exception}.
-     * @param <U> The type contained in the returned {@link GeckoResult}
-     * @return
+     * @param <U> Type of the new result that is returned by the listener.
+     * @return A new {@link GeckoResult} that the listener will complete.
      */
     public @NonNull <U> GeckoResult<U> then(@NonNull final OnExceptionListener<U> exceptionListener) {
         return then(null, exceptionListener);
@@ -132,7 +260,8 @@ public class GeckoResult<T> {
      *                      {@link GeckoResult} is completed with a value.
      * @param exceptionListener An instance of {@link OnExceptionListener}, called when the
      *                          {@link GeckoResult} is completed with an {@link Throwable}.
-     * @param <U> The type contained in the returned {@link GeckoResult}
+     * @param <U> Type of the new result that is returned by the listeners.
+     * @return A new {@link GeckoResult} that the listeners will complete.
      */
     public @NonNull <U> GeckoResult<U> then(@Nullable final OnValueListener<T, U> valueListener,
                                             @Nullable final OnExceptionListener<U> exceptionListener) {
@@ -242,11 +371,11 @@ public class GeckoResult<T> {
     }
 
     /**
-     * This completes the result with the specified value. IllegalStateException is thrown
+     * Complete the result with the specified value. IllegalStateException is thrown
      * if the result is already complete.
      *
      * @param value The value used to complete the result.
-     * @throws IllegalStateException
+     * @throws IllegalStateException If the result is already completed.
      */
     public synchronized void complete(final T value) {
         if (mComplete) {
@@ -260,11 +389,11 @@ public class GeckoResult<T> {
     }
 
     /**
-     * This completes the result with the specified {@link Throwable}. IllegalStateException is thrown
+     * Complete the result with the specified {@link Throwable}. IllegalStateException is thrown
      * if the result is already complete.
      *
      * @param exception The {@link Throwable} used to complete the result.
-     * @throws IllegalStateException
+     * @throws IllegalStateException If the result is already completed.
      */
     public synchronized void completeExceptionally(@NonNull final Throwable exception) {
         if (mComplete) {
@@ -283,28 +412,36 @@ public class GeckoResult<T> {
 
     /**
      * An interface used to deliver values to listeners of a {@link GeckoResult}
-     * @param <T> This is the type of the value delivered via {@link #onValue(Object)}
-     * @param <U> This is the type of the value for the result returned from {@link #onValue(Object)}
+     * @param <T> Type of the value delivered via {@link #onValue(Object)}
+     * @param <U> Type of the value for the result returned from {@link #onValue(Object)}
      */
     public interface OnValueListener<T, U> {
         /**
-         * Called when a {@link GeckoResult} is completed with a value. This will be
-         * called on the same thread in which the result was completed.
+         * Called when a {@link GeckoResult} is completed with a value. Will be
+         * called on the main thread.
          *
          * @param value The value of the {@link GeckoResult}
-         * @return A new {@link GeckoResult}, used for chaining results together.
-         *         May be null.
+         * @return Result used to complete the next result in the chain. May be null.
+         * @throws Throwable Exception used to complete next result in the chain.
          */
-        GeckoResult<U> onValue(T value) throws Throwable;
+        @Nullable GeckoResult<U> onValue(@Nullable T value) throws Throwable;
     }
 
     /**
      * An interface used to deliver exceptions to listeners of a {@link GeckoResult}
      *
-     * @param <V> This is the type of the vale for the result returned from {@link #onException(Throwable)}
+     * @param <V> Type of the vale for the result returned from {@link #onException(Throwable)}
      */
     public interface OnExceptionListener<V> {
-        GeckoResult<V> onException(Throwable exception) throws Throwable;
+        /**
+         * Called when a {@link GeckoResult} is completed with an exception. Will be
+         * called on the main thread.
+         *
+         * @param exception Exception that completed the result.
+         * @return Result used to complete the next result in the chain. May be null.
+         * @throws Throwable Exception used to complete next result in the chain.
+         */
+        @Nullable GeckoResult<V> onException(@NonNull Throwable exception) throws Throwable;
     }
 
     private boolean haveValue() {
