@@ -80,12 +80,16 @@ public:
    * This is called everytime a runnable is dispatched.
    *
    * aCategory can be used to distinguish counts per TaskCategory
+   *
+   * Note that an overflow will simply reset the counter.
    */
   void IncrementDispatchCounter(DispatchCategory aCategory);
 
   /**
    * This is called via nsThread::ProcessNextEvent to measure runnable
    * execution duration.
+   *
+   * Note that an overflow will simply reset the counter.
    */
   void IncrementExecutionDuration(uint32_t aMicroseconds);
 
@@ -108,11 +112,6 @@ public:
    * Returns the total number of dispatches.
    */
   uint64_t GetTotalDispatchCount();
-
-  /**
-   * Reset all counters and execution duration.
-   */
-  void ResetPerformanceCounters();
 
 private:
   ~PerformanceCounter() {}

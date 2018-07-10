@@ -517,7 +517,6 @@ WorkerDebugger::ReportPerformanceInfo()
       return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
                             true, isTopLevel, items);
     }
-    perf->ResetPerformanceCounters();
   }
 
   return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
