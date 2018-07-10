@@ -26,15 +26,6 @@ class MissingConfigureInfo(MissingVCSInfo):
     """Represents error finding VCS info from configure data."""
 
 
-class MissingVCSExtension(MissingVCSInfo):
-    """Represents error finding a required VCS extension."""
-
-    def __init__(self, ext):
-        self.ext = ext
-        msg = "Could not detect required extension '{}'".format(self.ext)
-        super(MissingVCSExtension, self).__init__(msg)
-
-
 class InvalidRepoPath(Exception):
     """Represents a failure to find a VCS repo at a specified path."""
 
@@ -117,11 +108,6 @@ class Repository(object):
         self.version = LooseVersion(match.group(1))
         return self.version
 
-    @property
-    def has_git_cinnabar(self):
-        """True if the repository is using git cinnabar."""
-        return False
-
     @abc.abstractproperty
     def name(self):
         """Name of the tool."""
@@ -202,16 +188,6 @@ class Repository(object):
         to factor these file classes into consideration.
         """
 
-    @abc.abstractmethod
-    def push_to_try(self, message):
-        """Create a temporary commit, push it to try and clean it up
-        afterwards.
-
-        With mercurial, MissingVCSExtension will be raised if the `push-to-try`
-        extension is not installed. On git, MissingVCSExtension will be raised
-        if git cinnabar is not present.
-        """
-
 
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
@@ -260,9 +236,10 @@ class HgRepository(Repository):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.close()
 
-    def _run(self, *args, **runargs):
+    def _run_in_client(self, args):
         if not self._client.server:
-            return super(HgRepository, self)._run(*args, **runargs)
+            raise Exception('active HgRepository context manager required')
+
         return self._client.rawcommand(args)
 
     def sparse_checkout_present(self):
@@ -327,10 +304,11 @@ class HgRepository(Repository):
     def get_files_in_working_directory(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         return list(p.replace('\\', '/') for p in
-                    self._run(b'files', b'-0').split(b'\0') if p)
+                    self._run_in_client([b'files', b'-0']).split(b'\0')
+                    if p)
 
     def working_directory_clean(self, untracked=False, ignored=False):
-        args = [b'status', b'--modified', b'--added', b'--removed',
+        args = [b'status', b'\0', b'--modified', b'--added', b'--removed',
                 b'--deleted']
         if untracked:
             args.append(b'--unknown')
@@ -339,19 +317,7 @@ class HgRepository(Repository):
 
         # If output is empty, there are no entries of requested status, which
         # means we are clean.
-        return not len(self._run(*args).strip())
-
-    def push_to_try(self, message):
-        try:
-            subprocess.check_call((self._tool, 'push-to-try', '-m', message), cwd=self.path)
-        except subprocess.CalledProcessError:
-            try:
-                self._run('showconfig', 'extensions.push-to-try')
-            except subprocess.CalledProcessError:
-                raise MissingVCSExtension('push-to-try')
-            raise
-        finally:
-            self._run('revert', '-a')
+        return not len(self._run_in_client(args).strip())
 
 
 class GitRepository(Repository):
@@ -375,14 +341,6 @@ class GitRepository(Repository):
         if head in refs:
             refs.remove(head)
         return self._run('merge-base', 'HEAD', *refs).strip()
-
-    @property
-    def has_git_cinnabar(self):
-        try:
-            self._run('cinnabar', '--version')
-        except subprocess.CalledProcessError:
-            return False
-        return True
 
     def sparse_checkout_present(self):
         # Not yet implemented.
@@ -436,17 +394,6 @@ class GitRepository(Repository):
             args.append('--ignored')
 
         return not len(self._run(*args).strip())
-
-    def push_to_try(self, message):
-        if not self.has_git_cinnabar:
-            raise MissingVCSExtension('cinnabar')
-
-        self._run('commit', '--allow-empty', '-m', message)
-        try:
-            subprocess.check_call((self._tool, 'push', 'hg::ssh://hg.mozilla.org/try',
-                                   '+HEAD:refs/heads/branches/default/tip'), cwd=self.path)
-        finally:
-            self._run('reset', 'HEAD~')
 
 
 def get_repository_object(path, hg='hg', git='git'):
