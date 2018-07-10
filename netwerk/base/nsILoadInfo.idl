@@ -1029,4 +1029,6 @@ interface nsILoadInfo : nsISupports
   StringArrayRef getFirstPartyStorageAccessGrantedOrigins();
   [noscript, notxpcom, nostdcall]
   bool isFirstPartyStorageAccessGrantedFor(in nsIURI aURI);
+  [noscript, notxpcom, nostdcall]
+  void addFirstPartyStorageAccessGrantedFor(in AString aOrigin);
 };
