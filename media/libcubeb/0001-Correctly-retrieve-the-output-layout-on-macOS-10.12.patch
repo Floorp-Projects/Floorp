@@ -1,0 +1,68 @@
+From 59f5cb4ba01f21c4ad87e9404d1e470408e18505 Mon Sep 17 00:00:00 2001
+From: Jean-Yves Avenard <jyavenard@mozilla.com>
+Date: Mon, 9 Jul 2018 17:37:16 +0200
+Subject: [PATCH 1/2] Correctly retrieve the output layout on macOS < 10.12.
+
+The method kAudioUnitProperty_AudioChannelLayout used to retrieve the channel layout wasn't introduced until 10.12. So we use kAudioDevicePropertyPreferredChannelLayout instead should it fails.
+
+Fixes #448
+---
+ src/cubeb_audiounit.cpp | 35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
+
+diff --git a/src/cubeb_audiounit.cpp b/src/cubeb_audiounit.cpp
+index 6163ed7..43120b3 100644
+--- a/src/cubeb_audiounit.cpp
++++ b/src/cubeb_audiounit.cpp
+@@ -1239,6 +1239,38 @@ audiounit_convert_channel_layout(AudioChannelLayout * layout)
+   return cl;
+ }
+ 
++static cubeb_channel_layout
++audiounit_get_preferred_channel_layout(AudioUnit output_unit)
++{
++  OSStatus rv = noErr;
++  UInt32 size = 0;
++  rv = AudioUnitGetPropertyInfo(output_unit,
++                                kAudioDevicePropertyPreferredChannelLayout,
++                                kAudioUnitScope_Output,
++                                AU_OUT_BUS,
++                                &size,
++                                nullptr);
++  if (rv != noErr) {
++    LOG("AudioUnitGetPropertyInfo/kAudioDevicePropertyPreferredChannelLayout rv=%d", rv);
++    return CUBEB_LAYOUT_UNDEFINED;
++  }
++  assert(size > 0);
++
++  auto layout = make_sized_audio_channel_layout(size);
++  rv = AudioUnitGetProperty(output_unit,
++                            kAudioDevicePropertyPreferredChannelLayout,
++                            kAudioUnitScope_Output,
++                            AU_OUT_BUS,
++                            layout.get(),
++                            &size);
++  if (rv != noErr) {
++    LOG("AudioUnitGetProperty/kAudioDevicePropertyPreferredChannelLayout rv=%d", rv);
++    return CUBEB_LAYOUT_UNDEFINED;
++  }
++
++  return audiounit_convert_channel_layout(layout.get());
++}
++
+ static cubeb_channel_layout
+ audiounit_get_current_channel_layout(AudioUnit output_unit)
+ {
+@@ -1252,7 +1284,8 @@ audiounit_get_current_channel_layout(AudioUnit output_unit)
+                                 nullptr);
+   if (rv != noErr) {
+     LOG("AudioUnitGetPropertyInfo/kAudioUnitProperty_AudioChannelLayout rv=%d", rv);
+-    return CUBEB_LAYOUT_UNDEFINED;
++    // This property isn't known before macOS 10.12, attempt another method.
++    return audiounit_get_preferred_channel_layout(output_unit);
+   }
+   assert(size > 0);
+ 
+-- 
+2.17.0
+

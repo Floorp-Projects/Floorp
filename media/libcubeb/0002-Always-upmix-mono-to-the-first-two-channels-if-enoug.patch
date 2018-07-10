@@ -1,0 +1,67 @@
+From dbd61924736fbe1a1caf1cbd544f7d197f1836f7 Mon Sep 17 00:00:00 2001
+From: Jean-Yves Avenard <jyavenard@mozilla.com>
+Date: Mon, 9 Jul 2018 20:10:13 +0200
+Subject: [PATCH 2/2] Always upmix mono to the first two channels if enough
+ output channels are available
+
+This allows to output what people typically expect when playing mono audio: sound coming from both left and right channels.
+
+To force this conversion for happening on mac, we tag that layout are unknown as soon as a channel type is unknown
+---
+ src/cubeb_audiounit.cpp |  8 ++++++--
+ src/cubeb_mixer.cpp     | 12 ++++++++++++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/src/cubeb_audiounit.cpp b/src/cubeb_audiounit.cpp
+index 43120b3..5a83098 100644
+--- a/src/cubeb_audiounit.cpp
++++ b/src/cubeb_audiounit.cpp
+@@ -291,7 +291,7 @@ cubeb_channel_to_channel_label(cubeb_channel channel)
+     case CHANNEL_TOP_BACK_RIGHT:
+       return kAudioChannelLabel_TopBackRight;
+     default:
+-      return CHANNEL_UNKNOWN;
++      return kAudioChannelLabel_Unknown;
+   }
+ }
+ 
+@@ -1232,8 +1232,12 @@ audiounit_convert_channel_layout(AudioChannelLayout * layout)
+ 
+   cubeb_channel_layout cl = 0;
+   for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+-    cl |= channel_label_to_cubeb_channel(
++    cubeb_channel cc = channel_label_to_cubeb_channel(
+       layout->mChannelDescriptions[i].mChannelLabel);
++    if (cc == CHANNEL_UNKNOWN) {
++      return CUBEB_LAYOUT_UNDEFINED;
++    }
++    cl |= cc;
+   }
+ 
+   return cl;
+diff --git a/src/cubeb_mixer.cpp b/src/cubeb_mixer.cpp
+index 8995c55..9aa141d 100644
+--- a/src/cubeb_mixer.cpp
++++ b/src/cubeb_mixer.cpp
+@@ -533,6 +533,18 @@ struct cubeb_mixer
+         output_buffer += _context._out_ch_count - _context._in_ch_count;
+       }
+     } else {
++      if (_context._in_ch_count == 1 && _context._out_ch_count >= 2) {
++        // Special case for upmixing mono input to stereo and more. We will
++        // duplicate the mono channel to the first two channels. On most system,
++        // the first two channels are for left and right. It is commonly
++        // expected that mono will on both left+right channels
++        for (uint32_t i = 0; i < frames; i++) {
++          output_buffer[0] = output_buffer[1] = *input_buffer;
++          output_buffer += _context._out_ch_count ;
++          input_buffer++;
++        }
++        return;
++      }
+       for (uint32_t i = 0; i < frames; i++) {
+         PodCopy(output_buffer, input_buffer, _context._out_ch_count);
+         output_buffer += _context._out_ch_count;
+-- 
+2.17.0
+
