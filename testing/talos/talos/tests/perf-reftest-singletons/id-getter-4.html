@@ -1,0 +1,16 @@
+<!doctype html>
+<script src="util.js"></script>
+<script>
+onload = function() {
+  var count = 20000000;
+  var el = document.createElement("span");
+  // The longest string we can fit in an autostring buffer (63 chars).
+  el.id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  var getter = Object.getOwnPropertyDescriptor(Element.prototype, "id").get;
+  perf_start();
+  for (var i = 0; i < count; ++i) {
+    getter.call(el);
+  }
+  perf_finish();
+};
+</script>
