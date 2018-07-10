@@ -11,7 +11,7 @@
  *
  */
 
-[scriptable, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
+[scriptable, builtinclass, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
 interface nsICommandParams : nsISupports
 {
   /*
