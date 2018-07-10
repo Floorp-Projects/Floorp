@@ -11,7 +11,7 @@ const { Cr } = require("chrome");
 const { ActorPool, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { longStringGrip } = require("devtools/server/actors/object/long-string");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 const { assert, dumpn } = DevToolsUtils;
@@ -54,7 +54,6 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  */
 const ThreadActor = ActorClassWithSpec(threadSpec, {
   initialize: function(parent, global) {
-    Actor.prototype.initialize.call(this, parent.conn);
     this._state = "detached";
     this._frameActors = [];
     this._parent = parent;
@@ -210,7 +209,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   destroy: function() {
     dumpn("in ThreadActor.prototype.destroy");
-    Actor.prototype.destroy.call(this);
     if (this._state == "paused") {
       this.onResume();
     }
