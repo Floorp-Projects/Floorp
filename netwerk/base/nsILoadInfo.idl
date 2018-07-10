@@ -34,7 +34,8 @@ class ServiceWorkerDescriptor;
 [ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);
 native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
-[ref] native StringArrayRef(const nsTArray<nsCString>);
+[ref] native CStringArrayRef(const nsTArray<nsCString>);
+[ref] native StringArrayRef(const nsTArray<nsString>);
 [ref] native Uint64ArrayRef(const nsTArray<uint64_t>);
 [ref] native PrincipalArrayRef(const nsTArray<nsCOMPtr<nsIPrincipal>>);
 [ref] native const_ClientInfoRef(const mozilla::dom::ClientInfo);
@@ -783,7 +784,7 @@ interface nsILoadInfo : nsISupports
    * Only call this function when using the SEC_REQUIRE_CORS_DATA_INHERITS mode.
    */
   [noscript, notxpcom, nostdcall]
-  void setCorsPreflightInfo(in StringArrayRef unsafeHeaders,
+  void setCorsPreflightInfo(in CStringArrayRef unsafeHeaders,
                             in boolean forcePreflight);
 
   /**
@@ -792,7 +793,7 @@ interface nsILoadInfo : nsISupports
    * loadInfo object - use with caution!
    */
   [noscript, notxpcom, nostdcall, binaryname(CorsUnsafeHeaders)]
-  StringArrayRef corsUnsafeHeaders();
+  CStringArrayRef corsUnsafeHeaders();
 
   /**
    * Returns value set through setCorsPreflightInfo.
@@ -1019,4 +1020,13 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, nostdcall, notxpcom]
   void SynthesizeServiceWorkerTainting(in LoadTainting aTainting);
+
+  /**
+   * This is the origin that has access storage granted also if 3rd party and
+   * in the tracking protection list.
+   */
+  [noscript, notxpcom, nostdcall]
+  StringArrayRef getFirstPartyStorageAccessGrantedOrigins();
+  [noscript, notxpcom, nostdcall]
+  bool isFirstPartyStorageAccessGrantedFor(in nsIURI aURI);
 };
