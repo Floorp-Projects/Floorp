@@ -43,6 +43,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvGetCookieString(const URIParams& aHost,
                                                       const bool& aIsForeign,
                                                       const bool& aIsTrackingResource,
+                                                      const bool& aFirstPartyStorageAccessGranted,
                                                       const bool& aIsSafeTopLevelNav,
                                                       const bool& aIsSameSiteForeign,
                                                       const OriginAttributes& aAttrs,
@@ -52,6 +53,7 @@ protected:
                                                       const URIParams& aChannelURI,
                                                       const bool& aIsForeign,
                                                       const bool& aIsTrackingResource,
+                                                      const bool& aFirstPartyStorageAccessGranted,
                                                       const nsCString& aCookieString,
                                                       const nsCString& aServerTime,
                                                       const OriginAttributes& aAttrs,
@@ -60,6 +62,7 @@ protected:
   mozilla::ipc::IPCResult RecvPrepareCookieList(const URIParams &aHost,
                                                 const bool &aIsForeign,
                                                 const bool &aIsTackingResource,
+                                                const bool& aFirstPartyStorageAccessGranted,
                                                 const bool &aIsSafeTopLevelNav,
                                                 const bool &aIsSameSiteForeign,
                                                 const OriginAttributes &aAttrs) override;

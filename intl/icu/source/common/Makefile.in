@@ -111,7 +111,8 @@ util.o util_props.o parsepos.o locbased.o cwchar.o wintz.o dtintrv.o ucnvsel.o p
 ulist.o uloc_tag.o icudataver.o icuplug.o listformatter.o ulistformatter.o \
 sharedobject.o simpleformatter.o unifiedcache.o uloc_keytype.o \
 ubiditransform.o \
-pluralmap.o
+pluralmap.o \
+static_unicode_sets.o
 
 ## Header files to install
 HEADERS = $(srcdir)/unicode/*.h

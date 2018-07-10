@@ -26,8 +26,6 @@ if (gcovResultsPath) {
   gcovResultsDir.initWithPath(gcovResultsPath);
 }
 
-const enabled = !!gcovResultsPath;
-
 function awaitPromise(promise) {
   let ret;
   let complete = false;
@@ -60,7 +58,7 @@ function moveDirectoryContents(src, dst) {
 var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
   // Resets the counters to 0.
   static async beforeTest() {
-    if (!enabled) {
+    if (!PerTestCoverageUtils.enabled) {
       return;
     }
 
@@ -81,7 +79,7 @@ var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
 
   // Dumps counters and moves the gcda files in the directory expected by codecoverage.py.
   static async afterTest() {
-    if (!enabled) {
+    if (!PerTestCoverageUtils.enabled) {
       return;
     }
 
@@ -97,3 +95,5 @@ var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
     awaitPromise(this.afterTest());
   }
 };
+
+PerTestCoverageUtils.enabled = !!gcovResultsPath;

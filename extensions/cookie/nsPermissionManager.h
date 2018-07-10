@@ -284,6 +284,9 @@ public:
    */
   static nsTArray<nsCString> GetAllKeysForPrincipal(nsIPrincipal* aPrincipal);
 
+  // From ContentChild.
+  nsresult RemoveAllFromIPC();
+
 private:
   virtual ~nsPermissionManager();
 

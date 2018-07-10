@@ -269,6 +269,9 @@ public:
   ThawInternal();
 
   void
+  PropagateFirstPartyStorageAccessGrantedInternal();
+
+  void
   TraverseTimeouts(nsCycleCollectionTraversalCallback& aCallback);
 
   void
@@ -1030,7 +1033,8 @@ public:
   bool
   IsStorageAllowed() const
   {
-    return mLoadInfo.mStorageAllowed;
+    AssertIsOnWorkerThread();
+    return mLoadInfo.mStorageAllowed || mLoadInfo.mFirstPartyStorageAccessGranted;
   }
 
   const OriginAttributes&
@@ -1100,6 +1104,9 @@ public:
 
   bool
   Thaw(nsPIDOMWindowInner* aWindow);
+
+  void
+  PropagateFirstPartyStorageAccessGranted();
 
   void
   EnableDebugger();
