@@ -256,9 +256,8 @@ SetDocumentStateCommand::DoCommandParams(const char* aCommandName,
       return NS_ERROR_INVALID_ARG;
     }
 
-    nsCString newValue;
-    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE,
-                                           getter_Copies(newValue));
+    nsAutoCString newValue;
+    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, newValue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -383,15 +382,15 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
     switch (htmlEditor->GetDefaultParagraphSeparator()) {
       case ParagraphSeparator::div:
-        aParams->SetCStringValue(STATE_ATTRIBUTE, "div");
+        aParams->SetCStringValue(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("div"));
         return NS_OK;
 
       case ParagraphSeparator::p:
-        aParams->SetCStringValue(STATE_ATTRIBUTE, "p");
+        aParams->SetCStringValue(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("p"));
         return NS_OK;
 
       case ParagraphSeparator::br:
-        aParams->SetCStringValue(STATE_ATTRIBUTE, "br");
+        aParams->SetCStringValue(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("br"));
         return NS_OK;
 
       default:

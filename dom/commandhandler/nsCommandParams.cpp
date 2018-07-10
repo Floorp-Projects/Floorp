@@ -103,17 +103,15 @@ nsCommandParams::GetStringValue(const char* aName, nsAString& aRetVal)
 }
 
 NS_IMETHODIMP
-nsCommandParams::GetCStringValue(const char* aName, char** aRetVal)
+nsCommandParams::GetCStringValue(const char* aName, nsACString& aRetVal)
 {
-  NS_ENSURE_ARG_POINTER(aRetVal);
-
   HashEntry* foundEntry = GetNamedEntry(aName);
   if (foundEntry && foundEntry->mEntryType == eStringType) {
     NS_ASSERTION(foundEntry->mData.mCString, "Null string");
-    *aRetVal = ToNewCString(*foundEntry->mData.mCString);
+    aRetVal.Assign(*foundEntry->mData.mCString);
     return NS_OK;
   }
-  *aRetVal = nullptr;
+  aRetVal.Truncate();
   return NS_ERROR_FAILURE;
 }
 
@@ -176,7 +174,7 @@ nsCommandParams::SetStringValue(const char* aName, const nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetCStringValue(const char* aName, const char* aValue)
+nsCommandParams::SetCStringValue(const char* aName, const nsACString& aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eStringType);
   if (!foundEntry) {

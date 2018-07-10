@@ -627,16 +627,17 @@ MultiStateCommandBase::DoCommandParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString tString;
+  nsAutoString attribute;
   if (aParams) {
-    nsCString s;
-    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
-    if (NS_SUCCEEDED(rv))
-      CopyASCIItoUTF16(s, tString);
-    else
-      aParams->GetStringValue(STATE_ATTRIBUTE, tString);
+    nsAutoCString asciiAttribute;
+    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, asciiAttribute);
+    if (NS_SUCCEEDED(rv)) {
+      CopyASCIItoUTF16(asciiAttribute, attribute);
+    } else {
+      aParams->GetStringValue(STATE_ATTRIBUTE, attribute);
+    }
   }
-  return SetState(htmlEditor, tString);
+  return SetState(htmlEditor, attribute);
 }
 
 NS_IMETHODIMP
@@ -675,7 +676,7 @@ ParagraphStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
     nsAutoCString tOutStateString;
     LossyCopyUTF16toASCII(outStateString, tOutStateString);
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+    aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   }
   return rv;
 }
@@ -708,7 +709,8 @@ FontFaceStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsresult rv = aHTMLEditor->GetFontFaceState(&outMixed, outStateString);
   if (NS_SUCCEEDED(rv)) {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
+    aParams->SetCStringValue(STATE_ATTRIBUTE,
+                             NS_ConvertUTF16toUTF8(outStateString));
   }
   return rv;
 }
@@ -768,7 +770,7 @@ FontSizeStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, anyHas && !allHas);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   aParams->SetBooleanValue(STATE_ENABLED, true);
 
   return rv;
@@ -831,7 +833,7 @@ FontColorStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -873,7 +875,7 @@ HighlightColorStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -932,7 +934,7 @@ BackgroundColorStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -987,7 +989,7 @@ AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED,outMixed);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -1039,14 +1041,16 @@ AbsolutePositioningCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   bool isEnabled = aHTMLEditor->AbsolutePositioningEnabled();
   if (!isEnabled) {
     aParams->SetBooleanValue(STATE_MIXED,false);
-    aParams->SetCStringValue(STATE_ATTRIBUTE, "");
+    aParams->SetCStringValue(STATE_ATTRIBUTE, EmptyCString());
     return NS_OK;
   }
 
   RefPtr<Element> container =
     aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
   aParams->SetBooleanValue(STATE_MIXED,  false);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, container ? "absolute" : "");
+  aParams->SetCStringValue(STATE_ATTRIBUTE,
+                           container ? NS_LITERAL_CSTRING("absolute") :
+                                       EmptyCString());
   return NS_OK;
 }
 
@@ -1489,14 +1493,17 @@ InsertTagCommand::DoCommandParams(const char *aCommandName,
   }
 
   // do we have an href to use for creating link?
-  nsCString s;
-  nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoString attrib;
-  CopyASCIItoUTF16(s, attrib);
+  nsAutoCString asciiAttribute;
+  nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, asciiAttribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  nsAutoString attribute;
+  CopyASCIItoUTF16(asciiAttribute, attribute);
 
-  if (attrib.IsEmpty())
+  if (attribute.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   // filter out tags we don't know how to insert
   nsAutoString attributeType;
@@ -1514,7 +1521,7 @@ InsertTagCommand::DoCommandParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   ErrorResult err;
-  elem->SetAttribute(attributeType, attrib, err);
+  elem->SetAttribute(attributeType, attribute, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
