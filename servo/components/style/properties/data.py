@@ -285,6 +285,7 @@ class Longhand(object):
                 "FontSynthesis",
                 "FontWeight",
                 "GridAutoFlow",
+                "ImageOrientation",
                 "InitialLetter",
                 "Integer",
                 "JustifyContent",
