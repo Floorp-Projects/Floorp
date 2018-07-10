@@ -144,7 +144,6 @@ namespace mozilla {
 class RefreshDriverTimer {
 public:
   RefreshDriverTimer()
-    : mLastFireEpoch(0)
   {
   }
 
@@ -202,7 +201,6 @@ public:
   }
 
   TimeStamp MostRecentRefresh() const { return mLastFireTime; }
-  int64_t MostRecentRefreshEpochTime() const { return mLastFireEpoch; }
 
   void SwapRefreshDrivers(RefreshDriverTimer* aNewTimer)
   {
@@ -220,7 +218,6 @@ public:
     }
     mRootRefreshDrivers.Clear();
 
-    aNewTimer->mLastFireEpoch = mLastFireEpoch;
     aNewTimer->mLastFireTime = mLastFireTime;
 
     StopTimer();
@@ -278,16 +275,15 @@ protected:
 
   /*
    * Actually runs a tick, poking all the attached RefreshDrivers.
-   * Grabs the "now" time via JS_Now and TimeStamp::Now().
+   * Grabs the "now" time via TimeStamp::Now().
    */
   void Tick()
   {
-    int64_t jsnow = JS_Now();
     TimeStamp now = TimeStamp::Now();
-    Tick(jsnow, now);
+    Tick(now);
   }
 
-  void TickRefreshDrivers(int64_t aJsNow, TimeStamp aNow, nsTArray<RefPtr<nsRefreshDriver>>& aDrivers)
+  void TickRefreshDrivers(TimeStamp aNow, nsTArray<RefPtr<nsRefreshDriver>>& aDrivers)
   {
     if (aDrivers.IsEmpty()) {
       return;
@@ -300,37 +296,34 @@ protected:
         continue;
       }
 
-      TickDriver(driver, aJsNow, aNow);
+      TickDriver(driver, aNow);
     }
   }
 
   /*
    * Tick the refresh drivers based on the given timestamp.
    */
-  void Tick(int64_t jsnow, TimeStamp now)
+  void Tick(TimeStamp now)
   {
     ScheduleNextTick(now);
 
-    mLastFireEpoch = jsnow;
     mLastFireTime = now;
 
     LOG("[%p] ticking drivers...", this);
     // RD is short for RefreshDriver
     AUTO_PROFILER_TRACING("Paint", "RefreshDriverTick");
 
-    TickRefreshDrivers(jsnow, now, mContentRefreshDrivers);
-    TickRefreshDrivers(jsnow, now, mRootRefreshDrivers);
+    TickRefreshDrivers(now, mContentRefreshDrivers);
+    TickRefreshDrivers(now, mRootRefreshDrivers);
 
     LOG("[%p] done.", this);
   }
 
-  static void TickDriver(nsRefreshDriver* driver, int64_t jsnow, TimeStamp now)
+  static void TickDriver(nsRefreshDriver* driver, TimeStamp now)
   {
-    LOG(">> TickDriver: %p (jsnow: %" PRId64 ")", driver, jsnow);
-    driver->Tick(jsnow, now);
+    driver->Tick(now);
   }
 
-  int64_t mLastFireEpoch;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
 
@@ -394,7 +387,6 @@ protected:
   void StartTimer() override
   {
     // pretend we just fired, and we schedule the next tick normally
-    mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
 
     mTargetTime = mLastFireTime + mRateDuration;
@@ -725,7 +717,6 @@ private:
     // Protect updates to `sActiveVsyncTimers`.
     MOZ_ASSERT(NS_IsMainThread());
 
-    mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
 
     if (XRE_IsParentProcess()) {
@@ -761,10 +752,7 @@ private:
 
   void RunRefreshDrivers(TimeStamp aTimeStamp)
   {
-    int64_t jsnow = JS_Now();
-    TimeDuration diff = TimeStamp::Now() - aTimeStamp;
-    int64_t vsyncJsNow = jsnow - diff.ToMicroseconds();
-    Tick(vsyncJsNow, aTimeStamp);
+    Tick(aTimeStamp);
   }
 
   RefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
@@ -885,7 +873,6 @@ protected:
 
   void StartTimer() override
   {
-    mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
 
     mTargetTime = mLastFireTime + mRateDuration;
@@ -936,12 +923,10 @@ protected:
   /* Runs just one driver's tick. */
   void TickOne()
   {
-    int64_t jsnow = JS_Now();
     TimeStamp now = TimeStamp::Now();
 
     ScheduleNextTick(now);
 
-    mLastFireEpoch = jsnow;
     mLastFireTime = now;
 
     nsTArray<RefPtr<nsRefreshDriver>> drivers(mContentRefreshDrivers);
@@ -951,7 +936,7 @@ protected:
     if (index < drivers.Length() &&
         !drivers[index]->IsTestControllingRefreshesEnabled())
     {
-      TickDriver(drivers[index], jsnow, now);
+      TickDriver(drivers[index], now);
     }
 
     mNextDriverIndex++;
@@ -1147,7 +1132,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   MOZ_ASSERT(mPresContext,
              "Need a pres context to tell us to call Disconnect() later "
              "and decrement sRefreshDriverCount.");
-  mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
   mMostRecentTick = mMostRecentRefresh;
   mNextThrottledFrameRequestTick = mMostRecentTick;
@@ -1182,7 +1166,6 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
   StopTimer();
 
   if (!mTestControllingRefreshes) {
-    mMostRecentRefreshEpochTime = JS_Now();
     mMostRecentRefresh = TimeStamp::Now();
 
     mTestControllingRefreshes = true;
@@ -1194,7 +1177,6 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     }
   }
 
-  mMostRecentRefreshEpochTime += aMilliseconds * 1000;
   mMostRecentRefresh += TimeDuration::FromMilliseconds((double) aMilliseconds);
 
   mozilla::dom::AutoNoJSAPI nojsapi;
@@ -1219,14 +1201,6 @@ nsRefreshDriver::MostRecentRefresh() const
   }
 
   return mMostRecentRefresh;
-}
-
-int64_t
-nsRefreshDriver::MostRecentRefreshEpochTime() const
-{
-  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
-
-  return mMostRecentRefreshEpochTime;
 }
 
 bool
@@ -1408,11 +1382,6 @@ nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags)
     aFlags & eAllowTimeToGoBackwards
     ? mActiveTimer->MostRecentRefresh()
     : std::max(mActiveTimer->MostRecentRefresh(), mMostRecentRefresh);
-  mMostRecentRefreshEpochTime =
-    aFlags & eAllowTimeToGoBackwards
-    ? mActiveTimer->MostRecentRefreshEpochTime()
-    : std::max(mActiveTimer->MostRecentRefreshEpochTime(),
-               mMostRecentRefreshEpochTime);
 
   if (mMostRecentRefresh != newMostRecentRefresh) {
     mMostRecentRefresh = newMostRecentRefresh;
@@ -1526,9 +1495,9 @@ nsRefreshDriver::DoTick()
              "Shouldn't have a JSContext on the stack");
 
   if (mTestControllingRefreshes) {
-    Tick(mMostRecentRefreshEpochTime, mMostRecentRefresh);
+    Tick(mMostRecentRefresh);
   } else {
-    Tick(JS_Now(), TimeStamp::Now());
+    Tick(TimeStamp::Now());
   }
 }
 
@@ -1789,7 +1758,7 @@ nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable)
 }
 
 void
-nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
+nsRefreshDriver::Tick(TimeStamp aNowTime)
 {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
              "Shouldn't have a JSContext on the stack");
@@ -1822,7 +1791,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   TimeStamp previousRefresh = mMostRecentRefresh;
 
   mMostRecentRefresh = aNowTime;
-  mMostRecentRefreshEpochTime = aNowEpoch;
 
   if (IsWaitingForPaint(aNowTime)) {
     // We're currently suspended waiting for earlier Tick's to
