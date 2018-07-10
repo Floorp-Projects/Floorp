@@ -20,7 +20,7 @@ function configureTest() {
 function runTestInIframe() {
   // This loading should fail
   var audioContext = new AudioContext();
-  audioContext.audioWorklet.import("404.js")
+  audioContext.audioWorklet.addModule("404.js")
   .then(() => {
     ok(false, "We should not be called!");
   }, () => {
@@ -29,7 +29,7 @@ function runTestInIframe() {
 
   // This should throw from JS
   .then(() => {
-    return audioContext.audioWorklet.import("worklet_exception.js")
+    return audioContext.audioWorklet.addModule("worklet_exception.js")
   })
   .then(() => {
     ok(false, "We should not be called!");

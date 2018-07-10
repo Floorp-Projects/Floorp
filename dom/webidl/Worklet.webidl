@@ -10,5 +10,9 @@
 [Pref="dom.worklet.enabled"]
 interface Worklet {
   [NewObject, Throws, NeedsCallerType]
-  Promise<void> import(USVString moduleURL);
+  Promise<void> addModule(USVString moduleURL, optional WorkletOptions options);
+};
+
+dictionary WorkletOptions {
+  RequestCredentials credentials = "same-origin";
 };
