@@ -38,7 +38,6 @@ XPIDL_SOURCES += [
     'nsIDashboard.idl',
     'nsIDashboardEventNotifier.idl',
     'nsIDeprecationWarner.idl',
-    'nsIDHCPClient.idl',
     'nsIDivertableChannel.idl',
     'nsIDownloader.idl',
     'nsIEncodedChannel.idl',
