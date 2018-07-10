@@ -4808,6 +4808,10 @@ EditorBase::ReinitializeSelection(Element& aElement)
 
   OnFocus(&aElement);
 
+  // If previous focused editor turn on spellcheck and this editor doesn't
+  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
+  SyncRealTimeSpell();
+
   nsPresContext* context = GetPresContext();
   if (NS_WARN_IF(!context)) {
     return;
