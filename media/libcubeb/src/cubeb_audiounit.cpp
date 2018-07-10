@@ -291,7 +291,7 @@ cubeb_channel_to_channel_label(cubeb_channel channel)
     case CHANNEL_TOP_BACK_RIGHT:
       return kAudioChannelLabel_TopBackRight;
     default:
-      return CHANNEL_UNKNOWN;
+      return kAudioChannelLabel_Unknown;
   }
 }
 
@@ -1232,11 +1232,47 @@ audiounit_convert_channel_layout(AudioChannelLayout * layout)
 
   cubeb_channel_layout cl = 0;
   for (UInt32 i = 0; i < layout->mNumberChannelDescriptions; ++i) {
-    cl |= channel_label_to_cubeb_channel(
+    cubeb_channel cc = channel_label_to_cubeb_channel(
       layout->mChannelDescriptions[i].mChannelLabel);
+    if (cc == CHANNEL_UNKNOWN) {
+      return CUBEB_LAYOUT_UNDEFINED;
+    }
+    cl |= cc;
   }
 
   return cl;
+}
+
+static cubeb_channel_layout
+audiounit_get_preferred_channel_layout(AudioUnit output_unit)
+{
+  OSStatus rv = noErr;
+  UInt32 size = 0;
+  rv = AudioUnitGetPropertyInfo(output_unit,
+                                kAudioDevicePropertyPreferredChannelLayout,
+                                kAudioUnitScope_Output,
+                                AU_OUT_BUS,
+                                &size,
+                                nullptr);
+  if (rv != noErr) {
+    LOG("AudioUnitGetPropertyInfo/kAudioDevicePropertyPreferredChannelLayout rv=%d", rv);
+    return CUBEB_LAYOUT_UNDEFINED;
+  }
+  assert(size > 0);
+
+  auto layout = make_sized_audio_channel_layout(size);
+  rv = AudioUnitGetProperty(output_unit,
+                            kAudioDevicePropertyPreferredChannelLayout,
+                            kAudioUnitScope_Output,
+                            AU_OUT_BUS,
+                            layout.get(),
+                            &size);
+  if (rv != noErr) {
+    LOG("AudioUnitGetProperty/kAudioDevicePropertyPreferredChannelLayout rv=%d", rv);
+    return CUBEB_LAYOUT_UNDEFINED;
+  }
+
+  return audiounit_convert_channel_layout(layout.get());
 }
 
 static cubeb_channel_layout
@@ -1252,7 +1288,8 @@ audiounit_get_current_channel_layout(AudioUnit output_unit)
                                 nullptr);
   if (rv != noErr) {
     LOG("AudioUnitGetPropertyInfo/kAudioUnitProperty_AudioChannelLayout rv=%d", rv);
-    return CUBEB_LAYOUT_UNDEFINED;
+    // This property isn't known before macOS 10.12, attempt another method.
+    return audiounit_get_preferred_channel_layout(output_unit);
   }
   assert(size > 0);
 
