@@ -993,6 +993,7 @@ pub unsafe extern "C" fn sdp_get_rids(attributes: *const Vec<SdpAttribute>, ret_
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeExtmap {
     pub id: uint16_t,
+    pub direction_specified: bool,
     pub direction: RustDirection,
     pub url: StringView,
     pub extension_attributes: StringView
@@ -1002,6 +1003,7 @@ impl<'a> From<&'a SdpAttributeExtmap> for RustSdpAttributeExtmap {
     fn from(other: &SdpAttributeExtmap) -> Self {
         RustSdpAttributeExtmap {
             id : other.id as uint16_t,
+            direction_specified: other.direction.is_some(),
             direction: RustDirection::from(&other.direction),
             url: StringView::from(other.url.as_str()),
             extension_attributes: StringView::from(&other.extension_attributes)
