@@ -14,16 +14,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="wizard-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/wizard.css"/>
-    </resources>
-  </binding>
-
   <binding id="wizard">
-    <resources>
-      <stylesheet src="chrome://global/skin/wizard.css"/>
-    </resources>
     <content>
       <xul:hbox class="wizard-header" anonid="Header"/>
 
@@ -451,7 +442,7 @@
     </handlers>
   </binding>
 
-  <binding id="wizardpage" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+  <binding id="wizardpage">
     <implementation>
       <field name="pageIndex">-1</field>
 
@@ -466,7 +457,7 @@
   </binding>
 
 #ifdef XP_MACOSX
-  <binding id="wizard-header" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+  <binding id="wizard-header">
     <content>
       <xul:stack class="wizard-header-stack" flex="1">
         <xul:vbox class="wizard-header-box-1">
@@ -482,7 +473,7 @@
     </content>
   </binding>
 
-  <binding id="wizard-buttons" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+  <binding id="wizard-buttons">
     <content>
       <xul:vbox flex="1">
         <xul:hbox class="wizard-buttons-btm">
@@ -513,7 +504,7 @@
 
 #else
 
-  <binding id="wizard-header" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+  <binding id="wizard-header">
     <content>
       <xul:hbox class="wizard-header-box-1" flex="1">
         <xul:vbox class="wizard-header-box-text" flex="1">
@@ -525,7 +516,7 @@
     </content>
   </binding>
 
-  <binding id="wizard-buttons" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
+  <binding id="wizard-buttons">
     <content>
       <xul:vbox class="wizard-buttons-box-1" flex="1">
         <xul:separator class="wizard-buttons-separator groove"/>
