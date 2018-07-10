@@ -16,6 +16,7 @@
     "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
     "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
     "patches": [
-      "find_symbolizer_linux.patch"
+      "find_symbolizer_linux.patch",
+      "rename_gcov_flush.patch"
     ]
 }
