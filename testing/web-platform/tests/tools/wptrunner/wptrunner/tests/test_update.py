@@ -1,3 +1,4 @@
+import json
 import mock
 import os
 import sys
@@ -71,15 +72,18 @@ def create_updater(tests, url_base="/", **kwargs):
 
 
 def create_log(entries):
-    logger = structuredlog.StructuredLogger("expected_test")
     data = BytesIO()
-    handler = handlers.StreamHandler(data, formatters.JSONFormatter())
-    logger.add_handler(handler)
+    if isinstance(entries, list):
+        logger = structuredlog.StructuredLogger("expected_test")
+        handler = handlers.StreamHandler(data, formatters.JSONFormatter())
+        logger.add_handler(handler)
 
-    for item in entries:
-        action, kwargs = item
-        getattr(logger, action)(**kwargs)
-    logger.remove_handler(handler)
+        for item in entries:
+            action, kwargs = item
+            getattr(logger, action)(**kwargs)
+        logger.remove_handler(handler)
+    else:
+        json.dump(entries, data)
     data.seek(0)
     return data
 
@@ -568,3 +572,38 @@ def test_update_lsan_3():
 
     assert not new_manifest.is_empty
     assert new_manifest.get("lsan-allowed") == ["baz", "foo"]
+
+
+def test_update_wptreport_0():
+    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness",
+              """[test.htm]
+  [test1]
+    expected: FAIL""")]
+
+    log = {"run_info": {},
+           "results": [
+               {"test": "/path/to/test.htm",
+                "subtests": [{"name": "test1",
+                              "status": "PASS",
+                              "expected": "FAIL"}],
+                "status": "OK"}
+           ]}
+
+    updated = update(tests, log)
+
+    assert len(updated) == 1
+    assert updated[0][1].is_empty
+
+
+def test_update_wptreport_1():
+    tests = [("path/to/__dir__", ["path/to/__dir__"], None, "")]
+
+    log = {"run_info": {},
+           "results": [],
+           "lsan_leaks": [{"scope": "path/to/",
+                           "frames": ["baz", "foobar"]}]}
+
+    updated = update(tests, log)
+
+    assert len(updated) == 1
+    assert updated[0][1].get("lsan-allowed") == ["baz"]
