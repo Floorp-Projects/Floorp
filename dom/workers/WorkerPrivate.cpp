@@ -55,6 +55,7 @@
 #include "mozilla/dom/ServiceWorkerEvents.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "SharedWorker.h"
+#include "WorkerCSPEventListener.h"
 #include "WorkerDebugger.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
@@ -425,6 +426,10 @@ private:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     if (NS_WARN_IF(!aWorkerPrivate->EnsureClientSource())) {
+      return false;
+    }
+
+    if (NS_WARN_IF(!aWorkerPrivate->EnsureCSPEventListener())) {
       return false;
     }
 
@@ -1537,6 +1542,8 @@ WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP)
     return;
   }
   aCSP->EnsureEventTarget(mMainThreadEventTarget);
+  aCSP->SetEventListener(mCSPEventListener);
+
   mLoadInfo.mCSP = aCSP;
 }
 
@@ -1557,6 +1564,7 @@ WorkerPrivate::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
   }
 
   csp->EnsureEventTarget(mMainThreadEventTarget);
+  csp->SetEventListener(mCSPEventListener);
 
   // If there's a CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {
@@ -3505,6 +3513,17 @@ WorkerPrivate::EnsureClientSource()
   // service worker or a chrome worker.
   if (Type() != WorkerTypeService && !IsChromeWorker()) {
     mClientSource->WorkerSyncPing(this);
+  }
+
+  return true;
+}
+
+bool
+WorkerPrivate::EnsureCSPEventListener()
+{
+  mCSPEventListener = WorkerCSPEventListener::Create(this);
+  if (NS_WARN_IF(!mCSPEventListener)) {
+    return false;
   }
 
   return true;

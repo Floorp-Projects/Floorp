@@ -9,6 +9,7 @@ interface nsIURI;
 interface nsIDocShell;
 interface nsIEventTarget;
 interface nsIPrincipal;
+interface nsICSPEventListener;
 
 webidl Element;
 webidl Document;
@@ -225,6 +226,13 @@ interface nsIContentSecurityPolicy : nsISerializable
                          in nsIPrincipal aPrincipal);
 
   /**
+   * Called after the CSP object is created to fill in event listener.
+   * @param aListener this listener will be notified when a CSP violation event
+   *                  must be dispatched.
+   */
+  void setEventListener(in nsICSPEventListener aListener);
+
+  /**
    *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
    */
   [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
@@ -304,4 +312,12 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   AString toJSON();
 
+};
+
+/* Listener for security policy violation event */
+[function, scriptable, uuid(c3163b14-3a8f-46dd-a4af-bd04680364cd)]
+interface nsICSPEventListener : nsISupports
+{
+  // aJSON is the JSON format of SecurityPolicyViolationEventInit dictionary.
+  void onCSPViolationEvent(in AString aJSON);
 };
