@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -207,7 +206,8 @@ var Settings = {
     }
   },
 
-  getStatusString(enabled) {
+  getStatusStringForSetting(setting) {
+    let enabled = Preferences.get(setting.pref, setting.defaultPrefValue);
     let status = bundle.GetStringFromName(enabled ? "telemetryUploadEnabled" : "telemetryUploadDisabled");
     return status;
   },
@@ -217,7 +217,7 @@ var Settings = {
    */
   render() {
     let settingsExplanation = document.getElementById("settings-explanation");
-    let uploadEnabled = this.getStatusString(TelemetrySend.sendingEnabled());
+    let uploadEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
     let extendedEnabled = Services.telemetry.canRecordExtended;
     let collectedData = bundle.GetStringFromName(extendedEnabled ? "prereleaseData" : "releaseData");
     let explanation = bundle.GetStringFromName("settingsExplanation");
