@@ -2664,6 +2664,20 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvRemoveAllPermissions()
+{
+  nsCOMPtr<nsIPermissionManager> permissionManagerIface =
+    services::GetPermissionManager();
+  nsPermissionManager* permissionManager =
+    static_cast<nsPermissionManager*>(permissionManagerIface.get());
+  MOZ_ASSERT(permissionManager,
+         "We have no permissionManager in the Content process !");
+
+  permissionManager->RemoveAllFromIPC();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvFlushMemory(const nsString& reason)
 {
   nsCOMPtr<nsIObserverService> os =
