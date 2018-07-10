@@ -63,6 +63,9 @@ enum PromiseHandler {
     // enumerate both true and false cases here.
     PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone,
     PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone,
+
+    // One past the maximum allowed PromiseHandler value.
+    PromiseHandlerLimit
 };
 
 enum ResolutionMode {
@@ -382,27 +385,69 @@ AbruptRejectPromise(JSContext *cx, CallArgs& args, HandleObject promiseObj, Hand
 }
 
 enum ReactionRecordSlots {
+    // The promise for which this record provides a reaction handler.
+    // Matches the [[Capability]].[[Promise]] field from the spec.
+    //
+    // The slot value is either an object, but not necessarily a built-in
+    // Promise object, or null. The latter case is only possible for async
+    // generator functions, in which case the REACTION_FLAG_ASYNC_GENERATOR
+    // flag must be set.
     ReactionRecordSlot_Promise = 0,
+
+    // The [[Handler]] field(s) of a PromiseReaction record. We create a
+    // single reaction record for fulfillment and rejection, therefore our
+    // PromiseReaction implementation needs two [[Handler]] fields.
+    //
+    // The slot value is either a callable object, an integer constant from
+    // the |PromiseHandler| enum, or null. If the value is null, the
+    // REACTION_FLAG_DEBUGGER_DUMMY flag must be set.
     ReactionRecordSlot_OnFulfilled,
     ReactionRecordSlot_OnRejected,
+
+    // The functions to resolve or reject the promise. Matches the
+    // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
+    // the spec.
+    //
+    // The slot values are either callable objects or null, but the latter
+    // case is only allowed if the promise is either a built-in Promise object
+    // or null.
     ReactionRecordSlot_Resolve,
     ReactionRecordSlot_Reject,
+
+    // The incumbent global for this reaction record. Can be null.
     ReactionRecordSlot_IncumbentGlobalObject,
+
+    // Bitmask of the REACTION_FLAG values.
     ReactionRecordSlot_Flags,
+
+    // Argument when calling the function stored in OnFulfilled or OnRejected.
     ReactionRecordSlot_HandlerArg,
+
+    // Additional slot to store extra data for specific reaction record types.
+    //
+    // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot store
+    //   the async generator function for this promise reaction.
     ReactionRecordSlot_Generator,
+
     ReactionRecordSlots,
 };
-
-#define REACTION_FLAG_RESOLVED                  0x1
-#define REACTION_FLAG_FULFILLED                 0x2
-#define REACTION_FLAG_IGNORE_DEFAULT_RESOLUTION 0x4
-#define REACTION_FLAG_ASYNC_FUNCTION            0x8
-#define REACTION_FLAG_ASYNC_GENERATOR           0x10
 
 // ES2016, 25.4.1.2.
 class PromiseReactionRecord : public NativeObject
 {
+  static constexpr size_t REACTION_FLAG_RESOLVED = 0x1;
+  static constexpr size_t REACTION_FLAG_FULFILLED = 0x2;
+  static constexpr size_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
+  static constexpr size_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
+  static constexpr size_t REACTION_FLAG_DEBUGGER_DUMMY = 0x20;
+
+  void setFlagOnInitialState(size_t flag) {
+      int32_t flags = this->flags();
+      MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
+      flags |= flag;
+      setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+  }
+
   public:
     static const Class class_;
 
@@ -426,19 +471,14 @@ class PromiseReactionRecord : public NativeObject
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
     }
     void setIsAsyncFunction() {
-        int32_t flags = this->flags();
-        flags |= REACTION_FLAG_ASYNC_FUNCTION;
-        setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+        setFlagOnInitialState(REACTION_FLAG_ASYNC_FUNCTION);
     }
     bool isAsyncFunction() {
         int32_t flags = this->flags();
         return flags & REACTION_FLAG_ASYNC_FUNCTION;
     }
-    void setIsAsyncGenerator(Handle<AsyncGeneratorObject*> asyncGenObj) {
-        int32_t flags = this->flags();
-        flags |= REACTION_FLAG_ASYNC_GENERATOR;
-        setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
-
+    void setIsAsyncGenerator(AsyncGeneratorObject* asyncGenObj) {
+        setFlagOnInitialState(REACTION_FLAG_ASYNC_GENERATOR);
         setFixedSlot(ReactionRecordSlot_Generator, ObjectValue(*asyncGenObj));
     }
     bool isAsyncGenerator() {
@@ -447,8 +487,15 @@ class PromiseReactionRecord : public NativeObject
     }
     AsyncGeneratorObject* asyncGenerator() {
         MOZ_ASSERT(isAsyncGenerator());
-        return &getFixedSlot(ReactionRecordSlot_Generator).toObject()
-                                                          .as<AsyncGeneratorObject>();
+        const Value& generator = getFixedSlot(ReactionRecordSlot_Generator);
+        return &generator.toObject().as<AsyncGeneratorObject>();
+    }
+    void setIsDebuggerDummy() {
+        setFlagOnInitialState(REACTION_FLAG_DEBUGGER_DUMMY);
+    }
+    bool isDebuggerDummy() {
+        int32_t flags = this->flags();
+        return flags & REACTION_FLAG_DEBUGGER_DUMMY;
     }
     Value handler() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
@@ -521,6 +568,21 @@ CreateResolvingFunctions(JSContext* cx, HandleObject promise,
 }
 
 static void ClearResolutionFunctionSlots(JSFunction* resolutionFun);
+
+static bool
+IsSettledMaybeWrappedPromise(JSObject* promise)
+{
+    if (IsProxy(promise)) {
+        promise = UncheckedUnwrap(promise);
+
+        // Caller needs to handle dead wrappers.
+        if (JS_IsDeadWrapper(promise))
+            return false;
+    }
+
+    return promise->as<PromiseObject>().state() != JS::PromiseState::Pending;
+}
+
 static MOZ_MUST_USE bool RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj,
                                                    HandleValue reason);
 
@@ -554,9 +616,8 @@ RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     // In some cases the Promise reference on the resolution function won't
     // have been removed during resolution, so we need to check that here,
     // too.
-    if (promise->is<PromiseObject>() &&
-        promise->as<PromiseObject>().state() != JS::PromiseState::Pending)
-    {
+    if (IsSettledMaybeWrappedPromise(promise)) {
+        args.rval().setUndefined();
         return true;
     }
 
@@ -587,6 +648,8 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue
 static MOZ_MUST_USE bool
 ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resolutionVal)
 {
+    MOZ_ASSERT(!IsSettledMaybeWrappedPromise(promise));
+
     // Step 7 (reordered).
     if (!resolutionVal.isObject())
         return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
@@ -610,14 +673,23 @@ ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resoluti
     RootedValue thenVal(cx);
     bool status = GetProperty(cx, resolution, resolution, cx->names().then, &thenVal);
 
-    // Step 9.
+    RootedValue error(cx);
     if (!status) {
-        RootedValue error(cx);
         if (!MaybeGetAndClearException(cx, &error))
             return false;
-
-        return RejectMaybeWrappedPromise(cx, promise, error);
     }
+
+    // Testing functions allow to directly settle a promise without going
+    // through the resolving functions. In that case the normal bookkeeping to
+    // ensure only pending promises can be resolved doesn't apply and we need
+    // to manually check for already settled promises. The exception is simply
+    // dropped when this case happens.
+    if (IsSettledMaybeWrappedPromise(promise))
+        return true;
+
+    // Step 9.
+    if (!status)
+        return RejectMaybeWrappedPromise(cx, promise, error);
 
     // Step 10 (implicit).
 
@@ -686,9 +758,8 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     // In some cases the Promise reference on the resolution function won't
     // have been removed during resolution, so we need to check that here,
     // too.
-    if (promise->is<PromiseObject>() &&
-        promise->as<PromiseObject>().state() != JS::PromiseState::Pending)
-    {
+    if (IsSettledMaybeWrappedPromise(promise)) {
+        args.rval().setUndefined();
         return true;
     }
 
@@ -714,6 +785,9 @@ MOZ_MUST_USE static bool
 EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
                           HandleValue handlerArg_, JS::PromiseState targetState)
 {
+    MOZ_ASSERT(targetState == JS::PromiseState::Fulfilled ||
+               targetState == JS::PromiseState::Rejected);
+
     // The reaction might have been stored on a Promise from another
     // compartment, which means it would've been wrapped in a CCW.
     // To properly handle that case here, unwrap it and enter its
@@ -793,8 +867,8 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // single compartment to the enqueuePromiseJob callback.
     RootedObject promise(cx, reaction->promise());
     if (promise && promise->is<PromiseObject>()) {
-      if (!cx->compartment()->wrap(cx, &promise))
-          return false;
+        if (!cx->compartment()->wrap(cx, &promise))
+            return false;
     }
 
     // Using objectFromIncumbentGlobal, we can derive the incumbent global by
@@ -883,8 +957,6 @@ FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue v
         if (!promise->compartment()->wrap(cx, &value))
             return false;
     }
-
-    MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
 
     return ResolvePromise(cx, promise, value, JS::PromiseState::Fulfilled);
 }
@@ -1090,8 +1162,6 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
         }
     }
 
-    MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
-
     return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected);
 }
 
@@ -1100,6 +1170,8 @@ static MOZ_MUST_USE bool
 TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseState state,
                         HandleValue valueOrReason)
 {
+    MOZ_ASSERT(state == JS::PromiseState::Fulfilled || state == JS::PromiseState::Rejected);
+
     RootedObject reactions(cx, &reactionsVal.toObject());
     RootedObject reaction(cx);
 
@@ -1137,7 +1209,7 @@ AsyncFunctionPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*> re
     Rooted<PromiseObject*> resultPromise(cx, &reaction->promise()->as<PromiseObject>());
     RootedValue generatorVal(cx, resultPromise->getFixedSlot(PromiseSlot_AwaitGenerator));
 
-    int32_t handlerNum = int32_t(handlerVal.toNumber());
+    int32_t handlerNum = handlerVal.toInt32();
 
     // Await's handlers don't return a value, nor throw exception.
     // They fail only on OOM.
@@ -1164,7 +1236,7 @@ AsyncGeneratorPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*> r
     RootedValue argument(cx, reaction->handlerArg());
     Rooted<AsyncGeneratorObject*> asyncGenObj(cx, reaction->asyncGenerator());
 
-    int32_t handlerNum = int32_t(handlerVal.toNumber());
+    int32_t handlerNum = handlerVal.toInt32();
 
     // Await's handlers don't return a value, nor throw exception.
     // They fail only on OOM.
@@ -1250,6 +1322,8 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
         return AsyncFunctionPromiseReactionJob(cx, reaction, args.rval());
     if (reaction->isAsyncGenerator())
         return AsyncGeneratorPromiseReactionJob(cx, reaction, args.rval());
+    if (reaction->isDebuggerDummy())
+        return true;
 
     // Step 3.
     RootedValue handlerVal(cx, reaction->handler());
@@ -1260,8 +1334,8 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     ResolutionMode resolutionMode = ResolveMode;
 
     // Steps 4-6.
-    if (handlerVal.isNumber()) {
-        int32_t handlerNum = int32_t(handlerVal.toNumber());
+    if (handlerVal.isInt32()) {
+        int32_t handlerNum = handlerVal.toInt32();
 
         // Step 4.
         if (handlerNum == PromiseHandlerIdentity) {
@@ -1283,6 +1357,9 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
             handlerResult = ObjectValue(*resultObj);
         }
     } else {
+        MOZ_ASSERT(handlerVal.isObject());
+        MOZ_ASSERT(IsCallable(handlerVal));
+
         // Step 6.
         FixedInvokeArgs<1> args2(cx);
         args2[0].set(argument);
@@ -1351,6 +1428,7 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     if (Call(cx, then, thenable, args2, &rval))
         return true;
 
+    // Steps 3-4.
     if (!MaybeGetAndClearException(cx, &rval))
         return false;
 
@@ -1404,6 +1482,7 @@ PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
+    // Steps 3-4.
     RootedValue exception(cx);
     if (!MaybeGetAndClearException(cx, &exception))
         return false;
@@ -1506,9 +1585,8 @@ EnqueuePromiseResolveThenableBuiltinJob(JSContext* cx, HandleObject promiseToRes
 }
 
 static MOZ_MUST_USE bool
-AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
-                   HandleValue onRejected, HandleObject dependentPromise,
-                   HandleObject resolve, HandleObject reject, HandleObject incumbentGlobal);
+AddDummyPromiseReactionForDebugger(JSContext* cx, Handle<PromiseObject*> promise,
+                                   HandleObject dependentPromise);
 
 static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
@@ -1557,6 +1635,11 @@ GetResolveFunctionFromPromise(PromiseObject* promise)
     // Only the original RejectPromiseFunction has a reference to the resolve
     // function.
     if (rejectFun->maybeNative() != &RejectPromiseFunction)
+        return nullptr;
+
+    // The reject function was already called and cleared its resolve-function
+    // extended slot.
+    if (rejectFun->getExtendedSlot(RejectFunctionSlot_ResolveFunction).isUndefined())
         return nullptr;
 
     return GetResolveFunctionFromReject(rejectFun);
@@ -2533,10 +2616,14 @@ Promise_static_species(JSContext* cx, unsigned argc, Value* vp)
 
 // ES2016, 25.4.5.1, implemented in Promise.js.
 
+enum class IncumbentGlobalObject {
+    Yes, No
+};
+
 static PromiseReactionRecord*
 NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfilled,
                   HandleValue onRejected, HandleObject resolve, HandleObject reject,
-                  HandleObject incumbentGlobalObject)
+                  IncumbentGlobalObject incumbentGlobalObjectOption)
 {
     // Either of the following conditions must be met:
     //   * resultPromise is a PromiseObject
@@ -2546,6 +2633,27 @@ NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfi
     MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(resolve));
     MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), reject);
     MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(reject));
+
+    // Ensure the onFulfilled handler has the expected type.
+    MOZ_ASSERT(onFulfilled.isInt32() || onFulfilled.isObjectOrNull());
+    MOZ_ASSERT_IF(onFulfilled.isObject(), IsCallable(onFulfilled));
+    MOZ_ASSERT_IF(onFulfilled.isInt32(),
+                  0 <= onFulfilled.toInt32() && onFulfilled.toInt32() < PromiseHandlerLimit);
+
+    // Ensure the onRejected handler has the expected type.
+    MOZ_ASSERT(onRejected.isInt32() || onRejected.isObjectOrNull());
+    MOZ_ASSERT_IF(onRejected.isObject(), IsCallable(onRejected));
+    MOZ_ASSERT_IF(onRejected.isInt32(),
+                  0 <= onRejected.toInt32() && onRejected.toInt32() < PromiseHandlerLimit);
+
+    // Handlers must either both be present or both be absent.
+    MOZ_ASSERT(onFulfilled.isNull() == onRejected.isNull());
+
+    RootedObject incumbentGlobalObject(cx);
+    if (incumbentGlobalObjectOption == IncumbentGlobalObject::Yes) {
+        if (!GetObjectFromIncumbentGlobal(cx, &incumbentGlobalObject))
+            return nullptr;
+    }
 
     Rooted<PromiseReactionRecord*> reaction(cx, NewObjectWithClassProto<PromiseReactionRecord>(cx));
     if (!reaction)
@@ -2678,8 +2786,8 @@ static MOZ_MUST_USE bool
 InternalAwait(JSContext* cx, HandleValue value, HandleObject resultPromise,
               HandleValue onFulfilled, HandleValue onRejected, T extraStep)
 {
-    MOZ_ASSERT(onFulfilled.isNumber() || onFulfilled.isObject());
-    MOZ_ASSERT(onRejected.isNumber() || onRejected.isObject());
+    MOZ_ASSERT(onFulfilled.isInt32());
+    MOZ_ASSERT(onRejected.isInt32());
 
     // Step 2.
     Rooted<PromiseObject*> promise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
@@ -2690,15 +2798,11 @@ InternalAwait(JSContext* cx, HandleValue value, HandleObject resultPromise,
     if (!ResolvePromiseInternal(cx, promise, value))
         return false;
 
-    RootedObject incumbentGlobal(cx);
-    if (!GetObjectFromIncumbentGlobal(cx, &incumbentGlobal))
-        return false;
-
     // Step 7-8.
     Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultPromise,
                                                                   onFulfilled, onRejected,
                                                                   nullptr, nullptr,
-                                                                  incumbentGlobal));
+                                                                  IncumbentGlobalObject::Yes));
     if (!reaction)
         return false;
 
@@ -3296,15 +3400,11 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
     if (!IsCallable(onRejected))
         onRejected = Int32Value(PromiseHandlerThrower);
 
-    RootedObject incumbentGlobal(cx);
-    if (!GetObjectFromIncumbentGlobal(cx, &incumbentGlobal))
-        return false;
-
     // Step 7.
     Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultPromise,
                                                                   onFulfilled, onRejected,
                                                                   resolve, reject,
-                                                                  incumbentGlobal));
+                                                                  IncumbentGlobalObject::Yes));
     if (!reaction)
         return false;
 
@@ -3466,8 +3566,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         return true;
 
     Rooted<PromiseObject*> promise(cx, &unwrappedPromiseObj->as<PromiseObject>());
-    return AddPromiseReaction(cx, promise, UndefinedHandleValue, UndefinedHandleValue,
-                              blockedPromise, nullptr, nullptr, nullptr);
+    return AddDummyPromiseReactionForDebugger(cx, promise, blockedPromise);
 }
 
 static MOZ_MUST_USE bool
@@ -3540,19 +3639,21 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
 }
 
 static MOZ_MUST_USE bool
-AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
-                   HandleValue onRejected, HandleObject dependentPromise,
-                   HandleObject resolve, HandleObject reject, HandleObject incumbentGlobal)
+AddDummyPromiseReactionForDebugger(JSContext* cx, Handle<PromiseObject*> promise,
+                                   HandleObject dependentPromise)
 {
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
     Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, dependentPromise,
-                                                                  onFulfilled, onRejected,
-                                                                  resolve, reject,
-                                                                  incumbentGlobal));
+                                                                  NullHandleValue, NullHandleValue,
+                                                                  nullptr, nullptr,
+                                                                  IncumbentGlobalObject::No));
     if (!reaction)
         return false;
+
+    reaction->setIsDebuggerDummy();
+
     return AddPromiseReaction(cx, promise, reaction);
 }
 
@@ -3639,6 +3740,9 @@ PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValu
         return ResolvePromiseInternal(cx, promise, resolutionValue);
 
     RootedObject resolveFun(cx, GetResolveFunctionFromPromise(promise));
+    if (!resolveFun)
+        return true;
+
     RootedValue funVal(cx, ObjectValue(*resolveFun));
 
     // For xray'd Promises, the resolve fun may have been created in another
