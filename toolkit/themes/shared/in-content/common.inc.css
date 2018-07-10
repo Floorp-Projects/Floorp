@@ -227,13 +227,8 @@ html|select:disabled,
 html|*.numberbox-input:disabled::-moz-number-spin-box,
 xul|button[disabled="true"],
 xul|colorpicker[type="button"][disabled="true"],
-xul|menulist[disabled="true"],
-xul|listbox[disabled="true"] {
+xul|menulist[disabled="true"] {
   opacity: 0.5;
-}
-
-xul|listbox[disabled="true"] xul|listitem:hover {
-  background-color: transparent;
 }
 
 *|button.primary {
@@ -749,8 +744,7 @@ xul|*.radio-label-box {
 /* List boxes */
 
 html|select[size][multiple],
-xul|richlistbox,
-xul|listbox {
+xul|richlistbox {
   -moz-appearance: none;
   margin-inline-start: 0;
   background-color: var(--in-content-box-background);
@@ -760,8 +754,7 @@ xul|listbox {
 }
 
 html|select[size][multiple] > html|option,
-xul|treechildren::-moz-tree-row,
-xul|listbox xul|listitem {
+xul|treechildren::-moz-tree-row {
   padding: 0.3em;
   margin: 0;
   border: none;
@@ -770,13 +763,11 @@ xul|listbox xul|listitem {
 }
 
 html|select[size][multiple] > html|option:hover,
-xul|treechildren::-moz-tree-row(hover),
-xul|listbox xul|listitem:hover {
+xul|treechildren::-moz-tree-row(hover) {
   background-color: var(--in-content-item-hover);
 }
 
-xul|treechildren::-moz-tree-row(selected),
-xul|listbox xul|listitem[selected="true"] {
+xul|treechildren::-moz-tree-row(selected) {
   background-color: var(--in-content-item-selected);
   color: var(--in-content-selected-text);
 }
