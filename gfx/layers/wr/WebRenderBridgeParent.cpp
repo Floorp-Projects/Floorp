@@ -418,8 +418,8 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
 
   RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
   if (dSurf) {
-    bool inserted = mSharedSurfaceIds.EnsureInserted(wr::AsUint64(aExtId));
-    if (!inserted) {
+    auto it = mSharedSurfaceIds.emplace(wr::AsUint64(aExtId));
+    if (!it.second) {
       // We already have a mapping for this image, so decrement the ownership
       // counter just increased unnecessarily. This can happen when an image is
       // slow to decode and we need to invalidate it by updating its image key.
@@ -477,8 +477,8 @@ WebRenderBridgeParent::AddExternalImageForTexture(wr::ExternalImageId aExtId,
     if (wrTexture) {
       wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
                                      wrTexture->GetExternalImageKey());
-      MOZ_ASSERT(!mTextureHosts.Get(wr::AsUint64(aKey), nullptr));
-      mTextureHosts.Put(wr::AsUint64(aKey), CompositableTextureHostRef(aTexture));
+      MOZ_ASSERT(mTextureHosts.find(wr::AsUint64(aKey)) == mTextureHosts.end());
+      mTextureHosts.emplace(wr::AsUint64(aKey), CompositableTextureHostRef(aTexture));
       return true;
     }
   }
@@ -1043,7 +1043,7 @@ WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipel
     return;
   }
 
-  MOZ_ASSERT(!mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get());
+  MOZ_ASSERT(mAsyncCompositables.find(wr::AsUint64(aPipelineId)) == mAsyncCompositables.end());
 
   RefPtr<CompositableHost> host;
   if (aAsync) {
@@ -1071,7 +1071,7 @@ WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipel
 
   wrHost->SetWrBridge(this);
   wrHost->EnableUseAsyncImagePipeline();
-  mAsyncCompositables.Put(wr::AsUint64(aPipelineId), wrHost);
+  mAsyncCompositables.emplace(wr::AsUint64(aPipelineId), wrHost);
   mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
   return;
@@ -1085,15 +1085,16 @@ WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPi
     return;
   }
 
-  WebRenderImageHost* wrHost = mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get();
-  if (!wrHost) {
+  auto it = mAsyncCompositables.find(wr::AsUint64(aPipelineId));
+  if (it == mAsyncCompositables.end()) {
     return;
   }
+  RefPtr<WebRenderImageHost>& wrHost = it->second;
 
   wrHost->ClearWrBridge();
   mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, aTxn);
   aTxn.RemovePipeline(aPipelineId);
-  mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
+  mAsyncCompositables.erase(wr::AsUint64(aPipelineId));
   return;
 }
 
@@ -1105,7 +1106,8 @@ WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
   }
 
   uint64_t imageId = wr::AsUint64(aImageId);
-  if (mSharedSurfaceIds.EnsureRemoved(imageId)) {
+  if (mSharedSurfaceIds.find(imageId) != mSharedSurfaceIds.end()) {
+    mSharedSurfaceIds.erase(imageId);
     mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, aImageId);
   }
 }
@@ -1121,13 +1123,14 @@ WebRenderBridgeParent::ReleaseTextureOfImage(const wr::ImageKey& aKey)
   CompositableTextureHostRef texture;
   WebRenderTextureHost* wrTexture = nullptr;
 
-  if (mTextureHosts.Get(id, &texture)) {
-    wrTexture = texture->AsWebRenderTextureHost();
+  auto it = mTextureHosts.find(id);
+  if (it != mTextureHosts.end()) {
+    wrTexture = (*it).second->AsWebRenderTextureHost();
   }
   if (wrTexture) {
     mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, wrTexture);
   }
-  mTextureHosts.Remove(id);
+  mTextureHosts.erase(id);
 }
 
 mozilla::ipc::IPCResult
@@ -1654,26 +1657,26 @@ WebRenderBridgeParent::ClearResources()
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
-  for (auto iter = mTextureHosts.Iter(); !iter.Done(); iter.Next()) {
-    WebRenderTextureHost* wrTexture = iter.Data()->AsWebRenderTextureHost();
+  for (const auto& entry : mTextureHosts) {
+    WebRenderTextureHost* wrTexture = entry.second->AsWebRenderTextureHost();
     MOZ_ASSERT(wrTexture);
     if (wrTexture) {
       mAsyncImageManager->HoldExternalImage(mPipelineId, wrEpoch, wrTexture);
     }
   }
-  mTextureHosts.Clear();
-  for (auto iter = mAsyncCompositables.Iter(); !iter.Done(); iter.Next()) {
-    wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
-    RefPtr<WebRenderImageHost> host = iter.Data();
+  mTextureHosts.clear();
+  for (const auto& entry : mAsyncCompositables) {
+    wr::PipelineId pipelineId = wr::AsPipelineId(entry.first);
+    RefPtr<WebRenderImageHost> host = entry.second;
     host->ClearWrBridge();
     mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId, txn);
   }
-  mAsyncCompositables.Clear();
-  for (auto iter = mSharedSurfaceIds.Iter(); !iter.Done(); iter.Next()) {
-    wr::ExternalImageId id = wr::ToExternalImageId(iter.Get()->GetKey());
+  mAsyncCompositables.clear();
+  for (const auto& entry : mSharedSurfaceIds) {
+    wr::ExternalImageId id = wr::ToExternalImageId(entry);
     mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, id);
   }
-  mSharedSurfaceIds.Clear();
+  mSharedSurfaceIds.clear();
 
   mAsyncImageManager->RemovePipeline(mPipelineId, wrEpoch);
   txn.RemovePipeline(mPipelineId);

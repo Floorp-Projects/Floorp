@@ -328,10 +328,9 @@ public:
     mNormal = DefaultNormal();
   }
 
-  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
+  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform,
+                              const Matrix4x4Typed<Units, Units>& aInverseTransform)
   {
-    MOZ_ASSERT(!aTransform.IsSingular());
-
     TransformPoints(aTransform, false);
 
     // Perspective projection transformation might produce points with w <= 0,
@@ -339,7 +338,15 @@ public:
     mPoints = ClipPointsAtInfinity(mPoints);
 
     // Normal vectors should be transformed using inverse transpose.
-    mNormal = aTransform.Inverse().Transpose().TransformPoint(mNormal);
+    mNormal = aInverseTransform.TransposeTransform4D(mNormal);
+  }
+
+
+  void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
+  {
+    MOZ_ASSERT(!aTransform.IsSingular());
+
+    TransformToScreenSpace(aTransform, aTransform.Inverse());
   }
 
 private:

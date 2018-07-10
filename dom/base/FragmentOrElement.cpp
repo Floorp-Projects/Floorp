@@ -1041,7 +1041,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // Step 4.
             // "If target is relatedTarget and target is not event's
             //  relatedTarget, then return true."
-            aVisitor.IgnoreCurrentTarget();
+            aVisitor.IgnoreCurrentTargetBecauseOfShadowDOMRetargeting();
             // Old code relies on mTarget to point to the first element which
             // was not added to the event target chain because of mCanHandle
             // being false, but in Shadow DOM case mTarget really should
@@ -1085,7 +1085,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // Step 11.5
             // "Otherwise, if parent and relatedTarget are identical, then set
             //  parent to null."
-            aVisitor.IgnoreCurrentTarget();
+            aVisitor.IgnoreCurrentTargetBecauseOfShadowDOMRetargeting();
             // Old code relies on mTarget to point to the first element which
             // was not added to the event target chain because of mCanHandle
             // being false, but in Shadow DOM case mTarget really should
