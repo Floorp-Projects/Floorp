@@ -1,6 +1,6 @@
 {
   "name": "mozilla-hybrid-content-telemetry",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The content library for Mozilla's Hybrid Content Telemetry.",
   "main": "HybridContentTelemetry-lib.js",
   "author": "Alessio Placitelli <aplacitelli@mozilla.com>",
