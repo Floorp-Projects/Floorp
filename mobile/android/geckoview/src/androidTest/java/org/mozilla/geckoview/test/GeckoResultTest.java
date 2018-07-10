@@ -1,27 +1,33 @@
 package org.mozilla.geckoview.test;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.test.annotation.UiThreadTest;
 import android.support.test.filters.MediumTest;
 import android.support.test.rule.UiThreadTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import static org.hamcrest.Matchers.equalTo;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class GeckoResultTest {
     private static final long DEFAULT_TIMEOUT = 5000;
+
+    private static class MockException extends RuntimeException {
+    }
 
     @Rule
     public UiThreadTestRule mUiThreadTestRule = new UiThreadTestRule();
@@ -212,7 +218,7 @@ public class GeckoResultTest {
         }).then(new OnExceptionListener<Void>() {
             @Override
             public GeckoResult<Void> onException(Throwable exception) {
-                assertThat("Exception should be MockException", exception instanceof MockException, equalTo(true));
+                assertThat("Exception should be MockException", exception, instanceOf(MockException.class));
                 done();
                 return null;
             }
@@ -221,6 +227,82 @@ public class GeckoResultTest {
         waitUntilDone();
     }
 
-    private static class MockException extends RuntimeException {
+    @UiThreadTest
+    @Test
+    public void then_propagatedValue() {
+        // The first GeckoResult only has an exception listener, so when the value 42 is
+        // propagated to subsequent GeckoResult instances, the propagated value is coerced to null.
+        GeckoResult.fromValue(42).then(new OnExceptionListener<String>() {
+            @Override
+            public GeckoResult<String> onException(Throwable exception) throws Throwable {
+                return null;
+            }
+        }).then(new OnValueListener<String, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(String value) throws Throwable {
+                assertThat("Propagated value is null", value, nullValue());
+                done();
+                return null;
+            }
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test(expected = GeckoResult.UncaughtException.class)
+    public void then_uncaughtException() {
+        GeckoResult.fromValue(42).then(new OnValueListener<Integer, String>() {
+            @Override
+            public GeckoResult<String> onValue(Integer value) {
+                throw new MockException();
+            }
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test(expected = GeckoResult.UncaughtException.class)
+    public void then_propagatedUncaughtException() {
+        GeckoResult.fromValue(42).then(new OnValueListener<Integer, String>() {
+            @Override
+            public GeckoResult<String> onValue(Integer value) {
+                throw new MockException();
+            }
+        }).then(new OnValueListener<String, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(String value) throws Throwable {
+                return null;
+            }
+        });
+
+        waitUntilDone();
+    }
+
+    @UiThreadTest
+    @Test
+    public void then_caughtException() {
+        GeckoResult.fromValue(42).then(new OnValueListener<Integer, String>() {
+            @Override
+            public GeckoResult<String> onValue(Integer value) throws Exception {
+                throw new MockException();
+            }
+        }).then(new OnValueListener<String, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(String value) throws Throwable {
+                return null;
+            }
+        }).then(new OnExceptionListener<Void>() {
+            @Override
+            public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                assertThat("Exception should be expected",
+                           exception, instanceOf(MockException.class));
+                done();
+                return null;
+            }
+        });
+
+        waitUntilDone();
     }
 }
