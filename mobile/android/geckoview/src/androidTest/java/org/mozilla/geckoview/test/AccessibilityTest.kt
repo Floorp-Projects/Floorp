@@ -33,12 +33,12 @@ import org.junit.runner.RunWith
 @WithDevToolsAPI
 class AccessibilityTest : BaseSessionTest() {
     lateinit var view: View
-    val provider: AccessibilityNodeProvider get() = view.accessibilityNodeProvider
+    val provider: AccessibilityNodeProvider get() = view.getAccessibilityNodeProvider()
 
     // Given a child ID, return the virtual descendent ID.
     private fun getVirtualDescendantId(childId: Long): Int {
         try {
-            val getVirtualDescendantIdMethod =
+            var getVirtualDescendantIdMethod =
                 AccessibilityNodeInfo::class.java.getMethod("getVirtualDescendantId", Long::class.java)
             return getVirtualDescendantIdMethod.invoke(null, childId) as Int
         } catch (ex: Exception) {
@@ -49,7 +49,7 @@ class AccessibilityTest : BaseSessionTest() {
     // Retrieve the virtual descendent ID of the event's source.
     private fun getSourceId(event: AccessibilityEvent): Int {
         try {
-            val getSourceIdMethod =
+            var getSourceIdMethod =
                 AccessibilityRecord::class.java.getMethod("getSourceNodeId")
             return getVirtualDescendantId(getSourceIdMethod.invoke(event) as Long)
         } catch (ex: Exception) {
@@ -60,13 +60,11 @@ class AccessibilityTest : BaseSessionTest() {
     private interface EventDelegate {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
         fun onFocused(event: AccessibilityEvent) { }
-        fun onTextSelectionChanged(event: AccessibilityEvent) { }
-        fun onTextChanged(event: AccessibilityEvent) { }
     }
 
     @Before fun setup() {
         // We initialize a view with a parent and grandparent so that the
-        // accessibility events propagate up at least to the parent.
+        // accessibility events propogate up at least to the parent.
         view = FrameLayout(InstrumentationRegistry.getTargetContext())
         FrameLayout(InstrumentationRegistry.getTargetContext()).addView(view)
         FrameLayout(InstrumentationRegistry.getTargetContext()).addView(view.parent as View)
@@ -81,11 +79,9 @@ class AccessibilityTest : BaseSessionTest() {
             EventDelegate::class,
         { newDelegate -> (view.parent as View).setAccessibilityDelegate(object : View.AccessibilityDelegate() {
             override fun onRequestSendAccessibilityEvent(host: ViewGroup, child: View, event: AccessibilityEvent): Boolean {
-                when (event.eventType) {
+                when (event.getEventType()) {
                     AccessibilityEvent.TYPE_VIEW_FOCUSED -> newDelegate.onFocused(event)
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
-                    AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
-                    AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
                     else -> {}
                 }
                 return false
@@ -101,9 +97,9 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testRootNode() {
         assertThat("provider is not null", provider, notNullValue())
-        val node = provider.createAccessibilityNodeInfo(AccessibilityNodeProvider.HOST_VIEW_ID)
+        var node = provider.createAccessibilityNodeInfo(AccessibilityNodeProvider.HOST_VIEW_ID)
         assertThat("Root node should have WebView class name",
-            node.className.toString(), equalTo("android.webkit.WebView"))
+            node.getClassName().toString(), equalTo("android.webkit.WebView"))
     }
 
     @Test fun testPageLoad() {
@@ -127,8 +123,8 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
-                assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Text node should not be focusable", node.isFocusable(), equalTo(false))
             }
         })
 
@@ -139,28 +135,8 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
-                assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
-            }
-        })
-    }
-
-    @Test fun testTextEntryNode() {
-        sessionRule.session.loadString("<input aria-label='Name' value='Tobias'>", "text/html")
-        sessionRule.waitForPageStop()
-
-        mainSession.evaluateJS("$('input').focus()")
-
-        sessionRule.waitUntilCalled(object : EventDelegate {
-            @AssertCalled(count = 1)
-            override fun onAccessibilityFocused(event: AccessibilityEvent) {
-                val nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
-                assertThat("Focused EditBox", node.className.toString(),
-                        equalTo("android.widget.EditText"))
-                assertThat("Hint has field name",
-                    node.extras.getString("AccessibilityNodeInfo.hint"),
-                    equalTo("Name"))
+                var node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Entry node should be focusable", node.isFocusable(), equalTo(true))
             }
         })
     }
