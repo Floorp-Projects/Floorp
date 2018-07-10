@@ -332,17 +332,14 @@ ul.children + .tag-line::before {
 }
 
 .reveal-link {
-  margin-inline-start: 10px;
   cursor: pointer;
-  display: none;
-}
+  background: url("chrome://devtools/skin/images/reveal.svg") no-repeat;
+  display: inline-block;
+  width: 16px;
+  height: 8px;
 
-.reveal-link:hover {
-  text-decoration: underline
-}
-
-.tag-line:hover .reveal-link {
-  display: inline;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
 }
 
 /* Draw a circle next to nodes that have a pseudo class lock.
