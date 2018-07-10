@@ -171,6 +171,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
     // to avoid memory leaks. Within the destructor of the principal we explicitly
     // set mLoadingPrincipal to null.
     nsIPrincipal*                              mLoadingPrincipal;
+    nsCOMPtr<nsICSPEventListener>              mEventListener;
 
     // helper members used to queue up web console messages till
     // the windowID becomes available. see flushConsoleMessages()

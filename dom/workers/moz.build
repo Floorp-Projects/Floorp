@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     'ScriptLoader.cpp',
     'SharedWorker.cpp',
     'Worker.cpp',
+    'WorkerCSPEventListener.cpp',
     'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerError.cpp',
