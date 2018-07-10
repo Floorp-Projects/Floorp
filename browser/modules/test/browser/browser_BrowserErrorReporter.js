@@ -84,6 +84,7 @@ add_task(async function testScalars() {
   const fetchStub = sinon.stub();
   const reporter = new BrowserErrorReporter({
     fetch: fetchStub,
+    sampleRates: new Map(),
     now: BrowserErrorReporter.getAppBuildIdDate(),
   });
   await SpecialPowers.pushPrefEnv({set: [

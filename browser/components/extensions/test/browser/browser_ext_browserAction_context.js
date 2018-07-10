@@ -22,6 +22,11 @@ async function runTests(options) {
                             String(badgeBackgroundColor),
                             "expected value from getBadgeBackgroundColor");
 
+      let badgeTextColor = await browser.browserAction.getBadgeTextColor(details);
+      browser.test.assertEq(String(expecting.badgeTextColor),
+                            String(badgeTextColor),
+                            "expected value from getBadgeTextColor");
+
       let enabled = await browser.browserAction.isEnabled(details);
       browser.test.assertEq(expecting.enabled, enabled,
                             "expected value from isEnabled");
@@ -41,6 +46,7 @@ async function runTests(options) {
         () => browser.browserAction.setPopup({tabId, popup: "foo.html"}),
         () => browser.browserAction.setBadgeText({tabId, text: "foo"}),
         () => browser.browserAction.setBadgeBackgroundColor({tabId, color: [0xff, 0, 0, 0xff]}),
+        () => browser.browserAction.setBadgeTextColor({tabId, color: [0, 0xff, 0xff, 0xff]}),
       ];
 
       for (let call of calls) {
@@ -96,6 +102,13 @@ async function runTests(options) {
     background: `(${background})(${options.getTests})`,
   });
 
+  function serializeColor([r, g, b, a]) {
+    if (a === 255) {
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+  }
+
   let browserActionId;
   function checkDetails(details, windowId) {
     let {document} = Services.wm.getOuterWindowWithId(windowId);
@@ -115,17 +128,18 @@ async function runTests(options) {
     is(button.getAttribute("badge"), details.badge, "badge text is correct");
     is(button.getAttribute("disabled") == "true", !details.enabled, "disabled state is correct");
 
-    if (details.badge && details.badgeBackgroundColor) {
+    if (details.badge) {
       let badge = button.ownerDocument.getAnonymousElementByAttribute(
         button, "class", "toolbarbutton-badge");
-
-      let badgeColor = window.getComputedStyle(badge).backgroundColor;
-      let color = details.badgeBackgroundColor;
-      let expectedColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-
-      is(badgeColor, expectedColor, "badge color is correct");
+      let style = window.getComputedStyle(badge);
+      let expected = {
+        backgroundColor: serializeColor(details.badgeBackgroundColor),
+        color: serializeColor(details.badgeTextColor),
+      };
+      for (let [prop, value] of Object.entries(expected)) {
+        is(style[prop], value, `${prop} is correct`);
+      }
     }
-
 
     // TODO: Popup URL.
   }
@@ -191,6 +205,7 @@ add_task(async function testTabSwitchContext() {
          "title": "Default Title",
          "badge": "",
          "badgeBackgroundColor": [0xd9, 0, 0, 255],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff],
          "enabled": true},
         {"icon": browser.runtime.getURL("1.png")},
         {"icon": browser.runtime.getURL("2.png"),
@@ -198,18 +213,21 @@ add_task(async function testTabSwitchContext() {
          "title": "Title 2",
          "badge": "2",
          "badgeBackgroundColor": [0xff, 0, 0, 0xff],
+         "badgeTextColor": [0, 0xff, 0xff, 0xff],
          "enabled": false},
         {"icon": browser.runtime.getURL("global.png"),
          "popup": browser.runtime.getURL("global.html"),
          "title": "Global Title",
          "badge": "g",
          "badgeBackgroundColor": [0, 0xff, 0, 0xff],
+         "badgeTextColor": [0xff, 0, 0xff, 0xff],
          "enabled": false},
         {"icon": browser.runtime.getURL("global.png"),
          "popup": browser.runtime.getURL("global.html"),
          "title": "Global Title",
          "badge": "g",
-         "badgeBackgroundColor": [0, 0xff, 0, 0xff]},
+         "badgeBackgroundColor": [0, 0xff, 0, 0xff],
+         "badgeTextColor": [0xff, 0, 0xff, 0xff]},
       ];
 
       let promiseTabLoad = details => {
@@ -257,6 +275,7 @@ add_task(async function testTabSwitchContext() {
           browser.browserAction.setTitle({tabId, title: "Title 2"});
           browser.browserAction.setBadgeText({tabId, text: "2"});
           browser.browserAction.setBadgeBackgroundColor({tabId, color: "#ff0000"});
+          browser.browserAction.setBadgeTextColor({tabId, color: "#00ffff"});
           browser.browserAction.disable(tabId);
 
           expect(details[2], null, null, details[0]);
@@ -273,6 +292,7 @@ add_task(async function testTabSwitchContext() {
           browser.browserAction.setTitle({title: "Global Title"});
           browser.browserAction.setBadgeText({text: "g"});
           browser.browserAction.setBadgeBackgroundColor({color: [0, 0xff, 0, 0xff]});
+          browser.browserAction.setBadgeTextColor({color: [0xff, 0, 0xff, 0xff]});
           browser.browserAction.disable();
 
           expect(details[1], null, details[3], details[0]);
@@ -341,6 +361,7 @@ add_task(async function testDefaultTitle() {
          "popup": "",
          "badge": "",
          "badgeBackgroundColor": [0xd9, 0, 0, 255],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff],
          "icon": browser.runtime.getURL("icon.png"),
          "enabled": true},
         {"title": "Foo Title"},
@@ -460,32 +481,38 @@ add_task(async function testPropertyRemoval() {
          "title": "Default Title",
          "badge": "",
          "badgeBackgroundColor": [0xd9, 0x00, 0x00, 0xFF],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff],
          "enabled": true},
         {"icon": browser.runtime.getURL("global.png"),
          "popup": browser.runtime.getURL("global.html"),
          "title": "global",
          "badge": "global",
-         "badgeBackgroundColor": [0x11, 0x11, 0x11, 0xFF]},
+         "badgeBackgroundColor": [0x11, 0x11, 0x11, 0xFF],
+         "badgeTextColor": [0x99, 0x99, 0x99, 0xff]},
         {"icon": browser.runtime.getURL("window.png"),
          "popup": browser.runtime.getURL("window.html"),
          "title": "window",
          "badge": "window",
-         "badgeBackgroundColor": [0x22, 0x22, 0x22, 0xFF]},
+         "badgeBackgroundColor": [0x22, 0x22, 0x22, 0xFF],
+         "badgeTextColor": [0x88, 0x88, 0x88, 0xff]},
         {"icon": browser.runtime.getURL("tab.png"),
          "popup": browser.runtime.getURL("tab.html"),
          "title": "tab",
          "badge": "tab",
-         "badgeBackgroundColor": [0x33, 0x33, 0x33, 0xFF]},
+         "badgeBackgroundColor": [0x33, 0x33, 0x33, 0xFF],
+         "badgeTextColor": [0x77, 0x77, 0x77, 0xff]},
         {"icon": defaultIcon,
          "popup": "",
          "title": "",
          "badge": "",
-         "badgeBackgroundColor": [0x33, 0x33, 0x33, 0xFF]},
+         "badgeBackgroundColor": [0x33, 0x33, 0x33, 0xFF],
+         "badgeTextColor": [0x77, 0x77, 0x77, 0xff]},
         {"icon": browser.runtime.getURL("global2.png"),
          "popup": browser.runtime.getURL("global2.html"),
          "title": "global2",
          "badge": "global2",
-         "badgeBackgroundColor": [0x44, 0x44, 0x44, 0xFF]},
+         "badgeBackgroundColor": [0x44, 0x44, 0x44, 0xFF],
+         "badgeTextColor": [0x66, 0x66, 0x66, 0xff]},
       ];
 
       return [
@@ -500,6 +527,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({title: "global"});
           browser.browserAction.setBadgeText({text: "global"});
           browser.browserAction.setBadgeBackgroundColor({color: "#111"});
+          browser.browserAction.setBadgeTextColor({color: "#999"});
           expect(null, null, details[1], details[0]);
         },
         async expect => {
@@ -510,6 +538,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({windowId, title: "window"});
           browser.browserAction.setBadgeText({windowId, text: "window"});
           browser.browserAction.setBadgeBackgroundColor({windowId, color: "#222"});
+          browser.browserAction.setBadgeTextColor({windowId, color: "#888"});
           expect(null, details[2], details[1], details[0]);
         },
         async expect => {
@@ -520,10 +549,11 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({tabId, title: "tab"});
           browser.browserAction.setBadgeText({tabId, text: "tab"});
           browser.browserAction.setBadgeBackgroundColor({tabId, color: "#333"});
+          browser.browserAction.setBadgeTextColor({tabId, color: "#777"});
           expect(details[3], details[2], details[1], details[0]);
         },
         async expect => {
-          browser.test.log("Set empty tab values, expect empty values except for bgcolor.");
+          browser.test.log("Set empty tab values, expect empty values except for colors.");
           let tabId = tabs[0];
           browser.browserAction.setIcon({tabId, path: ""});
           browser.browserAction.setPopup({tabId, popup: ""});
@@ -533,6 +563,11 @@ add_task(async function testPropertyRemoval() {
             browser.browserAction.setBadgeBackgroundColor({tabId, color: ""}),
             /^Invalid badge background color: ""$/,
             "Expected invalid badge background color error"
+          );
+          await browser.test.assertRejects(
+            browser.browserAction.setBadgeTextColor({tabId, color: ""}),
+            /^Invalid badge text color: ""$/,
+            "Expected invalid badge text color error"
           );
           expect(details[4], details[2], details[1], details[0]);
         },
@@ -544,6 +579,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({tabId, title: null});
           browser.browserAction.setBadgeText({tabId, text: null});
           browser.browserAction.setBadgeBackgroundColor({tabId, color: null});
+          browser.browserAction.setBadgeTextColor({tabId, color: null});
           expect(null, details[2], details[1], details[0]);
         },
         async expect => {
@@ -554,6 +590,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({windowId, title: null});
           browser.browserAction.setBadgeText({windowId, text: null});
           browser.browserAction.setBadgeBackgroundColor({windowId, color: null});
+          browser.browserAction.setBadgeTextColor({windowId, color: null});
           expect(null, null, details[1], details[0]);
         },
         async expect => {
@@ -563,6 +600,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setTitle({title: "global2"});
           browser.browserAction.setBadgeText({text: "global2"});
           browser.browserAction.setBadgeBackgroundColor({color: "#444"});
+          browser.browserAction.setBadgeTextColor({color: "#666"});
           expect(null, null, details[5], details[0]);
         },
         async expect => {
@@ -572,6 +610,7 @@ add_task(async function testPropertyRemoval() {
           browser.browserAction.setBadgeText({text: null});
           browser.browserAction.setTitle({title: null});
           browser.browserAction.setBadgeBackgroundColor({color: null});
+          browser.browserAction.setBadgeTextColor({color: null});
           expect(null, null, null, details[0]);
         },
       ];
@@ -602,17 +641,20 @@ add_task(async function testMultipleWindows() {
          "title": "Default Title",
          "badge": "",
          "badgeBackgroundColor": [0xd9, 0x00, 0x00, 0xFF],
+         "badgeTextColor": [0xff, 0xff, 0xff, 0xff],
          "enabled": true},
         {"icon": browser.runtime.getURL("window1.png"),
          "popup": browser.runtime.getURL("window1.html"),
          "title": "window1",
          "badge": "w1",
-         "badgeBackgroundColor": [0x11, 0x11, 0x11, 0xFF]},
+         "badgeBackgroundColor": [0x11, 0x11, 0x11, 0xFF],
+         "badgeTextColor": [0x99, 0x99, 0x99, 0xff]},
         {"icon": browser.runtime.getURL("window2.png"),
          "popup": browser.runtime.getURL("window2.html"),
          "title": "window2",
          "badge": "w2",
-         "badgeBackgroundColor": [0x22, 0x22, 0x22, 0xFF]},
+         "badgeBackgroundColor": [0x22, 0x22, 0x22, 0xFF],
+         "badgeTextColor": [0x88, 0x88, 0x88, 0xff]},
         {"title": "tab"},
       ];
 
@@ -629,6 +671,7 @@ add_task(async function testMultipleWindows() {
           browser.browserAction.setTitle({windowId, title: "window1"});
           browser.browserAction.setBadgeText({windowId, text: "w1"});
           browser.browserAction.setBadgeBackgroundColor({windowId, color: "#111"});
+          browser.browserAction.setBadgeTextColor({windowId, color: "#999"});
           expect(null, details[1], null, details[0]);
         },
         async expect => {
@@ -656,6 +699,7 @@ add_task(async function testMultipleWindows() {
           browser.browserAction.setTitle({windowId, title: "window2"});
           browser.browserAction.setBadgeText({windowId, text: "w2"});
           browser.browserAction.setBadgeBackgroundColor({windowId, color: "#222"});
+          browser.browserAction.setBadgeTextColor({windowId, color: "#888"});
           expect(null, details[2], null, details[0]);
         },
         async expect => {
@@ -690,6 +734,7 @@ add_task(async function testMultipleWindows() {
             setTitle: {title: "Default Title"},
             setBadgeText: {text: ""},
             setBadgeBackgroundColor: {color: [0xd9, 0x00, 0x00, 0xFF]},
+            setBadgeTextColor: {color: [0xff, 0xff, 0xff, 0xff]},
             getPopup: {},
             getTitle: {},
             getBadgeText: {},
