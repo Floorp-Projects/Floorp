@@ -18,8 +18,6 @@ manifestitem = None
 logger = structuredlog.StructuredLogger("web-platform-tests")
 
 
-TestItem = namedtuple("TestItem", ["test_manifest", "expected"])
-
 try:
     import ujson as json
 except ImportError:
@@ -44,33 +42,21 @@ def update_expected(test_paths, serve_root, log_file_names,
 
     manifests = load_test_manifests(serve_root, test_paths)
 
-    id_test_map = update_from_logs(manifests,
-                                   *log_file_names,
-                                   ignore_existing=ignore_existing,
-                                   property_order=property_order,
-                                   boolean_properties=boolean_properties,
-                                   stability=stability)
+    for metadata_path, updated_ini in update_from_logs(manifests,
+                                                       *log_file_names,
+                                                       ignore_existing=ignore_existing,
+                                                       property_order=property_order,
+                                                       boolean_properties=boolean_properties,
+                                                       stability=stability):
 
-    by_test_manifest = defaultdict(list)
-    while id_test_map:
-        item = id_test_map.popitem()[1]
-        by_test_manifest[item.test_manifest].append(item.expected)
-
-    for test_manifest, expected in by_test_manifest.iteritems():
-        metadata_path = manifests[test_manifest]["metadata_path"]
-        write_changes(metadata_path, expected)
-        if stability is not None:
-            for tree in expected:
-                if not tree.modified:
-                    continue
-                for test in expected.iterchildren():
-                    for subtest in test.iterchildren():
-                        if subtest.new_disabled:
-                            print "disabled: %s" % os.path.dirname(subtest.root.test_path) + "/" + subtest.name
-                        if test.new_disabled:
-                            print "disabled: %s" % test.root.test_path
-
-    return by_test_manifest
+        write_new_expected(metadata_path, updated_ini)
+        if stability:
+            for test in updated_ini.iterchildren():
+                for subtest in test.iterchildren():
+                    if subtest.new_disabled:
+                        print "disabled: %s" % os.path.dirname(subtest.root.test_path) + "/" + subtest.name
+                    if test.new_disabled:
+                        print "disabled: %s" % test.root.test_path
 
 
 def do_delayed_imports(serve_root):
@@ -147,9 +133,7 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
     for test_manifest, paths in manifests.iteritems():
         id_test_map.update(create_test_tree(
             paths["metadata_path"],
-            test_manifest,
-            property_order=property_order,
-            boolean_properties=boolean_properties))
+            test_manifest))
 
     updater = ExpectedUpdater(manifests,
                               id_test_map,
@@ -157,20 +141,16 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
     for log_filename in log_filenames:
         with open(log_filename) as f:
             updater.update_from_log(f)
-    return coalesce_results(id_test_map, stability)
+    for item in update_results(id_test_map, property_order, boolean_properties, stability):
+        yield item
 
 
-def coalesce_results(id_test_map, stability):
-    for _, expected in id_test_map.itervalues():
-        if not expected.modified:
-            continue
-        expected.coalesce_properties(stability=stability)
-        for test in expected.iterchildren():
-            for subtest in test.iterchildren():
-                subtest.coalesce_properties(stability=stability)
-            test.coalesce_properties(stability=stability)
-
-    return id_test_map
+def update_results(id_test_map, property_order, boolean_properties, stability):
+    test_file_items = set(id_test_map.itervalues())
+    for test_file in test_file_items:
+        updated_expected = test_file.update(property_order, boolean_properties, stability)
+        if updated_expected is not None and updated_expected.modified:
+            yield test_file.metadata_path, updated_expected
 
 
 def directory_manifests(metadata_path):
@@ -209,16 +189,28 @@ def write_changes(metadata_path, expected):
 
 def write_new_expected(metadata_path, expected):
     # Serialize the data back to a file
-    for tree in expected:
-        if not tree.is_empty:
-            manifest_str = wptmanifest.serialize(tree.node, skip_empty_data=True)
-            assert manifest_str != ""
-            path = expected_path(metadata_path, tree.test_path)
-            dir = os.path.split(path)[0]
-            if not os.path.exists(dir):
-                os.makedirs(dir)
-            with open(path, "wb") as f:
+    path = expected_path(metadata_path, expected.test_path)
+    if not expected.is_empty:
+        manifest_str = wptmanifest.serialize(expected.node, skip_empty_data=True)
+        assert manifest_str != ""
+        dir = os.path.split(path)[0]
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        tmp_path = path + ".tmp"
+        try:
+            with open(tmp_path, "wb") as f:
                 f.write(manifest_str)
+            os.rename(tmp_path, path)
+        except (Exception, KeyboardInterrupt):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+    else:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
 
 
 class ExpectedUpdater(object):
@@ -234,13 +226,12 @@ class ExpectedUpdater(object):
                            "lsan_leak": self.lsan_leak}
         self.tests_visited = {}
 
-        self.test_cache = {}
-
         self.types_by_path = {}
         for manifest in test_manifests.iterkeys():
             for test_type, path, _ in manifest:
                 if test_type in wpttest.manifest_test_cls:
                     self.types_by_path[path] = wpttest.manifest_test_cls[test_type]
+        self.run_infos = []
 
     def update_from_log(self, log_file):
         self.run_info = None
@@ -257,71 +248,77 @@ class ExpectedUpdater(object):
     def test_start(self, data):
         test_id = data["test"]
         try:
-            expected_node = self.id_test_map[test_id].expected.get_test(test_id)
+            test_data = self.id_test_map[test_id]
         except KeyError:
             print "Test not found %s, skipping" % test_id
             return
-        self.test_cache[test_id] = expected_node
 
-        if test_id not in self.tests_visited:
-            if self.ignore_existing:
-                expected_node.clear("expected")
-            self.tests_visited[test_id] = set()
+        if self.ignore_existing:
+            test_data.set_requires_update()
+            test_data.clear.append("expected")
+        self.tests_visited[test_id] = set()
 
     def test_status(self, data):
         test_id = data["test"]
-        test = self.test_cache.get(test_id)
-        if test is None:
+        subtest = data["subtest"]
+        test_data = self.id_test_map.get(test_id)
+        if test_data is None:
             return
-        test_cls = self.types_by_path[test.root.test_path]
 
-        subtest = test.get_subtest(data["subtest"])
+        test_cls = self.types_by_path[test_data.test_path]
 
-        self.tests_visited[test_id].add(data["subtest"])
+        self.tests_visited[test_id].add(subtest)
 
         result = test_cls.subtest_result_cls(
-            data["subtest"],
+            subtest,
             data["status"],
             None)
 
-        subtest.set_result(self.run_info, result)
+        test_data.set(test_id, subtest, "status", self.run_info, result)
+        if data.get("expected") and data["expected"] != data["status"]:
+            test_data.set_requires_update()
 
     def test_end(self, data):
-        test_id = data["test"]
-        test = self.test_cache.get(test_id)
-        if test is None:
-            return
-        test_cls = self.types_by_path[test.root.test_path]
-
         if data["status"] == "SKIP":
             return
+
+        test_id = data["test"]
+        test_data = self.id_test_map.get(test_id)
+        if test_data is None:
+            return
+        test_cls = self.types_by_path[test_data.test_path]
+
 
         result = test_cls.result_cls(
             data["status"],
             None)
-        test.set_result(self.run_info, result)
-        del self.test_cache[test_id]
+        test_data.set(test_id, None, "status", self.run_info, result)
+        if data.get("expected") and data["status"] != data["expected"]:
+            test_data.set_requires_update()
+        del self.tests_visited[test_id]
 
     def assertion_count(self, data):
         test_id = data["test"]
-        test = self.test_cache.get(test_id)
-        if test is None:
+        test_data = self.id_test_map.get(test_id)
+        if test_data is None:
             return
 
-        test.set_asserts(self.run_info, data["count"])
+        test_data.set(test_id, None, "asserts", self.run_info, data["count"])
+        if data["count"] < data["min_expected"] or data["count"] > data["max_expected"]:
+            test_data.set_requires_update()
 
     def lsan_leak(self, data):
         dir_path = data.get("scope", "/")
         dir_id = os.path.join(dir_path, "__dir__").replace(os.path.sep, "/")
         if dir_id.startswith("/"):
             dir_id = dir_id[1:]
-        expected_node = self.id_test_map[dir_id].expected
+        test_data = self.id_test_map[dir_id]
+        test_data.set(dir_id, None, "lsan", self.run_info, (data["frames"], data.get("allowed_match")))
+        if not data.get("allowed_match"):
+            test_data.set_requires_update()
 
-        expected_node.set_lsan(self.run_info, (data["frames"], data.get("allowed_match")))
 
-
-def create_test_tree(metadata_path, test_manifest, property_order=None,
-                     boolean_properties=None):
+def create_test_tree(metadata_path, test_manifest):
     """Create a map of expectation manifests for all tests in test_manifest,
     reading existing manifests under manifest_path
 
@@ -335,10 +332,12 @@ def create_test_tree(metadata_path, test_manifest, property_order=None,
                  item.item_type is not None]
     include_types = set(all_types) - exclude_types
     for _, test_path, tests in test_manifest.itertypes(*include_types):
-        expected_data = load_or_create_expected(test_manifest, metadata_path, test_path, tests,
-                                                property_order, boolean_properties)
+        test_file_data = TestFileData(test_manifest,
+                                      metadata_path,
+                                      test_path,
+                                      tests)
         for test in tests:
-            id_test_map[test.id] = TestItem(test_manifest, expected_data)
+            id_test_map[test.id] = test_file_data
 
         dir_path = os.path.split(test_path)[0].replace(os.path.sep, "/")
         while True:
@@ -349,15 +348,12 @@ def create_test_tree(metadata_path, test_manifest, property_order=None,
             dir_id = (test_manifest.url_base + dir_id).lstrip("/")
             if dir_id not in id_test_map:
                 dir_object = DirObject(dir_id, dir_path)
-                expected_data = load_or_create_expected(test_manifest,
-                                                        metadata_path,
-                                                        dir_id,
-                                                        [],
-                                                        property_order,
-                                                        boolean_properties)
-
-                id_test_map[dir_id] = TestItem(test_manifest, expected_data)
-            if not dir_path:
+                test_file_data = TestFileData(test_manifest,
+                                              metadata_path,
+                                              dir_id,
+                                              [])
+                id_test_map[dir_id] = test_file_data
+            if not dir_path or dir_path in id_test_map:
                 break
             dir_path = dir_path.rsplit("/", 1)[0] if "/" in dir_path else ""
 
@@ -373,27 +369,85 @@ class DirObject(object):
         return hash(self.id)
 
 
-def load_or_create_expected(test_manifest, metadata_path, test_path, tests, property_order=None,
-                            boolean_properties=None):
-    expected_data = load_expected(test_manifest, metadata_path, test_path, tests,
-                                  property_order=property_order,
-                                  boolean_properties=boolean_properties)
-    if expected_data is None:
-        expected_data = create_expected(test_manifest,
-                                        test_path,
-                                        tests,
-                                        property_order=property_order,
-                                        boolean_properties=boolean_properties)
-    return expected_data
+class TestFileData(object):
+    def __init__(self, test_manifest, metadata_path, test_path, tests):
+        self.test_manifest = test_manifest
+        self.test_path = test_path
+        self.metadata_path = metadata_path
+        self.tests = tests
+        self._expected = None
+        self._requires_update = False
+        self.clear = set()
+        self.data = []
+
+    def set_requires_update(self):
+        self._requires_update = True
+
+    def set(self, test_id, subtest_id, prop, run_info, value):
+        self.data.append((test_id, subtest_id, prop, run_info, value))
+
+    def expected(self, property_order, boolean_properties):
+        if self._expected is None:
+            expected_data = load_expected(self.test_manifest,
+                                          self.metadata_path,
+                                          self.test_path,
+                                          self.tests,
+                                          property_order,
+                                          boolean_properties)
+            if expected_data is None:
+                expected_data = create_expected(self.test_manifest,
+                                                self.test_path,
+                                                property_order,
+                                                boolean_properties)
+            self._expected = expected_data
+        return self._expected
+
+    def update(self, property_order, boolean_properties, stability):
+        if not self._requires_update:
+            return
+
+        expected = self.expected(property_order, boolean_properties)
+        expected_by_test = {}
+
+        for test in self.tests:
+            if not expected.has_test(test.id):
+                expected.append(manifestupdate.TestNode.create(test.id))
+            test_expected = expected.get_test(test.id)
+            expected_by_test[test.id] = test_expected
+            for prop in self.clear:
+                test_expected.clear(prop)
+
+        for (test_id, subtest_id, prop, run_info, value) in self.data:
+            # Special case directory metadata
+            if subtest_id is None and test_id.endswith("__dir__"):
+                if prop == "lsan":
+                    expected.set_lsan(run_info, value)
+                continue
+
+            test_expected = expected_by_test[test_id]
+            if subtest_id is None:
+                item_expected = test_expected
+            else:
+                item_expected = test_expected.get_subtest(subtest_id)
+            if prop == "status":
+                item_expected.set_result(run_info, value)
+            elif prop == "asserts":
+                item_expected.set_asserts(run_info, value)
+
+        expected.coalesce_properties(stability=stability)
+        for test in expected.iterchildren():
+            for subtest in test.iterchildren():
+                subtest.coalesce_properties(stability=stability)
+            test.coalesce_properties(stability=stability)
+
+        return expected
 
 
-def create_expected(test_manifest, test_path, tests, property_order=None,
+def create_expected(test_manifest, test_path, property_order=None,
                     boolean_properties=None):
     expected = manifestupdate.ExpectedManifest(None, test_path, test_manifest.url_base,
                                                property_order=property_order,
                                                boolean_properties=boolean_properties)
-    for test in tests:
-        expected.append(manifestupdate.TestNode.create(test.id))
     return expected
 
 
@@ -407,16 +461,11 @@ def load_expected(test_manifest, metadata_path, test_path, tests, property_order
     if expected_manifest is None:
         return
 
-    tests_by_id = {item.id: item for item in tests}
+    tests_by_id = {item.id for item in tests}
 
     # Remove expected data for tests that no longer exist
     for test in expected_manifest.iterchildren():
         if test.id not in tests_by_id:
             test.remove()
-
-    # Add tests that don't have expected data
-    for test in tests:
-        if not expected_manifest.has_test(test.id):
-            expected_manifest.append(manifestupdate.TestNode.create(test.id))
 
     return expected_manifest
