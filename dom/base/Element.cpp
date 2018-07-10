@@ -658,13 +658,6 @@ Element::GetElementsByTagName(const nsAString& aLocalName)
   return NS_GetContentList(this, kNameSpaceID_Unknown, aLocalName);
 }
 
-nsIFrame*
-Element::GetStyledFrame()
-{
-  nsIFrame *frame = GetPrimaryFrame(FlushType::Layout);
-  return frame ? nsLayoutUtils::GetStyleFrame(frame) : nullptr;
-}
-
 nsIScrollableFrame*
 Element::GetScrollFrame(nsIFrame **aFrame, FlushType aFlushType)
 {
@@ -1004,12 +997,13 @@ Element::ScrollHeight()
   if (IsSVGElement())
     return 0;
 
-  nsIScrollableFrame* sf = GetScrollFrame();
+  nsIFrame* frame;
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   nscoord height;
   if (sf) {
     height = sf->GetScrollRange().Height() + sf->GetScrollPortRect().Height();
   } else {
-    height = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).height;
+    height = GetScrollRectSizeForOverflowVisibleFrame(frame).height;
   }
 
   return nsPresContext::AppUnitsToIntCSSPixels(height);
@@ -1021,12 +1015,13 @@ Element::ScrollWidth()
   if (IsSVGElement())
     return 0;
 
-  nsIScrollableFrame* sf = GetScrollFrame();
+  nsIFrame* frame;
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   nscoord width;
   if (sf) {
     width = sf->GetScrollRange().Width() + sf->GetScrollPortRect().Width();
   } else {
-    width = GetScrollRectSizeForOverflowVisibleFrame(GetStyledFrame()).width;
+    width = GetScrollRectSizeForOverflowVisibleFrame(frame).width;
   }
 
   return nsPresContext::AppUnitsToIntCSSPixels(width);
