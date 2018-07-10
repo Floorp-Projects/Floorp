@@ -1224,6 +1224,11 @@ public:
   virtual mozilla::ipc::IPCResult RecvBHRThreadHang(
     const HangDetails& aHangDetails) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPrincipal,
+                                              const nsCString& aParentOrigin,
+                                              const nsCString& aGrantedOrigin) override;
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
