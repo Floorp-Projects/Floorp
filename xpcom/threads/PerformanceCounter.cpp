@@ -22,7 +22,6 @@ PerformanceCounter::PerformanceCounter(const nsACString& aName)
     mDispatchCounter(),
     mName(aName)
 {
-  ResetPerformanceCounters();
 }
 
 void
@@ -62,14 +61,4 @@ uint32_t
 PerformanceCounter::GetDispatchCount(DispatchCategory aCategory)
 {
   return mDispatchCounter[aCategory.GetValue()];
-}
-
-void
-PerformanceCounter::ResetPerformanceCounters()
-{
-  for (auto& cnt : mDispatchCounter) {
-    cnt = 0;
-  }
-  mExecutionDuration = 0;
-  mTotalDispatchCount = 0;
 }
