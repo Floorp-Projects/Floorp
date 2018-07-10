@@ -98,7 +98,7 @@ class ExpectedManifest(ManifestItem):
 
         :param test_id: The id of the test to look up"""
 
-        return self.child_map[test_id]
+        return self.child_map.get(test_id)
 
     def has_test(self, test_id):
         """Boolean indicating whether the current test has a known child test
@@ -168,7 +168,6 @@ class TestNode(ManifestItem):
     @property
     def test_type(self):
         """The type of the test represented by this TestNode"""
-
         return self.get("type", None)
 
     @property
