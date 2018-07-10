@@ -508,8 +508,8 @@ RenderThread::RegisterExternalImage(uint64_t aExternalImageId, already_AddRefed<
   if (mHasShutdown) {
     return;
   }
-  MOZ_ASSERT(!mRenderTextures.GetWeak(aExternalImageId));
-  mRenderTextures.Put(aExternalImageId, std::move(aTexture));
+  MOZ_ASSERT(mRenderTextures.find(aExternalImageId) == mRenderTextures.end());
+  mRenderTextures.emplace(aExternalImageId, std::move(aTexture));
 }
 
 void
@@ -519,7 +519,8 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
   if (mHasShutdown) {
     return;
   }
-  MOZ_ASSERT(mRenderTextures.GetWeak(aExternalImageId));
+  auto it = mRenderTextures.find(aExternalImageId);
+  MOZ_ASSERT(it != mRenderTextures.end());
   if (!IsInRenderThread()) {
     // The RenderTextureHost should be released in render thread. So, post the
     // deletion task here.
@@ -528,15 +529,15 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
     // deletion. Then the buffer in RenderTextureHost becomes invalid. It's fine
     // for this situation. Gecko will only release the buffer if WR doesn't need
     // it. So, no one will access the invalid buffer in RenderTextureHost.
-    RefPtr<RenderTextureHost> texture;
-    mRenderTextures.Remove(aExternalImageId, getter_AddRefs(texture));
+    RefPtr<RenderTextureHost> texture = it->second;
+    mRenderTextures.erase(it);
     mRenderTexturesDeferred.emplace_back(std::move(texture));
     Loop()->PostTask(NewRunnableMethod(
       "RenderThread::DeferredRenderTextureHostDestroy",
       this, &RenderThread::DeferredRenderTextureHostDestroy
     ));
   } else {
-    mRenderTextures.Remove(aExternalImageId);
+    mRenderTextures.erase(it);
   }
 }
 
@@ -546,8 +547,8 @@ RenderThread::UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId)
   MOZ_ASSERT(IsInRenderThread());
   MutexAutoLock lock(mRenderTextureMapLock);
   MOZ_ASSERT(mHasShutdown);
-  MOZ_ASSERT(mRenderTextures.GetWeak(aExternalImageId));
-  mRenderTextures.Remove(aExternalImageId);
+  MOZ_ASSERT(mRenderTextures.find(aExternalImageId) != mRenderTextures.end());
+  mRenderTextures.erase(aExternalImageId);
 }
 
 void
@@ -563,8 +564,12 @@ RenderThread::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
   MOZ_ASSERT(IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
-  MOZ_ASSERT(mRenderTextures.GetWeak(aExternalImageId.mHandle));
-  return mRenderTextures.GetWeak(aExternalImageId.mHandle);
+  auto it = mRenderTextures.find(aExternalImageId.mHandle);
+  MOZ_ASSERT(it != mRenderTextures.end());
+  if (it == mRenderTextures.end()) {
+    return nullptr;
+  }
+  return it->second;
 }
 
 void
@@ -592,8 +597,8 @@ RenderThread::HandleDeviceReset(const char* aWhere, bool aNotify)
   {
     MutexAutoLock lock(mRenderTextureMapLock);
     mRenderTexturesDeferred.clear();
-    for (auto iter = mRenderTextures.Iter(); !iter.Done(); iter.Next()) {
-      iter.UserData()->ClearCachedResources();
+    for (const auto& entry : mRenderTextures) {
+      entry.second->ClearCachedResources();
     }
   }
 
