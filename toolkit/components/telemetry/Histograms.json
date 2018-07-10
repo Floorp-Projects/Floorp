@@ -4829,7 +4829,7 @@
   },
   "PLACES_DATABASE_CORRUPTION_HANDLING_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "mbanner@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
@@ -4849,7 +4849,7 @@
   },
   "PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["mbonardo@mozilla.com", "mbanner@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "low": 30,
