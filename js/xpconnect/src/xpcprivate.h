@@ -3062,6 +3062,17 @@ void InnerCleanupValue(const nsXPTType& aType,
                        void* aValue,
                        uint32_t aArrayLen);
 
+// In order to be able to safely call CleanupValue on a generated value, the
+// data behind it needs to be initialized to a safe value. This method handles
+// initializing the backing data to a safe value to use as an argument to
+// XPCConvert methods, or xpc::CleanupValue.
+//
+// The pointer `aValue` must point to a block of memory at least aType.Stride()
+// bytes large, and correctly aligned.
+//
+// This method accepts the same types as xpc::CleanupValue.
+void InitializeValue(const nsXPTType& aType, void* aValue);
+
 } // namespace xpc
 
 namespace mozilla {

@@ -1245,10 +1245,6 @@ CallMethodHelper::Call()
 CallMethodHelper::~CallMethodHelper()
 {
     for (nsXPTCVariant& param : mDispatchParams) {
-        // Only clean up values which need cleanup.
-        if (!param.DoesValNeedCleanup())
-            continue;
-
         uint32_t arraylen = 0;
         if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arraylen))
             continue;
@@ -1477,25 +1473,39 @@ CallMethodHelper::InitializeDispatchParams()
 
     mJSContextIndex = mMethodInfo->IndexOfJSContext();
 
-    // iterate through the params to clear flags (for safe cleanup later)
-    for (uint8_t i = 0; i < paramCount + wantsJSContext + wantsOptArgc; i++) {
-        nsXPTCVariant* dp = mDispatchParams.AppendElement();
-        dp->ClearFlags();
-        dp->val.p = nullptr;
+    // Allocate enough space in mDispatchParams up-front.
+    if (!mDispatchParams.AppendElements(paramCount + wantsJSContext + wantsOptArgc)) {
+        Throw(NS_ERROR_OUT_OF_MEMORY, mCallContext);
+        return false;
     }
 
-    // Fill in the JSContext argument
-    if (wantsJSContext) {
-        nsXPTCVariant* dp = &mDispatchParams[mJSContextIndex];
-        dp->type = nsXPTType::T_VOID;
-        dp->val.p = mCallContext;
-    }
+    // Initialize each parameter to a valid state (for safe cleanup later).
+    for (uint8_t i = 0, paramIdx = 0; i < mDispatchParams.Length(); i++) {
+        nsXPTCVariant& dp = mDispatchParams[i];
 
-    // Fill in the optional_argc argument
-    if (wantsOptArgc) {
-        nsXPTCVariant* dp = &mDispatchParams[mOptArgcIndex];
-        dp->type = nsXPTType::T_U8;
-        dp->val.u8 = std::min<uint32_t>(mArgc, paramCount) - requiredArgs;
+        if (i == mJSContextIndex) {
+            // Fill in the JSContext argument
+            dp.type = nsXPTType::T_VOID;
+            dp.val.p = mCallContext;
+        } else if (i == mOptArgcIndex) {
+            // Fill in the optional_argc argument
+            dp.type = nsXPTType::T_U8;
+            dp.val.u8 = std::min<uint32_t>(mArgc, paramCount) - requiredArgs;
+        } else {
+            // Initialize normal arguments.
+            const nsXPTParamInfo& param = mMethodInfo->Param(paramIdx);
+            dp.type = param.Type();
+            xpc::InitializeValue(dp.type, &dp.val);
+
+            // Specify the correct storage/calling semantics. This will also set
+            // the `ptr` field to be self-referential.
+            if (param.IsIndirect()) {
+                dp.SetIndirect();
+            }
+
+            // Advance to the next normal parameter.
+            paramIdx++;
+        }
     }
 
     return true;
@@ -1522,40 +1532,8 @@ bool
 CallMethodHelper::ConvertIndependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-    const nsXPTType& type = paramInfo.GetType();
+    const nsXPTType& type = paramInfo.Type();
     nsXPTCVariant* dp = GetDispatchParam(i);
-    dp->type = type;
-    MOZ_ASSERT(!paramInfo.IsShared(), "[shared] implies [noscript]!");
-
-    // Specify the correct storage/calling semantics.
-    if (paramInfo.IsIndirect())
-        dp->SetIndirect();
-
-    // Some types are always stored within the nsXPTCVariant, and passed
-    // indirectly, regardless of in/out-ness. These types are stored in the
-    // nsXPTCVariant's extended value.
-    switch (type.Tag()) {
-        // Ensure that the jsval has a valid value.
-        case nsXPTType::T_JSVAL:
-            new (&dp->ext.jsval) JS::Value();
-            MOZ_ASSERT(dp->ext.jsval.isUndefined());
-            break;
-
-        // Initialize our temporary string class values so they can be assigned
-        // to by the XPCConvert logic.
-        case nsXPTType::T_ASTRING:
-        case nsXPTType::T_DOMSTRING:
-            new (&dp->ext.nsstr) nsString();
-            break;
-        case nsXPTType::T_CSTRING:
-        case nsXPTType::T_UTF8STRING:
-            new (&dp->ext.nscstr) nsCString();
-            break;
-    }
-
-    // Flag cleanup for anything that isn't self-contained.
-    if (!type.IsArithmetic())
-        dp->SetValNeedsCleanup();
 
     // Even if there's nothing to convert, we still need to examine the
     // JSObject container for out-params. If it's null or otherwise invalid,
@@ -1641,18 +1619,8 @@ bool
 CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-    const nsXPTType& type = paramInfo.GetType();
-
+    const nsXPTType& type = paramInfo.Type();
     nsXPTCVariant* dp = GetDispatchParam(i);
-    dp->type = type;
-
-    // Specify the correct storage/calling semantics.
-    if (paramInfo.IsIndirect())
-        dp->SetIndirect();
-
-    // Make sure we clean up all of our dependent types. All of them require
-    // allocations of some kind.
-    dp->SetValNeedsCleanup();
 
     // Even if there's nothing to convert, we still need to examine the
     // JSObject container for out-params. If it's null or otherwise invalid,
@@ -1712,14 +1680,18 @@ TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
     if (aType.Tag() == nsXPTType::T_JSVAL) {
         JS::UnsafeTraceRoot(aTrc, (JS::Value*)aVal,
                             "XPCWrappedNative::CallMethod param");
+    } else if (aType.Tag() == nsXPTType::T_SEQUENCE) {
+        auto* sequence = (xpt::detail::UntypedSequence*)aVal;
+
+        const nsXPTType& elty = aType.ArrayElementType();
+        for (uint32_t i = 0; i < sequence->Length(); ++i) {
+            TraceParam(aTrc, sequence->ElementAt(elty, i), elty);
+        }
     } else if (aType.Tag() == nsXPTType::T_ARRAY && *(void**)aVal) {
         const nsXPTType& elty = aType.ArrayElementType();
-        if (elty.Tag() != nsXPTType::T_JSVAL) {
-            return;
-        }
 
         for (uint32_t i = 0; i < aArrayLen; ++i) {
-            TraceParam(aTrc, elty.ElementPtr(aVal, i), elty);
+            TraceParam(aTrc, elty.ElementPtr(*(void**)aVal, i), elty);
         }
     }
 }
@@ -1729,10 +1701,9 @@ CallMethodHelper::trace(JSTracer* aTrc)
 {
     // We need to note each of our initialized parameters which contain jsvals.
     for (nsXPTCVariant& param : mDispatchParams) {
-        if (!param.DoesValNeedCleanup()) {
-            MOZ_ASSERT(param.type.Tag() != nsXPTType::T_JSVAL,
-                       "JSVals are marked as needing cleanup (even though they don't)");
-            continue;
+        // We only need to trace parameters which have an innermost JSVAL.
+        if (param.type.InnermostType().Tag() != nsXPTType::T_JSVAL) {
+            return;
         }
 
         uint32_t arrayLen = 0;
