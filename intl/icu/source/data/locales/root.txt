@@ -172,7 +172,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.39.27"}
+    Version{"2.1.41.58"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}

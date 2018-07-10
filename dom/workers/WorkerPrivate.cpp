@@ -569,6 +569,22 @@ private:
   }
 };
 
+class PropagateFirstPartyStorageAccessGrantedRunnable final : public WorkerControlRunnable
+{
+public:
+  explicit PropagateFirstPartyStorageAccessGrantedRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+  {}
+
+private:
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    aWorkerPrivate->PropagateFirstPartyStorageAccessGrantedInternal();
+    return true;
+  }
+};
+
 class ReportErrorToConsoleRunnable final : public WorkerRunnable
 {
   const char* mMessage;
@@ -1990,6 +2006,24 @@ WorkerPrivate::ParentWindowResumed()
       runnables[index]->Run();
     }
   }
+}
+
+void
+WorkerPrivate::PropagateFirstPartyStorageAccessGranted()
+{
+  AssertIsOnParentThread();
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mParentStatus >= Terminating) {
+      return;
+    }
+  }
+
+  RefPtr<PropagateFirstPartyStorageAccessGrantedRunnable> runnable =
+    new PropagateFirstPartyStorageAccessGrantedRunnable(this);
+  Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
 bool
@@ -3941,6 +3975,18 @@ WorkerPrivate::ThawInternal()
   }
 
   return true;
+}
+
+void
+WorkerPrivate::PropagateFirstPartyStorageAccessGrantedInternal()
+{
+  AssertIsOnWorkerThread();
+
+  mLoadInfo.mFirstPartyStorageAccessGranted = true;
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->PropagateFirstPartyStorageAccessGranted();
+  }
 }
 
 void

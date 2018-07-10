@@ -135,7 +135,7 @@ private:
 
 
 TransactionBuilder::TransactionBuilder(bool aUseSceneBuilderThread)
-  : mUseSceneBuilderThread(gfxPrefs::WebRenderAsyncSceneBuild() && aUseSceneBuilderThread)
+  : mUseSceneBuilderThread(aUseSceneBuilderThread)
 {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
 }

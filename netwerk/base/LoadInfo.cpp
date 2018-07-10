@@ -150,6 +150,12 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       nsCOMPtr<nsPIDOMWindowOuter> parent = contextOuter->GetScriptableParent();
       mParentOuterWindowID = parent ? parent->WindowID() : mOuterWindowID;
       mTopOuterWindowID = FindTopOuterWindowID(contextOuter);
+
+      nsGlobalWindowInner* innerWindow =
+        nsGlobalWindowInner::Cast(contextOuter->GetCurrentInnerWindow());
+      if (innerWindow) {
+        innerWindow->GetFirstPartyStorageAccessGrantedOrigins(mFirstPartyStorageAccessGrantedOrigins);
+      }
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
@@ -334,6 +340,12 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   mParentOuterWindowID = parent ? parent->WindowID() : 0;
   mTopOuterWindowID = FindTopOuterWindowID(aOuterWindow);
 
+  nsGlobalWindowInner* innerWindow =
+    nsGlobalWindowInner::Cast(aOuterWindow->GetCurrentInnerWindow());
+  if (innerWindow) {
+    innerWindow->GetFirstPartyStorageAccessGrantedOrigins(mFirstPartyStorageAccessGrantedOrigins);
+  }
+
   // get the docshell from the outerwindow, and then get the originattributes
   nsCOMPtr<nsIDocShell> docShell = aOuterWindow->GetDocShell();
   MOZ_ASSERT(docShell);
@@ -413,6 +425,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
                    LoadTainting aTainting,
+                   const nsTArray<nsString>& aFirstPartyStorageAccessGrantedOrigins,
                    bool aUpgradeInsecureRequests,
                    bool aBrowserUpgradeInsecureRequests,
                    bool aBrowserWouldUpgradeInsecureRequests,
@@ -452,6 +465,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(aTainting)
+  , mFirstPartyStorageAccessGrantedOrigins(aFirstPartyStorageAccessGrantedOrigins)
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
   , mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests)
   , mBrowserWouldUpgradeInsecureRequests(aBrowserWouldUpgradeInsecureRequests)
@@ -1390,6 +1404,38 @@ PerformanceStorage*
 LoadInfo::GetPerformanceStorage()
 {
   return mPerformanceStorage;
+}
+
+const nsTArray<nsString>&
+LoadInfo::GetFirstPartyStorageAccessGrantedOrigins()
+{
+  return mFirstPartyStorageAccessGrantedOrigins;
+}
+
+bool
+LoadInfo::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI)
+{
+  MOZ_ASSERT(aURI);
+
+  if (mFirstPartyStorageAccessGrantedOrigins.IsEmpty()) {
+    return false;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return mFirstPartyStorageAccessGrantedOrigins.Contains(origin);
+}
+
+void
+LoadInfo::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin)
+{
+  if (!mFirstPartyStorageAccessGrantedOrigins.Contains(aOrigin)) {
+    mFirstPartyStorageAccessGrantedOrigins.AppendElement(aOrigin);
+  }
 }
 
 } // namespace net

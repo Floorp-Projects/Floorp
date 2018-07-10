@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_PT{
-    Version{"2.1.39.11"}
+    Version{"2.1.41.97"}
     zoneStrings{
         "meta:Acre"{
             ld{"Hora de verão do Acre"}

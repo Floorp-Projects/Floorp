@@ -65,7 +65,7 @@ var usdCodeOptions =
 var usDollarsCode = new Intl.NumberFormat("en-US", usdCodeOptions);
 
 assertParts(usDollarsCode, 25,
-            [Currency("USD"), Integer("25")]);
+            [Currency("USD"), Literal("\xA0"), Integer("25")]);
 
 // ISO 4217 currency codes are formed from an ISO 3166-1 alpha-2 country code
 // followed by a third letter.  ISO 3166 guarantees that no country code
@@ -84,7 +84,7 @@ var xqqCodeOptions =
 var xqqMoneyCode = new Intl.NumberFormat("en-US", xqqCodeOptions);
 
 assertParts(xqqMoneyCode, 25,
-            [Currency("XQQ"), Integer("25")]);
+            [Currency("XQQ"), Literal("\xA0"), Integer("25")]);
 
 // Test currencyDisplay: "name".
 var usdNameOptions =
@@ -192,13 +192,44 @@ assertParts(usPercentFormatter, -1284.375,
              PercentSign("%")]);
 
 assertParts(usPercentFormatter, NaN,
-            [Nan("NaN")]);
+            [Nan("NaN"), PercentSign("%")]);
 
 assertParts(usPercentFormatter, Infinity,
             [Inf("∞"), PercentSign("%")]);
 
 assertParts(usPercentFormatter, -Infinity,
             [MinusSign("-"), Inf("∞"), PercentSign("%")]);
+
+var dePercentOptions =
+  {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  };
+var dePercentFormatter =
+  new Intl.NumberFormat("de", dePercentOptions);
+
+assertParts(dePercentFormatter, 0.375,
+            [Integer("37"), Decimal(","), Fraction("5"), Literal("\xA0"), PercentSign("%")]);
+
+assertParts(dePercentFormatter, -1284.375,
+            [MinusSign("-"),
+             Integer("128"),
+             Group("."),
+             Integer("437"),
+             Decimal(","),
+             Fraction("5"),
+             Literal("\xA0"),
+             PercentSign("%")]);
+
+assertParts(dePercentFormatter, NaN,
+            [Nan("NaN"), Literal("\xA0"), PercentSign("%")]);
+
+assertParts(dePercentFormatter, Infinity,
+            [Inf("∞"), Literal("\xA0"), PercentSign("%")]);
+
+assertParts(dePercentFormatter, -Infinity,
+            [MinusSign("-"), Inf("∞"), Literal("\xA0"), PercentSign("%")]);
 
 var arPercentOptions =
   {
