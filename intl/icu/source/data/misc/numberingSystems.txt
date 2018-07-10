@@ -87,6 +87,11 @@ numberingSystems:table(nofallback){
             desc{"%georgian"}
             radix:int{10}
         }
+        gong{
+            algorithmic:int{0}
+            desc{"𑶠𑶡𑶢𑶣𑶤𑶥𑶦𑶧𑶨𑶩"}
+            radix:int{10}
+        }
         gonm{
             algorithmic:int{0}
             desc{"𑵐𑵑𑵒𑵓𑵔𑵕𑵖𑵗𑵘𑵙"}
@@ -300,6 +305,11 @@ numberingSystems:table(nofallback){
         osma{
             algorithmic:int{0}
             desc{"𐒠𐒡𐒢𐒣𐒤𐒥𐒦𐒧𐒨𐒩"}
+            radix:int{10}
+        }
+        rohg{
+            algorithmic:int{0}
+            desc{"𐴰𐴱𐴲𐴳𐴴𐴵𐴶𐴷𐴸𐴹"}
             radix:int{10}
         }
         roman{

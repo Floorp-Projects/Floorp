@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ccp{
-    Version{"2.1.39.11"}
+    Version{"2.1.41.97"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"𑄃𑄛𑄴𑄉𑄚𑄨𑄌𑄴𑄖𑄚𑄴 𑄃𑄧𑄇𑄴𑄖𑄧"}

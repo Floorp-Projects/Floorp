@@ -1,0 +1,41 @@
+https://ssl.icu-project.org/trac/ticket/13851
+
+Index: source/common/ucase.cpp
+===================================================================
+--- a/intl/icu/source/common/ucase.cpp	(Revision 41549)
++++ b/intl/icu/source/common/ucase.cpp	(Revision 41550)
+@@ -270,6 +270,7 @@
+             }
+         }
+         if(HAS_SLOT(excWord, UCASE_EXC_DELTA)) {
++            pe=pe0;
+             int32_t delta;
+             GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe, delta);
+             sa->add(sa->set, (excWord&UCASE_EXC_DELTA_IS_NEGATIVE)==0 ? c+delta : c-delta);
+@@ -1167,7 +1168,7 @@
+ 
+         if(HAS_SLOT(excWord, UCASE_EXC_DELTA) && UCASE_IS_UPPER_OR_TITLE(props)) {
+             int32_t delta;
+-            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe, delta);
++            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe2, delta);
+             return (excWord&UCASE_EXC_DELTA_IS_NEGATIVE)==0 ? c+delta : c-delta;
+         }
+         if(HAS_SLOT(excWord, UCASE_EXC_LOWER)) {
+@@ -1261,7 +1262,7 @@
+ 
+         if(HAS_SLOT(excWord, UCASE_EXC_DELTA) && UCASE_GET_TYPE(props)==UCASE_LOWER) {
+             int32_t delta;
+-            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe, delta);
++            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe2, delta);
+             return (excWord&UCASE_EXC_DELTA_IS_NEGATIVE)==0 ? c+delta : c-delta;
+         }
+         if(!upperNotTitle && HAS_SLOT(excWord, UCASE_EXC_TITLE)) {
+@@ -1469,7 +1470,7 @@
+         }
+         if(HAS_SLOT(excWord, UCASE_EXC_DELTA) && UCASE_IS_UPPER_OR_TITLE(props)) {
+             int32_t delta;
+-            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe, delta);
++            GET_SLOT_VALUE(excWord, UCASE_EXC_DELTA, pe2, delta);
+             return (excWord&UCASE_EXC_DELTA_IS_NEGATIVE)==0 ? c+delta : c-delta;
+         }
+         if(HAS_SLOT(excWord, UCASE_EXC_FOLD)) {

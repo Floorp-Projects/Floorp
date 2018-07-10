@@ -5119,6 +5119,12 @@ supplementalData:table(nofallback){
             0,
             0,
         }
+        VEF:intvector{
+            2,
+            0,
+            0,
+            0,
+        }
         VND:intvector{
             0,
             0,

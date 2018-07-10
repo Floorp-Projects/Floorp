@@ -3682,6 +3682,8 @@ protected:
   // Return the same type parent docuement if exists, or return null.
   nsIDocument* GetSameTypeParentDocument();
 
+  void MaybeAllowStorageForOpener();
+
   // Helpers for GetElementsByName.
   static bool MatchNameAttribute(mozilla::dom::Element* aElement,
                                  int32_t aNamespaceID,
