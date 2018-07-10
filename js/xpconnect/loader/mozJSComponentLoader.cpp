@@ -1298,6 +1298,8 @@ mozJSComponentLoader::Import(JSContext* aCx, const nsACString& aLocation,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+      "mozJSComponentLoader::Import", JS, aLocation);
     ComponentLoaderInfo info(aLocation);
 
     rv = info.EnsureKey();
