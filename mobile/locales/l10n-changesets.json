@@ -105,7 +105,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "d357bc70146b"
+        "revision": "5b8c5d2c89d7"
     }, 
     "el": {
         "platforms": [
@@ -117,7 +117,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "4c30488b723d"
+        "revision": "d246a23fa850"
     }, 
     "en-ZA": {
         "platforms": [
@@ -129,25 +129,25 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "940934bbff78"
+        "revision": "32ec57f6ca2c"
     }, 
     "es-AR": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "b058d16452d8"
+        "revision": "1a7b927845ca"
     }, 
     "es-CL": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "eb41a0774677"
+        "revision": "dc1dffd212fe"
     }, 
     "es-ES": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "a2461f0e0962"
+        "revision": "c12ae37263f4"
     }, 
     "es-MX": {
         "platforms": [
@@ -165,7 +165,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "debed011db67"
+        "revision": "e511d19b0b24"
     }, 
     "fa": {
         "platforms": [
@@ -177,25 +177,25 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "8092a09e564b"
+        "revision": "0568dbc9f471"
     }, 
     "fi": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "b6c951a68eb4"
+        "revision": "034a22ead9a5"
     }, 
     "fr": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "053fe6959a48"
+        "revision": "db02b3395a0e"
     }, 
     "fy-NL": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "1d8f2c72f7bd"
+        "revision": "a3ab146a00c9"
     }, 
     "ga-IE": {
         "platforms": [
