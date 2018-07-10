@@ -12,7 +12,7 @@ function SlottedNodeEditor(container, node) {
   this.container = container;
   this.markup = this.container.markup;
   this.buildMarkup();
-  this.tag.textContent = "→ <" + node.nodeName.toLowerCase() + ">";
+  this.tag.textContent = "<" + node.nodeName.toLowerCase() + ">";
 
   // Make the "tag" part of this editor focusable.
   this.tag.setAttribute("tabindex", "-1");
@@ -31,7 +31,7 @@ SlottedNodeEditor.prototype = {
 
     this.revealLink = doc.createElement("span");
     this.revealLink.classList.add("reveal-link");
-    this.revealLink.textContent = INSPECTOR_L10N.getStr("markupView.revealLink.label");
+    this.revealLink.title = INSPECTOR_L10N.getStr("markupView.revealLink.tooltip");
     this.elt.appendChild(this.revealLink);
   },
 
