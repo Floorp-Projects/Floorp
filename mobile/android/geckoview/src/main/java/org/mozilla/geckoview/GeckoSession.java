@@ -16,7 +16,6 @@ import java.util.UUID;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.gfx.LayerSession;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
@@ -34,7 +33,6 @@ import android.database.Cursor;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;
@@ -94,16 +92,14 @@ public class GeckoSession extends LayerSession
         new EventDispatcher(mNativeQueue);
 
     private final SessionTextInput mTextInput = new SessionTextInput(this, mNativeQueue);
-
-    private SessionAccessibility mSessionAccessibility;
+    private SessionAccessibility mAccessibility;
+    private SessionFinder mFinder;
 
     private String mId = UUID.randomUUID().toString().replace("-", "");
     /* package */ String getId() { return mId; }
 
-    private static abstract class CallbackResult<T> extends GeckoResult<T> implements EventCallback {
-        @Override
-        public abstract void sendSuccess(Object response);
-
+    /* package */ static abstract class CallbackResult<T> extends GeckoResult<T>
+                                                          implements EventCallback {
         @Override
         public void sendError(Object response) {
             completeExceptionally(response != null ?
@@ -871,10 +867,10 @@ public class GeckoSession extends LayerSession
       * @return SessionAccessibility instance.
       */
     public @NonNull SessionAccessibility getAccessibility() {
-        if (mSessionAccessibility == null) {
-            mSessionAccessibility = new SessionAccessibility(this);
+        if (mAccessibility == null) {
+            mAccessibility = new SessionAccessibility(this);
         }
-        return mSessionAccessibility;
+        return mAccessibility;
     }
 
     @IntDef(flag = true,
@@ -1089,6 +1085,89 @@ public class GeckoSession extends LayerSession
     */
     public void goForward() {
         mEventDispatcher.dispatch("GeckoView:GoForward", null);
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(flag = true,
+            value = {FINDER_FIND_BACKWARDS, FINDER_FIND_LINKS_ONLY,
+                    FINDER_FIND_MATCH_CASE, FINDER_FIND_WHOLE_WORD})
+    /* package */ @interface FinderFindFlags {}
+
+    /** Go backwards when finding the next match. */
+    public static final int FINDER_FIND_BACKWARDS = 1;
+    /** Perform case-sensitive match; default is to perform a case-insensitive match. */
+    public static final int FINDER_FIND_MATCH_CASE = 1 << 1;
+    /** Must match entire words; default is to allow matching partial words. */
+    public static final int FINDER_FIND_WHOLE_WORD = 1 << 2;
+    /** Limit matches to links on the page. */
+    public static final int FINDER_FIND_LINKS_ONLY = 1 << 3;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(flag = true,
+            value = {FINDER_DISPLAY_HIGHLIGHT_ALL, FINDER_DISPLAY_DIM_PAGE,
+                    FINDER_DISPLAY_DRAW_LINK_OUTLINE})
+    /* package */ @interface FinderDisplayFlags {}
+
+    /** Highlight all find-in-page matches. */
+    public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
+    /** Dim the rest of the page when showing a find-in-page match. */
+    public static final int FINDER_DISPLAY_DIM_PAGE = 1 << 1;
+    /** Draw outlines around matching links. */
+    public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 1 << 2;
+
+    /**
+     * Represent the result of a find-in-page operation.
+     */
+    public static final class FinderResult {
+        /** Whether a match was found. */
+        public final boolean found;
+        /** Whether the search wrapped around the top or bottom of the page. */
+        public final boolean wrapped;
+        /** Ordinal number of the current match starting from 1, or 0 if no match. */
+        public final int current;
+        /** Total number of matches found so far, or -1 if unknown. */
+        public final int total;
+        /** Search string. */
+        @NonNull public final String searchString;
+        /** Flags used for the search; either 0 or a combination of {@link #FINDER_FIND_BACKWARDS
+         * FINDER_FIND_*} flags. */
+        @FinderFindFlags public final int flags;
+        /** URI of the link, if the current match is a link, or null otherwise. */
+        @Nullable public final String linkUri;
+        /** Bounds of the current match in client coordinates, or null if unknown. */
+        @Nullable public final RectF clientRect;
+
+        /* package */ FinderResult(@NonNull final GeckoBundle bundle) {
+            found = bundle.getBoolean("found");
+            wrapped = bundle.getBoolean("wrapped");
+            current = bundle.getInt("current", 0);
+            total = bundle.getInt("total", -1);
+            searchString = bundle.getString("searchString");
+            flags = SessionFinder.getFlagsFromBundle(bundle.getBundle("flags"));
+            linkUri = bundle.getString("linkURL");
+
+            final GeckoBundle rectBundle = bundle.getBundle("clientRect");
+            if (rectBundle == null) {
+                clientRect = null;
+            } else {
+                clientRect = new RectF((float) rectBundle.getDouble("left"),
+                                       (float) rectBundle.getDouble("top"),
+                                       (float) rectBundle.getDouble("right"),
+                                       (float) rectBundle.getDouble("bottom"));
+            }
+        }
+    }
+
+    /**
+     * Get the SessionFinder instance for this session, to perform find-in-page operations.
+     *
+     * @return SessionFinder instance.
+     */
+    public SessionFinder getFinder() {
+        if (mFinder == null) {
+            mFinder = new SessionFinder(getEventDispatcher());
+        }
+        return mFinder;
     }
 
     /**
