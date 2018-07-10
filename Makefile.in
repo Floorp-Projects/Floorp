@@ -224,7 +224,7 @@ profiledbuild::
 	$(MAKE) maybe_clobber_profiledbuild
 	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
 	$(call BUILDSTATUS,TIER_START pgo_profile_use)
-	$(MAKE) default MOZ_PROFILE_USE=1
+	$(MAKE) default MOZ_PROFILE_USE=1 $(if $(CLANG_CL),MOZ_PROFILE_ORDER_FILE=$(topobjdir)/cygprofile.txt)
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
 
 # Change default target to PGO build if PGO is enabled.
@@ -309,9 +309,13 @@ else
 maybe_clobber_profiledbuild:
 endif
 else
+ifdef CLANG_CL
+maybe_clobber_profiledbuild: clean
+else
 maybe_clobber_profiledbuild:
 	$(RM) $(DIST)/bin/*.pgc
 	find $(DIST)/$(MOZ_APP_NAME) -name '*.pgc' -exec mv {} $(DIST)/bin \;
+endif # CLANG_CL
 endif
 
 .PHONY: maybe_clobber_profiledbuild

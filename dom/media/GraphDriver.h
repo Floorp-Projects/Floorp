@@ -219,10 +219,8 @@ protected:
   // Time of the end of this graph iteration. This must be accessed while having
   // the monitor.
   GraphTime mIterationEnd;
-  // The MediaStreamGraphImpl that owns this driver. This has a lifetime longer
-  // than the driver, and will never be null. Hence, it can be accesed without
-  // monitor.
-  MediaStreamGraphImpl* mGraphImpl;
+  // The MediaStreamGraphImpl associated with this driver.
+  const RefPtr<MediaStreamGraphImpl> mGraphImpl;
 
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run

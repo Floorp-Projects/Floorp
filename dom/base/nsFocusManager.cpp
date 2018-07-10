@@ -3277,6 +3277,8 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
       if (iterContent->IsInNativeAnonymousSubtree() &&
           iterContent->GetPrimaryFrame()) {
         iterContent->GetPrimaryFrame()->IsFocusable(&tabIndex);
+      } else if (IsHostOrSlot(iterContent)) {
+        tabIndex = HostOrSlotTabIndexValue(iterContent);
       } else {
         iterContent->IsFocusable(&tabIndex);
       }
@@ -3416,7 +3418,11 @@ nsFocusManager::GetNextTabbableContentInAncestorScopes(
     MOZ_ASSERT(owner, "focus navigation scope owner not in document");
 
     int32_t tabIndex = 0;
-    startContent->IsFocusable(&tabIndex);
+    if (IsHostOrSlot(startContent)) {
+      tabIndex = HostOrSlotTabIndexValue(startContent);
+    } else {
+      startContent->IsFocusable(&tabIndex);
+    }
     nsIContent* contentToFocus =
       GetNextTabbableContentInScope(owner, startContent, aOriginalStartContent,
                                     aForward, tabIndex, aIgnoreTabIndex,
@@ -3481,7 +3487,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
     // (i.e. aStartContent is already in shadow DOM),
     // search from scope including aStartContent
     nsIContent* rootElement = aRootContent->OwnerDoc()->GetRootElement();
-    if (rootElement != FindOwner(aStartContent)) {
+    nsIContent* owner = FindOwner(aStartContent);
+    if (owner && rootElement != owner) {
       nsIContent* contentToFocus =
         GetNextTabbableContentInAncestorScopes(&aStartContent,
                                                aOriginalStartContent,

@@ -35,60 +35,69 @@ namespace gfx {
 template <class T, class Sub, class Rect>
 struct BaseRectAbsolute {
 protected:
-  T x1, y1, x2, y2;
+  T left, top, right, bottom;
 
 public:
-  BaseRectAbsolute() : x1(0), y1(0), x2(0), y2(0) {}
-  BaseRectAbsolute(T aX1, T aY1, T aX2, T aY2) :
-    x1(aX1), y1(aY1), x2(aX2), y2(aY2) {}
+  BaseRectAbsolute() : left(0), top(0), right(0), bottom(0) {}
+  BaseRectAbsolute(T aLeft, T aTop, T aRight, T aBottom) :
+    left(aLeft), top(aTop), right(aRight), bottom(aBottom) {}
 
-  MOZ_ALWAYS_INLINE T X() const { return x1; }
-  MOZ_ALWAYS_INLINE T Y() const { return y1; }
-  MOZ_ALWAYS_INLINE T Width() const { return x2 - x1; }
-  MOZ_ALWAYS_INLINE T Height() const { return y2 - y1; }
-  MOZ_ALWAYS_INLINE T XMost() const { return x2; }
-  MOZ_ALWAYS_INLINE T YMost() const { return y2; }
+  MOZ_ALWAYS_INLINE T X() const { return left; }
+  MOZ_ALWAYS_INLINE T Y() const { return top; }
+  MOZ_ALWAYS_INLINE T Width() const { return right - left; }
+  MOZ_ALWAYS_INLINE T Height() const { return bottom - top; }
+  MOZ_ALWAYS_INLINE T XMost() const { return right; }
+  MOZ_ALWAYS_INLINE T YMost() const { return bottom; }
+  MOZ_ALWAYS_INLINE const T& Left() const { return left; }
+  MOZ_ALWAYS_INLINE const T& Right() const { return right; }
+  MOZ_ALWAYS_INLINE const T& Top() const { return top; }
+  MOZ_ALWAYS_INLINE const T& Bottom() const { return bottom; }
+  MOZ_ALWAYS_INLINE T& Left() { return left; }
+  MOZ_ALWAYS_INLINE T& Right() { return right; }
+  MOZ_ALWAYS_INLINE T& Top() { return top; }
+  MOZ_ALWAYS_INLINE T& Bottom() { return bottom; }
 
-  MOZ_ALWAYS_INLINE void SetBox(T aX1, T aY1, T aX2, T aY2)
+  MOZ_ALWAYS_INLINE void SetBox(T aLeft, T aTop, T aRight, T aBottom)
   {
-    x1 = aX1; y1 = aY1; x2 = aX2; y2 = aY2;
+    left = aLeft; top = aTop; right = aRight; bottom = aBottom;
   }
-  void SetLeftEdge(T aX1)
+  void SetLeftEdge(T aLeft)
   {
-    x1 = aX1;
+    left = aLeft;
   }
-  void SetRightEdge(T aX2)
+  void SetRightEdge(T aRight)
   {
-    x2 = aX2;
+    right = aRight;
   }
-  void SetTopEdge(T aY1)
+  void SetTopEdge(T aTop)
   {
-    y1 = aY1;
+    top = aTop;
   }
-  void SetBottomEdge(T aY2)
+  void SetBottomEdge(T aBottom)
   {
-    y2 = aY2;
+    bottom = aBottom;
   }
 
   static Sub FromRect(const Rect& aRect)
   {
+    MOZ_ASSERT(!aRect.Overflows());
     return Sub(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
   }
 
   MOZ_MUST_USE Sub Intersect(const Sub& aOther) const
   {
     Sub result;
-    result.x1 = std::max<T>(x1, aOther.x1);
-    result.y1 = std::max<T>(y1, aOther.y1);
-    result.x2 = std::min<T>(x2, aOther.x2);
-    result.y2 = std::min<T>(y2, aOther.y2);
+    result.left = std::max<T>(left, aOther.left);
+    result.top = std::max<T>(top, aOther.top);
+    result.right = std::min<T>(right, aOther.right);
+    result.bottom = std::min<T>(bottom, aOther.bottom);
     return result;
   }
 
   bool IsEqualEdges(const Sub& aOther) const
   {
-    return x1 == aOther.x1 && y1 == aOther.y1 &&
-           x2 == aOther.x2 && y2 == aOther.y2;
+    return left == aOther.left && top == aOther.top &&
+           right == aOther.right && bottom == aOther.bottom;
   }
 };
 
@@ -102,8 +111,8 @@ struct IntRectAbsoluteTyped :
   typedef IntParam<int32_t> ToInt;
 
   IntRectAbsoluteTyped() : Super() {}
-  IntRectAbsoluteTyped(ToInt aX1, ToInt aY1, ToInt aX2, ToInt aY2) :
-      Super(aX1.value, aY1.value, aX2.value, aY2.value) {}
+  IntRectAbsoluteTyped(ToInt aLeft, ToInt aTop, ToInt aRight, ToInt aBottom) :
+      Super(aLeft.value, aTop.value, aRight.value, aBottom.value) {}
 };
 
 template <class Units>
@@ -115,9 +124,11 @@ struct RectAbsoluteTyped :
   typedef BaseRectAbsolute<Float, RectAbsoluteTyped<Units>, RectTyped<Units>> Super;
 
   RectAbsoluteTyped() : Super() {}
-  RectAbsoluteTyped(Float aX1, Float aY1, Float aX2, Float aY2) :
-      Super(aX1, aY1, aX2, aY2) {}
+  RectAbsoluteTyped(Float aLeft, Float aTop, Float aRight, Float aBottom) :
+      Super(aLeft, aTop, aRight, aBottom) {}
 };
+
+typedef IntRectAbsoluteTyped<UnknownUnits> IntRectAbsolute;
 
 }
 }
