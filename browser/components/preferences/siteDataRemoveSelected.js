@@ -13,8 +13,10 @@ let gSiteDataRemoveSelected = {
     let list = document.getElementById("removalList");
     let fragment = document.createDocumentFragment();
     for (let host of hosts) {
-      let listItem = document.createElement("listitem");
-      listItem.setAttribute("label", host);
+      let listItem = document.createElement("richlistitem");
+      let label = document.createElement("label");
+      label.setAttribute("value", host);
+      listItem.appendChild(label);
       fragment.appendChild(listItem);
     }
     list.appendChild(fragment);

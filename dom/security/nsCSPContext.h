@@ -30,6 +30,12 @@ class nsINetworkInterceptController;
 class nsIEventTarget;
 struct ConsoleMsgQueueElem;
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
+
 class nsCSPContext : public nsIContentSecurityPolicy
 {
   public:
@@ -97,9 +103,11 @@ class nsCSPContext : public nsIContentSecurityPolicy
       uint32_t aViolatedPolicyIndex);
 
     nsresult FireViolationEvent(
+      mozilla::dom::Element* aTriggeringElement,
       const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
 
-    nsresult AsyncReportViolation(nsISupports* aBlockedContentSource,
+    nsresult AsyncReportViolation(mozilla::dom::Element* aTriggeringElement,
+                                  nsISupports* aBlockedContentSource,
                                   nsIURI* aOriginalURI,
                                   const nsAString& aViolatedDirective,
                                   uint32_t aViolatedPolicyIndex,
@@ -122,6 +130,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
 
   private:
     bool permitsInternal(CSPDirective aDir,
+                         mozilla::dom::Element* aTriggeringElement,
                          nsIURI* aContentLocation,
                          nsIURI* aOriginalURI,
                          const nsAString& aNonce,
@@ -134,6 +143,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
 
     // helper to report inline script/style violations
     void reportInlineViolation(nsContentPolicyType aContentType,
+                               mozilla::dom::Element* aTriggeringElement,
                                const nsAString& aNonce,
                                const nsAString& aContent,
                                const nsAString& aViolatedDirective,
@@ -161,6 +171,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
     // to avoid memory leaks. Within the destructor of the principal we explicitly
     // set mLoadingPrincipal to null.
     nsIPrincipal*                              mLoadingPrincipal;
+    nsCOMPtr<nsICSPEventListener>              mEventListener;
 
     // helper members used to queue up web console messages till
     // the windowID becomes available. see flushConsoleMessages()

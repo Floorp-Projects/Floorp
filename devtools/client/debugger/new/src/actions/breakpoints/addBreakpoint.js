@@ -13,29 +13,25 @@ var _sourceMaps = require("../../utils/source-maps");
 
 var _source = require("../../utils/source");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 async function addBreakpoint(getState, client, sourceMaps, breakpoint) {
   const state = getState();
   const source = (0, _selectors.getSource)(state, breakpoint.location.sourceId);
-
-  const location = _objectSpread({}, breakpoint.location, {
+  const location = { ...breakpoint.location,
     sourceUrl: source.url
-  });
-
+  };
   const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, source, location, sourceMaps);
   const generatedSource = (0, _selectors.getSource)(state, generatedLocation.sourceId);
   (0, _breakpoint.assertLocation)(location);
   (0, _breakpoint.assertLocation)(generatedLocation);
 
   if ((0, _breakpoint.breakpointExists)(state, location)) {
-    const newBreakpoint = _objectSpread({}, breakpoint, {
+    const newBreakpoint = { ...breakpoint,
       location,
       generatedLocation
-    });
-
+    };
     (0, _breakpoint.assertBreakpoint)(newBreakpoint);
     return {
       breakpoint: newBreakpoint

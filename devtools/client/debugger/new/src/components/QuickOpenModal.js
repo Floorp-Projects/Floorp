@@ -43,10 +43,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function filter(values, query) {
   return _fuzzaldrinPlus2.default.filter(values, query, {
     key: "value",
@@ -170,9 +166,9 @@ class QuickOpenModal extends _react.Component {
 
       if (this.isGotoSourceQuery()) {
         const location = (0, _quickOpen.parseLineColumn)(this.props.query);
-        return this.gotoLocation(_objectSpread({}, location, {
+        return this.gotoLocation({ ...location,
           sourceId: item.id
-        }));
+        });
       }
 
       if (this.isSymbolSearch()) {
@@ -207,12 +203,12 @@ class QuickOpenModal extends _react.Component {
       }
 
       if (this.isFunctionQuery()) {
-        return highlightLineRange(_objectSpread({}, item.location != null ? {
-          start: item.location.start.line,
-          end: item.location.end.line
-        } : {}, {
+        return highlightLineRange({ ...(item.location != null ? {
+            start: item.location.start.line,
+            end: item.location.end.line
+          } : {}),
           sourceId: selectedSource.id
-        }));
+        });
       }
     };
 
@@ -333,9 +329,9 @@ class QuickOpenModal extends _react.Component {
       newQuery = query.replace(/[@:#?]/gi, " ");
       return results.map(result => {
         if (typeof result.title == "string") {
-          return _objectSpread({}, result, {
+          return { ...result,
             title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
-          });
+          };
         }
 
         return result;

@@ -1103,17 +1103,4 @@
     </content>
   </binding>
 
-  <binding id="listheader" display="xul:button">
-
-    <resources>
-      <stylesheet src="chrome://global/skin/listbox.css"/>
-    </resources>
-
-    <content>
-      <xul:image class="listheader-icon"/>
-      <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
-      <xul:image class="listheader-sortdirection" xbl:inherits="sortDirection"/>
-    </content>
-  </binding>
-
 </bindings>

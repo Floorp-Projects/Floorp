@@ -543,14 +543,14 @@ const Class PromiseReactionRecord::class_ = {
 static void
 AddPromiseFlags(PromiseObject& promise, int32_t flag)
 {
-    int32_t flags = promise.getFixedSlot(PromiseSlot_Flags).toInt32();
+    int32_t flags = promise.flags();
     promise.setFixedSlot(PromiseSlot_Flags, Int32Value(flags | flag));
 }
 
 static bool
 PromiseHasAnyFlag(PromiseObject& promise, int32_t flag)
 {
-    return promise.getFixedSlot(PromiseSlot_Flags).toInt32() & flag;
+    return promise.flags() & flag;
 }
 
 static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp);
@@ -926,7 +926,7 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
     // instead of getting the right list of reactions, we determine the
     // resolution type to retrieve the right information from the
     // reaction records.
-    RootedValue reactionsVal(cx, promise->getFixedSlot(PromiseSlot_ReactionsOrResult));
+    RootedValue reactionsVal(cx, promise->reactions());
 
     // Steps 3-5.
     // The same slot is used for the reactions list and the result, so setting
@@ -934,7 +934,7 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
     promise->setFixedSlot(PromiseSlot_ReactionsOrResult, valueOrReason);
 
     // Step 6.
-    int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();
+    int32_t flags = promise->flags();
     flags |= PROMISE_FLAG_RESOLVED;
     if (state == JS::PromiseState::Fulfilled)
         flags |= PROMISE_FLAG_FULFILLED;
@@ -998,8 +998,7 @@ CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx)
     if (!promise)
         return nullptr;
 
-    AddPromiseFlags(*promise, PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION |
-                    PROMISE_FLAG_DEFAULT_REJECT_FUNCTION);
+    AddPromiseFlags(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS);
     return promise;
 }
 
@@ -1661,9 +1660,9 @@ static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction);
 
-static MOZ_MUST_USE bool BlockOnPromise(JSContext* cx, HandleValue promise,
-                                        HandleObject blockedPromise,
-                                        HandleValue onFulfilled, HandleValue onRejected);
+static MOZ_MUST_USE bool
+BlockOnPromise(JSContext* cx, HandleValue promise, HandleObject blockedPromise,
+               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined);
 
 static JSFunction*
 GetResolveFunctionFromReject(JSFunction* reject)
@@ -2195,14 +2194,12 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    if (mode == ResolveMode) {
-        if (!PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION))
-            return true;
-        return ResolvePromiseInternal(cx, promise, result);
-    }
-
-    if (!PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_REJECT_FUNCTION))
+    if (!PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
         return true;
+
+    if (mode == ResolveMode)
+        return ResolvePromiseInternal(cx, promise, result);
+
     return RejectMaybeWrappedPromise(cx, promiseObj, result);
 }
 
@@ -2349,7 +2346,7 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
 
         // Step q.
         RootedValue resolveFunVal(cx, ObjectValue(*resolveFunc));
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal, true))
             return false;
 
         // Step r.
@@ -2507,6 +2504,11 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     MOZ_ASSERT(C->isConstructor());
     RootedValue CVal(cx, ObjectValue(*C));
 
+    // BlockOnPromise fast path requires the passed onFulfilled function
+    // doesn't return an object value, because otherwise the skipped promise
+    // creation is detectable due to missing property lookups.
+    bool isDefaultResolveFn = IsNativeFunction(resolve, ResolvePromiseFunction);
+
     RootedValue nextValue(cx);
     RootedValue resolveFunVal(cx, ObjectValue(*resolve));
     RootedValue rejectFunVal(cx, ObjectValue(*reject));
@@ -2543,8 +2545,11 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
             return false;
 
         // Step i.
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal,
+                            isDefaultResolveFn))
+        {
             return false;
+        }
     }
 
     MOZ_ASSERT_UNREACHABLE("Shouldn't reach the end of PerformPromiseRace");
@@ -3555,7 +3560,7 @@ PerformPromiseThenWithReaction(JSContext* cx, Handle<PromiseObject*> promise,
                                Handle<PromiseReactionRecord*> reaction)
 {
     JS::PromiseState state = promise->state();
-    int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();
+    int32_t flags = promise->flags();
     if (state == JS::PromiseState::Pending) {
         // Steps 5,6 (reordered).
         // Instead of creating separate reaction records for fulfillment and
@@ -3571,7 +3576,7 @@ PerformPromiseThenWithReaction(JSContext* cx, Handle<PromiseObject*> promise,
         MOZ_ASSERT_IF(state != JS::PromiseState::Fulfilled, state == JS::PromiseState::Rejected);
 
         // Step 8.a. / 9.b.
-        RootedValue valueOrReason(cx, promise->getFixedSlot(PromiseSlot_ReactionsOrResult));
+        RootedValue valueOrReason(cx, promise->valueOrReason());
 
         // We might be operating on a promise from another compartment. In
         // that case, we need to wrap the result/reason value before using it.
@@ -3605,7 +3610,7 @@ PerformPromiseThenWithReaction(JSContext* cx, Handle<PromiseObject*> promise,
  */
 static MOZ_MUST_USE bool
 BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromise_,
-               HandleValue onFulfilled, HandleValue onRejected)
+               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined)
 {
     RootedObject promiseObj(cx, ToObject(cx, promiseVal));
     if (!promiseObj)
@@ -3628,7 +3633,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         if (!C)
             return false;
 
-        RootedObject resultPromise(cx, blockedPromise_);
+        RootedObject resultPromise(cx);
         RootedObject resolveFun(cx);
         RootedObject rejectFun(cx);
 
@@ -3636,7 +3641,21 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         // rejected promises list.
         bool addToDependent = true;
 
-        if (C == PromiseCtor && resultPromise->is<PromiseObject>()) {
+        // Skip the creation of a built-in Promise object if:
+        // 1. `C` is the built-in Promise constructor.
+        // 2. The `onFulfilled` handler doesn't return an object, which
+        //    ensures no side-effects take place in ResolvePromiseInternal.
+        // 3. The blocked promise is a built-in Promise object.
+        // 4. The blocked promise doesn't use the default resolving functions,
+        //    which in turn means RunResolutionFunction when called from
+        //    PromiseRectionJob won't try to resolve the promise.
+        if (C == PromiseCtor &&
+            onFulfilledReturnsUndefined &&
+            blockedPromise_->is<PromiseObject>() &&
+            !PromiseHasAnyFlag(blockedPromise_->as<PromiseObject>(),
+                               PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
+        {
+            resultPromise.set(blockedPromise_);
             addToDependent = false;
         } else {
             // 25.4.5.3., step 4.
@@ -3728,7 +3747,7 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
     }
 
     // 25.4.5.3.1 steps 7.a,b.
-    RootedValue reactionsVal(cx, promise->getFixedSlot(PromiseSlot_ReactionsOrResult));
+    RootedValue reactionsVal(cx, promise->reactions());
     RootedNativeObject reactions(cx);
 
     if (reactionsVal.isUndefined()) {
@@ -3825,7 +3844,7 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     if (state() != JS::PromiseState::Pending)
         return true;
 
-    RootedValue reactionsVal(cx, getFixedSlot(PromiseSlot_ReactionsOrResult));
+    RootedValue reactionsVal(cx, reactions());
 
     // If no reactions are pending, we don't have list and are done.
     if (reactionsVal.isNullOrUndefined())
@@ -3875,7 +3894,7 @@ PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValu
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION))
+    if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
         return ResolvePromiseInternal(cx, promise, resolutionValue);
 
     RootedObject resolveFun(cx, GetResolveFunctionFromPromise(promise));
@@ -3904,7 +3923,7 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_REJECT_FUNCTION))
+    if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
         return ResolvePromise(cx, promise, rejectionValue, JS::PromiseState::Rejected);
 
     RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));

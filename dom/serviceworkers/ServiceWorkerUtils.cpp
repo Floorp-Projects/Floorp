@@ -7,6 +7,9 @@
 #include "ServiceWorkerUtils.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
+#include "nsIURL.h"
 
 namespace mozilla {
 namespace dom {

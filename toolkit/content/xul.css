@@ -498,11 +498,6 @@ listitem[type="checkbox"] {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-checkbox");
 }
 
-listheader {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
-  -moz-box-ordinal-group: 2147483646;
-}
-
 listcell {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell");
 }
@@ -903,10 +898,6 @@ richlistbox {
 
 richlistitem {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistitem');
-}
-
-richlistbox > listheader {
-  -moz-box-ordinal-group: 1;
 }
 
 

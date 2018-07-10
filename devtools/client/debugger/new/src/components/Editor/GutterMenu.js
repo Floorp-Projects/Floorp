@@ -21,12 +21,9 @@ var _actions2 = _interopRequireDefault(_actions);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function gutterMenu({
   breakpoint,
   line,
@@ -71,8 +68,7 @@ function gutterMenu({
       label: L10N.getStr("editor.continueToHere.label")
     }
   };
-
-  const toggleBreakpointItem = _objectSpread({
+  const toggleBreakpointItem = {
     accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
     disabled: false,
     click: () => {
@@ -81,34 +77,34 @@ function gutterMenu({
       if (isCbPanelOpen) {
         closeConditionalPanel();
       }
-    }
-  }, breakpoint ? gutterItems.removeBreakpoint : gutterItems.addBreakpoint);
-
-  const conditionalBreakpoint = _objectSpread({
+    },
+    ...(breakpoint ? gutterItems.removeBreakpoint : gutterItems.addBreakpoint)
+  };
+  const conditionalBreakpoint = {
     accesskey: L10N.getStr("editor.addConditionalBreakpoint.accesskey"),
     disabled: false,
-    click: () => openConditionalPanel(line)
-  }, breakpoint && breakpoint.condition ? gutterItems.editConditional : gutterItems.addConditional);
-
+    click: () => openConditionalPanel(line),
+    ...(breakpoint && breakpoint.condition ? gutterItems.editConditional : gutterItems.addConditional)
+  };
   const items = [toggleBreakpointItem, conditionalBreakpoint];
 
   if (isPaused) {
-    const continueToHereItem = _objectSpread({
+    const continueToHereItem = {
       accesskey: L10N.getStr("editor.continueToHere.accesskey"),
       disabled: false,
-      click: () => continueToHere(line)
-    }, gutterItems.continueToHere);
-
+      click: () => continueToHere(line),
+      ...gutterItems.continueToHere
+    };
     items.push(continueToHereItem);
   }
 
   if (breakpoint) {
-    const disableBreakpoint = _objectSpread({
+    const disableBreakpoint = {
       accesskey: L10N.getStr("editor.disableBreakpoint.accesskey"),
       disabled: false,
-      click: () => toggleDisabledBreakpoint(line)
-    }, breakpoint.disabled ? gutterItems.enableBreakpoint : gutterItems.disableBreakpoint);
-
+      click: () => toggleDisabledBreakpoint(line),
+      ...(breakpoint.disabled ? gutterItems.enableBreakpoint : gutterItems.disableBreakpoint)
+    };
     items.push(disableBreakpoint);
   }
 
@@ -132,10 +128,9 @@ class GutterContextMenuComponent extends _react.Component {
 
   showMenu(nextProps) {
     const {
-      contextMenu
-    } = nextProps,
-          props = _objectWithoutProperties(nextProps, ["contextMenu"]);
-
+      contextMenu,
+      ...props
+    } = nextProps;
     const {
       event
     } = contextMenu;
@@ -147,12 +142,13 @@ class GutterContextMenuComponent extends _react.Component {
       return;
     }
 
-    gutterMenu(_objectSpread({
+    gutterMenu({
       event,
       sourceId,
       line,
-      breakpoint
-    }, props));
+      breakpoint,
+      ...props
+    });
   }
 
   render() {

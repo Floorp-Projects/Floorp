@@ -25,3 +25,21 @@ richlistbox:focus > richlistitem[selected="true"] {
   color: HighlightText;
 }
 
+richlistbox.theme-listbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {
+  background-color: -moz-mac-secondaryhighlight;
+}
+
+richlistbox.theme-listbox > richlistitem > label {
+  margin: 0px;
+  padding-bottom: 1px;
+  padding-inline-start: 4px;
+  white-space: nowrap;
+}
+
+listheader {
+  color: -moz-DialogText;
+}

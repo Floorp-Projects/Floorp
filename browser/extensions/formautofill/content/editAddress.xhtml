@@ -79,8 +79,10 @@
 
     let {
       DEFAULT_REGION,
-      getFormFormat,
       supportedCountries,
+    } = FormAutofill;
+    let {
+      getFormFormat,
     } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
     let novalidate = window.arguments && window.arguments[1] == "novalidate";

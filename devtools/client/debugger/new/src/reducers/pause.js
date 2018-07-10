@@ -39,10 +39,16 @@ var _prefs = require("../utils/prefs");
 
 var _sources = require("./sources");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+/* eslint complexity: ["error", 30]*/
 
+/**
+ * Pause reducer
+ * @module reducers/pause
+ */
 const createPauseState = exports.createPauseState = () => ({
   extra: {},
   why: null,
@@ -92,28 +98,29 @@ function update(state = createPauseState(), action) {
         loadedObjects.forEach(obj => {
           objectMap[obj.value.objectId] = obj;
         });
-        return _objectSpread({}, state, {
+        return { ...state,
           isWaitingOnBreak: false,
           selectedFrameId,
           frames,
-          frameScopes: _objectSpread({}, emptyPauseState.frameScopes),
+          frameScopes: { ...emptyPauseState.frameScopes
+          },
           loadedObjects: objectMap,
           why
-        });
+        };
       }
 
     case "MAP_FRAMES":
       {
-        return _objectSpread({}, state, {
+        return { ...state,
           frames: action.frames
-        });
+        };
       }
 
     case "ADD_EXTRA":
       {
-        return _objectSpread({}, state, {
+        return { ...state,
           extra: action.extra
-        });
+        };
       }
 
     case "ADD_SCOPES":
@@ -124,23 +131,23 @@ function update(state = createPauseState(), action) {
           value
         } = action;
         const selectedFrameId = frame.id;
-
-        const generated = _objectSpread({}, state.frameScopes.generated, {
+        const generated = { ...state.frameScopes.generated,
           [selectedFrameId]: {
             pending: status !== "done",
             scope: value
           }
-        });
-
-        return _objectSpread({}, state, {
-          frameScopes: _objectSpread({}, state.frameScopes, {
+        };
+        return { ...state,
+          frameScopes: { ...state.frameScopes,
             generated
-          })
-        });
+          }
+        };
       }
 
     case "TRAVEL_TO":
-      return _objectSpread({}, state, action.data.paused);
+      return { ...state,
+        ...action.data.paused
+      };
 
     case "MAP_SCOPES":
       {
@@ -150,57 +157,55 @@ function update(state = createPauseState(), action) {
           value
         } = action;
         const selectedFrameId = frame.id;
-
-        const original = _objectSpread({}, state.frameScopes.original, {
+        const original = { ...state.frameScopes.original,
           [selectedFrameId]: {
             pending: status !== "done",
             scope: value && value.scope
           }
-        });
-
-        const mappings = _objectSpread({}, state.frameScopes.mappings, {
+        };
+        const mappings = { ...state.frameScopes.mappings,
           [selectedFrameId]: value && value.mappings
-        });
-
-        return _objectSpread({}, state, {
-          frameScopes: _objectSpread({}, state.frameScopes, {
+        };
+        return { ...state,
+          frameScopes: { ...state.frameScopes,
             original,
             mappings
-          })
-        });
+          }
+        };
       }
 
     case "BREAK_ON_NEXT":
-      return _objectSpread({}, state, {
+      return { ...state,
         isWaitingOnBreak: true
-      });
+      };
 
     case "SELECT_FRAME":
-      return _objectSpread({}, state, {
+      return { ...state,
         selectedFrameId: action.frame.id
-      });
+      };
 
     case "SELECT_COMPONENT":
-      return _objectSpread({}, state, {
+      return { ...state,
         selectedComponentIndex: action.componentIndex
-      });
+      };
 
     case "SET_POPUP_OBJECT_PROPERTIES":
       if (!action.properties) {
-        return _objectSpread({}, state);
+        return { ...state
+        };
       }
 
-      return _objectSpread({}, state, {
-        loadedObjects: _objectSpread({}, state.loadedObjects, {
+      return { ...state,
+        loadedObjects: { ...state.loadedObjects,
           [action.objectId]: action.properties
-        })
-      });
+        }
+      };
 
     case "CONNECT":
-      return _objectSpread({}, createPauseState(), {
+      return { ...createPauseState(),
         debuggeeUrl: action.url,
         canRewind: action.canRewind
-      });
+      };
 
     case "PAUSE_ON_EXCEPTIONS":
       const {
@@ -211,33 +216,37 @@ function update(state = createPauseState(), action) {
       _prefs.prefs.pauseOnCaughtExceptions = shouldPauseOnCaughtExceptions; // Preserving for the old debugger
 
       _prefs.prefs.ignoreCaughtExceptions = !shouldPauseOnCaughtExceptions;
-      return _objectSpread({}, state, {
+      return { ...state,
         shouldPauseOnExceptions,
         shouldPauseOnCaughtExceptions
-      });
+      };
 
     case "COMMAND":
       {
-        return action.status === "start" ? _objectSpread({}, state, emptyPauseState, {
+        return action.status === "start" ? { ...state,
+          ...emptyPauseState,
           command: action.command,
           previousLocation: getPauseLocation(state, action)
-        }) : _objectSpread({}, state, {
+        } : { ...state,
           command: null
-        });
+        };
       }
 
     case "RESUME":
-      return _objectSpread({}, state, emptyPauseState);
+      return { ...state,
+        ...emptyPauseState
+      };
 
     case "EVALUATE_EXPRESSION":
-      return _objectSpread({}, state, {
+      return { ...state,
         command: action.status === "start" ? "expression" : null
-      });
+      };
 
     case "NAVIGATE":
-      return _objectSpread({}, state, emptyPauseState, {
+      return { ...state,
+        ...emptyPauseState,
         debuggeeUrl: action.url
-      });
+      };
 
     case "TOGGLE_SKIP_PAUSING":
       {
@@ -245,9 +254,9 @@ function update(state = createPauseState(), action) {
           skipPausing
         } = action;
         _prefs.prefs.skipPausing = skipPausing;
-        return _objectSpread({}, state, {
+        return { ...state,
           skipPausing
-        });
+        };
       }
   }
 

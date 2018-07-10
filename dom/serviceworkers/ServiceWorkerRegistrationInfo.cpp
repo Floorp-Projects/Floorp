@@ -108,7 +108,10 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
   , mLastUpdateTime(0)
   , mPendingUninstall(false)
   , mCorrupt(false)
-{}
+{
+  MOZ_ASSERT_IF(ServiceWorkerParentInterceptEnabled(),
+                XRE_GetProcessType() == GeckoProcessType_Default);
+}
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {

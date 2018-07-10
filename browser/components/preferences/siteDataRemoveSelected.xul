@@ -23,8 +23,8 @@
 
   <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
 
-  <vbox id="contentContainer">
-    <hbox flex="1">
+  <vbox id="contentContainer" flex="1">
+    <hbox>
       <vbox>
         <image class="question-icon"/>
       </vbox>
@@ -41,13 +41,11 @@
       </vbox>
     </hbox>
 
-    <separator />
+    <separator/>
 
-    <vbox flex="1">
-      <label data-l10n-id="site-data-removing-table"/>
-      <separator class="thin"/>
-      <listbox id="removalList"/>
-    </vbox>
+    <label data-l10n-id="site-data-removing-table"/>
+    <separator class="thin"/>
+    <richlistbox id="removalList" class="theme-listbox" flex="1"/>
   </vbox>
 
 </dialog>

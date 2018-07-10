@@ -34,22 +34,26 @@ var EXPORTED_SYMBOLS = ["formAutofillParent"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillPreferences: "resource://formautofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
+  FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
   MasterPassword: "resource://formautofill/MasterPassword.jsm",
 });
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
+} = FormAutofill;
+
+const {
   CREDITCARDS_COLLECTION_NAME,
 } = FormAutofillUtils;
 
@@ -114,7 +118,7 @@ FormAutofillParent.prototype = {
     Services.obs.addObserver(this, "formautofill-storage-changed");
 
     // Only listen to credit card related messages if it is available
-    if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
       Services.ppmm.addMessageListener("FormAutofill:SaveCreditCard", this);
       Services.ppmm.addMessageListener("FormAutofill:RemoveCreditCards", this);
       Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
@@ -278,7 +282,7 @@ FormAutofillParent.prototype = {
     Services.obs.removeObserver(this, "sync-pane-loaded");
     Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
 
-    if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
       Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);
       Services.ppmm.removeMessageListener("FormAutofill:RemoveCreditCards", this);
       Services.ppmm.removeMessageListener("FormAutofill:GetDecryptedString", this);
@@ -431,8 +435,8 @@ FormAutofillParent.prototype = {
       this._recordFormFillingTime("address", "manual", timeStartedFillingMS);
 
       // Show first time use doorhanger
-      if (FormAutofillUtils.isAutofillAddressesFirstTimeUse) {
-        Services.prefs.setBoolPref(FormAutofillUtils.ADDRESSES_FIRST_TIME_USE_PREF, false);
+      if (FormAutofill.isAutofillAddressesFirstTimeUse) {
+        Services.prefs.setBoolPref(FormAutofill.ADDRESSES_FIRST_TIME_USE_PREF, false);
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
           const state = await FormAutofillDoorhanger.show(target, "firstTimeUse", description);
@@ -455,8 +459,8 @@ FormAutofillParent.prototype = {
     // Updates the used status for shield/heartbeat to recognize users who have
     // used Credit Card Autofill.
     let setUsedStatus = status => {
-      if (FormAutofillUtils.AutofillCreditCardsUsedStatus < status) {
-        Services.prefs.setIntPref(FormAutofillUtils.CREDITCARDS_USED_STATUS_PREF, status);
+      if (FormAutofill.AutofillCreditCardsUsedStatus < status) {
+        Services.prefs.setIntPref(FormAutofill.CREDITCARDS_USED_STATUS_PREF, status);
       }
     };
 
@@ -516,7 +520,7 @@ FormAutofillParent.prototype = {
 
     return async () => {
       // Suppress the pending doorhanger from showing up if user disabled credit card in previous doorhanger.
-      if (!FormAutofillUtils.isAutofillCreditCardsEnabled) {
+      if (!FormAutofill.isAutofillCreditCardsEnabled) {
         return;
       }
 

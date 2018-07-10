@@ -7,6 +7,7 @@ exports.setContextMenu = setContextMenu;
 exports.setPrimaryPaneTab = setPrimaryPaneTab;
 exports.closeActiveSearch = closeActiveSearch;
 exports.setActiveSearch = setActiveSearch;
+exports.updateActiveFileSearch = updateActiveFileSearch;
 exports.toggleFrameworkGrouping = toggleFrameworkGrouping;
 exports.showSource = showSource;
 exports.togglePaneCollapse = togglePaneCollapse;
@@ -24,6 +25,10 @@ var _selectors = require("../selectors/index");
 var _ui = require("../reducers/ui");
 
 var _source = require("../utils/source");
+
+var _editor = require("../utils/editor/index");
+
+var _fileSearch = require("./file-search");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -77,6 +82,21 @@ function setActiveSearch(activeSearch) {
       type: "TOGGLE_ACTIVE_SEARCH",
       value: activeSearch
     });
+  };
+}
+
+function updateActiveFileSearch() {
+  return ({
+    dispatch,
+    getState
+  }) => {
+    const isFileSearchOpen = (0, _selectors.getActiveSearch)(getState()) === "file";
+    const fileSearchQuery = (0, _selectors.getFileSearchQuery)(getState());
+
+    if (isFileSearchOpen && fileSearchQuery) {
+      const editor = (0, _editor.getEditor)();
+      dispatch((0, _fileSearch.searchContents)(fileSearchQuery, editor));
+    }
   };
 }
 

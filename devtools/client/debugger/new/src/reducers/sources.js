@@ -30,16 +30,18 @@ var _source = require("../utils/source");
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
-var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
-
 var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _prefs = require("../utils/prefs");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/**
+ * Sources reducer
+ * @module reducers/sources
+ */
 function initialSourcesState() {
   return {
     sources: {},
@@ -50,7 +52,7 @@ function initialSourcesState() {
 }
 
 function createSource(source) {
-  return _objectSpread({
+  return {
     id: undefined,
     url: undefined,
     sourceMapURL: undefined,
@@ -60,8 +62,9 @@ function createSource(source) {
     text: undefined,
     contentType: "",
     error: undefined,
-    loadedState: "unloaded"
-  }, source);
+    loadedState: "unloaded",
+    ...source
+  };
 }
 
 function update(state = initialSourcesState(), action) {
@@ -86,26 +89,27 @@ function update(state = initialSourcesState(), action) {
       }
 
     case "SET_SELECTED_LOCATION":
-      location = _objectSpread({}, action.location, {
+      location = { ...action.location,
         url: action.source.url
-      });
+      };
       _prefs.prefs.pendingSelectedLocation = location;
-      return _objectSpread({}, state, {
-        selectedLocation: _objectSpread({
-          sourceId: action.source.id
-        }, action.location),
+      return { ...state,
+        selectedLocation: {
+          sourceId: action.source.id,
+          ...action.location
+        },
         pendingSelectedLocation: location
-      });
+      };
 
     case "CLEAR_SELECTED_LOCATION":
       location = {
         url: ""
       };
       _prefs.prefs.pendingSelectedLocation = location;
-      return _objectSpread({}, state, {
+      return { ...state,
         selectedLocation: null,
         pendingSelectedLocation: location
-      });
+      };
 
     case "SET_PENDING_SELECTED_LOCATION":
       location = {
@@ -113,31 +117,31 @@ function update(state = initialSourcesState(), action) {
         line: action.line
       };
       _prefs.prefs.pendingSelectedLocation = location;
-      return _objectSpread({}, state, {
+      return { ...state,
         pendingSelectedLocation: location
-      });
+      };
 
     case "ADD_TAB":
-      return _objectSpread({}, state, {
+      return { ...state,
         tabs: updateTabList(state.tabs, action.url)
-      });
+      };
 
     case "MOVE_TAB":
-      return _objectSpread({}, state, {
+      return { ...state,
         tabs: updateTabList(state.tabs, action.url, action.tabIndex)
-      });
+      };
 
     case "CLOSE_TAB":
       _prefs.prefs.tabs = action.tabs;
-      return _objectSpread({}, state, {
+      return { ...state,
         tabs: action.tabs
-      });
+      };
 
     case "CLOSE_TABS":
       _prefs.prefs.tabs = action.tabs;
-      return _objectSpread({}, state, {
+      return { ...state,
         tabs: action.tabs
-      });
+      };
 
     case "LOAD_SOURCE_TEXT":
       return setSourceTextProps(state, action);
@@ -168,9 +172,9 @@ function update(state = initialSourcesState(), action) {
         return initialSourcesState();
       }
 
-      return _objectSpread({}, initialSourcesState(), {
+      return { ...initialSourcesState(),
         url
-      });
+      };
   }
 
   return state;
@@ -217,12 +221,14 @@ function updateSource(state, source) {
   }
 
   const existingSource = state.sources[source.id];
-  const updatedSource = existingSource ? _objectSpread({}, existingSource, source) : createSource(source);
-  return _objectSpread({}, state, {
-    sources: _objectSpread({}, state.sources, {
+  const updatedSource = existingSource ? { ...existingSource,
+    ...source
+  } : createSource(source);
+  return { ...state,
+    sources: { ...state.sources,
       [source.id]: updatedSource
-    })
-  });
+    }
+  };
 }
 
 function removeSourceFromTabList(tabs, url) {

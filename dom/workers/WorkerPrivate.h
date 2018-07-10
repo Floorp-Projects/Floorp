@@ -45,6 +45,7 @@ class MessagePortIdentifier;
 class PerformanceStorage;
 class SharedWorker;
 class WorkerControlRunnable;
+class WorkerCSPEventListener;
 class WorkerDebugger;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
@@ -552,6 +553,9 @@ public:
 
   bool
   EnsureClientSource();
+
+  bool
+  EnsureCSPEventListener();
 
   void
   EnsurePerformanceStorage();
@@ -1405,6 +1409,8 @@ private:
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
   RefPtr<PerformanceStorage> mPerformanceStorage;
+
+  RefPtr<WorkerCSPEventListener> mCSPEventListener;
 
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;

@@ -15,10 +15,9 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _selectors = require("../../selectors/index");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 async function makeScopedLocation({
   name,
   offset
@@ -37,13 +36,12 @@ async function makeScopedLocation({
 }
 
 function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation, text, originalText) {
-  const overrides = _objectSpread({}, pendingBreakpoint, {
+  const overrides = { ...pendingBreakpoint,
     generatedLocation,
     id,
     text,
     originalText
-  });
-
+  };
   const breakpoint = (0, _breakpoint.createBreakpoint)(location, overrides);
   (0, _breakpoint.assertBreakpoint)(breakpoint);
   return {
@@ -68,19 +66,16 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
     location,
     astLocation
   } = pendingBreakpoint;
-
-  const previousLocation = _objectSpread({}, location, {
+  const previousLocation = { ...location,
     sourceId
-  });
-
+  };
   const scopedLocation = await makeScopedLocation(astLocation, previousLocation, source);
   const scopedGeneratedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source, scopedLocation, sourceMaps); // this is the generatedLocation of the pending breakpoint, with
   // the source id updated to reflect the new connection
 
-  const generatedLocation = _objectSpread({}, pendingBreakpoint.generatedLocation, {
+  const generatedLocation = { ...pendingBreakpoint.generatedLocation,
     sourceId: generatedSourceId
-  });
-
+  };
   const isSameLocation = !(0, _breakpoint.locationMoved)(generatedLocation, scopedGeneratedLocation);
   const existingClient = client.getBreakpointByLocation(generatedLocation);
   /** ******* CASE 1: No server change ***********/

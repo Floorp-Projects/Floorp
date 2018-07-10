@@ -1,4 +1,4 @@
-52808
+52817
 0/nm
 0th/pt
 1/n1
@@ -23414,7 +23414,7 @@ diversify/GNDS
 diversion/M
 diversionary
 diversity/SM
-divert/SDG
+divert/SDGRZ
 diverticulitis/M
 divest/SLDG
 divestiture/MS
@@ -25359,6 +25359,7 @@ exasperate/DSGN
 exasperated/Y
 exasperating/Y
 exasperation/M
+exbibyte/MS
 excavate/GNDSX
 excavation/M
 excavator/SM
@@ -27431,7 +27432,7 @@ functionalist/S
 functionality/S
 functionary/SM
 functor
-fund/AMDGS
+fund/AMDGSRZ
 fundamental/SMY
 fundamentalism/M
 fundamentalist/SM
@@ -27963,6 +27964,7 @@ gibbet/GMDS
 gibbon/MS
 gibbous
 gibe/MGDS
+gibibyte/MS
 giblet/SM
 giddily
 giddiness/M
@@ -32402,6 +32404,7 @@ khan/MS
 kibble/DSMG
 kibbutz/MS
 kibbutzim
+kibibyte/MS
 kibitz/ZGDRS
 kibitzer/M
 kibosh/M
@@ -34549,6 +34552,7 @@ meatloaf/M
 meatloaves
 meatpacking/M
 meaty/TPR
+mebibyte/MS
 mecca/SM
 mechanic/MS
 mechanical/Y
@@ -38825,6 +38829,7 @@ peat/M
 peaty/TR
 pebble/MGDS
 pebbly
+pebibyte/MS
 pecan/SM
 peccadillo/M
 peccadilloes
@@ -45252,16 +45257,16 @@ skimp/SDG
 skimpily
 skimpiness/M
 skimpy/RTP
-skin/MS
+skin/MSA
 skincare/M
 skinflick/MS
 skinflint/MS
 skinful
 skinhead/MS
 skinless
-skinned
+skinned/A
 skinniness/M
-skinning
+skinning/A
 skinny/RMTP
 skint
 skintight
@@ -47298,6 +47303,7 @@ subpoena/GMDS
 subprime
 subprofessional/SM
 subprogram/S
+subrogate/DNS
 subroutine/SM
 subscribe/UASDG
 subscriber/MS
@@ -48316,6 +48322,7 @@ teaspoon/SM
 teaspoonful/SM
 teat/MS
 teatime/S
+tebibyte/MS
 tech/M
 techie/S
 technetium/M
@@ -52668,6 +52675,7 @@ yipping
 yo
 yob/S
 yobbo/S
+yobibyte/MS
 yodel/SMDRZG
 yodeler/M
 yoga/M
@@ -52731,6 +52739,7 @@ zealot/MS
 zealotry/M
 zealous/YP
 zealousness/M
+zebibyte/MS
 zebra/SM
 zebu/MS
 zed/SM

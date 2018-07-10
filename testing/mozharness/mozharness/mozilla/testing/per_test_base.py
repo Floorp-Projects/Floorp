@@ -205,7 +205,7 @@ class SingleTestMixin(object):
 
         if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
-        elif self.config.get('gpu_required', 'False') != 'False':
+        elif self.config.get('gpu_required', False) is not False:
             self._find_misc_tests(dirs, changed_files, gpu=True)
         else:
             self._find_misc_tests(dirs, changed_files)

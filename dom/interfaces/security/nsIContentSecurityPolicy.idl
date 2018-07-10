@@ -9,7 +9,9 @@ interface nsIURI;
 interface nsIDocShell;
 interface nsIEventTarget;
 interface nsIPrincipal;
+interface nsICSPEventListener;
 
+webidl Element;
 webidl Document;
 
 /**
@@ -122,9 +124,11 @@ interface nsIContentSecurityPolicy : nsISerializable
    * @param aContentPolicyType Either TYPE_SCRIPT or TYPE_STYLESHEET
    * @param aNonce The nonce string to check against the policy
    * @param aParserCreated If the script element was created by the HTML Parser
-   * @param aElementOrContent The script element of the inline resource to hash
-   *        or the content of the psuedo-script to compare to hash
-   *        (and compare to the hashes listed in the policy)
+   * @param aTriggeringElement The script element of the inline resource to
+   *        hash. It can be null.
+   * @param aContentOfPseudoScript The content of the psuedo-script to compare
+   *                               to hash (and compare to the hashes listed in
+   *                               the policy)
    * @param aLineNumber The line number of the inline resource
    *        (used for reporting)
    * @param aColumnNumber The column number of the inline resource
@@ -136,7 +140,8 @@ interface nsIContentSecurityPolicy : nsISerializable
   boolean getAllowsInline(in nsContentPolicyType aContentPolicyType,
                           in AString aNonce,
                           in boolean aParserCreated,
-                          in nsISupports aElementOrContent,
+                          in Element aTriggeringElement,
+                          in AString aContentOfPseudoScript,
                           in unsigned long aLineNumber,
                           in unsigned long aColumnNumber);
 
@@ -172,6 +177,8 @@ interface nsIContentSecurityPolicy : nsISerializable
    *
    * @param violationType
    *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
+   * @param triggeringElement
+   *     the element that triggers this CSP violation. It can be null.
    * @param sourceFile
    *     name of the source file containing the violation (if available)
    * @param contentSample
@@ -191,6 +198,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     reports.
    */
   void logViolationDetails(in unsigned short violationType,
+                           in Element triggeringElement,
                            in AString sourceFile,
                            in AString scriptSample,
                            in int32_t lineNum,
@@ -216,6 +224,13 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void setRequestContext(in Document aDocument,
                          in nsIPrincipal aPrincipal);
+
+  /**
+   * Called after the CSP object is created to fill in event listener.
+   * @param aListener this listener will be notified when a CSP violation event
+   *                  must be dispatched.
+   */
+  void setEventListener(in nsICSPEventListener aListener);
 
   /**
    *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
@@ -250,6 +265,8 @@ interface nsIContentSecurityPolicy : nsISerializable
    * NOTE: Calls to this may trigger violation reports when queried, so the
    * return value should not be cached.
    *
+   * @param aTriggeringElement
+   *        The element that triggers this CSP check. It can be null.
    * @param aURI
    *    The URI about to be loaded or used.
    * @param aDir
@@ -265,7 +282,10 @@ interface nsIContentSecurityPolicy : nsISerializable
    *    Whether or not the provided URI is allowed by CSP under the given
    *    directive. (block the pending operation if false).
    */
-  boolean permits(in nsIURI aURI, in CSPDirective aDir, in boolean aSpecific);
+  boolean permits(in Element aTriggeringElement,
+                  in nsIURI aURI,
+                  in CSPDirective aDir,
+                  in boolean aSpecific);
 
   /**
    * Delegate method called by the service when sub-elements of the protected
@@ -292,4 +312,12 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   AString toJSON();
 
+};
+
+/* Listener for security policy violation event */
+[function, scriptable, uuid(c3163b14-3a8f-46dd-a4af-bd04680364cd)]
+interface nsICSPEventListener : nsISupports
+{
+  // aJSON is the JSON format of SecurityPolicyViolationEventInit dictionary.
+  void onCSPViolationEvent(in AString aJSON);
 };

@@ -171,7 +171,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
         [["--gpu-required"], {
             "action": "store_true",
             "dest": "gpu_required",
-            "default": "False",
+            "default": False,
             "help": "Run additional verification on modified tests using gpu instances."}
          ],
     ] + copy.deepcopy(testing_config_options) + \

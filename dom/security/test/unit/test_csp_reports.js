@@ -102,9 +102,6 @@ function run_test() {
                                ":" + REPORT_SERVER_PORT +
                                "/foo/self");
 
-  let content = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
-  content.data = "";
   // test that inline script violations cause a report.
   makeTest(0, {"blocked-uri": ""}, false,
       function(csp) {
@@ -112,7 +109,8 @@ function run_test() {
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
                                        "", // aNonce
                                        false, // aParserCreated
-                                       content, // aContent
+                                       null, // aTriggeringElement
+                                       "", // aContentOfPseudoScript
                                        0, // aLineNumber
                                        0); // aColumnNumber
 
@@ -138,6 +136,7 @@ function run_test() {
         if (oReportViolation.value) {
           // force the logging, since the getter doesn't.
           csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL,
+                                  null, // aTriggeringElement
                                   selfuri.asciiSpec,
                                   // sending UTF-16 script sample to make sure
                                   // csp report in JSON is not cut-off, please
@@ -160,13 +159,11 @@ function run_test() {
   makeTest(3, {"blocked-uri": ""}, true,
       function(csp) {
         let inlineOK = true;
-        let content = Cc["@mozilla.org/supports-string;1"].
-                         createInstance(Ci.nsISupportsString);
-        content.data = "";
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
                                        "", // aNonce
                                        false, // aParserCreated
-                                       content, // aContent
+                                       null, // aTriggeringElement
+                                       "", // aContentOfPseudoScript
                                        0, // aLineNumber
                                        0); // aColumnNumber
 
@@ -188,6 +185,7 @@ function run_test() {
         if (oReportViolation.value) {
           // force the logging, since the getter doesn't.
           csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT,
+                                  null, // aTriggeringElement
                                   selfuri.asciiSpec,
                                   "script sample",
                                   4, // line number

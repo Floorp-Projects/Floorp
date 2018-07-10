@@ -19,6 +19,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 const {
@@ -33,7 +34,7 @@ const {
 // users who disable/enable the credit card autofill feature.
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 function FormAutofillPreferences() {
   this.bundle = Services.strings.createBundle(BUNDLE_URI);
@@ -104,7 +105,7 @@ FormAutofillPreferences.prototype = {
                                                        .map(key => this.bundle.GetStringFromName(key)).join("\n"));
 
     // Manually set the checked state
-    if (FormAutofillUtils.isAutofillAddressesEnabled) {
+    if (FormAutofill.isAutofillAddressesEnabled) {
       addressAutofillCheckbox.setAttribute("checked", true);
     }
 
@@ -128,7 +129,7 @@ FormAutofillPreferences.prototype = {
       savedAddressesBtn,
     };
 
-    if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
       let creditCardAutofill = document.createElementNS(XUL_NS, "hbox");
       let creditCardAutofillCheckboxGroup = document.createElementNS(XUL_NS, "hbox");
       let creditCardAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
@@ -159,7 +160,7 @@ FormAutofillPreferences.prototype = {
                                                            .map(key => this.bundle.GetStringFromName(key)).join("\n"));
 
       // Manually set the checked state
-      if (FormAutofillUtils.isAutofillCreditCardsEnabled) {
+      if (FormAutofill.isAutofillCreditCardsEnabled) {
         creditCardAutofillCheckbox.setAttribute("checked", true);
       }
 
@@ -208,11 +209,11 @@ FormAutofillPreferences.prototype = {
         let target = event.target;
 
         if (target == this.refs.addressAutofillCheckboxLabel) {
-          let pref = FormAutofillUtils.isAutofillAddressesEnabled;
+          let pref = FormAutofill.isAutofillAddressesEnabled;
           Services.prefs.setBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF, !pref);
           this.refs.addressAutofillCheckbox.checked = !pref;
         } else if (target == this.refs.creditCardAutofillCheckboxLabel) {
-          let pref = FormAutofillUtils.isAutofillCreditCardsEnabled;
+          let pref = FormAutofill.isAutofillCreditCardsEnabled;
           Services.prefs.setBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF, !pref);
           this.refs.creditCardAutofillCheckbox.checked = !pref;
         }

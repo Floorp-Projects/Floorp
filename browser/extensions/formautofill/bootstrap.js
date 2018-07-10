@@ -15,10 +15,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
                                "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofill",
+                               "resource://formautofill/FormAutofill.jsm");
 ChromeUtils.defineModuleGetter(this, "formAutofillParent",
                                "resource://formautofill/FormAutofillParent.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -116,7 +116,7 @@ function startup(data) {
   // available (ie, whether it is shown in any UI etc) - it *does not* determine
   // whether the engine is actually enabled or not.
   Services.prefs.setBoolPref("services.sync.engine.addresses.available", true);
-  if (FormAutofillUtils.isAutofillCreditCardsAvailable) {
+  if (FormAutofill.isAutofillCreditCardsAvailable) {
     Services.prefs.setBoolPref("services.sync.engine.creditcards.available", true);
   } else {
     Services.prefs.clearUserPref("services.sync.engine.creditcards.available");

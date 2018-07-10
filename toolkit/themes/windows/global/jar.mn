@@ -25,6 +25,7 @@ toolkit.jar:
 * skin/classic/global/numberbox.css
 * skin/classic/global/notification.css
   skin/classic/global/printPageSetup.css
+  skin/classic/global/richlistbox.css
   skin/classic/global/scrollbox.css
   skin/classic/global/splitter.css
   skin/classic/global/toolbar.css
