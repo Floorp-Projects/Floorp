@@ -94,6 +94,11 @@ class FaviconLoad {
 
   load() {
     this._deferred = PromiseUtils.defer();
+    // Clear the channel reference when we succeed or fail.
+    this._deferred.promise.then(
+      () => this.channel = null,
+      () => this.channel = null
+    );
 
     try {
       this.channel.asyncOpen2(this);
@@ -105,7 +110,10 @@ class FaviconLoad {
   }
 
   cancel() {
-    this._deferred.reject(Components.Exception(`Favicon load from ${this.icon.iconUri.spec} was cancelled.`, Cr.NS_BINDING_ABORTED));
+    if (!this.channel) {
+      return;
+    }
+
     this.channel.cancel(Cr.NS_BINDING_ABORTED);
   }
 
@@ -133,8 +141,9 @@ class FaviconLoad {
     }
 
     if (!Components.isSuccessCode(statusCode)) {
-      // If the load was cancelled the promise will have been rejected then.
-      if (statusCode != Cr.NS_BINDING_ABORTED) {
+      if (statusCode == Cr.NS_BINDING_ABORTED) {
+        this._deferred.reject(Components.Exception(`Favicon load from ${this.icon.iconUri.spec} was cancelled.`, statusCode));
+      } else {
         this._deferred.reject(Components.Exception(`Favicon at "${this.icon.iconUri.spec}" failed to load.`, statusCode));
       }
       return;
@@ -397,7 +406,6 @@ class IconLoader {
     try {
       this._loader = new FaviconLoad(iconInfo);
       let { dataURL, expiration } = await this._loader.load();
-      this._loader = null;
 
       this.chromeGlobal.sendAsyncMessage("Link:SetIcon", {
         originalURL: iconInfo.iconUri.spec,
@@ -415,6 +423,8 @@ class IconLoader {
           canUseForTab: !iconInfo.isRichIcon,
         });
       }
+    } finally {
+      this._loader = null;
     }
   }
 
