@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr{
-    Version{"2.1.39.20"}
+    Version{"2.1.41.97"}
     zoneStrings{
         "meta:Acre"{
             ld{"heure d’été de l’Acre"}

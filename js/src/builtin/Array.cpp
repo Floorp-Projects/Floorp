@@ -1005,16 +1005,19 @@ ObjectMayHaveExtraIndexedProperties(JSObject* obj)
 static bool
 AddLengthProperty(JSContext* cx, HandleArrayObject obj)
 {
-    /*
-     * Add the 'length' property for a newly created array,
-     * and update the elements to be an empty array owned by the object.
-     * The shared emptyObjectElements singleton cannot be used for slow arrays,
-     * as accesses to 'length' will use the elements header.
-     */
+    // Add the 'length' property for a newly created array. Shapes are shared
+    // across realms within a zone and because we update the initial shape with
+    // a Shape that contains the length-property (in NewArray), it's possible
+    // the length property has already been defined.
+
+    Shape* shape = obj->lastProperty();
+    if (!shape->isEmptyShape()) {
+        MOZ_ASSERT(JSID_IS_ATOM(shape->propidRaw(), cx->names().length));
+        MOZ_ASSERT(shape->previous()->isEmptyShape());
+        return true;
+    }
 
     RootedId lengthId(cx, NameToId(cx->names().length));
-    MOZ_ASSERT(!obj->lookup(cx, lengthId));
-
     return NativeObject::addAccessorProperty(cx, obj, lengthId,
                                              array_length_getter, array_length_setter,
                                              JSPROP_PERMANENT);

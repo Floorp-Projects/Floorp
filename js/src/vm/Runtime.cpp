@@ -636,8 +636,8 @@ JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject pro
     if (promise) {
         RootedObject unwrappedPromise(cx, promise);
         // While the job object is guaranteed to be unwrapped, the promise
-        // might be wrapped. See the comments in
-        // intrinsic_EnqueuePromiseReactionJob for details.
+        // might be wrapped. See the comments in EnqueuePromiseReactionJob in
+        // builtin/Promise.cpp for details.
         if (IsWrapper(promise))
             unwrappedPromise = UncheckedUnwrap(promise);
         if (unwrappedPromise->is<PromiseObject>())

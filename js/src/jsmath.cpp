@@ -649,27 +649,21 @@ js::ecmaPow(double x, double y)
 }
 
 bool
-js::math_pow_handle(JSContext* cx, HandleValue base, HandleValue power, MutableHandleValue result)
-{
-    double x;
-    if (!ToNumber(cx, base, &x))
-        return false;
-
-    double y;
-    if (!ToNumber(cx, power, &y))
-        return false;
-
-    double z = ecmaPow(x, y);
-    result.setNumber(z);
-    return true;
-}
-
-bool
 js::math_pow(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    return math_pow_handle(cx, args.get(0), args.get(1), args.rval());
+    double x;
+    if (!ToNumber(cx, args.get(0), &x))
+        return false;
+
+    double y;
+    if (!ToNumber(cx, args.get(1), &y))
+        return false;
+
+    double z = ecmaPow(x, y);
+    args.rval().setNumber(z);
+    return true;
 }
 
 uint64_t

@@ -71,7 +71,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\bin\icutu61.dll</OutputFile>
+      <OutputFile>..\..\..\bin\icutu62.dll</OutputFile>
       <AdditionalDependencies>icuuc.lib;icuin.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\..\lib\icutu.pdb</ProgramDatabaseFile>
@@ -97,7 +97,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\bin\icutu61d.dll</OutputFile>
+      <OutputFile>..\..\..\bin\icutu62d.dll</OutputFile>
       <AdditionalDependencies>icuucd.lib;icuind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\..\lib\icutud.pdb</ProgramDatabaseFile>
@@ -123,7 +123,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\bin64\icutu61.dll</OutputFile>
+      <OutputFile>..\..\..\bin64\icutu62.dll</OutputFile>
       <AdditionalDependencies>icuuc.lib;icuin.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\..\lib64\icutu.pdb</ProgramDatabaseFile>
@@ -146,7 +146,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\bin64\icutu61d.dll</OutputFile>
+      <OutputFile>..\..\..\bin64\icutu62d.dll</OutputFile>
       <AdditionalDependencies>icuucd.lib;icuind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\..\lib64\icutud.pdb</ProgramDatabaseFile>

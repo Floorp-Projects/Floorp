@@ -7,7 +7,7 @@
 
 ## Flags for ICU 59+
 CXXFLAGS += -std=c++11
-CFLAGS   += -std=c99
+CFLAGS   += -std=c11
 
 ## Flags for position independent code
 SHAREDLIBCFLAGS = -KPIC

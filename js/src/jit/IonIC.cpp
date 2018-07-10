@@ -520,10 +520,13 @@ IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript, IonUnaryArithIC
         res.setInt32(result);
         break;
       }
-      case JSOP_NEG:
-        if (!NegOperation(cx, val, res))
+      case JSOP_NEG: {
+        // We copy val here because the original value is needed below.
+        RootedValue valCopy(cx, val);
+        if (!NegOperation(cx, &valCopy, res))
             return false;
         break;
+      }
       default:
         MOZ_CRASH("Unexpected op");
     }

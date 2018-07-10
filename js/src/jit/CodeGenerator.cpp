@@ -7494,9 +7494,8 @@ CodeGenerator::visitPowD(LPowD* ins)
     MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
 
-using PowFn = bool (*)(JSContext*, HandleValue, HandleValue, MutableHandleValue);
-static const VMFunction PowInfo =
-    FunctionInfo<PowFn>(js::math_pow_handle, "math_pow_handle");
+using PowFn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue, MutableHandleValue);
+static const VMFunction PowInfo = FunctionInfo<PowFn>(js::PowValues, "PowValues");
 
 void
 CodeGenerator::visitPowV(LPowV* ins)
