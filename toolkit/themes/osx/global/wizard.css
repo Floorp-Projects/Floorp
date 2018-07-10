@@ -8,10 +8,6 @@ wizard {
   padding: 14px;
 }
 
-#header { 
-  display: inline !important;
-}
-
 .wizard-header {
   -moz-appearance: dialog;
 }

@@ -784,6 +784,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       // line number unknown. mRequestingNode doesn't bear this info.
       csp->LogViolationDetails(
         nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE,
+        nullptr, // triggering element
         NS_ConvertUTF8toUTF16(spec), EmptyString(),
         0, 0, EmptyString(), EmptyString());
       return NS_OK;

@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+richlistbox {
+  -moz-appearance: listbox;
+  margin: 2px 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+richlistbox[disabled="true"] {
+  color: GrayText;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+richlistbox:focus > richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"] {
+  outline: 1px dotted Highlight;
+  outline-offset: -1px;
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="true"] {
+  outline: 1px dotted #F3D982; /* TODO: find a suitable system color */
+}
+
+richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
+  outline: 1px dotted #F3D982;
+}
+
+richlistbox.theme-listbox:focus > richlistitem[current="true"] {
+  outline: 1px dotted Highlight;
+  outline-offset: -1px;
+}
+
+richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+}
+
+richlistbox.theme-listbox > richlistitem > label {
+  margin: 0px;
+  padding-top: 0px;
+  padding-bottom: 1px;
+  padding-inline-start: 4px;
+  padding-inline-end: 0px;
+  white-space: nowrap;
+}
+
+listheader {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}

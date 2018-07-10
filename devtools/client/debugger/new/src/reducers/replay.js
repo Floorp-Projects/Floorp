@@ -10,10 +10,9 @@ exports.getHistoryPosition = getHistoryPosition;
 
 var _prefs = require("../utils/prefs");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function initialState() {
   return {
     history: [],
@@ -34,9 +33,9 @@ function update(state = initialState(), action) {
   switch (action.type) {
     case "TRAVEL_TO":
       {
-        return _objectSpread({}, state, {
+        return { ...state,
           position: action.position
-        });
+        };
       }
 
     case "ADD_SCOPES":
@@ -91,24 +90,21 @@ function addScopes(state, action) {
     pending: true,
     scope: null
   };
-
-  const generated = _objectSpread({}, pausedInst.frameScopes.generated, {
+  const generated = { ...pausedInst.frameScopes.generated,
     [selectedFrameId]: scopeValue
-  });
-
-  const newPaused = _objectSpread({}, pausedInst, {
-    frameScopes: _objectSpread({}, pausedInst.frameScopes, {
+  };
+  const newPaused = { ...pausedInst,
+    frameScopes: { ...pausedInst.frameScopes,
       generated
-    })
-  });
-
+    }
+  };
   const history = [...state.history];
-  history[state.position] = _objectSpread({}, instance, {
+  history[state.position] = { ...instance,
     paused: newPaused
-  });
-  return _objectSpread({}, state, {
+  };
+  return { ...state,
     history
-  });
+  };
 }
 
 function mapScopes(state, action) {
@@ -125,27 +121,24 @@ function mapScopes(state, action) {
   }
 
   const pausedInst = instance.paused;
-
-  const original = _objectSpread({}, pausedInst.frameScopes.original, {
+  const original = { ...pausedInst.frameScopes.original,
     [selectedFrameId]: {
       pending: status !== "done",
       scope: value
     }
-  });
-
-  const newPaused = _objectSpread({}, pausedInst, {
-    frameScopes: _objectSpread({}, pausedInst.frameScopes, {
+  };
+  const newPaused = { ...pausedInst,
+    frameScopes: { ...pausedInst.frameScopes,
       original
-    })
-  });
-
+    }
+  };
   const history = [...state.history];
-  history[state.position] = _objectSpread({}, instance, {
+  history[state.position] = { ...instance,
     paused: newPaused
-  });
-  return _objectSpread({}, state, {
+  };
+  return { ...state,
     history
-  });
+  };
 }
 
 function evaluateExpression(state, action) {
@@ -166,12 +159,12 @@ function evaluateExpression(state, action) {
   };
   const expressions = [...prevExpressions, expression];
   const history = [...state.history];
-  history[state.position] = _objectSpread({}, instance, {
+  history[state.position] = { ...instance,
     expressions
-  });
-  return _objectSpread({}, state, {
+  };
+  return { ...state,
     history
-  });
+  };
 }
 
 function paused(state, action) {
@@ -198,10 +191,10 @@ function paused(state, action) {
     paused: pausedInfo
   }];
   const position = state.position + 1;
-  return _objectSpread({}, state, {
+  return { ...state,
     history,
     position
-  });
+  };
 }
 
 function getHistory(state) {

@@ -8,11 +8,13 @@
 
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
+#include "RemoteServiceWorkerImpl.h"
 #include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerImpl.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistration.h"
+#include "ServiceWorkerUtils.h"
 
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -47,24 +49,26 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
                       const ServiceWorkerDescriptor& aDescriptor)
 {
   RefPtr<ServiceWorker> ref;
+  RefPtr<ServiceWorker::Inner> inner;
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    return ref.forget();
+  if (ServiceWorkerParentInterceptEnabled()) {
+    inner = new RemoteServiceWorkerImpl(aDescriptor);
+  } else {
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    NS_ENSURE_TRUE(swm, nullptr);
+
+    RefPtr<ServiceWorkerRegistrationInfo> reg =
+      swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
+    NS_ENSURE_TRUE(reg, nullptr);
+
+    RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
+    NS_ENSURE_TRUE(reg, nullptr);
+
+    inner = new ServiceWorkerImpl(info, reg);
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> reg =
-    swm->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
-  if (!reg) {
-    return ref.forget();
-  }
+  NS_ENSURE_TRUE(inner, nullptr);
 
-  RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
-  if (!info) {
-    return ref.forget();
-  }
-
-  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info, reg);
   ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }

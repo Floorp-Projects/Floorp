@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerContainerImpl.h"
 
+#include "ServiceWorkerRegistration.h"
+
 namespace mozilla {
 namespace dom {
 

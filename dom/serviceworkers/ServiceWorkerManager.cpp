@@ -2318,6 +2318,11 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
     return;
   }
 
+  if (ServiceWorkerParentInterceptEnabled()) {
+    SoftUpdateInternal(aOriginAttributes, aScope, nullptr);
+    return;
+  }
+
   RefPtr<GenericPromise::Private> promise =
     new GenericPromise::Private(__func__);
 
@@ -2379,7 +2384,6 @@ ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttribut
                                          ServiceWorkerUpdateFinishCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCallback);
 
   if (mShuttingDown) {
     return;
@@ -2439,8 +2443,10 @@ ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttribut
                                newest->ScriptSpec(), nullptr,
                                registration->GetUpdateViaCache());
 
-  RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
-  job->AppendResultCallback(cb);
+  if (aCallback) {
+    RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
+    job->AppendResultCallback(cb);
+  }
 
   queue->ScheduleJob(job);
 }
@@ -2451,6 +2457,11 @@ ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
                              ServiceWorkerUpdateFinishCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    UpdateInternal(aPrincipal, aScope, aCallback);
+    return;
+  }
 
   RefPtr<GenericPromise::Private> promise =
     new GenericPromise::Private(__func__);

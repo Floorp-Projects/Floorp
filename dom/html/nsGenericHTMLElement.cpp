@@ -225,18 +225,15 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
 {
   aRect = CSSIntRect();
 
-  nsIFrame* frame = GetStyledFrame();
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
   if (!frame) {
     return nullptr;
   }
 
+  nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(frame);
+
   nsIFrame* parent = frame->GetParent();
   nsPoint origin(0, 0);
-
-  if (parent && parent->IsTableWrapperFrame() && frame->IsTableFrame()) {
-    origin = parent->GetPositionIgnoringScrolling();
-    parent = parent->GetParent();
-  }
 
   nsIContent* offsetParent = nullptr;
   Element* docElement = GetComposedDoc()->GetRootElement();
@@ -247,8 +244,8 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
     parent = frame;
   }
   else {
-    const bool isPositioned = frame->IsAbsPosContainingBlock();
-    const bool isAbsolutelyPositioned = frame->IsAbsolutelyPositioned();
+    const bool isPositioned = styleFrame->IsAbsPosContainingBlock();
+    const bool isAbsolutelyPositioned = styleFrame->IsAbsolutelyPositioned();
     origin += frame->GetPositionIgnoringScrolling();
 
     for ( ; parent ; parent = parent->GetParent()) {
