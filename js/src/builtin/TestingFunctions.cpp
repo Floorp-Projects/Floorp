@@ -2094,6 +2094,11 @@ SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
+    if (IsPromiseForAsync(promise)) {
+        JS_ReportErrorASCII(cx, "async function's promise shouldn't be manually settled");
+        return false;
+    }
+
     int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();
     promise->setFixedSlot(PromiseSlot_Flags,
                           Int32Value(flags | PROMISE_FLAG_RESOLVED | PROMISE_FLAG_FULFILLED));
