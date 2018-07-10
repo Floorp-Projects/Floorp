@@ -3434,3 +3434,9 @@ nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
   NS_ADDREF(*aFormList = holder->mFormList);
   NS_ADDREF(*aFormControlList = holder->mFormControlList);
 }
+
+void
+nsHTMLDocument::UserInteractionForTesting()
+{
+  NotifyUserGestureActivation();
+}

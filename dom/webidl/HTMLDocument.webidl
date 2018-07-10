@@ -73,4 +73,7 @@ partial interface HTMLDocument {
    */
   [ChromeOnly, Pure]
   readonly attribute NodeList blockedTrackingNodes;
+
+  [ChromeOnly]
+  void userInteractionForTesting();
 };
