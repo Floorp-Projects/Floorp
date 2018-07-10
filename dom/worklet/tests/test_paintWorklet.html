@@ -39,7 +39,7 @@ function configureTest() {
 
 // This function is called into an iframe.
 function runTestInIframe() {
-  paintWorklet.import("worklet_paintWorklet.js")
+  paintWorklet.addModule("worklet_paintWorklet.js")
 }
 </script>
 </body>
