@@ -506,3 +506,8 @@ android.applicationVariants.all { variant ->
     def buildType = "${variant.buildType.name.capitalize()}"
     tasks["compile${productFlavor}${buildType}UnitTestSources"].dependsOn(tasks["merge${productFlavor}${buildType}Assets"])
 }
+
+apply from: "${topsrcdir}/mobile/android/gradle/jacoco_dependencies.gradle"
+if (project.hasProperty('enable_code_coverage')) {
+    apply from: "${topsrcdir}/mobile/android/gradle/jacoco_for_junit.gradle"
+}

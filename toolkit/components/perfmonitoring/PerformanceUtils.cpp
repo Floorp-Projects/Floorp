@@ -19,9 +19,12 @@ namespace mozilla {
 void
 CollectPerformanceInfo(nsTArray<PerformanceInfo>& aMetrics)
 {
-  // collecting ReportPerformanceInfo from all DocGroup instances
-  for (const auto& tabChild : TabChild::GetAll()) {
-    TabGroup* tabGroup = tabChild->TabGroup();
+   // collecting ReportPerformanceInfo from all DocGroup instances
+   LinkedList<TabGroup>* tabGroups = TabGroup::GetTabGroupList();
+
+   for (TabGroup* tabGroup = tabGroups->getFirst(); tabGroup;
+       tabGroup =
+         static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
     for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
       DocGroup* docGroup = iter.Get()->mDocGroup;
       aMetrics.AppendElement(docGroup->ReportPerformanceInfo());

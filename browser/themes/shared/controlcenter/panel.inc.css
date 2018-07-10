@@ -307,6 +307,7 @@ description#identity-popup-content-verifier,
 }
 
 #tracking-protection-content[enabled="false"],
+#tracking-protection-content[hasException],
 #tracking-protection-content[state="loaded-tracking-content"] {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
 }
@@ -314,12 +315,14 @@ description#identity-popup-content-verifier,
 /* Show the "on" label by default, except when TP is disabled or there's a local exception. */
 #tracking-protection-label-off,
 #tracking-protection-content[enabled="false"] #tracking-protection-label-on,
+#tracking-protection-content[hasException] #tracking-protection-label-on,
 #tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-on {
   display: none;
 }
 
 #tracking-protection-label-on,
 #tracking-protection-content[enabled="false"] #tracking-protection-label-off,
+#tracking-protection-content[hasException] #tracking-protection-label-off,
 #tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-off {
   display: -moz-box;
 }
