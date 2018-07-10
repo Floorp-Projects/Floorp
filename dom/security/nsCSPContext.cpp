@@ -752,6 +752,13 @@ nsCSPContext::SetRequestContext(nsIDocument* aDocument,
 }
 
 NS_IMETHODIMP
+nsCSPContext::SetEventListener(nsICSPEventListener* aEventListener)
+{
+  mEventListener = aEventListener;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCSPContext::EnsureEventTarget(nsIEventTarget* aEventTarget)
 {
   NS_ENSURE_ARG(aEventTarget);
@@ -1181,6 +1188,13 @@ nsCSPContext::FireViolationEvent(
     return NS_OK;
   }
 
+  if (mEventListener) {
+    nsAutoString json;
+    if (aViolationEventInit.ToJSON(json)) {
+      mEventListener->OnCSPViolationEvent(json);
+    }
+  }
+
   // 1. If target is not null, and global is a Window, and target’s
   // shadow-including root is not global’s associated Document, set target to
   // null.
@@ -1198,8 +1212,8 @@ nsCSPContext::FireViolationEvent(
   }
 
   if (!eventTarget) {
-    // TODO: Set target be violation’s global object. If we are here, we are
-    // probably dealing with workers. See bug 1472927.
+    // If we are here, we are probably dealing with workers. Those are handled
+    // via nsICSPEventListener. Nothing to do here.
     return NS_OK;
   }
 
