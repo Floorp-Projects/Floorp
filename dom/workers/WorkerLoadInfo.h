@@ -103,6 +103,7 @@ struct WorkerLoadInfo
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
   bool mStorageAllowed;
+  bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
 
