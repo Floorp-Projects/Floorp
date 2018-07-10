@@ -35,9 +35,11 @@ class SessionFeature(
      * @return true if the event was handled, otherwise false.
      */
     fun handleBackPressed(): Boolean {
-        if (sessionManager.selectedSession.canGoBack) {
-            sessionUseCases.goBack.invoke()
-            return true
+        sessionManager.selectedSession?.let { session ->
+            if (session.canGoBack) {
+                sessionUseCases.goBack.invoke()
+                return true
+            }
         }
 
         return false

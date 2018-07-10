@@ -109,7 +109,7 @@ class DefaultSessionStorage(
         return try {
             val json = JSONObject()
             json.put(VERSION_KEY, VERSION)
-            json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession.id)
+            json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession?.id ?: "")
 
             sessionManager.sessions.forEach { session ->
                 val sessionJson = JSONObject()

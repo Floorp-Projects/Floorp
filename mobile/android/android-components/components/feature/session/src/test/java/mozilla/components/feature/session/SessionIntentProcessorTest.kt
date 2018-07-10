@@ -71,6 +71,20 @@ class SessionIntentProcessorTest {
     }
 
     @Test
+    fun testProcessWithDefaultHandlersHavingNoSelectedSession() {
+        `when`(sessionManager.selectedSession).thenReturn(null)
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val handler = SessionIntentProcessor(useCases, sessionManager, true, false)
+        val intent = mock(Intent::class.java)
+        `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
+        `when`(intent.dataString).thenReturn("http://mozilla.org")
+
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org")
+    }
+
+    @Test
     fun testProcessWithoutDefaultHandlers() {
         val handler = SessionIntentProcessor(useCases, sessionManager, useDefaultHandlers = false)
         val intent = mock(Intent::class.java)

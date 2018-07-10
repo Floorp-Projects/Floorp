@@ -24,7 +24,7 @@ class SessionUseCasesTest {
 
     @Before
     fun setup() {
-        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
+        `when`(sessionManager.selectedSessionOrThrow).thenReturn(selectedSession)
         `when`(sessionManager.getOrCreateEngineSession()).thenReturn(selectedEngineSession)
     }
 

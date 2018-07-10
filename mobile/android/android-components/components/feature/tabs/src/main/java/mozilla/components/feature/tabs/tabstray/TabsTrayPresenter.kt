@@ -16,7 +16,9 @@ import mozilla.components.concept.tabstray.TabsTray
  */
 class TabsTrayPresenter(
     private val tabsTray: TabsTray,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val closeTabsTray: () -> Unit,
+    private val onTabsTrayEmpty: (() -> Unit)? = null
 ) : SessionManager.Observer {
     private var sessions = sessionManager.sessions
     private var selectedIndex = sessions.indexOf(sessionManager.selectedSession)
@@ -33,6 +35,11 @@ class TabsTrayPresenter(
 
     override fun onSessionRemoved(session: Session) {
         calculateDiffAndUpdateTabsTray()
+
+        if (sessions.isEmpty()) {
+            onTabsTrayEmpty?.invoke()
+            closeTabsTray.invoke()
+        }
     }
 
     override fun onSessionAdded(session: Session) {
@@ -45,6 +52,9 @@ class TabsTrayPresenter(
 
     override fun onAllSessionsRemoved() {
         calculateDiffAndUpdateTabsTray()
+
+        onTabsTrayEmpty?.invoke()
+        closeTabsTray.invoke()
     }
 
     /**

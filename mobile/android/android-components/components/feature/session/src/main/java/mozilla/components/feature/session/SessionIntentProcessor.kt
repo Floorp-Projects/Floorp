@@ -46,10 +46,11 @@ class SessionIntentProcessor(
                 val session = if (openNewTab) {
                     Session(url).also { sessionManager.add(it, selected = true) }
                 } else {
-                    sessionManager.selectedSession
+                    sessionManager.selectedSession ?: Session(url)
                 }
 
                 sessionUseCases.loadUrl.invoke(url, session)
+
                 true
             }
         }

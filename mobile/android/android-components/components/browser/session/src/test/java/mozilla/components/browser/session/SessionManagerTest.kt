@@ -27,7 +27,7 @@ class SessionManagerTest {
         manager.add(Session("http://www.firefox.com"), true)
 
         assertEquals(2, manager.size)
-        assertEquals("http://www.firefox.com", manager.selectedSession.url)
+        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
     }
 
     @Test
@@ -39,9 +39,9 @@ class SessionManagerTest {
         manager.add(session1)
         manager.add(session2)
 
-        assertEquals("http://www.mozilla.org", manager.selectedSession.url)
+        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
         manager.select(session2)
-        assertEquals("http://www.firefox.com", manager.selectedSession.url)
+        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
     }
 
     @Test
@@ -161,10 +161,10 @@ class SessionManagerTest {
         assertEquals(0, manager.size)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `exception is thrown if selected session is selected with no selection`() {
+    @Test
+    fun `selectedSession is null with no selection`() {
         val manager = SessionManager(mock())
-        manager.selectedSession
+        assertNull(manager.selectedSession)
     }
 
     @Test
@@ -374,5 +374,11 @@ class SessionManagerTest {
 
         verify(observer).onAllSessionsRemoved()
         verifyNoMoreInteractions(observer)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `exception is thrown from selectedSessionOrThrow with no selection`() {
+        val manager = SessionManager(mock())
+        manager.selectedSessionOrThrow
     }
 }

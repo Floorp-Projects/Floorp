@@ -11,11 +11,14 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
@@ -25,7 +28,7 @@ class TabsTrayPresenterTest {
     @Test
     fun `start and stop will register and unregister`() {
         val sessionManager: SessionManager = mock()
-        val presenter = TabsTrayPresenter(mock(), sessionManager)
+        val presenter = TabsTrayPresenter(mock(), sessionManager, mock())
 
         verify(sessionManager, never()).register(presenter)
         verify(sessionManager, never()).unregister(presenter)
@@ -46,7 +49,7 @@ class TabsTrayPresenterTest {
         sessionManager.add(Session("https://getpocket.com"))
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, sessionManager)
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
 
         verifyNoMoreInteractions(tabsTray)
 
@@ -71,7 +74,7 @@ class TabsTrayPresenterTest {
         sessionManager.add(Session("https://getpocket.com"))
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, sessionManager)
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
 
         presenter.start()
 
@@ -92,20 +95,23 @@ class TabsTrayPresenterTest {
 
         val firstSession = Session("https://www.mozilla.org")
         sessionManager.add(firstSession)
-        sessionManager.add(Session("https://getpocket.com"))
+        val secondSession = Session("https://getpocket.com")
+        sessionManager.add(secondSession)
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, sessionManager)
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
 
         presenter.start()
 
         assertEquals(2, tabsTray.displaySessionsList!!.size)
 
         sessionManager.remove(firstSession)
-
         assertEquals(1, tabsTray.updateSessionsList!!.size)
-
         verify(tabsTray).onSessionsRemoved(0, 1)
+
+        sessionManager.remove(secondSession)
+        assertEquals(0, tabsTray.updateSessionsList!!.size)
+        verify(tabsTray, times(2)).onSessionsRemoved(0, 1)
 
         presenter.stop()
     }
@@ -119,7 +125,7 @@ class TabsTrayPresenterTest {
         sessionManager.add(Session("https://getpocket.com"))
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, sessionManager)
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
 
         presenter.start()
 
@@ -145,7 +151,7 @@ class TabsTrayPresenterTest {
         sessionManager.add(Session("E"))
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, sessionManager)
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
 
         presenter.start()
 
@@ -158,6 +164,69 @@ class TabsTrayPresenterTest {
 
         verify(tabsTray).onSessionsChanged(0, 1)
         verify(tabsTray).onSessionsChanged(3, 1)
+    }
+
+    @Test
+    fun `presenter will close tabs tray and execute callback when all sessions get removed`() {
+        val sessionManager = SessionManager(engine = mock())
+
+        sessionManager.add(Session("A"))
+        sessionManager.add(Session("B"))
+
+        var closed = false
+        var callbackExecuted = false
+
+        val presenter = TabsTrayPresenter(
+            mock(),
+            sessionManager,
+            closeTabsTray = { closed = true },
+            onTabsTrayEmpty = { callbackExecuted = true })
+
+        presenter.start()
+
+        assertFalse(closed)
+        assertFalse(callbackExecuted)
+
+        sessionManager.removeAll()
+
+        assertTrue(closed)
+        assertTrue(callbackExecuted)
+
+        presenter.stop()
+    }
+
+    @Test
+    fun `presenter will close tabs tray and execute callback when last session gets removed`() {
+        val sessionManager = SessionManager(engine = mock())
+
+        val session1 = Session("A").also { sessionManager.add(it) }
+        val session2 = Session("B").also { sessionManager.add(it) }
+
+        var closed = false
+        var callbackExecuted = false
+
+        val presenter = TabsTrayPresenter(
+                mock(),
+                sessionManager,
+                closeTabsTray = { closed = true },
+                onTabsTrayEmpty = { callbackExecuted = true })
+
+        presenter.start()
+
+        assertFalse(closed)
+        assertFalse(callbackExecuted)
+
+        sessionManager.remove(session1)
+
+        assertFalse(closed)
+        assertFalse(callbackExecuted)
+
+        sessionManager.remove(session2)
+
+        assertTrue(closed)
+        assertTrue(callbackExecuted)
+
+        presenter.stop()
     }
 }
 

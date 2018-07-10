@@ -47,6 +47,6 @@ class TabsUseCasesTest {
         useCases.addSession.invoke("https://www.mozilla.org")
 
         assertEquals(1, sessionManager.size)
-        assertEquals("https://www.mozilla.org", sessionManager.selectedSession.url)
+        assertEquals("https://www.mozilla.org", sessionManager.selectedSessionOrThrow.url)
     }
 }

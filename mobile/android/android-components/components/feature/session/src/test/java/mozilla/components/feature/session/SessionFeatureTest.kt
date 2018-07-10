@@ -33,6 +33,7 @@ class SessionFeatureTest {
     fun testHandleBackPressed() {
         val session = Session("https://www.mozilla.org")
         `when`(sessionManager.selectedSession).thenReturn(session)
+        `when`(sessionManager.selectedSessionOrThrow).thenReturn(session)
 
         val engineSession = mock(EngineSession::class.java)
         `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)

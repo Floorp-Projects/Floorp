@@ -40,7 +40,8 @@ class DefaultSessionStorageTest {
 
     @Test
     fun testPersistAndRestore() {
-        val session = Session("http://mozilla.org")
+        val session1 = Session("http://mozilla.org")
+        val session2 = Session("http://getpocket.com")
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
 
         val engineSession = mock(EngineSession::class.java)
@@ -51,7 +52,8 @@ class DefaultSessionStorageTest {
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
+        sessionManager.add(session1, true, engineSession)
+        sessionManager.add(session2)
 
         // Persist current sessions
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
@@ -62,16 +64,37 @@ class DefaultSessionStorageTest {
         val restoredSessionManager = SessionManager(engine)
         val restored = storage.restore(restoredSessionManager)
         assertTrue(restored)
-        assertEquals(1, restoredSessionManager.sessions.size)
+        assertEquals(2, restoredSessionManager.sessions.size)
 
         val restoredSession = restoredSessionManager.sessions.first()
-        assertEquals(session, restoredSession)
-        assertEquals(session.id, restoredSessionManager.selectedSession.id)
-        assertEquals(session.url, restoredSession.url)
+        assertEquals(session1, restoredSession)
+        assertEquals(session1.id, restoredSessionManager.selectedSessionOrThrow.id)
+        assertEquals(session1.url, restoredSession.url)
 
         val restoredEngineSession = restoredSessionManager.sessions.first().engineSessionHolder.engineSession
         assertNotNull(restoredEngineSession)
         verify(restoredEngineSession)!!.restoreState(engineSessionState.filter { it.key != "k3" })
+
+        assertEquals(session2, restoredSessionManager.sessions.last())
+    }
+
+    @Test
+    fun testPersistAndRestoreWithoutSession() {
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+
+        val sessionManager = SessionManager(engine)
+
+        // Persist current sessions
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+        val persisted = storage.persist(sessionManager)
+        assertTrue(persisted)
+
+        // Restore sessions using a fresh SessionManager
+        val restoredSessionManager = SessionManager(engine)
+        val restored = storage.restore(restoredSessionManager)
+        assertTrue(restored)
+        assertEquals(0, restoredSessionManager.sessions.size)
     }
 
     @Test

@@ -24,7 +24,7 @@ class SessionUseCases(
          * @param url url to load.
          * @param session the session for which the URL should be loaded.
          */
-        fun invoke(url: String, session: Session = sessionManager.selectedSession) {
+        fun invoke(url: String, session: Session = sessionManager.selectedSessionOrThrow) {
             sessionManager.getOrCreateEngineSession(session).loadUrl(url)
         }
     }
@@ -38,7 +38,7 @@ class SessionUseCases(
          *
          * @param session the session for which reload should be triggered.
          */
-        fun invoke(session: Session = sessionManager.selectedSession) {
+        fun invoke(session: Session = sessionManager.selectedSessionOrThrow) {
             sessionManager.getOrCreateEngineSession(session).reload()
         }
     }

@@ -27,15 +27,33 @@ class SessionManager(
         get() = synchronized(values) { values.size }
 
     /**
-     * Gets the currently selected session. Only one session can be selected.
+     * Gets the currently selected session if there is one.
+     *
+     * Only one session can be selected at a given time.
      */
-    val selectedSession: Session
+    val selectedSession: Session?
         get() = synchronized(values) {
             if (selectedIndex == NO_SELECTION) {
-                throw IllegalStateException("No selected session")
+                null
+            } else {
+                values[selectedIndex]
             }
-            values[selectedIndex]
         }
+
+    /**
+     * Gets the currently selected session or throws an IllegalStateException if no session is
+     * selected.
+     *
+     * It's application specific whether a session manager can have no selected session (= no sessions)
+     * or not. In applications that always have at least one session dealing with the nullable
+     * <code>selectedSession</code> property can be cumbersome. In those situations, where you always
+     * expect a session to exist, you can use <code>selectedSessionOrThrow</code> to avoid dealing
+     * with null values.
+     *
+     * Only one session can be selected at a given time.
+     */
+    val selectedSessionOrThrow: Session
+        get() = selectedSession ?: throw IllegalStateException("No selected session")
 
     /**
      * Returns a list of active sessions and filters out sessions used for CustomTabs.
@@ -67,12 +85,12 @@ class SessionManager(
     /**
      * Gets the linked engine session for the provided session (if it exists).
      */
-    fun getEngineSession(session: Session = selectedSession) = session.engineSessionHolder.engineSession
+    fun getEngineSession(session: Session = selectedSessionOrThrow) = session.engineSessionHolder.engineSession
 
     /**
      * Gets the linked engine session for the provided session and creates it if needed.
      */
-    fun getOrCreateEngineSession(session: Session = selectedSession): EngineSession {
+    fun getOrCreateEngineSession(session: Session = selectedSessionOrThrow): EngineSession {
         getEngineSession(session)?.let { return it }
 
         return engine.createSession().apply {
@@ -106,7 +124,7 @@ class SessionManager(
     /**
      * Removes the provided session. If no session is provided then the selected session is removed.
      */
-    fun remove(session: Session = selectedSession) = synchronized(values) {
+    fun remove(session: Session = selectedSessionOrThrow) = synchronized(values) {
         val indexToRemove = values.indexOf(session)
         if (indexToRemove == -1) {
             return
@@ -140,7 +158,7 @@ class SessionManager(
         notifyObservers { onSessionRemoved(session) }
 
         if (selectionUpdated && selectedIndex != NO_SELECTION) {
-            notifyObservers { onSessionSelected(selectedSession) }
+            notifyObservers { onSessionSelected(selectedSessionOrThrow) }
         }
     }
 

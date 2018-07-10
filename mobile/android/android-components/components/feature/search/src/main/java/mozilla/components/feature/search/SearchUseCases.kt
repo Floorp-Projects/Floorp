@@ -31,7 +31,7 @@ class SearchUseCases(
          * @param session the session to use, or the currently selected session if none
          * is provided.
          */
-        fun invoke(searchTerms: String, session: Session = sessionManager.selectedSession) {
+        fun invoke(searchTerms: String, session: Session = sessionManager.selectedSessionOrThrow) {
             val searchEngine = searchEngineManager.getDefaultSearchEngine(context)
             val searchUrl = searchEngine.buildSearchUrl(searchTerms)
 
