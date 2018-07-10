@@ -720,6 +720,9 @@ public:
   void
   AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin);
 
+  const nsTArray<nsString>&
+  GetFirstPartyStorageAccessGrantedOrigins() const;
+
   bool
   IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const;
 

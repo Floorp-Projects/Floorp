@@ -8045,6 +8045,12 @@ nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrig
   }
 }
 
+const nsTArray<nsString>&
+nsGlobalWindowInner::GetFirstPartyStorageAccessGrantedOrigins() const
+{
+  return mStorageGrantedOrigins;
+}
+
 bool
 nsGlobalWindowInner::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const
 {
