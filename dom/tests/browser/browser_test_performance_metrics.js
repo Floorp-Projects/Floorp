@@ -56,33 +56,40 @@ add_task(async function test() {
     gBrowser, opening: "about:performance", forceNewProcess: true
   });
 
-  let parent_process_event = false;
-  let worker_event = false;
-
   // load a 4th tab with a worker
   await BrowserTestUtils.withNewTab({ gBrowser, url: WORKER_URL },
     async function(browser) {
     // grab events..
-    let worker_duration = 0;
-    let worker_total = 0;
+    let workerDuration = 0;
+    let workerTotal = 0;
     let duration = 0;
     let total = 0;
+    let isTopLevel = false;
+    let aboutMemoryFound = false;
+    let parentProcessEvent = false;
+    let workerEvent = false;
 
     function exploreResults(data) {
       for (let entry of data) {
-        if (entry.pid == Services.appinfo.processID) {
-          parent_process_event = true;
+        if (entry.host == "example.com" && entry.isTopLevel) {
+          isTopLevel = true;
         }
-        if (entry.worker) {
-          worker_event = true;
-          worker_duration += entry.duration;
+        if (entry.host == "about:memory") {
+          aboutMemoryFound = true;
+        }
+        if (entry.pid == Services.appinfo.processID) {
+          parentProcessEvent = true;
+        }
+        if (entry.isWorker) {
+          workerEvent = true;
+          workerDuration += entry.duration;
         } else {
           duration += entry.duration;
         }
         // let's look at the data we got back
         for (let item of entry.items) {
-          if (entry.worker) {
-            worker_total += item.count;
+          if (entry.isWorker) {
+            workerTotal += item.count;
           } else {
             total += item.count;
           }
@@ -94,11 +101,13 @@ add_task(async function test() {
     let results = await ChromeUtils.requestPerformanceMetrics();
     exploreResults(results);
 
-    Assert.ok(worker_duration > 0, "Worker duration should be positive");
-    Assert.ok(worker_total > 0, "Worker count should be positive");
+    Assert.ok(workerDuration > 0, "Worker duration should be positive");
+    Assert.ok(workerTotal > 0, "Worker count should be positive");
     Assert.ok(duration > 0, "Duration should be positive");
     Assert.ok(total > 0, "Should get a positive count");
-    Assert.ok(parent_process_event, "parent process sent back some events");
+    Assert.ok(parentProcessEvent, "parent process sent back some events");
+    Assert.ok(isTopLevel, "example.com as a top level window");
+    Assert.ok(aboutMemoryFound, "about:memory");
   });
 
   BrowserTestUtils.removeTab(page1);

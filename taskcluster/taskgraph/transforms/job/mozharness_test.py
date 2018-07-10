@@ -95,7 +95,8 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'mount-point': "{workdir}/workspace".format(**run),
     }]
 
-    env = worker['env'] = {
+    env = worker.setdefault('env', {})
+    env.update({
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
         'MOZHARNESS_SCRIPT': mozharness['script'],
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
@@ -103,7 +104,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'NEED_WINDOW_MANAGER': 'true',
         'ENABLE_E10S': str(bool(test.get('e10s'))).lower(),
         'MOZ_AUTOMATION': '1',
-    }
+    })
 
     if mozharness.get('mochitest-flavor'):
         env['MOCHITEST_FLAVOR'] = mozharness['mochitest-flavor']

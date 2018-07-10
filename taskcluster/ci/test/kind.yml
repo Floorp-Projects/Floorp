@@ -3,9 +3,11 @@ loader: taskgraph.loader.test:loader
 kind-dependencies:
     - build
     - build-signing
+    - fetch
 
 transforms:
     - taskgraph.transforms.tests:transforms
+    - taskgraph.transforms.use_fetches:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.coalesce:transforms
     - taskgraph.transforms.task:transforms

@@ -1269,8 +1269,15 @@ Inspector.prototype = {
    * Handler for the "host-changed" event from the toolbox. Resets the inspector
    * sidebar sizes when the toolbox host type changes.
    */
-  onHostChanged: function() {
-    if (!this.is3PaneModeEnabled) {
+  async onHostChanged() {
+    // Eagerly call our resize handling code to process the fact that we
+    // switched hosts. If we don't do this, we'll wait for resize events + 200ms
+    // to have passed, which causes the old layout to noticeably show up in the
+    // new host, followed by the updated one.
+    await this._onLazyPanelResize();
+    // Note that we may have been destroyed by now, especially in tests, so we
+    // need to check if that's happened before touching anything else.
+    if (!this.target || !this.is3PaneModeEnabled) {
       return;
     }
 

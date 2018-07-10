@@ -18,12 +18,6 @@ def loader(kind, path, config, params, loaded_tasks):
     Generate tasks implementing Gecko tests.
     """
 
-    # the kind on which this one depends
-    if len(config.get('kind-dependencies', [])) != 2:
-        raise Exception(
-            'Test kinds must have exactly 2 items in kind-dependencies'
-        )
-
     builds_by_platform = get_builds_by_platform(dep_kind='build', loaded_tasks=loaded_tasks)
     signed_builds_by_platform = get_builds_by_platform(
         dep_kind='build-signing', loaded_tasks=loaded_tasks

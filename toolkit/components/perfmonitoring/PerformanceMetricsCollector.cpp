@@ -78,11 +78,11 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
       return;
     }
     data->mPid = result.pid();
-    data->mWid = result.wid();
-    data->mPwid = result.pwid();
-    data->mHost = *result.host().get();
+    data->mWindowId = result.windowId();
+    data->mHost.Assign(result.host());
     data->mDuration = result.pid();
-    data->mWorker = result.worker();
+    data->mIsWorker = result.isWorker();
+    data->mIsTopLevel = result.isTopLevel();
     data->mItems = items;
   }
 

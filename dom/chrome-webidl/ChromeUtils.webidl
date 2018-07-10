@@ -368,12 +368,12 @@ dictionary CategoryDispatchDictionary
 };
 
 dictionary PerformanceInfoDictionary {
-  DOMString host = "";
+  ByteString host = "";
   unsigned long pid = 0;
-  unsigned long long wid = 0;
-  unsigned long long pwid = 0;
+  unsigned long long windowId = 0;
   unsigned long long duration = 0;
-  boolean worker = false;
+  boolean isWorker = false;
+  boolean isTopLevel = false;
   sequence<CategoryDispatchDictionary> items = [];
 };
 

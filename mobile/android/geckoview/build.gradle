@@ -365,3 +365,8 @@ task("generateSDKBindings", type: JavaExec) {
 
     dependsOn project(':annotations').jar
 }
+
+apply from: "${topsrcdir}/mobile/android/gradle/jacoco_dependencies.gradle"
+if (project.hasProperty('enable_code_coverage')) {
+    apply from: "${topsrcdir}/mobile/android/gradle/jacoco_for_junit.gradle"
+}
