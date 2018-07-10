@@ -68,7 +68,6 @@ class MachCommands(MachCommandBase):
                      action='store_true',
                      help='Verbose output.')
     @CommandArgument('--python',
-                     default='2.7',
                      help='Version of Python for Pipenv to use. When given a '
                           'Python version, Pipenv will automatically scan your '
                           'system for a Python that matches that given version.')
@@ -100,7 +99,8 @@ class MachCommands(MachCommandBase):
                          jobs=1,
                          python=None,
                          **kwargs):
-        self.activate_pipenv(pipfile=None, populate=True, python=python)
+        python = python or self.virtualenv_manager.python_path
+        self.activate_pipenv(pipfile=None, args=['--python', python], populate=True)
 
         if test_objects is None:
             from moztest.resolve import TestResolver
