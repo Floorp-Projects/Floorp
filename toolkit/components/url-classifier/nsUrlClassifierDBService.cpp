@@ -2392,7 +2392,6 @@ nsUrlClassifierDBService::GetCacheInfo(const nsACString& aTable,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->GetCacheInfo(aTable, aCallback);
-  return NS_OK;
 }
 
 nsresult
