@@ -468,6 +468,11 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
+// Pref to control whether we use separate privileged content processes.
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
+pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
+#endif
+
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
 // By default, do not export HTML at shutdown.
