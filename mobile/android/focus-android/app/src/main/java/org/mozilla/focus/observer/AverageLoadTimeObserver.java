@@ -11,6 +11,7 @@ import android.util.Log;
 import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.UrlUtils;
 
 public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
 
@@ -36,6 +37,10 @@ public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
             }
         } else {
             if (loadStarted) {
+                if (UrlUtils.isLocalizedContent(session.getUrl().getValue())) {
+                    loadStarted = false;
+                    return;
+                }
                 Log.i(LOG_TAG, "Loaded page at " + session.getUrl().getValue());
                 long endTime = SystemClock.elapsedRealtime();
                 Log.i(LOG_TAG, "zerdatime " + endTime +
