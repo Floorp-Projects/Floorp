@@ -175,7 +175,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin61.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin62.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -192,7 +192,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin61d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin62d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -209,7 +209,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin61.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin62.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -226,7 +226,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin61d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin62d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -243,7 +243,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin61.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin62.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -260,7 +260,7 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin61d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin62d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -304,18 +304,6 @@
     <ClCompile Include="ucol_res.cpp" />
     <ClCompile Include="ucol_sit.cpp" />
     <ClCompile Include="ucoleitr.cpp" />
-    <ClCompile Include="affixpatternparser.cpp" />
-    <ClCompile Include="decimfmtimpl.cpp" />
-    <ClCompile Include="digitaffix.cpp" />
-    <ClCompile Include="digitaffixesandpadding.cpp" />
-    <ClCompile Include="digitformatter.cpp" />
-    <ClCompile Include="digitgrouping.cpp" />
-    <ClCompile Include="digitinterval.cpp" />
-    <ClCompile Include="pluralaffix.cpp" />
-    <ClCompile Include="precision.cpp" />
-    <ClCompile Include="smallintformatter.cpp" />
-    <ClCompile Include="valueformatter.cpp" />
-    <ClCompile Include="visibledigits.cpp" />
     <ClCompile Include="uitercollationiterator.cpp" />
     <ClCompile Include="usearch.cpp" />
     <ClCompile Include="astro.cpp" />
@@ -336,16 +324,14 @@
     <ClCompile Include="dayperiodrules.cpp" />
     <ClCompile Include="dcfmtsym.cpp" />
     <ClCompile Include="decContext.cpp" />
-    <ClCompile Include="decfmtst.cpp" />
-    <ClCompile Include="decimalformatpattern.cpp" />
     <ClCompile Include="decimfmt.cpp" />
     <ClCompile Include="decNumber.cpp" />
-    <ClCompile Include="digitlst.cpp" />
     <ClCompile Include="double-conversion-bignum-dtoa.cpp" />
     <ClCompile Include="double-conversion-bignum.cpp" />
     <ClCompile Include="double-conversion-cached-powers.cpp" />
     <ClCompile Include="double-conversion-diy-fp.cpp" />
     <ClCompile Include="double-conversion-fast-dtoa.cpp" />
+    <ClCompile Include="double-conversion-strtod.cpp" />
     <ClCompile Include="double-conversion.cpp" />
     <ClCompile Include="dtfmtsym.cpp" />
     <ClCompile Include="dtitvfmt.cpp" />
@@ -374,6 +360,7 @@
     <ClCompile Include="nfsubs.cpp" />
     <ClCompile Include="nounit.cpp" />
     <ClCompile Include="number_affixutils.cpp" />
+    <ClCompile Include="number_asformat.cpp" />
     <ClCompile Include="number_compact.cpp" />
     <ClCompile Include="number_decimalquantity.cpp" />
     <ClCompile Include="number_decimfmtprops.cpp" />
@@ -390,6 +377,22 @@
     <ClCompile Include="number_rounding.cpp" />
     <ClCompile Include="number_scientific.cpp" />
     <ClCompile Include="number_stringbuilder.cpp" />
+    <ClCompile Include="number_utils.cpp" />
+    <ClCompile Include="number_mapper.cpp" />
+    <ClCompile Include="number_multiplier.cpp" />
+    <ClCompile Include="number_currencysymbols.cpp" />
+    <ClCompile Include="number_skeletons.cpp" />
+    <ClCompile Include="number_capi.cpp" />
+    <ClCompile Include="numparse_stringsegment.cpp" />
+    <ClCompile Include="numparse_parsednumber.cpp" />
+    <ClCompile Include="numparse_impl.cpp" />
+    <ClCompile Include="numparse_symbols.cpp" />
+    <ClCompile Include="numparse_decimal.cpp" />
+    <ClCompile Include="numparse_scientific.cpp" />
+    <ClCompile Include="numparse_currency.cpp" />
+    <ClCompile Include="numparse_affixes.cpp" />
+    <ClCompile Include="numparse_compositions.cpp" />
+    <ClCompile Include="numparse_validators.cpp" />
     <ClCompile Include="numfmt.cpp" />
     <ClCompile Include="numsys.cpp" />
     <ClCompile Include="olsontz.cpp" />
@@ -490,20 +493,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bocsu.h" />
-    <ClInclude Include="affixpatternparser.h" />
-    <ClInclude Include="decimalformatpatternimpl.h" />
-    <ClInclude Include="decimfmtimpl.h" />
-    <ClInclude Include="digitaffix.h" />
-    <ClInclude Include="digitaffixesandpadding.h" />
-    <ClInclude Include="digitformatter.h" />
-    <ClInclude Include="digitgrouping.h" />
-    <ClInclude Include="digitinterval.h" />
-    <ClInclude Include="pluralaffix.h" />
-    <ClInclude Include="precision.h" />
-    <ClInclude Include="significantdigitinterval.h" />
-    <ClInclude Include="smallintformatter.h" />
-    <ClInclude Include="valueformatter.h" />
-    <ClInclude Include="visibledigits.h" />
     <ClInclude Include="collation.h" />
     <ClInclude Include="collationbuilder.h" />
     <ClInclude Include="collationcompare.h" />
@@ -524,7 +513,6 @@
     <ClInclude Include="collationtailoring.h" />
     <ClInclude Include="collationweights.h" />
     <ClInclude Include="dayperiodrules.h" />
-    <ClInclude Include="dcfmtimp.h" />
     <ClInclude Include="numsys_impl.h" />
     <ClInclude Include="region_impl.h" />
     <ClInclude Include="selfmtimpl.h" />
@@ -541,11 +529,8 @@
     <ClInclude Include="currfmt.h" />
     <ClInclude Include="dangical.h" />
     <ClInclude Include="decContext.h" />
-    <ClInclude Include="decfmtst.h" />
-    <ClInclude Include="decimalformatpattern.h" />
     <ClInclude Include="decNumber.h" />
     <ClInclude Include="decNumberLocal.h" />
-    <ClInclude Include="digitlst.h" />
     <ClInclude Include="double-conversion-bignum-dtoa.h" />
     <ClInclude Include="double-conversion-bignum.h" />
     <ClInclude Include="double-conversion-cached-powers.h" />
@@ -636,11 +621,14 @@
     <ClInclude Include="uspoof_conf.h" />
     <ClInclude Include="uspoof_impl.h" />
     <ClInclude Include="number_affixutils.h" />
+    <ClInclude Include="number_asformat.h" />
     <ClInclude Include="number_compact.h" />
     <ClInclude Include="number_decimalquantity.h" />
     <ClInclude Include="number_decimfmtprops.h" />
+    <ClInclude Include="number_decnum.h" />
     <ClInclude Include="number_formatimpl.h" />
     <ClInclude Include="number_longnames.h" />
+    <ClInclude Include="number_microprops.h" />
     <ClInclude Include="number_modifiers.h" />
     <ClInclude Include="number_patternmodifier.h" />
     <ClInclude Include="number_patternstring.h" />
@@ -648,7 +636,23 @@
     <ClInclude Include="number_scientific.h" />
     <ClInclude Include="number_stringbuilder.h" />
     <ClInclude Include="number_types.h" />
+    <ClInclude Include="number_utypes.h" />
     <ClInclude Include="number_utils.h" />
+    <ClInclude Include="number_mapper.h" />
+    <ClInclude Include="number_multiplier.h" />
+    <ClInclude Include="number_currencysymbols.h" />
+    <ClInclude Include="number_skeletons.h" />
+    <ClInclude Include="numparse_stringsegment.h" />
+    <ClInclude Include="numparse_impl.h" />
+    <ClInclude Include="numparse_symbols.h" />
+    <ClInclude Include="numparse_decimal.h" />
+    <ClInclude Include="numparse_scientific.h" />
+    <ClInclude Include="numparse_currency.h" />
+    <ClInclude Include="numparse_affixes.h" />
+    <ClInclude Include="numparse_compositions.h" />
+    <ClInclude Include="numparse_validators.h" />
+    <ClInclude Include="numparse_types.h" />
+    <ClInclude Include="numparse_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

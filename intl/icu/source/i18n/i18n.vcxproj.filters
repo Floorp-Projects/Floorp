@@ -54,45 +54,6 @@
     <ClCompile Include="usearch.cpp">
       <Filter>collation</Filter>
     </ClCompile>
-    <ClCompile Include="affixpatternparser.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="dayperiodrules.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="decimfmtimpl.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitaffix.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitaffixesandpadding.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitformatter.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitgrouping.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitinterval.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="pluralaffix.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="precision.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="smallintformatter.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="valueformatter.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="visibledigits.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
     <ClCompile Include="astro.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -141,19 +102,10 @@
     <ClCompile Include="decContext.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="decfmtst.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="decimalformatpattern.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
     <ClCompile Include="decimfmt.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="decNumber.cpp">
-      <Filter>formatting</Filter>
-    </ClCompile>
-    <ClCompile Include="digitlst.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="double-conversion-bignum-dtoa.cpp">
@@ -169,6 +121,9 @@
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="double-conversion-fast-dtoa.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion-strtod.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="double-conversion.cpp">
@@ -558,10 +513,13 @@
     <ClCompile Include="uregion.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="number_stringbuilder.cpp">
-      <Filter>formatting</Filter>
+    <ClCompile Include="nounit.cpp">
+      <Filter>misc</Filter>
     </ClCompile>
     <ClCompile Include="number_affixutils.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_asformat.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="number_compact.cpp">
@@ -609,8 +567,59 @@
     <ClCompile Include="number_scientific.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="nounit.cpp">
-      <Filter>misc</Filter>
+    <ClCompile Include="number_stringbuilder.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_utils.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_mapper.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_multiplier.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_currencysymbols.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_skeletons.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_capi.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_stringsegment.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_parsednumber.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_impl.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_symbols.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_decimal.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_scientific.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_currency.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_affixes.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_compositions.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numparse_validators.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="dayperiodrules.cpp">
+      <Filter>formatting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -695,48 +704,6 @@
     <ClInclude Include="usrchimp.h">
       <Filter>collation</Filter>
     </ClInclude>
-    <ClInclude Include="affixpatternparser.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="decimalformatpatternimpl.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="decimfmtimpl.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitaffix.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitaffixesandpadding.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitformatter.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitgrouping.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitinterval.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="pluralaffix.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="precision.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="significantdigitinterval.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="smallintformatter.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="valueformatter.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="visibledigits.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
     <ClInclude Include="astro.h">
       <Filter>formatting</Filter>
     </ClInclude>
@@ -764,19 +731,10 @@
     <ClInclude Include="decContext.h">
       <Filter>formatting</Filter>
     </ClInclude>
-    <ClInclude Include="decfmtst.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="decimalformatpattern.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
     <ClInclude Include="decNumber.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="decNumberLocal.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="digitlst.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="double-conversion-bignum-dtoa.h">
@@ -851,6 +809,9 @@
     <ClInclude Include="number_affixutils.h">
       <Filter>formatting</Filter>
     </ClInclude>
+    <ClInclude Include="number_asformat.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
     <ClInclude Include="number_compact.h">
       <Filter>formatting</Filter>
     </ClInclude>
@@ -860,10 +821,16 @@
     <ClInclude Include="number_decimfmtprops.h">
       <Filter>formatting</Filter>
     </ClInclude>
+    <ClInclude Include="number_decnum.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
     <ClInclude Include="number_formatimpl.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="number_longnames.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="number_microprops.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="number_modifiers.h">
@@ -887,7 +854,55 @@
     <ClInclude Include="number_types.h">
       <Filter>formatting</Filter>
     </ClInclude>
+    <ClInclude Include="number_utypes.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
     <ClInclude Include="number_utils.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="number_mapper.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="number_multiplier.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="number_currencysymbols.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="number_skeletons.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_stringsegment.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_impl.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_symbols.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_decimal.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_scientific.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_currency.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_affixes.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_compositions.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_validators.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_types.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numparse_utils.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="olsontz.h">
@@ -1091,9 +1106,6 @@
     <ClInclude Include="numsys_impl.h">
       <Filter>formatting</Filter>
     </ClInclude>
-    <ClInclude Include="dcfmtimp.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
     <ClInclude Include="selfmtimpl.h">
       <Filter>formatting</Filter>
     </ClInclude>
@@ -1171,247 +1183,5 @@
     <ResourceCompile Include="i18n.rc">
       <Filter>misc</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="unicode\coleitr.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\coll.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\search.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\sortkey.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\stsearch.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tblcoll.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ucol.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ucoleitr.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\usearch.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\basictz.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\calendar.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\choicfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\curramt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\currunit.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\datefmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dcfmtsym.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\decimfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dtfmtsym.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dtitvfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dtitvinf.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dtptngen.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\dtrule.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\fieldpos.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\fmtable.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\format.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\fpositer.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\gender.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\gregocal.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\measfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\measunit.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\measure.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\msgfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\numfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\numsys.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\plurfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\plurrule.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\rbnf.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\rbtz.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\scientificnumberformatter.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\selfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\simpletz.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\smpdtfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\timezone.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tmunit.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tmutamt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tmutfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tzrule.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tztrans.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ucal.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\udat.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\udateintervalformat.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\udatpg.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ugender.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ufieldpositer.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ulocdata.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\umsg.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\unum.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\unumsys.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\upluralrules.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ureldatefmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\utmscale.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\vtzone.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\regex.h">
-      <Filter>regex</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\uregex.h">
-      <Filter>regex</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\translit.h">
-      <Filter>transforms</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\unirepl.h">
-      <Filter>transforms</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\utrans.h">
-      <Filter>transforms</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\ucsdet.h">
-      <Filter>charset detect</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\uspoof.h">
-      <Filter>spoof</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\alphaindex.h">
-      <Filter>collation</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tzfmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\tznames.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\compactdecimalformat.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\currpinf.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\region.h">
-      <Filter>misc</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\uregion.h">
-      <Filter>misc</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\reldatefmt.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\uformattable.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\nounit.h">
-      <Filter>misc</Filter>
-    </CustomBuild>
-    <CustomBuild Include="unicode\numberformatter.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
   </ItemGroup>
 </Project>

@@ -61,10 +61,12 @@ windttst.o winnmtst.o winutil.o csdetest.o tzrulets.o tzoffloc.o tzfmttst.o ssea
 tufmtts.o itspoof.o simplethread.o bidiconf.o locnmtst.o dcfmtest.o alphaindextst.o listformattertest.o genderinfotest.o compactdecimalformattest.o regiontst.o \
 reldatefmttest.o simpleformattertest.o measfmttest.o numfmtspectest.o unifiedcachetest.o quantityformattertest.o \
 scientificnumberformattertest.o datadrivennumberformattestsuite.o \
-numberformattesttuple.o numberformat2test.o pluralmaptest.o \
+numberformattesttuple.o pluralmaptest.o \
 numbertest_affixutils.o numbertest_api.o numbertest_decimalquantity.o \
 numbertest_modifiers.o numbertest_patternmodifier.o numbertest_patternstring.o \
-numbertest_stringbuilder.o numbertest_doubleconversion.o
+numbertest_stringbuilder.o numbertest_stringsegment.o \
+numbertest_parse.o numbertest_doubleconversion.o numbertest_skeletons.o \
+static_unisets_test.o numfmtdatadriventest.o
 
 DEPS = $(OBJECTS:.o=.d)
 

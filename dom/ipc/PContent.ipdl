@@ -468,6 +468,7 @@ child:
 
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
+    async RemoveAllPermissions();
 
     async FlushMemory(nsString reason);
 
@@ -1151,6 +1152,15 @@ parent:
     async BHRThreadHang(HangDetails aHangDetails);
 
     async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
+
+    /*
+     * A 3rd party context (aPrincipal) has received the permission granted to
+     * have access to aGrantedOrigin when loaded by aParentOrigin.
+     */
+    async FirstPartyStorageAccessGrantedForOrigin(Principal aPrincipal,
+                                                  nsCString aParentOrigin,
+                                                  nsCString aGrantedOrigin);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
