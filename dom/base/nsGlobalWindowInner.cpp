@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/AutoplayRequest.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -49,6 +50,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPermission.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
@@ -332,6 +334,10 @@ using mozilla::dom::cache::CacheStorage;
 
 // Min idle notification time in seconds.
 #define MIN_IDLE_NOTIFICATION_TIME_S 1
+
+// Anti-tracking permission expiration
+#define ANTITRACKING_EXPIRATION 2592000000 // 30 days.
+#define ANTITRACKING_PERM_KEY "3rdPartyStorage"
 
 static LazyLogModule gDOMLeakPRLogInner("DOMLeakInner");
 
@@ -917,7 +923,8 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mObservingDidRefresh(false),
     mIteratingDocumentFlushedResolvers(false),
     mCanSkipCCGeneration(0),
-    mBeforeUnloadListenerCount(0)
+    mBeforeUnloadListenerCount(0),
+    mStorageGrantedOriginPopulated(false)
 {
   mIsInnerWindow = true;
 
@@ -1235,6 +1242,7 @@ nsGlobalWindowInner::FreeInnerObjects()
   }
 
   UnlinkHostObjectURIs();
+  ReleaseFirstPartyStorageAccessGrantedOrigins();
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
@@ -1558,6 +1566,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
 
   tmp->UnlinkHostObjectURIs();
+  tmp->ReleaseFirstPartyStorageAccessGrantedOrigins();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleRequestExecutor)
 
@@ -6516,6 +6525,34 @@ nsGlobalWindowInner::GetParentInternal()
   return outer->GetParentInternal();
 }
 
+nsIPrincipal*
+nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal()
+{
+  nsPIDOMWindowOuter* outerWindow = GetParentInternal();
+  if (!outerWindow) {
+    // No outer window available!
+    return nullptr;
+  }
+
+  if (!outerWindow->IsTopLevelWindow()) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowInner* innerWindow = outerWindow->GetCurrentInnerWindow();
+  if (NS_WARN_IF(!innerWindow)) {
+    return nullptr;
+  }
+
+  nsIPrincipal* parentPrincipal =
+    nsGlobalWindowInner::Cast(innerWindow)->GetPrincipal();
+  if (NS_WARN_IF(!parentPrincipal)) {
+    return nullptr;
+  }
+
+  return parentPrincipal;
+}
+
+
 //*****************************************************************************
 // nsGlobalWindowInner: Timeout Functions
 //*****************************************************************************
@@ -8036,25 +8073,52 @@ nsGlobalWindowInner::GetRegionalPrefsLocales(nsTArray<nsString>& aLocales)
 }
 
 void
-nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin)
+nsGlobalWindowInner::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
+                                                          bool aOverwritten)
 {
   MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
 
-  if (mStorageGrantedOrigins.Contains(aOrigin)) {
-    mStorageGrantedOrigins.AppendElement(aOrigin);
+  if (aOverwritten) {
+    SaveFirstPartyStorageAccessGrantedFor(aOrigin);
+  }
+
+  for (StorageGrantedOrigin& data : mStorageGrantedOrigins) {
+    if (data.mOrigin == aOrigin) {
+      data.mOverwritten = aOverwritten;
+      return;
+    }
+  }
+
+  StorageGrantedOrigin* data = mStorageGrantedOrigins.AppendElement();
+  data->mOrigin = aOrigin;
+  data->mOverwritten = aOverwritten;
+}
+
+void
+nsGlobalWindowInner::GetFirstPartyStorageAccessGrantedOrigins(nsTArray<nsString>& aOrigin)
+{
+  aOrigin.Clear();
+
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+    return;
+  }
+
+  MaybeRestoreFirstPartyStorageAccessGrantedOrigins();
+  for (const StorageGrantedOrigin& data : mStorageGrantedOrigins) {
+    aOrigin.AppendElement(data.mOrigin);
   }
 }
 
-const nsTArray<nsString>&
-nsGlobalWindowInner::GetFirstPartyStorageAccessGrantedOrigins() const
-{
-  return mStorageGrantedOrigins;
-}
-
 bool
-nsGlobalWindowInner::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const
+nsGlobalWindowInner::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
+
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+    return true;
+  }
+
+  MaybeRestoreFirstPartyStorageAccessGrantedOrigins();
 
   if (mStorageGrantedOrigins.IsEmpty()) {
     return false;
@@ -8066,7 +8130,198 @@ nsGlobalWindowInner::IsFirstPartyStorageAccessGrantedFor(nsIURI* aURI) const
     return false;
   }
 
-  return mStorageGrantedOrigins.Contains(origin);
+  for (const StorageGrantedOrigin& data : mStorageGrantedOrigins) {
+    if (data.mOrigin.Equals(origin)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void
+nsGlobalWindowInner::ReleaseFirstPartyStorageAccessGrantedOrigins()
+{
+  mStorageGrantedOriginPopulated = false;
+  mStorageGrantedOrigins.Clear();
+
+}
+
+void
+nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin)
+{
+  MOZ_ASSERT(StaticPrefs::privacy_restrict3rdpartystorage_enabled());
+
+  // Now we need the principal and the origin of the parent window.
+  nsIPrincipal* parentPrincipal = GetTopLevelStorageAreaPrincipal();
+  if (NS_WARN_IF(!parentPrincipal)) {
+    return;
+  }
+
+  nsAutoCString parentOrigin;
+  nsresult rv = parentPrincipal->GetOriginNoSuffix(parentOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Let's take the principal and the origin of the current window.
+  nsIPrincipal* principal = GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
+
+  if (XRE_IsParentProcess()) {
+    SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(principal,
+                                                               parentOrigin,
+                                                               grantedOrigin);
+    return;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+
+  // This is not really secure, because here we have the content process sending
+  // the request of storing a permission.
+  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(principal),
+                                                            parentOrigin,
+                                                            grantedOrigin);
+}
+
+/* static */ void
+nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aPrincipal,
+                                                                                const nsCString& aParentOrigin,
+                                                                                const nsCString& aGrantedOrigin)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString origin;
+  nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
+    return;
+  }
+
+  int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + ANTITRACKING_EXPIRATION;
+
+  // We store a permission for the 3rd party principal, to know that we grant
+  // the storage permission when loaded by the current parent origin.
+  nsAutoCString type;
+  if (origin == aGrantedOrigin) {
+    type = nsPrintfCString(ANTITRACKING_PERM_KEY "^%s", aParentOrigin.get());
+  } else {
+    type = nsPrintfCString(ANTITRACKING_PERM_KEY "^%s^%s", aParentOrigin.get(),
+                           aGrantedOrigin.get());
+  }
+
+  rv = pm->AddFromPrincipal(aPrincipal, type.get(),
+                            nsIPermissionManager::ALLOW_ACTION,
+                            nsIPermissionManager::EXPIRE_TIME, when);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+void
+nsGlobalWindowInner::MaybeRestoreFirstPartyStorageAccessGrantedOrigins()
+{
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+    return;
+  }
+
+  if (mStorageGrantedOriginPopulated) {
+    return;
+  }
+
+  mStorageGrantedOriginPopulated = true;
+
+  // Now we need the principal and the origin of the parent window.
+  nsIPrincipal* parentPrincipal = GetTopLevelStorageAreaPrincipal();
+  if (!parentPrincipal) {
+    // No parent window.
+    return;
+  }
+
+  nsAutoCString parentOrigin;
+  nsresult rv = parentPrincipal->GetOriginNoSuffix(parentOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Let's take the principal and the origin of the current window.
+  nsIPrincipal* principal = GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  nsAutoCString origin;
+  rv = principal->GetOriginNoSuffix(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = pm->GetAllForPrincipal(principal, getter_AddRefs(enumerator));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  bool more = false;
+  nsCOMPtr<nsISupports> iter;
+  nsCOMPtr<nsIPermission> perm;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+    rv = enumerator->GetNext(getter_AddRefs(iter));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    perm = do_QueryInterface(iter);
+    if (NS_WARN_IF(!perm)) {
+      return;
+    }
+
+    nsAutoCString type;
+    rv = perm->GetType(type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (!StringBeginsWith(type, NS_LITERAL_CSTRING(ANTITRACKING_PERM_KEY "^"))) {
+      continue;
+    }
+
+    nsCCharSeparatedTokenizer token(type, '^');
+    MOZ_ASSERT(token.hasMoreTokens());
+    auto value = token.nextToken();
+    MOZ_ASSERT(value.EqualsLiteral(ANTITRACKING_PERM_KEY));
+
+    nsAutoCString originA;
+    if (token.hasMoreTokens()) {
+      originA = token.nextToken();
+    }
+
+    // This permission was granted for another top-level window.
+    if (originA != parentOrigin) {
+      continue;
+    }
+
+    nsAutoCString originB;
+    if (token.hasMoreTokens()) {
+      originB = token.nextToken();
+    }
+
+    AddFirstPartyStorageAccessGrantedFor(NS_ConvertUTF8toUTF16(originB.IsEmpty() ? origin : originB),
+                                         false /* no overwrite */);
+  }
 }
 
 IntlUtils*
