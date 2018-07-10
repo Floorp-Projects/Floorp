@@ -14,7 +14,8 @@ const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const REGEX_PANEL = /webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/;
+const REGEX_PANEL =
+  /^(?:webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage)$/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
