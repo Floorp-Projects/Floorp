@@ -925,6 +925,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
+     * Get the current timeout value in milliseconds.
+     *
+     * @return The current timeout value in milliseconds.
+     */
+    public long getTimeoutMillis() {
+        return mTimeoutMillis;
+    }
+
+    /**
      * Assert a condition with junit.Assert or an error collector.
      *
      * @param reason Reason string
