@@ -64,7 +64,7 @@ private:
   void Clear();
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target) const;
-
+  bool IsEmptyInternal() const;
   uint32_t CalculatePreallocateSize() const;
   nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
   nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);

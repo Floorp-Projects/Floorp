@@ -98,6 +98,7 @@ VariableLengthPrefixSet::SetPrefixes(const PrefixStringMap& aPrefixMap)
       array.AppendElement(BigEndian::readUint32(begin), fallible);
       begin += sizeof(uint32_t);
     }
+    MOZ_ASSERT(array.Length() == numPrefixes);
 
     const uint32_t* arrayPtr = array.Elements();
 #endif
