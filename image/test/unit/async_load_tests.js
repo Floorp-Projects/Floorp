@@ -45,7 +45,7 @@ function checkClone(other_listener, aRequest)
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   var clone = aRequest.clone(outer);
-  requests.push(clone);
+  requests.push({ request: clone, locked: false });
 }
 
 // Ensure that all the callbacks were called on aRequest.
@@ -71,7 +71,7 @@ function secondLoadDone(oldlistener, aRequest)
     var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                   .createScriptedObserver(listener);
     var staticrequestclone = staticrequest.clone(outer);
-    requests.push(staticrequestclone);
+    requests.push({ request: staticrequestclone, locked: false });
   } catch(e) {
     // We can't create a static request. Most likely the request we started
     // with didn't load successfully.
@@ -92,7 +92,10 @@ function checkSecondLoad()
   var listener = new ImageListener(checkClone, secondLoadDone);
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
-  requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null));
+  requests.push({
+    request: gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null),
+    locked: false,
+  });
   listener.synchronous = false;
 }
 
@@ -130,7 +133,10 @@ function checkSecondChannelLoad()
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannelXPCOM(channel, outer, null, outlistener));
+  requests.push({
+    request: gCurrentLoader.loadImageWithChannelXPCOM(channel, outer, null, outlistener),
+    locked: false,
+  });
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -152,7 +158,10 @@ function run_loadImageWithChannel_tests()
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannelXPCOM(channel, outer, null, outlistener));
+  requests.push({
+    request: gCurrentLoader.loadImageWithChannelXPCOM(channel, outer, null, outlistener),
+    locked: false,
+  });
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -172,7 +181,10 @@ function startImageCallback(otherCb)
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
     var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                   .createScriptedObserver(listener2);
-    requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null));
+    requests.push({
+      request: gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null),
+      locked: false,
+    });
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
@@ -184,8 +196,11 @@ var gCurrentLoader;
 
 function cleanup()
 {
-  for (var i = 0; i < requests.length; ++i) {
-    requests[i].cancelAndForgetObserver(0);
+  for (let {request, locked} of requests) {
+    if (locked) {
+      try { request.unlockImage() } catch (e) {}
+    }
+    request.cancelAndForgetObserver(0);
   }
 }
 
@@ -200,10 +215,11 @@ function run_test()
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   var req = gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null);
-  requests.push(req);
 
   // Ensure that we don't cause any mayhem when we lock an image.
   req.lockImage();
+
+  requests.push({ request: req, locked: true });
 
   listener.synchronous = false;
 }

@@ -89,6 +89,7 @@ nsTreeBodyFrame::CancelImageRequests()
     nsTreeImageCacheEntry entry = iter.UserData();
     nsLayoutUtils::DeregisterImageRequest(PresContext(), entry.request,
                                           nullptr);
+    entry.request->UnlockImage();
     entry.request->CancelAndForgetObserver(NS_BINDING_ABORTED);
   }
 }
@@ -4243,6 +4244,7 @@ nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsTreeColumn* aCol)
     if (mImageCache.Get(imageSrc, &entry)) {
       nsLayoutUtils::DeregisterImageRequest(PresContext(), entry.request,
                                             nullptr);
+      entry.request->UnlockImage();
       entry.request->CancelAndForgetObserver(NS_BINDING_ABORTED);
       mImageCache.Remove(imageSrc);
     }
