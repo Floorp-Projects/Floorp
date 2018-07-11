@@ -39,6 +39,19 @@ interface nsIXPCTestParams : nsISupports {
   ACString              testACString(in ACString a, inout ACString b);
   jsval                 testJsval(in jsval a, inout jsval b);
 
+  // Test various forms of the Sequence<T> type.
+  Sequence<short>       testShortSequence(in Sequence<short> a, inout Sequence<short> b);
+  Sequence<double>      testDoubleSequence(in Sequence<double> a, inout Sequence<double> b);
+  Sequence<nsIXPCTestInterfaceA> testInterfaceSequence(in Sequence<nsIXPCTestInterfaceA> a, inout Sequence<nsIXPCTestInterfaceA> b);
+  Sequence<AString>     testAStringSequence(in Sequence<AString> a, inout Sequence<AString> b);
+  Sequence<ACString>    testACStringSequence(in Sequence<ACString> a, inout Sequence<ACString> b);
+  Sequence<jsval>       testJsvalSequence(in Sequence<jsval> a, inout Sequence<jsval> b);
+  Sequence<Sequence<short> > testSequenceSequence(in Sequence<Sequence<short> > a, inout Sequence<Sequence<short> > b);
+
+  void                  testInterfaceIsSequence(in nsIIDPtr aIID, [iid_is(aIID)] in Sequence<nsQIResult> a,
+                                                inout nsIIDPtr bIID, [iid_is(bIID)] inout Sequence<nsQIResult> b,
+                                                out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out Sequence<nsQIResult> rv);
+
   //
   // Dependent parameters use the same types as above, but are handled much differently.
   //
