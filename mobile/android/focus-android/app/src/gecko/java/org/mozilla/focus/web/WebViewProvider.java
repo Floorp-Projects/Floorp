@@ -37,6 +37,7 @@ import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 
 import java.util.concurrent.CountDownLatch;
+
 import kotlin.text.Charsets;
 
 /**
@@ -89,10 +90,11 @@ public class WebViewProvider {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .registerOnSharedPreferenceChangeListener(this);
             geckoSession = createGeckoSession();
-            setGeckoSession();
+            applySettingsAndSetDelegates();
+            setSession(geckoSession, geckoRuntime);
         }
 
-        private void setGeckoSession() {
+        private void applySettingsAndSetDelegates() {
             applyAppSettings();
             updateBlocking();
 
@@ -101,7 +103,6 @@ public class WebViewProvider {
             geckoSession.setNavigationDelegate(createNavigationDelegate());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             geckoSession.setPromptDelegate(createPromptDelegate());
-            setSession(geckoSession, geckoRuntime);
         }
 
         private GeckoSession createGeckoSession() {
@@ -309,8 +310,9 @@ public class WebViewProvider {
                     SentryWrapper.INSTANCE.captureGeckoCrash();
                     geckoSession.close();
                     geckoSession = createGeckoSession();
-                    setGeckoSession();
+                    applySettingsAndSetDelegates();
                     geckoSession.open(geckoRuntime);
+                    setSession(geckoSession);
                     geckoSession.loadUri(currentUrl);
                 }
 
