@@ -13,6 +13,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
+  -moz-user-focus: ignore;
 }
 
 video {
@@ -25,6 +26,7 @@ video {
   max-width: 100%;
   max-height: 100%;
   -moz-user-select: none;
+  -moz-user-focus: normal;
 }
 
 video:focus {

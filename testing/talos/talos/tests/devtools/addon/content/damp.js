@@ -108,12 +108,16 @@ Damp.prototype = {
    *
    * @param label String
    *        Test title, displayed everywhere in PerfHerder, DevTools Perf Dashboard, ...
+   * @param record Boolean
+   *        Optional, if passed false, the test won't be recorded. It won't appear in
+   *        PerfHerder. Instead we will record perf-html markers and only print the
+   *        timings on stdout.
    *
    * @return object
    *         With a `done` method, to be called whenever the test is finished running
    *         and we should record its duration.
    */
-  runTest(label) {
+  runTest(label, record = true) {
     if (DEBUG_ALLOCATIONS) {
       if (!this.allocationTracker) {
         this.allocationTracker = this.startAllocationTracker();
@@ -131,12 +135,16 @@ Damp.prototype = {
         let end = performance.now();
         let duration = end - start;
         performance.measure(label, startLabel);
-        this._results.push({
-          name: label,
-          value: duration
-        });
+        if (record) {
+          this._results.push({
+            name: label,
+            value: duration
+          });
+        } else {
+          dump(`'${label}' took ${duration}ms.\n`);
+        }
 
-        if (DEBUG_ALLOCATIONS == "normal") {
+        if (DEBUG_ALLOCATIONS == "normal" && record) {
           this._results.push({
             name: label + ".allocations",
             value: this.allocationTracker.countAllocations()

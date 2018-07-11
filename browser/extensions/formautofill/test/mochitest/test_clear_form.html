@@ -64,12 +64,21 @@ function checkIsFormCleared(patch = {}) {
   }
 }
 
+async function confirmClear(selector) {
+  info("Await for clearing input");
+  let promise = new Promise(resolve =>
+    document.querySelector(selector).addEventListener("input", resolve, {once: true})
+  );
+  synthesizeKey("KEY_Enter");
+  await promise;
+}
+
 add_task(async function simple_clear() {
   await triggerPopupAndHoverItem("#organization", 0);
   await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
 
   await triggerPopupAndHoverItem("#tel", 0);
-  synthesizeKey("KEY_Enter");
+  await confirmClear("#tel");
   checkIsFormCleared();
 });
 
@@ -78,7 +87,7 @@ add_task(async function clear_adapted_record() {
   await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
 
   await triggerPopupAndHoverItem("#street-address", 0);
-  synthesizeKey("KEY_Enter");
+  await confirmClear("#street-address");
   checkIsFormCleared();
 });
 
@@ -89,7 +98,7 @@ add_task(async function clear_modified_form() {
   await setInput("#tel", "+1111111111", true);
 
   await triggerPopupAndHoverItem("#street-address", 0);
-  synthesizeKey("KEY_Enter");
+  await confirmClear("#street-address");
   checkIsFormCleared({tel: "+1111111111"});
 });
 
@@ -101,7 +110,7 @@ add_task(async function clear_distinct_section() {
   await triggerPopupAndHoverItem("#organization", 0);
   await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
   await triggerPopupAndHoverItem("#street-address", 0);
-  synthesizeKey("KEY_Enter");
+  await confirmClear("#street-address");
 
   for (const [id, val] of Object.entries(MOCK_CC_STORAGE[0])) {
     const element = document.getElementById(id);
@@ -113,7 +122,7 @@ add_task(async function clear_distinct_section() {
   }
 
   await triggerPopupAndHoverItem("#cc-name", 0);
-  synthesizeKey("KEY_Enter");
+  await confirmClear("#cc-name");
   checkIsFormCleared();
 });
 

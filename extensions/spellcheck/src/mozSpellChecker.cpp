@@ -5,11 +5,11 @@
 
 #include "mozSpellChecker.h"
 #include "nsIServiceManager.h"
-#include "mozISpellI18NManager.h"
 #include "nsIStringEnumerator.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISimpleEnumerator.h"
+#include "mozEnglishWordUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/PRemoteSpellcheckEngineChild.h"
 #include "mozilla/TextServicesDocument.h"
@@ -427,9 +427,8 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
       nsCOMPtr<mozIPersonalDictionary> personalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
       mSpellCheckingEngine->SetPersonalDictionary(personalDictionary.get());
 
-      nsCOMPtr<mozISpellI18NManager> serv(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-      return serv->GetUtil(nullptr, getter_AddRefs(mConverter));
+      mConverter = new mozEnglishWordUtils;
+      return NS_OK;
     }
   }
 

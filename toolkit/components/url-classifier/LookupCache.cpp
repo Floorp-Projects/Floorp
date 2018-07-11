@@ -280,7 +280,7 @@ LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const
     info->entries.AppendElement(static_cast<nsIUrlClassifierCacheEntry*>(entry));
   }
 
-  NS_ADDREF(*aCache = info);
+  info.forget(aCache);
 }
 
 /* static */ bool

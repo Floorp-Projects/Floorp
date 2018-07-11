@@ -10,6 +10,7 @@
 
 /* eslint-env mozilla/frame-script */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofill",
                                "resource://formautofill/FormAutofill.jsm");
@@ -97,14 +98,17 @@ var FormAutofillFrameScript = {
         break;
       }
       case "FormAutoComplete:PopupClosed": {
-        FormAutofillContent.onPopupClosed();
-        chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
-                                               {capturing: true});
+        FormAutofillContent.onPopupClosed(message.data.selectedRowStyle);
+        Services.tm.dispatchToMainThread(() => {
+          chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
+                                                 true);
+        });
+
         break;
       }
       case "FormAutoComplete:PopupOpened": {
         chromeEventHandler.addEventListener("keydown", FormAutofillContent._onKeyDown,
-                                            {capturing: true});
+                                            true);
         break;
       }
     }

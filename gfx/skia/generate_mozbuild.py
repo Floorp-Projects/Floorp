@@ -68,7 +68,7 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    if CONFIG['CC_TYPE'] == 'gcc':
+    if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
         DEFINES['SK_JUMPER_USE_ASSEMBLY'] = 0
     elif CONFIG['CPU_ARCH'] == 'x86':
         SOURCES['skia/src/jumper/SkJumper_generated_win.S'].flags += ['-safeseh']
@@ -456,7 +456,7 @@ def write_mozbuild(sources):
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
-  f.write("    if CONFIG['CC_TYPE'] != 'gcc':\n")
+  f.write("    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):\n")
   write_list(f, "SOURCES", sources['no-mingw'], 8)
   # Windows-specific files don't get unification because of nasty headers.
   # Luckily there are not many files in this.
