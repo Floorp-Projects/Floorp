@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.mozstumbler.service.mainthread;
-
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.stumblerthread.StumblerService;
 
@@ -25,6 +26,7 @@ public class LocalPreferenceReceiver extends BroadcastReceiver {
     // |adb shell setprop log.tag.PassiveStumbler DEBUG|
     static final String LOG_TAG = "PassiveStumbler";
 
+    @SuppressLint("NewApi")
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) {
@@ -64,7 +66,12 @@ public class LocalPreferenceReceiver extends BroadcastReceiver {
                 intent.getStringExtra("user_agent")
         );
 
-        context.startService(startServiceIntent);
+        intent.setClass(context, StumblerService.class);
+        if (AppConstants.Versions.preO) {
+            context.startService(intent);
+        } else {
+            context.startForegroundService(intent);
+        }
     }
 }
 
