@@ -452,14 +452,13 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     }
 
     // If the search led to the parent of the node we started on (e.g. when
-    // starting on a text leaf), start the text movement from the end of that
-    // node, otherwise we just default to 0.
+    // starting on a text leaf), start the text movement from the end offset
+    // of that node. Otherwise we just default to the last offset in the parent.
     if (tempStart == -1) {
-      if (tempPosition != curPosition)
-        tempStart = text == curPosition->Parent() ?
-                    text->GetChildOffset(curPosition) : text->CharacterCount();
+      if (tempPosition != curPosition && text == curPosition->Parent())
+        tempStart = text->GetChildOffset(curPosition) + nsAccUtils::TextLength(curPosition);
       else
-        tempStart = 0;
+        tempStart = text->CharacterCount();
     }
 
     // If there's no more text on the current node, try to find the previous
