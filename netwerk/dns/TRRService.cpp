@@ -303,9 +303,11 @@ TRRService::Observe(nsISupports *aSubject,
       }
     }
 
-    if (mConfirmationState != CONFIRM_OK) {
-      mConfirmationState = CONFIRM_TRYING;
-      MaybeConfirm();
+    if (!mCaptiveIsPassed) {
+      if (mConfirmationState != CONFIRM_OK) {
+        mConfirmationState = CONFIRM_TRYING;
+        MaybeConfirm();
+      }
     } else {
       LOG(("TRRservice CP clear when already up!\n"));
     }
