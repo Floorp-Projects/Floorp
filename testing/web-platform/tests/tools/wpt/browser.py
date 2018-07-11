@@ -370,16 +370,19 @@ class Chrome(Browser):
 
     def version(self, binary=None):
         binary = binary or self.binary
-        try:
-            version_string = call(binary, "--version").strip()
-        except subprocess.CalledProcessError:
-            logger.warn("Failed to call %s", binary)
-            return None
-        m = re.match(r"Google Chrome (.*)", version_string)
-        if not m:
-            logger.warn("Failed to extract version from: s%", version_string)
-            return None
-        return m.group(1)
+        if uname[0] != "Windows":
+            try:
+                version_string = call(binary, "--version").strip()
+            except subprocess.CalledProcessError:
+                logger.warn("Failed to call %s", binary)
+                return None
+            m = re.match(r"Google Chrome (.*)", version_string)
+            if not m:
+                logger.warn("Failed to extract version from: s%", version_string)
+                return None
+            return m.group(1)
+        logger.warn("Unable to extract version from binary on Windows.")
+        return None
 
 
 class ChromeAndroid(Browser):

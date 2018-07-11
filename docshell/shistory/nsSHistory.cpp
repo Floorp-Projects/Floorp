@@ -1820,7 +1820,8 @@ nsSHistory::LoadURIWithOptions(const char16_t* aURI,
 }
 
 NS_IMETHODIMP
-nsSHistory::SetOriginAttributesBeforeLoading(JS::HandleValue aOriginAttributes)
+nsSHistory::SetOriginAttributesBeforeLoading(JS::HandleValue aOriginAttributes,
+                                             JSContext* aCx)
 {
   return NS_OK;
 }

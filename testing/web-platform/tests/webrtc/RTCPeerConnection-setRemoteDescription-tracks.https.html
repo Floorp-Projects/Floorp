@@ -19,9 +19,12 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     caller.addTrack(localStream.getTracks()[0]);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.track.id, localStream.getTracks()[0].id,
@@ -34,9 +37,12 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     caller.addTrack(localStream.getTracks()[0], localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.track.id, localStream.getTracks()[0].id,
@@ -53,10 +59,13 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     let eventSequence = '';
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     caller.addTrack(localStream.getTracks()[0], localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       eventSequence += 'ontrack;';
@@ -69,7 +78,9 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStreams = await Promise.all([
       navigator.mediaDevices.getUserMedia({audio: true}),
       navigator.mediaDevices.getUserMedia({audio: true}),
@@ -110,7 +121,9 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     let eventSequence = '';
     const localStreams = await Promise.all([
       navigator.mediaDevices.getUserMedia({audio: true}),
@@ -140,7 +153,9 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     let eventSequence = '';
     const localStreams = await Promise.all([
       navigator.mediaDevices.getUserMedia({audio: true}),
@@ -168,7 +183,9 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStreams = await Promise.all([
       navigator.mediaDevices.getUserMedia({audio: true}),
       navigator.mediaDevices.getUserMedia({audio: true}),
@@ -194,9 +211,12 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     caller.addTrack(localStream.getTracks()[0]);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_array_equals(callee.getReceivers(), [e.receiver],
@@ -208,9 +228,12 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     const sender = caller.addTrack(localStream.getTracks()[0]);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track');
     await exchangeOfferAnswer(caller, callee);
@@ -223,10 +246,14 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
-    const sender = caller.addTrack(localStream.getTracks()[0], localStream);
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
+    const [track] = localStream.getTracks();
+    const sender = caller.addTrack(track, localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.streams.length, 1);
       return e.streams[0];
@@ -247,10 +274,13 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     let eventSequence = '';
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     const sender = caller.addTrack(localStream.getTracks()[0], localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.streams.length, 1);
@@ -272,9 +302,12 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     const sender = caller.addTrack(localStream.getTracks()[0], localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.streams.length, 1);
@@ -294,10 +327,13 @@
 
   promise_test(async t => {
     const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
     const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
     let eventSequence = '';
     const localStream =
         await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => localStream.getTracks().forEach(track => track.stop()));
     const sender = caller.addTrack(localStream.getTracks()[0], localStream);
     const ontrackPromise = addEventListenerPromise(t, callee, 'track', e => {
       assert_equals(e.streams.length, 1);
@@ -319,7 +355,9 @@
 
   promise_test(async t => {
     const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
     const sender = pc.addTrack(stream.getTracks()[0]);
     pc.removeTrack(sender);
     pc.removeTrack(sender);

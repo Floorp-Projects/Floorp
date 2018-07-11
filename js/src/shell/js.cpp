@@ -479,7 +479,7 @@ struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPrepare
     {
         js::SetScriptEnvironmentPreparer(cx, this);
     }
-    void invoke(JS::HandleObject scope, Closure& closure) override;
+    void invoke(JS::HandleObject global, Closure& closure) override;
 };
 
 // Shell state set once at startup.
@@ -796,12 +796,14 @@ SkipUTF8BOM(FILE* file)
 }
 
 void
-EnvironmentPreparer::invoke(HandleObject scope, Closure& closure)
+EnvironmentPreparer::invoke(HandleObject global, Closure& closure)
 {
+    MOZ_ASSERT(JS_IsGlobalObject(global));
+
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
-    AutoRealm ar(cx, scope);
+    AutoRealm ar(cx, global);
     AutoReportException are(cx);
     if (!closure(cx))
         return;

@@ -106,7 +106,7 @@ DocGroup::ReportPerformanceInfo()
       continue;
     }
     pwid = top->WindowID();
-    isTopLevel = top->IsTopLevelWindow();;
+    isTopLevel = outer->IsTopLevelWindow();
     docURI->GetHost(host);
     // If the host is empty, using the url
     if (host.IsEmpty()) {

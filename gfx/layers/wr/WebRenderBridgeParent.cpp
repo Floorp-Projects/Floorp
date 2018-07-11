@@ -344,11 +344,11 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         }
         break;
       }
-      case OpUpdateResource::TOpAddExternalImageForTexture: {
-        const auto& op = cmd.get_OpAddExternalImageForTexture();
+      case OpUpdateResource::TOpPushExternalImageForTexture: {
+        const auto& op = cmd.get_OpPushExternalImageForTexture();
         CompositableTextureHostRef texture;
         texture = TextureHost::AsTextureHost(op.textureParent());
-        if (!AddExternalImageForTexture(op.externalImageId(), op.key(), texture, aUpdates)) {
+        if (!PushExternalImageForTexture(op.externalImageId(), op.key(), texture, op.isUpdate(), aUpdates)) {
           return false;
         }
         break;
@@ -456,11 +456,13 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
 }
 
 bool
-WebRenderBridgeParent::AddExternalImageForTexture(wr::ExternalImageId aExtId,
-                                                  wr::ImageKey aKey,
-                                                  TextureHost* aTexture,
-                                                  wr::TransactionBuilder& aResources)
+WebRenderBridgeParent::PushExternalImageForTexture(wr::ExternalImageId aExtId,
+                                                   wr::ImageKey aKey,
+                                                   TextureHost* aTexture,
+                                                   bool aIsUpdate,
+                                                   wr::TransactionBuilder& aResources)
 {
+  auto op = aIsUpdate ? TextureHost::UPDATE_IMAGE : TextureHost::ADD_IMAGE;
   Range<wr::ImageKey> keys(&aKey, 1);
   // Check if key is obsoleted.
   if (keys[0].mNamespace != mIdNamespace) {
@@ -475,9 +477,15 @@ WebRenderBridgeParent::AddExternalImageForTexture(wr::ExternalImageId aExtId,
   if (!gfxEnv::EnableWebRenderRecording()) {
     WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
     if (wrTexture) {
-      wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
+      wrTexture->PushResourceUpdates(aResources, op, keys,
                                      wrTexture->GetExternalImageKey());
-      MOZ_ASSERT(mTextureHosts.find(wr::AsUint64(aKey)) == mTextureHosts.end());
+      auto it = mTextureHosts.find(wr::AsUint64(aKey));
+      MOZ_ASSERT((it == mTextureHosts.end() && !aIsUpdate) ||
+                 (it != mTextureHosts.end() && aIsUpdate));
+      if (it != mTextureHosts.end()) {
+        // Release Texture if it exists.
+        ReleaseTextureOfImage(aKey);
+      }
       mTextureHosts.emplace(wr::AsUint64(aKey), CompositableTextureHostRef(aTexture));
       return true;
     }
@@ -498,7 +506,13 @@ WebRenderBridgeParent::AddExternalImageForTexture(wr::ExternalImageId aExtId,
   wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
   wr::Vec<uint8_t> data;
   data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
-  aResources.AddImage(keys[0], descriptor, data);
+
+  if (op == TextureHost::UPDATE_IMAGE) {
+    aResources.UpdateImageBuffer(keys[0], descriptor, data);
+  } else {
+    aResources.AddImage(keys[0], descriptor, data);
+  }
+
   dSurf->Unmap();
 
   return true;

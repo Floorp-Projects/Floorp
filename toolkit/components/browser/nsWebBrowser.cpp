@@ -672,9 +672,10 @@ nsWebBrowser::LoadURIWithOptions(const char16_t* aURI, uint32_t aLoadFlags,
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes)
+nsWebBrowser::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes,
+                                               JSContext* aCx)
 {
-  return mDocShellAsNav->SetOriginAttributesBeforeLoading(aOriginAttributes);
+  return mDocShellAsNav->SetOriginAttributesBeforeLoading(aOriginAttributes, aCx);
 }
 
 NS_IMETHODIMP

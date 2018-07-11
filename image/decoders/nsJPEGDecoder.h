@@ -80,6 +80,7 @@ private:
     FINISHED_JPEG_DATA
   };
 
+  void FinishRow(uint32_t aLastSourceRow);
   LexerTransition<State> ReadJPEGData(const char* aData, size_t aLength);
   LexerTransition<State> FinishedJPEGData();
 

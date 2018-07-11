@@ -281,14 +281,15 @@ IpcResourceUpdateQueue::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKe
 }
 
 void
-IpcResourceUpdateQueue::AddExternalImageForTexture(wr::ExternalImageId aExtId,
-                                                   wr::ImageKey aKey,
-                                                   layers::TextureClient* aTexture)
+IpcResourceUpdateQueue::PushExternalImageForTexture(wr::ExternalImageId aExtId,
+                                                    wr::ImageKey aKey,
+                                                    layers::TextureClient* aTexture,
+                                                    bool aIsUpdate)
 {
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aTexture->GetIPDLActor());
   MOZ_RELEASE_ASSERT(aTexture->GetIPDLActor()->GetIPCChannel() == mWriter.WrBridge()->GetIPCChannel());
-  mUpdates.AppendElement(layers::OpAddExternalImageForTexture(aExtId, aKey, nullptr, aTexture->GetIPDLActor()));
+  mUpdates.AppendElement(layers::OpPushExternalImageForTexture(aExtId, aKey, nullptr, aTexture->GetIPDLActor(), aIsUpdate));
 }
 
 bool

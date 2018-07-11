@@ -13832,24 +13832,15 @@ nsDocShell::SetOriginAttributes(const OriginAttributes& aAttrs)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes)
+nsDocShell::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes,
+                                             JSContext* aCx)
 {
   if (!aOriginAttributes.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(&aOriginAttributes.toObject())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JSContext* cx = jsapi.cx();
-  if (NS_WARN_IF(!cx)) {
-    return NS_ERROR_FAILURE;
-  }
-
   OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(cx, aOriginAttributes)) {
+  if (!attrs.Init(aCx, aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
   }
 
