@@ -58,7 +58,7 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 
         // Reflected methods can't use native types. All native types end up
         // getting tagged as void*, so this check is easy.
-        if (type.TagPart() == nsXPTType::T_VOID)
+        if (type.Tag() == nsXPTType::T_VOID)
             return false;
     }
     return true;
@@ -108,7 +108,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
-    switch (type.TagPart()) {
+    switch (type.Tag()) {
     case nsXPTType::T_I8    :
         d.setInt32(*static_cast<const int8_t*>(s));
         return true;
@@ -455,7 +455,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     bool sizeis = type.Tag() == TD_PSTRING_SIZE_IS ||
         type.Tag() == TD_PWSTRING_SIZE_IS;
 
-    switch (type.TagPart()) {
+    switch (type.Tag()) {
     case nsXPTType::T_I8     :
         return ConvertToPrimitive(cx, s, static_cast<int8_t*>(d));
     case nsXPTType::T_I16    :
