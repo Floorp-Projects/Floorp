@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "js/Value.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -152,6 +153,7 @@ static_assert(sizeof(nsXPTInterfaceInfo) == 28, "wrong size?");
  */
 enum nsXPTTypeTag : uint8_t
 {
+  // Arithmetic (POD) Types
   TD_INT8              = 0,
   TD_INT16             = 1,
   TD_INT32             = 2,
@@ -165,6 +167,8 @@ enum nsXPTTypeTag : uint8_t
   TD_BOOL              = 10,
   TD_CHAR              = 11,
   TD_WCHAR             = 12,
+
+  // Non-Arithmetic Types
   TD_VOID              = 13,
   TD_PNSIID            = 14,
   TD_DOMSTRING         = 15,
@@ -180,7 +184,8 @@ enum nsXPTTypeTag : uint8_t
   TD_ASTRING           = 25,
   TD_JSVAL             = 26,
   TD_DOMOBJECT         = 27,
-  TD_PROMISE           = 28
+  TD_PROMISE           = 28,
+  TD_SEQUENCE          = 29
 };
 
 
@@ -197,6 +202,8 @@ struct nsXPTType
   // with the nsXPTType::* re-exports.
   uint8_t Tag() const { return mTag; }
 
+  // The index in the function argument list which should be used when
+  // determining the iid_is or size_is properties of this dependent type.
   uint8_t ArgNum() const {
     MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
                Tag() == TD_PSTRING_SIZE_IS ||
@@ -205,15 +212,22 @@ struct nsXPTType
     return mData1;
   }
 
-  const nsXPTType& ArrayElementType() const {
-    MOZ_ASSERT(Tag() == TD_ARRAY);
-    return xpt::detail::GetType(mData2);
-  }
-
 private:
+  // Helper for reading 16-bit data values split between mData1 and mData2.
   uint16_t Data16() const { return ((uint16_t)mData1 << 8) | mData2; }
 
 public:
+  // Get the type of the element in the current array or sequence. Arrays only
+  // fit 8 bits of type data, while sequences support up to 16 bits of type data
+  // due to not needing to store an ArgNum.
+  const nsXPTType& ArrayElementType() const {
+    if (Tag() == TD_ARRAY) {
+      return xpt::detail::GetType(mData2);
+    }
+    MOZ_ASSERT(Tag() == TD_SEQUENCE);
+    return xpt::detail::GetType(Data16());
+  }
+
   // We store the 16-bit iface value as two 8-bit values in order to
   // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
   // reduces its size and also the size of XPTParamDescriptor.
@@ -243,13 +257,20 @@ public:
   bool IsArray() const { return Tag() == TD_ARRAY; }
 
   bool IsDependent() const {
-    return Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_ARRAY ||
+    return (Tag() == TD_SEQUENCE && InnermostType().IsDependent()) ||
+           Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_ARRAY ||
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
+  }
+
+  bool IsAlwaysIndirect() const {
+    return Tag() == TD_ASTRING || Tag() == TD_DOMSTRING ||
+           Tag() == TD_CSTRING || Tag() == TD_UTF8STRING ||
+           Tag() == TD_JSVAL || Tag() == TD_SEQUENCE;
   }
 
   // Unwrap a nested type to its innermost value (e.g. through arrays).
   const nsXPTType& InnermostType() const {
-    if (Tag() == TD_ARRAY) {
+    if (Tag() == TD_ARRAY || Tag() == TD_SEQUENCE) {
       return ArrayElementType().InnermostType();
     }
     return *this;
@@ -334,7 +355,8 @@ public:
     T_ASTRING           = TD_ASTRING          ,
     T_JSVAL             = TD_JSVAL            ,
     T_DOMOBJECT         = TD_DOMOBJECT        ,
-    T_PROMISE           = TD_PROMISE
+    T_PROMISE           = TD_PROMISE          ,
+    T_SEQUENCE          = TD_SEQUENCE
   };
 
   ////////////////////////////////////////////////////////////////
@@ -379,12 +401,7 @@ struct nsXPTParamInfo
   // params are passed indirectly, although some types are passed indirectly
   // unconditionally.
   bool IsIndirect() const {
-    return IsOut() ||
-      mType.Tag() == TD_JSVAL ||
-      mType.Tag() == TD_ASTRING ||
-      mType.Tag() == TD_DOMSTRING ||
-      mType.Tag() == TD_CSTRING ||
-      mType.Tag() == TD_UTF8STRING;
+    return IsOut() || Type().IsAlwaysIndirect();
   }
 
   ////////////////////////////////////////////////////////////////
@@ -501,6 +518,34 @@ struct nsXPTDOMObjectInfo
 
 namespace xpt {
 namespace detail {
+
+// The UntypedSequence type allows low-level access from XPConnect to nsTArray
+// internals without static knowledge of the array element type in question.
+class UntypedSequence
+  : public nsTArray_base<nsTArrayFallibleAllocator, nsTArray_CopyWithMemutils>
+{
+public:
+  void* Elements() const {
+    return static_cast<void*>(Hdr() + 1);
+  }
+
+  // Changes the length and capacity to be at least large enough for aTo elements.
+  bool SetLength(const nsXPTType& aEltTy, uint32_t aTo) {
+    if (!EnsureCapacity<nsTArrayFallibleAllocator>(aTo, aEltTy.Stride())) {
+      return false;
+    }
+    mHdr->mLength = aTo;
+    return true;
+  }
+
+  // Free backing memory for the nsTArray object.
+  void Clear() {
+    if (mHdr != EmptyHdr() && !UsesAutoArrayBuffer()) {
+      nsTArrayFallibleAllocator::Free(mHdr);
+    }
+    mHdr = EmptyHdr();
+  }
+};
 
 /**
  * The compressed representation of constants from XPT. Not part of the public
@@ -655,6 +700,7 @@ nsXPTType::Stride() const
     case TD_JSVAL:             return sizeof(JS::Value);
     case TD_DOMOBJECT:         return sizeof(void*);
     case TD_PROMISE:           return sizeof(void*);
+    case TD_SEQUENCE:          return sizeof(xpt::detail::UntypedSequence);
   }
 
   MOZ_CRASH("Unknown type");
