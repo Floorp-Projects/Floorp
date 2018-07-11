@@ -1682,10 +1682,10 @@ TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
                             "XPCWrappedNative::CallMethod param");
     } else if (aType.Tag() == nsXPTType::T_SEQUENCE) {
         auto* sequence = (xpt::detail::UntypedSequence*)aVal;
-
         const nsXPTType& elty = aType.ArrayElementType();
+
         for (uint32_t i = 0; i < sequence->Length(); ++i) {
-            TraceParam(aTrc, sequence->ElementAt(elty, i), elty);
+            TraceParam(aTrc, elty.ElementPtr(sequence->Elements(), i), elty);
         }
     } else if (aType.Tag() == nsXPTType::T_ARRAY && *(void**)aVal) {
         const nsXPTType& elty = aType.ArrayElementType();
