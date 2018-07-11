@@ -749,25 +749,27 @@ nsXPCWrappedJSClass::CleanupOutparams(const nsXPTMethodInfo* info,
         if (!param.IsOut())
             continue;
 
-        // Extract the array length so we can use it in CleanupValue.
-        uint32_t arrayLen = 0;
-        if (!GetArraySizeFromParam(info, param.Type(), nativeParams, &arrayLen))
-            continue;
-
         MOZ_ASSERT(param.IsIndirect(), "Outparams are always indirect");
 
-        // The inOutOnly flag is necessary because full outparams may contain
-        // uninitialized junk before the call is made, and we don't want to try
-        // to clean up uninitialized junk.
-        if (!inOutOnly || param.IsIn()) {
+        // Call 'CleanupValue' on parameters which we know to be initialized:
+        //  1. Complex parameters (initialized by caller)
+        //  2. 'inout' parameters (initialized by caller)
+        //  3. 'out' parameters when 'inOutOnly' is 'false' (initialized by us)
+        //
+        // We skip non-complex 'out' parameters before the call, as they may
+        // contain random junk.
+        if (param.Type().IsComplex() || param.IsIn() || !inOutOnly) {
+            uint32_t arrayLen = 0;
+            if (!GetArraySizeFromParam(info, param.Type(), nativeParams, &arrayLen))
+                continue;
+
             xpc::CleanupValue(param.Type(), nativeParams[i].val.p, arrayLen);
         }
 
-        // Even if we didn't call CleanupValue, null out any pointers. This is
-        // just to protect C++ callers which may read garbage if they forget to
-        // check the error value.
-        if (param.Type().HasPointerRepr()) {
-            *(void**)nativeParams[i].val.p = nullptr;
+        // Ensure our parameters are in a clean state. Complex values are always
+        // handled by CleanupValue, and others have a valid null representation.
+        if (!param.Type().IsComplex()) {
+            param.Type().ZeroValue(nativeParams[i].val.p);
         }
     }
 }
