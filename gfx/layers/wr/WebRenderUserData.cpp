@@ -155,18 +155,29 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
     return mKey;
   }
 
-  // Delete old key, we are generating a new key.
-  // TODO(nical): noooo... we need to reuse image keys.
-  ClearImageKey();
+  // If we already had a texture and the format hasn't changed, better to reuse the image keys
+  // than create new ones.
+  bool useUpdate = mKey.isSome()
+                   && !!mTextureOfImage
+                   && !!currentTexture
+                   && mTextureOfImage->GetSize() == currentTexture->GetSize()
+                   && mTextureOfImage->GetFormat() == currentTexture->GetFormat();
 
   wr::MaybeExternalImageId extId = currentTexture->GetExternalImageKey();
   MOZ_RELEASE_ASSERT(extId.isSome());
-  MOZ_ASSERT(!mTextureOfImage);
 
-  key = WrBridge()->GetNextImageKey();
-  aResources.AddExternalImageForTexture(extId.ref(), key, currentTexture);
+  if (useUpdate) {
+    MOZ_ASSERT(mKey.isSome());
+    MOZ_ASSERT(mTextureOfImage);
+    aResources.PushExternalImageForTexture(extId.ref(), mKey.ref(), currentTexture, /* aIsUpdate */ true);
+  } else {
+    ClearImageKey();
+    key = WrBridge()->GetNextImageKey();
+    aResources.PushExternalImageForTexture(extId.ref(), key, currentTexture, /* aIsUpdate */ false);
+    mKey = Some(key);
+  }
+
   mTextureOfImage = currentTexture;
-  mKey = Some(key);
   mOwnsKey = true;
 
   return mKey;

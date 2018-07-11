@@ -129,8 +129,8 @@ case $cmd in
         ${tgtpath}/dom/bindings
     ${MKDIR} -p ${tgtpath}/media/webrtc/trunk/tools
     cp -pPR \
-        ${TOPSRCDIR}/media/webrtc/trunk/tools/gyp \
-        ${tgtpath}/media/webrtc/trunk/tools
+        ${TOPSRCDIR}/third_party/python/gyp \
+        ${tgtpath}/third_party/python
     ${MKDIR} -p ${tgtpath}/testing
     cp -pPR \
         ${TOPSRCDIR}/testing/mozbase \

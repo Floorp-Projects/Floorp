@@ -210,10 +210,11 @@ private:
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                         wr::TransactionBuilder& aResources);
 
-  bool AddExternalImageForTexture(wr::ExternalImageId aExtId,
-                                  wr::ImageKey aKey,
-                                  TextureHost* aTexture,
-                                  wr::TransactionBuilder& aResources);
+  bool PushExternalImageForTexture(wr::ExternalImageId aExtId,
+                                   wr::ImageKey aKey,
+                                   TextureHost* aTexture,
+                                   bool aIsUpdate,
+                                   wr::TransactionBuilder& aResources);
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,

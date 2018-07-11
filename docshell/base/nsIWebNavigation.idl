@@ -406,5 +406,6 @@ interface nsIWebNavigation : nsISupports
    * Set an OriginAttributes dictionary in the docShell. This can be done only
    * before loading any content.
    */
+  [implicit_jscontext]
   void setOriginAttributesBeforeLoading(in jsval originAttributes);
 };

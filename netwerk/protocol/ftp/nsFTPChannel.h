@@ -43,6 +43,7 @@ public:
         , mResumeRequested(false)
         , mLastModifiedTime(0)
         , mForcePending(false)
+        , mSuspendCount(0)
     {
         SetURI(uri);
     }

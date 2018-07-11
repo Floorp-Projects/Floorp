@@ -2734,20 +2734,15 @@ IdToValue(jsid id)
 }
 
 /**
- * If the embedder has registered a ScriptEnvironmentPreparer,
- * PrepareScriptEnvironmentAndInvoke will call the preparer's 'invoke' method
+ * PrepareScriptEnvironmentAndInvoke asserts the embedder has registered a
+ * ScriptEnvironmentPreparer and then it calls the preparer's 'invoke' method
  * with the given |closure|, with the assumption that the preparer will set up
- * any state necessary to run script in |scope|, invoke |closure| with a valid
+ * any state necessary to run script in |global|, invoke |closure| with a valid
  * JSContext*, report any exceptions thrown from the closure, and return.
  *
- * If no preparer is registered, PrepareScriptEnvironmentAndInvoke will assert
- * that |rt| has exactly one JSContext associated with it, enter the compartment
- * of |scope| on that context, and invoke |closure|.
- *
- * In both cases, PrepareScriptEnvironmentAndInvoke will report any exceptions
- * that are thrown by the closure.  Consumers who want to propagate back
- * whether the closure succeeded should do so via members of the closure
- * itself.
+ * PrepareScriptEnvironmentAndInvoke will report any exceptions that are thrown
+ * by the closure.  Consumers who want to propagate back whether the closure
+ * succeeded should do so via members of the closure itself.
  */
 
 struct ScriptEnvironmentPreparer {
@@ -2755,11 +2750,11 @@ struct ScriptEnvironmentPreparer {
         virtual bool operator()(JSContext* cx) = 0;
     };
 
-    virtual void invoke(JS::HandleObject scope, Closure& closure) = 0;
+    virtual void invoke(JS::HandleObject global, Closure& closure) = 0;
 };
 
 extern JS_FRIEND_API(void)
-PrepareScriptEnvironmentAndInvoke(JSContext* cx, JS::HandleObject scope,
+PrepareScriptEnvironmentAndInvoke(JSContext* cx, JS::HandleObject global,
                                   ScriptEnvironmentPreparer::Closure& closure);
 
 JS_FRIEND_API(void)

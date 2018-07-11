@@ -7511,9 +7511,13 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // Retrieve the essentials from our closure object.
   ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
   JSContext* cx = argClosure.cinfo->cx;
-  RootedObject fun(cx, argClosure.cinfo->jsfnObj);
 
-  js::PrepareScriptEnvironmentAndInvoke(cx, fun, argClosure);
+  js::AssertSameCompartment(cx, argClosure.cinfo->jsfnObj);
+
+  RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+  MOZ_ASSERT(global);
+
+  js::PrepareScriptEnvironmentAndInvoke(cx, global, argClosure);
 }
 
 bool CClosure::ArgClosure::operator()(JSContext* cx)

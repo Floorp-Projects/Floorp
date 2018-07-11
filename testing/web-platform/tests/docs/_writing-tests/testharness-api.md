@@ -185,7 +185,7 @@ In the example above, `foo()` returns a Promise that resolves with the string
 a resolve reaction that verifies the returned value.
 
 Note that in the promise chain constructed in `test_function` assertions don't
-need to wrapped in `step` or `step_func` calls.
+need to be wrapped in `step` or `step_func` calls.
 
 Unlike Asynchronous Tests, Promise Tests don't start running until after the
 previous Promise Test finishes.
@@ -699,6 +699,11 @@ Relies on `===`, distinguishes between `-0` and `+0`, and has a specific check f
 ### `assert_in_array(actual, expected, description)`
 asserts that `expected` is an Array, and `actual` is equal to one of the
 members i.e. `expected.indexOf(actual) != -1`
+
+### `assert_object_equals(actual, expected, description)`
+asserts that `actual` is an object and not null and that all enumerable
+properties on `actual` are own properties on `expected` with the same values,
+recursing if the value is an object and not null.
 
 ### `assert_array_equals(actual, expected, description)`
 asserts that `actual` and `expected` have the same
