@@ -213,6 +213,21 @@
                                       getAccessible(doc.getElementById("start-block"))));
       gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, null, false));
 
+      gQueue.push(new setVCPosInvoker(docAcc, null, null,
+                  getAccessible(doc.getElementById("paragraph-3")).firstChild));
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 7],
+                  getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
+
+      gQueue.push(new setVCPosInvoker(docAcc, null, null,
+                  getAccessible(doc.getElementById("s1-link-1")).nextSibling));
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [4, 6],
+                  getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
+
+      gQueue.push(new setVCPosInvoker(docAcc, null, null,
+                  getAccessible(doc.getElementById("paragraph-4")).firstChild.nextSibling));
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [6, 10],
+                  getAccessible(doc.getElementById("paragraph-4"), nsIAccessibleText)));
+
       gQueue.invoke();
     }
 
