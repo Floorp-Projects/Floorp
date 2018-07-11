@@ -24,6 +24,7 @@ loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/util
 loader.lazyRequireGetter(this, "isShadowAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowHost", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "getShadowRootMode", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isXBLAnonymous", "devtools/shared/layout/utils", true);
 
 loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
@@ -132,6 +133,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isXBLAnonymous: isXBLAnonymous(this.rawNode),
       isShadowAnonymous: isShadowAnonymous(this.rawNode),
       isShadowRoot: shadowRoot,
+      shadowRootMode: getShadowRootMode(this.rawNode),
       isShadowHost: isShadowHost(this.rawNode),
       isDirectShadowHostChild: isDirectShadowHostChild(this.rawNode),
       pseudoClassLocks: this.writePseudoClassLocks(),
