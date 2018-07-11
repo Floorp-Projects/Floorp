@@ -16,7 +16,11 @@ function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.addActors(ACTORS_URL);
+  DebuggerServer.registerModule(ACTORS_URL, {
+    prefix: "testOne",
+    constructor: "TestActor1",
+    type: { target: true },
+  });
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
@@ -39,12 +43,12 @@ function test() {
 function testTargetScopedActor([aGrip, aResponse]) {
   let deferred = promise.defer();
 
-  ok(aGrip.testTargetScopedActor1,
+  ok(aGrip.testOneActor,
     "Found the test target-scoped actor.");
-  ok(aGrip.testTargetScopedActor1.includes("test_one"),
-    "testTargetScopedActor1's actorPrefix should be used.");
+  ok(aGrip.testOneActor.includes("testOne"),
+    "testOneActor's actorPrefix should be used.");
 
-  gClient.request({ to: aGrip.testTargetScopedActor1, type: "ping" }, aResponse => {
+  gClient.request({ to: aGrip.testOneActor, type: "ping" }, aResponse => {
     is(aResponse.pong, "pong",
       "Actor should respond to requests.");
 
@@ -64,7 +68,7 @@ function closeTab(aTestActor) {
         deferred.reject(aResponse);
       });
     } catch (e) {
-      is(e.message, "'ping' request packet has no destination.", "testTargetScopedActor1 went away.");
+      is(e.message, "'ping' request packet has no destination.", "testOnActor went away.");
       deferred.resolve();
     }
 
