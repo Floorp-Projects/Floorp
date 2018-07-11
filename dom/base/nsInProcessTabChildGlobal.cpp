@@ -214,6 +214,28 @@ nsInProcessTabChildGlobal::GetTabEventTarget()
   return target.forget();
 }
 
+uint64_t
+nsInProcessTabChildGlobal::ChromeOuterWindowID()
+{
+  if (!mDocShell) {
+    return 0;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  nsresult rv = item->GetRootTreeItem(getter_AddRefs(root));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return 0;
+  }
+
+  nsPIDOMWindowOuter* topWin = root->GetWindow();
+  if (!topWin) {
+    return 0;
+  }
+
+  return topWin->WindowID();
+}
+
 void
 nsInProcessTabChildGlobal::FireUnloadEvent()
 {
