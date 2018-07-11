@@ -108,6 +108,7 @@ AboutNewTabService.prototype = {
       case "nsPref:changed":
         if (data === PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS) {
           this._privilegedContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS);
+          this.notifyChange();
         } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
           this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
           this.notifyChange();
