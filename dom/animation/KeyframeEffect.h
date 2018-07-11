@@ -313,11 +313,6 @@ protected:
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
-  static already_AddRefed<KeyframeEffect>
-  ConstructKeyframeEffect(const GlobalObject& aGlobal,
-                          KeyframeEffect& aSource,
-                          ErrorResult& aRv);
-
   // Build properties by recalculating from |mKeyframes| using |aComputedStyle|
   // to resolve specified values. This function also applies paced spacing if
   // needed.
