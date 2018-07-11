@@ -1420,8 +1420,6 @@ class DebuggerObject : public NativeObject
     // Properties
     static MOZ_MUST_USE bool getClassName(JSContext* cx, HandleDebuggerObject object,
                                           MutableHandleString result);
-    static MOZ_MUST_USE bool getGlobal(JSContext* cx, HandleDebuggerObject object,
-                                       MutableHandleDebuggerObject result);
     static MOZ_MUST_USE bool getParameterNames(JSContext* cx, HandleDebuggerObject object,
                                                MutableHandle<StringVector> result);
     static MOZ_MUST_USE bool getBoundTargetFunction(JSContext* cx, HandleDebuggerObject object,
@@ -1548,7 +1546,6 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool boundTargetFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool boundThisGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool boundArgumentsGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool globalGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool errorMessageNameGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool errorNotesGetter(JSContext* cx, unsigned argc, Value* vp);

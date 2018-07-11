@@ -31,14 +31,14 @@ namespace js {
 
 namespace detail {
 
-template <typename T>
+template <typename T, typename D>
 class SingleLinkedList;
 
-template <typename T>
+template <typename T, typename D = JS::DeletePolicy<T>>
 class SingleLinkedListElement
 {
-    friend class SingleLinkedList<T>;
-    js::UniquePtr<T> next_;
+    friend class SingleLinkedList<T, D>;
+    js::UniquePtr<T, D> next_;
 
   public:
     SingleLinkedListElement()
@@ -54,13 +54,13 @@ class SingleLinkedListElement
 // Single linked list which is using UniquePtr to hold the next pointers.
 // UniquePtr are used to ensure that none of the elements are used
 // silmutaneously in 2 different list.
-template <typename T>
+template <typename T, typename D = JS::DeletePolicy<T>>
 class SingleLinkedList
 {
   private:
     // First element of the list which owns the next element, and ensure that
     // that this list is the only owner of the element.
-    UniquePtr<T> head_;
+    UniquePtr<T, D> head_;
 
     // Weak pointer to the last element of the list.
     T* last_;
@@ -151,7 +151,7 @@ class SingleLinkedList
         return result;
     }
 
-    void pushFront(UniquePtr<T>&& elem) {
+    void pushFront(UniquePtr<T, D>&& elem) {
         if (!last_)
             last_ = elem.get();
         elem->next_ = std::move(head_);
@@ -159,7 +159,7 @@ class SingleLinkedList
         assertInvariants();
     }
 
-    void append(UniquePtr<T>&& elem) {
+    void append(UniquePtr<T, D>&& elem) {
         if (last_) {
             last_->next_ = std::move(elem);
             last_ = last_->next_.get();
@@ -181,9 +181,9 @@ class SingleLinkedList
         assertInvariants();
         list.assertInvariants();
     }
-    UniquePtr<T> popFirst() {
+    UniquePtr<T, D> popFirst() {
         MOZ_ASSERT(head_);
-        UniquePtr<T> result = std::move(head_);
+        UniquePtr<T, D> result = std::move(head_);
         head_ = std::move(result->next_);
         if (!head_)
             last_ = nullptr;
@@ -197,8 +197,7 @@ static const size_t LIFO_ALLOC_ALIGN = 8;
 MOZ_ALWAYS_INLINE
 uint8_t*
 AlignPtr(uint8_t* orig) {
-    static_assert(mozilla::tl::FloorLog2<LIFO_ALLOC_ALIGN>::value ==
-                  mozilla::tl::CeilingLog2<LIFO_ALLOC_ALIGN>::value,
+    static_assert(mozilla::IsPowerOfTwo(LIFO_ALLOC_ALIGN),
                   "LIFO_ALLOC_ALIGN must be a power of two");
 
     uint8_t* result = (uint8_t*) AlignBytes(uintptr_t(orig), LIFO_ALLOC_ALIGN);
@@ -289,15 +288,6 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
       , protect_(protect ? 1 : 0)
 #endif
     {
-        // We cannot bake this value inside the BumpChunk class, because
-        // sizeof(BumpChunk) can only be computed after the closing brace of the
-        // BumpChunk class, or within one of its methods. As a work-around, the
-        // reservedSpace value is baked in, and we check that it indeed matches
-        // with the space taken by the data of the BumpChunk class, and the
-        // alignment of a pointer.
-        MOZ_ASSERT(BumpChunk::reservedSpace == AlignBytes(sizeof(BumpChunk), LIFO_ALLOC_ALIGN),
-                   "Checked that the baked-in value correspond to computed value");
-
         assertInvariants();
 #if defined(LIFO_HAVE_MEM_CHECKS)
         // The memory is freshly allocated and marked as undefined by the
@@ -343,11 +333,6 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         removeMProtectHandler();
     }
 
-    // Space reserved for the BumpChunk internal data, and the alignment of the
-    // first allocation content.  This can be used to ensure there is enough
-    // space for the next allocation. (see LifoAlloc::newChunkWithCapacity)
-    static constexpr size_t reservedSpace = 4 * sizeof(uintptr_t);
-
     // Returns true if this chunk contains no allocated content.
     bool empty() const { return end() == begin(); }
 
@@ -358,8 +343,8 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
     // These are used for manipulating a chunk as if it was a vector of bytes,
     // and used for iterating over the content of the buffer (see
     // LifoAlloc::Enum)
-    const uint8_t* begin() const { return base() + reservedSpace; }
-    uint8_t* begin() { return base() + reservedSpace; }
+    inline const uint8_t* begin() const;
+    inline uint8_t* begin();
     uint8_t* end() const { return bump_; }
 
     // This function is the only way to allocate and construct a chunk. It
@@ -470,7 +455,7 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         //
         // This is used when freezing a LifoAlloc, such as moving a LifoAlloc to
         // another thread.
-        Header    = 0,
+        Header = 0,
         // Refers to the set of allocated and reserved bytes, from
         // PageRoundup(begin()), to capacity_.
         //
@@ -483,7 +468,7 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         // This is used when a BumpChunk is no longer used for allocation, while
         // containing live data. This should catch out-of-bound accesses within
         // the LifoAlloc content.
-        Reserved  = 2,
+        Reserved = 2,
         // Refers to the end of the BumpChunk.
         //
         // This is used when a BumpChunk is used for doing allocation, as
@@ -501,6 +486,23 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
 #endif
 };
 
+// Space reserved for the BumpChunk internal data, and the alignment of the
+// first allocation content. This can be used to ensure there is enough space
+// for the next allocation (see LifoAlloc::newChunkWithCapacity).
+static constexpr size_t BumpChunkReservedSpace = AlignBytes(sizeof(BumpChunk), LIFO_ALLOC_ALIGN);
+
+inline const uint8_t*
+BumpChunk::begin() const
+{
+    return base() + BumpChunkReservedSpace;
+}
+
+inline uint8_t*
+BumpChunk::begin()
+{
+    return base() + BumpChunkReservedSpace;
+}
+
 } // namespace detail
 
 // LIFO bump allocator: used for phase-oriented and fast LIFO allocations.
@@ -510,7 +512,7 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
 class LifoAlloc
 {
     using Loc = detail::BumpChunk::Loc;
-    using BumpChunk = js::UniquePtr<detail::BumpChunk>;
+    using UniqueBumpChunk = js::UniquePtr<detail::BumpChunk>;
     using BumpChunkList = detail::SingleLinkedList<detail::BumpChunk>;
 
     // List of chunks containing allocated data. In the common case, the last
@@ -537,26 +539,13 @@ class LifoAlloc
     LifoAlloc(const LifoAlloc&) = delete;
 
     // Return a BumpChunk that can perform an allocation of at least size |n|.
-    BumpChunk newChunkWithCapacity(size_t n);
+    UniqueBumpChunk newChunkWithCapacity(size_t n);
 
     // Reuse or allocate a BumpChunk that can perform an allocation of at least
     // size |n|, if successful it is placed at the end the list of |chunks_|.
     MOZ_MUST_USE bool getOrCreateChunk(size_t n);
 
-    void reset(size_t defaultChunkSize) {
-        MOZ_ASSERT(mozilla::RoundUpPow2(defaultChunkSize) == defaultChunkSize);
-        while (!chunks_.empty()) {
-            chunks_.begin()->setRWUntil(Loc::End);
-            chunks_.popFirst();
-        }
-        while (!unused_.empty()) {
-            unused_.begin()->setRWUntil(Loc::End);
-            unused_.popFirst();
-        }
-        defaultChunkSize_ = defaultChunkSize;
-        markCount = 0;
-        curSize_ = 0;
-    }
+    void reset(size_t defaultChunkSize);
 
     // Append unused chunks to the end of this LifoAlloc.
     void appendUnused(BumpChunkList&& otherUnused) {
@@ -705,7 +694,7 @@ class LifoAlloc
                 return true;
         }
 
-        BumpChunk newChunk = newChunkWithCapacity(n);
+        UniqueBumpChunk newChunk = newChunkWithCapacity(n);
         if (!newChunk)
             return false;
         size_t size = newChunk->computedSizeOfIncludingThis();

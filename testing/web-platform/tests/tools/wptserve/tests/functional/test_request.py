@@ -1,14 +1,14 @@
-import unittest
+import sys
 
 import pytest
 
 wptserve = pytest.importorskip("wptserve")
 from .base import TestUsingServer
 from wptserve.request import InputFile
-from urllib2 import HTTPError
 
 
 class TestInputFile(TestUsingServer):
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_seek(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -37,6 +37,7 @@ class TestInputFile(TestUsingServer):
                           "12345ab\ncdef", "12345ab\n", "cdef"],
                          resp.read().split(" "))
 
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_seek_input_longer_than_buffer(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -63,6 +64,7 @@ class TestInputFile(TestUsingServer):
         finally:
             InputFile.max_buffer_size = old_max_buf
 
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_iter(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -75,6 +77,7 @@ class TestInputFile(TestUsingServer):
         self.assertEqual(200, resp.getcode())
         self.assertEqual(["12345\n", "abcdef\r\n", "zyxwv"], resp.read().split(" "))
 
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_iter_input_longer_than_buffer(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -95,6 +98,7 @@ class TestInputFile(TestUsingServer):
 
 
 class TestRequest(TestUsingServer):
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_body(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -106,6 +110,7 @@ class TestRequest(TestUsingServer):
         resp = self.request(route[1], method="POST", body="12345ab\ncdef")
         self.assertEqual("12345ab\ncdef", resp.read())
 
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_route_match(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -118,6 +123,7 @@ class TestRequest(TestUsingServer):
 
 
 class TestAuth(TestUsingServer):
+    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_auth(self):
         @wptserve.handlers.handler
         def handler(request, response):

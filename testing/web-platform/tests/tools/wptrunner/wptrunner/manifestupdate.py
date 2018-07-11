@@ -333,7 +333,7 @@ class PropertyUpdate(object):
                 if new_default_value != self.default_value:
                     self.node.set(self.property_name, self.update_value(None, new_default_value), condition=None)
             else:
-                self.add_new(unconditional_value)
+                self.add_new(unconditional_value, stability)
 
         # Remove cases where the value matches the default
         if (self.property_name in self.node._data and
@@ -357,7 +357,7 @@ class PropertyUpdate(object):
                   should be updated, and new_default_value is the value to set if it should."""
         raise NotImplementedError
 
-    def add_new(self, unconditional_value):
+    def add_new(self, unconditional_value, stability=False):
         """Add new conditional values for the property.
 
         Subclasses need not implement this if they only ever update the default value."""
@@ -389,7 +389,7 @@ class ExpectedUpdate(PropertyUpdate):
         new_value = self.new[0].value
         return update_default, new_value
 
-    def add_new(self, unconditional_value):
+    def add_new(self, unconditional_value, stability=False):
         try:
             conditionals = group_conditionals(
                 self.new,

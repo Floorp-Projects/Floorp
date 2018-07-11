@@ -110,6 +110,8 @@ CONSOLE: streams/resources/test-utils.js
 CONSOLE: service-workers/service-worker/resources/navigation-redirect-other-origin.html
 CONSOLE: service-workers/service-worker/navigation-redirect.https.html
 CONSOLE: service-workers/service-worker/resources/clients-get-other-origin.html
+CONSOLE: webrtc/tools/*
+CONSOLE: webaudio/resources/audit.js:39
 
 # use of console in a public library - annotation-model ensures
 # it is not actually used
@@ -144,6 +146,7 @@ SET TIMEOUT: encrypted-media/polyfill/clearkey-polyfill.js
 SET TIMEOUT: encrypted-media/scripts/playback-temporary-events.js
 SET TIMEOUT: eventsource/eventsource-close.htm
 SET TIMEOUT: eventsource/eventsource-request-cancellation.htm
+SET TIMEOUT: generic-sensor/resources/iframe_sensor_handler.html
 SET TIMEOUT: html/browsers/browsing-the-web/history-traversal/*
 SET TIMEOUT: html/browsers/browsing-the-web/navigating-across-documents/*
 SET TIMEOUT: html/browsers/browsing-the-web/scroll-to-fragid/*

@@ -1,3 +1,7 @@
+// Feature test to avoid timeouts
+function assert_feature_policy_supported() {
+  assert_not_equals(document.policy, undefined, 'Feature Policy is supported');
+}
 // Tests whether a feature that is enabled/disabled by feature policy works
 // as expected.
 // Arguments:
@@ -18,7 +22,7 @@
 //      attribute. "feature_name" is the feature name of a policy controlled
 //      feature (https://wicg.github.io/feature-policy/#features).
 //      See examples at:
-//      https://github.com/WICG/feature-policy/blob/gh-pages/features.md
+//      https://github.com/WICG/feature-policy/blob/master/features.md
 //    allow_attribute: Optional argument, only used for testing fullscreen or
 //      payment: either "allowfullscreen" or "allowpaymentrequest" is passed.
 function test_feature_availability(
@@ -279,6 +283,7 @@ function test_allowed_feature_for_subframe(message, feature, src, allow) {
     frame.allow = allow;
   }
   promise_test(function() {
+    assert_feature_policy_supported();
     frame.src = src;
     return new Promise(function(resolve, reject) {
       window.addEventListener('message', function handler(evt) {
@@ -305,6 +310,7 @@ function test_disallowed_feature_for_subframe(message, feature, src, allow) {
     frame.allow = allow;
   }
   promise_test(function() {
+    assert_feature_policy_supported();
     frame.src = src;
     return new Promise(function(resolve, reject) {
       window.addEventListener('message', function handler(evt) {
@@ -333,6 +339,7 @@ function test_subframe_header_policy(
     feature, frame_header_policy, src, test_expects, test_name) {
   let frame = document.createElement('iframe');
   promise_test(function() {
+    assert_feature_policy_supported()
     frame.src = src + '?pipe=sub|header(Feature-Policy,' + feature + ' '
         + frame_header_policy + ';)';
     return new Promise(function(resolve, reject) {

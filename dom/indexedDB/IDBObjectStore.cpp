@@ -952,7 +952,7 @@ public:
       if (aDatabase && aDatabase->GetParentObject()) {
         parent = aDatabase->GetParentObject();
       } else {
-        parent = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+        parent = xpc::CurrentNativeGlobal(aCx);
       }
     } else {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();

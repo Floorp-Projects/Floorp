@@ -505,6 +505,13 @@ nsIGlobalObject*
 NativeGlobal(JSObject* aObj);
 
 /**
+ * Returns the nsIGlobalObject corresponding to |cx|'s JS global. Must not be
+ * called when |cx| is not in a Realm.
+ */
+nsIGlobalObject*
+CurrentNativeGlobal(JSContext* cx);
+
+/**
  * If |aObj| is a window, returns the associated nsGlobalWindow.
  * Otherwise, returns null.
  */
@@ -519,7 +526,7 @@ nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj);
 
 /**
- * If |cx| is in a compartment whose global is a window, returns the associated
+ * If |cx| is in a realm whose global is a window, returns the associated
  * nsGlobalWindow. Otherwise, returns null.
  */
 nsGlobalWindowInner*

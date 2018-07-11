@@ -8,21 +8,30 @@
   <script src="/resources/testharness.js"></script>
   <script src="/resources/testharnessreport.js"></script>
   <style>
-    :focus-visible { background-color: rgb(128, 196, 128); }
+    :focus-visible {
+      outline: darkgreen dotted 1px; /* fallback for Edge */
+      outline: darkgreen auto 5px;
+    }
+
+    :focus:not(:focus-visible) {
+      outline: 0;
+      background-color: tomato;
+    }
   </style>
 </head>
 <body>
+  This test checks that using the Tab key to navigate focus to an element triggers <code>:focus-visible</code> matching.
   <ol id="instructions">
     <li>If the user-agent does not claim to support the <code>:focus-visible</code> pseudo-class then SKIP this test.</li>
     <li>Use the TAB key on the keyboard to focus the element below that says "Focus me."</li>
-    <li>If the element does not have a green background, then the test result is FAILURE. If the element has a green background, then the test result is SUCCESS.</li>
+    <li>If the element has a red background, then the test result is FAILURE. If the element has a green outline, then the test result is SUCCESS.</li>
   </ol>
-  <br />
+  <br>
   <div id="el" tabindex="0">Focus me.</div>
   <script>
     async_test(function(t) {
       el.addEventListener("focus", t.step_func(function() {
-          assert_equals(getComputedStyle(el).backgroundColor, "rgb(128, 196, 128)");
+        assert_equals(getComputedStyle(el).outlineColor, "rgb(0, 100, 0)");
         t.done();
       }));
     }, "Keyboard focus should match :focus-visible");

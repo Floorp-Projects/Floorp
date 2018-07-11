@@ -179,8 +179,7 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsCOMPtr<nsIGlobalObject> global =
-        xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
     NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
     ErrorResult errv;
