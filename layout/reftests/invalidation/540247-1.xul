@@ -10,8 +10,8 @@ function runtest() {
   // Make sure that the effects of the scroll are painted to the screen before
   // shrinking the size of the scrolled frame.
   window.addEventListener("MozAfterPaint", finish, false);
-  var scrollbox = document.getElementById('s');
-  scrollbox.scrollTo(0, 1000);
+  var sbo = document.getElementById('s').boxObject;
+  sbo.scrollTo(0, 1000);
 }
 
 function finish() {

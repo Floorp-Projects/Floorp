@@ -34,6 +34,7 @@ EXPORTS.mozilla.dom += [
     'BoxObject.h',
     'ListBoxObject.h',
     'MenuBoxObject.h',
+    'ScrollBoxObject.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -78,6 +79,7 @@ if CONFIG['MOZ_XUL']:
         'nsTitleBarFrame.cpp',
         'nsXULLabelFrame.cpp',
         'nsXULPopupManager.cpp',
+        'ScrollBoxObject.cpp',
     ]
 
 if CONFIG['MOZ_XUL']:
