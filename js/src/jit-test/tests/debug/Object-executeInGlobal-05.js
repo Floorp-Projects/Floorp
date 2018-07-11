@@ -12,7 +12,6 @@ var dg2 = dbg.addDebuggee(g2);
 
 // Generate a Debugger.Object viewing g2 from g1's compartment.
 var dg1wg2 = dg1.makeDebuggeeValue(g2);
-assertEq(dg1wg2.global, dg1);
 assertEq(dg1wg2.unwrap(), dg2);
 assertThrowsInstanceOf(function () { dg1wg2.executeInGlobal('1'); }, TypeError);
 assertThrowsInstanceOf(function () { dg1wg2.executeInGlobalWithBindings('x', { x: 1 }); }, TypeError);

@@ -28,20 +28,16 @@ g2.h = g1.h;
 // Asking for that second D.O's script should yield null, because it's not
 // a debuggee.
 var fDO = g2w.getOwnPropertyDescriptor('f').value;
-assertEq(fDO.global, g2w);
-assertEq(fDO.unwrap().global === g2w, false);
+assertEq(fDO.unwrap().class, "Function");
 assertEq(fDO.unwrap().script, null);
 
 // Similarly for g1.g, and asking for its parameter names.
 var gDO = g2w.getOwnPropertyDescriptor('g').value;
-assertEq(gDO.global, g2w);
-assertEq(gDO.unwrap().global === g2w, false);
 assertEq(gDO.unwrap().parameterNames, undefined);
 
 // Similarly for g1.h, and asking for its bound function properties.
 var hDO = g2w.getOwnPropertyDescriptor('h').value;
-assertEq(hDO.global, g2w);
-assertEq(hDO.unwrap().global === g2w, false);
+assertEq(hDO.unwrap().class, "Function");
 assertEq(hDO.unwrap().isBoundFunction, undefined);
 assertEq(hDO.unwrap().isArrowFunction, undefined);
 assertEq(hDO.unwrap().boundTargetFunction, undefined);
