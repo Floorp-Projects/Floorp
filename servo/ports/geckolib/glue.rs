@@ -3583,16 +3583,33 @@ fn set_property(
         return false;
     }
 
+    let importance = if is_important { Importance::Important } else { Importance::Normal };
+    let append_only = unsafe {
+        structs::StaticPrefs_sVarCache_layout_css_property_append_only
+    };
+    let mode = if append_only {
+        DeclarationPushMode::Append
+    } else {
+        let will_change = read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+            decls.will_change_in_update_mode(&source_declarations, importance)
+        });
+        if !will_change {
+            return false;
+        }
+        DeclarationPushMode::Update
+    };
+
     before_change_closure.invoke();
 
-    let importance = if is_important { Importance::Important } else { Importance::Normal };
-    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+    let result = write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.extend(
             source_declarations.drain(),
             importance,
-            DeclarationPushMode::Append
+            mode,
         )
-    })
+    });
+    debug_assert!(result);
+    true
 }
 
 #[no_mangle]
