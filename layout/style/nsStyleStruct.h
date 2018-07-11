@@ -2871,25 +2871,24 @@ public:
   nsStyleSVGPaintType Type() const { return mType; }
 
   void SetNone();
-  void SetColor(mozilla::StyleComplexColor aColor);
+  void SetColor(nscolor aColor);
   void SetPaintServer(mozilla::css::URLValue* aPaintServer,
                       nsStyleSVGFallbackType aFallbackType,
-                      mozilla::StyleComplexColor aFallbackColor);
+                      nscolor aFallbackColor);
   void SetPaintServer(mozilla::css::URLValue* aPaintServer) {
     SetPaintServer(aPaintServer, eStyleSVGFallbackType_NotSet,
-                   mozilla::StyleComplexColor::Black());
+                   NS_RGB(0, 0, 0));
   }
   void SetContextValue(nsStyleSVGPaintType aType,
                        nsStyleSVGFallbackType aFallbackType,
-                       mozilla::StyleComplexColor aFallbackColor);
+                       nscolor aFallbackColor);
   void SetContextValue(nsStyleSVGPaintType aType) {
-    SetContextValue(aType, eStyleSVGFallbackType_NotSet,
-                    mozilla::StyleComplexColor::Black());
+    SetContextValue(aType, eStyleSVGFallbackType_NotSet, NS_RGB(0, 0, 0));
   }
 
-  nscolor GetColor(mozilla::ComputedStyle* aComputedStyle) const {
+  nscolor GetColor() const {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Color);
-    return mPaint.mColor.CalcColor(aComputedStyle);
+    return mPaint.mColor;
   }
 
   mozilla::css::URLValue* GetPaintServer() const {
@@ -2901,11 +2900,11 @@ public:
     return mFallbackType;
   }
 
-  nscolor GetFallbackColor(mozilla::ComputedStyle* aComputedStyle) const {
+  nscolor GetFallbackColor() const {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Server ||
                mType == eStyleSVGPaintType_ContextFill ||
                mType == eStyleSVGPaintType_ContextStroke);
-    return mFallbackColor.CalcColor(aComputedStyle);
+    return mFallbackColor;
   }
 
   bool operator==(const nsStyleSVGPaint& aOther) const;
@@ -2917,15 +2916,13 @@ private:
   void Reset();
   void Assign(const nsStyleSVGPaint& aOther);
 
-  union ColorOrPaintServer {
-    mozilla::StyleComplexColor mColor;
+  union {
+    nscolor mColor;
     mozilla::css::URLValue* mPaintServer;
-    explicit ColorOrPaintServer(mozilla::StyleComplexColor c) : mColor(c) {}
-  };
-  ColorOrPaintServer mPaint;
+  } mPaint;
   nsStyleSVGPaintType mType;
   nsStyleSVGFallbackType mFallbackType;
-  mozilla::StyleComplexColor mFallbackColor;
+  nscolor mFallbackColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG

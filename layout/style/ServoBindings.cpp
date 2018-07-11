@@ -1639,7 +1639,7 @@ Gecko_CreateGradient(uint8_t aShape,
 
   nsStyleGradientStop dummyStop = {
     nsStyleCoord(eStyleUnit_None),
-    StyleComplexColor::Black(),
+    StyleComplexColor::FromColor(NS_RGB(0, 0, 0)),
     0
   };
 

@@ -28,6 +28,15 @@ var _pacedTestLists =
                             comp2_3: "rgb(20, 20, 6)",
                             comp1:   "rgb(20, 30, 4)"
                           }),
+    new AnimTestcasePaced("olive; " +        // rgb(128, 128, 0)
+                          "currentColor; " + // rgb(50, 50, 50)
+                          "rgb(206, 150, 206)",
+                          { comp0:   "rgb(128, 128, 0)",
+                            comp1_6: "rgb(89, 89, 25)",
+                            comp1_3: "rgb(50, 50, 50)",
+                            comp2_3: "rgb(128, 100, 128)",
+                            comp1:   "rgb(206, 150, 206)"
+                          }),
                           // Use the same RGB component values to make
                           // premultication effect easier to compute.
     new AnimTestcasePaced("rgba(20, 40, 60, 0.2); " +
@@ -38,31 +47,6 @@ var _pacedTestLists =
                             comp1_3: "rgba(20, 40, 60, 0.4)",
                             comp2_3: "rgba(20, 40, 60, 0.6)",
                             comp1:   "rgba(20, 40, 60, 0.8)"
-                          }),
-  ],
-  currentColor_color: [
-    new AnimTestcasePaced("olive; " +        // rgb(128, 128, 0)
-                          "currentColor; " + // rgb(50, 50, 50)
-                          "rgb(206, 150, 206)",
-                          { comp0:   "rgb(128, 128, 0)",
-                            comp1_6: "rgb(89, 89, 25)",
-                            comp1_3: "rgb(50, 50, 50)",
-                            comp2_3: "rgb(128, 100, 128)",
-                            comp1:   "rgb(206, 150, 206)"
-                          }),
-  ],
-  currentColor_fill: [
-                          // Bug 1467622 changed the distance calculation
-                          // involving currentColor, comp values below
-                          // are no longer evenly spaced.
-    new AnimTestcasePaced("olive; " +        // rgb(128, 128, 0)
-                          "currentColor; " + // rgb(50, 50, 50)
-                          "rgb(206, 150, 206)",
-                          { comp0:   "rgb(128, 128, 0)",
-                            comp1_6: "rgb(99, 99, 18)",
-                            comp1_3: "rgb(71, 71, 37)",
-                            comp2_3: "rgb(111, 89, 111)",
-                            comp1:   "rgb(206, 150, 206)"
                           }),
   ],
   paintServer : [
@@ -226,15 +210,12 @@ var _pacedTestLists =
 var gPacedBundles =
 [
   new TestcaseBundle(gPropList.clip,  _pacedTestLists.rect),
-  new TestcaseBundle(gPropList.color,
-                     [].concat(_pacedTestLists.color,
-                               _pacedTestLists.currentColor_color)),
+  new TestcaseBundle(gPropList.color, _pacedTestLists.color),
   new TestcaseBundle(gPropList.direction, [
     new AnimTestcasePaced("rtl; ltr; rtl")
   ]),
   new TestcaseBundle(gPropList.fill,
                      [].concat(_pacedTestLists.color,
-                               _pacedTestLists.currentColor_fill,
                                _pacedTestLists.paintServer)),
   new TestcaseBundle(gPropList.font_size,
                      [].concat(_pacedTestLists.lengthNoUnits,

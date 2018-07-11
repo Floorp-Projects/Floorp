@@ -4662,7 +4662,7 @@ nsComputedDOMStyle::GetFallbackValue(const nsStyleSVGPaint* aPaint)
 {
   RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
   if (aPaint->GetFallbackType() == eStyleSVGFallbackType_Color) {
-    SetToRGBAColor(fallback, aPaint->GetFallbackColor(mComputedStyle));
+    SetToRGBAColor(fallback, aPaint->GetFallbackColor());
   } else {
     fallback->SetIdent(eCSSKeyword_none);
   }
@@ -4684,7 +4684,7 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
       val->SetIdent(eCSSKeyword_none);
       break;
     case eStyleSVGPaintType_Color:
-      SetToRGBAColor(val, paint->GetColor(mComputedStyle));
+      SetToRGBAColor(val, paint->GetColor());
       break;
     case eStyleSVGPaintType_Server: {
       SetValueToURLValue(paint->GetPaintServer(), val);

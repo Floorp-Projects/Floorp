@@ -9,7 +9,6 @@ use values::RGBA;
 use values::computed::{LengthOrPercentage, NonNegativeLength};
 use values::computed::{NonNegativeLengthOrPercentage, NonNegativeNumber, Number};
 use values::computed::Opacity;
-use values::computed::color::Color;
 use values::computed::url::ComputedUrl;
 use values::generics::svg as generic;
 
@@ -18,9 +17,9 @@ pub use values::specified::SVGPaintOrder;
 pub use values::specified::MozContextProperties;
 
 /// Computed SVG Paint value
-pub type SVGPaint = generic::SVGPaint<Color, ComputedUrl>;
+pub type SVGPaint = generic::SVGPaint<RGBA, ComputedUrl>;
 /// Computed SVG Paint Kind value
-pub type SVGPaintKind = generic::SVGPaintKind<Color, ComputedUrl>;
+pub type SVGPaintKind = generic::SVGPaintKind<RGBA, ComputedUrl>;
 
 impl Default for SVGPaint {
     fn default() -> Self {
@@ -34,7 +33,7 @@ impl Default for SVGPaint {
 impl SVGPaint {
     /// Opaque black color
     pub fn black() -> Self {
-        let rgba = RGBA::from_floats(0., 0., 0., 1.).into();
+        let rgba = RGBA::from_floats(0., 0., 0., 1.);
         SVGPaint {
             kind: generic::SVGPaintKind::Color(rgba),
             fallback: None,
