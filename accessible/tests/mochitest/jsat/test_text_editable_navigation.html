@@ -41,9 +41,8 @@
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       is(evt[0].editable, true, "focused item is editable");
       runner.eventTextMatches(evt[1],
-        ["Text content test document",
-         "Please refrain from Mayoneggs during this salmonella scare.",
-         "text area"]);
+        ["Please refrain from Mayoneggs during this salmonella scare."]);
+      is(evt[1].className, "android.widget.EditText", "editable class");
       is(evt[1].focused, true, "a11y focused item is focused");
       is(evt[2].fromIndex, 0, "Correct fromIndex");
       is(evt[2].toIndex, 0, "Correct toIndex");

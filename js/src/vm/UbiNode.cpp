@@ -19,6 +19,7 @@
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/UbiNodeUtils.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "util/Text.h"
@@ -222,7 +223,6 @@ Node::exposeToJS() const
     return v;
 }
 
-
 // A JS::CallbackTracer subclass that adds a Edge to a Vector for each
 // edge on which it is invoked.
 class EdgeVectorTracer : public JS::CallbackTracer {
@@ -285,31 +285,6 @@ class EdgeVectorTracer : public JS::CallbackTracer {
     { }
 };
 
-
-// An EdgeRange concrete class that simply holds a vector of Edges,
-// populated by the init method.
-class SimpleEdgeRange : public EdgeRange {
-    EdgeVector edges;
-    size_t i;
-
-    void settle() {
-        front_ = i < edges.length() ? &edges[i] : nullptr;
-    }
-
-  public:
-    explicit SimpleEdgeRange() : edges(), i(0) { }
-
-    bool init(JSRuntime* rt, void* thing, JS::TraceKind kind, bool wantNames = true) {
-        EdgeVectorTracer tracer(rt, &edges, wantNames);
-        js::TraceChildren(&tracer, thing, kind);
-        settle();
-        return tracer.okay;
-    }
-
-    void popFront() override { i++; settle(); }
-};
-
-
 template<typename Referent>
 JS::Zone*
 TracerConcrete<Referent>::zone() const
@@ -337,7 +312,7 @@ TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
     if (!range)
         return nullptr;
 
-    if (!range->init(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!range->addTracerEdges(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
     // Note: Clang 3.8 (or older) require an explicit construction of the
@@ -560,6 +535,14 @@ UniquePtr<EdgeRange>
 Concrete<RootList>::edges(JSContext* cx, bool wantNames) const {
     MOZ_ASSERT_IF(wantNames, get().wantNames);
     return js::MakeUnique<PreComputedEdgeRange>(get().edges);
+}
+
+bool
+SimpleEdgeRange::addTracerEdges(JSRuntime* rt, void* thing, JS::TraceKind kind, bool wantNames) {
+    EdgeVectorTracer tracer(rt, &edges, wantNames);
+    js::TraceChildren(&tracer, thing, kind);
+    settle();
+    return tracer.okay;
 }
 
 } // namespace ubi
