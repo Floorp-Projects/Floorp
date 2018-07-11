@@ -46,6 +46,7 @@ protected:
 public:
   explicit VRDisplayExternal(const VRDisplayState& aDisplayState);
   void Refresh();
+  const VRControllerState& GetLastControllerState(uint32_t aStateIndex) const;
 protected:
   virtual ~VRDisplayExternal();
   void Destroy();
@@ -58,17 +59,6 @@ private:
   VRTelemetry mTelemetry;
   bool mIsPresenting;
   VRHMDSensorState mLastSensorState;
-};
-
-class VRControllerExternal : public VRControllerHost
-{
-public:
-  explicit VRControllerExternal(dom::GamepadHand aHand, uint32_t aDisplayID, uint32_t aNumButtons,
-                              uint32_t aNumTriggers, uint32_t aNumAxes,
-                              const nsCString& aId);
-
-protected:
-  virtual ~VRControllerExternal();
 };
 
 } // namespace impl
@@ -96,7 +86,9 @@ public:
                              double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
-  bool PullState(VRDisplayState* aDisplayState, VRHMDSensorState* aSensorState = nullptr);
+  bool PullState(VRDisplayState* aDisplayState,
+                 VRHMDSensorState* aSensorState = nullptr,
+                 VRControllerState* aControllerState = nullptr);
   void PushState(VRBrowserState* aBrowserState, const bool aNotifyCond = false);
 
 protected:
@@ -106,7 +98,6 @@ protected:
 private:
   // there can only be one
   RefPtr<impl::VRDisplayExternal> mDisplay;
-  nsTArray<RefPtr<impl::VRControllerExternal>> mExternalController;
 #if defined(XP_MACOSX)
   int mShmemFD;
 #elif defined(XP_WIN)
