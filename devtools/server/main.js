@@ -12,7 +12,7 @@ var { Ci, Cc } = require("chrome");
 var Services = require("Services");
 var { ActorPool, OriginalLocation, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
-var { ChildDebuggerTransport, WorkerDebuggerTransport } =
+var { WorkerDebuggerTransport } =
   require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
@@ -20,6 +20,7 @@ var { dumpn } = DevToolsUtils;
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 loader.lazyRequireGetter(this, "LocalDebuggerTransport", "devtools/shared/transport/local-transport", true);
+loader.lazyRequireGetter(this, "ChildDebuggerTransport", "devtools/shared/transport/child-transport", true);
 
 loader.lazyGetter(this, "generateUUID", () => {
   // eslint-disable-next-line no-shadow
