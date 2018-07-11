@@ -1237,16 +1237,20 @@ ReflowInput::CalculateBorderPaddingMargin(
     nscoord start, end;
     // We have to compute the start and end values
     if (eStyleUnit_Auto == mStyleMargin->mMargin.GetUnit(startSide)) {
-      // XXX FIXME (or does CalculateBlockSideMargins do this?)
-      start = 0;  // just ignore
+      // We set this to 0 for now, and fix it up later in
+      // InitAbsoluteConstraints (which is caller of this function, via
+      // CalculateHypotheticalPosition).
+      start = 0;
     } else {
       start = nsLayoutUtils::
         ComputeCBDependentValue(aContainingBlockSize,
                                 mStyleMargin->mMargin.Get(startSide));
     }
     if (eStyleUnit_Auto == mStyleMargin->mMargin.GetUnit(endSide)) {
-      // XXX FIXME (or does CalculateBlockSideMargins do this?)
-      end = 0;  // just ignore
+      // We set this to 0 for now, and fix it up later in
+      // InitAbsoluteConstraints (which is caller of this function, via
+      // CalculateHypotheticalPosition).
+      end = 0;
     } else {
       end = nsLayoutUtils::
         ComputeCBDependentValue(aContainingBlockSize,
@@ -1765,6 +1769,10 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     ComputedLogicalBorderPadding().ConvertTo(cbwm, wm);
 
   bool iSizeIsAuto = eStyleUnit_Auto == mStylePosition->ISize(cbwm).GetUnit();
+  bool marginIStartIsAuto = false;
+  bool marginIEndIsAuto = false;
+  bool marginBStartIsAuto = false;
+  bool marginBEndIsAuto = false;
   if (iStartIsAuto) {
     // We know 'right' is not 'auto' anymore thanks to the hypothetical
     // box code above.
@@ -1835,9 +1843,9 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     nscoord availMarginSpace =
       aCBSize.ISize(cbwm) - offsets.IStartEnd(cbwm) - margin.IStartEnd(cbwm) -
       borderPadding.IStartEnd(cbwm) - computedSize.ISize(cbwm);
-    bool marginIStartIsAuto =
+    marginIStartIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetIStartUnit(cbwm);
-    bool marginIEndIsAuto =
+    marginIEndIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetIEndUnit(cbwm);
 
     if (marginIStartIsAuto) {
@@ -1923,9 +1931,9 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     //  * we're dealing with a replaced element
     //  * bsize was constrained by min- or max-bsize.
     nscoord availMarginSpace = autoBSize - computedSize.BSize(cbwm);
-    bool marginBStartIsAuto =
+    marginBStartIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetBStartUnit(cbwm);
-    bool marginBEndIsAuto =
+    marginBEndIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetBEndUnit(cbwm);
 
     if (marginBStartIsAuto) {
@@ -1954,7 +1962,19 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   ComputedISize() = computedSize.ConvertTo(wm, cbwm).ISize(wm);
 
   SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
-  SetComputedLogicalMargin(margin.ConvertTo(wm, cbwm));
+
+  LogicalMargin marginInOurWM = margin.ConvertTo(wm, cbwm);
+  SetComputedLogicalMargin(marginInOurWM);
+
+  // If we have auto margins, update our UsedMarginProperty. The property
+  // will have already been created by InitOffsets if it is needed.
+  if (marginIStartIsAuto || marginIEndIsAuto ||
+      marginBStartIsAuto || marginBEndIsAuto) {
+    nsMargin* propValue = mFrame->GetProperty(nsIFrame::UsedMarginProperty());
+    MOZ_ASSERT(propValue, "UsedMarginProperty should have been created "
+                          "by InitOffsets.");
+    *propValue = marginInOurWM.GetPhysicalMargin(wm);
+  }
 }
 
 // This will not be converted to abstract coordinates because it's only
