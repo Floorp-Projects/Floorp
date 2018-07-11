@@ -82,6 +82,10 @@
 #include "WGLLibrary.h"
 #endif
 
+#if defined(MOZ_WIDGET_ANDROID)
+    #include "../../gfx/vr/gfxVRExternal.h"
+#endif
+
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
@@ -2290,6 +2294,55 @@ WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
     return totalBytes;
 }
 
+
+#if defined(MOZ_WIDGET_ANDROID)
+already_AddRefed<layers::SharedSurfaceTextureClient>
+WebGLContext::GetVRFrame()
+{
+  if (IsContextLost()) {
+    ForceRestoreContext();
+  }
+
+  int frameId = gfx::impl::VRDisplayExternal::sPushIndex;
+  static int lastFrameId = -1;
+  /**
+   * Android doesn't like duplicated GetVRFrame within the same gfxVRExternal frame.
+   * Ballout forced composition calls if we are in the same VRExternal push frame index.
+   * Also discard frameId 0 because sometimes compositor is not paused yet due to channel communication delays.
+   */
+  const bool ignoreFrame = lastFrameId == frameId || frameId == 0;
+  lastFrameId = frameId;
+  if (!ignoreFrame) {
+      BeginComposition();
+      EndComposition();
+  }
+
+  if (IsContextLost()) {
+    return nullptr;
+  }
+
+  gl::GLScreenBuffer* screen = gl->Screen();
+  if (!screen) {
+    return nullptr;
+  }
+
+  RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
+  if (!sharedSurface || !sharedSurface->Surf()) {
+    return nullptr;
+  }
+
+  /**
+   * Make sure that the WebGL buffer is committed to the attached SurfaceTexture on Android.
+   */
+  if (!ignoreFrame && !IsContextLost()) {
+    sharedSurface->Surf()->ProducerAcquire();
+    sharedSurface->Surf()->Commit();
+    sharedSurface->Surf()->ProducerRelease();
+  }
+
+  return sharedSurface.forget();
+}
+#else
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
@@ -2314,6 +2367,8 @@ WebGLContext::GetVRFrame()
 
   return sharedSurface.forget();
 }
+
+#endif  // ifdefined(MOZ_WIDGET_ANDROID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

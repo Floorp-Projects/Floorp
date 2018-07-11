@@ -48,6 +48,12 @@ static const int kVRControllerMaxTriggers = 16;
 static const int kVRControllerMaxAxis = 16;
 static const int kVRLayerMaxCount = 8;
 
+#if defined(__ANDROID__)
+typedef uint64_t VRLayerTextureHandle;
+#else
+typedef void* VRLayerTextureHandle;
+#endif
+
 struct Point3D_POD
 {
   float x;
@@ -135,7 +141,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
 #endif // MOZILLA_INTERNAL_API
 
 struct VRHMDSensorState {
-  int64_t inputFrameID;
+  uint64_t inputFrameID;
   double timestamp;
   VRDisplayCapabilityFlags flags;
 
@@ -277,19 +283,20 @@ enum class VRLayerType : uint16_t {
 enum class VRLayerTextureType : uint16_t {
   LayerTextureType_None = 0,
   LayerTextureType_D3D10SurfaceDescriptor = 1,
-  LayerTextureType_MacIOSurface = 2
+  LayerTextureType_MacIOSurface = 2,
+  LayerTextureType_GeckoSurfaceTexture = 3
 };
 
 struct VRLayer_2D_Content
 {
-  void* mTextureHandle;
+  VRLayerTextureHandle mTextureHandle;
   VRLayerTextureType mTextureType;
   uint64_t mFrameId;
 };
 
 struct VRLayer_Stereo_Immersive
 {
-  void* mTextureHandle;
+  VRLayerTextureHandle mTextureHandle;
   VRLayerTextureType mTextureType;
   uint64_t mFrameId;
   uint64_t mInputFrameId;
@@ -316,7 +323,6 @@ struct VRBrowserState
 
 struct VRSystemState
 {
-  uint32_t presentingGeneration;
   bool enumerationCompleted;
   VRDisplayState displayState;
   VRHMDSensorState sensorState;
@@ -330,6 +336,8 @@ struct VRExternalShmem
 #if defined(__ANDROID__)
   pthread_mutex_t systemMutex;
   pthread_mutex_t browserMutex;
+  pthread_cond_t systemCond;
+  pthread_cond_t browserCond;
 #else
   int64_t generationA;
 #endif // defined(__ANDROID__)
