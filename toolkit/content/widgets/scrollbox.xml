@@ -15,6 +15,15 @@
         <children/>
       </xul:box>
     </content>
+
+    <implementation>
+      <method name="scrollByIndex">
+        <parameter name="index"/>
+        <body>
+          this.boxObject.scrollByIndex(index);
+        </body>
+      </method>
+    </implementation>
   </binding>
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
@@ -104,6 +113,16 @@
           this.setAttribute("smoothscroll", !!val);
           return val;
         ]]></setter>
+      </property>
+
+      <field name="_scrollBoxObject">null</field>
+      <property name="scrollBoxObject" readonly="true">
+        <getter><![CDATA[
+          if (!this._scrollBoxObject) {
+            this._scrollBoxObject = this._scrollbox.boxObject;
+          }
+          return this._scrollBoxObject;
+        ]]></getter>
       </property>
 
       <property name="scrollClientRect" readonly="true">

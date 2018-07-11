@@ -750,6 +750,7 @@ WEBIDL_FILES = [
     'ScreenOrientation.webidl',
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
+    'ScrollBoxObject.webidl',
     'Selection.webidl',
     'ServiceWorker.webidl',
     'ServiceWorkerContainer.webidl',
