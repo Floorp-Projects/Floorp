@@ -1347,7 +1347,7 @@ struct nsRecessedBorder : public nsStyleBorder {
     : nsStyleBorder(aPresContext)
   {
     NS_FOR_CSS_SIDES(side) {
-      BorderColorFor(side) = StyleComplexColor::Black();
+      BorderColorFor(side) = StyleComplexColor::FromColor(NS_RGB(0, 0, 0));
       mBorder.Side(side) = aBorderWidth;
       // Note: use SetBorderStyle here because we want to affect
       // mComputedBorder
