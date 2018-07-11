@@ -1490,8 +1490,10 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        ldflags, lib = objs
+        self.assertEqual(len(objs), 3)
+        ldflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertRegexpMatches(lib.lib_name, "random_crate")
         self.assertRegexpMatches(lib.import_name, "random_crate")
@@ -1510,8 +1512,11 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('rust-library-features',
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
-        ldflags, lib = objs
+
+        self.assertEqual(len(objs), 3)
+        ldflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertEqual(lib.features, ['musthave', 'cantlivewithout'])
 
@@ -1559,8 +1564,10 @@ class TestEmitterBasic(unittest.TestCase):
                                                BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
 
-        ldflags, prog = objs
+        self.assertEqual(len(objs), 3)
+        ldflags, cflags, prog = objs
         self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(prog, RustProgram)
         self.assertEqual(prog.name, 'some')
 
@@ -1571,9 +1578,14 @@ class TestEmitterBasic(unittest.TestCase):
                                                HOST_BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], HostRustProgram)
-        self.assertEqual(objs[0].name, 'some')
+        self.assertEqual(len(objs), 4)
+        print(objs)
+        ldflags, cflags, hostflags, prog = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(hostflags, ComputedFlags)
+        self.assertIsInstance(prog, HostRustProgram)
+        self.assertEqual(prog.name, 'some')
 
     def test_host_rust_libraries(self):
         '''Test HOST_RUST_LIBRARIES emission.'''
@@ -1581,10 +1593,14 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_HOST_TARGET='i686-pc-windows-msvc',
                                                HOST_BIN_SUFFIX='.exe'))
         objs = self.read_topsrcdir(reader)
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], HostRustLibrary)
-        self.assertRegexpMatches(objs[0].lib_name, 'host_lib')
-        self.assertRegexpMatches(objs[0].import_name, 'host_lib')
+
+        self.assertEqual(len(objs), 3)
+        ldflags, lib, cflags = objs
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(lib, HostRustLibrary)
+        self.assertRegexpMatches(lib.lib_name, 'host_lib')
+        self.assertRegexpMatches(lib.import_name, 'host_lib')
 
     def test_crate_dependency_path_resolution(self):
         '''Test recursive dependencies resolve with the correct paths.'''
@@ -1592,8 +1608,10 @@ class TestEmitterBasic(unittest.TestCase):
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
         objs = self.read_topsrcdir(reader)
 
-        ldflags, lib = objs
+        self.assertEqual(len(objs), 3)
+        ldflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
 
     def test_install_shared_lib(self):
