@@ -103,7 +103,7 @@ function popupShown()
 
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
-  var scrollbox = document.getAnonymousNodes(popup)[0]._scrollbox;
+  var sbo = document.getAnonymousNodes(popup)[0].scrollBoxObject;
   var expectedScrollPos = 0;
 
   if (gTestIndex == 0) {
@@ -141,7 +141,7 @@ function popupShown()
     ok(Math.round(rect.bottom) + gScreenY <= screen.height, gTests[gTestIndex] + " bottom");
     ok(gOverflowed && !gUnderflowed, gTests[gTestIndex] + " overflow")
 
-    scrollbox.scrollTo(0, 40);
+    sbo.scrollTo(0, 40);
     expectedScrollPos = 40;
   }
   else if (gTestIndex == 3) {
@@ -157,7 +157,7 @@ function popupShown()
     ok(!gOverflowed && gUnderflowed, gTests[gTestIndex] + " overflow");
   }
 
-  is(scrollbox.scrollTop, expectedScrollPos, "menu scroll position")
+  is(sbo.positionY, expectedScrollPos, "menu scroll position");
 
   hidePopup();
 }

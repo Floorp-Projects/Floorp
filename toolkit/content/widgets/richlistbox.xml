@@ -23,6 +23,9 @@
       <field name="_scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "main-box");
       </field>
+      <field name="scrollBoxObject">
+        this._scrollbox.boxObject;
+      </field>
       <constructor>
         <![CDATA[
           // add a template build listener
@@ -96,8 +99,7 @@
             }
           }
           return null;
-        ]]>
-        </body>
+        ]]></body>
       </method>
 
       <method name="getPreviousItem">
@@ -178,6 +180,7 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
+            // work around missing implementation in scrollBoxObject
             return this.ensureElementIsVisible(this.getItemAtIndex(aIndex));
           ]]>
         </body>
@@ -210,7 +213,7 @@
           <![CDATA[
             var item = this.getItemAtIndex(aIndex);
             if (item)
-              this._scrollbox.scrollToElement(item);
+              this.scrollBoxObject.scrollToElement(item);
           ]]>
         </body>
       </method>
@@ -270,12 +273,12 @@
             // the new current item is at approximately the same position as
             // the existing current item.
             if (this._isItemVisible(this.currentItem))
-              this._scrollbox.scrollBy(0, this._scrollbox.boxObject.height * aDirection);
+              this.scrollBoxObject.scrollBy(0, this.scrollBoxObject.height * aDirection);
 
             // Figure out, how many items fully fit into the view port
             // (including the currently selected one), and determine
             // the index of the first one lying (partially) outside
-            var height = this._scrollbox.boxObject.height;
+            var height = this.scrollBoxObject.height;
             var startBorder = this.currentItem.boxObject.y;
             if (aDirection == -1)
               startBorder += this.currentItem.boxObject.height;
@@ -354,7 +357,7 @@
                 if (this.selType != "multiple" && this.selectedCount == 0)
                   this.selectedItem = currentItem;
 
-                if (this._scrollbox.boxObject.height) {
+                if (this.scrollBoxObject.height) {
                   this.ensureElementIsVisible(currentItem);
                 } else {
                   // XXX hack around a bug in ensureElementIsVisible as it will
@@ -419,11 +422,11 @@
             if (!aItem)
               return false;
 
-            var y = this._scrollbox.scrollTop + this._scrollbox.boxObject.y;
+            var y = this.scrollBoxObject.positionY + this.scrollBoxObject.y;
 
             // Partially visible items are also considered visible
             return (aItem.boxObject.y + aItem.boxObject.height > y) &&
-                   (aItem.boxObject.y < y + this._scrollbox.boxObject.height);
+                   (aItem.boxObject.y < y + this.scrollBoxObject.height);
           ]]>
         </body>
       </method>

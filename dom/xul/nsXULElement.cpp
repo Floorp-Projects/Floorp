@@ -75,7 +75,6 @@
 #include "nsLayoutUtils.h"
 #include "XULFrameElement.h"
 #include "XULPopupElement.h"
-#include "XULScrollElement.h"
 
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/BoxObject.h"
@@ -156,11 +155,6 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
       nodeInfo->Equals(nsGkAtoms::editor)) {
     already_AddRefed<mozilla::dom::NodeInfo> frameni = nodeInfo.forget();
     return new XULFrameElement(frameni);
-  }
-
-  if (nodeInfo->Equals(nsGkAtoms::scrollbox)) {
-    already_AddRefed<mozilla::dom::NodeInfo> scrollni = nodeInfo.forget();
-    return new XULScrollElement(scrollni);
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());

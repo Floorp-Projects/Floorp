@@ -256,6 +256,7 @@
 #ifdef MOZ_XUL
 #include "mozilla/dom/ListBoxObject.h"
 #include "mozilla/dom/MenuBoxObject.h"
+#include "mozilla/dom/ScrollBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
 #include "nsIDocShellTreeOwner.h"
@@ -6329,6 +6330,8 @@ nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
       boxObject = new TreeBoxObject();
     } else if (tag == nsGkAtoms::listbox) {
       boxObject = new ListBoxObject();
+    } else if (tag == nsGkAtoms::scrollbox) {
+      boxObject = new ScrollBoxObject();
     } else {
       boxObject = new BoxObject();
     }

@@ -9,8 +9,8 @@ document.addEventListener("MozReftestInvalidate", runtest, false);
 function runtest() {
   document.getElementById('b').height = '100';
 
-  var scrollbox = document.getElementById('s');
-  scrollbox.scrollTo(0, 1000);
+  var sbo = document.getElementById('s').boxObject;
+  sbo.scrollTo(0, 1000);
 
   document.documentElement.className = "";
 }
