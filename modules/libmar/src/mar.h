@@ -48,6 +48,7 @@ typedef struct MarItem_ {
 struct MarFile_ {
   FILE *fp;
   MarItem *item_table[TABLESIZE];
+  int item_table_is_valid;
 };
 
 typedef struct MarFile_ MarFile;
