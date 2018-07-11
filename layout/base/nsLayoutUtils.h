@@ -1221,10 +1221,11 @@ public:
    * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
    * Otherwise (by default), the border box is used.
    */
-  static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+  static void GetAllInFlowRects(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
                                 RectCallback* aCallback, uint32_t aFlags = 0);
 
-  static void GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+  static void GetAllInFlowRectsAndTexts(nsIFrame* aFrame,
+                                        const nsIFrame* aRelativeTo,
                                         RectCallback* aCallback,
                                         mozilla::dom::Sequence<nsString>* aTextList,
                                         uint32_t aFlags = 0);
@@ -1239,7 +1240,7 @@ public:
    * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
    * Otherwise (by default), the border box is used.
    */
-  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
                                        uint32_t aFlags = 0);
 
   enum {
