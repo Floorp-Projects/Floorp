@@ -24,8 +24,6 @@ add_task(async function() {
         "Expect the target BrowsingContextTargetActor in response form field.");
       Assert.equal(response.type, "tabAttached",
         "Expect tabAttached in the response type.");
-      Assert.ok(typeof response.promisesActor === "string",
-        "Should have a tab context PromisesActor.");
       resolve();
     });
   });
