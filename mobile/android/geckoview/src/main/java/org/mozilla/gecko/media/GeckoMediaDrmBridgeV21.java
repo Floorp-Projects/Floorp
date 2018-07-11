@@ -473,9 +473,11 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
         @Override
         protected Void doInBackground(Void... params) {
+            HttpURLConnection urlConnection = null;
+            BufferedReader in = null;
             try {
                 URI finalURI = new URI(mURL + "&signedRequest=" + URLEncoder.encode(new String(mDrmRequest), "UTF-8"));
-                HttpURLConnection urlConnection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(finalURI);
+                urlConnection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(finalURI);
                 urlConnection.setRequestMethod("POST");
                 if (DEBUG) Log.d(LOGTAG, "Provisioning, posting url =" + finalURI.toString());
 
@@ -489,8 +491,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
                 int responseCode = urlConnection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader in =
-                      new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), StringUtils.UTF_8));
+                    in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), StringUtils.UTF_8));
                     String inputLine;
                     StringBuffer response = new StringBuffer();
 
@@ -508,6 +509,17 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 Log.e(LOGTAG, "Got exception during posting provisioning request ...", e);
             } catch (URISyntaxException e) {
                 Log.e(LOGTAG, "Got exception during creating uri ...", e);
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                try {
+                    if (in != null) {
+                        in.close();
+                    }
+                } catch (IOException e) {
+                    Log.e(LOGTAG, "Exception during closing in ...", e);
+                }
             }
             return null;
         }
