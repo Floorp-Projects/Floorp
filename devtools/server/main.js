@@ -29,30 +29,8 @@ loader.lazyGetter(this, "generateUUID", () => {
   return generateUUID;
 });
 
-// Overload `Components` to prevent DevTools loader exception on Components
-// object usage
-// eslint-disable-next-line no-unused-vars
-Object.defineProperty(this, "Components", {
-  get() {
-    return require("chrome").components;
-  }
-});
-
 const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
   "resource://devtools/server/startup/content-process.js";
-
-function loadSubScript(url) {
-  try {
-    Services.scriptloader.loadSubScript(url, this);
-  } catch (e) {
-    const errorStr = "Error loading: " + url + ":\n" +
-                   (e.fileName ? "at " + e.fileName + " : " + e.lineNumber + "\n" : "") +
-                   e + " - " + e.stack + "\n";
-    dump(errorStr);
-    reportError(errorStr);
-    throw e;
-  }
-}
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
@@ -156,7 +134,7 @@ var DebuggerServer = {
     }
 
     if (!this.rootlessServer && !this.createRootActor) {
-      throw new Error("Use DebuggerServer.addActors() to add a root actor " +
+      throw new Error("Use DebuggerServer.setRootActor() to add a root actor " +
                       "implementation.");
     }
   },
@@ -195,18 +173,6 @@ var DebuggerServer = {
    */
   registerAllActors() {
     this.registerActors({ root: true, browser: true, target: true });
-  },
-
-  /**
-   * Load a subscript into the debugging global.
-   *
-   * @param url string A url that will be loaded as a subscript into the
-   *        debugging global.  The user must load at least one script
-   *        that implements a createRootActor() function to create the
-   *        server's root actor.
-   */
-  addActors(url) {
-    loadSubScript.call(this, url);
   },
 
   /**
@@ -1343,15 +1309,6 @@ if (this.exports) {
 this.DebuggerServer = DebuggerServer;
 this.ActorPool = ActorPool;
 this.OriginalLocation = OriginalLocation;
-
-// When using DebuggerServer.addActors, some symbols are expected to be in
-// the scope of the added actor even before the corresponding modules are
-// loaded, so let's explicitly bind the expected symbols here.
-var includes = ["Components", "Ci", "Cu", "require", "Services", "DebuggerServer",
-                "ActorPool", "DevToolsUtils"];
-includes.forEach(name => {
-  DebuggerServer[name] = this[name];
-});
 
 /**
  * Creates a DebuggerServerConnection.

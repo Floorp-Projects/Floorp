@@ -21,7 +21,8 @@ try {
 
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
-    const { DebuggerServer, ActorPool } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/main");
+    const { ActorPool } = require("devtools/server/actors/common");
 
     DebuggerServer.init();
     // We want a special server without any root actor and only target-scoped actors.
