@@ -122,7 +122,7 @@ const ADDONS = {
     },
   },
 
-  // Dictionary - incompatible in strict compatibility mode
+  // Dictionary - compatible even in strict compatibility mode
   "addon7@tests.mozilla.org": {
     "install.rdf": {
       id: "addon7@tests.mozilla.org",
@@ -140,7 +140,7 @@ const ADDONS = {
     },
     compatible: {
       nonStrict: true,
-      strict: false,
+      strict: true,
     },
   },
 };

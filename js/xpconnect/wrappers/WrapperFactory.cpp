@@ -701,4 +701,10 @@ NativeGlobal(JSObject* obj)
     return global;
 }
 
+nsIGlobalObject*
+CurrentNativeGlobal(JSContext* cx)
+{
+    return xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+}
+
 } // namespace xpc

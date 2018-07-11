@@ -90,8 +90,8 @@ menucaption > .menu-iconic-text {
   height: 16px;
 }
 
-.menu-iconic > .menu-iconic-left,
-.menuitem-iconic > .menu-iconic-left {
+menu.menu-iconic > .menu-iconic-left,
+menuitem.menuitem-iconic > .menu-iconic-left {
   -moz-appearance: menuimage;
   padding-top: 2px;
 }

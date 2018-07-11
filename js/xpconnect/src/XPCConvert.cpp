@@ -813,7 +813,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
     case nsXPTType::T_PROMISE:
     {
-        nsIGlobalObject* glob = NativeGlobal(CurrentGlobalOrNull(cx));
+        nsIGlobalObject* glob = CurrentNativeGlobal(cx);
         if (!glob) {
             if (pErr) {
                 *pErr = NS_ERROR_UNEXPECTED;

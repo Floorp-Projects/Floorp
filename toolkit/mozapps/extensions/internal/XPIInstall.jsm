@@ -649,7 +649,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
     addon.hasEmbeddedWebExtension = manifest.hasEmbeddedWebExtension == "true";
 
     if (addon.optionsType &&
-        addon.optionsType != AddonManager.OPTIONS_INLINE_BROWSER &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE_BROWSER &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
       throw new Error("Install manifest specifies unknown optionsType: " + addon.optionsType);
     }
@@ -2595,9 +2595,9 @@ UpdateChecker.prototype = {
     XPIInstall.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
-
     let ignoreMaxVersion = false;
-    let ignoreStrictCompat = false;
+    // Ignore strict compatibility for dictionaries by default.
+    let ignoreStrictCompat = (this.addon.type == "webextension-dictionary");
     if (!AddonManager.checkCompatibility) {
       ignoreMaxVersion = true;
       ignoreStrictCompat = true;

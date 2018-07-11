@@ -152,9 +152,7 @@ SecretDecoderRing::AsyncEncryptStrings(uint32_t plaintextsCount,
   NS_ENSURE_ARG_POINTER(plaintexts);
   NS_ENSURE_ARG_POINTER(aCx);
 
-  nsIGlobalObject* globalObject =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!globalObject)) {
     return NS_ERROR_UNEXPECTED;
   }

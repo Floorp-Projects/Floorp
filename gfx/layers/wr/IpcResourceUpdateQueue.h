@@ -85,9 +85,10 @@ public:
 
   void AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
 
-  void AddExternalImageForTexture(wr::ExternalImageId aExtId,
-                                  wr::ImageKey aKey,
-                                  layers::TextureClient* aTexture);
+  void PushExternalImageForTexture(wr::ExternalImageId aExtId,
+                                   wr::ImageKey aKey,
+                                   layers::TextureClient* aTexture,
+                                   bool aIsUpdate);
 
   bool UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
