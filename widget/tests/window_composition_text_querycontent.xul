@@ -884,6 +884,63 @@ function runCompositionCommitTest()
   is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #3");
   is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #3");
 
+  // inserting empty string with simple composition.
+  textarea.value = "abc";
+  textarea.setSelectionRange(3, 3);
+  synthesizeComposition({ type: "compositionstart" });
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  is(result.compositionupdate, false,
+     "runCompositionCommitTest: compositionupdate should not be fired when interting empty string with composition");
+  is(result.compositionend, true,
+     "runCompositionCommitTest: compositionend should be fired when interting empty string with composition");
+  is(result.text, true,
+     "runCompositionCommitTest: text should be fired when interting empty string with composition");
+  is(result.input, true,
+     "runCompositionCommitTest: input should be fired when interting empty string with composition");
+  is(textarea.value, "abc",
+     "runCompositionCommitTest: textarea should keep original value when interting empty string with composition");
+
+  // replacing selection with empty string with simple composition.
+  textarea.value = "abc";
+  textarea.setSelectionRange(0, 3);
+  synthesizeComposition({ type: "compositionstart" });
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  is(result.compositionupdate, false,
+     "runCompositionCommitTest: compositionupdate should not be fired when replacing selection with empty string with composition");
+  is(result.compositionend, true,
+     "runCompositionCommitTest: compositionend should be fired when replacing selection with empty string with composition");
+  is(result.text, true,
+     "runCompositionCommitTest: text should be fired when replacing selection with empty string with composition");
+  is(result.input, true,
+     "runCompositionCommitTest: input should be fired when replacing selection with empty string with composition");
+  is(textarea.value, "",
+     "runCompositionCommitTest: textarea should become empty when replacing selection with empty string with composition");
+
+  // replacing selection with same string with simple composition.
+  textarea.value = "abc";
+  textarea.setSelectionRange(0, 3);
+  synthesizeComposition({ type: "compositionstart" });
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "abc" });
+
+  is(result.compositionupdate, true,
+     "runCompositionCommitTest: compositionupdate should be fired when replacing selection with same string with composition");
+  is(result.compositionend, true,
+     "runCompositionCommitTest: compositionend should be fired when replacing selection with same string with composition");
+  is(result.text, true,
+     "runCompositionCommitTest: text should be fired when replacing selection with same string with composition");
+  is(result.input, true,
+     "runCompositionCommitTest: input should be fired when replacing selection with same string with composition");
+  is(textarea.value, "abc",
+     "runCompositionCommitTest: textarea should keep same value when replacing selection with same string with composition");
+
   // compositioncommit with non-empty composition string.
   textarea.value = "";
   synthesizeCompositionChange(
@@ -6421,13 +6478,15 @@ function runRemoveContentTest()
 
     hitEventLoop(function () {
       // XXX Currently, "input" event isn't fired on removed content.
-      is(events.length, 1,
+      is(events.length, 2,
          "runRemoveContentTest: wrong event count #2");
-      is(events[0].type, "compositionend",
+      is(events[0].type, "text",
+         "runRemoveContentTest: the 1st event must be text #2");
+      is(events[1].type, "compositionend",
          "runRemoveContentTest: the 1st event must be compositionend #2");
-      is(events[0].data, "",
+      is(events[1].data, "",
          "runRemoveContentTest: compositionupdate has wrong data #2");
-      is(events[0].target, textarea,
+      is(events[1].target, textarea,
          "runRemoveContentTest: The 1st event was fired on wrong event target #2");
       ok(!getEditor(textarea).isComposing,
          "runRemoveContentTest: the textarea still has composition #2");
