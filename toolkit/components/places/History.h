@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "nsURIHashKey.h"
 #include "nsTObserverArray.h"
-#include "nsDeque.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "mozIStorageConnection.h"
