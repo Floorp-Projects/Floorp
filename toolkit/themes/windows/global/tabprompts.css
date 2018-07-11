@@ -8,18 +8,18 @@ tabmodalprompt {
   font-family: sans-serif; /* use content font not system UI font */
 }
 
-.tabmodalprompt-mainContainer {
+.mainContainer {
   color: -moz-fieldText;
   background-color: -moz-field;
   border-radius: 2px;
   border: 1px solid threeDDarkShadow;
 }
 
-.tabmodalprompt-topContainer {
+.topContainer {
   padding: 20px;
 }
 
-.tabmodalprompt-buttonContainer {
+.buttonContainer {
   padding: 12px 20px 15px;
   background-color: hsla(0,0%,0%,.05);
   border-top: 1px solid hsla(0,0%,0%,.05);
