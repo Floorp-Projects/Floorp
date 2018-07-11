@@ -87,6 +87,7 @@ nsUrlClassifierPrefixSet::Clear()
 {
   LOG(("[%s] Clearing PrefixSet", mName.get()));
   mIndexDeltas.Clear();
+  mIndexDeltasChecksum = ~0;
   mIndexPrefixes.Clear();
   mTotalPrefixes = 0;
 }
@@ -97,14 +98,13 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
   MutexAutoLock lock(mLock);
 
   nsresult rv = NS_OK;
+  Clear();
 
-  if (aLength <= 0) {
-    if (mIndexPrefixes.Length() > 0) {
-      Clear();
-    }
-  } else {
-    MOZ_ASSERT(aArray);
+  if (aLength > 0) {
     rv = MakePrefixSet(aArray, aLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Clear(); // clear out any leftovers
+    }
   }
 
   return rv;
@@ -115,18 +115,14 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
 {
   mLock.AssertCurrentThreadOwns();
 
-  if (aLength == 0) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(aPrefixes);
+  MOZ_ASSERT(aLength > 0);
 
 #ifdef DEBUG
   for (uint32_t i = 1; i < aLength; i++) {
     MOZ_ASSERT(aPrefixes[i] >= aPrefixes[i-1]);
   }
 #endif
-
-  Clear();
-  mTotalPrefixes = aLength;
 
   mIndexPrefixes.AppendElement(aPrefixes[0]);
   mIndexDeltas.AppendElement();
@@ -160,6 +156,8 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
     }
     previousItem = aPrefixes[i];
   }
+
+  mTotalPrefixes = aLength;
 
   mIndexDeltas.LastElement().Compact();
 
@@ -267,7 +265,7 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
 
   *aFound = false;
 
-  if (mIndexPrefixes.Length() == 0) {
+  if (IsEmptyInternal()) {
     return NS_OK;
   }
 
@@ -344,12 +342,25 @@ nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
+bool
+nsUrlClassifierPrefixSet::IsEmptyInternal() const
+{
+  if (mIndexPrefixes.IsEmpty()) {
+    MOZ_ASSERT(mIndexDeltas.IsEmpty() && mTotalPrefixes == 0,
+               "If we're empty, there should be no leftovers.");
+    return true;
+  }
+
+  MOZ_ASSERT(mTotalPrefixes >= mIndexPrefixes.Length());
+  return false;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 {
   MutexAutoLock lock(mLock);
 
-  *aEmpty = (mIndexPrefixes.Length() == 0);
+  *aEmpty = IsEmptyInternal();
   return NS_OK;
 }
 
@@ -433,6 +444,8 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
 {
   mCanary.Check();
 
+  Clear();
+
   uint32_t magic;
   uint32_t read;
 
@@ -514,6 +527,7 @@ uint32_t
 nsUrlClassifierPrefixSet::CalculatePreallocateSize() const
 {
   uint32_t fileSize = 4 * sizeof(uint32_t);
+  MOZ_RELEASE_ASSERT(mTotalPrefixes >= mIndexPrefixes.Length());
   uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
   fileSize += 2 * mIndexPrefixes.Length() * sizeof(uint32_t);
   fileSize += deltas * sizeof(uint16_t);
