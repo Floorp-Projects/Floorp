@@ -352,7 +352,7 @@ VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
 {
   MOZ_COUNT_CTOR(VRControllerHost);
   mControllerInfo.mType = aType;
-  mControllerInfo.mControllerState.hand = aHand;
+  mControllerInfo.mControllerState.mHand = aHand;
   mControllerInfo.mMappingType = dom::GamepadMappingType::_empty;
   mControllerInfo.mDisplayID = aDisplayID;
   mControllerInfo.mControllerID = VRSystemManager::AllocateControllerID();
@@ -372,25 +372,25 @@ VRControllerHost::GetControllerInfo() const
 void
 VRControllerHost::SetButtonPressed(uint64_t aBit)
 {
-  mControllerInfo.mControllerState.buttonPressed = aBit;
+  mControllerInfo.mControllerState.mButtonPressed = aBit;
 }
 
 uint64_t
 VRControllerHost::GetButtonPressed()
 {
-  return mControllerInfo.mControllerState.buttonPressed;
+  return mControllerInfo.mControllerState.mButtonPressed;
 }
 
 void
 VRControllerHost::SetButtonTouched(uint64_t aBit)
 {
-  mControllerInfo.mControllerState.buttonTouched = aBit;
+  mControllerInfo.mControllerState.mButtonTouched = aBit;
 }
 
 uint64_t
 VRControllerHost::GetButtonTouched()
 {
-  return mControllerInfo.mControllerState.buttonTouched;
+  return mControllerInfo.mControllerState.mButtonTouched;
 }
 
 void
@@ -408,7 +408,7 @@ VRControllerHost::GetPose()
 dom::GamepadHand
 VRControllerHost::GetHand()
 {
-  return mControllerInfo.mControllerState.hand;
+  return mControllerInfo.mControllerState.mHand;
 }
 
 void

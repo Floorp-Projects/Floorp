@@ -139,7 +139,6 @@ private:
   uint32_t mPromiseID;
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
   RefPtr<dom::VRMockDisplay> mVRMockDisplay;
-  VRControllerState mLastControllerState[kVRControllerMaxCount];
 
   DISALLOW_COPY_AND_ASSIGN(VRManagerChild);
 };
