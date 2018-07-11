@@ -337,8 +337,12 @@ add_task(async function test_kinto_sync() {
     result = await collection.sync();
     Assert.ok(result.ok);
     list = await collection.list();
-    const after = list.data[0].title;
+    const after = list.data[1].title;
     Assert.notEqual(before, after);
+
+    const manualID = list.data[0].id;
+    Assert.equal(list.data.length, 3);
+    Assert.equal(manualID, "some-manually-chosen-id");
   } finally {
     await sqliteHandle.close();
   }
@@ -431,7 +435,7 @@ function getSampleResponse(req, port) {
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
         "Content-Type: application/json; charset=UTF-8",
         "Server: waitress",
-        "Etag: \"1445607541265\""
+        "Etag: \"1445607541267\""
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({
@@ -440,6 +444,11 @@ function getSampleResponse(req, port) {
           "done": false,
           "id": "901967b0-f729-4b30-8d8d-499cba7f4b1d",
           "title": "Modified title"
+        }, {
+          "last_modified": 1445607541267,
+          "done": true,
+          "id": "some-manually-chosen-id",
+          "title": "New record with custom ID"
         }]
       })
     }
