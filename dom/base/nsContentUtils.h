@@ -2965,6 +2965,12 @@ public:
                                           nsIURI* aURI);
 
   /*
+   * Returns true if this window's channel has been marked as a tracking
+   * resource.
+   */
+  static bool IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow);
+
+  /*
    * Serializes a HTML nsINode into its markup representation.
    */
   static bool SerializeNodeToMarkup(nsINode* aRoot,
