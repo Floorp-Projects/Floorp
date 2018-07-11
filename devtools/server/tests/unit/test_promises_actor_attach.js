@@ -22,9 +22,8 @@ add_task(async function() {
   const targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
-  const [ tabResponse ] = await attachTab(client, targetTab);
-
-  await testAttach(client, tabResponse);
+  await attachTab(client, targetTab);
+  await testAttach(client, targetTab);
 
   await close(client);
 });
