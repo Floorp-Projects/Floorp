@@ -28,6 +28,14 @@ nsXPCTestParams::~nsXPCTestParams()
     return NS_OK;                                                             \
 }
 
+#define SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP) {                                \
+    _retval.SwapElements(b);                                                  \
+    b = a;                                                                    \
+    for (uint32_t i = 0; i < b.Length(); ++i)                                 \
+        TAKE_OWNERSHIP(b[i]);                                                 \
+    return NS_OK;                                                             \
+}
+
 #define TAKE_OWNERSHIP_NOOP(val) {}
 #define TAKE_OWNERSHIP_INTERFACE(val) {static_cast<nsISupports*>(val)->AddRef();}
 #define TAKE_OWNERSHIP_STRING(val) {                                          \
@@ -312,4 +320,70 @@ NS_IMETHODIMP nsXPCTestParams::TestStringArrayOptionalSize(const char * *a, uint
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestShortSequence(const nsTArray<short>& a, nsTArray<short>& b, nsTArray<short>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestDoubleSequence(const nsTArray<double>& a, nsTArray<double>& b, nsTArray<double>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+// XXX(nika): Consider generating the exposed type 'nsTArray<RefPtr<nsIXPCTestInterfaceA>>` here instead?
+NS_IMETHODIMP
+nsXPCTestParams::TestInterfaceSequence(const nsTArray<nsIXPCTestInterfaceA*>& a,
+                                       nsTArray<nsIXPCTestInterfaceA*>& b,
+                                       nsTArray<nsIXPCTestInterfaceA*>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_INTERFACE);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestAStringSequence(const nsTArray<nsString>& a,
+                                     nsTArray<nsString>& b,
+                                     nsTArray<nsString>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestACStringSequence(const nsTArray<nsCString>& a,
+                                      nsTArray<nsCString>& b,
+                                      nsTArray<nsCString>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestJsvalSequence(const nsTArray<JS::Value>& a,
+                                   nsTArray<JS::Value>& b,
+                                   nsTArray<JS::Value>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestSequenceSequence(const nsTArray<nsTArray<short>>& a,
+                                      nsTArray<nsTArray<short>>& b,
+                                      nsTArray<nsTArray<short>>& _retval)
+{
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::TestInterfaceIsSequence(const nsIID* aIID, const nsTArray<void*>& a,
+                                         nsIID** bIID, nsTArray<void*>& b,
+                                         nsIID** rvIID, nsTArray<void*>& _retval)
+{
+    // Shuffle around our nsIIDs
+    *rvIID = (*bIID)->Clone();
+    *bIID = aIID->Clone();
+
+    // Perform the generic sequence shuffle.
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_INTERFACE);
 }
