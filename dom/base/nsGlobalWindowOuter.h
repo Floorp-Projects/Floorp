@@ -906,7 +906,7 @@ public:
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
   already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
   already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
-  nsresult SecurityCheckURL(const char *aURL, nsIURI** aURI);
+  nsresult SecurityCheckURL(const char *aURL);
   bool IsPrivateBrowsing();
 
   bool PopupWhitelisted();
@@ -1052,8 +1052,6 @@ private:
   void SetIsBackgroundInternal(bool aIsBackground);
 
   nsresult GetInterfaceInternal(const nsIID& aIID, void** aSink);
-
-  void MaybeAllowStorageForOpenedWindow(nsIURI* aURI);
 
 public:
   // Dispatch a runnable related to the global.

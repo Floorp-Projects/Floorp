@@ -12453,10 +12453,9 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  // No 3rd party or no tracking resource.
+  // No 3rd party.
   if (!nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
-                                                   nullptr) ||
-      !nsContentUtils::IsTrackingResourceWindow(openerInner)) {
+                                                   nullptr)) {
     return;
   }
 
