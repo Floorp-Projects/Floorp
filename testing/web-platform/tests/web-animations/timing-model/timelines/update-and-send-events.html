@@ -19,9 +19,7 @@ promise_test(async t => {
   await animation.ready;
 
   let rAFReceived = false;
-  requestAnimationFrame(() => {
-    rAFReceived = true;
-  });
+  requestAnimationFrame(() => rAFReceived = true);
 
   const eventWatcher = new EventWatcher(t, animation, 'cancel');
   animation.cancel();
@@ -42,9 +40,7 @@ promise_test(async t => {
   await animation.ready;
 
   let rAFReceived = false;
-  requestAnimationFrame(() => {
-    rAFReceived = true;
-  });
+  requestAnimationFrame(() => rAFReceived = true);
 
   const eventWatcher = new EventWatcher(t, animation, 'finish');
   animation.finish();
@@ -109,12 +105,8 @@ promise_test(async t => {
     receivedEvents.push({ type, timeStamp });
   }
 
-  div.onanimationcancel = event => {
-    receiveEvent(event.type, event.timeStamp);
-  };
-  div.ontransitioncancel = event => {
-    receiveEvent(event.type, event.timeStamp);
-  };
+  div.onanimationcancel = event => receiveEvent(event.type, event.timeStamp);
+  div.ontransitioncancel = event => receiveEvent(event.type, event.timeStamp);
 
   getComputedStyle(div).marginLeft;
   div.style = 'animation: anim 100s; ' +
@@ -164,9 +156,7 @@ promise_test(async t => {
   const anim = div.getAnimations()[0];
 
   let receivedEvents = [];
-  anim.oncancel = event => {
-    receivedEvents.push(event);
-  };
+  anim.oncancel = event => receivedEvents.push(event);
 
   const eventWatcher = new EventWatcher(t, div, 'transitionstart');
   await eventWatcher.wait_for('transitionstart');
@@ -187,5 +177,33 @@ promise_test(async t => {
   assert_array_equals(receivedEvents.map(event => event.type), ['cancel'],
     'The cancel event should be dispatched in a later frame');
 }, 'Queues a cancel event in transitionstart event callback');
+
+promise_test(async t => {
+  const div = createDiv(t);
+  getComputedStyle(div).marginLeft;
+  div.style = 'transition: margin-left 100s; margin-left: 100px;';
+  const anim = div.getAnimations()[0];
+
+  let receivedEvents = [];
+  anim.oncancel = event => receivedEvents.push(event);
+  anim.onfinish = event => receivedEvents.push(event);
+  div.ontransitionstart = event => receivedEvents.push(event);
+  div.ontransitioncancel = event => receivedEvents.push(event);
+
+  await anim.ready;
+
+  anim.finish();
+  anim.cancel();
+
+  await waitForAnimationFrames(1);
+
+  assert_array_equals(receivedEvents.map(event => event.type),
+    [ 'transitionstart',
+      'finish',
+      'cancel',
+      'transitioncancel' ],
+    'Playback and CSS events for the same transition should be sorted by ' +
+    'schedule event time and composite order');
+}, 'Sorts events for the same transition');
 
 </script>

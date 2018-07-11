@@ -711,7 +711,7 @@ const gCSSProperties = {
   'image-orientation': {
     // https://drafts.csswg.org/css-images-3/#propdef-image-orientation
     types: [
-      { type: 'discrete', options: [ [ '0deg', '90deg' ] ] }
+      { type: 'discrete', options: [ [ 'none', 'from-image' ] ] }
     ]
   },
   'image-rendering': {

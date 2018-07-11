@@ -4799,6 +4799,27 @@ EditorBase::FinalizeSelection()
   return NS_OK;
 }
 
+void
+EditorBase::ReinitializeSelection(Element& aElement)
+{
+  if (NS_WARN_IF(Destroyed())) {
+    return;
+  }
+
+  OnFocus(&aElement);
+
+  // If previous focused editor turn on spellcheck and this editor doesn't
+  // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
+  SyncRealTimeSpell();
+
+  nsPresContext* context = GetPresContext();
+  if (NS_WARN_IF(!context)) {
+    return;
+  }
+  nsCOMPtr<nsIContent> focusedContent = GetFocusedContentForIME();
+  IMEStateManager::OnFocusInEditor(context, focusedContent, *this);
+}
+
 Element*
 EditorBase::GetEditorRoot()
 {

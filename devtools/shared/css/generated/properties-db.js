@@ -6197,10 +6197,10 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "flip",
       "from-image",
       "inherit",
       "initial",
+      "none",
       "unset"
     ]
   },

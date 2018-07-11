@@ -26,7 +26,7 @@ struct AnimationEventInfo
 {
   RefPtr<dom::EventTarget> mTarget;
   RefPtr<dom::Animation> mAnimation;
-  TimeStamp mTimeStamp;
+  TimeStamp mScheduledEventTimeStamp;
 
   typedef Variant<InternalTransitionEvent,
                   InternalAnimationEvent,
@@ -38,11 +38,11 @@ struct AnimationEventInfo
                      const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage,
                      double aElapsedTime,
-                     const TimeStamp& aTimeStamp,
+                     const TimeStamp& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
     : mTarget(aTarget.mElement)
     , mAnimation(aAnimation)
-    , mTimeStamp(aTimeStamp)
+    , mScheduledEventTimeStamp(aScheduledEventTimeStamp)
     , mEvent(EventVariant(InternalAnimationEvent(true, aMessage)))
   {
     InternalAnimationEvent& event = mEvent.as<InternalAnimationEvent>();
@@ -59,11 +59,11 @@ struct AnimationEventInfo
                      const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage,
                      double aElapsedTime,
-                     const TimeStamp& aTimeStamp,
+                     const TimeStamp& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
     : mTarget(aTarget.mElement)
     , mAnimation(aAnimation)
-    , mTimeStamp(aTimeStamp)
+    , mScheduledEventTimeStamp(aScheduledEventTimeStamp)
     , mEvent(EventVariant(InternalTransitionEvent(true, aMessage)))
   {
     InternalTransitionEvent& event = mEvent.as<InternalTransitionEvent>();
@@ -79,11 +79,11 @@ struct AnimationEventInfo
   // For web animation events
   AnimationEventInfo(const nsAString& aName,
                      RefPtr<dom::AnimationPlaybackEvent>&& aEvent,
-                     TimeStamp&& aTimeStamp,
+                     TimeStamp&& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
     : mTarget(aAnimation)
     , mAnimation(aAnimation)
-    , mTimeStamp(std::move(aTimeStamp))
+    , mScheduledEventTimeStamp(std::move(aScheduledEventTimeStamp))
     , mEvent(std::move(aEvent))
   {
   }
@@ -215,14 +215,16 @@ private:
   class AnimationEventInfoLessThan
   {
   public:
-    bool operator()(const AnimationEventInfo& a, const AnimationEventInfo& b) const
+    bool operator()(const AnimationEventInfo& a,
+                    const AnimationEventInfo& b) const
     {
-      if (a.mTimeStamp != b.mTimeStamp) {
+      if (a.mScheduledEventTimeStamp != b.mScheduledEventTimeStamp) {
         // Null timestamps sort first
-        if (a.mTimeStamp.IsNull() || b.mTimeStamp.IsNull()) {
-          return a.mTimeStamp.IsNull();
+        if (a.mScheduledEventTimeStamp.IsNull() ||
+            b.mScheduledEventTimeStamp.IsNull()) {
+          return a.mScheduledEventTimeStamp.IsNull();
         } else {
-          return a.mTimeStamp < b.mTimeStamp;
+          return a.mScheduledEventTimeStamp < b.mScheduledEventTimeStamp;
         }
       }
 

@@ -4147,7 +4147,7 @@ QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aTimestamp || aPersisted);
+  MOZ_ASSERT(aTimestamp != nullptr || aPersisted != nullptr);
   MOZ_ASSERT(mStorageInitialized);
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
@@ -4165,17 +4165,17 @@ QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
   }
 
   bool persisted;
-  if (aPersisted) {
+  if (aPersisted != nullptr) {
     rv = binaryStream->ReadBoolean(&persisted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  if (aTimestamp) {
+  if (aTimestamp != nullptr) {
     *aTimestamp = timestamp;
   }
-  if (aPersisted) {
+  if (aPersisted != nullptr) {
     *aPersisted = persisted;
   }
   return NS_OK;
