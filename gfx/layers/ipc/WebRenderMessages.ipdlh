@@ -51,10 +51,11 @@ struct OpAddExternalImage {
   ImageKey key;
 };
 
-struct OpAddExternalImageForTexture {
+struct OpPushExternalImageForTexture {
   ExternalImageId externalImageId;
   ImageKey key;
   PTexture texture;
+  bool isUpdate;
 };
 
 struct OpAddCompositorAnimations {
@@ -176,7 +177,7 @@ union OpUpdateResource {
   OpAddFontInstance;
   OpDeleteFontInstance;
   OpAddExternalImage;
-  OpAddExternalImageForTexture;
+  OpPushExternalImageForTexture;
 };
 
 } // namespace

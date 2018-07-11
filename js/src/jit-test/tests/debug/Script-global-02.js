@@ -34,7 +34,3 @@ g1.eval('function i() { g3.h(); }');
 
 g1.i();
 assertEq(log, 'd');
-
-assertEq(g1w.getOwnPropertyDescriptor('f').value.global, g1w);
-assertEq(g2w.getOwnPropertyDescriptor('g').value.global, g2w);
-assertEq(g3w.getOwnPropertyDescriptor('h').value.global, g3w);

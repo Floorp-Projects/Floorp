@@ -10,3 +10,6 @@
    == just artifact builds, and will be removed in bug 1470873.
    ==
    ======================================================================= */
+
+@import url("chrome://global/skin/menu.css");
+

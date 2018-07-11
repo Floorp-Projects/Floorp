@@ -1,8 +1,6 @@
-import openssl
-import pregenerated
-from base import NoSSLEnvironment
-from openssl import OpenSSLEnvironment
-from pregenerated import PregeneratedSSLEnvironment
+from .base import NoSSLEnvironment
+from .openssl import OpenSSLEnvironment
+from .pregenerated import PregeneratedSSLEnvironment
 
 environments = {"none": NoSSLEnvironment,
                 "openssl": OpenSSLEnvironment,

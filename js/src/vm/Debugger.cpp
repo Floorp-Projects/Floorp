@@ -8938,19 +8938,6 @@ DebuggerObject::boundArgumentsGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
-DebuggerObject::globalGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get global", args, object)
-
-    RootedDebuggerObject result(cx);
-    if (!DebuggerObject::getGlobal(cx, object, &result))
-        return false;
-
-    args.rval().setObject(*result);
-    return true;
-}
-
-/* static */ bool
 DebuggerObject::allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get allocationSite", args, object)
@@ -9646,7 +9633,6 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_PSG("boundTargetFunction", DebuggerObject::boundTargetFunctionGetter, 0),
     JS_PSG("boundThis", DebuggerObject::boundThisGetter, 0),
     JS_PSG("boundArguments", DebuggerObject::boundArgumentsGetter, 0),
-    JS_PSG("global", DebuggerObject::globalGetter, 0),
     JS_PSG("allocationSite", DebuggerObject::allocationSiteGetter, 0),
     JS_PSG("errorMessageName", DebuggerObject::errorMessageNameGetter, 0),
     JS_PSG("errorNotes", DebuggerObject::errorNotesGetter, 0),
@@ -9826,17 +9812,6 @@ DebuggerObject::getClassName(JSContext* cx, HandleDebuggerObject object,
 
     result.set(str);
     return true;
-}
-
-/* static */ bool
-DebuggerObject::getGlobal(JSContext* cx, HandleDebuggerObject object,
-                          MutableHandleDebuggerObject result)
-{
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-
-    RootedObject global(cx, &referent->deprecatedGlobal());
-    return dbg->wrapDebuggeeObject(cx, global, result);
 }
 
 JSAtom*

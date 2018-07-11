@@ -16,6 +16,9 @@ async function runManualTest({ completeWith: result }, button) {
       // We .complete() as normal, using the passed test value
       const promise = response.complete(result);
       assert_true(promise instanceof Promise, "returns a promise");
+      // Immediately calling complete() again yields a rejected promise.
+      await promise_rejects(t, "InvalidStateError", response.complete(result));
+      // but the original promise is unaffected
       const returnedValue = await promise;
       assert_equals(
         returnedValue,
@@ -23,17 +26,8 @@ async function runManualTest({ completeWith: result }, button) {
         "Returned value must always be undefined"
       );
       // We now call .complete() again, to force an exception
-      // because [[completeCalled]] is true.
-      try {
-        await response.complete(result);
-        assert_unreached("Expected InvalidStateError to be thrown");
-      } catch (err) {
-        assert_equals(
-          err.code,
-          DOMException.INVALID_STATE_ERR,
-          "Must throw an InvalidStateError"
-        );
-      }
+      // because [[complete]] is true.
+      await promise_rejects(t, "InvalidStateError", response.complete(result));
       button.innerHTML = `✅  ${button.textContent}`;
     } catch (err) {
       button.innerHTML = `❌  ${button.textContent}`;
@@ -80,5 +74,5 @@ async function runManualTest({ completeWith: result }, button) {
 </ol>
 <small>
   If you find a buggy test, please <a href="https://github.com/web-platform-tests/wpt/issues">file a bug</a>
-  and tag one of the <a href="https://github.com/web-platform-tests/wpt/blob/master/payment-request/OWNERS">owners</a>.
+  and tag one of the <a href="https://github.com/web-platform-tests/wpt/blob/master/payment-request/META.yml">suggested reviewers</a>.
 </small>
