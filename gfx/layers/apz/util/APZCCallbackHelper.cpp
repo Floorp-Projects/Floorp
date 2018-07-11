@@ -74,6 +74,16 @@ RecenterDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics)
   aFrameMetrics.SetDisplayPortMargins(margins);
 }
 
+static already_AddRefed<nsIPresShell>
+GetPresShell(const nsIContent* aContent)
+{
+  nsCOMPtr<nsIPresShell> result;
+  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+    result = doc->GetShell();
+  }
+  return result.forget();
+}
+
 static CSSPoint
 ScrollFrameTo(nsIScrollableFrame* aFrame, const FrameMetrics& aMetrics, bool& aSuccessOut)
 {
@@ -146,6 +156,11 @@ ScrollFrame(nsIContent* aContent,
   if (sf) {
     sf->ResetScrollInfoIfGeneration(aMetrics.GetScrollGeneration());
     sf->SetScrollableByAPZ(!aMetrics.IsScrollInfoLayer());
+    if (sf->IsRootScrollFrameOfDocument()) {
+      if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
+        shell->SetVisualViewportOffset(CSSPoint::ToAppUnits(aMetrics.GetScrollOffset()));
+      }
+    }
   }
   bool scrollUpdated = false;
   CSSPoint apzScrollOffset = aMetrics.GetScrollOffset();
@@ -228,16 +243,6 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
               baseSize.width * nsPresContext::AppUnitsPerCSSPixel(),
               baseSize.height * nsPresContext::AppUnitsPerCSSPixel());
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
-}
-
-static already_AddRefed<nsIPresShell>
-GetPresShell(const nsIContent* aContent)
-{
-  nsCOMPtr<nsIPresShell> result;
-  if (nsIDocument* doc = aContent->GetComposedDoc()) {
-    result = doc->GetShell();
-  }
-  return result.forget();
 }
 
 static void
