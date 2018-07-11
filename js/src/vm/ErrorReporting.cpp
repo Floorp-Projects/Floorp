@@ -147,7 +147,7 @@ class MOZ_STACK_CLASS ReportExceptionClosure
 } // anonymous namespace
 
 void
-js::ReportErrorToGlobal(JSContext* cx, HandleObject global, HandleValue error)
+js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global, HandleValue error)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
 #ifdef DEBUG
