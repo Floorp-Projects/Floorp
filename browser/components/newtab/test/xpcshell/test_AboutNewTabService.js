@@ -14,22 +14,54 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
-const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html";
-const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug.html";
-const ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream.html";
-const ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug.html";
-
 const DOWNLOADS_URL = "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
+const SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF = "browser.tabs.remote.separatePrivilegedContentProcess";
 const ACTIVITY_STREAM_PRERENDER_PREF = "browser.newtabpage.activity-stream.prerender";
 const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";
 
 function cleanup() {
+  Services.prefs.clearUserPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_PRERENDER_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_DEBUG_PREF);
   aboutNewTabService.resetNewTabURL();
 }
 
 registerCleanupFunction(cleanup);
+
+let ACTIVITY_STREAM_PRERENDER_URL;
+let ACTIVITY_STREAM_PRERENDER_DEBUG_URL;
+let ACTIVITY_STREAM_URL;
+let ACTIVITY_STREAM_DEBUG_URL;
+
+function setExpectedUrlsWithScripts() {
+  ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html";
+  ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug.html";
+  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream.html";
+  ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug.html";
+}
+
+function setExpectedUrlsWithoutScripts() {
+  ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered-noscripts.html";
+  ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug-noscripts.html";
+  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream-noscripts.html";
+  ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug-noscripts.html";
+}
+
+// Default expected URLs to files with scripts in them.
+setExpectedUrlsWithScripts();
+
+function addTestsWithPrivilegedContentProcessPref(test) {
+  add_task(async() => {
+    await setPrivilegedContentProcessPref(true);
+    setExpectedUrlsWithoutScripts();
+    await test();
+  });
+  add_task(async() => {
+    await setPrivilegedContentProcessPref(false);
+    setExpectedUrlsWithScripts();
+    await test();
+  });
+}
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {
   return new Promise(resolve => {
@@ -60,6 +92,16 @@ function setupASPrerendered() {
 
   let notificationPromise = nextChangeNotificationPromise("about:newtab");
   Services.prefs.setBoolPref(ACTIVITY_STREAM_PRERENDER_PREF, true);
+  return notificationPromise;
+}
+
+function setPrivilegedContentProcessPref(usePrivilegedContentProcess) {
+  if (usePrivilegedContentProcess === Services.prefs.getBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF)) {
+    return Promise.resolve();
+  }
+
+  let notificationPromise = nextChangeNotificationPromise("about:newtab");
+  Services.prefs.setBoolPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF, usePrivilegedContentProcess);
   return notificationPromise;
 }
 
@@ -105,10 +147,11 @@ add_task(async function test_override_activity_stream_disabled() {
   cleanup();
 });
 
-add_task(async function test_override_activity_stream_enabled() {
+addTestsWithPrivilegedContentProcessPref(async function test_override_activity_stream_enabled() {
   let notificationPromise = await setupASPrerendered();
 
-  Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_URL, "Newtab URL should be the default activity stream prerendered URL");
+  Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_URL,
+    "Newtab URL should be the default activity stream prerendered URL");
   Assert.ok(!aboutNewTabService.overridden, "Newtab URL should not be overridden");
   Assert.ok(aboutNewTabService.activityStreamEnabled, "Activity Stream should be enabled");
   Assert.ok(aboutNewTabService.activityStreamPrerender, "Activity Stream should be prerendered");
@@ -127,8 +170,9 @@ add_task(async function test_override_activity_stream_enabled() {
   cleanup();
 });
 
-add_task(async function test_default_url() {
+addTestsWithPrivilegedContentProcessPref(async function test_default_url() {
   await setupASPrerendered();
+
   Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_URL,
     "Newtab defaultURL initially set to prerendered AS url");
 
@@ -161,7 +205,7 @@ add_task(async function test_default_url() {
   cleanup();
 });
 
-add_task(async function test_welcome_url() {
+addTestsWithPrivilegedContentProcessPref(async function test_welcome_url() {
   await setupASPrerendered();
 
   Assert.equal(aboutNewTabService.activityStreamPrerender, true,
@@ -194,11 +238,11 @@ add_task(function test_locale() {
 });
 
 /**
- * Tests reponse to updates to prefs
+ * Tests response to updates to prefs
  */
-add_task(async function test_updates() {
-   // Simulates a "cold-boot" situation, with some pref already set before testing a series
-   // of changes.
+addTestsWithPrivilegedContentProcessPref(async function test_updates() {
+  // Simulates a "cold-boot" situation, with some pref already set before testing a series
+  // of changes.
   await setupASPrerendered();
 
   aboutNewTabService.resetNewTabURL(); // need to set manually because pref notifs are off
