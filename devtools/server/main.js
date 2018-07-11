@@ -17,15 +17,9 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
-DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
-  // eslint-disable-next-line no-shadow
-  const { DebuggerSocket } = require("devtools/shared/security/socket");
-  return DebuggerSocket;
-});
-DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
-  return require("devtools/shared/security/auth");
-});
-DevToolsUtils.defineLazyGetter(this, "generateUUID", () => {
+loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
+loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
+loader.lazyGetter(this, "generateUUID", () => {
   // eslint-disable-next-line no-shadow
   const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
                            .getService(Ci.nsIUUIDGenerator);
