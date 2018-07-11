@@ -53,7 +53,7 @@ def read_build_config(docdir):
             if key.startswith('/'):
                 key = key[1:]
             else:
-                key = os.path.join(reldir, key)
+                key = os.path.normpath(os.path.join(reldir, key))
 
             if key in trees:
                 raise Exception('%s has already been registered as a destination.' % key)
