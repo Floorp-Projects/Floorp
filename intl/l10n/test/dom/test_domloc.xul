@@ -33,7 +33,6 @@ new-tab
 
 
   const domLoc = new DOMLocalization(
-    window,
     [],
     generateMessages
   );

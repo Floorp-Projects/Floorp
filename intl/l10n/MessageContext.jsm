@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.6.3 */
+/* fluent@aa95b1f (July 10, 2018) */
 
 /*  eslint no-magic-numbers: [0]  */
 
@@ -1671,6 +1671,22 @@ function resolve(ctx, args, message, errors = []) {
 }
 
 /**
+ * Fluent Resource is a structure storing a map
+ * of localization entries.
+ */
+class FluentResource extends Map {
+  constructor(entries, errors = []) {
+    super(entries);
+    this.errors = errors;
+  }
+
+  static fromString(source) {
+    const [entries, errors] = parse(source);
+    return new FluentResource(Object.entries(entries), errors);
+  }
+}
+
+/**
  * Message contexts are single-language stores of translations.  They are
  * responsible for parsing translation resources in the Fluent syntax and can
  * format translation units (entities) to strings.
@@ -1712,11 +1728,17 @@ class MessageContext {
    *   - `useIsolating` - boolean specifying whether to use Unicode isolation
    *                    marks (FSI, PDI) for bidi interpolations.
    *
+   *   - `transform` - a function used to transform string parts of patterns.
+   *
    * @param   {string|Array<string>} locales - Locale or locales of the context
    * @param   {Object} [options]
    * @returns {MessageContext}
    */
-  constructor(locales, { functions = {}, useIsolating = true, transform = v => v } = {}) {
+  constructor(locales, {
+    functions = {},
+    useIsolating = true,
+    transform = v => v
+  } = {}) {
     this.locales = Array.isArray(locales) ? locales : [locales];
 
     this._terms = new Map();
@@ -1778,8 +1800,31 @@ class MessageContext {
    * @returns {Array<Error>}
    */
   addMessages(source) {
-    const [entries, errors] = parse(source);
-    for (const id in entries) {
+    const res = FluentResource.fromString(source);
+    return this.addResource(res);
+  }
+
+  /**
+   * Add a translation resource to the context.
+   *
+   * The translation resource must be a proper FluentResource
+   * parsed by `MessageContext.parseResource`.
+   *
+   *     let res = MessageContext.parseResource("foo = Foo");
+   *     ctx.addResource(res);
+   *     ctx.getMessage('foo');
+   *
+   *     // Returns a raw representation of the 'foo' message.
+   *
+   * Parsed entities should be formatted with the `format` method in case they
+   * contain logic (references, select expressions etc.).
+   *
+   * @param   {FluentResource} res - FluentResource object.
+   * @returns {Array<Error>}
+   */
+  addResource(res) {
+    const errors = res.errors.slice();
+    for (const [id, value] of res) {
       if (id.startsWith("-")) {
         // Identifiers starting with a dash (-) define terms. Terms are private
         // and cannot be retrieved from MessageContext.
@@ -1787,13 +1832,13 @@ class MessageContext {
           errors.push(`Attempt to override an existing term: "${id}"`);
           continue;
         }
-        this._terms.set(id, entries[id]);
+        this._terms.set(id, value);
       } else {
         if (this._messages.has(id)) {
           errors.push(`Attempt to override an existing message: "${id}"`);
           continue;
         }
-        this._messages.set(id, entries[id]);
+        this._messages.set(id, value);
       }
     }
 
