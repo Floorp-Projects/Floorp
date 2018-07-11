@@ -13,7 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Services: "resource://gre/modules/Services.jsm"
+  Services: "resource://gre/modules/Services.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 /**
@@ -612,9 +613,9 @@ DownloadsPlacesView.prototype = {
   downloadsCmd_clearDownloads() {
     this._downloadsData.removeFinished();
     if (this._place) {
-      Cc["@mozilla.org/browser/download-history;1"]
-        .getService(Ci.nsIDownloadHistory)
-        .removeAllDownloads();
+      PlacesUtils.history.removeVisitsByFilter({
+        transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD
+      }).catch(Cu.reportError);
     }
     // There may be no selection or focus change as a result
     // of these change, and we want the command updated immediately.

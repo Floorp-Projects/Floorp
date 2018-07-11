@@ -372,6 +372,8 @@ var History = Object.freeze({
    *          - limit: (Number) Limit the number of visits
    *                we remove to this number
    *          - url: (URL) Only remove visits to this URL
+   *          - transition: (Integer)
+   *                The type of the transition (see TRANSITIONS below)
    *      If both `beginDate` and `endDate` are specified,
    *      visits between `beginDate` (inclusive) and `end`
    *      (inclusive) are removed.
@@ -398,6 +400,7 @@ var History = Object.freeze({
     let hasEndDate = "endDate" in filter;
     let hasURL = "url" in filter;
     let hasLimit = "limit" in filter;
+    let hasTransition = "transition" in filter;
     if (hasBeginDate) {
       this.ensureDate(filter.beginDate);
     }
@@ -407,7 +410,11 @@ var History = Object.freeze({
     if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
       throw new TypeError("`beginDate` should be at least as old as `endDate`");
     }
-    if (!hasBeginDate && !hasEndDate && !hasURL && !hasLimit) {
+    if (hasTransition &&
+        !this.isValidTransition(filter.transition)) {
+      throw new TypeError("`transition` should be valid");
+    }
+    if (!hasBeginDate && !hasEndDate && !hasURL && !hasLimit && !hasTransition) {
       throw new TypeError("Expected a non-empty filter");
     }
 
@@ -573,11 +580,11 @@ var History = Object.freeze({
   /**
    * Is a value a valid transition type?
    *
-   * @param transitionType: (String)
+   * @param transition: (String)
    * @return (Boolean)
    */
-  isValidTransition(transitionType) {
-    return Object.values(History.TRANSITIONS).includes(transitionType);
+  isValidTransition(transition) {
+    return Object.values(History.TRANSITIONS).includes(transition);
   },
 
   /**
@@ -900,9 +907,12 @@ var cleanupPages = async function(db, pages) {
  *          - hasForeign: (boolean) If `true`, the page has at least
  *              one foreign reference (i.e. a bookmark), so the page should
  *              be kept and its frecency updated.
+ * @param transition: (Number)
+ *      Set to a valid TRANSITIONS value to indicate all transitions of a
+ *      certain type have been removed, otherwise defaults to -1 (unknown value).
  * @return (Promise)
  */
-var notifyCleanup = async function(db, pages) {
+var notifyCleanup = async function(db, pages, transition = -1) {
   let notifiedCount = 0;
   let observers = PlacesUtils.history.getObservers();
 
@@ -911,16 +921,11 @@ var notifyCleanup = async function(db, pages) {
   for (let page of pages) {
     let uri = NetUtil.newURI(page.url.href);
     let guid = page.guid;
-    if (page.hasVisits) {
-      // For the moment, we do not have the necessary observer API
-      // to notify when we remove a subset of visits, see bug 937560.
-      continue;
-    }
-    if (page.hasForeign) {
+    if (page.hasVisits || page.hasForeign) {
       // We have removed all visits, but the page is still alive, e.g.
       // because of a bookmark.
       notify(observers, "onDeleteVisits",
-        [uri, false, guid, reason, -1]);
+        [uri, page.hasVisits > 0, guid, reason, transition]);
     } else {
       // The page has been entirely removed.
       notify(observers, "onDeleteURI",
@@ -1036,6 +1041,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
   // so we need to *1000 one way and /1000 the other way.
   let conditions = [];
   let args = {};
+  let transition = -1;
   if ("beginDate" in filter) {
     conditions.push("v.visit_date >= :begin * 1000");
     args.begin = Number(filter.beginDate);
@@ -1046,6 +1052,11 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
   }
   if ("limit" in filter) {
     args.limit = Number(filter.limit);
+  }
+  if ("transition" in filter) {
+    conditions.push("v.visit_type = :transition");
+    args.transition = filter.transition;
+    transition = filter.transition;
   }
 
   let optionalJoin = "";
@@ -1122,7 +1133,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
       await cleanupPages(db, pages);
     });
 
-    notifyCleanup(db, pages);
+    notifyCleanup(db, pages, transition);
     notifyOnResult(onResultData, onResult); // don't wait
   } finally {
     // Ensure we cleanup embed visits, even if we bailed out early.
