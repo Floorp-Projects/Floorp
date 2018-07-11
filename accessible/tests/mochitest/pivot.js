@@ -104,7 +104,7 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMetho
     var accMatches = position == aIdOrNameOrAcc;
 
     SimpleTest.ok(idMatches || nameMatches || accMatches, "id or name matches",
-                  "expecting " + aIdOrNameOrAcc + ", got '" +
+                  "expecting " + prettyName(aIdOrNameOrAcc) + ", got '" +
                   prettyName(position));
 
     SimpleTest.is(aEvent.isFromUserInput, aIsFromUserInput,
