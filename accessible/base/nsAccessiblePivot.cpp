@@ -825,13 +825,17 @@ nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
       if (temp == root)
         break;
 
+      // Unlike traditional pre-order traversal we revisit the parent
+      // nodes when we go up the tree. This is because our starting point
+      // may be a subtree or a leaf. If it's parent matches, it should
+      // take precedent over a sibling.
       if (temp != aAccessible && temp->IsHyperText())
         return temp->AsHyperText();
 
-      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
-
       if (sibling)
         break;
+
+      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
     } while ((temp = temp->Parent()));
 
     if (!sibling)
