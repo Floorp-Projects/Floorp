@@ -14,6 +14,7 @@ const {
   UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_STATE,
   UPDATE_PROPERTY_VALUE,
+  UPDATE_WARNING_MESSAGE,
 } = require("../actions/index");
 
 const INITIAL_STATE = {
@@ -38,6 +39,9 @@ const INITIAL_STATE = {
   },
   // CSS font properties defined on the selected rule.
   properties: {},
+
+  // Warning message with the reason why the font editor cannot be shown.
+  warning: getStr("fontinspector.noFontsOnSelectedElement"),
 };
 
 const reducers = {
@@ -105,7 +109,11 @@ const reducers = {
     const newState = { ...state };
     newState.properties[property] = value;
     return newState;
-  }
+  },
+
+  [UPDATE_WARNING_MESSAGE](state, { warning }) {
+    return { ...state, warning };
+  },
 
 };
 
