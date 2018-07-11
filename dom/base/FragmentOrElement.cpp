@@ -763,10 +763,12 @@ FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots()
 
   // Don't clear mXBLBinding, it'll be done in
   // BindingManager::RemovedFromDocument from FragmentOrElement::Unlink.
+  //
+  // mShadowRoot will similarly be cleared explicitly from
+  // FragmentOrElement::Unlink.
   mSMILOverrideStyle = nullptr;
   mControllers = nullptr;
   mLabelsList = nullptr;
-  mShadowRoot = nullptr;
   if (mCustomElementData) {
     mCustomElementData->Unlink();
     mCustomElementData = nullptr;
@@ -1499,6 +1501,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   // Clear flag here because unlinking slots will clear the
   // containing shadow root pointer.
   tmp->UnsetFlags(NODE_IS_IN_SHADOW_TREE);
+
+  if (ShadowRoot* shadowRoot = tmp->GetShadowRoot()) {
+    for (nsIContent* child = shadowRoot->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      child->UnbindFromTree(true, false);
+    }
+
+    shadowRoot->SetIsComposedDocParticipant(false);
+    tmp->ExtendedDOMSlots()->mShadowRoot = nullptr;
+  }
 
   nsIDocument* doc = tmp->OwnerDoc();
   doc->BindingManager()->RemovedFromDocument(tmp, doc,
