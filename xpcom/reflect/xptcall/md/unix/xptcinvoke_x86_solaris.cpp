@@ -31,6 +31,8 @@ invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
         case nsXPTType::T_DOUBLE :
             result++;
             break;
+        default:
+            break;
         }
     }
     return result;
@@ -60,6 +62,7 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
         case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
         case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
+        default                  : break;
         }
     }
 }
