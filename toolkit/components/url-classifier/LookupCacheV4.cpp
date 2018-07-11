@@ -190,7 +190,7 @@ nsresult
 LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
 {
   nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -198,14 +198,14 @@ LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
   rv = LoadMetadata(state, checksum);
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_METADATA_CORRUPT,
                         rv == NS_ERROR_FILE_CORRUPTED);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = VerifyChecksum(checksum);
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_LOAD_CORRUPT,
                         rv == NS_ERROR_FILE_CORRUPTED);
-
+  Unused << NS_WARN_IF(NS_FAILED(rv));
   return rv;
 }
 
