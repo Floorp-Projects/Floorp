@@ -5,6 +5,8 @@
 
 /* eslint-env mozilla/browser-window */
 
+let delayedStartupTimeoutId = null;
+
 function OpenBrowserWindowFromDockMenu(options) {
   let win = OpenBrowserWindow(options);
   win.addEventListener("load", function() {
@@ -16,7 +18,7 @@ function OpenBrowserWindowFromDockMenu(options) {
   return win;
 }
 
-gBrowserInit.nonBrowserWindowStartup = function() {
+function nonBrowserWindowStartup() {
   // Disable inappropriate commands / submenus
   var disabledItems = ["Browser:SavePage",
                        "Browser:SendLink", "cmd_pageSetup", "cmd_print", "cmd_find", "cmd_findAgain",
@@ -78,34 +80,33 @@ gBrowserInit.nonBrowserWindowStartup = function() {
     document.getElementById("macDockMenuNewPrivateWindow").hidden = true;
   }
 
-  this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
-};
+  delayedStartupTimeoutId = setTimeout(nonBrowserWindowDelayedStartup, 0);
+}
 
-gBrowserInit.nonBrowserWindowDelayedStartup = function() {
-  this._delayedStartupTimeoutId = null;
+function nonBrowserWindowDelayedStartup() {
+  delayedStartupTimeoutId = null;
 
   // initialise the offline listener
   BrowserOffline.init();
 
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
+}
 
-};
-
-gBrowserInit.nonBrowserWindowShutdown = function() {
+function nonBrowserWindowShutdown() {
   let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
                     .getService(Ci.nsIMacDockSupport);
   dockSupport.dockMenu = null;
 
   // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
   // just cancel the pending timeout and return;
-  if (this._delayedStartupTimeoutId) {
-    clearTimeout(this._delayedStartupTimeoutId);
+  if (delayedStartupTimeoutId) {
+    clearTimeout(delayedStartupTimeoutId);
     return;
   }
 
   BrowserOffline.uninit();
-};
+}
 
-addEventListener("load",   function() { gBrowserInit.nonBrowserWindowStartup()  }, false);
-addEventListener("unload", function() { gBrowserInit.nonBrowserWindowShutdown() }, false);
+addEventListener("load", nonBrowserWindowStartup, false);
+addEventListener("unload", nonBrowserWindowShutdown, false);
