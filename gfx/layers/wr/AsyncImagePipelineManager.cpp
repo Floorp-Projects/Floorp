@@ -297,10 +297,8 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
       updateDisplayList = true;
     }
 
-    // Request to generate frame if there is an update.
-    if (updateDisplayList || !op.isNothing()) {
-      SetWillGenerateFrame();
-    }
+    // We will schedule generating a frame after the scene
+    // build is done or resource update is done, so we don't need to do it here.
 
     if (!updateDisplayList) {
       // We don't need to update the display list, either because we can't or because
