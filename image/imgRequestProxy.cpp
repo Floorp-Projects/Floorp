@@ -150,11 +150,7 @@ imgRequestProxy::~imgRequestProxy()
                                    mHadDispatch);
   }
 
-  // Unlock the image the proper number of times if we're holding locks on
-  // it. Note that UnlockImage() decrements mLockCount each time it's called.
-  while (mLockCount) {
-    UnlockImage();
-  }
+  MOZ_RELEASE_ASSERT(!mLockCount, "Someone forgot to unlock on time?");
 
   ClearAnimationConsumers();
 
