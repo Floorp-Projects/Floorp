@@ -13,4 +13,5 @@ DevToolsModules(
     'stream-utils.js',
     'transport.js',
     'websocket-transport.js',
+    'worker-transport.js',
 )

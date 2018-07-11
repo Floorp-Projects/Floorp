@@ -12,8 +12,6 @@ var { Ci, Cc } = require("chrome");
 var Services = require("Services");
 var { ActorPool, OriginalLocation, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
-var { WorkerDebuggerTransport } =
-  require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
@@ -21,6 +19,8 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 loader.lazyRequireGetter(this, "LocalDebuggerTransport", "devtools/shared/transport/local-transport", true);
 loader.lazyRequireGetter(this, "ChildDebuggerTransport", "devtools/shared/transport/child-transport", true);
+loader.lazyRequireGetter(this, "WorkerThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
+loader.lazyRequireGetter(this, "MainThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
 
 loader.lazyGetter(this, "generateUUID", () => {
   // eslint-disable-next-line no-shadow
@@ -600,7 +600,7 @@ var DebuggerServer = {
     this._checkInit();
 
     const transport = isWorker ?
-                    new WorkerDebuggerTransport(scopeOrManager, prefix) :
+                    new WorkerThreadWorkerDebuggerTransport(scopeOrManager, prefix) :
                     new ChildDebuggerTransport(scopeOrManager, prefix);
 
     return this._onConnection(transport, prefix, true);
@@ -769,7 +769,7 @@ var DebuggerServer = {
           dbg.removeListener(listener);
 
           // Step 7: Create a transport for the connection to the worker.
-          const transport = new WorkerDebuggerTransport(dbg, id);
+          const transport = new MainThreadWorkerDebuggerTransport(dbg, id);
           transport.ready();
           transport.hooks = {
             onClosed: () => {
