@@ -1637,9 +1637,9 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             MOZ_CRASH("Unknown Type!");
     }
 
-    // Null out the pointer if we have it.
-    if (aType.HasPointerRepr()) {
-        *(void**)aValue = nullptr;
+    // Clear any non-complex values to the valid '0' state.
+    if (!aType.IsComplex()) {
+        aType.ZeroValue(aValue);
     }
 }
 
@@ -1672,7 +1672,7 @@ xpc::InitializeValue(const nsXPTType& aType, void* aValue)
 
         // The remaining types all have valid states where all bytes are '0'.
         default:
-            memset(aValue, 0, aType.Stride());
+            aType.ZeroValue(aValue);
             break;
     }
 }
