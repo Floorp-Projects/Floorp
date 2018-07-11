@@ -369,19 +369,8 @@ def load_wpt_tests(requested_paths, excluded_paths, debug):
         os.path.join(here, "testharnessreport.js"),
     ]
 
-    def resolve(test_path, script):
-        if script.startswith("/"):
-            return os.path.join(wpt, script[1:])
-
-        return os.path.join(test_path, script)
-
     return [
-        RefTestCase(
-            wpt,
-            test_path,
-            extra_helper_paths=extra_helper_paths + [resolve(test_path, s) for s in test.scripts],
-            wpt=test
-        )
+        RefTestCase(wpt, test_path, extra_helper_paths=extra_helper_paths, wpt=test)
         for test_path, test_type, test in loader.iter_tests()
     ]
 
