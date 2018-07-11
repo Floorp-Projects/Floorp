@@ -1,8 +1,8 @@
-# [Android Components](../../README.md) > Samples > FxA
+# [Android Components](../../README.md) > Samples > Firefox Accounts (FxA)
 
 ![](src/main/res/mipmap-xhdpi/ic_launcher.png)
 
-A simple app showcasing the service-fxa component.
+A simple app showcasing the service-firefox-account component.
 
 ## License
 
