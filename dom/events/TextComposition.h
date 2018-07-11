@@ -369,6 +369,9 @@ private:
   //       mIsRequestingCancel are set to false.
   bool mRequestedToCommitOrCancel;
 
+  // Set to true if the instance dispatches an eCompositionChange event.
+  bool mHasDispatchedDOMTextEvent;
+
   // Before this dispatches commit event into the tree, this is set to true.
   // So, this means if native IME already commits the composition.
   bool mHasReceivedCommitEvent;

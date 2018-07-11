@@ -67,6 +67,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mIsRequestingCommit(false)
   , mIsRequestingCancel(false)
   , mRequestedToCommitOrCancel(false)
+  , mHasDispatchedDOMTextEvent(false)
   , mHasReceivedCommitEvent(false)
   , mWasNativeCompositionEndEventDiscarded(false)
   , mAllowControlCharacters(
@@ -108,6 +109,13 @@ TextComposition::MaybeDispatchCompositionUpdate(
     return false;
   }
 
+  // Note that we don't need to dispatch eCompositionUpdate event even if
+  // mHasDispatchedDOMTextEvent is false and eCompositionCommit event is
+  // dispatched with empty string immediately after eCompositionStart
+  // because composition string has never been changed from empty string to
+  // non-empty string in such composition even if selected string was not
+  // empty string (mLastData isn't set to selected text when this receives
+  // eCompositionStart).
   if (mLastData == aCompositionEvent->mData) {
     return true;
   }
@@ -356,10 +364,15 @@ TextComposition::DispatchCompositionEvent(
   // When mIsComposing is false but the committing string is different from
   // the last data (E.g., previous eCompositionChange event made the
   // composition string empty or didn't have clause information), we don't
-  // need to dispatch redundant DOM text event.
+  // need to dispatch redundant DOM text event.  (But note that we need to
+  // dispatch eCompositionChange event if we have not dispatched
+  // eCompositionChange event yet and commit string replaces selected string
+  // with empty string since selected string hasn't been replaced with empty
+  // string yet.)
   if (dispatchDOMTextEvent &&
       aCompositionEvent->mMessage != eCompositionChange &&
-      !mIsComposing && mLastData == aCompositionEvent->mData) {
+      !mIsComposing && mHasDispatchedDOMTextEvent &&
+      mLastData == aCompositionEvent->mData) {
     dispatchEvent = dispatchDOMTextEvent = false;
   }
 
@@ -387,10 +400,14 @@ TextComposition::DispatchCompositionEvent(
     // we cannot map multiple event messages to a DOM event type.
     if (dispatchDOMTextEvent &&
         aCompositionEvent->mMessage != eCompositionChange) {
+      mHasDispatchedDOMTextEvent = true;
       aCompositionEvent->mFlags =
         CloneAndDispatchAs(aCompositionEvent, eCompositionChange,
                            aStatus, aCallBack);
     } else {
+      if (aCompositionEvent->mMessage == eCompositionChange) {
+        mHasDispatchedDOMTextEvent = true;
+      }
       DispatchEvent(aCompositionEvent, aStatus, aCallBack);
     }
   } else {
