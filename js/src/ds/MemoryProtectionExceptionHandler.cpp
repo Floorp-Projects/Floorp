@@ -118,7 +118,7 @@ MemoryProtectionExceptionHandler::isDisabled()
     // faults it sees are fatal. Just disable this handler in that case, as the
     // crash annotations provided here are not critical for ASan builds.
     return true;
-#elif defined(RELEASE_OR_BETA)
+#elif !defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
     // Disable the exception handler for Beta and Release builds.
     return true;
 #else
