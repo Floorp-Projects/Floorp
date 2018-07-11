@@ -32,9 +32,8 @@ const uint32_t VariableLengthPrefixSet::MAX_BUFFER_SIZE;
 // they will be passed to nsUrlClassifierPrefixSet because of better optimization.
 VariableLengthPrefixSet::VariableLengthPrefixSet()
   : mLock("VariableLengthPrefixSet.mLock")
-  , mMemoryReportPath()
+  , mFixedPrefixSet(new nsUrlClassifierPrefixSet)
 {
-  mFixedPrefixSet = new nsUrlClassifierPrefixSet();
 }
 
 nsresult
@@ -164,7 +163,8 @@ VariableLengthPrefixSet::GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefi
 // full hash. However, if that happens, this method returns any one of them.
 // It does not guarantee which one of those will be returned.
 nsresult
-VariableLengthPrefixSet::Matches(const nsACString& aFullHash, uint32_t* aLength)
+VariableLengthPrefixSet::Matches(const nsACString& aFullHash,
+                                 uint32_t* aLength) const
 {
   MutexAutoLock lock(mLock);
 
@@ -199,7 +199,7 @@ VariableLengthPrefixSet::Matches(const nsACString& aFullHash, uint32_t* aLength)
 }
 
 nsresult
-VariableLengthPrefixSet::IsEmpty(bool* aEmpty)
+VariableLengthPrefixSet::IsEmpty(bool* aEmpty) const
 {
   MutexAutoLock lock(mLock);
 
@@ -254,7 +254,7 @@ VariableLengthPrefixSet::LoadFromFile(nsIFile* aFile)
 }
 
 nsresult
-VariableLengthPrefixSet::StoreToFile(nsIFile* aFile)
+VariableLengthPrefixSet::StoreToFile(nsIFile* aFile) const
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
@@ -345,7 +345,7 @@ VariableLengthPrefixSet::LoadPrefixes(nsIInputStream* in)
 }
 
 uint32_t
-VariableLengthPrefixSet::CalculatePreallocateSize()
+VariableLengthPrefixSet::CalculatePreallocateSize() const
 {
   uint32_t fileSize = 0;
 
@@ -362,7 +362,7 @@ VariableLengthPrefixSet::CalculatePreallocateSize()
 }
 
 nsresult
-VariableLengthPrefixSet::WritePrefixes(nsIOutputStream* out)
+VariableLengthPrefixSet::WritePrefixes(nsIOutputStream* out) const
 {
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
@@ -403,8 +403,8 @@ VariableLengthPrefixSet::WritePrefixes(nsIOutputStream* out)
 
 bool
 VariableLengthPrefixSet::BinarySearch(const nsACString& aFullHash,
-                                         const nsACString& aPrefixes,
-                                         uint32_t aPrefixSize)
+                                      const nsACString& aPrefixes,
+                                      uint32_t aPrefixSize) const
 {
   const char* fullhash = aFullHash.BeginReading();
   const char* prefixes = aPrefixes.BeginReading();
@@ -428,7 +428,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
 
 NS_IMETHODIMP
 VariableLengthPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                           nsISupports* aData, bool aAnonymize)
+                                        nsISupports* aData, bool aAnonymize)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -441,7 +441,7 @@ VariableLengthPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 size_t
-VariableLengthPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+VariableLengthPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   MutexAutoLock lock(mLock);
 
