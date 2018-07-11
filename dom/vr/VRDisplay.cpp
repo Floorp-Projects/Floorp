@@ -285,7 +285,7 @@ VRPose::GetPosition(JSContext* aCx,
                     JS::MutableHandle<JSObject*> aRetval,
                     ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mPosition, mVRState.position, 3,
+  SetFloat32Array(aCx, aRetval, mPosition, mVRState.pose.position, 3,
     !mPosition && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
     aRv);
 }
@@ -295,7 +295,7 @@ VRPose::GetLinearVelocity(JSContext* aCx,
                           JS::MutableHandle<JSObject*> aRetval,
                           ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mLinearVelocity, mVRState.linearVelocity, 3,
+  SetFloat32Array(aCx, aRetval, mLinearVelocity, mVRState.pose.linearVelocity, 3,
     !mLinearVelocity && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
     aRv);
 }
@@ -305,7 +305,7 @@ VRPose::GetLinearAcceleration(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mLinearAcceleration, mVRState.linearAcceleration, 3,
+  SetFloat32Array(aCx, aRetval, mLinearAcceleration, mVRState.pose.linearAcceleration, 3,
     !mLinearAcceleration && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration),
     aRv);
 
@@ -316,7 +316,7 @@ VRPose::GetOrientation(JSContext* aCx,
                        JS::MutableHandle<JSObject*> aRetval,
                        ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mOrientation, mVRState.orientation, 4,
+  SetFloat32Array(aCx, aRetval, mOrientation, mVRState.pose.orientation, 4,
     !mOrientation && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
     aRv);
 }
@@ -326,7 +326,7 @@ VRPose::GetAngularVelocity(JSContext* aCx,
                            JS::MutableHandle<JSObject*> aRetval,
                            ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mAngularVelocity, mVRState.angularVelocity, 3,
+  SetFloat32Array(aCx, aRetval, mAngularVelocity, mVRState.pose.angularVelocity, 3,
     !mAngularVelocity && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
     aRv);
 }
@@ -336,7 +336,7 @@ VRPose::GetAngularAcceleration(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv)
 {
-  SetFloat32Array(aCx, aRetval, mAngularAcceleration, mVRState.angularAcceleration, 3,
+  SetFloat32Array(aCx, aRetval, mAngularAcceleration, mVRState.pose.angularAcceleration, 3,
     !mAngularAcceleration && bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration),
     aRv);
 }
