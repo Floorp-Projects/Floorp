@@ -1147,9 +1147,13 @@ var ActivityStreamProvider = {
     // Determine if the other link is "better" (larger frecency, more recent,
     // lexicographically earlier url)
     function isOtherBetter(link, other) {
-      return other.frecency > link.frecency ||
-        (other.frecency === link.frecency && other.lastVisitDate > link.lastVisitDate ||
-         other.lastVisitDate === link.lastVisitDate && other.url < link.url);
+      if (other.frecency === link.frecency) {
+        if (other.lastVisitDate === link.lastVisitDate) {
+          return other.url < link.url;
+        }
+        return other.lastVisitDate > link.lastVisitDate;
+      }
+      return other.frecency > link.frecency;
     }
 
     // Update a host Map with the better link
