@@ -9,7 +9,7 @@
 function PreInitTargetScopedActor(connection) {}
 
 PreInitTargetScopedActor.prototype = {
-  actorPrefix: "preInitTab",
+  actorPrefix: "preInitTargetScoped",
   onPing(request) {
     return { message: "pong" };
   },
@@ -18,8 +18,4 @@ PreInitTargetScopedActor.prototype = {
 PreInitTargetScopedActor.prototype.requestTypes = {
   "ping": PreInitTargetScopedActor.prototype.onPing,
 };
-
-DebuggerServer.addTargetScopedActor({
-  constructorName: "PreInitTargetScopedActor",
-  constructorFun: PreInitTargetScopedActor,
-}, "preInitTargetScopedActor");
+exports.PreInitTargetScopedActor = PreInitTargetScopedActor;
