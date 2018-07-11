@@ -189,7 +189,7 @@ public:
 
   void EnumerateDevices(uint64_t aWindowId,
                         dom::MediaSourceEnum,
-                        nsTArray<RefPtr<MediaEngineSource>>*) override;
+                        nsTArray<RefPtr<MediaDevice>>*) override;
   void Shutdown() override;
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 
