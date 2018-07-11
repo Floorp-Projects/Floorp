@@ -23,6 +23,11 @@ class Blob;
 class AllocationHandle;
 class MediaEngineSource;
 
+enum MediaSinkEnum {
+  Speaker,
+  Other,
+};
+
 enum {
   kVideoTrack = 1,
   kAudioTrack = 2,
