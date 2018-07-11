@@ -10,7 +10,7 @@
  */
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
-var { ActorPool, OriginalLocation, RegisteredActorFactory,
+var { ActorPool, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
@@ -1299,16 +1299,7 @@ DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
 
 EventEmitter.decorate(DebuggerServer);
 
-if (this.exports) {
-  exports.DebuggerServer = DebuggerServer;
-  exports.ActorPool = ActorPool;
-  exports.OriginalLocation = OriginalLocation;
-}
-
-// Needed on B2G (See header note)
-this.DebuggerServer = DebuggerServer;
-this.ActorPool = ActorPool;
-this.OriginalLocation = OriginalLocation;
+exports.DebuggerServer = DebuggerServer;
 
 /**
  * Creates a DebuggerServerConnection.
