@@ -125,7 +125,7 @@ MediaEngineWebRTC::SetFakeDeviceChangeEvents()
 void
 MediaEngineWebRTC::EnumerateVideoDevices(uint64_t aWindowId,
                                          dom::MediaSourceEnum aMediaSource,
-                                         nsTArray<RefPtr<MediaEngineSource> >* aSources)
+                                         nsTArray<RefPtr<MediaDevice> >* aDevices)
 {
   mMutex.AssertCurrentThreadOwns();
 
@@ -228,23 +228,29 @@ MediaEngineWebRTC::EnumerateVideoDevices(uint64_t aWindowId,
         vSource->RequiresSharing()) {
       // We've already seen this shared device, just refresh and append.
       static_cast<MediaEngineRemoteVideoSource*>(vSource.get())->Refresh(i);
-      aSources->AppendElement(vSource.get());
     } else {
       vSource = new MediaEngineRemoteVideoSource(i, capEngine, aMediaSource,
                                                  scaryKind || scarySource);
       devicesForThisWindow->Put(uuid, vSource);
-      aSources->AppendElement(vSource);
     }
+    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                              vSource,
+                              vSource->GetName(),
+                              NS_ConvertUTF8toUTF16(vSource->GetUUID())));
   }
 
   if (mHasTabVideoSource || dom::MediaSourceEnum::Browser == aMediaSource) {
-    aSources->AppendElement(new MediaEngineTabVideoSource());
+    RefPtr<MediaEngineSource> tabVideoSource = new MediaEngineTabVideoSource();
+    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                              tabVideoSource,
+                              tabVideoSource->GetName(),
+                              NS_ConvertUTF8toUTF16(tabVideoSource->GetUUID())));
   }
 }
 
 void
 MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
-                                              nsTArray<RefPtr<MediaEngineSource> >* aSources)
+                                              nsTArray<RefPtr<MediaDevice> >* aDevices)
 {
   mMutex.AssertCurrentThreadOwns();
 
@@ -284,43 +290,47 @@ MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
     }
 
 
-    RefPtr<MediaEngineSource> aSource;
+    RefPtr<MediaEngineSource> micSource;
     NS_ConvertUTF8toUTF16 uuid(uniqueId);
 
     nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
       devicesForThisWindow = mAudioSources.LookupOrAdd(aWindowId);
 
-    if (devicesForThisWindow->Get(uuid, getter_AddRefs(aSource)) &&
-        aSource->RequiresSharing()) {
-      // We've already seen this device, just append.
-      aSources->AppendElement(aSource.get());
-    } else {
-      aSource = new MediaEngineWebRTCMicrophoneSource(
+    bool alreadySeenThisDeviceBefore = devicesForThisWindow->Get(uuid, getter_AddRefs(micSource)) &&
+                                       micSource->RequiresSharing();
+    if (!alreadySeenThisDeviceBefore) {
+      micSource = new MediaEngineWebRTCMicrophoneSource(
           new mozilla::AudioInputCubeb(i),
           i, deviceName, uniqueId,
           mDelayAgnostic, mExtendedFilter);
-      devicesForThisWindow->Put(uuid, aSource);
-      aSources->AppendElement(aSource);
+      devicesForThisWindow->Put(uuid, micSource);
     }
+    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                              micSource,
+                              micSource->GetName(),
+                              NS_ConvertUTF8toUTF16(micSource->GetUUID())));
   }
 }
 
 void
 MediaEngineWebRTC::EnumerateDevices(uint64_t aWindowId,
                                     dom::MediaSourceEnum aMediaSource,
-                                    nsTArray<RefPtr<MediaEngineSource> >* aSources)
+                                    nsTArray<RefPtr<MediaDevice> >* aDevices)
 {
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
   if (MediaEngineSource::IsVideo(aMediaSource)) {
-    EnumerateVideoDevices(aWindowId, aMediaSource, aSources);
+    EnumerateVideoDevices(aWindowId, aMediaSource, aDevices);
   } else if (aMediaSource == dom::MediaSourceEnum::AudioCapture) {
     RefPtr<MediaEngineWebRTCAudioCaptureSource> audioCaptureSource =
       new MediaEngineWebRTCAudioCaptureSource(nullptr);
-    aSources->AppendElement(audioCaptureSource);
+    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                              audioCaptureSource,
+                              audioCaptureSource->GetName(),
+                              NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID())));
   } else {
     MOZ_ASSERT(aMediaSource == dom::MediaSourceEnum::Microphone);
-    EnumerateMicrophoneDevices(aWindowId, aSources);
+    EnumerateMicrophoneDevices(aWindowId, aDevices);
   }
 }
 
