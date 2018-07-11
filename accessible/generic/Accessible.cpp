@@ -639,7 +639,10 @@ Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const
 {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
-    bool* hasHitRegionRect = static_cast<bool*>(mContent->GetProperty(nsGkAtoms::hitregion));
+    bool* pHasHitRegionRect = static_cast<bool*>(mContent->GetProperty(nsGkAtoms::hitregion));
+    MOZ_ASSERT(pHasHitRegionRect == nullptr ||
+               *pHasHitRegionRect, "hitregion property is always null or true");
+    bool hasHitRegionRect = pHasHitRegionRect != nullptr && *pHasHitRegionRect;
 
     if (hasHitRegionRect && mContent->IsElement()) {
       // This is for canvas fallback content

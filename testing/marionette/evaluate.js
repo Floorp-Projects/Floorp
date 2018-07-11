@@ -150,19 +150,19 @@ evaluate.sandbox = function(sb, script, args = [],
  *     Known element store to look up web elements from.  If undefined,
  *     the web element references are returned instead.
  * @param {WindowProxy=} window
- *     Current browsing context, if <var>seenEls</var> is provided.
+ *     Current browsing context, if `seenEls` is provided.
  *
  * @return {Object}
- *     Same object as provided by <var>obj</var> with the web elements
+ *     Same object as provided by `obj` with the web elements
  *     replaced by DOM elements.
  *
  * @throws {NoSuchElementError}
- *     If <var>seenEls</var> is given and the web element reference
- *     has not been seen before.
+ *     If `seenEls` is given and the web element reference has not
+ *     been seen before.
  * @throws {StaleElementReferenceError}
- *     If <var>seenEls</var> is given and the element has gone stale,
- *     indicating it is no longer attached to the DOM, or its node
- *     document is no longer the active document.
+ *     If `seenEls` is given and the element has gone stale, indicating
+ *     it is no longer attached to the DOM, or its node document
+ *     is no longer the active document.
  */
 evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
   switch (typeof obj) {
@@ -204,32 +204,21 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
  *
  * The marshaling rules are as follows:
  *
- * <ul>
+ * - Primitives are returned as is.
  *
- * <li>
- * Primitives are returned as is.
+ * - Collections, such as `Array<`, `NodeList`, `HTMLCollection`
+ *   et al. are expanded to arrays and then recursed.
  *
- * <li>
- * Collections, such as <code>Array</code>, <code>NodeList</code>,
- * <code>HTMLCollection</code> et al. are expanded to arrays and
- * then recursed.
+ * - Elements that are not known web elements are added to the
+ *   `seenEls` element store.  Once known, the elements' associated
+ *   web element representation is returned.
  *
- * <li>
- * Elements that are not known web elements are added to the
- * <var>seenEls</var> element store.  Once known, the elements'
- * associated web element representation is returned.
+ * - Objects with custom JSON representations, i.e. if they have
+ *   a callable `toJSON` function, are returned verbatim.  This means
+ *   their internal integrity _are not_ checked.  Be careful.
  *
- * <li>
- * Objects with custom JSON representations, i.e. if they have a
- * callable <code>toJSON</code> function, are returned verbatim.
- * This means their internal integrity <em>are not</em> checked.
- * Be careful.
- *
- * <li>
- * Other arbitrary objects are first tested for cyclic references
- * and then recursed into.
- *
- * </ul>
+ * -  Other arbitrary objects are first tested for cyclic references
+ *    and then recursed into.
  *
  * @param {Object} obj
  *     Object to be marshaled.
@@ -237,7 +226,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
  *     Element store to use for lookup of web element references.
  *
  * @return {Object}
- *     Same object as provided by <var>obj</var> with the elements
+ *     Same object as provided by `obj` with the elements
  *     replaced by web elements.
  *
  * @throws {JavaScriptError}
@@ -295,9 +284,72 @@ evaluate.toJSON = function(obj, seenEls) {
 };
 
 /**
- * Cu.isDeadWrapper does not return true for a dead sandbox that was
- * assosciated with and extension popup. This provides a way to still
- * test for a dead object.
+ * Tests if an arbitrary object is cyclic.
+ *
+ * Element prototypes are by definition acyclic, even when they
+ * contain cyclic references.  This is because `evaluate.toJSON`
+ * ensures they are marshaled as web elements.
+ *
+ * @param {*} value
+ *     Object to test for cyclical references.
+ *
+ * @return {boolean}
+ *     True if object is cyclic, false otherwise.
+ */
+evaluate.isCyclic = function(value, stack = []) {
+  let t = Object.prototype.toString.call(value);
+
+  // null
+  if (t == "[object Undefined]" || t == "[object Null]") {
+    return false;
+
+  // primitives
+  } else if (t == "[object Boolean]" ||
+      t == "[object Number]" ||
+      t == "[object String]") {
+    return false;
+
+  // HTMLElement, SVGElement, XULElement, et al.
+  } else if (element.isElement(value)) {
+    return false;
+
+  // Array, NodeList, HTMLCollection, et al.
+  } else if (element.isCollection(value)) {
+    if (stack.includes(value)) {
+      return true;
+    }
+    stack.push(value);
+
+    for (let i = 0; i < value.length; i++) {
+      if (evaluate.isCyclic(value[i], stack)) {
+        return true;
+      }
+    }
+
+    stack.pop();
+    return false;
+  }
+
+  // arbitrary objects
+  if (stack.includes(value)) {
+    return true;
+  }
+  stack.push(value);
+
+  for (let prop in value) {
+    if (evaluate.isCyclic(value[prop], stack)) {
+      return true;
+    }
+  }
+
+  stack.pop();
+  return false;
+};
+
+/**
+ * `Cu.isDeadWrapper` does not return true for a dead sandbox that
+ * was assosciated with and extension popup.  This provides a way to
+ * still test for a dead object.
  *
  * @param {Object} obj
  *     A potentially dead object.
@@ -326,23 +378,22 @@ this.sandbox = {};
  * create a structured clone of it in a less-privileged scope.  It returns
  * a reference to the clone.
  *
- * Unlike for {@link Components.utils.cloneInto}, <var>obj</var> may
- * contain functions and DOM elemnets.
+ * Unlike for {@link Components.utils.cloneInto}, `obj` may contain
+ * functions and DOM elements.
  */
 sandbox.cloneInto = function(obj, sb) {
   return Cu.cloneInto(obj, sb, {cloneFunctions: true, wrapReflectors: true});
 };
 
 /**
- * Augment given sandbox by an adapter that has an <code>exports</code>
- * map property, or a normal map, of function names and function
- * references.
+ * Augment given sandbox by an adapter that has an `exports` map
+ * property, or a normal map, of function names and function references.
  *
  * @param {Sandbox} sb
  *     The sandbox to augment.
  * @param {Object} adapter
- *     Object that holds an <code>exports</code> property, or a map, of
- *     function names and function references.
+ *     Object that holds an `exports` property, or a map, of function
+ *     names and function references.
  *
  * @return {Sandbox}
  *     The augmented sandbox.

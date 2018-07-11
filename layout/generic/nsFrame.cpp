@@ -7153,6 +7153,16 @@ DoesLayerOrAncestorsHaveOutOfDateFrameMetrics(Layer* aLayer)
 bool
 nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
 {
+  // If we move a transformed layer when we have a merged display
+  // list, then it can end up intersecting other items for which
+  // we don't have a defined ordering.
+  // We could allow this if the display list is in the canonical
+  // ordering (correctly sorted for all intersections), but we
+  // don't have a way to check that yet.
+  if (nsLayoutUtils::AreRetainedDisplayListsEnabled()) {
+    return false;
+  }
+
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
     this, DisplayItemType::TYPE_TRANSFORM);
   if (!layer || !layer->HasUserData(LayerIsPrerenderedDataKey())) {
