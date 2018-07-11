@@ -27,12 +27,7 @@ function findBreakpointSources(sources, breakpoints) {
   return (0, _lodash.sortBy)(breakpointSources, source => (0, _source.getFilename)(source));
 }
 
-function _getBreakpointSources(breakpoints, sources) {
-  const breakpointSources = findBreakpointSources(sources, breakpoints);
-  return breakpointSources.map(source => ({
-    source,
-    breakpoints: getBreakpointsForSource(source, breakpoints)
-  }));
-}
-
-const getBreakpointSources = exports.getBreakpointSources = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _getBreakpointSources);
+const getBreakpointSources = exports.getBreakpointSources = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, (breakpoints, sources) => findBreakpointSources(sources, breakpoints).map(source => ({
+  source,
+  breakpoints: getBreakpointsForSource(source, breakpoints)
+})));
