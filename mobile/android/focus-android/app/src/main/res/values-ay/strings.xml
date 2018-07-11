@@ -139,6 +139,7 @@
   <string name="error_timeout_title">Pachax tukusxiwa</string>
   <string name="error_hostLookup_title">Tunux janiw katutakiti</string>
   <string name="error_malformedURI_title">Janiw walikiti</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>Uka llika janjax ukham qillqata&#241;apawa<strong>http://www.example.com/</strong></li>" "<li>"um sum qillqatam u&#241;akit\'am (i.e. "<strong>/</strong>).</li></ul>]]></string>
   <string name="error_redirectLoop_title">Aka llika janjax janiw chiqapakiti</string>
   <string name="error_redirectLoop_message"><![CDATA[<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Akham jan walt\'awinakax janiw walt\'aykaspati ukhamarak yatiy&#228;winak u&#241;stayanisma</li>]]></string>
   <string name="error_unsupportedprotocol_title">Uka llika janjax janiw amuyatakiti</string>

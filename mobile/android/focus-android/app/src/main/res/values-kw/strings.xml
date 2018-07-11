@@ -189,8 +189,15 @@
   <string name="site_security_icon_content_description">Sekerder an wiasva</string>
   <string name="preference_autocomplete_duplicate_url_error">Yma an URL na seulabrys</string>
   <string name="find_in_page">Hwilas y\'n folen</string>
+  <string name="find_in_page_input">Hwilas y\'n folen</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d a %2$d</string>
+  <string name="accessibility_next_result">Ke dhe\'n nessa sewyans</string>
+  <string name="accessibility_previous_result">Ke dhe\'n sewyans kens</string>
+  <string name="accessibility_dismiss_find_in_page">Degea hwilas y\'n folen</string>
   <string name="http_auth_dialog_title">Res yw gwirya</string>
   <string name="http_auth_dialog_username">Hanow usyer</string>
   <string name="http_auth_dialog_password">Ger tremena</string>
   <string name="preference_performance_request_desktop_site">Gweles an versyon jynn-amontya</string>
+  <string name="custom_tab_copy_url_action">URL kopies</string>
 </resources>
