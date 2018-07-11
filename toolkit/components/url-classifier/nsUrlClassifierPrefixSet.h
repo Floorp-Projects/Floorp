@@ -46,7 +46,7 @@ public:
 
   nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -63,20 +63,17 @@ private:
 
   void Clear();
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
-  uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
+  uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target) const;
 
-  uint32_t CalculatePreallocateSize();
-  nsresult WritePrefixes(nsIOutputStream* out);
+  uint32_t CalculatePreallocateSize() const;
+  nsresult WritePrefixes(nsIOutputStream* out) const;
   nsresult LoadPrefixes(nsIInputStream* in);
-
-  template<typename T>
-  void CalculateTArrayChecksum(nsTArray<T>& aArray, uint32_t* outChecksum);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
   // It should be held for all operations between Init() and destruction that
   // touch this class's data members.
-  mozilla::Mutex mLock;
+  mutable mozilla::Mutex mLock;
   // list of fully stored prefixes, that also form the
   // start of a run of deltas in mIndexDeltas.
   nsTArray<uint32_t> mIndexPrefixes;

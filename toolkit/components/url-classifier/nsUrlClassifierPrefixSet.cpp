@@ -40,11 +40,25 @@ NS_IMPL_ISUPPORTS(
 // Definition required due to std::max<>()
 const uint32_t nsUrlClassifierPrefixSet::MAX_BUFFER_SIZE;
 
+template<typename T>
+static void
+CalculateTArrayChecksum(const nsTArray<T>& aArray, uint32_t* outChecksum)
+{
+  *outChecksum = ~0;
+
+  for (size_t i = 0; i < aArray.Length(); i++) {
+    const T& element = aArray[i];
+    const void* pointer = &element;
+    *outChecksum = ComputeCrc32c(*outChecksum,
+                                 reinterpret_cast<const uint8_t*>(pointer),
+                                 sizeof(void*));
+  }
+}
+
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mLock("nsUrlClassifierPrefixSet.mLock")
   , mIndexDeltasChecksum(~0)
   , mTotalPrefixes(0)
-  , mMemoryReportPath()
 {
 }
 
@@ -226,9 +240,9 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
   return NS_OK;
 }
 
-uint32_t nsUrlClassifierPrefixSet::BinSearch(uint32_t start,
-                                             uint32_t end,
-                                             uint32_t target)
+uint32_t
+nsUrlClassifierPrefixSet::BinSearch(uint32_t start, uint32_t end,
+                                    uint32_t target) const
 {
   mLock.AssertCurrentThreadOwns();
 
@@ -316,7 +330,7 @@ nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 size_t
-nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   MutexAutoLock lock(mLock);
 
@@ -497,7 +511,7 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
 }
 
 uint32_t
-nsUrlClassifierPrefixSet::CalculatePreallocateSize()
+nsUrlClassifierPrefixSet::CalculatePreallocateSize() const
 {
   uint32_t fileSize = 4 * sizeof(uint32_t);
   uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
@@ -507,7 +521,7 @@ nsUrlClassifierPrefixSet::CalculatePreallocateSize()
 }
 
 nsresult
-nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
+nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out) const
 {
   mCanary.Check();
 
@@ -550,27 +564,27 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
     }
   }
 
-  rv = out->Write(reinterpret_cast<char*>(&indexSize), writelen, &written);
+  rv = out->Write(reinterpret_cast<const char*>(&indexSize), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  rv = out->Write(reinterpret_cast<char*>(&totalDeltas), writelen, &written);
+  rv = out->Write(reinterpret_cast<const char*>(&totalDeltas), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
   writelen = indexSize * sizeof(uint32_t);
-  rv = out->Write(reinterpret_cast<char*>(mIndexPrefixes.Elements()), writelen, &written);
+  rv = out->Write(reinterpret_cast<const char*>(mIndexPrefixes.Elements()), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  rv = out->Write(reinterpret_cast<char*>(indexStarts.Elements()), writelen, &written);
+  rv = out->Write(reinterpret_cast<const char*>(indexStarts.Elements()), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
   if (totalDeltas > 0) {
     for (uint32_t i = 0; i < indexDeltaSize; i++) {
       writelen = mIndexDeltas[i].Length() * sizeof(uint16_t);
-      rv = out->Write(reinterpret_cast<char*>(mIndexDeltas[i].Elements()), writelen, &written);
+      rv = out->Write(reinterpret_cast<const char*>(mIndexDeltas[i].Elements()), writelen, &written);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
     }
@@ -579,20 +593,4 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
   LOG(("[%s] Writing PrefixSet successful", mName.get()));
 
   return NS_OK;
-}
-
-template<typename T>
-void
-nsUrlClassifierPrefixSet::CalculateTArrayChecksum(nsTArray<T>& aArray,
-                                                  uint32_t* outChecksum)
-{
-  *outChecksum = ~0;
-
-  for (size_t i = 0; i < aArray.Length(); i++) {
-    const T& element = aArray[i];
-    const void* pointer = &element;
-    *outChecksum = ComputeCrc32c(*outChecksum,
-                                 reinterpret_cast<const uint8_t*>(pointer),
-                                 sizeof(void*));
-  }
 }
