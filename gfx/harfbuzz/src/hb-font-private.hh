@@ -31,7 +31,6 @@
 
 #include "hb-private.hh"
 
-#include "hb-object-private.hh"
 #include "hb-face-private.hh"
 #include "hb-shaper-private.hh"
 

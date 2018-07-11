@@ -28,7 +28,6 @@
 #define HB_MAP_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-object-private.hh"
 
 
 template <typename T>
@@ -89,7 +88,7 @@ struct hb_map_t
   {
     if (unlikely (!successful)) return false;
 
-    unsigned int power = _hb_bit_storage (population * 2 + 8);
+    unsigned int power = hb_bit_storage (population * 2 + 8);
     unsigned int new_size = 1u << power;
     item_t *new_items = (item_t *) malloc ((size_t) new_size * sizeof (item_t));
     if (unlikely (!new_items))

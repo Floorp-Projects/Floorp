@@ -24,9 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-atomic-private.hh"
-#include "hb-mutex-private.hh"
-
+#include "hb-private.hh"
 
 #if defined(HB_ATOMIC_INT_NIL)
 #error "Could not find any system to define atomic_int macros, library WILL NOT be thread-safe"

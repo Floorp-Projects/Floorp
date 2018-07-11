@@ -31,8 +31,6 @@
 
 #include "hb-private.hh"
 
-#include "hb-object-private.hh"
-
 
 /*
  * hb_blob_t
