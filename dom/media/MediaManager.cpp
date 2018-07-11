@@ -1494,19 +1494,19 @@ private:
 // Source getter returning full list
 
 static void
-GetSources(MediaEngine *aEngine,
-           uint64_t aWindowId,
-           MediaSourceEnum aSrcType,
-           nsTArray<RefPtr<MediaDevice>>& aResult,
-           const char* aMediaDeviceName = nullptr)
+GetMediaDevices(MediaEngine *aEngine,
+                uint64_t aWindowId,
+                MediaSourceEnum aSrcType,
+                nsTArray<RefPtr<MediaDevice>>& aResult,
+                const char* aMediaDeviceName = nullptr)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
 
   LOG(("%s: aEngine=%p, aWindowId=%" PRIu64 ", aSrcType=%" PRIu8 ", aMediaDeviceName=%s",
        __func__, aEngine, aWindowId, static_cast<uint8_t>(aSrcType),
        aMediaDeviceName ? aMediaDeviceName : "null"));
-  nsTArray<RefPtr<MediaEngineSource>> sources;
-  aEngine->EnumerateDevices(aWindowId, aSrcType, &sources);
+  nsTArray<RefPtr<MediaDevice>> devices;
+  aEngine->EnumerateDevices(aWindowId, aSrcType, &devices);
 
   /*
    * We're allowing multiple tabs to access the same camera for parity
@@ -1515,25 +1515,20 @@ GetSources(MediaEngine *aEngine,
    * to.
    */
   if (aMediaDeviceName && *aMediaDeviceName)  {
-    for (auto& source : sources) {
-      nsString deviceName = source->GetName();
-      if (deviceName.EqualsASCII(aMediaDeviceName)) {
-        aResult.AppendElement(MakeRefPtr<MediaDevice>(
-              source,
-              source->GetName(),
-              NS_ConvertUTF8toUTF16(source->GetUUID())));
+    for (auto& device : devices) {
+      if (device->mName.EqualsASCII(aMediaDeviceName)) {
+        aResult.AppendElement(device);
         LOG(("%s: found aMediaDeviceName=%s", __func__, aMediaDeviceName));
         break;
       }
     }
   } else {
-    for (auto& source : sources) {
-      aResult.AppendElement(MakeRefPtr<MediaDevice>(
-            source,
-            source->GetName(),
-            NS_ConvertUTF8toUTF16(source->GetUUID())));
-      LOG(("%s: appending device=%s", __func__,
-           NS_ConvertUTF16toUTF8(source->GetName()).get()));
+    aResult = devices;
+    if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
+      for (auto& device : devices) {
+        LOG(("%s: appending device=%s", __func__,
+             NS_ConvertUTF16toUTF8(device->mName).get()));
+      }
     }
   }
 }
@@ -1951,21 +1946,17 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       SourceSet videos;
       LOG(("EnumerateRawDevices Task: Getting video sources with %s backend",
            aVideoEnumType == DeviceEnumerationType::Fake ? "fake" : "real"));
-      GetSources(aVideoEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
-                 aWindowId, aVideoType, videos, videoLoopDev.get());
-      for (auto& source : videos) {
-        result->AppendElement(source);
-      }
+      GetMediaDevices(aVideoEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
+                      aWindowId, aVideoType, videos, videoLoopDev.get());
+      result->AppendElements(videos);
     }
     if (hasAudio) {
       SourceSet audios;
       LOG(("EnumerateRawDevices Task: Getting audio sources with %s backend",
            aVideoEnumType == DeviceEnumerationType::Fake ? "fake" : "real"));
-      GetSources(aAudioEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
-                 aWindowId, aAudioType, audios, audioLoopDev.get());
-      for (auto& source : audios) {
-        result->AppendElement(source);
-      }
+      GetMediaDevices(aAudioEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
+                      aWindowId, aAudioType, audios, audioLoopDev.get());
+      result->AppendElements(audios);
     }
     NS_DispatchToMainThread(NewRunnableFrom([id, result = std::move(result)]() mutable {
       MediaManager* mgr = MediaManager::GetIfExists();
