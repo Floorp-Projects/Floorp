@@ -322,6 +322,7 @@ class Include(object):
 
 class IDL(object):
     def __init__(self, productions):
+        self.hasSequence = False
         self.productions = productions
         self.deps = []
 
@@ -329,6 +330,12 @@ class IDL(object):
         self.namemap.set(object)
 
     def getName(self, id, location):
+        if id.name == 'Sequence':
+            if id.params is None or len(id.params) != 1:
+                raise IDLError("Sequence takes exactly 1 parameter", location)
+            self.hasSequence = True
+            return Sequence(self.getName(id.params[0], location), location)
+
         if id.params is not None:
             raise IDLError("Generic type '%s' unrecognized" % id.name, location)
 
@@ -358,6 +365,8 @@ class IDL(object):
         for p in self.productions:
             if p.kind == 'include':
                 yield p
+        if self.hasSequence:
+            yield Include("nsTArray.h", BuiltinLocation)
 
     def needsJSTypes(self):
         for p in self.productions:
@@ -1236,6 +1245,36 @@ class Array(object):
         return "%s%s%s" % ('*mut ' if 'out' in calltype else '',
                            '*const ' if const else '*mut ',
                            self.type.rustType('element'))
+
+
+class Sequence(object):
+    kind = 'sequence'
+
+    def __init__(self, type, location):
+        self.type = type
+        self.location = location
+
+    @property
+    def name(self):
+        return "Sequence<%s>" % self.type.name
+
+    def resolve(self, idl):
+        idl.getName(self.type, self.location)
+
+    def isScriptable(self):
+        return self.type.isScriptable()
+
+    def nativeType(self, calltype):
+        base = 'nsTArray<%s>' % self.type.nativeType('element')
+        if 'out' in calltype:
+            return '%s& ' % base
+        elif 'in' == calltype:
+            return 'const %s& ' % base
+        else:
+            return base
+
+    def rustType(self, calltype):
+        raise RustNoncompat("Sequence<...> types")
 
 
 TypeId = namedtuple('TypeId', 'name params')
