@@ -15,22 +15,7 @@
 # that they can be shared with browser.xul.
 #include global-scripts.inc
 
-<script type="application/javascript">
-  function OpenBrowserWindowFromDockMenu(options) {
-    let win = OpenBrowserWindow(options);
-    win.addEventListener("load", function listener() {
-      win.removeEventListener("load", listener);
-      let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
-        .getService(Ci.nsIMacDockSupport);
-      dockSupport.activateApplication(true);
-    });
-
-    return win;
-  }
-
-  addEventListener("load",   function() { gBrowserInit.nonBrowserWindowStartup()  }, false);
-  addEventListener("unload", function() { gBrowserInit.nonBrowserWindowShutdown() }, false);
-</script>
+<script type="application/javascript" src="chrome://browser/content/nonbrowser-mac.js"></script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters)
 # *must* go into the browser-sets.inc file so that they can be shared with
