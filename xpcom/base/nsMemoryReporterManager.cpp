@@ -1614,9 +1614,6 @@ nsMemoryReporterManager::Init()
   nsMemoryInfoDumper::Initialize();
 #endif
 
-  // Report our own memory usage as well.
-  RegisterWeakReporter(this);
-
   return NS_OK;
 }
 
@@ -1642,22 +1639,6 @@ nsMemoryReporterManager::~nsMemoryReporterManager()
   delete mWeakReporters;
   NS_ASSERTION(!mSavedStrongReporters, "failed to restore strong reporters");
   NS_ASSERTION(!mSavedWeakReporters, "failed to restore weak reporters");
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                        nsISupports* aData, bool aAnonymize)
-{
-  size_t n = MallocSizeOf(this);
-  n += mStrongReporters->ShallowSizeOfIncludingThis(MallocSizeOf);
-  n += mWeakReporters->ShallowSizeOfIncludingThis(MallocSizeOf);
-
-  MOZ_COLLECT_REPORT(
-    "explicit/memory-reporter-manager", KIND_HEAP, UNITS_BYTES,
-    n,
-    "Memory used by the memory reporter infrastructure.");
-
-  return NS_OK;
 }
 
 #ifdef DEBUG_CHILD_PROCESS_MEMORY_REPORTING
