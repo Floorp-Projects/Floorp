@@ -19,6 +19,12 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="tabmodalprompt">
+
+    <resources>
+        <stylesheet src="chrome://global/content/tabprompts.css"/>
+        <stylesheet src="chrome://global/skin/tabprompts.css"/>
+    </resources>
+
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                  role="dialog"
                  aria-describedby="infoBody">
@@ -26,8 +32,8 @@
         <!-- This is based on the guts of commonDialog.xul -->
         <spacer flex="1"/>
         <hbox pack="center">
-            <vbox anonid="mainContainer" class="tabmodalprompt-mainContainer">
-                <grid class="tabmodalprompt-topContainer" flex="1">
+            <vbox anonid="mainContainer" class="mainContainer">
+                <grid class="topContainer" flex="1">
                     <columns>
                         <column/>
                         <column flex="1"/>
@@ -58,7 +64,7 @@
                     </rows>
                 </grid>
                 <xbl:children/>
-                <hbox class="tabmodalprompt-buttonContainer">
+                <hbox class="buttonContainer">
 #ifdef XP_UNIX
                     <button anonid="button3" hidden="true"/>
                     <button anonid="button2" hidden="true"/>

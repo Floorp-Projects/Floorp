@@ -9,7 +9,7 @@ tabmodalprompt {
   font-size: 110%;
 }
 
-.tabmodalprompt-mainContainer {
+.mainContainer {
   color: black;
   background-color: hsla(0,0%,100%,.95);
   background-clip: padding-box;
@@ -17,17 +17,17 @@ tabmodalprompt {
   border: 1px solid hsla(0,0%,0%,.5);
 }
 
-.tabmodalprompt-topContainer {
+.topContainer {
   padding: 20px;
 }
 
-.tabmodalprompt-buttonContainer {
+.buttonContainer {
   padding: 12px 20px 15px;
   background-color: hsla(0,0%,0%,.05);
   border-top: 1px solid hsla(0,0%,0%,.05);
 }
 
-.tabmodalprompt-buttonContainer > button {
+button {
   -moz-appearance: none;
   padding: 2px 0;
   margin: 0;
@@ -43,21 +43,21 @@ tabmodalprompt {
               0 1px 2px hsla(0,0%,0%,.1);
 }
 
-.tabmodalprompt-buttonContainer > button[default=true] {
+button[default=true] {
   background-color: hsl(0,0%,79%);
 }
 
-.tabmodalprompt-buttonContainer > button:hover {
+button:hover {
   background-color: hsl(0,0%,96%);
 }
 
-.tabmodalprompt-buttonContainer > button:hover:active {
+button:hover:active {
   background-image: linear-gradient(hsla(0,0%,100%,.2), transparent);
   background-color: hsl(0,0%,70%);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 1px 3px hsla(0,0%,0%,.2);
 }
 
-.tabmodalprompt-buttonContainer > button:focus {
+button:focus {
   box-shadow: var(--focus-ring-box-shadow)
 }

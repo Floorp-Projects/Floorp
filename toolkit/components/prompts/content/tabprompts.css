@@ -10,7 +10,7 @@ tabmodalprompt {
   -moz-box-orient: vertical;
 }
 
-.tabmodalprompt-mainContainer {
+.mainContainer {
   min-width: 20em;
   min-height: 12em;
   -moz-user-focus: normal;
