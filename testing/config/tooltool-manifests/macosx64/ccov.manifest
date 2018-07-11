@@ -1,9 +1,0 @@
-[
-  {
-    "size": 919638,
-    "visibility": "public",
-    "digest": "c90e75f664daf05506e703b54a1afa0d065f06a90625fef35ed8aa3623dc15ca7efc3ab905e4db2245c9540a72647792de3d700f728eada8d2b068d8f2f6d9e1",
-    "algorithm": "sha512",
-    "filename": "grcov-osx-x86_64.tar.bz2"
-  }
-]
