@@ -18,6 +18,7 @@
     <item type="id" name="pref_header_search"/>
     <item type="id" name="updateServicePermissionNotification" />
     <item type="id" name="foregroundNotification" />
+    <item type="id" name="stumblerNotification" />
     <item type="id" name="actionbar"/>
     <item type="id" name="action_button"/>
     <item type="id" name="page_progress"/>
