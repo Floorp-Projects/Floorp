@@ -240,6 +240,7 @@ static bool
 IsContainerLayerItem(nsDisplayItem* aItem)
 {
   switch (aItem->GetType()) {
+    case DisplayItemType::TYPE_WRAP_LIST:
     case DisplayItemType::TYPE_TRANSFORM:
     case DisplayItemType::TYPE_OPACITY:
     case DisplayItemType::TYPE_FILTER:
@@ -518,9 +519,9 @@ struct DIGroup
             combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
             IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
             auto rect = transformedRect.Intersect(imageRect);
-            MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
             GP("Layer NoChange: %s %d %d %d %d\n", aItem->Name(),
                    aData->mRect.x, aData->mRect.y, aData->mRect.XMost(), aData->mRect.YMost());
+            MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
           }
         } else {
           // XXX: this code can eventually be deleted/made debug only
@@ -528,9 +529,9 @@ struct DIGroup
           combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
           IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
           auto rect = transformedRect.Intersect(imageRect);
-          MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
           GP("NoChange: %s %d %d %d %d\n", aItem->Name(),
                  aData->mRect.x, aData->mRect.y, aData->mRect.XMost(), aData->mRect.YMost());
+          MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
         }
       }
     }
