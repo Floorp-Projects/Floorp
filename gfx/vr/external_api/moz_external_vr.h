@@ -24,11 +24,12 @@ namespace mozilla {
 #ifdef MOZILLA_INTERNAL_API
 namespace dom {
   enum class GamepadHand : uint8_t;
+  enum class GamepadCapabilityFlags : uint16_t;
 }
 #endif //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 0;
+static const int32_t kVRExternalVersion = 1;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -44,7 +45,7 @@ static const uint32_t kVRGroupAll = 0xffffffff;
 static const int kVRDisplayNameMaxLen = 256;
 static const int kVRControllerNameMaxLen = 256;
 static const int kVRControllerMaxCount = 16;
-static const int kVRControllerMaxTriggers = 16;
+static const int kVRControllerMaxButtons = 64;
 static const int kVRControllerMaxAxis = 16;
 static const int kVRLayerMaxCount = 8;
 
@@ -80,6 +81,32 @@ enum class ControllerHand : uint8_t {
   Left,
   Right,
   EndGuard_
+};
+
+enum class ControllerCapabilityFlags : uint16_t {
+  Cap_None = 0,
+  /**
+   * Cap_Position is set if the Gamepad is capable of tracking its position.
+   */
+  Cap_Position = 1 << 1,
+  /**
+    * Cap_Orientation is set if the Gamepad is capable of tracking its orientation.
+    */
+  Cap_Orientation = 1 << 2,
+  /**
+   * Cap_AngularAcceleration is set if the Gamepad is capable of tracking its
+   * angular acceleration.
+   */
+  Cap_AngularAcceleration = 1 << 3,
+  /**
+   * Cap_LinearAcceleration is set if the Gamepad is capable of tracking its
+   * linear acceleration.
+   */
+  Cap_LinearAcceleration = 1 << 4,
+  /**
+   * Cap_All used for validity checking during IPC serialization
+   */
+  Cap_All = (1 << 5) - 1
 };
 
 #endif // ifndef MOZILLA_INTERNAL_API
@@ -140,20 +167,25 @@ enum class VRDisplayCapabilityFlags : uint16_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
 #endif // MOZILLA_INTERNAL_API
 
+struct VRPose
+{
+  float orientation[4];
+  float position[3];
+  float angularVelocity[3];
+  float angularAcceleration[3];
+  float linearVelocity[3];
+  float linearAcceleration[3];
+};
+
 struct VRHMDSensorState {
   uint64_t inputFrameID;
   double timestamp;
   VRDisplayCapabilityFlags flags;
 
   // These members will only change with inputFrameID:
-  float orientation[4];
-  float position[3];
+  VRPose pose;
   float leftViewMatrix[16];
   float rightViewMatrix[16];
-  float angularVelocity[3];
-  float angularAcceleration[3];
-  float linearVelocity[3];
-  float linearAcceleration[3];
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -248,22 +280,30 @@ struct VRDisplayState
 
 struct VRControllerState
 {
-  char mControllerName[kVRControllerNameMaxLen];
+  char controllerName[kVRControllerNameMaxLen];
 #ifdef MOZILLA_INTERNAL_API
-  dom::GamepadHand mHand;
+  dom::GamepadHand hand;
 #else
-  ControllerHand mHand;
+  ControllerHand hand;
 #endif
-  uint32_t mNumButtons;
-  uint32_t mNumAxes;
-  uint32_t mNumTriggers;
-  uint32_t mNumHaptics;
+  uint32_t numButtons;
+  uint32_t numAxes;
+  uint32_t numHaptics;
   // The current button pressed bit of button mask.
-  uint64_t mButtonPressed;
+  uint64_t buttonPressed;
   // The current button touched bit of button mask.
-  uint64_t mButtonTouched;
-  float mTriggerValue[kVRControllerMaxTriggers];
-  float mAxisValue[kVRControllerMaxAxis];
+  uint64_t buttonTouched;
+  float triggerValue[kVRControllerMaxButtons];
+  float axisValue[kVRControllerMaxAxis];
+
+#ifdef MOZILLA_INTERNAL_API
+  dom::GamepadCapabilityFlags flags;
+#else
+  ControllerCapabilityFlags flags;
+#endif
+  VRPose pose;
+  bool isPositionValid;
+  bool isOrientationValid;
 };
 
 struct VRLayerEyeRect
