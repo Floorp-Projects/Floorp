@@ -679,40 +679,6 @@ KeyframeEffect::ConstructKeyframeEffect(
   return effect.forget();
 }
 
-/* static */ already_AddRefed<KeyframeEffect>
-KeyframeEffect::ConstructKeyframeEffect(const GlobalObject& aGlobal,
-                                        KeyframeEffect& aSource,
-                                        ErrorResult& aRv)
-{
-  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
-  if (!doc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // Create a new KeyframeEffect object with aSource's target,
-  // iteration composite operation, composite operation, and spacing mode.
-  // The constructor creates a new AnimationEffect object by
-  // aSource's TimingParams.
-  // Note: we don't need to re-throw exceptions since the value specified on
-  //       aSource's timing object can be assumed valid.
-  RefPtr<KeyframeEffect> effect =
-    new KeyframeEffect(doc,
-                       aSource.mTarget,
-                       aSource.SpecifiedTiming(),
-                       aSource.mEffectOptions);
-  // Copy cumulative change hint. mCumulativeChangeHint should be the same as
-  // the source one because both of targets are the same.
-  effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
-
-  // Copy aSource's keyframes and animation properties.
-  // Note: We don't call SetKeyframes directly, which might revise the
-  //       computed offsets and rebuild the animation properties.
-  effect->mKeyframes = aSource.mKeyframes;
-  effect->mProperties = aSource.mProperties;
-  return effect.forget();
-}
-
 nsTArray<AnimationProperty>
 KeyframeEffect::BuildProperties(const ComputedStyle* aStyle)
 {
@@ -885,14 +851,6 @@ KeyframeEffect::Constructor(
 }
 
 /* static */ already_AddRefed<KeyframeEffect>
-KeyframeEffect::Constructor(const GlobalObject& aGlobal,
-                            KeyframeEffect& aSource,
-                            ErrorResult& aRv)
-{
-  return ConstructKeyframeEffect(aGlobal, aSource, aRv);
-}
-
-/* static */ already_AddRefed<KeyframeEffect>
 KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
@@ -901,6 +859,40 @@ KeyframeEffect::Constructor(
     ErrorResult& aRv)
 {
   return ConstructKeyframeEffect(aGlobal, aTarget, aKeyframes, aOptions, aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(const GlobalObject& aGlobal,
+                            KeyframeEffect& aSource,
+                            ErrorResult& aRv)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Create a new KeyframeEffect object with aSource's target,
+  // iteration composite operation, composite operation, and spacing mode.
+  // The constructor creates a new AnimationEffect object by
+  // aSource's TimingParams.
+  // Note: we don't need to re-throw exceptions since the value specified on
+  //       aSource's timing object can be assumed valid.
+  RefPtr<KeyframeEffect> effect =
+    new KeyframeEffect(doc,
+                       aSource.mTarget,
+                       aSource.SpecifiedTiming(),
+                       aSource.mEffectOptions);
+  // Copy cumulative change hint. mCumulativeChangeHint should be the same as
+  // the source one because both of targets are the same.
+  effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
+
+  // Copy aSource's keyframes and animation properties.
+  // Note: We don't call SetKeyframes directly, which might revise the
+  //       computed offsets and rebuild the animation properties.
+  effect->mKeyframes = aSource.mKeyframes;
+  effect->mProperties = aSource.mProperties;
+  return effect.forget();
 }
 
 void
