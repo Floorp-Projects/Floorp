@@ -12,6 +12,7 @@ import os.path
 import re
 from ply import lex
 from ply import yacc
+from collections import namedtuple
 
 """A type conforms to the following pattern:
 
@@ -328,10 +329,13 @@ class IDL(object):
         self.namemap.set(object)
 
     def getName(self, id, location):
+        if id.params is not None:
+            raise IDLError("Generic type '%s' unrecognized" % id.name, location)
+
         try:
-            return self.namemap[id]
+            return self.namemap[id.name]
         except KeyError:
-            raise IDLError("type '%s' not found" % id, location)
+            raise IDLError("type '%s' not found" % id.name, location)
 
     def hasName(self, id):
         return id in self.namemap
@@ -663,7 +667,7 @@ class Interface(object):
                 if hasattr(member, 'doccomments'):
                     member.doccomments[0:0] = self.doccomments
                     break
-            self.doccomments = parent.getName(self.name, None).doccomments
+            self.doccomments = parent.getName(TypeId(self.name), None).doccomments
 
         if self.attributes.function:
             has_method = False
@@ -678,7 +682,7 @@ class Interface(object):
 
         parent.setName(self)
         if self.base is not None:
-            realbase = parent.getName(self.base, self.location)
+            realbase = parent.getName(TypeId(self.base), self.location)
             if realbase.kind != 'interface':
                 raise IDLError("interface '%s' inherits from non-interface type '%s'" %
                                (self.name, self.base), self.location)
@@ -737,7 +741,7 @@ class Interface(object):
         # The constant may be in a base class
         iface = self
         while name not in iface.namemap and iface is not None:
-            iface = self.idl.getName(self.base, self.location)
+            iface = self.idl.getName(TypeId(self.base), self.location)
         if iface is None:
             raise IDLError("cannot find symbol '%s'" % name)
         c = iface.namemap.get(name, location)
@@ -748,7 +752,7 @@ class Interface(object):
 
     def needsJSTypes(self):
         for m in self.members:
-            if m.kind == "attribute" and m.type == "jsval":
+            if m.kind == "attribute" and m.type == TypeId("jsval"):
                 return True
             if m.kind == "method" and m.needsJSTypes():
                 return True
@@ -758,7 +762,7 @@ class Interface(object):
         ''' Returns the number of entries in the vtable for this interface. '''
         total = sum(member.count() for member in self.members)
         if self.base is not None:
-            realbase = self.idl.getName(self.base, self.location)
+            realbase = self.idl.getName(TypeId(self.base), self.location)
             total += realbase.countEntries()
         return total
 
@@ -1084,7 +1088,7 @@ class Method(object):
     def needsJSTypes(self):
         if self.implicit_jscontext:
             return True
-        if self.type == "jsval":
+        if self.type == TypeId("jsval"):
             return True
         for p in self.params:
             t = p.realtype
@@ -1234,6 +1238,20 @@ class Array(object):
                            self.type.rustType('element'))
 
 
+TypeId = namedtuple('TypeId', 'name params')
+
+
+# Make str(TypeId) produce a nicer value
+TypeId.__str__ = lambda self: \
+    "%s<%s>" % (self.name, ', '.join(str(p) for p in self.params)) \
+    if self.params is not None \
+    else self.name
+
+
+# Allow skipping 'params' in TypeId(..)
+TypeId.__new__.__defaults__ = (None,)
+
+
 class IDLParser(object):
     keywords = {
         'const': 'CONST',
@@ -1274,7 +1292,7 @@ class IDLParser(object):
     t_LSHIFT = r'<<'
     t_RSHIFT = r'>>'
 
-    literals = '"(){}[],;:=|+-*'
+    literals = '"(){}[]<>,;:=|+-*'
 
     t_ignore = ' \t'
 
@@ -1367,7 +1385,7 @@ class IDLParser(object):
         p[0].insert(0, p[1])
 
     def p_typedef(self, p):
-        """typedef : TYPEDEF IDENTIFIER IDENTIFIER ';'"""
+        """typedef : TYPEDEF type IDENTIFIER ';'"""
         p[0] = Typedef(type=p[2],
                        name=p[3],
                        location=self.getLocation(p, 1),
@@ -1480,7 +1498,7 @@ class IDLParser(object):
         p[0] = CDATA(p[1], self.getLocation(p, 1))
 
     def p_member_const(self, p):
-        """member : CONST IDENTIFIER IDENTIFIER '=' number ';' """
+        """member : CONST type IDENTIFIER '=' number ';' """
         p[0] = ConstMember(type=p[2], name=p[3],
                            value=p[5], location=self.getLocation(p, 1),
                            doccomments=p.slice[1].doccomments)
@@ -1542,7 +1560,7 @@ class IDLParser(object):
         p[0] = lambda i: n1(i) | n2(i)
 
     def p_member_att(self, p):
-        """member : attributes optreadonly ATTRIBUTE IDENTIFIER IDENTIFIER ';'"""
+        """member : attributes optreadonly ATTRIBUTE type IDENTIFIER ';'"""
         if 'doccomments' in p[1]:
             doccomments = p[1]['doccomments']
         elif p[2] is not None:
@@ -1558,7 +1576,7 @@ class IDLParser(object):
                          doccomments=doccomments)
 
     def p_member_method(self, p):
-        """member : attributes IDENTIFIER IDENTIFIER '(' paramlist ')' raises ';'"""
+        """member : attributes type IDENTIFIER '(' paramlist ')' raises ';'"""
         if 'doccomments' in p[1]:
             doccomments = p[1]['doccomments']
         else:
@@ -1591,7 +1609,7 @@ class IDLParser(object):
         p[0].insert(0, p[2])
 
     def p_param(self, p):
-        """param : attributes paramtype IDENTIFIER IDENTIFIER"""
+        """param : attributes paramtype type IDENTIFIER"""
         p[0] = Param(paramtype=p[2],
                      type=p[3],
                      name=p[4],
@@ -1626,6 +1644,25 @@ class IDLParser(object):
 
     def p_idlist_continue(self, p):
         """idlist : IDENTIFIER ',' idlist"""
+        p[0] = list(p[3])
+        p[0].insert(0, p[1])
+
+    def p_type_id(self, p):
+        """type : IDENTIFIER"""
+        p[0] = TypeId(name=p[1])
+        p.slice[0].doccomments = p.slice[1].doccomments
+
+    def p_type_generic(self, p):
+        """type : IDENTIFIER '<' typelist '>'"""
+        p[0] = TypeId(name=p[1], params=p[3])
+        p.slice[0].doccomments = p.slice[1].doccomments
+
+    def p_typelist(self, p):
+        """typelist : type"""
+        p[0] = [p[1]]
+
+    def p_typelist_continue(self, p):
+        """typelist : type ',' typelist"""
         p[0] = list(p[3])
         p[0].insert(0, p[1])
 
