@@ -1602,7 +1602,7 @@ fn parse_simulcast(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
 }
 
 fn parse_ssrc(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
-    let mut tokens = to_parse.split_whitespace();
+    let mut tokens = to_parse.splitn(2,' ');
     let ssrc_id = match tokens.next() {
         None => {
             return Err(SdpParserInternalError::Generic("Ssrc attribute is missing ssrc-id value"
@@ -2100,6 +2100,8 @@ fn test_parse_attribute_ssrc() {
     assert!(parse_attribute("ssrc:2655508255").is_ok());
     assert!(parse_attribute("ssrc:2655508255 foo").is_ok());
     assert!(parse_attribute("ssrc:2655508255 cname:{735484ea-4f6c-f74a-bd66-7425f8476c2e}")
+                .is_ok());
+    assert!(parse_attribute("ssrc:2082260239 msid:1d0cdb4e-5934-4f0f-9f88-40392cb60d31 315b086a-5cb6-4221-89de-caf0b038c79d")
                 .is_ok());
 
     assert!(parse_attribute("ssrc:").is_err());
