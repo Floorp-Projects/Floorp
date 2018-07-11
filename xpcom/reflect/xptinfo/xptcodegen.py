@@ -284,6 +284,11 @@ def link_to_cpp(interfaces, fd):
             d1 = type['size_is']
             d2 = lower_extra_type(type['element'])
 
+        elif tag == 'TD_SEQUENCE':
+            # NOTE: TD_SEQUENCE can hold 16 bits of type index, while TD_ARRAY
+            # can only hold 8.
+            d1, d2 = splitint(lower_extra_type(type['element']))
+
         elif tag == 'TD_INTERFACE_TYPE':
             d1, d2 = splitint(interface_idx(type['name']))
 
