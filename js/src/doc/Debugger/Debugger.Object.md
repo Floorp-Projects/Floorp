@@ -311,13 +311,6 @@ from its prototype:
     when it was resolved. If the referent hasn't been resolved or is not a
     [`Promise`][promise], throw a `TypeError` exception.
 
-`global`
-:   A `Debugger.Object` instance referring to the global object in whose
-    scope the referent was allocated. This does not unwrap cross-compartment
-    wrappers: if the referent is a wrapper, the result refers to the
-    wrapper's global, not the wrapped object's global. The result refers to
-    the global directly, not via a wrapper.
-
 <code id="allocationsite">allocationSite</code>
 :   If [object allocation site tracking][tracking-allocs] was enabled when this
     `Debugger.Object`'s referent was allocated, return the
