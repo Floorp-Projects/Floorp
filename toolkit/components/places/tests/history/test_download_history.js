@@ -19,8 +19,8 @@ const PRIVATE_URI = NetUtil.newURI("http://www.example.net/");
  * @param aCallback
  *        Callback function to be called with the same arguments of onVisit.
  */
-function waitForOnVisit(aCallback) {
-  function listener(aEvents) {
+async function waitForOnVisit(aCallback) {
+  await PlacesTestUtils.waitForNotification("page-visited", aEvents => {
     Assert.equal(aEvents.length, 1, "Right number of visits notified");
     Assert.equal(aEvents[0].type, "page-visited");
     let {
@@ -35,13 +35,12 @@ function waitForOnVisit(aCallback) {
       typedCount,
       lastKnownTitle,
     } = aEvents[0];
-    PlacesObservers.removeListener(["page-visited"], listener);
     let uriArg = NetUtil.newURI(url);
     aCallback(uriArg, visitId, visitTime, 0, referringVisitId,
               transitionType, pageGuid, hidden, visitCount,
               typedCount, lastKnownTitle);
-  }
-  PlacesObservers.addListener(["page-visited"], listener);
+    return true;
+  }, "places");
 }
 
 /**
@@ -78,54 +77,88 @@ function waitForOnDeleteVisits(aCallback) {
   PlacesUtils.history.addObserver(historyObserver);
 }
 
-add_test(function test_dh_is_from_places() {
+add_task(async function test_dh_is_from_places() {
   // Test that this nsIDownloadHistory is the one places implements.
   Assert.ok(gDownloadHistory instanceof Ci.mozIAsyncHistory);
-
-  run_next_test();
 });
 
-add_test(function test_dh_addRemoveDownload() {
-  waitForOnVisit(function DHAD_onVisit(aURI) {
-    Assert.ok(aURI.equals(DOWNLOAD_URI));
 
-    // Verify that the URI is already available in results at this time.
-    Assert.ok(!!page_in_database(DOWNLOAD_URI));
+async function checkAddAndRemove(expected) {
+  let visitedPromise = PlacesTestUtils.waitForNotification("page-visited",
+    visits => visits[0].url == DOWNLOAD_URI.spec,
+    "places");
 
-    waitForOnDeleteURI(function DHRAD_onDeleteURI(aDeletedURI) {
-      Assert.ok(aDeletedURI.equals(DOWNLOAD_URI));
-
-      // Verify that the URI is already available in results at this time.
-      Assert.ok(!page_in_database(DOWNLOAD_URI));
-
-      run_next_test();
-    });
-    gDownloadHistory.removeAllDownloads();
+  let pageInfo = await PlacesUtils.history.insert({
+    url: DOWNLOAD_URI.spec,
+    visits: [{
+      date: new Date(),
+      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+    }]
   });
 
-  gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+  await visitedPromise;
+
+  Assert.ok(!!page_in_database(DOWNLOAD_URI),
+    "Should have added the page to the database");
+
+  let notificationArgs;
+  let removedPromise = PlacesTestUtils.waitForNotification(
+    expected.deleteVisitOnly ? "onDeleteVisits" : "onDeleteURI",
+    (...args) => {
+      notificationArgs = args;
+      return true;
+    },
+    "history");
+
+  await PlacesUtils.history.removeVisitsByFilter({
+    transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD
+  });
+
+  await removedPromise;
+
+  Assert.equal(notificationArgs[0].spec, DOWNLOAD_URI.spec,
+    "Should have received the correct URI in the notification");
+
+  if (expected.deleteVisitOnly) {
+    Assert.equal(notificationArgs[1], expected.partialRemoval,
+      "Should have received the expected partialRemoval in the notification");
+    Assert.equal(notificationArgs[2], pageInfo.guid,
+      "Should have received the correct GUID in the notification");
+    Assert.equal(notificationArgs[3], Ci.nsINavHistoryObserver.REASON_DELETED,
+      "Should have received the correct reason in the notification");
+    Assert.equal(notificationArgs[4], PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+      "Should have received the correct transition type in the notification");
+    Assert.ok(!!page_in_database(DOWNLOAD_URI),
+      "Should have kept the page in the database.");
+  } else {
+    Assert.equal(notificationArgs[1], pageInfo.guid,
+      "Should have received the correct GUID in the notification");
+    Assert.equal(notificationArgs[2], Ci.nsINavHistoryObserver.REASON_DELETED,
+      "Should have received the correct reason in the notification");
+    Assert.ok(!page_in_database(DOWNLOAD_URI),
+      "Should have removed the page from the database.");
+  }
+}
+
+add_task(async function test_dh_addRemoveDownload() {
+  await checkAddAndRemove({
+    deleteVisitOnly: false,
+    partialRemoval: false,
+  });
 });
 
-add_test(function test_dh_addMultiRemoveDownload() {
-  PlacesTestUtils.addVisits({
+add_task(async function test_dh_addMultiRemoveDownload() {
+  await PlacesTestUtils.addVisits({
     uri: DOWNLOAD_URI,
     transition: TRANSITION_TYPED
-  }).then(function() {
-    waitForOnVisit(function DHAD_onVisit(aURI) {
-      Assert.ok(aURI.equals(DOWNLOAD_URI));
-      Assert.ok(!!page_in_database(DOWNLOAD_URI));
-
-      waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aDeletedURI) {
-        Assert.ok(aDeletedURI.equals(DOWNLOAD_URI));
-        Assert.ok(!!page_in_database(DOWNLOAD_URI));
-
-        PlacesUtils.history.clear().then(run_next_test);
-      });
-      gDownloadHistory.removeAllDownloads();
-    });
-
-    gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
   });
+
+  await checkAddAndRemove({
+    deleteVisitOnly: true,
+    partialRemoval: true,
+  });
+
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_dh_addBookmarkRemoveDownload() {
@@ -135,21 +168,9 @@ add_task(async function test_dh_addBookmarkRemoveDownload() {
     title: "A bookmark"
   });
 
-  await new Promise(resolve => {
-    waitForOnVisit(function DHAD_onVisit(aURI) {
-      Assert.ok(aURI.equals(DOWNLOAD_URI));
-      Assert.ok(!!page_in_database(DOWNLOAD_URI));
-
-      waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aDeletedURI) {
-        Assert.ok(aDeletedURI.equals(DOWNLOAD_URI));
-        Assert.ok(!!page_in_database(DOWNLOAD_URI));
-
-        PlacesUtils.history.clear().then(resolve);
-      });
-      gDownloadHistory.removeAllDownloads();
-    });
-
-    gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+  await checkAddAndRemove({
+    deleteVisitOnly: true,
+    partialRemoval: false,
   });
 });
 

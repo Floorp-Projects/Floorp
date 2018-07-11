@@ -20,6 +20,8 @@ ChromeUtils.defineModuleGetter(this, "DownloadsViewUI",
                                "resource:///modules/DownloadsViewUI.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
 
 let gPanelViewInstances = new WeakMap();
 const kRefreshBatchSize = 10;
@@ -240,9 +242,9 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     if (!instance)
       return;
     instance._downloadsData.removeFinished();
-    Cc["@mozilla.org/browser/download-history;1"]
-      .getService(Ci.nsIDownloadHistory)
-      .removeAllDownloads();
+    PlacesUtils.history.removeVisitsByFilter({
+      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD
+    }).catch(Cu.reportError);
   }
 
   /**
