@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1474662
+Test that the chromeOuterWindowID on the MessageManager interface
+works, and that it properly updates when swapping frameloaders between
+windows.
+-->
+<window title="Mozilla Bug 1474662"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1474662"
+     target="_blank">Mozilla Bug 1474662</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+
+  const BROWSER_DOC = "window_chromeOuterWindowID.xul";
+  const TEST_PAGE = "http://example.com";
+  const TEST_PAGE_2 = "http://example.com/browser";
+
+  function getOuterWindowID(win) {
+    return win.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils)
+              .outerWindowID;
+  }
+
+  /**
+   * Takes two <xul:browser>'s that should be in the same document, and
+   * ensures that their frame script environments know the correct value
+   * of the host window's outerWindowID.
+   */
+  async function ensureExpectedChromeOuterWindowIDs(browser1, browser2) {
+    is(browser1.ownerDocument, browser2.ownerDocument,
+       "Both browsers should belong to the same document.");
+    let winID = getOuterWindowID(browser1.ownerGlobal);
+
+    let browser1ID = await ContentTask.spawn(browser1, null, () => {
+      return chromeOuterWindowID;
+    });
+
+    let browser2ID = await ContentTask.spawn(browser2, null, () => {
+      return chromeOuterWindowID;
+    });
+
+    is(browser1ID, winID,
+       "Browser 1 frame script environment should have the correct chromeOuterWindowID");
+    is(browser2ID, winID,
+       "Browser 1 frame script environment should have the correct chromeOuterWindowID");
+  }
+
+  /**
+   * Opens up a BROWSER_DOC test window, and points each browser to a particular
+   * page.
+   *
+   * @param num (Number)
+   *        An identifier number for this window. Mainly used as a suffix for the
+   *        returned values.
+   * @param page (String)
+   *        A URL to load in each <xul:browser>
+   * @returns Promise
+   *        The Promise resolves with an object with the following properties:
+   *
+   *        win<num>: a reference to the opened window
+   *        remote<num>: a reference to the remote browser in the window
+   *        nonRemote<num>: a reference to the non-remote browser in the window
+   */
+  async function prepareWindow(num, page) {
+    let win = window.open(BROWSER_DOC, "bug1474662-" + num, "chrome,width=200,height=200");
+    await BrowserTestUtils.waitForEvent(win, "load");
+    let remote = win.document.getElementById("remote");
+    let nonRemote = win.document.getElementById("non-remote");
+
+    ok(remote && remote.isRemoteBrowser,
+       "Should have found a remote browser in test window " + num);
+    ok(nonRemote && !nonRemote.isRemoteBrowser,
+       "Should have found a non-remote browser in test window " + num);
+
+    remote.loadURI(page);
+    await BrowserTestUtils.browserLoaded(remote);
+    nonRemote.loadURI(page);
+    await BrowserTestUtils.browserLoaded(nonRemote);
+
+    let result = {};
+    result["win" + num] = win;
+    result["remote" + num] = remote;
+    result["nonRemote" + num] = nonRemote;
+    return result;
+  }
+
+  add_task(async () => {
+    let { win1, remote1, nonRemote1 } = await prepareWindow(1, TEST_PAGE);
+    let { win2, remote2, nonRemote2 } = await prepareWindow(2, TEST_PAGE_2);
+
+    let win1ID = getOuterWindowID(win1);
+    let win2ID = getOuterWindowID(win2);
+
+    // Quick sanity-test here - if something has gone horribly wrong
+    // and the windows have the same IDs, then the rest of this test
+    // is meaningless.
+    isnot(win1ID, win2ID,
+          "The windows should definitely have different IDs.");
+
+    await ensureExpectedChromeOuterWindowIDs(remote1, nonRemote1);
+    await ensureExpectedChromeOuterWindowIDs(remote2, nonRemote2);
+
+    // Swap the frameloaders! This doesn't swap the <browser> elements though,
+    // so what's expected is that the IDs should remain the same within
+    // the browsers despite the underlying content changing.
+    remote1.swapFrameLoaders(remote2);
+    nonRemote1.swapFrameLoaders(nonRemote2);
+
+    await ensureExpectedChromeOuterWindowIDs(remote1, nonRemote1);
+    await ensureExpectedChromeOuterWindowIDs(remote2, nonRemote2);
+
+    // Now swap them back.
+    remote1.swapFrameLoaders(remote2);
+    nonRemote1.swapFrameLoaders(nonRemote2);
+
+    await ensureExpectedChromeOuterWindowIDs(remote1, nonRemote1);
+    await ensureExpectedChromeOuterWindowIDs(remote2, nonRemote2);
+
+    await BrowserTestUtils.closeWindow(win1);
+    await BrowserTestUtils.closeWindow(win2);
+  });
+  ]]></script>
+</window>
