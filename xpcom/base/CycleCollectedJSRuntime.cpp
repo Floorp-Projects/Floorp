@@ -1549,15 +1549,16 @@ CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 }
 
 void
-CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
+CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject global,
                                                      js::ScriptEnvironmentPreparer::Closure& closure)
 {
-  nsIGlobalObject* global = xpc::NativeGlobal(scope);
+  MOZ_ASSERT(JS_IsGlobalObject(global));
+  nsIGlobalObject* nativeGlobal = xpc::NativeGlobal(global);
 
   // Not much we can do if we simply don't have a usable global here...
-  NS_ENSURE_TRUE_VOID(global && global->GetGlobalJSObject());
+  NS_ENSURE_TRUE_VOID(nativeGlobal && nativeGlobal->GetGlobalJSObject());
 
-  AutoEntryScript aes(global, "JS-engine-initiated execution");
+  AutoEntryScript aes(nativeGlobal, "JS-engine-initiated execution");
 
   MOZ_ASSERT(!JS_IsExceptionPending(aes.cx()));
 
