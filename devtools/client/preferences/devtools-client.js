@@ -65,8 +65,13 @@ pref("devtools.inspector.shapesHighlighter.enabled", true);
 pref("devtools.flexboxinspector.enabled", false);
 // Enable the new Animation Inspector
 pref("devtools.new-animationinspector.enabled", true);
-// Enable the Variable Fonts editor
+
+// Enable the Variable Fonts editor only in Nightly
+#if defined(NIGHTLY_BUILD)
+pref("devtools.inspector.fonteditor.enabled", true);
+#else
 pref("devtools.inspector.fonteditor.enabled", false);
+#endif
 // Enable the font highlight-on-hover feature
 pref("devtools.inspector.fonthighlighter.enabled", false);
 
