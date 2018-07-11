@@ -161,6 +161,7 @@ var TrackingProtection = {
 
     // Don't deal with about:, file: etc.
     if (!baseURI) {
+      this.icon.removeAttribute("state");
       return;
     }
 
