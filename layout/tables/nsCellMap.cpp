@@ -905,10 +905,9 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
                                  nsCellMap&  aCellMap,
                                  uint32_t    aRowGroupStart,
                                  uint32_t    aRowIndex,
-                                 uint32_t    aColIndex,
-                                 bool        aIsBEndIEnd)
+                                 uint32_t    aColIndex)
 {
-  if (!mBCInfo || aIsBEndIEnd) ABORT0();
+  if (!mBCInfo) ABORT0();
 
   BCCellData* cellData;
   BCData* bcData = nullptr;
@@ -957,7 +956,7 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
 }
 
 // store the aSide border segment at coord = (aRowIndex, aColIndex). For bStart/iStart, store
-// the info at coord. For bEnd/iStart store it at the adjacent location so that it is
+// the info at coord. For bEnd/iEnd store it at the adjacent location so that it is
 // bStart/iStart at that location. If the new location is at the iEnd or bEnd edge of the
 // table, then store it one of the special arrays (iEnd-most borders, bEnd-most borders).
 void
