@@ -91,8 +91,8 @@ project(':ui-progress').projectDir = new File('components/ui/progress')
 // Services
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':service-fxa'
-project(':service-fxa').projectDir = new File('components/service/fxa')
+include ':service-firefox-accounts'
+project(':service-firefox-accounts').projectDir = new File('components/service/firefox-accounts')
 
 include ':service-telemetry'
 project(':service-telemetry').projectDir = new File('components/service/telemetry')
@@ -117,8 +117,8 @@ project(':support-utils').projectDir = new File(rootDir, 'components/support/uti
 include ':samples-browser'
 project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
 
-include ':samples-fxa'
-project(':samples-fxa').projectDir = new File(rootDir, 'samples/fxa')
+include ':samples-firefox-accounts'
+project(':samples-firefox-accounts').projectDir = new File(rootDir, 'samples/firefox-accounts')
 
 include ':samples-toolbar'
 project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')

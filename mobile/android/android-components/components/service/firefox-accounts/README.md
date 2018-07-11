@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Service > FxA
+# [Android Components](../../../README.md) > Service > Firefox Accounts (FxA)
 
 A library for integrating with Firefox Accounts.
 

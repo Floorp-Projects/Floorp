@@ -44,7 +44,7 @@ android {
 
 
 dependencies {
-    implementation project(':service-fxa')   
+    implementation project(':service-firefox-accounts')   
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"

@@ -155,7 +155,7 @@ _Generic low-level UI components for building apps._
 
 _Components and libraries to interact with backend services._
 
-* 🔴 [**FxA**](components/service/fxa/README.md) - A library for integrating with Firefox Accounts.
+* 🔴 [**Firefox Accounts (FxA)**](components/service/firefox-accounts/README.md) - A library for integrating with Firefox Accounts.
 
 * 🔵 [**Telemetry**](components/service/telemetry/README.md) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
@@ -175,7 +175,7 @@ _Sample apps using various components._
 
 * [**Browser**](samples/browser) - A simple browser composed from browser components.
 
-* [**FxA**](samples/fxa) - A simple app demoing Firefox Accounts integration.
+* [**Firefox Accounts (FxA)**](samples/firefox-accounts) - A simple app demoing Firefox Accounts integration.
 
 * [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component.
 
