@@ -198,9 +198,7 @@ enum nsXPTTypeTag : uint8_t
  */
 struct nsXPTType
 {
-  // NOTE: This is uint8_t instead of nsXPTTypeTag so that it can be compared
-  // with the nsXPTType::* re-exports.
-  uint8_t Tag() const { return mTag; }
+  nsXPTTypeTag Tag() const { return static_cast<nsXPTTypeTag>(mTag); }
 
   // The index in the function argument list which should be used when
   // determining the iid_is or size_is properties of this dependent type.
@@ -321,42 +319,41 @@ public:
   // nsXPTType backwards compatibility //
   ///////////////////////////////////////
 
-  nsXPTType& operator=(uint8_t aPrefix) { mTag = aPrefix; return *this; }
-  operator uint8_t() const { return mTag; };
+  nsXPTType& operator=(nsXPTTypeTag aPrefix) { mTag = aPrefix; return *this; }
+  operator nsXPTTypeTag() const { return Tag(); }
 
-  enum // Re-export TD_ interfaces from nsXPTType
-  {
-    T_I8                = TD_INT8             ,
-    T_I16               = TD_INT16            ,
-    T_I32               = TD_INT32            ,
-    T_I64               = TD_INT64            ,
-    T_U8                = TD_UINT8            ,
-    T_U16               = TD_UINT16           ,
-    T_U32               = TD_UINT32           ,
-    T_U64               = TD_UINT64           ,
-    T_FLOAT             = TD_FLOAT            ,
-    T_DOUBLE            = TD_DOUBLE           ,
-    T_BOOL              = TD_BOOL             ,
-    T_CHAR              = TD_CHAR             ,
-    T_WCHAR             = TD_WCHAR            ,
-    T_VOID              = TD_VOID             ,
-    T_IID               = TD_PNSIID           ,
-    T_DOMSTRING         = TD_DOMSTRING        ,
-    T_CHAR_STR          = TD_PSTRING          ,
-    T_WCHAR_STR         = TD_PWSTRING         ,
-    T_INTERFACE         = TD_INTERFACE_TYPE   ,
-    T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
-    T_ARRAY             = TD_ARRAY            ,
-    T_PSTRING_SIZE_IS   = TD_PSTRING_SIZE_IS  ,
-    T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS ,
-    T_UTF8STRING        = TD_UTF8STRING       ,
-    T_CSTRING           = TD_CSTRING          ,
-    T_ASTRING           = TD_ASTRING          ,
-    T_JSVAL             = TD_JSVAL            ,
-    T_DOMOBJECT         = TD_DOMOBJECT        ,
-    T_PROMISE           = TD_PROMISE          ,
-    T_SEQUENCE          = TD_SEQUENCE
-  };
+#define TD_ALIAS_(name_, value_) static constexpr nsXPTTypeTag name_ = value_
+  TD_ALIAS_(T_I8                , TD_INT8             );
+  TD_ALIAS_(T_I16               , TD_INT16            );
+  TD_ALIAS_(T_I32               , TD_INT32            );
+  TD_ALIAS_(T_I64               , TD_INT64            );
+  TD_ALIAS_(T_U8                , TD_UINT8            );
+  TD_ALIAS_(T_U16               , TD_UINT16           );
+  TD_ALIAS_(T_U32               , TD_UINT32           );
+  TD_ALIAS_(T_U64               , TD_UINT64           );
+  TD_ALIAS_(T_FLOAT             , TD_FLOAT            );
+  TD_ALIAS_(T_DOUBLE            , TD_DOUBLE           );
+  TD_ALIAS_(T_BOOL              , TD_BOOL             );
+  TD_ALIAS_(T_CHAR              , TD_CHAR             );
+  TD_ALIAS_(T_WCHAR             , TD_WCHAR            );
+  TD_ALIAS_(T_VOID              , TD_VOID             );
+  TD_ALIAS_(T_IID               , TD_PNSIID           );
+  TD_ALIAS_(T_DOMSTRING         , TD_DOMSTRING        );
+  TD_ALIAS_(T_CHAR_STR          , TD_PSTRING          );
+  TD_ALIAS_(T_WCHAR_STR         , TD_PWSTRING         );
+  TD_ALIAS_(T_INTERFACE         , TD_INTERFACE_TYPE   );
+  TD_ALIAS_(T_INTERFACE_IS      , TD_INTERFACE_IS_TYPE);
+  TD_ALIAS_(T_ARRAY             , TD_ARRAY            );
+  TD_ALIAS_(T_PSTRING_SIZE_IS   , TD_PSTRING_SIZE_IS  );
+  TD_ALIAS_(T_PWSTRING_SIZE_IS  , TD_PWSTRING_SIZE_IS );
+  TD_ALIAS_(T_UTF8STRING        , TD_UTF8STRING       );
+  TD_ALIAS_(T_CSTRING           , TD_CSTRING          );
+  TD_ALIAS_(T_ASTRING           , TD_ASTRING          );
+  TD_ALIAS_(T_JSVAL             , TD_JSVAL            );
+  TD_ALIAS_(T_DOMOBJECT         , TD_DOMOBJECT        );
+  TD_ALIAS_(T_PROMISE           , TD_PROMISE          );
+  TD_ALIAS_(T_SEQUENCE          , TD_SEQUENCE         );
+#undef TD_ALIAS_
 
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
@@ -664,12 +661,7 @@ inline size_t
 nsXPTType::Stride() const
 {
   // Compute the stride to use when walking an array of the given type.
-  //
-  // NOTE: We cast to nsXPTTypeTag here so we get a warning if a type is missed
-  // in this switch statement. It's important that this method returns a value
-  // for every possible type.
-
-  switch (static_cast<nsXPTTypeTag>(Tag())) {
+  switch (Tag()) {
     case TD_INT8:              return sizeof(int8_t);
     case TD_INT16:             return sizeof(int16_t);
     case TD_INT32:             return sizeof(int32_t);
