@@ -114,21 +114,42 @@ public class CrashReporterService extends JobIntentService {
         Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
         if (inFile.renameTo(outFile))
             return true;
+        FileInputStream inStream = null;
+        FileOutputStream outStream = null;
         try {
             outFile.createNewFile();
             Log.i(LOGTAG, "couldn't rename minidump file");
             // so copy it instead
-            FileChannel inChannel = new FileInputStream(inFile).getChannel();
-            FileChannel outChannel = new FileOutputStream(outFile).getChannel();
+            inStream = new FileInputStream(inFile);
+            outStream = new FileOutputStream(outFile);
+            FileChannel inChannel = inStream.getChannel();
+            FileChannel outChannel = outStream.getChannel();
             long transferred = inChannel.transferTo(0, inChannel.size(), outChannel);
-            inChannel.close();
-            outChannel.close();
-
             if (transferred > 0)
                 inFile.delete();
         } catch (Exception e) {
             Log.e(LOGTAG, "exception while copying minidump file: ", e);
             return false;
+        } finally {
+            // always try and close inStream and outStream while taking into
+            // consideration that `.close` throws as well.
+            try {
+                if (inStream != null) {
+                    inStream.close();
+                }
+            } catch (IOException e) {
+                Log.e(LOGTAG, "inStream could not be closed: ", e);
+                return false;
+            } finally {
+                try {
+                    if (outStream != null) {
+                        outStream.close();
+                    }
+                } catch (IOException e) {
+                    Log.e(LOGTAG, "outStream could not be closed: ", e);
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -260,12 +281,23 @@ public class CrashReporterService extends JobIntentService {
     }
 
     private boolean readStringsFromFile(String filePath, Map<String, String> stringMap) {
+        FileReader fileReader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            fileReader = new FileReader(filePath);
+            BufferedReader reader = new BufferedReader(fileReader);
             return readStringsFromReader(reader, stringMap);
         } catch (Exception e) {
             Log.e(LOGTAG, "exception while reading strings: ", e);
             return false;
+        } finally {
+            try {
+                if (fileReader != null) {
+                    fileReader.close();
+                }
+            } catch (IOException e) {
+                Log.e(LOGTAG, "exception while closing file: ", e);
+                return false;
+            }
         }
     }
 
@@ -321,13 +353,13 @@ public class CrashReporterService extends JobIntentService {
         if (spec == null) {
             return;
         }
-
+        HttpURLConnection conn = null;
         try {
             final URL url = new URL(URLDecoder.decode(spec, "UTF-8"));
             final URI uri = new URI(url.getProtocol(), url.getUserInfo(),
                     url.getHost(), url.getPort(),
                     url.getPath(), url.getQuery(), url.getRef());
-            HttpURLConnection conn = (HttpURLConnection) ProxySelector.openConnectionWithProxy(uri);
+            conn = (HttpURLConnection) ProxySelector.openConnectionWithProxy(uri);
             conn.setRequestMethod("POST");
             String boundary = generateBoundary();
             conn.setDoOutput(true);
@@ -398,6 +430,10 @@ public class CrashReporterService extends JobIntentService {
             Log.e(LOGTAG, "exception during send: ", e);
         } catch (URISyntaxException e) {
             Log.e(LOGTAG, "exception during new URI: ", e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
     }
 
