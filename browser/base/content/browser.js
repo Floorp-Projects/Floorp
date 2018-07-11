@@ -1943,102 +1943,6 @@ var gBrowserInit = {
   },
 };
 
-if (AppConstants.platform == "macosx") {
-  // nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
-  // nonBrowserWindowShutdown() are used for non-browser windows in
-  // macWindow.inc.xul
-  gBrowserInit.nonBrowserWindowStartup = function() {
-    // Disable inappropriate commands / submenus
-    var disabledItems = ["Browser:SavePage",
-                         "Browser:SendLink", "cmd_pageSetup", "cmd_print", "cmd_find", "cmd_findAgain",
-                         "viewToolbarsMenu", "viewSidebarMenuMenu", "Browser:Reload",
-                         "viewFullZoomMenu", "pageStyleMenu", "charsetMenu", "View:PageSource", "View:FullScreen",
-                         "viewHistorySidebar", "Browser:AddBookmarkAs", "Browser:BookmarkAllTabs",
-                         "View:PageInfo", "History:UndoCloseTab"];
-    var element;
-
-    for (let disabledItem of disabledItems) {
-      element = document.getElementById(disabledItem);
-      if (element)
-        element.setAttribute("disabled", "true");
-    }
-
-    // Show menus that are only visible in non-browser windows
-    let shownItems = ["menu_openLocation"];
-    for (let shownItem of shownItems) {
-      element = document.getElementById(shownItem);
-      if (element)
-        element.removeAttribute("hidden");
-    }
-
-    // If no windows are active (i.e. we're the hidden window), disable the close, minimize
-    // and zoom menu commands as well
-    if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
-      var hiddenWindowDisabledItems = ["cmd_close", "minimizeWindow", "zoomWindow"];
-      for (let hiddenWindowDisabledItem of hiddenWindowDisabledItems) {
-        element = document.getElementById(hiddenWindowDisabledItem);
-        if (element)
-          element.setAttribute("disabled", "true");
-      }
-
-      // also hide the window-list separator
-      element = document.getElementById("sep-window-list");
-      element.setAttribute("hidden", "true");
-
-      // Setup the dock menu.
-      let dockMenuElement = document.getElementById("menu_mac_dockmenu");
-      if (dockMenuElement != null) {
-        let nativeMenu = Cc["@mozilla.org/widget/standalonenativemenu;1"]
-                         .createInstance(Ci.nsIStandaloneNativeMenu);
-
-        try {
-          nativeMenu.init(dockMenuElement);
-
-          let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
-                            .getService(Ci.nsIMacDockSupport);
-          dockSupport.dockMenu = nativeMenu;
-        } catch (e) {
-        }
-      }
-    }
-
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      document.getElementById("macDockMenuNewWindow").hidden = true;
-    }
-    if (!PrivateBrowsingUtils.enabled) {
-      document.getElementById("macDockMenuNewPrivateWindow").hidden = true;
-    }
-
-    this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
-  };
-
-  gBrowserInit.nonBrowserWindowDelayedStartup = function() {
-    this._delayedStartupTimeoutId = null;
-
-    // initialise the offline listener
-    BrowserOffline.init();
-
-    // initialize the private browsing UI
-    gPrivateBrowsingUI.init();
-
-  };
-
-  gBrowserInit.nonBrowserWindowShutdown = function() {
-    let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
-                      .getService(Ci.nsIMacDockSupport);
-    dockSupport.dockMenu = null;
-
-    // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
-    // just cancel the pending timeout and return;
-    if (this._delayedStartupTimeoutId) {
-      clearTimeout(this._delayedStartupTimeoutId);
-      return;
-    }
-
-    BrowserOffline.uninit();
-  };
-}
-
 function HandleAppCommandEvent(evt) {
   switch (evt.command) {
   case "Back":
@@ -6517,7 +6421,8 @@ var LanguageDetectionListener = {
   }
 };
 
-
+// Note that this is also called from non-browser windows on OSX, which do
+// share menu items but not much else. See nonbrowser-mac.js.
 var BrowserOffline = {
   _inited: false,
 
@@ -7493,6 +7398,8 @@ const gAccessibilityServiceIndicator = {
   }
 };
 
+// Note that this is also called from non-browser windows on OSX, which do
+// share menu items but not much else. See nonbrowser-mac.js.
 var gPrivateBrowsingUI = {
   init: function PBUI_init() {
     // Do nothing for normal windows

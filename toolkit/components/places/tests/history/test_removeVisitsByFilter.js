@@ -320,6 +320,10 @@ add_task(async function test_error_cases() {
     () => PlacesUtils.history.removeVisitsByFilter({beginDate: new Date(1000), endDate: new Date(0)}),
     /TypeError: `beginDate` should be at least as old/
   );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({transition: -1}),
+    /TypeError: `transition` should be valid/
+  );
 });
 
 add_task(async function test_orphans() {
