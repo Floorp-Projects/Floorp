@@ -57,6 +57,7 @@ PrepareAndDispatch(uint32_t methodIndex, nsXPTCStubBase* self, uint32_t* args)
         case nsXPTType::T_I64    : dp->val.i64 = *((int64_t*) ap); ap++; break;
         case nsXPTType::T_U64    : dp->val.u64 = *((uint64_t*)ap); ap++; break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
+        default                  : break;
         }
     }
 
