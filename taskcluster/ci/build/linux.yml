@@ -970,7 +970,7 @@ linux64-ccov/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang
+        - linux64-clang-7
         - linux64-rust-nightly
         - linux64-gcc
         - linux64-sccache
