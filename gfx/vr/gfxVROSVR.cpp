@@ -317,22 +317,22 @@ VRDisplayOSVR::GetSensorState()
 
   if (ret == OSVR_RETURN_SUCCESS) {
     result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
-    result.pose.orientation[0] = orientation.data[1];
-    result.pose.orientation[1] = orientation.data[2];
-    result.pose.orientation[2] = orientation.data[3];
-    result.pose.orientation[3] = orientation.data[0];
+    result.orientation[0] = orientation.data[1];
+    result.orientation[1] = orientation.data[2];
+    result.orientation[2] = orientation.data[3];
+    result.orientation[3] = orientation.data[0];
   } else {
     // default to an identity quaternion
-    result.pose.orientation[3] = 1.0f;
+    result.orientation[3] = 1.0f;
   }
 
   OSVR_PositionState position;
   ret = osvr_GetPositionState(*m_iface, &timestamp, &position);
   if (ret == OSVR_RETURN_SUCCESS) {
     result.flags |= VRDisplayCapabilityFlags::Cap_Position;
-    result.pose.position[0] = position.data[0];
-    result.pose.position[1] = position.data[1];
-    result.pose.position[2] = position.data[2];
+    result.position[0] = position.data[0];
+    result.position[1] = position.data[1];
+    result.position[2] = position.data[2];
   }
 
   result.CalcViewMatrices(mHeadToEye);

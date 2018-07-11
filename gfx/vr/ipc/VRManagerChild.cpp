@@ -44,7 +44,6 @@ VRManagerChild::VRManagerChild()
   , mBackend(layers::LayersBackend::LAYERS_NONE)
   , mPromiseID(0)
   , mVRMockDisplay(nullptr)
-  , mLastControllerState{}
 {
   MOZ_ASSERT(NS_IsMainThread());
 

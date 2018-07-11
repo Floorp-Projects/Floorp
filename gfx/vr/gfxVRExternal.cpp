@@ -52,6 +52,8 @@ using namespace mozilla::gfx::impl;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
+static const uint32_t kNumExternalHaptcs = 1;
+
 int VRDisplayExternal::sPushIndex = 0;
 
 VRDisplayExternal::VRDisplayExternal(const VRDisplayState& aDisplayState)
@@ -63,7 +65,7 @@ VRDisplayExternal::VRDisplayExternal(const VRDisplayState& aDisplayState)
   mDisplayInfo.mDisplayState = aDisplayState;
 
   // default to an identity quaternion
-  mLastSensorState.pose.orientation[3] = 1.0f;
+  mLastSensorState.orientation[3] = 1.0f;
 }
 
 VRDisplayExternal::~VRDisplayExternal()
@@ -76,6 +78,8 @@ void
 VRDisplayExternal::Destroy()
 {
   StopPresentation();
+
+  // TODO - Implement
 }
 
 void
@@ -89,7 +93,7 @@ VRDisplayExternal::Refresh()
   VRManager *vm = VRManager::Get();
   VRSystemManagerExternal* manager = vm->GetExternalManager();
 
-  manager->PullState(&mDisplayInfo.mDisplayState, &mLastSensorState, mDisplayInfo.mControllerState);
+  manager->PullState(&mDisplayInfo.mDisplayState, &mLastSensorState);
 }
 
 VRHMDSensorState
@@ -233,7 +237,7 @@ VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
 
   VRDisplayState displayState;
   memset(&displayState, 0, sizeof(VRDisplayState));
-  if (manager->PullState(&displayState, &mLastSensorState, mDisplayInfo.mControllerState)) {
+  while (displayState.mLastSubmittedFrameId < aFrameId) {
     if (manager->PullState(&displayState, &mLastSensorState)) {
       if (!displayState.mIsConnected) {
         // Service has shut down or hardware has been disconnected
@@ -248,6 +252,26 @@ VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
   }
 
   return displayState.mLastSubmittedFrameSuccessful;
+}
+
+VRControllerExternal::VRControllerExternal(dom::GamepadHand aHand, uint32_t aDisplayID,
+                                       uint32_t aNumButtons, uint32_t aNumTriggers,
+                                       uint32_t aNumAxes, const nsCString& aId)
+  : VRControllerHost(VRDeviceType::External, aHand, aDisplayID)
+{
+  MOZ_COUNT_CTOR_INHERITED(VRControllerExternal, VRControllerHost);
+
+  VRControllerState& state = mControllerInfo.mControllerState;
+  strncpy(state.mControllerName, aId.BeginReading(), kVRControllerNameMaxLen);
+  state.mNumButtons = aNumButtons;
+  state.mNumAxes = aNumAxes;
+  state.mNumTriggers = aNumTriggers;
+  state.mNumHaptics = kNumExternalHaptcs;
+}
+
+VRControllerExternal::~VRControllerExternal()
+{
+  MOZ_COUNT_DTOR_INHERITED(VRControllerExternal, VRControllerHost);
 }
 
 VRSystemManagerExternal::VRSystemManagerExternal(VRExternalShmem* aAPIShmem /* = nullptr*/)
@@ -434,6 +458,7 @@ VRSystemManagerExternal::Shutdown()
   if (mDisplay) {
     mDisplay = nullptr;
   }
+  RemoveControllers();
   CloseShmem();
 #if defined(MOZ_WIDGET_ANDROID)
   mDoShutdown = false;
@@ -513,6 +538,12 @@ VRSystemManagerExternal::GetIsPresenting()
 }
 
 void
+VRSystemManagerExternal::HandleInput()
+{
+  // TODO - Implement This!
+}
+
+void
 VRSystemManagerExternal::VibrateHaptic(uint32_t aControllerIdx,
                                       uint32_t aHapticIndex,
                                       double aIntensity,
@@ -531,40 +562,32 @@ VRSystemManagerExternal::StopVibrateHaptic(uint32_t aControllerIdx)
 void
 VRSystemManagerExternal::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
 {
-  // Controller updates are handled in VRDisplayClient for VRSystemManagerExternal
   aControllerResult.Clear();
+  for (uint32_t i = 0; i < mExternalController.Length(); ++i) {
+    aControllerResult.AppendElement(mExternalController[i]);
+  }
 }
 
 void
 VRSystemManagerExternal::ScanForControllers()
 {
-  // Controller updates are handled in VRDisplayClient for VRSystemManagerExternal
-  if (mDisplay) {
-    mDisplay->Refresh();
-  }
-  return;
-}
-
-void
-VRSystemManagerExternal::HandleInput()
-{
-  // Controller updates are handled in VRDisplayClient for VRSystemManagerExternal
-  if (mDisplay) {
-    mDisplay->Refresh();
-  }
-  return;
+  // TODO - Implement this
 }
 
 void
 VRSystemManagerExternal::RemoveControllers()
 {
-  // Controller updates are handled in VRDisplayClient for VRSystemManagerExternal
+  // The controller count is changed, removing the existing gamepads first.
+  for (uint32_t i = 0; i < mExternalController.Length(); ++i) {
+    RemoveGamepad(i);
+  }
+  mExternalController.Clear();
+  mControllerCount = 0;
 }
 
 bool
-VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState,
-                                   VRHMDSensorState* aSensorState /* = nullptr */,
-                                   VRControllerState* aControllerState /* = nullptr */) {
+VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState, VRHMDSensorState* aSensorState /* = nullptr */)
+{
   bool success = false;
   MOZ_ASSERT(mExternalShmem);
   if (mExternalShmem) {
@@ -573,9 +596,6 @@ VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState,
       memcpy(aDisplayState, (void*)&(mExternalShmem->state.displayState), sizeof(VRDisplayState));
       if (aSensorState) {
         memcpy(aSensorState, (void*)&(mExternalShmem->state.sensorState), sizeof(VRHMDSensorState));
-      }
-      if (aControllerState) {
-        memcpy(aControllerState, (void*)&(mExternalShmem->state.controllerState), sizeof(VRControllerState) * kVRControllerMaxCount);
       }
       success = mExternalShmem->state.enumerationCompleted;
       pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->systemMutex));
@@ -588,9 +608,6 @@ VRSystemManagerExternal::PullState(VRDisplayState* aDisplayState,
       memcpy(aDisplayState, &tmp.state.displayState, sizeof(VRDisplayState));
       if (aSensorState) {
         memcpy(aSensorState, &tmp.state.sensorState, sizeof(VRHMDSensorState));
-      }
-      if (aControllerState) {
-        memcpy(aControllerState, (void*)&(mExternalShmem->state.controllerState), sizeof(VRControllerState) * kVRControllerMaxCount);
       }
       success = true;
     }
