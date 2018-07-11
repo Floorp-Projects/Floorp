@@ -144,16 +144,34 @@ BumpChunk::removeMProtectHandler() const
 } // namespace js
 
 void
+LifoAlloc::reset(size_t defaultChunkSize)
+{
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(defaultChunkSize));
+
+    while (!chunks_.empty()) {
+        chunks_.begin()->setRWUntil(Loc::End);
+        chunks_.popFirst();
+    }
+    while (!unused_.empty()) {
+        unused_.begin()->setRWUntil(Loc::End);
+        unused_.popFirst();
+    }
+    defaultChunkSize_ = defaultChunkSize;
+    markCount = 0;
+    curSize_ = 0;
+}
+
+void
 LifoAlloc::freeAll()
 {
     while (!chunks_.empty()) {
         chunks_.begin()->setRWUntil(Loc::End);
-        BumpChunk bc = chunks_.popFirst();
+        UniqueBumpChunk bc = chunks_.popFirst();
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
     while (!unused_.empty()) {
         unused_.begin()->setRWUntil(Loc::End);
-        BumpChunk bc = unused_.popFirst();
+        UniqueBumpChunk bc = unused_.popFirst();
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
 
@@ -162,14 +180,14 @@ LifoAlloc::freeAll()
     MOZ_ASSERT(curSize_ == 0);
 }
 
-LifoAlloc::BumpChunk
+LifoAlloc::UniqueBumpChunk
 LifoAlloc::newChunkWithCapacity(size_t n)
 {
     MOZ_ASSERT(fallibleScope_, "[OOM] Cannot allocate a new chunk in an infallible scope.");
 
     // Compute the size which should be requested in order to be able to fit |n|
     // bytes in the newly allocated chunk, or default the |defaultChunkSize_|.
-    size_t defaultChunkFreeSpace = defaultChunkSize_ - detail::BumpChunk::reservedSpace;
+    size_t defaultChunkFreeSpace = defaultChunkSize_ - detail::BumpChunkReservedSpace;
     size_t chunkSize;
     if (n > defaultChunkFreeSpace) {
         MOZ_ASSERT(defaultChunkFreeSpace < defaultChunkSize_);
@@ -193,7 +211,7 @@ LifoAlloc::newChunkWithCapacity(size_t n)
 #endif
 
     // Create a new BumpChunk, and allocate space for it.
-    BumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize, protect);
+    UniqueBumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize, protect);
     if (!result)
         return nullptr;
     MOZ_ASSERT(result->computedSizeOfIncludingThis() == chunkSize);
@@ -238,7 +256,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     }
 
     // Allocate a new BumpChunk with enough space for the next allocation.
-    BumpChunk newChunk = newChunkWithCapacity(n);
+    UniqueBumpChunk newChunk = newChunkWithCapacity(n);
     if (!newChunk)
         return false;
     size_t size = newChunk->computedSizeOfIncludingThis();

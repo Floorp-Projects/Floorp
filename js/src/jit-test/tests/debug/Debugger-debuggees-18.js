@@ -34,7 +34,6 @@ assertDebuggees();
 // "dg1" means "Debugger.Object referring (directly) to g1".
 var dg1 = dbg.addDebuggee(g1);
 dg1.toSource = function() { return "[Debugger.Object for global g1]"; };
-assertEq(dg1.global, dg1);
 assertEq(dg1.unwrap(), dg1);
 assertDebuggees(dg1);
 
@@ -42,13 +41,11 @@ assertDebuggees(dg1);
 // to it without a wrapper.
 var dg2 = dbg.addDebuggee(g2);
 dg2.toSource = function() { return "[Debugger.Object for global g2]"; };
-assertEq(dg2.global, dg2);
 assertEq(dg2.unwrap(), dg2);
 assertDebuggees(dg1, dg2);
 
 // "dwg1" means "Debugger.Object referring to CCW of g1".
 var dwg1 = dg2.makeDebuggeeValue(g1);
-assertEq(dwg1.global, dg2);
 assertEq(dwg1.unwrap(), dg1);
 dwg1.toSource = function() { return "[Debugger.Object for CCW of global g1]"; };
 

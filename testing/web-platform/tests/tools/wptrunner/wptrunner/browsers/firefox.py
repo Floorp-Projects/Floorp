@@ -4,7 +4,6 @@ import platform
 import signal
 import subprocess
 import sys
-import tempfile
 
 import mozinfo
 import mozleak
@@ -21,9 +20,9 @@ from .base import (get_free_port,
                    cmd_arg,
                    browser_command)
 from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.executormarionette import (MarionetteTestharnessExecutor,
-                                            MarionetteRefTestExecutor,
-                                            MarionetteWdspecExecutor)
+from ..executors.executormarionette import (MarionetteTestharnessExecutor,  # noqa: F401
+                                            MarionetteRefTestExecutor,  # noqa: F401
+                                            MarionetteWdspecExecutor)  # noqa: F401
 
 
 here = os.path.join(os.path.split(__file__)[0])
@@ -253,16 +252,21 @@ class FirefoxBrowser(Browser):
         prefs = Preferences()
 
         pref_paths = []
-        prefs_general = os.path.join(self.prefs_root, 'prefs_general.js')
-        if os.path.isfile(prefs_general):
-            # Old preference file used in Firefox 60 and earlier (remove when no longer supported)
-            pref_paths.append(prefs_general)
 
         profiles = os.path.join(self.prefs_root, 'profiles.json')
         if os.path.isfile(profiles):
             with open(profiles, 'r') as fh:
                 for name in json.load(fh)['web-platform-tests']:
                     pref_paths.append(os.path.join(self.prefs_root, name, 'user.js'))
+        else:
+            # Old preference files used before the creation of profiles.json (remove when no longer supported)
+            legacy_pref_paths = (
+                os.path.join(self.prefs_root, 'prefs_general.js'),   # Used in Firefox 60 and below
+                os.path.join(self.prefs_root, 'common', 'user.js'),  # Used in Firefox 61
+            )
+            for path in legacy_pref_paths:
+                if os.path.isfile(path):
+                    pref_paths.append(path)
 
         for path in pref_paths:
             if os.path.exists(path):

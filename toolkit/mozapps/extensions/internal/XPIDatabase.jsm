@@ -486,8 +486,11 @@ class AddonInternal {
 
     // Only extensions and dictionaries can be compatible by default; themes
     // and language packs always use strict compatibility checking.
+    // Dictionaries are compatible by default unless requested by the dictinary.
     if (this.type in COMPATIBLE_BY_DEFAULT_TYPES &&
-        !AddonManager.strictCompatibility && !this.strictCompatibility) {
+        !this.strictCompatibility &&
+        (!AddonManager.strictCompatibility ||
+         this.type == "webextension-dictionary")) {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.

@@ -3,9 +3,6 @@ import sys
 from os.path import join, dirname
 from mozlog import structured
 
-import mock
-import pytest
-
 sys.path.insert(0, join(dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, join(dirname(__file__), "..", ".."))
 

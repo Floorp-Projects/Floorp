@@ -368,7 +368,7 @@ private:
   nsTHashtable<nsPtrHashKey<JS::Zone>> mZonesWaitingForGC;
 
   struct EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
-    void invoke(JS::HandleObject scope, Closure& closure) override;
+    void invoke(JS::HandleObject global, Closure& closure) override;
   };
   EnvironmentPreparer mEnvironmentPreparer;
 

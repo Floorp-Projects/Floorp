@@ -1405,14 +1405,16 @@ js::detail::IdMatchesAtom(jsid id, JSString* atom)
 }
 
 JS_FRIEND_API(void)
-js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject scope, ScriptEnvironmentPreparer::Closure& closure)
+js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject global,
+                                      ScriptEnvironmentPreparer::Closure& closure)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
+    MOZ_ASSERT(global->is<GlobalObject>());
 
     MOZ_RELEASE_ASSERT(cx->runtime()->scriptEnvironmentPreparer,
                        "Embedding needs to set a scriptEnvironmentPreparer callback");
 
-    cx->runtime()->scriptEnvironmentPreparer->invoke(scope, closure);
+    cx->runtime()->scriptEnvironmentPreparer->invoke(global, closure);
 }
 
 JS_FRIEND_API(void)

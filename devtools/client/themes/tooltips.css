@@ -172,7 +172,7 @@
 
 /* type="arrow" overrides: remove arrow decorations for the xul <panel> wrapper */
 
-.tooltip-xul-wrapper[type="arrow"][side] {
+.tooltip-xul-wrapper[type="arrow"] {
   margin: 0;
 }
 

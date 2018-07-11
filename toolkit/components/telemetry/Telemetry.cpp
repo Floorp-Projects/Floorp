@@ -848,7 +848,7 @@ NS_IMETHODIMP
 TelemetryImpl::GetLoadedModules(JSContext *cx, Promise** aPromise)
 {
 #if defined(MOZ_GECKO_PROFILER)
-  nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(cx);
   if (NS_WARN_IF(!global)) {
     return NS_ERROR_FAILURE;
   }
