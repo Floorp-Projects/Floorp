@@ -31,6 +31,7 @@ class VRDisplayExternal : public VRDisplayHost
 {
 public:
   void ZeroSensor() override;
+  static int sPushIndex;
 
 protected:
   VRHMDSensorState GetSensorState() override;
@@ -52,7 +53,7 @@ protected:
 private:
   bool PopulateLayerTexture(const layers::SurfaceDescriptor& aTexture,
                             VRLayerTextureType* aTextureType,
-                            void** aTextureHandle);
+                            VRLayerTextureHandle* aTextureHandle);
 
   VRTelemetry mTelemetry;
   bool mIsPresenting;
@@ -96,7 +97,7 @@ public:
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
   bool PullState(VRDisplayState* aDisplayState, VRHMDSensorState* aSensorState = nullptr);
-  void PushState(VRBrowserState* aBrowserState);
+  void PushState(VRBrowserState* aBrowserState, const bool aNotifyCond = false);
 
 protected:
   explicit VRSystemManagerExternal(VRExternalShmem* aAPIShmem = nullptr);
@@ -116,7 +117,9 @@ private:
 #endif
 
   volatile VRExternalShmem* mExternalShmem;
+#if !defined(MOZ_WIDGET_ANDROID)
   bool mSameProcess;
+#endif
 
   void OpenShmem();
   void CloseShmem();
