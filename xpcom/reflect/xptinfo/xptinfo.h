@@ -322,8 +322,7 @@ public:
   ///////////////////////////////////////
 
   nsXPTType& operator=(uint8_t aPrefix) { mTag = aPrefix; return *this; }
-  operator uint8_t() const { return TagPart(); };
-  uint8_t TagPart() const { return mTag; };
+  operator uint8_t() const { return mTag; };
 
   enum // Re-export TD_ interfaces from nsXPTType
   {
