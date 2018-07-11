@@ -1630,6 +1630,13 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
         case nsXPTType::T_JSVAL:
             ((JS::Value*)aValue)->setUndefined();
             break;
+
+        // Non-arithmetic types requiring no cleanup
+        case nsXPTType::T_VOID:
+            break;
+
+        default:
+            MOZ_CRASH("Unknown Type!");
     }
 
     // Null out the pointer if we have it.
