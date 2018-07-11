@@ -102,5 +102,3 @@ user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
 user_pref("ui.caretBlinkTime", -1);
 user_pref("ui.caretWidth", 1);
-// Turn off the Push service.
-user_pref("dom.push.serverURL", "");
