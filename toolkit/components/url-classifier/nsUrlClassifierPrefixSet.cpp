@@ -107,6 +107,7 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
     }
   }
 
+  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
   return rv;
 }
 
@@ -167,6 +168,7 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
 
   mIndexDeltas.Compact();
   mIndexPrefixes.Compact();
+  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
 
   LOG(("Total number of indices: %d (crc=%u)", aLength, mIndexDeltasChecksum));
   LOG(("Total number of deltas: %d", totalDeltas));
@@ -553,13 +555,17 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const
 
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
-  uint32_t magic = PREFIXSET_VERSION_MAGIC;
-  nsresult rv = out->Write(reinterpret_cast<char*>(&magic), writelen, &written);
+  const uint32_t magic = PREFIXSET_VERSION_MAGIC;
+  nsresult rv = out->Write(reinterpret_cast<const char*>(&magic), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  uint32_t indexSize = mIndexPrefixes.Length();
-  uint32_t indexDeltaSize = mIndexDeltas.Length();
+  const uint32_t indexSize = mIndexPrefixes.Length();
+  if (NS_WARN_IF(mIndexDeltas.Length() != indexSize)) {
+    LOG(("[%s] mIndexPrefixes doesn't have the same length as mIndexDeltas",
+         mName.get()));
+    return NS_ERROR_FAILURE;
+  }
   uint32_t totalDeltas = 0;
 
   // Store the shape of mIndexDeltas by noting at which "count" of total
@@ -568,15 +574,18 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const
   // If we ever update the format, we can gain space by storing the delta
   // subarray sizes, which fit in bytes.
   nsTArray<uint32_t> indexStarts;
+  if (!indexStarts.SetCapacity(indexSize + 1, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   indexStarts.AppendElement(0);
 
-  for (uint32_t i = 0; i < indexDeltaSize; i++) {
+  for (uint32_t i = 0; i < indexSize; i++) {
     uint32_t deltaLength = mIndexDeltas[i].Length();
     totalDeltas += deltaLength;
-    if (!indexStarts.AppendElement(totalDeltas, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    indexStarts.AppendElement(totalDeltas);
   }
+  indexStarts.RemoveElementAt(indexSize); // we don't use the last element
+  MOZ_ASSERT(indexStarts.Length() == indexSize);
 
   rv = out->Write(reinterpret_cast<const char*>(&indexSize), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -596,7 +605,7 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
   if (totalDeltas > 0) {
-    for (uint32_t i = 0; i < indexDeltaSize; i++) {
+    for (uint32_t i = 0; i < indexSize; i++) {
       writelen = mIndexDeltas[i].Length() * sizeof(uint16_t);
       rv = out->Write(reinterpret_cast<const char*>(mIndexDeltas[i].Elements()), writelen, &written);
       NS_ENSURE_SUCCESS(rv, rv);
