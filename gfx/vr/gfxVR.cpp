@@ -189,10 +189,10 @@ VRHMDSensorState::CalcViewMatrices(const gfx::Matrix4x4* aHeadToEyeTransforms)
 
   gfx::Matrix4x4 matHead;
   if (flags & VRDisplayCapabilityFlags::Cap_Orientation) {
-    matHead.SetRotationFromQuaternion(gfx::Quaternion(pose.orientation[0], pose.orientation[1],
-                                                      pose.orientation[2], pose.orientation[3]));
+    matHead.SetRotationFromQuaternion(gfx::Quaternion(orientation[0], orientation[1],
+                                                      orientation[2], orientation[3]));
   }
-  matHead.PreTranslate(-pose.position[0], -pose.position[1], -pose.position[2]);
+  matHead.PreTranslate(-position[0], -position[1], -position[2]);
 
   gfx::Matrix4x4 matView = matHead * aHeadToEyeTransforms[VRDisplayState::Eye_Left];
   matView.Normalize();

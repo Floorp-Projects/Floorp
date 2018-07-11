@@ -8,7 +8,6 @@
 #define mozilla_gfx_vr_VRMessageUtils_h
 
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "VRManager.h"
 
@@ -110,11 +109,8 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mGroupMask);
     WriteParam(aMsg, aParam.mFrameId);
     WriteParam(aMsg, aParam.mDisplayState);
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.mLastSensorState); i++) {
+    for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
       WriteParam(aMsg, aParam.mLastSensorState[i]);
-    }
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.mControllerState); i++) {
-      WriteParam(aMsg, aParam.mControllerState[i]);
     }
   }
 
@@ -128,28 +124,26 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mDisplayState))) {
       return false;
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->mLastSensorState); i++) {
+    for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->mLastSensorState[i]))) {
         return false;
       }
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->mControllerState); i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mControllerState[i]))) {
-        return false;
-      }
-    }
+
     return true;
   }
 };
 
-
 template <>
-struct ParamTraits<mozilla::gfx::VRPose>
+struct ParamTraits<mozilla::gfx::VRHMDSensorState>
 {
-  typedef mozilla::gfx::VRPose paramType;
+  typedef mozilla::gfx::VRHMDSensorState paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    WriteParam(aMsg, aParam.timestamp);
+    WriteParam(aMsg, aParam.inputFrameID);
+    WriteParam(aMsg, aParam.flags);
     WriteParam(aMsg, aParam.orientation[0]);
     WriteParam(aMsg, aParam.orientation[1]);
     WriteParam(aMsg, aParam.orientation[2]);
@@ -169,11 +163,20 @@ struct ParamTraits<mozilla::gfx::VRPose>
     WriteParam(aMsg, aParam.linearAcceleration[0]);
     WriteParam(aMsg, aParam.linearAcceleration[1]);
     WriteParam(aMsg, aParam.linearAcceleration[2]);
+    for (int i=0; i < 16; i++) {
+      WriteParam(aMsg, aParam.leftViewMatrix[i]);
+    }
+    for (int i=0; i < 16; i++) {
+      WriteParam(aMsg, aParam.rightViewMatrix[i]);
+    }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->orientation[0])) ||
+    if (!ReadParam(aMsg, aIter, &(aResult->timestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->inputFrameID)) ||
+        !ReadParam(aMsg, aIter, &(aResult->flags)) ||
+        !ReadParam(aMsg, aIter, &(aResult->orientation[0])) ||
         !ReadParam(aMsg, aIter, &(aResult->orientation[1])) ||
         !ReadParam(aMsg, aIter, &(aResult->orientation[2])) ||
         !ReadParam(aMsg, aIter, &(aResult->orientation[3])) ||
@@ -194,43 +197,12 @@ struct ParamTraits<mozilla::gfx::VRPose>
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2]))) {
       return false;
     }
-    return true;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::gfx::VRHMDSensorState>
-{
-  typedef mozilla::gfx::VRHMDSensorState paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.timestamp);
-    WriteParam(aMsg, aParam.inputFrameID);
-    WriteParam(aMsg, aParam.flags);
-    WriteParam(aMsg, aParam.pose);
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.leftViewMatrix); i++) {
-      WriteParam(aMsg, aParam.leftViewMatrix[i]);
-    }
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.rightViewMatrix); i++) {
-      WriteParam(aMsg, aParam.rightViewMatrix[i]);
-    }
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &(aResult->timestamp)) ||
-        !ReadParam(aMsg, aIter, &(aResult->inputFrameID)) ||
-        !ReadParam(aMsg, aIter, &(aResult->flags)) ||
-        !ReadParam(aMsg, aIter, &(aResult->pose))) {
-      return false;
-    }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->leftViewMatrix); i++) {
+    for (int i=0; i < 16; i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->leftViewMatrix[i]))) {
         return false;
       }
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->rightViewMatrix); i++) {
+    for (int i=0; i < 16; i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->rightViewMatrix[i]))) {
         return false;
       }
@@ -274,23 +246,19 @@ struct ParamTraits<mozilla::gfx::VRControllerState>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     nsCString controllerName;
-    controllerName.Assign(aParam.controllerName); // FINDME!! HACK! - Bounds checking?
+    controllerName.Assign(aParam.mControllerName); // FINDME!! HACK! - Bounds checking?
     WriteParam(aMsg, controllerName);
-    WriteParam(aMsg, aParam.hand);
-    WriteParam(aMsg, aParam.numButtons);
-    WriteParam(aMsg, aParam.numAxes);
-    WriteParam(aMsg, aParam.numHaptics);
-    WriteParam(aMsg, aParam.buttonPressed);
-    WriteParam(aMsg, aParam.buttonTouched);
-    WriteParam(aMsg, aParam.flags);
-    WriteParam(aMsg, aParam.pose);
-    WriteParam(aMsg, aParam.isPositionValid);
-    WriteParam(aMsg, aParam.isOrientationValid);
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.axisValue); i++) {
-      WriteParam(aMsg, aParam.axisValue[i]);
+    WriteParam(aMsg, aParam.mNumButtons);
+    WriteParam(aMsg, aParam.mNumAxes);
+    WriteParam(aMsg, aParam.mNumTriggers);
+    WriteParam(aMsg, aParam.mNumHaptics);
+    WriteParam(aMsg, aParam.mButtonPressed);
+    WriteParam(aMsg, aParam.mButtonTouched);
+    for (int i=0; i < mozilla::gfx::kVRControllerMaxAxis; i++) {
+      WriteParam(aMsg, aParam.mAxisValue[i]);
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aParam.triggerValue); i++) {
-      WriteParam(aMsg, aParam.triggerValue[i]);
+    for (int i=0; i < mozilla::gfx::kVRControllerMaxTriggers; i++) {
+      WriteParam(aMsg, aParam.mTriggerValue[i]);
     }
   }
 
@@ -298,29 +266,25 @@ struct ParamTraits<mozilla::gfx::VRControllerState>
   {
     nsCString controllerName;
     if (!ReadParam(aMsg, aIter, &(controllerName)) ||
-        !ReadParam(aMsg, aIter, &(aResult->hand)) ||
-        !ReadParam(aMsg, aIter, &(aResult->numButtons)) ||
-        !ReadParam(aMsg, aIter, &(aResult->numAxes)) ||
-        !ReadParam(aMsg, aIter, &(aResult->numHaptics)) ||
-        !ReadParam(aMsg, aIter, &(aResult->buttonPressed)) ||
-        !ReadParam(aMsg, aIter, &(aResult->buttonTouched)) ||
-        !ReadParam(aMsg, aIter, &(aResult->flags)) ||
-        !ReadParam(aMsg, aIter, &(aResult->pose)) ||
-        !ReadParam(aMsg, aIter, &(aResult->isPositionValid)) ||
-        !ReadParam(aMsg, aIter, &(aResult->isOrientationValid))) {
+        !ReadParam(aMsg, aIter, &(aResult->mNumButtons)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mNumAxes)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mNumTriggers)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mNumHaptics)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mButtonPressed)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mButtonTouched))) {
       return false;
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->axisValue); i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->axisValue[i]))) {
+    for (int i=0; i < mozilla::gfx::kVRControllerMaxAxis; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mAxisValue[i]))) {
         return false;
       }
     }
-    for (size_t i = 0; i < mozilla::ArrayLength(aResult->triggerValue); i++) {
-      if (!ReadParam(aMsg, aIter, &(aResult->triggerValue[i]))) {
+    for (int i=0; i < mozilla::gfx::kVRControllerMaxTriggers; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mTriggerValue[i]))) {
         return false;
       }
     }
-    strncpy(aResult->controllerName, controllerName.BeginReading(), mozilla::gfx::kVRControllerNameMaxLen); // FINDME! TODO! HACK!  Safe? Better way?
+    strncpy(aResult->mControllerName, controllerName.BeginReading(), mozilla::gfx::kVRControllerNameMaxLen); // FINDME! TODO! HACK!  Safe? Better way?
 
     return true;
   }

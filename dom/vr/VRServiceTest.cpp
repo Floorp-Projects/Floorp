@@ -95,50 +95,50 @@ VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
     const Float32Array& value = aOrientation.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 4);
-    mSensorState.pose.orientation[0] = value.Data()[0];
-    mSensorState.pose.orientation[1] = value.Data()[1];
-    mSensorState.pose.orientation[2] = value.Data()[2];
-    mSensorState.pose.orientation[3] = value.Data()[3];
+    mSensorState.orientation[0] = value.Data()[0];
+    mSensorState.orientation[1] = value.Data()[1];
+    mSensorState.orientation[2] = value.Data()[2];
+    mSensorState.orientation[3] = value.Data()[3];
   }
   if (!aAngularVelocity.IsNull()) {
     const Float32Array& value = aAngularVelocity.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 3);
-    mSensorState.pose.angularVelocity[0] = value.Data()[0];
-    mSensorState.pose.angularVelocity[1] = value.Data()[1];
-    mSensorState.pose.angularVelocity[2] = value.Data()[2];
+    mSensorState.angularVelocity[0] = value.Data()[0];
+    mSensorState.angularVelocity[1] = value.Data()[1];
+    mSensorState.angularVelocity[2] = value.Data()[2];
   }
   if (!aAngularAcceleration.IsNull()) {
     const Float32Array& value = aAngularAcceleration.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 3);
-    mSensorState.pose.angularAcceleration[0] = value.Data()[0];
-    mSensorState.pose.angularAcceleration[1] = value.Data()[1];
-    mSensorState.pose.angularAcceleration[2] = value.Data()[2];
+    mSensorState.angularAcceleration[0] = value.Data()[0];
+    mSensorState.angularAcceleration[1] = value.Data()[1];
+    mSensorState.angularAcceleration[2] = value.Data()[2];
   }
   if (!aPosition.IsNull()) {
     const Float32Array& value = aPosition.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 3);
-    mSensorState.pose.position[0] = value.Data()[0];
-    mSensorState.pose.position[1] = value.Data()[1];
-    mSensorState.pose.position[2] = value.Data()[2];
+    mSensorState.position[0] = value.Data()[0];
+    mSensorState.position[1] = value.Data()[1];
+    mSensorState.position[2] = value.Data()[2];
   }
   if (!aLinearVelocity.IsNull()) {
     const Float32Array& value = aLinearVelocity.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 3);
-    mSensorState.pose.linearVelocity[0] = value.Data()[0];
-    mSensorState.pose.linearVelocity[1] = value.Data()[1];
-    mSensorState.pose.linearVelocity[2] = value.Data()[2];
+    mSensorState.linearVelocity[0] = value.Data()[0];
+    mSensorState.linearVelocity[1] = value.Data()[1];
+    mSensorState.linearVelocity[2] = value.Data()[2];
   }
   if (!aLinearAcceleration.IsNull()) {
     const Float32Array& value = aLinearAcceleration.Value();
     value.ComputeLengthAndData();
     MOZ_ASSERT(value.Length() == 3);
-    mSensorState.pose.linearAcceleration[0] = value.Data()[0];
-    mSensorState.pose.linearAcceleration[1] = value.Data()[1];
-    mSensorState.pose.linearAcceleration[2] = value.Data()[2];
+    mSensorState.linearAcceleration[0] = value.Data()[0];
+    mSensorState.linearAcceleration[1] = value.Data()[1];
+    mSensorState.linearAcceleration[2] = value.Data()[2];
   }
 }
 
