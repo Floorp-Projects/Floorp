@@ -7,6 +7,7 @@
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DevToolsModules(
+    'child-transport.js',
     'local-transport.js',
     'packets.js',
     'stream-utils.js',
