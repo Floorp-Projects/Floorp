@@ -60,6 +60,7 @@ struct VRDisplayInfo
   uint32_t mGroupMask;
   uint64_t mFrameId;
   VRDisplayState mDisplayState;
+  VRControllerState mControllerState[kVRControllerMaxCount];
 
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
   const VRHMDSensorState& GetSensorState() const
@@ -89,10 +90,11 @@ struct VRDisplayInfo
         return false;
       }
     }
-    // Note that mDisplayState is asserted to be a POD type, so memcmp is safe
+    // Note that mDisplayState and mControllerState are asserted to be POD types, so memcmp is safe
     return mType == other.mType &&
            mDisplayID == other.mDisplayID &&
            memcmp(&mDisplayState, &other.mDisplayState, sizeof(VRDisplayState)) == 0 &&
+           memcmp(mControllerState, other.mControllerState, sizeof(VRControllerState) * kVRControllerMaxCount) == 0 &&
            mPresentingGroups == other.mPresentingGroups &&
            mGroupMask == other.mGroupMask &&
            mFrameId == other.mFrameId;
@@ -123,13 +125,13 @@ struct VRControllerInfo
 {
   VRDeviceType GetType() const { return mType; }
   uint32_t GetControllerID() const { return mControllerID; }
-  const char* GetControllerName() const { return mControllerState.mControllerName; }
+  const char* GetControllerName() const { return mControllerState.controllerName; }
   dom::GamepadMappingType GetMappingType() const { return mMappingType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
-  dom::GamepadHand GetHand() const { return mControllerState.mHand; }
-  uint32_t GetNumButtons() const { return mControllerState.mNumButtons; }
-  uint32_t GetNumAxes() const { return mControllerState.mNumAxes; }
-  uint32_t GetNumHaptics() const { return mControllerState.mNumHaptics; }
+  dom::GamepadHand GetHand() const { return mControllerState.hand; }
+  uint32_t GetNumButtons() const { return mControllerState.numButtons; }
+  uint32_t GetNumAxes() const { return mControllerState.numAxes; }
+  uint32_t GetNumHaptics() const { return mControllerState.numHaptics; }
 
   uint32_t mControllerID;
   VRDeviceType mType;
@@ -137,15 +139,12 @@ struct VRControllerInfo
   uint32_t mDisplayID;
   VRControllerState mControllerState;
   bool operator==(const VRControllerInfo& other) const {
+    // Note that mControllerState is asserted to be a POD type, so memcmp is safe
     return mType == other.mType &&
            mControllerID == other.mControllerID &&
-           strncmp(mControllerState.mControllerName, other.mControllerState.mControllerName, kVRControllerNameMaxLen) == 0 &&
+           memcmp(&mControllerState, &other.mControllerState, sizeof(VRControllerState)) == 0 &&
            mMappingType == other.mMappingType &&
-           mDisplayID == other.mDisplayID &&
-           mControllerState.mHand == other.mControllerState.mHand &&
-           mControllerState.mNumButtons == other.mControllerState.mNumButtons &&
-           mControllerState.mNumAxes == other.mControllerState.mNumAxes &&
-           mControllerState.mNumHaptics == other.mControllerState.mNumHaptics;
+           mDisplayID == other.mDisplayID;
   }
 
   bool operator!=(const VRControllerInfo& other) const {
