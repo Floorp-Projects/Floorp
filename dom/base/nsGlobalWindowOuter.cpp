@@ -6897,22 +6897,18 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     }
   }
 
-  bool windowExists = WindowExists(aName, forceNoOpener, !aCalledNoScript);
-
   // XXXbz When this gets fixed to not use LegacyIsCallerNativeCode()
   // (indirectly) maybe we can nix the AutoJSAPI usage OnLinkClickEvent::Run.
   // But note that if you change this to GetEntryGlobal(), say, then
   // OnLinkClickEvent::Run will need a full-blown AutoEntryScript.
   const bool checkForPopup = !nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
-    !aDialog && !windowExists;
+    !aDialog && !WindowExists(aName, forceNoOpener, !aCalledNoScript);
 
   // Note: the Void handling here is very important, because the window watcher
   // expects a null URL string (not an empty string) if there is no URL to load.
   nsCString url;
   url.SetIsVoid(true);
   nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIURI> uri;
 
   // It's important to do this security check before determining whether this
   // window opening should be blocked, to ensure that we don't FireAbuseEvents
@@ -6927,7 +6923,7 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     // If we're not navigating, we assume that whoever *does* navigate the
     // window will do a security check of their own.
     if (!url.IsVoid() && !aDialog && aNavigate)
-      rv = SecurityCheckURL(url.get(), getter_AddRefs(uri));
+      rv = SecurityCheckURL(url.get());
   }
 
   if (NS_FAILED(rv))
@@ -7029,10 +7025,6 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   // success!
 
-  if (!aCalledNoScript && !windowExists && uri) {
-    MaybeAllowStorageForOpenedWindow(uri);
-  }
-
   NS_ENSURE_TRUE(domReturn, NS_OK);
   nsCOMPtr<nsPIDOMWindowOuter> outerReturn =
     nsPIDOMWindowOuter::From(domReturn);
@@ -7055,29 +7047,6 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   }
 
   return rv;
-}
-
-void
-nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI)
-{
-  nsGlobalWindowInner *inner = GetCurrentInnerWindowInternal();
-  if (NS_WARN_IF(!inner)) {
-    return;
-  }
-
-  // No 3rd party or no tracking resource.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr, nullptr) ||
-      !nsContentUtils::IsTrackingResourceWindow(inner)) {
-    return;
-  }
-
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  inner->AddFirstPartyStorageAccessGrantedFor(origin, true);
 }
 
 //*****************************************************************************
@@ -7139,7 +7108,7 @@ nsGlobalWindowOuter::GetScrollFrame()
 }
 
 nsresult
-nsGlobalWindowOuter::SecurityCheckURL(const char *aURL, nsIURI** aURI)
+nsGlobalWindowOuter::SecurityCheckURL(const char *aURL)
 {
   nsCOMPtr<nsPIDOMWindowInner> sourceWindow = do_QueryInterface(GetEntryGlobal());
   if (!sourceWindow) {
@@ -7172,7 +7141,6 @@ nsGlobalWindowOuter::SecurityCheckURL(const char *aURL, nsIURI** aURI)
     return NS_ERROR_FAILURE;
   }
 
-  uri.forget(aURI);
   return NS_OK;
 }
 
