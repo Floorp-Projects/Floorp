@@ -183,29 +183,6 @@ public:
   nsresult invalidateFrecencies(const nsCString& aPlaceIdsQueryString);
 
   /**
-   * Calls onDeleteVisits and onDeleteURI notifications on registered listeners
-   * with the history service.
-   *
-   * @param aURI
-   *        The nsIURI object representing the URI of the page being expired.
-   * @param aVisitTime
-   *        The time, in microseconds, that the page being expired was visited.
-   * @param aWholeEntry
-   *        Indicates if this is the last visit for this URI.
-   * @param aGUID
-   *        The unique ID associated with the page.
-   * @param aReason
-   *        Indicates the reason for the removal.
-   *        See nsINavHistoryObserver::REASON_* constants.
-   * @param aTransitionType
-   *        If it's a valid TRANSITION_* value, all visits of the specified type
-   *        have been removed.
-   */
-  nsresult NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
-                               bool aWholeEntry, const nsACString& aGUID,
-                               uint16_t aReason, uint32_t aTransitionType);
-
-  /**
    * These functions return non-owning references to the locale-specific
    * objects for places components.
    */
@@ -288,16 +265,6 @@ public:
   void DomainNameFromURI(nsIURI* aURI,
                          nsACString& aDomainName);
   static PRTime NormalizeTime(uint32_t aRelative, PRTime aOffset);
-
-  // Don't use these directly, inside nsNavHistory use UpdateBatchScoper,
-  // else use nsINavHistoryService::RunInBatchMode
-  nsresult BeginUpdateBatch();
-  nsresult EndUpdateBatch();
-
-  // The level of batches' nesting, 0 when no batches are open.
-  int32_t mBatchLevel;
-  // Current active transaction for a batch.
-  mozStorageTransaction* mBatchDBTransaction;
 
   typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
 
@@ -470,10 +437,6 @@ public:
 
   static void StoreLastInsertedId(const nsACString& aTable,
                                   const int64_t aLastInsertedId);
-
-  bool isBatching() {
-    return mBatchLevel > 0;
-  }
 
 #ifdef XP_WIN
   /**
