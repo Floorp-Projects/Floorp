@@ -3050,6 +3050,7 @@ const std::string kBasicAudioVideoDataOffer =
 "a=rtcp-fb:97 nack pli" CRLF
 "a=rtcp-fb:97 ccm fir" CRLF
 "a=rtcp-fb:* ccm tmmbr" CRLF
+"a=rtcp-fb:120 transport-cc" CRLF
 "a=setup:actpass" CRLF
 "a=rtcp-mux" CRLF
 "m=application 9 DTLS/SCTP 5000" CRLF
@@ -3136,7 +3137,13 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
   auto& video_attrs = mSdp->GetMediaSection(1).GetAttributeList();
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtcpFbAttribute));
   auto& rtcpfbs = video_attrs.GetRtcpFb().mFeedbacks;
-  ASSERT_EQ(20U, rtcpfbs.size());
+
+  if (IsParsingWithSipccParser()) {
+    ASSERT_EQ(20U, rtcpfbs.size());
+  } else {
+    ASSERT_EQ(21U, rtcpfbs.size());
+  }
+
   CheckRtcpFb(rtcpfbs[0], "120", SdpRtcpFbAttributeList::kAck, "rpsi");
   CheckRtcpFb(rtcpfbs[1], "120", SdpRtcpFbAttributeList::kAck, "app", "foo");
   CheckRtcpFb(rtcpfbs[2], "120", SdpRtcpFbAttributeList::kNack, "");
@@ -3157,6 +3164,10 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
   CheckRtcpFb(rtcpfbs[17], "97",  SdpRtcpFbAttributeList::kNack, "pli");
   CheckRtcpFb(rtcpfbs[18], "97", SdpRtcpFbAttributeList::kCcm, "fir");
   CheckRtcpFb(rtcpfbs[19], "*", SdpRtcpFbAttributeList::kCcm, "tmmbr");
+
+  if (!IsParsingWithSipccParser()) {
+    CheckRtcpFb(rtcpfbs[20], "120", SdpRtcpFbAttributeList::kTransCC, "");
+  }
 }
 
 TEST_P(NewSdpTest, CheckRtcp) {
