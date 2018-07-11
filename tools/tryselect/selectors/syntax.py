@@ -14,7 +14,7 @@ from moztest.resolve import TestResolver
 
 from .. import preset
 from ..cli import BaseTryParser
-from ..vcs import VCSHelper
+from ..push import push_to_try
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -314,7 +314,6 @@ class AutoTry(object):
         self.topsrcdir = topsrcdir
         self._resolver = None
         self.mach_context = mach_context
-        self.vcs = VCSHelper.create()
 
     @property
     def resolver(self):
@@ -620,8 +619,8 @@ class AutoTry(object):
         if kwargs["verbose"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        self.vcs.push_to_try('syntax', kwargs["message"].format(msg=msg), push=kwargs['push'],
-                             closed_tree=kwargs["closed_tree"])
+        push_to_try('syntax', kwargs["message"].format(msg=msg), push=kwargs['push'],
+                    closed_tree=kwargs["closed_tree"])
 
         if kwargs["save"]:
             assert msg.startswith("try: ")

@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <rect x="0"  y="0"   width="50" height="100" fill="rgb(0, 191, 0)"/>
-  <rect x="50" y="0"   width="50" height="100" fill="rgb(0, 255, 1)"/>
-  <rect x="50" y="100" width="50" height="100" fill="rgb(254, 0, 122)"/>
-  <rect x="0"  y="100" width="50" height="100" fill="rgb(191, 0, 93)"/>
-</svg>

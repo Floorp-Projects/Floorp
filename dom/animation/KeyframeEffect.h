@@ -305,18 +305,12 @@ protected:
   static Maybe<OwningAnimationTarget>
   ConvertTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
-  template<class KeyframeEffectType, class OptionsType>
-  static already_AddRefed<KeyframeEffectType>
+  template<class OptionsType>
+  static already_AddRefed<KeyframeEffect>
   ConstructKeyframeEffect(const GlobalObject& aGlobal,
                           const Nullable<ElementOrCSSPseudoElement>& aTarget,
                           JS::Handle<JSObject*> aKeyframes,
                           const OptionsType& aOptions,
-                          ErrorResult& aRv);
-
-  template<class KeyframeEffectType>
-  static already_AddRefed<KeyframeEffectType>
-  ConstructKeyframeEffect(const GlobalObject& aGlobal,
-                          KeyframeEffect& aSource,
                           ErrorResult& aRv);
 
   // Build properties by recalculating from |mKeyframes| using |aComputedStyle|
