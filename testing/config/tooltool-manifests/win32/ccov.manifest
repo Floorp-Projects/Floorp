@@ -1,9 +1,0 @@
-[
-  {
-    "size": 919079,
-    "digest": "80144fb0d626be56ec0c12536c59097d473f74e05bf97515f8754bb39851e9e4260096a1852d6c57f60dc64a1970be4ca851bff094502f2658bfd2eec5667747",
-    "algorithm": "sha512",
-    "filename": "grcov-win-i686.tar.bz2",
-    "unpack": false
-  }
-]

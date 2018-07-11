@@ -119,7 +119,9 @@ const getHistoryObserver = () => {
       onFrecencyChanged() {}
       onManyFrecenciesChanged() {}
       onDeleteVisits(uri, partialRemoval, guid, reason) {
-        this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+        if (!partialRemoval) {
+          this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+        }
       }
     }();
     PlacesUtils.observers.addListener(

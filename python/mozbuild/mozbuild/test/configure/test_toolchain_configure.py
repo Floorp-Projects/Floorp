@@ -1555,7 +1555,7 @@ class RustTest(BaseConfigureTest):
             return 0, '', ''
         raise NotImplementedError('unsupported arguments')
 
-    def get_rust_target(self, target, building_with_gcc=True):
+    def get_rust_target(self, target, compiler_type='gcc'):
         environ = {
             'PATH': os.pathsep.join(
                 mozpath.abspath(p) for p in ('/bin', '/usr/bin')),
@@ -1570,9 +1570,9 @@ class RustTest(BaseConfigureTest):
         sandbox = self.get_sandbox(paths, {}, [], environ)
 
         # Trick the sandbox into not running the target compiler check
-        dep = sandbox._depends[sandbox['building_with_gcc']]
+        dep = sandbox._depends[sandbox['c_compiler']]
         getattr(sandbox, '__value_for_depends')[(dep, False)] = \
-            building_with_gcc
+            CompilerResult(type=compiler_type)
         return sandbox._value_for(sandbox['rust_target_triple'])
 
     def test_rust_target(self):
@@ -1622,10 +1622,12 @@ class RustTest(BaseConfigureTest):
 
         # Windows
         for autoconf, building_with_gcc, rust in (
-            ('i686-pc-mingw32', False, 'i686-pc-windows-msvc'),
-            ('x86_64-pc-mingw32', False, 'x86_64-pc-windows-msvc'),
-            ('i686-pc-mingw32', True, 'i686-pc-windows-gnu'),
-            ('x86_64-pc-mingw32', True, 'x86_64-pc-windows-gnu'),
+            ('i686-pc-mingw32', 'cl', 'i686-pc-windows-msvc'),
+            ('x86_64-pc-mingw32', 'cl', 'x86_64-pc-windows-msvc'),
+            ('i686-pc-mingw32', 'gcc', 'i686-pc-windows-gnu'),
+            ('x86_64-pc-mingw32', 'gcc', 'x86_64-pc-windows-gnu'),
+            ('i686-pc-mingw32', 'clang', 'i686-pc-windows-gnu'),
+            ('x86_64-pc-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
         ):
             self.assertEqual(self.get_rust_target(autoconf, building_with_gcc), rust)
 

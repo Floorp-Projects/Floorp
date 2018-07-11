@@ -158,14 +158,24 @@ function checkLastChar(string, testChar) {
   return lastChar === testChar;
 }
 
-function hasUnexpectedChar(value, char, rightOffset, leftOffset) {
+function hasUnescapedChar(value, char, rightOffset, leftOffset) {
   const lastPos = value.length - 1;
-  value.slice(rightOffset, lastPos - leftOffset).includes(char);
+  const string = value.slice(rightOffset, lastPos - leftOffset);
+  const index = string.indexOf(char);
+  if (index === -1) {
+    return false;
+  }
+  const prevChar = index > 0 ? string[index - 1] : null;
+  // return false if the unexpected character is escaped, true if it is not
+  return prevChar !== "\\";
 }
 
 function collectString(token, tokens, index) {
   const firstChar = token.value[0];
   const isString = isStringChar(firstChar);
+  const UNESCAPED_CHAR_ERROR = segment =>
+    `String has unescaped \`${firstChar}\` in [${segment}...],` +
+    " may miss a space between arguments";
   let value = token.value;
 
   // the test value is not a string, or it is a string but a complete one
@@ -174,8 +184,8 @@ function collectString(token, tokens, index) {
     return { value, offset: 0 };
   }
 
-  if (hasUnexpectedChar(value, firstChar, 1, 0)) {
-    throw Error(`String contains unexpected ${firstChar} character`);
+  if (hasUnescapedChar(value, firstChar, 1, 0)) {
+    throw Error(UNESCAPED_CHAR_ERROR(value));
   }
 
   let offset = null;
@@ -186,14 +196,15 @@ function collectString(token, tokens, index) {
 
     const nextToken = tokens[i];
     if (nextToken.type !== ARG) {
-      throw Error(`String does not terminate before flag ${nextToken.value}`);
-    }
-
-    if (hasUnexpectedChar(nextToken.value, firstChar, 0, 1)) {
-      throw Error(`String contains unexpected ${firstChar} character`);
+      throw Error(`String does not terminate before flag "${nextToken.value}"`);
     }
 
     value = `${value} ${nextToken.value}`;
+
+    if (hasUnescapedChar(nextToken.value, firstChar, 0, 1)) {
+      throw Error(UNESCAPED_CHAR_ERROR(value));
+    }
+
     if (checkLastChar(nextToken.value, firstChar)) {
       offset = i - index;
       break;

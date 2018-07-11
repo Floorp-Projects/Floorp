@@ -54,9 +54,6 @@
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
 #endif
 
-// Fired after frecency has been updated.
-#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
-
 // The preference we watch to know when the mobile bookmarks folder is filled by
 // sync.
 #define MOBILE_BOOKMARKS_PREF "browser.bookmarks.showMobileBookmarks"
@@ -75,7 +72,6 @@ class nsIAutoCompleteController;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class nsNavHistory;
-class PlacesDecayFrecencyCallback;
 class PlacesSQLQueryBuilder;
 
 // nsNavHistory
@@ -85,7 +81,6 @@ class nsNavHistory final : public nsSupportsWeakReference
                          , public nsIObserver
                          , public mozIStorageVacuumParticipant
 {
-  friend class PlacesDecayFrecencyCallback;
   friend class PlacesSQLQueryBuilder;
 
 public:
@@ -178,15 +173,6 @@ public:
   nsresult UpdateFrecency(int64_t aPlaceId);
 
   /**
-   * Recalculates frecency for all pages requesting that (frecency < 0). Those
-   * may be generated:
-   *  * After a "clear private data"
-   *  * After removing visits
-   *  * After migrating from older versions
-   */
-  nsresult FixInvalidFrecencies();
-
-  /**
    * Invalidate the frecencies of a list of places, so they will be recalculated
    * at the first idle-daily notification.
    *
@@ -195,29 +181,6 @@ public:
    *        an empty string all places will be invalidated.
    */
   nsresult invalidateFrecencies(const nsCString& aPlaceIdsQueryString);
-
-  /**
-   * Calls onDeleteVisits and onDeleteURI notifications on registered listeners
-   * with the history service.
-   *
-   * @param aURI
-   *        The nsIURI object representing the URI of the page being expired.
-   * @param aVisitTime
-   *        The time, in microseconds, that the page being expired was visited.
-   * @param aWholeEntry
-   *        Indicates if this is the last visit for this URI.
-   * @param aGUID
-   *        The unique ID associated with the page.
-   * @param aReason
-   *        Indicates the reason for the removal.
-   *        See nsINavHistoryObserver::REASON_* constants.
-   * @param aTransitionType
-   *        If it's a valid TRANSITION_* value, all visits of the specified type
-   *        have been removed.
-   */
-  nsresult NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
-                               bool aWholeEntry, const nsACString& aGUID,
-                               uint16_t aReason, uint32_t aTransitionType);
 
   /**
    * These functions return non-owning references to the locale-specific
@@ -302,16 +265,6 @@ public:
   void DomainNameFromURI(nsIURI* aURI,
                          nsACString& aDomainName);
   static PRTime NormalizeTime(uint32_t aRelative, PRTime aOffset);
-
-  // Don't use these directly, inside nsNavHistory use UpdateBatchScoper,
-  // else use nsINavHistoryService::RunInBatchMode
-  nsresult BeginUpdateBatch();
-  nsresult EndUpdateBatch();
-
-  // The level of batches' nesting, 0 when no batches are open.
-  int32_t mBatchLevel;
-  // Current active transaction for a batch.
-  mozStorageTransaction* mBatchDBTransaction;
 
   typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
 
@@ -485,10 +438,6 @@ public:
   static void StoreLastInsertedId(const nsACString& aTable,
                                   const int64_t aLastInsertedId);
 
-  bool isBatching() {
-    return mBatchLevel > 0;
-  }
-
 #ifdef XP_WIN
   /**
    * Get the cached HCRYPTPROV initialized in the nsNavHistory constructor.
@@ -507,6 +456,8 @@ public:
                                   const RefPtr<nsNavHistoryQuery>& aQuery,
                                   nsNavHistoryQueryOptions* aOptions);
 
+  void DecayFrecencyCompleted(uint16_t reason);
+
 private:
   ~nsNavHistory();
 
@@ -519,9 +470,14 @@ protected:
   RefPtr<mozilla::places::Database> mDB;
 
   /**
-   * Decays frecency and inputhistory values.  Runs on idle-daily.
+   * Recalculates frecency for all pages where frecency < 0, then decays
+   * frecency and inputhistory values. Pages can invalidate frecencies:
+   *  * After a "clear private data"
+   *  * After removing visits
+   *  * After migrating from older versions
+   * This method runs on idle-daily.
    */
-  nsresult DecayFrecency();
+  nsresult FixAndDecayFrecency();
 
   /**
    * Loads all of the preferences that we use into member variables.
@@ -634,7 +590,6 @@ protected:
   int32_t mUnvisitedTypedBonus;
   int32_t mReloadVisitBonus;
 
-  void DecayFrecencyCompleted(uint16_t reason);
   uint32_t mDecayFrecencyPendingCount;
 
   nsresult RecalculateOriginFrecencyStatsInternal();

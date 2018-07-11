@@ -7,37 +7,32 @@
 #define mozEnglishWordUtils_h__
 
 #include "nsCOMPtr.h"
-#include "mozISpellI18NUtil.h"
 #include "nsString.h"
 
 #include "mozITXTToHTMLConv.h"
 #include "nsCycleCollectionParticipant.h"
 
-class mozEnglishWordUtils : public mozISpellI18NUtil
+class mozEnglishWordUtils final
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_MOZISPELLI18NUTIL
-  NS_DECL_CYCLE_COLLECTION_CLASS(mozEnglishWordUtils)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(mozEnglishWordUtils)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(mozEnglishWordUtils)
 
   mozEnglishWordUtils();
-  /* additional members */
-  enum myspCapitalization
-  {
-    NoCap,
-    InitCap,
-    AllCap,
-    HuhCap
-  };
+
+  /**
+   * Given a unicode string and an offset, find the beginning and end of the
+   * next word. begin and end are -1 if there are no words remaining in the
+   * string. This should really be folded into the Line/WordBreaker.
+   */
+  nsresult FindNextWord(const char16_t* word, uint32_t length,
+                        uint32_t offset, int32_t* begin, int32_t* end);
 
 protected:
   virtual ~mozEnglishWordUtils();
 
-  mozEnglishWordUtils::myspCapitalization captype(const nsString &word);
-  bool ucIsAlpha(char16_t aChar);
+  static bool ucIsAlpha(char16_t aChar);
 
-  nsString mLanguage;
-  nsString mCharset;
   nsCOMPtr<mozITXTToHTMLConv> mURLDetector; // used to detect urls so the spell checker can skip them.
 };
 

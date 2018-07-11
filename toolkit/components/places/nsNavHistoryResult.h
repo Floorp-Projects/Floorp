@@ -128,8 +128,7 @@ public:
 public:
   explicit nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot,
                               const RefPtr<nsNavHistoryQuery>& aQuery,
-                              const RefPtr<nsNavHistoryQueryOptions>& aOptions,
-                              bool aBatchInProgress);
+                              const RefPtr<nsNavHistoryQueryOptions>& aOptions);
 
   RefPtr<nsNavHistoryContainerResultNode> mRootNode;
 

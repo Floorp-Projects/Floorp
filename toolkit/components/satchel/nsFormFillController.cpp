@@ -873,6 +873,8 @@ nsFormFillController::HandleEvent(Event* aEvent)
     return Focus(aEvent);
   case eMouseDown:
     return MouseDown(aEvent);
+  case eKeyDown:
+    return KeyDown(aEvent);
   case eKeyPress:
     return KeyPress(aEvent);
   case eEditorInput:
@@ -1061,6 +1063,41 @@ nsFormFillController::Focus(Event* aEvent)
 }
 
 nsresult
+nsFormFillController::KeyDown(Event* aEvent)
+{
+  NS_ASSERTION(mController, "should have a controller!");
+  if (!mFocusedInput || !mController) {
+    return NS_OK;
+  }
+
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
+  if (!keyEvent) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool cancel = false;
+  uint32_t k = keyEvent->KeyCode();
+  switch (k) {
+    case KeyboardEvent_Binding::DOM_VK_RETURN: {
+      mController->HandleEnter(false, aEvent, &cancel);
+      break;
+    }
+  }
+
+  if (cancel) {
+    aEvent->PreventDefault();
+    // Don't let the page see the RETURN event when the popup is open
+    // (indicated by cancel=true) so sites don't manually submit forms
+    // (e.g. via submit.click()) without the autocompleted value being filled.
+    // Bug 286933 will fix this for other key events.
+    if (k == KeyboardEvent_Binding::DOM_VK_RETURN) {
+      aEvent->StopPropagation();
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
 nsFormFillController::KeyPress(Event* aEvent)
 {
   NS_ASSERTION(mController, "should have a controller!");
@@ -1149,20 +1186,10 @@ nsFormFillController::KeyPress(Event* aEvent)
     mController->HandleTab();
     cancel = false;
     break;
-  case KeyboardEvent_Binding::DOM_VK_RETURN:
-    mController->HandleEnter(false, aEvent, &cancel);
-    break;
   }
 
   if (cancel) {
     aEvent->PreventDefault();
-    // Don't let the page see the RETURN event when the popup is open
-    // (indicated by cancel=true) so sites don't manually submit forms
-    // (e.g. via submit.click()) without the autocompleted value being filled.
-    // Bug 286933 will fix this for other key events.
-    if (k == KeyboardEvent_Binding::DOM_VK_RETURN) {
-      aEvent->StopPropagation();
-    }
   }
 
   return NS_OK;
@@ -1242,7 +1269,6 @@ nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
   }
 
   EventTarget* target = aWindow->GetChromeEventHandler();
-
   if (!target) {
     return;
   }
@@ -1261,6 +1287,8 @@ nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("mousedown"),
                               TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("input"),
+                              TrustedEventsAtCapture());
+  elm->AddEventListenerByType(this, NS_LITERAL_STRING("keydown"),
                               TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("keypress"),
                               TrustedEventsAtSystemGroupCapture());
@@ -1289,7 +1317,6 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
   RemoveForDocument(doc);
 
   EventTarget* target = aWindow->GetChromeEventHandler();
-
   if (!target) {
     return;
   }
@@ -1308,6 +1335,8 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("mousedown"),
                                  TrustedEventsAtCapture());
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("input"),
+                                 TrustedEventsAtCapture());
+  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("keydown"),
                                  TrustedEventsAtCapture());
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("keypress"),
                                  TrustedEventsAtSystemGroupCapture());

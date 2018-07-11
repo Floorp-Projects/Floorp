@@ -44,15 +44,4 @@ interface nsIDownloadHistory : nsISupports {
   void addDownload(in nsIURI aSource, [optional] in nsIURI aReferrer,
                    [optional] in PRTime aStartTime,
                    [optional] in nsIURI aDestination);
-
-  /**
-   * Remove all downloads from history.
-   *
-   * @note This removal is not guaranteed to be synchronous, since it delegates
-   *       the actual removal to the underlying history implementation.  If you
-   *       need to observe the completion of the removal, use the underlying
-   *       history implementation's notifications system (e.g. nsINavHistoryObserver
-   *       for toolkit's implementation of this interface).
-   */
-  void removeAllDownloads();
 };

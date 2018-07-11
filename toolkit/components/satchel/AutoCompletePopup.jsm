@@ -128,8 +128,12 @@ this.AutoCompletePopup = {
       }
 
       case "popuphidden": {
+        let selectedIndex = this.openedPopup.selectedIndex;
+        let selectedRowStyle = selectedIndex != -1 ?
+          AutoCompleteResultView.getStyleAt(selectedIndex) : "";
+        this.sendMessageToBrowser("FormAutoComplete:PopupClosed",
+                                  { selectedRowStyle });
         AutoCompleteResultView.clearResults();
-        this.sendMessageToBrowser("FormAutoComplete:PopupClosed");
         // adjustHeight clears the height from the popup so that
         // we don't have a big shrink effect if we closed with a
         // large list, and then open on a small one.

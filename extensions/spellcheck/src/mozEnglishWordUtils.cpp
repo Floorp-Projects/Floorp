@@ -12,132 +12,34 @@
 #include "mozilla/Likely.h"
 #include "nsMemory.h"
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(mozEnglishWordUtils)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(mozEnglishWordUtils)
-
-NS_INTERFACE_MAP_BEGIN(mozEnglishWordUtils)
-  NS_INTERFACE_MAP_ENTRY(mozISpellI18NUtil)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozISpellI18NUtil)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozEnglishWordUtils)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(mozEnglishWordUtils, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(mozEnglishWordUtils, Release)
 
 NS_IMPL_CYCLE_COLLECTION(mozEnglishWordUtils,
                          mURLDetector)
 
 mozEnglishWordUtils::mozEnglishWordUtils()
 {
-  mLanguage.AssignLiteral("en");
-
-  nsresult rv;
-  mURLDetector = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &rv);
+  mURLDetector = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID);
 }
 
 mozEnglishWordUtils::~mozEnglishWordUtils()
 {
 }
 
-NS_IMETHODIMP mozEnglishWordUtils::GetLanguage(char16_t * *aLanguage)
-{
-  NS_ENSURE_ARG_POINTER(aLanguage);
-
-  *aLanguage = ToNewUnicode(mLanguage);
-  if (!*aLanguage) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-// return the possible root forms of aWord.
-NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t type, char16_t ***words, uint32_t *count)
-{
-  nsAutoString word(aWord);
-  char16_t **tmpPtr;
-  int32_t length = word.Length();
-
-  *count = 0;
-
-  mozEnglishWordUtils::myspCapitalization ct = captype(word);
-  switch (ct)
-    {
-    case HuhCap:
-    case NoCap:
-      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *));
-      if (!tmpPtr)
-        return NS_ERROR_OUT_OF_MEMORY;
-      tmpPtr[0] = ToNewUnicode(word);
-      if (!tmpPtr[0]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(0, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      *words = tmpPtr;
-      *count = 1;
-      break;
-
-
-    case AllCap:
-      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * 3);
-      if (!tmpPtr)
-        return NS_ERROR_OUT_OF_MEMORY;
-      tmpPtr[0] = ToNewUnicode(word);
-      if (!tmpPtr[0]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(0, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      ToLowerCase(tmpPtr[0], tmpPtr[0], length);
-
-      tmpPtr[1] = ToNewUnicode(word);
-      if (!tmpPtr[1]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(1, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      ToLowerCase(tmpPtr[1], tmpPtr[1], length);
-      ToUpperCase(tmpPtr[1], tmpPtr[1], 1);
-
-      tmpPtr[2] = ToNewUnicode(word);
-      if (!tmpPtr[2]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(2, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      *words = tmpPtr;
-      *count = 3;
-      break;
-
-    case InitCap:
-      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * 2);
-      if (!tmpPtr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      tmpPtr[0] = ToNewUnicode(word);
-      if (!tmpPtr[0]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(0, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      ToLowerCase(tmpPtr[0], tmpPtr[0], length);
-
-      tmpPtr[1] = ToNewUnicode(word);
-      if (!tmpPtr[1]) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(1, tmpPtr);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      *words = tmpPtr;
-      *count = 2;
-      break;
-    default:
-      return NS_ERROR_FAILURE; // should never get here;
-    }
-  return NS_OK;
-}
-
 // This needs vast improvement
-bool mozEnglishWordUtils::ucIsAlpha(char16_t aChar)
+
+// static
+bool
+mozEnglishWordUtils::ucIsAlpha(char16_t aChar)
 {
   // XXX we have to fix callers to handle the full Unicode range
   return nsUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
 }
 
-NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length, uint32_t offset, int32_t *begin, int32_t *end)
+nsresult
+mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length,
+                                  uint32_t offset, int32_t *begin, int32_t *end)
 {
   const char16_t *p = word + offset;
   const char16_t *endbuf = word + length;
@@ -205,80 +107,3 @@ NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t l
   }
   return NS_OK;
 }
-
-mozEnglishWordUtils::myspCapitalization
-mozEnglishWordUtils::captype(const nsString &word)
-{
-  char16_t* lword=ToNewUnicode(word);
-  ToUpperCase(lword,lword,word.Length());
-  if(word.Equals(lword)){
-    free(lword);
-    return AllCap;
-  }
-
-  ToLowerCase(lword,lword,word.Length());
-  if(word.Equals(lword)){
-    free(lword);
-    return NoCap;
-  }
-  int32_t length=word.Length();
-  if(Substring(word,1,length-1).Equals(lword+1)){
-    free(lword);
-    return InitCap;
-  }
-  free(lword);
-  return HuhCap;
-}
-
-// Convert the list of words in iwords to the same capitalization aWord and
-// return them in owords.
-NS_IMETHODIMP mozEnglishWordUtils::FromRootForm(const char16_t *aWord, const char16_t **iwords, uint32_t icount, char16_t ***owords, uint32_t *ocount)
-{
-  nsAutoString word(aWord);
-  nsresult rv = NS_OK;
-
-  int32_t length;
-  char16_t **tmpPtr  = (char16_t **)moz_xmalloc(sizeof(char16_t *)*icount);
-  if (!tmpPtr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mozEnglishWordUtils::myspCapitalization ct = captype(word);
-  for(uint32_t i = 0; i < icount; ++i) {
-    length = NS_strlen(iwords[i]);
-    tmpPtr[i] = (char16_t *) moz_xmalloc(sizeof(char16_t) * (length + 1));
-    if (MOZ_UNLIKELY(!tmpPtr[i])) {
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, tmpPtr);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    memcpy(tmpPtr[i], iwords[i], (length + 1) * sizeof(char16_t));
-
-    nsAutoString capTest(tmpPtr[i]);
-    mozEnglishWordUtils::myspCapitalization newCt=captype(capTest);
-    if(newCt == NoCap){
-      switch(ct)
-        {
-        case HuhCap:
-        case NoCap:
-          break;
-        case AllCap:
-          ToUpperCase(tmpPtr[i],tmpPtr[i],length);
-          rv = NS_OK;
-          break;
-        case InitCap:
-          ToUpperCase(tmpPtr[i],tmpPtr[i],1);
-          rv = NS_OK;
-          break;
-        default:
-          rv = NS_ERROR_FAILURE; // should never get here;
-          break;
-
-        }
-    }
-  }
-  if (NS_SUCCEEDED(rv)){
-    *owords = tmpPtr;
-    *ocount = icount;
-  }
-  return rv;
-}
-

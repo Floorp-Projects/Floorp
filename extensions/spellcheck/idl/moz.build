@@ -7,8 +7,6 @@
 XPIDL_SOURCES += [
     'mozIPersonalDictionary.idl',
     'mozISpellCheckingEngine.idl',
-    'mozISpellI18NManager.idl',
-    'mozISpellI18NUtil.idl',
 ]
 
 XPIDL_MODULE = 'spellchecker'

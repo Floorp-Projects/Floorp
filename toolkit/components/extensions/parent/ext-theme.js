@@ -63,11 +63,6 @@ class Theme {
   load(details) {
     this.details = details;
 
-    if (this.windowId) {
-      this.lwtStyles.window = getWinUtils(
-        windowTracker.getWindow(this.windowId)).outerWindowID;
-    }
-
     if (details.colors) {
       this.loadColors(details.colors);
     }
@@ -84,25 +79,24 @@ class Theme {
       this.loadProperties(details.properties);
     }
 
-    // Lightweight themes require accentcolor and textcolor to be defined.
-    if (this.lwtStyles.accentcolor &&
-        this.lwtStyles.textcolor) {
-      if (this.windowId) {
-        windowOverrides.set(this.windowId, this);
-      } else {
-        windowOverrides.clear();
-        defaultTheme = this;
-      }
-      onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
+    let lwtData = {
+      theme: this.lwtStyles,
+    };
 
-      LightweightThemeManager.fallbackThemeData = this.lwtStyles;
-      Services.obs.notifyObservers(null,
-                                   "lightweight-theme-styling-update",
-                                   JSON.stringify(this.lwtStyles));
+    if (this.windowId) {
+      lwtData.window =
+        getWinUtils(windowTracker.getWindow(this.windowId)).outerWindowID;
+      windowOverrides.set(this.windowId, this);
     } else {
-      this.logger.warn("Your theme doesn't include one of the following required " +
-        "properties: 'headerURL', 'accentcolor' or 'textcolor'");
+      windowOverrides.clear();
+      defaultTheme = this;
     }
+    onUpdatedEmitter.emit("theme-updated", this.details, this.windowId);
+
+    LightweightThemeManager.fallbackThemeData = this.lwtStyles;
+    Services.obs.notifyObservers(null,
+                                 "lightweight-theme-styling-update",
+                                 JSON.stringify(lwtData));
   }
 
   /**
@@ -296,19 +290,12 @@ class Theme {
   }
 
   static unload(windowId) {
-    let lwtStyles = {
-      headerURL: "",
-      accentcolor: "",
-      accentcolorInactive: "",
-      additionalBackgrounds: "",
-      backgroundsAlignment: "",
-      backgroundsTiling: "",
-      textcolor: "",
-      icons: {},
+    let lwtData = {
+      theme: null,
     };
 
     if (windowId) {
-      lwtStyles.window = getWinUtils(windowTracker.getWindow(windowId)).outerWindowID;
+      lwtData.window = getWinUtils(windowTracker.getWindow(windowId)).outerWindowID;
       windowOverrides.set(windowId, emptyTheme);
     } else {
       windowOverrides.clear();
@@ -316,13 +303,10 @@ class Theme {
     }
     onUpdatedEmitter.emit("theme-updated", {}, windowId);
 
-    for (let icon of ICONS) {
-      lwtStyles.icons[`--${icon}--icon`] = "";
-    }
     LightweightThemeManager.fallbackThemeData = null;
     Services.obs.notifyObservers(null,
                                  "lightweight-theme-styling-update",
-                                 JSON.stringify(lwtStyles));
+                                 JSON.stringify(lwtData));
   }
 }
 

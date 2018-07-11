@@ -13,6 +13,8 @@
 //   unmodified
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
 // First, we need to setup appInfo for the blocklist service to work
 var id = "xpcshell@tests.mozilla.org";
@@ -208,22 +210,10 @@ function fetch_blocklist() {
   Services.prefs.setBoolPref("services.settings.verify_signature", false);
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${port}/v1`);
-  Services.prefs.setCharPref("extensions.blocklist.url",
-                              `http://localhost:${port}/blocklist.xml`);
-  let blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
-                    .getService(Ci.nsITimerCallback);
 
-  return new Promise((resolve) => {
-    const e = "remote-settings-changes-polled";
-    const changesPolledObserver = {
-      observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, e);
-        resolve();
-      }
-    };
-    Services.obs.addObserver(changesPolledObserver, e);
-    blocklist.notify(null);
-  });
+  BlocklistClients.initialize();
+
+  return RemoteSettings.pollChanges();
 }
 
 function* generate_revocations_txt_lines() {

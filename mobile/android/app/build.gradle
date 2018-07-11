@@ -223,6 +223,11 @@ dependencies {
     implementation "com.android.support:customtabs:$support_library_version"
     implementation "com.android.support:palette-v7:$support_library_version"
 
+    // We always include support for multidexing even when we don't enable it at runtime.
+    // We could conditionally include support, but we'd need
+    // to generate the `Application` class or fork the file on disk.
+    implementation "com.android.support:multidex:1.0.3"
+
     if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
         implementation "com.android.support:mediarouter-v7:$support_library_version"
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"

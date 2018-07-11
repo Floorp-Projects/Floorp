@@ -38,10 +38,10 @@ var CompactTheme = {
 
   observe(subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
-      let newTheme = JSON.parse(data);
-      if (newTheme && (
-          newTheme.id == "firefox-compact-light@mozilla.org" ||
-          newTheme.id == "firefox-compact-dark@mozilla.org")) {
+      let { theme } = JSON.parse(data) || {};
+      if (theme && (
+          theme.id == "firefox-compact-light@mozilla.org" ||
+          theme.id == "firefox-compact-dark@mozilla.org")) {
         // We are using the theme ID on this object instead of always referencing
         // LightweightThemeManager.currentTheme in case this is a preview
         this._toggleStyleSheet(true);

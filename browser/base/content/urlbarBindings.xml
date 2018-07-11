@@ -122,7 +122,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
         this.popup.addEventListener("popupshowing", () => {
           this._enableOrDisableOneOffSearches();
-        }, {capturing: true, once: true});
+        }, {capture: true, once: true});
 
         // history dropmarker open state
         this.popup.addEventListener("popupshowing", () => {

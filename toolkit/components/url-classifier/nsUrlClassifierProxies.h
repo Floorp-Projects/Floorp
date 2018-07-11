@@ -200,7 +200,7 @@ public:
   private:
     const RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
     const nsCString mTable;
-    nsIUrlClassifierCacheInfo* mCache;
+    nsCOMPtr<nsIUrlClassifierCacheInfo> mCache;
     const nsMainThreadPtrHandle<nsIUrlClassifierGetCacheCallback> mCallback;
   };
 
@@ -217,7 +217,7 @@ public:
 
     NS_DECL_NSIRUNNABLE
   private:
-    nsIUrlClassifierCacheInfo* mCache;
+    nsCOMPtr<nsIUrlClassifierCacheInfo> mCache;
     const nsMainThreadPtrHandle<nsIUrlClassifierGetCacheCallback> mCallback;
   };
 

@@ -899,7 +899,7 @@ function _updateUsedThemes(aList) {
 
 function _notifyWindows(aThemeData) {
   Services.obs.notifyObservers(null, "lightweight-theme-styling-update",
-                               JSON.stringify(aThemeData));
+                               JSON.stringify({theme: aThemeData}));
 }
 
 var _previewTimer;

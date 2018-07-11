@@ -3946,8 +3946,7 @@ NS_INTERFACE_MAP_END
 
 nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot,
                                        const RefPtr<nsNavHistoryQuery>& aQuery,
-                                       const RefPtr<nsNavHistoryQueryOptions>& aOptions,
-                                       bool aBatchInProgress
+                                       const RefPtr<nsNavHistoryQueryOptions>& aOptions
 ) : mRootNode(aRoot)
   , mQuery(aQuery)
   , mOptions(aOptions)
@@ -3957,7 +3956,7 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot,
   , mIsAllBookmarksObserver(false)
   , mIsMobilePrefObserver(false)
   , mBookmarkFolderObservers(64)
-  , mBatchInProgress(aBatchInProgress)
+  , mBatchInProgress(false)
   , mSuppressNotifications(false)
 {
   mSortingMode = aOptions->SortingMode();

@@ -917,8 +917,8 @@ nsAutoCompleteController::ClosePopup()
   nsCOMPtr<nsIAutoCompletePopup> popup;
   input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nullptr, NS_ERROR_FAILURE);
-  popup->SetSelectedIndex(-1);
-  return input->SetPopupOpen(false);
+  MOZ_ALWAYS_SUCCEEDS(input->SetPopupOpen(false));
+  return popup->SetSelectedIndex(-1);
 }
 
 nsresult
