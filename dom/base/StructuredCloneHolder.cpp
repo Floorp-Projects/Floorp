@@ -378,7 +378,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
   }
 
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
-    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
     if (!global) {
       return nullptr;
     }
@@ -436,7 +436,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
       return nullptr;
     }
 
-    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
     if (!global) {
       return nullptr;
     }

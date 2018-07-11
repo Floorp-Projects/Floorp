@@ -101,7 +101,7 @@ StructuredCloneData::Read(JSContext* aCx,
 {
   MOZ_ASSERT(mInitialized);
 
-  nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
   MOZ_ASSERT(global);
 
   ReadFromBuffer(global, aCx, Data(), aValue, aRv);

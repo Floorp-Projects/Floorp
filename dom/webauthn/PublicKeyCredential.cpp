@@ -86,8 +86,7 @@ PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse)
 /* static */ already_AddRefed<Promise>
 PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
 {
-  nsIGlobalObject* globalObject =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aGlobal.Context()));
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aGlobal.Context());
   if (NS_WARN_IF(!globalObject)) {
     return nullptr;
   }
