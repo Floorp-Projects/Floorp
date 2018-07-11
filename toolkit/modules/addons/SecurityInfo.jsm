@@ -214,8 +214,8 @@ const SecurityInfo = {
       subject: cert.subjectName,
       issuer: cert.issuerName,
       validity: {
-        start: cert.validity.notBefore,
-        end: cert.validity.notAfter,
+        start: cert.validity.notBefore ? Math.trunc(cert.validity.notBefore / 1000) : 0,
+        end: cert.validity.notAfter ? Math.trunc(cert.validity.notAfter / 1000) : 0,
       },
       fingerprint: {
         sha1: cert.sha1Fingerprint,
