@@ -918,12 +918,28 @@ SwitchStatementWithDefault:
         BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
 
 StaticMemberAssignmentTarget:
+    init:
+        TokenPos namePos;
+    fields:
+        property:
+            block:
+                before: |
+                    namePos = tokenizer_->pos();
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
 
 StaticMemberExpression:
+    init:
+        TokenPos namePos;
+    fields:
+        property:
+            block:
+                before: |
+                    namePos = tokenizer_->pos();
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), namePos));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
 
 ThisExpression:
     build: |
