@@ -82,9 +82,9 @@ class Settings private constructor(context: Context) {
     fun shouldUseSecureMode(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_secure), false)
 
-    fun setDefaultSearchEngine(searchEngine: SearchEngine) {
+    fun setDefaultSearchEngineByName(name: String) {
         preferences.edit()
-                .putString(getPreferenceKey(R.string.pref_key_search_engine), searchEngine.name)
+                .putString(getPreferenceKey(R.string.pref_key_search_engine), name)
                 .apply()
     }
 

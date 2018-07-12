@@ -37,7 +37,7 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
 
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
         val newDefaultEngine = searchEngines[checkedId]
-        Settings.getInstance(group.context).setDefaultSearchEngine(newDefaultEngine)
+        Settings.getInstance(group.context).setDefaultSearchEngineByName(newDefaultEngine.name)
         val source = if (CustomSearchEngineStore.isCustomSearchEngine(newDefaultEngine.identifier, context))
             CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
         else

@@ -21,6 +21,7 @@ import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -204,6 +205,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             if (isValidSearchQuery == true) {
                 CustomSearchEngineStore.addSearchEngine(that.activity, engineName, query)
                 Snackbar.make(that.view, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                Settings.getInstance(that.activity).setDefaultSearchEngineByName(engineName)
                 that.fragmentManager.popBackStack()
             } else {
                 showServerError(that)
