@@ -1295,7 +1295,7 @@ CheckForOutdatedParent(nsINode* aParent, nsINode* aNode, ErrorResult& aError)
     nsIGlobalObject* global = aParent->OwnerDoc()->GetScopeObject();
     MOZ_ASSERT(global);
 
-    if (js::GetGlobalForObjectCrossCompartment(existingObj) !=
+    if (JS::GetNonCCWObjectGlobal(existingObj) !=
         global->GetGlobalJSObject()) {
       JSAutoRealm ar(cx, existingObj);
       ReparentWrapper(cx, existingObj, aError);
