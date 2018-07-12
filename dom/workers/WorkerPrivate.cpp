@@ -2295,7 +2295,6 @@ WorkerPrivate::BroadcastErrorToSharedWorkers(
   }
 
   AutoTArray<WindowAction, 10> windowActions;
-  nsresult rv;
 
   // First fire the error event at all SharedWorker objects. This may include
   // multiple objects in a single window as well as objects in different
@@ -2389,9 +2388,8 @@ WorkerPrivate::BroadcastErrorToSharedWorkers(
     init.mBubbles = true;
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    rv = sgo->HandleScriptError(init, &status);
-    if (NS_FAILED(rv)) {
-      ThrowAndReport(windowAction.mWindow, rv);
+    if (!sgo->HandleScriptError(init, &status)) {
+      ThrowAndReport(windowAction.mWindow, NS_ERROR_UNEXPECTED);
       continue;
     }
 
