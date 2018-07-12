@@ -158,18 +158,19 @@ ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aCl
     return;
   }
   aClient->SetLastFwdTransactionId(GetFwdTransactionId());
-  mTexturesWaitingRecycled.Put(aClient->GetSerial(), aClient);
+  mTexturesWaitingRecycled.emplace(aClient->GetSerial(), aClient);
 }
 
 void
 ImageBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
 {
-  if (auto entry = mTexturesWaitingRecycled.Lookup(aTextureId)) {
-    if (aFwdTransactionId < entry.Data()->GetLastFwdTransactionId()) {
+  auto it = mTexturesWaitingRecycled.find(aTextureId);
+  if (it != mTexturesWaitingRecycled.end()) {
+    if (aFwdTransactionId < it->second->GetLastFwdTransactionId()) {
       // Released on host side, but client already requested newer use texture.
       return;
     }
-    entry.Remove();
+    mTexturesWaitingRecycled.erase(it);
   }
 }
 
@@ -177,7 +178,7 @@ void
 ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
-  mTexturesWaitingRecycled.Remove(aTextureId);
+  mTexturesWaitingRecycled.erase(aTextureId);
 }
 
 // Singleton
@@ -235,7 +236,7 @@ ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
   mDestroyed = true;
   {
     MutexAutoLock lock(mContainerMapLock);
-    mImageContainerListeners.Clear();
+    mImageContainerListeners.clear();
   }
 }
 
@@ -287,7 +288,7 @@ ImageBridgeChild::~ImageBridgeChild()
 void
 ImageBridgeChild::MarkShutDown()
 {
-  mTexturesWaitingRecycled.Clear();
+  mTexturesWaitingRecycled.clear();
 
   mCanSend = false;
 }
@@ -310,8 +311,8 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   // But offscreen canvas does not provide it.
   if (aImageContainer) {
     MutexAutoLock lock(mContainerMapLock);
-    MOZ_ASSERT(!mImageContainerListeners.Contains(id));
-    mImageContainerListeners.Put(id, aImageContainer->GetImageContainerListener());
+    MOZ_ASSERT(mImageContainerListeners.find(id) == mImageContainerListeners.end());
+    mImageContainerListeners.emplace(id, aImageContainer->GetImageContainerListener());
   }
 
   CompositableHandle handle(id);
@@ -323,7 +324,7 @@ void
 ImageBridgeChild::ForgetImageContainer(const CompositableHandle& aHandle)
 {
   MutexAutoLock lock(mContainerMapLock);
-  mImageContainerListeners.Remove(aHandle.Value());
+  mImageContainerListeners.erase(aHandle.Value());
 }
 
 Thread* ImageBridgeChild::GetThread() const
@@ -724,9 +725,8 @@ ImageBridgeChild::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier&
     nsTArray<RefPtr<ImageContainerListener> > listeners;
     {
       MutexAutoLock lock(mContainerMapLock);
-      for (auto iter = mImageContainerListeners.Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<ImageContainerListener>& listener = iter.Data();
-        listeners.AppendElement(listener);
+      for (const auto& entry : mImageContainerListeners) {
+        listeners.AppendElement(entry.second);
       }
     }
     // Drop ImageContainer's ImageClient whithout holding mContainerMapLock to avoid deadlock.
@@ -1004,8 +1004,9 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
     RefPtr<ImageContainerListener> listener;
     {
       MutexAutoLock lock(mContainerMapLock);
-      if (auto entry = mImageContainerListeners.Lookup(n.compositable().Value())) {
-        listener = entry.Data();
+      auto it = mImageContainerListeners.find(n.compositable().Value());
+      if (it != mImageContainerListeners.end()) {
+        listener = it->second;
       }
     }
     if (listener) {
@@ -1117,7 +1118,7 @@ ImageBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 
   {
     MutexAutoLock lock(mContainerMapLock);
-    mImageContainerListeners.Remove(aHandle.Value());
+    mImageContainerListeners.erase(aHandle.Value());
   }
 }
 
