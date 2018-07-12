@@ -89,11 +89,6 @@ public:
   void Closed();
 
 private:
-  explicit MessagePort(nsIGlobalObject* aGlobal);
-  ~MessagePort();
-
-  void DisconnectFromOwner() override;
-
   enum State {
     // When a port is created by a MessageChannel it is entangled with the
     // other. They both run on the same thread, same event loop and the
@@ -139,9 +134,13 @@ private:
     eStateDisentangledForClose
   };
 
+  explicit MessagePort(nsIGlobalObject* aGlobal, State aState);
+  ~MessagePort();
+
+  void DisconnectFromOwner() override;
+
   void Initialize(const nsID& aUUID, const nsID& aDestinationUUID,
-                  uint32_t aSequenceID, bool mNeutered, State aState,
-                  ErrorResult& aRv);
+                  uint32_t aSequenceID, bool mNeutered, ErrorResult& aRv);
 
   bool ConnectToPBackground();
 

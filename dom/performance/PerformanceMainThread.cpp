@@ -75,8 +75,9 @@ NS_INTERFACE_MAP_END_INHERITING(Performance)
 
 PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                                              nsDOMNavigationTiming* aDOMTiming,
-                                             nsITimedChannel* aChannel)
-  : Performance(aWindow)
+                                             nsITimedChannel* aChannel,
+                                             bool aPrincipal)
+  : Performance(aWindow, aPrincipal)
   , mDOMTiming(aDOMTiming)
   , mChannel(aChannel)
 {

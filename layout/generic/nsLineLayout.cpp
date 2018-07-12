@@ -62,6 +62,9 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mForceBreakFrameOffset(-1),
     mMinLineBSize(0),
     mTextIndent(0),
+    mMaxStartBoxBSize(0),
+    mMaxEndBoxBSize(0),
+    mFinalLineBSize(0),
     mFirstLetterStyleOK(false),
     mIsTopOfPage(false),
     mImpactedByFloats(false),
@@ -77,6 +80,13 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mLineAtStart(false),
     mHasRuby(false),
     mSuppressLineWrap(nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
+#ifdef DEBUG
+    ,
+    mSpansAllocated(0),
+    mSpansFreed(0),
+    mFramesAllocated(0),
+    mFramesFreed(0)
+#endif
 {
   MOZ_ASSERT(aOuterReflowInput, "aOuterReflowInput must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->IsLetterFrame(),

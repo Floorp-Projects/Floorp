@@ -2599,9 +2599,10 @@ nsIDocument::IsSynthesized() {
 }
 
 bool
-nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
+nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindowInner> window = xpc::WindowGlobalOrNull(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
+  nsCOMPtr<nsPIDOMWindowInner> window = xpc::WindowOrNull(aGlobal);
 
   nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
   if (!doc) {
@@ -4631,7 +4632,7 @@ nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       JSObject *obj = GetWrapperPreserveColor();
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-        NS_ASSERTION(js::GetGlobalForObjectCrossCompartment(obj) == newScope,
+        NS_ASSERTION(JS::GetNonCCWObjectGlobal(obj) == newScope,
                      "Wrong scope, this is really bad!");
       }
     }
@@ -4713,12 +4714,9 @@ nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   }
 
   if (!mMaybeServiceWorkerControlled && mDocumentContainer && mScriptGlobalObject && GetChannel()) {
-    nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-    uint32_t loadType;
-    docShell->GetLoadType(&loadType);
 
     // If we are shift-reloaded, don't associate with a ServiceWorker.
-    if (IsForceReloadType(loadType)) {
+    if (mDocumentContainer->IsForceReloading()) {
       NS_WARNING("Page was shift reloaded, skipping ServiceWorker control");
       return;
     }
@@ -12453,9 +12451,10 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  // No 3rd party.
+  // No 3rd party or no tracking resource.
   if (!nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
-                                                   nullptr)) {
+                                                   nullptr) ||
+      !nsContentUtils::IsTrackingResourceWindow(openerInner)) {
     return;
   }
 
@@ -12575,6 +12574,8 @@ namespace {
 struct PrefStore
 {
   PrefStore()
+    : mFlashBlockEnabled(false)
+    , mPluginsHttpOnly(false)
   {
     Preferences::AddBoolVarCache(&mFlashBlockEnabled,
                                  "plugins.flashBlock.enabled");

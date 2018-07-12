@@ -599,16 +599,16 @@ public:
   }
 
   /**
-   * Indicates how many times the surface has been invalidated.
+   * Yields a dirty rect of what has changed since it was last called.
    */
-  virtual int32_t Invalidations() const {
-    return -1;
+  virtual Maybe<IntRect> TakeDirtyRect() {
+    return Nothing();
   }
 
   /**
-   * Increment the invalidation counter.
+   * Indicate a region which has changed in the surface.
    */
-  virtual void Invalidate() { }
+  virtual void Invalidate(const IntRect& aDirtyRect) { }
 
 protected:
   bool mIsMapped;

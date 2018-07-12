@@ -244,7 +244,10 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
     bool isGcMarkingTracer = trc->isMarkingTracer();
 
     MOZ_ASSERT_IF(zone->requireGCTracer(),
-                  isGcMarkingTracer || IsBufferGrayRootsTracer(trc) || IsUnmarkGrayTracer(trc));
+                  isGcMarkingTracer ||
+                  IsBufferGrayRootsTracer(trc) ||
+                  IsUnmarkGrayTracer(trc) ||
+                  IsClearEdgesTracer(trc));
 
     if (isGcMarkingTracer) {
         GCMarker* gcMarker = GCMarker::fromTracer(trc);

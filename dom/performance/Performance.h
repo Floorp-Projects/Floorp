@@ -118,8 +118,8 @@ public:
   void InsertResourceEntry(PerformanceEntry* aEntry);
 
 protected:
-  Performance();
-  explicit Performance(nsPIDOMWindowInner* aWindow);
+  explicit Performance(bool aSystemPrincipal);
+  Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal);
 
   virtual ~Performance();
 

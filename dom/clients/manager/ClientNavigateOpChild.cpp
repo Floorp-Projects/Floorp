@@ -9,7 +9,7 @@
 #include "ClientState.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
@@ -216,16 +216,11 @@ ClientNavigateOpChild::DoNavigate(const ClientNavigateOpConstructorArgs& aArgs)
     return ref.forget();
   }
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  rv = docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv)) {
-    ref = ClientOpPromise::CreateAndReject(rv, __func__);
-    return ref.forget();
-  }
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   loadInfo->SetTriggeringPrincipal(principal);
   loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
-  loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContent);
+  loadInfo->SetLoadType(LOAD_STOP_CONTENT);
   loadInfo->SetSourceDocShell(docShell);
   rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, true);
   if (NS_FAILED(rv)) {

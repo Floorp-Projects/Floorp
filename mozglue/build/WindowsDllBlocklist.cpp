@@ -40,7 +40,7 @@ using namespace mozilla;
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   { name, __VA_ARGS__ },
-#define DLL_BLOCKLIST_CHAR_TYPE char
+#define DLL_BLOCKLIST_STRING_TYPE const char*
 #include "mozilla/WindowsDllBlocklistDefs.h"
 
 // define this for very verbose dll load debug spew

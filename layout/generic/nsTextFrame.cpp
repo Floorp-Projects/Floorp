@@ -425,7 +425,6 @@ protected:
 
   // Selection data
 
-  int16_t      mSelectionStatus; // see nsIDocument.h SetDisplaySelection()
   nscolor      mSelectionTextColor;
   nscolor      mSelectionBGColor;
   RefPtr<nsCSSShadowArray> mSelectionShadow;
@@ -1004,7 +1003,9 @@ public:
     mCommonAncestorWithLastFrame(nullptr),
     mMissingFonts(aPresContext->MissingFontRecorder()),
     mBidiEnabled(aPresContext->BidiEnabled()),
+    mStartOfLine(true),
     mSkipIncompleteTextRuns(false),
+    mCanStopOnThisLine(false),
     mWhichTextRun(aWhichTextRun),
     mNextRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
     mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE) {
@@ -3099,6 +3100,7 @@ public:
       mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
+      mJustificationArrayStart(0),
       mReflowing(true),
       mWhichTextRun(aWhichTextRun)
   {
@@ -3123,6 +3125,7 @@ public:
       mLetterSpacing(LetterSpacing(aFrame)),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
+      mJustificationArrayStart(0),
       mReflowing(false),
       mWhichTextRun(aWhichTextRun)
   {
@@ -3755,7 +3758,13 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
     mInitCommonColors(false),
     mInitSelectionColorsAndShadow(false),
     mResolveColors(true),
-    mHasSelectionShadow(false)
+    mSelectionTextColor(NS_RGBA(0, 0, 0, 0)),
+    mSelectionBGColor(NS_RGBA(0, 0, 0, 0)),
+    mHasSelectionShadow(false),
+    mSufficientContrast(0),
+    mFrameBackgroundColor(NS_RGBA(0, 0, 0, 0)),
+    mSystemFieldForegroundColor(NS_RGBA(0, 0, 0, 0)),
+    mSystemFieldBackgroundColor(NS_RGBA(0, 0, 0, 0))
 {
   for (uint32_t i = 0; i < ArrayLength(mSelectionStyle); i++)
     mSelectionStyle[i].mInit = false;
@@ -8169,7 +8178,8 @@ ClusterIterator::NextCluster()
 
 ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
                                  int32_t aDirection, nsString& aContext)
-  : mTextFrame(aTextFrame), mDirection(aDirection), mCharIndex(-1)
+  : mTextFrame(aTextFrame), mDirection(aDirection), mCharIndex(-1),
+    mHaveWordBreak(false)
 {
   mIterator = aTextFrame->EnsureTextRun(nsTextFrame::eInflated);
   if (!aTextFrame->GetTextRun(nsTextFrame::eInflated)) {
