@@ -189,28 +189,7 @@ Animation::SetEffectNoUpdate(AnimationEffect* aEffect)
       nsNodeUtils::AnimationChanged(this);
     }
 
-    // Reschedule pending pause or pending play tasks.
-    // If we have a pending animation, it will either be registered
-    // in the pending animation tracker and have a null pending ready time,
-    // or, after it has been painted, it will be removed from the tracker
-    // and assigned a pending ready time.
-    // After updating the effect we'll typically need to repaint so if we've
-    // already been assigned a pending ready time, we should clear it and put
-    // the animation back in the tracker.
-    if (!mPendingReadyTime.IsNull()) {
-      mPendingReadyTime.SetNull();
-
-      nsIDocument* doc = GetRenderedDocument();
-      if (doc) {
-        PendingAnimationTracker* tracker =
-          doc->GetOrCreatePendingAnimationTracker();
-        if (mPendingState == PendingState::PlayPending) {
-          tracker->AddPlayPending(*this);
-        } else {
-          tracker->AddPausePending(*this);
-        }
-      }
-    }
+    ReschedulePendingTasks();
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -1479,6 +1458,27 @@ Animation::ResetPendingTasks()
   if (mReady) {
     mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     mReady = nullptr;
+  }
+}
+
+void
+Animation::ReschedulePendingTasks()
+{
+  if (mPendingReadyTime.IsNull()) {
+    return;
+  }
+
+  mPendingReadyTime.SetNull();
+
+  nsIDocument* doc = GetRenderedDocument();
+  if (doc) {
+    PendingAnimationTracker* tracker =
+      doc->GetOrCreatePendingAnimationTracker();
+    if (mPendingState == PendingState::PlayPending) {
+      tracker->AddPlayPending(*this);
+    } else {
+      tracker->AddPausePending(*this);
+    }
   }
 }
 

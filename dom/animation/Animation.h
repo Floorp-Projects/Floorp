@@ -381,6 +381,21 @@ public:
   void NotifyGeometricAnimationsStartingThisFrame();
 
   /**
+   * Reschedule pending pause or pending play tasks when updating the target
+   * effect.
+   *
+   * If we are pending, we will either be registered in the pending animation
+   * tracker and have a null pending ready time, or, after our effect has been
+   * painted, we will be removed from the tracker and assigned a pending ready
+   * time.
+   *
+   * When the target effect is updated, we'll typically need to repaint so for
+   * the latter case where we already have a pending ready time, clear it and put
+   * ourselves back in the pending animation tracker.
+   */
+  void ReschedulePendingTasks();
+
+  /**
    * Used by subclasses to synchronously queue a cancel event in situations
    * where the Animation may have been cancelled.
    *
