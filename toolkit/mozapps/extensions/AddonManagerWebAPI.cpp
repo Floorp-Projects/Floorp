@@ -92,9 +92,10 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
 }
 
 bool
-AddonManagerWebAPI::IsAPIEnabled(JSContext* cx, JSObject* obj)
+AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  nsGlobalWindowInner* global = xpc::WindowGlobalOrNull(obj);
+  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
+  nsGlobalWindowInner* global = xpc::WindowOrNull(aGlobal);
   if (!global) {
     return false;
   }
