@@ -508,7 +508,7 @@ function StartTests()
         }
 
         g.totalTests = g.urls.length;
-        if (!g.totalTests && !g.verify)
+        if (!g.totalTests && !g.verify && !g.repeat)
             throw "No tests to run";
 
         g.uriCanvases = {};
@@ -626,7 +626,7 @@ function StartCurrentTest()
     } else if (g.urls.length == 0 && g.repeat > 0) {
         // Repeat
         g.repeat--;
-        StartTests();
+        ReadTests();
     } else {
         if (g.urls[0].chaosMode) {
             g.windowUtils.enterChaosMode();
