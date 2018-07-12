@@ -212,7 +212,7 @@ VariableLengthPrefixSet::IsEmpty(bool* aEmpty) const
 }
 
 nsresult
-VariableLengthPrefixSet::LoadFromFile(nsIFile* aFile)
+VariableLengthPrefixSet::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
 {
   MutexAutoLock lock(mLock);
 
@@ -254,7 +254,7 @@ VariableLengthPrefixSet::LoadFromFile(nsIFile* aFile)
 }
 
 nsresult
-VariableLengthPrefixSet::StoreToFile(nsIFile* aFile) const
+VariableLengthPrefixSet::StoreToFile(nsCOMPtr<nsIFile>& aFile) const
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
@@ -293,7 +293,7 @@ VariableLengthPrefixSet::StoreToFile(nsIFile* aFile) const
 }
 
 nsresult
-VariableLengthPrefixSet::LoadPrefixes(nsIInputStream* in)
+VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
 {
   uint32_t magic;
   uint32_t read;
@@ -362,7 +362,7 @@ VariableLengthPrefixSet::CalculatePreallocateSize() const
 }
 
 nsresult
-VariableLengthPrefixSet::WritePrefixes(nsIOutputStream* out) const
+VariableLengthPrefixSet::WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const
 {
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);

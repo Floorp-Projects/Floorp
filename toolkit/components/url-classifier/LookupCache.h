@@ -190,7 +190,7 @@ public:
 
   LookupCache(const nsACString& aTableName,
               const nsACString& aProvider,
-              nsIFile* aStoreFile);
+              nsCOMPtr<nsIFile>& aStoreFile);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LookupCache);
 
@@ -198,7 +198,7 @@ public:
 
   // The directory handle where we operate will
   // be moved away when a backup is made.
-  nsresult UpdateRootDirHandle(nsIFile* aRootStoreDirectory);
+  nsresult UpdateRootDirHandle(nsCOMPtr<nsIFile>& aRootStoreDirectory);
 
   // Write data stored in lookup cache to disk.
   nsresult WriteFile();
@@ -248,8 +248,8 @@ public:
 private:
   nsresult LoadPrefixSet();
 
-  virtual nsresult StoreToFile(nsIFile* aFile) = 0;
-  virtual nsresult LoadFromFile(nsIFile* aFile) = 0;
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) = 0;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) = 0;
   virtual size_t SizeOfPrefixSet() const = 0;
 
   virtual int Ver() const = 0;
@@ -283,7 +283,7 @@ class LookupCacheV2 final : public LookupCache
 public:
   explicit LookupCacheV2(const nsACString& aTableName,
                          const nsACString& aProvider,
-                         nsIFile* aStoreFile)
+                         nsCOMPtr<nsIFile>& aStoreFile)
     : LookupCache(aTableName, aProvider, aStoreFile) {}
 
   virtual nsresult Init() override;
@@ -317,8 +317,8 @@ protected:
   nsresult ReadCompletions();
 
   virtual nsresult ClearPrefixes() override;
-  virtual nsresult StoreToFile(nsIFile* aFile) override;
-  virtual nsresult LoadFromFile(nsIFile* aFile) override;
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual size_t SizeOfPrefixSet() const override;
 
 private:
