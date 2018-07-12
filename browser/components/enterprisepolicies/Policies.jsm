@@ -61,6 +61,12 @@ var EXPORTED_SYMBOLS = ["Policies"];
  * The callbacks will be bound to their parent policy object.
  */
 var Policies = {
+  "AppUpdateURL": {
+    onBeforeAddons(manager, param) {
+      setDefaultPref("app.update.url", param.href);
+    }
+  },
+
   "Authentication": {
     onBeforeAddons(manager, param) {
       if ("SPNEGO" in param) {
