@@ -353,6 +353,13 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         }
         break;
       }
+      case OpUpdateResource::TOpUpdateExternalImage: {
+        const auto& op = cmd.get_OpUpdateExternalImage();
+        if (!UpdateExternalImage(op.externalImageId(), op.key(), op.dirtyRect(), aUpdates)) {
+          return false;
+        }
+        break;
+      }
       case OpUpdateResource::TOpAddRawFont: {
         const auto& op = cmd.get_OpAddRawFont();
         wr::Vec<uint8_t> bytes;
@@ -515,6 +522,54 @@ WebRenderBridgeParent::PushExternalImageForTexture(wr::ExternalImageId aExtId,
 
   dSurf->Unmap();
 
+  return true;
+}
+
+bool
+WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
+                                           wr::ImageKey aKey,
+                                           const ImageIntRect& aDirtyRect,
+                                           wr::TransactionBuilder& aResources)
+{
+  Range<wr::ImageKey> keys(&aKey, 1);
+  // Check if key is obsoleted.
+  if (keys[0].mNamespace != mIdNamespace) {
+    return true;
+  }
+
+  uint64_t imageId = wr::AsUint64(aExtId);
+  if (mSharedSurfaceIds.find(imageId) == mSharedSurfaceIds.end()) {
+    gfxCriticalNote << "Updating unknown shared surface: " << wr::AsUint64(aExtId);
+    return false;
+  }
+
+  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Get(aExtId);
+  if (!dSurf) {
+    gfxCriticalNote << "Shared surface does not exist for extId:" << wr::AsUint64(aExtId);
+    return false;
+  }
+
+  if (!gfxEnv::EnableWebRenderRecording()) {
+    wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+                                   dSurf->GetFormat());
+    aResources.UpdateExternalImageWithDirtyRect(aKey, descriptor, aExtId,
+                                                wr::WrExternalImageBufferType::ExternalBuffer,
+                                                wr::ToDeviceUintRect(aDirtyRect),
+                                                0);
+    return true;
+  }
+
+  DataSourceSurface::ScopedMap map(dSurf, DataSourceSurface::READ);
+  if (!map.IsMapped()) {
+    gfxCriticalNote << "DataSourceSurface failed to map for Image for extId:" << wr::AsUint64(aExtId);
+    return false;
+  }
+
+  IntSize size = dSurf->GetSize();
+  wr::ImageDescriptor descriptor(size, map.GetStride(), dSurf->GetFormat());
+  wr::Vec<uint8_t> data;
+  data.PushBytes(Range<uint8_t>(map.GetData(), size.height * map.GetStride()));
+  aResources.UpdateImageBuffer(keys[0], descriptor, data);
   return true;
 }
 
