@@ -18,8 +18,7 @@ import mozilla.components.service.fxa.FxaResult
 import mozilla.components.service.fxa.OAuthInfo
 import mozilla.components.service.fxa.Profile
 
-
-open class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener {
 
     private var account: FirefoxAccount? = null
     private var scopes: Array<String> = arrayOf("profile")
@@ -53,8 +52,12 @@ open class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<View>(R.id.button).setOnClickListener {
+        findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             account?.beginOAuthFlow(scopes, false)?.whenComplete { openTab(it) }
+        }
+
+        findViewById<View>(R.id.buttonWebView).setOnClickListener {
+            account?.beginOAuthFlow(scopes, false)?.whenComplete { openWebView(it) }
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
@@ -96,10 +99,32 @@ open class MainActivity : AppCompatActivity() {
                     txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
                 }
                 account?.toJSONString().let {
-                    getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, it).apply()
+                    getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit()
+                            .putString(FXA_STATE_KEY, it).apply()
                 }
             }
             account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
         }
+    }
+
+    private fun openWebView(url: String) {
+        supportFragmentManager?.beginTransaction()?.apply {
+            replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
+            addToBackStack(null)
+            commit()
+        }
+    }
+
+    override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
+        val txtView: TextView = findViewById(R.id.txtView)
+        val handleAuth = { _: OAuthInfo -> account?.getProfile() }
+        val handleProfile = { value: Profile ->
+            runOnUiThread {
+                txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
+            }
+        }
+
+        account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
+        supportFragmentManager?.popBackStack()
     }
 }

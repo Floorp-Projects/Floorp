@@ -51,4 +51,5 @@ dependencies {
 
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
     implementation "com.android.support:customtabs:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support:support-v4:${rootProject.ext.dependencies['supportLibraries']}"
 }
