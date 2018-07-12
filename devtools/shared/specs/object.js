@@ -24,6 +24,11 @@ types.addDictType("object.descriptor", {
   set: "nullable:json",
 });
 
+types.addDictType("object.completion", {
+  return: "nullable:json",
+  throw: "nullable:json"
+});
+
 types.addDictType("object.definitionSite", {
   source: "source",
   line: "number",
@@ -43,6 +48,10 @@ types.addDictType("object.prototype", {
 
 types.addDictType("object.property", {
   descriptor: "nullable:object.descriptor"
+});
+
+types.addDictType("object.propertyValue", {
+  value: "nullable:object.completion"
 });
 
 types.addDictType("object.bindings", {
@@ -164,6 +173,12 @@ const objectSpec = generateActorSpec({
         name: Arg(0, "string")
       },
       response: RetVal("object.property")
+    },
+    propertyValue: {
+      request: {
+        name: Arg(0, "string")
+      },
+      response: RetVal("object.propertyValue")
     },
     rejectionStack: {
       request: {},
