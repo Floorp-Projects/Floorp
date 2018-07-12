@@ -227,6 +227,24 @@ public class SessionAccessibility {
                                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityByGranularity", data);
                             }
                             return true;
+                        case AccessibilityNodeInfo.ACTION_SET_SELECTION:
+                            if (arguments == null) {
+                                return false;
+                            }
+                            int selectionStart = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT);
+                            int selectionEnd = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT);
+                            data = new GeckoBundle(2);
+                            data.putInt("start", selectionStart);
+                            data.putInt("end", selectionEnd);
+                            mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySetSelection", data);
+                            return true;
+                        case AccessibilityNodeInfo.ACTION_CUT:
+                        case AccessibilityNodeInfo.ACTION_COPY:
+                        case AccessibilityNodeInfo.ACTION_PASTE:
+                            data = new GeckoBundle(1);
+                            data.putInt("action", action);
+                            mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClipboard", data);
+                            return true;
                         }
 
                         return mView.performAccessibilityAction(action, arguments);
@@ -360,9 +378,6 @@ public class SessionAccessibility {
         node.setPassword(message.getBoolean("password"));
         node.setFocusable(message.getBoolean("focusable"));
         node.setFocused(message.getBoolean("focused"));
-        if (Build.VERSION.SDK_INT >= 18) {
-            node.setEditable(message.getBoolean("editable"));
-        }
 
         node.setClassName(message.getString("className", "android.view.View"));
 
@@ -376,6 +391,14 @@ public class SessionAccessibility {
             node.setText(sb.toString());
         }
         node.setContentDescription(message.getString("description", ""));
+
+        if (Build.VERSION.SDK_INT >= 18 && message.getBoolean("editable")) {
+            node.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
+            node.addAction(AccessibilityNodeInfo.ACTION_CUT);
+            node.addAction(AccessibilityNodeInfo.ACTION_COPY);
+            node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
+            node.setEditable(true);
+        }
 
         if (message.getBoolean("clickable")) {
             node.setClickable(true);

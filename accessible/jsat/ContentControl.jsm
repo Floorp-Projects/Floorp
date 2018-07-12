@@ -24,6 +24,10 @@ const MOVEMENT_GRANULARITY_CHARACTER = 1;
 const MOVEMENT_GRANULARITY_WORD = 2;
 const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
 
+const CLIPBOARD_COPY = 0x4000;
+const CLIPBOARD_PASTE = 0x8000;
+const CLIPBOARD_CUT = 0x10000;
+
 function ContentControl(aContentScope) {
   this._contentScope = Cu.getWeakReference(aContentScope);
   this._childMessageSenders = new WeakMap();
@@ -36,7 +40,9 @@ this.ContentControl.prototype = {
                        "AccessFu:AutoMove",
                        "AccessFu:Activate",
                        "AccessFu:MoveByGranularity",
-                       "AccessFu:AndroidScroll"],
+                       "AccessFu:AndroidScroll",
+                       "AccessFu:SetSelection",
+                       "AccessFu:Clipboard"],
 
   start: function cc_start() {
     let cs = this._contentScope.get();
@@ -324,6 +330,48 @@ this.ContentControl.prototype = {
       this.vc.movePreviousByText(pivotGranularity);
     } else if (direction === "Next") {
       this.vc.moveNextByText(pivotGranularity);
+    }
+  },
+
+  handleSetSelection: function cc_handleSetSelection(aMessage) {
+    const { start, end } = aMessage.json;
+    const focusedAcc =
+      Utils.AccService.getAccessibleFor(this.document.activeElement);
+    if (focusedAcc) {
+      const accText = focusedAcc.QueryInterface(Ci.nsIAccessibleText);
+      if (start == end) {
+        accText.caretOffset = start;
+      } else {
+        accText.setSelectionBounds(0, start, end);
+      }
+    }
+  },
+
+  handleClipboard: function cc_handleClipboard(aMessage) {
+    const { action } = aMessage.json;
+    const focusedAcc =
+      Utils.AccService.getAccessibleFor(this.document.activeElement);
+    if (focusedAcc) {
+      const [startSel, endSel] = Utils.getTextSelection(focusedAcc);
+      const editText = focusedAcc.QueryInterface(Ci.nsIAccessibleEditableText);
+      switch (action) {
+        case CLIPBOARD_COPY:
+          if (startSel != endSel) {
+            editText.copyText(startSel, endSel);
+          }
+          break;
+        case CLIPBOARD_PASTE:
+          if (startSel != endSel) {
+            editText.deleteText(startSel, endSel);
+          }
+          editText.pasteText(startSel);
+          break;
+        case CLIPBOARD_CUT:
+          if (startSel != endSel) {
+            editText.cutText(startSel, endSel);
+          }
+          break;
+      }
     }
   },
 

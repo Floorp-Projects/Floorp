@@ -210,8 +210,14 @@ this.EventManager.prototype = {
         // on this one..
         let state = Utils.getState(acc);
         if (state.contains(States.FOCUSED) && state.contains(States.EDITABLE)) {
-          this.present(Presentation.textSelectionChanged(acc.getText(0, -1),
-            caretOffset, caretOffset, 0, 0, aEvent.isFromUserInput));
+          let fromIndex = caretOffset;
+          if (acc.selectionCount) {
+            const [startSel, endSel] = Utils.getTextSelection(acc);
+            fromIndex = startSel == caretOffset ? endSel : startSel;
+          }
+          this.present(Presentation.textSelectionChanged(
+            acc.getText(0, -1), fromIndex, caretOffset, 0, 0,
+            aEvent.isFromUserInput));
         }
         break;
       }
