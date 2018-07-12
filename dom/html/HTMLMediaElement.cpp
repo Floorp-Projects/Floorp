@@ -7866,6 +7866,12 @@ HTMLMediaElement::CreateDOMPromise(ErrorResult& aRv) const
 void
 HTMLMediaElement::AsyncResolvePendingPlayPromises()
 {
+  // Disconnect requests for permission to play. We're playing either way,
+  // so there's no point keeping the promise connected. Note: the front
+  // end permission prompt code will detect that we've started playing, and
+  // hide the permission prompt.
+  mAutoplayPermissionRequest.DisconnectIfExists();
+
   if (mShuttingDown) {
     return;
   }
