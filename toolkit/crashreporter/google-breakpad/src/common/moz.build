@@ -52,7 +52,9 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         '-O2',
         '-g',
     ]
-    HOST_DEFINES['HAVE_RUST_DEMANGLE'] = True
+    # The tup build doesn't currently link this properly: bug 1475278
+    if 'Tup' not in CONFIG['BUILD_BACKENDS']:
+        HOST_DEFINES['HAVE_RUST_DEMANGLE'] = True
     LOCAL_INCLUDES += [
         '/toolkit/crashreporter/rust',
     ]
