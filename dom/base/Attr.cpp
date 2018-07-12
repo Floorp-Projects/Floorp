@@ -27,9 +27,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsWrapperCacheInlines.h"
 
-nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
-                           already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-: nsINode(aNodeInfo), mAttrMap(aAttrMap)
+nsIAttribute::nsIAttribute(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+: nsINode(aNodeInfo)
 {
 }
 
@@ -46,7 +45,7 @@ bool Attr::sInitialized;
 Attr::Attr(nsDOMAttributeMap *aAttrMap,
            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
            const nsAString  &aValue)
-  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
+  : nsIAttribute(aNodeInfo), mAttrMap(aAttrMap), mValue(aValue)
 {
   MOZ_ASSERT(mNodeInfo, "We must get a nodeinfo here!");
   MOZ_ASSERT(mNodeInfo->NodeType() == ATTRIBUTE_NODE,

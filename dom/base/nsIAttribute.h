@@ -20,32 +20,11 @@ class nsIAttribute : public nsINode
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
 
-  virtual void SetMap(nsDOMAttributeMap *aMap) = 0;
-
-  nsDOMAttributeMap *GetMap()
-  {
-    return mAttrMap;
-  }
-
-  mozilla::dom::NodeInfo *NodeInfo() const
-  {
-    return mNodeInfo;
-  }
-
-  /**
-   * Called when our ownerElement is moved into a new document.
-   * Updates the nodeinfo of this node.
-   */
-  virtual nsresult SetOwnerDocument(nsIDocument* aDocument) = 0;
-
 protected:
 #ifdef MOZILLA_INTERNAL_API
-  nsIAttribute(nsDOMAttributeMap *aAttrMap,
-               already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  nsIAttribute(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 #endif //MOZILLA_INTERNAL_API
   virtual ~nsIAttribute();
-
-  RefPtr<nsDOMAttributeMap> mAttrMap;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)

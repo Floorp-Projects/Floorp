@@ -51,10 +51,20 @@ public:
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-  // nsIAttribute interface
-  void SetMap(nsDOMAttributeMap *aMap) override;
+  nsDOMAttributeMap* GetMap()
+  {
+    return mAttrMap;
+  }
+
+  void SetMap(nsDOMAttributeMap *aMap);
+
   Element* GetElement() const;
-  nsresult SetOwnerDocument(nsIDocument* aDocument) override;
+
+  /**
+   * Called when our ownerElement is moved into a new document.
+   * Updates the nodeinfo of this node.
+   */
+  nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   // nsINode interface
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
@@ -100,6 +110,7 @@ protected:
   static bool sInitialized;
 
 private:
+  RefPtr<nsDOMAttributeMap> mAttrMap;
   nsString mValue;
 };
 
