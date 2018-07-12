@@ -38,7 +38,7 @@ class AndroidPresentor {
    *   See nsIAccessiblePivot.
    * @param {bool} aIsFromUserInput the pivot change was invoked by the user
    */
-  pivotChanged(aPosition, aOldPosition, aReason, aStartOffset, aEndOffset) {
+  pivotChanged(aPosition, aOldPosition, aReason, aStartOffset, aEndOffset, aIsUserInput) {
     let context = new PivotContext(
       aPosition, aOldPosition, aStartOffset, aEndOffset);
     if (!context.accessible) {
