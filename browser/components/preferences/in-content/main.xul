@@ -537,13 +537,15 @@
 #endif
 
 #ifdef MOZ_UPDATER
-  <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
-  <radiogroup id="updateRadioGroup" preference="app.update.auto">
+  <description data-l10n-id="update-application-allow-description"></description>
+  <radiogroup id="updateRadioGroup">
     <radio id="autoDesktop"
-           value="true"
+           value="auto"
            data-l10n-id="update-application-auto"/>
-    <radio value="false"
+    <radio value="checkOnly"
            data-l10n-id="update-application-check-choose"/>
+    <radio value="manual"
+           data-l10n-id="update-application-manual"/>
   </radiogroup>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"

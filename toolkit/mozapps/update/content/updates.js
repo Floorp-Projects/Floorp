@@ -14,10 +14,10 @@ ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 
 const XMLNS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_ELEVATE_NEVER       = "app.update.elevate.never";
+const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_URL_MANUAL          = "app.update.url.manual";
@@ -492,7 +492,7 @@ var gCheckingPage = {
    * Manager control, so stop checking for updates.
    */
   onWizardCancel() {
-    this._checker.stopCurrentCheck();
+    this._checker.stopChecking(Ci.nsIUpdateChecker.CURRENT_CHECK);
   },
 
   /**
@@ -561,7 +561,8 @@ var gNoUpdatesPage = {
   onPageShow() {
     LOG("gNoUpdatesPage", "onPageShow - could not select an appropriate " +
         "update. Either there were no updates or |selectUpdate| failed");
-    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO, true))
+
+    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true))
       document.getElementById("noUpdatesAutoEnabled").hidden = false;
     else
       document.getElementById("noUpdatesAutoDisabled").hidden = false;

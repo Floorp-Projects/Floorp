@@ -228,6 +228,7 @@ if (AppConstants.platform === "win") {
 
 if (AppConstants.MOZ_UPDATER) {
   Preferences.addAll([
+    { id: "app.update.enabled", type: "bool" },
     { id: "app.update.auto", type: "bool" },
     { id: "app.update.disable_button.showUpdateHistory", type: "bool" },
   ]);
@@ -501,35 +502,17 @@ var gMainPane = {
 
     if (AppConstants.MOZ_UPDATER) {
       gAppUpdater = new appUpdater();
+      let onUnload = () => {
+        window.removeEventListener("unload", onUnload);
+        Services.prefs.removeObserver("app.update.", this);
+      };
+      window.addEventListener("unload", onUnload);
+      Services.prefs.addObserver("app.update.", this);
+      this.updateReadPrefs();
+      setEventListener("updateRadioGroup", "command",
+        gMainPane.updateWritePrefs);
       setEventListener("showUpdateHistory", "command",
         gMainPane.showUpdates);
-
-      if (Services.policies && !Services.policies.isAllowed("appUpdate")) {
-        document.getElementById("updateAllowDescription").hidden = true;
-        document.getElementById("updateRadioGroup").hidden = true;
-        if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
-          document.getElementById("useService").hidden = true;
-        }
-      }
-
-      if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
-        // Check to see if the maintenance service is installed.
-        // If it isn't installed, don't show the preference at all.
-        let installed;
-        try {
-          let wrk = Cc["@mozilla.org/windows-registry-key;1"]
-                    .createInstance(Ci.nsIWindowsRegKey);
-          wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
-                   "SOFTWARE\\Mozilla\\MaintenanceService",
-                   wrk.ACCESS_READ | wrk.WOW64_64);
-          installed = wrk.readIntValue("Installed");
-          wrk.close();
-        } catch (e) {
-        }
-        if (installed != 1) {
-          document.getElementById("useService").hidden = true;
-        }
-      }
     }
 
     // Initilize Application section.
@@ -1192,6 +1175,111 @@ var gMainPane = {
     }
   },
 
+  /*
+   * Preferences:
+   *
+   * app.update.enabled
+   * - true if updates to the application are enabled, false otherwise
+   * app.update.auto
+   * - true if updates should be automatically downloaded and installed and
+   * false if the user should be asked what he wants to do when an update is
+   * available
+   * extensions.update.enabled
+   * - true if updates to extensions and themes are enabled, false otherwise
+   * browser.search.update
+   * - true if updates to search engines are enabled, false otherwise
+   */
+
+  /**
+   * Selects the item of the radiogroup based on the pref values and locked
+   * states.
+   *
+   * UI state matrix for update preference conditions
+   *
+   * UI Components:                              Preferences
+   * Radiogroup                                  i   = app.update.enabled
+   *                                             ii  = app.update.auto
+   *
+   * Disabled states:
+   * Element           pref  value  locked  disabled
+   * radiogroup        i     t/f    f       false
+   *                   i     t/f    *t*     *true*
+   *                   ii    t/f    f       false
+   *                   ii    t/f    *t*     *true*
+   */
+  updateReadPrefs() {
+    if (AppConstants.MOZ_UPDATER) {
+      var enabledPref = Preferences.get("app.update.enabled");
+      var autoPref = Preferences.get("app.update.auto");
+      let disabledByPolicy = Services.policies &&
+                             !Services.policies.isAllowed("appUpdate");
+      var radiogroup = document.getElementById("updateRadioGroup");
+
+      if (!enabledPref.value || disabledByPolicy) // Don't care for autoPref.value in this case.
+        radiogroup.value = "manual"; // 3. Never check for updates.
+      else if (autoPref.value) // enabledPref.value && autoPref.value
+        radiogroup.value = "auto"; // 1. Automatically install updates
+      else // enabledPref.value && !autoPref.value
+        radiogroup.value = "checkOnly"; // 2. Check, but let me choose
+
+      var canCheck = Cc["@mozilla.org/updates/update-service;1"].
+        getService(Ci.nsIApplicationUpdateService).
+        canCheckForUpdates;
+      // canCheck is false if the enabledPref is false and locked,
+      // or the binary platform or OS version is not known.
+      // A locked pref is sufficient to disable the radiogroup.
+      radiogroup.disabled = !canCheck ||
+                            enabledPref.locked ||
+                            autoPref.locked ||
+                            disabledByPolicy;
+
+      if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
+        // Check to see if the maintenance service is installed.
+        // If it is don't show the preference at all.
+        var installed;
+        try {
+          var wrk = Cc["@mozilla.org/windows-registry-key;1"]
+            .createInstance(Ci.nsIWindowsRegKey);
+          wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
+            "SOFTWARE\\Mozilla\\MaintenanceService",
+            wrk.ACCESS_READ | wrk.WOW64_64);
+          installed = wrk.readIntValue("Installed");
+          wrk.close();
+        } catch (e) {
+        }
+        if (installed != 1) {
+          document.getElementById("useService").hidden = true;
+        }
+      }
+    }
+  },
+
+  /**
+   * Sets the pref values based on the selected item of the radiogroup.
+   */
+  updateWritePrefs() {
+    let disabledByPolicy = Services.policies &&
+                           !Services.policies.isAllowed("appUpdate");
+    if (AppConstants.MOZ_UPDATER && !disabledByPolicy) {
+      var enabledPref = Preferences.get("app.update.enabled");
+      var autoPref = Preferences.get("app.update.auto");
+      var radiogroup = document.getElementById("updateRadioGroup");
+      switch (radiogroup.value) {
+        case "auto": // 1. Automatically install updates for Desktop only
+          enabledPref.value = true;
+          autoPref.value = true;
+          break;
+        case "checkOnly": // 2. Check, but let me choose
+          enabledPref.value = true;
+          autoPref.value = false;
+          break;
+        case "manual": // 3. Never check for updates.
+          enabledPref.value = false;
+          autoPref.value = false;
+      }
+    }
+  },
+
   /**
    * Displays the history of installed updates.
    */
@@ -1248,6 +1336,9 @@ var gMainPane = {
         // All the prefs we observe can affect what we display, so we rebuild
         // the view when any of them changes.
         this._rebuildView();
+      }
+      if (AppConstants.MOZ_UPDATER) {
+        this.updateReadPrefs();
       }
     }
   },

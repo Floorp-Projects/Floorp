@@ -120,7 +120,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
-        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_ENABLED, true],
         [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
         [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
@@ -173,10 +173,10 @@ function runUpdateProcessingTest(updates, steps) {
 
     setUpdateTimerPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    await SpecialPowers.pushPrefEnv({
+    SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
-        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_ENABLED, true],
         [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
         [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],

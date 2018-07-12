@@ -187,6 +187,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["accessibility.force_disabled", {what:  RECORD_PREF_VALUE}],
   ["app.shield.optoutstudies.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.auto", {what: RECORD_PREF_VALUE}],
+  ["app.update.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.interval", {what: RECORD_PREF_VALUE}],
   ["app.update.service.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.silent", {what: RECORD_PREF_VALUE}],
@@ -267,6 +268,7 @@ const PREF_DISTRIBUTOR = "app.distributor";
 const PREF_DISTRIBUTOR_CHANNEL = "app.distributor.channel";
 const PREF_APP_PARTNER_BRANCH = "app.partner.";
 const PREF_PARTNER_ID = "mozilla.partner.id";
+const PREF_UPDATE_ENABLED = "app.update.enabled";
 const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 const PREF_SEARCH_COHORT = "browser.search.cohort";
 
@@ -1418,7 +1420,7 @@ EnvironmentCache.prototype = {
       locale: getBrowserLocale(),
       update: {
         channel: updateChannel,
-        enabled: !Services.policies || Services.policies.isAllowed("appUpdate"),
+        enabled: Services.prefs.getBoolPref(PREF_UPDATE_ENABLED, true),
         autoDownload: Services.prefs.getBoolPref(PREF_UPDATE_AUTODOWNLOAD, true),
       },
       userPrefs: this._getPrefData(),
