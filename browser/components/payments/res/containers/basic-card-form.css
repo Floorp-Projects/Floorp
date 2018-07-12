@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+basic-card-form > footer > .cancel-button {
+  /* When cancel is shown (during onboarding), it should always be on the left with a space after it */
+  margin-right: auto;
+}
+
+basic-card-form > footer > .cancel-button[hidden] ~ .back-button {
+  /* When back is shown (outside onboarding) we want "Back <space> Add/Save" */
+  /* Bug 1468153 may change the button ordering to match platform conventions */
+  margin-right: auto;
+}
