@@ -6,12 +6,14 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
+    - fetch
 
 transforms:
     - taskgraph.transforms.build:transforms
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
     - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.use_fetches:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
