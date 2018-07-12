@@ -139,7 +139,7 @@ class EditAddress extends EditAutofillForm {
     let inputs = [];
     for (let i = 0; i < fieldsOrder.length; i++) {
       let {fieldId, newLine} = fieldsOrder[i];
-      let container = this._elements.form.querySelector(`#${fieldId}-container`);
+      let container = document.getElementById(`${fieldId}-container`);
       let containerInputs = [...container.querySelectorAll("input, textarea, select")];
       containerInputs.forEach(function(input) { input.disabled = false; });
       inputs.push(...containerInputs);
@@ -155,7 +155,7 @@ class EditAddress extends EditAutofillForm {
     }
     // Hide the remaining fields
     for (let field of fields) {
-      let container = this._elements.form.querySelector(`#${field}-container`);
+      let container = document.getElementById(`${field}-container`);
       container.style.display = "none";
       for (let input of [...container.querySelectorAll("input, textarea, select")]) {
         input.disabled = true;
@@ -164,7 +164,7 @@ class EditAddress extends EditAutofillForm {
   }
 
   updatePostalCodeValidation(postalCodePattern) {
-    let postalCodeInput = this._elements.form.querySelector("#postal-code");
+    let postalCodeInput = document.getElementById("postal-code");
     if (postalCodePattern && postalCodeInput.style.display != "none") {
       postalCodeInput.setAttribute("pattern", postalCodePattern);
     } else {

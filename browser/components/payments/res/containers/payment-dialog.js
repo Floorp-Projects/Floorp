@@ -8,7 +8,6 @@ import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.j
 import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
-import "../components/payment-request-page.js";
 import "./address-picker.js";
 import "./address-form.js";
 import "./basic-card-form.js";

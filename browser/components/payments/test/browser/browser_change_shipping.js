@@ -69,7 +69,7 @@ add_task(async function test_change_shipping() {
       // Note: The update includes a modifier, and modifiers must include a total
       // so the expected total is that one
       is(content.document.querySelector("#total > currency-amount").textContent,
-         "\u20AC2.50 EUR",
+         "\u20AC2.50",
          "Check updated total currency amount");
 
       let btn = content.document.querySelector("#view-all");
