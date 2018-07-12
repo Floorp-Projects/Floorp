@@ -24,7 +24,9 @@ const GECKOVIEW_MESSAGE = {
   PREVIOUS: "GeckoView:AccessibilityPrevious",
   SCROLL_BACKWARD: "GeckoView:AccessibilityScrollBackward",
   SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
-  EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch"
+  EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch",
+  SET_SELECTION: "GeckoView:AccessibilitySetSelection",
+  CLIPBOARD: "GeckoView:AccessibilityClipboard",
 };
 
 var AccessFu = {
@@ -267,6 +269,12 @@ var AccessFu = {
       case GECKOVIEW_MESSAGE.EXPLORE_BY_TOUCH:
         this.Input.moveToPoint("Simple", ...data.coordinates);
         break;
+      case GECKOVIEW_MESSAGE.SET_SELECTION:
+        this.Input.setSelection(data);
+        break;
+      case GECKOVIEW_MESSAGE.CLIPBOARD:
+        this.Input.clipboard(data);
+        break;
     }
   },
 
@@ -328,7 +336,7 @@ var AccessFu = {
   },
 
   autoMove: function autoMove(aOptions) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:AutoMove", aOptions);
   },
 
@@ -366,13 +374,13 @@ var AccessFu = {
 
 var Input = {
   moveToPoint: function moveToPoint(aRule, aX, aY) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:MoveToPoint",
       {rule: aRule, x: aX, y: aY, origin: "top"});
   },
 
   moveCursor: function moveCursor(aAction, aRule, aInputType, aAdjustRange) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:MoveCursor",
                         { action: aAction, rule: aRule,
                           origin: "top", inputType: aInputType,
@@ -380,14 +388,24 @@ var Input = {
   },
 
   androidScroll: function androidScroll(aDirection) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:AndroidScroll",
                         { direction: aDirection, origin: "top" });
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:MoveByGranularity", aDetails);
+  },
+
+  setSelection: function setSelection(aDetails) {
+    const mm = Utils.getMessageManager();
+    mm.sendAsyncMessage("AccessFu:SetSelection", aDetails);
+  },
+
+  clipboard: function clipboard(aDetails) {
+    const mm = Utils.getMessageManager();
+    mm.sendAsyncMessage("AccessFu:Clipboard", aDetails);
   },
 
   activateCurrent: function activateCurrent(aData, aActivateIfKey = false) {
@@ -405,7 +423,7 @@ var Input = {
   },
 
   sendScrollMessage: function sendScrollMessage(aPage, aHorizontal) {
-    let mm = Utils.getMessageManager();
+    const mm = Utils.getMessageManager();
     mm.sendAsyncMessage("AccessFu:Scroll",
       {page: aPage, horizontal: aHorizontal, origin: "top"});
   },
