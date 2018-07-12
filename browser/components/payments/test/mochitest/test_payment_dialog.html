@@ -182,6 +182,19 @@ add_task(async function test_completionStateChangesPrevented() {
   }
 });
 
+add_task(async function test_scrollPaymentRequestPage() {
+  await setup();
+  info("making the payment-dialog container small to require scrolling");
+  el1.parentElement.style.height = "100px";
+  let summaryPageBody = document.querySelector("#payment-summary .page-body");
+  is(summaryPageBody.scrollTop, 0, "Page body not scrolled initially");
+  let securityCodeInput = summaryPageBody.querySelector("payment-method-picker input");
+  securityCodeInput.focus();
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  ok(summaryPageBody.scrollTop > 0, "Page body scrolled after focusing the CVV field");
+  el1.parentElement.style.height = "";
+});
+
 add_task(async function test_disconnect() {
   await setup();
 
