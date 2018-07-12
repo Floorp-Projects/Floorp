@@ -52,8 +52,9 @@
 #include <string.h>
 
 #include "aom/aom_encoder.h"
-#include "common/tools_common.h"
-#include "common/video_writer.h"
+
+#include "../tools_common.h"
+#include "../video_writer.h"
 
 static const char *exec_name;
 
@@ -67,12 +68,13 @@ void usage_exit(void) {
 
 static int get_frame_stats(aom_codec_ctx_t *ctx, const aom_image_t *img,
                            aom_codec_pts_t pts, unsigned int duration,
-                           aom_enc_frame_flags_t flags,
+                           aom_enc_frame_flags_t flags, unsigned int deadline,
                            aom_fixed_buf_t *stats) {
   int got_pkts = 0;
   aom_codec_iter_t iter = NULL;
   const aom_codec_cx_pkt_t *pkt = NULL;
-  const aom_codec_err_t res = aom_codec_encode(ctx, img, pts, duration, flags);
+  const aom_codec_err_t res =
+      aom_codec_encode(ctx, img, pts, duration, flags, deadline);
   if (res != AOM_CODEC_OK) die_codec(ctx, "Failed to get frame stats.");
 
   while ((pkt = aom_codec_get_cx_data(ctx, &iter)) != NULL) {
@@ -92,11 +94,13 @@ static int get_frame_stats(aom_codec_ctx_t *ctx, const aom_image_t *img,
 
 static int encode_frame(aom_codec_ctx_t *ctx, const aom_image_t *img,
                         aom_codec_pts_t pts, unsigned int duration,
-                        aom_enc_frame_flags_t flags, AvxVideoWriter *writer) {
+                        aom_enc_frame_flags_t flags, unsigned int deadline,
+                        AvxVideoWriter *writer) {
   int got_pkts = 0;
   aom_codec_iter_t iter = NULL;
   const aom_codec_cx_pkt_t *pkt = NULL;
-  const aom_codec_err_t res = aom_codec_encode(ctx, img, pts, duration, flags);
+  const aom_codec_err_t res =
+      aom_codec_encode(ctx, img, pts, duration, flags, deadline);
   if (res != AOM_CODEC_OK) die_codec(ctx, "Failed to encode frame.");
 
   while ((pkt = aom_codec_get_cx_data(ctx, &iter)) != NULL) {
@@ -129,11 +133,13 @@ static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
   // Calculate frame statistics.
   while (aom_img_read(raw, infile) && frame_count < limit) {
     ++frame_count;
-    get_frame_stats(&codec, raw, frame_count, 1, 0, &stats);
+    get_frame_stats(&codec, raw, frame_count, 1, 0, AOM_DL_GOOD_QUALITY,
+                    &stats);
   }
 
   // Flush encoder.
-  while (get_frame_stats(&codec, NULL, frame_count, 1, 0, &stats)) {
+  while (get_frame_stats(&codec, NULL, frame_count, 1, 0, AOM_DL_GOOD_QUALITY,
+                         &stats)) {
   }
 
   printf("Pass 0 complete. Processed %d frames.\n", frame_count);
@@ -162,11 +168,11 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
   // Encode frames.
   while (aom_img_read(raw, infile) && frame_count < limit) {
     ++frame_count;
-    encode_frame(&codec, raw, frame_count, 1, 0, writer);
+    encode_frame(&codec, raw, frame_count, 1, 0, AOM_DL_GOOD_QUALITY, writer);
   }
 
   // Flush encoder.
-  while (encode_frame(&codec, NULL, -1, 1, 0, writer)) {
+  while (encode_frame(&codec, NULL, -1, 1, 0, AOM_DL_GOOD_QUALITY, writer)) {
   }
 
   printf("\n");

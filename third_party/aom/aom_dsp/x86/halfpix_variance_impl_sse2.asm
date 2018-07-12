@@ -13,8 +13,6 @@
 
 %include "aom_ports/x86_abi_support.asm"
 
-SECTION .text
-
 ;void aom_half_horiz_vert_variance16x_h_sse2(unsigned char *ref,
 ;                                            int ref_stride,
 ;                                            unsigned char *src,

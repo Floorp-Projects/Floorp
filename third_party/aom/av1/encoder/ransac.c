@@ -80,6 +80,60 @@ static void project_points_double_affine(double *mat, double *points,
   }
 }
 
+static void project_points_double_hortrapezoid(double *mat, double *points,
+                                               double *proj, const int n,
+                                               const int stride_points,
+                                               const int stride_proj) {
+  int i;
+  double x, y, Z, Z_inv;
+  for (i = 0; i < n; ++i) {
+    x = *(points++), y = *(points++);
+    Z_inv = mat[7] * y + 1;
+    assert(fabs(Z_inv) > 0.000001);
+    Z = 1. / Z_inv;
+    *(proj++) = (mat[2] * x + mat[3] * y + mat[0]) * Z;
+    *(proj++) = (mat[5] * y + mat[1]) * Z;
+    points += stride_points - 2;
+    proj += stride_proj - 2;
+  }
+}
+
+static void project_points_double_vertrapezoid(double *mat, double *points,
+                                               double *proj, const int n,
+                                               const int stride_points,
+                                               const int stride_proj) {
+  int i;
+  double x, y, Z, Z_inv;
+  for (i = 0; i < n; ++i) {
+    x = *(points++), y = *(points++);
+    Z_inv = mat[6] * x + 1;
+    assert(fabs(Z_inv) > 0.000001);
+    Z = 1. / Z_inv;
+    *(proj++) = (mat[2] * x + mat[0]) * Z;
+    *(proj++) = (mat[4] * x + mat[5] * y + mat[1]) * Z;
+    points += stride_points - 2;
+    proj += stride_proj - 2;
+  }
+}
+
+static void project_points_double_homography(double *mat, double *points,
+                                             double *proj, const int n,
+                                             const int stride_points,
+                                             const int stride_proj) {
+  int i;
+  double x, y, Z, Z_inv;
+  for (i = 0; i < n; ++i) {
+    x = *(points++), y = *(points++);
+    Z_inv = mat[6] * x + mat[7] * y + 1;
+    assert(fabs(Z_inv) > 0.000001);
+    Z = 1. / Z_inv;
+    *(proj++) = (mat[2] * x + mat[3] * y + mat[0]) * Z;
+    *(proj++) = (mat[4] * x + mat[5] * y + mat[1]) * Z;
+    points += stride_points - 2;
+    proj += stride_proj - 2;
+  }
+}
+
 static void normalize_homography(double *pts, int n, double *T) {
   double *p = pts;
   double mean[2] = { 0, 0 };
@@ -137,6 +191,22 @@ static void denormalize_homography(double *params, double *T1, double *T2) {
   invnormalize_mat(T2, iT2);
   multiply_mat(params, T1, params2, 3, 3, 3);
   multiply_mat(iT2, params2, params, 3, 3, 3);
+}
+
+static void denormalize_homography_reorder(double *params, double *T1,
+                                           double *T2) {
+  double params_denorm[MAX_PARAMDIM];
+  memcpy(params_denorm, params, sizeof(*params) * 8);
+  params_denorm[8] = 1.0;
+  denormalize_homography(params_denorm, T1, T2);
+  params[0] = params_denorm[2];
+  params[1] = params_denorm[5];
+  params[2] = params_denorm[0];
+  params[3] = params_denorm[1];
+  params[4] = params_denorm[3];
+  params[5] = params_denorm[4];
+  params[6] = params_denorm[6];
+  params[7] = params_denorm[7];
 }
 
 static void denormalize_affine_reorder(double *params, double *T1, double *T2) {
@@ -304,6 +374,217 @@ static int find_affine(int np, double *pts1, double *pts2, double *mat) {
   }
   denormalize_affine_reorder(mat, T1, T2);
   aom_free(a);
+  return 0;
+}
+
+static int find_vertrapezoid(int np, double *pts1, double *pts2, double *mat) {
+  const int np3 = np * 3;
+  double *a = (double *)aom_malloc(sizeof(*a) * np3 * 14);
+  double *U = a + np3 * 7;
+  double S[7], V[7 * 7], H[9];
+  int i, mini;
+  double sx, sy, dx, dy;
+  double T1[9], T2[9];
+
+  normalize_homography(pts1, np, T1);
+  normalize_homography(pts2, np, T2);
+
+  for (i = 0; i < np; ++i) {
+    dx = *(pts2++);
+    dy = *(pts2++);
+    sx = *(pts1++);
+    sy = *(pts1++);
+
+    a[i * 3 * 7 + 0] = a[i * 3 * 7 + 1] = 0;
+    a[i * 3 * 7 + 2] = -sx;
+    a[i * 3 * 7 + 3] = -sy;
+    a[i * 3 * 7 + 4] = -1;
+    a[i * 3 * 7 + 5] = dy * sx;
+    a[i * 3 * 7 + 6] = dy;
+
+    a[(i * 3 + 1) * 7 + 0] = sx;
+    a[(i * 3 + 1) * 7 + 1] = 1;
+    a[(i * 3 + 1) * 7 + 2] = a[(i * 3 + 1) * 7 + 3] = a[(i * 3 + 1) * 7 + 4] =
+        0;
+    a[(i * 3 + 1) * 7 + 5] = -dx * sx;
+    a[(i * 3 + 1) * 7 + 6] = -dx;
+
+    a[(i * 3 + 2) * 7 + 0] = -dy * sx;
+    a[(i * 3 + 2) * 7 + 1] = -dy;
+    a[(i * 3 + 2) * 7 + 2] = dx * sx;
+    a[(i * 3 + 2) * 7 + 3] = dx * sy;
+    a[(i * 3 + 2) * 7 + 4] = dx;
+    a[(i * 3 + 2) * 7 + 5] = a[(i * 3 + 2) * 7 + 6] = 0;
+  }
+  if (SVD(U, S, V, a, np3, 7)) {
+    aom_free(a);
+    return 1;
+  } else {
+    double minS = 1e12;
+    mini = -1;
+    for (i = 0; i < 7; ++i) {
+      if (S[i] < minS) {
+        minS = S[i];
+        mini = i;
+      }
+    }
+  }
+  H[1] = H[7] = 0;
+  for (i = 0; i < 1; i++) H[i] = V[i * 7 + mini];
+  for (; i < 6; i++) H[i + 1] = V[i * 7 + mini];
+  for (; i < 7; i++) H[i + 2] = V[i * 7 + mini];
+
+  denormalize_homography_reorder(H, T1, T2);
+  aom_free(a);
+  if (H[8] == 0.0) {
+    return 1;
+  } else {
+    // normalize
+    double f = 1.0 / H[8];
+    for (i = 0; i < 8; i++) mat[i] = f * H[i];
+  }
+  return 0;
+}
+
+static int find_hortrapezoid(int np, double *pts1, double *pts2, double *mat) {
+  const int np3 = np * 3;
+  double *a = (double *)aom_malloc(sizeof(*a) * np3 * 14);
+  double *U = a + np3 * 7;
+  double S[7], V[7 * 7], H[9];
+  int i, mini;
+  double sx, sy, dx, dy;
+  double T1[9], T2[9];
+
+  normalize_homography(pts1, np, T1);
+  normalize_homography(pts2, np, T2);
+
+  for (i = 0; i < np; ++i) {
+    dx = *(pts2++);
+    dy = *(pts2++);
+    sx = *(pts1++);
+    sy = *(pts1++);
+
+    a[i * 3 * 7 + 0] = a[i * 3 * 7 + 1] = a[i * 3 * 7 + 2] = 0;
+    a[i * 3 * 7 + 3] = -sy;
+    a[i * 3 * 7 + 4] = -1;
+    a[i * 3 * 7 + 5] = dy * sy;
+    a[i * 3 * 7 + 6] = dy;
+
+    a[(i * 3 + 1) * 7 + 0] = sx;
+    a[(i * 3 + 1) * 7 + 1] = sy;
+    a[(i * 3 + 1) * 7 + 2] = 1;
+    a[(i * 3 + 1) * 7 + 3] = a[(i * 3 + 1) * 7 + 4] = 0;
+    a[(i * 3 + 1) * 7 + 5] = -dx * sy;
+    a[(i * 3 + 1) * 7 + 6] = -dx;
+
+    a[(i * 3 + 2) * 7 + 0] = -dy * sx;
+    a[(i * 3 + 2) * 7 + 1] = -dy * sy;
+    a[(i * 3 + 2) * 7 + 2] = -dy;
+    a[(i * 3 + 2) * 7 + 3] = dx * sy;
+    a[(i * 3 + 2) * 7 + 4] = dx;
+    a[(i * 3 + 2) * 7 + 5] = a[(i * 3 + 2) * 7 + 6] = 0;
+  }
+
+  if (SVD(U, S, V, a, np3, 7)) {
+    aom_free(a);
+    return 1;
+  } else {
+    double minS = 1e12;
+    mini = -1;
+    for (i = 0; i < 7; ++i) {
+      if (S[i] < minS) {
+        minS = S[i];
+        mini = i;
+      }
+    }
+  }
+  H[3] = H[6] = 0;
+  for (i = 0; i < 3; i++) H[i] = V[i * 7 + mini];
+  for (; i < 5; i++) H[i + 1] = V[i * 7 + mini];
+  for (; i < 7; i++) H[i + 2] = V[i * 7 + mini];
+
+  denormalize_homography_reorder(H, T1, T2);
+  aom_free(a);
+  if (H[8] == 0.0) {
+    return 1;
+  } else {
+    // normalize
+    double f = 1.0 / H[8];
+    for (i = 0; i < 8; i++) mat[i] = f * H[i];
+  }
+  return 0;
+}
+
+static int find_homography(int np, double *pts1, double *pts2, double *mat) {
+  // Implemented from Peter Kovesi's normalized implementation
+  const int np3 = np * 3;
+  double *a = (double *)aom_malloc(sizeof(*a) * np3 * 18);
+  double *U = a + np3 * 9;
+  double S[9], V[9 * 9], H[9];
+  int i, mini;
+  double sx, sy, dx, dy;
+  double T1[9], T2[9];
+
+  normalize_homography(pts1, np, T1);
+  normalize_homography(pts2, np, T2);
+
+  for (i = 0; i < np; ++i) {
+    dx = *(pts2++);
+    dy = *(pts2++);
+    sx = *(pts1++);
+    sy = *(pts1++);
+
+    a[i * 3 * 9 + 0] = a[i * 3 * 9 + 1] = a[i * 3 * 9 + 2] = 0;
+    a[i * 3 * 9 + 3] = -sx;
+    a[i * 3 * 9 + 4] = -sy;
+    a[i * 3 * 9 + 5] = -1;
+    a[i * 3 * 9 + 6] = dy * sx;
+    a[i * 3 * 9 + 7] = dy * sy;
+    a[i * 3 * 9 + 8] = dy;
+
+    a[(i * 3 + 1) * 9 + 0] = sx;
+    a[(i * 3 + 1) * 9 + 1] = sy;
+    a[(i * 3 + 1) * 9 + 2] = 1;
+    a[(i * 3 + 1) * 9 + 3] = a[(i * 3 + 1) * 9 + 4] = a[(i * 3 + 1) * 9 + 5] =
+        0;
+    a[(i * 3 + 1) * 9 + 6] = -dx * sx;
+    a[(i * 3 + 1) * 9 + 7] = -dx * sy;
+    a[(i * 3 + 1) * 9 + 8] = -dx;
+
+    a[(i * 3 + 2) * 9 + 0] = -dy * sx;
+    a[(i * 3 + 2) * 9 + 1] = -dy * sy;
+    a[(i * 3 + 2) * 9 + 2] = -dy;
+    a[(i * 3 + 2) * 9 + 3] = dx * sx;
+    a[(i * 3 + 2) * 9 + 4] = dx * sy;
+    a[(i * 3 + 2) * 9 + 5] = dx;
+    a[(i * 3 + 2) * 9 + 6] = a[(i * 3 + 2) * 9 + 7] = a[(i * 3 + 2) * 9 + 8] =
+        0;
+  }
+
+  if (SVD(U, S, V, a, np3, 9)) {
+    aom_free(a);
+    return 1;
+  } else {
+    double minS = 1e12;
+    mini = -1;
+    for (i = 0; i < 9; ++i) {
+      if (S[i] < minS) {
+        minS = S[i];
+        mini = i;
+      }
+    }
+  }
+
+  for (i = 0; i < 9; i++) H[i] = V[i * 9 + mini];
+  denormalize_homography_reorder(H, T1, T2);
+  aom_free(a);
+  if (H[8] == 0.0) {
+    return 1;
+  } else {
+    // normalize
+    double f = 1.0 / H[8];
+    for (i = 0; i < 8; i++) mat[i] = f * H[i];
+  }
   return 0;
 }
 
@@ -579,6 +860,11 @@ static int is_degenerate_affine(double *p) {
   return is_collinear3(p, p + 2, p + 4);
 }
 
+static int is_degenerate_homography(double *p) {
+  return is_collinear3(p, p + 2, p + 4) || is_collinear3(p, p + 2, p + 6) ||
+         is_collinear3(p, p + 4, p + 6) || is_collinear3(p + 2, p + 4, p + 6);
+}
+
 int ransac_translation(int *matched_points, int npoints,
                        int *num_inliers_by_motion, double *params_by_motion,
                        int num_desired_motions) {
@@ -600,4 +886,31 @@ int ransac_affine(int *matched_points, int npoints, int *num_inliers_by_motion,
   return ransac(matched_points, npoints, num_inliers_by_motion,
                 params_by_motion, num_desired_motions, 3, is_degenerate_affine,
                 find_affine, project_points_double_affine);
+}
+
+int ransac_homography(int *matched_points, int npoints,
+                      int *num_inliers_by_motion, double *params_by_motion,
+                      int num_desired_motions) {
+  return ransac(matched_points, npoints, num_inliers_by_motion,
+                params_by_motion, num_desired_motions, 4,
+                is_degenerate_homography, find_homography,
+                project_points_double_homography);
+}
+
+int ransac_hortrapezoid(int *matched_points, int npoints,
+                        int *num_inliers_by_motion, double *params_by_motion,
+                        int num_desired_motions) {
+  return ransac(matched_points, npoints, num_inliers_by_motion,
+                params_by_motion, num_desired_motions, 4,
+                is_degenerate_homography, find_hortrapezoid,
+                project_points_double_hortrapezoid);
+}
+
+int ransac_vertrapezoid(int *matched_points, int npoints,
+                        int *num_inliers_by_motion, double *params_by_motion,
+                        int num_desired_motions) {
+  return ransac(matched_points, npoints, num_inliers_by_motion,
+                params_by_motion, num_desired_motions, 4,
+                is_degenerate_homography, find_vertrapezoid,
+                project_points_double_vertrapezoid);
 }

@@ -22,16 +22,15 @@ extern "C" {
 
 void av1_init_intra_predictors(void);
 void av1_predict_intra_block_facade(const AV1_COMMON *cm, MACROBLOCKD *xd,
-                                    int plane, int blk_col, int blk_row,
-                                    TX_SIZE tx_size);
+                                    int plane, int block_idx, int blk_col,
+                                    int blk_row, TX_SIZE tx_size);
 void av1_predict_intra_block(const AV1_COMMON *cm, const MACROBLOCKD *xd,
-                             int bw, int bh, TX_SIZE tx_size,
-                             PREDICTION_MODE mode, int angle_delta,
-                             int use_palette,
-                             FILTER_INTRA_MODE filter_intra_mode,
-                             const uint8_t *ref, int ref_stride, uint8_t *dst,
-                             int dst_stride, int aoff, int loff, int plane);
+                             int bw, int bh, BLOCK_SIZE bsize,
+                             PREDICTION_MODE mode, const uint8_t *ref,
+                             int ref_stride, uint8_t *dst, int dst_stride,
+                             int aoff, int loff, int plane);
 
+#if CONFIG_INTERINTRA
 // Mapping of interintra to intra mode for use in the intra component
 static const PREDICTION_MODE interintra_to_intra_mode[INTERINTRA_MODES] = {
   DC_PRED, V_PRED, H_PRED, SMOOTH_PRED
@@ -42,67 +41,44 @@ static const INTERINTRA_MODE intra_to_interintra_mode[INTRA_MODES] = {
   II_DC_PRED, II_V_PRED, II_H_PRED, II_V_PRED,      II_SMOOTH_PRED, II_V_PRED,
   II_H_PRED,  II_H_PRED, II_V_PRED, II_SMOOTH_PRED, II_SMOOTH_PRED
 };
+#endif  // CONFIG_INTERINTRA
 
-#define FILTER_INTRA_SCALE_BITS 4
+#if CONFIG_FILTER_INTRA
+#define FILTER_INTRA_PREC_BITS 10
+#endif  // CONFIG_FILTER_INTRA
 
-static INLINE int av1_is_directional_mode(PREDICTION_MODE mode) {
-  return mode >= V_PRED && mode <= D67_PRED;
+#define CONFIG_INTRA_EDGE_UPSAMPLE CONFIG_INTRA_EDGE
+#define CONFIG_USE_ANGLE_DELTA_SUB8X8 0
+
+#if CONFIG_EXT_INTRA
+static INLINE int av1_is_directional_mode(PREDICTION_MODE mode,
+                                          BLOCK_SIZE bsize) {
+#if CONFIG_INTRA_EDGE_UPSAMPLE
+  (void)bsize;
+  return mode >= V_PRED && mode <= D63_PRED;
+#else
+  return mode >= V_PRED && mode <= D63_PRED && bsize >= BLOCK_8X8;
+#endif
 }
 
 static INLINE int av1_use_angle_delta(BLOCK_SIZE bsize) {
+  (void)bsize;
+#if CONFIG_USE_ANGLE_DELTA_SUB8X8
+  return 1;
+#else
   return bsize >= BLOCK_8X8;
+#endif
 }
+#endif  // CONFIG_EXT_INTRA
 
-static INLINE int av1_allow_intrabc(const AV1_COMMON *const cm) {
-  return frame_is_intra_only(cm) && cm->allow_screen_content_tools &&
-         cm->allow_intrabc;
+#if CONFIG_INTRABC
+static INLINE int av1_allow_intrabc(BLOCK_SIZE bsize,
+                                    const AV1_COMMON *const cm) {
+  return (bsize >= BLOCK_8X8 || bsize == BLOCK_4X4) &&
+         cm->allow_screen_content_tools;
 }
+#endif  // CONFIG_INTRABC
 
-static INLINE int av1_filter_intra_allowed_bsize(const AV1_COMMON *const cm,
-                                                 BLOCK_SIZE bs) {
-  if (!cm->seq_params.enable_filter_intra || bs == BLOCK_INVALID) return 0;
-
-  return block_size_wide[bs] <= 32 && block_size_high[bs] <= 32;
-}
-
-static INLINE int av1_filter_intra_allowed(const AV1_COMMON *const cm,
-                                           const MB_MODE_INFO *mbmi) {
-  return mbmi->mode == DC_PRED &&
-         mbmi->palette_mode_info.palette_size[0] == 0 &&
-         av1_filter_intra_allowed_bsize(cm, mbmi->sb_type);
-}
-
-extern const int8_t av1_filter_intra_taps[FILTER_INTRA_MODES][8][8];
-
-// Get the shift (up-scaled by 256) in X w.r.t a unit change in Y.
-// If angle > 0 && angle < 90, dx = -((int)(256 / t));
-// If angle > 90 && angle < 180, dx = (int)(256 / t);
-// If angle > 180 && angle < 270, dx = 1;
-static INLINE int av1_get_dx(int angle) {
-  if (angle > 0 && angle < 90) {
-    return dr_intra_derivative[angle];
-  } else if (angle > 90 && angle < 180) {
-    return dr_intra_derivative[180 - angle];
-  } else {
-    // In this case, we are not really going to use dx. We may return any value.
-    return 1;
-  }
-}
-
-// Get the shift (up-scaled by 256) in Y w.r.t a unit change in X.
-// If angle > 0 && angle < 90, dy = 1;
-// If angle > 90 && angle < 180, dy = (int)(256 * t);
-// If angle > 180 && angle < 270, dy = -((int)(256 * t));
-static INLINE int av1_get_dy(int angle) {
-  if (angle > 90 && angle < 180) {
-    return dr_intra_derivative[angle - 90];
-  } else if (angle > 180 && angle < 270) {
-    return dr_intra_derivative[270 - angle];
-  } else {
-    // In this case, we are not really going to use dy. We may return any value.
-    return 1;
-  }
-}
 #ifdef __cplusplus
 }  // extern "C"
 #endif

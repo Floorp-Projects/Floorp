@@ -25,8 +25,17 @@ typedef int (*RansacFunc)(int *matched_points, int npoints,
 
 /* Each of these functions fits a motion model from a set of
    corresponding points in 2 frames using RANSAC. */
+int ransac_homography(int *matched_points, int npoints,
+                      int *num_inliers_by_motion, double *params_by_motion,
+                      int num_motions);
 int ransac_affine(int *matched_points, int npoints, int *num_inliers_by_motion,
                   double *params_by_motion, int num_motions);
+int ransac_hortrapezoid(int *matched_points, int npoints,
+                        int *num_inliers_by_motion, double *params_by_motion,
+                        int num_motions);
+int ransac_vertrapezoid(int *matched_points, int npoints,
+                        int *num_inliers_by_motion, double *params_by_motion,
+                        int num_motions);
 int ransac_rotzoom(int *matched_points, int npoints, int *num_inliers_by_motion,
                    double *params_by_motion, int num_motions);
 int ransac_translation(int *matched_points, int npoints,

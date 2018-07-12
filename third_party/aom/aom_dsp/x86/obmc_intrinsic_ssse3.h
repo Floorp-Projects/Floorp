@@ -14,7 +14,7 @@
 
 #include <immintrin.h>
 
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 static INLINE int32_t xx_hsum_epi32_si32(__m128i v_d) {
   v_d = _mm_hadd_epi32(v_d, v_d);

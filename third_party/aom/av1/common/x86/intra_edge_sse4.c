@@ -12,8 +12,8 @@
 #include <assert.h>
 #include <smmintrin.h>
 
-#include "config/aom_config.h"
-#include "config/av1_rtcd.h"
+#include "./aom_config.h"
+#include "./av1_rtcd.h"
 
 void av1_filter_intra_edge_sse4_1(uint8_t *p, int sz, int strength) {
   if (!strength) return;
@@ -39,9 +39,9 @@ void av1_filter_intra_edge_sse4_1(uint8_t *p, int sz, int strength) {
   // Adjust input pointer for filter support area
   uint8_t *in = (strength == 3) ? p - 1 : p;
 
-  // Avoid modifying first sample
+  // Avoid modifying first/last samples
   uint8_t *out = p + 1;
-  int len = sz - 1;
+  int len = sz - 2;
 
   const int use_3tap_filter = (strength < 3);
 
@@ -133,9 +133,9 @@ void av1_filter_intra_edge_high_sse4_1(uint16_t *p, int sz, int strength) {
   // Adjust input pointer for filter support area
   uint16_t *in = (strength == 3) ? p - 1 : p;
 
-  // Avoid modifying first sample
+  // Avoid modifying first/last samples
   uint16_t *out = p + 1;
-  int len = sz - 1;
+  int len = sz - 2;
 
   const int use_3tap_filter = (strength < 3);
 

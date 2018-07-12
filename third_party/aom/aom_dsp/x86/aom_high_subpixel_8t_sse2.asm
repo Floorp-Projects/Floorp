@@ -200,8 +200,6 @@
     movdqu      [rdi + %2], xmm0
 %endm
 
-SECTION .text
-
 ;void aom_filter_block1d4_v8_sse2
 ;(
 ;    unsigned char *src_ptr,
@@ -378,6 +376,169 @@ sym(aom_highbd_filter_block1d16_v8_sse2):
 
     LOAD_VERT_8 16
     HIGH_APPLY_FILTER_8 0, 16
+    add         rdi, rbx
+
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 8
+    pop rsp
+    pop rbx
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d4_v8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d4_v8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    push        rbx
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 7
+    %define k0k6 [rsp + 16 * 0]
+    %define k2k5 [rsp + 16 * 1]
+    %define k3k4 [rsp + 16 * 2]
+    %define k1k7 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define max [rsp + 16 * 5]
+    %define min [rsp + 16 * 6]
+
+    HIGH_GET_FILTERS_4
+
+    mov         rsi, arg(0)                 ;src_ptr
+    mov         rdi, arg(2)                 ;output_ptr
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rbx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rbx, [rbx + rbx]
+    lea         rdx, [rax + rax * 2]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+
+.loop:
+    movq        xmm0, [rsi]                 ;load src: row 0
+    movq        xmm1, [rsi + rax]           ;1
+    movq        xmm6, [rsi + rdx * 2]       ;6
+    lea         rsi,  [rsi + rax]
+    movq        xmm7, [rsi + rdx * 2]       ;7
+    movq        xmm2, [rsi + rax]           ;2
+    movq        xmm3, [rsi + rax * 2]       ;3
+    movq        xmm4, [rsi + rdx]           ;4
+    movq        xmm5, [rsi + rax * 4]       ;5
+
+    HIGH_APPLY_FILTER_4 1
+
+    lea         rdi, [rdi + rbx]
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 7
+    pop rsp
+    pop rbx
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d8_v8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d8_v8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    push        rbx
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 8
+    %define k0k1 [rsp + 16 * 0]
+    %define k6k7 [rsp + 16 * 1]
+    %define k2k5 [rsp + 16 * 2]
+    %define k3k4 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define temp [rsp + 16 * 5]
+    %define max [rsp + 16 * 6]
+    %define min [rsp + 16 * 7]
+
+    HIGH_GET_FILTERS
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rbx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rbx, [rbx + rbx]
+    lea         rdx, [rax + rax * 2]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+.loop:
+    LOAD_VERT_8 0
+    HIGH_APPLY_FILTER_8 1, 0
+
+    lea         rdi, [rdi + rbx]
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 8
+    pop rsp
+    pop rbx
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d16_v8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d16_v8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    push        rbx
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 8
+    %define k0k1 [rsp + 16 * 0]
+    %define k6k7 [rsp + 16 * 1]
+    %define k2k5 [rsp + 16 * 2]
+    %define k3k4 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define temp [rsp + 16 * 5]
+    %define max [rsp + 16 * 6]
+    %define min [rsp + 16 * 7]
+
+    HIGH_GET_FILTERS
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rbx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rbx, [rbx + rbx]
+    lea         rdx, [rax + rax * 2]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+.loop:
+    LOAD_VERT_8 0
+    HIGH_APPLY_FILTER_8 1, 0
+    sub         rsi, rax
+
+    LOAD_VERT_8 16
+    HIGH_APPLY_FILTER_8 1, 16
     add         rdi, rbx
 
     dec         rcx
@@ -595,6 +756,197 @@ sym(aom_highbd_filter_block1d16_h8_sse2):
     movdqu      xmm7,   [rsi + 24]
 
     HIGH_APPLY_FILTER_8 0, 16
+
+    lea         rsi, [rsi + rax]
+    lea         rdi, [rdi + rdx]
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 8
+    pop rsp
+
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d4_h8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d4_h8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 7
+    %define k0k6 [rsp + 16 * 0]
+    %define k2k5 [rsp + 16 * 1]
+    %define k3k4 [rsp + 16 * 2]
+    %define k1k7 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define max [rsp + 16 * 5]
+    %define min [rsp + 16 * 6]
+
+    HIGH_GET_FILTERS_4
+
+    mov         rsi, arg(0)                 ;src_ptr
+    mov         rdi, arg(2)                 ;output_ptr
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rdx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rdx, [rdx + rdx]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+
+.loop:
+    movdqu      xmm0,   [rsi - 6]           ;load src
+    movdqu      xmm4,   [rsi + 2]
+    movdqa      xmm1, xmm0
+    movdqa      xmm6, xmm4
+    movdqa      xmm7, xmm4
+    movdqa      xmm2, xmm0
+    movdqa      xmm3, xmm0
+    movdqa      xmm5, xmm4
+
+    psrldq      xmm1, 2
+    psrldq      xmm6, 4
+    psrldq      xmm7, 6
+    psrldq      xmm2, 4
+    psrldq      xmm3, 6
+    psrldq      xmm5, 2
+
+    HIGH_APPLY_FILTER_4 1
+
+    lea         rsi, [rsi + rax]
+    lea         rdi, [rdi + rdx]
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 7
+    pop rsp
+
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d8_h8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d8_h8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 8
+    %define k0k1 [rsp + 16 * 0]
+    %define k6k7 [rsp + 16 * 1]
+    %define k2k5 [rsp + 16 * 2]
+    %define k3k4 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define temp [rsp + 16 * 5]
+    %define max [rsp + 16 * 6]
+    %define min [rsp + 16 * 7]
+
+    HIGH_GET_FILTERS
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rdx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rdx, [rdx + rdx]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+
+.loop:
+    movdqu      xmm0,   [rsi - 6]           ;load src
+    movdqu      xmm1,   [rsi - 4]
+    movdqu      xmm2,   [rsi - 2]
+    movdqu      xmm3,   [rsi]
+    movdqu      xmm4,   [rsi + 2]
+    movdqu      xmm5,   [rsi + 4]
+    movdqu      xmm6,   [rsi + 6]
+    movdqu      xmm7,   [rsi + 8]
+
+    HIGH_APPLY_FILTER_8 1, 0
+
+    lea         rsi, [rsi + rax]
+    lea         rdi, [rdi + rdx]
+    dec         rcx
+    jnz         .loop
+
+    add rsp, 16 * 8
+    pop rsp
+
+    ; begin epilog
+    pop rdi
+    pop rsi
+    RESTORE_XMM
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
+
+global sym(aom_highbd_filter_block1d16_h8_avg_sse2) PRIVATE
+sym(aom_highbd_filter_block1d16_h8_avg_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM 7
+    push        rsi
+    push        rdi
+    ; end prolog
+
+    ALIGN_STACK 16, rax
+    sub         rsp, 16 * 8
+    %define k0k1 [rsp + 16 * 0]
+    %define k6k7 [rsp + 16 * 1]
+    %define k2k5 [rsp + 16 * 2]
+    %define k3k4 [rsp + 16 * 3]
+    %define krd [rsp + 16 * 4]
+    %define temp [rsp + 16 * 5]
+    %define max [rsp + 16 * 6]
+    %define min [rsp + 16 * 7]
+
+    HIGH_GET_FILTERS
+
+    movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
+    movsxd      rdx, DWORD PTR arg(3)       ;out_pitch
+    lea         rax, [rax + rax]            ;bytes per line
+    lea         rdx, [rdx + rdx]
+    movsxd      rcx, DWORD PTR arg(4)       ;output_height
+
+.loop:
+    movdqu      xmm0,   [rsi - 6]           ;load src
+    movdqu      xmm1,   [rsi - 4]
+    movdqu      xmm2,   [rsi - 2]
+    movdqu      xmm3,   [rsi]
+    movdqu      xmm4,   [rsi + 2]
+    movdqu      xmm5,   [rsi + 4]
+    movdqu      xmm6,   [rsi + 6]
+    movdqu      xmm7,   [rsi + 8]
+
+    HIGH_APPLY_FILTER_8 1, 0
+
+    movdqu      xmm0,   [rsi + 10]           ;load src
+    movdqu      xmm1,   [rsi + 12]
+    movdqu      xmm2,   [rsi + 14]
+    movdqu      xmm3,   [rsi + 16]
+    movdqu      xmm4,   [rsi + 18]
+    movdqu      xmm5,   [rsi + 20]
+    movdqu      xmm6,   [rsi + 22]
+    movdqu      xmm7,   [rsi + 24]
+
+    HIGH_APPLY_FILTER_8 1, 16
 
     lea         rsi, [rsi + rax]
     lea         rdi, [rdi + rdx]

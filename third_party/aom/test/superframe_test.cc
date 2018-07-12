@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include <climits>
 #include <vector>
@@ -23,7 +23,7 @@ const int kTestMode = 0;
 const int kTileCols = 1;
 const int kTileRows = 2;
 
-typedef ::testing::tuple<libaom_test::TestMode, int, int> SuperframeTestParam;
+typedef std::tr1::tuple<libaom_test::TestMode, int, int> SuperframeTestParam;
 
 class SuperframeTest
     : public ::libaom_test::CodecTestWithParam<SuperframeTestParam>,
@@ -35,12 +35,12 @@ class SuperframeTest
   virtual void SetUp() {
     InitializeConfig();
     const SuperframeTestParam input = GET_PARAM(1);
-    const libaom_test::TestMode mode = ::testing::get<kTestMode>(input);
+    const libaom_test::TestMode mode = std::tr1::get<kTestMode>(input);
     SetMode(mode);
     sf_count_ = 0;
     sf_count_max_ = INT_MAX;
-    n_tile_cols_ = ::testing::get<kTileCols>(input);
-    n_tile_rows_ = ::testing::get<kTileRows>(input);
+    n_tile_cols_ = std::tr1::get<kTileCols>(input);
+    n_tile_rows_ = std::tr1::get<kTileRows>(input);
   }
 
   virtual void PreEncodeFrameHook(libaom_test::VideoSource *video,
@@ -50,6 +50,9 @@ class SuperframeTest
       encoder->Control(AOME_SET_CPUUSED, 2);
       encoder->Control(AV1E_SET_TILE_COLUMNS, n_tile_cols_);
       encoder->Control(AV1E_SET_TILE_ROWS, n_tile_rows_);
+#if CONFIG_LOOPFILTERING_ACROSS_TILES
+      encoder->Control(AV1E_SET_TILE_LOOPFILTER, 0);
+#endif  // CONFIG_LOOPFILTERING_ACROSS_TILES
     }
   }
 
@@ -97,13 +100,31 @@ class SuperframeTest
 TEST_P(SuperframeTest, TestSuperframeIndexIsOptional) {
   sf_count_max_ = 0;  // early exit on successful test.
   cfg_.g_lag_in_frames = 25;
+#if CONFIG_EXT_TILE
   cfg_.large_scale_tile = 1;
+#endif  // CONFIG_EXT_TILE
   ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
                                        30, 1, 0, 40);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+#if CONFIG_EXT_REFS
   // NOTE: The use of BWDREF_FRAME will enable the coding of more non-show
   //       frames besides ALTREF_FRAME.
   EXPECT_GE(sf_count_, 1);
+#else
+  EXPECT_EQ(sf_count_, 1);
+#endif  // CONFIG_EXT_REFS
 }
 
+// The superframe index is currently mandatory with both ANS and DAALA_EC due
+// to the decoder starting at the end of the buffer.
+#if CONFIG_EXT_TILE
+// Single tile does not work with ANS (see comment above).
+const int tile_col_values[] = { 1, 2 };
+const int tile_row_values[] = { 1, 2, 32 };
+AV1_INSTANTIATE_TEST_CASE(
+    SuperframeTest,
+    ::testing::Combine(::testing::Values(::libaom_test::kTwoPassGood),
+                       ::testing::ValuesIn(tile_col_values),
+                       ::testing::ValuesIn(tile_row_values)));
+#endif  // CONFIG_EXT_TILE
 }  // namespace

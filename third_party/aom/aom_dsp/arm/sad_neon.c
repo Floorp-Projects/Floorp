@@ -11,7 +11,7 @@
 
 #include <arm_neon.h>
 
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 #include "aom/aom_integer.h"
 

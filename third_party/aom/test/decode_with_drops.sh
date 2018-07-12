@@ -16,7 +16,7 @@
 . $(dirname $0)/tools_common.sh
 
 # Environment check: Make sure input is available:
-#   $AV1_IVF_FILE is required.
+#   $AOM_IVF_FILE and $AV1_IVF_FILE are required.
 decode_with_drops_verify_environment() {
   if [ "$(av1_encode_available)" != "yes" ] && [ ! -e "${AV1_IVF_FILE}" ]; then
     return 1
@@ -27,7 +27,7 @@ decode_with_drops_verify_environment() {
 # to name the output file. $3 is the drop mode, and is passed directly to
 # decode_with_drops.
 decode_with_drops() {
-  local decoder="$(aom_tool_path decode_with_drops)"
+  local decoder="${LIBAOM_BIN_PATH}/decode_with_drops${AOM_TEST_EXE_SUFFIX}"
   local input_file="$1"
   local codec="$2"
   local output_file="${AOM_TEST_OUTPUT_DIR}/decode_with_drops_${codec}"
@@ -47,22 +47,21 @@ decode_with_drops() {
 
 # Decodes $AV1_IVF_FILE while dropping frames, twice: once in sequence mode,
 # and once in pattern mode.
-DISABLED_decode_with_drops_av1() {
+decode_with_drops_av1() {
   if [ "$(av1_decode_available)" = "yes" ]; then
     local file="${AV1_IVF_FILE}"
     if [ ! -e "${AV1_IVF_FILE}" ]; then
       file="${AOM_TEST_OUTPUT_DIR}/test_encode.ivf"
       encode_yuv_raw_input_av1 "${file}" --ivf
     fi
-    # Drop frames 3 and 4.
-    decode_with_drops "${file}" "av1" "3-4"
+    # Drop frames 2 and 3.
+    decode_with_drops "${file}" "av1" "2-3"
 
     # Test pattern mode: Drop 3 of every 4 frames.
     decode_with_drops "${file}" "av1" "3/4"
   fi
 }
 
-# TODO(yaowu): Disable this test as trailing_bit check is expected to fail
-decode_with_drops_tests="DISABLED_decode_with_drops_av1"
+decode_with_drops_tests="decode_with_drops_av1"
 
 run_tests decode_with_drops_verify_environment "${decode_with_drops_tests}"

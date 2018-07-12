@@ -18,22 +18,22 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
         if CONFIG['CC_TYPE'] == 'gcc':
             ASFLAGS += [ '-I%s/media/libaom/config/win/mingw64/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw64/' ]
-            EXPORTS.aom += [ 'config/win/mingw64/config/aom_config.h' ]
+            EXPORTS.aom += [ 'config/win/mingw64/aom_config.h' ]
         else:
             ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
-            EXPORTS.aom += [ 'config/win/x64/config/aom_config.h' ]
+            EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
             # This code is not included in our PGO profile, and pointlessly
             # PGO-optimizing it slows down our builds a lot.
             NO_PGO = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]
-        EXPORTS.aom += [ 'config/mac/x64/config/aom_config.h' ]
+        EXPORTS.aom += [ 'config/mac/x64/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/linux/x64/' ]
-        EXPORTS.aom += [ 'config/linux/x64/config/aom_config.h' ]
+        EXPORTS.aom += [ 'config/linux/x64/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.aom += files['IA32_EXPORTS']
     SOURCES += files['IA32_SOURCES']
@@ -42,16 +42,16 @@ elif CONFIG['CPU_ARCH'] == 'x86':
         if CONFIG['CC_TYPE'] == 'gcc':
             ASFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw32/' ]
-            EXPORTS.aom += [ 'config/win/mingw32/config/aom_config.h' ]
+            EXPORTS.aom += [ 'config/win/mingw32/aom_config.h' ]
         else:
             ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
-            EXPORTS.aom += [ 'config/win/ia32/config/aom_config.h' ]
+            EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
             NO_PGO = True # Compiler OOMs, bug 1445922
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/linux/ia32/' ]
-        EXPORTS.aom += [ 'config/linux/ia32/config/aom_config.h' ]
+        EXPORTS.aom += [ 'config/linux/ia32/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.aom += files['ARM_EXPORTS']
     ASFLAGS += [
@@ -59,7 +59,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         '-I%s/libaom' % OBJDIR,
     ]
     LOCAL_INCLUDES += [ '/media/libaom/config/linux/arm/' ]
-    EXPORTS.aom += [ 'config/linux/arm/config/aom_config.h' ]
+    EXPORTS.aom += [ 'config/linux/arm/aom_config.h' ]
 
     arm_asm_files = files['ARM_SOURCES']
 
@@ -89,7 +89,7 @@ else:
     SOURCES += files['GENERIC_SOURCES']
     ASFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
     LOCAL_INCLUDES += [ '/media/libaom/config/generic/' ]
-    EXPORTS.aom += [ 'config/generic/config/aom_config.h' ]
+    EXPORTS.aom += [ 'config/generic/aom_config.h' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
@@ -114,8 +114,6 @@ if CONFIG['CC_TYPE'] != 'msvc':
             SOURCES[f].flags += ['-mssse3']
         elif f.endswith('sse4.c'):
             SOURCES[f].flags += ['-msse4.1']
-        elif f.endswith('sse42.c'):
-            SOURCES[f].flags += ['-msse4.2']
         elif f.endswith('avx.c'):
             SOURCES[f].flags += ['-mavx']
         elif f.endswith('avx2.c'):

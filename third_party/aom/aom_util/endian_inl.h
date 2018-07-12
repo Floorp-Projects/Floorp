@@ -15,9 +15,7 @@
 #define AOM_UTIL_ENDIAN_INL_H_
 
 #include <stdlib.h>
-
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom/aom_integer.h"
 
 #if defined(__GNUC__)

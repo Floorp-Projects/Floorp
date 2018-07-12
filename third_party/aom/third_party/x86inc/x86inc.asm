@@ -34,7 +34,7 @@
 ; as this feature might be useful for others as well.  Send patches or ideas
 ; to x264-devel@videolan.org .
 
-%include "config/aom_config.asm"
+%include "aom_config.asm"
 
 %ifndef private_prefix
     %define private_prefix aom

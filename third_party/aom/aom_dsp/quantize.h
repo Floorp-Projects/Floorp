@@ -12,8 +12,7 @@
 #ifndef AOM_DSP_QUANTIZE_H_
 #define AOM_DSP_QUANTIZE_H_
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom_dsp/aom_dsp_common.h"
 
 #ifdef __cplusplus
@@ -45,6 +44,7 @@ void highbd_quantize_b_helper_c(
     const int16_t *scan, const int16_t *iscan, const qm_val_t *qm_ptr,
     const qm_val_t *iqm_ptr, const int log_scale);
 
+#if CONFIG_HIGHBITDEPTH
 void aom_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
                              int skip_block, const int16_t *zbin_ptr,
                              const int16_t *round_ptr, const int16_t *quant_ptr,
@@ -52,6 +52,69 @@ void aom_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
                              tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                              const int16_t *dequant_ptr, uint16_t *eob_ptr,
                              const int16_t *scan, const int16_t *iscan);
+#endif
+
+void aom_quantize_dc(const tran_low_t *coeff_ptr, int n_coeffs, int skip_block,
+                     const int16_t *round_ptr, const int16_t quant_ptr,
+                     tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                     const int16_t dequant_ptr, uint16_t *eob_ptr);
+void aom_quantize_dc_32x32(const tran_low_t *coeff_ptr, int skip_block,
+                           const int16_t *round_ptr, const int16_t quant_ptr,
+                           tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                           const int16_t dequant_ptr, uint16_t *eob_ptr);
+#if CONFIG_TX64X64
+void aom_quantize_dc_64x64(const tran_low_t *coeff_ptr, int skip_block,
+                           const int16_t *round_ptr, const int16_t quant_ptr,
+                           tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                           const int16_t dequant_ptr, uint16_t *eob_ptr);
+#endif  // CONFIG_TX64X64
+
+#if CONFIG_AOM_QM
+#if CONFIG_HIGHBITDEPTH
+void aom_highbd_quantize_dc(const tran_low_t *coeff_ptr, int n_coeffs,
+                            int skip_block, const int16_t *round_ptr,
+                            const int16_t quant_ptr, tran_low_t *qcoeff_ptr,
+                            tran_low_t *dqcoeff_ptr, const int16_t dequant_ptr,
+                            uint16_t *eob_ptr, const qm_val_t *qm_ptr,
+                            const qm_val_t *iqm_ptr);
+void aom_highbd_quantize_dc_32x32(
+    const tran_low_t *coeff_ptr, int skip_block, const int16_t *round_ptr,
+    const int16_t quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+    const int16_t dequant_ptr, uint16_t *eob_ptr, const qm_val_t *qm_ptr,
+    const qm_val_t *iqm_ptr);
+#if CONFIG_TX64X64
+void aom_highbd_quantize_dc_64x64(
+    const tran_low_t *coeff_ptr, int skip_block, const int16_t *round_ptr,
+    const int16_t quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+    const int16_t dequant_ptr, uint16_t *eob_ptr, const qm_val_t *qm_ptr,
+    const qm_val_t *iqm_ptr);
+#endif  // CONFIG_TX64X64
+#endif  // CONFIG_HIGHBITDEPTH
+
+#else  // CONFIG_AOM_QM
+
+#if CONFIG_HIGHBITDEPTH
+void aom_highbd_quantize_dc(const tran_low_t *coeff_ptr, int n_coeffs,
+                            int skip_block, const int16_t *round_ptr,
+                            const int16_t quant_ptr, tran_low_t *qcoeff_ptr,
+                            tran_low_t *dqcoeff_ptr, const int16_t dequant_ptr,
+                            uint16_t *eob_ptr);
+void aom_highbd_quantize_dc_32x32(const tran_low_t *coeff_ptr, int skip_block,
+                                  const int16_t *round_ptr,
+                                  const int16_t quant_ptr,
+                                  tran_low_t *qcoeff_ptr,
+                                  tran_low_t *dqcoeff_ptr,
+                                  const int16_t dequant_ptr, uint16_t *eob_ptr);
+#if CONFIG_TX64X64
+void aom_highbd_quantize_dc_64x64(const tran_low_t *coeff_ptr, int skip_block,
+                                  const int16_t *round_ptr,
+                                  const int16_t quant_ptr,
+                                  tran_low_t *qcoeff_ptr,
+                                  tran_low_t *dqcoeff_ptr,
+                                  const int16_t dequant_ptr, uint16_t *eob_ptr);
+#endif  // CONFIG_TX64X64
+#endif  // CONFIG_HIGHBITDEPTH
+#endif  // CONFIG_AOM_QM
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -9,8 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_dsp_rtcd.h"
 #include "aom_ports/mem.h"
 #include "aom_dsp/mips/macros_msa.h"
 #include "aom_dsp/variance.h"

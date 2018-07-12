@@ -22,7 +22,7 @@
   \section main_startpoints Starting Points
   - Consult the \ref changelog for a complete list of improvements in this
     release.
-  - \ref readme contains instructions on compiling the sample applications.
+  - The \ref readme contains instructions on recompiling the sample applications.
   - Read the \ref usage "usage" for a narrative on codec usage.
   - Read the \ref samples "sample code" for examples of how to interact with the
     codec.
@@ -45,8 +45,8 @@
    \verbinclude CHANGELOG
 */
 
-/*!\page readme README.md
-   \include README.md
+/*!\page readme README
+   \verbinclude README
 */
 
 /*!\defgroup codecs Supported Codecs */
