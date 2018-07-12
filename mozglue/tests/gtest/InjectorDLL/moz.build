@@ -11,4 +11,5 @@ UNIFIED_SOURCES = [
     'InjectorDLL.cpp',
 ]
 
-TEST_HARNESS_FILES.gtest += ['!InjectorDLL.dll']
+if CONFIG['COMPILE_ENVIRONMENT']:
+    TEST_HARNESS_FILES.gtest += ['!InjectorDLL.dll']
