@@ -8800,7 +8800,12 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     error(JSMSG_BAD_SUPERPROP, "property");
                     return null();
                 }
-                nextMember = handler.newPropertyAccess(lhs, field, pos().end);
+
+                Node name = handler.newPropertyName(field, pos());
+                if (!name)
+                    return null();
+
+                nextMember = handler.newPropertyAccess(lhs, name);
                 if (!nextMember)
                     return null();
             } else {
