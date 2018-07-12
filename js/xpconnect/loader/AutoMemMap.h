@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "nsIMemoryReporter.h"
 
 #include <prio.h>
@@ -17,10 +18,6 @@
 class nsIFile;
 
 namespace mozilla {
-namespace ipc {
-  class FileDescriptor;
-}
-
 namespace loader {
 
 using mozilla::ipc::FileDescriptor;

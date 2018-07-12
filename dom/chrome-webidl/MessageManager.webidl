@@ -457,8 +457,6 @@ interface GlobalProcessScriptLoader : ProcessScriptLoader
    */
   [Throws]
   readonly attribute any initialProcessData;
-
-  readonly attribute MozWritableSharedMap sharedData;
 };
 
 [ChromeOnly, Global, NeedResolve]
@@ -496,8 +494,6 @@ interface ContentProcessMessageManager
    */
   [Throws]
   readonly attribute any initialProcessData;
-
-  readonly attribute MozSharedMap sharedData;
 };
 // MessageManagerGlobal inherits from SyncMessageSender, which is a real interface, not a
 // mixin. This will need to change when we implement mixins according to the current

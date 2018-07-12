@@ -15,8 +15,6 @@ XPIDL_MODULE = 'dom'
 
 EXPORTS.mozilla.dom.ipc += [
     'IdType.h',
-    'SharedMap.h',
-    'SharedMapChangeEvent.h',
     'SharedStringMap.h',
     'StructuredCloneData.h',
 ]
@@ -71,7 +69,6 @@ UNIFIED_SOURCES += [
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
-    'SharedMap.cpp',
     'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
     'TabChild.cpp',
@@ -175,7 +172,6 @@ JAR_MANIFESTS += ['jar.mn']
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
 

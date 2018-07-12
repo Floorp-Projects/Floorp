@@ -66,10 +66,6 @@ class URIParams;
 
 namespace dom {
 
-namespace ipc {
-class SharedMap;
-}
-
 class AlertObserver;
 class ConsoleListener;
 class ClonedMessageData;
@@ -167,10 +163,6 @@ public:
   bool IsAlive() const;
 
   bool IsShuttingDown() const;
-
-  ipc::SharedMap* SharedData() { return mSharedData; };
-
-  void ClearSharedData();
 
   static void AppendProcessId(nsACString& aName);
 
@@ -404,11 +396,6 @@ public:
 
   mozilla::ipc::IPCResult RecvRegisterStringBundles(nsTArray<StringBundleDescriptor>&& stringBundles) override;
 
-  mozilla::ipc::IPCResult RecvUpdateSharedData(const FileDescriptor& aMapFile,
-                                               const uint32_t& aMapSize,
-                                               nsTArray<IPCBlob>&& aBlobs,
-                                               nsTArray<nsCString>&& aChangedKeys) override;
-
   virtual mozilla::ipc::IPCResult RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition) override;
 
   virtual mozilla::ipc::IPCResult RecvGeolocationError(const uint16_t& errorCode) override;
@@ -628,9 +615,7 @@ public:
   RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                 const StructuredCloneData& aInitialData,
                                 nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                nsTArray<SystemFontListEntry>&& aFontList,
-                                const FileDescriptor& aSharedDataMapFile,
-                                const uint32_t& aSharedDataMapSize) override;
+                                nsTArray<SystemFontListEntry>&& aFontList) override;
 
   virtual mozilla::ipc::IPCResult
   RecvProvideAnonymousTemporaryFile(const uint64_t& aID, const FileDescOrError& aFD) override;
@@ -829,8 +814,6 @@ private:
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
   nsCOMPtr<nsITimer> mForceKillTimer;
-
-  RefPtr<ipc::SharedMap> mSharedData;
 
 #ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
