@@ -1645,7 +1645,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::MutableHandle<JS::PropertyDescriptor> desc,
                               bool& cacheOnHolder)
 {
-  JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
   {
     JSAutoRealm ar(cx, global);
     ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
@@ -3052,7 +3052,7 @@ struct MaybeGlobalThisPolicy : public NormalThisPolicy
   {
     return aArgs.thisv().isObject() ?
       &aArgs.thisv().toObject() :
-      js::GetGlobalForObjectCrossCompartment(&aArgs.callee());
+      JS::GetNonCCWObjectGlobal(&aArgs.callee());
   }
 
   // We want the MaybeUnwrapThisObject of NormalThisPolicy.
