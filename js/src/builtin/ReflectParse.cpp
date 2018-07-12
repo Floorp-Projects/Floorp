@@ -2741,17 +2741,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::Dot:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
 
         RootedValue expr(cx);
         RootedValue propname(cx);
-        RootedAtom pnAtom(cx, pn->pn_atom);
+        RootedAtom pnAtom(cx, pn->pn_right->pn_atom);
 
         if (pn->as<PropertyAccess>().isSuper()) {
-            if (!builder.super(&pn->pn_expr->pn_pos, &expr))
+            if (!builder.super(&pn->pn_left->pn_pos, &expr))
                 return false;
         } else {
-            if (!expression(pn->pn_expr, &expr))
+            if (!expression(pn->pn_left, &expr))
                 return false;
         }
 
