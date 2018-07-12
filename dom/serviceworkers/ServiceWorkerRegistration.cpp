@@ -529,22 +529,25 @@ ServiceWorkerRegistration::UpdateStateInternal(const Maybe<ServiceWorkerDescript
   }
 
   if (aActive.isSome()) {
-    mActiveWorker = global->GetOrCreateServiceWorker(aActive.ref());
-    mActiveWorker->SetState(aActive.ref().State());
+    if ((mActiveWorker = global->GetOrCreateServiceWorker(aActive.ref()))) {
+      mActiveWorker->SetState(aActive.ref().State());
+    }
   } else {
     mActiveWorker = nullptr;
   }
 
   if (aWaiting.isSome()) {
-    mWaitingWorker = global->GetOrCreateServiceWorker(aWaiting.ref());
-    mWaitingWorker->SetState(aWaiting.ref().State());
+    if ((mWaitingWorker = global->GetOrCreateServiceWorker(aWaiting.ref()))) {
+      mWaitingWorker->SetState(aWaiting.ref().State());
+    }
   } else {
     mWaitingWorker = nullptr;
   }
 
   if (aInstalling.isSome()) {
-    mInstallingWorker = global->GetOrCreateServiceWorker(aInstalling.ref());
-    mInstallingWorker->SetState(aInstalling.ref().State());
+    if ((mInstallingWorker = global->GetOrCreateServiceWorker(aInstalling.ref()))) {
+      mInstallingWorker->SetState(aInstalling.ref().State());
+    }
   } else {
     mInstallingWorker = nullptr;
   }

@@ -3933,7 +3933,7 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
   // Or are persistent permissions (audio or video) granted?
 
   auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
-  if (NS_WARN_IF(!window)) {
+  if (NS_WARN_IF(!window) || NS_WARN_IF(!window->GetPrincipal())) {
     return false;
   }
   // Check if this site has persistent permissions.
@@ -3947,7 +3947,7 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
   uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
   uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
   {
-    auto* principal = window->GetExtantDoc()->NodePrincipal();
+    auto* principal = window->GetPrincipal();
     rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;

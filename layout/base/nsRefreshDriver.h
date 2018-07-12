@@ -116,10 +116,6 @@ public:
    * the main event loop have the same start time.)
    */
   mozilla::TimeStamp MostRecentRefresh() const;
-  /**
-   * Same thing, but in microseconds since the epoch.
-   */
-  int64_t MostRecentRefreshEpochTime() const;
 
   /**
    * Add / remove refresh observers.  Returns whether the operation
@@ -430,7 +426,7 @@ private:
   void DispatchAnimationEvents();
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations();
-  void Tick(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
+  void Tick(mozilla::TimeStamp aNowTime);
 
   enum EnsureTimerStartedFlags {
     eNone = 0,
@@ -512,7 +508,6 @@ private:
   // True if the next tick should notify DOMContentFlushed.
   bool mNotifyDOMContentFlushed;
 
-  int64_t mMostRecentRefreshEpochTime;
   // Number of seconds that the refresh driver is blocked waiting for a compositor
   // transaction to be completed before we append a note to the gfx critical log.
   // The number is doubled every time the threshold is hit.

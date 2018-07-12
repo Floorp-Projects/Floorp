@@ -62,7 +62,7 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     NS_ENSURE_TRUE(reg, nullptr);
 
     RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
-    NS_ENSURE_TRUE(reg, nullptr);
+    NS_ENSURE_TRUE(info, nullptr);
 
     inner = new ServiceWorkerImpl(info, reg);
   }

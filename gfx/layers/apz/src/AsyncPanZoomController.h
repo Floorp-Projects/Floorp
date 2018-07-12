@@ -666,6 +666,23 @@ protected:
   nsEventStatus OnCancelTap(const TapGestureInput& aEvent);
 
   /**
+   * The following five methods modify the scroll offset. For the APZC
+   * representing the RCD-RSF, they also recalculate the offset of the layout
+   * viewport.
+   */
+
+  /**
+   * Scroll the scroll frame to an X,Y offset.
+   */
+  void SetScrollOffset(const CSSPoint& aOffset);
+
+  /**
+   * Scroll the scroll frame to an X,Y offset, clamping the resulting scroll
+   * offset to the scroll range.
+   */
+  void ClampAndSetScrollOffset(const CSSPoint& aOffset);
+
+  /**
    * Scroll the scroll frame by an X,Y offset.
    * The resulting scroll offset is not clamped to the scrollable rect;
    * the caller must ensure it stays within range.
@@ -674,9 +691,14 @@ protected:
 
   /**
    * Scroll the scroll frame by an X,Y offset, clamping the resulting
-   * scroll offset to the scrollable rect.
+   * scroll offset to the scroll range.
    */
   void ScrollByAndClamp(const CSSPoint& aOffset);
+
+  /**
+   * Copy the scroll offset and scroll generation from |aFrameMetrics|.
+   */
+  void CopyScrollInfoFrom(const FrameMetrics& aFrameMetrics);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
@@ -1185,6 +1207,7 @@ private:
   friend class GenericScrollAnimation;
   friend class WheelScrollAnimation;
   friend class KeyboardScrollAnimation;
+  friend class ZoomAnimation;
 
   friend class GenericOverscrollEffect;
   friend class WidgetOverscrollEffect;

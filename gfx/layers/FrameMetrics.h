@@ -481,6 +481,11 @@ public:
     return mViewport;
   }
 
+  CSSRect GetVisualViewport() const
+  {
+    return CSSRect(mScrollOffset, CalculateCompositedSizeInCssPixels());
+  }
+
   void SetExtraResolution(const ScreenToLayerScale2D& aExtraResolution)
   {
     mExtraResolution = aExtraResolution;
@@ -525,6 +530,13 @@ public:
   bool IsScrollInfoLayer() const {
     return mIsScrollInfoLayer;
   }
+
+  // Determine if the visual viewport is outside of the layout viewport and
+  // adjust the x,y-offset in mViewport accordingly. This is necessary to
+  // allow APZ to async-scroll the layout viewport.
+  //
+  // This is a no-op if mIsRootContent is false.
+  void RecalculateViewportOffset();
 
 private:
   // A unique ID assigned to each scrollable frame.

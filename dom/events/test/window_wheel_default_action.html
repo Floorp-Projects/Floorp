@@ -908,10 +908,18 @@ function doTestScroll(aSettings, aCallback)
     var currentTest = kTests[currentTestIndex];
     description = "doTestScroll(aSettings=" + aSettings.description + "), " + currentTest.description + ": ";
     if (currentTest.prepare) {
-      currentTest.prepare(doTestCurrentScroll);
+      // prepare() can make changes to a page such as
+      // changing the 'overflow' property which requires
+      // a repaint to take effect before sending
+      // scroll-wheel events.
+      currentTest.prepare(doWaitForPaintsAndScroll);
     } else {
       doTestCurrentScroll();
     }
+  }
+
+  function doWaitForPaintsAndScroll() {
+   waitForAllPaintsFlushed(doTestCurrentScroll);
   }
 
   function doTestCurrentScroll() {

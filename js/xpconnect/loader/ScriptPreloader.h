@@ -41,6 +41,7 @@ namespace loader {
     class ScriptCacheChild;
 
     enum class ProcessType : uint8_t {
+        Uninitialized,
         Parent,
         Web,
         Extension,
@@ -111,6 +112,7 @@ public:
 
     static ProcessType CurrentProcessType()
     {
+        MOZ_ASSERT(sProcessType != ProcessType::Uninitialized);
         return sProcessType;
     }
 
@@ -490,6 +492,7 @@ private:
     ScriptCacheChild* mChildActor = nullptr;
 
     nsString mBaseName;
+    nsCString mContentStartupFinishedTopic;
 
     nsCOMPtr<nsIFile> mProfD;
     nsCOMPtr<nsIThread> mSaveThread;
