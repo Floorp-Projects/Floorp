@@ -3462,9 +3462,8 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
             op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
         }
     }
-    auto result = arguments;
-    result->setKind(ParseNodeKind::Call);
-    result->prepend(callee);
+
+    BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
     result->setOp(op);
     return result;
 }
@@ -5677,10 +5676,7 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
-    auto result = arguments;
-    result->setKind(ParseNodeKind::New);
-    result->prepend(callee);
-    result->setOp(JSOP_NEW);
+    BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
     return result;
 }
 
