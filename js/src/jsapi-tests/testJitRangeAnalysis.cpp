@@ -111,7 +111,6 @@ END_TEST(testJitRangeAnalysis_MathSign)
 BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
 {
     MinimalFunc func;
-    MathCache cache;
 
     MBasicBlock* entry = func.createEntryBlock();
     MBasicBlock* thenBlock = func.createBlock(entry);

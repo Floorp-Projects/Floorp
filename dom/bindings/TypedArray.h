@@ -221,6 +221,7 @@ private:
 public:
   ArrayBufferView_base()
     : Base()
+    , mType(js::Scalar::MaxTypedArrayViewType)
   {
   }
 

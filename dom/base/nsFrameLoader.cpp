@@ -25,7 +25,7 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowser.h"
 #include "nsContentUtils.h"
@@ -472,9 +472,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   rv = CheckURILoad(mURIToLoad, mTriggeringPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   loadInfo->SetOriginalFrameSrc(mLoadingOriginalSrc);
   mLoadingOriginalSrc = false;

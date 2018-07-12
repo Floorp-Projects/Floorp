@@ -12,7 +12,6 @@
 #include "base/thread.h"                // for Thread
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtrHashtable.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/webrender_ffi.h"

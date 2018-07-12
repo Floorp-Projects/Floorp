@@ -97,9 +97,6 @@ with Files('JSONFile.jsm'):
 with Files('LightweightThemeConsumer.jsm'):
     BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
-with Files('Memory.jsm'):
-    BUG_COMPONENT = ('Core', 'DOM: Content Processes')
-
 with Files('NLP.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -217,7 +214,6 @@ EXTRA_JS_MODULES += [
     'Integration.jsm',
     'JSONFile.jsm',
     'Log.jsm',
-    'Memory.jsm',
     'NewTabUtils.jsm',
     'NLP.jsm',
     'ObjectUtils.jsm',
