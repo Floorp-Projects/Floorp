@@ -3599,6 +3599,15 @@ TabChildGlobal::GetTabEventTarget()
   return target.forget();
 }
 
+uint64_t
+TabChildGlobal::ChromeOuterWindowID()
+{
+  if (!mTabChild) {
+    return 0;
+  }
+  return mTabChild->ChromeOuterWindowID();
+}
+
 nsIPrincipal*
 TabChildGlobal::GetPrincipal()
 {

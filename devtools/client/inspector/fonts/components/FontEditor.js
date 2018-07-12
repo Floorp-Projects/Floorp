@@ -279,7 +279,7 @@ class FontEditor extends PureComponent {
     );
   }
 
-  renderWarning() {
+  renderWarning(warning) {
     return dom.div(
       {
         id: "font-editor"
@@ -288,14 +288,14 @@ class FontEditor extends PureComponent {
         {
           className: "devtools-sidepanel-no-result"
         },
-        getStr("fontinspector.noFontsOnSelectedElement")
+        warning
       )
     );
   }
 
   render() {
     const { fontEditor } = this.props;
-    const { fonts, families, axes, instance, properties } = fontEditor;
+    const { fonts, families, axes, instance, properties, warning } = fontEditor;
     // Pick the first font to show editor controls regardless of how many fonts are used.
     const font = fonts[0];
     const hasFontAxes = font && font.variationAxes;
@@ -308,9 +308,9 @@ class FontEditor extends PureComponent {
       return axis.tag === "wght";
     });
 
-    // Render empty state message for nodes that don't have a used font.
+    // Show the empty state with a warning message when a used font was not found.
     if (!font) {
-      return this.renderWarning();
+      return this.renderWarning(warning);
     }
 
     return dom.div(

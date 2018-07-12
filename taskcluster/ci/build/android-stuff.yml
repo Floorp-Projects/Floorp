@@ -79,6 +79,8 @@ android-test-ccov/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+    fetches:
+        - grcov-linux-x86_64
 
 android-lint/opt:
     description: "Android lint"

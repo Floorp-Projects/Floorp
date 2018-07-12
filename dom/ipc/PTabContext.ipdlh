@@ -33,6 +33,7 @@ struct PopupIPCTabContext
 {
   PBrowserOrId opener;
   bool isMozBrowserElement;
+  uint64_t chromeOuterWindowID;
 };
 
 // An IPCTabContext which corresponds to an app, browser, or normal frame.
@@ -44,6 +45,8 @@ struct FrameIPCTabContext
   // Whether this is a mozbrowser frame.  <iframe mozbrowser mozapp> and
   // <xul:browser> are not considered to be mozbrowser frames.
   bool isMozBrowserElement;
+
+  uint64_t chromeOuterWindowID;
 
   // The requested presentation URL.
   // This value would be empty if the TabContext isn't created for
