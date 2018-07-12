@@ -520,7 +520,8 @@ WindowOrNull(JSObject* aObj);
 
 /**
  * If |aObj| has a window for a global, returns the associated nsGlobalWindow.
- * Otherwise, returns null.
+ * Otherwise, returns null. Note: aObj must not be a cross-compartment wrapper
+ * because CCWs are not associated with a single global/realm.
  */
 nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj);
