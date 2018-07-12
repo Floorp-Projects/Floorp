@@ -473,20 +473,19 @@ var PlacesCommandHook = {
   },
 
   /**
-   * List of nsIURI objects characterizing the tabs currently open in the
-   * browser, modulo pinned tabs.  The URIs will be in the order in which their
-   * corresponding tabs appeared and duplicates are discarded.
-   */
-  get uniqueCurrentPages() {
+   * List of nsIURI objects characterizing tabs given in param.
+   * Duplicates are discarded.
+  */
+  getUniquePages(tabs) {
     let uniquePages = {};
     let URIs = [];
 
-    gBrowser.visibleTabs.forEach(tab => {
+    tabs.forEach(tab => {
       let browser = tab.linkedBrowser;
       let uri = browser.currentURI;
       let title = browser.contentTitle || tab.label;
       let spec = uri.spec;
-      if (!tab.pinned && !(spec in uniquePages)) {
+      if (!(spec in uniquePages)) {
         uniquePages[spec] = null;
         URIs.push({ uri, title });
       }
@@ -495,16 +494,33 @@ var PlacesCommandHook = {
   },
 
   /**
-   * Adds a folder with bookmarks to all of the currently open tabs in this
-   * window.
+   * List of nsIURI objects characterizing the tabs currently open in the
+   * browser, modulo pinned tabs. The URIs will be in the order in which their
+   * corresponding tabs appeared and duplicates are discarded.
    */
-  bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
-    let pages = this.uniqueCurrentPages;
-    if (pages.length > 1) {
-    PlacesUIUtils.showBookmarkDialog({ action: "add",
-                                       type: "folder",
-                                       URIList: pages
-                                     }, window);
+  get uniqueCurrentPages() {
+    let visibleUnpinnedTabs = gBrowser.visibleTabs
+                                      .filter(tab => !tab.pinned);
+    return this.getUniquePages(visibleUnpinnedTabs);
+  },
+
+   /**
+   * List of nsIURI objects characterizing the tabs currently
+   * selected in the window. Duplicates are discarded.
+   */
+  get uniqueSelectedPages() {
+    return this.getUniquePages(gBrowser.selectedTabs);
+  },
+
+  /**
+   * Adds a folder with bookmarks to URIList given in param.
+   */
+  bookmarkPages(URIList) {
+    if (URIList.length > 1) {
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: "folder",
+                                         URIList,
+                                       }, window);
     }
   },
 

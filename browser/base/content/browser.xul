@@ -132,6 +132,11 @@
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                 tbattr="tabbrowser-multiple-visible"
                 oncommand="gBrowser.reloadAllTabs();"/>
+       <menuitem id="context_bookmarkSelectedTabs"
+                hidden="true"
+                label="&bookmarkSelectedTabs.label;"
+                accesskey="&bookmarkSelectedTabs.accesskey;"
+                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
