@@ -140,7 +140,7 @@ let apiManager = new class extends SchemaAPIManager {
 
       // Load order matters here. The base manifest defines types which are
       // extended by other schemas, so needs to be loaded first.
-      return Schemas.load(BASE_SCHEMA).then(() => {
+      return Schemas.load(BASE_SCHEMA, AppConstants.DEBUG).then(() => {
         let promises = [];
         for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
           promises.push(Schemas.load(url));
@@ -151,9 +151,7 @@ let apiManager = new class extends SchemaAPIManager {
         for (let url of schemaURLs) {
           promises.push(Schemas.load(url));
         }
-        return Promise.all(promises).then(() => {
-          Schemas.updateSharedSchemas();
-        });
+        return Promise.all(promises);
       });
     })();
 
@@ -751,14 +749,19 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 ParentAPIManager = {
   proxyContexts: new Map(),
 
+  parentMessageManagers: new Set(),
+
   init() {
     Services.obs.addObserver(this, "message-manager-close");
+    Services.obs.addObserver(this, "ipc:content-created");
 
     Services.mm.addMessageListener("API:CreateProxyContext", this);
     Services.mm.addMessageListener("API:CloseProxyContext", this, true);
     Services.mm.addMessageListener("API:Call", this);
     Services.mm.addMessageListener("API:AddListener", this);
     Services.mm.addMessageListener("API:RemoveListener", this);
+
+    this.schemaHook = this.schemaHook.bind(this);
   },
 
   attachMessageManager(extension, processMessageManager) {
@@ -780,6 +783,23 @@ ParentAPIManager = {
           extension.parentMessageManager = null;
         }
       }
+
+      this.parentMessageManagers.delete(mm);
+    } else if (topic === "ipc:content-created") {
+      let mm = subject.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIMessageSender);
+      if (mm.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE) {
+        this.parentMessageManagers.add(mm);
+        mm.sendAsyncMessage("Schema:Add", Schemas.schemaJSON);
+
+        Schemas.schemaHook = this.schemaHook;
+      }
+    }
+  },
+
+  schemaHook(schemas) {
+    for (let mm of this.parentMessageManagers) {
+      mm.sendAsyncMessage("Schema:Add", schemas);
     }
   },
 

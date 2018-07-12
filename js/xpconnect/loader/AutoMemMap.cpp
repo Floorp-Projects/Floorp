@@ -8,7 +8,6 @@
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/Unused.h"
-#include "mozilla/ipc/FileDescriptor.h"
 #include "nsIFile.h"
 
 #include <private/pprio.h>
@@ -143,11 +142,12 @@ AutoMemMap::cloneHandle() const
 void
 AutoMemMap::reset()
 {
-    if (addr && !persistent_) {
-        Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
-        addr = nullptr;
-    }
     if (fileMap) {
+        if (addr && !persistent_) {
+            Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
+            addr = nullptr;
+        }
+
         Unused << NS_WARN_IF(PR_CloseFileMap(fileMap) != PR_SUCCESS);
         fileMap = nullptr;
     }
