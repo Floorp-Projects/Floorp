@@ -50,7 +50,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
         done = true;
       }
     } else {
-      var msg = JSON.parse(e.data);
+      try {
+        var msg = JSON.parse(e.data);
+      } catch (ex) {
+        // Diagnostic for Bug 1462983: if JSON.parse throws, pause to print
+        // the string that it choked on, and then resume throwing the exception.
+        ok(false, "JSON.parse threw, when passed string '" + e.data + "'");
+        throw ex;
+      }
       if (msg.error) {
         window.onerror(msg.msg, msg.url, msg.line);
       }
