@@ -54,6 +54,10 @@ types.addDictType("object.propertyValue", {
   value: "nullable:object.completion"
 });
 
+types.addDictType("object.apply", {
+  value: "nullable:object.completion"
+});
+
 types.addDictType("object.bindings", {
   arguments: "array:json",
   variables: "json",
@@ -179,6 +183,13 @@ const objectSpec = generateActorSpec({
         name: Arg(0, "string")
       },
       response: RetVal("object.propertyValue")
+    },
+    apply: {
+      request: {
+        this: Arg(0, "nullable:json"),
+        arguments: Arg(1, "nullable:array:json"),
+      },
+      response: RetVal("object.apply")
     },
     rejectionStack: {
       request: {},

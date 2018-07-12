@@ -537,6 +537,51 @@ const proto = {
   },
 
   /**
+   * Handle a protocol request to evaluate a function and provide the value of
+   * the result.
+   *
+   * Note: Since this will evaluate the function, it can trigger execution of
+   * content code and may cause side effects. This endpoint should only be used
+   * when you are confident that the side-effects will be safe, or the user
+   * is expecting the effects.
+   *
+   * @param {any} context
+   *        The 'this' value to call the function with.
+   * @param {Array<any>} args
+   *        The array of un-decoded actor objects, or primitives.
+   */
+  apply: function(context, args) {
+    const debugeeContext = this._getValueFromGrip(context);
+    const debugeeArgs = args && args.map(this._getValueFromGrip, this);
+
+    if (!this.obj.callable) {
+      return this.throwError("notCallable", "debugee object is not callable");
+    }
+
+    const value = this.obj.apply(debugeeContext, debugeeArgs);
+
+    return { value: this._buildCompletion(value) };
+  },
+
+  _getValueFromGrip(grip) {
+    if (typeof grip !== "object" || !grip) {
+      return grip;
+    }
+
+    if (typeof grip.actor !== "string") {
+      return this.throwError("invalidGrip", "grip argument did not include actor ID");
+    }
+
+    const actor = this.conn.getActor(grip.actor);
+
+    if (!actor) {
+      return this.throwError("unknownActor", "grip actor did not match a known object");
+    }
+
+    return actor.obj;
+  },
+
+  /**
    * Converts a Debugger API completion value record into an eqivalent
    * object grip for use by the API.
    *
