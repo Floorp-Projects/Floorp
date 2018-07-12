@@ -361,7 +361,7 @@ MediaCapabilities::DecodingInfo(
                 powerEfficient = decoder->IsHardwareAccelerated(reason);
                 if (!powerEfficient && VPXDecoder::IsVP9(config->mMimeType)) {
                   smooth = VP9Benchmark::IsVP9DecodeFast(true /* default */);
-                  uint32_t fps = StaticPrefs::MediaBenchmarkVp9Fps();
+                  uint32_t fps = VP9Benchmark::MediaBenchmarkVp9Fps();
                   if (!smooth && fps > 0) {
                     // The VP9 estimizer decode a 1280x720 video. Let's adjust
                     // the result for the resolution and frame rate of what we
