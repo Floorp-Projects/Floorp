@@ -72,6 +72,7 @@ class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class mozIDOMWindowProxy;
 
+class nsDocShellLoadInfo;
 class nsDOMWindowList;
 class nsScreen;
 class nsHistory;
@@ -611,7 +612,7 @@ public:
             mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions,
-                nsIDocShellLoadInfo* aLoadInfo,
+                nsDocShellLoadInfo* aLoadInfo,
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator() override;
@@ -897,7 +898,7 @@ private:
                         bool aNavigate,
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
-                        nsIDocShellLoadInfo* aLoadInfo,
+                        nsDocShellLoadInfo* aLoadInfo,
                         bool aForceNoOpener,
                         nsPIDOMWindowOuter **aReturn);
 
@@ -906,7 +907,7 @@ public:
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
   already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
   already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
-  nsresult SecurityCheckURL(const char *aURL);
+  nsresult SecurityCheckURL(const char *aURL, nsIURI** aURI);
   bool IsPrivateBrowsing();
 
   bool PopupWhitelisted();
@@ -1052,6 +1053,8 @@ private:
   void SetIsBackgroundInternal(bool aIsBackground);
 
   nsresult GetInterfaceInternal(const nsIID& aIID, void** aSink);
+
+  void MaybeAllowStorageForOpenedWindow(nsIURI* aURI);
 
 public:
   // Dispatch a runnable related to the global.

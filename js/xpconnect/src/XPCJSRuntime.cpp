@@ -539,7 +539,7 @@ nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
-    JSObject* glob = js::GetGlobalForObjectCrossCompartment(aObj);
+    JSObject* glob = JS::GetNonCCWObjectGlobal(aObj);
 
     return WindowOrNull(glob);
 }
@@ -1886,10 +1886,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/interpreter-stack"),
         KIND_HEAP, rtStats.runtime.interpreterStack,
         "JS interpreter frames.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/math-cache"),
-        KIND_HEAP, rtStats.runtime.mathCache,
-        "The math cache.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/shared-immutable-strings-cache"),
         KIND_HEAP, rtStats.runtime.sharedImmutableStringsCache,

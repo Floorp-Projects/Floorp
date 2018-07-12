@@ -375,9 +375,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->tracelogger += cx->traceLogger->sizeOfIncludingThis(mallocSizeOf);
 #endif
 
-    if (MathCache* cache = caches().maybeGetMathCache())
-        rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
-
     rtSizes->uncompressedSourceCache +=
         caches().uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 

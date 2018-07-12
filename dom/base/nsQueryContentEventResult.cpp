@@ -51,10 +51,18 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsQueryContentEventResult)
 NS_IMPL_RELEASE(nsQueryContentEventResult)
 
-nsQueryContentEventResult::nsQueryContentEventResult()
-  : mEventMessage(eVoidEvent)
-  , mSucceeded(false)
+nsQueryContentEventResult::nsQueryContentEventResult(mozilla::WidgetQueryContentEvent &aEvent)
+  : mEventMessage(aEvent.mMessage)
+  , mOffset(aEvent.mReply.mOffset)
+  , mTentativeCaretOffset(aEvent.mReply.mTentativeCaretOffset)
+  , mString(aEvent.mReply.mString)
+  , mRect(aEvent.mReply.mRect)
+  , mRectArray(std::move(aEvent.mReply.mRectArray))
+  , mSucceeded(aEvent.mSucceeded)
+  , mReversed(aEvent.mReply.mReversed)
 {
+  // Mark as result that is longer used.
+  aEvent.mSucceeded = false;
 }
 
 nsQueryContentEventResult::~nsQueryContentEventResult()
@@ -223,20 +231,8 @@ nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
 }
 
 void
-nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
-                                          WidgetQueryContentEvent &aEvent)
+nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget)
 {
-  mEventMessage = aEvent.mMessage;
-  mSucceeded = aEvent.mSucceeded;
-  mReversed = aEvent.mReply.mReversed;
-  mRect = aEvent.mReply.mRect;
-  mOffset = aEvent.mReply.mOffset;
-  mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
-  mString = aEvent.mReply.mString;
-  mRectArray = std::move(aEvent.mReply.mRectArray);
-  // Mark as result that is longer used.
-  aEvent.mSucceeded = false;
-
   if (!IsRectRelatedPropertyAvailable(mEventMessage) ||
       !aWidget || !mSucceeded) {
     return;

@@ -135,7 +135,7 @@ void
 CompositorBridgeChild::Destroy()
 {
   // This must not be called from the destructor!
-  mTexturesWaitingRecycled.Clear();
+  mTexturesWaitingRecycled.clear();
 
   // Destroying the layer manager may cause all sorts of things to happen, so
   // let's make sure there is still a reference to keep this alive whatever
@@ -898,25 +898,26 @@ CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient
   }
 
   aClient->SetLastFwdTransactionId(GetFwdTransactionId());
-  mTexturesWaitingRecycled.Put(aClient->GetSerial(), aClient);
+  mTexturesWaitingRecycled.emplace(aClient->GetSerial(), aClient);
 }
 
 void
 CompositorBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
 {
-  if (auto entry = mTexturesWaitingRecycled.Lookup(aTextureId)) {
-    if (aFwdTransactionId < entry.Data()->GetLastFwdTransactionId()) {
+  auto it = mTexturesWaitingRecycled.find(aTextureId);
+  if (it != mTexturesWaitingRecycled.end()) {
+    if (aFwdTransactionId < it->second->GetLastFwdTransactionId()) {
       // Released on host side, but client already requested newer use texture.
       return;
     }
-    entry.Remove();
+    mTexturesWaitingRecycled.erase(it);
   }
 }
 
 void
 CompositorBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 {
-  mTexturesWaitingRecycled.Remove(aTextureId);
+  mTexturesWaitingRecycled.erase(aTextureId);
 }
 
 TextureClientPool*

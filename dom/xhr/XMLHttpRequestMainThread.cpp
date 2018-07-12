@@ -210,6 +210,7 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mIsHtml(false),
     mWarnAboutSyncHtml(false),
     mLoadTotal(-1),
+    mLoadTransferred(0),
     mIsSystem(false),
     mIsAnon(false),
     mFirstStartRequestSeen(false),

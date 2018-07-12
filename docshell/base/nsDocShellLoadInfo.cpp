@@ -11,54 +11,10 @@
 #include "nsIDocShell.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
-void
-GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI)
-{
-  if (!aLoadInfo) {
-    return;
-  }
-
-  nsresult rv;
-
-  bool isSome;
-  rv = aLoadInfo->GetResultPrincipalURIIsSome(&isSome);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  aRPURI.reset();
-
-  if (!isSome) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aLoadInfo->GetResultPrincipalURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  aRPURI.emplace(std::move(uri));
-}
-
-void
-SetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
-{
-  if (!aLoadInfo) {
-    return;
-  }
-
-  nsresult rv;
-
-  rv = aLoadInfo->SetResultPrincipalURI(aRPURI.refOr(nullptr));
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  rv = aLoadInfo->SetResultPrincipalURIIsSome(aRPURI.isSome());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-}
 
 } // mozilla
 
@@ -71,7 +27,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   , mOriginalFrameSrc(false)
   , mSendReferrer(true)
   , mReferrerPolicy(mozilla::net::RP_Unset)
-  , mLoadType(nsIDocShellLoadInfo::loadNormal)
+  , mLoadType(LOAD_NORMAL)
   , mIsSrcdocLoad(false)
 {
 }
@@ -80,331 +36,270 @@ nsDocShellLoadInfo::~nsDocShellLoadInfo()
 {
 }
 
-NS_IMPL_ADDREF(nsDocShellLoadInfo)
-NS_IMPL_RELEASE(nsDocShellLoadInfo)
-
-NS_INTERFACE_MAP_BEGIN(nsDocShellLoadInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellLoadInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIDocShellLoadInfo)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetReferrer(nsIURI** aReferrer)
+nsIURI*
+nsDocShellLoadInfo::Referrer() const
 {
-  NS_ENSURE_ARG_POINTER(aReferrer);
-
-  *aReferrer = mReferrer;
-  NS_IF_ADDREF(*aReferrer);
-  return NS_OK;
+  return mReferrer;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetReferrer(nsIURI* aReferrer)
 {
   mReferrer = aReferrer;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetOriginalURI(nsIURI** aOriginalURI)
+nsIURI*
+nsDocShellLoadInfo::OriginalURI() const
 {
-  NS_ENSURE_ARG_POINTER(aOriginalURI);
-
-  *aOriginalURI = mOriginalURI;
-  NS_IF_ADDREF(*aOriginalURI);
-  return NS_OK;
+  return mOriginalURI;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetOriginalURI(nsIURI* aOriginalURI)
 {
   mOriginalURI = aOriginalURI;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetResultPrincipalURI(nsIURI** aResultPrincipalURI)
+nsIURI*
+nsDocShellLoadInfo::ResultPrincipalURI() const
 {
-  NS_ENSURE_ARG_POINTER(aResultPrincipalURI);
-
-  *aResultPrincipalURI = mResultPrincipalURI;
-  NS_IF_ADDREF(*aResultPrincipalURI);
-  return NS_OK;
+  return mResultPrincipalURI;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetResultPrincipalURI(nsIURI* aResultPrincipalURI)
 {
   mResultPrincipalURI = aResultPrincipalURI;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetResultPrincipalURIIsSome(bool* aIsSome)
+bool
+nsDocShellLoadInfo::ResultPrincipalURIIsSome() const
 {
-  *aIsSome = mResultPrincipalURIIsSome;
-  return NS_OK;
+  return mResultPrincipalURIIsSome;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetResultPrincipalURIIsSome(bool aIsSome)
 {
   mResultPrincipalURIIsSome = aIsSome;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetLoadReplace(bool* aLoadReplace)
+bool
+nsDocShellLoadInfo::LoadReplace() const
 {
-  *aLoadReplace = mLoadReplace;
-  return NS_OK;
+  return mLoadReplace;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetLoadReplace(bool aLoadReplace)
 {
   mLoadReplace = aLoadReplace;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
+nsIPrincipal*
+nsDocShellLoadInfo::TriggeringPrincipal() const
 {
-  NS_ENSURE_ARG_POINTER(aTriggeringPrincipal);
-  NS_IF_ADDREF(*aTriggeringPrincipal = mTriggeringPrincipal);
-  return NS_OK;
+  return mTriggeringPrincipal;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
 {
   mTriggeringPrincipal = aTriggeringPrincipal;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetInheritPrincipal(bool* aInheritPrincipal)
+bool
+nsDocShellLoadInfo::InheritPrincipal() const
 {
-  NS_ENSURE_ARG_POINTER(aInheritPrincipal);
-  *aInheritPrincipal = mInheritPrincipal;
-  return NS_OK;
+  return mInheritPrincipal;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetInheritPrincipal(bool aInheritPrincipal)
 {
   mInheritPrincipal = aInheritPrincipal;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetPrincipalIsExplicit(bool* aPrincipalIsExplicit)
+bool
+nsDocShellLoadInfo::PrincipalIsExplicit() const
 {
-  *aPrincipalIsExplicit = mPrincipalIsExplicit;
-  return NS_OK;
+  return mPrincipalIsExplicit;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetPrincipalIsExplicit(bool aPrincipalIsExplicit)
 {
   mPrincipalIsExplicit = aPrincipalIsExplicit;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI)
+bool
+nsDocShellLoadInfo::ForceAllowDataURI() const
 {
-  *aForceAllowDataURI = mForceAllowDataURI;
-  return NS_OK;
+  return mForceAllowDataURI;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetForceAllowDataURI(bool aForceAllowDataURI)
 {
   mForceAllowDataURI = aForceAllowDataURI;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetOriginalFrameSrc(bool* aOriginalFrameSrc)
+bool
+nsDocShellLoadInfo::OriginalFrameSrc() const
 {
-  *aOriginalFrameSrc = mOriginalFrameSrc;
-  return NS_OK;
+  return mOriginalFrameSrc;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetOriginalFrameSrc(bool aOriginalFrameSrc)
 {
   mOriginalFrameSrc = aOriginalFrameSrc;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetLoadType(nsDocShellInfoLoadType* aLoadType)
+uint32_t
+nsDocShellLoadInfo::LoadType() const
 {
-  NS_ENSURE_ARG_POINTER(aLoadType);
-
-  *aLoadType = mLoadType;
-  return NS_OK;
+  return mLoadType;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::SetLoadType(nsDocShellInfoLoadType aLoadType)
+void
+nsDocShellLoadInfo::SetLoadType(uint32_t aLoadType)
 {
   mLoadType = aLoadType;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetSHEntry(nsISHEntry** aSHEntry)
+nsISHEntry*
+nsDocShellLoadInfo::SHEntry() const
 {
-  NS_ENSURE_ARG_POINTER(aSHEntry);
-
-  *aSHEntry = mSHEntry;
-  NS_IF_ADDREF(*aSHEntry);
-  return NS_OK;
+  return mSHEntry;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
 {
   mSHEntry = aSHEntry;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetTarget(char16_t** aTarget)
+void
+nsDocShellLoadInfo::GetTarget(nsAString& aTarget) const
 {
-  NS_ENSURE_ARG_POINTER(aTarget);
-
-  *aTarget = ToNewUnicode(mTarget);
-
-  return NS_OK;
+  aTarget = mTarget;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::SetTarget(const char16_t* aTarget)
+void
+nsDocShellLoadInfo::SetTarget(const nsAString& aTarget)
 {
-  mTarget.Assign(aTarget);
-  return NS_OK;
+  mTarget = aTarget;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetPostDataStream(nsIInputStream** aResult)
+nsIInputStream*
+nsDocShellLoadInfo::PostDataStream() const
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mPostDataStream;
-
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+  return mPostDataStream;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetPostDataStream(nsIInputStream* aStream)
 {
   mPostDataStream = aStream;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetHeadersStream(nsIInputStream** aHeadersStream)
+nsIInputStream*
+nsDocShellLoadInfo::HeadersStream() const
 {
-  NS_ENSURE_ARG_POINTER(aHeadersStream);
-  *aHeadersStream = mHeadersStream;
-  NS_IF_ADDREF(*aHeadersStream);
-  return NS_OK;
+  return mHeadersStream;
 }
-NS_IMETHODIMP
+
+void
 nsDocShellLoadInfo::SetHeadersStream(nsIInputStream* aHeadersStream)
 {
   mHeadersStream = aHeadersStream;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetSendReferrer(bool* aSendReferrer)
+bool
+nsDocShellLoadInfo::SendReferrer() const
 {
-  NS_ENSURE_ARG_POINTER(aSendReferrer);
-
-  *aSendReferrer = mSendReferrer;
-  return NS_OK;
+  return mSendReferrer;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetSendReferrer(bool aSendReferrer)
 {
   mSendReferrer = aSendReferrer;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetReferrerPolicy(
-    nsDocShellInfoReferrerPolicy* aReferrerPolicy)
+uint32_t
+nsDocShellLoadInfo::ReferrerPolicy() const
 {
-  *aReferrerPolicy = mReferrerPolicy;
-  return NS_OK;
+  return mReferrerPolicy;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::SetReferrerPolicy(
-    nsDocShellInfoReferrerPolicy aReferrerPolicy)
+void
+nsDocShellLoadInfo::SetReferrerPolicy(mozilla::net::ReferrerPolicy aReferrerPolicy)
 {
   mReferrerPolicy = aReferrerPolicy;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetIsSrcdocLoad(bool* aIsSrcdocLoad)
+bool
+nsDocShellLoadInfo::IsSrcdocLoad() const
 {
-  *aIsSrcdocLoad = mIsSrcdocLoad;
-  return NS_OK;
+  return mIsSrcdocLoad;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetSrcdocData(nsAString& aSrcdocData)
+void
+nsDocShellLoadInfo::GetSrcdocData(nsAString& aSrcdocData) const
 {
   aSrcdocData = mSrcdocData;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetSrcdocData(const nsAString& aSrcdocData)
 {
   mSrcdocData = aSrcdocData;
   mIsSrcdocLoad = true;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetSourceDocShell(nsIDocShell** aSourceDocShell)
+nsIDocShell*
+nsDocShellLoadInfo::SourceDocShell() const
 {
-  MOZ_ASSERT(aSourceDocShell);
-  nsCOMPtr<nsIDocShell> result = mSourceDocShell;
-  result.forget(aSourceDocShell);
-  return NS_OK;
+  return mSourceDocShell;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetSourceDocShell(nsIDocShell* aSourceDocShell)
 {
   mSourceDocShell = aSourceDocShell;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShellLoadInfo::GetBaseURI(nsIURI** aBaseURI)
+nsIURI*
+nsDocShellLoadInfo::BaseURI() const
 {
-  NS_ENSURE_ARG_POINTER(aBaseURI);
-
-  *aBaseURI = mBaseURI;
-  NS_IF_ADDREF(*aBaseURI);
-  return NS_OK;
+  return mBaseURI;
 }
 
-NS_IMETHODIMP
+void
 nsDocShellLoadInfo::SetBaseURI(nsIURI* aBaseURI)
 {
   mBaseURI = aBaseURI;
-  return NS_OK;
+}
+
+void
+nsDocShellLoadInfo::GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const
+{
+  bool isSome = ResultPrincipalURIIsSome();
+  aRPURI.reset();
+
+  if (!isSome) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri = ResultPrincipalURI();
+  aRPURI.emplace(std::move(uri));
+}
+
+void
+nsDocShellLoadInfo::SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
+{
+  SetResultPrincipalURI(aRPURI.refOr(nullptr));
+  SetResultPrincipalURIIsSome(aRPURI.isSome());
 }

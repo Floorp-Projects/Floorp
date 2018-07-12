@@ -151,9 +151,6 @@ private:
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
 
-  PRTime mModalStateTime;
-  uint32_t mModalStateDepth;
-
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.
   nsCOMPtr<nsIScriptGlobalObject> mGlobalObjectRef;

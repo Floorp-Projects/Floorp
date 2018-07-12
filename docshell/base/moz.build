@@ -41,7 +41,6 @@ XPIDL_SOURCES += [
     'nsIContentViewer.idl',
     'nsIContentViewerEdit.idl',
     'nsIDocShell.idl',
-    'nsIDocShellLoadInfo.idl',
     'nsIDocShellTreeItem.idl',
     'nsIDocShellTreeOwner.idl',
     'nsIDocumentLoaderFactory.idl',
@@ -64,6 +63,7 @@ XPIDL_MODULE = 'docshell'
 
 EXPORTS += [
     'nsCTooltipTextProvider.h',
+    'nsDocShellLoadInfo.h',
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
     'nsILinkHandler.h',

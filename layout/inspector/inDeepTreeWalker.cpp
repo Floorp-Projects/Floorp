@@ -28,6 +28,7 @@ inDeepTreeWalker::inDeepTreeWalker()
   : mShowAnonymousContent(false),
     mShowSubDocuments(false),
     mShowDocumentsAsNodes(false),
+    mCurrentIndex(-1),
     mWhatToShow(mozilla::dom::NodeFilter_Binding::SHOW_ALL)
 {
 }
