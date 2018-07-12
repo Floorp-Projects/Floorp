@@ -451,7 +451,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ COOKIE_ACCEPT_ALL, COOKIE_ACCEPT_FIRST_PARTY,
               COOKIE_ACCEPT_NONE, COOKIE_ACCEPT_VISITED })
-    public @interface CookieBehavior {}
+    /* package */ @interface CookieBehavior {}
+
     /**
      * Accept first-party and third-party cookies and site data.
      */
@@ -497,7 +498,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ COOKIE_LIFETIME_NORMAL, COOKIE_LIFETIME_RUNTIME,
               COOKIE_LIFETIME_DAYS })
-    public @interface CookieLifetime {}
+    /* package */ @interface CookieLifetime {}
+
     /**
      * Accept default cookie lifetime.
      */

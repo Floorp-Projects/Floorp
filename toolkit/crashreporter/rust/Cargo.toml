@@ -1,0 +1,16 @@
+[package]
+name = "dump_syms_rust_demangle"
+version = "0.1.0"
+
+[dependencies]
+rustc-demangle = "0.1"
+
+[lib]
+path = "lib.rs"
+crate-type = ["staticlib"]
+test = false
+doctest = false
+bench = false
+doc = false
+plugin = false
+harness = false

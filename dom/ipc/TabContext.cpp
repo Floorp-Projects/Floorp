@@ -23,6 +23,7 @@ namespace dom {
 TabContext::TabContext()
   : mInitialized(false)
   , mIsMozBrowserElement(false)
+  , mChromeOuterWindowID(0)
   , mJSPluginID(-1)
   , mShowAccelerators(UIStateChangeType_NoChange)
   , mShowFocusRings(UIStateChangeType_NoChange)
@@ -59,6 +60,12 @@ TabContext::JSPluginId() const
   return mJSPluginID;
 }
 
+uint64_t
+TabContext::ChromeOuterWindowID() const
+{
+  return mChromeOuterWindowID;
+}
+
 bool
 TabContext::SetTabContext(const TabContext& aContext)
 {
@@ -82,12 +89,14 @@ TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
   // This is only used after already initialized.
   MOZ_ASSERT(mInitialized);
 
-  // The only permissable change is to `mIsMozBrowserElement`.  All other fields
-  // must match for the change to be accepted.
+  // The only permissable changes are to `mIsMozBrowserElement` and
+  // mChromeOuterWindowID.  All other fields must match for the change
+  // to be accepted.
   if (aContext.mOriginAttributes != mOriginAttributes) {
     return false;
   }
 
+  mChromeOuterWindowID = aContext.mChromeOuterWindowID;
   mIsMozBrowserElement = aContext.mIsMozBrowserElement;
   return true;
 }
@@ -118,6 +127,7 @@ TabContext::ShowFocusRings() const
 
 bool
 TabContext::SetTabContext(bool aIsMozBrowserElement,
+                          uint64_t aChromeOuterWindowID,
                           UIStateChangeType aShowAccelerators,
                           UIStateChangeType aShowFocusRings,
                           const OriginAttributes& aOriginAttributes,
@@ -130,6 +140,7 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
 
   mInitialized = true;
   mIsMozBrowserElement = aIsMozBrowserElement;
+  mChromeOuterWindowID = aChromeOuterWindowID;
   mOriginAttributes = aOriginAttributes;
   mPresentationURL = aPresentationURL;
   mShowAccelerators = aShowAccelerators;
@@ -156,6 +167,7 @@ TabContext::AsIPCTabContext() const
 
   return IPCTabContext(FrameIPCTabContext(mOriginAttributes,
                                           mIsMozBrowserElement,
+                                          mChromeOuterWindowID,
                                           mPresentationURL,
                                           mShowAccelerators,
                                           mShowFocusRings));
@@ -165,6 +177,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   : mInvalidReason(nullptr)
 {
   bool isMozBrowserElement = false;
+  uint64_t chromeOuterWindowID = 0;
   int32_t jsPluginId = -1;
   OriginAttributes originAttributes;
   nsAutoString presentationURL;
@@ -216,6 +229,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       // opener app.
       isMozBrowserElement = ipcContext.isMozBrowserElement();
       originAttributes = context->mOriginAttributes;
+      chromeOuterWindowID = ipcContext.chromeOuterWindowID();
       break;
     }
     case IPCTabContext::TJSPluginFrameIPCTabContext: {
@@ -230,6 +244,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         aParams.get_FrameIPCTabContext();
 
       isMozBrowserElement = ipcContext.isMozBrowserElement();
+      chromeOuterWindowID = ipcContext.chromeOuterWindowID();
       presentationURL = ipcContext.presentationURL();
       showAccelerators = ipcContext.showAccelerators();
       showFocusRings = ipcContext.showFocusRings();
@@ -258,6 +273,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
   } else {
     rv = mTabContext.SetTabContext(isMozBrowserElement,
+                                   chromeOuterWindowID,
                                    showAccelerators,
                                    showFocusRings,
                                    originAttributes,

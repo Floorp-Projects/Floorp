@@ -114,6 +114,11 @@ public:
   static const char* sBenchmarkFpsVersionCheck;
   static const uint32_t sBenchmarkVersionID;
   static bool sHasRunTest;
+  // Return the value of media.benchmark.vp9.fps preference (which will be 0 if
+  // not known)
+  static uint32_t MediaBenchmarkVp9Fps();
+private:
+  static bool ShouldRun();
 };
 }
 

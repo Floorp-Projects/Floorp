@@ -28,6 +28,10 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 
+#ifdef MOZ_WAYLAND
+#include <sys/mman.h>
+#endif
+
 namespace mozilla {
 namespace widget {
 
@@ -445,11 +449,203 @@ KeymapWrapper::InitBySystemSettingsX11()
 
 #ifdef MOZ_WAYLAND
 void
+KeymapWrapper::SetModifierMask(xkb_keymap *aKeymap, ModifierIndex aModifierIndex,
+                               const char* aModifierName)
+{
+    static auto sXkbKeymapModGetIndex =
+        (xkb_mod_index_t (*)(struct xkb_keymap *, const char *))
+        dlsym(RTLD_DEFAULT, "xkb_keymap_mod_get_index");
+
+    xkb_mod_index_t index = sXkbKeymapModGetIndex(aKeymap, aModifierName);
+    if (index != XKB_MOD_INVALID) {
+        mModifierMasks[aModifierIndex] = (1 << index);
+    }
+}
+
+void
+KeymapWrapper::SetModifierMasks(xkb_keymap *aKeymap)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+
+    // This mapping is derived from get_xkb_modifiers() at gdkkeys-wayland.c
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_NUM_LOCK, XKB_MOD_NAME_NUM);
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_ALT, XKB_MOD_NAME_ALT);
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_META, "Meta");
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_SUPER, "Super");
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_HYPER, "Hyper");
+
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_SCROLL_LOCK, "ScrollLock");
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_LEVEL3, "Level3");
+    keymapWrapper->SetModifierMask(aKeymap, INDEX_LEVEL5, "Level5");
+
+    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+        ("%p KeymapWrapper::SetModifierMasks, CapsLock=0x%X, NumLock=0x%X, "
+         "ScrollLock=0x%X, Level3=0x%X, Level5=0x%X, "
+         "Shift=0x%X, Ctrl=0x%X, Alt=0x%X, Meta=0x%X, Super=0x%X, Hyper=0x%X",
+         keymapWrapper,
+         keymapWrapper->GetModifierMask(CAPS_LOCK),
+         keymapWrapper->GetModifierMask(NUM_LOCK),
+         keymapWrapper->GetModifierMask(SCROLL_LOCK),
+         keymapWrapper->GetModifierMask(LEVEL3),
+         keymapWrapper->GetModifierMask(LEVEL5),
+         keymapWrapper->GetModifierMask(SHIFT),
+         keymapWrapper->GetModifierMask(CTRL),
+         keymapWrapper->GetModifierMask(ALT),
+         keymapWrapper->GetModifierMask(META),
+         keymapWrapper->GetModifierMask(SUPER),
+         keymapWrapper->GetModifierMask(HYPER)));
+}
+
+/* This keymap routine is derived from weston-2.0.0/clients/simple-im.c
+*/
+static void
+keyboard_handle_keymap(void *data, struct wl_keyboard *wl_keyboard,
+                       uint32_t format, int fd, uint32_t size)
+{
+    if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
+        close(fd);
+        return;
+    }
+
+    char *mapString = (char *)mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    if (mapString == MAP_FAILED) {
+        close(fd);
+        return;
+    }
+
+    static auto sXkbContextNew =
+        (struct xkb_context *(*)(enum xkb_context_flags))
+        dlsym(RTLD_DEFAULT, "xkb_context_new");
+    static auto sXkbKeymapNewFromString =
+        (struct xkb_keymap *(*)(struct xkb_context *, const char *,
+         enum xkb_keymap_format, enum xkb_keymap_compile_flags))
+        dlsym(RTLD_DEFAULT, "xkb_keymap_new_from_string");
+
+    struct xkb_context *xkb_context = sXkbContextNew(XKB_CONTEXT_NO_FLAGS);
+    struct xkb_keymap *keymap =
+        sXkbKeymapNewFromString(xkb_context, mapString,
+            XKB_KEYMAP_FORMAT_TEXT_V1,
+            XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+    munmap(mapString, size);
+    close(fd);
+
+    if (!keymap) {
+        NS_WARNING("keyboard_handle_keymap(): Failed to compile keymap!\n");
+        return;
+    }
+
+    KeymapWrapper::SetModifierMasks(keymap);
+
+    static auto sXkbKeymapUnRef =
+        (void(*)(struct xkb_keymap *))
+        dlsym(RTLD_DEFAULT, "xkb_keymap_unref");
+    sXkbKeymapUnRef(keymap);
+
+    static auto sXkbContextUnref =
+        (void(*)(struct xkb_context *))
+        dlsym(RTLD_DEFAULT, "xkb_context_unref");
+    sXkbContextUnref(xkb_context);
+}
+
+static void
+keyboard_handle_enter(void *data, struct wl_keyboard *keyboard,
+                      uint32_t serial, struct wl_surface *surface,
+                      struct wl_array *keys)
+{
+}
+
+static void
+keyboard_handle_leave(void *data, struct wl_keyboard *keyboard,
+                      uint32_t serial, struct wl_surface *surface)
+{
+}
+
+static void
+keyboard_handle_key(void *data, struct wl_keyboard *keyboard,
+                    uint32_t serial, uint32_t time, uint32_t key,
+                    uint32_t state)
+{
+}
+
+static void
+keyboard_handle_modifiers(void *data, struct wl_keyboard *keyboard,
+                          uint32_t serial, uint32_t mods_depressed,
+                          uint32_t mods_latched, uint32_t mods_locked,
+                          uint32_t group)
+{
+}
+
+static const struct wl_keyboard_listener keyboard_listener = {
+    keyboard_handle_keymap,
+    keyboard_handle_enter,
+    keyboard_handle_leave,
+    keyboard_handle_key,
+    keyboard_handle_modifiers,
+};
+
+static void
+seat_handle_capabilities(void *data, struct wl_seat *seat,
+                         unsigned int caps)
+{
+    static wl_keyboard *keyboard = nullptr;
+
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
+        keyboard = wl_seat_get_keyboard(seat);
+        wl_keyboard_add_listener(keyboard, &keyboard_listener, nullptr);
+    } else if (keyboard && !(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
+        wl_keyboard_destroy(keyboard);
+        keyboard = nullptr;
+    }
+}
+
+static const struct wl_seat_listener seat_listener = {
+      seat_handle_capabilities,
+};
+
+static void
+gdk_registry_handle_global(void               *data,
+                           struct wl_registry *registry,
+                           uint32_t            id,
+                           const char         *interface,
+                           uint32_t            version)
+{
+    if (strcmp(interface, "wl_seat") == 0) {
+        wl_seat *seat =
+            (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+        wl_seat_add_listener(seat, &seat_listener, data);
+    }
+}
+
+static void
+gdk_registry_handle_global_remove(void               *data,
+                                 struct wl_registry *registry,
+                                 uint32_t            id)
+{
+}
+
+static const struct wl_registry_listener keyboard_registry_listener = {
+    gdk_registry_handle_global,
+    gdk_registry_handle_global_remove
+};
+
+void
 KeymapWrapper::InitBySystemSettingsWayland()
 {
-    // Not implemented yet, but at least Alt modifier should be handled to save
-    // popular usage.
-    mModifierMasks[INDEX_ALT] = 1 << 3;
+    // Available as of GTK 3.8+
+    static auto sGdkWaylandDisplayGetWlDisplay =
+        (wl_display *(*)(GdkDisplay *))
+        dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+
+    wl_display *display =
+        sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
+    wl_registry_add_listener(wl_display_get_registry(display),
+                             &keyboard_registry_listener, this);
+
+    // Call wl_display_roundtrip() twice to make sure all
+    // callbacks are processed.
+    wl_display_roundtrip(display);
+    wl_display_roundtrip(display);
 }
 #endif
 

@@ -13,6 +13,7 @@ class CurrentTimeLabel extends PureComponent {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -39,13 +40,14 @@ class CurrentTimeLabel extends PureComponent {
   }
 
   render() {
+    const { timeScale } = this.props;
     const { currentTime } = this.state;
 
     return dom.label(
       {
         className: "current-time-label",
       },
-      formatStopwatchTime(currentTime)
+      formatStopwatchTime(currentTime - timeScale.zeroPositionTime)
     );
   }
 }
@@ -62,22 +64,15 @@ function formatStopwatchTime(time) {
     return "00:00.000";
   }
 
-  let milliseconds = parseInt(time % 1000, 10);
-  let seconds = parseInt((time / 1000) % 60, 10);
-  let minutes = parseInt((time / (1000 * 60)), 10);
+  const sign = time < 0 ? "-" : "";
+  let milliseconds = parseInt(Math.abs(time % 1000), 10);
+  let seconds = parseInt(Math.abs((time / 1000)) % 60, 10);
+  let minutes = parseInt(Math.abs((time / (1000 * 60))), 10);
 
-  const pad = (nb, max) => {
-    if (nb < max) {
-      return new Array((max + "").length - (nb + "").length + 1).join("0") + nb;
-    }
-    return nb;
-  };
-
-  minutes = pad(minutes, 10);
-  seconds = pad(seconds, 10);
-  milliseconds = pad(milliseconds, 100);
-
-  return `${minutes}:${seconds}.${milliseconds}`;
+  minutes = minutes.toString().padStart(2, "0");
+  seconds = seconds.toString().padStart(2, "0");
+  milliseconds = milliseconds.toString().padStart(3, "0");
+  return `${sign}${minutes}:${seconds}.${milliseconds}`;
 }
 
 module.exports = CurrentTimeLabel;

@@ -13,6 +13,10 @@
 
 #include <gdk/gdk.h>
 #include <X11/XKBlib.h>
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#include <xkbcommon/xkbcommon.h>
+#endif
 
 namespace mozilla {
 namespace widget {
@@ -149,6 +153,14 @@ public:
      */
     static void WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyEvent,
                                           GdkEventKey* aGdkKeyEvent);
+
+#ifdef MOZ_WAYLAND
+    /**
+     * Utility function to set all supported modifier masks
+     * from xkb_keymap. We call that from Wayland backend routines.
+     */
+    static void SetModifierMasks(xkb_keymap *aKeymap);
+#endif
 
     /**
      * Destroys the singleton KeymapWrapper instance, if it exists.
@@ -379,6 +391,15 @@ protected:
      */
     void WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
                                            GdkEventKey* aGdkKeyEvent);
+
+#ifdef MOZ_WAYLAND
+    /**
+     * Utility function to set Xkb modifier key mask.
+     */
+    void SetModifierMask(xkb_keymap *aKeymap,
+                         ModifierIndex aModifierIndex,
+                         const char* aModifierName);
+#endif
 };
 
 } // namespace widget
