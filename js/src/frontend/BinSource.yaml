@@ -428,9 +428,8 @@ CallExpression:
                 op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             }
         }
-        auto result = arguments;
-        result->setKind(ParseNodeKind::Call);
-        result->prepend(callee);
+
+        BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
         result->setOp(op);
 
 
@@ -831,10 +830,7 @@ LiteralStringExpression:
 
 NewExpression:
     build: |
-        auto result = arguments;
-        result->setKind(ParseNodeKind::New);
-        result->prepend(callee);
-        result->setOp(JSOP_NEW);
+        BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
 
 ObjectExpression:
     build:

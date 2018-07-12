@@ -806,6 +806,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     bool isRestParameter(ParseNode* pn);
 
+    MOZ_MUST_USE bool emitArguments(ParseNode* pn, bool callop, bool spread);
     MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue);
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedResumeGenerator(ParseNode* pn);
