@@ -287,24 +287,24 @@ VRDisplayOpenVR::GetSensorState()
     rot.Invert();
 
     result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
-    result.orientation[0] = rot.x;
-    result.orientation[1] = rot.y;
-    result.orientation[2] = rot.z;
-    result.orientation[3] = rot.w;
-    result.angularVelocity[0] = pose.vAngularVelocity.v[0];
-    result.angularVelocity[1] = pose.vAngularVelocity.v[1];
-    result.angularVelocity[2] = pose.vAngularVelocity.v[2];
+    result.pose.orientation[0] = rot.x;
+    result.pose.orientation[1] = rot.y;
+    result.pose.orientation[2] = rot.z;
+    result.pose.orientation[3] = rot.w;
+    result.pose.angularVelocity[0] = pose.vAngularVelocity.v[0];
+    result.pose.angularVelocity[1] = pose.vAngularVelocity.v[1];
+    result.pose.angularVelocity[2] = pose.vAngularVelocity.v[2];
 
     result.flags |= VRDisplayCapabilityFlags::Cap_Position;
-    result.position[0] = m._41;
-    result.position[1] = m._42;
-    result.position[2] = m._43;
-    result.linearVelocity[0] = pose.vVelocity.v[0];
-    result.linearVelocity[1] = pose.vVelocity.v[1];
-    result.linearVelocity[2] = pose.vVelocity.v[2];
+    result.pose.position[0] = m._41;
+    result.pose.position[1] = m._42;
+    result.pose.position[2] = m._43;
+    result.pose.linearVelocity[0] = pose.vVelocity.v[0];
+    result.pose.linearVelocity[1] = pose.vVelocity.v[1];
+    result.pose.linearVelocity[2] = pose.vVelocity.v[2];
   } else {
     // default to an identity quaternion
-    result.orientation[3] = 1.0f;
+    result.pose.orientation[3] = 1.0f;
   }
 
   result.CalcViewMatrices(headToEyeTransforms);
@@ -438,11 +438,10 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplay
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
 
   VRControllerState& state = mControllerInfo.mControllerState;
-  strncpy(state.mControllerName, aId.BeginReading(), kVRControllerNameMaxLen);
-  state.mNumButtons = aNumButtons;
-  state.mNumAxes = aNumAxes;
-  state.mNumTriggers = aNumTriggers;
-  state.mNumHaptics = kNumOpenVRHaptcs;
+  strncpy(state.controllerName, aId.BeginReading(), kVRControllerNameMaxLen);
+  state.numButtons = aNumButtons;
+  state.numAxes = aNumAxes;
+  state.numHaptics = kNumOpenVRHaptcs;
 }
 
 VRControllerOpenVR::~VRControllerOpenVR()
@@ -466,31 +465,31 @@ VRControllerOpenVR::GetTrackedIndex()
 float
 VRControllerOpenVR::GetAxisMove(uint32_t aAxis)
 {
-  return mControllerInfo.mControllerState.mAxisValue[aAxis];
+  return mControllerInfo.mControllerState.axisValue[aAxis];
 }
 
 void
 VRControllerOpenVR::SetAxisMove(uint32_t aAxis, float aValue)
 {
-  mControllerInfo.mControllerState.mAxisValue[aAxis] = aValue;
+  mControllerInfo.mControllerState.axisValue[aAxis] = aValue;
 }
 
 void
 VRControllerOpenVR::SetTrigger(uint32_t aButton, float aValue)
 {
-  mControllerInfo.mControllerState.mTriggerValue[aButton] = aValue;
+  mControllerInfo.mControllerState.triggerValue[aButton] = aValue;
 }
 
 float
 VRControllerOpenVR::GetTrigger(uint32_t aButton)
 {
-  return mControllerInfo.mControllerState.mTriggerValue[aButton];
+  return mControllerInfo.mControllerState.triggerValue[aButton];
 }
 
 void
 VRControllerOpenVR::SetHand(dom::GamepadHand aHand)
 {
-  mControllerInfo.mControllerState.mHand = aHand;
+  mControllerInfo.mControllerState.hand = aHand;
 }
 
 void

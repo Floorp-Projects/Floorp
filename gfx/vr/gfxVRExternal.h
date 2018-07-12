@@ -31,6 +31,7 @@ class VRDisplayExternal : public VRDisplayHost
 {
 public:
   void ZeroSensor() override;
+  static int sPushIndex;
 
 protected:
   VRHMDSensorState GetSensorState() override;
@@ -45,6 +46,7 @@ protected:
 public:
   explicit VRDisplayExternal(const VRDisplayState& aDisplayState);
   void Refresh();
+  const VRControllerState& GetLastControllerState(uint32_t aStateIndex) const;
 protected:
   virtual ~VRDisplayExternal();
   void Destroy();
@@ -52,22 +54,11 @@ protected:
 private:
   bool PopulateLayerTexture(const layers::SurfaceDescriptor& aTexture,
                             VRLayerTextureType* aTextureType,
-                            void** aTextureHandle);
+                            VRLayerTextureHandle* aTextureHandle);
 
   VRTelemetry mTelemetry;
   bool mIsPresenting;
   VRHMDSensorState mLastSensorState;
-};
-
-class VRControllerExternal : public VRControllerHost
-{
-public:
-  explicit VRControllerExternal(dom::GamepadHand aHand, uint32_t aDisplayID, uint32_t aNumButtons,
-                              uint32_t aNumTriggers, uint32_t aNumAxes,
-                              const nsCString& aId);
-
-protected:
-  virtual ~VRControllerExternal();
 };
 
 } // namespace impl
@@ -95,8 +86,10 @@ public:
                              double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
-  bool PullState(VRDisplayState* aDisplayState, VRHMDSensorState* aSensorState = nullptr);
-  void PushState(VRBrowserState* aBrowserState);
+  bool PullState(VRDisplayState* aDisplayState,
+                 VRHMDSensorState* aSensorState = nullptr,
+                 VRControllerState* aControllerState = nullptr);
+  void PushState(VRBrowserState* aBrowserState, const bool aNotifyCond = false);
 
 protected:
   explicit VRSystemManagerExternal(VRExternalShmem* aAPIShmem = nullptr);
@@ -105,7 +98,6 @@ protected:
 private:
   // there can only be one
   RefPtr<impl::VRDisplayExternal> mDisplay;
-  nsTArray<RefPtr<impl::VRControllerExternal>> mExternalController;
 #if defined(XP_MACOSX)
   int mShmemFD;
 #elif defined(XP_WIN)
@@ -116,7 +108,9 @@ private:
 #endif
 
   volatile VRExternalShmem* mExternalShmem;
+#if !defined(MOZ_WIDGET_ANDROID)
   bool mSameProcess;
+#endif
 
   void OpenShmem();
   void CloseShmem();

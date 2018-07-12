@@ -562,7 +562,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
       nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
       MOZ_ASSERT(sgo);
 
-      if (NS_WARN_IF(NS_FAILED(sgo->HandleScriptError(init, &status)))) {
+      if (NS_WARN_IF(!sgo->HandleScriptError(init, &status))) {
         status = nsEventStatus_eIgnore;
       }
     } else {
