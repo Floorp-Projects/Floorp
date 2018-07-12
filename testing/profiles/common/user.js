@@ -1,6 +1,6 @@
 // Base preferences file used by both unittest and perf harnesses.
 /* globals user_pref */
-user_pref("app.update.disabledForTesting", true);
+user_pref("app.update.enabled", false);
 user_pref("browser.chrome.guess_favicon", false);
 user_pref("browser.dom.window.dump.enabled", true);
 // Use an empty list of sites to avoid fetching

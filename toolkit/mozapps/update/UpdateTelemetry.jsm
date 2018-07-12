@@ -46,14 +46,17 @@ var AUSTLMY = {
   CHK_IS_STAGED: 10,
   // An update is already downloaded (no notification)
   CHK_IS_DOWNLOADED: 11,
-  // Note: codes 12-13 were removed along with the |app.update.enabled| pref.
+  // Background checks disabled by preference (no notification)
+  CHK_PREF_DISABLED: 12,
+  // Update checks disabled by admin locked preference (no notification)
+  CHK_ADMIN_DISABLED: 13,
   // Unable to check for updates per hasUpdateMutex() (no notification)
   CHK_NO_MUTEX: 14,
   // Unable to check for updates per gCanCheckForUpdates (no notification). This
   // should be covered by other codes and is recorded just in case.
   CHK_UNABLE_TO_CHECK: 15,
-  // Note: code 16 was removed when the feature for disabling updates for the
-  // session was removed.
+  // Background checks disabled for the current session (no notification)
+  CHK_DISABLED_FOR_SESSION: 16,
   // Unable to perform a background check while offline (no notification)
   CHK_OFFLINE: 17,
   // Note: codes 18 - 21 were removed along with the certificate checking code.
@@ -84,8 +87,6 @@ var AUSTLMY = {
   // User opted out of elevated updates for the available update version, OSX
   // only (no notification)
   CHK_ELEVATION_OPTOUT_FOR_VERSION: 36,
-  // Update checks disabled by enterprise policy
-  CHK_DISABLED_BY_POLICY: 37,
 
   /**
    * Submit a telemetry ping for the update check result code or a telemetry

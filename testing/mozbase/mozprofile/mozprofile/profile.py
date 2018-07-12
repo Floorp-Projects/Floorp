@@ -431,8 +431,7 @@ class FirefoxProfile(Profile):
     """Specialized Profile subclass for Firefox"""
 
     preferences = {  # Don't automatically update the application
-        'app.update.disabledForTesting': True,
-        'security.turn_off_all_security_so_that_viruses_can_take_over_this_computer': True,
+        'app.update.enabled': False,
         # Don't restore the last open set of tabs if the browser has crashed
         'browser.sessionstore.resume_from_crash': False,
         # Don't check for the default web browser during startup

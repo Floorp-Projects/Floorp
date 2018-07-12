@@ -18,8 +18,10 @@ add_task(async function test_update_preferences_ui() {
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let updateRadioGroup = content.document.getElementById("updateRadioGroup");
-    is(updateRadioGroup.hidden, true,
+    is(updateRadioGroup.disabled, true,
        "Update choices should be diabled when app update is locked by policy");
+    is(updateRadioGroup.value, "manual",
+       "Update choice should be set to \"manual\" when app update is disabled by policy");
   });
 
   BrowserTestUtils.removeTab(tab);
