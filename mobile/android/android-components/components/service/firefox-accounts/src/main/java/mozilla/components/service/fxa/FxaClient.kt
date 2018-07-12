@@ -7,21 +7,18 @@ package mozilla.components.service.fxa
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
-import com.sun.jna.NativeLibrary
 import com.sun.jna.PointerType
 
 @Suppress("FunctionNaming", "TooManyFunctions")
 internal interface FxaClient : Library {
     companion object {
         private const val JNA_LIBRARY_NAME = "fxa_client"
-        private val JNA_NATIVE_LIB: Any
         internal val INSTANCE: FxaClient
 
         init {
             System.loadLibrary("crypto")
             System.loadLibrary("ssl")
             System.loadLibrary("fxa_client")
-            JNA_NATIVE_LIB = NativeLibrary.getInstance(JNA_LIBRARY_NAME)
             INSTANCE = Native.loadLibrary(JNA_LIBRARY_NAME, FxaClient::class.java) as FxaClient
         }
     }
