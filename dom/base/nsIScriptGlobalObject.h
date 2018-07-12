@@ -71,11 +71,9 @@ public:
   /**
    * Handle a script error.  Generally called by a script context.
    */
-  virtual nsresult HandleScriptError(
-                     const mozilla::dom::ErrorEventInit &aErrorEventInit,
-                     nsEventStatus *aEventStatus) {
-    NS_ENSURE_STATE(NS_HandleScriptError(this, aErrorEventInit, aEventStatus));
-    return NS_OK;
+  bool HandleScriptError(const mozilla::dom::ErrorEventInit &aErrorEventInit,
+                         nsEventStatus *aEventStatus) {
+    return NS_HandleScriptError(this, aErrorEventInit, aEventStatus);
   }
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true) { return false; }
