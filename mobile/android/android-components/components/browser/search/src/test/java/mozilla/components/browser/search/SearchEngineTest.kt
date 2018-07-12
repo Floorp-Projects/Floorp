@@ -79,6 +79,23 @@ class SearchEngineTest {
                 searchEngine.buildSearchUrl("hello world"))
     }
 
+    @Test
+    fun `Build search suggestion URL`() {
+        val searchUri = Uri.parse("https://mozilla.org/search/?q={searchTerms}")
+        val suggestionsUri = Uri.parse("https://mozilla.org/search/suggestions?q={searchTerms}")
+
+        val searchEngine = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(searchUri),
+                suggestionsUri)
+
+        assertEquals(
+                "https://mozilla.org/search/suggestions?q=Focus",
+                searchEngine.buildSuggestionsURL("Focus"))
+    }
+
     private fun mockResultUriList(): List<Uri> = listOf(
             Uri.parse("http://${UUID.randomUUID()}).mozilla.org/q?={searchTerms}")
     )
