@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Masukkan e-mel anda",
   "firstrun_form_sub_header": "untuk ke Firefox Sync",
   "firstrun_email_input_placeholder": "E-mel",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Perlu e-mel yang sah",
   "firstrun_extra_legal_links": "Dengan meneruskan, anda bersetuju dengan {terms} dan {privacy}.",
   "firstrun_terms_of_service": "Terma Perkhidmatan",
   "firstrun_privacy_notice": "Notis Privasi",

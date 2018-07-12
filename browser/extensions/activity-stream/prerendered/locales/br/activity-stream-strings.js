@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Enankit ho chomlec'h postel",
   "firstrun_form_sub_header": "evit kenderc'hel etrezek Firefox Sync.",
   "firstrun_email_input_placeholder": "Postel",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Postel talvoudek azgoulennet",
   "firstrun_extra_legal_links": "En ur genderc'hel, e savit a-du gant an {terms} hag ar {privacy}.",
   "firstrun_terms_of_service": "divizoù arver",
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
