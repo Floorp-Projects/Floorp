@@ -231,7 +231,7 @@ add_task(async function() {
 
     info("Query completed. Performing checks for input '" +
          searchBox.value + "'");
-    const actualSuggestions = popup.getItems().reverse();
+    const actualSuggestions = popup.getItems();
 
     is(popup.isOpen ? actualSuggestions.length : 0, suggestions.length,
        "There are expected number of suggestions.");

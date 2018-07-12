@@ -72,7 +72,6 @@ add_task(async function() {
     const actualSuggestions = popup.getItems();
     is(popup.isOpen ? actualSuggestions.length : 0, expectedSuggestions.length,
        "There are expected number of suggestions");
-    actualSuggestions.reverse();
 
     for (let i = 0; i < expectedSuggestions.length; i++) {
       is(expectedSuggestions[i][0], actualSuggestions[i].label,
