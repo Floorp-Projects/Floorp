@@ -40,6 +40,7 @@ class BlockReflowInput {
       , mIsOverflowContainer(false)
       , mIsFloatListInBlockPropertyTable(false)
       , mFloatFragmentsInsideColumnEnabled(false)
+      , mCanHaveTextOverflow(false)
     {}
 
     // Set in the BlockReflowInput constructor when the frame being reflowed has

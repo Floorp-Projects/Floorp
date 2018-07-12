@@ -2374,6 +2374,8 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
                                      WritingMode aWM,
                                      const nsSize& aContainerSize)
   : mFrame(aFrame)
+  , mLeftBEnd(nscoord_MIN)
+  , mRightBEnd(nscoord_MIN)
   , mRect(ShapeInfo::ConvertToFloatLogical(aMarginRect, aWM, aContainerSize) +
           nsPoint(aLineLeft, aBlockStart))
 {

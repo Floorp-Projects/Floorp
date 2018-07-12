@@ -493,7 +493,10 @@ struct nsGridContainerFrame::LineRange
     int32_t mUntranslatedEnd;
   };
 protected:
-  LineRange() {}
+  LineRange()
+    : mStart(0)
+    , mEnd(0)
+  {}
 };
 
 /**
@@ -1061,7 +1064,9 @@ struct nsGridContainerFrame::TrackSizingFunctions
 struct nsGridContainerFrame::Tracks
 {
   explicit Tracks(LogicalAxis aAxis)
-    : mStateUnion(TrackSize::StateBits(0))
+    : mContentBoxSize(0)
+    , mGridGap(0)
+    , mStateUnion(TrackSize::StateBits(0))
     , mAxis(aAxis)
     , mCanResolveLineRangeSize(false)
   {
