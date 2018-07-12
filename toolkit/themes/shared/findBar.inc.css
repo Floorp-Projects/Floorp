@@ -169,6 +169,12 @@ findbar[noanim] {
   margin-inline-start: 12px !important;
 }
 
+.findbar-find-status:-moz-lwtheme,
+.found-matches:-moz-lwtheme {
+  color: inherit;
+  opacity: .6;
+}
+
 .find-status-icon[status="pending"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
 }
