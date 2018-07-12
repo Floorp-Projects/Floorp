@@ -12,7 +12,7 @@
 #define mozilla_dom_Attr_h
 
 #include "mozilla/Attributes.h"
-#include "nsIAttribute.h"
+#include "nsINode.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -26,7 +26,7 @@ namespace dom {
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements the DOM Attr interface.
-class Attr final : public nsIAttribute
+class Attr final : public nsINode
 {
   virtual ~Attr() {}
 
@@ -81,8 +81,7 @@ public:
   static void Initialize();
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
-                                                                   nsIAttribute)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(Attr)
 
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
