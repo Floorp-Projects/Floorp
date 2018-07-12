@@ -1398,7 +1398,7 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
       new InitRunnable(workerPrivate, webSocketImpl, !!aTransportProvider, aUrl,
                        protocolArray, nsDependentCString(file.get()), lineno,
                        column);
-    runnable->Dispatch(Terminating, aRv);
+    runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -1501,7 +1501,7 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
                "not yet implemented");
     RefPtr<AsyncOpenRunnable> runnable =
       new AsyncOpenRunnable(webSocket->mImpl);
-    runnable->Dispatch(Terminating, aRv);
+    runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }

@@ -1804,7 +1804,7 @@ XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
   nsCOMPtr<nsIEventTarget> syncLoopTarget;
   bool isSyncXHR = mProxy->mIsSyncXHR;
   if (isSyncXHR) {
-    autoSyncLoop.emplace(mWorkerPrivate, Terminating);
+    autoSyncLoop.emplace(mWorkerPrivate, Canceling);
     syncLoopTarget = autoSyncLoop->GetEventTarget();
     if (!syncLoopTarget) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1819,7 +1819,7 @@ XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
 
   mStateData.mFlagSend = true;
 
-  aRunnable->Dispatch(Terminating, aRv);
+  aRunnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     // Dispatch() may have spun the event loop and we may have already unrooted.
     // If so we don't want autoUnpin to try again.
@@ -1888,7 +1888,7 @@ XMLHttpRequestWorker::Open(const nsACString& aMethod,
                      mTimeout, mResponseType);
 
   ++mProxy->mOpenCount;
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     if (mProxy && !--mProxy->mOpenCount) {
       ReleaseProxy();
@@ -1925,7 +1925,7 @@ XMLHttpRequestWorker::SetRequestHeader(const nsACString& aHeader,
 
   RefPtr<SetRequestHeaderRunnable> runnable =
     new SetRequestHeaderRunnable(mWorkerPrivate, mProxy, aHeader, aValue);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 void
@@ -1948,7 +1948,7 @@ XMLHttpRequestWorker::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 
   RefPtr<SetTimeoutRunnable> runnable =
     new SetTimeoutRunnable(mWorkerPrivate, mProxy, aTimeout);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 void
@@ -1971,7 +1971,7 @@ XMLHttpRequestWorker::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv
 
   RefPtr<SetWithCredentialsRunnable> runnable =
     new SetWithCredentialsRunnable(mWorkerPrivate, mProxy, aWithCredentials);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 void
@@ -1996,7 +1996,7 @@ XMLHttpRequestWorker::SetMozBackgroundRequest(bool aBackgroundRequest,
   RefPtr<SetBackgroundRequestRunnable> runnable =
     new SetBackgroundRequestRunnable(mWorkerPrivate, mProxy,
                                      aBackgroundRequest);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 XMLHttpRequestUpload*
@@ -2189,7 +2189,7 @@ XMLHttpRequestWorker::Abort(ErrorResult& aRv)
   mProxy->mOuterEventStreamId++;
 
   RefPtr<AbortRunnable> runnable = new AbortRunnable(mWorkerPrivate, mProxy);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 void
@@ -2212,7 +2212,7 @@ XMLHttpRequestWorker::GetResponseHeader(const nsACString& aHeader,
   RefPtr<GetResponseHeaderRunnable> runnable =
     new GetResponseHeaderRunnable(mWorkerPrivate, mProxy, aHeader,
                                   responseHeader);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -2238,7 +2238,7 @@ XMLHttpRequestWorker::GetAllResponseHeaders(nsACString& aResponseHeaders,
   nsCString responseHeaders;
   RefPtr<GetAllResponseHeadersRunnable> runnable =
     new GetAllResponseHeadersRunnable(mWorkerPrivate, mProxy, responseHeaders);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -2270,7 +2270,7 @@ XMLHttpRequestWorker::OverrideMimeType(const nsAString& aMimeType, ErrorResult& 
 
   RefPtr<OverrideMimeTypeRunnable> runnable =
     new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, aMimeType);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 void
@@ -2306,7 +2306,7 @@ XMLHttpRequestWorker::SetResponseType(XMLHttpRequestResponseType aResponseType,
 
   RefPtr<SetResponseTypeRunnable> runnable =
     new SetResponseTypeRunnable(mWorkerPrivate, mProxy, aResponseType);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
     return;
   }

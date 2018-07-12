@@ -92,8 +92,8 @@ WorkerHolderToken::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
 
-  // When the service worker thread is stopped we will get Terminating,
-  // but nothing higher than that.  We must shut things down at Terminating.
+  // When the service worker thread is stopped we will get Canceling,
+  // but nothing higher than that.  We must shut things down at Canceling.
   if (aStatus < mShutdownStatus || mShuttingDown) {
     return true;
   }

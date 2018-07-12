@@ -1056,7 +1056,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
                                                        imageSize,
                                                        aCropRect,
                                                        getter_AddRefs(data));
-    task->Dispatch(Terminating, aRv);
+    task->Dispatch(Canceling, aRv);
   }
 
   if (NS_WARN_IF(!data)) {
@@ -2083,7 +2083,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal,
                                                                  aFormat,
                                                                  aLayout,
                                                                  getter_AddRefs(data));
-    task->Dispatch(Terminating, aRv);
+    task->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return promise.forget();
     }
