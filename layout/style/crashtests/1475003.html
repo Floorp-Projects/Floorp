@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<script>
+function go() {
+  window.requestAnimationFrame(eh);
+}
+function eh() {
+  a.appendChild(b);
+  d.innerHTML = c.outerHTML;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload=go()>
+<audio id="a" onerror="eh()" src="x"></audio>
+<data id="b">
+<li id="c">
+<svg>
+<set attributeName="overflow" to="hidden"/>
+<li id="d">
+</html>
