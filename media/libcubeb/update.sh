@@ -83,3 +83,5 @@ patch -p3 < prefer-pulse-rust.patch
 echo "Applying disable-device-switching.patch on top of $rev"
 patch -p3 < disable-device-switching.patch
 
+echo "Apply audiounit-stream-destroy-crash.patch on top of $rev"
+patch -p1 < audiounit-stream-destroy-crash.patch
