@@ -90,5 +90,18 @@ promise_test(async t => {
 }, 'Removing target element from the document removes the animation from ' +
    'the tracker in the next tick');
 
+test(t => {
+  const target = addDiv(t);
+  const anotherTarget = addDiv(t);
+  const anim = target.animate(null, 100 * MS_PER_SEC);
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be tracked by tracker');
+
+  anim.effect.target = anotherTarget;
+
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be still tracked by tracker');
+}, 'Setting another target keeps the pending animation in the tracker');
+
 </script>
 </body>
