@@ -7,6 +7,9 @@
 #ifndef ds_Nestable_h
 #define ds_Nestable_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+
 namespace js {
 
 // A base class for nestable structures.
