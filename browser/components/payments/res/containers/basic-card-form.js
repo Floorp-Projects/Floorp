@@ -4,7 +4,6 @@
 
 /* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
 import LabelledCheckbox from "../components/labelled-checkbox.js";
-import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
 
@@ -17,11 +16,16 @@ import paymentRequest from "../paymentRequest.js";
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRequestPage) {
+export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
 
+    this.pageTitle = document.createElement("h2");
     this.genericErrorText = document.createElement("div");
+
+    this.cancelButton = document.createElement("button");
+    this.cancelButton.className = "cancel-button";
+    this.cancelButton.addEventListener("click", this);
 
     this.addressAddLink = document.createElement("a");
     this.addressAddLink.className = "add-link";
@@ -32,14 +36,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.addressEditLink.href = "javascript:void(0)";
     this.addressEditLink.addEventListener("click", this);
 
-    this.persistCheckbox = new LabelledCheckbox();
-    this.persistCheckbox.className = "persist-checkbox";
-
-    // page footer
-    this.cancelButton = document.createElement("button");
-    this.cancelButton.className = "cancel-button";
-    this.cancelButton.addEventListener("click", this);
-
     this.backButton = document.createElement("button");
     this.backButton.className = "back-button";
     this.backButton.addEventListener("click", this);
@@ -48,7 +44,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.saveButton.className = "save-button primary";
     this.saveButton.addEventListener("click", this);
 
-    this.footer.append(this.cancelButton, this.backButton, this.saveButton);
+    this.persistCheckbox = new LabelledCheckbox();
+    this.persistCheckbox.className = "persist-checkbox";
 
     // The markup is shared with form autofill preferences.
     let url = "formautofill/editCreditCard.xhtml";
@@ -73,7 +70,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
   connectedCallback() {
     this.promiseReady.then(form => {
-      this.body.appendChild(form);
+      this.appendChild(this.pageTitle);
+      this.appendChild(form);
 
       let record = {};
       let addresses = [];
@@ -91,8 +89,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       let billingAddressRow = this.form.querySelector(".billingAddressRow");
       billingAddressRow.appendChild(fragment);
 
-      this.body.appendChild(this.persistCheckbox);
-      this.body.appendChild(this.genericErrorText);
+      this.appendChild(this.persistCheckbox);
+      this.appendChild(this.genericErrorText);
+      this.appendChild(this.cancelButton);
+      this.appendChild(this.backButton);
+      this.appendChild(this.saveButton);
       // Only call the connected super callback(s) once our markup is fully
       // connected, including the shared form fetched asynchronously.
       super.connectedCallback();
@@ -134,7 +135,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
     // If a card is selected we want to edit it.
     if (editing) {
-      this.pageTitleHeading.textContent = this.dataset.editBasicCardTitle;
+      this.pageTitle.textContent = this.dataset.editBasicCardTitle;
       record = basicCards[basicCardPage.guid];
       if (!record) {
         throw new Error("Trying to edit a non-existing card: " + basicCardPage.guid);
@@ -142,7 +143,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
     } else {
-      this.pageTitleHeading.textContent = this.dataset.addBasicCardTitle;
+      this.pageTitle.textContent = this.dataset.addBasicCardTitle;
       // Use a currently selected shipping address as the default billing address
       record.billingAddressGUID = basicCardPage.billingAddressGUID;
       if (!record.billingAddressGUID && selectedShippingAddress) {

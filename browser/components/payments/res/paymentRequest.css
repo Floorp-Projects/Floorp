@@ -3,14 +3,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
+  /* Based on global.css styles for top-level XUL windows */
+  color: -moz-DialogText;
+  font: message-box;
   height: 100%;
+}
+
+body {
+  /* Override font-size from in-content/common.css which is too large */
+  font-size: inherit;
+}
+
+#order-details-overlay,
+html {
+  /* Based on global.css styles for top-level XUL windows */
+  -moz-appearance: dialog;
+  background-color: -moz-Dialog;
 }
 
 body {
   height: 100%;
   margin: 0;
-  /* Override font-size from in-content/common.css which is too large */
-  font-size: inherit;
+  overflow: hidden;
 }
 
 [hidden] {
@@ -21,7 +35,8 @@ body {
   /* include the default borders in the max-height */
   box-sizing: border-box;
   float: right;
-  height: 100vh;
+  /* avoid causing the body to scroll */
+  max-height: 100vh;
   /* Float above the other overlays */
   position: relative;
   z-index: 99;
@@ -30,60 +45,26 @@ body {
 payment-dialog {
   box-sizing: border-box;
   display: grid;
-  grid-template: "header" auto
-                 "main"   1fr;
-                 "disabled-overlay" auto;
+  grid-template-rows: fit-content(10%) auto;
   height: 100%;
-}
-
-payment-dialog > header,
-.page > .page-body,
-.page > footer {
-  padding: 0 10%;
+  margin: 0 10%;
+  padding: 1em;
 }
 
 payment-dialog > header {
-  border-bottom: 1px solid rgba(0,0,0,0.1);
   display: flex;
-  /* from visual spec: */
-  padding-bottom: 19px;
-  padding-top: 19px;
 }
 
 #main-container {
   display: flex;
-  grid-area: main;
   position: relative;
-  max-height: 100%;
 }
 
-.page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+#payment-summary {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: fit-content(10%) auto fit-content(10%);
   position: relative;
-  width: 100%;
-}
-
-.page > .page-body {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  /* The area above the footer should scroll, if necessary. */
-  overflow: auto;
-}
-
-.page > .page-body > h2:empty {
-  display: none;
-}
-
-.page > footer {
-  align-items: center;
-  background-color: #eaeaee;
-  display: flex;
-  /* from visual spec: */
-  padding-top: 20px;
-  padding-bottom: 18px;
 }
 
 #error-text {
@@ -91,7 +72,6 @@ payment-dialog > header {
 }
 
 #order-details-overlay {
-  background-color: var(--in-content-page-background);
   overflow: auto;
   position: absolute;
   top: 0;
@@ -101,37 +81,22 @@ payment-dialog > header {
   z-index: 1;
 }
 
+payment-dialog > footer {
+  align-items: baseline;
+  display: flex;
+}
+
 #total {
   flex: 1 1 auto;
   margin: 5px;
 }
-
-#total > currency-amount {
-  color: var(--in-content-link-color);
-  font-size: 1.5em;
-}
-
-#total > currency-amount > .currency-code {
-  color: GrayText;
-  font-size: 1rem;
-}
-
-#total > div {
-  color: GrayText;
-}
-
 #view-all {
   flex: 0 1 auto;
 }
 
-payment-dialog #pay::before {
-  -moz-context-properties: fill;
-  content: url(chrome://browser/skin/connection-secure.svg);
-  fill: currentColor;
-  height: 16px;
-  margin-right: 0.5em;
-  vertical-align: text-bottom;
-  width: 16px;
+#total .label {
+  font-size: 15px;
+  font-weight: bold;
 }
 
 payment-dialog[changes-prevented][completion-state="fail"] #pay,
@@ -141,10 +106,6 @@ payment-dialog[changes-prevented][completion-state="success"] #pay {
   /* Show the pay button above #disabled-overlay */
   position: relative;
   z-index: 1;
-}
-
-#cancel {
-  margin-left: auto;
 }
 
 #disabled-overlay {
