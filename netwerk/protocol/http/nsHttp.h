@@ -107,6 +107,10 @@ namespace net {
 // on ERROR_NET_RESET.
 #define NS_HTTP_CONNECTION_RESTARTABLE  (1<<13)
 
+// Disallow name resolutions for this transaction to use TRR - primarily
+// for use with TRR implementations themselves
+#define NS_HTTP_DISABLE_TRR (1<<14)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
