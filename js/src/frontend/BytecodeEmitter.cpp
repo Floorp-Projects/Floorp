@@ -7069,17 +7069,62 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         }
     }
 
+    ParseNode* coordNode = pn;
+    if (pn->isOp(JSOP_CALL) || pn->isOp(JSOP_SPREADCALL)) {
+        switch (pn_callee->getKind()) {
+          case ParseNodeKind::Dot: {
+
+            // Check if this member is a simple chain of simple chain of
+            // property accesses, e.g. x.y.z, this.x.y, super.x.y
+            bool simpleDotChain = false;
+            for (ParseNode* cur = pn_callee; cur->isKind(ParseNodeKind::Dot); cur = cur->pn_left) {
+                ParseNode* left = cur->pn_left;
+                if (left->isKind(ParseNodeKind::Name) || left->isKind(ParseNodeKind::This) ||
+                    left->isKind(ParseNodeKind::SuperBase))
+                {
+                    simpleDotChain = true;
+                }
+            }
+
+            if (!simpleDotChain) {
+                // obj().aprop() // expression
+                //       ^       // column coord
+                //
+                // Note: Because of the constant folding logic in FoldElement,
+                // this case also applies for constant string properties.
+                //
+                // obj()['aprop']() // expression
+                //       ^          // column coord
+                coordNode = pn_callee->pn_right;
+            }
+            break;
+          }
+          case ParseNodeKind::Elem:
+            // obj[expr]() // expression
+            //          ^  // column coord
+            coordNode = pn_args;
+            break;
+          default:
+            break;
+        }
+    }
+
     if (!spread) {
         if (pn->getOp() == JSOP_CALL && valueUsage == ValueUsage::IgnoreValue) {
-            if (!emitCall(JSOP_CALL_IGNORES_RV, argc, pn))
+            if (!emitCall(JSOP_CALL_IGNORES_RV, argc, coordNode))
                 return false;
             checkTypeSet(JSOP_CALL_IGNORES_RV);
         } else {
-            if (!emitCall(pn->getOp(), argc, pn))
+            if (!emitCall(pn->getOp(), argc, coordNode))
                 return false;
             checkTypeSet(pn->getOp());
         }
     } else {
+        if (coordNode) {
+            if (!updateSourceCoordNotes(coordNode->pn_pos.begin))
+                return false;
+        }
+
         if (!emit1(pn->getOp()))
             return false;
         checkTypeSet(pn->getOp());

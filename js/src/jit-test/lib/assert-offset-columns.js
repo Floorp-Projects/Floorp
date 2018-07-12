@@ -33,7 +33,12 @@ function assertOffsetColumns(code, expectedBpts, expectedOrdering = null) {
 
     // Set breakpoints everywhere and call the function.
     const dbg = new Debugger;
-    const script = dbg.addDebuggee(global).makeDebuggeeValue(global.f).script;
+    let debuggeeFn = dbg.addDebuggee(global).makeDebuggeeValue(global.f);
+    if (debuggeeFn.isBoundFunction) {
+        debuggeeFn = debuggeeFn.boundTargetFunction;
+    }
+
+    const { script } = debuggeeFn;
     for (const offset of script.getAllColumnOffsets()) {
         assertEq(offset.lineNumber, 1);
         assertEq(offset.columnNumber < execCode.length, true);

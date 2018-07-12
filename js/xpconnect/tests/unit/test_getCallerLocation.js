@@ -39,11 +39,11 @@ add_task(async function() {
 
   equal(frame.source, "thing.js", "Frame source");
   equal(frame.line, 5, "Frame line");
-  equal(frame.column, 14, "Frame column");
+  equal(frame.column, 18, "Frame column");
   equal(frame.functionDisplayName, "it", "Frame function name");
   equal(frame.parent, null, "Frame parent");
 
-  equal(String(frame), "it@thing.js:5:14\n", "Stringified frame");
+  equal(String(frame), "it@thing.js:5:18\n", "Stringified frame");
 
 
   // reportError
@@ -55,7 +55,7 @@ add_task(async function() {
   let [msg] = messages.filter(m => m.message.includes("Meh"));
 
   equal(msg.stack, frame, "reportError stack frame");
-  equal(msg.message, '[JavaScript Error: "Meh" {file: "thing.js" line: 5}]\nit@thing.js:5:14\n');
+  equal(msg.message, '[JavaScript Error: "Meh" {file: "thing.js" line: 5}]\nit@thing.js:5:18\n');
 
   Assert.throws(() => { Cu.reportError("Meh", {}); },
                 err => err.result == Cr.NS_ERROR_INVALID_ARG,
@@ -82,5 +82,5 @@ add_task(async function() {
   equal(error.message, "Meh", "Error message");
   equal(error.fileName, "thing.js", "Error filename");
   equal(error.lineNumber, 5, "Error line");
-  equal(error.columnNumber, 14, "Error column");
+  equal(error.columnNumber, 18, "Error column");
 });
