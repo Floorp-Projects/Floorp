@@ -1100,47 +1100,6 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
     return mLocalStore->SetValue(uri, id, attrstr, valuestr);
 }
 
-
-nsresult
-XULDocument::GetViewportSize(int32_t* aWidth,
-                             int32_t* aHeight)
-{
-    *aWidth = *aHeight = 0;
-
-    FlushPendingNotifications(FlushType::Layout);
-
-    nsIPresShell *shell = GetShell();
-    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-
-    nsIFrame* frame = shell->GetRootFrame();
-    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-    nsSize size = frame->GetSize();
-
-    *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
-    *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
-
-    return NS_OK;
-}
-
-int32_t
-XULDocument::GetWidth(ErrorResult& aRv)
-{
-    int32_t width = 0;
-    int32_t height = 0;
-    aRv = GetViewportSize(&width, &height);
-    return width;
-}
-
-int32_t
-XULDocument::GetHeight(ErrorResult& aRv)
-{
-    int32_t width = 0;
-    int32_t height = 0;
-    aRv = GetViewportSize(&width, &height);
-    return height;
-}
-
 static JSObject*
 GetScopeObjectOfNode(nsINode* node)
 {
