@@ -67,25 +67,16 @@ class TabsListBase {
 
     for (let tab of this.gBrowser.tabs) {
       if (this.filterFn(tab)) {
-        let row = this._createRow(tab);
-        row.tab = tab;
-        row.addEventListener("command", this);
-        this.tabToElement.set(tab, row);
-        if (this.className) {
-          row.classList.add(this.className);
-        }
-
-        fragment.appendChild(row);
+        fragment.appendChild(this._createRow(tab));
       }
     }
 
-    if (this.insertBefore) {
-      this.insertBefore.parentNode.insertBefore(fragment, this.insertBefore);
-    } else {
-      this.containerNode.appendChild(fragment);
-    }
-
+    this._addElement(fragment);
     this._setupListeners();
+  }
+
+  _addElement(elementOrFragment) {
+    this.containerNode.insertBefore(elementOrFragment, this.insertBefore);
   }
 
   /*
@@ -115,11 +106,32 @@ class TabsListBase {
     let item = this.tabToElement.get(tab);
     if (item) {
       if (!this.filterFn(tab)) {
-        // If the tab is no longer in this set of tabs, hide the item.
+        // The tab no longer matches our criteria, remove it.
         this._removeItem(item, tab);
       } else {
         this._setRowAttributes(item, tab);
       }
+    } else if (this.filterFn(tab)) {
+      // The tab now matches our criteria, add a row for it.
+      this._addTab(tab);
+    }
+  }
+
+  _addTab(newTab) {
+    let newRow = this._createRow(newTab);
+    let nextTab = newTab.nextSibling;
+
+    while (nextTab && !this.filterFn(nextTab)) {
+      nextTab = nextTab.nextSibling;
+    }
+
+    if (nextTab) {
+      // If we found a tab after this one in the list, insert the new row before it.
+      let nextRow = this.tabToElement.get(nextTab);
+      nextRow.parentNode.insertBefore(newRow, nextRow);
+    } else {
+      // If there's no next tab then insert it as usual.
+      this._addElement(newRow);
     }
   }
 
@@ -206,6 +218,12 @@ class TabsPanel extends TabsListBase {
     let {doc} = this;
     let row = doc.createElementNS(NSXUL, "toolbaritem");
     row.setAttribute("class", "all-tabs-item");
+    if (this.className) {
+      row.classList.add(this.className);
+    }
+    row.tab = tab;
+    row.addEventListener("command", this);
+    this.tabToElement.set(tab, row);
 
     let button = doc.createElementNS(NSXUL, "toolbarbutton");
     button.setAttribute("class", "all-tabs-button subviewbutton subviewbutton-iconic");
