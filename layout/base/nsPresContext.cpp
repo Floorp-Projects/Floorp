@@ -193,6 +193,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mLastFontInflationScreenSize(gfxSize(-1.0, -1.0)),
     mCurAppUnitsPerDevPixel(0),
     mAutoQualityMinFontSizePixelsPref(0),
+    mLangService(nsLanguageAtomService::GetService()),
     // origin nscoord_MIN is impossible, so the first ResizeReflow always fires
     mLastResizeEventVisibleArea(nsRect(nscoord_MIN, nscoord_MIN,
                                        NS_UNCONSTRAINEDSIZE,
@@ -244,6 +245,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mPendingThemeChanged(false),
     mPendingUIResolutionChanged(false),
     mPrefChangePendingNeedsReflow(false),
+    mPostedPrefChangedRunnable(false),
     mIsEmulatingMedia(false),
     mIsGlyph(false),
     mUsesRootEMUnits(false),
@@ -879,8 +881,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
       mRefreshDriver = new nsRefreshDriver(this);
     }
   }
-
-  mLangService = nsLanguageAtomService::GetService();
 
   // Register callbacks so we're notified when the preferences change
   Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,

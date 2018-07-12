@@ -74,7 +74,7 @@ class MOZ_HEAP_CLASS TextOverflow final {
   typedef mozilla::LogicalRect LogicalRect;
 
   struct AlignmentEdges {
-    AlignmentEdges() : mAssigned(false) {}
+    AlignmentEdges() : mIStart(0), mIEnd(0), mAssigned(false) {}
     void Accumulate(WritingMode aWM, const LogicalRect& aRect)
     {
       if (MOZ_LIKELY(mAssigned)) {
@@ -93,7 +93,11 @@ class MOZ_HEAP_CLASS TextOverflow final {
   };
 
   struct InnerClipEdges {
-    InnerClipEdges() : mAssignedIStart(false), mAssignedIEnd(false) {}
+    InnerClipEdges()
+      : mIStart(0)
+      , mIEnd(0)
+      , mAssignedIStart(false)
+      , mAssignedIEnd(false) {}
     void AccumulateIStart(WritingMode aWM, const LogicalRect& aRect)
     {
       if (MOZ_LIKELY(mAssignedIStart)) {
@@ -234,6 +238,9 @@ class MOZ_HEAP_CLASS TextOverflow final {
       mInitialized = false;
       mISize = 0;
       mStyle = &aStyle;
+      mIntrinsicISize = 0;
+      mHasOverflow = false;
+      mActive = false;
     }
 
     /**

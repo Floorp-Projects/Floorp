@@ -62,6 +62,8 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
   : SizeComputationInput(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mAvailableWidth(0)
+  , mAvailableHeight(0)
   , mContainingBlockSize(mWritingMode)
   , mReflowDepth(0)
 {
@@ -182,6 +184,8 @@ ReflowInput::ReflowInput(
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mAvailableWidth(0)
+  , mAvailableHeight(0)
   , mContainingBlockSize(mWritingMode)
   , mFlags(aParentReflowInput.mFlags)
   , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
