@@ -17,7 +17,7 @@ const PREF_APP_UPDATE_DOORHANGER                 = "app.update.doorhanger";
 const PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS     = "app.update.download.attempts";
 const PREF_APP_UPDATE_DOWNLOADPROMPTMAXATTEMPTS  = "app.update.download.maxAttempts";
 const PREF_APP_UPDATE_DOWNLOADBACKGROUNDINTERVAL = "app.update.download.backgroundInterval";
-const PREF_APP_UPDATE_DISABLEDFORTESTING         = "app.update.disabledForTesting";
+const PREF_APP_UPDATE_ENABLED                    = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME                   = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                        = "app.update.log";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED        = "app.update.notifiedUnsupported";
@@ -34,7 +34,6 @@ const PREF_APP_UPDATE_URL_MANUAL                 = "app.update.url.manual";
 const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";
 const PREF_DISTRIBUTION_VERSION      = "distribution.version";
-const PREF_DISABLE_SECURITY          = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
