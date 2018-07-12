@@ -37,7 +37,6 @@ WEBIDL_FILES = [
     'MatchGlob.webidl',
     'MatchPattern.webidl',
     'MessageManager.webidl',
-    'MozSharedMap.webidl',
     'MozStorageAsyncStatementParams.webidl',
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',

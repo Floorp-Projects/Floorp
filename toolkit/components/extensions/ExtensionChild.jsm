@@ -59,8 +59,6 @@ const {
   withHandlingUserInput,
 } = ExtensionCommon;
 
-const {sharedData} = Services.cpmm;
-
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
 // Copy an API object from |source| into the scope |dest|.
@@ -604,9 +602,9 @@ class BrowserExtensionContent extends EventEmitter {
     this.uuid = data.uuid;
     this.instanceId = data.instanceId;
 
-    if (WebExtensionPolicy.isExtensionProcess) {
-      Object.assign(this, this.getSharedData("extendedData"));
-    }
+    this.childModules = data.childModules;
+    this.dependencies = data.dependencies;
+    this.schemaURLs = data.schemaURLs;
 
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
@@ -618,6 +616,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));
     this.permissions = data.permissions;
     this.optionalPermissions = data.optionalPermissions;
+    this.principal = data.principal;
 
     let restrictSchemes = !this.hasPermission("mozillaAddons");
 
@@ -625,14 +624,11 @@ class BrowserExtensionContent extends EventEmitter {
 
     this.apiManager = this.getAPIManager();
 
-    this._manifest = null;
-    this._localeData = null;
+    this.localeData = new LocaleData(data.localeData);
 
-    this.baseURI = Services.io.newURI(`moz-extension://${this.uuid}/`);
-    this.baseURL = this.baseURI.spec;
-
-    this.principal = Services.scriptSecurityManager.createCodebasePrincipal(
-      this.baseURI, {});
+    this.manifest = data.manifest;
+    this.baseURL = data.baseURL;
+    this.baseURI = Services.io.newURI(data.baseURL);
 
     // Only used in addon processes.
     this.views = new Set();
@@ -687,33 +683,13 @@ class BrowserExtensionContent extends EventEmitter {
     ExtensionManager.extensions.set(this.id, this);
   }
 
-  getSharedData(key, value) {
-    return sharedData.get(`extension/${this.id}/${key}`);
-  }
-
-  get localeData() {
-    if (!this._localeData) {
-      this._localeData = new LocaleData(this.getSharedData("locales"));
-    }
-    return this._localeData;
-  }
-
-  get manifest() {
-    if (!this._manifest) {
-      this._manifest = this.getSharedData("manifest");
-    }
-    return this._manifest;
-  }
-
   getAPIManager() {
     let apiManagers = [ExtensionPageChild.apiManager];
 
-    if (this.dependencies) {
-      for (let id of this.dependencies) {
-        let extension = processScript.getExtensionChild(id);
-        if (extension) {
-          apiManagers.push(extension.experimentAPIManager);
-        }
+    for (let id of this.dependencies) {
+      let extension = processScript.getExtensionChild(id);
+      if (extension) {
+        apiManagers.push(extension.experimentAPIManager);
       }
     }
 

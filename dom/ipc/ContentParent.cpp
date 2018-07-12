@@ -61,7 +61,6 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/URLClassifierParent.h"
-#include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -2324,12 +2323,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.CopyScreensToRemote(this);
 
-  ipc::WritableSharedMap* sharedData = nsFrameMessageManager::sParentProcessManager->SharedData();
-  sharedData->Flush();
-
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache,
-                                          fontList, sharedData->CloneMapFile(),
-                                          sharedData->MapSize());
+                                          fontList);
 
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
   nsChromeRegistryChrome* chromeRegistry =

@@ -466,10 +466,6 @@ child:
 
     async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
 
-    async UpdateSharedData(FileDescriptor mapFile, uint32_t aSize,
-                           IPCBlob[] blobs,
-                           nsCString[] changedKeys);
-
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
     async RemoveAllPermissions();
@@ -517,9 +513,7 @@ child:
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
                                     /* used on MacOSX and Linux only: */
-                                    SystemFontListEntry[] systemFontList,
-                                    FileDescriptor sharedDataMapFile,
-                                    uint32_t sharedDataMapSize);
+                                    SystemFontListEntry[] systemFontList);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
