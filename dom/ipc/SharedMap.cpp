@@ -218,7 +218,7 @@ SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset, uint16_t aNew
         ptr += aSize;
         return true;
     });
-    MOZ_ASSERT(ptr - aDestPtr == mSize);
+    MOZ_ASSERT(uint32_t(ptr - aDestPtr) == mSize);
   } else {
     memcpy(aDestPtr, Data(), mSize);
   }
