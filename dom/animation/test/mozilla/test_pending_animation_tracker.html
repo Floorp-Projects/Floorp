@@ -1,0 +1,78 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Test animations in PendingAnimationTracker</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+"use strict";
+
+test(t => {
+  const target = addDiv(t);
+  const anim = target.animate(null, 100 * MS_PER_SEC);
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be tracked by tracker');
+
+  anim.effect = null;
+
+  assert_false(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+               'The animation should NOT be tracked by the tracker');
+}, 'Setting null effect removes the animation from the tracker');
+
+test(t => {
+  const target = addDiv(t);
+  const anim = target.animate(null, 100 * MS_PER_SEC);
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be tracked by tracker');
+
+  const newEffect = new KeyframeEffect(target, null);
+  anim.effect = newEffect;
+
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be still tracked by tracker');
+}, 'Setting another effect keeps the pending animation in the tracker');
+
+test(t => {
+  const target = addDiv(t);
+  const anim = target.animate(null, 100 * MS_PER_SEC);
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be tracked by tracker');
+
+  anim.cancel();
+
+  assert_false(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+               'The animation should NOT be tracked by the tracker');
+}, 'Calling cancel() removes the animation from the tracker');
+
+promise_test(async t => {
+  // Before proceeding this test, make sure following code is _NOT_ processed
+  // between paint and refresh driver's tick.  Otherwise, waitForNextFrame below
+  // doesn't ensure that a paint process happens which means that there is
+  // no chance to call TriggerPendingAnimationsOnNextTick to discard the
+  // animation from the pending animation tracker.
+  await waitForNextFrame();
+
+  const target = addDiv(t);
+  const anim = target.animate(null, 100 * MS_PER_SEC);
+
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation should be tracked by tracker');
+
+  target.remove();
+
+  assert_true(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+              'The animation is still being tracked by the tracker');
+
+  await waitForNextFrame();
+  assert_false(SpecialPowers.DOMWindowUtils.isAnimationInPendingTracker(anim),
+               'The animation should NOT be tracked by the tracker in the ' +
+               'next frame');
+}, 'Removing target element from the document removes the animation from ' +
+   'the tracker in the next tick');
+
+</script>
+</body>
