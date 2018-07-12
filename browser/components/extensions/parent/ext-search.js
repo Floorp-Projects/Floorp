@@ -37,22 +37,22 @@ this.search = class extends ExtensionAPI {
           let engines = Services.search.getEngines();
           let visibleEngines = engines.filter(engine => !engine.hidden);
           return Promise.all(visibleEngines.map(async engine => {
-            let favicon_url = null;
+            let favIconUrl;
             if (engine.iconURI) {
               if (engine.iconURI.schemeIs("resource") ||
                   engine.iconURI.schemeIs("chrome")) {
                 // Convert internal URLs to data URLs
-                favicon_url = await getDataURI(engine.iconURI.spec);
+                favIconUrl = await getDataURI(engine.iconURI.spec);
               } else {
-                favicon_url = engine.iconURI.spec;
+                favIconUrl = engine.iconURI.spec;
               }
             }
 
             return {
               name: engine.name,
-              is_default: engine === Services.search.currentEngine,
-              alias: engine.alias,
-              favicon_url,
+              isDefault: engine === Services.search.currentEngine,
+              alias: engine.alias || undefined,
+              favIconUrl,
             };
           }));
         },
