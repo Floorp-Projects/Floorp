@@ -90,9 +90,12 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
         context = aContext;
       }
       if (context) {
-        SetAntialiasingFlags(this, context->GetDrawTarget());
+        DrawTarget* target = context->GetDrawTarget();
+        bool oldAA = target->GetPermitSubpixelAA();
+        SetAntialiasingFlags(this, target);
         aCallback(this, context, toDraw, toDraw, DrawRegionClip::NONE,
                   nsIntRegion(), aCallbackData);
+        target->SetPermitSubpixelAA(oldAA);
       }
       if (needsGroup && availableGroup) {
         BasicManager()->PopGroupForLayer(group);
