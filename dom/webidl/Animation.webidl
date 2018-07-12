@@ -12,8 +12,7 @@
 
 enum AnimationPlayState { "idle", "running", "paused", "finished" };
 
-[Func="nsDocument::IsElementAnimateEnabled",
- Constructor (optional AnimationEffect? effect = null,
+[Constructor (optional AnimationEffect? effect = null,
               optional AnimationTimeline? timeline)]
 interface Animation : EventTarget {
   attribute DOMString id;

@@ -3277,16 +3277,6 @@ nsIDocument::GetAllowPlugins()
 }
 
 bool
-nsDocument::IsElementAnimateEnabled(JSContext* aCx, JSObject* /*unused*/)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return nsContentUtils::IsSystemCaller(aCx) ||
-         nsContentUtils::AnimationsAPICoreEnabled() ||
-         nsContentUtils::AnimationsAPIElementAnimateEnabled();
-}
-
-bool
 nsDocument::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/)
 {
   MOZ_ASSERT(NS_IsMainThread());
