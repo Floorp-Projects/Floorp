@@ -1,5 +1,3 @@
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
-
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.

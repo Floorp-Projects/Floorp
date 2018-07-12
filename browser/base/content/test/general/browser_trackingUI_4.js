@@ -44,38 +44,38 @@ async function testTrackingProtectionAnimation() {
   info("Load a test page not containing tracking elements");
   let benignTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, BENIGN_PAGE);
 
-  ok(!TrackingProtection.iconBox.hasAttribute("state"), "iconBox: no state");
-  ok(!TrackingProtection.iconBox.hasAttribute("animate"), "iconBox: no animate");
+  ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
+  ok(TrackingProtection.icon.hasAttribute("animate"), "icon: animate");
 
   info("Load a test page containing tracking elements");
   let trackingTab = await BrowserTestUtils.openNewForegroundTab(tabbrowser, TRACKING_PAGE);
 
-  ok(TrackingProtection.iconBox.hasAttribute("state"), "iconBox: state");
-  ok(TrackingProtection.iconBox.hasAttribute("animate"), "iconBox: animate");
+  ok(TrackingProtection.icon.hasAttribute("state"), "icon: state");
+  ok(TrackingProtection.icon.hasAttribute("animate"), "icon: animate");
 
   info("Switch from tracking -> benign tab");
   let securityChanged = waitForSecurityChange();
   tabbrowser.selectedTab = benignTab;
   await securityChanged;
 
-  ok(!TrackingProtection.iconBox.hasAttribute("state"), "iconBox: no state");
-  ok(!TrackingProtection.iconBox.hasAttribute("animate"), "iconBox: no animate");
+  ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
+  ok(!TrackingProtection.icon.hasAttribute("animate"), "icon: no animate");
 
   info("Switch from benign -> tracking tab");
   securityChanged = waitForSecurityChange();
   tabbrowser.selectedTab = trackingTab;
   await securityChanged;
 
-  ok(TrackingProtection.iconBox.hasAttribute("state"), "iconBox: state");
-  ok(!TrackingProtection.iconBox.hasAttribute("animate"), "iconBox: no animate");
+  ok(TrackingProtection.icon.hasAttribute("state"), "icon: state");
+  ok(!TrackingProtection.icon.hasAttribute("animate"), "icon: no animate");
 
   info("Reload tracking tab");
   securityChanged = waitForSecurityChange(2);
   tabbrowser.reload();
   await securityChanged;
 
-  ok(TrackingProtection.iconBox.hasAttribute("state"), "iconBox: state");
-  ok(TrackingProtection.iconBox.hasAttribute("animate"), "iconBox: animate");
+  ok(TrackingProtection.icon.hasAttribute("state"), "icon: state");
+  ok(TrackingProtection.icon.hasAttribute("animate"), "icon: animate");
 }
 
 add_task(async function testNormalBrowsing() {
