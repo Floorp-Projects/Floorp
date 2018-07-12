@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-
 NOT_NESTED = 1
 INSIDE_SYNC_NESTED = 2
 INSIDE_CPOW_NESTED = 3
@@ -15,8 +13,8 @@ HIGH_PRIORITY = 3
 
 class Visitor:
     def defaultVisit(self, node):
-        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'" % (
-            node.__class__.__name__)
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitTranslationUnit(self, tu):
         for cxxInc in tu.cxxIncludes:
@@ -309,7 +307,7 @@ class MessageDecl(Node):
             elif modifier == 'verify':
                 self.verify = modifier
             elif modifier != '':
-                raise Exception, "Unexpected message modifier `%s'" % modifier
+                raise Exception("Unexpected message modifier `%s'" % modifier)
 
 
 class Param(Node):

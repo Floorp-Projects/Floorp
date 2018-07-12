@@ -21,8 +21,8 @@ class TypeVisitor:
         self.visited = set()
 
     def defaultVisit(self, node, *args):
-        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'" % (
-            node.__class__.__name__)
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitVoidType(self, v, *args):
         pass
@@ -688,7 +688,7 @@ class GatherDecls(TcheckVisitor):
             expectedfilename += 'h'
         if basefilename != expectedfilename:
             self.error(tu.loc,
-                       "expected file for translation unit `%s' to be named `%s'; instead it's named `%s'",
+                       "expected file for translation unit `%s' to be named `%s'; instead it's named `%s'",  # NOQA: E501
                        tu.name, expectedfilename, basefilename)
 
         if tu.protocol:
@@ -908,7 +908,7 @@ class GatherDecls(TcheckVisitor):
             if not (ctordecl and ctordecl.type.isCtor()):
                 self.error(
                     managed.loc,
-                    "constructor declaration required for managed protocol `%s' (managed by protocol `%s')",
+                    "constructor declaration required for managed protocol `%s' (managed by protocol `%s')",  # NOQA: E501
                     mgdname, p.name)
 
         # FIXME/cjones declare all the little C++ thingies that will
@@ -935,7 +935,7 @@ class GatherDecls(TcheckVisitor):
         elif not isinstance(mgrdecl.type, ProtocolType):
             self.error(
                 loc,
-                "entity `%s' referenced as |manager| of `%s' is not of `protocol' type; instead it is of type `%s'",
+                "entity `%s' referenced as |manager| of `%s' is not of `protocol' type; instead it is of type `%s'",  # NOQA: E501
                 mgrname, pname, mgrdecl.type.typename())
         else:
             mgr.decl = mgrdecl
@@ -1148,7 +1148,7 @@ class CheckTypes(TcheckVisitor):
             if mgrtype is not None and ptype.needsMoreJuiceThan(mgrtype):
                 self.error(
                     p.decl.loc,
-                    "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
+                    "protocol `%s' requires more powerful send semantics than its manager `%s' provides",  # NOQA: E501
                     pname, mgrtype.name())
 
         if ptype.isToplevel():
@@ -1183,7 +1183,7 @@ class CheckTypes(TcheckVisitor):
         if not mgstype.isManagedBy(ptype):
             self.error(
                 loc,
-                "|manages| declaration in protocol `%s' does not match any |manager| declaration in protocol `%s'",
+                "|manages| declaration in protocol `%s' does not match any |manager| declaration in protocol `%s'",  # NOQA: E501
                 pname, mgsname)
 
     def visitManager(self, mgr):
@@ -1202,7 +1202,7 @@ class CheckTypes(TcheckVisitor):
         if not mgrtype.isManagerOf(ptype):
             self.error(
                 loc,
-                "|manager| declaration in protocol `%s' does not match any |manages| declaration in protocol `%s'",
+                "|manager| declaration in protocol `%s' does not match any |manages| declaration in protocol `%s'",  # NOQA: E501
                 pname, mgrname)
 
     def visitMessageDecl(self, md):
@@ -1220,7 +1220,7 @@ class CheckTypes(TcheckVisitor):
         if mtype.nested == INSIDE_CPOW_NESTED and (mtype.isOut() or mtype.isInout()):
             self.error(
                 loc,
-                "inside_cpow nested parent-to-child messages are verboten (here, message `%s' in protocol `%s')",
+                "inside_cpow nested parent-to-child messages are verboten (here, message `%s' in protocol `%s')",  # NOQA: E501
                 mname, pname)
 
         # We allow inside_sync messages that are themselves sync to be sent from the
@@ -1235,7 +1235,7 @@ class CheckTypes(TcheckVisitor):
         if mtype.needsMoreJuiceThan(ptype):
             self.error(
                 loc,
-                "message `%s' requires more powerful send semantics than its protocol `%s' provides",
+                "message `%s' requires more powerful send semantics than its protocol `%s' provides",  # NOQA: E501
                 mname, pname)
 
         if (mtype.isCtor() or mtype.isDtor()) and mtype.isAsync() and mtype.returns:
@@ -1251,7 +1251,7 @@ class CheckTypes(TcheckVisitor):
                 error_message = ("%s messages can't use compression (here, in protocol `%s')" %
                                  (message_type, pname))
             else:
-                error_message = ("message `%s' in protocol `%s' requests compression but is not async" %
+                error_message = ("message `%s' in protocol `%s' requests compression but is not async" %  # NOQA: E501
                                  (mname, pname))
 
             self.error(loc, error_message)

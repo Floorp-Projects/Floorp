@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import sys
 from ply import lex, yacc
 
 from ipdl.ast import *
@@ -373,7 +372,8 @@ def p_ProtocolDefn(p):
     p[0] = protocol
 
     if Parser.current.type == 'header':
-        _error(protocol.loc, 'can\'t define a protocol in a header.  Do it in a protocol spec instead.')
+        _error(protocol.loc,
+               'can\'t define a protocol in a header.  Do it in a protocol spec instead.')
 
 
 def p_ProtocolBody(p):
@@ -676,7 +676,7 @@ def p_MaybeNullable(p):
     p[0] = (2 == len(p))
 
 # --------------------
-## C++ stuff
+# C++ stuff
 
 
 def p_CxxType(p):
