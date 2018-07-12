@@ -34,12 +34,20 @@ payment-dialog {
                  "main"   1fr;
                  "disabled-overlay" auto;
   height: 100%;
-  margin: 0 10%;
-  padding: 1em;
+}
+
+payment-dialog > header,
+.page > .page-body,
+.page > footer {
+  padding: 0 10%;
 }
 
 payment-dialog > header {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
   display: flex;
+  /* from visual spec: */
+  padding-bottom: 19px;
+  padding-top: 19px;
 }
 
 #main-container {
@@ -58,14 +66,24 @@ payment-dialog > header {
 }
 
 .page > .page-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
   /* The area above the footer should scroll, if necessary. */
   overflow: auto;
 }
 
+.page > .page-body > h2:empty {
+  display: none;
+}
+
 .page > footer {
-  align-items: end;
+  align-items: center;
+  background-color: #eaeaee;
   display: flex;
-  flex-grow: 1;
+  /* from visual spec: */
+  padding-top: 20px;
+  padding-bottom: 18px;
 }
 
 #error-text {
@@ -88,7 +106,17 @@ payment-dialog > header {
   margin: 5px;
 }
 
+#total > currency-amount {
+  color: var(--in-content-link-color);
+  font-size: 1.5em;
+}
+
 #total > currency-amount > .currency-code {
+  color: GrayText;
+  font-size: 1rem;
+}
+
+#total > div {
   color: GrayText;
 }
 
@@ -96,9 +124,14 @@ payment-dialog > header {
   flex: 0 1 auto;
 }
 
-#total .label {
-  font-size: 15px;
-  font-weight: bold;
+payment-dialog #pay::before {
+  -moz-context-properties: fill;
+  content: url(chrome://browser/skin/connection-secure.svg);
+  fill: currentColor;
+  height: 16px;
+  margin-right: 0.5em;
+  vertical-align: text-bottom;
+  width: 16px;
 }
 
 payment-dialog[changes-prevented][completion-state="fail"] #pay,
@@ -108,6 +141,10 @@ payment-dialog[changes-prevented][completion-state="success"] #pay {
   /* Show the pay button above #disabled-overlay */
   position: relative;
   z-index: 1;
+}
+
+#cancel {
+  margin-left: auto;
 }
 
 #disabled-overlay {
