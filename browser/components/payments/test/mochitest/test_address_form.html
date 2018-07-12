@@ -94,7 +94,7 @@ add_task(async function test_backButton() {
   await asyncElementRendered();
 
   let stateChangePromise = promiseStateChange(form.requestStore);
-  is(form.pageTitle.textContent, "Sample page title", "Check label");
+  is(form.pageTitleHeading.textContent, "Sample page title", "Check label");
 
   is(form.backButton.textContent, "Back", "Check label");
   form.backButton.scrollIntoView();
