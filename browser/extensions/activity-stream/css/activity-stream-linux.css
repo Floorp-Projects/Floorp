@@ -230,8 +230,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll; }
-  body.hide-onboarding > #onboarding-overlay-button {
+  body.hide-onboarding, body.hide-main > #onboarding-overlay-button {
     display: none !important; }
+  body.hide-main > #onboarding-notification-bar {
+    display: none; }
 
 h1,
 h2 {
@@ -332,6 +334,8 @@ main {
   margin: auto;
   padding-bottom: 68px;
   width: 274px; }
+  .hide-main main {
+    visibility: hidden; }
   @media (min-width: 482px) {
     main {
       width: 402px; } }
@@ -814,6 +818,7 @@ main {
 .overlay-wrapper {
   position: absolute;
   top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   z-index: 21000;
@@ -853,11 +858,15 @@ main {
       transition: none;
       opacity: 1; }
 
-.background {
+.background,
+body.hide-main {
   width: 100%;
   height: 100%;
   display: block;
-  background: url("../data/content/assets/fox-tail.png") top -200px center no-repeat, linear-gradient(to bottom, #003EAA 40%, #004EC2 60%, #0060DF 80%, #0080FF 90%, #00C7FF 100%) top center no-repeat, #003EAA;
+  background-image: url("../data/content/assets/fox-tail.png"), linear-gradient(to bottom, #003EAA 40%, #004EC2 60%, #0060DF 80%, #0080FF 90%, #00C7FF 100%);
+  background-position-x: center;
+  background-position-y: -200px, top;
+  background-repeat: no-repeat;
   background-size: cover;
   position: fixed; }
 
@@ -976,11 +985,11 @@ main {
   background: url("../data/content/assets/sync-devices.svg") bottom center no-repeat;
   padding-bottom: 210px; }
 
-.firstrun-link {
+a.firstrun-link {
   color: #FFF;
   display: block;
   text-decoration: underline; }
-  .firstrun-link:hover, .firstrun-link:active, .firstrun-link:focus {
+  a.firstrun-link:hover, a.firstrun-link:active, a.firstrun-link:focus {
     color: #FFF; }
 
 .firstrun-title {

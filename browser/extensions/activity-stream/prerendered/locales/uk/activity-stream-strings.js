@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Введіть свою адресу е-пошти",
   "firstrun_form_sub_header": "для продовження в Синхронізації Firefox.",
   "firstrun_email_input_placeholder": "Е-пошта",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Необхідна адреса електронної пошти",
   "firstrun_extra_legal_links": "Продовжуючи, ви приймаєте {terms} і {privacy}.",
   "firstrun_terms_of_service": "Умови надання послуги",
   "firstrun_privacy_notice": "Повідомлення про приватність",
