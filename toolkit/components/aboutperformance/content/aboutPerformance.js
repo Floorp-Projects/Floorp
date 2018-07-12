@@ -9,8 +9,6 @@
 const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});
-const { Memory } = ChromeUtils.import("resource://gre/modules/Memory.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 // about:performance observes notifications on this topic.
 // if a notification is sent, this causes the page to be updated immediately,
@@ -862,123 +860,8 @@ var Control = {
   _displayMode: MODE_GLOBAL,
 };
 
-/**
- * This functionality gets memory related information of sub-processes and
- * updates the performance table regularly.
- * If the page goes hidden, it also handles visibility change by not
- * querying the content processes unnecessarily.
- */
-var SubprocessMonitor = {
-  _timeout: null,
-
-  /**
-   * Init will start the process of updating the table if the page is not hidden,
-   * and set up an event listener for handling visibility changes.
-   */
-  init() {
-    if (!document.hidden) {
-      SubprocessMonitor.updateTable();
-    }
-    document.addEventListener("visibilitychange", SubprocessMonitor.handleVisibilityChange);
-  },
-
-  /**
-   * This function updates the table after an interval if the page is visible
-   * and clears the interval otherwise.
-   */
-  handleVisibilityChange() {
-    if (!document.hidden) {
-      SubprocessMonitor.queueUpdate();
-    } else {
-      clearTimeout(this._timeout);
-      this._timeout = null;
-    }
-  },
-
-  /**
-   * This function queues a timer to request the next summary using updateTable
-   * after some delay.
-   */
-  queueUpdate() {
-    this._timeout = setTimeout(() => this.updateTable(), UPDATE_INTERVAL_MS);
-  },
-
-  /**
-   * This is a helper function for updateTable, which updates a particular row.
-   * @param {<tr> node} row The row to be updated.
-   * @param {object} summaries The object with the updated RSS and USS values.
-   * @param {string} pid The pid represented by the row for which we update.
-   */
-  updateRow(row, summaries, pid) {
-    row.cells[0].textContent = pid;
-    let RSSval = DownloadUtils.convertByteUnits(summaries[pid].rss);
-    row.cells[1].textContent = RSSval.join(" ");
-    let USSval = DownloadUtils.convertByteUnits(summaries[pid].uss);
-    row.cells[2].textContent = USSval.join(" ");
-  },
-
-  /**
-   * This function adds a row to the subprocess-performance table for every new pid
-   * and populates and regularly updates it with RSS/USS measurements.
-   */
-  updateTable() {
-    if (!document.hidden) {
-      Memory.summary().then((summaries) => {
-        if (!(Object.keys(summaries).length)) {
-          // The summaries list was empty, which means we timed out getting
-          // the memory reports. We'll try again later.
-          SubprocessMonitor.queueUpdate();
-          return;
-        }
-        let resultTable = document.getElementById("subprocess-reports");
-        let recycle = [];
-        // We first iterate the table to check if summaries exist for rowPids,
-        // if yes, update them and delete the pid's summary or else hide the row
-        // for recycling it. Start at row 1 instead of 0 (to skip the header row).
-        for (let i = 1, row; (row = resultTable.rows[i]); i++) {
-          let rowPid = row.dataset.pid;
-          let summary = summaries[rowPid];
-          if (summary) {
-            // Now we update the values in the row, which is hardcoded for now,
-            // but we might want to make this more adaptable in the future.
-            SubprocessMonitor.updateRow(row, summaries, rowPid);
-            delete summaries[rowPid];
-          } else {
-            // Take this unnecessary row, hide it and stash it for potential re-use.
-            row.hidden = true;
-            recycle.push(row);
-          }
-        }
-        // For the remaining pids in summaries, we choose from the recyclable
-        // (hidden) nodes, and if they get exhausted, append a row to the table.
-        for (let pid in summaries) {
-          let row = recycle.pop();
-          if (row) {
-            row.hidden = false;
-          } else {
-            // We create a new row here, and set it to row
-            row = document.createElement("tr");
-            // Insert cell for pid
-            row.insertCell();
-            // Insert a cell for USS.
-            row.insertCell();
-            // Insert another cell for RSS.
-            row.insertCell();
-          }
-          row.dataset.pid = pid;
-          // Update the row and put it at the bottom
-          SubprocessMonitor.updateRow(row, summaries, pid);
-          resultTable.appendChild(row);
-        }
-      });
-      SubprocessMonitor.queueUpdate();
-    }
-  },
-};
-
 var go = async function() {
 
-  SubprocessMonitor.init();
   Control.init();
 
   // Setup a hook to allow tests to configure and control this page

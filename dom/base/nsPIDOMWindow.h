@@ -29,7 +29,7 @@ class nsIArray;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShell;
-class nsIDocShellLoadInfo;
+class nsDocShellLoadInfo;
 class nsIDocument;
 class nsIIdleObserver;
 class nsIPrincipal;
@@ -1125,7 +1125,7 @@ public:
   //                will not affect any other window features.
   virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
                         const nsAString& aOptions,
-                        nsIDocShellLoadInfo* aLoadInfo,
+                        nsDocShellLoadInfo* aLoadInfo,
                         bool aForceNoOpener,
                         nsPIDOMWindowOuter **_retval) = 0;
   virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,

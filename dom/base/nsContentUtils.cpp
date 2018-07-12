@@ -8840,6 +8840,26 @@ nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
 
 // static public
 bool
+nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return false;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(document->GetChannel());
+  if (!httpChannel) {
+    return false;
+  }
+
+  return httpChannel->GetIsTrackingResource();
+}
+
+// static public
+bool
 nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                               nsIChannel* aChannel,
                                               nsIURI* aURI)
@@ -9635,7 +9655,8 @@ nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri)
   MOZ_ASSERT(strncmp(aUri, "about:", 6) == 0);
 
   // Make sure the global is a window
-  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobal);
   if (!win) {
     return false;
   }

@@ -31,7 +31,10 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
                                            const ReflowInput& aParentRI)
   : mPresContext(aPresContext),
     mOuterReflowInput(aParentRI),
+    mFrame(nullptr),
     mSpace(aParentRI.GetWritingMode()),
+    mICoord(0),
+    mBCoord(0),
     mMetrics(aParentRI)
 {
 }

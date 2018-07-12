@@ -12,7 +12,8 @@ namespace mozilla {
 namespace dom {
 
 PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
-  : mWorkerPrivate(aWorkerPrivate)
+  : Performance(aWorkerPrivate->UsesSystemPrincipal())
+  , mWorkerPrivate(aWorkerPrivate)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }

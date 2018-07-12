@@ -320,6 +320,14 @@ IpcResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
 }
 
 void
+IpcResourceUpdateQueue::UpdateExternalImage(wr::ExternalImageId aExtId,
+                                            wr::ImageKey aKey,
+                                            ImageIntRect aDirtyRect)
+{
+  mUpdates.AppendElement(layers::OpUpdateExternalImage(aExtId, aKey, aDirtyRect));
+}
+
+void
 IpcResourceUpdateQueue::DeleteImage(ImageKey aKey)
 {
   mUpdates.AppendElement(layers::OpDeleteImage(aKey));

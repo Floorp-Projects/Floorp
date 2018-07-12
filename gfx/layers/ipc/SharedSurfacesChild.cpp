@@ -23,24 +23,20 @@ class SharedSurfacesChild::ImageKeyData final
 {
 public:
   ImageKeyData(WebRenderLayerManager* aManager,
-               const wr::ImageKey& aImageKey,
-               int32_t aInvalidations)
+               const wr::ImageKey& aImageKey)
     : mManager(aManager)
     , mImageKey(aImageKey)
-    , mInvalidations(aInvalidations)
   { }
 
   ImageKeyData(ImageKeyData&& aOther)
     : mManager(std::move(aOther.mManager))
     , mImageKey(aOther.mImageKey)
-    , mInvalidations(aOther.mInvalidations)
   { }
 
   ImageKeyData& operator=(ImageKeyData&& aOther)
   {
     mManager = std::move(aOther.mManager);
     mImageKey = aOther.mImageKey;
-    mInvalidations = aOther.mInvalidations;
     return *this;
   }
 
@@ -49,7 +45,6 @@ public:
 
   RefPtr<WebRenderLayerManager> mManager;
   wr::ImageKey mImageKey;
-  int32_t mInvalidations;
 };
 
 class SharedSurfacesChild::SharedUserData final
@@ -119,7 +114,7 @@ public:
 
   wr::ImageKey UpdateKey(WebRenderLayerManager* aManager,
                          wr::IpcResourceUpdateQueue& aResources,
-                         int32_t aInvalidations)
+                         const Maybe<IntRect>& aDirtyRect)
   {
     MOZ_ASSERT(aManager);
     MOZ_ASSERT(!aManager->IsDestroyed());
@@ -146,13 +141,12 @@ public:
         // can change state. If our namespace differs, then our old key has
         // already been discarded.
         bool ownsKey = wrBridge->GetNamespace() == entry.mImageKey.mNamespace;
-        if (!ownsKey || entry.mInvalidations != aInvalidations) {
-          if (ownsKey) {
-            aManager->AddImageKeyForDiscard(entry.mImageKey);
-          }
-          entry.mInvalidations = aInvalidations;
+        if (!ownsKey) {
           entry.mImageKey = wrBridge->GetNextImageKey();
           aResources.AddExternalImage(mId, entry.mImageKey);
+        } else if (aDirtyRect) {
+          aResources.UpdateExternalImage(mId, entry.mImageKey,
+                                         ViewAs<ImagePixel>(aDirtyRect.ref()));
         }
 
         key = entry.mImageKey;
@@ -162,7 +156,7 @@ public:
 
     if (!found) {
       key = aManager->WrBridge()->GetNextImageKey();
-      ImageKeyData data(aManager, key, aInvalidations);
+      ImageKeyData data(aManager, key);
       mKeys.AppendElement(std::move(data));
       aResources.AddExternalImage(mId, key);
     }
@@ -323,12 +317,12 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
   // surfaces promise to increment the invalidation counter each time the
   // surface has changed. We can use this counter to determine whether or not
   // we should upate our paired ImageKey.
-  int32_t invalidations = aSurface->Invalidations();
+  Maybe<IntRect> dirtyRect = aSurface->TakeDirtyRect();
   SharedUserData* data = nullptr;
   nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
   if (NS_SUCCEEDED(rv)) {
     MOZ_ASSERT(data);
-    aKey = data->UpdateKey(aManager, aResources, invalidations);
+    aKey = data->UpdateKey(aManager, aResources, dirtyRect);
   }
 
   return rv;

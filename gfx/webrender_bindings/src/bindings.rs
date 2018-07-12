@@ -1304,6 +1304,30 @@ pub extern "C" fn wr_resource_updates_update_external_image(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
+    txn: &mut Transaction,
+    key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    external_image_id: WrExternalImageId,
+    image_type: WrExternalImageBufferType,
+    channel_index: u8,
+    dirty_rect: DeviceUintRect,
+) {
+    txn.update_image(
+        key,
+        descriptor.into(),
+        ImageData::External(
+            ExternalImageData {
+                id: external_image_id.into(),
+                channel_index,
+                image_type: image_type.to_wr(),
+            }
+        ),
+        Some(dirty_rect)
+    );
+}
+
+#[no_mangle]
 pub extern "C" fn wr_resource_updates_update_blob_image(
     txn: &mut Transaction,
     image_key: WrImageKey,

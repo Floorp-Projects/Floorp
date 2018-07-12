@@ -1834,9 +1834,6 @@ protected:
   bool mFontSizeInflationDisabledInMasterProcess;
   bool mFontSizeInflationEnabled;
 
-  // Dirty bit indicating that mFontSizeInflationEnabled needs to be recomputed.
-  bool mFontSizeInflationEnabledIsDirty;
-
   bool mPaintingIsFrozen;
 
   // If a document belongs to an invisible DocShell, this flag must be set

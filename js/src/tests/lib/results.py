@@ -70,23 +70,30 @@ class TestResult:
         from wptrunner.executors.base import testharness_result_converter
 
         rc = output.rc
+        stdout = output.out.split("\n")
         if rc != 0:
             if rc == 3:
                 harness_status = "ERROR"
+                harness_message = "Exit code reported exception"
             else:
                 harness_status = "CRASH"
+                harness_message = "Exit code reported crash"
             tests = []
         else:
-            for line in output.out.split("\n"):
+            for (idx, line) in enumerate(stdout):
                 if line.startswith("WPT OUTPUT: "):
                     msg = line[len("WPT OUTPUT: "):]
                     data = [output.test.wpt.url] + json.loads(msg)
                     harness_status_obj, tests = testharness_result_converter(output.test.wpt, data)
                     harness_status = harness_status_obj.status
+                    harness_message = "Reported by harness: %s" % (harness_status_obj.message,)
+                    del stdout[idx]
                     break
             else:
                 harness_status = "ERROR"
+                harness_message = "No harness output found"
                 tests = []
+        stdout.append("Harness status: %s (%s)" % (harness_status, harness_message))
 
         result = cls.PASS
         results = []
@@ -97,12 +104,21 @@ class TestResult:
                 result = cls.FAIL
         else:
             for test in tests:
-                if test.status == output.test.wpt.expected(test.name):
+                test_output = "Subtest \"%s\": " % (test.name,)
+                expected = output.test.wpt.expected(test.name)
+                if test.status == expected:
                     test_result = (cls.PASS, "")
+                    test_output += "as expected: %s" % (test.status,)
                 else:
                     test_result = (cls.FAIL, test.message)
                     result = cls.FAIL
+                    test_output += "expected %s, found %s" % (expected, test.status)
+                    if test.message:
+                        test_output += " (with message: \"%s\")" % (test.message,)
                 results.append(test_result)
+                stdout.append(test_output)
+
+        output.out = "\n".join(stdout) + "\n"
 
         return cls(output.test, result, results)
 

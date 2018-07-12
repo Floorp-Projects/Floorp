@@ -21,7 +21,7 @@
 nsPrintObject::nsPrintObject() :
   mContent(nullptr), mFrameType(eFrame), mParent(nullptr),
   mHasBeenPrinted(false), mDontPrint(true), mPrintAsIs(false),
-  mInvisible(false), mDidCreateDocShell(false),
+  mInvisible(false), mPrintPreview(false), mDidCreateDocShell(false),
   mShrinkRatio(1.0), mZoomRatio(1.0)
 {
   MOZ_COUNT_CTOR(nsPrintObject);

@@ -20,68 +20,6 @@ class GlobalObject;
 
 typedef double (*UnaryFunType)(double);
 
-class MathCache
-{
-  public:
-    enum MathFuncId {
-        Zero,
-        Sin, Cos, Tan, Sinh, Cosh, Tanh, Asin, Acos, Atan, Asinh, Acosh, Atanh,
-        Sqrt, Log, Log10, Log2, Log1p, Exp, Expm1, Cbrt
-    };
-
-  private:
-    static const unsigned SizeLog2 = 12;
-    static const unsigned Size = 1 << SizeLog2;
-    struct Entry { double in; MathFuncId id; double out; };
-    Entry table[Size];
-
-  public:
-    MathCache();
-
-    unsigned hash(double x, MathFuncId id) {
-        union { double d; struct { uint32_t one, two; } s; } u = { x };
-        uint32_t hash32 = u.s.one ^ u.s.two;
-        hash32 += uint32_t(id) << 8;
-        uint16_t hash16 = uint16_t(hash32 ^ (hash32 >> 16));
-        return (hash16 & (Size - 1)) ^ (hash16 >> (16 - SizeLog2));
-    }
-
-    /*
-     * N.B. lookup uses double-equality. This is only safe if hash() maps +0
-     * and -0 to different table entries, which is asserted in MathCache().
-     */
-    double lookup(UnaryFunType f, double x, MathFuncId id) {
-        unsigned index = hash(x, id);
-        Entry& e = table[index];
-        if (e.in == x && e.id == id)
-            return e.out;
-        e.in = x;
-        e.id = id;
-        return e.out = f(x);
-    }
-
-    bool isCached(double x, MathFuncId id, double *r, unsigned *index) {
-        *index = hash(x, id);
-        Entry& e = table[*index];
-        if (e.in == x && e.id == id) {
-            *r = e.out;
-            return true;
-        }
-        return false;
-    }
-
-    void store(MathFuncId id, double x, double v, unsigned index) {
-        Entry &e = table[index];
-        if (e.in == x && e.id == id)
-            return;
-        e.in = x;
-        e.id = id;
-        e.out = v;
-    }
-
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-};
-
 /*
  * JS math functions.
  */
@@ -124,7 +62,7 @@ extern bool
 math_min(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_sqrt_impl(MathCache* cache, double x);
+math_sqrt_impl(double x);
 
 extern bool
 math_sqrt_handle(JSContext* cx, js::HandleValue number, js::MutableHandleValue result);
@@ -140,10 +78,7 @@ minmax_impl(JSContext* cx, bool max, js::HandleValue a, js::HandleValue b,
             js::MutableHandleValue res);
 
 extern void
-math_sincos_uncached(double x, double *sin, double *cos);
-
-extern void
-math_sincos_impl(MathCache* mathCache, double x, double *sin, double *cos);
+math_sincos_impl(double x, double *sin, double *cos);
 
 extern bool
 math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res);
@@ -164,10 +99,7 @@ extern bool
 math_log(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_log_impl(MathCache* cache, double x);
-
-extern double
-math_log_uncached(double x);
+math_log_impl(double x);
 
 extern bool
 math_log_handle(JSContext* cx, HandleValue val, MutableHandleValue res);
@@ -176,10 +108,7 @@ extern bool
 math_sin(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_sin_impl(MathCache* cache, double x);
-
-extern double
-math_sin_uncached(double x);
+math_sin_impl(double x);
 
 extern bool
 math_sin_handle(JSContext* cx, HandleValue val, MutableHandleValue res);
@@ -188,28 +117,19 @@ extern bool
 math_cos(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_cos_impl(MathCache* cache, double x);
-
-extern double
-math_cos_uncached(double x);
+math_cos_impl(double x);
 
 extern bool
 math_exp(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_exp_impl(MathCache* cache, double x);
-
-extern double
-math_exp_uncached(double x);
+math_exp_impl(double x);
 
 extern bool
 math_tan(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_tan_impl(MathCache* cache, double x);
-
-extern double
-math_tan_uncached(double x);
+math_tan_impl(double x);
 
 extern bool
 math_log10(JSContext* cx, unsigned argc, js::Value* vp);
@@ -284,28 +204,19 @@ extern double
 ecmaAtan2(double x, double y);
 
 extern double
-math_atan_impl(MathCache* cache, double x);
-
-extern double
-math_atan_uncached(double x);
+math_atan_impl(double x);
 
 extern bool
 math_atan(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_asin_impl(MathCache* cache, double x);
-
-extern double
-math_asin_uncached(double x);
+math_asin_impl(double x);
 
 extern bool
 math_asin(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double
-math_acos_impl(MathCache* cache, double x);
-
-extern double
-math_acos_uncached(double x);
+math_acos_impl(double x);
 
 extern bool
 math_acos(JSContext* cx, unsigned argc, js::Value* vp);
@@ -353,67 +264,37 @@ extern double
 ecmaPow(double x, double y);
 
 extern double
-math_log10_impl(MathCache* cache, double x);
+math_log10_impl(double x);
 
 extern double
-math_log10_uncached(double x);
+math_log2_impl(double x);
 
 extern double
-math_log2_impl(MathCache* cache, double x);
+math_log1p_impl(double x);
 
 extern double
-math_log2_uncached(double x);
+math_expm1_impl(double x);
 
 extern double
-math_log1p_impl(MathCache* cache, double x);
+math_cosh_impl(double x);
 
 extern double
-math_log1p_uncached(double x);
+math_sinh_impl(double x);
 
 extern double
-math_expm1_impl(MathCache* cache, double x);
+math_tanh_impl(double x);
 
 extern double
-math_expm1_uncached(double x);
+math_acosh_impl(double x);
 
 extern double
-math_cosh_impl(MathCache* cache, double x);
+math_asinh_impl(double x);
 
 extern double
-math_cosh_uncached(double x);
+math_atanh_impl(double x);
 
 extern double
-math_sinh_impl(MathCache* cache, double x);
-
-extern double
-math_sinh_uncached(double x);
-
-extern double
-math_tanh_impl(MathCache* cache, double x);
-
-extern double
-math_tanh_uncached(double x);
-
-extern double
-math_acosh_impl(MathCache* cache, double x);
-
-extern double
-math_acosh_uncached(double x);
-
-extern double
-math_asinh_impl(MathCache* cache, double x);
-
-extern double
-math_asinh_uncached(double x);
-
-extern double
-math_atanh_impl(MathCache* cache, double x);
-
-extern double
-math_atanh_uncached(double x);
-
-extern double
-math_trunc_uncached(double x);
+math_trunc_impl(double x);
 
 extern float
 math_truncf_impl(float x);
@@ -422,16 +303,13 @@ extern bool
 math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r);
 
 extern double
-math_sign_uncached(double x);
+math_sign_impl(double x);
 
 extern bool
 math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r);
 
 extern double
-math_cbrt_impl(MathCache* cache, double x);
-
-extern double
-math_cbrt_uncached(double x);
+math_cbrt_impl(double x);
 
 } /* namespace js */
 

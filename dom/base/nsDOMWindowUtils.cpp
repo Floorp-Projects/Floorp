@@ -2043,8 +2043,8 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   nsresult rv = targetWidget->DispatchEvent(&queryEvent, status);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto* result = new nsQueryContentEventResult();
-  result->SetEventResult(widget, queryEvent);
+  auto* result = new nsQueryContentEventResult(queryEvent);
+  result->SetEventResult(widget);
   NS_ADDREF(*aResult = result);
   return NS_OK;
 }

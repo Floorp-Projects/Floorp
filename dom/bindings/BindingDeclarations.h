@@ -482,7 +482,7 @@ public:
 
 protected:
   // ptr is left uninitialized for optimization purposes.
-  T* ptr;
+  MOZ_INIT_OUTSIDE_CTOR T* ptr;
 #ifdef DEBUG
   bool inited;
 #endif

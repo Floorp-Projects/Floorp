@@ -11,9 +11,19 @@
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
+#define MOZ_LITERAL_UNICODE_STRING(s) \
+  { \
+    /* Length of the string in bytes, less the null terminator */ \
+    sizeof(s) - sizeof(wchar_t), \
+    /* Length of the string in bytes, including the null terminator */ \
+    sizeof(s), \
+    /* Pointer to the buffer */ \
+    const_cast<wchar_t*>(s) \
+  }
+
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
-  { L##name, __VA_ARGS__ },
-#define DLL_BLOCKLIST_CHAR_TYPE wchar_t
+  { MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__ },
+#define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
 
 // Restrict the blocklist definitions to Nightly-only for now
 #if defined(NIGHTLY_BUILD)
@@ -34,13 +44,13 @@ class MOZ_STATIC_CLASS MOZ_TRIVIAL_CTOR_DTOR NativeNtBlockSet final
   {
     NativeNtBlockSetEntry() = default;
     ~NativeNtBlockSetEntry() = default;
-    NativeNtBlockSetEntry(const wchar_t* aName, uint64_t aVersion,
+    NativeNtBlockSetEntry(const UNICODE_STRING& aName, uint64_t aVersion,
                           NativeNtBlockSetEntry* aNext)
       : mName(aName)
       , mVersion(aVersion)
       , mNext(aNext)
     {}
-    const wchar_t*          mName;
+    UNICODE_STRING          mName;
     uint64_t                mVersion;
     NativeNtBlockSetEntry*  mNext;
   };
@@ -50,11 +60,12 @@ public:
   NativeNtBlockSet() = default;
   ~NativeNtBlockSet() = default;
 
-  void Add(const wchar_t* aName, uint64_t aVersion);
+  void Add(const UNICODE_STRING& aName, uint64_t aVersion);
   void Write(HANDLE aFile);
 
 private:
-  static NativeNtBlockSetEntry* NewEntry(const wchar_t* aName, uint64_t aVersion,
+  static NativeNtBlockSetEntry* NewEntry(const UNICODE_STRING& aName,
+                                         uint64_t aVersion,
                                          NativeNtBlockSetEntry* aNextEntry);
 
 private:
@@ -65,7 +76,7 @@ private:
 };
 
 NativeNtBlockSet::NativeNtBlockSetEntry*
-NativeNtBlockSet::NewEntry(const wchar_t* aName, uint64_t aVersion,
+NativeNtBlockSet::NewEntry(const UNICODE_STRING& aName, uint64_t aVersion,
                            NativeNtBlockSet::NativeNtBlockSetEntry* aNextEntry)
 {
   HANDLE processHeap = mozilla::nt::RtlGetProcessHeap();
@@ -82,14 +93,13 @@ NativeNtBlockSet::NewEntry(const wchar_t* aName, uint64_t aVersion,
 }
 
 void
-NativeNtBlockSet::Add(const wchar_t* aName, uint64_t aVersion)
+NativeNtBlockSet::Add(const UNICODE_STRING& aName, uint64_t aVersion)
 {
   ::RtlAcquireSRWLockExclusive(&mLock);
 
   for (NativeNtBlockSetEntry* entry = mFirstEntry; entry; entry = entry->mNext) {
-    // We just need to compare the string pointers, not the strings themselves,
-    // as we always pass in the strings statically defined in the blocklist.
-    if (aName == entry->mName && aVersion == entry->mVersion) {
+    if (::RtlEqualUnicodeString(&entry->mName, &aName, TRUE) &&
+        aVersion == entry->mVersion) {
       ::RtlReleaseSRWLockExclusive(&mLock);
       return;
     }
@@ -118,8 +128,9 @@ NativeNtBlockSet::Write(HANDLE aFile)
 
   MOZ_SEH_TRY {
     for (auto entry = mFirstEntry; entry; entry = entry->mNext) {
-      int convOk = ::WideCharToMultiByte(CP_UTF8, 0, entry->mName, -1, buf,
-                                         sizeof(buf), nullptr, nullptr);
+      int convOk = ::WideCharToMultiByte(CP_UTF8, 0, entry->mName.Buffer,
+                                         entry->mName.Length / sizeof(wchar_t),
+                                         buf, sizeof(buf), nullptr, nullptr);
       if (!convOk) {
         continue;
       }
@@ -225,11 +236,11 @@ IsDllAllowed(const UNICODE_STRING& aLeafName, void* aBaseAddress)
     return false;
   }
 
-  UNICODE_STRING testStr;
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
-  while (info->name) {
-    ::RtlInitUnicodeString(&testStr, info->name);
-    if (::RtlEqualUnicodeString(&aLeafName, &testStr, TRUE)) {
+  DECLARE_POINTER_TO_LAST_DLL_BLOCKLIST_ENTRY(end);
+
+  while (info < end) {
+    if (::RtlEqualUnicodeString(&aLeafName, &info->name, TRUE)) {
       break;
     }
 
@@ -237,7 +248,7 @@ IsDllAllowed(const UNICODE_STRING& aLeafName, void* aBaseAddress)
   }
 
   uint64_t version;
-  if (info->name && !CheckBlockInfo(info, aBaseAddress, version)) {
+  if (info->name.Length && !CheckBlockInfo(info, aBaseAddress, version)) {
     gBlockSet.Add(info->name, version);
     return false;
   }
