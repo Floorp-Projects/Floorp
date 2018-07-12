@@ -99,6 +99,7 @@ template<> struct IsIntegralHelper<unsigned long long> : TrueType {};
 template<> struct IsIntegralHelper<bool>               : TrueType {};
 template<> struct IsIntegralHelper<wchar_t>            : TrueType {};
 template<> struct IsIntegralHelper<char16_t>           : TrueType {};
+template<> struct IsIntegralHelper<char32_t>           : TrueType {};
 
 } /* namespace detail */
 
