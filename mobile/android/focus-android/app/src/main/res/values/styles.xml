@@ -13,6 +13,7 @@
         <item name="popupMenuStyle">@style/PopupMenu</item>
 
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">

@@ -108,7 +108,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        WebViewProvider.applyAppSettings(getContext(), getSettings(), this);
+        WebViewProvider.INSTANCE.applyAppSettings(getContext(), getSettings(), this);
     }
 
     @Override
@@ -172,9 +172,9 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     public void setBlockingEnabled(boolean enabled) {
         client.setBlockingEnabled(enabled);
         if (enabled) {
-            WebViewProvider.applyAppSettings(getContext(), getSettings(), this);
+            WebViewProvider.INSTANCE.applyAppSettings(getContext(), getSettings(), this);
         } else {
-            WebViewProvider.disableBlocking(getSettings(), this);
+            WebViewProvider.INSTANCE.disableBlocking(getSettings(), this);
         }
 
         if (callback != null) {
@@ -185,9 +185,9 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     @Override
     public void setRequestDesktop(boolean shouldRequestDesktop) {
         if (shouldRequestDesktop) {
-            WebViewProvider.requestDesktopSite(getSettings());
+            WebViewProvider.INSTANCE.requestDesktopSite(getSettings());
         } else {
-            WebViewProvider.requestMobileSite(getContext(), getSettings());
+            WebViewProvider.INSTANCE.requestMobileSite(getContext(), getSettings());
         }
 
         if (callback != null) {

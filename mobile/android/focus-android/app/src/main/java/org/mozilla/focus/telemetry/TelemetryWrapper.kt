@@ -246,7 +246,7 @@ object TelemetryWrapper {
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)
                     .setBuildId(TelemetryConfiguration(context).buildId +
-                    (if (AppConstants.isGeckoBuild())
+                    (if (AppConstants.isGeckoBuild(context))
                         ("-" + TELEMETRY_APP_ENGINE_GECKOVIEW) else ""))
 
             val serializer = JSONPingSerializer()

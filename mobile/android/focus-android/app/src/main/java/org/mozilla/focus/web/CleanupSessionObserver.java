@@ -24,7 +24,7 @@ public class CleanupSessionObserver extends NonNullObserver<List<Session>> {
     protected void onValueChanged(@NonNull List<Session> sessions) {
         if (sessions.isEmpty()) {
             // Make sure no browsing data remains on the device if there's no active session (anymore).
-            WebViewProvider.performCleanup(context);
+            WebViewProvider.INSTANCE.performCleanup(context);
         }
     }
 }

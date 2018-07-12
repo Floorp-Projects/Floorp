@@ -26,5 +26,6 @@
         calling functions from desktop apps and silently ignoring those calls when
         the functions are not available on Android. -->
         <ignore path="**/sentry*.jar" />
+        <ignore path="**/junit*.jar" />
     </issue>
 </lint>

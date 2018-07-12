@@ -52,7 +52,7 @@ public class LocalizedContent {
 
         String aboutVersion = "";
         try {
-            final String engineIndicator = AppConstants.isGeckoBuild() ?
+            final String engineIndicator = AppConstants.isGeckoBuild(context) ?
                     " \uD83E\uDD8E " + BuildConfig.GECKOVIEW_VERSION
                     : "";
             final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);

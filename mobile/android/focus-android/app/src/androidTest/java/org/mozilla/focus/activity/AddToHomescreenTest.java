@@ -130,7 +130,7 @@ public class AddToHomescreenTest {
         TestHelper.pressEnterKey();
         TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
-        if (!AppConstants.isGeckoBuild()) {
+        if (!AppConstants.isGeckoBuild(mActivityTestRule.getActivity())) {
             TestHelper.waitForWebSiteTitleLoad();
         }
 
@@ -181,7 +181,7 @@ public class AddToHomescreenTest {
         TestHelper.pressEnterKey();
         TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
-        if (!AppConstants.isGeckoBuild()) {
+        if (!AppConstants.isGeckoBuild(mActivityTestRule.getActivity())) {
             TestHelper.waitForWebSiteTitleLoad();
         }
 

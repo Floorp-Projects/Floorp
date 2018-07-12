@@ -20,9 +20,9 @@ before_install:
   - yes | sdkmanager "platforms;android-27"
 
 script:
-  - ./gradlew --no-daemon clean assemble
+  - ./gradlew -Pcoverage --no-daemon clean assembleFocusGeckoX86
   - echo "--" > .adjust_token
-  - ./gradlew --no-daemon jacocoTestReport
+  - ./gradlew -Pcoverage --no-daemon jacocoTestReport
 
 after_success:
   - python <(curl -s https://raw.githubusercontent.com/TouK/sputnik-ci/master/sputnik-ci.py)

@@ -5,7 +5,12 @@
 
 package org.mozilla.focus.utils;
 
+import android.content.Context;
+import android.preference.PreferenceManager;
+
 import org.mozilla.focus.BuildConfig;
+
+import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 public final class AppConstants {
     private static final String BUILD_TYPE_DEBUG = "debug";
@@ -28,8 +33,9 @@ public final class AppConstants {
         return BUILD_TYPE_RELEASE.equals(BuildConfig.BUILD_TYPE);
     }
 
-    public static boolean isGeckoBuild() {
-        return BuildConfig.FLAVOR_engine.equals(ENGINE_FLAVOR_GECKO);
+    public static boolean isGeckoBuild(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(ENGINE_PREF_STRING_KEY, false);
     }
 
     public static boolean supportsDownloadingFiles() {

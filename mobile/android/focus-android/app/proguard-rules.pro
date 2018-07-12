@@ -93,6 +93,9 @@
 # Android architecture components
 ####################################################################################################
 
+-dontwarn android.**
+-dontwarn com.google.**
+
 # https://developer.android.com/topic/libraries/architecture/release-notes.html
 # According to the docs this won't be needed when 1.0 of the library is released.
 -keep class * implements android.arch.lifecycle.GeneratedAdapter {<init>(...);}

@@ -103,7 +103,7 @@ class BrowserMenuAdapter(
 
         items.add(MenuItem.RequestDesktopCheck)
 
-        if (AppConstants.isGeckoBuild()) {
+        if (AppConstants.isGeckoBuild(context)) {
             // "Report Site Issue" is available for builds using GeckoView only
             items.add(MenuItem.Default(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue)))
         }

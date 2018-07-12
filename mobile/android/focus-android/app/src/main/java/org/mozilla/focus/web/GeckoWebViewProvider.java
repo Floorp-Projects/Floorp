@@ -17,10 +17,14 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebSettings;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.focus.browser.LocalizedContent;
+import org.mozilla.focus.gecko.GeckoViewPrompt;
+import org.mozilla.focus.gecko.NestedGeckoView;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.telemetry.SentryWrapper;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -28,6 +32,7 @@ import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.webview.SystemWebView;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoResponse;
@@ -43,26 +48,27 @@ import kotlin.text.Charsets;
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
-public class WebViewProvider {
+public class GeckoWebViewProvider implements IWebViewProvider {
     private static volatile GeckoRuntime geckoRuntime;
 
-    public static void preload(final Context context) {
+    public void preload(@NonNull final Context context) {
         createGeckoRuntimeIfNeeded(context);
     }
 
-    public static View create(Context context, AttributeSet attrs) {
+    @NonNull
+    public View create(@NonNull Context context, AttributeSet attrs) {
         return new GeckoWebView(context, attrs);
     }
 
-    public static void performCleanup(final Context context) {
+    public void performCleanup(@NonNull final Context context) {
         // Nothing: does Gecko need extra private mode cleanup?
     }
 
-    public static void performNewBrowserSessionCleanup() {
+    public void performNewBrowserSessionCleanup() {
         // Nothing: a WebKit work-around.
     }
 
-    private static void createGeckoRuntimeIfNeeded(Context context) {
+    private void createGeckoRuntimeIfNeeded(Context context) {
         if (geckoRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                     new GeckoRuntimeSettings.Builder();
@@ -70,6 +76,31 @@ public class WebViewProvider {
             runtimeSettingsBuilder.nativeCrashReportingEnabled(true);
             geckoRuntime = GeckoRuntime.create(context.getApplicationContext(), runtimeSettingsBuilder.build());
         }
+    }
+
+    @Override
+    public void requestMobileSite(@NotNull Context context, @NotNull WebSettings webSettings) {
+
+    }
+
+    @Override
+    public void requestDesktopSite(@NotNull WebSettings webSettings) {
+
+    }
+
+    @Override
+    public void applyAppSettings(@NotNull Context context, @NotNull WebSettings webSettings, @NotNull SystemWebView systemWebView) {
+
+    }
+
+    @Override
+    public void disableBlocking(@NotNull WebSettings webSettings, @NotNull SystemWebView systemWebView) {
+
+    }
+
+    @Override
+    public String getUABrowserString(@NotNull String existingUAString, @NotNull String focusToken) {
+        return null;
     }
 
     public static class GeckoWebView extends NestedGeckoView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {

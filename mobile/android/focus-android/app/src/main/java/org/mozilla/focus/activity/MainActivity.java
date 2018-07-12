@@ -5,10 +5,13 @@
 
 package org.mozilla.focus.activity;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.AttributeSet;
@@ -24,9 +27,12 @@ import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.ui.SessionsSheetFragment;
+import org.mozilla.focus.settings.ExperimentsSettingsFragment;
+import org.mozilla.focus.telemetry.SentryWrapper;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.ViewUtils;
+import org.mozilla.focus.viewmodel.MainViewModel;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
@@ -53,6 +59,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        SentryWrapper.INSTANCE.init(this);
+
+        initViewModel();
+
         if (Settings.getInstance(this).shouldUseSecureMode()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
@@ -71,7 +81,22 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         registerSessionObserver();
 
-        WebViewProvider.preload(this);
+        WebViewProvider.INSTANCE.preload(this);
+    }
+
+    private void initViewModel() {
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        viewModel.getExperimentsLiveData().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                ExperimentsSettingsFragment preferenceFragment = new ExperimentsSettingsFragment();
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, preferenceFragment, ExperimentsSettingsFragment.FRAGMENT_TAG)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+            }
+        });
     }
 
     private void registerSessionObserver() {
@@ -91,7 +116,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
                 } else {
                     // This happens when we move from 0 to 1 sessions: either on startup or after an erase.
                     if (wasSessionsEmpty) {
-                        WebViewProvider.performNewBrowserSessionCleanup();
+                        WebViewProvider.INSTANCE.performNewBrowserSessionCleanup();
                         wasSessionsEmpty = false;
                     }
 
@@ -132,7 +157,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     @Override
     protected void onPause() {
         if (isFinishing()) {
-            WebViewProvider.performCleanup(this);
+            WebViewProvider.INSTANCE.performCleanup(this);
         }
 
         super.onPause();
@@ -244,7 +269,7 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     public View onCreateView(String name, Context context, AttributeSet attrs) {
         if (name.equals(IWebView.class.getName())) {
             // Inject our implementation of IWebView from the WebViewProvider.
-            return WebViewProvider.create(this, attrs);
+            return WebViewProvider.INSTANCE.create(this, attrs);
         }
 
         return super.onCreateView(name, context, attrs);

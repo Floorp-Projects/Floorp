@@ -50,9 +50,9 @@ def generate_ui_test_task(dependencies):
 		name = "(Focus for Android) UI tests - Webview",
 		description = "Run UI tests for Focus/Klar for Android.",
 		command = ('echo "--" > .adjust_token'
-			' && ./gradlew --no-daemon clean assembleFocusWebviewUniversalDebug assembleFocusWebviewUniversalDebugAndroidTest'
+			' && ./gradlew --no-daemon clean assembleFocusWebviewX86Debug assembleFocusWebviewX86DebugAndroidTest'
 			' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-			' && tools/taskcluster/execute-firebase-test.sh focusWebviewUniversal app-focus-webview-universal-debug model=walleye,version=26 model=shamu,version=23 model=Nexus9,version=23'),
+			' && tools/taskcluster/execute-firebase-test.sh focusWebviewX86 app-focus-webview-x86-debug model=walleye,version=26 model=shamu,version=23 model=Nexus9,version=23'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {
@@ -106,7 +106,7 @@ def upload_apk_nimbledroid_task(dependencies):
 		name = "(Focus for Android) Upload Debug APK to Nimbledroid",
 		description = "Upload APKs to Nimbledroid for performance measurement and tracking.",
 		command = ('echo "--" > .adjust_token'
-				   ' && ./gradlew --no-daemon clean assembleFocusWebviewUniversalRelease assembleKlarGeckoArmRelease'
+				   ' && ./gradlew --no-daemon clean assembleFocusWebviewArmRelease assembleKlarGeckoArmRelease'
 				   ' && python tools/taskcluster/upload_apk_nimbledroid.py'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/nimbledroid' ],

@@ -54,7 +54,7 @@ public final class TestHelper {
 
     // wait for web area to be visible
     public static void waitForWebContent() {
-        if (!AppConstants.isGeckoBuild()) {
+        if (!AppConstants.isGeckoBuild(InstrumentationRegistry.getContext())) {
             assertTrue(webView.waitForExists(waitingTime));
         } else {
             assertTrue(geckoView.waitForExists(waitingTime));
@@ -156,7 +156,6 @@ public final class TestHelper {
     public static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/addtohomescreen_dialog_add")
             .enabled(true));
-
     public static UiObject AddautoBtn = TestHelper.mDevice.findObject(new UiSelector()
             .className("android.widget.Button")
             .instance(1)
