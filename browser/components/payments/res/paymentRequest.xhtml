@@ -92,8 +92,8 @@
     </header>
 
     <div id="main-container">
-      <section id="payment-summary" class="page">
-        <section>
+      <payment-request-page id="payment-summary">
+        <div class="page-body">
           <div id="error-text"></div>
 
           <div class="shipping-related"
@@ -122,9 +122,9 @@
                           data-edit-link-label="&payer.editLink.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
           <div id="error-text"></div>
-        </section>
+        </div>
 
-        <footer id="controls-container">
+        <footer>
           <button id="cancel">&cancelPaymentButton.label;</button>
           <button id="pay"
                   class="primary"
@@ -134,14 +134,13 @@
                   data-unknown-label="&unknownPaymentButton.label;"
                   data-success-label="&successPaymentButton.label;"></button>
         </footer>
-      </section>
+      </payment-request-page>
       <section id="order-details-overlay" hidden="hidden">
         <h2>&orderDetailsLabel;</h2>
         <order-details></order-details>
       </section>
 
       <basic-card-form id="basic-card-page"
-                       class="page"
                        data-add-basic-card-title="&basicCard.addPage.title;"
                        data-edit-basic-card-title="&basicCard.editPage.title;"
                        data-error-generic-save="&basicCardPage.error.genericSave;"
@@ -156,7 +155,6 @@
                        hidden="hidden"></basic-card-form>
 
       <address-form id="address-page"
-                    class="page"
                     data-error-generic-save="&addressPage.error.genericSave;"
                     data-cancel-button-label="&addressPage.cancelButton.label;"
                     data-back-button-label="&addressPage.backButton.label;"
@@ -182,8 +180,8 @@
 </head>
 <body dir="&locale.dir;">
   <iframe id="debugging-console"
-          hidden="hidden"
-          height="400"></iframe>
+          hidden="hidden">
+  </iframe>
   <payment-dialog data-shipping-address-title-add="&shippingAddress.addPage.title;"
                   data-shipping-address-title-edit="&shippingAddress.editPage.title;"
                   data-delivery-address-title-add="&deliveryAddress.addPage.title;"
