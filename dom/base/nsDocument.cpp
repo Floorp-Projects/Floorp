@@ -2599,9 +2599,10 @@ nsIDocument::IsSynthesized() {
 }
 
 bool
-nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
+nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindowInner> window = xpc::WindowGlobalOrNull(aObject);
+  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
+  nsCOMPtr<nsPIDOMWindowInner> window = xpc::WindowOrNull(aGlobal);
 
   nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
   if (!doc) {

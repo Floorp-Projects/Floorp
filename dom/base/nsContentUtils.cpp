@@ -9655,7 +9655,8 @@ nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri)
   MOZ_ASSERT(strncmp(aUri, "about:", 6) == 0);
 
   // Make sure the global is a window
-  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobal);
   if (!win) {
     return false;
   }
