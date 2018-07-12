@@ -79,6 +79,17 @@ describe("ASRouterFeed", () => {
     });
   });
   describe("#onAction: PREF_CHANGE", () => {
+    it("should return early if the pref changed does not enable/disable the router", async () => {
+      // Router starts initialized
+      await Router.init(new FakeRemotePageManager(), storage);
+      sinon.stub(Router, "uninit");
+      prefs[EXPERIMENT_PREF] = false;
+
+      // call .onAction with INIT
+      feed.onAction({type: at.PREF_CHANGED, data: {name: "someOtherPref"}});
+
+      assert.notCalled(Router.uninit);
+    });
     it("should uninitialize the ASRouter if it is already initialized and the experiment pref is false", async () => {
       // Router starts initialized
       await Router.init(new FakeRemotePageManager(), storage);
@@ -86,7 +97,7 @@ describe("ASRouterFeed", () => {
       prefs[EXPERIMENT_PREF] = false;
 
       // call .onAction with INIT
-      feed.onAction({type: at.PREF_CHANGED});
+      feed.onAction({type: at.PREF_CHANGED, data: {name: EXPERIMENT_PREF}});
 
       assert.calledOnce(Router.uninit);
     });
