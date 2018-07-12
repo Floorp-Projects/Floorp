@@ -1038,7 +1038,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       // Watch out for getters!
       case ParseNodeKind::Dot:
-        MOZ_ASSERT(pn->isArity(PN_NAME));
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
 
@@ -1418,6 +1418,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::CallSiteObj:      // by ParseNodeKind::TaggedTemplate
       case ParseNodeKind::PosHolder:        // by ParseNodeKind::NewTarget
       case ParseNodeKind::SuperBase:        // by ParseNodeKind::Elem and others
+      case ParseNodeKind::PropertyName:     // by ParseNodeKind::Dot
         MOZ_CRASH("handled by parent nodes");
 
       case ParseNodeKind::Limit: // invalid sentinel value
@@ -1889,11 +1890,11 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn)
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Dot));
     MOZ_ASSERT(!pn->as<PropertyAccess>().isSuper());
 
-    ParseNode* pn2 = pn->pn_expr;
+    ParseNode* pn2 = pn->pn_left;
 
     /*
      * If the object operand is also a dotted property reference, reverse the
-     * list linked via pn_expr temporarily so we can iterate over it from the
+     * list linked via pn_left temporarily so we can iterate over it from the
      * bottom up (reversing again as we go), to avoid excessive recursion.
      */
     if (pn2->isKind(ParseNodeKind::Dot) && !pn2->as<PropertyAccess>().isSuper()) {
@@ -1901,9 +1902,9 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn)
         ParseNode* pnup = nullptr;
         ParseNode* pndown;
         for (;;) {
-            /* Reverse pndot->pn_expr to point up, not down. */
-            pndown = pndot->pn_expr;
-            pndot->pn_expr = pnup;
+            /* Reverse pndot->pn_left to point up, not down. */
+            pndown = pndot->pn_left;
+            pndot->pn_left = pnup;
             if (!pndown->isKind(ParseNodeKind::Dot) || pndown->as<PropertyAccess>().isSuper())
                 break;
             pnup = pndot;
@@ -1916,12 +1917,12 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn)
 
         do {
             /* Walk back up the list, emitting annotated name ops. */
-            if (!emitAtomOp(pndot, JSOP_GETPROP))
+            if (!emitAtomOp(pndot->pn_right, JSOP_GETPROP))
                 return false;
 
-            /* Reverse the pn_expr link again. */
-            pnup = pndot->pn_expr;
-            pndot->pn_expr = pndown;
+            /* Reverse the pn_left link again. */
+            pnup = pndot->pn_left;
+            pndot->pn_left = pndown;
             pndown = pndot;
         } while ((pndot = pnup) != nullptr);
         return true;
@@ -1946,7 +1947,7 @@ BytecodeEmitter::emitSuperPropLHS(ParseNode* superBase, bool isCall)
 bool
 BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 {
-    MOZ_ASSERT(pn->isArity(PN_NAME));
+    MOZ_ASSERT(pn->isArity(PN_BINARY));
 
     if (!emitPropLHS(pn))
         return false;
@@ -1954,7 +1955,7 @@ BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
     if (op == JSOP_CALLPROP && !emit1(JSOP_DUP))
         return false;
 
-    if (!emitAtomOp(pn, op))
+    if (!emitAtomOp(pn->pn_right, op))
         return false;
 
     if (op == JSOP_CALLPROP && !emit1(JSOP_SWAP))
@@ -1970,7 +1971,7 @@ BytecodeEmitter::emitSuperGetProp(ParseNode* pn, bool isCall)
     if (!emitSuperPropLHS(base, isCall))
         return false;
 
-    if (!emitAtomOp(pn, JSOP_GETPROP_SUPER))
+    if (!emitAtomOp(pn->pn_right, JSOP_GETPROP_SUPER))
         return false;
 
     if (isCall && !emit1(JSOP_SWAP))
@@ -2000,7 +2001,7 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
         if (!emit1(JSOP_DUP))                       // OBJ OBJ
             return false;
     }
-    if (!emitAtomOp(pn->pn_kid, isSuper? JSOP_GETPROP_SUPER : JSOP_GETPROP)) // OBJ V
+    if (!emitAtomOp(pn->pn_kid->pn_right, isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) // OBJ V
         return false;
     if (!emit1(JSOP_POS))                           // OBJ N
         return false;
@@ -2026,7 +2027,7 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
 
     JSOp setOp = isSuper ? sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER
                          : sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-    if (!emitAtomOp(pn->pn_kid, setOp))             // N? N+1
+    if (!emitAtomOp(pn->pn_kid->pn_right, setOp))   // N? N+1
         return false;
     if (post && !emit1(JSOP_POP))                   // RESULT
         return false;
@@ -2716,7 +2717,7 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
                 return false;
             *emitted = 2;
         } else {
-            if (!emitTree(target->pn_expr))
+            if (!emitTree(target->pn_left))
                 return false;
             *emitted = 1;
         }
@@ -2834,7 +2835,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
                 setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
             else
                 setOp = sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-            if (!emitAtomOp(target, setOp))
+            if (!emitAtomOp(target->pn_right, setOp))
                 return false;
             break;
           }
@@ -3946,11 +3947,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
                 return false;
             offset += 2;
         } else {
-            if (!emitTree(lhs->expr()))
+            if (!emitTree(lhs->pn_left))
                 return false;
             offset += 1;
         }
-        if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
+        if (!makeAtomIndex(lhs->pn_right->pn_atom, &atomIndex))
             return false;
         break;
       case ParseNodeKind::Elem: {
@@ -3999,7 +4000,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
             } else {
                 if (!emit1(JSOP_DUP))
                     return false;
-                bool isLength = (lhs->pn_atom == cx->names().length);
+                bool isLength = (lhs->pn_right->pn_atom == cx->names().length);
                 getOp = isLength ? JSOP_LENGTH : JSOP_GETPROP;
             }
             if (!emitIndex32(getOp, atomIndex))
@@ -8695,8 +8696,9 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
             return false;
         break;
 
+      case ParseNodeKind::PropertyName:
       case ParseNodeKind::PosHolder:
-        MOZ_FALLTHROUGH_ASSERT("Should never try to emit ParseNodeKind::PosHolder");
+        MOZ_FALLTHROUGH_ASSERT("Should never try to emit ParseNodeKind::PosHolder or ::Property");
 
       default:
         MOZ_ASSERT(0);
