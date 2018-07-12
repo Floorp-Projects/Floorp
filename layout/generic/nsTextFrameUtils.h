@@ -164,7 +164,7 @@ public:
   nsSkipCharsRunIterator(const gfxSkipCharsIterator& aStart,
       LengthMode aLengthIncludesSkipped, uint32_t aLength)
     : mIterator(aStart), mRemainingLength(aLength), mRunLength(0),
-      mVisitSkipped(false),
+      mSkipped(false), mVisitSkipped(false),
       mLengthIncludesSkipped(aLengthIncludesSkipped) {
   }
   void SetVisitSkipped() { mVisitSkipped = true; }

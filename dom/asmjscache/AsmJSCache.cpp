@@ -446,6 +446,7 @@ public:
     mOpenMode(aOpenMode),
     mWriteParams(aWriteParams),
     mOperationMayProceed(true),
+    mModuleIndex(0),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
     mActorDestroyed(false),

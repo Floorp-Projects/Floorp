@@ -209,6 +209,9 @@ private:
                        wr::TransactionBuilder& aUpdates);
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                         wr::TransactionBuilder& aResources);
+  bool UpdateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
+                           const ImageIntRect& aDirtyRect,
+                           wr::TransactionBuilder& aResources);
 
   bool PushExternalImageForTexture(wr::ExternalImageId aExtId,
                                    wr::ImageKey aKey,

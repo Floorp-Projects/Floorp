@@ -109,7 +109,6 @@ protected:
    */
   bool          mIsHTMLSerializer;
 
-  bool          mDoHeader;
   bool          mIsCopying; // Set to true only while copying
 
   /*

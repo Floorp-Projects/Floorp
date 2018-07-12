@@ -771,7 +771,11 @@ class nsLineList_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+    nsLineList_iterator()
+      : mListLink(nullptr)
+    {
+      memset(&mCurrent, 0xcd, sizeof(mCurrent));
+    }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -810,36 +814,42 @@ class nsLineList_iterator {
 
     reference operator*()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -847,6 +857,7 @@ class nsLineList_iterator {
 #ifndef __MWERKS__
     operator const_pointer() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -880,21 +891,25 @@ class nsLineList_iterator {
     // to keep AIX happy.
     bool operator==(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
     bool operator==(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
@@ -930,7 +945,11 @@ class nsLineList_reverse_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+    nsLineList_reverse_iterator()
+      : mListLink(nullptr)
+    {
+      memset(&mCurrent, 0xcd, sizeof(mCurrent));
+    }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -969,36 +988,42 @@ class nsLineList_reverse_iterator {
 
     reference operator*()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1006,6 +1031,7 @@ class nsLineList_reverse_iterator {
 #ifndef __MWERKS__
     operator const_pointer() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1015,21 +1041,25 @@ class nsLineList_reverse_iterator {
     // to keep AIX happy.
     bool operator==(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
     bool operator==(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
@@ -1066,7 +1096,11 @@ class nsLineList_const_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_const_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+    nsLineList_const_iterator()
+      : mListLink(nullptr)
+    {
+      memset(&mCurrent, 0xcd, sizeof(mCurrent));
+    }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -1109,18 +1143,21 @@ class nsLineList_const_iterator {
 
     const_reference operator*() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1128,6 +1165,7 @@ class nsLineList_const_iterator {
 #ifndef __MWERKS__
     operator const_pointer() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1149,21 +1187,25 @@ class nsLineList_const_iterator {
     // to keep AIX happy.
     bool operator==(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
     bool operator==(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
@@ -1200,7 +1242,11 @@ class nsLineList_const_reverse_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_const_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
+    nsLineList_const_reverse_iterator()
+      : mListLink(nullptr)
+    {
+      memset(&mCurrent, 0xcd, sizeof(mCurrent));
+    }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -1243,18 +1289,21 @@ class nsLineList_const_reverse_iterator {
 
     const_reference operator*() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1262,6 +1311,7 @@ class nsLineList_const_reverse_iterator {
 #ifndef __MWERKS__
     operator const_pointer() const
     {
+      MOZ_ASSERT(mListLink);
       MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
@@ -1271,21 +1321,25 @@ class nsLineList_const_reverse_iterator {
     // to keep AIX happy.
     bool operator==(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther) const
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
     bool operator==(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther)
     {
+      MOZ_ASSERT(mListLink);
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }

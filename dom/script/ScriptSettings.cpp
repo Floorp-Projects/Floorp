@@ -568,6 +568,7 @@ AutoJSAPI::ReportException()
       errorGlobal = GetCurrentThreadWorkerGlobal();
     }
   }
+  MOZ_ASSERT(JS_IsGlobalObject(errorGlobal));
   JSAutoRealm ar(cx(), errorGlobal);
   JS::Rooted<JS::Value> exn(cx());
   js::ErrorReport jsReport(cx());
@@ -576,7 +577,7 @@ AutoJSAPI::ReportException()
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
-      RefPtr<nsGlobalWindowInner> win = xpc::WindowGlobalOrNull(errorGlobal);
+      RefPtr<nsGlobalWindowInner> win = xpc::WindowOrNull(errorGlobal);
       nsPIDOMWindowInner* inner = win ? win->AsInner() : nullptr;
       bool isChrome = nsContentUtils::IsSystemPrincipal(
         nsContentUtils::ObjectPrincipal(errorGlobal));

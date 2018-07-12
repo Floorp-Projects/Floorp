@@ -114,7 +114,7 @@
 
 #include "mozInlineSpellChecker.h"
 #include "nsDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIConsoleListener.h"
 #include "nsIContentViewer.h"
 #include "nsICycleCollectorListener.h"
@@ -546,6 +546,7 @@ ContentChild::ContentChild()
  , mMainChromeTid(0)
  , mMsaaID(0)
 #endif
+ , mIsForBrowser(false)
  , mIsAlive(true)
  , mShuttingDown(false)
 {
@@ -756,7 +757,7 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                             const nsAString& aName,
                             const nsACString& aFeatures,
                             bool aForceNoOpener,
-                            nsIDocShellLoadInfo* aLoadInfo,
+                            nsDocShellLoadInfo* aLoadInfo,
                             bool* aWindowIsNew,
                             mozIDOMWindowProxy** aReturn)
 {
@@ -768,7 +769,7 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
 
 static nsresult
 GetCreateWindowParams(mozIDOMWindowProxy* aParent,
-                      nsIDocShellLoadInfo* aLoadInfo,
+                      nsDocShellLoadInfo* aLoadInfo,
                       nsACString& aBaseURIString, float* aFullZoom,
                       uint32_t* aReferrerPolicy,
                       nsIPrincipal** aTriggeringPrincipal)
@@ -796,13 +797,11 @@ GetCreateWindowParams(mozIDOMWindowProxy* aParent,
 
   baseURI->GetSpec(aBaseURIString);
 
-  bool sendReferrer = true;
   if (aLoadInfo) {
-    aLoadInfo->GetSendReferrer(&sendReferrer);
-    if (!sendReferrer) {
+    if (!aLoadInfo->SendReferrer()) {
       *aReferrerPolicy = mozilla::net::RP_No_Referrer;
     } else {
-      aLoadInfo->GetReferrerPolicy(aReferrerPolicy);
+      *aReferrerPolicy = aLoadInfo->ReferrerPolicy();
     }
   }
 
@@ -833,7 +832,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
                                   bool aForceNoOpener,
-                                  nsIDocShellLoadInfo* aLoadInfo,
+                                  nsDocShellLoadInfo* aLoadInfo,
                                   bool* aWindowIsNew,
                                   mozIDOMWindowProxy** aReturn)
 {

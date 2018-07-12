@@ -346,6 +346,17 @@ interface nsISHEntry : nsISupports
      * changed once set to a non-null value.
      */
     [noscript] attribute nsISHistory SHistory;
+
+    /**
+     * Sets an SHEntry to reflect that it is a history type load. as
+     * nsIDocShellLoadInfo and its LoadType enum were removed, this is the
+     * equivalent to doing
+     *
+     * shEntry.loadType = 4;
+     *
+     * in js, but easier to maintain and less opaque.
+     */
+    void setAsHistoryLoad();
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

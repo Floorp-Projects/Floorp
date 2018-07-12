@@ -12,21 +12,6 @@ using namespace js;
 
 using mozilla::PodZero;
 
-MathCache*
-RuntimeCaches::createMathCache(JSContext* cx)
-{
-    MOZ_ASSERT(!mathCache_);
-
-    auto newMathCache = MakeUnique<MathCache>();
-    if (!newMathCache) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
-    mathCache_ = std::move(newMathCache);
-    return mathCache_.get();
-}
-
 bool
 RuntimeCaches::init()
 {

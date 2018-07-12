@@ -1584,6 +1584,16 @@ void wr_resource_updates_update_external_image(Transaction *aTxn,
 WR_FUNC;
 
 WR_INLINE
+void wr_resource_updates_update_external_image_with_dirty_rect(Transaction *aTxn,
+                                                               WrImageKey aKey,
+                                                               const WrImageDescriptor *aDescriptor,
+                                                               WrExternalImageId aExternalImageId,
+                                                               WrExternalImageBufferType aImageType,
+                                                               uint8_t aChannelIndex,
+                                                               DeviceUintRect aDirtyRect)
+WR_FUNC;
+
+WR_INLINE
 void wr_resource_updates_update_image(Transaction *aTxn,
                                       WrImageKey aKey,
                                       const WrImageDescriptor *aDescriptor,

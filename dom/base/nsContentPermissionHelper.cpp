@@ -167,8 +167,8 @@ ContentPermissionRequestParent::~ContentPermissionRequestParent()
 mozilla::ipc::IPCResult
 ContentPermissionRequestParent::Recvprompt()
 {
-  mProxy = new nsContentPermissionRequestProxy();
-  if (NS_FAILED(mProxy->Init(mRequests, this))) {
+  mProxy = new nsContentPermissionRequestProxy(this);
+  if (NS_FAILED(mProxy->Init(mRequests))) {
     mProxy->Cancel();
   }
   return IPC_OK();
@@ -578,8 +578,10 @@ nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
   }
 }
 
-nsContentPermissionRequestProxy::nsContentPermissionRequestProxy()
+nsContentPermissionRequestProxy::nsContentPermissionRequestProxy(ContentPermissionRequestParent* parent)
+  : mParent(parent)
 {
+    NS_ASSERTION(mParent, "null parent");
 }
 
 nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy()
@@ -587,11 +589,8 @@ nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy()
 }
 
 nsresult
-nsContentPermissionRequestProxy::Init(const nsTArray<PermissionRequest>& requests,
-                                      ContentPermissionRequestParent* parent)
+nsContentPermissionRequestProxy::Init(const nsTArray<PermissionRequest>& requests)
 {
-  NS_ASSERTION(parent, "null parent");
-  mParent = parent;
   mPermissionRequests = requests;
   mRequester = new nsContentPermissionRequesterProxy(mParent);
 

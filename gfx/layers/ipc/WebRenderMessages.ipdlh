@@ -132,6 +132,12 @@ struct OpUpdateBlobImage {
   ImageIntRect dirtyRect;
 };
 
+struct OpUpdateExternalImage {
+  ExternalImageId externalImageId;
+  ImageKey key;
+  ImageIntRect dirtyRect;
+};
+
 struct OpDeleteImage {
   ImageKey key;
 };
@@ -178,6 +184,7 @@ union OpUpdateResource {
   OpDeleteFontInstance;
   OpAddExternalImage;
   OpPushExternalImageForTexture;
+  OpUpdateExternalImage;
 };
 
 } // namespace

@@ -61,10 +61,12 @@ public:
   GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
                            mozilla::MutationClosureData* aClosureData) final
   {
-    aClosure->function = MutationClosureFunction;
-    aClosure->data = aClosureData;
-    aClosureData->mClosure = MutationClosureFunction;
-    aClosureData->mElement = mElement;
+    if (!mIsSMILOverride) {
+      aClosure->function = MutationClosureFunction;
+      aClosure->data = aClosureData;
+      aClosureData->mClosure = MutationClosureFunction;
+      aClosureData->mElement = mElement;
+    }
   }
 
 protected:

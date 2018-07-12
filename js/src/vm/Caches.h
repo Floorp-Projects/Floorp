@@ -240,10 +240,6 @@ class NewObjectCache
 
 class RuntimeCaches
 {
-    UniquePtr<js::MathCache> mathCache_;
-
-    js::MathCache* createMathCache(JSContext* cx);
-
   public:
     js::GSNCache gsnCache;
     js::EnvironmentCoordinateNameCache envCoordinateNameCache;
@@ -252,13 +248,6 @@ class RuntimeCaches
     js::EvalCache evalCache;
 
     bool init();
-
-    js::MathCache* getMathCache(JSContext* cx) {
-        return mathCache_ ? mathCache_.get() : createMathCache(cx);
-    }
-    js::MathCache* maybeGetMathCache() {
-        return mathCache_.get();
-    }
 
     void purgeForMinorGC(JSRuntime* rt) {
         newObjectCache.clearNurseryObjects(rt);

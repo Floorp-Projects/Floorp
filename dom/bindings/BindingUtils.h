@@ -1664,7 +1664,9 @@ FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
   }
   MOZ_ASSERT(JS::ObjectIsNotGray(obj));
 
-  obj = js::GetGlobalForObjectCrossCompartment(obj);
+  // The object is never a CCW but it may not be in the current compartment of
+  // the JSContext.
+  obj = JS::GetNonCCWObjectGlobal(obj);
 
   if (!useXBLScope) {
     return obj;
@@ -2412,7 +2414,7 @@ inline bool
 XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
                    JS::MutableHandle<JSObject*> protop)
 {
-  JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
   {
     JSAutoRealm ar(cx, global);
     const DOMJSClass* domClass = GetDOMClass(obj);
