@@ -22,7 +22,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "nsIGfxInfo.h"
 
 #ifndef MOZ_WIDGET_ANDROID
 #include "WebMSample.h"
@@ -34,7 +33,7 @@ namespace mozilla {
 
 // Update this version number to force re-running the benchmark. Such as when
 // an improvement to FFVP9 or LIBVPX is deemed worthwhile.
-const uint32_t VP9Benchmark::sBenchmarkVersionID = 5;
+const uint32_t VP9Benchmark::sBenchmarkVersionID = 4;
 
 const char* VP9Benchmark::sBenchmarkFpsPref = "media.benchmark.vp9.fps";
 const char* VP9Benchmark::sBenchmarkFpsVersionCheck = "media.benchmark.vp9.versioncheck";
@@ -42,44 +41,12 @@ bool VP9Benchmark::sHasRunTest = false;
 
 // static
 bool
-VP9Benchmark::ShouldRun()
-{
-#if defined(MOZ_WIDGET_ANDROID)
-  // Assume that the VP9 software decoder will always be too slow.
-  return false;
-#else
-#if defined(MOZ_APPLEMEDIA)
-  const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  nsString vendorID, deviceID;
-  gfxInfo->GetAdapterVendorID(vendorID);
-  // We won't run the VP9 benchmark on mac using an Intel GPU as performance are
-  // poor, see bug 1404042.
-  if (vendorID.EqualsLiteral("0x8086")) {
-    return false;
-  }
-  // Fall Through
-#endif
-  return true;
-#endif
-}
-
-// static
-uint32_t
-VP9Benchmark::MediaBenchmarkVp9Fps()
-{
-  if (!ShouldRun()) {
-    return 0;
-  }
-  return StaticPrefs::MediaBenchmarkVp9Threshold();
-}
-
-// static
-bool
 VP9Benchmark::IsVP9DecodeFast(bool aDefault)
 {
-  if (!ShouldRun()) {
-    return false;
-  }
+  // Disable VP9 estimizer on Mac, see bug 1400787.
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_APPLEMEDIA)
+  return false;
+#else
   static StaticMutex sMutex;
   uint32_t decodeFps = StaticPrefs::MediaBenchmarkVp9Fps();
   uint32_t hadRecentUpdate = StaticPrefs::MediaBenchmarkVp9Versioncheck();
@@ -125,6 +92,7 @@ VP9Benchmark::IsVP9DecodeFast(bool aDefault)
   }
 
   return decodeFps >= StaticPrefs::MediaBenchmarkVp9Threshold();
+#endif
 }
 
 Benchmark::Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters)
