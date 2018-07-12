@@ -207,7 +207,7 @@ hpp:
 
 Arguments:
     init:
-        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
@@ -428,9 +428,8 @@ CallExpression:
                 op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             }
         }
-        auto result = arguments;
-        result->setKind(ParseNodeKind::Call);
-        result->prepend(callee);
+
+        BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
         result->setOp(op);
 
 
@@ -489,11 +488,11 @@ CompoundAssignmentExpression:
 
 ComputedMemberAssignmentTarget:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
 
 ComputedMemberExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
 
 ConditionalExpression:
     build: |
@@ -831,10 +830,7 @@ LiteralStringExpression:
 
 NewExpression:
     build: |
-        auto result = arguments;
-        result->setKind(ParseNodeKind::New);
-        result->prepend(callee);
-        result->setOp(JSOP_NEW);
+        BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
 
 ObjectExpression:
     build:
@@ -923,11 +919,11 @@ SwitchStatementWithDefault:
 
 StaticMemberAssignmentTarget:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), tokenizer_->offset()));
 
 StaticMemberExpression:
     build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), tokenizer_->offset()));
 
 ThisExpression:
     build: |

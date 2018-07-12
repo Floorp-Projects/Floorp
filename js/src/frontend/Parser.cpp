@@ -3397,13 +3397,13 @@ GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, Node nodeList,
+GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, Node tagArgsList,
                                                    TokenKind tt)
 {
     Node callSiteObjNode = handler.newCallSiteObject(pos().begin);
     if (!callSiteObjNode)
         return false;
-    handler.addList(nodeList, callSiteObjNode);
+    handler.addList(tagArgsList, callSiteObjNode);
 
     while (true) {
         if (!appendToCallSiteObj(callSiteObjNode))
@@ -3411,10 +3411,10 @@ GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, 
         if (tt != TokenKind::TemplateHead)
             break;
 
-        if (!addExprAndGetNextTemplStrToken(yieldHandling, nodeList, &tt))
+        if (!addExprAndGetNextTemplStrToken(yieldHandling, tagArgsList, &tt))
             return false;
     }
-    handler.setEndPosition(nodeList, callSiteObjNode);
+    handler.setEndPosition(tagArgsList, callSiteObjNode);
     return true;
 }
 
@@ -8643,24 +8643,27 @@ GeneralParser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling 
 }
 
 template <class ParseHandler, typename CharT>
-bool
-GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, Node listNode,
-                                                 bool* isSpread,
+typename ParseHandler::Node
+GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, bool* isSpread,
                                                  PossibleError* possibleError /* = nullptr */)
 {
+    Node argsList = handler.newArguments(pos());
+    if (!argsList)
+        return null();
+
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Rp, TokenStream::Operand))
-        return false;
+        return null();
     if (matched) {
-        handler.setEndPosition(listNode, pos().end);
-        return true;
+        handler.setEndPosition(argsList, pos().end);
+        return argsList;
     }
 
     while (true) {
         bool spread = false;
         uint32_t begin = 0;
         if (!tokenStream.matchToken(&matched, TokenKind::TripleDot, TokenStream::Operand))
-            return false;
+            return null();
         if (matched) {
             spread = true;
             begin = pos().begin;
@@ -8669,18 +8672,18 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
 
         Node argNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited, possibleError);
         if (!argNode)
-            return false;
+            return null();
         if (spread) {
             argNode = handler.newSpread(begin, argNode);
             if (!argNode)
-                return false;
+                return null();
         }
 
-        handler.addList(listNode, argNode);
+        handler.addList(argsList, argNode);
 
         bool matched;
         if (!tokenStream.matchToken(&matched, TokenKind::Comma, TokenStream::Operand))
-            return false;
+            return null();
         if (!matched)
             break;
 
@@ -8693,8 +8696,8 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
 
     MUST_MATCH_TOKEN_MOD(TokenKind::Rp, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
 
-    handler.setEndPosition(listNode, pos().end);
-    return true;
+    handler.setEndPosition(argsList, pos().end);
+    return argsList;
 }
 
 bool
@@ -8740,20 +8743,27 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
             if (!ctorExpr)
                 return null();
 
-            lhs = handler.newNewExpression(newBegin, ctorExpr);
-            if (!lhs)
-                return null();
-
             bool matched;
             if (!tokenStream.matchToken(&matched, TokenKind::Lp))
                 return null();
+
+            bool isSpread = false;
+            Node args;
             if (matched) {
-                bool isSpread = false;
-                if (!argumentList(yieldHandling, lhs, &isSpread))
-                    return null();
-                if (isSpread)
-                    handler.setOp(lhs, JSOP_SPREADNEW);
+                args = argumentList(yieldHandling, &isSpread);
+            } else {
+                args = handler.newArguments(pos());
             }
+
+            if (!args)
+                return null();
+
+            lhs = handler.newNewExpression(newBegin, ctorExpr, args);
+            if (!lhs)
+                return null();
+
+            if (isSpread)
+                handler.setOp(lhs, JSOP_SPREADNEW);
         }
     } else if (tt == TokenKind::Super) {
         Node thisName = newThisName();
@@ -8826,15 +8836,16 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     return null();
                 }
 
-                nextMember = handler.newSuperCall(lhs);
-                if (!nextMember)
-                    return null();
-
                 // Despite the fact that it's impossible to have |super()| in a
                 // generator, we still inherit the yieldHandling of the
                 // memberExpression, per spec. Curious.
                 bool isSpread = false;
-                if (!argumentList(yieldHandling, nextMember, &isSpread))
+                Node args = argumentList(yieldHandling, &isSpread);
+                if (!args)
+                    return null();
+
+                nextMember = handler.newSuperCall(lhs, args);
+                if (!nextMember)
                     return null();
 
                 if (isSpread)
@@ -8852,13 +8863,6 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     error(JSMSG_SELFHOSTED_METHOD_CALL);
                     return null();
                 }
-
-                TokenPos nextMemberPos = pos();
-                nextMember = tt == TokenKind::Lp
-                             ? handler.newCall(nextMemberPos)
-                             : handler.newTaggedTemplate(nextMemberPos);
-                if (!nextMember)
-                    return null();
 
                 JSOp op = JSOP_CALL;
                 bool maybeAsyncArrow = false;
@@ -8901,13 +8905,11 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     }
                 }
 
-                handler.setBeginPosition(nextMember, lhs);
-                handler.addList(nextMember, lhs);
-
                 if (tt == TokenKind::Lp) {
                     bool isSpread = false;
                     PossibleError* asyncPossibleError = maybeAsyncArrow ? possibleError : nullptr;
-                    if (!argumentList(yieldHandling, nextMember, &isSpread, asyncPossibleError))
+                    Node args = argumentList(yieldHandling, &isSpread, asyncPossibleError);
+                    if (!args)
                         return null();
                     if (isSpread) {
                         if (op == JSOP_EVAL)
@@ -8917,8 +8919,20 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                         else
                             op = JSOP_SPREADCALL;
                     }
+
+                    nextMember = handler.newCall(lhs, args);
+                    if (!nextMember)
+                        return null();
                 } else {
-                    if (!taggedTemplate(yieldHandling, nextMember, tt))
+                    Node args = handler.newArguments(pos());
+                    if (!args)
+                        return null();
+
+                    if (!taggedTemplate(yieldHandling, args, tt))
+                        return null();
+
+                    nextMember = handler.newTaggedTemplate(lhs, args);
+                    if (!nextMember)
                         return null();
                 }
                 handler.setOp(nextMember, op);
