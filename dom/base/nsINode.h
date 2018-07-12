@@ -946,7 +946,7 @@ public:
 
   /**
    * Get the parent nsINode for this node. This can be either an nsIContent,
-   * an nsIDocument or an nsIAttribute.
+   * an nsIDocument or an Attr.
    * @return the parent node
    */
   nsINode* GetParentNode() const
