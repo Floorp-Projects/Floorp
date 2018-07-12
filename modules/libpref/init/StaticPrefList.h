@@ -338,6 +338,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Is the '-webkit-appearance' alias for '-moz-appearance' enabled?
+VARCACHE_PREF(
+  "layout.css.webkit-appearance.enabled",
+   layout_css_webkit_appearance_enabled,
+  bool, false
+)
+
 // Pref to control whether @-moz-document rules are enabled in content pages.
 VARCACHE_PREF(
   "layout.css.moz-document.content.enabled",
