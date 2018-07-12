@@ -8212,7 +8212,11 @@ nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
                                                                                 const nsCString& aGrantedOrigin)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aPrincipal);
+
+  if (NS_WARN_IF(!aPrincipal)) {
+    // The child process is sending something wrong. Let's ignore it.
+    return;
+  }
 
   nsAutoCString origin;
   nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
