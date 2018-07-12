@@ -49,6 +49,7 @@ dependencies {
 
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
 }
 
 task unzipJniLibs(type: Copy) {

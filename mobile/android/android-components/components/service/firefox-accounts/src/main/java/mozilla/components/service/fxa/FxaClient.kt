@@ -8,18 +8,30 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.PointerType
+import java.lang.reflect.Proxy
 
-@Suppress("FunctionNaming", "TooManyFunctions")
+@Suppress("FunctionNaming", "TooManyFunctions", "TooGenericExceptionThrown")
 internal interface FxaClient : Library {
     companion object {
         private const val JNA_LIBRARY_NAME = "fxa_client"
-        internal val INSTANCE: FxaClient
+        internal var INSTANCE: FxaClient
 
         init {
-            System.loadLibrary("crypto")
-            System.loadLibrary("ssl")
-            System.loadLibrary("fxa_client")
-            INSTANCE = Native.loadLibrary(JNA_LIBRARY_NAME, FxaClient::class.java) as FxaClient
+            try {
+                System.loadLibrary("crypto")
+                System.loadLibrary("ssl")
+                System.loadLibrary("fxa_client")
+                INSTANCE = Native.loadLibrary(JNA_LIBRARY_NAME, FxaClient::class.java) as FxaClient
+            } catch (e: UnsatisfiedLinkError) {
+                // We want to be able load this class in environments that don't have FxA native
+                // libs available (for unit testing purposes). This also has the advantage of
+                // not stopping the whole world in case of missing native FxA libs.
+                INSTANCE = Proxy.newProxyInstance(
+                        FxaClient::class.java.classLoader,
+                        arrayOf(FxaClient::class.java)) { _, _, _ ->
+                    throw RuntimeException("Firefox Account functionality not available", e)
+                } as FxaClient
+            }
         }
     }
 
