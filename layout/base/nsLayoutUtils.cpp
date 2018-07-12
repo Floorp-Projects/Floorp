@@ -8851,6 +8851,7 @@ AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame *aFrame)
   } else {
     // indicate we have nothing to restore
     mPresContext = nullptr;
+    mOldValue = false;
   }
 }
 

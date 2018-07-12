@@ -17,6 +17,7 @@
 #include "nsIURI.h"
 class nsPresContext;
 class nsIPresShell;
+class nsDocShellLoadInfo;
 namespace mozilla {
 class Encoding;
 class HTMLEditor;
@@ -61,6 +62,7 @@ interface nsICommandManager;
 interface nsICommandParams;
 interface nsILoadURIDelegate;
 native TabChildRef(already_AddRefed<nsITabChild>);
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 webidl EventTarget;
 
@@ -87,7 +89,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    *                     be allowed.  Use at your own risk.
    */
   [noscript]void loadURI(in nsIURI uri,
-                         in nsIDocShellLoadInfo loadInfo,
+                         in nsDocShellLoadInfoPtr loadInfo,
                          in unsigned long aLoadFlags,
                          in boolean firstParty);
 
@@ -205,12 +207,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [implicit_jscontext]
   void addState(in jsval aData, in DOMString aTitle,
                 in DOMString aURL, in boolean aReplace);
-
-  /**
-   * Creates a DocShellLoadInfo object that you can manipulate and then pass
-   * to loadURI.
-   */
-  void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
 
   /**
    * Reset state to a new content model within the current document and the document

@@ -9,6 +9,8 @@
 
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
+#include <unordered_map>
+
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"             // for already_AddRefed
@@ -21,7 +23,6 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsRefPtrHashtable.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
 
@@ -395,13 +396,13 @@ private:
    * Hold TextureClients refs until end of their usages on host side.
    * It defer calling of TextureClient recycle callback.
    */
-  nsRefPtrHashtable<nsUint64HashKey, TextureClient> mTexturesWaitingRecycled;
+  std::unordered_map<uint64_t, RefPtr<TextureClient>> mTexturesWaitingRecycled;
 
   /**
    * Mapping from async compositable IDs to image containers.
    */
   Mutex mContainerMapLock;
-  nsRefPtrHashtable<nsUint64HashKey, ImageContainerListener> mImageContainerListeners;
+  std::unordered_map<uint64_t, RefPtr<ImageContainerListener>> mImageContainerListeners;
 
 #if defined(XP_WIN)
   /**

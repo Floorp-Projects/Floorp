@@ -135,7 +135,6 @@ protected:
   nsCString       mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
-  bool            mInitialized;
 
   bool mHoldingJSVal;
   JS::Heap<JS::Value> mThrownJSVal;

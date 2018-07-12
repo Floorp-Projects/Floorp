@@ -120,6 +120,13 @@ public:
                            wr::WrExternalImageBufferType aBufferType,
                            uint8_t aChannelIndex = 0);
 
+  void UpdateExternalImageWithDirtyRect(ImageKey aKey,
+                                        const ImageDescriptor& aDescriptor,
+                                        ExternalImageId aExtID,
+                                        wr::WrExternalImageBufferType aBufferType,
+                                        const wr::DeviceUintRect& aDirtyRect,
+                                        uint8_t aChannelIndex = 0);
+
   void DeleteImage(wr::ImageKey aKey);
 
   void AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex);

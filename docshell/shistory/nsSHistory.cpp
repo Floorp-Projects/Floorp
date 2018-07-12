@@ -13,7 +13,7 @@
 #include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIObserverService.h"
@@ -1114,7 +1114,7 @@ nsSHistory::GoBack()
   if (!canGoBack) {
     return NS_ERROR_UNEXPECTED;
   }
-  return LoadEntry(mIndex - 1, nsIDocShellLoadInfo::loadHistory, HIST_CMD_BACK);
+  return LoadEntry(mIndex - 1, LOAD_HISTORY, HIST_CMD_BACK);
 }
 
 NS_IMETHODIMP
@@ -1126,27 +1126,27 @@ nsSHistory::GoForward()
   if (!canGoForward) {
     return NS_ERROR_UNEXPECTED;
   }
-  return LoadEntry(mIndex + 1, nsIDocShellLoadInfo::loadHistory,
+  return LoadEntry(mIndex + 1, LOAD_HISTORY,
                    HIST_CMD_FORWARD);
 }
 
 NS_IMETHODIMP
 nsSHistory::Reload(uint32_t aReloadFlags)
 {
-  nsDocShellInfoLoadType loadType;
+  uint32_t loadType;
   if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY &&
       aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE) {
-    loadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+    loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
   } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY) {
-    loadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
+    loadType = LOAD_RELOAD_BYPASS_PROXY;
   } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE) {
-    loadType = nsIDocShellLoadInfo::loadReloadBypassCache;
+    loadType = LOAD_RELOAD_BYPASS_CACHE;
   } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE) {
-    loadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+    loadType = LOAD_RELOAD_CHARSET_CHANGE;
   } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
-    loadType = nsIDocShellLoadInfo::loadReloadMixedContent;
+    loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
   } else {
-    loadType = nsIDocShellLoadInfo::loadReloadNormal;
+    loadType = LOAD_RELOAD_NORMAL;
   }
 
   // We are reloading. Send Reload notifications.
@@ -1178,7 +1178,7 @@ nsSHistory::ReloadCurrentEntry()
     return NS_OK;
   }
 
-  return LoadEntry(mIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_RELOAD);
+  return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
 }
 
 NS_IMETHODIMP
@@ -1194,7 +1194,7 @@ nsSHistory::RestoreToEntryAtIndex(int32_t aIndex)
   }
 
   // XXX We may want to ensure docshell is currently holding about:blank
-  return InitiateLoad(nextEntry, mRootDocShell, nsIDocShellLoadInfo::loadHistory);
+  return InitiateLoad(nextEntry, mRootDocShell, LOAD_HISTORY);
 }
 
 void
@@ -1840,7 +1840,7 @@ nsSHistory::LoadURI(const char16_t* aURI,
 NS_IMETHODIMP
 nsSHistory::GotoIndex(int32_t aIndex)
 {
-  return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_GOTOINDEX);
+  return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX);
 }
 
 nsresult
@@ -2039,14 +2039,13 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
 {
   NS_ENSURE_STATE(aFrameDS && aFrameEntry);
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   /* Set the loadType in the SHEntry too to  what was passed on.
    * This will be passed on to child subframes later in nsDocShell,
    * so that proper loadType is maintained through out a frameset
    */
   aFrameEntry->SetLoadType(aLoadType);
-  aFrameDS->CreateLoadInfo(getter_AddRefs(loadInfo));
 
   loadInfo->SetLoadType(aLoadType);
   loadInfo->SetSHEntry(aFrameEntry);

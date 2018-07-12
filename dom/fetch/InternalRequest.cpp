@@ -124,6 +124,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
                                  const nsAString& aIntegrity)
   : mMethod(aMethod)
   , mHeaders(aHeaders)
+  , mBodyLength(InternalResponse::UNKNOWN_BODY_SIZE)
   , mContentPolicyType(aContentPolicyType)
   , mReferrer(aReferrer)
   , mReferrerPolicy(aReferrerPolicy)
@@ -184,13 +185,16 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
   , mURLList(aIPCRequest.urls())
   , mHeaders(new InternalHeaders(aIPCRequest.headers(),
                                  aIPCRequest.headersGuard()))
+  , mBodyLength(InternalResponse::UNKNOWN_BODY_SIZE)
   , mContentPolicyType(aIPCRequest.contentPolicyType())
   , mReferrer(aIPCRequest.referrer())
   , mReferrerPolicy(aIPCRequest.referrerPolicy())
+  , mEnvironmentReferrerPolicy(net::RP_Unset)
   , mMode(aIPCRequest.mode())
   , mCredentialsMode(aIPCRequest.credentials())
   , mCacheMode(aIPCRequest.requestCache())
   , mRedirectMode(aIPCRequest.requestRedirect())
+  , mMozErrors(false)
 {
   MOZ_ASSERT(!mURLList.IsEmpty());
 }

@@ -103,45 +103,6 @@
         border-left-color: rgb(255, 0, 0);
       }
 
-      #subprocess-reports {
-        background-color: var(--aboutSupport-table-background);
-        color: var(--in-content-text-color);
-        font: message-box;
-        text-align: start;
-        border: 1px solid var(--in-content-border-color);
-        border-spacing: 0px;
-        float: right;
-        margin-bottom: 20px;
-        -moz-margin-start: 20px;
-        -moz-margin-end: 0;
-        width: 100%;
-      }
-      #subprocess-reports:dir(rtl) {
-        float: left;
-      }
-      #subprocess-reports th,
-      #subprocess-reports td {
-        border: 1px solid var(--in-content-border-color);
-        padding: 4px;
-      }
-      #subprocess-reports thead th {
-        text-align: center;
-      }
-      #subprocess-reports th {
-        text-align: start;
-        background-color: var(--in-content-table-header-background);
-        color: var(--in-content-selected-text);
-      }
-      #subprocess-reports th.column {
-        white-space: nowrap;
-        width: 0px;
-      }
-      #subprocess-reports td {
-        background-color: #ebebeb;
-        text-align: start;
-        border-color: var(--in-content-table-border-dark-color);
-        border-spacing: 40px;
-      }
       .options {
         width: 100%;
       }
@@ -154,16 +115,6 @@
     </style>
   </head>
   <body onload="go()">
-    <div>
-      <h2>Memory usage of Subprocesses</h2>
-      <table id="subprocess-reports">
-        <tr>
-          <th>Process ID</th>
-          <th title="RSS measures the pages resident in the main memory for the process">Resident Set Size</th>
-          <th title="USS gives a count of unshared pages, unique to the process">Unique Set Size</th>
-        </tr>
-      </table>
-    </div>
     <div class="options">
       <div class="toggle-container-with-text">
         <input type="checkbox" checked="false" id="check-display-recent" role="checkbox"></input>

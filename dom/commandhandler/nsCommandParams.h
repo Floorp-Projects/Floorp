@@ -42,6 +42,7 @@ protected:
     HashEntry(uint8_t aType, const char* aEntryName)
       : mEntryName(aEntryName)
       , mEntryType(aType)
+      , mData()
     {
       Reset(mEntryType);
     }
