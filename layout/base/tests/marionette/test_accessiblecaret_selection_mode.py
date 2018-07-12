@@ -46,7 +46,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _longtext_html = 'layout/test_carets_longtext.html'
     _iframe_html = 'layout/test_carets_iframe.html'
     _display_none_html = 'layout/test_carets_display_none.html'
-    _svg_shapes_html = 'layout/test_carets_svg_shapes.html'
 
     def setUp(self):
         # Code to execute before every test is running.
@@ -620,33 +619,3 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Drag the second caret down by 50px.
         self.actions.flick(el, caret2_x, caret2_y, caret2_x, caret2_y + 50).perform()
         self.assertEqual(target_content, sel.selected_content)
-
-    def test_carets_should_not_appear_when_long_pressing_svg_shapes(self):
-        self.open_test_html(self._svg_shapes_html)
-
-        rect = self.marionette.find_element(By.ID, 'rect')
-        text = self.marionette.find_element(By.ID, 'text')
-
-        sel = SelectionManager(text)
-        num_words_in_text = len(sel.content.split())
-
-        # Goal: the carets should not appear when long-pressing on the
-        # unselectable SVG rect.
-
-        # Get the position of the end of last word in text, i.e. the
-        # position of the second caret when selecting the last word.
-        self.long_press_on_word(text, num_words_in_text - 1)
-        (_, _), (x2, y2) = sel.carets_location()
-
-        # Long press to select the unselectable SVG rect.
-        self.long_press_on_location(rect)
-        (_, _), (x, y) = sel.carets_location()
-
-        # Drag the second caret to (x2, y2).
-        self.actions.flick(text, x, y, x2, y2).perform()
-
-        # If the carets should appear on the rect, the selection will be
-        # extended to cover all the words in text. Assert this should not
-        # happen.
-        self.assertNotEqual(sel.content, sel.selected_content.strip())
-
