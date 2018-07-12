@@ -209,6 +209,21 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         }
     }
 
+    @WrapForJNI
+    public static void detachAllFromGLContext(long context) {
+        synchronized (sSurfaceTextures) {
+            for (GeckoSurfaceTexture tex : sSurfaceTextures.values()) {
+                try {
+                    if (tex.isAttachedToGLContext(context)) {
+                        tex.detachFromGLContext();
+                    }
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Failed to detach SurfaceTexture with handle: " + tex.mHandle, e);
+                }
+            }
+        }
+    }
+
     public static GeckoSurfaceTexture acquire(boolean singleBufferMode) {
         if (singleBufferMode && !isSingleBufferSupported()) {
             throw new IllegalArgumentException("single buffer mode not supported on API version < 19");

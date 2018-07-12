@@ -1846,8 +1846,10 @@ CompositorOGL::Pause()
 #ifdef MOZ_WIDGET_ANDROID
   if (!gl() || gl()->IsDestroyed())
     return;
-
-  // ReleaseSurface internally calls MakeCurrent.
+  gl()->MakeCurrent();
+  java::GeckoSurfaceTexture::DestroyUnused((int64_t)mGLContext.get());
+  java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)mGLContext.get());
+  // ReleaseSurface internally calls MakeCurrent
   gl()->ReleaseSurface();
 #endif
 }
