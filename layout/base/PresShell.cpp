@@ -826,6 +826,7 @@ PresShell::PresShell()
   , mScaleToResolution(false)
   , mIsLastChromeOnlyEscapeKeyConsumed(false)
   , mHasReceivedPaintMessage(false)
+  , mIsLastKeyDownCanceled(false)
   , mHasHandledUserInput(false)
 #ifdef NIGHTLY_BUILD
   , mForceDispatchKeyPressEventsForNonPrintableKeys(false)
