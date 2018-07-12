@@ -221,9 +221,11 @@ public class SessionAccessibility {
                                 data.putInt("keyIndex", keyIndex);
                                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", data);
                             } else if (granularity > 0) {
-                                data = new GeckoBundle(2);
+                                boolean extendSelection = arguments.getBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+                                data = new GeckoBundle(3);
                                 data.putString("direction", action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY ? "Next" : "Previous");
                                 data.putInt("granularity", granularity);
+                                data.putBoolean("select", extendSelection);
                                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityByGranularity", data);
                             }
                             return true;
