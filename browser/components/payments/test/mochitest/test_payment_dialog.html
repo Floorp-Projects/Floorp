@@ -8,7 +8,6 @@ Test the payment-dialog custom element
   <title>Test the payment-dialog element</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="sinon-2.3.2.js"></script>
   <script src="payments_common.js"></script>
   <script src="../../res/vendor/custom-elements.min.js"></script>
@@ -94,7 +93,6 @@ add_task(async function test_viewAllButtonVisibility() {
 
   let button = el1._viewAllButton;
   ok(button.hidden, "Button is initially hidden when there are no items to show");
-  ok(isHidden(button), "Button should be visibly hidden since bug 1469464");
 
   // Add a display item.
   let request = deepClone(el1.requestStore.getState().request);
@@ -180,19 +178,6 @@ add_task(async function test_completionStateChangesPrevented() {
       document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
     ok(payButton === visibleElement, "Pay button is on top of the overlay");
   }
-});
-
-add_task(async function test_scrollPaymentRequestPage() {
-  await setup();
-  info("making the payment-dialog container small to require scrolling");
-  el1.parentElement.style.height = "100px";
-  let summaryPageBody = document.querySelector("#payment-summary .page-body");
-  is(summaryPageBody.scrollTop, 0, "Page body not scrolled initially");
-  let securityCodeInput = summaryPageBody.querySelector("payment-method-picker input");
-  securityCodeInput.focus();
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
-  ok(summaryPageBody.scrollTop > 0, "Page body scrolled after focusing the CVV field");
-  el1.parentElement.style.height = "";
 });
 
 add_task(async function test_disconnect() {

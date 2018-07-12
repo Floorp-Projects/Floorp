@@ -4,7 +4,6 @@
 
 /* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
 import LabelledCheckbox from "../components/labelled-checkbox.js";
-import PaymentRequestPage from "../components/payment-request-page.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import paymentRequest from "../paymentRequest.js";
 /* import-globals-from ../unprivileged-fallbacks.js */
@@ -12,18 +11,15 @@ import paymentRequest from "../paymentRequest.js";
 /**
  * <address-form></address-form>
  *
- * Don't use document.getElementById or document.querySelector* to access form
- * elements, use querySelector on `this` or `this.form` instead so that elements
- * can be found before the element is connected.
- *
  * XXX: Bug 1446164 - This form isn't localized when used via this custom element
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequestPage) {
+export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
 
+    this.pageTitle = document.createElement("h2");
     this.genericErrorText = document.createElement("div");
 
     this.cancelButton = document.createElement("button");
@@ -77,7 +73,8 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
 
   connectedCallback() {
     this.promiseReady.then(form => {
-      this.body.appendChild(form);
+      this.appendChild(this.pageTitle);
+      this.appendChild(form);
 
       let record = {};
       this.formHandler = new EditAddress({
@@ -88,12 +85,11 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
         supportedCountries: PaymentDialogUtils.supportedCountries,
       });
 
-      this.body.appendChild(this.persistCheckbox);
-      this.body.appendChild(this.genericErrorText);
-
-      this.footer.appendChild(this.cancelButton);
-      this.footer.appendChild(this.backButton);
-      this.footer.appendChild(this.saveButton);
+      this.appendChild(this.persistCheckbox);
+      this.appendChild(this.genericErrorText);
+      this.appendChild(this.cancelButton);
+      this.appendChild(this.backButton);
+      this.appendChild(this.saveButton);
       // Only call the connected super callback(s) once our markup is fully
       // connected, including the shared form fetched asynchronously.
       super.connectedCallback();
@@ -127,7 +123,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       this.removeAttribute("address-fields");
     }
 
-    this.pageTitleHeading.textContent = addressPage.title;
+    this.pageTitle.textContent = addressPage.title;
     this.genericErrorText.textContent = page.error;
 
     let editing = !!addressPage.guid;
@@ -165,8 +161,8 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
 
     let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
     for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
-      let container = this.form.querySelector(errorSelector + "-container");
-      let field = this.form.querySelector(errorSelector);
+      let container = document.querySelector(errorSelector + "-container");
+      let field = document.querySelector(errorSelector);
       let errorText = (shippingAddressErrors && shippingAddressErrors[errorName]) || "";
       container.classList.toggle("error", !!errorText);
       field.setCustomValidity(errorText);

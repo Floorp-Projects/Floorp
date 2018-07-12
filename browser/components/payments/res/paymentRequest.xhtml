@@ -10,8 +10,6 @@
 
   <!ENTITY viewAllItems               "View All Items">
   <!ENTITY paymentSummaryTitle        "Your Payment">
-  <!ENTITY header.payTo               "Pay to">
-
   <!ENTITY shippingAddressLabel       "Shipping Address">
   <!ENTITY deliveryAddressLabel       "Delivery Address">
   <!ENTITY pickupAddressLabel         "Pickup Address">
@@ -71,7 +69,6 @@
   <link rel="stylesheet" href="components/shipping-option.css"/>
   <link rel="stylesheet" href="components/payment-details-item.css"/>
   <link rel="stylesheet" href="containers/address-form.css"/>
-  <link rel="stylesheet" href="containers/basic-card-form.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
 
   <script src="unprivileged-fallbacks.js"></script>
@@ -84,17 +81,20 @@
   <template id="payment-dialog-template">
     <header>
       <div id="total">
-        <currency-amount display-code="display-code"></currency-amount>
-        <div>&header.payTo; <span id="host-name"></span></div>
+        <h2 class="label"></h2>
+        <currency-amount></currency-amount>
+        <div id="host-name"></div>
       </div>
-      <div id="top-buttons" hidden="hidden">
+      <div id="top-buttons" >
         <button id="view-all" class="closed">&viewAllItems;</button>
       </div>
     </header>
 
     <div id="main-container">
-      <payment-request-page id="payment-summary">
-        <div class="page-body">
+      <section id="payment-summary" class="page">
+        <h2>&paymentSummaryTitle;</h2>
+
+        <section>
           <div id="error-text"></div>
 
           <div class="shipping-related"
@@ -123,9 +123,9 @@
                           data-edit-link-label="&payer.editLink.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
           <div id="error-text"></div>
-        </div>
+        </section>
 
-        <footer>
+        <footer id="controls-container">
           <button id="cancel">&cancelPaymentButton.label;</button>
           <button id="pay"
                   class="primary"
@@ -135,13 +135,14 @@
                   data-unknown-label="&unknownPaymentButton.label;"
                   data-success-label="&successPaymentButton.label;"></button>
         </footer>
-      </payment-request-page>
+      </section>
       <section id="order-details-overlay" hidden="hidden">
         <h2>&orderDetailsLabel;</h2>
         <order-details></order-details>
       </section>
 
       <basic-card-form id="basic-card-page"
+                       class="page"
                        data-add-basic-card-title="&basicCard.addPage.title;"
                        data-edit-basic-card-title="&basicCard.editPage.title;"
                        data-error-generic-save="&basicCardPage.error.genericSave;"
@@ -156,6 +157,7 @@
                        hidden="hidden"></basic-card-form>
 
       <address-form id="address-page"
+                    class="page"
                     data-error-generic-save="&addressPage.error.genericSave;"
                     data-cancel-button-label="&addressPage.cancelButton.label;"
                     data-back-button-label="&addressPage.backButton.label;"
@@ -181,8 +183,8 @@
 </head>
 <body dir="&locale.dir;">
   <iframe id="debugging-console"
-          hidden="hidden">
-  </iframe>
+          hidden="hidden"
+          height="400"></iframe>
   <payment-dialog data-shipping-address-title-add="&shippingAddress.addPage.title;"
                   data-shipping-address-title-edit="&shippingAddress.editPage.title;"
                   data-delivery-address-title-add="&deliveryAddress.addPage.title;"

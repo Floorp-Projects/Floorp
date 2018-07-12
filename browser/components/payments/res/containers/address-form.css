@@ -73,14 +73,3 @@ body[dir=rtl] .error-text::before {
 :-moz-any(input, textarea, select):valid + .error-text {
   display: none;
 }
-
-address-form > footer > .cancel-button {
-  /* When cancel is shown (during onboarding), it should always be on the left with a space after it */
-  margin-right: auto;
-}
-
-address-form > footer > .back-button {
-  /* When back is shown (outside onboarding) we want "Back <space> Add/Save" */
-  /* Bug 1468153 may change the button ordering to match platform conventions */
-  margin-right: auto;
-}
