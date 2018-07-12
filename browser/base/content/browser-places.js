@@ -446,15 +446,12 @@ var PlacesCommandHook = {
 
   /**
    * Adds a bookmark to the page targeted by a link.
-   * @param parentId
-   *        The folder in which to create a new bookmark if aURL isn't
-   *        bookmarked.
    * @param url (string)
    *        the address of the link target
    * @param title
    *        The link text
    */
-  async bookmarkLink(parentId, url, title) {
+  async bookmarkLink(url, title) {
     let bm = await PlacesUtils.bookmarks.fetch({url});
     if (bm) {
       let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
@@ -462,10 +459,10 @@ var PlacesCommandHook = {
       return;
     }
 
-    let parentGuid = parentId == PlacesUtils.bookmarksMenuFolderId ?
-                       PlacesUtils.bookmarks.menuGuid :
-                       await PlacesUtils.promiseItemGuid(parentId);
-    let defaultInsertionPoint = new PlacesInsertionPoint({ parentId, parentGuid });
+    let defaultInsertionPoint = new PlacesInsertionPoint({
+      parentId: PlacesUtils.bookmarksMenuFolderId,
+      parentGuid: PlacesUtils.bookmarks.menuGuid
+    });
     PlacesUIUtils.showBookmarkDialog({ action: "add",
                                        type: "bookmark",
                                        uri: makeURI(url),

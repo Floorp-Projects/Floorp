@@ -1437,8 +1437,8 @@ nsContextMenu.prototype = {
   },
 
   bookmarkLink: function CM_bookmarkLink() {
-    window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId,
-                                              this.linkURL, this.linkTextStr);
+    window.top.PlacesCommandHook.bookmarkLink(this.linkURL, this.linkTextStr)
+                                .catch(Cu.reportError);
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
@@ -1448,9 +1448,7 @@ nsContextMenu.prototype = {
     let onMessage = (message) => {
       mm.removeMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
 
-      window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId,
-                                                uri.spec,
-                                                message.data.title)
+      window.top.PlacesCommandHook.bookmarkLink(uri.spec, message.data.title)
                                   .catch(Cu.reportError);
     };
     mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
