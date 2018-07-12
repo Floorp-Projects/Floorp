@@ -22,7 +22,6 @@ var EXPORTED_SYMBOLS = ["ContentControl"];
 
 const MOVEMENT_GRANULARITY_CHARACTER = 1;
 const MOVEMENT_GRANULARITY_WORD = 2;
-const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
 
 const CLIPBOARD_COPY = 0x4000;
 const CLIPBOARD_PASTE = 0x8000;
@@ -307,11 +306,16 @@ this.ContentControl.prototype = {
   },
 
   handleMoveByGranularity: function cc_handleMoveByGranularity(aMessage) {
-    let { direction, granularity } = aMessage.json;
-    let focusedAcc = Utils.AccService.getAccessibleFor(this.document.activeElement);
-    if (focusedAcc && Utils.getState(focusedAcc).contains(States.EDITABLE)) {
-      this.moveCaret(focusedAcc, direction, granularity);
-      return;
+    const { direction, granularity, select } = aMessage.json;
+    const focusedAcc =
+      Utils.AccService.getAccessibleFor(this.document.activeElement);
+    const editable =
+      focusedAcc && Utils.getState(focusedAcc).contains(States.EDITABLE) ?
+      focusedAcc.QueryInterface(Ci.nsIAccessibleText) : null;
+
+    if (editable) {
+      const caretOffset = editable.caretOffset;
+      this.vc.setTextRange(editable, caretOffset, caretOffset, false);
     }
 
     let pivotGranularity;
@@ -330,6 +334,21 @@ this.ContentControl.prototype = {
       this.vc.movePreviousByText(pivotGranularity);
     } else if (direction === "Next") {
       this.vc.moveNextByText(pivotGranularity);
+    }
+
+    if (editable) {
+      const newOffset = direction === "Next" ?
+        this.vc.endOffset : this.vc.startOffset;
+      if (select) {
+        let anchor = editable.caretOffset;
+        if (editable.selectionCount) {
+          const [startSel, endSel] = Utils.getTextSelection(editable);
+          anchor = startSel == anchor ? endSel : startSel;
+        }
+        editable.setSelectionBounds(0, anchor, newOffset);
+      } else {
+        editable.caretOffset = newOffset;
+      }
     }
   },
 
@@ -382,47 +401,6 @@ this.ContentControl.prototype = {
         aOldOffset, aOldOffset, true);
       this._contentScope.get().sendAsyncMessage("AccessFu:Present", msg);
     }
-  },
-
-  moveCaret: function cc_moveCaret(accessible, direction, granularity) {
-    let accText = accessible.QueryInterface(Ci.nsIAccessibleText);
-    let oldOffset = accText.caretOffset;
-    let text = accText.getText(0, accText.characterCount);
-
-    let start = {}, end = {};
-    if (direction === "Previous" && oldOffset > 0) {
-      switch (granularity) {
-        case MOVEMENT_GRANULARITY_CHARACTER:
-          accText.caretOffset--;
-          break;
-        case MOVEMENT_GRANULARITY_WORD:
-          accText.getTextBeforeOffset(accText.caretOffset,
-            Ci.nsIAccessibleText.BOUNDARY_WORD_START, start, end);
-          accText.caretOffset = end.value === accText.caretOffset ?
-            start.value : end.value;
-          break;
-        case MOVEMENT_GRANULARITY_PARAGRAPH:
-          let startOfParagraph = text.lastIndexOf("\n", accText.caretOffset - 1);
-          accText.caretOffset = startOfParagraph !== -1 ? startOfParagraph : 0;
-          break;
-      }
-    } else if (direction === "Next" && oldOffset < accText.characterCount) {
-      switch (granularity) {
-        case MOVEMENT_GRANULARITY_CHARACTER:
-          accText.caretOffset++;
-          break;
-        case MOVEMENT_GRANULARITY_WORD:
-          accText.getTextAtOffset(accText.caretOffset,
-                                  Ci.nsIAccessibleText.BOUNDARY_WORD_END, start, end);
-          accText.caretOffset = end.value;
-          break;
-        case MOVEMENT_GRANULARITY_PARAGRAPH:
-          accText.caretOffset = text.indexOf("\n", accText.caretOffset + 1);
-          break;
-      }
-    }
-
-    this.presentCaretChange(text, oldOffset, accText.caretOffset);
   },
 
   getChildCursor: function cc_getChildCursor(aAccessible) {
@@ -497,7 +475,7 @@ this.ContentControl.prototype = {
           this._contentScope.get().sendAsyncMessage(
             "AccessFu:Present", Presentation.pivotChanged(
               vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
-              vc.startOffset, vc.endOffset, false));
+              vc.startOffset, vc.endOffset));
         }
       };
 
@@ -518,11 +496,11 @@ this.ContentControl.prototype = {
       if (!moveFirstOrLast || acc) {
         // We either need next/previous or there is an anchor we need to use.
         moved = vc[moveFirstOrLast ? "moveNext" : moveMethod](rule, acc, true,
-                                                              false);
+                                                              true);
       }
       if (moveFirstOrLast && !moved) {
         // We move to first/last after no anchor move happened or succeeded.
-        moved = vc[moveMethod](rule, false);
+        moved = vc[moveMethod](rule, true);
       }
 
       let sentToChild = this.sendToChild(vc, {
