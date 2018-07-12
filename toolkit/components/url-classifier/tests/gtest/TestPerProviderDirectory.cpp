@@ -26,7 +26,7 @@ template<typename T>
 void VerifyPrivateStorePath(T* target,
                             const nsCString& aTableName,
                             const nsCString& aProvider,
-                            nsIFile* aRootDir,
+                            nsCOMPtr<nsIFile> aRootDir,
                             bool aUsePerProviderStore)
 {
   nsString rootStorePath;
