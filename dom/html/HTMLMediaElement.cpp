@@ -4380,7 +4380,8 @@ HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     case ePointerMove:
     case eMouseMove:
       node = do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
-      if (node->IsInNativeAnonymousSubtree()) {
+      if (node->IsInNativeAnonymousSubtree() ||
+          node->IsInUAWidget()) {
         if (node->IsHTMLElement(nsGkAtoms::input)) {
           // The node is a <input type="range">
           el = static_cast<HTMLInputElement*>(node.get());
