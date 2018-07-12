@@ -4,7 +4,6 @@
 
 use api::{DevicePoint, DeviceSize, DeviceRect, LayoutRect, LayoutToWorldTransform};
 use api::{PremultipliedColorF, WorldToLayoutTransform};
-use clip_scroll_tree::TransformIndex;
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use prim_store::{EdgeAaSegmentMask};
 use render_task::RenderTaskAddress;
@@ -399,6 +398,11 @@ pub struct TransformPalette {
     pub transforms: Vec<TransformData>,
     metadata: Vec<TransformMetadata>,
 }
+
+#[derive(Copy, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct TransformIndex(pub u32);
 
 impl TransformPalette {
     pub fn new(spatial_node_count: usize) -> TransformPalette {
