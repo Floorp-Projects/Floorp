@@ -539,7 +539,7 @@ nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
-    JSObject* glob = js::GetGlobalForObjectCrossCompartment(aObj);
+    JSObject* glob = JS::GetNonCCWObjectGlobal(aObj);
 
     return WindowOrNull(glob);
 }
