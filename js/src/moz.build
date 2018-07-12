@@ -214,6 +214,7 @@ UNIFIED_SOURCES += [
     'frontend/FoldConstants.cpp',
     'frontend/NameFunctions.cpp',
     'frontend/ParseNode.cpp',
+    'frontend/TDZCheckCache.cpp',
     'frontend/TokenStream.cpp',
     'gc/Allocator.cpp',
     'gc/AtomMarking.cpp',
