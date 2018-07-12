@@ -18,41 +18,41 @@
 extern "C" {
 #endif
 
-static INLINE int32_t clamp_value(int32_t value, int8_t bit) {
-  if (bit <= 0) return value;  // Do nothing for invalid clamp bit.
-  const int64_t max_value = (1LL << (bit - 1)) - 1;
-  const int64_t min_value = -(1LL << (bit - 1));
-  return (int32_t)clamp64(value, min_value, max_value);
-}
-
-static INLINE void clamp_buf(int32_t *buf, int32_t size, int8_t bit) {
-  for (int i = 0; i < size; ++i) buf[i] = clamp_value(buf[i], bit);
-}
-
-void av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
+void av1_idct4_new(const int32_t *input, int32_t *output, const int8_t *cos_bit,
                    const int8_t *stage_range);
-void av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
+void av1_idct8_new(const int32_t *input, int32_t *output, const int8_t *cos_bit,
                    const int8_t *stage_range);
-void av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_idct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                    const int8_t *stage_range);
-void av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range);
-void av1_iidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
-                      const int8_t *stage_range);
-void av1_iidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit,
-                      const int8_t *stage_range);
-void av1_iidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit,
-                       const int8_t *stage_range);
-void av1_iidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit,
-                       const int8_t *stage_range);
+void av1_idct16_new(const int32_t *input, int32_t *output,
+                    const int8_t *cos_bit, const int8_t *stage_range);
+void av1_idct32_new(const int32_t *input, int32_t *output,
+                    const int8_t *cos_bit, const int8_t *stage_range);
+#if CONFIG_TX64X64
+void av1_idct64_new(const int32_t *input, int32_t *output,
+                    const int8_t *cos_bit, const int8_t *stage_range);
+#endif  // CONFIG_TX64X64
+
+void av1_iadst4_new(const int32_t *input, int32_t *output,
+                    const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iadst8_new(const int32_t *input, int32_t *output,
+                    const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iadst16_new(const int32_t *input, int32_t *output,
+                     const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iadst32_new(const int32_t *input, int32_t *output,
+                     const int8_t *cos_bit, const int8_t *stage_range);
+#if CONFIG_EXT_TX
+void av1_iidentity4_c(const int32_t *input, int32_t *output,
+                      const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity8_c(const int32_t *input, int32_t *output,
+                      const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity16_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity32_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range);
+#if CONFIG_TX64X64
+void av1_iidentity64_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range);
+#endif  // CONFIG_TX64X64
+#endif  // CONFIG_EXT_TX
 
 #ifdef __cplusplus
 }

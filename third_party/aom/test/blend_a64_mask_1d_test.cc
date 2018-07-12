@@ -17,11 +17,11 @@
 #include "test/register_state_check.h"
 #include "test/function_equivalence_test.h"
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-#include "config/av1_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "aom/aom_integer.h"
+
+#include "./av1_rtcd.h"
 
 #include "av1/common/enums.h"
 
@@ -46,8 +46,8 @@ class BlendA64Mask1DTest : public FunctionEquivalenceTest<F> {
   virtual void Execute(const T *p_src0, const T *p_src1) = 0;
 
   void Common() {
-    w_ = 2 << this->rng_(MAX_SB_SIZE_LOG2);
-    h_ = 2 << this->rng_(MAX_SB_SIZE_LOG2);
+    w_ = 1 << this->rng_(MAX_SB_SIZE_LOG2 + 1);
+    h_ = 1 << this->rng_(MAX_SB_SIZE_LOG2 + 1);
 
     dst_offset_ = this->rng_(33);
     dst_stride_ = this->rng_(kMaxWidth + 1 - w_) + w_;
@@ -116,7 +116,7 @@ class BlendA64Mask1DTest : public FunctionEquivalenceTest<F> {
 
 typedef void (*F8B)(uint8_t *dst, uint32_t dst_stride, const uint8_t *src0,
                     uint32_t src0_stride, const uint8_t *src1,
-                    uint32_t src1_stride, const uint8_t *mask, int w, int h);
+                    uint32_t src1_stride, const uint8_t *mask, int h, int w);
 typedef libaom_test::FuncParam<F8B> TestFuncs;
 
 class BlendA64Mask1DTest8B : public BlendA64Mask1DTest<F8B, uint8_t> {
@@ -124,10 +124,10 @@ class BlendA64Mask1DTest8B : public BlendA64Mask1DTest<F8B, uint8_t> {
   void Execute(const uint8_t *p_src0, const uint8_t *p_src1) {
     params_.ref_func(dst_ref_ + dst_offset_, dst_stride_, p_src0 + src0_offset_,
                      src0_stride_, p_src1 + src1_offset_, src1_stride_, mask_,
-                     w_, h_);
+                     h_, w_);
     ASM_REGISTER_STATE_CHECK(params_.tst_func(
         dst_tst_ + dst_offset_, dst_stride_, p_src0 + src0_offset_,
-        src0_stride_, p_src1 + src1_offset_, src1_stride_, mask_, w_, h_));
+        src0_stride_, p_src1 + src1_offset_, src1_stride_, mask_, h_, w_));
   }
 };
 
@@ -167,7 +167,7 @@ TEST_P(BlendA64Mask1DTest8B, ExtremeValues) {
 static void blend_a64_hmask_ref(uint8_t *dst, uint32_t dst_stride,
                                 const uint8_t *src0, uint32_t src0_stride,
                                 const uint8_t *src1, uint32_t src1_stride,
-                                const uint8_t *mask, int w, int h) {
+                                const uint8_t *mask, int h, int w) {
   uint8_t mask2d[BlendA64Mask1DTest8B::kMaxMaskSize]
                 [BlendA64Mask1DTest8B::kMaxMaskSize];
 
@@ -175,14 +175,14 @@ static void blend_a64_hmask_ref(uint8_t *dst, uint32_t dst_stride,
     for (int col = 0; col < w; ++col) mask2d[row][col] = mask[col];
 
   aom_blend_a64_mask_c(dst, dst_stride, src0, src0_stride, src1, src1_stride,
-                       &mask2d[0][0], BlendA64Mask1DTest8B::kMaxMaskSize, w, h,
+                       &mask2d[0][0], BlendA64Mask1DTest8B::kMaxMaskSize, h, w,
                        0, 0);
 }
 
 static void blend_a64_vmask_ref(uint8_t *dst, uint32_t dst_stride,
                                 const uint8_t *src0, uint32_t src0_stride,
                                 const uint8_t *src1, uint32_t src1_stride,
-                                const uint8_t *mask, int w, int h) {
+                                const uint8_t *mask, int h, int w) {
   uint8_t mask2d[BlendA64Mask1DTest8B::kMaxMaskSize]
                 [BlendA64Mask1DTest8B::kMaxMaskSize];
 
@@ -190,7 +190,7 @@ static void blend_a64_vmask_ref(uint8_t *dst, uint32_t dst_stride,
     for (int col = 0; col < w; ++col) mask2d[row][col] = mask[row];
 
   aom_blend_a64_mask_c(dst, dst_stride, src0, src0_stride, src1, src1_stride,
-                       &mask2d[0][0], BlendA64Mask1DTest8B::kMaxMaskSize, w, h,
+                       &mask2d[0][0], BlendA64Mask1DTest8B::kMaxMaskSize, h, w,
                        0, 0);
 }
 
@@ -207,21 +207,14 @@ INSTANTIATE_TEST_CASE_P(
         TestFuncs(blend_a64_vmask_ref, aom_blend_a64_vmask_sse4_1)));
 #endif  // HAVE_SSE4_1
 
-#if HAVE_NEON
-INSTANTIATE_TEST_CASE_P(NEON, BlendA64Mask1DTest8B,
-                        ::testing::Values(TestFuncs(blend_a64_hmask_ref,
-                                                    aom_blend_a64_hmask_neon),
-                                          TestFuncs(blend_a64_vmask_ref,
-                                                    aom_blend_a64_vmask_neon)));
-#endif  // HAVE_NEON
-
+#if CONFIG_HIGHBITDEPTH
 //////////////////////////////////////////////////////////////////////////////
 // High bit-depth version
 //////////////////////////////////////////////////////////////////////////////
 
 typedef void (*FHBD)(uint8_t *dst, uint32_t dst_stride, const uint8_t *src0,
                      uint32_t src0_stride, const uint8_t *src1,
-                     uint32_t src1_stride, const uint8_t *mask, int w, int h,
+                     uint32_t src1_stride, const uint8_t *mask, int h, int w,
                      int bd);
 typedef libaom_test::FuncParam<FHBD> TestFuncsHBD;
 
@@ -231,11 +224,11 @@ class BlendA64Mask1DTestHBD : public BlendA64Mask1DTest<FHBD, uint16_t> {
     params_.ref_func(CONVERT_TO_BYTEPTR(dst_ref_ + dst_offset_), dst_stride_,
                      CONVERT_TO_BYTEPTR(p_src0 + src0_offset_), src0_stride_,
                      CONVERT_TO_BYTEPTR(p_src1 + src1_offset_), src1_stride_,
-                     mask_, w_, h_, bit_depth_);
+                     mask_, h_, w_, bit_depth_);
     ASM_REGISTER_STATE_CHECK(params_.tst_func(
         CONVERT_TO_BYTEPTR(dst_tst_ + dst_offset_), dst_stride_,
         CONVERT_TO_BYTEPTR(p_src0 + src0_offset_), src0_stride_,
-        CONVERT_TO_BYTEPTR(p_src1 + src1_offset_), src1_stride_, mask_, w_, h_,
+        CONVERT_TO_BYTEPTR(p_src1 + src1_offset_), src1_stride_, mask_, h_, w_,
         bit_depth_));
   }
 
@@ -294,7 +287,7 @@ TEST_P(BlendA64Mask1DTestHBD, ExtremeValues) {
 static void highbd_blend_a64_hmask_ref(
     uint8_t *dst, uint32_t dst_stride, const uint8_t *src0,
     uint32_t src0_stride, const uint8_t *src1, uint32_t src1_stride,
-    const uint8_t *mask, int w, int h, int bd) {
+    const uint8_t *mask, int h, int w, int bd) {
   uint8_t mask2d[BlendA64Mask1DTestHBD::kMaxMaskSize]
                 [BlendA64Mask1DTestHBD::kMaxMaskSize];
 
@@ -303,13 +296,13 @@ static void highbd_blend_a64_hmask_ref(
 
   aom_highbd_blend_a64_mask_c(
       dst, dst_stride, src0, src0_stride, src1, src1_stride, &mask2d[0][0],
-      BlendA64Mask1DTestHBD::kMaxMaskSize, w, h, 0, 0, bd);
+      BlendA64Mask1DTestHBD::kMaxMaskSize, h, w, 0, 0, bd);
 }
 
 static void highbd_blend_a64_vmask_ref(
     uint8_t *dst, uint32_t dst_stride, const uint8_t *src0,
     uint32_t src0_stride, const uint8_t *src1, uint32_t src1_stride,
-    const uint8_t *mask, int w, int h, int bd) {
+    const uint8_t *mask, int h, int w, int bd) {
   uint8_t mask2d[BlendA64Mask1DTestHBD::kMaxMaskSize]
                 [BlendA64Mask1DTestHBD::kMaxMaskSize];
 
@@ -318,7 +311,7 @@ static void highbd_blend_a64_vmask_ref(
 
   aom_highbd_blend_a64_mask_c(
       dst, dst_stride, src0, src0_stride, src1, src1_stride, &mask2d[0][0],
-      BlendA64Mask1DTestHBD::kMaxMaskSize, w, h, 0, 0, bd);
+      BlendA64Mask1DTestHBD::kMaxMaskSize, h, w, 0, 0, bd);
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -336,4 +329,6 @@ INSTANTIATE_TEST_CASE_P(
                       TestFuncsHBD(highbd_blend_a64_vmask_ref,
                                    aom_highbd_blend_a64_vmask_sse4_1)));
 #endif  // HAVE_SSE4_1
+
+#endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

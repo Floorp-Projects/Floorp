@@ -24,12 +24,7 @@
 // image for MCP.
 // Run "make test" to download lightfield test data: vase10x10.yuv.
 // Run lightfield encoder to encode whole lightfield:
-// examples/lightfield_encoder 1024 1024 vase10x10.yuv vase10x10.ivf 10 10 5
-
-// Note: In bitstream.c and encoder.c, define EXT_TILE_DEBUG as 1 will print
-// out the uncompressed header and the frame contexts, which can be used to
-// test the bit exactness of the headers and the frame contexts for large scale
-// tile coded frames.
+// examples/lightfield_encoder 1024 1024 vase10x10.yuv vase10x10.webm 10 10 5
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,13 +34,11 @@
 #include "aom/aomcx.h"
 #include "av1/common/enums.h"
 
-#include "common/tools_common.h"
-#include "common/video_writer.h"
-
-#define MAX_EXTERNAL_REFERENCES 128
-#define AOM_BORDER_IN_PIXELS 288
+#include "../tools_common.h"
+#include "../video_writer.h"
 
 static const char *exec_name;
+static const unsigned int deadline = AOM_DL_GOOD_QUALITY;
 
 void usage_exit(void) {
   fprintf(stderr,
@@ -55,26 +48,52 @@ void usage_exit(void) {
   exit(EXIT_FAILURE);
 }
 
+static aom_image_t *aom_img_copy(aom_image_t *src, aom_image_t *dst) {
+  dst = aom_img_alloc(dst, src->fmt, src->d_w, src->d_h, 16);
+
+  int plane;
+
+  for (plane = 0; plane < 3; ++plane) {
+    unsigned char *src_buf = src->planes[plane];
+    const int src_stride = src->stride[plane];
+    const int src_w = plane == 0 ? src->d_w : src->d_w >> 1;
+    const int src_h = plane == 0 ? src->d_h : src->d_h >> 1;
+
+    unsigned char *dst_buf = dst->planes[plane];
+    const int dst_stride = dst->stride[plane];
+    int y;
+
+    for (y = 0; y < src_h; ++y) {
+      memcpy(dst_buf, src_buf, src_w);
+      src_buf += src_stride;
+      dst_buf += dst_stride;
+    }
+  }
+  return dst;
+}
+
 static int aom_img_size_bytes(aom_image_t *img) {
   int image_size_bytes = 0;
   int plane;
   for (plane = 0; plane < 3; ++plane) {
+    const int stride = img->stride[plane];
     const int w = aom_img_plane_width(img, plane) *
                   ((img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1);
     const int h = aom_img_plane_height(img, plane);
-    image_size_bytes += w * h;
+    image_size_bytes += (w + stride) * h;
   }
   return image_size_bytes;
 }
 
 static int get_frame_stats(aom_codec_ctx_t *ctx, const aom_image_t *img,
                            aom_codec_pts_t pts, unsigned int duration,
-                           aom_enc_frame_flags_t flags,
+                           aom_enc_frame_flags_t flags, unsigned int dl,
                            aom_fixed_buf_t *stats) {
   int got_pkts = 0;
   aom_codec_iter_t iter = NULL;
   const aom_codec_cx_pkt_t *pkt = NULL;
-  const aom_codec_err_t res = aom_codec_encode(ctx, img, pts, duration, flags);
+  const aom_codec_err_t res =
+      aom_codec_encode(ctx, img, pts, duration, flags, dl);
   if (res != AOM_CODEC_OK) die_codec(ctx, "Failed to get frame stats.");
 
   while ((pkt = aom_codec_get_cx_data(ctx, &iter)) != NULL) {
@@ -94,11 +113,13 @@ static int get_frame_stats(aom_codec_ctx_t *ctx, const aom_image_t *img,
 
 static int encode_frame(aom_codec_ctx_t *ctx, const aom_image_t *img,
                         aom_codec_pts_t pts, unsigned int duration,
-                        aom_enc_frame_flags_t flags, AvxVideoWriter *writer) {
+                        aom_enc_frame_flags_t flags, unsigned int dl,
+                        AvxVideoWriter *writer) {
   int got_pkts = 0;
   aom_codec_iter_t iter = NULL;
   const aom_codec_cx_pkt_t *pkt = NULL;
-  const aom_codec_err_t res = aom_codec_encode(ctx, img, pts, duration, flags);
+  const aom_codec_err_t res =
+      aom_codec_encode(ctx, img, pts, duration, flags, dl);
   if (res != AOM_CODEC_OK) die_codec(ctx, "Failed to encode frame.");
 
   while ((pkt = aom_codec_get_cx_data(ctx, &iter)) != NULL) {
@@ -118,44 +139,33 @@ static int encode_frame(aom_codec_ctx_t *ctx, const aom_image_t *img,
   return got_pkts;
 }
 
-static void get_raw_image(aom_image_t **frame_to_encode, aom_image_t *raw,
-                          aom_image_t *raw_shift) {
-  if (!CONFIG_LOWBITDEPTH) {
-    // Need to allocate larger buffer to use hbd internal.
-    int input_shift = 0;
-    aom_img_upshift(raw_shift, raw, input_shift);
-    *frame_to_encode = raw_shift;
-  } else {
-    *frame_to_encode = raw;
-  }
-}
-
 static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
                              const AvxInterface *encoder,
                              const aom_codec_enc_cfg_t *cfg, int lf_width,
-                             int lf_height, int lf_blocksize, int flags,
-                             aom_image_t *raw_shift) {
+                             int lf_height, int lf_blocksize) {
   aom_codec_ctx_t codec;
   int frame_count = 0;
-  int image_size_bytes = aom_img_size_bytes(raw);
+  int image_size_bytes = 0;
   int u_blocks, v_blocks;
   int bu, bv;
   aom_fixed_buf_t stats = { NULL, 0 };
-  aom_image_t *frame_to_encode;
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, flags))
+  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, 0))
     die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 1))
+    die_codec(&codec, "Failed to set frame parallel decoding");
   if (aom_codec_control(&codec, AOME_SET_ENABLEAUTOALTREF, 0))
     die_codec(&codec, "Failed to turn off auto altref");
-  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 0))
-    die_codec(&codec, "Failed to set frame parallel decoding");
+  if (aom_codec_control(&codec, AV1E_SET_SINGLE_TILE_DECODING, 1))
+    die_codec(&codec, "Failed to turn on single tile decoding");
+
+  image_size_bytes = aom_img_size_bytes(raw);
 
   // How many reference images we need to encode.
   u_blocks = (lf_width + lf_blocksize - 1) / lf_blocksize;
   v_blocks = (lf_height + lf_blocksize - 1) / lf_blocksize;
-
-  printf("\n First pass: ");
-
+  aom_image_t *reference_images =
+      (aom_image_t *)malloc(u_blocks * v_blocks * sizeof(aom_image_t));
   for (bv = 0; bv < v_blocks; ++bv) {
     for (bu = 0; bu < u_blocks; ++bu) {
       const int block_u_min = bu * lf_blocksize;
@@ -164,6 +174,7 @@ static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
       int block_v_end = (bv + 1) * lf_blocksize;
       int u_block_size, v_block_size;
       int block_ref_u, block_ref_v;
+      struct av1_ref_frame ref_frame;
 
       block_u_end = block_u_end < lf_width ? block_u_end : lf_width;
       block_v_end = block_v_end < lf_height ? block_v_end : lf_height;
@@ -171,28 +182,22 @@ static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
       v_block_size = block_v_end - block_v_min;
       block_ref_u = block_u_min + u_block_size / 2;
       block_ref_v = block_v_min + v_block_size / 2;
-
-      printf("A%d, ", (block_ref_u + block_ref_v * lf_width));
       fseek(infile, (block_ref_u + block_ref_v * lf_width) * image_size_bytes,
             SEEK_SET);
       aom_img_read(raw, infile);
-      get_raw_image(&frame_to_encode, raw, raw_shift);
-
+      if (aom_codec_control(&codec, AOME_USE_REFERENCE,
+                            AOM_LAST_FLAG | AOM_GOLD_FLAG | AOM_ALT_FLAG))
+        die_codec(&codec, "Failed to set reference flags");
       // Reference frames can be encoded encoded without tiles.
       ++frame_count;
-      get_frame_stats(&codec, frame_to_encode, frame_count, 1,
-                      AOM_EFLAG_NO_REF_LAST2 | AOM_EFLAG_NO_REF_LAST3 |
-                          AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF |
-                          AOM_EFLAG_NO_REF_BWD | AOM_EFLAG_NO_REF_ARF2 |
-                          AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
-                          AOM_EFLAG_NO_UPD_ARF,
+      get_frame_stats(&codec, raw, frame_count, 1,
+                      AOM_EFLAG_FORCE_GF | AOM_EFLAG_NO_UPD_ENTROPY, deadline,
                       &stats);
+      ref_frame.idx = 0;
+      aom_codec_control(&codec, AV1_GET_REFERENCE, &ref_frame);
+      aom_img_copy(&ref_frame.img, &reference_images[frame_count - 1]);
     }
   }
-
-  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 1))
-    die_codec(&codec, "Failed to set frame parallel decoding");
-
   for (bv = 0; bv < v_blocks; ++bv) {
     for (bu = 0; bu < u_blocks; ++bu) {
       const int block_u_min = bu * lf_blocksize;
@@ -204,39 +209,58 @@ static aom_fixed_buf_t pass0(aom_image_t *raw, FILE *infile,
       block_v_end = block_v_end < lf_height ? block_v_end : lf_height;
       for (v = block_v_min; v < block_v_end; ++v) {
         for (u = block_u_min; u < block_u_end; ++u) {
-          printf("C%d, ", (u + v * lf_width));
+          // This was a work around for a bug in libvpx.  I'm not sure if this
+          // same bug exists in current version of av1.  Need to call this,
+          // otherwise the default is to not use any reference frames.  Then
+          // if you don't have at least one AOM_EFLAG_NO_REF_* flag, all frames
+          // will be intra encoded.  I'm not sure why the default is not to use
+          // any reference frames.  It looks like there is something about the
+          // way I encode the reference frames above that sets that as
+          // default...
+          if (aom_codec_control(&codec, AOME_USE_REFERENCE,
+                                AOM_LAST_FLAG | AOM_GOLD_FLAG | AOM_ALT_FLAG))
+            die_codec(&codec, "Failed to set reference flags");
+
+          // Set tile size to 64 pixels. The tile_columns and
+          // tile_rows in the tile coding are overloaded to represent
+          // tile_width and tile_height, that range from 1 to 64, in the unit
+          // of 64 pixels.
+          if (aom_codec_control(&codec, AV1E_SET_TILE_COLUMNS, 1))
+            die_codec(&codec, "Failed to set tile width");
+          if (aom_codec_control(&codec, AV1E_SET_TILE_ROWS, 1))
+            die_codec(&codec, "Failed to set tile height");
+
+          av1_ref_frame_t ref;
+          ref.idx = 0;
+          ref.img = reference_images[bv * u_blocks + bu];
+          if (aom_codec_control(&codec, AV1_SET_REFERENCE, &ref))
+            die_codec(&codec, "Failed to set reference frame");
+
           fseek(infile, (u + v * lf_width) * image_size_bytes, SEEK_SET);
           aom_img_read(raw, infile);
-          get_raw_image(&frame_to_encode, raw, raw_shift);
-
           ++frame_count;
-          get_frame_stats(&codec, frame_to_encode, frame_count, 1,
-                          AOM_EFLAG_NO_REF_LAST2 | AOM_EFLAG_NO_REF_LAST3 |
-                              AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF |
-                              AOM_EFLAG_NO_REF_BWD | AOM_EFLAG_NO_REF_ARF2 |
-                              AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
-                              AOM_EFLAG_NO_UPD_ARF | AOM_EFLAG_NO_UPD_ENTROPY,
-                          &stats);
+          get_frame_stats(&codec, raw, frame_count, 1,
+                          AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
+                              AOM_EFLAG_NO_UPD_ARF | AOM_EFLAG_NO_UPD_ENTROPY |
+                              AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF,
+                          deadline, &stats);
         }
       }
     }
   }
   // Flush encoder.
-  // No ARF, this should not be needed.
-  while (get_frame_stats(&codec, NULL, frame_count, 1, 0, &stats)) {
+  while (get_frame_stats(&codec, NULL, frame_count, 1, 0, deadline, &stats)) {
   }
 
+  printf("Pass 0 complete. Processed %d frames.\n", frame_count);
   if (aom_codec_destroy(&codec)) die_codec(&codec, "Failed to destroy codec.");
-
-  printf("\nFirst pass complete. Processed %d frames.\n", frame_count);
 
   return stats;
 }
 
 static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
-                  const AvxInterface *encoder, aom_codec_enc_cfg_t *cfg,
-                  int lf_width, int lf_height, int lf_blocksize, int flags,
-                  aom_image_t *raw_shift) {
+                  const AvxInterface *encoder, const aom_codec_enc_cfg_t *cfg,
+                  int lf_width, int lf_height, int lf_blocksize) {
   AvxVideoInfo info = { encoder->fourcc,
                         cfg->g_w,
                         cfg->g_h,
@@ -244,48 +268,27 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
   AvxVideoWriter *writer = NULL;
   aom_codec_ctx_t codec;
   int frame_count = 0;
-  int image_size_bytes = aom_img_size_bytes(raw);
+  int image_size_bytes;
   int bu, bv;
   int u_blocks, v_blocks;
-  aom_image_t *frame_to_encode;
-  aom_image_t reference_images[MAX_EXTERNAL_REFERENCES];
-  int reference_image_num = 0;
-  int i;
 
   writer = aom_video_writer_open(outfile_name, kContainerIVF, &info);
   if (!writer) die("Failed to open %s for writing", outfile_name);
 
-  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, flags))
+  if (aom_codec_enc_init(&codec, encoder->codec_interface(), cfg, 0))
     die_codec(&codec, "Failed to initialize encoder");
+  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 1))
+    die_codec(&codec, "Failed to set frame parallel decoding");
   if (aom_codec_control(&codec, AOME_SET_ENABLEAUTOALTREF, 0))
     die_codec(&codec, "Failed to turn off auto altref");
-  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 0))
-    die_codec(&codec, "Failed to set frame parallel decoding");
-  // Note: The superblock is a sequence parameter and has to be the same for 1
-  // sequence. In lightfield application, must choose the superblock size(either
-  // 64x64 or 128x128) before the encoding starts. Otherwise, the default is
-  // AOM_SUPERBLOCK_SIZE_DYNAMIC, and the superblock size will be set to 64x64
-  // internally.
-  if (aom_codec_control(&codec, AV1E_SET_SUPERBLOCK_SIZE,
-                        AOM_SUPERBLOCK_SIZE_64X64))
-    die_codec(&codec, "Failed to set SB size");
+  if (aom_codec_control(&codec, AV1E_SET_SINGLE_TILE_DECODING, 1))
+    die_codec(&codec, "Failed to turn on single tile decoding");
 
+  image_size_bytes = aom_img_size_bytes(raw);
   u_blocks = (lf_width + lf_blocksize - 1) / lf_blocksize;
   v_blocks = (lf_height + lf_blocksize - 1) / lf_blocksize;
-
-  reference_image_num = u_blocks * v_blocks;
-  aom_img_fmt_t ref_fmt = AOM_IMG_FMT_I420;
-  if (!CONFIG_LOWBITDEPTH) ref_fmt |= AOM_IMG_FMT_HIGHBITDEPTH;
-  // Allocate memory with the border so that it can be used as a reference.
-  for (i = 0; i < reference_image_num; i++) {
-    if (!aom_img_alloc_with_border(&reference_images[i], ref_fmt, cfg->g_w,
-                                   cfg->g_h, 32, 8, AOM_BORDER_IN_PIXELS)) {
-      die("Failed to allocate image.");
-    }
-  }
-
-  printf("\n Second pass: ");
-
+  aom_image_t *reference_images =
+      (aom_image_t *)malloc(u_blocks * v_blocks * sizeof(aom_image_t));
   // Encode reference images first.
   printf("Encoding Reference Images\n");
   for (bv = 0; bv < v_blocks; ++bv) {
@@ -296,6 +299,7 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
       int block_v_end = (bv + 1) * lf_blocksize;
       int u_block_size, v_block_size;
       int block_ref_u, block_ref_v;
+      struct av1_ref_frame ref_frame;
 
       block_u_end = block_u_end < lf_width ? block_u_end : lf_width;
       block_v_end = block_v_end < lf_height ? block_v_end : lf_height;
@@ -303,51 +307,24 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
       v_block_size = block_v_end - block_v_min;
       block_ref_u = block_u_min + u_block_size / 2;
       block_ref_v = block_v_min + v_block_size / 2;
-
-      printf("A%d, ", (block_ref_u + block_ref_v * lf_width));
       fseek(infile, (block_ref_u + block_ref_v * lf_width) * image_size_bytes,
             SEEK_SET);
       aom_img_read(raw, infile);
-
-      get_raw_image(&frame_to_encode, raw, raw_shift);
-
+      if (aom_codec_control(&codec, AOME_USE_REFERENCE,
+                            AOM_LAST_FLAG | AOM_GOLD_FLAG | AOM_ALT_FLAG))
+        die_codec(&codec, "Failed to set reference flags");
       // Reference frames may be encoded without tiles.
       ++frame_count;
       printf("Encoding reference image %d of %d\n", bv * u_blocks + bu,
              u_blocks * v_blocks);
-      encode_frame(&codec, frame_to_encode, frame_count, 1,
-                   AOM_EFLAG_NO_REF_LAST2 | AOM_EFLAG_NO_REF_LAST3 |
-                       AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF |
-                       AOM_EFLAG_NO_REF_BWD | AOM_EFLAG_NO_REF_ARF2 |
-                       AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
-                       AOM_EFLAG_NO_UPD_ARF | AOM_EFLAG_NO_UPD_ENTROPY,
+      encode_frame(&codec, raw, frame_count, 1,
+                   AOM_EFLAG_FORCE_GF | AOM_EFLAG_NO_UPD_ENTROPY, deadline,
                    writer);
-
-      if (aom_codec_control(&codec, AV1_COPY_NEW_FRAME_IMAGE,
-                            &reference_images[frame_count - 1]))
-        die_codec(&codec, "Failed to copy decoder reference frame");
+      ref_frame.idx = 0;
+      aom_codec_control(&codec, AV1_GET_REFERENCE, &ref_frame);
+      aom_img_copy(&ref_frame.img, &reference_images[frame_count - 1]);
     }
   }
-
-  cfg->large_scale_tile = 1;
-  // Fixed q encoding for camera frames.
-  cfg->rc_end_usage = AOM_Q;
-  if (aom_codec_enc_config_set(&codec, cfg))
-    die_codec(&codec, "Failed to configure encoder");
-
-  // The fixed q value used in encoding.
-  if (aom_codec_control(&codec, AOME_SET_CQ_LEVEL, 36))
-    die_codec(&codec, "Failed to set cq level");
-  if (aom_codec_control(&codec, AV1E_SET_FRAME_PARALLEL_DECODING, 1))
-    die_codec(&codec, "Failed to set frame parallel decoding");
-  if (aom_codec_control(&codec, AV1E_SET_SINGLE_TILE_DECODING, 1))
-    die_codec(&codec, "Failed to turn on single tile decoding");
-  // Set tile_columns and tile_rows to MAX values, which guarantees the tile
-  // size of 64 x 64 pixels(i.e. 1 SB) for <= 4k resolution.
-  if (aom_codec_control(&codec, AV1E_SET_TILE_COLUMNS, 6))
-    die_codec(&codec, "Failed to set tile width");
-  if (aom_codec_control(&codec, AV1E_SET_TILE_ROWS, 6))
-    die_codec(&codec, "Failed to set tile height");
 
   for (bv = 0; bv < v_blocks; ++bv) {
     for (bu = 0; bu < u_blocks; ++bu) {
@@ -360,44 +337,56 @@ static void pass1(aom_image_t *raw, FILE *infile, const char *outfile_name,
       block_v_end = block_v_end < lf_height ? block_v_end : lf_height;
       for (v = block_v_min; v < block_v_end; ++v) {
         for (u = block_u_min; u < block_u_end; ++u) {
+          // This was a work around for a bug in libvpx.  I'm not sure if this
+          // same bug exists in current version of av1.  Need to call this,
+          // otherwise the default is to not use any reference frames.  Then
+          // if you don't have at least one AOM_EFLAG_NO_REF_* flag, all frames
+          // will be intra encoded.  I'm not sure why the default is not to use
+          // any reference frames.  It looks like there is something about the
+          // way I encode the reference frames above that sets that as
+          // default...
+          if (aom_codec_control(&codec, AOME_USE_REFERENCE,
+                                AOM_LAST_FLAG | AOM_GOLD_FLAG | AOM_ALT_FLAG))
+            die_codec(&codec, "Failed to set reference flags");
+
+          // Set tile size to 64 pixels. The tile_columns and
+          // tile_rows in the tile coding are overloaded to represent tile_width
+          // and tile_height, that range from 1 to 64, in the unit of 64 pixels.
+          if (aom_codec_control(&codec, AV1E_SET_TILE_COLUMNS, 1))
+            die_codec(&codec, "Failed to set tile width");
+          if (aom_codec_control(&codec, AV1E_SET_TILE_ROWS, 1))
+            die_codec(&codec, "Failed to set tile height");
+
           av1_ref_frame_t ref;
           ref.idx = 0;
-          ref.use_external_ref = 1;
           ref.img = reference_images[bv * u_blocks + bu];
           if (aom_codec_control(&codec, AV1_SET_REFERENCE, &ref))
             die_codec(&codec, "Failed to set reference frame");
-
-          printf("C%d, ", (u + v * lf_width));
           fseek(infile, (u + v * lf_width) * image_size_bytes, SEEK_SET);
           aom_img_read(raw, infile);
-          get_raw_image(&frame_to_encode, raw, raw_shift);
-
           ++frame_count;
+
           printf("Encoding image %d of %d\n",
                  frame_count - (u_blocks * v_blocks), lf_width * lf_height);
-          encode_frame(&codec, frame_to_encode, frame_count, 1,
-                       AOM_EFLAG_NO_REF_LAST2 | AOM_EFLAG_NO_REF_LAST3 |
-                           AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF |
-                           AOM_EFLAG_NO_REF_BWD | AOM_EFLAG_NO_REF_ARF2 |
-                           AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
-                           AOM_EFLAG_NO_UPD_ARF | AOM_EFLAG_NO_UPD_ENTROPY,
-                       writer);
+          encode_frame(&codec, raw, frame_count, 1,
+                       AOM_EFLAG_NO_UPD_LAST | AOM_EFLAG_NO_UPD_GF |
+                           AOM_EFLAG_NO_UPD_ARF | AOM_EFLAG_NO_UPD_ENTROPY |
+                           AOM_EFLAG_NO_REF_GF | AOM_EFLAG_NO_REF_ARF,
+                       deadline, writer);
         }
       }
     }
   }
 
   // Flush encoder.
-  // No ARF, this should not be needed.
-  while (encode_frame(&codec, NULL, -1, 1, 0, writer)) {
+  while (encode_frame(&codec, NULL, -1, 1, 0, deadline, writer)) {
   }
 
-  for (i = 0; i < reference_image_num; i++) aom_img_free(&reference_images[i]);
-
   if (aom_codec_destroy(&codec)) die_codec(&codec, "Failed to destroy codec.");
+
   aom_video_writer_close(writer);
 
-  printf("\nSecond pass complete. Processed %d frames.\n", frame_count);
+  printf("Pass 1 complete. Processed %d frames.\n", frame_count);
 }
 
 int main(int argc, char **argv) {
@@ -412,10 +401,8 @@ int main(int argc, char **argv) {
   aom_codec_ctx_t codec;
   aom_codec_enc_cfg_t cfg;
   aom_image_t raw;
-  aom_image_t raw_shift;
   aom_codec_err_t res;
   aom_fixed_buf_t stats;
-  int flags = 0;
 
   const AvxInterface *encoder = NULL;
   const int fps = 30;
@@ -448,19 +435,14 @@ int main(int argc, char **argv) {
     die("Invalid lf_width and/or lf_height: %dx%d", lf_width, lf_height);
   if (lf_blocksize <= 0) die("Invalid lf_blocksize: %d", lf_blocksize);
 
-  if (!aom_img_alloc(&raw, AOM_IMG_FMT_I420, w, h, 32)) {
-    die("Failed to allocate image.");
-  }
-  if (!CONFIG_LOWBITDEPTH) {
-    // Need to allocate larger buffer to use hbd internal.
-    aom_img_alloc(&raw_shift, AOM_IMG_FMT_I420 | AOM_IMG_FMT_HIGHBITDEPTH, w, h,
-                  32);
-  }
+  if (!aom_img_alloc(&raw, AOM_IMG_FMT_I420, w, h, 1))
+    die("Failed to allocate image", w, h);
 
   printf("Using %s\n", aom_codec_iface_name(encoder->codec_interface()));
 
   // Configuration
   res = aom_codec_enc_config_default(encoder->codec_interface(), &cfg, 0);
+
   if (res) die_codec(&codec, "Failed to get default codec config.");
 
   cfg.g_w = w;
@@ -468,32 +450,29 @@ int main(int argc, char **argv) {
   cfg.g_timebase.num = 1;
   cfg.g_timebase.den = fps;
   cfg.rc_target_bitrate = bitrate;
-  cfg.g_error_resilient = 0;  // This is required.
-  cfg.g_lag_in_frames = 0;    // need to set this since default is 19.
+  cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
+  // Need to set lag_in_frames to 1 or 0.  Otherwise the frame flags get
+  // overridden after the first frame in encode_frame_to_data_rate() (see where
+  // get_frame_flags() is called).
+  cfg.g_lag_in_frames = 0;
   cfg.kf_mode = AOM_KF_DISABLED;
-  cfg.large_scale_tile = 0;  // Only set it to 1 for camera frame encoding.
-  cfg.g_bit_depth = AOM_BITS_8;
-  flags |= (cfg.g_bit_depth > AOM_BITS_8 || !CONFIG_LOWBITDEPTH)
-               ? AOM_CODEC_USE_HIGHBITDEPTH
-               : 0;
+  cfg.large_scale_tile = 1;
 
   if (!(infile = fopen(infile_arg, "rb")))
     die("Failed to open %s for reading", infile_arg);
 
   // Pass 0
   cfg.g_pass = AOM_RC_FIRST_PASS;
-  stats = pass0(&raw, infile, encoder, &cfg, lf_width, lf_height, lf_blocksize,
-                flags, &raw_shift);
+  stats = pass0(&raw, infile, encoder, &cfg, lf_width, lf_height, lf_blocksize);
 
   // Pass 1
   rewind(infile);
   cfg.g_pass = AOM_RC_LAST_PASS;
   cfg.rc_twopass_stats_in = stats;
   pass1(&raw, infile, outfile_arg, encoder, &cfg, lf_width, lf_height,
-        lf_blocksize, flags, &raw_shift);
+        lf_blocksize);
   free(stats.buf);
 
-  if (!CONFIG_LOWBITDEPTH) aom_img_free(&raw_shift);
   aom_img_free(&raw);
   fclose(infile);
 

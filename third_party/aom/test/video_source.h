@@ -71,10 +71,7 @@ static FILE *GetTempOutFile(std::string *file_name) {
   }
   return NULL;
 #else
-  char name_template[] = "/tmp/libaomtest.XXXXXX";
-  const int fd = mkstemp(name_template);
-  *file_name = name_template;
-  return fdopen(fd, "wb+");
+  return tmpfile();
 #endif
 }
 

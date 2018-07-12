@@ -12,8 +12,7 @@
 #ifndef AOM_PORTS_ARM_H_
 #define AOM_PORTS_ARM_H_
 #include <stdlib.h>
-
-#include "config/aom_config.h"
+#include "aom_config.h"
 
 #ifdef __cplusplus
 extern "C" {

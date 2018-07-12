@@ -12,13 +12,80 @@
 #include <assert.h>
 #include <smmintrin.h>
 
-#include "config/av1_rtcd.h"
-
+#include "./av1_rtcd.h"
 #include "av1/common/filter.h"
+
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
+DECLARE_ALIGNED(16, static int16_t, subpel_filters_sharp[15][6][8]);
+#endif
+
+#if USE_TEMPORALFILTER_12TAP
+DECLARE_ALIGNED(16, static int16_t, subpel_temporalfilter[15][6][8]);
+#endif
+
+typedef int16_t (*HbdSubpelFilterCoeffs)[8];
 
 typedef void (*TransposeSave)(int width, int pixelsNum, uint32_t *src,
                               int src_stride, uint16_t *dst, int dst_stride,
                               int bd);
+
+static INLINE HbdSubpelFilterCoeffs
+hbd_get_subpel_filter_ver_signal_dir(const InterpFilterParams p, int index) {
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
+  if (p.interp_filter == MULTITAP_SHARP) {
+    return &subpel_filters_sharp[index][0];
+  }
+#endif
+#if USE_TEMPORALFILTER_12TAP
+  if (p.interp_filter == TEMPORALFILTER_12TAP) {
+    return &subpel_temporalfilter[index][0];
+  }
+#endif
+  (void)p;
+  (void)index;
+  return NULL;
+}
+
+static void init_simd_filter(const int16_t *filter_ptr, int taps,
+                             int16_t (*simd_filter)[6][8]) {
+  int shift;
+  int offset = (12 - taps) / 2;
+  for (shift = 1; shift < SUBPEL_SHIFTS; ++shift) {
+    const int16_t *filter_row = filter_ptr + shift * taps;
+    int i, j;
+    for (i = 0; i < 12; ++i) {
+      for (j = 0; j < 4; ++j) {
+        int r = i / 2;
+        int c = j * 2 + (i % 2);
+        if (i - offset >= 0 && i - offset < taps)
+          simd_filter[shift - 1][r][c] = filter_row[i - offset];
+        else
+          simd_filter[shift - 1][r][c] = 0;
+      }
+    }
+  }
+}
+
+void av1_highbd_convolve_init_sse4_1(void) {
+#if USE_TEMPORALFILTER_12TAP
+  {
+    InterpFilterParams filter_params =
+        av1_get_interp_filter_params(TEMPORALFILTER_12TAP);
+    int taps = filter_params.taps;
+    const int16_t *filter_ptr = filter_params.filter_ptr;
+    init_simd_filter(filter_ptr, taps, subpel_temporalfilter);
+  }
+#endif
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
+  {
+    InterpFilterParams filter_params =
+        av1_get_interp_filter_params(MULTITAP_SHARP);
+    int taps = filter_params.taps;
+    const int16_t *filter_ptr = filter_params.filter_ptr;
+    init_simd_filter(filter_ptr, taps, subpel_filters_sharp);
+  }
+#endif
+}
 
 // pixelsNum 0: write all 4 pixels
 //           1/2/3: residual pixels 1/2/3
@@ -151,6 +218,138 @@ void trans_accum_save_4x4(int width, int pixelsNum, uint32_t *src,
   writePixel(u, width, pixelsNum, dst, dst_stride);
 }
 
+static TransposeSave transSaveTab[2] = { trans_save_4x4, trans_accum_save_4x4 };
+
+static INLINE void transpose_pair(__m128i *in, __m128i *out) {
+  __m128i x0, x1;
+
+  x0 = _mm_unpacklo_epi32(in[0], in[1]);
+  x1 = _mm_unpacklo_epi32(in[2], in[3]);
+
+  out[0] = _mm_unpacklo_epi64(x0, x1);
+  out[1] = _mm_unpackhi_epi64(x0, x1);
+
+  x0 = _mm_unpackhi_epi32(in[0], in[1]);
+  x1 = _mm_unpackhi_epi32(in[2], in[3]);
+
+  out[2] = _mm_unpacklo_epi64(x0, x1);
+  out[3] = _mm_unpackhi_epi64(x0, x1);
+
+  x0 = _mm_unpacklo_epi32(in[4], in[5]);
+  x1 = _mm_unpacklo_epi32(in[6], in[7]);
+
+  out[4] = _mm_unpacklo_epi64(x0, x1);
+  out[5] = _mm_unpackhi_epi64(x0, x1);
+}
+
+static void highbd_filter_horiz(const uint16_t *src, int src_stride, __m128i *f,
+                                int tapsNum, uint32_t *buf) {
+  __m128i u[8], v[6];
+
+  assert(tapsNum == 10 || tapsNum == 12);
+  if (tapsNum == 10) {
+    src -= 1;
+  }
+
+  u[0] = _mm_loadu_si128((__m128i const *)src);
+  u[1] = _mm_loadu_si128((__m128i const *)(src + src_stride));
+  u[2] = _mm_loadu_si128((__m128i const *)(src + 2 * src_stride));
+  u[3] = _mm_loadu_si128((__m128i const *)(src + 3 * src_stride));
+
+  u[4] = _mm_loadu_si128((__m128i const *)(src + 8));
+  u[5] = _mm_loadu_si128((__m128i const *)(src + src_stride + 8));
+  u[6] = _mm_loadu_si128((__m128i const *)(src + 2 * src_stride + 8));
+  u[7] = _mm_loadu_si128((__m128i const *)(src + 3 * src_stride + 8));
+
+  transpose_pair(u, v);
+
+  u[0] = _mm_madd_epi16(v[0], f[0]);
+  u[1] = _mm_madd_epi16(v[1], f[1]);
+  u[2] = _mm_madd_epi16(v[2], f[2]);
+  u[3] = _mm_madd_epi16(v[3], f[3]);
+  u[4] = _mm_madd_epi16(v[4], f[4]);
+  u[5] = _mm_madd_epi16(v[5], f[5]);
+
+  u[6] = _mm_min_epi32(u[2], u[3]);
+  u[7] = _mm_max_epi32(u[2], u[3]);
+
+  u[0] = _mm_add_epi32(u[0], u[1]);
+  u[0] = _mm_add_epi32(u[0], u[5]);
+  u[0] = _mm_add_epi32(u[0], u[4]);
+  u[0] = _mm_add_epi32(u[0], u[6]);
+  u[0] = _mm_add_epi32(u[0], u[7]);
+
+  _mm_storeu_si128((__m128i *)buf, u[0]);
+}
+
+void av1_highbd_convolve_horiz_sse4_1(const uint16_t *src, int src_stride,
+                                      uint16_t *dst, int dst_stride, int w,
+                                      int h,
+                                      const InterpFilterParams filter_params,
+                                      const int subpel_x_q4, int x_step_q4,
+                                      int avg, int bd) {
+  DECLARE_ALIGNED(16, uint32_t, temp[4 * 4]);
+  __m128i verf[6];
+  HbdSubpelFilterCoeffs vCoeffs;
+  const uint16_t *srcPtr;
+  const int tapsNum = filter_params.taps;
+  int i, col, count, blkResidu, blkHeight;
+  TransposeSave transSave = transSaveTab[avg];
+  (void)x_step_q4;
+
+  if (0 == subpel_x_q4 || 16 != x_step_q4) {
+    av1_highbd_convolve_horiz_c(src, src_stride, dst, dst_stride, w, h,
+                                filter_params, subpel_x_q4, x_step_q4, avg, bd);
+    return;
+  }
+
+  vCoeffs =
+      hbd_get_subpel_filter_ver_signal_dir(filter_params, subpel_x_q4 - 1);
+  if (!vCoeffs) {
+    av1_highbd_convolve_horiz_c(src, src_stride, dst, dst_stride, w, h,
+                                filter_params, subpel_x_q4, x_step_q4, avg, bd);
+    return;
+  }
+
+  verf[0] = *((const __m128i *)(vCoeffs));
+  verf[1] = *((const __m128i *)(vCoeffs + 1));
+  verf[2] = *((const __m128i *)(vCoeffs + 2));
+  verf[3] = *((const __m128i *)(vCoeffs + 3));
+  verf[4] = *((const __m128i *)(vCoeffs + 4));
+  verf[5] = *((const __m128i *)(vCoeffs + 5));
+
+  src -= (tapsNum >> 1) - 1;
+  srcPtr = src;
+
+  count = 0;
+  blkHeight = h >> 2;
+  blkResidu = h & 3;
+
+  while (blkHeight != 0) {
+    for (col = 0; col < w; col += 4) {
+      for (i = 0; i < 4; ++i) {
+        highbd_filter_horiz(srcPtr, src_stride, verf, tapsNum, temp + (i * 4));
+        srcPtr += 1;
+      }
+      transSave(w, 0, temp, 4, dst + col, dst_stride, bd);
+    }
+    count++;
+    srcPtr = src + count * src_stride * 4;
+    dst += dst_stride * 4;
+    blkHeight--;
+  }
+
+  if (blkResidu == 0) return;
+
+  for (col = 0; col < w; col += 4) {
+    for (i = 0; i < 4; ++i) {
+      highbd_filter_horiz(srcPtr, src_stride, verf, tapsNum, temp + (i * 4));
+      srcPtr += 1;
+    }
+    transSave(w, blkResidu, temp, 4, dst + col, dst_stride, bd);
+  }
+}
+
 // Vertical convolutional filter
 
 typedef void (*WritePixels)(__m128i *u, int bd, uint16_t *dst);
@@ -203,3 +402,134 @@ static void write4pixelsAccum(__m128i *u, int bd, uint16_t *dst) {
 }
 
 WritePixels write4pixelsTab[2] = { write4pixelsOnly, write4pixelsAccum };
+
+static void filter_vert_horiz_parallel(const uint16_t *src, int src_stride,
+                                       const __m128i *f, int taps,
+                                       uint16_t *dst, WritePixels saveFunc,
+                                       int bd) {
+  __m128i s[12];
+  __m128i zero = _mm_setzero_si128();
+  int i = 0;
+  int r = 0;
+
+  // TODO(luoyi) treat s[12] as a circular buffer in width = 2 case
+  assert(taps == 10 || taps == 12);
+  if (10 == taps) {
+    i += 1;
+    s[0] = zero;
+  }
+  while (i < 12) {
+    s[i] = _mm_loadu_si128((__m128i const *)(src + r * src_stride));
+    i += 1;
+    r += 1;
+  }
+
+  s[0] = _mm_unpacklo_epi16(s[0], s[1]);
+  s[2] = _mm_unpacklo_epi16(s[2], s[3]);
+  s[4] = _mm_unpacklo_epi16(s[4], s[5]);
+  s[6] = _mm_unpacklo_epi16(s[6], s[7]);
+  s[8] = _mm_unpacklo_epi16(s[8], s[9]);
+  s[10] = _mm_unpacklo_epi16(s[10], s[11]);
+
+  s[0] = _mm_madd_epi16(s[0], f[0]);
+  s[2] = _mm_madd_epi16(s[2], f[1]);
+  s[4] = _mm_madd_epi16(s[4], f[2]);
+  s[6] = _mm_madd_epi16(s[6], f[3]);
+  s[8] = _mm_madd_epi16(s[8], f[4]);
+  s[10] = _mm_madd_epi16(s[10], f[5]);
+
+  s[1] = _mm_min_epi32(s[4], s[6]);
+  s[3] = _mm_max_epi32(s[4], s[6]);
+
+  s[0] = _mm_add_epi32(s[0], s[2]);
+  s[0] = _mm_add_epi32(s[0], s[10]);
+  s[0] = _mm_add_epi32(s[0], s[8]);
+  s[0] = _mm_add_epi32(s[0], s[1]);
+  s[0] = _mm_add_epi32(s[0], s[3]);
+
+  saveFunc(s, bd, dst);
+}
+
+static void highbd_filter_vert_compute_large(const uint16_t *src,
+                                             int src_stride, const __m128i *f,
+                                             int taps, int w, int h,
+                                             uint16_t *dst, int dst_stride,
+                                             int avg, int bd) {
+  int col;
+  int rowIndex = 0;
+  const uint16_t *src_ptr = src;
+  uint16_t *dst_ptr = dst;
+  const int step = 4;
+  WritePixels write4pixels = write4pixelsTab[avg];
+
+  do {
+    for (col = 0; col < w; col += step) {
+      filter_vert_horiz_parallel(src_ptr, src_stride, f, taps, dst_ptr,
+                                 write4pixels, bd);
+      src_ptr += step;
+      dst_ptr += step;
+    }
+    rowIndex++;
+    src_ptr = src + rowIndex * src_stride;
+    dst_ptr = dst + rowIndex * dst_stride;
+  } while (rowIndex < h);
+}
+
+static void highbd_filter_vert_compute_small(const uint16_t *src,
+                                             int src_stride, const __m128i *f,
+                                             int taps, int w, int h,
+                                             uint16_t *dst, int dst_stride,
+                                             int avg, int bd) {
+  int rowIndex = 0;
+  WritePixels write2pixels = write2pixelsTab[avg];
+  (void)w;
+
+  do {
+    filter_vert_horiz_parallel(src, src_stride, f, taps, dst, write2pixels, bd);
+    rowIndex++;
+    src += src_stride;
+    dst += dst_stride;
+  } while (rowIndex < h);
+}
+
+void av1_highbd_convolve_vert_sse4_1(const uint16_t *src, int src_stride,
+                                     uint16_t *dst, int dst_stride, int w,
+                                     int h,
+                                     const InterpFilterParams filter_params,
+                                     const int subpel_y_q4, int y_step_q4,
+                                     int avg, int bd) {
+  __m128i verf[6];
+  HbdSubpelFilterCoeffs vCoeffs;
+  const int tapsNum = filter_params.taps;
+
+  if (0 == subpel_y_q4 || 16 != y_step_q4) {
+    av1_highbd_convolve_vert_c(src, src_stride, dst, dst_stride, w, h,
+                               filter_params, subpel_y_q4, y_step_q4, avg, bd);
+    return;
+  }
+
+  vCoeffs =
+      hbd_get_subpel_filter_ver_signal_dir(filter_params, subpel_y_q4 - 1);
+  if (!vCoeffs) {
+    av1_highbd_convolve_vert_c(src, src_stride, dst, dst_stride, w, h,
+                               filter_params, subpel_y_q4, y_step_q4, avg, bd);
+    return;
+  }
+
+  verf[0] = *((const __m128i *)(vCoeffs));
+  verf[1] = *((const __m128i *)(vCoeffs + 1));
+  verf[2] = *((const __m128i *)(vCoeffs + 2));
+  verf[3] = *((const __m128i *)(vCoeffs + 3));
+  verf[4] = *((const __m128i *)(vCoeffs + 4));
+  verf[5] = *((const __m128i *)(vCoeffs + 5));
+
+  src -= src_stride * ((tapsNum >> 1) - 1);
+
+  if (w > 2) {
+    highbd_filter_vert_compute_large(src, src_stride, verf, tapsNum, w, h, dst,
+                                     dst_stride, avg, bd);
+  } else {
+    highbd_filter_vert_compute_small(src, src_stride, verf, tapsNum, w, h, dst,
+                                     dst_stride, avg, bd);
+  }
+}

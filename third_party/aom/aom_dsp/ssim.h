@@ -18,8 +18,7 @@
 extern "C" {
 #endif
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom_scale/yv12config.h"
 
 // metrics used for calculating ssim, ssim2, dssim, and ssimc
@@ -76,9 +75,11 @@ double aom_calc_fastssim(const YV12_BUFFER_CONFIG *source,
                          double *ssim_u, double *ssim_v, uint32_t bd,
                          uint32_t in_bd);
 
+#if CONFIG_HIGHBITDEPTH
 double aom_highbd_calc_ssim(const YV12_BUFFER_CONFIG *source,
                             const YV12_BUFFER_CONFIG *dest, double *weight,
                             uint32_t bd, uint32_t in_bd);
+#endif  // CONFIG_HIGHBITDEPTH
 
 #ifdef __cplusplus
 }  // extern "C"

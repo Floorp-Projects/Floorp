@@ -23,8 +23,6 @@ struct aom_write_bit_buffer {
   uint32_t bit_offset;
 };
 
-int aom_wb_is_byte_aligned(const struct aom_write_bit_buffer *wb);
-
 uint32_t aom_wb_bytes_written(const struct aom_write_bit_buffer *wb);
 
 void aom_wb_write_bit(struct aom_write_bit_buffer *wb, int bit);
@@ -32,9 +30,6 @@ void aom_wb_write_bit(struct aom_write_bit_buffer *wb, int bit);
 void aom_wb_overwrite_bit(struct aom_write_bit_buffer *wb, int bit);
 
 void aom_wb_write_literal(struct aom_write_bit_buffer *wb, int data, int bits);
-
-void aom_wb_write_unsigned_literal(struct aom_write_bit_buffer *wb,
-                                   uint32_t data, int bits);
 
 void aom_wb_overwrite_literal(struct aom_write_bit_buffer *wb, int data,
                               int bits);

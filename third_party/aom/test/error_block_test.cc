@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include <cmath>
 #include <cstdlib>
@@ -15,9 +15,8 @@
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "config/aom_config.h"
-#include "config/av1_rtcd.h"
-
+#include "./aom_config.h"
+#include "./av1_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
@@ -29,13 +28,14 @@
 using libaom_test::ACMRandom;
 
 namespace {
+#if CONFIG_HIGHBITDEPTH
 const int kNumIterations = 1000;
 
 typedef int64_t (*ErrorBlockFunc)(const tran_low_t *coeff,
                                   const tran_low_t *dqcoeff,
                                   intptr_t block_size, int64_t *ssz, int bps);
 
-typedef ::testing::tuple<ErrorBlockFunc, ErrorBlockFunc, aom_bit_depth_t>
+typedef std::tr1::tuple<ErrorBlockFunc, ErrorBlockFunc, aom_bit_depth_t>
     ErrorBlockParam;
 
 class ErrorBlockTest : public ::testing::TestWithParam<ErrorBlockParam> {
@@ -156,8 +156,8 @@ TEST_P(ErrorBlockTest, ExtremeValues) {
       << "First failed at test case " << first_failure;
 }
 
-#if (HAVE_SSE2 || HAVE_AVX)
-using ::testing::make_tuple;
+#if HAVE_SSE2 || HAVE_AVX
+using std::tr1::make_tuple;
 
 INSTANTIATE_TEST_CASE_P(
     SSE2, ErrorBlockTest,
@@ -168,4 +168,6 @@ INSTANTIATE_TEST_CASE_P(
                       make_tuple(&av1_highbd_block_error_sse2,
                                  &av1_highbd_block_error_c, AOM_BITS_8)));
 #endif  // HAVE_SSE2
+
+#endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

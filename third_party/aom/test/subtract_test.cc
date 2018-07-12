@@ -7,20 +7,23 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
+#if CONFIG_AV1
 #include "av1/common/blockd.h"
+#endif
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
+
+#define USE_SPEED_TEST (0)
 
 typedef void (*SubtractFunc)(int rows, int cols, int16_t *diff_ptr,
                              ptrdiff_t diff_stride, const uint8_t *src_ptr,
@@ -109,13 +112,14 @@ typedef void (*HBDSubtractFunc)(int rows, int cols, int16_t *diff_ptr,
                                 ptrdiff_t src_stride, const uint8_t *pred_ptr,
                                 ptrdiff_t pred_stride, int bd);
 
-using ::testing::get;
-using ::testing::make_tuple;
-using ::testing::tuple;
+using ::std::tr1::get;
+using ::std::tr1::make_tuple;
+using ::std::tr1::tuple;
 
 // <width, height, bit_dpeth, subtract>
 typedef tuple<int, int, int, HBDSubtractFunc> Params;
 
+#if CONFIG_HIGHBITDEPTH
 class AV1HBDSubtractBlockTest : public ::testing::TestWithParam<Params> {
  public:
   virtual void SetUp() {
@@ -126,7 +130,11 @@ class AV1HBDSubtractBlockTest : public ::testing::TestWithParam<Params> {
 
     rnd_.Reset(ACMRandom::DeterministicSeed());
 
+#if CONFIG_EXT_PARTITION
     const size_t max_width = 128;
+#else
+    const size_t max_width = 64;
+#endif
     const size_t max_block_size = max_width * max_width;
     src_ = CONVERT_TO_BYTEPTR(reinterpret_cast<uint16_t *>(
         aom_memalign(16, max_block_size * sizeof(uint16_t))));
@@ -159,7 +167,11 @@ class AV1HBDSubtractBlockTest : public ::testing::TestWithParam<Params> {
 
 void AV1HBDSubtractBlockTest::CheckResult() {
   const int test_num = 100;
+#if CONFIG_EXT_PARTITION
   const size_t max_width = 128;
+#else
+  const size_t max_width = 64;
+#endif
   const int max_block_size = max_width * max_width;
   const int mask = (1 << bit_depth_) - 1;
   int i, j;
@@ -188,7 +200,11 @@ TEST_P(AV1HBDSubtractBlockTest, CheckResult) { CheckResult(); }
 
 void AV1HBDSubtractBlockTest::RunForSpeed() {
   const int test_num = 200000;
+#if CONFIG_EXT_PARTITION
   const size_t max_width = 128;
+#else
+  const size_t max_width = 64;
+#endif
   const int max_block_size = max_width * max_width;
   const int mask = (1 << bit_depth_) - 1;
   int i, j;
@@ -235,15 +251,18 @@ const Params kAV1HBDSubtractBlock_sse2[] = {
   make_tuple(64, 32, 12, &aom_highbd_subtract_block_c),
   make_tuple(64, 64, 12, &aom_highbd_subtract_block_sse2),
   make_tuple(64, 64, 12, &aom_highbd_subtract_block_c),
+#if CONFIG_EXT_PARTITION
   make_tuple(64, 128, 12, &aom_highbd_subtract_block_sse2),
   make_tuple(64, 128, 12, &aom_highbd_subtract_block_c),
   make_tuple(128, 64, 12, &aom_highbd_subtract_block_sse2),
   make_tuple(128, 64, 12, &aom_highbd_subtract_block_c),
   make_tuple(128, 128, 12, &aom_highbd_subtract_block_sse2),
   make_tuple(128, 128, 12, &aom_highbd_subtract_block_c)
+#endif  // CONFIG_EXT_PARTITION
 };
 
 INSTANTIATE_TEST_CASE_P(SSE2, AV1HBDSubtractBlockTest,
                         ::testing::ValuesIn(kAV1HBDSubtractBlock_sse2));
 #endif  // HAVE_SSE2
+#endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

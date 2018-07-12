@@ -26,7 +26,7 @@ twopass_encoder_verify_environment() {
 # Runs twopass_encoder using the codec specified by $1 with a frame limit of
 # 100.
 twopass_encoder() {
-  local encoder="$(aom_tool_path twopass_encoder)"
+  local encoder="${LIBAOM_BIN_PATH}/twopass_encoder${AOM_TEST_EXE_SUFFIX}"
   local codec="$1"
   local output_file="${AOM_TEST_OUTPUT_DIR}/twopass_encoder_${codec}.ivf"
   local limit=7

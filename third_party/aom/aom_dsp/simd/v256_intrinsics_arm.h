@@ -12,6 +12,6 @@
 #ifndef _V256_INTRINSICS_H
 #define _V256_INTRINSICS_H
 
-#include "aom_dsp/simd/v256_intrinsics_v128.h"
+#include "./v256_intrinsics_v128.h"
 
 #endif /* _V256_INTRINSICS_H */

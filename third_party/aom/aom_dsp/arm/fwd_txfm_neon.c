@@ -11,8 +11,7 @@
 
 #include <arm_neon.h>
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom_dsp/txfm_common.h"
 
 void aom_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {

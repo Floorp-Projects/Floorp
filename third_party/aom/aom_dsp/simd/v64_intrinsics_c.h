@@ -17,8 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 typedef union {
   uint8_t u8[8];
@@ -31,17 +30,13 @@ typedef union {
   int64_t s64;
 } c_v64;
 
-SIMD_INLINE uint32_t c_v64_low_u32(c_v64 a) {
-  return a.u32[!!CONFIG_BIG_ENDIAN];
-}
+SIMD_INLINE uint32_t c_v64_low_u32(c_v64 a) { return a.u32[CONFIG_BIG_ENDIAN]; }
 
 SIMD_INLINE uint32_t c_v64_high_u32(c_v64 a) {
   return a.u32[!CONFIG_BIG_ENDIAN];
 }
 
-SIMD_INLINE int32_t c_v64_low_s32(c_v64 a) {
-  return a.s32[!!CONFIG_BIG_ENDIAN];
-}
+SIMD_INLINE int32_t c_v64_low_s32(c_v64 a) { return a.s32[CONFIG_BIG_ENDIAN]; }
 
 SIMD_INLINE int32_t c_v64_high_s32(c_v64 a) {
   return a.s32[!CONFIG_BIG_ENDIAN];
@@ -50,7 +45,7 @@ SIMD_INLINE int32_t c_v64_high_s32(c_v64 a) {
 SIMD_INLINE c_v64 c_v64_from_32(uint32_t x, uint32_t y) {
   c_v64 t;
   t.u32[!CONFIG_BIG_ENDIAN] = x;
-  t.u32[!!CONFIG_BIG_ENDIAN] = y;
+  t.u32[CONFIG_BIG_ENDIAN] = y;
   return t;
 }
 
@@ -182,30 +177,6 @@ SIMD_INLINE c_v64 c_v64_add_16(c_v64 a, c_v64 b) {
   return t;
 }
 
-SIMD_INLINE c_v64 c_v64_sadd_u8(c_v64 a, c_v64 b) {
-  c_v64 t;
-  int c;
-  for (c = 0; c < 8; c++)
-    t.u8[c] = (int16_t)a.u8[c] + (int16_t)b.u8[c] > 255
-                  ? 255
-                  : (int16_t)a.u8[c] + (int16_t)b.u8[c] < 0
-                        ? 0
-                        : (int16_t)a.u8[c] + (int16_t)b.u8[c];
-  return t;
-}
-
-SIMD_INLINE c_v64 c_v64_sadd_s8(c_v64 a, c_v64 b) {
-  c_v64 t;
-  int c;
-  for (c = 0; c < 8; c++)
-    t.s8[c] = (int16_t)a.s8[c] + (int16_t)b.s8[c] > 127
-                  ? 127
-                  : (int16_t)a.s8[c] + (int16_t)b.s8[c] < -128
-                        ? -128
-                        : (int16_t)a.s8[c] + (int16_t)b.s8[c];
-  return t;
-}
-
 SIMD_INLINE c_v64 c_v64_sadd_s16(c_v64 a, c_v64 b) {
   c_v64 t;
   int c;
@@ -235,7 +206,8 @@ SIMD_INLINE c_v64 c_v64_sub_8(c_v64 a, c_v64 b) {
 SIMD_INLINE c_v64 c_v64_ssub_u8(c_v64 a, c_v64 b) {
   c_v64 t;
   int c;
-  for (c = 0; c < 8; c++) t.u8[c] = a.u8[c] < b.u8[c] ? 0 : a.u8[c] - b.u8[c];
+  for (c = 0; c < 8; c++)
+    t.u8[c] = (int32_t)a.u8[c] - (int32_t)b.u8[c] < 0 ? 0 : a.u8[c] - b.u8[c];
   return t;
 }
 
@@ -487,20 +459,6 @@ SIMD_INLINE c_v64 c_v64_pack_s32_s16(c_v64 a, c_v64 b) {
   return t;
 }
 
-SIMD_INLINE c_v64 c_v64_pack_s32_u16(c_v64 a, c_v64 b) {
-  c_v64 t;
-  if (CONFIG_BIG_ENDIAN) {
-    c_v64 u = a;
-    a = b;
-    b = u;
-  }
-  t.u16[3] = a.s32[1] > 65535 ? 65535 : a.s32[1] < 0 ? 0 : a.s32[1];
-  t.u16[2] = a.s32[0] > 65535 ? 65535 : a.s32[0] < 0 ? 0 : a.s32[0];
-  t.u16[1] = b.s32[1] > 65535 ? 65535 : b.s32[1] < 0 ? 0 : b.s32[1];
-  t.u16[0] = b.s32[0] > 65535 ? 65535 : b.s32[0] < 0 ? 0 : b.s32[0];
-  return t;
-}
-
 SIMD_INLINE c_v64 c_v64_pack_s16_u8(c_v64 a, c_v64 b) {
   c_v64 t;
   if (CONFIG_BIG_ENDIAN) {
@@ -709,13 +667,6 @@ SIMD_INLINE c_v64 c_v64_rdavg_u8(c_v64 a, c_v64 b) {
   c_v64 t;
   int c;
   for (c = 0; c < 8; c++) t.u8[c] = (a.u8[c] + b.u8[c]) >> 1;
-  return t;
-}
-
-SIMD_INLINE c_v64 c_v64_rdavg_u16(c_v64 a, c_v64 b) {
-  c_v64 t;
-  int c;
-  for (c = 0; c < 4; c++) t.u16[c] = (a.u16[c] + b.u16[c]) >> 1;
   return t;
 }
 

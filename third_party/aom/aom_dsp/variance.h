@@ -12,7 +12,7 @@
 #ifndef AOM_DSP_VARIANCE_H_
 #define AOM_DSP_VARIANCE_H_
 
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 #include "aom/aom_integer.h"
 
@@ -33,6 +33,10 @@ typedef unsigned int (*aom_sad_avg_fn_t)(const uint8_t *a, int a_stride,
 typedef void (*aom_copy32xn_fn_t)(const uint8_t *a, int a_stride, uint8_t *b,
                                   int b_stride, int n);
 
+typedef void (*aom_sad_multi_fn_t)(const uint8_t *a, int a_stride,
+                                   const uint8_t *b, int b_stride,
+                                   unsigned int *sad_array);
+
 typedef void (*aom_sad_multi_d_fn_t)(const uint8_t *a, int a_stride,
                                      const uint8_t *const b_array[],
                                      int b_stride, unsigned int *sad_array);
@@ -50,16 +54,7 @@ typedef unsigned int (*aom_subp_avg_variance_fn_t)(
     const uint8_t *a, int a_stride, int xoffset, int yoffset, const uint8_t *b,
     int b_stride, unsigned int *sse, const uint8_t *second_pred);
 
-typedef unsigned int (*aom_jnt_sad_avg_fn_t)(const uint8_t *a, int a_stride,
-                                             const uint8_t *b, int b_stride,
-                                             const uint8_t *second_pred,
-                                             const JNT_COMP_PARAMS *jcp_param);
-
-typedef unsigned int (*aom_jnt_subp_avg_variance_fn_t)(
-    const uint8_t *a, int a_stride, int xoffset, int yoffset, const uint8_t *b,
-    int b_stride, unsigned int *sse, const uint8_t *second_pred,
-    const JNT_COMP_PARAMS *jcp_param);
-
+#if CONFIG_AV1
 typedef unsigned int (*aom_masked_sad_fn_t)(const uint8_t *src, int src_stride,
                                             const uint8_t *ref, int ref_stride,
                                             const uint8_t *second_pred,
@@ -69,13 +64,9 @@ typedef unsigned int (*aom_masked_subpixvariance_fn_t)(
     const uint8_t *src, int src_stride, int xoffset, int yoffset,
     const uint8_t *ref, int ref_stride, const uint8_t *second_pred,
     const uint8_t *msk, int msk_stride, int invert_mask, unsigned int *sse);
+#endif  // CONFIG_AV1
 
-void aom_comp_mask_upsampled_pred(
-    MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col,
-    const MV *const mv, uint8_t *comp_pred, const uint8_t *pred, int width,
-    int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref,
-    int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask);
-
+#if CONFIG_AV1 && CONFIG_MOTION_VAR
 typedef unsigned int (*aom_obmc_sad_fn_t)(const uint8_t *pred, int pred_stride,
                                           const int32_t *wsrc,
                                           const int32_t *msk);
@@ -87,22 +78,27 @@ typedef unsigned int (*aom_obmc_variance_fn_t)(const uint8_t *pred,
 typedef unsigned int (*aom_obmc_subpixvariance_fn_t)(
     const uint8_t *pred, int pred_stride, int xoffset, int yoffset,
     const int32_t *wsrc, const int32_t *msk, unsigned int *sse);
+#endif  // CONFIG_AV1 && CONFIG_MOTION_VAR
 
+#if CONFIG_AV1
 typedef struct aom_variance_vtable {
   aom_sad_fn_t sdf;
   aom_sad_avg_fn_t sdaf;
   aom_variance_fn_t vf;
   aom_subpixvariance_fn_t svf;
   aom_subp_avg_variance_fn_t svaf;
+  aom_sad_multi_fn_t sdx3f;
+  aom_sad_multi_fn_t sdx8f;
   aom_sad_multi_d_fn_t sdx4df;
   aom_masked_sad_fn_t msdf;
   aom_masked_subpixvariance_fn_t msvf;
+#if CONFIG_MOTION_VAR
   aom_obmc_sad_fn_t osdf;
   aom_obmc_variance_fn_t ovf;
   aom_obmc_subpixvariance_fn_t osvf;
-  aom_jnt_sad_avg_fn_t jsdaf;
-  aom_jnt_subp_avg_variance_fn_t jsvaf;
+#endif  // CONFIG_MOTION_VAR
 } aom_variance_fn_ptr_t;
+#endif  // CONFIG_AV1
 
 void aom_highbd_var_filter_block2d_bil_first_pass(
     const uint8_t *src_ptr8, uint16_t *output_ptr,
@@ -119,8 +115,10 @@ void aom_highbd_var_filter_block2d_bil_second_pass(
 uint32_t aom_sse_odd_size(const uint8_t *a, int a_stride, const uint8_t *b,
                           int b_stride, int w, int h);
 
+#if CONFIG_HIGHBITDEPTH
 uint64_t aom_highbd_sse_odd_size(const uint8_t *a, int a_stride,
                                  const uint8_t *b, int b_stride, int w, int h);
+#endif  // CONFIG_HIGHBITDEPTH
 
 #ifdef __cplusplus
 }  // extern "C"

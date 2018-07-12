@@ -9,8 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom_mem/aom_mem.h"
 #include "av1/common/reconinter.h"
 #include "av1/decoder/dthread.h"
@@ -158,8 +157,12 @@ void av1_frameworker_copy_context(AVxWorker *const dst_worker,
   av1_frameworker_unlock_stats(src_worker);
 
   dst_cm->bit_depth = src_cm->bit_depth;
+#if CONFIG_HIGHBITDEPTH
   dst_cm->use_highbitdepth = src_cm->use_highbitdepth;
-  // TODO(zoeliu): To handle parallel decoding
+#endif
+#if CONFIG_EXT_REFS
+// TODO(zoeliu): To handle parallel decoding
+#endif  // CONFIG_EXT_REFS
   dst_cm->prev_frame =
       src_cm->show_existing_frame ? src_cm->prev_frame : src_cm->cur_frame;
   dst_cm->last_width =
@@ -177,10 +180,14 @@ void av1_frameworker_copy_context(AVxWorker *const dst_worker,
 
   memcpy(dst_cm->lf_info.lfthr, src_cm->lf_info.lfthr,
          (MAX_LOOP_FILTER + 1) * sizeof(loop_filter_thresh));
-  dst_cm->lf.sharpness_level = src_cm->lf.sharpness_level;
+  dst_cm->lf.last_sharpness_level = src_cm->lf.sharpness_level;
+#if CONFIG_LOOPFILTER_LEVEL
   dst_cm->lf.filter_level[0] = src_cm->lf.filter_level[0];
   dst_cm->lf.filter_level[1] = src_cm->lf.filter_level[1];
-  memcpy(dst_cm->lf.ref_deltas, src_cm->lf.ref_deltas, REF_FRAMES);
+#else
+  dst_cm->lf.filter_level = src_cm->lf.filter_level;
+#endif
+  memcpy(dst_cm->lf.ref_deltas, src_cm->lf.ref_deltas, TOTAL_REFS_PER_FRAME);
   memcpy(dst_cm->lf.mode_deltas, src_cm->lf.mode_deltas, MAX_MODE_LF_DELTAS);
   dst_cm->seg = src_cm->seg;
   memcpy(dst_cm->frame_contexts, src_cm->frame_contexts,

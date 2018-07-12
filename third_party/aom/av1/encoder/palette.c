@@ -23,14 +23,16 @@
 #include "av1/encoder/k_means_template.h"
 #undef AV1_K_MEANS_DIM
 
-static int int_comparer(const void *a, const void *b) {
-  return (*(int *)a - *(int *)b);
+static int float_comparer(const void *a, const void *b) {
+  const float fa = *(const float *)a;
+  const float fb = *(const float *)b;
+  return (fa > fb) - (fa < fb);
 }
 
-int av1_remove_duplicates(int *centroids, int num_centroids) {
+int av1_remove_duplicates(float *centroids, int num_centroids) {
   int num_unique;  // number of unique centroids
   int i;
-  qsort(centroids, num_centroids, sizeof(*centroids), int_comparer);
+  qsort(centroids, num_centroids, sizeof(*centroids), float_comparer);
   // Remove duplicates.
   num_unique = 1;
   for (i = 1; i < num_centroids; ++i) {
@@ -41,6 +43,7 @@ int av1_remove_duplicates(int *centroids, int num_centroids) {
   return num_unique;
 }
 
+#if CONFIG_PALETTE_DELTA_ENCODING
 static int delta_encode_cost(const int *colors, int num, int bit_depth,
                              int min_val) {
   if (num <= 0) return 0;
@@ -113,11 +116,15 @@ int av1_get_palette_delta_bits_v(const PALETTE_MODE_INFO *const pmi,
   }
   return AOMMAX(av1_ceil_log2(max_d + 1), *min_bits);
 }
+#endif  // CONFIG_PALETTE_DELTA_ENCODING
 
 int av1_palette_color_cost_y(const PALETTE_MODE_INFO *const pmi,
+#if CONFIG_PALETTE_DELTA_ENCODING
                              uint16_t *color_cache, int n_cache,
+#endif  // CONFIG_PALETTE_DELTA_ENCODING
                              int bit_depth) {
   const int n = pmi->palette_size[0];
+#if CONFIG_PALETTE_DELTA_ENCODING
   int out_cache_colors[PALETTE_MAX_SIZE];
   uint8_t cache_color_found[2 * PALETTE_MAX_SIZE];
   const int n_out_cache =
@@ -125,13 +132,19 @@ int av1_palette_color_cost_y(const PALETTE_MODE_INFO *const pmi,
                             cache_color_found, out_cache_colors);
   const int total_bits =
       n_cache + delta_encode_cost(out_cache_colors, n_out_cache, bit_depth, 1);
-  return av1_cost_literal(total_bits);
+  return total_bits * av1_cost_bit(128, 0);
+#else
+  return bit_depth * n * av1_cost_bit(128, 0);
+#endif  // CONFIG_PALETTE_DELTA_ENCODING
 }
 
 int av1_palette_color_cost_uv(const PALETTE_MODE_INFO *const pmi,
+#if CONFIG_PALETTE_DELTA_ENCODING
                               uint16_t *color_cache, int n_cache,
+#endif  // CONFIG_PALETTE_DELTA_ENCODING
                               int bit_depth) {
   const int n = pmi->palette_size[1];
+#if CONFIG_PALETTE_DELTA_ENCODING
   int total_bits = 0;
   // U channel palette color cost.
   int out_cache_colors[PALETTE_MAX_SIZE];
@@ -150,5 +163,8 @@ int av1_palette_color_cost_uv(const PALETTE_MODE_INFO *const pmi,
       2 + bit_depth + (bits_v + 1) * (n - 1) - zero_count;
   const int bits_using_raw = bit_depth * n;
   total_bits += 1 + AOMMIN(bits_using_delta, bits_using_raw);
-  return av1_cost_literal(total_bits);
+  return total_bits * av1_cost_bit(128, 0);
+#else
+  return 2 * bit_depth * n * av1_cost_bit(128, 0);
+#endif  // CONFIG_PALETTE_DELTA_ENCODING
 }

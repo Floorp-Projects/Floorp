@@ -11,9 +11,10 @@
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-#include "config/av1_rtcd.h"
+#include "./aom_config.h"
+
+#include "./aom_dsp_rtcd.h"
+#include "./av1_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
 
@@ -99,7 +100,7 @@ TEST_F(WedgeUtilsSSEFuncTest, ResidualBlendingEquiv) {
       p1[j] = clamp(s[j] + rng_(33) - 16, 0, UINT8_MAX);
     }
 
-    aom_blend_a64_mask(p, w, p0, w, p1, w, m, w, w, h, 0, 0);
+    aom_blend_a64_mask(p, w, p0, w, p1, w, m, w, h, w, 0, 0);
 
     aom_subtract_block(h, w, r0, w, s, w, p0, w);
     aom_subtract_block(h, w, r1, w, s, w, p1, w);

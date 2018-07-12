@@ -12,31 +12,26 @@
 #ifndef AOM_MEM_AOM_MEM_H_
 #define AOM_MEM_AOM_MEM_H_
 
-#include "aom/aom_integer.h"
-#include "config/aom_config.h"
-
+#include "aom_config.h"
 #if defined(__uClinux__)
 #include <lddk.h>
 #endif
 
+#include <stdlib.h>
+#include <stddef.h>
+
 #if defined(__cplusplus)
 extern "C" {
-#endif
-
-#ifndef AOM_MAX_ALLOCABLE_MEMORY
-#if SIZE_MAX > (1ULL << 32)
-#define AOM_MAX_ALLOCABLE_MEMORY 8589934592  // 8 GB
-#else
-// For 32-bit targets keep this below INT_MAX to avoid valgrind warnings.
-#define AOM_MAX_ALLOCABLE_MEMORY ((1ULL << 31) - (1 << 16))
-#endif
 #endif
 
 void *aom_memalign(size_t align, size_t size);
 void *aom_malloc(size_t size);
 void *aom_calloc(size_t num, size_t size);
 void aom_free(void *memblk);
+
+#if CONFIG_HIGHBITDEPTH
 void *aom_memset16(void *dest, int val, size_t length);
+#endif
 
 #include <string.h>
 

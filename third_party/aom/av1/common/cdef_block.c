@@ -12,13 +12,28 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "config/aom_dsp_rtcd.h"
-#include "config/av1_rtcd.h"
+#ifdef HAVE_CONFIG_H
+#include "./config.h"
+#endif
 
-#include "av1/common/cdef.h"
+#include "./aom_dsp_rtcd.h"
+#include "./av1_rtcd.h"
+#include "./cdef.h"
 
 /* Generated from gen_filter_tables.c. */
-DECLARE_ALIGNED(16, const int, cdef_directions[8][2]) = {
+#if !CONFIG_CDEF_SINGLEPASS || CDEF_FULL
+const int cdef_directions[8][3] = {
+  { -1 * CDEF_BSTRIDE + 1, -2 * CDEF_BSTRIDE + 2, -3 * CDEF_BSTRIDE + 3 },
+  { 0 * CDEF_BSTRIDE + 1, -1 * CDEF_BSTRIDE + 2, -1 * CDEF_BSTRIDE + 3 },
+  { 0 * CDEF_BSTRIDE + 1, 0 * CDEF_BSTRIDE + 2, 0 * CDEF_BSTRIDE + 3 },
+  { 0 * CDEF_BSTRIDE + 1, 1 * CDEF_BSTRIDE + 2, 1 * CDEF_BSTRIDE + 3 },
+  { 1 * CDEF_BSTRIDE + 1, 2 * CDEF_BSTRIDE + 2, 3 * CDEF_BSTRIDE + 3 },
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 1, 3 * CDEF_BSTRIDE + 1 },
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 0, 3 * CDEF_BSTRIDE + 0 },
+  { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE - 1, 3 * CDEF_BSTRIDE - 1 }
+};
+#else
+const int cdef_directions[8][2] = {
   { -1 * CDEF_BSTRIDE + 1, -2 * CDEF_BSTRIDE + 2 },
   { 0 * CDEF_BSTRIDE + 1, -1 * CDEF_BSTRIDE + 2 },
   { 0 * CDEF_BSTRIDE + 1, 0 * CDEF_BSTRIDE + 2 },
@@ -28,6 +43,7 @@ DECLARE_ALIGNED(16, const int, cdef_directions[8][2]) = {
   { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE + 0 },
   { 1 * CDEF_BSTRIDE + 0, 2 * CDEF_BSTRIDE - 1 }
 };
+#endif
 
 /* Detect direction. 0 means 45-degree up-right, 2 is horizontal, and so on.
    The search minimizes the weighted variance along all the lines in a
@@ -107,38 +123,65 @@ int cdef_find_dir_c(const uint16_t *img, int stride, int32_t *var,
   return best_dir;
 }
 
+#if CONFIG_CDEF_SINGLEPASS
+#if CDEF_FULL
+const int cdef_pri_taps[2][3] = { { 3, 2, 1 }, { 2, 2, 2 } };
+const int cdef_sec_taps[2][2] = { { 3, 1 }, { 3, 1 } };
+#else
 const int cdef_pri_taps[2][2] = { { 4, 2 }, { 3, 3 } };
 const int cdef_sec_taps[2][2] = { { 2, 1 }, { 2, 1 } };
+#endif
 
 /* Smooth in the direction detected. */
+#if CDEF_CAP
 void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride,
                          const uint16_t *in, int pri_strength, int sec_strength,
                          int dir, int pri_damping, int sec_damping, int bsize,
-                         AOM_UNUSED int max_unused, int coeff_shift) {
+                         UNUSED int max_unused)
+#else
+void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride,
+                         const uint16_t *in, int pri_strength, int sec_strength,
+                         int dir, int pri_damping, int sec_damping, int bsize,
+                         int max)
+#endif
+{
   int i, j, k;
   const int s = CDEF_BSTRIDE;
-  const int *pri_taps = cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
-  const int *sec_taps = cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
-  for (i = 0; i < 4 << (bsize == BLOCK_8X8 || bsize == BLOCK_4X8); i++) {
-    for (j = 0; j < 4 << (bsize == BLOCK_8X8 || bsize == BLOCK_8X4); j++) {
+  const int *pri_taps = cdef_pri_taps[pri_strength & 1];
+  const int *sec_taps = cdef_sec_taps[pri_strength & 1];
+  for (i = 0; i < 4 << (bsize == BLOCK_8X8); i++) {
+    for (j = 0; j < 4 << (bsize == BLOCK_8X8); j++) {
       int16_t sum = 0;
       int16_t y;
       int16_t x = in[i * s + j];
+#if CDEF_CAP
       int max = x;
       int min = x;
-      for (k = 0; k < 2; k++) {
+#endif
+#if CDEF_FULL
+      for (k = 0; k < 3; k++)
+#else
+      for (k = 0; k < 2; k++)
+#endif
+      {
         int16_t p0 = in[i * s + j + cdef_directions[dir][k]];
         int16_t p1 = in[i * s + j - cdef_directions[dir][k]];
         sum += pri_taps[k] * constrain(p0 - x, pri_strength, pri_damping);
         sum += pri_taps[k] * constrain(p1 - x, pri_strength, pri_damping);
+#if CDEF_CAP
         if (p0 != CDEF_VERY_LARGE) max = AOMMAX(p0, max);
         if (p1 != CDEF_VERY_LARGE) max = AOMMAX(p1, max);
         min = AOMMIN(p0, min);
         min = AOMMIN(p1, min);
+#endif
+#if CDEF_FULL
+        if (k == 2) continue;
+#endif
         int16_t s0 = in[i * s + j + cdef_directions[(dir + 2) & 7][k]];
         int16_t s1 = in[i * s + j - cdef_directions[(dir + 2) & 7][k]];
         int16_t s2 = in[i * s + j + cdef_directions[(dir + 6) & 7][k]];
         int16_t s3 = in[i * s + j - cdef_directions[(dir + 6) & 7][k]];
+#if CDEF_CAP
         if (s0 != CDEF_VERY_LARGE) max = AOMMAX(s0, max);
         if (s1 != CDEF_VERY_LARGE) max = AOMMAX(s1, max);
         if (s2 != CDEF_VERY_LARGE) max = AOMMAX(s2, max);
@@ -147,12 +190,17 @@ void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride,
         min = AOMMIN(s1, min);
         min = AOMMIN(s2, min);
         min = AOMMIN(s3, min);
+#endif
         sum += sec_taps[k] * constrain(s0 - x, sec_strength, sec_damping);
         sum += sec_taps[k] * constrain(s1 - x, sec_strength, sec_damping);
         sum += sec_taps[k] * constrain(s2 - x, sec_strength, sec_damping);
         sum += sec_taps[k] * constrain(s3 - x, sec_strength, sec_damping);
       }
+#if CDEF_CAP
       y = clamp((int16_t)x + ((8 + sum - (sum < 0)) >> 4), min, max);
+#else
+      y = clamp((int16_t)x + ((8 + sum - (sum < 0)) >> 4), 0, max);
+#endif
       if (dst8)
         dst8[i * dstride + j] = (uint8_t)y;
       else
@@ -160,6 +208,67 @@ void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride,
     }
   }
 }
+
+#else
+
+/* Smooth in the direction detected. */
+void cdef_direction_8x8_c(uint16_t *y, int ystride, const uint16_t *in,
+                          int threshold, int dir, int damping) {
+  int i;
+  int j;
+  int k;
+  static const int taps[3] = { 3, 2, 1 };
+  for (i = 0; i < 8; i++) {
+    for (j = 0; j < 8; j++) {
+      int16_t sum;
+      int16_t xx;
+      int16_t yy;
+      xx = in[i * CDEF_BSTRIDE + j];
+      sum = 0;
+      for (k = 0; k < 3; k++) {
+        int16_t p0;
+        int16_t p1;
+        p0 = in[i * CDEF_BSTRIDE + j + cdef_directions[dir][k]] - xx;
+        p1 = in[i * CDEF_BSTRIDE + j - cdef_directions[dir][k]] - xx;
+        sum += taps[k] * constrain(p0, threshold, damping);
+        sum += taps[k] * constrain(p1, threshold, damping);
+      }
+      sum = (sum + 8) >> 4;
+      yy = xx + sum;
+      y[i * ystride + j] = yy;
+    }
+  }
+}
+
+/* Smooth in the direction detected. */
+void cdef_direction_4x4_c(uint16_t *y, int ystride, const uint16_t *in,
+                          int threshold, int dir, int damping) {
+  int i;
+  int j;
+  int k;
+  static const int taps[2] = { 4, 1 };
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      int16_t sum;
+      int16_t xx;
+      int16_t yy;
+      xx = in[i * CDEF_BSTRIDE + j];
+      sum = 0;
+      for (k = 0; k < 2; k++) {
+        int16_t p0;
+        int16_t p1;
+        p0 = in[i * CDEF_BSTRIDE + j + cdef_directions[dir][k]] - xx;
+        p1 = in[i * CDEF_BSTRIDE + j - cdef_directions[dir][k]] - xx;
+        sum += taps[k] * constrain(p0, threshold, damping);
+        sum += taps[k] * constrain(p1, threshold, damping);
+      }
+      sum = (sum + 8) >> 4;
+      yy = xx + sum;
+      y[i * ystride + j] = yy;
+    }
+  }
+}
+#endif
 
 /* Compute the primary filter strength for an 8x8 block based on the
    directional variance difference. A high variance difference means
@@ -173,26 +282,172 @@ static INLINE int adjust_strength(int strength, int32_t var) {
   return var ? (strength * (4 + i) + 8) >> 4 : 0;
 }
 
+#if !CONFIG_CDEF_SINGLEPASS
+void copy_8x8_16bit_to_16bit_c(uint16_t *dst, int dstride, const uint16_t *src,
+                               int sstride) {
+  int i, j;
+  for (i = 0; i < 8; i++)
+    for (j = 0; j < 8; j++) dst[i * dstride + j] = src[i * sstride + j];
+}
+
+void copy_4x4_16bit_to_16bit_c(uint16_t *dst, int dstride, const uint16_t *src,
+                               int sstride) {
+  int i, j;
+  for (i = 0; i < 4; i++)
+    for (j = 0; j < 4; j++) dst[i * dstride + j] = src[i * sstride + j];
+}
+
+static void copy_block_16bit_to_16bit(uint16_t *dst, int dstride, uint16_t *src,
+                                      cdef_list *dlist, int cdef_count,
+                                      int bsize) {
+  int bi, bx, by;
+
+  if (bsize == BLOCK_8X8) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_8x8_16bit_to_16bit(&dst[(by << 3) * dstride + (bx << 3)], dstride,
+                              &src[bi << (3 + 3)], 8);
+    }
+  } else if (bsize == BLOCK_4X8) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_16bit(&dst[(by << 3) * dstride + (bx << 2)], dstride,
+                              &src[bi << (3 + 2)], 4);
+      copy_4x4_16bit_to_16bit(&dst[((by << 3) + 4) * dstride + (bx << 2)],
+                              dstride, &src[(bi << (3 + 2)) + 4 * 4], 4);
+    }
+  } else if (bsize == BLOCK_8X4) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_16bit(&dst[(by << 2) * dstride + (bx << 3)], dstride,
+                              &src[bi << (2 + 3)], 8);
+      copy_4x4_16bit_to_16bit(&dst[(by << 2) * dstride + (bx << 3) + 4],
+                              dstride, &src[(bi << (2 + 3)) + 4], 8);
+    }
+  } else {
+    assert(bsize == BLOCK_4X4);
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_16bit(&dst[(by << 2) * dstride + (bx << 2)], dstride,
+                              &src[bi << (2 + 2)], 4);
+    }
+  }
+}
+
+void copy_8x8_16bit_to_8bit_c(uint8_t *dst, int dstride, const uint16_t *src,
+                              int sstride) {
+  int i, j;
+  for (i = 0; i < 8; i++)
+    for (j = 0; j < 8; j++)
+      dst[i * dstride + j] = (uint8_t)src[i * sstride + j];
+}
+
+void copy_4x4_16bit_to_8bit_c(uint8_t *dst, int dstride, const uint16_t *src,
+                              int sstride) {
+  int i, j;
+  for (i = 0; i < 4; i++)
+    for (j = 0; j < 4; j++)
+      dst[i * dstride + j] = (uint8_t)src[i * sstride + j];
+}
+
+static void copy_block_16bit_to_8bit(uint8_t *dst, int dstride,
+                                     const uint16_t *src, cdef_list *dlist,
+                                     int cdef_count, int bsize) {
+  int bi, bx, by;
+  if (bsize == BLOCK_8X8) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_8x8_16bit_to_8bit(&dst[(by << 3) * dstride + (bx << 3)], dstride,
+                             &src[bi << (3 + 3)], 8);
+    }
+  } else if (bsize == BLOCK_4X8) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_8bit(&dst[(by << 3) * dstride + (bx << 2)], dstride,
+                             &src[bi << (3 + 2)], 4);
+      copy_4x4_16bit_to_8bit(&dst[((by << 3) + 4) * dstride + (bx << 2)],
+                             dstride, &src[(bi << (3 + 2)) + 4 * 4], 4);
+    }
+  } else if (bsize == BLOCK_8X4) {
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_8bit(&dst[(by << 2) * dstride + (bx << 3)], dstride,
+                             &src[bi << (2 + 3)], 8);
+      copy_4x4_16bit_to_8bit(&dst[(by << 2) * dstride + (bx << 3) + 4], dstride,
+                             &src[(bi << (2 + 3)) + 4], 8);
+    }
+  } else {
+    assert(bsize == BLOCK_4X4);
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      copy_4x4_16bit_to_8bit(&dst[(by << 2) * dstride + (bx << 2)], dstride,
+                             &src[bi << (2 * 2)], 4);
+    }
+  }
+}
+
+int get_filter_skip(int level) {
+  int filter_skip = level & 1;
+  if (level == 1) filter_skip = 0;
+  return filter_skip;
+}
+
+void cdef_filter_fb(uint8_t *dst, int dstride, uint16_t *y, uint16_t *in,
+                    int xdec, int ydec, int dir[CDEF_NBLOCKS][CDEF_NBLOCKS],
+                    int *dirinit, int var[CDEF_NBLOCKS][CDEF_NBLOCKS], int pli,
+                    cdef_list *dlist, int cdef_count, int level,
+                    int sec_strength, int sec_damping, int pri_damping,
+                    int coeff_shift, int skip_dering, int hbd) {
+#else
+
 void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
                     int xdec, int ydec, int dir[CDEF_NBLOCKS][CDEF_NBLOCKS],
                     int *dirinit, int var[CDEF_NBLOCKS][CDEF_NBLOCKS], int pli,
                     cdef_list *dlist, int cdef_count, int level,
                     int sec_strength, int pri_damping, int sec_damping,
                     int coeff_shift) {
+#endif
   int bi;
   int bx;
   int by;
   int bsize, bsizex, bsizey;
 
-  int pri_strength = level << coeff_shift;
-  sec_strength <<= coeff_shift;
+#if CONFIG_CDEF_SINGLEPASS
+  int pri_strength = (level >> 1) << coeff_shift;
+  int filter_skip = level & 1;
+  if (!pri_strength && !sec_strength && filter_skip) {
+    pri_strength = 19 << coeff_shift;
+    sec_strength = 7 << coeff_shift;
+  }
+#else
+  int threshold = (level >> 1) << coeff_shift;
+  int filter_skip = get_filter_skip(level);
+  if (level == 1) threshold = 31 << coeff_shift;
+
+  cdef_direction_func cdef_direction[] = { cdef_direction_4x4,
+                                           cdef_direction_8x8 };
+#endif
   sec_damping += coeff_shift - (pli != AOM_PLANE_Y);
   pri_damping += coeff_shift - (pli != AOM_PLANE_Y);
   bsize =
       ydec ? (xdec ? BLOCK_4X4 : BLOCK_8X4) : (xdec ? BLOCK_4X8 : BLOCK_8X8);
   bsizex = 3 - xdec;
   bsizey = 3 - ydec;
-  if (dirinit && pri_strength == 0 && sec_strength == 0) {
+#if CONFIG_CDEF_SINGLEPASS
+  if (dirinit && pri_strength == 0 && sec_strength == 0)
+#else
+  if (!skip_dering)
+#endif
+  {
+#if CONFIG_CDEF_SINGLEPASS
     // If we're here, both primary and secondary strengths are 0, and
     // we still haven't written anything to y[] yet, so we just copy
     // the input to y[]. This is necessary only for av1_cdef_search()
@@ -200,16 +455,97 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
     for (bi = 0; bi < cdef_count; bi++) {
       by = dlist[bi].by;
       bx = dlist[bi].bx;
+#else
+    if (pli == 0) {
+      if (!dirinit || !*dirinit) {
+        for (bi = 0; bi < cdef_count; bi++) {
+          by = dlist[bi].by;
+          bx = dlist[bi].bx;
+          dir[by][bx] = cdef_find_dir(&in[8 * by * CDEF_BSTRIDE + 8 * bx],
+                                      CDEF_BSTRIDE, &var[by][bx], coeff_shift);
+        }
+        if (dirinit) *dirinit = 1;
+      }
+    }
+    // Only run dering for non-zero threshold (which is always the case for
+    // 4:2:2 or 4:4:0). If we don't dering, we still need to eventually write
+    // something out in y[] later.
+    if (threshold != 0) {
+      assert(bsize == BLOCK_8X8 || bsize == BLOCK_4X4);
+      for (bi = 0; bi < cdef_count; bi++) {
+        int t = !filter_skip && dlist[bi].skip ? 0 : threshold;
+        by = dlist[bi].by;
+        bx = dlist[bi].bx;
+        (cdef_direction[bsize == BLOCK_8X8])(
+            &y[bi << (bsizex + bsizey)], 1 << bsizex,
+            &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
+            pli ? t : adjust_strength(t, var[by][bx]), dir[by][bx],
+            pri_damping);
+      }
+    }
+  }
+
+  if (sec_strength) {
+    if (threshold && !skip_dering)
+      copy_block_16bit_to_16bit(in, CDEF_BSTRIDE, y, dlist, cdef_count, bsize);
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+      int py = by << bsizey;
+      int px = bx << bsizex;
+
+      if (!filter_skip && dlist[bi].skip) continue;
+      if (!dst || hbd) {
+        // 16 bit destination if high bitdepth or 8 bit destination not given
+        (!threshold || (dir[by][bx] < 4 && dir[by][bx]) ? aom_clpf_block_hbd
+                                                        : aom_clpf_hblock_hbd)(
+            dst ? (uint16_t *)dst + py * dstride + px
+                : &y[bi << (bsizex + bsizey)],
+            in + py * CDEF_BSTRIDE + px, dst && hbd ? dstride : 1 << bsizex,
+            CDEF_BSTRIDE, 1 << bsizex, 1 << bsizey, sec_strength << coeff_shift,
+            sec_damping);
+      } else {
+        // Do clpf and write the result to an 8 bit destination
+        (!threshold || (dir[by][bx] < 4 && dir[by][bx]) ? aom_clpf_block
+                                                        : aom_clpf_hblock)(
+            dst + py * dstride + px, in + py * CDEF_BSTRIDE + px, dstride,
+            CDEF_BSTRIDE, 1 << bsizex, 1 << bsizey, sec_strength << coeff_shift,
+            sec_damping);
+      }
+    }
+  } else if (threshold != 0) {
+    // No clpf, so copy instead
+    if (hbd) {
+      copy_block_16bit_to_16bit((uint16_t *)dst, dstride, y, dlist, cdef_count,
+                                bsize);
+    } else {
+      copy_block_16bit_to_8bit(dst, dstride, y, dlist, cdef_count, bsize);
+    }
+  } else if (dirinit) {
+    // If we're here, both dering and clpf are off, and we still haven't written
+    // anything to y[] yet, so we just copy the input to y[]. This is necessary
+    // only for av1_cdef_search() and only av1_cdef_search() sets dirinit.
+    for (bi = 0; bi < cdef_count; bi++) {
+      by = dlist[bi].by;
+      bx = dlist[bi].bx;
+#endif
       int iy, ix;
       // TODO(stemidts/jmvalin): SIMD optimisations
       for (iy = 0; iy < 1 << bsizey; iy++)
         for (ix = 0; ix < 1 << bsizex; ix++)
+#if CONFIG_CDEF_SINGLEPASS
           dst16[(bi << (bsizex + bsizey)) + (iy << bsizex) + ix] =
+#else
+          y[(bi << (bsizex + bsizey)) + (iy << bsizex) + ix] =
+#endif
               in[((by << bsizey) + iy) * CDEF_BSTRIDE + (bx << bsizex) + ix];
     }
+#if CONFIG_CDEF_SINGLEPASS
     return;
+#endif
   }
 
+#if CONFIG_CDEF_SINGLEPASS
   if (pli == 0) {
     if (!dirinit || !*dirinit) {
       for (bi = 0; bi < cdef_count; bi++) {
@@ -221,28 +557,19 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
       if (dirinit) *dirinit = 1;
     }
   }
-  if (pli == 1 && xdec != ydec) {
-    for (bi = 0; bi < cdef_count; bi++) {
-      static const int conv422[8] = { 7, 0, 2, 4, 5, 6, 6, 6 };
-      static const int conv440[8] = { 1, 2, 2, 2, 3, 4, 6, 0 };
-      by = dlist[bi].by;
-      bx = dlist[bi].bx;
-      dir[by][bx] = (xdec ? conv422 : conv440)[dir[by][bx]];
-    }
-  }
 
+  assert(bsize == BLOCK_8X8 || bsize == BLOCK_4X4);
   for (bi = 0; bi < cdef_count; bi++) {
-    int t = dlist[bi].skip ? 0 : pri_strength;
-    int s = dlist[bi].skip ? 0 : sec_strength;
+    int t = !filter_skip && dlist[bi].skip ? 0 : pri_strength;
+    int s = !filter_skip && dlist[bi].skip ? 0 : sec_strength;
     by = dlist[bi].by;
     bx = dlist[bi].bx;
     if (dst8)
-      cdef_filter_block(&dst8[(by << bsizey) * dstride + (bx << bsizex)], NULL,
-                        dstride,
-                        &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
-                        (pli ? t : adjust_strength(t, var[by][bx])), s,
-                        t ? dir[by][bx] : 0, pri_damping, sec_damping, bsize,
-                        (256 << coeff_shift) - 1, coeff_shift);
+      cdef_filter_block(
+          &dst8[(by << bsizey) * dstride + (bx << bsizex)], NULL, dstride,
+          &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
+          (pli ? t : adjust_strength(t, var[by][bx])), s, t ? dir[by][bx] : 0,
+          pri_damping, sec_damping, bsize, (256 << coeff_shift) - 1);
     else
       cdef_filter_block(
           NULL,
@@ -251,7 +578,7 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
           dirinit ? 1 << bsizex : dstride,
           &in[(by * CDEF_BSTRIDE << bsizey) + (bx << bsizex)],
           (pli ? t : adjust_strength(t, var[by][bx])), s, t ? dir[by][bx] : 0,
-          pri_damping, sec_damping, bsize, (256 << coeff_shift) - 1,
-          coeff_shift);
+          pri_damping, sec_damping, bsize, (256 << coeff_shift) - 1);
   }
+#endif
 }

@@ -14,8 +14,6 @@
 
 %include "aom_ports/x86_abi_support.asm"
 
-SECTION .text
-
 ; void av1_temporal_filter_apply_sse2 | arg
 ;  (unsigned char  *frame1,           |  0
 ;   unsigned int    stride,           |  1

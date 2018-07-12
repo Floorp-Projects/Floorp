@@ -12,7 +12,7 @@
 ;
 
 
-%include "config/aom_config.asm"
+%include "aom_config.asm"
 
 ; 32/64 bit compatibility macros
 ;

@@ -69,9 +69,10 @@ struct SPEED_FEATURES;
 
 int av1_init_search_range(int size);
 
-int av1_refining_search_sad(struct macroblock *x, MV *ref_mv, int sad_per_bit,
-                            int distance, const aom_variance_fn_ptr_t *fn_ptr,
-                            const MV *center_mv);
+int av1_refining_search_sad(struct macroblock *x, struct mv *ref_mv,
+                            int sad_per_bit, int distance,
+                            const aom_variance_fn_ptr_t *fn_ptr,
+                            const struct mv *center_mv);
 
 // Runs sequence of diamond searches in smaller steps for RD.
 int av1_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
@@ -80,20 +81,24 @@ int av1_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
                            const aom_variance_fn_ptr_t *fn_ptr,
                            const MV *ref_mv, MV *dst_mv);
 
+// Perform integral projection based motion estimation.
+unsigned int av1_int_pro_motion_estimation(const struct AV1_COMP *cpi,
+                                           MACROBLOCK *x, BLOCK_SIZE bsize,
+                                           int mi_row, int mi_col);
+
 int av1_hex_search(MACROBLOCK *x, MV *start_mv, int search_param,
                    int sad_per_bit, int do_init_search, int *cost_list,
                    const aom_variance_fn_ptr_t *vfp, int use_mvcost,
                    const MV *center_mv);
 
 typedef int(fractional_mv_step_fp)(
-    MACROBLOCK *x, const AV1_COMMON *const cm, int mi_row, int mi_col,
-    const MV *ref_mv, int allow_hp, int error_per_bit,
+    MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
     const aom_variance_fn_ptr_t *vfp,
     int forced_stop,  // 0 - full, 1 - qtr only, 2 - half only
     int iters_per_step, int *cost_list, int *mvjcost, int *mvcost[2],
     int *distortion, unsigned int *sse1, const uint8_t *second_pred,
     const uint8_t *mask, int mask_stride, int invert_mask, int w, int h,
-    int use_accurate_subpel_search);
+    int use_upsampled_ref);
 
 extern fractional_mv_step_fp av1_find_best_sub_pixel_tree;
 extern fractional_mv_step_fp av1_find_best_sub_pixel_tree_pruned;
@@ -118,33 +123,52 @@ int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
                              int invert_mask, const MV *center_mv,
                              const uint8_t *second_pred);
 
+struct AV1_COMP;
+
+#if CONFIG_HASH_ME
 int av1_full_pixel_search(const struct AV1_COMP *cpi, MACROBLOCK *x,
                           BLOCK_SIZE bsize, MV *mvp_full, int step_param,
                           int error_per_bit, int *cost_list, const MV *ref_mv,
                           int var_max, int rd, int x_pos, int y_pos, int intra);
+#else
+int av1_full_pixel_search(const struct AV1_COMP *cpi, MACROBLOCK *x,
+                          BLOCK_SIZE bsize, MV *mvp_full, int step_param,
+                          int error_per_bit, int *cost_list, const MV *ref_mv,
+                          int var_max, int rd);
+#endif
 
+#if CONFIG_MOTION_VAR
 int av1_obmc_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
                                 MV *mvp_full, int step_param, int sadpb,
                                 int further_steps, int do_refine,
                                 const aom_variance_fn_ptr_t *fn_ptr,
                                 const MV *ref_mv, MV *dst_mv, int is_second);
 int av1_find_best_obmc_sub_pixel_tree_up(
-    MACROBLOCK *x, const AV1_COMMON *const cm, int mi_row, int mi_col,
-    MV *bestmv, const MV *ref_mv, int allow_hp, int error_per_bit,
-    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
-    int *mvjcost, int *mvcost[2], int *distortion, unsigned int *sse1,
-    int is_second, int use_accurate_subpel_search);
-
-unsigned int av1_compute_motion_cost(const struct AV1_COMP *cpi,
-                                     MACROBLOCK *const x, BLOCK_SIZE bsize,
-                                     int mi_row, int mi_col, const MV *this_mv);
-unsigned int av1_refine_warped_mv(const struct AV1_COMP *cpi,
-                                  MACROBLOCK *const x, BLOCK_SIZE bsize,
-                                  int mi_row, int mi_col, int *pts0,
-                                  int *pts_inref0, int total_samples);
-
+    MACROBLOCK *x, MV *bestmv, const MV *ref_mv, int allow_hp,
+    int error_per_bit, const aom_variance_fn_ptr_t *vfp, int forced_stop,
+    int iters_per_step, int *mvjcost, int *mvcost[2], int *distortion,
+    unsigned int *sse1, int is_second, int use_upsampled_ref);
+#endif  // CONFIG_MOTION_VAR
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#if CONFIG_WARPED_MOTION
+unsigned int av1_compute_motion_cost(const struct AV1_COMP *cpi,
+                                     MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                     int mi_row, int mi_col, const MV *this_mv);
+#if WARPED_MOTION_SORT_SAMPLES
+unsigned int av1_refine_warped_mv(const struct AV1_COMP *cpi,
+                                  MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                  int mi_row, int mi_col, int *pts0,
+                                  int *pts_inref0, int *pts_mv0,
+                                  int total_samples);
+#else
+unsigned int av1_refine_warped_mv(const struct AV1_COMP *cpi,
+                                  MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                  int mi_row, int mi_col, int *pts,
+                                  int *pts_inref);
+#endif  // WARPED_MOTION_SORT_SAMPLES
+#endif  // CONFIG_WARPED_MOTION
 
 #endif  // AV1_ENCODER_MCOMP_H_

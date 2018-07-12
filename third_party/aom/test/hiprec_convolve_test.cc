@@ -12,51 +12,33 @@
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/hiprec_convolve_test_util.h"
 
-using ::testing::make_tuple;
-using ::testing::tuple;
+using std::tr1::tuple;
+using std::tr1::make_tuple;
 using libaom_test::ACMRandom;
-using libaom_test::AV1HighbdHiprecConvolve::AV1HighbdHiprecConvolveTest;
 using libaom_test::AV1HiprecConvolve::AV1HiprecConvolveTest;
+#if CONFIG_HIGHBITDEPTH
+using libaom_test::AV1HighbdHiprecConvolve::AV1HighbdHiprecConvolveTest;
+#endif
 
 namespace {
 
-TEST_P(AV1HiprecConvolveTest, CheckOutput) { RunCheckOutput(GET_PARAM(3)); }
-TEST_P(AV1HiprecConvolveTest, DISABLED_SpeedTest) {
-  RunSpeedTest(GET_PARAM(3));
-}
 #if HAVE_SSE2
+TEST_P(AV1HiprecConvolveTest, CheckOutput) { RunCheckOutput(GET_PARAM(3)); }
+
 INSTANTIATE_TEST_CASE_P(SSE2, AV1HiprecConvolveTest,
                         libaom_test::AV1HiprecConvolve::BuildParams(
-                            av1_wiener_convolve_add_src_sse2));
-#endif
-#if HAVE_AVX2
-INSTANTIATE_TEST_CASE_P(AVX2, AV1HiprecConvolveTest,
-                        libaom_test::AV1HiprecConvolve::BuildParams(
-                            av1_wiener_convolve_add_src_avx2));
-#endif
-#if HAVE_NEON
-INSTANTIATE_TEST_CASE_P(NEON, AV1HiprecConvolveTest,
-                        libaom_test::AV1HiprecConvolve::BuildParams(
-                            av1_wiener_convolve_add_src_neon));
+                            aom_convolve8_add_src_hip_sse2));
 #endif
 
-#if HAVE_SSSE3 || HAVE_AVX2
+#if CONFIG_HIGHBITDEPTH && HAVE_SSSE3
 TEST_P(AV1HighbdHiprecConvolveTest, CheckOutput) {
   RunCheckOutput(GET_PARAM(4));
 }
-TEST_P(AV1HighbdHiprecConvolveTest, DISABLED_SpeedTest) {
-  RunSpeedTest(GET_PARAM(4));
-}
-#if HAVE_SSSE3
+
 INSTANTIATE_TEST_CASE_P(SSSE3, AV1HighbdHiprecConvolveTest,
                         libaom_test::AV1HighbdHiprecConvolve::BuildParams(
-                            av1_highbd_wiener_convolve_add_src_ssse3));
-#endif
-#if HAVE_AVX2
-INSTANTIATE_TEST_CASE_P(AVX2, AV1HighbdHiprecConvolveTest,
-                        libaom_test::AV1HighbdHiprecConvolve::BuildParams(
-                            av1_highbd_wiener_convolve_add_src_avx2));
-#endif
+                            aom_highbd_convolve8_add_src_hip_ssse3));
+
 #endif
 
 }  // namespace

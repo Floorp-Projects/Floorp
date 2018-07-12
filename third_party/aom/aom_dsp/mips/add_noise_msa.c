@@ -10,8 +10,7 @@
  */
 
 #include <stdlib.h>
-
-#include "aom_dsp/mips/macros_msa.h"
+#include "./macros_msa.h"
 
 void aom_plane_add_noise_msa(uint8_t *start_ptr, char *noise,
                              char blackclamp[16], char whiteclamp[16],

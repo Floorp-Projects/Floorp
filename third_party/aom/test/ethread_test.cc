@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include <string>
 #include <vector>
@@ -16,7 +16,7 @@
 #include "test/encode_test_driver.h"
 #include "test/md5_helper.h"
 #include "test/util.h"
-#include "test/yuv_video_source.h"
+#include "test/y4m_video_source.h"
 
 namespace {
 class AVxEncoderThreadTest
@@ -32,10 +32,12 @@ class AVxEncoderThreadTest
     cfg.h = 720;
     cfg.allow_lowbitdepth = 1;
     decoder_ = codec_->CreateDecoder(cfg, 0);
+#if CONFIG_AV1
     if (decoder_->IsAV1()) {
       decoder_->Control(AV1_SET_DECODE_TILE_ROW, -1);
       decoder_->Control(AV1_SET_DECODE_TILE_COL, -1);
     }
+#endif
 
     size_enc_.clear();
     md5_dec_.clear();
@@ -69,6 +71,9 @@ class AVxEncoderThreadTest
                                   ::libaom_test::Encoder *encoder) {
     if (!encoder_initialized_) {
       SetTileSize(encoder);
+#if CONFIG_LOOPFILTERING_ACROSS_TILES
+      encoder->Control(AV1E_SET_TILE_LOOPFILTER, 0);
+#endif  // CONFIG_LOOPFILTERING_ACROSS_TILES
       encoder->Control(AOME_SET_CPUUSED, set_cpu_used_);
       if (encoding_mode_ != ::libaom_test::kRealTime) {
         encoder->Control(AOME_SET_ENABLEAUTOALTREF, 1);
@@ -113,8 +118,7 @@ class AVxEncoderThreadTest
   }
 
   void DoTest() {
-    ::libaom_test::YUVVideoSource video(
-        "niklas_640_480_30.yuv", AOM_IMG_FMT_I420, 640, 480, 30, 1, 15, 18);
+    ::libaom_test::Y4mVideoSource video("niklas_1280_720_30.y4m", 15, 18);
     cfg_.rc_target_bitrate = 1000;
 
     // Encode using single thread.
@@ -160,16 +164,18 @@ class AVxEncoderThreadTest
 };
 
 TEST_P(AVxEncoderThreadTest, EncoderResultTest) {
+#if CONFIG_AV1 && CONFIG_EXT_TILE
   cfg_.large_scale_tile = 0;
-  decoder_->Control(AV1_SET_TILE_MODE, 0);
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
   DoTest();
 }
 
 class AVxEncoderThreadTestLarge : public AVxEncoderThreadTest {};
 
 TEST_P(AVxEncoderThreadTestLarge, EncoderResultTest) {
+#if CONFIG_AV1 && CONFIG_EXT_TILE
   cfg_.large_scale_tile = 0;
-  decoder_->Control(AV1_SET_TILE_MODE, 0);
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
   DoTest();
 }
 
@@ -184,6 +190,7 @@ AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadTestLarge,
                                             ::libaom_test::kOnePassGood),
                           ::testing::Range(0, 2));
 
+#if CONFIG_AV1 && CONFIG_EXT_TILE
 class AVxEncoderThreadLSTest : public AVxEncoderThreadTest {
   virtual void SetTileSize(libaom_test::Encoder *encoder) {
     encoder->Control(AV1E_SET_TILE_COLUMNS, 1);
@@ -193,17 +200,15 @@ class AVxEncoderThreadLSTest : public AVxEncoderThreadTest {
   }
 };
 
-TEST_P(AVxEncoderThreadLSTest, DISABLED_EncoderResultTest) {
+TEST_P(AVxEncoderThreadLSTest, EncoderResultTest) {
   cfg_.large_scale_tile = 1;
-  decoder_->Control(AV1_SET_TILE_MODE, 1);
   DoTest();
 }
 
 class AVxEncoderThreadLSTestLarge : public AVxEncoderThreadLSTest {};
 
-TEST_P(AVxEncoderThreadLSTestLarge, DISABLED_EncoderResultTest) {
+TEST_P(AVxEncoderThreadLSTestLarge, EncoderResultTest) {
   cfg_.large_scale_tile = 1;
-  decoder_->Control(AV1_SET_TILE_MODE, 1);
   DoTest();
 }
 
@@ -215,4 +220,5 @@ AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadLSTestLarge,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
                           ::testing::Range(0, 2));
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
 }  // namespace

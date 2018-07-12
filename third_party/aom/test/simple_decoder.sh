@@ -25,7 +25,7 @@ simple_decoder_verify_environment() {
 # Runs simple_decoder using $1 as input file. $2 is the codec name, and is used
 # solely to name the output file.
 simple_decoder() {
-  local decoder="$(aom_tool_path simple_decoder)"
+  local decoder="${LIBAOM_BIN_PATH}/simple_decoder${AOM_TEST_EXE_SUFFIX}"
   local input_file="$1"
   local codec="$2"
   local output_file="${AOM_TEST_OUTPUT_DIR}/simple_decoder_${codec}.raw"

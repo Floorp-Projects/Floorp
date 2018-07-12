@@ -12,20 +12,13 @@
 #ifndef AOM_UTIL_DEBUG_UTIL_H_
 #define AOM_UTIL_DEBUG_UTIL_H_
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom_dsp/prob.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void bitstream_queue_set_frame_write(int frame_idx);
-int bitstream_queue_get_frame_write(void);
-void bitstream_queue_set_frame_read(int frame_idx);
-int bitstream_queue_get_frame_read(void);
-
-#if CONFIG_BITSTREAM_DEBUG
 /* This is a debug tool used to detect bitstream error. On encoder side, it
  * pushes each bit and probability into a queue before the bit is written into
  * the Arithmetic coder. On decoder side, whenever a bit is read out from the
@@ -42,25 +35,10 @@ void bitstream_queue_pop(int *result, aom_cdf_prob *cdf, int *nsymbs);
 void bitstream_queue_push(int result, const aom_cdf_prob *cdf, int nsymbs);
 void bitstream_queue_set_skip_write(int skip);
 void bitstream_queue_set_skip_read(int skip);
-#endif  // CONFIG_BITSTREAM_DEBUG
-
-#if CONFIG_MISMATCH_DEBUG
-void mismatch_move_frame_idx_w();
-void mismatch_move_frame_idx_r();
-void mismatch_reset_frame(int num_planes);
-void mismatch_record_block_pre(const uint8_t *src, int src_stride,
-                               int frame_offset, int plane, int pixel_c,
-                               int pixel_r, int blk_w, int blk_h, int highbd);
-void mismatch_record_block_tx(const uint8_t *src, int src_stride,
-                              int frame_offset, int plane, int pixel_c,
-                              int pixel_r, int blk_w, int blk_h, int highbd);
-void mismatch_check_block_pre(const uint8_t *src, int src_stride,
-                              int frame_offset, int plane, int pixel_c,
-                              int pixel_r, int blk_w, int blk_h, int highbd);
-void mismatch_check_block_tx(const uint8_t *src, int src_stride,
-                             int frame_offset, int plane, int pixel_c,
-                             int pixel_r, int blk_w, int blk_h, int highbd);
-#endif  // CONFIG_MISMATCH_DEBUG
+void bitstream_queue_set_frame_write(int frame_idx);
+int bitstream_queue_get_frame_write(void);
+void bitstream_queue_set_frame_read(int frame_idx);
+int bitstream_queue_get_frame_read(void);
 
 #ifdef __cplusplus
 }  // extern "C"

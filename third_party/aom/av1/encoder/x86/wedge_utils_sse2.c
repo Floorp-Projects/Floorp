@@ -31,7 +31,7 @@ uint64_t av1_wedge_sse_from_residuals_sse2(const int16_t *r1, const int16_t *d,
   uint64_t csse;
 
   const __m128i v_mask_max_w = _mm_set1_epi16(MAX_MASK_VALUE);
-  const __m128i v_zext_q = xx_set1_64_from_32i(0xffffffff);
+  const __m128i v_zext_q = _mm_set_epi32(0, 0xffffffff, 0, 0xffffffff);
 
   __m128i v_acc0_q = _mm_setzero_si128();
 

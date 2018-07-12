@@ -7,10 +7,9 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/codec_factory.h"
 #include "test/encode_test_driver.h"
@@ -216,7 +215,6 @@ TEST_P(DatarateTestLarge, ChangingDropFrameThresh) {
   cfg_.rc_end_usage = AOM_CBR;
   cfg_.rc_target_bitrate = 200;
   cfg_.g_lag_in_frames = 0;
-  cfg_.g_error_resilient = 1;
   // TODO(marpan): Investigate datarate target failures with a smaller keyframe
   // interval (128).
   cfg_.kf_max_dist = 9999;

@@ -90,14 +90,4 @@ static INLINE __m128i half_btf_sse4_1(const __m128i *w0, const __m128i *n0,
   return x;
 }
 
-static INLINE __m128i half_btf_0_sse4_1(const __m128i *w0, const __m128i *n0,
-                                        const __m128i *rounding, int bit) {
-  __m128i x;
-
-  x = _mm_mullo_epi32(*w0, *n0);
-  x = _mm_add_epi32(x, *rounding);
-  x = _mm_srai_epi32(x, bit);
-  return x;
-}
-
 #endif  // _HIGHBD_TXFM_UTILITY_SSE4_H

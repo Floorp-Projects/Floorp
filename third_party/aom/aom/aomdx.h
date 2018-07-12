@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /* Include controls common to both the encoder and decoder */
-#include "aom/aom.h"
+#include "./aom.h"
 
 /*!\name Algorithm interface for AV1
  *
@@ -37,9 +37,11 @@ extern aom_codec_iface_t aom_codec_av1_dx_algo;
 extern aom_codec_iface_t *aom_codec_av1_dx(void);
 /*!@} - end algorithm interface member group*/
 
+#ifndef AOM_ACCOUNTING_H_
 /** Data structure that stores bit accounting for debug
  */
 typedef struct Accounting Accounting;
+#endif
 
 #ifndef AOM_INSPECTION_H_
 /** Callback that inspects decoder frame data.
@@ -59,30 +61,6 @@ typedef struct aom_inspect_init {
   /*! Inspection context. */
   void *inspect_ctx;
 } aom_inspect_init;
-
-/*!\brief Structure to hold a tile's start address and size in the bitstream.
- *
- * Defines a structure to hold a tile's start address and size in the bitstream.
- */
-typedef struct aom_tile_data {
-  /*! Tile data size. */
-  size_t coded_tile_data_size;
-  /*! Tile's start address. */
-  const void *coded_tile_data;
-  /*! Extra size information. */
-  size_t extra_size;
-} aom_tile_data;
-
-/*!\brief Structure to hold the external reference frame pointer.
- *
- * Define a structure to hold the external reference frame pointer.
- */
-typedef struct av1_ext_ref_frame {
-  /*! Start pointer of external references. */
-  aom_image_t *img;
-  /*! Number of available external references. */
-  int num;
-} av1_ext_ref_frame_t;
 
 /*!\enum aom_dec_control_id
  * \brief AOM decoder control functions
@@ -105,6 +83,13 @@ enum aom_dec_control_id {
    *  by the last decode
    */
   AOMD_GET_LAST_REF_USED,
+
+  /** decryption function to decrypt encoded buffer data immediately
+   * before decoding. Takes a aom_decrypt_init, which contains
+   * a callback function and opaque context pointer.
+   */
+  AOMD_SET_DECRYPTOR,
+  // AOMD_SET_DECRYPTOR = AOMD_SET_DECRYPTOR,
 
   /** control function to get the dimensions that the current frame is decoded
    * at. This may be different to the intended display size for the frame as
@@ -164,50 +149,6 @@ enum aom_dec_control_id {
    */
   AV1_SET_DECODE_TILE_ROW,
   AV1_SET_DECODE_TILE_COL,
-  /** control function to set the tile coding mode. A value that is equal to
-   *  zero indicates the tiles are coded in normal tile mode. A value that is
-   *  1 indicates the tiles are coded in large-scale tile mode.
-   */
-  AV1_SET_TILE_MODE,
-  /** control function to get the frame header information of an encoded frame
-   * in the bitstream. This provides a way to access a frame's header data.
-   */
-  AV1D_GET_FRAME_HEADER_INFO,
-  /** control function to get the start address and size of a tile in the coded
-   * bitstream. This provides a way to access a specific tile's bitstream data.
-   */
-  AV1D_GET_TILE_DATA,
-  /** control function to set the external references' pointers in the decoder.
-   *  This is used while decoding the tile list OBU in large-scale tile coding
-   *  mode.
-   */
-  AV1D_SET_EXT_REF_PTR,
-  /** control function to enable the ext-tile software debug and testing code in
-   * the decoder.
-   */
-  AV1D_EXT_TILE_DEBUG,
-
-  /** control function to indicate whether bitstream is in Annex-B format. */
-  AV1D_SET_IS_ANNEXB,
-
-  /** control function to indicate which operating point to use. A scalable
-   *  stream may define multiple operating points, each of which defines a
-   *  set of temporal and spatial layers to be processed. The operating point
-   *  index may take a value between 0 and operating_points_cnt_minus_1 (which
-   *  is at most 31).
-   */
-  AV1D_SET_OPERATING_POINT,
-
-  /** control function to indicate whether to output one frame per temporal
-   *  unit (the default), or one frame per spatial layer.
-   *  In a scalable stream, each temporal unit corresponds to a single "frame"
-   *  of video, and within a temporal unit there may be multiple spatial layers
-   *  with different versions of that frame.
-   *  For video playback, only the highest-quality version (within the
-   *  selected operating point) is needed, but for some use cases it is useful
-   *  to have access to multiple versions of a frame when they are available.
-   */
-  AV1D_SET_OUTPUT_ALL_LAYERS,
 
   /** control function to set an aom_inspect_cb callback that is invoked each
    * time a frame is decoded.  When compiled without --enable-inspection, this
@@ -217,6 +158,24 @@ enum aom_dec_control_id {
 
   AOM_DECODER_CTRL_ID_MAX,
 };
+
+/** Decrypt n bytes of data from input -> output, using the decrypt_state
+ *  passed in AOMD_SET_DECRYPTOR.
+ */
+typedef void (*aom_decrypt_cb)(void *decrypt_state, const unsigned char *input,
+                               unsigned char *output, int count);
+
+/*!\brief Structure to hold decryption state
+ *
+ * Defines a structure to hold the decryption state and access function.
+ */
+typedef struct aom_decrypt_init {
+  /*! Decrypt callback. */
+  aom_decrypt_cb decrypt_cb;
+
+  /*! Decryption state. */
+  void *decrypt_state;
+} aom_decrypt_init;
 
 /*!\cond */
 /*!\brief AOM decoder control function parameter type
@@ -234,6 +193,10 @@ AOM_CTRL_USE_TYPE(AOMD_GET_LAST_REF_USED, int *)
 #define AOM_CTRL_AOMD_GET_LAST_REF_USED
 AOM_CTRL_USE_TYPE(AOMD_GET_LAST_QUANTIZER, int *)
 #define AOM_CTRL_AOMD_GET_LAST_QUANTIZER
+AOM_CTRL_USE_TYPE(AOMD_SET_DECRYPTOR, aom_decrypt_init *)
+#define AOM_CTRL_AOMD_SET_DECRYPTOR
+// AOM_CTRL_USE_TYPE(AOMD_SET_DECRYPTOR, aom_decrypt_init *)
+//#define AOM_CTRL_AOMD_SET_DECRYPTOR
 AOM_CTRL_USE_TYPE(AV1D_GET_DISPLAY_SIZE, int *)
 #define AOM_CTRL_AV1D_GET_DISPLAY_SIZE
 AOM_CTRL_USE_TYPE(AV1D_GET_BIT_DEPTH, unsigned int *)
@@ -248,22 +211,6 @@ AOM_CTRL_USE_TYPE(AV1_SET_DECODE_TILE_ROW, int)
 #define AOM_CTRL_AV1_SET_DECODE_TILE_ROW
 AOM_CTRL_USE_TYPE(AV1_SET_DECODE_TILE_COL, int)
 #define AOM_CTRL_AV1_SET_DECODE_TILE_COL
-AOM_CTRL_USE_TYPE(AV1_SET_TILE_MODE, unsigned int)
-#define AOM_CTRL_AV1_SET_TILE_MODE
-AOM_CTRL_USE_TYPE(AV1D_GET_FRAME_HEADER_INFO, aom_tile_data *)
-#define AOM_CTRL_AV1D_GET_FRAME_HEADER_INFO
-AOM_CTRL_USE_TYPE(AV1D_GET_TILE_DATA, aom_tile_data *)
-#define AOM_CTRL_AV1D_GET_TILE_DATA
-AOM_CTRL_USE_TYPE(AV1D_SET_EXT_REF_PTR, av1_ext_ref_frame_t *)
-#define AOM_CTRL_AV1D_SET_EXT_REF_PTR
-AOM_CTRL_USE_TYPE(AV1D_EXT_TILE_DEBUG, unsigned int)
-#define AOM_CTRL_AV1D_EXT_TILE_DEBUG
-AOM_CTRL_USE_TYPE(AV1D_SET_IS_ANNEXB, unsigned int)
-#define AOM_CTRL_AV1D_SET_IS_ANNEXB
-AOM_CTRL_USE_TYPE(AV1D_SET_OPERATING_POINT, int)
-#define AOM_CTRL_AV1D_SET_OPERATING_POINT
-AOM_CTRL_USE_TYPE(AV1D_SET_OUTPUT_ALL_LAYERS, int)
-#define AOM_CTRL_AV1D_SET_OUTPUT_ALL_LAYERS
 AOM_CTRL_USE_TYPE(AV1_SET_INSPECTION_CALLBACK, aom_inspect_init *)
 #define AOM_CTRL_AV1_SET_INSPECTION_CALLBACK
 /*!\endcond */

@@ -1,4 +1,5 @@
-# This file is used by git cl to get repository specific information.
-GERRIT_HOST: True
+# This file is used by gcl to get repository specific information.
+GERRIT_HOST: aomedia-review.googlesource.com
+GERRIT_PORT: 29418
+GERRIT_SQUASH_UPLOADS: false
 CODE_REVIEW_SERVER: aomedia-review.googlesource.com
-GERRIT_SQUASH_UPLOADS: False

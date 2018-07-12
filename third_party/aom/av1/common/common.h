@@ -20,7 +20,6 @@
 #include "aom_mem/aom_mem.h"
 #include "aom/aom_integer.h"
 #include "aom_ports/bitops.h"
-#include "config/aom_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,8 +52,6 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
   AOM_CHECK_MEM_ERROR(&cm->error, lval, expr)
 
 #define AOM_FRAME_MARKER 0x2
-
-#define AV1_MIN_TILE_SIZE_BYTES 1
 
 #ifdef __cplusplus
 }  // extern "C"

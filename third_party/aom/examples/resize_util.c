@@ -16,8 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "av1/common/resize.h"
-#include "common/tools_common.h"
+#include "../tools_common.h"
+#include "../av1/encoder/av1_resize.h"
 
 static const char *exec_name = NULL;
 

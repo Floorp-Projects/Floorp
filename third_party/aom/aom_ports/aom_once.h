@@ -12,7 +12,7 @@
 #ifndef AOM_PORTS_AOM_ONCE_H_
 #define AOM_PORTS_AOM_ONCE_H_
 
-#include "config/aom_config.h"
+#include "aom_config.h"
 
 /* Implement a function wrapper to guarantee initialization
  * thread-safety for library singletons.

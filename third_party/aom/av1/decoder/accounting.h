@@ -11,7 +11,6 @@
 #ifndef AOM_ACCOUNTING_H_
 #define AOM_ACCOUNTING_H_
 #include <stdlib.h>
-#include "aom/aomdx.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,6 +57,8 @@ typedef struct {
   /** Dictionary for translating strings into id. */
   AccountingDictionary dictionary;
 } AccountingSymbols;
+
+typedef struct Accounting Accounting;
 
 struct Accounting {
   AccountingSymbols syms;

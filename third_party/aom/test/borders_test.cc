@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include <climits>
 #include <vector>
@@ -19,12 +19,12 @@
 
 namespace {
 
-class BordersTestLarge
+class BordersTest
     : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
       public ::libaom_test::EncoderTest {
  protected:
-  BordersTestLarge() : EncoderTest(GET_PARAM(0)) {}
-  virtual ~BordersTestLarge() {}
+  BordersTest() : EncoderTest(GET_PARAM(0)) {}
+  virtual ~BordersTest() {}
 
   virtual void SetUp() {
     InitializeConfig();
@@ -47,7 +47,7 @@ class BordersTestLarge
   }
 };
 
-TEST_P(BordersTestLarge, TestEncodeHighBitrate) {
+TEST_P(BordersTest, TestEncodeHighBitrate) {
   // Validate that this non multiple of 64 wide clip encodes and decodes
   // without a mismatch when passing in a very low max q.  This pushes
   // the encoder to producing lots of big partitions which will likely
@@ -63,7 +63,7 @@ TEST_P(BordersTestLarge, TestEncodeHighBitrate) {
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
-TEST_P(BordersTestLarge, TestLowBitrate) {
+TEST_P(BordersTest, TestLowBitrate) {
   // Validate that this clip encodes and decodes without a mismatch
   // when passing in a very high min q.  This pushes the encoder to producing
   // lots of small partitions which might will test the other condition.
@@ -80,6 +80,6 @@ TEST_P(BordersTestLarge, TestLowBitrate) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
-AV1_INSTANTIATE_TEST_CASE(BordersTestLarge,
+AV1_INSTANTIATE_TEST_CASE(BordersTest,
                           ::testing::Values(::libaom_test::kTwoPassGood));
 }  // namespace

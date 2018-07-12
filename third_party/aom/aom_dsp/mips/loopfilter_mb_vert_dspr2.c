@@ -11,8 +11,7 @@
 
 #include <stdlib.h>
 
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_dsp_rtcd.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/mips/common_dspr2.h"
 #include "aom_dsp/mips/loopfilter_filters_dspr2.h"

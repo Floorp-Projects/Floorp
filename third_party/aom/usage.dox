@@ -108,4 +108,28 @@
     (comprised of characters in the set [a-z_a-Z0-9+/]). This information is not
     useful to an application at runtime, but may be of use to aom for support.
 
+
+    \section usage_deadline Deadline
+    Both the encoding and decoding functions have a <code>deadline</code>
+    parameter. This parameter indicates the amount of time, in microseconds
+    (us), that the application wants the codec to spend processing before
+    returning. This is a soft deadline -- that is, the semantics of the
+    requested operation take precedence over meeting the deadline. If, for
+    example, an application sets a <code>deadline</code> of 1000us, and the
+    frame takes 2000us to decode, the call to aom_codec_decode() will return
+    after 2000us. In this case the deadline is not met, but the semantics of the
+    function are preserved. If, for the same frame, an application instead sets
+    a <code>deadline</code> of 5000us, the decoder will see that it has 3000us
+    remaining in its time slice when decoding completes. It could then choose to
+    run a set of \ref usage_postproc filters, and perhaps would return after
+    4000us (instead of the allocated 5000us). In this case the deadline is met,
+    and the semantics of the call are preserved, as before.
+
+    The special value <code>0</code> is reserved to represent an infinite
+    deadline. In this case, the codec will perform as much processing as
+    possible to yield the highest quality frame.
+
+    By convention, the value <code>1</code> is used to mean "return as fast as
+    possible."
+
 */

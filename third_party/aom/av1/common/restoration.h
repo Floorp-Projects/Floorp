@@ -13,10 +13,9 @@
 #define AV1_COMMON_RESTORATION_H_
 
 #include "aom_ports/mem.h"
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 #include "av1/common/blockd.h"
-#include "av1/common/enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,13 +26,23 @@ extern "C" {
 
 #define RESTORATION_PROC_UNIT_SIZE 64
 
+#if CONFIG_STRIPED_LOOP_RESTORATION
 // Filter tile grid offset upwards compared to the superblock grid
-#define RESTORATION_UNIT_OFFSET 8
+#define RESTORATION_TILE_OFFSET 8
+#endif
 
-#define SGRPROJ_BORDER_VERT 3  // Vertical border used for Sgr
-#define SGRPROJ_BORDER_HORZ 3  // Horizontal border used for Sgr
+#if CONFIG_STRIPED_LOOP_RESTORATION
+#define SGRPROJ_BORDER_VERT 2  // Vertical border used for Sgr
+#else
+#define SGRPROJ_BORDER_VERT 1  // Vertical border used for Sgr
+#endif
+#define SGRPROJ_BORDER_HORZ 2  // Horizontal border used for Sgr
 
+#if CONFIG_STRIPED_LOOP_RESTORATION
 #define WIENER_BORDER_VERT 2  // Vertical border used for Wiener
+#else
+#define WIENER_BORDER_VERT 1  // Vertical border used for Wiener
+#endif
 #define WIENER_HALFWIN 3
 #define WIENER_BORDER_HORZ (WIENER_HALFWIN)  // Horizontal border for Wiener
 
@@ -52,16 +61,11 @@ extern "C" {
 #define RESTORATION_BORDER_HORZ (WIENER_BORDER_HORZ)
 #endif  // SGRPROJ_BORDER_VERT >= WIENER_BORDER_VERT
 
-// How many border pixels do we need for each processing unit?
-#define RESTORATION_BORDER 3
-
-// How many rows of deblocked pixels do we save above/below each processing
-// stripe?
-#define RESTORATION_CTX_VERT 2
-
+#if CONFIG_STRIPED_LOOP_RESTORATION
 // Additional pixels to the left and right in above/below buffers
 // It is RESTORATION_BORDER_HORZ rounded up to get nicer buffer alignment
 #define RESTORATION_EXTRA_HORZ 4
+#endif
 
 // Pad up to 20 more (may be much less is needed)
 #define RESTORATION_PADDING 20
@@ -71,23 +75,30 @@ extern "C" {
    (RESTORATION_PROC_UNIT_SIZE + RESTORATION_BORDER_VERT * 2 + \
     RESTORATION_PADDING))
 
-#define RESTORATION_UNITSIZE_MAX 256
-#define RESTORATION_UNITPELS_HORZ_MAX \
-  (RESTORATION_UNITSIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_HORZ + 16)
-#define RESTORATION_UNITPELS_VERT_MAX                                \
-  ((RESTORATION_UNITSIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_VERT + \
-    RESTORATION_UNIT_OFFSET))
-#define RESTORATION_UNITPELS_MAX \
-  (RESTORATION_UNITPELS_HORZ_MAX * RESTORATION_UNITPELS_VERT_MAX)
+#define RESTORATION_TILESIZE_MAX 256
+#if CONFIG_STRIPED_LOOP_RESTORATION
+#define RESTORATION_TILEPELS_HORZ_MAX \
+  (RESTORATION_TILESIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_HORZ + 16)
+#define RESTORATION_TILEPELS_VERT_MAX                                \
+  ((RESTORATION_TILESIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_VERT + \
+    RESTORATION_TILE_OFFSET))
+#define RESTORATION_TILEPELS_MAX \
+  (RESTORATION_TILEPELS_HORZ_MAX * RESTORATION_TILEPELS_VERT_MAX)
+#else
+#define RESTORATION_TILEPELS_MAX                                           \
+  ((RESTORATION_TILESIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_HORZ + 16) * \
+   (RESTORATION_TILESIZE_MAX * 3 / 2 + 2 * RESTORATION_BORDER_VERT))
+#endif
 
 // Two 32-bit buffers needed for the restored versions from two filters
 // TODO(debargha, rupert): Refactor to not need the large tilesize to be stored
 // on the decoder side.
-#define SGRPROJ_TMPBUF_SIZE (RESTORATION_UNITPELS_MAX * 2 * sizeof(int32_t))
+#define SGRPROJ_TMPBUF_SIZE (RESTORATION_TILEPELS_MAX * 2 * sizeof(int32_t))
 
 #define SGRPROJ_EXTBUF_SIZE (0)
 #define SGRPROJ_PARAMS_BITS 4
 #define SGRPROJ_PARAMS (1 << SGRPROJ_PARAMS_BITS)
+#define USE_HIGHPASS_IN_SGRPROJ 0
 
 // Precision bits for projection
 #define SGRPROJ_PRJ_BITS 7
@@ -97,16 +108,24 @@ extern "C" {
 #define SGRPROJ_SGR_BITS 8
 #define SGRPROJ_SGR (1 << SGRPROJ_SGR_BITS)
 
+#if USE_HIGHPASS_IN_SGRPROJ
+#define SGRPROJ_PRJ_MIN0 (-(1 << SGRPROJ_PRJ_BITS) / 8)
+#define SGRPROJ_PRJ_MAX0 (SGRPROJ_PRJ_MIN0 + (1 << SGRPROJ_PRJ_BITS) - 1)
+#define SGRPROJ_PRJ_MIN1 (-(1 << SGRPROJ_PRJ_BITS) / 2)
+#define SGRPROJ_PRJ_MAX1 (SGRPROJ_PRJ_MIN1 + (1 << SGRPROJ_PRJ_BITS) - 1)
+#else
 #define SGRPROJ_PRJ_MIN0 (-(1 << SGRPROJ_PRJ_BITS) * 3 / 4)
 #define SGRPROJ_PRJ_MAX0 (SGRPROJ_PRJ_MIN0 + (1 << SGRPROJ_PRJ_BITS) - 1)
 #define SGRPROJ_PRJ_MIN1 (-(1 << SGRPROJ_PRJ_BITS) / 4)
 #define SGRPROJ_PRJ_MAX1 (SGRPROJ_PRJ_MIN1 + (1 << SGRPROJ_PRJ_BITS) - 1)
+#endif  // USE_HIGHPASS_IN_SGRPROJ
 
 #define SGRPROJ_PRJ_SUBEXP_K 4
 
 #define SGRPROJ_BITS (SGRPROJ_PRJ_BITS * 2 + SGRPROJ_PARAMS_BITS)
 
 #define MAX_RADIUS 2  // Only 1, 2, 3 allowed
+#define MAX_EPS 80    // Max value of eps
 #define MAX_NELEM ((2 * MAX_RADIUS + 1) * (2 * MAX_RADIUS + 1))
 #define SGRPROJ_MTABLE_BITS 20
 #define SGRPROJ_RECIP_BITS 12
@@ -124,13 +143,17 @@ extern "C" {
 #define WIENER_FILT_PREC_BITS 7
 #define WIENER_FILT_STEP (1 << WIENER_FILT_PREC_BITS)
 
+// Whether to use high intermediate precision filtering
+#define USE_WIENER_HIGH_INTERMEDIATE_PRECISION 1
+
 // Central values for the taps
 #define WIENER_FILT_TAP0_MIDV (3)
 #define WIENER_FILT_TAP1_MIDV (-7)
 #define WIENER_FILT_TAP2_MIDV (15)
-#define WIENER_FILT_TAP3_MIDV                                              \
-  (WIENER_FILT_STEP - 2 * (WIENER_FILT_TAP0_MIDV + WIENER_FILT_TAP1_MIDV + \
-                           WIENER_FILT_TAP2_MIDV))
+#define WIENER_FILT_TAP3_MIDV                           \
+  (WIENER_FILT_STEP -                                   \
+   2 * (WIENER_FILT_TAP0_MIDV + WIENER_FILT_TAP1_MIDV + \
+        WIENER_FILT_TAP2_MIDV))
 
 #define WIENER_FILT_TAP0_BITS 4
 #define WIENER_FILT_TAP1_BITS 5
@@ -171,64 +194,51 @@ extern "C" {
 #error "Wiener filter currently only works if WIENER_FILT_PREC_BITS == 7"
 #endif
 
-#define LR_TILE_ROW 0
-#define LR_TILE_COL 0
-#define LR_TILE_COLS 1
-
 typedef struct {
-  int r[2];  // radii
-  int s[2];  // sgr parameters for r[0] and r[1], based on GenSgrprojVtable()
+#if USE_HIGHPASS_IN_SGRPROJ
+  int corner;
+  int edge;
+#else
+  int r1;
+  int e1;
+#endif  // USE_HIGHPASS_IN_SGRPROJ
+  int r2;
+  int e2;
 } sgr_params_type;
 
 typedef struct {
-  RestorationType restoration_type;
-  WienerInfo wiener_info;
-  SgrprojInfo sgrproj_info;
-} RestorationUnitInfo;
-
-// A restoration line buffer needs space for two lines plus a horizontal filter
-// margin of RESTORATION_EXTRA_HORZ on each side.
-#define RESTORATION_LINEBUFFER_WIDTH \
-  (RESTORATION_UNITSIZE_MAX * 3 / 2 + 2 * RESTORATION_EXTRA_HORZ)
-
-// Similarly, the column buffers (used when we're at a vertical tile edge
-// that we can't filter across) need space for one processing unit's worth
-// of pixels, plus the top/bottom border width
-#define RESTORATION_COLBUFFER_HEIGHT \
-  (RESTORATION_PROC_UNIT_SIZE + 2 * RESTORATION_BORDER)
-
-typedef struct {
-  // Temporary buffers to save/restore 3 lines above/below the restoration
-  // stripe.
-  uint16_t tmp_save_above[RESTORATION_BORDER][RESTORATION_LINEBUFFER_WIDTH];
-  uint16_t tmp_save_below[RESTORATION_BORDER][RESTORATION_LINEBUFFER_WIDTH];
-} RestorationLineBuffers;
-
-typedef struct {
-  uint8_t *stripe_boundary_above;
-  uint8_t *stripe_boundary_below;
-  int stripe_boundary_stride;
-  int stripe_boundary_size;
-} RestorationStripeBoundaries;
-
-typedef struct {
+  int restoration_tilesize;
+  int procunit_width, procunit_height;
   RestorationType frame_restoration_type;
-  int restoration_unit_size;
-
-  // Fields below here are allocated and initialised by
-  // av1_alloc_restoration_struct. (horz_)units_per_tile give the number of
-  // restoration units in (one row of) the largest tile in the frame. The data
-  // in unit_info is laid out with units_per_tile entries for each tile, which
-  // have stride horz_units_per_tile.
-  //
-  // Even if there are tiles of different sizes, the data in unit_info is laid
-  // out as if all tiles are of full size.
-  int units_per_tile;
-  int vert_units_per_tile, horz_units_per_tile;
-  RestorationUnitInfo *unit_info;
-  RestorationStripeBoundaries boundaries;
-  int optimized_lr;
+  RestorationType *restoration_type;
+  // Wiener filter
+  WienerInfo *wiener_info;
+  // Selfguided proj filter
+  SgrprojInfo *sgrproj_info;
 } RestorationInfo;
+
+typedef struct {
+  RestorationInfo *rsi;
+  int keyframe;
+  int ntiles;
+  int tile_width, tile_height;
+  int nhtiles, nvtiles;
+  int32_t *tmpbuf;
+#if CONFIG_STRIPED_LOOP_RESTORATION
+  int component;
+  int subsampling_y;
+  uint8_t *stripe_boundary_above[MAX_MB_PLANE];
+  uint8_t *stripe_boundary_below[MAX_MB_PLANE];
+  int stripe_boundary_stride[MAX_MB_PLANE];
+  // Temporary buffers to save/restore 2 lines above/below the restoration
+  // stripe
+  // Allow for filter margin to left and right
+  uint16_t
+      tmp_save_above[2][RESTORATION_TILESIZE_MAX + 2 * RESTORATION_EXTRA_HORZ];
+  uint16_t
+      tmp_save_below[2][RESTORATION_TILESIZE_MAX + 2 * RESTORATION_EXTRA_HORZ];
+#endif
+} RestorationInternal;
 
 static INLINE void set_default_sgrproj(SgrprojInfo *sgrproj_info) {
   sgrproj_info->xqd[0] = (SGRPROJ_PRJ_MIN0 + SGRPROJ_PRJ_MAX0) / 2;
@@ -247,128 +257,91 @@ static INLINE void set_default_wiener(WienerInfo *wiener_info) {
   wiener_info->vfilter[6] = wiener_info->hfilter[6] = WIENER_FILT_TAP0_MIDV;
 }
 
-typedef struct {
-  int h_start, h_end, v_start, v_end;
-} RestorationTileLimits;
+static INLINE int av1_get_rest_ntiles(int width, int height, int tilesize,
+                                      int *tile_width, int *tile_height,
+                                      int *nhtiles, int *nvtiles) {
+  int nhtiles_, nvtiles_;
+  int tile_width_, tile_height_;
+  tile_width_ = (tilesize < 0) ? width : AOMMIN(tilesize, width);
+  tile_height_ = (tilesize < 0) ? height : AOMMIN(tilesize, height);
+  assert(tile_width_ > 0 && tile_height_ > 0);
 
-typedef void (*rest_unit_visitor_t)(const RestorationTileLimits *limits,
-                                    const AV1PixelRect *tile_rect,
-                                    int rest_unit_idx, void *priv,
-                                    int32_t *tmpbuf,
-                                    RestorationLineBuffers *rlbs);
+  nhtiles_ = (width + (tile_width_ >> 1)) / tile_width_;
+  nvtiles_ = (height + (tile_height_ >> 1)) / tile_height_;
+  if (tile_width) *tile_width = tile_width_;
+  if (tile_height) *tile_height = tile_height_;
+  if (nhtiles) *nhtiles = nhtiles_;
+  if (nvtiles) *nvtiles = nvtiles_;
+  return (nhtiles_ * nvtiles_);
+}
 
-typedef struct FilterFrameCtxt {
-  const RestorationInfo *rsi;
-  int tile_stripe0;
-  int ss_x, ss_y;
-  int highbd, bit_depth;
-  uint8_t *data8, *dst8;
-  int data_stride, dst_stride;
-  AV1PixelRect tile_rect;
-} FilterFrameCtxt;
+typedef struct { int h_start, h_end, v_start, v_end; } RestorationTileLimits;
 
-typedef struct AV1LrStruct {
-  rest_unit_visitor_t on_rest_unit;
-  FilterFrameCtxt ctxt[MAX_MB_PLANE];
-  YV12_BUFFER_CONFIG *frame;
-  YV12_BUFFER_CONFIG *dst;
-} AV1LrStruct;
+static INLINE RestorationTileLimits
+av1_get_rest_tile_limits(int tile_idx, int nhtiles, int nvtiles, int tile_width,
+                         int tile_height, int im_width,
+#if CONFIG_STRIPED_LOOP_RESTORATION
+                         int im_height, int subsampling_y) {
+#else
+                         int im_height) {
+#endif
+  const int htile_idx = tile_idx % nhtiles;
+  const int vtile_idx = tile_idx / nhtiles;
+  RestorationTileLimits limits;
+  limits.h_start = htile_idx * tile_width;
+  limits.v_start = vtile_idx * tile_height;
+  limits.h_end =
+      (htile_idx < nhtiles - 1) ? limits.h_start + tile_width : im_width;
+  limits.v_end =
+      (vtile_idx < nvtiles - 1) ? limits.v_start + tile_height : im_height;
+#if CONFIG_STRIPED_LOOP_RESTORATION
+  // Offset the tile upwards to align with the restoration processing stripe
+  limits.v_start -= RESTORATION_TILE_OFFSET >> subsampling_y;
+  if (limits.v_start < 0) limits.v_start = 0;
+  if (limits.v_end < im_height)
+    limits.v_end -= RESTORATION_TILE_OFFSET >> subsampling_y;
+#endif
+  return limits;
+}
 
 extern const sgr_params_type sgr_params[SGRPROJ_PARAMS];
-extern int sgrproj_mtable[SGRPROJ_PARAMS][2];
+extern int sgrproj_mtable[MAX_EPS][MAX_NELEM];
 extern const int32_t x_by_xplus1[256];
 extern const int32_t one_by_x[MAX_NELEM];
 
-void av1_alloc_restoration_struct(struct AV1Common *cm, RestorationInfo *rsi,
-                                  int is_uv);
+int av1_alloc_restoration_struct(struct AV1Common *cm,
+                                 RestorationInfo *rst_info, int width,
+                                 int height);
 void av1_free_restoration_struct(RestorationInfo *rst_info);
 
 void extend_frame(uint8_t *data, int width, int height, int stride,
-                  int border_horz, int border_vert, int highbd);
-void decode_xq(const int *xqd, int *xq, const sgr_params_type *params);
-
-// Filter a single loop restoration unit.
-//
-// limits is the limits of the unit. rui gives the mode to use for this unit
-// and its coefficients. If striped loop restoration is enabled, rsb contains
-// deblocked pixels to use for stripe boundaries; rlbs is just some space to
-// use as a scratch buffer. tile_rect gives the limits of the tile containing
-// this unit. tile_stripe0 is the index of the first stripe in this tile.
-//
-// ss_x and ss_y are flags which should be 1 if this is a plane with
-// horizontal/vertical subsampling, respectively. highbd is a flag which should
-// be 1 in high bit depth mode, in which case bit_depth is the bit depth.
-//
-// data8 is the frame data (pointing at the top-left corner of the frame, not
-// the restoration unit) and stride is its stride. dst8 is the buffer where the
-// results will be written and has stride dst_stride. Like data8, dst8 should
-// point at the top-left corner of the frame.
-//
-// Finally tmpbuf is a scratch buffer used by the sgrproj filter which should
-// be at least SGRPROJ_TMPBUF_SIZE big.
-void av1_loop_restoration_filter_unit(
-    const RestorationTileLimits *limits, const RestorationUnitInfo *rui,
-    const RestorationStripeBoundaries *rsb, RestorationLineBuffers *rlbs,
-    const AV1PixelRect *tile_rect, int tile_stripe0, int ss_x, int ss_y,
-    int highbd, int bit_depth, uint8_t *data8, int stride, uint8_t *dst8,
-    int dst_stride, int32_t *tmpbuf, int optimized_lr);
-
-void av1_loop_restoration_filter_frame(YV12_BUFFER_CONFIG *frame,
-                                       struct AV1Common *cm, int optimized_lr,
-                                       void *lr_ctxt);
+                  int border_horz, int border_vert);
+#if CONFIG_HIGHBITDEPTH
+void extend_frame_highbd(uint16_t *data, int width, int height, int stride,
+                         int border_horz, int border_vert);
+#endif  // CONFIG_HIGHBITDEPTH
+void decode_xq(int *xqd, int *xq);
+void av1_loop_restoration_frame(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
+                                RestorationInfo *rsi, int components_pattern,
+                                int partial_frame, YV12_BUFFER_CONFIG *dst);
 void av1_loop_restoration_precal();
-
-typedef void (*rest_tile_start_visitor_t)(int tile_row, int tile_col,
-                                          void *priv);
-struct AV1LrSyncData;
-
-typedef void (*sync_read_fn_t)(void *const lr_sync, int r, int c, int plane);
-
-typedef void (*sync_write_fn_t)(void *const lr_sync, int r, int c,
-                                const int sb_cols, int plane);
-
-// Call on_rest_unit for each loop restoration unit in the plane.
-void av1_foreach_rest_unit_in_plane(const struct AV1Common *cm, int plane,
-                                    rest_unit_visitor_t on_rest_unit,
-                                    void *priv, AV1PixelRect *tile_rect,
-                                    int32_t *tmpbuf,
-                                    RestorationLineBuffers *rlbs);
 
 // Return 1 iff the block at mi_row, mi_col with size bsize is a
 // top-level superblock containing the top-left corner of at least one
-// loop restoration unit.
+// loop restoration tile.
 //
 // If the block is a top-level superblock, the function writes to
-// *rcol0, *rcol1, *rrow0, *rrow1. The rectangle of restoration unit
-// indices given by [*rcol0, *rcol1) x [*rrow0, *rrow1) are relative
-// to the current tile, whose starting index is returned as
-// *tile_tl_idx.
+// *rcol0, *rcol1, *rrow0, *rrow1. The rectangle of indices given by
+// [*rcol0, *rcol1) x [*rrow0, *rrow1) will point at the set of rtiles
+// whose top left corners lie in the superblock. Note that the set is
+// only nonempty if *rcol0 < *rcol1 and *rrow0 < *rrow1.
 int av1_loop_restoration_corners_in_sb(const struct AV1Common *cm, int plane,
                                        int mi_row, int mi_col, BLOCK_SIZE bsize,
                                        int *rcol0, int *rcol1, int *rrow0,
-                                       int *rrow1, int *tile_tl_idx);
+                                       int *rrow1, int *nhtiles);
 
-void av1_loop_restoration_save_boundary_lines(const YV12_BUFFER_CONFIG *frame,
-                                              struct AV1Common *cm,
-                                              int after_cdef);
-void av1_loop_restoration_filter_frame_init(AV1LrStruct *lr_ctxt,
-                                            YV12_BUFFER_CONFIG *frame,
-                                            struct AV1Common *cm,
-                                            int optimized_lr, int num_planes);
-void av1_loop_restoration_copy_planes(AV1LrStruct *loop_rest_ctxt,
-                                      struct AV1Common *cm, int num_planes);
-void av1_foreach_rest_unit_in_row(
-    RestorationTileLimits *limits, const AV1PixelRect *tile_rect,
-    rest_unit_visitor_t on_rest_unit, int row_number, int unit_size,
-    int unit_idx0, int hunits_per_tile, int vunits_per_tile, int plane,
-    void *priv, int32_t *tmpbuf, RestorationLineBuffers *rlbs,
-    sync_read_fn_t on_sync_read, sync_write_fn_t on_sync_write,
-    struct AV1LrSyncData *const lr_sync);
-AV1PixelRect av1_whole_frame_rect(const struct AV1Common *cm, int is_uv);
-int av1_lr_count_units_in_tile(int unit_size, int tile_size);
-void av1_lr_sync_read_dummy(void *const lr_sync, int r, int c, int plane);
-void av1_lr_sync_write_dummy(void *const lr_sync, int r, int c,
-                             const int sb_cols, int plane);
+void av1_loop_restoration_save_boundary_lines(YV12_BUFFER_CONFIG *frame,
+                                              struct AV1Common *cm);
 #ifdef __cplusplus
 }  // extern "C"
 #endif

@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "aom/aom_integer.h"
+#include "./aom_integer.h"
 
 /*!\brief The maximum number of work buffers used by libaom.
  *  Support maximum 4 threads to decode video in parallel.

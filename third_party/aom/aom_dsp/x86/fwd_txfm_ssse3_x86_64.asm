@@ -13,6 +13,10 @@
 
 %include "third_party/x86inc/x86inc.asm"
 
+; This file provides SSSE3 version of the forward transformation. Part
+; of the macro definitions are originally derived from the ffmpeg project.
+; The current version applies to x86 64-bit only.
+
 SECTION_RODATA
 
 pw_11585x2: times 8 dw 23170
@@ -28,7 +32,106 @@ TRANSFORM_COEFFS 15137,   6270
 TRANSFORM_COEFFS 16069,   3196
 TRANSFORM_COEFFS  9102,  13623
 
+SECTION .text
+
+%if ARCH_X86_64
+%macro SUM_SUB 3
+  psubw  m%3, m%1, m%2
+  paddw  m%1, m%2
+  SWAP    %2, %3
+%endmacro
+
+; butterfly operation
+%macro MUL_ADD_2X 6 ; dst1, dst2, src, round, coefs1, coefs2
+  pmaddwd            m%1, m%3, %5
+  pmaddwd            m%2, m%3, %6
+  paddd              m%1,  %4
+  paddd              m%2,  %4
+  psrad              m%1,  14
+  psrad              m%2,  14
+%endmacro
+
+%macro BUTTERFLY_4X 7 ; dst1, dst2, coef1, coef2, round, tmp1, tmp2
+  punpckhwd          m%6, m%2, m%1
+  MUL_ADD_2X         %7,  %6,  %6,  %5, [pw_%4_%3], [pw_%3_m%4]
+  punpcklwd          m%2, m%1
+  MUL_ADD_2X         %1,  %2,  %2,  %5, [pw_%4_%3], [pw_%3_m%4]
+  packssdw           m%1, m%7
+  packssdw           m%2, m%6
+%endmacro
+
+; matrix transpose
+%macro INTERLEAVE_2X 4
+  punpckh%1          m%4, m%2, m%3
+  punpckl%1          m%2, m%3
+  SWAP               %3,  %4
+%endmacro
+
+%macro TRANSPOSE8X8 9
+  INTERLEAVE_2X  wd, %1, %2, %9
+  INTERLEAVE_2X  wd, %3, %4, %9
+  INTERLEAVE_2X  wd, %5, %6, %9
+  INTERLEAVE_2X  wd, %7, %8, %9
+
+  INTERLEAVE_2X  dq, %1, %3, %9
+  INTERLEAVE_2X  dq, %2, %4, %9
+  INTERLEAVE_2X  dq, %5, %7, %9
+  INTERLEAVE_2X  dq, %6, %8, %9
+
+  INTERLEAVE_2X  qdq, %1, %5, %9
+  INTERLEAVE_2X  qdq, %3, %7, %9
+  INTERLEAVE_2X  qdq, %2, %6, %9
+  INTERLEAVE_2X  qdq, %4, %8, %9
+
+  SWAP  %2, %5
+  SWAP  %4, %7
+%endmacro
+
+; 1D forward 8x8 DCT transform
+%macro FDCT8_1D 1
+  SUM_SUB            0,  7,  9
+  SUM_SUB            1,  6,  9
+  SUM_SUB            2,  5,  9
+  SUM_SUB            3,  4,  9
+
+  SUM_SUB            0,  3,  9
+  SUM_SUB            1,  2,  9
+  SUM_SUB            6,  5,  9
+%if %1 == 0
+  SUM_SUB            0,  1,  9
+%endif
+
+  BUTTERFLY_4X       2,  3,  6270,  15137,  m8,  9,  10
+
+  pmulhrsw           m6, m12
+  pmulhrsw           m5, m12
+%if %1 == 0
+  pmulhrsw           m0, m12
+  pmulhrsw           m1, m12
+%else
+  BUTTERFLY_4X       1,  0,  11585, 11585,  m8,  9,  10
+  SWAP               0,  1
+%endif
+
+  SUM_SUB            4,  5,  9
+  SUM_SUB            7,  6,  9
+  BUTTERFLY_4X       4,  7,  3196,  16069,  m8,  9,  10
+  BUTTERFLY_4X       5,  6,  13623,  9102,  m8,  9,  10
+  SWAP               1,  4
+  SWAP               3,  6
+%endmacro
+
+%macro DIVIDE_ROUND_2X 4 ; dst1, dst2, tmp1, tmp2
+  psraw              m%3, m%1, 15
+  psraw              m%4, m%2, 15
+  psubw              m%1, m%3
+  psubw              m%2, m%4
+  psraw              m%1, 1
+  psraw              m%2, 1
+%endmacro
+
 %macro STORE_OUTPUT 2 ; index, result
+%if CONFIG_HIGHBITDEPTH
   ; const __m128i sign_bits = _mm_cmplt_epi16(*poutput, zero);
   ; __m128i out0 = _mm_unpacklo_epi16(*poutput, sign_bits);
   ; __m128i out1 = _mm_unpackhi_epi16(*poutput, sign_bits);
@@ -41,16 +144,16 @@ TRANSFORM_COEFFS  9102,  13623
   punpckhwd          m12, m11
   mova               [outputq + 4*%1 +  0], m%2
   mova               [outputq + 4*%1 + 16], m12
+%else
+  mova               [outputq + 2*%1], m%2
+%endif
 %endmacro
 
-SECTION .text
-
-%if ARCH_X86_64
 INIT_XMM ssse3
 cglobal fdct8x8, 3, 5, 13, input, output, stride
 
-  mova               m8, [GLOBAL(pd_8192)]
-  mova              m12, [GLOBAL(pw_11585x2)]
+  mova               m8, [pd_8192]
+  mova              m12, [pw_11585x2]
 
   lea                r3, [2 * strideq]
   lea                r4, [4 * strideq]
@@ -77,303 +180,25 @@ cglobal fdct8x8, 3, 5, 13, input, output, stride
   psllw              m7, 2
 
   ; column transform
-  ; stage 1
-  paddw m10, m0, m7
-  psubw m0, m7
+  FDCT8_1D  0
+  TRANSPOSE8X8 0, 1, 2, 3, 4, 5, 6, 7, 9
 
-  paddw m9, m1, m6
-  psubw m1, m6
+  FDCT8_1D  1
+  TRANSPOSE8X8 0, 1, 2, 3, 4, 5, 6, 7, 9
 
-  paddw m7, m2, m5
-  psubw m2, m5
+  DIVIDE_ROUND_2X   0, 1, 9, 10
+  DIVIDE_ROUND_2X   2, 3, 9, 10
+  DIVIDE_ROUND_2X   4, 5, 9, 10
+  DIVIDE_ROUND_2X   6, 7, 9, 10
 
-  paddw m6, m3, m4
-  psubw m3, m4
-
-  ; stage 2
-  paddw m5, m9, m7
-  psubw m9, m7
-
-  paddw m4, m10, m6
-  psubw m10, m6
-
-  paddw m7, m1, m2
-  psubw m1, m2
-
-  ; stage 3
-  paddw m6, m4, m5
-  psubw m4, m5
-
-  pmulhrsw m1, m12
-  pmulhrsw m7, m12
-
-  ; sin(pi / 8), cos(pi / 8)
-  punpcklwd m2, m10, m9
-  punpckhwd m10, m9
-  pmaddwd m5, m2, [GLOBAL(pw_15137_6270)]
-  pmaddwd m2, [GLOBAL(pw_6270_m15137)]
-  pmaddwd m9, m10, [GLOBAL(pw_15137_6270)]
-  pmaddwd m10, [GLOBAL(pw_6270_m15137)]
-  paddd m5, m8
-  paddd m2, m8
-  paddd m9, m8
-  paddd m10, m8
-  psrad m5, 14
-  psrad m2, 14
-  psrad m9, 14
-  psrad m10, 14
-  packssdw m5, m9
-  packssdw m2, m10
-
-  pmulhrsw m6, m12
-  pmulhrsw m4, m12
-
-  paddw m9, m3, m1
-  psubw m3, m1
-
-  paddw m10, m0, m7
-  psubw m0, m7
-
-  ; stage 4
-  ; sin(pi / 16), cos(pi / 16)
-  punpcklwd m1, m10, m9
-  punpckhwd m10, m9
-  pmaddwd m7, m1, [GLOBAL(pw_16069_3196)]
-  pmaddwd m1, [GLOBAL(pw_3196_m16069)]
-  pmaddwd m9, m10, [GLOBAL(pw_16069_3196)]
-  pmaddwd m10, [GLOBAL(pw_3196_m16069)]
-  paddd m7, m8
-  paddd m1, m8
-  paddd m9, m8
-  paddd m10, m8
-  psrad m7, 14
-  psrad m1, 14
-  psrad m9, 14
-  psrad m10, 14
-  packssdw m7, m9
-  packssdw m1, m10
-
-  ; sin(3 * pi / 16), cos(3 * pi / 16)
-  punpcklwd m11, m0, m3
-  punpckhwd m0, m3
-  pmaddwd m9, m11, [GLOBAL(pw_9102_13623)]
-  pmaddwd m11, [GLOBAL(pw_13623_m9102)]
-  pmaddwd m3, m0, [GLOBAL(pw_9102_13623)]
-  pmaddwd m0, [GLOBAL(pw_13623_m9102)]
-  paddd m9, m8
-  paddd m11, m8
-  paddd m3, m8
-  paddd m0, m8
-  psrad m9, 14
-  psrad m11, 14
-  psrad m3, 14
-  psrad m0, 14
-  packssdw m9, m3
-  packssdw m11, m0
-
-  ; transpose
-  ; stage 1
-  punpcklwd m0, m6, m7
-  punpcklwd m3, m5, m11
-  punpckhwd m6, m7
-  punpckhwd m5, m11
-  punpcklwd m7, m4, m9
-  punpcklwd m10, m2, m1
-  punpckhwd m4, m9
-  punpckhwd m2, m1
-
-  ; stage 2
-  punpckldq m9, m0, m3
-  punpckldq m1, m6, m5
-  punpckhdq m0, m3
-  punpckhdq m6, m5
-  punpckldq m3, m7, m10
-  punpckldq m5, m4, m2
-  punpckhdq m7, m10
-  punpckhdq m4, m2
-
-  ; stage 3
-  punpcklqdq m10, m9, m3
-  punpckhqdq m9, m3
-  punpcklqdq m2, m0, m7
-  punpckhqdq m0, m7
-  punpcklqdq m3, m1, m5
-  punpckhqdq m1, m5
-  punpcklqdq m7, m6, m4
-  punpckhqdq m6, m4
-
-  ; row transform
-  ; stage 1
-  paddw m5, m10, m6
-  psubw m10, m6
-
-  paddw m4, m9, m7
-  psubw m9, m7
-
-  paddw m6, m2, m1
-  psubw m2, m1
-
-  paddw m7, m0, m3
-  psubw m0, m3
-
-  ;stage 2
-  paddw m1, m5, m7
-  psubw m5, m7
-
-  paddw m3, m4, m6
-  psubw m4, m6
-
-  paddw m7, m9, m2
-  psubw m9, m2
-
-  ; stage 3
-  punpcklwd m6, m1, m3
-  punpckhwd m1, m3
-  pmaddwd m2, m6, [GLOBAL(pw_11585_11585)]
-  pmaddwd m6, [GLOBAL(pw_11585_m11585)]
-  pmaddwd m3, m1, [GLOBAL(pw_11585_11585)]
-  pmaddwd m1, [GLOBAL(pw_11585_m11585)]
-  paddd m2, m8
-  paddd m6, m8
-  paddd m3, m8
-  paddd m1, m8
-  psrad m2, 14
-  psrad m6, 14
-  psrad m3, 14
-  psrad m1, 14
-  packssdw m2, m3
-  packssdw m6, m1
-
-  pmulhrsw m7, m12
-  pmulhrsw m9, m12
-
-  punpcklwd m3, m5, m4
-  punpckhwd m5, m4
-  pmaddwd m1, m3, [GLOBAL(pw_15137_6270)]
-  pmaddwd m3, [GLOBAL(pw_6270_m15137)]
-  pmaddwd m4, m5, [GLOBAL(pw_15137_6270)]
-  pmaddwd m5, [GLOBAL(pw_6270_m15137)]
-  paddd m1, m8
-  paddd m3, m8
-  paddd m4, m8
-  paddd m5, m8
-  psrad m1, 14
-  psrad m3, 14
-  psrad m4, 14
-  psrad m5, 14
-  packssdw m1, m4
-  packssdw m3, m5
-
-  paddw m4, m0, m9
-  psubw m0, m9
-
-  paddw m5, m10, m7
-  psubw m10, m7
-
-  ; stage 4
-  punpcklwd m9, m5, m4
-  punpckhwd m5, m4
-  pmaddwd m7, m9, [GLOBAL(pw_16069_3196)]
-  pmaddwd m9, [GLOBAL(pw_3196_m16069)]
-  pmaddwd m4, m5, [GLOBAL(pw_16069_3196)]
-  pmaddwd m5, [GLOBAL(pw_3196_m16069)]
-  paddd m7, m8
-  paddd m9, m8
-  paddd m4, m8
-  paddd m5, m8
-  psrad m7, 14
-  psrad m9, 14
-  psrad m4, 14
-  psrad m5, 14
-  packssdw m7, m4
-  packssdw m9, m5
-
-  punpcklwd m4, m10, m0
-  punpckhwd m10, m0
-  pmaddwd m5, m4, [GLOBAL(pw_9102_13623)]
-  pmaddwd m4, [GLOBAL(pw_13623_m9102)]
-  pmaddwd m0, m10, [GLOBAL(pw_9102_13623)]
-  pmaddwd m10, [GLOBAL(pw_13623_m9102)]
-  paddd m5, m8
-  paddd m4, m8
-  paddd m0, m8
-  paddd m10, m8
-  psrad m5, 14
-  psrad m4, 14
-  psrad m0, 14
-  psrad m10, 14
-  packssdw m5, m0
-  packssdw m4, m10
-
-  ; transpose
-  ; stage 1
-  punpcklwd m0, m2, m7
-  punpcklwd m10, m1, m4
-  punpckhwd m2, m7
-  punpckhwd m1, m4
-  punpcklwd m7, m6, m5
-  punpcklwd m4, m3, m9
-  punpckhwd m6, m5
-  punpckhwd m3, m9
-
-  ; stage 2
-  punpckldq m5, m0, m10
-  punpckldq m9, m2, m1
-  punpckhdq m0, m10
-  punpckhdq m2, m1
-  punpckldq m10, m7, m4
-  punpckldq m1, m6, m3
-  punpckhdq m7, m4
-  punpckhdq m6, m3
-
-  ; stage 3
-  punpcklqdq m4, m5, m10
-  punpckhqdq m5, m10
-  punpcklqdq m3, m0, m7
-  punpckhqdq m0, m7
-  punpcklqdq m10, m9, m1
-  punpckhqdq m9, m1
-  punpcklqdq m7, m2, m6
-  punpckhqdq m2, m6
-
-  psraw m1, m4, 15
-  psraw m6, m5, 15
-  psraw m8, m3, 15
-  psraw m11, m0, 15
-
-  psubw m4, m1
-  psubw m5, m6
-  psubw m3, m8
-  psubw m0, m11
-
-  psraw m4, 1
-  psraw m5, 1
-  psraw m3, 1
-  psraw m0, 1
-
-  psraw m1, m10, 15
-  psraw m6, m9, 15
-  psraw m8, m7, 15
-  psraw m11, m2, 15
-
-  psubw m10, m1
-  psubw m9, m6
-  psubw m7, m8
-  psubw m2, m11
-
-  psraw m10, 1
-  psraw m9, 1
-  psraw m7, 1
-  psraw m2, 1
-
-  STORE_OUTPUT  0,  4
-  STORE_OUTPUT  8,  5
-  STORE_OUTPUT 16,  3
-  STORE_OUTPUT 24,  0
-  STORE_OUTPUT 32, 10
-  STORE_OUTPUT 40,  9
-  STORE_OUTPUT 48,  7
-  STORE_OUTPUT 56,  2
+  STORE_OUTPUT       0, 0
+  STORE_OUTPUT       8, 1
+  STORE_OUTPUT      16, 2
+  STORE_OUTPUT      24, 3
+  STORE_OUTPUT      32, 4
+  STORE_OUTPUT      40, 5
+  STORE_OUTPUT      48, 6
+  STORE_OUTPUT      56, 7
 
   RET
 %endif

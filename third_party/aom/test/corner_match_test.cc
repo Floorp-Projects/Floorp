@@ -8,11 +8,11 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#include "config/av1_rtcd.h"
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
 #include "test/util.h"
+#include "./av1_rtcd.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 
@@ -24,8 +24,8 @@ namespace AV1CornerMatch {
 
 using libaom_test::ACMRandom;
 
-using ::testing::make_tuple;
-using ::testing::tuple;
+using std::tr1::tuple;
+using std::tr1::make_tuple;
 typedef tuple<int> CornerMatchParam;
 
 class AV1CornerMatchTest : public ::testing::TestWithParam<CornerMatchParam> {

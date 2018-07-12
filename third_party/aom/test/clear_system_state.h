@@ -11,8 +11,7 @@
 #ifndef TEST_CLEAR_SYSTEM_STATE_H_
 #define TEST_CLEAR_SYSTEM_STATE_H_
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #if ARCH_X86 || ARCH_X86_64
 #include "aom_ports/x86.h"
 #endif

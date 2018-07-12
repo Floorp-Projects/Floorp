@@ -16,8 +16,7 @@
 // backwards due to ANS's stack like behavior.
 
 #include <assert.h>
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/ans.h"
 #include "aom_dsp/answriter.h"
@@ -48,7 +47,6 @@ struct BufAnsCoder {
   int window_size;
 #endif
   int pos;  // Dummy variable to store the output buffer after closing
-  uint8_t allow_update_cdf;
 };
 
 // Allocate a buffered ANS coder to store size symbols.

@@ -44,9 +44,14 @@ struct lookahead_ctx {
  * The lookahead stage is a queue of frame buffers on which some analysis
  * may be done when buffers are enqueued.
  */
-struct lookahead_ctx *av1_lookahead_init(
-    unsigned int width, unsigned int height, unsigned int subsampling_x,
-    unsigned int subsampling_y, int use_highbitdepth, unsigned int depth);
+struct lookahead_ctx *av1_lookahead_init(unsigned int width,
+                                         unsigned int height,
+                                         unsigned int subsampling_x,
+                                         unsigned int subsampling_y,
+#if CONFIG_HIGHBITDEPTH
+                                         int use_highbitdepth,
+#endif
+                                         unsigned int depth);
 
 /**\brief Destroys the lookahead stage
  */
@@ -68,7 +73,10 @@ void av1_lookahead_destroy(struct lookahead_ctx *ctx);
  * \param[in] active_map  Map that specifies which macroblock is active
  */
 int av1_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG *src,
-                       int64_t ts_start, int64_t ts_end, int use_highbitdepth,
+                       int64_t ts_start, int64_t ts_end,
+#if CONFIG_HIGHBITDEPTH
+                       int use_highbitdepth,
+#endif
                        aom_enc_frame_flags_t flags);
 
 /**\brief Get the next source buffer to encode

@@ -12,7 +12,6 @@
 #ifndef AV1_COMMON_SCALE_H_
 #define AV1_COMMON_SCALE_H_
 
-#include "av1/common/convolve.h"
 #include "av1/common/mv.h"
 #include "aom_dsp/aom_convolve.h"
 
@@ -35,15 +34,22 @@ struct scale_factors {
   int (*scale_value_x)(int val, const struct scale_factors *sf);
   int (*scale_value_y)(int val, const struct scale_factors *sf);
 
-  // convolve_fn_ptr[subpel_x != 0][subpel_y != 0][is_compound]
-  aom_convolve_fn_t convolve[2][2][2];
-  aom_highbd_convolve_fn_t highbd_convolve[2][2][2];
+  convolve_fn_t predict[2][2][2];  // horiz, vert, avg
+#if CONFIG_HIGHBITDEPTH
+  highbd_convolve_fn_t highbd_predict[2][2][2];  // horiz, vert, avg
+#endif                                           // CONFIG_HIGHBITDEPTH
 };
 
 MV32 av1_scale_mv(const MV *mv, int x, int y, const struct scale_factors *sf);
 
+#if CONFIG_HIGHBITDEPTH
+void av1_setup_scale_factors_for_frame(struct scale_factors *sf, int other_w,
+                                       int other_h, int this_w, int this_h,
+                                       int use_high);
+#else
 void av1_setup_scale_factors_for_frame(struct scale_factors *sf, int other_w,
                                        int other_h, int this_w, int this_h);
+#endif  // CONFIG_HIGHBITDEPTH
 
 static INLINE int av1_is_valid_scale(const struct scale_factors *sf) {
   return sf->x_scale_fp != REF_INVALID_SCALE &&

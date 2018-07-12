@@ -14,8 +14,7 @@
 
 #include <msa.h>
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom/aom_integer.h"
 
 #define LD_B(RTYPE, psrc) *((const RTYPE *)(psrc))

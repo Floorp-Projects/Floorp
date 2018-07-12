@@ -104,15 +104,16 @@ typedef aom_codec_err_t (*aom_codec_destroy_fn_t)(aom_codec_alg_priv_t *ctx);
  *
  * \param[in]      data    Pointer to a block of data to parse
  * \param[in]      data_sz Size of the data buffer
- * \param[in,out]  si      Pointer to stream info to update. The is_annexb
- *                         member \ref MUST be properly initialized. This
- *                         function sets the rest of the members.
+ * \param[in,out]  si      Pointer to stream info to update. The size member
+ *                         \ref MUST be properly initialized, but \ref MAY be
+ *                         clobbered by the algorithm. This parameter \ref MAY
+ *                         be NULL.
  *
  * \retval #AOM_CODEC_OK
  *     Bitstream is parsable and stream information updated
  */
 typedef aom_codec_err_t (*aom_codec_peek_si_fn_t)(const uint8_t *data,
-                                                  size_t data_sz,
+                                                  unsigned int data_sz,
                                                   aom_codec_stream_info_t *si);
 
 /*!\brief Return information about the current stream.
@@ -120,7 +121,10 @@ typedef aom_codec_err_t (*aom_codec_peek_si_fn_t)(const uint8_t *data,
  * Returns information about the stream that has been parsed during decoding.
  *
  * \param[in]      ctx     Pointer to this instance's context
- * \param[in,out]  si      Pointer to stream info to update
+ * \param[in,out]  si      Pointer to stream info to update. The size member
+ *                         \ref MUST be properly initialized, but \ref MAY be
+ *                         clobbered by the algorithm. This parameter \ref MAY
+ *                         be NULL.
  *
  * \retval #AOM_CODEC_OK
  *     Bitstream is parsable and stream information updated
@@ -191,8 +195,9 @@ typedef const struct aom_codec_ctrl_fn_map {
  */
 typedef aom_codec_err_t (*aom_codec_decode_fn_t)(aom_codec_alg_priv_t *ctx,
                                                  const uint8_t *data,
-                                                 size_t data_sz,
-                                                 void *user_priv);
+                                                 unsigned int data_sz,
+                                                 void *user_priv,
+                                                 long deadline);
 
 /*!\brief Decoded frames iterator
  *
@@ -247,7 +252,8 @@ typedef aom_codec_err_t (*aom_codec_encode_fn_t)(aom_codec_alg_priv_t *ctx,
                                                  const aom_image_t *img,
                                                  aom_codec_pts_t pts,
                                                  unsigned long duration,
-                                                 aom_enc_frame_flags_t flags);
+                                                 aom_enc_frame_flags_t flags,
+                                                 unsigned long deadline);
 typedef const aom_codec_cx_pkt_t *(*aom_codec_get_cx_data_fn_t)(
     aom_codec_alg_priv_t *ctx, aom_codec_iter_t *iter);
 

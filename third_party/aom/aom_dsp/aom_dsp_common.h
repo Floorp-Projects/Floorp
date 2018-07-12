@@ -12,8 +12,7 @@
 #ifndef AOM_DSP_AOM_DSP_COMMON_H_
 #define AOM_DSP_AOM_DSP_COMMON_H_
 
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom/aom_integer.h"
 #include "aom_ports/mem.h"
 
@@ -22,7 +21,11 @@ extern "C" {
 #endif
 
 #ifndef MAX_SB_SIZE
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
 #define MAX_SB_SIZE 128
+#else
+#define MAX_SB_SIZE 64
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
 #endif  // ndef MAX_SB_SIZE
 
 #define AOMMIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -49,20 +52,32 @@ extern "C" {
 #define UNLIKELY(v) (v)
 #endif
 
-typedef uint8_t qm_val_t;
+typedef uint16_t qm_val_t;
 #define AOM_QM_BITS 5
 
+#if CONFIG_HIGHBITDEPTH
 // Note:
 // tran_low_t  is the datatype used for final transform coefficients.
 // tran_high_t is the datatype used for intermediate transform stages.
 typedef int64_t tran_high_t;
 typedef int32_t tran_low_t;
+#else
+// Note:
+// tran_low_t  is the datatype used for final transform coefficients.
+// tran_high_t is the datatype used for intermediate transform stages.
+typedef int32_t tran_high_t;
+typedef int16_t tran_low_t;
+#endif  // CONFIG_HIGHBITDEPTH
 
 static INLINE uint8_t clip_pixel(int val) {
   return (val > 255) ? 255 : (val < 0) ? 0 : val;
 }
 
 static INLINE int clamp(int value, int low, int high) {
+  return value < low ? low : (value > high ? high : value);
+}
+
+static INLINE uint32_t clamp32u(uint32_t value, uint32_t low, uint32_t high) {
   return value < low ? low : (value > high ? high : value);
 }
 
@@ -81,14 +96,6 @@ static INLINE uint16_t clip_pixel_highbd(int val, int bd) {
     case 10: return (uint16_t)clamp(val, 0, 1023);
     case 12: return (uint16_t)clamp(val, 0, 4095);
   }
-}
-
-// The result of this branchless code is equivalent to (value < 0 ? 0 : value)
-// or max(0, value) and might be faster in some cases.
-// Care should be taken since the behavior of right shifting signed type
-// negative value is undefined by C standards and implementation defined,
-static INLINE unsigned int negative_to_zero(int value) {
-  return value & ~(value >> (sizeof(value) * 8 - 1));
 }
 
 #ifdef __cplusplus

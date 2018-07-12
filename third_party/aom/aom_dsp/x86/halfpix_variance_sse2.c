@@ -11,9 +11,8 @@
 
 #include <assert.h>
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "aom/aom_integer.h"
 
 void aom_half_horiz_vert_variance16x_h_sse2(const unsigned char *ref,

@@ -11,11 +11,10 @@
 
 #include <immintrin.h>
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 
 #include "aom/aom_integer.h"
-#include "aom_dsp/x86/synonyms_avx2.h"
 #include "aom_ports/mem.h"
 
 // SAD
@@ -361,6 +360,7 @@ unsigned int aom_highbd_sad64x64_avx2(const uint8_t *src, int src_stride,
   return sum;
 }
 
+#if CONFIG_EXT_PARTITION
 static void sad128x1(const uint16_t *src_ptr, const uint16_t *ref_ptr,
                      const uint16_t *sec_ptr, __m256i *sad_acc) {
   __m256i s[8], r[8];
@@ -471,6 +471,7 @@ unsigned int aom_highbd_sad128x128_avx2(const uint8_t *src, int src_stride,
   sum += aom_highbd_sad128x64_avx2(src, src_stride, ref, ref_stride);
   return sum;
 }
+#endif  // CONFIG_EXT_PARTITION
 
 // If sec_ptr = 0, calculate regular SAD. Otherwise, calculate average SAD.
 static INLINE void sad16x4(const uint16_t *src_ptr, int src_stride,
@@ -648,6 +649,7 @@ unsigned int aom_highbd_sad64x64_avg_avx2(const uint8_t *src, int src_stride,
   return sum;
 }
 
+#if CONFIG_EXT_PARTITION
 unsigned int aom_highbd_sad64x128_avg_avx2(const uint8_t *src, int src_stride,
                                            const uint8_t *ref, int ref_stride,
                                            const uint8_t *second_pred) {
@@ -695,13 +697,19 @@ unsigned int aom_highbd_sad128x128_avg_avx2(const uint8_t *src, int src_stride,
                                        second_pred);
   return sum;
 }
+#endif  // CONFIG_EXT_PARTITION
 
 // SAD 4D
 // Combine 4 __m256i vectors to uint32_t result[4]
 static INLINE void get_4d_sad_from_mm256_epi32(const __m256i *v,
                                                uint32_t *res) {
   __m256i u0, u1, u2, u3;
-  const __m256i mask = yy_set1_64_from_32i(UINT32_MAX);
+#if defined(_MSC_VER) && defined(_M_IX86) && _MSC_VER < 1900
+  const __m256i mask = _mm256_setr_epi32(UINT32_MAX, 0, UINT32_MAX, 0,
+                                         UINT32_MAX, 0, UINT32_MAX, 0);
+#else
+  const __m256i mask = _mm256_set1_epi64x(UINT32_MAX);
+#endif
   __m128i sad;
 
   // 8 32-bit summation
@@ -959,6 +967,7 @@ void aom_highbd_sad64x64x4d_avx2(const uint8_t *src, int src_stride,
   sad_array[3] = first_half[3] + second_half[3];
 }
 
+#if CONFIG_EXT_PARTITION
 void aom_highbd_sad64x128x4d_avx2(const uint8_t *src, int src_stride,
                                   const uint8_t *const ref_array[],
                                   int ref_stride, uint32_t *sad_array) {
@@ -1036,3 +1045,4 @@ void aom_highbd_sad128x128x4d_avx2(const uint8_t *src, int src_stride,
   sad_array[2] = first_half[2] + second_half[2];
   sad_array[3] = first_half[3] + second_half[3];
 }
+#endif  // CONFIG_EXT_PARTITION
