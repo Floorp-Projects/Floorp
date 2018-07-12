@@ -10,6 +10,8 @@
 
   <!ENTITY viewAllItems               "View All Items">
   <!ENTITY paymentSummaryTitle        "Your Payment">
+  <!ENTITY header.payTo               "Pay to">
+
   <!ENTITY shippingAddressLabel       "Shipping Address">
   <!ENTITY deliveryAddressLabel       "Delivery Address">
   <!ENTITY pickupAddressLabel         "Pickup Address">
@@ -83,17 +85,15 @@
       <div id="total">
         <h2 class="label"></h2>
         <currency-amount></currency-amount>
-        <div id="host-name"></div>
+        <div>&header.payTo; <span id="host-name"></span></div>
       </div>
-      <div id="top-buttons" >
+      <div id="top-buttons" hidden="hidden">
         <button id="view-all" class="closed">&viewAllItems;</button>
       </div>
     </header>
 
     <div id="main-container">
       <section id="payment-summary" class="page">
-        <h2>&paymentSummaryTitle;</h2>
-
         <section>
           <div id="error-text"></div>
 
