@@ -219,13 +219,15 @@ TimerManager.prototype = {
       }
       tryFire(function() {
         if (timerData.callback && timerData.callback.notify) {
-          try {
-            timerData.callback.notify(timer);
-            LOG("TimerManager:notify - notified timerID: " + timerID);
-          } catch (e) {
-            LOG("TimerManager:notify - error notifying timerID: " + timerID +
-                ", error: " + e);
-          }
+          ChromeUtils.idleDispatch(() => {
+            try {
+              timerData.callback.notify(timer);
+              LOG("TimerManager:notify - notified timerID: " + timerID);
+            } catch (e) {
+              LOG("TimerManager:notify - error notifying timerID: " + timerID +
+                  ", error: " + e);
+            }
+          });
         } else {
           LOG("TimerManager:notify - timerID: " + timerID + " doesn't " +
               "implement nsITimerCallback - skipping");
