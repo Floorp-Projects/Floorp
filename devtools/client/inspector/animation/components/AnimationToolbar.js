@@ -22,6 +22,7 @@ class AnimationToolbar extends PureComponent {
       rewindAnimationsCurrentTime: PropTypes.func.isRequired,
       setAnimationsPlaybackRate: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -33,6 +34,7 @@ class AnimationToolbar extends PureComponent {
       rewindAnimationsCurrentTime,
       setAnimationsPlaybackRate,
       setAnimationsPlayState,
+      timeScale,
     } = this.props;
 
     return dom.div(
@@ -60,6 +62,7 @@ class AnimationToolbar extends PureComponent {
         {
           addAnimationsCurrentTimeListener,
           removeAnimationsCurrentTimeListener,
+          timeScale,
         }
       )
     );
