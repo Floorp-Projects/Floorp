@@ -652,8 +652,10 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   // This relies on us having a cx() because the AutoJSAPI constructor already
   // ran.
   , mCallerOverride(cx())
+#ifdef MOZ_GECKO_PROFILER
   , mAutoProfilerLabel("AutoEntryScript", aReason, __LINE__,
                        js::ProfilingStackFrame::Category::JS)
+#endif
 {
   MOZ_ASSERT(aGlobalObject);
 
