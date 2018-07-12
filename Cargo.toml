@@ -9,6 +9,7 @@ members = [
   "js/rust",
   "js/src/frontend/binsource", # Code generator.
   "testing/geckodriver",
+  "toolkit/crashreporter/rust",
   "toolkit/library/gtest/rust",
   "toolkit/library/rust/",
 ]

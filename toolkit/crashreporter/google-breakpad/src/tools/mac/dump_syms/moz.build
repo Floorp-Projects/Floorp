@@ -25,6 +25,20 @@ HOST_USE_LIBS += [
     'host_breakpad_common_s',
     'host_breakpad_dwarf_s',
 ]
+# Order matters here, but HOST_USE_LIBS must be sorted.
+HOST_USE_LIBS += [
+    'dump_syms_rust_demangle',
+]
+# Ideally, this should be derived from the output of rustc
+# --print=native-static-libs or something like that.
+HOST_OS_LIBS += [
+    'dl',
+    'pthread',
+]
+if CONFIG['HOST_OS_ARCH'] == 'Linux':
+    HOST_OS_LIBS += [
+        'rt',
+    ]
 
 LOCAL_INCLUDES += [
     '../../../common/mac',

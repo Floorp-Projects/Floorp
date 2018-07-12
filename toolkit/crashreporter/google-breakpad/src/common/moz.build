@@ -52,6 +52,10 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         '-O2',
         '-g',
     ]
+    HOST_DEFINES['HAVE_RUST_DEMANGLE'] = True
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/rust',
+    ]
     HostLibrary('host_breakpad_common_s')
 
 if CONFIG['OS_TARGET'] == 'Android':
