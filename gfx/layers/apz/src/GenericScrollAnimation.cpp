@@ -105,7 +105,7 @@ GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration
     return false;
   }
 
-  aFrameMetrics.ScrollBy(adjustedOffset / zoom);
+  mApzc.ScrollBy(adjustedOffset / zoom);
   return !finished;
 }
 

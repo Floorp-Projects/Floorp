@@ -17,27 +17,35 @@ var prefs = [
   ["apz.touch_start_tolerance", "0.0"],
   // The subtests in this test do touch-drags to pan the page, but we don't
   // want those pans to turn into fling animations, so we increase the
-  // fling-stop threshold velocity to absurdly high.
-  ["apz.fling_stopped_threshold", "10000"],
+  // fling-min threshold velocity to an arbitrarily large value.
+  ["apz.fling_min_velocity_threshold", "10000"],
   // The helper_bug1280013's div gets a displayport on scroll, but if the
   // test takes too long the displayport can expire before we read the value
   // out of the test. So we disable displayport expiry for these tests.
   ["apz.displayport_expiry_ms", 0],
+  // Prevent the dynamic toolbar from interfering with main-thread scroll
+  // offset values.
+  ["browser.chrome.dynamictoolbar", false],
 ];
 
 // Increase the tap timeouts so the double-tap is still detected in case of
 // random delays during testing.
-var doubletap_prefs = prefs.slice(); // make a copy
-doubletap_prefs.push(["ui.click_hold_context_menus.delay", 10000]);
-doubletap_prefs.push(["apz.max_tap_time", 10000]);
+var doubletap_prefs = [
+  ...prefs,
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+];
 
 var subtests = [
   {'file': 'helper_bug1280013.html', 'prefs': prefs},
   {'file': 'helper_basic_zoom.html', 'prefs': prefs},
+  {'file': 'helper_zoomed_pan.html', 'prefs': prefs},
   {'file': 'helper_basic_doubletap_zoom.html', 'prefs': doubletap_prefs},
 ];
 
 if (isApzEnabled()) {
+  // This has a lot of subtests, and Android emulators are slow.
+  SimpleTest.requestLongerTimeout(2);
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
     runSubtestsSeriallyInFreshWindows(subtests)
