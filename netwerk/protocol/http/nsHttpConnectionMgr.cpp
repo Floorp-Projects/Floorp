@@ -4066,6 +4066,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     if (mCaps & NS_HTTP_REFRESH_DNS)
         tmpFlags = nsISocketTransport::BYPASS_CACHE;
 
+    if (mCaps & NS_HTTP_DISABLE_TRR) {
+        tmpFlags = nsISocketTransport::DISABLE_TRR;
+    }
+
     if (mCaps & NS_HTTP_LOAD_ANONYMOUS)
         tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
 
