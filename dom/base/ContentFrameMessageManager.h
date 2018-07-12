@@ -52,6 +52,7 @@ public:
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() = 0;
+  virtual uint64_t ChromeOuterWindowID() = 0;
 
   nsFrameMessageManager* GetMessageManager()
   {

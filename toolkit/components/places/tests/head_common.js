@@ -935,3 +935,41 @@ async function setupPlacesDatabase(aFileName, aDestFileName = DB_FILENAME) {
   await OS.File.copy(src, dest);
   return dest;
 }
+
+/**
+ * Gets the URLs of pages that have a particular annotation.
+ *
+ * @param {String} name The name of the annotation to search for.
+ * @return An array of URLs found.
+ */
+function getPagesWithAnnotation(name) {
+  return PlacesUtils.promiseDBConnection().then(async db => {
+    let rows = await db.execute(`
+      SELECT h.url FROM moz_anno_attributes n
+      JOIN moz_annos a ON n.id = a.anno_attribute_id
+      JOIN moz_places h ON h.id = a.place_id
+      WHERE n.name = :name
+    `, {name});
+
+    return rows.map(row => row.getResultByName("url"));
+  });
+}
+
+/**
+ * Gets the URLs of pages that have a particular annotation.
+ *
+ * @param {String} name The name of the annotation to search for.
+ * @return An array of GUIDs found.
+ */
+function getItemsWithAnnotation(name) {
+  return PlacesUtils.promiseDBConnection().then(async db => {
+    let rows = await db.execute(`
+      SELECT b.guid FROM moz_anno_attributes n
+      JOIN moz_items_annos a ON n.id = a.anno_attribute_id
+      JOIN moz_bookmarks b ON b.id = a.item_id
+      WHERE n.name = :name
+    `, {name});
+
+    return rows.map(row => row.getResultByName("guid"));
+  });
+}

@@ -8,7 +8,10 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  await removeAnimatedElementsExcept([".animated", ".end-delay", ".long"]);
+  await removeAnimatedElementsExcept([".animated",
+                                      ".end-delay",
+                                      ".long",
+                                      ".negative-delay"]);
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Check animations state after resuming with infinite animation");
@@ -18,7 +21,7 @@ add_task(async function() {
   await clickOnPauseResumeButton(animationInspector, panel);
   await wait(1000);
   assertPlayState(animationInspector.state.animations,
-                  ["running", "finished", "finished"]);
+                  ["running", "finished", "finished", "finished"]);
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
 
   info("Check animations state after resuming without infinite animation");
@@ -29,7 +32,7 @@ add_task(async function() {
   await clickOnPlaybackRateSelector(animationInspector, panel, 10);
   info("Resume animations");
   await clickOnPauseResumeButton(animationInspector, panel);
-  assertPlayState(animationInspector.state.animations, ["running", "running"]);
+  assertPlayState(animationInspector.state.animations, ["running", "running", "running"]);
   assertCurrentTimeLessThanDuration(animationInspector.state.animations);
   assertScrubberPosition(panel);
 });

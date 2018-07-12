@@ -4731,6 +4731,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
   // Calculate the hypothetical cross size of each item:
+
+  // 'sumLineCrossSizes' includes the size of all gaps between lines
   nscoord sumLineCrossSizes = 0;
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     for (FlexItem* item = line->GetFirstItem(); item; item = item->getNext()) {
@@ -4770,6 +4772,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     // Now that we've finished with this line's items, size the line itself:
     line->ComputeCrossSizeAndBaseline(aAxisTracker);
     sumLineCrossSizes += line->GetLineCrossSize();
+
+    // Add the cross axis gap space if this is not the last line
+    if (line->getNext()) {
+      sumLineCrossSizes += aCrossGapSize;
+    }
   }
 
   bool isCrossSizeDefinite;

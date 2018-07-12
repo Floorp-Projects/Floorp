@@ -876,7 +876,7 @@ public class GeckoSession extends LayerSession
     @IntDef(flag = true,
             value = { LOAD_FLAGS_NONE, LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY,
                       LOAD_FLAGS_EXTERNAL, LOAD_FLAGS_ALLOW_POPUPS })
-    public @interface LoadFlags {}
+    /* package */ @interface LoadFlags {}
 
     // These flags follow similarly named ones in Gecko's nsIWebNavigation.idl
     // https://searchfox.org/mozilla-central/source/docshell/base/nsIWebNavigation.idl
@@ -1759,13 +1759,13 @@ public class GeckoSession extends LayerSession
         public class SecurityInformation {
             @IntDef({SECURITY_MODE_UNKNOWN, SECURITY_MODE_IDENTIFIED,
                      SECURITY_MODE_VERIFIED})
-            public @interface SecurityMode {}
+            /* package */ @interface SecurityMode {}
             public static final int SECURITY_MODE_UNKNOWN = 0;
             public static final int SECURITY_MODE_IDENTIFIED = 1;
             public static final int SECURITY_MODE_VERIFIED = 2;
 
             @IntDef({CONTENT_UNKNOWN, CONTENT_BLOCKED, CONTENT_LOADED})
-            public @interface ContentType {}
+            /* package */ @interface ContentType {}
             public static final int CONTENT_UNKNOWN = 0;
             public static final int CONTENT_BLOCKED = 1;
             public static final int CONTENT_LOADED = 2;
@@ -1916,7 +1916,7 @@ public class GeckoSession extends LayerSession
     public interface ContentDelegate {
         @IntDef({ELEMENT_TYPE_NONE, ELEMENT_TYPE_IMAGE, ELEMENT_TYPE_VIDEO,
                  ELEMENT_TYPE_AUDIO})
-        public @interface ElementType {}
+        /* package */ @interface ElementType {}
         static final int ELEMENT_TYPE_NONE = 0;
         static final int ELEMENT_TYPE_IMAGE = 1;
         static final int ELEMENT_TYPE_VIDEO = 2;
@@ -1997,7 +1997,7 @@ public class GeckoSession extends LayerSession
     public interface SelectionActionDelegate {
         @IntDef(flag = true, value = {FLAG_IS_COLLAPSED,
                                       FLAG_IS_EDITABLE})
-        @interface Flag {}
+        /* package */ @interface Flag {}
 
         /**
          * The selection is collapsed at a single position.
@@ -2021,7 +2021,7 @@ public class GeckoSession extends LayerSession
                     ACTION_UNSELECT,
                     ACTION_COLLAPSE_TO_START,
                     ACTION_COLLAPSE_TO_END})
-        @interface Action {}
+        /* package */ @interface Action {}
 
         /**
          * Copy onto the clipboard then delete the selected content. Selection
@@ -2134,7 +2134,7 @@ public class GeckoSession extends LayerSession
                  HIDE_REASON_INVISIBLE_SELECTION,
                  HIDE_REASON_ACTIVE_SELECTION,
                  HIDE_REASON_ACTIVE_SCROLL})
-        @interface HideReason {}
+        /* package */ @interface HideReason {}
 
         /**
          * Actions are no longer available due to the user clearing the selection.
@@ -2194,14 +2194,15 @@ public class GeckoSession extends LayerSession
         void onCanGoForward(GeckoSession session, boolean canGoForward);
 
         @IntDef({TARGET_WINDOW_NONE, TARGET_WINDOW_CURRENT, TARGET_WINDOW_NEW})
-        public @interface TargetWindow {}
+        /* package */ @interface TargetWindow {}
         public static final int TARGET_WINDOW_NONE = 0;
         public static final int TARGET_WINDOW_CURRENT = 1;
         public static final int TARGET_WINDOW_NEW = 2;
 
         @IntDef(flag = true,
                 value = {LOAD_REQUEST_IS_USER_TRIGGERED})
-        public @interface LoadRequestFlags {}
+        /* package */ @interface LoadRequestFlags {}
+
         // Match with nsIDocShell.idl.
         /**
          * The load request was triggered by user input.
@@ -2391,7 +2392,7 @@ public class GeckoSession extends LayerSession
                     value = {AUTH_FLAG_HOST, AUTH_FLAG_PROXY,
                              AUTH_FLAG_ONLY_PASSWORD, AUTH_FLAG_PREVIOUS_FAILED,
                              AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE})
-            public @interface AuthFlag {}
+            /* package */ @interface AuthFlag {}
 
             /**
              * The auth prompt is for a network host.
@@ -2415,7 +2416,8 @@ public class GeckoSession extends LayerSession
             public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
 
             @IntDef({AUTH_LEVEL_NONE, AUTH_LEVEL_PW_ENCRYPTED, AUTH_LEVEL_SECURE})
-            public @interface AuthLevel {}
+            /* package */ @interface AuthLevel {}
+
             /**
              * The auth request is unencrypted or the encryption status is unknown.
              */
@@ -2477,7 +2479,8 @@ public class GeckoSession extends LayerSession
 
         class Choice {
             @IntDef({CHOICE_TYPE_MENU, CHOICE_TYPE_SINGLE, CHOICE_TYPE_MULTIPLE})
-            public @interface ChoiceType {}
+            /* package */ @interface ChoiceType {}
+
             /**
              * Display choices in a menu that dismisses as soon as an item is chosen.
              */
@@ -2620,7 +2623,8 @@ public class GeckoSession extends LayerSession
 
         @IntDef({DATETIME_TYPE_DATE, DATETIME_TYPE_MONTH, DATETIME_TYPE_WEEK,
                  DATETIME_TYPE_TIME, DATETIME_TYPE_DATETIME_LOCAL})
-        public @interface DatetimeType {}
+        /* package */ @interface DatetimeType {}
+
         /**
          * Prompt for year, month, and day.
          */
@@ -2686,7 +2690,7 @@ public class GeckoSession extends LayerSession
         }
 
         @IntDef({FILE_TYPE_SINGLE, FILE_TYPE_MULTIPLE})
-        public @interface FileType {}
+        /* package */ @interface FileType {}
         static final int FILE_TYPE_SINGLE = 1;
         static final int FILE_TYPE_MULTIPLE = 2;
 
@@ -2730,7 +2734,8 @@ public class GeckoSession extends LayerSession
                 value = { CATEGORY_NONE, CATEGORY_AD, CATEGORY_ANALYTIC,
                           CATEGORY_SOCIAL, CATEGORY_CONTENT, CATEGORY_ALL,
                           CATEGORY_TEST })
-        public @interface Category {}
+        /* package */ @interface Category {}
+
         static final int CATEGORY_NONE = 0;
         /**
          * Block advertisement trackers.
@@ -2782,7 +2787,8 @@ public class GeckoSession extends LayerSession
      **/
     public interface PermissionDelegate {
         @IntDef({PERMISSION_GEOLOCATION, PERMISSION_DESKTOP_NOTIFICATION})
-        public @interface Permission {}
+        /* package */ @interface Permission {}
+
         /**
          * Permission for using the geolocation API.
          * See: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
@@ -2845,7 +2851,7 @@ public class GeckoSession extends LayerSession
             @IntDef({SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION,
                      SOURCE_WINDOW, SOURCE_BROWSER, SOURCE_MICROPHONE,
                      SOURCE_AUDIOCAPTURE, SOURCE_OTHER})
-            public @interface Source {}
+            /* package */ @interface Source {}
 
             /**
              * The media source is a camera.
@@ -2888,7 +2894,8 @@ public class GeckoSession extends LayerSession
             public static final int SOURCE_OTHER = 7;
 
             @IntDef({TYPE_VIDEO, TYPE_AUDIO})
-            public @interface Type {}
+            /* package */ @interface Type {}
+
             /**
              * The media type is video.
              */
@@ -3031,7 +3038,8 @@ public class GeckoSession extends LayerSession
     public interface TextInputDelegate {
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({RESTART_REASON_FOCUS, RESTART_REASON_BLUR, RESTART_REASON_CONTENT_CHANGE})
-        @interface RestartReason {}
+        /* package */ @interface RestartReason {}
+
         /** Restarting input due to an input field gaining focus. */
         int RESTART_REASON_FOCUS = 0;
         /** Restarting input due to an input field losing focus. */

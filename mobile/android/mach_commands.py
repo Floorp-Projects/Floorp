@@ -9,8 +9,6 @@ import logging
 import os
 import shutil
 import subprocess
-import tarfile
-import urllib
 import zipfile
 
 import mozpack.path as mozpath
@@ -224,14 +222,11 @@ class MachCommands(MachCommandBase):
 
     def _process_jacoco_reports(self):
         def download_grcov(parent_dir):
-            # TODO: Bug 1472236 - Remove this and use fetch tasks to download grcov.
-            grcov_version = "v0.2.1"
-            tar_name = 'grcov.tar.bz2'
-            tar_path = os.path.join(parent_dir, tar_name)
-            url = 'https://github.com/mozilla/grcov/releases/download/%s/grcov-linux-x86_64.tar.bz2' % grcov_version  # NOQA: E501
-            urllib.urlretrieve(url, tar_path)
-            with tarfile.open(tar_path) as tar:
-                tar.extractall(parent_dir)
+            fetch_script_path = os.path.join(self.topsrcdir, 'taskcluster', 'scripts', 'misc',
+                                             'fetch-content')
+            args = [fetch_script_path, 'task-artifacts', os.environ['MOZ_FETCHES'],
+                    '-d', parent_dir]
+            self.run_process(args, ensure_exit_code=True)
             return os.path.join(parent_dir, 'grcov')
 
         def run_grcov(grcov_path, input_path):

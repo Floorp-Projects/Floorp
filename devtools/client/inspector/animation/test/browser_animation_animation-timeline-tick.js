@@ -54,7 +54,9 @@ function assertTickLabels(timeScale, listContainerEl) {
   const animationDuration = timeScale.getDuration();
   const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
   const interval = findOptimalTimeInterval(minTimeInterval);
-  const expectedTickItem = Math.ceil(animationDuration / interval);
+  const shiftWidth = timeScale.zeroPositionTime % interval;
+  const expectedTickItem = Math.ceil(animationDuration / interval) +
+                             (shiftWidth !== 0 ? 1 : 0);
 
   const timelineTickItemEls = timelineTickListEl.querySelectorAll(".tick-label");
   is(timelineTickItemEls.length, expectedTickItem,
@@ -63,7 +65,10 @@ function assertTickLabels(timeScale, listContainerEl) {
   info("Make sure graduations are evenly distributed and show the right times");
   for (const [index, tickEl] of timelineTickItemEls.entries()) {
     const left = parseFloat(tickEl.style.marginInlineStart);
-    const expectedPos = index * interval * 100 / animationDuration;
+    let expectedPos = (((index - 1) * interval + shiftWidth) / animationDuration) * 100;
+    if (shiftWidth !== 0 && index === 0) {
+      expectedPos = 0;
+    }
     is(Math.round(left), Math.round(expectedPos),
       `Graduation ${ index } is positioned correctly`);
 

@@ -126,7 +126,7 @@ const allProperties = new Set([
   "discarded",
   "favIconUrl",
   "hidden",
-  "isarticle",
+  "isArticle",
   "mutedInfo",
   "pinned",
   "sharingState",
@@ -150,6 +150,12 @@ class TabsUpdateFilterEventManager extends EventManager {
         // Default is to listen for all events.
         needsModified = filter.properties.some(p => allAttrs.has(p));
         filter.properties = new Set(filter.properties);
+        // TODO Bug 1465520 remove warning when ready.
+        if (filter.properties.has("isarticle")) {
+          extension.logger.warn("The isarticle filter name is deprecated, use isArticle.");
+          filter.properties.delete("isarticle");
+          filter.properties.add("isArticle");
+        }
       } else {
         filter.properties = allProperties;
       }
@@ -297,7 +303,7 @@ class TabsUpdateFilterEventManager extends EventManager {
         windowTracker.addListener(name, listener);
       }
 
-      if (filter.properties.has("isarticle")) {
+      if (filter.properties.has("isArticle")) {
         tabTracker.on("tab-isarticle", isArticleChangeListener);
       }
 
@@ -306,7 +312,7 @@ class TabsUpdateFilterEventManager extends EventManager {
           windowTracker.removeListener(name, listener);
         }
 
-        if (filter.properties.has("isarticle")) {
+        if (filter.properties.has("isArticle")) {
           tabTracker.off("tab-isarticle", isArticleChangeListener);
         }
       };

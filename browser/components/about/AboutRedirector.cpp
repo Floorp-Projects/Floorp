@@ -167,12 +167,19 @@ AboutRedirector::NewChannel(nsIURI* aURI,
       // Let the aboutNewTabService decide where to redirect for about:home and
       // enabled about:newtab. Disabledx about:newtab page uses fallback.
       if (path.EqualsLiteral("home") ||
-          (sNewTabPageEnabled && path.EqualsLiteral("newtab")) ||
-          path.EqualsLiteral("welcome")) {
+          (sNewTabPageEnabled && path.EqualsLiteral("newtab"))) {
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
           do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      if (path.EqualsLiteral("welcome")) {
+        nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
+          do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = aboutNewTabService->GetWelcomeURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 

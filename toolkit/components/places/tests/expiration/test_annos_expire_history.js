@@ -31,9 +31,9 @@ add_task(async function test_annos_expire_history() {
     as.setPageAnnotation(pageURI, "page_expire2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
 
-  let pages = as.getPagesWithAnnotation("page_expire1");
+  let pages = await getPagesWithAnnotation("page_expire1");
   Assert.equal(pages.length, 5);
-  pages = as.getPagesWithAnnotation("page_expire2");
+  pages = await getPagesWithAnnotation("page_expire2");
   Assert.equal(pages.length, 5);
 
   // Add some bookmarked page and a couple session annotations for each.
@@ -52,9 +52,9 @@ add_task(async function test_annos_expire_history() {
     as.setPageAnnotation(pageURI, "item_persist2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
 
-  let items = as.getPagesWithAnnotation("item_persist1");
+  let items = await getPagesWithAnnotation("item_persist1");
   Assert.equal(items.length, 5);
-  items = as.getPagesWithAnnotation("item_persist2");
+  items = await getPagesWithAnnotation("item_persist2");
   Assert.equal(items.length, 5);
 
   // Add other visited page and a couple expire with history annotations for each.
@@ -66,24 +66,24 @@ add_task(async function test_annos_expire_history() {
     as.setPageAnnotation(pageURI, "page_persist2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
 
-  pages = as.getPagesWithAnnotation("page_persist1");
+  pages = await getPagesWithAnnotation("page_persist1");
   Assert.equal(pages.length, 5);
-  pages = as.getPagesWithAnnotation("page_persist2");
+  pages = await getPagesWithAnnotation("page_persist2");
   Assert.equal(pages.length, 5);
 
   // Expire all visits for the first 5 pages and the bookmarks.
   await promiseForceExpirationStep(10);
 
-  pages = as.getPagesWithAnnotation("page_expire1");
+  pages = await getPagesWithAnnotation("page_expire1");
   Assert.equal(pages.length, 0);
-  pages = as.getPagesWithAnnotation("page_expire2");
+  pages = await getPagesWithAnnotation("page_expire2");
   Assert.equal(pages.length, 0);
-  items = as.getItemsWithAnnotation("item_persist1");
+  items = await getItemsWithAnnotation("item_persist1");
   Assert.equal(items.length, 0);
-  items = as.getItemsWithAnnotation("item_persist2");
+  items = await getItemsWithAnnotation("item_persist2");
   Assert.equal(items.length, 0);
-  pages = as.getPagesWithAnnotation("page_persist1");
+  pages = await getPagesWithAnnotation("page_persist1");
   Assert.equal(pages.length, 5);
-  pages = as.getPagesWithAnnotation("page_persist2");
+  pages = await getPagesWithAnnotation("page_persist2");
   Assert.equal(pages.length, 5);
 });

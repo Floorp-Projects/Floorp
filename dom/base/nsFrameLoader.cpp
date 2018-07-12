@@ -3344,6 +3344,8 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
+  uint64_t chromeOuterWindowID = 0;
+
   nsIDocument* doc = mOwnerContent->OwnerDoc();
   if (doc) {
     nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(doc);
@@ -3352,11 +3354,17 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
         root->ShowAccelerators() ? UIStateChangeType_Set : UIStateChangeType_Clear;
       showFocusRings =
         root->ShowFocusRings() ? UIStateChangeType_Set : UIStateChangeType_Clear;
+
+      nsPIDOMWindowOuter* outerWin = root->GetWindow();
+      if (outerWin) {
+        chromeOuterWindowID = outerWin->WindowID();
+      }
     }
   }
 
   bool tabContextUpdated =
     aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
+                               chromeOuterWindowID,
                                showAccelerators,
                                showFocusRings,
                                attrs,

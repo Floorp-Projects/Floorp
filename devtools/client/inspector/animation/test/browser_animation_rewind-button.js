@@ -9,8 +9,10 @@
 // * the state should be always paused after rewinding
 
 add_task(async function() {
-  await addTab(URL_ROOT + "doc_custom_playback_rate.html");
+  await addTab(URL_ROOT + "doc_multi_timings.html");
   const { animationInspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept([".animated",
+                                      ".negative-delay"]);
 
   info("Checking button existence");
   ok(panel.querySelector(".rewind-button"), "Rewind button should exist");

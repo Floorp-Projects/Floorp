@@ -277,34 +277,6 @@ interface nsIAnnotationService : nsISupports
                                out unsigned short aType);
 
     /**
-     * Retrieves the type of an existing annotation
-     * Use getAnnotationInfo if you need this along with the mime-type etc.
-     *
-     * @param aURI
-     *        the uri on which the annotation is set
-     * @param aName
-     *        the annotation name
-     * @return one of the TYPE_* constants above
-     * @throws if the annotation is not set
-     */
-    uint16_t getPageAnnotationType(in nsIURI aURI,
-                                   in AUTF8String aName);
-    uint16_t getItemAnnotationType(in long long aItemId,
-                                   in AUTF8String aName);
-
-    /**
-     * Returns a list of all URIs having a given annotation.
-     */
-    void getPagesWithAnnotation(
-      in AUTF8String name,
-      [optional] out unsigned long resultCount,
-      [retval, array, size_is(resultCount)] out nsIURI results);
-    void getItemsWithAnnotation(
-      in AUTF8String name,
-      [optional] out unsigned long resultCount,
-      [retval, array, size_is(resultCount)] out long long results);
-
-    /**
      * Returns a list of mozIAnnotation(s), having a given annotation name.
      *
      * @param name
@@ -330,8 +302,6 @@ interface nsIAnnotationService : nsISupports
     /**
      * Test for annotation existence.
      */
-    boolean pageHasAnnotation(in nsIURI aURI,
-                              in AUTF8String aName);
     boolean itemHasAnnotation(in long long aItemId,
                               in AUTF8String aName);
 
@@ -347,18 +317,6 @@ interface nsIAnnotationService : nsISupports
     void removeItemAnnotation(in long long aItemId,
                               in AUTF8String aName,
                               [optional] in unsigned short aSource);
-
-    /**
-     * Removes all annotations for the given page/item.
-     * We may want some other similar functions to get annotations with given
-     * flags (once we have flags defined).
-     *
-     * Unlike the other item methods, `removeItemAnnotations` does *not* notify
-     * `nsINavBookmarkObserver::onItemChanged` for the affected item.
-     */
-    void removePageAnnotations(in nsIURI aURI);
-    void removeItemAnnotations(in long long aItemId,
-                               [optional] in unsigned short aSource);
 
     /**
      * Adds an annotation observer. The annotation service will keep an owning

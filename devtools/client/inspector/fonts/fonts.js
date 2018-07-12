@@ -31,6 +31,7 @@ const {
   updateCustomInstance,
   updateFontEditor,
   updateFontProperty,
+  updateWarningMessage,
 } = require("./actions/font-editor");
 const { updatePreviewText } = require("./actions/font-options");
 
@@ -461,7 +462,8 @@ class FontInspector {
     return this.inspector &&
            this.inspector.selection.nodeFront &&
            this.inspector.selection.isConnected() &&
-           this.inspector.selection.isElementNode();
+           this.inspector.selection.isElementNode() &&
+           !this.inspector.selection.isPseudoElementNode();
   }
 
   /**
@@ -667,8 +669,14 @@ class FontInspector {
       return;
     }
 
-    if (!this.inspector || !this.store || !this.isSelectedNodeValid()) {
+    if (!this.store || !this.isSelectedNodeValid()) {
       this.store.dispatch(resetFontEditor());
+
+      if (this.inspector.selection.isPseudoElementNode()) {
+        const noPseudoWarning = getStr("fontinspector.noPseduoWarning");
+        this.store.dispatch(updateWarningMessage(noPseudoWarning));
+      }
+
       return;
     }
 

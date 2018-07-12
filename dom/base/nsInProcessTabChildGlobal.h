@@ -81,6 +81,7 @@ public:
     return docShell.forget();
   }
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
+  virtual uint64_t ChromeOuterWindowID() override;
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER

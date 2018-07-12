@@ -188,8 +188,7 @@ const clickOnRewindButton = async function(animationInspector, panel) {
  */
 const clickOnCurrentTimeScrubberController = async function(animationInspector,
                                                             panel,
-                                                            mouseDownPosition,
-                                                            mouseMovePosition) {
+                                                            mouseDownPosition) {
   const controllerEl = panel.querySelector(".current-time-scrubber-area");
   const bounds = controllerEl.getBoundingClientRect();
   const mousedonwX = bounds.width * mouseDownPosition;

@@ -258,6 +258,20 @@ AboutNewTabService.prototype = {
     ].join("");
   },
 
+  /*
+   * Returns the about:welcome URL
+   *
+   * This is calculated in the same way the default URL is, except that we don't
+   * allow prerendering.
+   */
+  get welcomeURL() {
+    const prerenderEnabled = this._activityStreamPrerender;
+    this._activityStreamPrerender = false;
+    const url = this.defaultURL;
+    this._activityStreamPrerender = prerenderEnabled;
+    return url;
+  },
+
   get newTabURL() {
     return this._newTabURL;
   },

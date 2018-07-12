@@ -101,11 +101,6 @@ protected:
   static const int kAnnoIndex_DateAdded;
   static const int kAnnoIndex_LastModified;
 
-  nsresult HasAnnotationInternal(nsIURI* aURI,
-                                 int64_t aItemId,
-                                 const nsACString& aName,
-                                 bool* _hasAnno);
-
   nsresult StartGetAnnotation(nsIURI* aURI,
                               int64_t aItemId,
                               const nsACString& aName,
@@ -160,10 +155,6 @@ protected:
 
 
 public:
-  nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
-                                          nsCOMArray<nsIURI>* _results);
-  nsresult GetItemsWithAnnotationTArray(const nsACString& aName,
-                                        nsTArray<int64_t>* _result);
   nsresult GetItemAnnotationNamesTArray(int64_t aItemId,
                                         nsTArray<nsCString>* _result);
   nsresult RemoveItemAnnotationsWithoutNotifying(int64_t aItemId);

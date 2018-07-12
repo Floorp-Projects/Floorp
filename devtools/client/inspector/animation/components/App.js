@@ -94,6 +94,7 @@ class App extends Component {
             rewindAnimationsCurrentTime,
             setAnimationsPlaybackRate,
             setAnimationsPlayState,
+            timeScale,
           }
         ),
         SplitBox({
