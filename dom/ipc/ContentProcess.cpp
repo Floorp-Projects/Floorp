@@ -246,6 +246,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
 void
 ContentProcess::CleanUp()
 {
+  mContent.ClearSharedData();
   mXREEmbed.Stop();
 }
 
