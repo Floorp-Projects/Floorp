@@ -377,7 +377,8 @@ class AnimationInspector {
   }
 
   async rewindAnimationsCurrentTime() {
-    await this.setAnimationsCurrentTime(0, true);
+    const { timeScale } = this.state;
+    await this.setAnimationsCurrentTime(timeScale.zeroPositionTime, true);
   }
 
   selectAnimation(animation) {
@@ -455,7 +456,7 @@ class AnimationInspector {
     try {
       if (doPlay && animations.every(animation =>
                       timeScale.getEndTime(animation) <= animation.state.currentTime)) {
-        await this.doSetCurrentTimes(0);
+        await this.doSetCurrentTimes(timeScale.zeroPositionTime);
       }
 
       // If the server does not support pauseSome/playSome function, (which happens
