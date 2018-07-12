@@ -453,7 +453,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "38a6a5248082"
+        "revision": "7dd7bff2b82f"
     }, 
     "son": {
         "platforms": [
@@ -471,13 +471,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "143c0cb9865c"
+        "revision": "f31a74d15318"
     }, 
     "sv-SE": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "11ce527edf2a"
+        "revision": "b91ece9785d7"
     }, 
     "ta": {
         "platforms": [
