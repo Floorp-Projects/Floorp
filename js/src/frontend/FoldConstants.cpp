@@ -349,6 +349,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case ParseNodeKind::Object:
       case ParseNodeKind::Dot:
       case ParseNodeKind::Elem:
+      case ParseNodeKind::Arguments:
       case ParseNodeKind::Call:
       case ParseNodeKind::Name:
       case ParseNodeKind::TemplateString:
@@ -1409,8 +1410,9 @@ FoldCall(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& par
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Call) ||
                node->isKind(ParseNodeKind::SuperCall) ||
+               node->isKind(ParseNodeKind::New) ||
                node->isKind(ParseNodeKind::TaggedTemplate));
-    MOZ_ASSERT(node->isArity(PN_LIST));
+    MOZ_ASSERT(node->isArity(PN_BINARY));
 
     // Don't fold a parenthesized callable component in an invocation, as this
     // might cause a different |this| value to be used, changing semantics:
@@ -1423,10 +1425,26 @@ FoldCall(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& par
     //   assertEq(obj.f``, "obj");
     //
     // See bug 537673 and bug 1182373.
-    ParseNode** listp = &node->pn_head;
-    if ((*listp)->isInParens())
-        listp = &(*listp)->pn_next;
+    ParseNode** pn_callee = &node->pn_left;
+    if (node->isKind(ParseNodeKind::New) || !(*pn_callee)->isInParens()) {
+        if (!Fold(cx, pn_callee, parser))
+            return false;
+    }
 
+    ParseNode** pn_args = &node->pn_right;
+    if (!Fold(cx, pn_args, parser))
+        return false;
+
+    return true;
+}
+
+static bool
+FoldArguments(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+{
+    MOZ_ASSERT(node->isKind(ParseNodeKind::Arguments));
+    MOZ_ASSERT(node->isArity(PN_LIST));
+
+    ParseNode** listp = &node->pn_head;
     for (; *listp; listp = &(*listp)->pn_next) {
         if (!Fold(cx, listp, parser))
             return false;
@@ -1642,7 +1660,6 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::InstanceOf:
       case ParseNodeKind::In:
       case ParseNodeKind::Comma:
-      case ParseNodeKind::New:
       case ParseNodeKind::Array:
       case ParseNodeKind::Object:
       case ParseNodeKind::StatementList:
@@ -1694,9 +1711,13 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldAdd(cx, pnp, parser);
 
       case ParseNodeKind::Call:
+      case ParseNodeKind::New:
       case ParseNodeKind::SuperCall:
       case ParseNodeKind::TaggedTemplate:
         return FoldCall(cx, pn, parser);
+
+      case ParseNodeKind::Arguments:
+        return FoldArguments(cx, pn, parser);
 
       case ParseNodeKind::Switch:
       case ParseNodeKind::Colon:
