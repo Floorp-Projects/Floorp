@@ -958,6 +958,7 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
     if (mAnimation) {
       nsNodeUtils::AnimationAdded(mAnimation);
+      mAnimation->ReschedulePendingTasks();
     }
   }
 }
