@@ -211,6 +211,7 @@ UNIFIED_SOURCES += [
     'ds/MemoryProtectionExceptionHandler.cpp',
     'frontend/BytecodeCompiler.cpp',
     'frontend/BytecodeEmitter.cpp',
+    'frontend/EmitterScope.cpp',
     'frontend/FoldConstants.cpp',
     'frontend/NameFunctions.cpp',
     'frontend/ParseNode.cpp',

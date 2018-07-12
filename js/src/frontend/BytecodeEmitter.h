@@ -175,12 +175,12 @@ enum class ValueUsage {
     IgnoreValue
 };
 
+class EmitterScope;
 class TDZCheckCache;
 
 struct MOZ_STACK_CLASS BytecodeEmitter
 {
     class NestableControl;
-    class EmitterScope;
 
     SharedContext* const sc;      /* context shared between parsing and bytecode generation */
 
