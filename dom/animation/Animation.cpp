@@ -1464,7 +1464,7 @@ Animation::ResetPendingTasks()
 void
 Animation::ReschedulePendingTasks()
 {
-  if (mPendingReadyTime.IsNull()) {
+  if (mPendingState == PendingState::NotPending) {
     return;
   }
 
@@ -1474,9 +1474,11 @@ Animation::ReschedulePendingTasks()
   if (doc) {
     PendingAnimationTracker* tracker =
       doc->GetOrCreatePendingAnimationTracker();
-    if (mPendingState == PendingState::PlayPending) {
+    if (mPendingState == PendingState::PlayPending &&
+        !tracker->IsWaitingToPlay(*this)) {
       tracker->AddPlayPending(*this);
-    } else {
+    } else if (mPendingState == PendingState::PausePending &&
+               !tracker->IsWaitingToPause(*this)) {
       tracker->AddPausePending(*this);
     }
   }
