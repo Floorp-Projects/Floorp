@@ -2,7 +2,6 @@ import copy
 import re
 import os
 import subprocess
-import sys
 import tempfile
 
 # We test the compiler indirectly, rather than reaching into the ipdl/

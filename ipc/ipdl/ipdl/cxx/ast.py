@@ -3,13 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import sys
 
 
 class Visitor:
     def defaultVisit(self, node):
-        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'" % (
-            node.__class__.__name__)
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitWhitespace(self, ws):
         pass
@@ -377,9 +376,6 @@ class TypeArray(Node):
         '''the type |basetype DECLNAME[nmemb]|.  |nmemb| is an Expr'''
         self.basetype = basetype
         self.nmemb = nmemb
-
-    def __deepcopy__(self, memo):
-        return TypeArray(deepcopy(self.basetype, memo), nmemb)
 
 
 class TypeEnum(Node):
