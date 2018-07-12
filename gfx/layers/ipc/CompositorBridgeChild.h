@@ -17,12 +17,13 @@
 #include "mozilla/layers/PaintThread.h" // for PaintThread
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"           // for nsClassHashtable
-#include "nsRefPtrHashtable.h"
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_REFCOUNTING
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "nsWeakReference.h"
+
+#include <unordered_map>
 
 namespace mozilla {
 
@@ -389,7 +390,7 @@ private:
    * Hold TextureClients refs until end of their usages on host side.
    * It defer calling of TextureClient recycle callback.
    */
-  nsRefPtrHashtable<nsUint64HashKey, TextureClient> mTexturesWaitingRecycled;
+  std::unordered_map<uint64_t, RefPtr<TextureClient>> mTexturesWaitingRecycled;
 
   MessageLoop* mMessageLoop;
 
