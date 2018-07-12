@@ -44,6 +44,7 @@ interface nsIContentPermissionRequest;
 interface nsIObserver;
 interface nsIDOMStorage;
 
+webidl Animation;
 webidl DOMRect;
 webidl Element;
 webidl EventTarget;
@@ -1706,6 +1707,12 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   AString getOMTCTransform(in Element aElement,
                            [optional] in AString aPseudoElement);
+
+  /*
+   * Returns true if the given animation is being tracked by the pending
+   * animation tracker for the current document.
+   */
+  bool isAnimationInPendingTracker(in Animation aAnimation);
 
   /**
    * If aHandlingInput is true, this informs the event state manager that
