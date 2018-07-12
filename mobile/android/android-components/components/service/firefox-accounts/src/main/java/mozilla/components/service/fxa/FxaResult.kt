@@ -45,7 +45,9 @@ class FxaResult<T> {
     }
 
     /**
-     * Convenience method allowing [FxaResult] to be called with a lambda expression on a value.
+     * Adds a value listener to be called when the [FxaResult] is completed with
+     * a value. Listeners will be invoked on the same thread in which the
+     * [FxaResult] was completed.
      *
      * @param fn A lambda expression with the same method signature as [OnValueListener],
      * called when the [FxaResult] is completed with a value.
@@ -58,8 +60,9 @@ class FxaResult<T> {
     }
 
     /**
-     * Convenience method allowing [FxaResult] to be called with lambda expressions on a value
-     * and on an exception.
+     * Adds listeners to be called when the [FxaResult] is completed either with
+     * a value or [Exception]. Listeners will be invoked on the same thread in which the
+     * [FxaResult] was completed.
      *
      * @param vfn A lambda expression with the same method signature as [OnValueListener],
      * called when the [FxaResult] is completed with a value.
@@ -118,6 +121,24 @@ class FxaResult<T> {
         }
 
         return result
+    }
+
+    /**
+     * Adds a value listener to be called when the [FxaResult] and the whole chain of [then]
+     * calls is completed with a value. Listeners will be invoked on the same thread in
+     * which the [FxaResult] was completed.
+     *
+     * @param fn A lambda expression with the same method signature as [OnValueListener],
+     * called when the [FxaResult] is completed with a value.
+     */
+    fun whenComplete(fn: (value: T) -> Unit) {
+        val listener = object : OnValueListener<T, Void> {
+            override fun onValue(value: T): FxaResult<Void>? {
+                fn(value)
+                return FxaResult()
+            }
+        }
+        then(listener, null)
     }
 
     /**

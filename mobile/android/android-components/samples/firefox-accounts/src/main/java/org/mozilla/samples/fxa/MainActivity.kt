@@ -33,19 +33,28 @@ open class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<View>(R.id.button).setOnClickListener {
-            openOAuthTab()
+        Config.custom(CONFIG_URL).whenComplete { value: Config ->
+            account = FirefoxAccount(value, CLIENT_ID)
         }
 
-        Config.custom(CONFIG_URL).then { value: Config ->
-            account = FirefoxAccount(value, CLIENT_ID)
-            FxaResult.fromValue(account)
+        findViewById<View>(R.id.button).setOnClickListener {
+            account?.beginOAuthFlow(REDIRECT_URL, scopes, false)?.whenComplete { openTab(it) }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         account?.close()
+    }
+
+    private fun openTab(url: String) {
+        val customTabsIntent = CustomTabsIntent.Builder()
+                .addDefaultShareMenuItem()
+                .setShowTitle(true)
+                .build()
+
+        customTabsIntent.intent.data = Uri.parse(url)
+        customTabsIntent.launchUrl(this@MainActivity, Uri.parse(url))
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -64,28 +73,8 @@ open class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
                 }
-                FxaResult<Void>()
             }
-            account?.completeOAuthFlow(code, state)?.then(handleAuth)?.then(handleProfile)
+            account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
         }
-    }
-
-    private fun openTab(url: String) {
-        val customTabsIntent = CustomTabsIntent.Builder()
-                .addDefaultShareMenuItem()
-                .setShowTitle(true)
-                .build()
-
-        customTabsIntent.intent.data = Uri.parse(url)
-        customTabsIntent.launchUrl(this@MainActivity, Uri.parse(url))
-    }
-
-    private fun openOAuthTab() {
-        val valueListener = { value: String ->
-            openTab(value)
-            FxaResult<Void>()
-        }
-
-        account?.beginOAuthFlow(REDIRECT_URL, scopes, false)?.then(valueListener)
     }
 }
