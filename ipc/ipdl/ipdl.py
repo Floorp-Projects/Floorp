@@ -1,13 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 import optparse
 import os
-import re
 import sys
 from cStringIO import StringIO
-import mozpack.path as mozpath
 from ConfigParser import RawConfigParser
 
 import ipdl
@@ -15,7 +12,7 @@ import ipdl
 
 def log(minv, fmt, *args):
     if _verbosity >= minv:
-        print fmt % args
+        print(fmt % args)
 
 # process command line
 
@@ -111,7 +108,7 @@ for f in files:
         sys.exit(1)
 
     if not ipdl.checkSyncMessage(ast, syncMsgList):
-        print >>sys.stderr, 'Error: New sync IPC messages must be reviewed by an IPC peer and recorded in %s' % options.syncMsgList
+        print >>sys.stderr, 'Error: New sync IPC messages must be reviewed by an IPC peer and recorded in %s' % options.syncMsgList  # NOQA: E501
         sys.exit(1)
 
 if not ipdl.checkFixedSyncMessages(parser):

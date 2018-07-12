@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import re
-import sys
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -1740,8 +1738,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             methodvar.name,
             params=[Decl(Type('base::ProcessId'), parentpidvar.name),
                     Decl(Type('base::ProcessId'), childpidvar.name),
-                    Decl(Type('mozilla::ipc::Endpoint<' + tparent.name + '>', ptr=1), parentvar.name),
-                    Decl(Type('mozilla::ipc::Endpoint<' + tchild.name + '>', ptr=1), childvar.name)],
+                    Decl(Type('mozilla::ipc::Endpoint<' + tparent.name + '>', ptr=1),
+                         parentvar.name),
+                    Decl(Type('mozilla::ipc::Endpoint<' + tchild.name + '>', ptr=1),
+                         childvar.name)],
             ret=rettype))
         openfunc.addstmt(StmtReturn(ExprCall(
             ExprVar('mozilla::ipc::CreateEndpoints'),
@@ -2029,7 +2029,8 @@ class _ParamTraits():
         # bool Read(..) impl
         actorvar = ExprVar('actor')
         read = [
-            StmtDecl(Decl(Type('mozilla::Maybe', T=Type('mozilla::ipc::IProtocol', ptr=1)), actorvar.name),
+            StmtDecl(Decl(Type('mozilla::Maybe', T=Type('mozilla::ipc::IProtocol',
+                                                        ptr=1)), actorvar.name),
                      init=ExprCall(ExprSelect(cls.actor, '->', 'ReadActor'),
                                    args=[cls.msgvar,
                                          cls.itervar,
@@ -2294,10 +2295,6 @@ def _generateCxxStruct(sd):
 
     def fieldsAsParamList():
         return [Decl(f.inType(), f.argVar().name) for f in sd.fields]
-
-    def assignFromOther(oexpr):
-        return ExprCall(assignvar,
-                        args=[f.initExpr(oexpr) for f in sd.fields])
 
     # If this is an empty struct (no fields), then the default ctor
     # and "create-with-fields" ctors are equivalent.  So don't bother
@@ -2635,10 +2632,12 @@ def _generateCxxUnion(ud):
         else:
             case.addstmts([
                 # new ... (Move(other.get_C()))
-                StmtExpr(c.callCtor(ExprMove(ExprCall(ExprSelect(othervar, '.', c.getTypeName()))))),
+                StmtExpr(c.callCtor(ExprMove(ExprCall(ExprSelect(othervar, '.',
+                                                                 c.getTypeName()))))),
                 # other.MaybeDestroy(T__None)
                 StmtExpr(
-                    voidCast(ExprCall(ExprSelect(othervar, '.', maybedtorvar), args=[tnonevar]))),
+                    voidCast(ExprCall(ExprSelect(othervar, '.', maybedtorvar),
+                                      args=[tnonevar]))),
             ])
         case.addstmts([StmtBreak()])
         moveswitch.addcase(CaseLabel(c.enum()), case)
@@ -3431,8 +3430,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                            params=params, ret=_Result.Type()))
 
             if not switch:
-                crash = StmtExpr(ExprCall(ExprVar('MOZ_ASSERT_UNREACHABLE'),
-                                          args=[ExprLiteral.String('message protocol not supported')]))
+                crash = StmtExpr(ExprCall(
+                    ExprVar('MOZ_ASSERT_UNREACHABLE'),
+                    args=[ExprLiteral.String('message protocol not supported')]))
                 method.addstmts([crash, StmtReturn(_Result.NotKnown)])
                 return method
 
@@ -3470,9 +3470,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')),
                                    '!=', ExprLiteral.TRUE),
                         '||',
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_interrupt')), '!=', ExprLiteral.TRUE))))
-                ifdying.addifstmts([_fatalError('incoming message racing with actor deletion'),
-                                    StmtReturn(_Result.Processed)])
+                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_interrupt')),
+                                   '!=', ExprLiteral.TRUE))))
+                ifdying.addifstmts([
+                    _fatalError('incoming message racing with actor deletion'),
+                    StmtReturn(_Result.Processed)])
                 method.addstmt(ifdying)
 
             # bug 509581: don't generate the switch stmt if there
@@ -3565,9 +3567,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         whyvar = ExprVar('why')
         subtreewhyvar = ExprVar('subtreewhy')
         kidsvar = ExprVar('kids')
-        ivar = ExprVar('i')
         itervar = ExprVar('iter')
-        ithkid = ExprIndex(kidsvar, ivar)
 
         destroysubtree = MethodDefn(MethodDecl(
             destroysubtreevar.name,
@@ -3597,13 +3597,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for managed in ptype.manages:
             managedVar = p.managedVar(managed, self.side)
-            lenvar = ExprVar('len')
             kidvar = ExprVar('kid')
 
             foreachdestroy = StmtRangedFor(kidvar, kidsvar)
 
             foreachdestroy.addstmt(
-                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=1))
+                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=1))  # NOQA: E501
             ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
             ifhas.addifstmt(StmtExpr(ExprCall(
                 ExprSelect(kidvar, '->', destroysubtreevar.name),
@@ -3695,23 +3694,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def implementManagerIface(self):
         p = self.protocol
-        routedvar = ExprVar('aRouted')
-        idvar = ExprVar('aId')
-        shmemvar = ExprVar('shmem')
-        rawvar = ExprVar('segment')
-        sizevar = ExprVar('aSize')
-        typevar = ExprVar('aType')
-        unsafevar = ExprVar('aUnsafe')
         protocolbase = Type('IProtocol', ptr=1)
-        sourcevar = ExprVar('aSource')
-        ivar = ExprVar('i')
-        kidsvar = ExprVar('kids')
-        ithkid = ExprIndex(kidsvar, ivar)
 
         methods = []
 
         if p.decl.type.isToplevel():
-            tmpvar = ExprVar('tmp')
 
             # "private" message that passes shmem mappings from one process
             # to the other
@@ -3732,9 +3719,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'), abort)
                 self.asyncSwitch.addcase(
                     CaseLabel('SHMEM_DESTROYED_MESSAGE_TYPE'), abort)
-
-        othervar = ExprVar('other')
-        managertype = Type(_actorName(p.name, self.side), ptr=1)
 
         # Keep track of types created with an INOUT ctor. We need to call
         # Register() or RegisterID() for them depending on the side the managee
@@ -3835,7 +3819,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         decltype = md.decl.type
         sendmethod = None
         promisesendmethod = None
-        helpermethod = None
         recvlbl, recvcase = None, None
 
         def addRecvCase(lbl, case):
@@ -3971,7 +3954,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def failCtorIf(self, md, cond):
         actorvar = md.actorDecl().var()
-        type = md.decl.type.constructedType()
         failif = StmtIf(cond)
 
         if self.side == 'child':
@@ -4306,7 +4288,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok = ExprVar('sendok__')
         seqno = ExprVar('seqno__')
         resolve = ExprVar('resolve__')
-        reason = ExprVar('reason__')
         resolvertype = Type(md.resolverName())
         failifsendok = StmtIf(ExprNot(sendok))
         failifsendok.addifstmt(_printWarningMessage('Error sending reply'))
@@ -4329,12 +4310,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             destructexpr = md.returns[0].var()
         selfvar = ExprVar('self__')
         ifactorisdead = StmtIf(ExprNot(selfvar))
-        ifactorisdead.addifstmts([_printWarningMessage("Not resolving response because actor is dead."),
-                                  StmtReturn()])
+        ifactorisdead.addifstmts([
+            _printWarningMessage("Not resolving response because actor is dead."),
+            StmtReturn()])
         ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
                                                self.protocol.deadState()))
-        ifactorisdestroyed.addifstmts([_printWarningMessage("Not resolving response because actor is destroyed."),
-                                       StmtReturn()])
+        ifactorisdestroyed.addifstmts([
+            _printWarningMessage("Not resolving response because actor is destroyed."),
+            StmtReturn()])
         returnifactorisdead = [ifactorisdead,
                                ifactorisdestroyed]
         resolverfn = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
@@ -4577,7 +4560,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         resolvefn = ExprVar('aResolve')
         rejectfn = ExprVar('aReject')
 
-        sendargs = [msgexpr]
         stmts = [Whitespace.NL,
                  self.logMessage(md, msgexpr, 'Sending ', actor),
                  self.profilerLabel(md)] + self.transition(md, actor, errorfn=errfnUnreachable)
@@ -4611,12 +4593,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtBlock([
                     StmtExpr(ExprCall(ExprVar('AUTO_PROFILER_TRACING'),
                                       [ExprLiteral.String("IPC"),
-                                       ExprLiteral.String(self.protocol.name + "::" + md.prettyMsgName())])),
+                                       ExprLiteral.String(self.protocol.name + "::" +
+                                                          md.prettyMsgName())])),
                     StmtExpr(ExprAssn(sendok,
-                                      ExprCall(ExprSelect(self.protocol.callGetChannel(actor),
-                                                          '->',
-                                                          _sendPrefix(md.decl.type)),
-                                               args=[msgexpr, ExprAddrOf(replyexpr)]))),
+                                      ExprCall(
+                                          ExprSelect(self.protocol.callGetChannel(actor),
+                                                     '->',
+                                                     _sendPrefix(md.decl.type)),
+                                          args=[msgexpr, ExprAddrOf(replyexpr)]))),
                 ])
                 ])
         )
