@@ -136,27 +136,23 @@ this.EventManager.prototype = {
     switch (aEvent.eventType) {
       case Events.VIRTUALCURSOR_CHANGED:
       {
-        if (!aEvent.isFromUserInput) {
+        let pivot = aEvent.accessible.
+          QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
+        let position = pivot.position;
+        if (position && position.role == Roles.INTERNAL_FRAME)
           break;
-        }
-
-        const event = aEvent.
+        let event = aEvent.
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
-        const position = event.newAccessible;
+        let reason = event.reason;
+        let oldAccessible = event.oldAccessible;
 
-        // We pass control to the vc in the embedded frame.
-        if (position && position.role == Roles.INTERNAL_FRAME) {
-          break;
-        }
-
-        // Blur to document if new position is not explicitly focused.
         if (!Utils.getState(position).contains(States.FOCUSED)) {
           aEvent.accessibleDocument.takeFocus();
         }
-
         this.present(
-          Presentation.pivotChanged(position, event.oldAccessible, event.reason,
-                                    event.newStartOffset, event.newEndOffset));
+          Presentation.pivotChanged(position, oldAccessible, reason,
+                                    pivot.startOffset, pivot.endOffset,
+                                    aEvent.isFromUserInput));
 
         break;
       }
@@ -214,14 +210,8 @@ this.EventManager.prototype = {
         // on this one..
         let state = Utils.getState(acc);
         if (state.contains(States.FOCUSED) && state.contains(States.EDITABLE)) {
-          let fromIndex = caretOffset;
-          if (acc.selectionCount) {
-            const [startSel, endSel] = Utils.getTextSelection(acc);
-            fromIndex = startSel == caretOffset ? endSel : startSel;
-          }
-          this.present(Presentation.textSelectionChanged(
-            acc.getText(0, -1), fromIndex, caretOffset, 0, 0,
-            aEvent.isFromUserInput));
+          this.present(Presentation.textSelectionChanged(acc.getText(0, -1),
+            caretOffset, caretOffset, 0, 0, aEvent.isFromUserInput));
         }
         break;
       }
