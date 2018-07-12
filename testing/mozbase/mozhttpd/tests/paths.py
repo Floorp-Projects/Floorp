@@ -9,7 +9,9 @@ from mozfile import TemporaryDirectory
 import mozhttpd
 import os
 import unittest
-import urllib2
+
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.error import HTTPError
 
 import mozunit
 
@@ -17,13 +19,13 @@ import mozunit
 class PathTest(unittest.TestCase):
 
     def try_get(self, url, expected_contents):
-        f = urllib2.urlopen(url)
+        f = urlopen(url)
         self.assertEqual(f.getcode(), 200)
         self.assertEqual(f.read(), expected_contents)
 
     def try_get_expect_404(self, url):
-        with self.assertRaises(urllib2.HTTPError) as cm:
-            urllib2.urlopen(url)
+        with self.assertRaises(HTTPError) as cm:
+            urlopen(url)
         self.assertEqual(404, cm.exception.code)
 
     def test_basic(self):
@@ -36,8 +38,8 @@ class PathTest(unittest.TestCase):
                                       path_mappings={'/files': d2}
                                       )
             httpd.start(block=False)
-            self.try_get(httpd.get_url("/test1.txt"), "test 1 contents")
-            self.try_get(httpd.get_url("/files/test2.txt"), "test 2 contents")
+            self.try_get(httpd.get_url("/test1.txt"), b"test 1 contents")
+            self.try_get(httpd.get_url("/files/test2.txt"), b"test 2 contents")
             self.try_get_expect_404(httpd.get_url("/files/test2_nope.txt"))
             httpd.stop()
 
@@ -51,8 +53,8 @@ class PathTest(unittest.TestCase):
                                                      '/abc': d2, }
                                       )
             httpd.start(block=False)
-            self.try_get(httpd.get_url("/abcxyz/test1.txt"), "test 1 contents")
-            self.try_get(httpd.get_url("/abc/test2.txt"), "test 2 contents")
+            self.try_get(httpd.get_url("/abcxyz/test1.txt"), b"test 1 contents")
+            self.try_get(httpd.get_url("/abc/test2.txt"), b"test 2 contents")
             httpd.stop()
 
     def test_multipart_path_mapping(self):
@@ -63,7 +65,7 @@ class PathTest(unittest.TestCase):
                                       path_mappings={'/abc/def/ghi': d1}
                                       )
             httpd.start(block=False)
-            self.try_get(httpd.get_url("/abc/def/ghi/test1.txt"), "test 1 contents")
+            self.try_get(httpd.get_url("/abc/def/ghi/test1.txt"), b"test 1 contents")
             self.try_get_expect_404(httpd.get_url("/abc/test1.txt"))
             self.try_get_expect_404(httpd.get_url("/abc/def/test1.txt"))
             httpd.stop()
