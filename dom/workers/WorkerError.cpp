@@ -132,7 +132,7 @@ public:
         else if (nsGlobalWindowInner* win = xpc::WindowOrNull(global)) {
           MOZ_ASSERT(NS_IsMainThread());
 
-          if (NS_FAILED(win->HandleScriptError(init, &status))) {
+          if (!win->HandleScriptError(init, &status)) {
             NS_WARNING("Failed to dispatch main thread error event!");
             status = nsEventStatus_eIgnore;
           }
@@ -385,7 +385,7 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       else if (nsGlobalWindowInner* win = xpc::WindowOrNull(global)) {
         MOZ_ASSERT(NS_IsMainThread());
 
-        if (NS_FAILED(win->HandleScriptError(init, &status))) {
+        if (!win->HandleScriptError(init, &status)) {
           NS_WARNING("Failed to dispatch main thread error event!");
           status = nsEventStatus_eIgnore;
         }

@@ -42,13 +42,17 @@ private:
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
   ::vr::IVRCompositor* mVRCompositor = nullptr;
+  ::vr::TrackedDeviceIndex_t mControllerDeviceIndex[kVRControllerMaxCount];
   bool mShouldQuit;
+  bool mIsWindowsMR;
 
   bool InitState(mozilla::gfx::VRSystemState& aSystemState);
-  void UpdateStageParameters(mozilla::gfx::VRDisplayState& state);
-  void UpdateEyeParameters(mozilla::gfx::VRDisplayState& state, gfx::Matrix4x4* headToEyeTransforms = nullptr);
-  void GetSensorState(mozilla::gfx::VRSystemState& state);
-  void GetControllerState(VRSystemState &state);
+  void UpdateStageParameters(mozilla::gfx::VRDisplayState& aState);
+  void UpdateEyeParameters(mozilla::gfx::VRSystemState& aState);
+  void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
+  void EnumerateControllers(VRSystemState& aState);
+  void UpdateControllerPoses(VRSystemState& aState);
+  void UpdateControllerButtons(VRSystemState& aState);
 
   bool SubmitFrame(void* aTextureHandle,
                    ::vr::ETextureType aTextureType,
@@ -57,6 +61,9 @@ private:
 #if defined(XP_WIN)
   bool CreateD3DObjects();
 #endif
+  void GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
+                             ::vr::TrackedDeviceIndex_t aDeviceIndex,
+                             nsCString& aId);
 };
 
 } // namespace mozilla
