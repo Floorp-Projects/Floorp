@@ -12,9 +12,9 @@ const { getFormatStr } = require("./l10n");
 const TIME_FORMAT_MAX_DURATION_IN_MS = 4000;
 
 /**
- * TimeScale object holds the total duration, start time and end time information for all
- * animations which should be displayed, and is used to calculate the displayed area for
- * each animation.
+ * TimeScale object holds the total duration, start time and end time and zero position
+ * time information for all animations which should be displayed, and is used to calculate
+ * the displayed area for each animation.
  */
 class TimeScale {
   constructor(animations) {
@@ -26,11 +26,13 @@ class TimeScale {
     let animationsCurrentTime = -Number.MAX_VALUE;
     let minStartTime = Infinity;
     let maxEndTime = 0;
+    let zeroPositionTime = 0;
 
     for (const animation of animations) {
       const {
         createdTime,
         currentTime,
+        currentTimeAtCreated,
         delay,
         duration,
         endDelay = 0,
@@ -39,7 +41,30 @@ class TimeScale {
       } = animation.state;
 
       const toRate = v => v / playbackRate;
-      const startTime = createdTime + toRate(Math.min(delay, 0));
+      const negativeDelay = toRate(Math.min(delay, 0));
+      let startPositionTime = createdTime + negativeDelay;
+      // If currentTimeAtCreated is not defined (which happens when connected to server
+      // older than FF62), use startPositionTime instead. See bug 1468475.
+      const originalCurrentTime =
+            toRate(currentTimeAtCreated ? currentTimeAtCreated : startPositionTime);
+      const startPositionTimeAtCreated =
+            createdTime + originalCurrentTime;
+      let animationZeroPositionTime = 0;
+
+      // To shift the zero position time is the following two patterns.
+      //  * Animation has negative current time which is smaller than negative dleay.
+      //  * Animation has negative delay.
+      // Furthermore, we should override the zero position time if we will need to
+      // expand the duration due to this negative current time or negative delay of
+      // this target animation.
+      if (originalCurrentTime < negativeDelay &&
+          startPositionTimeAtCreated < minStartTime) {
+        startPositionTime = startPositionTimeAtCreated;
+        animationZeroPositionTime = Math.abs(originalCurrentTime);
+      } else if (negativeDelay < 0 && startPositionTime < minStartTime) {
+        animationZeroPositionTime = Math.abs(negativeDelay);
+      }
+
       let endTime = 0;
 
       if (duration === Infinity) {
@@ -56,15 +81,24 @@ class TimeScale {
                          Math.max(endDelay, 0));
       }
 
-      minStartTime = Math.min(minStartTime, startTime);
       maxEndTime = Math.max(maxEndTime, endTime);
       animationsCurrentTime =
         Math.max(animationsCurrentTime, createdTime + toRate(currentTime));
+
+      if (startPositionTime < minStartTime) {
+        minStartTime = startPositionTime;
+        // Override the previous calculated zero position only if the duration will be
+        // expanded.
+        zeroPositionTime = animationZeroPositionTime;
+      } else {
+        zeroPositionTime = Math.max(zeroPositionTime, animationZeroPositionTime);
+      }
     }
 
     this.minStartTime = minStartTime;
     this.maxEndTime = maxEndTime;
     this.currentTime = animationsCurrentTime;
+    this.zeroPositionTime = zeroPositionTime;
   }
 
   /**
@@ -111,29 +145,23 @@ class TimeScale {
       this.maxEndTime = Math.max(this.maxEndTime, endTime);
 
       this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
+      this.zeroPositionTime = this.minStartTime;
     }
   }
 
   /**
-   * Convert a distance in % to a time, in the current time scale.
-   *
-   * @param {Number} distance
-   * @return {Number}
-   */
-  distanceToTime(distance) {
-    return this.minStartTime + (this.getDuration() * distance / 100);
-  }
-
-  /**
-   * Convert a distance in % to a time, in the current time scale.
-   * The time will be relative to the current minimum start time.
+   *  Convert a distance in % to a time, in the current time scale. The time
+   *  will be relative to the zero position time.
+   *  i.e., If zeroPositionTime will be negative and specified time is shorter
+   *  than the absolute value of zero position time, relative time will be
+   *  negative time.
    *
    * @param {Number} distance
    * @return {Number}
    */
   distanceToRelativeTime(distance) {
-    const time = this.distanceToTime(distance);
-    return time - this.minStartTime;
+    return (this.getDuration() * distance / 100)
+           - this.zeroPositionTime;
   }
 
   /**
@@ -144,6 +172,11 @@ class TimeScale {
    * @return {String} The formatted time string.
    */
   formatTime(time) {
+    // Ignore negative zero
+    if (Math.abs(time) < (1 / 1000)) {
+      time = 0.0;
+    }
+
     // Format in milliseconds if the total duration is short enough.
     if (this.getDuration() <= TIME_FORMAT_MAX_DURATION_IN_MS) {
       return getFormatStr("timeline.timeGraduationLabel", time.toFixed(0));
