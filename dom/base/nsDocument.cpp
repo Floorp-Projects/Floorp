@@ -4631,7 +4631,7 @@ nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       JSObject *obj = GetWrapperPreserveColor();
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-        NS_ASSERTION(js::GetGlobalForObjectCrossCompartment(obj) == newScope,
+        NS_ASSERTION(JS::GetNonCCWObjectGlobal(obj) == newScope,
                      "Wrong scope, this is really bad!");
       }
     }
