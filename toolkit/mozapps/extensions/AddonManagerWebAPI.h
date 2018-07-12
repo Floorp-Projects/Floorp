@@ -13,7 +13,7 @@ namespace mozilla {
 
 class AddonManagerWebAPI {
 public:
-  static bool IsAPIEnabled(JSContext* cx, JSObject* obj);
+  static bool IsAPIEnabled(JSContext* aCx, JSObject* aGlobal);
 
   static bool IsValidSite(nsIURI* uri);
 };
