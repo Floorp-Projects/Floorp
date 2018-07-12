@@ -28,6 +28,7 @@ static const uint32_t ACTIVITY_STREAM_FLAGS =
   nsIAboutModule::ALLOW_SCRIPT |
   nsIAboutModule::ENABLE_INDEXED_DB |
   nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+  nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGED_CHILD |
   nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
 
 struct RedirEntry {
@@ -92,6 +93,7 @@ static const RedirEntry kRedirMap[] = {
   { "newtab", "about:blank", ACTIVITY_STREAM_FLAGS },
   { "welcome", "about:blank",
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+    nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGED_CHILD |
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT },
   { "library", "chrome://browser/content/aboutLibrary.xhtml",

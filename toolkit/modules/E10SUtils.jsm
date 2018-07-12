@@ -43,8 +43,6 @@ const PRIVILEGED_REMOTE_TYPE = "privileged";
 const LARGE_ALLOCATION_REMOTE_TYPE = "webLargeAllocation";
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
 
-const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
-
 function validatedWebRemoteType(aPreferredRemoteType, aTargetUri, aCurrentUri) {
   // If the domain is whitelisted to allow it to use file:// URIs, then we have
   // to run it in a file content process, in case it uses file:// sub-resources.
@@ -159,9 +157,8 @@ var E10SUtils = {
 
         let flags = module.getURIFlags(aURI);
         if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD) {
-          // Load Activity Stream in a separate process.
-          if (useSeparatePrivilegedContentProcess &&
-              ACTIVITY_STREAM_PAGES.has(aURI.filePath)) {
+          if ((flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGED_CHILD) &&
+              useSeparatePrivilegedContentProcess) {
             return PRIVILEGED_REMOTE_TYPE;
           }
           return DEFAULT_REMOTE_TYPE;

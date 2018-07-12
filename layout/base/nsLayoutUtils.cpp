@@ -4106,11 +4106,11 @@ nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame)
 }
 
 struct BoxToRect : public nsLayoutUtils::BoxCallback {
-  nsIFrame* mRelativeTo;
+  const nsIFrame* mRelativeTo;
   nsLayoutUtils::RectCallback* mCallback;
   uint32_t mFlags;
 
-  BoxToRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
+  BoxToRect(const nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
             uint32_t aFlags)
     : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags) {}
 
@@ -4145,7 +4145,7 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
 struct MOZ_RAII BoxToRectAndText : public BoxToRect {
   Sequence<nsString>* mTextList;
 
-  BoxToRectAndText(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
+  BoxToRectAndText(const nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
                    Sequence<nsString>* aTextList, uint32_t aFlags)
     : BoxToRect(aRelativeTo, aCallback, aFlags), mTextList(aTextList) {}
 
@@ -4185,7 +4185,7 @@ struct MOZ_RAII BoxToRectAndText : public BoxToRect {
 };
 
 void
-nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
                                  RectCallback* aCallback, uint32_t aFlags)
 {
   BoxToRect converter(aRelativeTo, aCallback, aFlags);
@@ -4193,7 +4193,8 @@ nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
 }
 
 void
-nsLayoutUtils::GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+nsLayoutUtils::GetAllInFlowRectsAndTexts(nsIFrame* aFrame,
+                                         const nsIFrame* aRelativeTo,
                                          RectCallback* aCallback,
                                          Sequence<nsString>* aTextList,
                                          uint32_t aFlags)
@@ -4230,7 +4231,7 @@ nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
 }
 
 nsRect
-nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
                                       uint32_t aFlags) {
   RectAccumulator accumulator;
   GetAllInFlowRects(aFrame, aRelativeTo, &accumulator, aFlags);
@@ -9121,8 +9122,12 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     nsLayoutUtils::CalculateScrollableRectForFrame(scrollableFrame, aForFrame)));
 
   if (scrollableFrame) {
-    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
-    metrics.SetScrollOffset(CSSPoint::FromAppUnits(scrollPosition));
+    CSSPoint scrollPosition = CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
+    metrics.SetScrollOffset(scrollPosition);
+
+    CSSRect viewport = metrics.GetViewport();
+    viewport.MoveTo(scrollPosition);
+    metrics.SetViewport(viewport);
 
     nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
     metrics.SetSmoothScrollOffset(CSSPoint::FromAppUnits(smoothScrollPosition));

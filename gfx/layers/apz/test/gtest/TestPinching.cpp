@@ -19,9 +19,10 @@ protected:
   FrameMetrics GetPinchableFrameMetrics()
   {
     FrameMetrics fm;
-    fm.SetCompositionBounds(ParentLayerRect(200, 200, 100, 200));
+    fm.SetCompositionBounds(ParentLayerRect(0, 0, 100, 200));
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetScrollOffset(CSSPoint(300, 300));
+    fm.SetViewport(CSSRect(300, 300, 100, 200));
     fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
@@ -56,10 +57,10 @@ protected:
     FrameMetrics fm = apzc->GetFrameMetrics();
 
     if (aShouldTriggerPinch) {
-      // the visible area of the document in CSS pixels is now x=305 y=310 w=40 h=80
+      // the visible area of the document in CSS pixels is now x=325 y=330 w=40 h=80
       EXPECT_EQ(2.5f, fm.GetZoom().ToScaleFactor().scale);
-      EXPECT_EQ(305, fm.GetScrollOffset().x);
-      EXPECT_EQ(310, fm.GetScrollOffset().y);
+      EXPECT_EQ(325, fm.GetScrollOffset().x);
+      EXPECT_EQ(330, fm.GetScrollOffset().y);
     } else {
       // The frame metrics should stay the same since touch-action:none makes
       // apzc ignore pinch gestures.
@@ -88,9 +89,9 @@ protected:
     fm = apzc->GetFrameMetrics();
 
     if (aShouldTriggerPinch) {
-      // the visible area of the document in CSS pixels is now x=880 y=0 w=100 h=200
+      // the visible area of the document in CSS pixels is now x=805 y=0 w=100 h=200
       EXPECT_EQ(1.0f, fm.GetZoom().ToScaleFactor().scale);
-      EXPECT_EQ(880, fm.GetScrollOffset().x);
+      EXPECT_EQ(805, fm.GetScrollOffset().x);
       EXPECT_EQ(0, fm.GetScrollOffset().y);
     } else {
       EXPECT_EQ(2.0f, fm.GetZoom().ToScaleFactor().scale);
@@ -339,6 +340,85 @@ TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
   EXPECT_EQ(325, fm.GetScrollOffset().x);
   EXPECT_EQ(325, fm.GetScrollOffset().y);
   EXPECT_EQ(2.0, fm.GetZoom().ToScaleFactor().scale);
+}
+
+TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  MakeApzcZoomable();
+
+  // Case 1 - visual viewport is still inside layout viewport.
+  Pan(apzc, 350, 300, PanOptions::NoFling);
+  FrameMetrics fm = apzc->GetFrameMetrics();
+  // It starts from (300, 300) pans by (0, 50) screen pixels, but there is a
+  // 2x zoom, which causes the scroll offset to change by half of that (0, 25).
+  // But the visual viewport is still inside the layout viewport.
+  EXPECT_EQ(300, fm.GetScrollOffset().x);
+  EXPECT_EQ(325, fm.GetScrollOffset().y);
+  EXPECT_EQ(300, fm.GetViewport().X());
+  EXPECT_EQ(300, fm.GetViewport().Y());
+
+  // Case 2 - visual viewport crosses the bottom boundary of the layout
+  // viewport.
+  Pan(apzc, 525, 325, PanOptions::NoFling);
+  fm = apzc->GetFrameMetrics();
+  // It starts from (300, 325) pans by (0, 200) screen pixels, but there is a
+  // 2x zoom, which causes the scroll offset to change by half of that
+  // (0, 100). The visual viewport crossed the bottom boundary of the layout
+  // viewport by 25px.
+  EXPECT_EQ(300, fm.GetScrollOffset().x);
+  EXPECT_EQ(425, fm.GetScrollOffset().y);
+  EXPECT_EQ(300, fm.GetViewport().X());
+  EXPECT_EQ(325, fm.GetViewport().Y());
+
+  // Case 3 - visual viewport crosses the top boundary of the layout viewport.
+  Pan(apzc, 425, 775, PanOptions::NoFling);
+  fm = apzc->GetFrameMetrics();
+  // It starts from (300, 425) pans by (0, -350) screen pixels, but there is a
+  // 2x zoom, which causes the scroll offset to change by half of that
+  // (0, -175). The visual viewport crossed the top of the layout viewport by
+  // 75px.
+  EXPECT_EQ(300, fm.GetScrollOffset().x);
+  EXPECT_EQ(250, fm.GetScrollOffset().y);
+  EXPECT_EQ(300, fm.GetViewport().X());
+  EXPECT_EQ(250, fm.GetViewport().Y());
+
+  // Case 4 - visual viewport crosses the left boundary of the layout viewport.
+  Pan(apzc, ScreenIntPoint(150, 10), ScreenIntPoint(350, 10), PanOptions::NoFling);
+  fm = apzc->GetFrameMetrics();
+  // It starts from (300, 250) pans by (-200, 0) screen pixels, but there is a
+  // 2x zoom, which causes the scroll offset to change by half of that
+  // (-100, 0). The visual viewport crossed the left boundary of the layout
+  // viewport by 100px.
+  EXPECT_EQ(200, fm.GetScrollOffset().x);
+  EXPECT_EQ(250, fm.GetScrollOffset().y);
+  EXPECT_EQ(200, fm.GetViewport().X());
+  EXPECT_EQ(250, fm.GetViewport().Y());
+
+  // Case 5 - visual viewport crosses the right boundary of the layout viewport.
+  Pan(apzc, ScreenIntPoint(350, 10), ScreenIntPoint(150, 10), PanOptions::NoFling);
+  fm = apzc->GetFrameMetrics();
+  // It starts from (200, 250) pans by (200, 0) screen pixels, but there is a
+  // 2x zoom, which causes the scroll offset to change by half of that
+  // (100, 0). The visual viewport crossed the right boundary of the layout
+  // viewport by 50px.
+  EXPECT_EQ(300, fm.GetScrollOffset().x);
+  EXPECT_EQ(250, fm.GetScrollOffset().y);
+  EXPECT_EQ(250, fm.GetViewport().X());
+  EXPECT_EQ(250, fm.GetViewport().Y());
+
+  // Case 6 - visual viewport crosses both the vertical and horizontal
+  // boundaries of the layout viewport by moving diagonally towards the
+  // top-right corner.
+  Pan(apzc, ScreenIntPoint(350, 200), ScreenIntPoint(150, 400), PanOptions::NoFling);
+  fm = apzc->GetFrameMetrics();
+  // It starts from (300, 250) pans by (200, -200) screen pixels, but there is
+  // a 2x zoom, which causes the scroll offset to change by half of that
+  // (100, -100). The visual viewport moved by (100, -100) outside the
+  // boundary of the layout viewport.
+  EXPECT_EQ(400, fm.GetScrollOffset().x);
+  EXPECT_EQ(150, fm.GetScrollOffset().y);
+  EXPECT_EQ(350, fm.GetViewport().X());
+  EXPECT_EQ(150, fm.GetViewport().Y());
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {

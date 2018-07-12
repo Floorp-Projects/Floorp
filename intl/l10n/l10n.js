@@ -44,7 +44,7 @@
 
   const resourceIds = getResourceLinks(document.head || document);
 
-  document.l10n = new DOMLocalization(window, resourceIds);
+  document.l10n = new DOMLocalization(resourceIds);
 
   // Trigger the first two contexts to be loaded eagerly.
   document.l10n.ctxs.touchNext(2);
