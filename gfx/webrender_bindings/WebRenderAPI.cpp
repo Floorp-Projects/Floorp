@@ -639,6 +639,23 @@ TransactionBuilder::UpdateExternalImage(ImageKey aKey,
 }
 
 void
+TransactionBuilder::UpdateExternalImageWithDirtyRect(ImageKey aKey,
+                                                     const ImageDescriptor& aDescriptor,
+                                                     ExternalImageId aExtID,
+                                                     wr::WrExternalImageBufferType aBufferType,
+                                                     const wr::DeviceUintRect& aDirtyRect,
+                                                     uint8_t aChannelIndex)
+{
+  wr_resource_updates_update_external_image_with_dirty_rect(mTxn,
+                                                            aKey,
+                                                            &aDescriptor,
+                                                            aExtID,
+                                                            aBufferType,
+                                                            aChannelIndex,
+                                                            aDirtyRect);
+}
+
+void
 TransactionBuilder::DeleteImage(ImageKey aKey)
 {
   wr_resource_updates_delete_image(mTxn, aKey);

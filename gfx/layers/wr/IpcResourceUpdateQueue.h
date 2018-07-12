@@ -99,11 +99,9 @@ public:
                        Range<uint8_t> aBytes,
                        ImageIntRect aDirtyRect);
 
-  void UpdateExternalImage(ImageKey aKey,
-                           const ImageDescriptor& aDescriptor,
-                           ExternalImageId aExtID,
-                           wr::WrExternalImageBufferType aBufferType,
-                           uint8_t aChannelIndex = 0);
+  void UpdateExternalImage(ExternalImageId aExtID,
+                           ImageKey aKey,
+                           ImageIntRect aDirtyRect);
 
   void DeleteImage(wr::ImageKey aKey);
 
