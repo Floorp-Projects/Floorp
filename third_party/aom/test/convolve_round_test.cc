@@ -11,8 +11,7 @@
 
 #include <assert.h>
 
-#include "config/av1_rtcd.h"
-
+#include "./av1_rtcd.h"
 #include "aom/aom_integer.h"
 #include "aom_ports/aom_timer.h"
 #include "test/acm_random.h"
@@ -52,7 +51,7 @@ void highbd_convolve_rounding_12(CONVOLVE_ROUNDING_PARAM) {
 
 typedef enum { LOWBITDEPTH_TEST, HIGHBITDEPTH_TEST } DataPathType;
 
-using ::testing::tuple;
+using std::tr1::tuple;
 
 typedef tuple<ConvolveRoundFunc, ConvolveRoundFunc, DataPathType>
     ConvolveRoundParam;
@@ -93,9 +92,11 @@ class ConvolveRoundTest : public ::testing::TestWithParam<ConvolveRoundParam> {
     if (data_path_ == LOWBITDEPTH_TEST) {
       dst = reinterpret_cast<uint8_t *>(dst_);
       dst_ref = reinterpret_cast<uint8_t *>(dst_ref_);
+#if CONFIG_HIGHBITDEPTH
     } else if (data_path_ == HIGHBITDEPTH_TEST) {
       dst = CONVERT_TO_BYTEPTR(dst_);
       dst_ref = CONVERT_TO_BYTEPTR(dst_ref_);
+#endif
     } else {
       assert(0);
     }
@@ -162,8 +163,10 @@ class ConvolveRoundTest : public ::testing::TestWithParam<ConvolveRoundParam> {
 
 TEST_P(ConvolveRoundTest, BitExactCheck) { ConvolveRoundingRun(); }
 
-using ::testing::make_tuple;
+using std::tr1::make_tuple;
+
 #if HAVE_AVX2
+#if CONFIG_HIGHBITDEPTH
 const ConvolveRoundParam kConvRndParamArray[] = {
   make_tuple(&av1_convolve_rounding_c, &av1_convolve_rounding_avx2,
              LOWBITDEPTH_TEST),
@@ -177,6 +180,11 @@ const ConvolveRoundParam kConvRndParamArray[] = {
              &highbd_convolve_rounding_12<av1_highbd_convolve_rounding_avx2>,
              HIGHBITDEPTH_TEST)
 };
+#else
+const ConvolveRoundParam kConvRndParamArray[] = { make_tuple(
+    &av1_convolve_rounding_c, &av1_convolve_rounding_avx2, LOWBITDEPTH_TEST) };
+#endif
+
 INSTANTIATE_TEST_CASE_P(AVX2, ConvolveRoundTest,
                         ::testing::ValuesIn(kConvRndParamArray));
 #endif  // HAVE_AVX2

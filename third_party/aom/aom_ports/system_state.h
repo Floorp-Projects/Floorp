@@ -12,7 +12,7 @@
 #ifndef AOM_PORTS_SYSTEM_STATE_H_
 #define AOM_PORTS_SYSTEM_STATE_H_
 
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 #if ARCH_X86 || ARCH_X86_64
 void aom_reset_mmx_state(void);

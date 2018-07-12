@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+*/
 
 #include <string.h>
 #include <limits.h>
@@ -15,9 +15,8 @@
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
@@ -28,34 +27,17 @@
 
 typedef unsigned int (*SadMxNFunc)(const uint8_t *src_ptr, int src_stride,
                                    const uint8_t *ref_ptr, int ref_stride);
-typedef ::testing::tuple<int, int, SadMxNFunc, int> SadMxNParam;
+typedef std::tr1::tuple<int, int, SadMxNFunc, int> SadMxNParam;
 
 typedef uint32_t (*SadMxNAvgFunc)(const uint8_t *src_ptr, int src_stride,
                                   const uint8_t *ref_ptr, int ref_stride,
                                   const uint8_t *second_pred);
-typedef ::testing::tuple<int, int, SadMxNAvgFunc, int> SadMxNAvgParam;
-
-typedef void (*JntCompAvgFunc)(uint8_t *comp_pred, const uint8_t *pred,
-                               int width, int height, const uint8_t *ref,
-                               int ref_stride,
-                               const JNT_COMP_PARAMS *jcp_param);
-typedef ::testing::tuple<int, int, JntCompAvgFunc, int> JntCompAvgParam;
-
-typedef unsigned int (*JntSadMxhFunc)(const uint8_t *src_ptr, int src_stride,
-                                      const uint8_t *ref_ptr, int ref_stride,
-                                      int width, int height);
-typedef ::testing::tuple<int, int, JntSadMxhFunc, int> JntSadMxhParam;
-
-typedef uint32_t (*JntSadMxNAvgFunc)(const uint8_t *src_ptr, int src_stride,
-                                     const uint8_t *ref_ptr, int ref_stride,
-                                     const uint8_t *second_pred,
-                                     const JNT_COMP_PARAMS *jcp_param);
-typedef ::testing::tuple<int, int, JntSadMxNAvgFunc, int> JntSadMxNAvgParam;
+typedef std::tr1::tuple<int, int, SadMxNAvgFunc, int> SadMxNAvgParam;
 
 typedef void (*SadMxNx4Func)(const uint8_t *src_ptr, int src_stride,
                              const uint8_t *const ref_ptr[], int ref_stride,
                              uint32_t *sad_array);
-typedef ::testing::tuple<int, int, SadMxNx4Func, int> SadMxNx4Param;
+typedef std::tr1::tuple<int, int, SadMxNx4Func, int> SadMxNx4Param;
 
 using libaom_test::ACMRandom;
 
@@ -72,19 +54,11 @@ class SADTestBase : public ::testing::Test {
         aom_memalign(kDataAlignment, kDataBufferSize));
     second_pred8_ =
         reinterpret_cast<uint8_t *>(aom_memalign(kDataAlignment, 128 * 128));
-    comp_pred8_ =
-        reinterpret_cast<uint8_t *>(aom_memalign(kDataAlignment, 128 * 128));
-    comp_pred8_test_ =
-        reinterpret_cast<uint8_t *>(aom_memalign(kDataAlignment, 128 * 128));
     source_data16_ = reinterpret_cast<uint16_t *>(
         aom_memalign(kDataAlignment, kDataBlockSize * sizeof(uint16_t)));
     reference_data16_ = reinterpret_cast<uint16_t *>(
         aom_memalign(kDataAlignment, kDataBufferSize * sizeof(uint16_t)));
     second_pred16_ = reinterpret_cast<uint16_t *>(
-        aom_memalign(kDataAlignment, 128 * 128 * sizeof(uint16_t)));
-    comp_pred16_ = reinterpret_cast<uint16_t *>(
-        aom_memalign(kDataAlignment, 128 * 128 * sizeof(uint16_t)));
-    comp_pred16_test_ = reinterpret_cast<uint16_t *>(
         aom_memalign(kDataAlignment, 128 * 128 * sizeof(uint16_t)));
   }
 
@@ -95,20 +69,12 @@ class SADTestBase : public ::testing::Test {
     reference_data8_ = NULL;
     aom_free(second_pred8_);
     second_pred8_ = NULL;
-    aom_free(comp_pred8_);
-    comp_pred8_ = NULL;
-    aom_free(comp_pred8_test_);
-    comp_pred8_test_ = NULL;
     aom_free(source_data16_);
     source_data16_ = NULL;
     aom_free(reference_data16_);
     reference_data16_ = NULL;
     aom_free(second_pred16_);
     second_pred16_ = NULL;
-    aom_free(comp_pred16_);
-    comp_pred16_ = NULL;
-    aom_free(comp_pred16_test_);
-    comp_pred16_test_ = NULL;
   }
 
   virtual void TearDown() { libaom_test::ClearSystemState(); }
@@ -126,16 +92,14 @@ class SADTestBase : public ::testing::Test {
       source_data_ = source_data8_;
       reference_data_ = reference_data8_;
       second_pred_ = second_pred8_;
-      comp_pred_ = comp_pred8_;
-      comp_pred_test_ = comp_pred8_test_;
+#if CONFIG_HIGHBITDEPTH
     } else {
       use_high_bit_depth_ = true;
       bit_depth_ = static_cast<aom_bit_depth_t>(bd_);
       source_data_ = CONVERT_TO_BYTEPTR(source_data16_);
       reference_data_ = CONVERT_TO_BYTEPTR(reference_data16_);
       second_pred_ = CONVERT_TO_BYTEPTR(second_pred16_);
-      comp_pred_ = CONVERT_TO_BYTEPTR(comp_pred16_);
-      comp_pred_test_ = CONVERT_TO_BYTEPTR(comp_pred16_test_);
+#endif  // CONFIG_HIGHBITDEPTH
     }
     mask_ = (1 << bit_depth_) - 1;
     source_stride_ = (width_ + 31) & ~31;
@@ -144,9 +108,11 @@ class SADTestBase : public ::testing::Test {
   }
 
   virtual uint8_t *GetReference(int block_idx) {
+#if CONFIG_HIGHBITDEPTH
     if (use_high_bit_depth_)
       return CONVERT_TO_BYTEPTR(CONVERT_TO_SHORTPTR(reference_data_) +
                                 block_idx * kDataBlockSize);
+#endif  // CONFIG_HIGHBITDEPTH
     return reference_data_ + block_idx * kDataBlockSize;
   }
 
@@ -156,17 +122,21 @@ class SADTestBase : public ::testing::Test {
     unsigned int sad = 0;
     const uint8_t *const reference8 = GetReference(block_idx);
     const uint8_t *const source8 = source_data_;
+#if CONFIG_HIGHBITDEPTH
     const uint16_t *const reference16 =
         CONVERT_TO_SHORTPTR(GetReference(block_idx));
     const uint16_t *const source16 = CONVERT_TO_SHORTPTR(source_data_);
+#endif  // CONFIG_HIGHBITDEPTH
     for (int h = 0; h < height_; ++h) {
       for (int w = 0; w < width_; ++w) {
         if (!use_high_bit_depth_) {
           sad += abs(source8[h * source_stride_ + w] -
                      reference8[h * reference_stride_ + w]);
+#if CONFIG_HIGHBITDEPTH
         } else {
           sad += abs(source16[h * source_stride_ + w] -
                      reference16[h * reference_stride_ + w]);
+#endif  // CONFIG_HIGHBITDEPTH
         }
       }
     }
@@ -181,10 +151,12 @@ class SADTestBase : public ::testing::Test {
     const uint8_t *const reference8 = GetReference(block_idx);
     const uint8_t *const source8 = source_data_;
     const uint8_t *const second_pred8 = second_pred_;
+#if CONFIG_HIGHBITDEPTH
     const uint16_t *const reference16 =
         CONVERT_TO_SHORTPTR(GetReference(block_idx));
     const uint16_t *const source16 = CONVERT_TO_SHORTPTR(source_data_);
     const uint16_t *const second_pred16 = CONVERT_TO_SHORTPTR(second_pred_);
+#endif  // CONFIG_HIGHBITDEPTH
     for (int h = 0; h < height_; ++h) {
       for (int w = 0; w < width_; ++w) {
         if (!use_high_bit_depth_) {
@@ -192,65 +164,13 @@ class SADTestBase : public ::testing::Test {
                           reference8[h * reference_stride_ + w];
           const uint8_t comp_pred = ROUND_POWER_OF_TWO(tmp, 1);
           sad += abs(source8[h * source_stride_ + w] - comp_pred);
+#if CONFIG_HIGHBITDEPTH
         } else {
           const int tmp = second_pred16[h * width_ + w] +
                           reference16[h * reference_stride_ + w];
           const uint16_t comp_pred = ROUND_POWER_OF_TWO(tmp, 1);
           sad += abs(source16[h * source_stride_ + w] - comp_pred);
-        }
-      }
-    }
-    return sad;
-  }
-
-  void ReferenceJntCompAvg(int block_idx) {
-    const uint8_t *const reference8 = GetReference(block_idx);
-    const uint8_t *const second_pred8 = second_pred_;
-    uint8_t *const comp_pred8 = comp_pred_;
-    const uint16_t *const reference16 =
-        CONVERT_TO_SHORTPTR(GetReference(block_idx));
-    const uint16_t *const second_pred16 = CONVERT_TO_SHORTPTR(second_pred_);
-    uint16_t *const comp_pred16 = CONVERT_TO_SHORTPTR(comp_pred_);
-    for (int h = 0; h < height_; ++h) {
-      for (int w = 0; w < width_; ++w) {
-        if (!use_high_bit_depth_) {
-          const int tmp =
-              second_pred8[h * width_ + w] * jcp_param_.bck_offset +
-              reference8[h * reference_stride_ + w] * jcp_param_.fwd_offset;
-          comp_pred8[h * width_ + w] = ROUND_POWER_OF_TWO(tmp, 4);
-        } else {
-          const int tmp =
-              second_pred16[h * width_ + w] * jcp_param_.bck_offset +
-              reference16[h * reference_stride_ + w] * jcp_param_.fwd_offset;
-          comp_pred16[h * width_ + w] = ROUND_POWER_OF_TWO(tmp, 4);
-        }
-      }
-    }
-  }
-
-  unsigned int ReferenceJntSADavg(int block_idx) {
-    unsigned int sad = 0;
-    const uint8_t *const reference8 = GetReference(block_idx);
-    const uint8_t *const source8 = source_data_;
-    const uint8_t *const second_pred8 = second_pred_;
-    const uint16_t *const reference16 =
-        CONVERT_TO_SHORTPTR(GetReference(block_idx));
-    const uint16_t *const source16 = CONVERT_TO_SHORTPTR(source_data_);
-    const uint16_t *const second_pred16 = CONVERT_TO_SHORTPTR(second_pred_);
-    for (int h = 0; h < height_; ++h) {
-      for (int w = 0; w < width_; ++w) {
-        if (!use_high_bit_depth_) {
-          const int tmp =
-              second_pred8[h * width_ + w] * jcp_param_.bck_offset +
-              reference8[h * reference_stride_ + w] * jcp_param_.fwd_offset;
-          const uint8_t comp_pred = ROUND_POWER_OF_TWO(tmp, 4);
-          sad += abs(source8[h * source_stride_ + w] - comp_pred);
-        } else {
-          const int tmp =
-              second_pred16[h * width_ + w] * jcp_param_.bck_offset +
-              reference16[h * reference_stride_ + w] * jcp_param_.fwd_offset;
-          const uint16_t comp_pred = ROUND_POWER_OF_TWO(tmp, 4);
-          sad += abs(source16[h * source_stride_ + w] - comp_pred);
+#endif  // CONFIG_HIGHBITDEPTH
         }
       }
     }
@@ -259,13 +179,17 @@ class SADTestBase : public ::testing::Test {
 
   void FillConstant(uint8_t *data, int stride, uint16_t fill_constant) {
     uint8_t *data8 = data;
+#if CONFIG_HIGHBITDEPTH
     uint16_t *data16 = CONVERT_TO_SHORTPTR(data);
+#endif  // CONFIG_HIGHBITDEPTH
     for (int h = 0; h < height_; ++h) {
       for (int w = 0; w < width_; ++w) {
         if (!use_high_bit_depth_) {
           data8[h * stride + w] = static_cast<uint8_t>(fill_constant);
+#if CONFIG_HIGHBITDEPTH
         } else {
           data16[h * stride + w] = fill_constant;
+#endif  // CONFIG_HIGHBITDEPTH
         }
       }
     }
@@ -273,13 +197,17 @@ class SADTestBase : public ::testing::Test {
 
   void FillRandom(uint8_t *data, int stride) {
     uint8_t *data8 = data;
+#if CONFIG_HIGHBITDEPTH
     uint16_t *data16 = CONVERT_TO_SHORTPTR(data);
+#endif  // CONFIG_HIGHBITDEPTH
     for (int h = 0; h < height_; ++h) {
       for (int w = 0; w < width_; ++w) {
         if (!use_high_bit_depth_) {
           data8[h * stride + w] = rnd_.Rand8();
+#if CONFIG_HIGHBITDEPTH
         } else {
           data16[h * stride + w] = rnd_.Rand16() & mask_;
+#endif  // CONFIG_HIGHBITDEPTH
         }
       }
     }
@@ -299,13 +227,6 @@ class SADTestBase : public ::testing::Test {
   static uint16_t *reference_data16_;
   static uint16_t *second_pred16_;
   int reference_stride_;
-  static uint8_t *comp_pred_;
-  static uint8_t *comp_pred8_;
-  static uint16_t *comp_pred16_;
-  static uint8_t *comp_pred_test_;
-  static uint8_t *comp_pred8_test_;
-  static uint16_t *comp_pred16_test_;
-  JNT_COMP_PARAMS jcp_param_;
 
   ACMRandom rnd_;
 };
@@ -391,116 +312,15 @@ class SADavgTest : public ::testing::WithParamInterface<SadMxNAvgParam>,
   }
 };
 
-class JntCompAvgTest : public ::testing::WithParamInterface<JntCompAvgParam>,
-                       public SADTestBase {
- public:
-  JntCompAvgTest() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
-
- protected:
-  void jnt_comp_avg(int block_idx) {
-    const uint8_t *const reference = GetReference(block_idx);
-
-    ASM_REGISTER_STATE_CHECK(GET_PARAM(2)(comp_pred_test_, second_pred_, width_,
-                                          height_, reference, reference_stride_,
-                                          &jcp_param_));
-  }
-
-  void CheckCompAvg() {
-    for (int j = 0; j < 2; ++j) {
-      for (int i = 0; i < 4; ++i) {
-        jcp_param_.fwd_offset = quant_dist_lookup_table[j][i][0];
-        jcp_param_.bck_offset = quant_dist_lookup_table[j][i][1];
-
-        ReferenceJntCompAvg(0);
-        jnt_comp_avg(0);
-
-        for (int y = 0; y < height_; ++y)
-          for (int x = 0; x < width_; ++x)
-            ASSERT_EQ(comp_pred_[y * width_ + x],
-                      comp_pred_test_[y * width_ + x]);
-      }
-    }
-  }
-};
-
-class JntSADTest : public ::testing::WithParamInterface<JntSadMxhParam>,
-                   public SADTestBase {
- public:
-  JntSADTest() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
-
- protected:
-  unsigned int SAD(int block_idx) {
-    unsigned int ret;
-    const uint8_t *const reference = GetReference(block_idx);
-
-    ASM_REGISTER_STATE_CHECK(ret = GET_PARAM(2)(source_data_, source_stride_,
-                                                reference, reference_stride_,
-                                                GET_PARAM(0), GET_PARAM(1)));
-    return ret;
-  }
-
-  void CheckSAD() {
-    const unsigned int reference_sad = ReferenceSAD(0);
-    const unsigned int exp_sad = SAD(0);
-
-    ASSERT_EQ(reference_sad, exp_sad);
-  }
-
-  void SpeedSAD() {
-    int test_count = 20000000;
-    while (test_count > 0) {
-      SAD(0);
-      test_count -= 1;
-    }
-  }
-};
-
-class JntSADavgTest : public ::testing::WithParamInterface<JntSadMxNAvgParam>,
-                      public SADTestBase {
- public:
-  JntSADavgTest() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
-
- protected:
-  unsigned int jnt_SAD_avg(int block_idx) {
-    unsigned int ret;
-    const uint8_t *const reference = GetReference(block_idx);
-
-    ASM_REGISTER_STATE_CHECK(ret = GET_PARAM(2)(source_data_, source_stride_,
-                                                reference, reference_stride_,
-                                                second_pred_, &jcp_param_));
-    return ret;
-  }
-
-  void CheckSAD() {
-    for (int j = 0; j < 2; ++j) {
-      for (int i = 0; i < 4; ++i) {
-        jcp_param_.fwd_offset = quant_dist_lookup_table[j][i][0];
-        jcp_param_.bck_offset = quant_dist_lookup_table[j][i][1];
-
-        const unsigned int reference_sad = ReferenceJntSADavg(0);
-        const unsigned int exp_sad = jnt_SAD_avg(0);
-
-        ASSERT_EQ(reference_sad, exp_sad);
-      }
-    }
-  }
-};
-
 uint8_t *SADTestBase::source_data_ = NULL;
 uint8_t *SADTestBase::reference_data_ = NULL;
 uint8_t *SADTestBase::second_pred_ = NULL;
-uint8_t *SADTestBase::comp_pred_ = NULL;
-uint8_t *SADTestBase::comp_pred_test_ = NULL;
 uint8_t *SADTestBase::source_data8_ = NULL;
 uint8_t *SADTestBase::reference_data8_ = NULL;
 uint8_t *SADTestBase::second_pred8_ = NULL;
-uint8_t *SADTestBase::comp_pred8_ = NULL;
-uint8_t *SADTestBase::comp_pred8_test_ = NULL;
 uint16_t *SADTestBase::source_data16_ = NULL;
 uint16_t *SADTestBase::reference_data16_ = NULL;
 uint16_t *SADTestBase::second_pred16_ = NULL;
-uint16_t *SADTestBase::comp_pred16_ = NULL;
-uint16_t *SADTestBase::comp_pred16_test_ = NULL;
 
 TEST_P(SADTest, MaxRef) {
   FillConstant(source_data_, source_stride_, 0);
@@ -608,132 +428,6 @@ TEST_P(SADavgTest, ShortSrc) {
   source_stride_ = tmp_stride;
 }
 
-TEST_P(JntCompAvgTest, MaxRef) {
-  FillConstant(reference_data_, reference_stride_, mask_);
-  FillConstant(second_pred_, width_, 0);
-  CheckCompAvg();
-}
-
-TEST_P(JntCompAvgTest, MaxSecondPred) {
-  FillConstant(reference_data_, reference_stride_, 0);
-  FillConstant(second_pred_, width_, mask_);
-  CheckCompAvg();
-}
-
-TEST_P(JntCompAvgTest, ShortRef) {
-  const int tmp_stride = reference_stride_;
-  reference_stride_ >>= 1;
-  FillRandom(reference_data_, reference_stride_);
-  FillRandom(second_pred_, width_);
-  CheckCompAvg();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntCompAvgTest, UnalignedRef) {
-  // The reference frame, but not the source frame, may be unaligned for
-  // certain types of searches.
-  const int tmp_stride = reference_stride_;
-  reference_stride_ -= 1;
-  FillRandom(reference_data_, reference_stride_);
-  FillRandom(second_pred_, width_);
-  CheckCompAvg();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADTest, MaxRef) {
-  FillConstant(source_data_, source_stride_, 0);
-  FillConstant(reference_data_, reference_stride_, mask_);
-  CheckSAD();
-}
-
-TEST_P(JntSADTest, MaxSrc) {
-  FillConstant(source_data_, source_stride_, mask_);
-  FillConstant(reference_data_, reference_stride_, 0);
-  CheckSAD();
-}
-
-TEST_P(JntSADTest, ShortRef) {
-  const int tmp_stride = reference_stride_;
-  reference_stride_ >>= 1;
-  FillRandom(source_data_, source_stride_);
-  FillRandom(reference_data_, reference_stride_);
-  CheckSAD();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADTest, UnalignedRef) {
-  // The reference frame, but not the source frame, may be unaligned for
-  // certain types of searches.
-  const int tmp_stride = reference_stride_;
-  reference_stride_ -= 1;
-  FillRandom(source_data_, source_stride_);
-  FillRandom(reference_data_, reference_stride_);
-  CheckSAD();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADTest, ShortSrc) {
-  const int tmp_stride = source_stride_;
-  source_stride_ >>= 1;
-  int test_count = 2000;
-  while (test_count > 0) {
-    FillRandom(source_data_, source_stride_);
-    FillRandom(reference_data_, reference_stride_);
-    CheckSAD();
-    test_count -= 1;
-  }
-  source_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADavgTest, MaxRef) {
-  FillConstant(source_data_, source_stride_, 0);
-  FillConstant(reference_data_, reference_stride_, mask_);
-  FillConstant(second_pred_, width_, 0);
-  CheckSAD();
-}
-TEST_P(JntSADavgTest, MaxSrc) {
-  FillConstant(source_data_, source_stride_, mask_);
-  FillConstant(reference_data_, reference_stride_, 0);
-  FillConstant(second_pred_, width_, 0);
-  CheckSAD();
-}
-
-TEST_P(JntSADavgTest, ShortRef) {
-  const int tmp_stride = reference_stride_;
-  reference_stride_ >>= 1;
-  FillRandom(source_data_, source_stride_);
-  FillRandom(reference_data_, reference_stride_);
-  FillRandom(second_pred_, width_);
-  CheckSAD();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADavgTest, UnalignedRef) {
-  // The reference frame, but not the source frame, may be unaligned for
-  // certain types of searches.
-  const int tmp_stride = reference_stride_;
-  reference_stride_ -= 1;
-  FillRandom(source_data_, source_stride_);
-  FillRandom(reference_data_, reference_stride_);
-  FillRandom(second_pred_, width_);
-  CheckSAD();
-  reference_stride_ = tmp_stride;
-}
-
-TEST_P(JntSADavgTest, ShortSrc) {
-  const int tmp_stride = source_stride_;
-  source_stride_ >>= 1;
-  int test_count = 2000;
-  while (test_count > 0) {
-    FillRandom(source_data_, source_stride_);
-    FillRandom(reference_data_, reference_stride_);
-    FillRandom(second_pred_, width_);
-    CheckSAD();
-    test_count -= 1;
-  }
-  source_stride_ = tmp_stride;
-}
-
 TEST_P(SADx4Test, MaxRef) {
   FillConstant(source_data_, source_stride_, 0);
   FillConstant(GetReference(0), reference_stride_, mask_);
@@ -806,14 +500,16 @@ TEST_P(SADx4Test, SrcAlignedByWidth) {
   source_data_ = tmp_source_data;
 }
 
-using ::testing::make_tuple;
+using std::tr1::make_tuple;
 
 //------------------------------------------------------------------------------
 // C functions
 const SadMxNParam c_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128_c, -1),
   make_tuple(128, 64, &aom_sad128x64_c, -1),
   make_tuple(64, 128, &aom_sad64x128_c, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64_c, -1),
   make_tuple(64, 32, &aom_sad64x32_c, -1),
   make_tuple(32, 64, &aom_sad32x64_c, -1),
@@ -827,9 +523,12 @@ const SadMxNParam c_tests[] = {
   make_tuple(8, 4, &aom_sad8x4_c, -1),
   make_tuple(4, 8, &aom_sad4x8_c, -1),
   make_tuple(4, 4, &aom_sad4x4_c, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_c, 8),
   make_tuple(128, 64, &aom_highbd_sad128x64_c, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128_c, 8),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_c, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32_c, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64_c, 8),
@@ -843,9 +542,11 @@ const SadMxNParam c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_c, 8),
   make_tuple(4, 8, &aom_highbd_sad4x8_c, 8),
   make_tuple(4, 4, &aom_highbd_sad4x4_c, 8),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_c, 10),
   make_tuple(128, 64, &aom_highbd_sad128x64_c, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128_c, 10),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_c, 10),
   make_tuple(64, 32, &aom_highbd_sad64x32_c, 10),
   make_tuple(32, 64, &aom_highbd_sad32x64_c, 10),
@@ -859,9 +560,11 @@ const SadMxNParam c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_c, 10),
   make_tuple(4, 8, &aom_highbd_sad4x8_c, 10),
   make_tuple(4, 4, &aom_highbd_sad4x4_c, 10),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_c, 12),
   make_tuple(128, 64, &aom_highbd_sad128x64_c, 12),
   make_tuple(64, 128, &aom_highbd_sad64x128_c, 12),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_c, 12),
   make_tuple(64, 32, &aom_highbd_sad64x32_c, 12),
   make_tuple(32, 64, &aom_highbd_sad32x64_c, 12),
@@ -875,13 +578,16 @@ const SadMxNParam c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_c, 12),
   make_tuple(4, 8, &aom_highbd_sad4x8_c, 12),
   make_tuple(4, 4, &aom_highbd_sad4x4_c, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADTest, ::testing::ValuesIn(c_tests));
 
 const SadMxNAvgParam avg_c_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128_avg_c, -1),
   make_tuple(128, 64, &aom_sad128x64_avg_c, -1),
   make_tuple(64, 128, &aom_sad64x128_avg_c, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64_avg_c, -1),
   make_tuple(64, 32, &aom_sad64x32_avg_c, -1),
   make_tuple(32, 64, &aom_sad32x64_avg_c, -1),
@@ -895,9 +601,12 @@ const SadMxNAvgParam avg_c_tests[] = {
   make_tuple(8, 4, &aom_sad8x4_avg_c, -1),
   make_tuple(4, 8, &aom_sad4x8_avg_c, -1),
   make_tuple(4, 4, &aom_sad4x4_avg_c, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_c, 8),
   make_tuple(128, 64, &aom_highbd_sad128x64_avg_c, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_c, 8),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_c, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32_avg_c, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64_avg_c, 8),
@@ -911,9 +620,11 @@ const SadMxNAvgParam avg_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_avg_c, 8),
   make_tuple(4, 8, &aom_highbd_sad4x8_avg_c, 8),
   make_tuple(4, 4, &aom_highbd_sad4x4_avg_c, 8),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_c, 10),
   make_tuple(128, 64, &aom_highbd_sad128x64_avg_c, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_c, 10),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_c, 10),
   make_tuple(64, 32, &aom_highbd_sad64x32_avg_c, 10),
   make_tuple(32, 64, &aom_highbd_sad32x64_avg_c, 10),
@@ -927,9 +638,11 @@ const SadMxNAvgParam avg_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_avg_c, 10),
   make_tuple(4, 8, &aom_highbd_sad4x8_avg_c, 10),
   make_tuple(4, 4, &aom_highbd_sad4x4_avg_c, 10),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_c, 12),
   make_tuple(128, 64, &aom_highbd_sad128x64_avg_c, 12),
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_c, 12),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_c, 12),
   make_tuple(64, 32, &aom_highbd_sad64x32_avg_c, 12),
   make_tuple(32, 64, &aom_highbd_sad32x64_avg_c, 12),
@@ -943,56 +656,16 @@ const SadMxNAvgParam avg_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4_avg_c, 12),
   make_tuple(4, 8, &aom_highbd_sad4x8_avg_c, 12),
   make_tuple(4, 4, &aom_highbd_sad4x4_avg_c, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADavgTest, ::testing::ValuesIn(avg_c_tests));
 
-// TODO(chengchen): add highbd tests
-const JntCompAvgParam jnt_comp_avg_c_tests[] = {
-  make_tuple(128, 128, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(128, 64, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(64, 128, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(64, 64, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(64, 32, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(32, 64, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(32, 32, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(32, 16, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(16, 32, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(16, 16, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(16, 8, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(8, 16, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(8, 8, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(8, 4, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(4, 8, &aom_jnt_comp_avg_pred_c, -1),
-  make_tuple(4, 4, &aom_jnt_comp_avg_pred_c, -1),
-};
-
-INSTANTIATE_TEST_CASE_P(C, JntCompAvgTest,
-                        ::testing::ValuesIn(jnt_comp_avg_c_tests));
-
-const JntSadMxNAvgParam jnt_avg_c_tests[] = {
-  make_tuple(128, 128, &aom_jnt_sad128x128_avg_c, -1),
-  make_tuple(128, 64, &aom_jnt_sad128x64_avg_c, -1),
-  make_tuple(64, 128, &aom_jnt_sad64x128_avg_c, -1),
-  make_tuple(64, 64, &aom_jnt_sad64x64_avg_c, -1),
-  make_tuple(64, 32, &aom_jnt_sad64x32_avg_c, -1),
-  make_tuple(32, 64, &aom_jnt_sad32x64_avg_c, -1),
-  make_tuple(32, 32, &aom_jnt_sad32x32_avg_c, -1),
-  make_tuple(32, 16, &aom_jnt_sad32x16_avg_c, -1),
-  make_tuple(16, 32, &aom_jnt_sad16x32_avg_c, -1),
-  make_tuple(16, 16, &aom_jnt_sad16x16_avg_c, -1),
-  make_tuple(16, 8, &aom_jnt_sad16x8_avg_c, -1),
-  make_tuple(8, 16, &aom_jnt_sad8x16_avg_c, -1),
-  make_tuple(8, 8, &aom_jnt_sad8x8_avg_c, -1),
-  make_tuple(8, 4, &aom_jnt_sad8x4_avg_c, -1),
-  make_tuple(4, 8, &aom_jnt_sad4x8_avg_c, -1),
-  make_tuple(4, 4, &aom_jnt_sad4x4_avg_c, -1),
-};
-INSTANTIATE_TEST_CASE_P(C, JntSADavgTest, ::testing::ValuesIn(jnt_avg_c_tests));
-
 const SadMxNx4Param x4d_c_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128x4d_c, -1),
   make_tuple(128, 64, &aom_sad128x64x4d_c, -1),
   make_tuple(64, 128, &aom_sad64x128x4d_c, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64x4d_c, -1),
   make_tuple(64, 32, &aom_sad64x32x4d_c, -1),
   make_tuple(32, 64, &aom_sad32x64x4d_c, -1),
@@ -1006,9 +679,12 @@ const SadMxNx4Param x4d_c_tests[] = {
   make_tuple(8, 4, &aom_sad8x4x4d_c, -1),
   make_tuple(4, 8, &aom_sad4x8x4d_c, -1),
   make_tuple(4, 4, &aom_sad4x4x4d_c, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_c, 8),
   make_tuple(128, 64, &aom_highbd_sad128x64x4d_c, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_c, 8),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_c, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32x4d_c, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64x4d_c, 8),
@@ -1022,9 +698,11 @@ const SadMxNx4Param x4d_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4x4d_c, 8),
   make_tuple(4, 8, &aom_highbd_sad4x8x4d_c, 8),
   make_tuple(4, 4, &aom_highbd_sad4x4x4d_c, 8),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_c, 10),
   make_tuple(128, 64, &aom_highbd_sad128x64x4d_c, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_c, 10),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_c, 10),
   make_tuple(64, 32, &aom_highbd_sad64x32x4d_c, 10),
   make_tuple(32, 64, &aom_highbd_sad32x64x4d_c, 10),
@@ -1038,9 +716,11 @@ const SadMxNx4Param x4d_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4x4d_c, 10),
   make_tuple(4, 8, &aom_highbd_sad4x8x4d_c, 10),
   make_tuple(4, 4, &aom_highbd_sad4x4x4d_c, 10),
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_c, 12),
   make_tuple(128, 64, &aom_highbd_sad128x64x4d_c, 12),
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_c, 12),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_c, 12),
   make_tuple(64, 32, &aom_highbd_sad64x32x4d_c, 12),
   make_tuple(32, 64, &aom_highbd_sad32x64x4d_c, 12),
@@ -1054,6 +734,7 @@ const SadMxNx4Param x4d_c_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4x4d_c, 12),
   make_tuple(4, 8, &aom_highbd_sad4x8x4d_c, 12),
   make_tuple(4, 4, &aom_highbd_sad4x4x4d_c, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADx4Test, ::testing::ValuesIn(x4d_c_tests));
 
@@ -1083,9 +764,11 @@ INSTANTIATE_TEST_CASE_P(NEON, SADx4Test, ::testing::ValuesIn(x4d_neon_tests));
 // x86 functions
 #if HAVE_SSE2
 const SadMxNParam sse2_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128_sse2, -1),
   make_tuple(128, 64, &aom_sad128x64_sse2, -1),
   make_tuple(64, 128, &aom_sad64x128_sse2, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64_sse2, -1),
   make_tuple(64, 32, &aom_sad64x32_sse2, -1),
   make_tuple(32, 64, &aom_sad32x64_sse2, -1),
@@ -1099,6 +782,7 @@ const SadMxNParam sse2_tests[] = {
   make_tuple(8, 4, &aom_sad8x4_sse2, -1),
   make_tuple(4, 8, &aom_sad4x8_sse2, -1),
   make_tuple(4, 4, &aom_sad4x4_sse2, -1),
+#if CONFIG_HIGHBITDEPTH
   make_tuple(64, 64, &aom_highbd_sad64x64_sse2, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32_sse2, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64_sse2, 8),
@@ -1132,13 +816,16 @@ const SadMxNParam sse2_tests[] = {
   make_tuple(8, 16, &aom_highbd_sad8x16_sse2, 12),
   make_tuple(8, 8, &aom_highbd_sad8x8_sse2, 12),
   make_tuple(8, 4, &aom_highbd_sad8x4_sse2, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADTest, ::testing::ValuesIn(sse2_tests));
 
 const SadMxNAvgParam avg_sse2_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128_avg_sse2, -1),
   make_tuple(128, 64, &aom_sad128x64_avg_sse2, -1),
   make_tuple(64, 128, &aom_sad64x128_avg_sse2, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64_avg_sse2, -1),
   make_tuple(64, 32, &aom_sad64x32_avg_sse2, -1),
   make_tuple(32, 64, &aom_sad32x64_avg_sse2, -1),
@@ -1152,6 +839,7 @@ const SadMxNAvgParam avg_sse2_tests[] = {
   make_tuple(8, 4, &aom_sad8x4_avg_sse2, -1),
   make_tuple(4, 8, &aom_sad4x8_avg_sse2, -1),
   make_tuple(4, 4, &aom_sad4x4_avg_sse2, -1),
+#if CONFIG_HIGHBITDEPTH
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_sse2, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32_avg_sse2, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64_avg_sse2, 8),
@@ -1185,13 +873,16 @@ const SadMxNAvgParam avg_sse2_tests[] = {
   make_tuple(8, 16, &aom_highbd_sad8x16_avg_sse2, 12),
   make_tuple(8, 8, &aom_highbd_sad8x8_avg_sse2, 12),
   make_tuple(8, 4, &aom_highbd_sad8x4_avg_sse2, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADavgTest, ::testing::ValuesIn(avg_sse2_tests));
 
 const SadMxNx4Param x4d_sse2_tests[] = {
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_sad128x128x4d_sse2, -1),
   make_tuple(128, 64, &aom_sad128x64x4d_sse2, -1),
   make_tuple(64, 128, &aom_sad64x128x4d_sse2, -1),
+#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
   make_tuple(64, 64, &aom_sad64x64x4d_sse2, -1),
   make_tuple(64, 32, &aom_sad64x32x4d_sse2, -1),
   make_tuple(32, 64, &aom_sad32x64x4d_sse2, -1),
@@ -1205,6 +896,7 @@ const SadMxNx4Param x4d_sse2_tests[] = {
   make_tuple(8, 4, &aom_sad8x4x4d_sse2, -1),
   make_tuple(4, 8, &aom_sad4x8x4d_sse2, -1),
   make_tuple(4, 4, &aom_sad4x4x4d_sse2, -1),
+#if CONFIG_HIGHBITDEPTH
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_sse2, 8),
   make_tuple(64, 32, &aom_highbd_sad64x32x4d_sse2, 8),
   make_tuple(32, 64, &aom_highbd_sad32x64x4d_sse2, 8),
@@ -1244,90 +936,17 @@ const SadMxNx4Param x4d_sse2_tests[] = {
   make_tuple(8, 4, &aom_highbd_sad8x4x4d_sse2, 12),
   make_tuple(4, 8, &aom_highbd_sad4x8x4d_sse2, 12),
   make_tuple(4, 4, &aom_highbd_sad4x4x4d_sse2, 12),
+#endif  // CONFIG_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADx4Test, ::testing::ValuesIn(x4d_sse2_tests));
 #endif  // HAVE_SSE2
-
-#if HAVE_SSSE3
-// Note: These are named sse2, but part of ssse3 file and only built and linked
-// when ssse3 is enabled.
-const JntSadMxhParam jnt_sad_sse2_tests[] = {
-  make_tuple(4, 4, &aom_sad4xh_sse2, -1),
-  make_tuple(4, 8, &aom_sad4xh_sse2, -1),
-  make_tuple(8, 4, &aom_sad8xh_sse2, -1),
-  make_tuple(8, 8, &aom_sad8xh_sse2, -1),
-  make_tuple(8, 16, &aom_sad8xh_sse2, -1),
-  make_tuple(16, 8, &aom_sad16xh_sse2, -1),
-  make_tuple(16, 16, &aom_sad16xh_sse2, -1),
-  make_tuple(16, 32, &aom_sad16xh_sse2, -1),
-  make_tuple(32, 16, &aom_sad32xh_sse2, -1),
-  make_tuple(32, 32, &aom_sad32xh_sse2, -1),
-  make_tuple(32, 64, &aom_sad32xh_sse2, -1),
-  make_tuple(64, 32, &aom_sad64xh_sse2, -1),
-  make_tuple(64, 64, &aom_sad64xh_sse2, -1),
-  make_tuple(128, 128, &aom_sad128xh_sse2, -1),
-  make_tuple(128, 64, &aom_sad128xh_sse2, -1),
-  make_tuple(64, 128, &aom_sad64xh_sse2, -1),
-  make_tuple(4, 16, &aom_sad4xh_sse2, -1),
-  make_tuple(16, 4, &aom_sad16xh_sse2, -1),
-  make_tuple(8, 32, &aom_sad8xh_sse2, -1),
-  make_tuple(32, 8, &aom_sad32xh_sse2, -1),
-  make_tuple(16, 64, &aom_sad16xh_sse2, -1),
-  make_tuple(64, 16, &aom_sad64xh_sse2, -1),
-};
-INSTANTIATE_TEST_CASE_P(SSE2, JntSADTest,
-                        ::testing::ValuesIn(jnt_sad_sse2_tests));
-
-#endif  // HAVE_SSSE3
 
 #if HAVE_SSE3
 // Only functions are x3, which do not have tests.
 #endif  // HAVE_SSE3
 
 #if HAVE_SSSE3
-const JntCompAvgParam jnt_comp_avg_ssse3_tests[] = {
-  make_tuple(128, 128, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(128, 64, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(64, 128, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(64, 64, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(64, 32, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(32, 64, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(32, 32, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(32, 16, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(16, 32, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(16, 16, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(16, 8, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(8, 16, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(8, 8, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(8, 4, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(4, 8, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(4, 4, &aom_jnt_comp_avg_pred_ssse3, -1),
-  make_tuple(16, 16, &aom_jnt_comp_avg_pred_ssse3, -1),
-};
-
-INSTANTIATE_TEST_CASE_P(SSSE3, JntCompAvgTest,
-                        ::testing::ValuesIn(jnt_comp_avg_ssse3_tests));
-
-const JntSadMxNAvgParam jnt_avg_ssse3_tests[] = {
-  make_tuple(128, 128, &aom_jnt_sad128x128_avg_ssse3, -1),
-  make_tuple(128, 64, &aom_jnt_sad128x64_avg_ssse3, -1),
-  make_tuple(64, 128, &aom_jnt_sad64x128_avg_ssse3, -1),
-  make_tuple(64, 64, &aom_jnt_sad64x64_avg_ssse3, -1),
-  make_tuple(64, 32, &aom_jnt_sad64x32_avg_ssse3, -1),
-  make_tuple(32, 64, &aom_jnt_sad32x64_avg_ssse3, -1),
-  make_tuple(32, 32, &aom_jnt_sad32x32_avg_ssse3, -1),
-  make_tuple(32, 16, &aom_jnt_sad32x16_avg_ssse3, -1),
-  make_tuple(16, 32, &aom_jnt_sad16x32_avg_ssse3, -1),
-  make_tuple(16, 16, &aom_jnt_sad16x16_avg_ssse3, -1),
-  make_tuple(16, 8, &aom_jnt_sad16x8_avg_ssse3, -1),
-  make_tuple(8, 16, &aom_jnt_sad8x16_avg_ssse3, -1),
-  make_tuple(8, 8, &aom_jnt_sad8x8_avg_ssse3, -1),
-  make_tuple(8, 4, &aom_jnt_sad8x4_avg_ssse3, -1),
-  make_tuple(4, 8, &aom_jnt_sad4x8_avg_ssse3, -1),
-  make_tuple(4, 4, &aom_jnt_sad4x4_avg_ssse3, -1),
-};
-INSTANTIATE_TEST_CASE_P(SSSE3, JntSADavgTest,
-                        ::testing::ValuesIn(jnt_avg_ssse3_tests));
+// Only functions are x3, which do not have tests.
 #endif  // HAVE_SSSE3
 
 #if HAVE_SSE4_1
@@ -1336,14 +955,18 @@ INSTANTIATE_TEST_CASE_P(SSSE3, JntSADavgTest,
 
 #if HAVE_AVX2
 const SadMxNParam avx2_tests[] = {
+#if CONFIG_EXT_PARTITION
   make_tuple(64, 128, &aom_sad64x128_avx2, -1),
   make_tuple(128, 64, &aom_sad128x64_avx2, -1),
   make_tuple(128, 128, &aom_sad128x128_avx2, -1),
+#endif
   make_tuple(64, 64, &aom_sad64x64_avx2, -1),
   make_tuple(64, 32, &aom_sad64x32_avx2, -1),
   make_tuple(32, 64, &aom_sad32x64_avx2, -1),
   make_tuple(32, 32, &aom_sad32x32_avx2, -1),
   make_tuple(32, 16, &aom_sad32x16_avx2, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_avx2, 8),
   make_tuple(128, 128, &aom_highbd_sad128x128_avx2, 10),
   make_tuple(128, 128, &aom_highbd_sad128x128_avx2, 12),
@@ -1353,6 +976,7 @@ const SadMxNParam avx2_tests[] = {
   make_tuple(64, 128, &aom_highbd_sad64x128_avx2, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128_avx2, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128_avx2, 12),
+#endif
   make_tuple(64, 64, &aom_highbd_sad64x64_avx2, 8),
   make_tuple(64, 64, &aom_highbd_sad64x64_avx2, 10),
   make_tuple(64, 64, &aom_highbd_sad64x64_avx2, 12),
@@ -1377,18 +1001,23 @@ const SadMxNParam avx2_tests[] = {
   make_tuple(16, 8, &aom_highbd_sad16x8_avx2, 8),
   make_tuple(16, 8, &aom_highbd_sad16x8_avx2, 10),
   make_tuple(16, 8, &aom_highbd_sad16x8_avx2, 12),
+#endif
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADTest, ::testing::ValuesIn(avx2_tests));
 
 const SadMxNAvgParam avg_avx2_tests[] = {
+#if CONFIG_EXT_PARTITION
   make_tuple(64, 128, &aom_sad64x128_avg_avx2, -1),
   make_tuple(128, 64, &aom_sad128x64_avg_avx2, -1),
   make_tuple(128, 128, &aom_sad128x128_avg_avx2, -1),
+#endif
   make_tuple(64, 64, &aom_sad64x64_avg_avx2, -1),
   make_tuple(64, 32, &aom_sad64x32_avg_avx2, -1),
   make_tuple(32, 64, &aom_sad32x64_avg_avx2, -1),
   make_tuple(32, 32, &aom_sad32x32_avg_avx2, -1),
   make_tuple(32, 16, &aom_sad32x16_avg_avx2, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_avx2, 8),
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_avx2, 10),
   make_tuple(128, 128, &aom_highbd_sad128x128_avg_avx2, 12),
@@ -1398,6 +1027,7 @@ const SadMxNAvgParam avg_avx2_tests[] = {
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_avx2, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_avx2, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128_avg_avx2, 12),
+#endif
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_avx2, 8),
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_avx2, 10),
   make_tuple(64, 64, &aom_highbd_sad64x64_avg_avx2, 12),
@@ -1422,17 +1052,22 @@ const SadMxNAvgParam avg_avx2_tests[] = {
   make_tuple(16, 8, &aom_highbd_sad16x8_avg_avx2, 8),
   make_tuple(16, 8, &aom_highbd_sad16x8_avg_avx2, 10),
   make_tuple(16, 8, &aom_highbd_sad16x8_avg_avx2, 12),
+#endif
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADavgTest, ::testing::ValuesIn(avg_avx2_tests));
 
 const SadMxNx4Param x4d_avx2_tests[] = {
+#if CONFIG_EXT_PARTITION
   make_tuple(64, 128, &aom_sad64x128x4d_avx2, -1),
   make_tuple(128, 64, &aom_sad128x64x4d_avx2, -1),
   make_tuple(128, 128, &aom_sad128x128x4d_avx2, -1),
+#endif
   make_tuple(64, 64, &aom_sad64x64x4d_avx2, -1),
   make_tuple(32, 64, &aom_sad32x64x4d_avx2, -1),
   make_tuple(64, 32, &aom_sad64x32x4d_avx2, -1),
   make_tuple(32, 32, &aom_sad32x32x4d_avx2, -1),
+#if CONFIG_HIGHBITDEPTH
+#if CONFIG_EXT_PARTITION
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_avx2, 8),
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_avx2, 10),
   make_tuple(128, 128, &aom_highbd_sad128x128x4d_avx2, 12),
@@ -1442,6 +1077,7 @@ const SadMxNx4Param x4d_avx2_tests[] = {
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_avx2, 8),
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_avx2, 10),
   make_tuple(64, 128, &aom_highbd_sad64x128x4d_avx2, 12),
+#endif
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_avx2, 8),
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_avx2, 10),
   make_tuple(64, 64, &aom_highbd_sad64x64x4d_avx2, 12),
@@ -1466,6 +1102,7 @@ const SadMxNx4Param x4d_avx2_tests[] = {
   make_tuple(16, 8, &aom_highbd_sad16x8x4d_avx2, 8),
   make_tuple(16, 8, &aom_highbd_sad16x8x4d_avx2, 10),
   make_tuple(16, 8, &aom_highbd_sad16x8x4d_avx2, 12),
+#endif
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADx4Test, ::testing::ValuesIn(x4d_avx2_tests));
 #endif  // HAVE_AVX2

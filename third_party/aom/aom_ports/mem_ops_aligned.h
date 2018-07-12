@@ -91,8 +91,7 @@
     *mem = (uint##sz##_t)raw;                                           \
   }
 
-#include "config/aom_config.h"
-
+#include "aom_config.h"
 #if CONFIG_BIG_ENDIAN
 #define mem_get_be_aligned_generic(sz) mem_get_ne_aligned_generic(be, sz)
 #define mem_get_sbe_aligned_generic(sz) mem_get_sne_aligned_generic(be, sz)

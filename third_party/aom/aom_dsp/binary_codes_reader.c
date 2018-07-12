@@ -33,6 +33,17 @@ static uint16_t inv_recenter_finite_nonneg(uint16_t n, uint16_t r, uint16_t v) {
   }
 }
 
+int16_t aom_read_primitive_symmetric_(aom_reader *r,
+                                      unsigned int mag_bits ACCT_STR_PARAM) {
+  if (aom_read_bit(r, ACCT_STR_NAME)) {
+    int s = aom_read_bit(r, ACCT_STR_NAME);
+    int16_t x = aom_read_literal(r, mag_bits, ACCT_STR_NAME) + 1;
+    return (s > 0 ? -x : x);
+  } else {
+    return 0;
+  }
+}
+
 uint16_t aom_read_primitive_quniform_(aom_reader *r,
                                       uint16_t n ACCT_STR_PARAM) {
   if (n <= 1) return 0;
@@ -51,56 +62,76 @@ static uint16_t aom_rb_read_primitive_quniform(struct aom_read_bit_buffer *rb,
   return v < m ? v : (v << 1) - m + aom_rb_read_bit(rb);
 }
 
+uint16_t aom_read_primitive_refbilevel_(aom_reader *r, uint16_t n, uint16_t p,
+                                        uint16_t ref ACCT_STR_PARAM) {
+  if (n <= 1) return 0;
+  assert(p > 0 && p <= n);
+  assert(ref < n);
+  int lolimit = ref - p / 2;
+  const int hilimit = lolimit + p - 1;
+  if (lolimit < 0) {
+    lolimit = 0;
+  } else if (hilimit >= n) {
+    lolimit = n - p;
+  }
+  int v;
+  if (aom_read_bit(r, ACCT_STR_NAME)) {
+    v = aom_read_primitive_quniform(r, p, ACCT_STR_NAME) + lolimit;
+  } else {
+    v = aom_read_primitive_quniform(r, n - p, ACCT_STR_NAME);
+    if (v >= lolimit) v += p;
+  }
+  return v;
+}
+
 // Decode finite subexponential code that for a symbol v in [0, n-1] with
 // parameter k
 uint16_t aom_read_primitive_subexpfin_(aom_reader *r, uint16_t n,
                                        uint16_t k ACCT_STR_PARAM) {
   int i = 0;
   int mk = 0;
-
+  uint16_t v;
   while (1) {
     int b = (i ? k + i - 1 : k);
     int a = (1 << b);
-
     if (n <= mk + 3 * a) {
-      return aom_read_primitive_quniform(r, n - mk, ACCT_STR_NAME) + mk;
+      v = aom_read_primitive_quniform(r, n - mk, ACCT_STR_NAME) + mk;
+      break;
+    } else {
+      if (aom_read_bit(r, ACCT_STR_NAME)) {
+        i = i + 1;
+        mk += a;
+      } else {
+        v = aom_read_literal(r, b, ACCT_STR_NAME) + mk;
+        break;
+      }
     }
-
-    if (!aom_read_bit(r, ACCT_STR_NAME)) {
-      return aom_read_literal(r, b, ACCT_STR_NAME) + mk;
-    }
-
-    i = i + 1;
-    mk += a;
   }
-
-  assert(0);
-  return 0;
+  return v;
 }
 
 static uint16_t aom_rb_read_primitive_subexpfin(struct aom_read_bit_buffer *rb,
                                                 uint16_t n, uint16_t k) {
   int i = 0;
   int mk = 0;
-
+  uint16_t v;
   while (1) {
     int b = (i ? k + i - 1 : k);
     int a = (1 << b);
-
     if (n <= mk + 3 * a) {
-      return aom_rb_read_primitive_quniform(rb, n - mk) + mk;
+      v = aom_rb_read_primitive_quniform(rb, n - mk) + mk;
+      break;
+    } else {
+      if (aom_rb_read_bit(rb)) {
+        i = i + 1;
+        mk += a;
+      } else {
+        v = aom_rb_read_literal(rb, b) + mk;
+        break;
+      }
     }
-
-    if (!aom_rb_read_bit(rb)) {
-      return aom_rb_read_literal(rb, b) + mk;
-    }
-
-    i = i + 1;
-    mk += a;
   }
-
-  assert(0);
-  return 0;
+  return v;
 }
 
 uint16_t aom_read_primitive_refsubexpfin_(aom_reader *r, uint16_t n, uint16_t k,
@@ -115,19 +146,20 @@ static uint16_t aom_rb_read_primitive_refsubexpfin(
                                     aom_rb_read_primitive_subexpfin(rb, n, k));
 }
 
+// Decode finite subexponential code that for a symbol v in [-(n-1), n-1] with
+// parameter k based on a reference ref also in [-(n-1), n-1].
+int16_t aom_read_signed_primitive_refsubexpfin_(aom_reader *r, uint16_t n,
+                                                uint16_t k,
+                                                int16_t ref ACCT_STR_PARAM) {
+  ref += n - 1;
+  const uint16_t scaled_n = (n << 1) - 1;
+  return aom_read_primitive_refsubexpfin(r, scaled_n, k, ref, ACCT_STR_NAME) -
+         n + 1;
+}
+
 int16_t aom_rb_read_signed_primitive_refsubexpfin(
     struct aom_read_bit_buffer *rb, uint16_t n, uint16_t k, int16_t ref) {
   ref += n - 1;
   const uint16_t scaled_n = (n << 1) - 1;
   return aom_rb_read_primitive_refsubexpfin(rb, scaled_n, k, ref) - n + 1;
-}
-
-uint32_t aom_rb_read_uvlc(struct aom_read_bit_buffer *rb) {
-  int leading_zeros = 0;
-  while (!aom_rb_read_bit(rb)) ++leading_zeros;
-  // Maximum 32 bits.
-  if (leading_zeros >= 32) return UINT32_MAX;
-  const uint32_t base = (1u << leading_zeros) - 1;
-  const uint32_t value = aom_rb_read_literal(rb, leading_zeros);
-  return base + value;
 }

@@ -11,9 +11,8 @@
 
 #include <arm_neon.h>
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "aom/aom_integer.h"
 
 static INLINE unsigned int horizontal_long_add_16x8(const uint16x8_t vec_lo,

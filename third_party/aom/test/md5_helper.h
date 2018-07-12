@@ -12,8 +12,8 @@
 #ifndef TEST_MD5_HELPER_H_
 #define TEST_MD5_HELPER_H_
 
+#include "./md5_utils.h"
 #include "aom/aom_decoder.h"
-#include "common/md5_utils.h"
 
 namespace libaom_test {
 class MD5 {

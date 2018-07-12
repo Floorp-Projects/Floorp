@@ -11,7 +11,12 @@
 #include "av1/decoder/decoder.h"
 #include "av1/decoder/inspection.h"
 #include "av1/common/enums.h"
+#if CONFIG_CDEF
 #include "av1/common/cdef.h"
+#endif
+#if CONFIG_CFL
+#include "av1/common/cfl.h"
+#endif
 
 static void ifd_init_mi_rc(insp_frame_data *fd, int mi_cols, int mi_rows) {
   fd->mi_cols = mi_cols;
@@ -43,29 +48,25 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
   fd->show_frame = cm->show_frame;
   fd->frame_type = cm->frame_type;
   fd->base_qindex = cm->base_qindex;
-  // Set width and height of the first tile until generic support can be added
-  TileInfo tile_info;
-  av1_tile_set_row(&tile_info, cm, 0);
-  av1_tile_set_col(&tile_info, cm, 0);
-  fd->tile_mi_cols = tile_info.mi_col_end - tile_info.mi_col_start;
-  fd->tile_mi_rows = tile_info.mi_row_end - tile_info.mi_row_start;
-  fd->delta_q_present_flag = cm->delta_q_present_flag;
-  fd->delta_q_res = cm->delta_q_res;
+  fd->tile_mi_cols = cm->tile_width;
+  fd->tile_mi_rows = cm->tile_height;
 #if CONFIG_ACCOUNTING
   fd->accounting = &pbi->accounting;
 #endif
-  // TODO(negge): copy per frame CDEF data
+#if CONFIG_CDEF
+// TODO(negge): copy per frame CDEF data
+#endif
   int i, j;
   for (i = 0; i < MAX_SEGMENTS; i++) {
     for (j = 0; j < 2; j++) {
-      fd->y_dequant[i][j] = cm->y_dequant_QTX[i][j];
-      fd->u_dequant[i][j] = cm->u_dequant_QTX[i][j];
-      fd->v_dequant[i][j] = cm->v_dequant_QTX[i][j];
+      fd->y_dequant[i][j] = cm->y_dequant[i][j];
+      fd->uv_dequant[i][j] = cm->uv_dequant[i][j];
     }
   }
   for (j = 0; j < cm->mi_rows; j++) {
     for (i = 0; i < cm->mi_cols; i++) {
-      const MB_MODE_INFO *mbmi = cm->mi_grid_visible[j * cm->mi_stride + i];
+      const MB_MODE_INFO *mbmi =
+          &cm->mi_grid_visible[j * cm->mi_stride + i]->mbmi;
       insp_mi_data *mi = &fd->mi_grid[j * cm->mi_cols + i];
       // Segment
       mi->segment_id = mbmi->segment_id;
@@ -89,19 +90,24 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
       mi->sb_type = mbmi->sb_type;
       // Skip Flag
       mi->skip = mbmi->skip;
+#if CONFIG_DUAL_FILTER
       mi->filter[0] = av1_extract_interp_filter(mbmi->interp_filters, 0);
       mi->filter[1] = av1_extract_interp_filter(mbmi->interp_filters, 1);
-      mi->dual_filter_type = mi->filter[0] * 3 + mi->filter[1];
+#else
+      mi->filter = av1_extract_interp_filter(mbmi->interp_filters, 0);
+#endif
       // Transform
-      // TODO(anyone): extract tx type info from mbmi->txk_type[].
-      mi->tx_type = DCT_DCT;
+      mi->tx_type = mbmi->tx_type;
       mi->tx_size = mbmi->tx_size;
 
+#if CONFIG_CDEF
       mi->cdef_level =
           cm->cdef_strengths[mbmi->cdef_strength] / CDEF_SEC_STRENGTHS;
       mi->cdef_strength =
           cm->cdef_strengths[mbmi->cdef_strength] % CDEF_SEC_STRENGTHS;
       mi->cdef_strength += mi->cdef_strength == 3;
+#endif
+#if CONFIG_CFL
       if (mbmi->uv_mode == UV_CFL_PRED) {
         mi->cfl_alpha_idx = mbmi->cfl_alpha_idx;
         mi->cfl_alpha_sign = mbmi->cfl_alpha_signs;
@@ -109,8 +115,7 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
         mi->cfl_alpha_idx = 0;
         mi->cfl_alpha_sign = 0;
       }
-      // delta_q
-      mi->current_qindex = mbmi->current_qindex;
+#endif
     }
   }
   return 1;

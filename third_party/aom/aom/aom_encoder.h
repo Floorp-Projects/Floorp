@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#include "aom/aom_codec.h"
+#include "./aom_codec.h"
 
 /*!\brief Current ABI version number
  *
@@ -159,8 +159,6 @@ typedef struct aom_codec_cx_pkt {
        * Only applicable when "output partition" mode is enabled. First
        * partition has id 0.*/
       int partition_id;
-      /*!\brief size of the visible frame in this packet */
-      size_t vis_frame_size;
     } frame;                            /**< data for compressed frame packet */
     aom_fixed_buf_t twopass_stats;      /**< data for two-pass packet */
     aom_fixed_buf_t firstpass_mb_stats; /**< first pass mb packet */
@@ -283,25 +281,6 @@ typedef struct aom_codec_enc_cfg {
    * resolution, independent of any spatial resampling the encoder may do.
    */
   unsigned int g_h;
-
-  /*!\brief Max number of frames to encode
-   *
-   */
-  unsigned int g_limit;
-
-  /*!\brief Forced maximum width of the frame
-   *
-   * If this value is non-zero then it is used to force the maximum frame
-   * width written in write_sequence_header().
-   */
-  unsigned int g_forced_max_frame_width;
-
-  /*!\brief Forced maximum height of the frame
-   *
-   * If this value is non-zero then it is used to force the maximum frame
-   * height written in write_sequence_header().
-   */
-  unsigned int g_forced_max_frame_height;
 
   /*!\brief Bit-depth of the codec
    *
@@ -607,11 +586,6 @@ typedef struct aom_codec_enc_cfg {
    * keyframing settings (kf)
    */
 
-  /*!\brief Option to enable forward reference key frame
-   *
-   */
-  int fwd_kf_enabled;
-
   /*!\brief Keyframe placement mode
    *
    * This value indicates whether the encoder should place keyframes at a
@@ -638,28 +612,6 @@ typedef struct aom_codec_enc_cfg {
    */
   unsigned int kf_max_dist;
 
-  /*!\brief sframe interval
-   *
-   * This value, expressed as a number of frames, forces the encoder to code
-   * an S-Frame every sframe_dist frames.
-   */
-  unsigned int sframe_dist;
-
-  /*!\brief sframe insertion mode
-   *
-   * This value must be set to 1 or 2, and tells the encoder how to insert
-   * S-Frames. It will only have an effect if sframe_dist != 0.
-   *
-   * If altref is enabled:
-   *   - if sframe_mode == 1, the considered frame will be made into an
-   *     S-Frame only if it is an altref frame
-   *   - if sframe_mode == 2, the next altref frame will be made into an
-   *     S-Frame.
-   *
-   * Otherwise: the considered frame will be made into an S-Frame.
-   */
-  unsigned int sframe_mode;
-
   /*!\brief Tile coding mode
    *
    * This value indicates the tile coding mode.
@@ -667,30 +619,6 @@ typedef struct aom_codec_enc_cfg {
    * implies a large-scale tile coding.
    */
   unsigned int large_scale_tile;
-
-  /*!\brief Monochrome mode
-   *
-   * If this is nonzero, the encoder will generate a monochrome stream
-   * with no chroma planes.
-   */
-  unsigned int monochrome;
-
-  /*!\brief full_still_picture_hdr
-   *
-   * If this is nonzero, the encoder will generate a full header even for
-   * still picture encoding. if zero, a reduced header is used for still
-   * picture. This flag has no effect when a regular video with more than
-   * a single frame is encoded.
-   */
-  unsigned int full_still_picture_hdr;
-
-  /*!\brief Bitstream syntax mode
-   *
-   * This value indicates the bitstream syntax mode.
-   * A value of 0 indicates bitstream is saved as Section 5 bitstream. A value
-   * of 1 indicates the bitstream is saved in Annex-B format
-   */
-  unsigned int save_as_annexb;
 
   /*!\brief Number of explicit tile widths specified
    *
@@ -733,11 +661,6 @@ typedef struct aom_codec_enc_cfg {
    * The number of heights specified is given by tile_height_count
    */
   int tile_heights[MAX_TILE_HEIGHTS];
-
-  /*!\brief Options defined per config file
-   *
-   */
-  cfg_options_t cfg;
 } aom_codec_enc_cfg_t; /**< alias for struct aom_codec_enc_cfg */
 
 /*!\brief Initialize an encoder instance
@@ -859,10 +782,22 @@ aom_codec_err_t aom_codec_enc_config_set(aom_codec_ctx_t *ctx,
  */
 aom_fixed_buf_t *aom_codec_get_global_headers(aom_codec_ctx_t *ctx);
 
+/*!\brief deadline parameter analogous to  AVx GOOD QUALITY mode. */
+#define AOM_DL_GOOD_QUALITY (1000000)
 /*!\brief Encode a frame
  *
  * Encodes a video frame at the given "presentation time." The presentation
  * time stamp (PTS) \ref MUST be strictly increasing.
+ *
+ * The encoder supports the notion of a soft real-time deadline. Given a
+ * non-zero value to the deadline parameter, the encoder will make a "best
+ * effort" guarantee to  return before the given time slice expires. It is
+ * implicit that limiting the available time to encode will degrade the
+ * output quality. The encoder can be given an unlimited time to produce the
+ * best possible frame by specifying a deadline of '0'. This deadline
+ * supercedes the AVx notion of "best quality, good quality, realtime".
+ * Applications that wish to map these former settings to the new deadline
+ * based system can use the symbol #AOM_DL_GOOD_QUALITY.
  *
  * When the last frame has been passed to the encoder, this function should
  * continue to be called, with the img parameter set to NULL. This will
@@ -875,6 +810,7 @@ aom_fixed_buf_t *aom_codec_get_global_headers(aom_codec_ctx_t *ctx);
  * \param[in]    pts       Presentation time stamp, in timebase units.
  * \param[in]    duration  Duration to show frame, in timebase units.
  * \param[in]    flags     Flags to use for encoding this frame.
+ * \param[in]    deadline  Time to spend encoding, in microseconds. (0=infinite)
  *
  * \retval #AOM_CODEC_OK
  *     The configuration was populated.
@@ -885,7 +821,8 @@ aom_fixed_buf_t *aom_codec_get_global_headers(aom_codec_ctx_t *ctx);
  */
 aom_codec_err_t aom_codec_encode(aom_codec_ctx_t *ctx, const aom_image_t *img,
                                  aom_codec_pts_t pts, unsigned long duration,
-                                 aom_enc_frame_flags_t flags);
+                                 aom_enc_frame_flags_t flags,
+                                 unsigned long deadline);
 
 /*!\brief Set compressed data output buffer
  *

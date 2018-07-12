@@ -13,7 +13,7 @@
  * \brief Provides the high level interface to wrap encoder algorithms.
  *
  */
-#include "config/aom_config.h"
+#include "./aom_config.h"
 
 #if HAVE_FEXCEPT
 #define _GNU_SOURCE
@@ -171,13 +171,13 @@ aom_codec_err_t aom_codec_enc_config_default(aom_codec_iface_t *iface,
     }
   }
 
-  /* default values */
-  if (cfg) {
-    cfg->cfg.ext_partition = 1;
-  }
-
   return res;
 }
+
+/* clang-format off */
+#define FLOATING_POINT_BEGIN_SCOPE do {
+#define FLOATING_POINT_END_SCOPE } while (0);
+/* clang-format on */
 
 #if ARCH_X86 || ARCH_X86_64
 /* On X86, disable the x87 unit's internal 80 bit precision for better
@@ -201,21 +201,20 @@ aom_codec_err_t aom_codec_enc_config_default(aom_codec_iface_t *iface,
 #define FLOATING_POINT_RESTORE_EXCEPTIONS
 #endif  // HAVE_FEXCEPT && CONFIG_DEBUG
 
-/* clang-format off */
 #define FLOATING_POINT_INIT    \
-  do {                         \
+  FLOATING_POINT_BEGIN_SCOPE   \
   FLOATING_POINT_SET_PRECISION \
   FLOATING_POINT_SET_EXCEPTIONS
 
 #define FLOATING_POINT_RESTORE      \
   FLOATING_POINT_RESTORE_EXCEPTIONS \
   FLOATING_POINT_RESTORE_PRECISION  \
-  } while (0);
-/* clang-format on */
+  FLOATING_POINT_END_SCOPE
 
 aom_codec_err_t aom_codec_encode(aom_codec_ctx_t *ctx, const aom_image_t *img,
                                  aom_codec_pts_t pts, unsigned long duration,
-                                 aom_enc_frame_flags_t flags) {
+                                 aom_enc_frame_flags_t flags,
+                                 unsigned long deadline) {
   aom_codec_err_t res = AOM_CODEC_OK;
 
   if (!ctx || (img && !duration))
@@ -233,8 +232,8 @@ aom_codec_err_t aom_codec_encode(aom_codec_ctx_t *ctx, const aom_image_t *img,
     FLOATING_POINT_INIT
 
     if (num_enc == 1)
-      res =
-          ctx->iface->enc.encode(get_alg_priv(ctx), img, pts, duration, flags);
+      res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts, duration, flags,
+                                   deadline);
     else {
       /* Multi-resolution encoding:
        * Encode multi-levels in reverse order. For example,
@@ -248,7 +247,7 @@ aom_codec_err_t aom_codec_encode(aom_codec_ctx_t *ctx, const aom_image_t *img,
 
       for (i = num_enc - 1; i >= 0; i--) {
         if ((res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts, duration,
-                                          flags)))
+                                          flags, deadline)))
           break;
 
         ctx--;

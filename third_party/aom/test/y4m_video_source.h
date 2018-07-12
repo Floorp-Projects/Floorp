@@ -13,8 +13,8 @@
 #include <algorithm>
 #include <string>
 
-#include "common/y4minput.h"
 #include "test/video_source.h"
+#include "./y4minput.h"
 
 namespace libaom_test {
 

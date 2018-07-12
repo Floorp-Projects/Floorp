@@ -16,11 +16,18 @@
 #include "av1/common/seg_common.h"
 #include "av1/common/quant_common.h"
 
-static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 1, 1, 1, 0, 0 };
+#if CONFIG_LOOPFILTER_LEVEL
+static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 1, 1, 0, 0 };
 
 static const int seg_feature_data_max[SEG_LVL_MAX] = {
-  MAXQ, MAX_LOOP_FILTER, MAX_LOOP_FILTER, MAX_LOOP_FILTER, MAX_LOOP_FILTER, 7, 0
+  MAXQ, MAX_LOOP_FILTER, MAX_LOOP_FILTER, MAX_LOOP_FILTER, 0
 };
+#else
+static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 0, 0 };
+
+static const int seg_feature_data_max[SEG_LVL_MAX] = { MAXQ, MAX_LOOP_FILTER, 3,
+                                                       0 };
+#endif  // CONFIG_LOOPFILTER_LEVEL
 
 // These functions provide access to new segment level features.
 // Eventually these function may be "optimized out" but for the moment,
@@ -30,19 +37,6 @@ static const int seg_feature_data_max[SEG_LVL_MAX] = {
 void av1_clearall_segfeatures(struct segmentation *seg) {
   av1_zero(seg->feature_data);
   av1_zero(seg->feature_mask);
-}
-
-void calculate_segdata(struct segmentation *seg) {
-  seg->segid_preskip = 0;
-  seg->last_active_segid = 0;
-  for (int i = 0; i < MAX_SEGMENTS; i++) {
-    for (int j = 0; j < SEG_LVL_MAX; j++) {
-      if (seg->feature_mask[i] & (1 << j)) {
-        seg->segid_preskip |= (j >= SEG_LVL_REF_FRAME);
-        seg->last_active_segid = i;
-      }
-    }
-  }
 }
 
 void av1_enable_segfeature(struct segmentation *seg, int segment_id,
@@ -58,17 +52,6 @@ int av1_is_segfeature_signed(SEG_LVL_FEATURES feature_id) {
   return seg_feature_data_signed[feature_id];
 }
 
-// The 'seg_data' given for each segment can be either deltas (from the default
-// value chosen for the frame) or absolute values.
-//
-// Valid range for abs values is (0-127 for MB_LVL_ALT_Q), (0-63 for
-// SEGMENT_ALT_LF)
-// Valid range for delta values are (+/-127 for MB_LVL_ALT_Q), (+/-63 for
-// SEGMENT_ALT_LF)
-//
-// abs_delta = SEGMENT_DELTADATA (deltas) abs_delta = SEGMENT_ABSDATA (use
-// the absolute values given).
-
 void av1_set_segdata(struct segmentation *seg, int segment_id,
                      SEG_LVL_FEATURES feature_id, int seg_data) {
   if (seg_data < 0) {
@@ -80,5 +63,9 @@ void av1_set_segdata(struct segmentation *seg, int segment_id,
 
   seg->feature_data[segment_id][feature_id] = seg_data;
 }
+
+const aom_tree_index av1_segment_tree[TREE_SIZE(MAX_SEGMENTS)] = {
+  2, 4, 6, 8, 10, 12, 0, -1, -2, -3, -4, -5, -6, -7
+};
 
 // TBD? Functions to read and write segment data with range / validity checking

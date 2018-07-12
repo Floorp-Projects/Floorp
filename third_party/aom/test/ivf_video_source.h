@@ -10,17 +10,14 @@
  */
 #ifndef TEST_IVF_VIDEO_SOURCE_H_
 #define TEST_IVF_VIDEO_SOURCE_H_
-
 #include <cstdio>
 #include <cstdlib>
 #include <new>
 #include <string>
-
-#include "aom_ports/sanitizer.h"
 #include "test/video_source.h"
 
 namespace libaom_test {
-const unsigned int kCodeBufferSize = 256 * 1024 * 1024;
+const unsigned int kCodeBufferSize = 256 * 1024;
 const unsigned int kIvfFileHdrSize = 32;
 const unsigned int kIvfFrameHdrSize = 12;
 
@@ -44,10 +41,9 @@ class IVFVideoSource : public CompressedVideoSource {
 
   virtual void Init() {
     // Allocate a buffer for read in the compressed video frame.
-    compressed_frame_buf_ = new uint8_t[kCodeBufferSize];
+    compressed_frame_buf_ = new uint8_t[libaom_test::kCodeBufferSize];
     ASSERT_TRUE(compressed_frame_buf_ != NULL)
         << "Allocate frame buffer failed";
-    ASAN_POISON_MEMORY_REGION(compressed_frame_buf_, kCodeBufferSize);
   }
 
   virtual void Begin() {
@@ -85,12 +81,9 @@ class IVFVideoSource : public CompressedVideoSource {
       frame_sz_ = MemGetLe32(frame_hdr);
       ASSERT_LE(frame_sz_, kCodeBufferSize)
           << "Frame is too big for allocated code buffer";
-      ASAN_UNPOISON_MEMORY_REGION(compressed_frame_buf_, kCodeBufferSize);
       ASSERT_EQ(frame_sz_,
                 fread(compressed_frame_buf_, 1, frame_sz_, input_file_))
           << "Failed to read complete frame";
-      ASAN_POISON_MEMORY_REGION(compressed_frame_buf_ + frame_sz_,
-                                kCodeBufferSize - frame_sz_);
     }
   }
 

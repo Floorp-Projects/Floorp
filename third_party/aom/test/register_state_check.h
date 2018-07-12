@@ -13,9 +13,7 @@
 #define TEST_REGISTER_STATE_CHECK_H_
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
-
-#include "config/aom_config.h"
-
+#include "./aom_config.h"
 #include "aom/aom_integer.h"
 
 // ASM_REGISTER_STATE_CHECK(asm_function)
@@ -31,7 +29,7 @@
 //   See platform implementations of RegisterStateCheckXXX for details.
 //
 
-#if defined(_WIN64) && ARCH_X86_64
+#if defined(_WIN64)
 
 #undef NOMINMAX
 #define NOMINMAX
@@ -90,6 +88,53 @@ class RegisterStateCheck {
 
 }  // namespace libaom_test
 
+#elif defined(CONFIG_SHARED) && defined(HAVE_NEON_ASM) && !CONFIG_SHARED && \
+    HAVE_NEON_ASM && CONFIG_AV1
+
+extern "C" {
+// Save the d8-d15 registers into store.
+void aom_push_neon(int64_t *store);
+}
+
+namespace libaom_test {
+
+// Compares the state of d8-d15 at construction with their state at
+// destruction. These registers should be preserved by the callee on
+// arm platform.
+class RegisterStateCheck {
+ public:
+  RegisterStateCheck() { initialized_ = StoreRegisters(pre_store_); }
+  ~RegisterStateCheck() { Check(); }
+
+ private:
+  static bool StoreRegisters(int64_t store[8]) {
+    aom_push_neon(store);
+    return true;
+  }
+
+  // Compares the register state. Returns true if the states match.
+  void Check() const {
+    ASSERT_TRUE(initialized_);
+    int64_t post_store[8];
+    aom_push_neon(post_store);
+    for (int i = 0; i < 8; ++i) {
+      EXPECT_EQ(pre_store_[i], post_store[i])
+          << "d" << i + 8 << " has been modified";
+    }
+  }
+
+  bool initialized_;
+  int64_t pre_store_[8];
+};
+
+#define ASM_REGISTER_STATE_CHECK(statement)    \
+  do {                                         \
+    libaom_test::RegisterStateCheck reg_check; \
+    statement;                                 \
+  } while (false)
+
+}  // namespace libaom_test
+
 #else
 
 namespace libaom_test {
@@ -99,7 +144,7 @@ class RegisterStateCheck {};
 
 }  // namespace libaom_test
 
-#endif  // _WIN64 && ARCH_X86_64
+#endif  // _WIN64
 
 #if ARCH_X86 || ARCH_X86_64
 #if defined(__GNUC__)

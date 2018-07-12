@@ -8,9 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#include "config/aom_config.h"
-
-#include "aom_dsp/bitreader_buffer.h"
+#include "./aom_config.h"
+#include "./bitreader_buffer.h"
 
 size_t aom_rb_bytes_read(struct aom_read_bit_buffer *rb) {
   return (rb->bit_offset + 7) >> 3;
@@ -36,13 +35,9 @@ int aom_rb_read_literal(struct aom_read_bit_buffer *rb, int bits) {
   return value;
 }
 
-uint32_t aom_rb_read_unsigned_literal(struct aom_read_bit_buffer *rb,
-                                      int bits) {
-  uint32_t value = 0;
-  int bit;
-  for (bit = bits - 1; bit >= 0; bit--)
-    value |= (uint32_t)aom_rb_read_bit(rb) << bit;
-  return value;
+int aom_rb_read_signed_literal(struct aom_read_bit_buffer *rb, int bits) {
+  const int value = aom_rb_read_literal(rb, bits);
+  return aom_rb_read_bit(rb) ? -value : value;
 }
 
 int aom_rb_read_inv_signed_literal(struct aom_read_bit_buffer *rb, int bits) {

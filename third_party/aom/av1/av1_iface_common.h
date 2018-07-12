@@ -15,11 +15,10 @@
 
 static void yuvconfig2image(aom_image_t *img, const YV12_BUFFER_CONFIG *yv12,
                             void *user_priv) {
-  /* aom_img_wrap() doesn't allow specifying independent strides for
-   * the Y, U, and V planes, nor other alignment adjustments that
-   * might be representable by a YV12_BUFFER_CONFIG, so we just
-   * initialize all the fields.
-   */
+  /** aom_img_wrap() doesn't allow specifying independent strides for
+    * the Y, U, and V planes, nor other alignment adjustments that
+    * might be representable by a YV12_BUFFER_CONFIG, so we just
+    * initialize all the fields.*/
   int bps;
   if (!yv12->subsampling_y) {
     if (!yv12->subsampling_x) {
@@ -30,18 +29,23 @@ static void yuvconfig2image(aom_image_t *img, const YV12_BUFFER_CONFIG *yv12,
       bps = 16;
     }
   } else {
-    img->fmt = AOM_IMG_FMT_I420;
-    bps = 12;
+    if (!yv12->subsampling_x) {
+      img->fmt = AOM_IMG_FMT_I440;
+      bps = 16;
+    } else {
+      img->fmt = AOM_IMG_FMT_I420;
+      bps = 12;
+    }
   }
-  img->cp = yv12->color_primaries;
-  img->tc = yv12->transfer_characteristics;
-  img->mc = yv12->matrix_coefficients;
-  img->monochrome = yv12->monochrome;
+  img->cs = yv12->color_space;
+#if CONFIG_COLORSPACE_HEADERS
+  img->tf = yv12->transfer_function;
   img->csp = yv12->chroma_sample_position;
+#endif
   img->range = yv12->color_range;
   img->bit_depth = 8;
-  img->w = yv12->y_width;
-  img->h = yv12->y_height;
+  img->w = yv12->y_stride;
+  img->h = ALIGN_POWER_OF_TWO(yv12->y_height + 2 * AOM_BORDER_IN_PIXELS, 3);
   img->d_w = yv12->y_crop_width;
   img->d_h = yv12->y_crop_height;
   img->r_w = yv12->render_width;
@@ -56,6 +60,7 @@ static void yuvconfig2image(aom_image_t *img, const YV12_BUFFER_CONFIG *yv12,
   img->stride[AOM_PLANE_U] = yv12->uv_stride;
   img->stride[AOM_PLANE_V] = yv12->uv_stride;
   img->stride[AOM_PLANE_ALPHA] = yv12->y_stride;
+#if CONFIG_HIGHBITDEPTH
   if (yv12->flags & YV12_FLAG_HIGHBITDEPTH) {
     // aom_image_t uses byte strides and a pointer to the first byte
     // of the image.
@@ -70,6 +75,7 @@ static void yuvconfig2image(aom_image_t *img, const YV12_BUFFER_CONFIG *yv12,
     img->stride[AOM_PLANE_V] = 2 * yv12->uv_stride;
     img->stride[AOM_PLANE_ALPHA] = 2 * yv12->y_stride;
   }
+#endif  // CONFIG_HIGHBITDEPTH
   img->bps = bps;
   img->user_priv = user_priv;
   img->img_data = yv12->buffer_alloc;
@@ -87,8 +93,8 @@ static aom_codec_err_t image2yuvconfig(const aom_image_t *img,
   yv12->y_crop_height = img->d_h;
   yv12->render_width = img->r_w;
   yv12->render_height = img->r_h;
-  yv12->y_width = img->w;
-  yv12->y_height = img->h;
+  yv12->y_width = img->d_w;
+  yv12->y_height = img->d_h;
 
   yv12->uv_width =
       img->x_chroma_shift == 1 ? (1 + yv12->y_width) / 2 : yv12->y_width;
@@ -99,13 +105,14 @@ static aom_codec_err_t image2yuvconfig(const aom_image_t *img,
 
   yv12->y_stride = img->stride[AOM_PLANE_Y];
   yv12->uv_stride = img->stride[AOM_PLANE_U];
-  yv12->color_primaries = img->cp;
-  yv12->transfer_characteristics = img->tc;
-  yv12->matrix_coefficients = img->mc;
-  yv12->monochrome = img->monochrome;
+  yv12->color_space = img->cs;
+#if CONFIG_COLORSPACE_HEADERS
+  yv12->transfer_function = img->tf;
   yv12->chroma_sample_position = img->csp;
+#endif
   yv12->color_range = img->range;
 
+#if CONFIG_HIGHBITDEPTH
   if (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) {
     // In aom_image_t
     //     planes point to uint8 address of start of data
@@ -127,6 +134,9 @@ static aom_codec_err_t image2yuvconfig(const aom_image_t *img,
     yv12->flags = 0;
   }
   yv12->border = (yv12->y_stride - img->w) / 2;
+#else
+  yv12->border = (img->stride[AOM_PLANE_Y] - img->w) / 2;
+#endif  // CONFIG_HIGHBITDEPTH
   yv12->subsampling_x = img->x_chroma_shift;
   yv12->subsampling_y = img->y_chroma_shift;
   return AOM_CODEC_OK;

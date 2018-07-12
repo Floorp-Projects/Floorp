@@ -18,9 +18,8 @@
 #include <intrin.h>
 #endif
 
-#include "config/aom_config.h"
-
-#include "aom_dsp/aom_simd_inline.h"
+#include "./aom_config.h"
+#include "./aom_simd_inline.h"
 
 #define SIMD_CHECK 1  // Sanity checks in C equivalents
 

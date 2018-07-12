@@ -20,51 +20,64 @@ extern "C" {
 
 enum {
   INTRA_ALL = (1 << DC_PRED) | (1 << V_PRED) | (1 << H_PRED) | (1 << D45_PRED) |
-              (1 << D135_PRED) | (1 << D113_PRED) | (1 << D157_PRED) |
-              (1 << D203_PRED) | (1 << D67_PRED) | (1 << SMOOTH_PRED) |
-              (1 << SMOOTH_V_PRED) | (1 << SMOOTH_H_PRED) | (1 << PAETH_PRED),
-  UV_INTRA_ALL =
-      (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED) |
-      (1 << UV_D45_PRED) | (1 << UV_D135_PRED) | (1 << UV_D113_PRED) |
-      (1 << UV_D157_PRED) | (1 << UV_D203_PRED) | (1 << UV_D67_PRED) |
-      (1 << UV_SMOOTH_PRED) | (1 << UV_SMOOTH_V_PRED) |
-      (1 << UV_SMOOTH_H_PRED) | (1 << UV_PAETH_PRED) | (1 << UV_CFL_PRED),
+              (1 << D135_PRED) | (1 << D117_PRED) | (1 << D153_PRED) |
+              (1 << D207_PRED) | (1 << D63_PRED) | (1 << SMOOTH_PRED) |
+#if CONFIG_SMOOTH_HV
+              (1 << SMOOTH_V_PRED) | (1 << SMOOTH_H_PRED) |
+#endif  // CONFIG_SMOOTH_HV
+              (1 << TM_PRED),
+#if CONFIG_CFL
+  UV_INTRA_ALL = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED) |
+                 (1 << UV_D45_PRED) | (1 << UV_D135_PRED) |
+                 (1 << UV_D117_PRED) | (1 << UV_D153_PRED) |
+                 (1 << UV_D207_PRED) | (1 << UV_D63_PRED) |
+                 (1 << UV_SMOOTH_PRED) |
+#if CONFIG_SMOOTH_HV
+                 (1 << UV_SMOOTH_V_PRED) | (1 << UV_SMOOTH_H_PRED) |
+#endif  // CONFIG_SMOOTH_HV
+                 (1 << UV_TM_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC = (1 << UV_DC_PRED),
   UV_INTRA_DC_CFL = (1 << UV_DC_PRED) | (1 << UV_CFL_PRED),
-  UV_INTRA_DC_TM = (1 << UV_DC_PRED) | (1 << UV_PAETH_PRED),
-  UV_INTRA_DC_PAETH_CFL =
-      (1 << UV_DC_PRED) | (1 << UV_PAETH_PRED) | (1 << UV_CFL_PRED),
+  UV_INTRA_DC_TM = (1 << UV_DC_PRED) | (1 << UV_TM_PRED),
+  UV_INTRA_DC_TM_CFL =
+      (1 << UV_DC_PRED) | (1 << UV_TM_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC_H_V = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED),
   UV_INTRA_DC_H_V_CFL = (1 << UV_DC_PRED) | (1 << UV_V_PRED) |
                         (1 << UV_H_PRED) | (1 << UV_CFL_PRED),
-  UV_INTRA_DC_PAETH_H_V = (1 << UV_DC_PRED) | (1 << UV_PAETH_PRED) |
-                          (1 << UV_V_PRED) | (1 << UV_H_PRED),
-  UV_INTRA_DC_PAETH_H_V_CFL = (1 << UV_DC_PRED) | (1 << UV_PAETH_PRED) |
-                              (1 << UV_V_PRED) | (1 << UV_H_PRED) |
-                              (1 << UV_CFL_PRED),
+  UV_INTRA_DC_TM_H_V = (1 << UV_DC_PRED) | (1 << UV_TM_PRED) |
+                       (1 << UV_V_PRED) | (1 << UV_H_PRED),
+  UV_INTRA_DC_TM_H_V_CFL = (1 << UV_DC_PRED) | (1 << UV_TM_PRED) |
+                           (1 << UV_V_PRED) | (1 << UV_H_PRED) |
+                           (1 << UV_CFL_PRED),
+#endif  // CONFIG_CFL
   INTRA_DC = (1 << DC_PRED),
-  INTRA_DC_TM = (1 << DC_PRED) | (1 << PAETH_PRED),
+  INTRA_DC_TM = (1 << DC_PRED) | (1 << TM_PRED),
   INTRA_DC_H_V = (1 << DC_PRED) | (1 << V_PRED) | (1 << H_PRED),
-  INTRA_DC_PAETH_H_V =
-      (1 << DC_PRED) | (1 << PAETH_PRED) | (1 << V_PRED) | (1 << H_PRED)
+  INTRA_DC_TM_H_V =
+      (1 << DC_PRED) | (1 << TM_PRED) | (1 << V_PRED) | (1 << H_PRED)
 };
 
 enum {
-  INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << GLOBALMV) |
-              (1 << NEWMV) | (1 << NEAREST_NEARESTMV) | (1 << NEAR_NEARMV) |
-              (1 << NEW_NEWMV) | (1 << NEAREST_NEWMV) | (1 << NEAR_NEWMV) |
-              (1 << NEW_NEARMV) | (1 << NEW_NEARESTMV) | (1 << GLOBAL_GLOBALMV),
+#if CONFIG_COMPOUND_SINGLEREF
+// TODO(zoeliu): To further consider following single ref comp modes:
+//               SR_NEAREST_NEARMV, SR_NEAREST_NEWMV, SR_NEAR_NEWMV,
+//               SR_ZERO_NEWMV, and SR_NEW_NEWMV.
+#endif  // CONFIG_COMPOUND_SINGLEREF
+  INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV) |
+              (1 << NEAREST_NEARESTMV) | (1 << NEAR_NEARMV) | (1 << NEW_NEWMV) |
+              (1 << NEAREST_NEWMV) | (1 << NEAR_NEWMV) | (1 << NEW_NEARMV) |
+              (1 << NEW_NEARESTMV) | (1 << ZERO_ZEROMV),
   INTER_NEAREST = (1 << NEARESTMV) | (1 << NEAREST_NEARESTMV) |
                   (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV),
   INTER_NEAREST_NEW = (1 << NEARESTMV) | (1 << NEWMV) |
                       (1 << NEAREST_NEARESTMV) | (1 << NEW_NEWMV) |
                       (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV) |
                       (1 << NEW_NEARMV) | (1 << NEAR_NEWMV),
-  INTER_NEAREST_ZERO = (1 << NEARESTMV) | (1 << GLOBALMV) |
-                       (1 << NEAREST_NEARESTMV) | (1 << GLOBAL_GLOBALMV) |
+  INTER_NEAREST_ZERO = (1 << NEARESTMV) | (1 << ZEROMV) |
+                       (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
                        (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV),
-  INTER_NEAREST_NEW_ZERO = (1 << NEARESTMV) | (1 << GLOBALMV) | (1 << NEWMV) |
-                           (1 << NEAREST_NEARESTMV) | (1 << GLOBAL_GLOBALMV) |
+  INTER_NEAREST_NEW_ZERO = (1 << NEARESTMV) | (1 << ZEROMV) | (1 << NEWMV) |
+                           (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
                            (1 << NEW_NEWMV) | (1 << NEW_NEARESTMV) |
                            (1 << NEAREST_NEWMV) | (1 << NEW_NEARMV) |
                            (1 << NEAR_NEWMV),
@@ -73,8 +86,8 @@ enum {
                            (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV) |
                            (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
                            (1 << NEAR_NEARMV),
-  INTER_NEAREST_NEAR_ZERO = (1 << NEARESTMV) | (1 << NEARMV) | (1 << GLOBALMV) |
-                            (1 << NEAREST_NEARESTMV) | (1 << GLOBAL_GLOBALMV) |
+  INTER_NEAREST_NEAR_ZERO = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) |
+                            (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
                             (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV) |
                             (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
                             (1 << NEAR_NEARMV),
@@ -91,17 +104,6 @@ enum {
   LAST_AND_INTRA_SPLIT_ONLY = (1 << THR_COMP_GA) | (1 << THR_COMP_LA) |
                               (1 << THR_ALTR) | (1 << THR_GOLD)
 };
-
-typedef enum {
-  TXFM_CODING_SF = 1,
-  INTER_PRED_SF = 2,
-  INTRA_PRED_SF = 4,
-  PARTITION_SF = 8,
-  LOOP_FILTER_SF = 16,
-  RD_SKIP_SF = 32,
-  RESERVE_2_SF = 64,
-  RESERVE_3_SF = 128,
-} DEV_SPEED_FEATURES;
 
 typedef enum {
   DIAMOND = 0,
@@ -139,8 +141,8 @@ typedef enum {
 
 typedef enum {
   USE_FULL_RD = 0,
-  USE_FAST_RD,
   USE_LARGESTALL,
+  USE_TX_8X8
 } TX_SIZE_SEARCH_METHOD;
 
 typedef enum {
@@ -188,13 +190,10 @@ typedef enum {
   NO_PRUNE = 0,
   // eliminates one tx type in vertical and horizontal direction
   PRUNE_ONE = 1,
+#if CONFIG_EXT_TX
   // eliminates two tx types in each direction
   PRUNE_TWO = 2,
-  // adaptively prunes the least perspective tx types out of all 16
-  // (tuned to provide negligible quality loss)
-  PRUNE_2D_ACCURATE = 3,
-  // similar, but applies much more aggressive pruning to get better speed-up
-  PRUNE_2D_FAST = 4,
+#endif
 } TX_TYPE_PRUNE_MODE;
 
 typedef struct {
@@ -205,13 +204,6 @@ typedef struct {
   // Use a skip flag prediction model to detect blocks with skip = 1 early
   // and avoid doing full TX type search for such blocks.
   int use_skip_flag_prediction;
-
-  // Threshold used by the ML based method to predict TX block split decisions.
-  int ml_tx_split_thresh;
-
-  // skip remaining transform type search when we found the rdcost of skip is
-  // better than applying transform
-  int skip_tx_search;
 } TX_TYPE_SEARCH;
 
 typedef enum {
@@ -269,29 +261,13 @@ typedef struct MESH_PATTERN {
   int interval;
 } MESH_PATTERN;
 
+#if CONFIG_GLOBAL_MOTION
 typedef enum {
   GM_FULL_SEARCH,
   GM_REDUCED_REF_SEARCH,
   GM_DISABLE_SEARCH
 } GM_SEARCH_TYPE;
-
-typedef enum {
-  GM_ERRORADV_TR_0,
-  GM_ERRORADV_TR_1,
-  GM_ERRORADV_TR_2,
-  GM_ERRORADV_TR_TYPES,
-} GM_ERRORADV_TYPE;
-
-typedef enum {
-  NO_TRELLIS_OPT,         // No trellis optimization
-  FULL_TRELLIS_OPT,       // Trellis optimization in all stages
-  FINAL_PASS_TRELLIS_OPT  // Trellis optimization in only the final encode pass
-} TRELLIS_OPT_TYPE;
-
-typedef enum {
-  FULL_TXFM_RD,
-  LOW_TXFM_RD,
-} TXFM_RD_MODEL;
+#endif  // CONFIG_GLOBAL_MOTION
 
 typedef struct SPEED_FEATURES {
   MV_SPEED_FEATURES mv;
@@ -301,11 +277,8 @@ typedef struct SPEED_FEATURES {
 
   RECODE_LOOP_TYPE recode_loop;
 
-  // Trellis (dynamic programming) optimization of quantized values
-  TRELLIS_OPT_TYPE optimize_coefficients;
-
-  // Global motion warp error threshold
-  GM_ERRORADV_TYPE gm_erroradv_type;
+  // Trellis (dynamic programming) optimization of quantized values (+1, 0).
+  int optimize_coefficients;
 
   // Always set to 0. If on it enables 0 cost background transmission
   // (except for the initial transmission of the segmentation). The feature is
@@ -313,14 +286,6 @@ typedef struct SPEED_FEATURES {
   // backgrounds very to cheap to encode, and the segmentation we have
   // adds overhead.
   int static_segmentation;
-
-  // Limit the inter mode tested in the RD loop
-  int reduce_inter_modes;
-
-  // Do not compute the global motion parameters for a LAST2_FRAME or
-  // LAST3_FRAME if the GOLDEN_FRAME is closer and it has a non identity
-  // global model.
-  int selective_ref_gm;
 
   // If 1 we iterate finding a best reference for 2 ref frames together - via
   // a log search that iterates 4 times (check around mv for last for best
@@ -344,17 +309,6 @@ typedef struct SPEED_FEATURES {
   // for intra and model coefs for the rest.
   TX_SIZE_SEARCH_METHOD tx_size_search_method;
 
-  // Init search depth for square and rectangular transform partitions.
-  // Values:
-  // 0 - search full tree, 1: search 1 level, 2: search the highest level only
-  int inter_tx_size_search_init_depth_sqr;
-  int inter_tx_size_search_init_depth_rect;
-  int intra_tx_size_search_init_depth_sqr;
-  int intra_tx_size_search_init_depth_rect;
-  // If any dimension of a coding block size above 64, always search the
-  // largest transform only, since the largest transform block size is 64x64.
-  int tx_size_search_lgr_block;
-
   // After looking at the first set of modes (set by index here), skip
   // checking modes for reference frames that don't match the reference frame
   // of the best so far.
@@ -364,50 +318,8 @@ typedef struct SPEED_FEATURES {
 
   TX_TYPE_SEARCH tx_type_search;
 
-  // Skip split transform block partition when the collocated bigger block
-  // is selected as all zero coefficients.
-  int txb_split_cap;
-
-  // Shortcut the transform block partition and type search when the target
-  // rdcost is relatively lower.
-  // Values are 0 (not used) , or 1 - 2 with progressively increasing
-  // aggressiveness
-  int adaptive_txb_search_level;
-
-  // Prune level for tx_size_type search for inter based on rd model
-  // 0: no pruning
-  // 1-2: progressively increasing aggressiveness of pruning
-  int model_based_prune_tx_search_level;
-
-  // Model based breakout after interpolation filter search
-  // 0: no breakout
-  // 1: use model based rd breakout
-  int model_based_post_interp_filter_breakout;
-
   // Used if partition_search_type = FIXED_SIZE_PARTITION
   BLOCK_SIZE always_this_block_size;
-
-  // Drop less likely to be picked reference frames in the RD search.
-  // Has three levels for now: 0, 1 and 2, where higher levels prune more
-  // aggressively than lower ones. (0 means no pruning).
-  int selective_ref_frame;
-
-  // Prune extended partition types search
-  // Can take values 0 - 2, 0 referring to no pruning, and 1 - 2 increasing
-  // aggressiveness of pruning in order.
-  int prune_ext_partition_types_search_level;
-
-  // Use a ML model to prune horz_a, horz_b, vert_a and vert_b partitions.
-  int ml_prune_ab_partition;
-
-  int fast_cdef_search;
-
-  // 2-pass coding block partition search
-  int two_pass_partition_search;
-
-  // Use the mode decisions made in the initial partition search to prune mode
-  // candidates, e.g. ref frames.
-  int mode_pruning_based_on_two_pass_partition_search;
 
   // Skip rectangular partition test when partition type none gives better
   // rd than partition type split.
@@ -515,7 +427,7 @@ typedef struct SPEED_FEATURES {
   // by only looking at counts from 1/2 the bands.
   FAST_COEFF_UPDATE use_fast_coef_updates;
 
-  // A binary mask indicating if NEARESTMV, NEARMV, GLOBALMV, NEWMV
+  // A binary mask indicating if NEARESTMV, NEARMV, ZEROMV, NEWMV
   // modes are used in order from LSB to MSB for each BLOCK_SIZE.
   int inter_mode_mask[BLOCK_SIZES_ALL];
 
@@ -544,6 +456,10 @@ typedef struct SPEED_FEATURES {
   // default interp filter choice
   InterpFilter default_interp_filter;
 
+  // Early termination in transform size search, which only applies while
+  // tx_size_search_method is USE_FULL_RD.
+  int tx_size_search_breakout;
+
   // adaptive interp_filter search to allow skip of certain filter types.
   int adaptive_interp_filter_search;
 
@@ -560,67 +476,16 @@ typedef struct SPEED_FEATURES {
   // Fast approximation of av1_model_rd_from_var_lapndz
   int simple_model_rd_from_var;
 
-  // If true, sub-pixel search uses the exact convolve function used for final
-  // encoding and decoding; otherwise, it uses bilinear interpolation.
-  int use_accurate_subpel_search;
+  // Do sub-pixel search in up-sampled reference frames
+  int use_upsampled_references;
 
   // Whether to compute distortion in the image domain (slower but
   // more accurate), or in the transform domain (faster but less acurate).
-  // 0: use image domain
-  // 1: use transform domain in tx_type search, and use image domain for
-  // RD_STATS
-  // 2: use transform domain
   int use_transform_domain_distortion;
 
+#if CONFIG_GLOBAL_MOTION
   GM_SEARCH_TYPE gm_search_type;
-
-  // Do limited interpolation filter search for dual filters, since best choice
-  // usually includes EIGHTTAP_REGULAR.
-  int use_fast_interpolation_filter_search;
-
-  // Save results of interpolation_filter_search for a block
-  // Check mv and ref_frames before search, if they are same with previous
-  // saved results, it can be skipped.
-  int skip_repeat_interpolation_filter_search;
-
-  // Use a hash table to store previously computed optimized qcoeffs from
-  // expensive calls to optimize_txb.
-  int use_hash_based_trellis;
-
-  // flag to drop some ref frames in compound motion search
-  int drop_ref;
-
-  // flag to allow skipping intra mode for inter frame prediction
-  int skip_intra_in_interframe;
-
-  // Use hash table to store intra(keyframe only) txb transform search results
-  // to avoid repeated search on the same residue signal.
-  int use_intra_txb_hash;
-
-  // Use hash table to store inter txb transform search results
-  // to avoid repeated search on the same residue signal.
-  int use_inter_txb_hash;
-
-  // Use hash table to store macroblock RD search results
-  // to avoid repeated search on the same residue signal.
-  int use_mb_rd_hash;
-
-  // Calculate RD cost before doing optimize_b, and skip if the cost is large.
-  int optimize_b_precheck;
-
-  // Use model rd instead of transform search in jnt_comp
-  int jnt_comp_fast_tx_search;
-
-  // Skip mv search in jnt_comp
-  int jnt_comp_skip_mv_search;
-
-  // Decoder side speed feature to add penalty for use of dual-sgr filters.
-  // Takes values 0 - 10, 0 indicating no penalty and each additional level
-  // adding a penalty of 1%
-  int dual_sgr_penalty_level;
-
-  // Dynamically estimate final rd from prediction error and mode cost
-  int inter_mode_rd_model_estimation;
+#endif  // CONFIG_GLOBAL_MOTION
 } SPEED_FEATURES;
 
 struct AV1_COMP;

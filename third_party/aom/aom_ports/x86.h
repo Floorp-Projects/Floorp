@@ -17,8 +17,8 @@
 #include <intrin.h> /* For __cpuidex, __rdtsc */
 #endif
 
+#include "aom_config.h"
 #include "aom/aom_integer.h"
-#include "config/aom_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,7 +162,6 @@ static INLINE uint64_t xgetbv(void) {
 #define HAS_SSE4_1 0x20
 #define HAS_AVX 0x40
 #define HAS_AVX2 0x80
-#define HAS_SSE4_2 0x100
 #ifndef BIT
 #define BIT(n) (1 << n)
 #endif
@@ -202,8 +201,6 @@ static INLINE int x86_simd_caps(void) {
   if (reg_ecx & BIT(9)) flags |= HAS_SSSE3;
 
   if (reg_ecx & BIT(19)) flags |= HAS_SSE4_1;
-
-  if (reg_ecx & BIT(20)) flags |= HAS_SSE4_2;
 
   // bits 27 (OSXSAVE) & 28 (256-bit AVX)
   if ((reg_ecx & (BIT(27) | BIT(28))) == (BIT(27) | BIT(28))) {

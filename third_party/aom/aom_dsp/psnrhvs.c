@@ -17,12 +17,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
-
+#include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
 #include "aom_dsp/psnr.h"
 #include "aom_dsp/ssim.h"
 #include "aom_ports/system_state.h"
+
+#if !defined(M_PI)
+#define M_PI (3.141592653589793238462643)
+#endif
+#include <string.h>
 
 static void od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
                            int xstride) {
@@ -34,6 +38,7 @@ static void od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
       *(y + ystride * i + j) = (*(y + ystride * i + j) + 4) >> 3;
 }
 
+#if CONFIG_HIGHBITDEPTH
 static void hbd_od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
                                int xstride) {
   int i, j;
@@ -43,6 +48,7 @@ static void hbd_od_bin_fdct8x8(tran_low_t *y, int ystride, const int16_t *x,
     for (j = 0; j < 8; j++)
       *(y + ystride * i + j) = (*(y + ystride * i + j) + 4) >> 3;
 }
+#endif
 
 /* Normalized inverse quantization matrix for 8x8 DCT at the point of
  * transparency. This is not the JPEG based matrix from the paper,
@@ -117,16 +123,14 @@ static double convert_score_db(double _score, double _weight, int bit_depth) {
 static double calc_psnrhvs(const unsigned char *src, int _systride,
                            const unsigned char *dst, int _dystride, double _par,
                            int _w, int _h, int _step, const double _csf[8][8],
-                           uint32_t _shift, int buf_is_hbd) {
+                           uint32_t bit_depth, uint32_t _shift) {
   double ret;
   const uint8_t *_src8 = src;
   const uint8_t *_dst8 = dst;
   const uint16_t *_src16 = CONVERT_TO_SHORTPTR(src);
   const uint16_t *_dst16 = CONVERT_TO_SHORTPTR(dst);
-  DECLARE_ALIGNED(16, int16_t, dct_s[8 * 8]);
-  DECLARE_ALIGNED(16, int16_t, dct_d[8 * 8]);
-  DECLARE_ALIGNED(16, tran_low_t, dct_s_coef[8 * 8]);
-  DECLARE_ALIGNED(16, tran_low_t, dct_d_coef[8 * 8]);
+  int16_t dct_s[8 * 8], dct_d[8 * 8];
+  tran_low_t dct_s_coef[8 * 8], dct_d_coef[8 * 8];
   double mask[8][8];
   int pixels;
   int x;
@@ -172,10 +176,10 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
       for (i = 0; i < 8; i++) {
         for (j = 0; j < 8; j++) {
           int sub = ((i & 12) >> 2) + ((j & 12) >> 1);
-          if (!buf_is_hbd) {
+          if (bit_depth == 8 && _shift == 0) {
             dct_s[i * 8 + j] = _src8[(y + i) * _systride + (j + x)];
             dct_d[i * 8 + j] = _dst8[(y + i) * _dystride + (j + x)];
-          } else {
+          } else if (bit_depth == 10 || bit_depth == 12) {
             dct_s[i * 8 + j] = _src16[(y + i) * _systride + (j + x)] >> _shift;
             dct_d[i * 8 + j] = _dst16[(y + i) * _dystride + (j + x)] >> _shift;
           }
@@ -208,12 +212,15 @@ static double calc_psnrhvs(const unsigned char *src, int _systride,
         s_gvar = (s_vars[0] + s_vars[1] + s_vars[2] + s_vars[3]) / s_gvar;
       if (d_gvar > 0)
         d_gvar = (d_vars[0] + d_vars[1] + d_vars[2] + d_vars[3]) / d_gvar;
-      if (!buf_is_hbd) {
-        od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
-        od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
-      } else {
+#if CONFIG_HIGHBITDEPTH
+      if (bit_depth == 10 || bit_depth == 12) {
         hbd_od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
         hbd_od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
+      }
+#endif
+      if (bit_depth == 8) {
+        od_bin_fdct8x8(dct_s_coef, 8, dct_s, 8);
+        od_bin_fdct8x8(dct_d_coef, 8, dct_d, 8);
       }
       for (i = 0; i < 8; i++)
         for (j = (i == 0); j < 8; j++)
@@ -249,24 +256,21 @@ double aom_psnrhvs(const YV12_BUFFER_CONFIG *src, const YV12_BUFFER_CONFIG *dst,
   const int step = 7;
   uint32_t bd_shift = 0;
   aom_clear_system_state();
+
   assert(bd == 8 || bd == 10 || bd == 12);
   assert(bd >= in_bd);
-  assert(src->flags == dst->flags);
-  const int buf_is_hbd = src->flags & YV12_FLAG_HIGHBITDEPTH;
 
   bd_shift = bd - in_bd;
 
-  *y_psnrhvs = calc_psnrhvs(
-      src->y_buffer, src->y_stride, dst->y_buffer, dst->y_stride, par,
-      src->y_crop_width, src->y_crop_height, step, csf_y, bd_shift, buf_is_hbd);
-  *u_psnrhvs =
-      calc_psnrhvs(src->u_buffer, src->uv_stride, dst->u_buffer, dst->uv_stride,
-                   par, src->uv_crop_width, src->uv_crop_height, step,
-                   csf_cb420, bd_shift, buf_is_hbd);
-  *v_psnrhvs =
-      calc_psnrhvs(src->v_buffer, src->uv_stride, dst->v_buffer, dst->uv_stride,
-                   par, src->uv_crop_width, src->uv_crop_height, step,
-                   csf_cr420, bd_shift, buf_is_hbd);
+  *y_psnrhvs = calc_psnrhvs(src->y_buffer, src->y_stride, dst->y_buffer,
+                            dst->y_stride, par, src->y_crop_width,
+                            src->y_crop_height, step, csf_y, bd, bd_shift);
+  *u_psnrhvs = calc_psnrhvs(src->u_buffer, src->uv_stride, dst->u_buffer,
+                            dst->uv_stride, par, src->uv_crop_width,
+                            src->uv_crop_height, step, csf_cb420, bd, bd_shift);
+  *v_psnrhvs = calc_psnrhvs(src->v_buffer, src->uv_stride, dst->v_buffer,
+                            dst->uv_stride, par, src->uv_crop_width,
+                            src->uv_crop_height, step, csf_cr420, bd, bd_shift);
   psnrhvs = (*y_psnrhvs) * .8 + .1 * ((*u_psnrhvs) + (*v_psnrhvs));
   return convert_score_db(psnrhvs, 1.0, in_bd);
 }

@@ -86,9 +86,11 @@ class YUVVideoSource : public VideoSource {
       switch (format) {
         case AOM_IMG_FMT_I420: raw_size_ = width * height * 3 / 2; break;
         case AOM_IMG_FMT_I422: raw_size_ = width * height * 2; break;
+        case AOM_IMG_FMT_I440: raw_size_ = width * height * 2; break;
         case AOM_IMG_FMT_I444: raw_size_ = width * height * 3; break;
         case AOM_IMG_FMT_I42016: raw_size_ = width * height * 3; break;
         case AOM_IMG_FMT_I42216: raw_size_ = width * height * 4; break;
+        case AOM_IMG_FMT_I44016: raw_size_ = width * height * 4; break;
         case AOM_IMG_FMT_I44416: raw_size_ = width * height * 6; break;
         default: ASSERT_TRUE(0);
       }
