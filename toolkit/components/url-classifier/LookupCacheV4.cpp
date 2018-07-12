@@ -181,13 +181,13 @@ LookupCacheV4::ClearPrefixes()
 }
 
 nsresult
-LookupCacheV4::StoreToFile(nsIFile* aFile)
+LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile)
 {
   return mVLPrefixSet->StoreToFile(aFile);
 }
 
 nsresult
-LookupCacheV4::LoadFromFile(nsIFile* aFile)
+LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
 {
   nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
   if (NS_FAILED(rv)) {

@@ -429,7 +429,7 @@ nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 }
 
 nsresult
-nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
+nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
 {
   mCanary.Check();
 
@@ -521,7 +521,7 @@ nsUrlClassifierPrefixSet::CalculatePreallocateSize() const
 }
 
 nsresult
-nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out) const
+nsUrlClassifierPrefixSet::WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const
 {
   mCanary.Check();
 

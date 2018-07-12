@@ -31,8 +31,8 @@ public:
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
   nsresult Matches(const nsACString& aFullHash, uint32_t* aLength) const;
   nsresult IsEmpty(bool* aEmpty) const;
-  nsresult LoadFromFile(nsIFile* aFile);
-  nsresult StoreToFile(nsIFile* aFile) const;
+  nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile);
+  nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -50,8 +50,8 @@ private:
                     uint32_t aPrefixSize) const;
 
   uint32_t CalculatePreallocateSize() const;
-  nsresult WritePrefixes(nsIOutputStream* out) const;
-  nsresult LoadPrefixes(nsIInputStream* in);
+  nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
+  nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
