@@ -1166,9 +1166,11 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
         return mLocalStore->RemoveValue(uri, id, attrstr);
     }
 
-    // Persisting attributes to windows is handled by nsXULWindow.
+    // Persisting attributes to top level windows is handled by nsXULWindow.
     if (aElement->IsXULElement(nsGkAtoms::window)) {
-        return NS_OK;
+        if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+           return NS_OK;
+        }
     }
 
     return mLocalStore->SetValue(uri, id, attrstr, valuestr);
@@ -1758,9 +1760,12 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
                  continue;
             }
 
-            // Applying persistent attributes to windows is handled by nsXULWindow.
+            // Applying persistent attributes to top level windows is handled
+            // by nsXULWindow.
             if (element->IsXULElement(nsGkAtoms::window)) {
-                continue;
+                if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+                    continue;
+                }
             }
 
             Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);
