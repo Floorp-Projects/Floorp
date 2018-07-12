@@ -427,14 +427,19 @@ class FontInspector {
   /**
    * Get a reference to a TextProperty instance from the current selected rule for a
    * given property name. If one doesn't exist, create one with the given value.
+   * If the selected rule no longer exists (ex: during test teardown), return null.
    *
    * @param {String} name
    *        CSS property name
    * @param {String} value
    *        CSS property value
-   * @return {TextProperty}
+   * @return {TextProperty|null}
    */
   getTextProperty(name, value) {
+    if (!this.selectedRule) {
+      return null;
+    }
+
     let textProperty =
       this.selectedRule.textProps.find(prop => prop.name === name);
     if (!textProperty) {
@@ -617,7 +622,14 @@ class FontInspector {
   syncChanges(name, value) {
     const textProperty = this.getTextProperty(name, value);
     if (textProperty) {
-      textProperty.setValue(value);
+      // This method may be called after the connection to the page style actor is closed.
+      // For example, during teardown of automated tests. Here, we catch any failure that
+      // may occur because of that. We're not interested in handling the error.
+      try {
+        textProperty.setValue(value);
+      } catch (e) {
+        // Silent error.
+      }
     }
 
     this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
@@ -716,8 +728,12 @@ class FontInspector {
       let unit = fromUnit;
 
       if (toUnit && fromUnit) {
-        value = await this.convert(value, fromUnit, toUnit);
-        unit = toUnit;
+        try {
+          value = await this.convertUnits(value, fromUnit, toUnit);
+          unit = toUnit;
+        } catch (err) {
+          // Silent error
+        }
       }
 
       this.onFontPropertyUpdate(property, value, unit);
@@ -1005,7 +1021,13 @@ class FontInspector {
     // Prevent reacting to changes we caused.
     this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
     // Live preview font property changes on the page.
-    textProperty.rule.previewPropertyValue(textProperty, value, "");
+
+    try {
+      textProperty.rule.previewPropertyValue(textProperty, value, "");
+    } catch (e) {
+      // Silent error
+    }
+
     // Sync Rule view with changes reflected on the page (debounced).
     this.syncChanges(name, value);
   }
