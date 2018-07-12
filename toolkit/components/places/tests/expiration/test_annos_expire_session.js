@@ -40,13 +40,13 @@ add_task(async function test_annos_expire_session() {
   }
 
 
-  let pages = as.getPagesWithAnnotation("test1");
+  let pages = await getPagesWithAnnotation("test1");
   Assert.equal(pages.length, 10);
-  pages = as.getPagesWithAnnotation("test2");
+  pages = await getPagesWithAnnotation("test2");
   Assert.equal(pages.length, 10);
-  let items = as.getItemsWithAnnotation("test1");
+  let items = await getItemsWithAnnotation("test1");
   Assert.equal(items.length, 10);
-  items = as.getItemsWithAnnotation("test2");
+  items = await getItemsWithAnnotation("test2");
   Assert.equal(items.length, 10);
 
   await new Promise(resolve => {

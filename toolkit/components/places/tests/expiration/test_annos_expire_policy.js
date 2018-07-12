@@ -158,25 +158,25 @@ add_task(async function test_annos_expire_policy() {
   // Expire all visits for the bookmarks.
   await promiseForceExpirationStep(5);
 
-  ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
-    let pages = as.getPagesWithAnnotation(aAnno);
+  for (let anno of ["expire_days", "expire_weeks", "expire_months"]) {
+    let pages = await getPagesWithAnnotation(anno);
     Assert.equal(pages.length, 0);
-  });
+  }
 
-  ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
-    let items = as.getItemsWithAnnotation(aAnno);
+  for (let anno of ["expire_days", "expire_weeks", "expire_months"]) {
+    let items = await getItemsWithAnnotation(anno);
     Assert.equal(items.length, 0);
-  });
+  }
 
-  ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
-   "persist_months", "persist_lm_months"].forEach(function(aAnno) {
-    let pages = as.getPagesWithAnnotation(aAnno);
+  for (let anno of ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
+   "persist_months", "persist_lm_months"]) {
+    let pages = await getPagesWithAnnotation(anno);
     Assert.equal(pages.length, 10);
-  });
+  }
 
-  ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
-   "persist_months", "persist_lm_months"].forEach(function(aAnno) {
-    let items = as.getItemsWithAnnotation(aAnno);
+  for (let anno of ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
+   "persist_months", "persist_lm_months"]) {
+    let items = await getItemsWithAnnotation(anno);
     Assert.equal(items.length, 5);
-  });
+  }
 });

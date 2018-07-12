@@ -53,26 +53,24 @@ add_task(async function test_historyClear() {
   // Expire all visits for the bookmarks
   await PlacesUtils.history.clear();
 
-  ["expire_session",
-   "expire"].forEach(function(aAnno) {
-    let pages = as.getPagesWithAnnotation(aAnno);
+  for (let anno of ["expire_session", "expire"]) {
+    let pages = await getPagesWithAnnotation(anno);
     Assert.equal(pages.length, 0);
-  });
+  }
 
-  ["expire_session", "expire"].forEach(function(aAnno) {
-    let items = as.getItemsWithAnnotation(aAnno);
+  for (let anno of ["expire_session", "expire"]) {
+    let items = await getItemsWithAnnotation(anno);
     Assert.equal(items.length, 0);
-  });
+  }
 
-  let pages = as.getPagesWithAnnotation("persist");
+  let pages = await getPagesWithAnnotation("persist");
   Assert.equal(pages.length, 5);
 
-  let items = as.getItemsWithAnnotation("persist");
+  let items = await getItemsWithAnnotation("persist");
   Assert.equal(items.length, 5);
 
-  for (let itemId of items) {
+  for (let guid of items) {
     // Check item exists.
-    let guid = await PlacesUtils.promiseItemGuid(itemId);
     Assert.ok((await PlacesUtils.bookmarks.fetch({guid})), "item exists");
   }
 });

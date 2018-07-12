@@ -876,46 +876,6 @@ nsAnnotationService::GetItemAnnotationInt64(int64_t aItemId,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetPageAnnotationType(nsIURI* aURI,
-                                           const nsACString& aName,
-                                           uint16_t* _retval)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(aURI, 0, aName, statement);
-  if (NS_FAILED(rv))
-    return rv;
-
-  mozStorageStatementScoper scoper(statement);
-  *_retval = statement->AsInt32(kAnnoIndex_Type);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationType(int64_t aItemId,
-                                           const nsACString& aName,
-                                           uint16_t* _retval)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
-  if (NS_FAILED(rv))
-    return rv;
-
-  mozStorageStatementScoper scoper(statement);
-  *_retval = statement->AsInt32(kAnnoIndex_Type);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationDouble(nsIURI* aURI,
                                              const nsACString& aName,
                                              double* _retval)
@@ -1026,105 +986,6 @@ nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
-                                            uint32_t* _resultCount,
-                                            nsIURI*** _results)
-{
-  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
-  NS_ENSURE_ARG_POINTER(_resultCount);
-  NS_ENSURE_ARG_POINTER(_results);
-
-  *_resultCount = 0;
-  *_results = nullptr;
-  nsCOMArray<nsIURI> results;
-
-  nsresult rv = GetPagesWithAnnotationCOMArray(aName, &results);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Convert to raw array.
-  if (results.Count() == 0)
-    return NS_OK;
-
-  *_resultCount = results.Count();
-  results.Forget(_results);
-
-  return NS_OK;
-}
-
-
-nsresult
-nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
-                                                    nsCOMArray<nsIURI>* _results)
-{
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT h.url "
-    "FROM moz_anno_attributes n "
-    "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-    "JOIN moz_places h ON h.id = a.place_id "
-    "WHERE n.name = :anno_name"
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasMore)) &&
-         hasMore) {
-    nsAutoCString uristring;
-    rv = stmt->GetUTF8String(0, uristring);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // convert to a URI, in case of some invalid URI, just ignore this row
-    // so we can mostly continue.
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), uristring);
-    if (NS_FAILED(rv))
-      continue;
-
-    bool added = _results->AppendObject(uri);
-    NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
-                                            uint32_t* _resultCount,
-                                            int64_t** _results)
-{
-  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
-  NS_ENSURE_ARG_POINTER(_resultCount);
-  NS_ENSURE_ARG_POINTER(_results);
-
-  *_resultCount = 0;
-  *_results = nullptr;
-  nsTArray<int64_t> results;
-
-  nsresult rv = GetItemsWithAnnotationTArray(aName, &results);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Convert to raw array.
-  if (results.Length() == 0)
-    return NS_OK;
-
-  *_results = static_cast<int64_t*>
-                         (moz_xmalloc(results.Length() * sizeof(int64_t)));
-  NS_ENSURE_TRUE(*_results, NS_ERROR_OUT_OF_MEMORY);
-
-  *_resultCount = results.Length();
-  for (uint32_t i = 0; i < *_resultCount; i ++) {
-    (*_results)[i] = results[i];
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsAnnotationService::GetAnnotationsWithName(const nsACString& aName,
                                             uint32_t* _count,
                                             mozIAnnotatedResult*** _annotations)
@@ -1224,33 +1085,6 @@ nsAnnotationService::GetAnnotationsWithName(const nsACString& aName,
 
 
 nsresult
-nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
-                                                  nsTArray<int64_t>* _results)
-{
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT a.item_id "
-    "FROM moz_anno_attributes n "
-    "JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
-    "WHERE n.name = :anno_name"
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) &&
-         hasMore) {
-    if (!_results->AppendElement(stmt->AsInt64(0)))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
 nsAnnotationService::GetItemAnnotationNamesTArray(int64_t aItemId,
                                                   nsTArray<nsCString>* _result)
 {
@@ -1320,36 +1154,6 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
     NS_ADDREF((*_result)[i] = var);
   }
   *_count = names.Length();
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::PageHasAnnotation(nsIURI* aURI,
-                                       const nsACString& aName,
-                                       bool* _retval)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsresult rv = HasAnnotationInternal(aURI, 0, aName, _retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::ItemHasAnnotation(int64_t aItemId,
-                                       const nsACString& aName,
-                                       bool* _retval)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsresult rv = HasAnnotationInternal(nullptr, aItemId, aName, _retval);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1448,46 +1252,6 @@ nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
-nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
-{
-  NS_ENSURE_ARG(aURI);
-
-  // Should this be precompiled or a getter?
-  nsCOMPtr<mozIStorageStatement> statement = mDB->GetStatement(
-    "DELETE FROM moz_annos WHERE place_id = "
-      "(SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)"
-  );
-  NS_ENSURE_STATE(statement);
-  mozStorageStatementScoper scoper(statement);
-
-  nsresult rv = URIBinder::Bind(statement, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Update observers
-  NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationRemoved(aURI, EmptyCString()));
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::RemoveItemAnnotations(int64_t aItemId,
-                                           uint16_t aSource)
-{
-  nsresult rv = RemoveItemAnnotationsWithoutNotifying(aItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, EmptyCString(),
-                                                 aSource));
-
-  return NS_OK;
-}
-
-
 nsresult
 nsAnnotationService::RemoveItemAnnotationsWithoutNotifying(int64_t aItemId)
 {
@@ -1554,45 +1318,29 @@ nsAnnotationService::GetObservers(uint32_t* _count,
   return NS_OK;
 }
 
-nsresult
-nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
-                                           int64_t aItemId,
-                                           const nsACString& aName,
-                                           bool* _hasAnno)
+NS_IMETHODIMP
+nsAnnotationService::ItemHasAnnotation(int64_t aItemId,
+                                       const nsACString& aName,
+                                       bool* _hasAnno)
 {
-  bool isItemAnnotation = (aItemId > 0);
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (isItemAnnotation) {
-    stmt = mDB->GetStatement(
-      "SELECT b.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
-             "a.id, a.dateAdded "
-      "FROM moz_bookmarks b "
-      "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
-                                 "AND a.anno_attribute_id = nameid "
-      "WHERE b.id = :item_id"
-    );
-  }
-  else {
-    stmt = mDB->GetStatement(
-      "SELECT h.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
-             "a.id, a.dateAdded "
-      "FROM moz_places h "
-      "LEFT JOIN moz_annos a ON a.place_id = h.id "
-                           "AND a.anno_attribute_id = nameid "
-      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
-    );
-  }
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_hasAnno);
+
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "SELECT b.id, "
+           "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS nameid, "
+           "a.id, a.dateAdded "
+    "FROM moz_bookmarks b "
+    "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
+                               "AND a.anno_attribute_id = nameid "
+    "WHERE b.id = :item_id"
+  );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
 
   nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (isItemAnnotation)
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  else
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult;
