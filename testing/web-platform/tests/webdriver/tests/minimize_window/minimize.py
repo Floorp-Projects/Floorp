@@ -8,19 +8,17 @@ def minimize(session):
 
 
 def is_fullscreen(session):
-    # At the time of writing, WebKit does not conform to the Fullscreen API specification.
-    # Remove the prefixed fallback when https://bugs.webkit.org/show_bug.cgi?id=158125 is fixed.
-    return session.execute_script("return !!(window.fullScreen || document.webkitIsFullScreen)")
-
-# 10.7.4 Minimize Window
+    # At the time of writing, WebKit does not conform to the
+    # Fullscreen API specification.
+    #
+    # Remove the prefixed fallback when
+    # https://bugs.webkit.org/show_bug.cgi?id=158125 is fixed.
+    return session.execute_script("""
+        return !!(window.fullScreen || document.webkitIsFullScreen)
+        """)
 
 
 def test_no_browsing_context(session, create_window):
-    """
-    1. If the current top-level browsing context is no longer open,
-    return error with error code no such window.
-
-    """
     session.window_handle = create_window()
     session.close()
     response = minimize(session)
@@ -28,21 +26,6 @@ def test_no_browsing_context(session, create_window):
 
 
 def test_fully_exit_fullscreen(session):
-    """
-    4. Fully exit fullscreen.
-
-    [...]
-
-    To fully exit fullscreen a document document, run these steps:
-
-      1. If document's fullscreen element is null, terminate these steps.
-
-      2. Unfullscreen elements whose fullscreen flag is set, within
-      document's top layer, except for document's fullscreen element.
-
-      3. Exit fullscreen document.
-
-    """
     session.window.fullscreen()
     assert is_fullscreen(session) is True
 
@@ -53,55 +36,14 @@ def test_fully_exit_fullscreen(session):
 
 
 def test_minimize(session):
-    """
-    5. Iconify the window.
-
-    [...]
-
-    To iconify the window, given an operating system level window with an
-    associated top-level browsing context, run implementation-specific
-    steps to iconify, minimize, or hide the window from the visible
-    screen. Do not return from this operation until the visibility state
-    of the top-level browsing context's active document has reached the
-    hidden state, or until the operation times out.
-
-    """
     assert not session.execute_script("return document.hidden")
 
     response = minimize(session)
     assert_success(response)
-
     assert session.execute_script("return document.hidden")
 
 
 def test_payload(session):
-    """
-    6. Return success with the JSON serialization of the current top-level
-    browsing context's window rect.
-
-    [...]
-
-    A top-level browsing context's window rect is defined as a
-    dictionary of the screenX, screenY, width and height attributes of
-    the WindowProxy. Its JSON representation is the following:
-
-    "x"
-        WindowProxy's screenX attribute.
-
-    "y"
-        WindowProxy's screenY attribute.
-
-    "width"
-        Width of the top-level browsing context's outer dimensions,
-        including any browser chrome and externally drawn window
-        decorations in CSS reference pixels.
-
-    "height"
-        Height of the top-level browsing context's outer dimensions,
-        including any browser chrome and externally drawn window
-        decorations in CSS reference pixels.
-
-    """
     assert not session.execute_script("return document.hidden")
 
     response = minimize(session)

@@ -34,27 +34,6 @@ errors = {
 }
 
 
-# WebDriver specification ID: dfn-send-an-error
-#
-# > When required to send an error, with error code, a remote end must run the
-# > following steps:
-# >
-# > 1. Let http status and name be the error response data for error code.
-# > 2. Let message be an implementation-defined string containing a
-# >    human-readable description of the reason for the error.
-# > 3. Let stacktrace be an implementation-defined string containing a stack
-# >    trace report of the active stack frames at the time when the error
-# >    occurred.
-# > 4. Let data be a new JSON Object initialised with the following properties:
-# >
-# >     error
-# >         name
-# >     message
-# >         message
-# >     stacktrace
-# >         stacktrace
-# >
-# > 5. Send a response with status and data as arguments.
 def assert_error(response, error_code):
     """
     Verify that the provided webdriver.Response instance described
