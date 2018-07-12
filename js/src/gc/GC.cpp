@@ -3643,14 +3643,14 @@ BackgroundSweepTask::BackgroundSweepTask(JSRuntime* rt)
     done(false)
 {}
 
-inline bool
+bool
 BackgroundSweepTask::isRunning() const
 {
     AutoLockHelperThreadState lock;
     return isRunningWithLockHeld(lock);
 }
 
-inline bool
+bool
 BackgroundSweepTask::isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const
 {
     return Base::isRunningWithLockHeld(lock) && !done;
