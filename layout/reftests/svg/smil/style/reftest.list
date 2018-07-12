@@ -31,7 +31,7 @@ fuzzy-if(skiaContent,1,550) == anim-css-fill-1-to-ident-ident.svg       anim-css
 
 # 'fill' property, from/to/by, with 'currentColor' keyword
 fuzzy-if(skiaContent,1,550) == anim-css-fill-1-by-ident-curcol.svg      anim-css-fill-1-ref.svg
-fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-curcol-hex.svg   anim-css-fill-1-ref.svg
+fuzzy-if(winWidget,1,442) fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-curcol-hex.svg anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-by-hex-curcol.svg   anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-curcol-hex.svg   anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) == anim-css-fill-1-from-to-hex-curcol.svg   anim-css-fill-1-ref.svg
