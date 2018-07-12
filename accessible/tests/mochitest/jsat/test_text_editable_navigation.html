@@ -65,7 +65,7 @@
       evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      checkMoveCaret(...evt, 29, 36);
+      checkMoveCaret(...evt, 30, 36);
 
       evt = await runner.moveNextByGranularity(MovementGranularity.CHARACTER,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
@@ -76,16 +76,6 @@
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 37, 38);
-
-      evt = await runner.moveNextByGranularity(MovementGranularity.PARAGRAPH,
-        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      checkMoveCaret(...evt, 38, 59);
-
-      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
-        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      checkMoveCaret(...evt, 59, 53);
 
       evt = await runner.blur(AndroidEvents.VIEW_FOCUSED);
       is(evt.editable, false, "Focused out of editable");
