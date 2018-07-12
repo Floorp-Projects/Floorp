@@ -275,16 +275,20 @@ class FullParseHandler
         addList(/* list = */ literal, /* child = */ element);
     }
 
-    ParseNode* newCall(const TokenPos& pos) {
-        return new_<ListNode>(ParseNodeKind::Call, JSOP_CALL, pos);
+    ParseNode* newCall(ParseNode* callee, ParseNode* args) {
+        return new_<BinaryNode>(ParseNodeKind::Call, JSOP_CALL, callee, args);
     }
 
-    ParseNode* newSuperCall(ParseNode* callee) {
-        return new_<ListNode>(ParseNodeKind::SuperCall, JSOP_SUPERCALL, callee);
+    ParseNode* newArguments(const TokenPos& pos) {
+        return new_<ListNode>(ParseNodeKind::Arguments, JSOP_NOP, pos);
     }
 
-    ParseNode* newTaggedTemplate(const TokenPos& pos) {
-        return new_<ListNode>(ParseNodeKind::TaggedTemplate, JSOP_CALL, pos);
+    ParseNode* newSuperCall(ParseNode* callee, ParseNode* args) {
+        return new_<BinaryNode>(ParseNodeKind::SuperCall, JSOP_SUPERCALL, callee, args);
+    }
+
+    ParseNode* newTaggedTemplate(ParseNode* tag, ParseNode* args) {
+        return new_<BinaryNode>(ParseNodeKind::TaggedTemplate, JSOP_CALL, tag, args);
     }
 
     ParseNode* newObjectLiteral(uint32_t begin) {
@@ -735,13 +739,8 @@ class FullParseHandler
         return new_<LexicalScopeNode>(bindings, body);
     }
 
-    Node newNewExpression(uint32_t begin, ParseNode* ctor) {
-        ParseNode* newExpr = new_<ListNode>(ParseNodeKind::New, JSOP_NEW, TokenPos(begin, begin + 1));
-        if (!newExpr)
-            return nullptr;
-
-        addList(/* list = */ newExpr, /* child = */ ctor);
-        return newExpr;
+    Node newNewExpression(uint32_t begin, ParseNode* ctor, ParseNode* args) {
+        return new_<BinaryNode>(ParseNodeKind::New, JSOP_NEW, TokenPos(begin, args->pn_pos.end), ctor, args);
     }
 
     ParseNode* newAssignment(ParseNodeKind kind, ParseNode* lhs, ParseNode* rhs) {
