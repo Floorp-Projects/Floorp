@@ -268,6 +268,7 @@ struct VRDisplayState
   VRFieldOfView mEyeFOV[VRDisplayState::NumEyes];
   Point3D_POD mEyeTranslation[VRDisplayState::NumEyes];
   IntSize_POD mEyeResolution;
+  bool mSuppressFrames;
   bool mIsConnected;
   bool mIsMounted;
   FloatSize_POD mStageSize;
