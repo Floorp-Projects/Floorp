@@ -46,7 +46,7 @@ add_task(async function test_search() {
   let addonEngines = await extension.awaitMessage("engines");
   let engines = Services.search.getEngines().filter(engine => !engine.hidden);
   is(addonEngines.length, engines.length, "Engine lengths are the same.");
-  let defaultEngine = addonEngines.filter(engine => engine.is_default === true);
+  let defaultEngine = addonEngines.filter(engine => engine.isDefault === true);
   is(defaultEngine.length, 1, "One default engine");
   is(defaultEngine[0].name, Services.search.currentEngine.name, "Default engine is correct");
   await clickBrowserAction(extension);
