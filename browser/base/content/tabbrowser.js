@@ -5000,12 +5000,17 @@ var TabContextMenu = {
     document.getElementById("context_closeTab").hidden = multiselectionContext;
     document.getElementById("context_closeSelectedTabs").hidden = !multiselectionContext;
 
-    // Hide "Bookmark All Tabs" for a pinned tab.  Update its state if visible.
+    // Hide "Bookmark All Tabs" for a pinned tab or multiselection.
+    // Update its state if visible.
     let bookmarkAllTabs = document.getElementById("context_bookmarkAllTabs");
-    bookmarkAllTabs.hidden = this.contextTab.pinned;
+    bookmarkAllTabs.hidden = this.contextTab.pinned || multiselectionContext;
     if (!bookmarkAllTabs.hidden) {
       PlacesCommandHook.updateBookmarkAllTabsCommand();
     }
+
+    // Show "Bookmark Selected Tabs" in a multiselect context and hide it otherwise.
+    let bookmarkMultiSelectedTabs = document.getElementById("context_bookmarkSelectedTabs");
+    bookmarkMultiSelectedTabs.hidden = !multiselectionContext;
 
     let toggleMute = document.getElementById("context_toggleMuteTab");
     let toggleMultiSelectMute = document.getElementById("context_toggleMuteSelectedTabs");
