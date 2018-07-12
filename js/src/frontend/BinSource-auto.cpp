@@ -6193,13 +6193,18 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(const size_t start
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    size_t nameStart;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
-
     RootedAtom property(cx_);
-    MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    {
+        nameStart = tokenizer_->offset();
+        MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), tokenizer_->offset()));
+    }
+
+    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
     return result;
 }
 
@@ -6238,13 +6243,18 @@ BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, cons
     const BinField expected_fields[2] = { BinField::Object, BinField::Property };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
+    size_t nameStart;
 
     BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper());
-
     RootedAtom property(cx_);
-    MOZ_TRY_VAR(property, tokenizer_->readAtom());
+    {
+        nameStart = tokenizer_->offset();
+        MOZ_TRY_VAR(property, tokenizer_->readAtom());
 
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), tokenizer_->offset()));
+    }
+
+    BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
     return result;
 }
 

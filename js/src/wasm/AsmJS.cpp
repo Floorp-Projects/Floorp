@@ -593,16 +593,16 @@ static ParseNode*
 DotBase(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Dot));
-    MOZ_ASSERT(pn->isArity(PN_NAME));
-    return pn->expr();
+    MOZ_ASSERT(pn->isArity(PN_BINARY));
+    return pn->pn_left;
 }
 
 static PropertyName*
 DotMember(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Dot));
-    MOZ_ASSERT(pn->isArity(PN_NAME));
-    return pn->pn_atom->asPropertyName();
+    MOZ_ASSERT(pn->isArity(PN_BINARY));
+    return pn->pn_right->pn_atom->asPropertyName();
 }
 
 static ParseNode*

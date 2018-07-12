@@ -55,6 +55,7 @@ class ObjectBox;
     F(PostIncrement) \
     F(PreDecrement) \
     F(PostDecrement) \
+    F(PropertyName) \
     F(Dot) \
     F(Elem) \
     F(Array) \
@@ -382,8 +383,9 @@ IsTypeofKind(ParseNodeKind kind)
  *                          for a more-specific PNK_DELETE* unless constant
  *                          folding (or a similar parse tree manipulation) has
  *                          occurred
- * Dot      name        pn_expr: MEMBER expr to left of .
- *                          pn_atom: name to right of .
+ * PropertyName name    pn_atom: property name being accessed
+ * Dot      binary      pn_left: MEMBER expr to left of .
+ *                          pn_right: PropertyName to right of .
  * Elem     binary      pn_left: MEMBER expr to left of [
  *                          pn_right: expr between [ and ]
  * Call     binary      pn_left: callee expression on the left of the (
@@ -573,8 +575,7 @@ class ParseNode
                 FunctionBox* funbox;    /* function object */
             };
             ParseNode*  expr;           /* module or function body, var
-                                           initializer, argument default, or
-                                           base object of ParseNodeKind::Dot */
+                                           initializer, or argument default */
         } name;
         struct {
             LexicalScope::Data* bindings;
@@ -1178,30 +1179,33 @@ class RegExpLiteral : public NullaryNode
     }
 };
 
-class PropertyAccess : public ParseNode
+class PropertyAccess : public BinaryNode
 {
   public:
-    PropertyAccess(ParseNode* lhs, PropertyName* name, uint32_t begin, uint32_t end)
-      : ParseNode(ParseNodeKind::Dot, JSOP_NOP, PN_NAME, TokenPos(begin, end))
+    /*
+     * PropertyAccess nodes can have any expression/'super' as left-hand
+     * side, but the name must be a ParseNodeKind::PropertyName node.
+     */
+    PropertyAccess(ParseNode* lhs, ParseNode* name, uint32_t begin, uint32_t end)
+      : BinaryNode(ParseNodeKind::Dot, JSOP_NOP, TokenPos(begin, end), lhs, name)
     {
         MOZ_ASSERT(lhs != nullptr);
         MOZ_ASSERT(name != nullptr);
-        pn_u.name.expr = lhs;
-        pn_u.name.atom = name;
     }
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Dot);
-        MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
+        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.pn_right->isKind(ParseNodeKind::PropertyName));
         return match;
     }
 
     ParseNode& expression() const {
-        return *pn_u.name.expr;
+        return *pn_u.binary.left;
     }
 
     PropertyName& name() const {
-        return *pn_u.name.atom->asPropertyName();
+        return *pn_u.binary.right->pn_atom->asPropertyName();
     }
 
     bool isSuper() const {
