@@ -112,8 +112,9 @@ class ToolboxTabsOrderManager {
   }
 
   onMouseOut(e) {
-    if (e.pageX <= 0 || this.dragTarget.ownerDocument.width <= e.pageX ||
-        e.pageY <= 0 || this.dragTarget.ownerDocument.height <= e.pageY) {
+    const documentElement = this.dragTarget.ownerDocument.documentElement;
+    if (e.pageX <= 0 || documentElement.clientWidth <= e.pageX ||
+        e.pageY <= 0 || documentElement.clientHeight <= e.pageY) {
       this.onMouseUp();
     }
   }
