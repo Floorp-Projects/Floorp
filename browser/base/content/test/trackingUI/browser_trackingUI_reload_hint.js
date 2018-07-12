@@ -6,6 +6,8 @@
 const PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
+var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+
 // TODO: replace this once bug 1428847 is done.
 function hidden(el) {
   let win = el.ownerGlobal;
