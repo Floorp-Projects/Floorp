@@ -9,6 +9,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 import android.os.Build
+import android.os.Bundle
 
 import android.support.test.filters.MediumTest
 import android.support.test.InstrumentationRegistry
@@ -165,6 +166,77 @@ class AccessibilityTest : BaseSessionTest() {
                             node.extras.getString("AccessibilityNodeInfo.hint"),
                             equalTo("Name"))
                 }
+            }
+        })
+    }
+
+    private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int) {
+        var eventFromIndex = 0;
+        var eventToIndex = 0;
+        do {
+            sessionRule.waitUntilCalled(object : EventDelegate {
+                override fun onTextSelectionChanged(event: AccessibilityEvent) {
+                    eventFromIndex = event.fromIndex;
+                    eventToIndex = event.toIndex;
+                }
+            })
+        } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
+    }
+
+    private fun setSelectionArguments(start: Int, end: Int): Bundle {
+        val arguments = Bundle(2)
+        arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
+        arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end)
+        return arguments
+    }
+
+    @Test fun testClipboard() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
+        sessionRule.session.loadString("<input value='hello cruel world' id='input'>", "text/html")
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS("$('input').focus()")
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Focused EditBox", node.className.toString(),
+                        equalTo("android.widget.EditText"))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onTextSelectionChanged(event: AccessibilityEvent) {
+                assertThat("fromIndex should be at start", event.fromIndex, equalTo(0))
+                assertThat("toIndex should be at start", event.toIndex, equalTo(0))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(5, 11))
+        waitUntilTextSelectionChanged(5, 11)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_COPY, null)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(11, 11))
+        waitUntilTextSelectionChanged(11, 11)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onTextChanged(event: AccessibilityEvent) {
+                assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel world"))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(17, 23))
+        waitUntilTextSelectionChanged(17, 23)
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled
+            override fun onTextChanged(event: AccessibilityEvent) {
+                assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel cruel"))
             }
         })
     }
