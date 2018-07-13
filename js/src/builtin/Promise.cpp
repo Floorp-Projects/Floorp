@@ -824,14 +824,15 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
         MOZ_RELEASE_ASSERT(reactionObj->is<PromiseReactionRecord>());
         reaction = &reactionObj->as<PromiseReactionRecord>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(reactionObj))) {
+        JSObject* unwrappedReactionObj = UncheckedUnwrap(reactionObj);
+        if (JS_IsDeadWrapper(unwrappedReactionObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        reaction = &UncheckedUnwrap(reactionObj)->as<PromiseReactionRecord>();
+        reaction = &unwrappedReactionObj->as<PromiseReactionRecord>();
         MOZ_RELEASE_ASSERT(reaction->is<PromiseReactionRecord>());
         ar.emplace(cx, reaction);
-        if (!reaction->compartment()->wrap(cx, &handlerArg))
+        if (!cx->compartment()->wrap(cx, &handlerArg))
             return false;
     }
 
@@ -977,13 +978,14 @@ FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue v
     if (!IsProxy(promiseObj)) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(promiseObj))) {
+        JSObject* unwrappedPromiseObj = UncheckedUnwrap(promiseObj);
+        if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
+        promise = &unwrappedPromiseObj->as<PromiseObject>();
         ar.emplace(cx, promise);
-        if (!promise->compartment()->wrap(cx, &value))
+        if (!cx->compartment()->wrap(cx, &value))
             return false;
     }
 
@@ -1157,11 +1159,12 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
     if (!IsProxy(promiseObj)) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(promiseObj))) {
+        JSObject* unwrappedPromiseObj = UncheckedUnwrap(promiseObj);
+        if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
+        promise = &unwrappedPromiseObj->as<PromiseObject>();
         ar.emplace(cx, promise);
 
         // The rejection reason might've been created in a compartment with higher
@@ -1171,7 +1174,7 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
         // avoid that situation, we synthesize a generic error that doesn't
         // expose any privileged information but can safely be used in the
         // rejection handler.
-        if (!promise->compartment()->wrap(cx, &reason))
+        if (!cx->compartment()->wrap(cx, &reason))
             return false;
         if (reason.isObject() && !CheckedUnwrap(&reason.toObject())) {
             // Report the existing reason, so we don't just drop it on the
@@ -2253,7 +2256,7 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
         MOZ_ASSERT(unwrappedPromiseObj);
 
-        JSAutoRealm ar(cx, unwrappedPromiseObj);
+        AutoRealm ar(cx, unwrappedPromiseObj);
         valuesArray = NewDenseFullyAllocatedArray(cx, 0);
     } else {
         valuesArray = NewDenseFullyAllocatedArray(cx, 0);
@@ -2314,10 +2317,10 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         }
 
         // Step h.
-        { // Scope for the JSAutoRealm we need to work with valuesArray.  We
+        { // Scope for the AutoRealm we need to work with valuesArray.  We
             // mostly do this for performance; we could go ahead and do the define via
             // a cross-compartment proxy instead...
-            JSAutoRealm ar(cx, valuesArray);
+            AutoRealm ar(cx, valuesArray);
             indexId = INT_TO_JSID(index);
             if (!DefineDataProperty(cx, valuesArray, indexId, UndefinedHandleValue))
                 return false;
@@ -2396,15 +2399,18 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
     // Step 5.
     RootedValue valuesVal(cx, data->valuesArray());
     RootedObject valuesObj(cx, &valuesVal.toObject());
-    bool valuesListIsWrapped = false;
-    if (IsWrapper(valuesObj)) {
-        valuesListIsWrapped = true;
+    if (IsProxy(valuesObj)) {
         // See comment for PerformPromiseAll, step 3 for why we unwrap here.
         valuesObj = UncheckedUnwrap(valuesObj);
-    }
-    if (JS_IsDeadWrapper(valuesObj)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-        return false;
+
+        if (JS_IsDeadWrapper(valuesObj)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            return false;
+        }
+
+        AutoRealm ar(cx, valuesObj);
+        if (!cx->compartment()->wrap(cx, &xVal))
+            return false;
     }
     HandleNativeObject values = valuesObj.as<NativeObject>();
 
@@ -2413,11 +2419,7 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 8.
     // The index is guaranteed to be initialized to `undefined`.
-    if (valuesListIsWrapped) {
-        AutoRealm ar(cx, values);
-        if (!cx->compartment()->wrap(cx, &xVal))
-            return false;
-    }
+    MOZ_ASSERT(values->getDenseElement(index).isUndefined());
     values->setDenseElement(index, xVal);
 
     // Steps 7,9.
