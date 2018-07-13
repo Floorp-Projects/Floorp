@@ -40,8 +40,8 @@ add_task(async function() {
   is(popup.itemCount, items.length, "items added");
   is(JSON.stringify(popup.getItems()), JSON.stringify(items),
     "getItems returns back the same items");
-  is(popup.selectedIndex, 2, "Index of the first item from bottom is selected.");
-  is(popup.selectedItem, items[2], "First item from bottom is selected");
+  is(popup.selectedIndex, 0, "Index of the first item from top is selected.");
+  is(popup.selectedItem, items[0], "First item from top is selected");
   checkActiveDescendant(popup, input);
 
   popup.selectedIndex = 1;
