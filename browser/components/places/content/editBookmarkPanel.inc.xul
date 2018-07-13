@@ -107,9 +107,10 @@
     </vbox>
 
     <vbox id="editBMPanel_tagsSelectorRow"
-         collapsed="true">
-      <listbox id="editBMPanel_tagsSelector"
-               height="150"/>
+          collapsed="true">
+      <richlistbox id="editBMPanel_tagsSelector"
+                   styled="true"
+                   height="150"/>
     </vbox>
 
     <vbox id="editBMPanel_keywordRow"
