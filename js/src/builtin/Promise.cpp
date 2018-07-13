@@ -1596,6 +1596,14 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     RootedObject then(cx, CheckedUnwrap(&thenVal.toObject()));
     AutoRealm ar(cx, then);
 
+    // Wrap the `promiseToResolve` and `thenable` arguments.
+    if (!cx->compartment()->wrap(cx, &promiseToResolve))
+        return false;
+
+    MOZ_ASSERT(thenable.isObject());
+    if (!cx->compartment()->wrap(cx, &thenable))
+        return false;
+
     HandlePropertyName funName = cx->names().empty;
     RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
                                              gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -1609,28 +1617,20 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     // work.
     // The layout is described in the ThenableJobDataIndices enum.
     RootedArrayObject data(cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataLength));
-    if (!data ||
-        data->ensureDenseElements(cx, 0, ThenableJobDataLength) != DenseElementResult::Success)
-    {
+    if (!data)
         return false;
-    }
 
-    // Wrap and set the `promiseToResolve` argument.
-    if (!cx->compartment()->wrap(cx, &promiseToResolve))
-        return false;
-    data->setDenseElement(ThenableJobDataIndex_Promise, promiseToResolve);
-    // At this point the promise is guaranteed to be wrapped into the job's
-    // compartment.
-    RootedObject promise(cx, &promiseToResolve.toObject());
-
-    // Wrap and set the `thenable` argument.
-    MOZ_ASSERT(thenable.isObject());
-    if (!cx->compartment()->wrap(cx, &thenable))
-        return false;
-    data->setDenseElement(ThenableJobDataIndex_Thenable, thenable);
+    // Set the `promiseToResolve` and `thenable` arguments.
+    data->setDenseInitializedLength(ThenableJobDataLength);
+    data->initDenseElement(ThenableJobDataIndex_Promise, promiseToResolve);
+    data->initDenseElement(ThenableJobDataIndex_Thenable, thenable);
 
     // Store the data array on the reaction job.
     job->setExtendedSlot(ThenableJobSlot_JobData, ObjectValue(*data));
+
+    // At this point the promise is guaranteed to be wrapped into the job's
+    // compartment.
+    RootedObject promise(cx, &promiseToResolve.toObject());
 
     RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
     return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
@@ -2094,8 +2094,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
         RootedNativeObject valuesArray(cx, NewDenseFullyAllocatedArray(cx, promiseCount));
         if (!valuesArray)
             return nullptr;
-        if (valuesArray->ensureDenseElements(cx, 0, promiseCount) != DenseElementResult::Success)
-            return nullptr;
+        valuesArray->ensureDenseInitializedLength(cx, 0, promiseCount);
 
         // Sub-step 4.
         // Create our data holder that holds all the things shared across
@@ -3790,11 +3789,10 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
         reactions = NewDenseFullyAllocatedArray(cx, 2);
         if (!reactions)
             return false;
-        if (reactions->ensureDenseElements(cx, 0, 2) != DenseElementResult::Success)
-            return false;
 
-        reactions->setDenseElement(0, reactionsVal);
-        reactions->setDenseElement(1, reactionVal);
+        reactions->setDenseInitializedLength(2);
+        reactions->initDenseElement(0, reactionsVal);
+        reactions->initDenseElement(1, reactionVal);
 
         promise->setFixedSlot(PromiseSlot_ReactionsOrResult, ObjectValue(*reactions));
     } else {
@@ -3802,8 +3800,11 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
         MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
         HandleNativeObject reactions = reactionsObj.as<NativeObject>();
         uint32_t len = reactions->getDenseInitializedLength();
-        if (reactions->ensureDenseElements(cx, 0, len + 1) != DenseElementResult::Success)
+        DenseElementResult result = reactions->ensureDenseElements(cx, len, 1);
+        if (result != DenseElementResult::Success) {
+            MOZ_ASSERT(result == DenseElementResult::Failure);
             return false;
+        }
         reactions->setDenseElement(len, reactionVal);
     }
 
