@@ -235,8 +235,8 @@ VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
   memset(&displayState, 0, sizeof(VRDisplayState));
   while (displayState.mLastSubmittedFrameId < aFrameId) {
     if (manager->PullState(&displayState, &mLastSensorState, mDisplayInfo.mControllerState)) {
-      if (!displayState.mIsConnected) {
-        // Service has shut down or hardware has been disconnected
+      if (displayState.mSuppressFrames || !displayState.mIsConnected) {
+        // External implementation wants to supress frames, service has shut down or hardware has been disconnected.
         return false;
       }
     }

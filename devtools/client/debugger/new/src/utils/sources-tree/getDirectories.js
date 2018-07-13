@@ -7,57 +7,48 @@ exports.getDirectories = getDirectories;
 
 var _utils = require("./utils");
 
-var _getURL = require("./getURL");
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function findSource(sourceTree, sourceUrl) {
-  let returnTarget = null;
-
-  function _traverse(subtree) {
-    if (subtree.type === "directory") {
-      for (const child of subtree.contents) {
-        _traverse(child);
-      }
-    } else if (!returnTarget) {
-      if (subtree.path.replace(/http(s)?:\//, "") == sourceUrl) {
-        returnTarget = subtree;
-        return;
-      }
+function _traverse(subtree, source) {
+  if (subtree.type === "source") {
+    if (subtree.contents.id === source.id) {
+      return subtree;
     }
+
+    return null;
   }
 
-  sourceTree.contents.forEach(node => _traverse(node));
-
-  if (!returnTarget) {
-    return sourceTree;
-  }
-
-  return returnTarget;
+  const matches = subtree.contents.map(child => _traverse(child, source));
+  return matches && matches.filter(Boolean)[0];
 }
 
-function getDirectories(source, sourceTree) {
-  const url = (0, _getURL.getURL)(source);
-  const fullUrl = `${url.group}${url.path}`;
-  const parentMap = (0, _utils.createParentMap)(sourceTree);
-  const subtreeSource = findSource(sourceTree, fullUrl);
+function findSourceItem(sourceTree, source) {
+  return _traverse(sourceTree, source);
+}
 
-  if (!subtreeSource) {
-    return [];
+function getAncestors(sourceTree, item) {
+  if (!item) {
+    return null;
   }
 
-  let node = subtreeSource;
+  const parentMap = (0, _utils.createParentMap)(sourceTree);
   const directories = [];
-  directories.push(subtreeSource);
+  directories.push(item);
 
   while (true) {
-    node = parentMap.get(node);
+    item = parentMap.get(item);
 
-    if (!node) {
+    if (!item) {
       return directories;
     }
 
-    directories.push(node);
+    directories.push(item);
   }
+}
+
+function getDirectories(source, sourceTree) {
+  const item = findSourceItem(sourceTree, source);
+  const ancestors = getAncestors(sourceTree, item);
+  return ancestors || [sourceTree];
 }

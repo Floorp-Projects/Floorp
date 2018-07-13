@@ -271,7 +271,7 @@ public:
   void
   Dispatch(ErrorResult& aRv)
   {
-    WorkerMainThreadRunnable::Dispatch(Terminating, aRv);
+    WorkerMainThreadRunnable::Dispatch(Canceling, aRv);
   }
 
 private:
@@ -325,7 +325,7 @@ public:
   void
   Dispatch(ErrorResult& aRv)
   {
-    WorkerMainThreadRunnable::Dispatch(Terminating, aRv);
+    WorkerMainThreadRunnable::Dispatch(Canceling, aRv);
   }
 
   nsIURI*
@@ -381,7 +381,7 @@ URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
   RefPtr<CreateURLRunnable> runnable =
     new CreateURLRunnable(workerPrivate, blobImpl, aResult);
 
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -404,7 +404,7 @@ URLWorker::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   RefPtr<RevokeURLRunnable> runnable =
     new RevokeURLRunnable(workerPrivate, aUrl);
 
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -427,7 +427,7 @@ URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   RefPtr<IsValidURLRunnable> runnable =
     new IsValidURLRunnable(workerPrivate, aUrl);
 
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return false;
   }
@@ -462,7 +462,7 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   // create url proxy
   RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(mWorkerPrivate, aURL, aBase);
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -489,7 +489,7 @@ URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
 
   RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(mWorkerPrivate, aHref, Optional<nsAString>());
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

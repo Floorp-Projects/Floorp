@@ -1194,7 +1194,7 @@ EventSourceImpl::ReestablishConnection()
   } else {
     RefPtr<CallRestartConnection> runnable = new CallRestartConnection(this);
     ErrorResult result;
-    runnable->Dispatch(Terminating, result);
+    runnable->Dispatch(Canceling, result);
     MOZ_ASSERT(!result.Failed());
     rv = result.StealNSResult();
   }
@@ -1994,7 +1994,7 @@ EventSource::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
 
   RefPtr<InitRunnable> initRunnable =
     new InitRunnable(workerPrivate, eventSourceImp, aURL);
-  initRunnable->Dispatch(Terminating, aRv);
+  initRunnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2022,7 +2022,7 @@ EventSource::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
   // Let's connect to the server.
   RefPtr<ConnectRunnable> connectRunnable =
     new ConnectRunnable(workerPrivate, eventSourceImp);
-  connectRunnable->Dispatch(Terminating, aRv);
+  connectRunnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

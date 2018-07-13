@@ -171,7 +171,7 @@ ConnectionWorker::Create(WorkerPrivate* aWorkerPrivate, ErrorResult& aRv)
   RefPtr<InitializeRunnable> runnable =
     new InitializeRunnable(aWorkerPrivate, c->mProxy, networkInfo);
 
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

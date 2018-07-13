@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
    - repackage-signing
+   - repackage-signing-l10n
    - partials-signing
 
 only-for-build-platforms:

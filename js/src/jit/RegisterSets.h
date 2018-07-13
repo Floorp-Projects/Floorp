@@ -920,7 +920,7 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
         takeUnchecked(reg);
     }
     void take(FloatRegister reg) {
-        MOZ_ASSERT(has(reg));
+        MOZ_ASSERT(this->has(reg));
         takeUnchecked(reg);
     }
     void take(AnyRegister reg) {
