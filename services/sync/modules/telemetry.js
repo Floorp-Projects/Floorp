@@ -513,8 +513,7 @@ class SyncTelemetryImpl {
   }
 
   submit(record) {
-    if (Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri") ||
-    	Services.prefs.prefHasUserValue("services.sync.tokenServerURI")) {
+    if (Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri")) {
       log.trace(`Not sending telemetry ping for self-hosted Sync user`);
       return false;
     }
