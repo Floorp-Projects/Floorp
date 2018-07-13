@@ -11,6 +11,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIURIWithPrincipal.h"
+#include "nsURLHelper.h"
 
 namespace mozilla {
 
@@ -55,6 +56,28 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   nsresult rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
     mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+    return;
+  }
+
+  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS) {
+    // If the host is an IPv4/IPv6 address, we still accept it as a
+    // valid firstPartyDomain.
+    nsAutoCString ipAddr;
+    rv = aURI->GetHost(ipAddr);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (net_IsValidIPv6Addr(ipAddr.BeginReading(), ipAddr.Length())) {
+      // According to RFC2732, the host of an IPv6 address should be an
+      // IPv6reference. The GetHost() of nsIURI will only return the IPv6
+      // address. So, we need to convert it back to IPv6reference here.
+      mFirstPartyDomain.Truncate();
+      mFirstPartyDomain.AssignLiteral("[");
+      mFirstPartyDomain.Append(NS_ConvertUTF8toUTF16(ipAddr));
+      mFirstPartyDomain.AppendLiteral("]");
+    } else {
+      mFirstPartyDomain = NS_ConvertUTF8toUTF16(ipAddr);
+    }
+
     return;
   }
 
