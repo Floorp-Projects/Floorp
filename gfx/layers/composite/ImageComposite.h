@@ -50,13 +50,8 @@ public:
     BIAS_POSITIVE,
   };
 
-  static TimeStamp GetBiasedTime(const TimeStamp& aInput, ImageComposite::Bias aBias);
-
 protected:
-  static Bias UpdateBias(const TimeStamp& aCompositionTime,
-                         const TimeStamp& aCompositedImageTime,
-                         const TimeStamp& aNextImageTime, // may be null
-                         ImageComposite::Bias aBias);
+  void UpdateBias(size_t aImageIndex);
 
   virtual TimeStamp GetCompositionTime() const = 0;
 
@@ -75,12 +70,21 @@ protected:
    * mBias is updated at the end of Composite().
    */
   const TimedImage* ChooseImage() const;
-  TimedImage* ChooseImage();
   int ChooseImageIndex() const;
+  const TimedImage* GetImage(size_t aIndex) const;
+  size_t ImagesCount() const { return mImages.Length(); }
+  const nsTArray<TimedImage>& Images() const { return mImages; }
 
-  nsTArray<TimedImage> mImages;
+  void RemoveImagesWithTextureHost(TextureHost* aTexture);
+  void ClearImages();
+  void SetImages(nsTArray<TimedImage>&& aNewImages);
+
   int32_t mLastFrameID;
   int32_t mLastProducerID;
+
+private:
+  nsTArray<TimedImage> mImages;
+  TimeStamp GetBiasedTime(const TimeStamp& aInput) const;
   /**
    * Bias to apply to the next frame.
    */

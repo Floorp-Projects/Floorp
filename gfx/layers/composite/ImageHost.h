@@ -93,7 +93,7 @@ public:
 
   struct RenderInfo {
     int imageIndex;
-    TimedImage* img;
+    const TimedImage* img;
     RefPtr<TextureHost> host;
 
     RenderInfo() : imageIndex(-1), img(nullptr)
