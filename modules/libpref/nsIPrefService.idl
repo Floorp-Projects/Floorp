@@ -15,7 +15,7 @@ interface nsIFile;
 [function, scriptable, uuid(c3f0cedc-e244-4316-b33a-80306a1c35a1)]
 interface nsIPrefStatsCallback : nsISupports
 {
-  void visit(in ACString prefName, in unsigned long accessCount);
+  void visit(in string prefName, in unsigned long accessCount);
 };
 
 /**

@@ -7,7 +7,7 @@
 #ifndef dom_ipc_MemMapSnapshot_h
 #define dom_ipc_MemMapSnapshot_h
 
-#include "mozilla/AutoMemMap.h"
+#include "AutoMemMap.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"

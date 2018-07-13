@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "SharedPrefMap.h"
-
 #include "base/basictypes.h"
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
@@ -95,8 +93,6 @@
 
 using namespace mozilla;
 
-using mozilla::ipc::FileDescriptor;
-
 #ifdef DEBUG
 
 #define ENSURE_PARENT_PROCESS(func, pref)                                      \
@@ -131,6 +127,15 @@ static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
+// Keep this in sync with PrefType in parser/src/lib.rs.
+enum class PrefType : uint8_t
+{
+  None = 0, // only used when neither the default nor user value is set
+  String = 1,
+  Int = 2,
+  Bool = 3,
+};
+
 // This is used for pref names and string pref values. We encode the string
 // length, then a '/', then the string chars. This encoding means there are no
 // special chars that are forbidden or require escaping.
@@ -160,23 +165,6 @@ union PrefValue {
   int32_t mIntVal;
   bool mBoolVal;
 
-  PrefValue() = default;
-
-  explicit PrefValue(bool aVal)
-    : mBoolVal(aVal)
-  {
-  }
-
-  explicit PrefValue(int32_t aVal)
-    : mIntVal(aVal)
-  {
-  }
-
-  explicit PrefValue(const char* aVal)
-    : mStringVal(aVal)
-  {
-  }
-
   bool Equals(PrefType aType, PrefValue aValue)
   {
     switch (aType) {
@@ -200,9 +188,6 @@ union PrefValue {
         MOZ_CRASH("Unhandled enum value");
     }
   }
-
-  template<typename T>
-  T Get() const;
 
   void Init(PrefType aNewType, PrefValue aNewValue)
   {
@@ -333,27 +318,6 @@ union PrefValue {
   }
 };
 
-template<>
-bool
-PrefValue::Get() const
-{
-  return mBoolVal;
-}
-
-template<>
-int32_t
-PrefValue::Get() const
-{
-  return mIntVal;
-}
-
-template<>
-nsDependentCString
-PrefValue::Get() const
-{
-  return nsDependentCString(mStringVal);
-}
-
 #ifdef DEBUG
 const char*
 PrefTypeToString(PrefType aType)
@@ -452,11 +416,7 @@ struct PrefsSizes
 };
 }
 
-static StaticRefPtr<SharedPrefMap> gSharedMap;
-
-static ArenaAllocator<4096, 1> gPrefNameArena;
-
-class PrefWrapper;
+static ArenaAllocator<8192, 1> gPrefNameArena;
 
 class Pref
 {
@@ -468,6 +428,7 @@ public:
     , mIsLocked(false)
     , mHasDefaultValue(false)
     , mHasUserValue(false)
+    , mHasChangedSinceInit(false)
     , mDefaultValue()
     , mUserValue()
   {
@@ -482,8 +443,7 @@ public:
     mUserValue.Clear(Type());
   }
 
-  const char* Name() const { return mName; }
-  nsDependentCString NameString() const { return nsDependentCString(mName); }
+  const char* Name() { return mName; }
 
   // Types.
 
@@ -499,33 +459,39 @@ public:
   // Other properties.
 
   bool IsLocked() const { return mIsLocked; }
-  void SetIsLocked(bool aValue) { mIsLocked = aValue; }
-
-  bool IsSticky() const { return mIsSticky; }
+  void SetIsLocked(bool aValue)
+  {
+    mIsLocked = aValue;
+    mHasChangedSinceInit = true;
+  }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
   bool HasUserValue() const { return mHasUserValue; }
 
-  template<typename T>
-  void AddToMap(SharedPrefMapBuilder& aMap)
+  // When a content process is created we could tell it about every pref. But
+  // the content process also initializes prefs from file, so we save a lot of
+  // IPC if we only tell it about prefs that have changed since initialization.
+  //
+  // Specifically, we send a pref if any of the following conditions are met.
+  //
+  // - If the pref has changed in any way (default value, user value, or other
+  //   attribute, such as whether it is locked) since being initialized from
+  //   file.
+  //
+  // - If the pref has a user value. (User values are more complicated than
+  //   default values, because they can be loaded from file after
+  //   initialization with Preferences::ReadUserPrefsFromFile(), so we are
+  //   conservative with them.)
+  //
+  // In other words, prefs that only have a default value and haven't changed
+  // need not be sent. One could do better with effort, but it's ok to be
+  // conservative and this still greatly reduces the number of prefs sent.
+  //
+  // Note: This function is only useful in the parent process.
+  bool MustSendToContentProcesses() const
   {
-    aMap.Add(Name(),
-             { HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked() },
-             HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
-             HasUserValue() ? mUserValue.Get<T>() : T());
-  }
-
-  void AddToMap(SharedPrefMapBuilder& aMap)
-  {
-    if (IsTypeBool()) {
-      AddToMap<bool>(aMap);
-    } else if (IsTypeInt()) {
-      AddToMap<int32_t>(aMap);
-    } else if (IsTypeString()) {
-      AddToMap<nsDependentCString>(aMap);
-    } else {
-      MOZ_ASSERT_UNREACHABLE("Unexpected preference type");
-    }
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return mHasUserValue || mHasChangedSinceInit;
   }
 
   // Other operations.
@@ -539,41 +505,63 @@ public:
     return strcmp(mName, aPrefName) == 0;
   }
 
-  bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const
+  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
   {
-    MOZ_ASSERT(IsTypeBool());
-    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
-                                               : HasUserValue());
+    if (!IsTypeBool()) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-    return aKind == PrefValueKind::Default ? mDefaultValue.mBoolVal
-                                           : mUserValue.mBoolVal;
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
+      // Do we have a default?
+      if (!mHasDefaultValue) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mBoolVal;
+    } else {
+      *aResult = mUserValue.mBoolVal;
+    }
+
+    return NS_OK;
   }
 
-  int32_t GetIntValue(PrefValueKind aKind = PrefValueKind::User) const
+  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult)
   {
-    MOZ_ASSERT(IsTypeInt());
-    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
-                                               : HasUserValue());
+    if (!IsTypeInt()) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-    return aKind == PrefValueKind::Default ? mDefaultValue.mIntVal
-                                           : mUserValue.mIntVal;
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
+      // Do we have a default?
+      if (!mHasDefaultValue) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aResult = mDefaultValue.mIntVal;
+    } else {
+      *aResult = mUserValue.mIntVal;
+    }
+
+    return NS_OK;
   }
 
-  const char* GetBareStringValue(
-    PrefValueKind aKind = PrefValueKind::User) const
+  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult)
   {
-    MOZ_ASSERT(IsTypeString());
-    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
-                                               : HasUserValue());
+    if (!IsTypeString()) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-    return aKind == PrefValueKind::Default ? mDefaultValue.mStringVal
-                                           : mUserValue.mStringVal;
-  }
+    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
+      // Do we have a default?
+      if (!mHasDefaultValue) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      MOZ_ASSERT(mDefaultValue.mStringVal);
+      aResult = mDefaultValue.mStringVal;
+    } else {
+      MOZ_ASSERT(mUserValue.mStringVal);
+      aResult = mUserValue.mStringVal;
+    }
 
-  nsDependentCString GetStringValue(
-    PrefValueKind aKind = PrefValueKind::User) const
-  {
-    return nsDependentCString(GetBareStringValue(aKind));
+    return NS_OK;
   }
 
   void ToDomPref(dom::Pref* aDomPref)
@@ -645,12 +633,12 @@ public:
       userValueChanged = true;
     }
 
+    mHasChangedSinceInit = true;
+
     if (userValueChanged || (defaultValueChanged && !mHasUserValue)) {
       *aValueChanged = true;
     }
   }
-
-  void FromWrapper(PrefWrapper& aWrapper);
 
   bool HasAdvisablySizedValues()
   {
@@ -692,12 +680,14 @@ public:
   {
     mUserValue.Clear(Type());
     mHasUserValue = false;
+    mHasChangedSinceInit = true;
   }
 
   nsresult SetDefaultValue(PrefType aType,
                            PrefValue aValue,
                            bool aIsSticky,
                            bool aIsLocked,
+                           bool aFromInit,
                            bool* aValueChanged)
   {
     // Types must always match when setting the default value.
@@ -714,6 +704,9 @@ public:
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
         mHasDefaultValue = true;
+        if (!aFromInit) {
+          mHasChangedSinceInit = true;
+        }
         if (aIsSticky) {
           mIsSticky = true;
         }
@@ -756,11 +749,38 @@ public:
       mUserValue.Replace(mHasUserValue, Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
+      if (!aFromInit) {
+        mHasChangedSinceInit = true;
+      }
       if (!IsLocked()) {
         *aValueChanged = true;
       }
     }
     return NS_OK;
+  }
+
+  // Returns false if this pref doesn't have a user value worth saving.
+  bool UserValueToStringForSaving(nsCString& aStr)
+  {
+    // Should we save the user value, if present? Only if it does not match the
+    // default value, or it is sticky.
+    if (mHasUserValue &&
+        (!ValueMatches(PrefValueKind::Default, Type(), mUserValue) ||
+         mIsSticky)) {
+      if (IsTypeString()) {
+        StrEscape(mUserValue.mStringVal, aStr);
+
+      } else if (IsTypeInt()) {
+        aStr.AppendInt(mUserValue.mIntVal);
+
+      } else if (IsTypeBool()) {
+        aStr = mUserValue.mBoolVal ? "true" : "false";
+      }
+      return true;
+    }
+
+    // Do not save default prefs that haven't changed.
+    return false;
   }
 
   // Prefs are serialized in a manner that mirrors dom::Pref. The two should be
@@ -938,6 +958,7 @@ private:
   uint32_t mIsLocked : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
+  uint32_t mHasChangedSinceInit : 1;
 
   PrefValue mDefaultValue;
   PrefValue mUserValue;
@@ -946,6 +967,10 @@ private:
 class PrefEntry : public PLDHashEntryHdr
 {
 public:
+#ifdef DEBUG
+  // This field is before mPref to minimize sizeof(PrefEntry) on 64-bit.
+  uint32_t mAccessCount;
+#endif
   Pref* mPref; // Note: this is never null in a live entry.
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
@@ -961,6 +986,9 @@ public:
     auto entry = static_cast<PrefEntry*>(aEntry);
     auto prefName = static_cast<const char*>(aKey);
 
+#ifdef DEBUG
+    entry->mAccessCount = 0;
+#endif
     entry->mPref = new Pref(prefName);
   }
 
@@ -972,211 +1000,6 @@ public:
     entry->mPref = nullptr;
   }
 };
-
-using PrefWrapperBase = Variant<Pref*, SharedPrefMap::Pref>;
-class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase
-{
-  using SharedPref = const SharedPrefMap::Pref;
-
-public:
-  MOZ_IMPLICIT PrefWrapper(Pref* aPref)
-    : PrefWrapperBase(AsVariant(aPref))
-  {
-  }
-
-  MOZ_IMPLICIT PrefWrapper(const SharedPrefMap::Pref& aPref)
-    : PrefWrapperBase(AsVariant(aPref))
-  {
-  }
-
-  // Types.
-
-  bool IsType(PrefType aType) const { return Type() == aType; }
-  bool IsTypeNone() const { return IsType(PrefType::None); }
-  bool IsTypeString() const { return IsType(PrefType::String); }
-  bool IsTypeInt() const { return IsType(PrefType::Int); }
-  bool IsTypeBool() const { return IsType(PrefType::Bool); }
-
-#define FORWARD(retType, method)                                               \
-  retType method() const                                                       \
-  {                                                                            \
-    struct Matcher                                                             \
-    {                                                                          \
-      retType match(const Pref* aPref) { return aPref->method(); }             \
-      retType match(SharedPref& aPref) { return aPref.method(); }              \
-    };                                                                         \
-    return match(Matcher());                                                   \
-  }
-
-  FORWARD(bool, IsLocked)
-  FORWARD(bool, IsSticky)
-  FORWARD(bool, HasDefaultValue)
-  FORWARD(bool, HasUserValue)
-  FORWARD(const char*, Name)
-  FORWARD(nsCString, NameString)
-  FORWARD(PrefType, Type)
-#undef FORWARD
-
-#define FORWARD(retType, method)                                               \
-  retType method(PrefValueKind aKind = PrefValueKind::User) const              \
-  {                                                                            \
-    struct Matcher                                                             \
-    {                                                                          \
-      PrefValueKind mKind;                                                     \
-                                                                               \
-      retType match(const Pref* aPref) { return aPref->method(mKind); }        \
-      retType match(SharedPref& aPref) { return aPref.method(mKind); }         \
-    };                                                                         \
-    return match(Matcher{ aKind });                                            \
-  }
-
-  FORWARD(bool, GetBoolValue)
-  FORWARD(int32_t, GetIntValue)
-  FORWARD(nsCString, GetStringValue)
-  FORWARD(const char*, GetBareStringValue)
-#undef FORWARD
-
-  PrefValue GetValue(PrefValueKind aKind = PrefValueKind::User) const
-  {
-    switch (Type()) {
-      case PrefType::Bool:
-        return PrefValue{ GetBoolValue(aKind) };
-      case PrefType::Int:
-        return PrefValue{ GetIntValue(aKind) };
-      case PrefType::String:
-        return PrefValue{ GetBareStringValue(aKind) };
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected pref type");
-        return PrefValue{};
-    }
-  }
-
-  Result<PrefValueKind, nsresult> WantValueKind(PrefType aType,
-                                                PrefValueKind aKind) const
-  {
-    if (Type() != aType) {
-      return Err(NS_ERROR_UNEXPECTED);
-    }
-
-    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
-      if (!HasDefaultValue()) {
-        return Err(NS_ERROR_UNEXPECTED);
-      }
-      return PrefValueKind::Default;
-    }
-    return PrefValueKind::User;
-  }
-
-  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult) const
-  {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Bool, aKind));
-
-    *aResult = GetBoolValue(kind);
-    return NS_OK;
-  }
-
-  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult) const
-  {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Int, aKind));
-
-    *aResult = GetIntValue(kind);
-    return NS_OK;
-  }
-
-  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult) const
-  {
-    PrefValueKind kind;
-    MOZ_TRY_VAR(kind, WantValueKind(PrefType::String, aKind));
-
-    aResult = GetStringValue(kind);
-    return NS_OK;
-  }
-
-  // Returns false if this pref doesn't have a user value worth saving.
-  bool UserValueToStringForSaving(nsCString& aStr)
-  {
-    // Should we save the user value, if present? Only if it does not match the
-    // default value, or it is sticky.
-    if (HasUserValue() &&
-        (!ValueMatches(PrefValueKind::Default, Type(), GetValue()) ||
-         IsSticky())) {
-      if (IsTypeString()) {
-        StrEscape(GetStringValue().get(), aStr);
-
-      } else if (IsTypeInt()) {
-        aStr.AppendInt(GetIntValue());
-
-      } else if (IsTypeBool()) {
-        aStr = GetBoolValue() ? "true" : "false";
-      }
-      return true;
-    }
-
-    // Do not save default prefs that haven't changed.
-    return false;
-  }
-
-  bool Matches(PrefType aType,
-               PrefValueKind aKind,
-               PrefValue& aValue,
-               bool aIsSticky,
-               bool aIsLocked) const
-  {
-    return (ValueMatches(aKind, aType, aValue) && aIsSticky == IsSticky() &&
-            aIsLocked == IsLocked());
-  }
-
-  bool ValueMatches(PrefValueKind aKind,
-                    PrefType aType,
-                    const PrefValue& aValue) const
-  {
-    if (!IsType(aType)) {
-      return false;
-    }
-    if (!(aKind == PrefValueKind::Default ? HasDefaultValue()
-                                          : HasUserValue())) {
-      return false;
-    }
-    switch (aType) {
-      case PrefType::Bool:
-        return GetBoolValue(aKind) == aValue.mBoolVal;
-      case PrefType::Int:
-        return GetIntValue(aKind) == aValue.mIntVal;
-      case PrefType::String:
-        return strcmp(GetBareStringValue(aKind), aValue.mStringVal) == 0;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected preference type");
-        return false;
-    }
-  }
-};
-
-void
-Pref::FromWrapper(PrefWrapper& aWrapper)
-{
-  MOZ_ASSERT(aWrapper.is<SharedPrefMap::Pref>());
-  auto pref = aWrapper.as<SharedPrefMap::Pref>();
-
-  MOZ_ASSERT(IsTypeNone());
-  MOZ_ASSERT(strcmp(mName, pref.Name()) == 0);
-
-  mType = uint32_t(pref.Type());
-
-  mIsLocked = pref.IsLocked();
-  mIsSticky = pref.IsSticky();
-
-  mHasDefaultValue = pref.HasDefaultValue();
-  mHasUserValue = pref.HasUserValue();
-
-  if (mHasDefaultValue) {
-    mDefaultValue.Init(Type(), aWrapper.GetValue(PrefValueKind::Default));
-  }
-  if (mHasUserValue) {
-    mUserValue.Init(Type(), aWrapper.GetValue(PrefValueKind::User));
-  }
-}
 
 class CallbackNode
 {
@@ -1253,43 +1076,6 @@ static PLDHashTable* gHashTable;
 static CallbackNode* gFirstCallback = nullptr;
 static CallbackNode* gLastPriorityNode = nullptr;
 
-#ifdef DEBUG
-#define ACCESS_COUNTS
-#endif
-
-#ifdef ACCESS_COUNTS
-using AccessCountsHashTable = nsDataHashtable<nsCStringHashKey, uint32_t>;
-static AccessCountsHashTable* gAccessCounts;
-
-static void
-AddAccessCount(const nsACString& aPrefName)
-{
-  // FIXME: Servo reads preferences from background threads in unsafe ways (bug
-  // 1474789), and triggers assertions here if we try to add usage count entries
-  // from background threads.
-  if (NS_IsMainThread()) {
-    uint32_t& count = gAccessCounts->GetOrInsert(aPrefName);
-    count++;
-  }
-}
-
-static void
-AddAccessCount(const char* aPrefName)
-{
-  AddAccessCount(nsDependentCString(aPrefName));
-}
-#else
-static void MOZ_MAYBE_UNUSED
-AddAccessCount(const nsACString& aPrefName)
-{
-}
-
-static void
-AddAccessCount(const char* aPrefName)
-{
-}
-#endif
-
 // These are only used during the call to NotifyCallbacks().
 static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
@@ -1300,266 +1086,13 @@ static PLDHashTableOps pref_HashTableOps = {
   PrefEntry::InitEntry,
 };
 
-class PrefsHashIter
-{
-  using Iterator = decltype(gHashTable->Iter());
-  using ElemType = Pref*;
-
-  Iterator mIter;
-
-public:
-  explicit PrefsHashIter(PLDHashTable* aTable)
-    : mIter(aTable->Iter())
-  {
-  }
-
-  class Elem
-  {
-    friend class PrefsHashIter;
-
-    PrefsHashIter& mParent;
-    bool mDone;
-
-    Elem(PrefsHashIter& aIter, bool aDone)
-      : mParent(aIter)
-      , mDone(aDone)
-    {
-    }
-
-    Iterator& Iter() { return mParent.mIter; }
-
-  public:
-    Elem& operator*() { return *this; }
-
-    ElemType get()
-    {
-      if (mDone) {
-        return nullptr;
-      }
-      return static_cast<PrefEntry*>(Iter().Get())->mPref;
-    }
-    ElemType get() const { return const_cast<Elem*>(this)->get(); }
-
-    ElemType operator->() { return get(); }
-    ElemType operator->() const { return get(); }
-
-    operator ElemType() { return get(); }
-
-    void Remove() { Iter().Remove(); }
-
-    Elem& operator++()
-    {
-      MOZ_ASSERT(!mDone);
-      Iter().Next();
-      mDone = Iter().Done();
-      return *this;
-    }
-
-    bool operator!=(Elem& other)
-    {
-      return mDone != other.mDone || this->get() != other.get();
-    }
-  };
-
-  Elem begin() { return Elem(*this, mIter.Done()); }
-
-  Elem end() { return Elem(*this, true); }
-};
-
-class PrefsIter
-{
-  using Iterator = decltype(gHashTable->Iter());
-  using ElemType = PrefWrapper;
-
-  using HashElem = PrefsHashIter::Elem;
-  using SharedElem = SharedPrefMap::Pref;
-
-  using ElemTypeVariant = Variant<HashElem, SharedElem>;
-
-  SharedPrefMap* mSharedMap;
-  PLDHashTable* mHashTable;
-  PrefsHashIter mIter;
-
-  ElemTypeVariant mPos;
-  ElemTypeVariant mEnd;
-
-  Maybe<PrefWrapper> mEntry;
-
-public:
-  PrefsIter(PLDHashTable* aHashTable, SharedPrefMap* aSharedMap)
-    : mSharedMap(aSharedMap)
-    , mHashTable(aHashTable)
-    , mIter(aHashTable)
-    , mPos(AsVariant(mIter.begin()))
-    , mEnd(AsVariant(mIter.end()))
-  {
-    if (Done()) {
-      NextIterator();
-    }
-  }
-
-private:
-#define MATCH(type, ...)                                                       \
-  do {                                                                         \
-    struct Matcher                                                             \
-    {                                                                          \
-      PrefsIter& mIter;                                                        \
-      type match(HashElem& pos)                                                \
-      {                                                                        \
-        HashElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<HashElem>();            \
-        __VA_ARGS__;                                                           \
-      }                                                                        \
-      type match(SharedElem& pos)                                              \
-      {                                                                        \
-        SharedElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<SharedElem>();        \
-        __VA_ARGS__;                                                           \
-      }                                                                        \
-    };                                                                         \
-    return mPos.match(Matcher{ *this });                                       \
-  } while (0);
-
-  bool Done() { MATCH(bool, return pos == end); }
-
-  PrefWrapper MakeEntry() { MATCH(PrefWrapper, return PrefWrapper(pos)); }
-
-  void NextEntry()
-  {
-    mEntry.reset();
-    MATCH(void, ++pos);
-  }
-#undef MATCH
-
-  bool Next()
-  {
-    NextEntry();
-    return !Done() || NextIterator();
-  }
-
-  bool NextIterator()
-  {
-    if (mPos.is<HashElem>() && mSharedMap) {
-      mPos = AsVariant(mSharedMap->begin());
-      mEnd = AsVariant(mSharedMap->end());
-      return !Done();
-    }
-    return false;
-  }
-
-  bool IteratingBase() { return mPos.is<SharedElem>(); }
-
-  PrefWrapper& Entry()
-  {
-    MOZ_ASSERT(!Done());
-
-    if (!mEntry.isSome()) {
-      mEntry.emplace(MakeEntry());
-    }
-    return mEntry.ref();
-  }
-
-public:
-  class Elem
-  {
-    friend class PrefsIter;
-
-    PrefsIter& mParent;
-    bool mDone;
-
-    Elem(PrefsIter& aIter, bool aDone)
-      : mParent(aIter)
-      , mDone(aDone)
-    {
-      SkipDuplicates();
-    }
-
-    void Next() { mDone = !mParent.Next(); }
-
-    void SkipDuplicates()
-    {
-      while (!mDone && (mParent.IteratingBase()
-                          ? !!mParent.mHashTable->Search(ref().Name())
-                          : ref().IsTypeNone())) {
-        Next();
-      }
-    }
-
-  public:
-    Elem& operator*() { return *this; }
-
-    ElemType& ref() { return mParent.Entry(); }
-    const ElemType& ref() const { return const_cast<Elem*>(this)->ref(); }
-
-    ElemType* operator->() { return &ref(); }
-    const ElemType* operator->() const { return &ref(); }
-
-    operator ElemType() { return ref(); }
-
-    void Remove()
-    {
-      MOZ_ASSERT(!mParent.IteratingBase());
-      mParent.mPos.as<HashElem>().Remove();
-    }
-
-    Elem& operator++()
-    {
-      MOZ_ASSERT(!mDone);
-      Next();
-      SkipDuplicates();
-      return *this;
-    }
-
-    bool operator!=(Elem& other)
-    {
-      if (mDone != other.mDone) {
-        return true;
-      }
-      if (mDone) {
-        return false;
-      }
-      return &this->ref() != &other.ref();
-    }
-  };
-
-  Elem begin() { return { *this, Done() }; }
-
-  Elem end() { return { *this, true }; }
-};
-
 static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
 static void
-NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref = nullptr);
+NotifyCallbacks(const char* aPrefName);
 
-static void
-NotifyCallbacks(const char* aPrefName, const PrefWrapper& aPref)
-{
-  NotifyCallbacks(aPrefName, &aPref);
-}
-
-// The approximate number of preferences in the dynamic hashtable for the parent
-// and content processes, respectively. These numbers are used to determine the
-// initial size of the dynamic preference hashtables, and should be chosen to
-// avoid rehashing during normal usage. The actual number of preferences will,
-// or course, change over time, but these numbers only need to be within a
-// binary order of magnitude of the actual values to remain effective.
-//
-// The number for the parent process should reflect the total number of
-// preferences in the database, since the parent process needs to initially
-// build a dynamic hashtable of the entire preference database. The number for
-// the child process should reflect the number of preferences which are likely
-// to change after the startup of the first content process, since content
-// processes only store changed preferences on top of a snapshot of the database
-// created at startup.
-//
-// Note: The capacity of a hashtable doubles when its length reaches an exact
-// power of two. A table with an initial length of 64 is twice as large as one
-// with an initial length of 63. This is important in content processes, where
-// lookup speed is less critical and we pay the price of the additional overhead
-// for each content process. So the initial content length should generally be
-// *under* the next power-of-two larger than its expected length.
-constexpr size_t kHashTableInitialLengthParent = 3000;
-constexpr size_t kHashTableInitialLengthContent = 64;
+#define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
 static PrefSaveData
 pref_savePrefs()
@@ -1568,7 +1101,9 @@ pref_savePrefs()
 
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
-  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
       continue;
@@ -1612,63 +1147,11 @@ pref_HashTableLookup(const char* aPrefName)
     return nullptr;
   }
 
+#ifdef DEBUG
+  entry->mAccessCount += 1;
+#endif
+
   return entry->mPref;
-}
-
-// While notifying preference callbacks, this holds the wrapper for the
-// preference being notified, in order to optimize lookups.
-//
-// Note: Callbacks and lookups only happen on the main thread, so this is safe
-// to use without locking.
-static const PrefWrapper* gCallbackPref;
-
-Maybe<PrefWrapper>
-pref_Lookup(const char* aPrefName, bool aIncludeTypeNone = false)
-{
-  Maybe<PrefWrapper> result;
-
-  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
-
-  AddAccessCount(aPrefName);
-
-  if (gCallbackPref && strcmp(aPrefName, gCallbackPref->Name()) == 0) {
-    result.emplace(*gCallbackPref);
-  } else if (Pref* pref = pref_HashTableLookup(aPrefName)) {
-    if (aIncludeTypeNone || !pref->IsTypeNone()) {
-      result.emplace(pref);
-    }
-  } else if (gSharedMap) {
-    Maybe<SharedPrefMap::Pref> pref = gSharedMap->Get(aPrefName);
-    if (pref.isSome()) {
-      result.emplace(*pref);
-    }
-  }
-
-  return result;
-}
-
-static Result<Pref*, nsresult>
-pref_LookupForModify(const char* aPrefName,
-                     const std::function<bool(const PrefWrapper&)>& aCheckFn)
-{
-  Maybe<PrefWrapper> wrapper = pref_Lookup(aPrefName, /* includeTypeNone */ true);
-  if (wrapper.isNothing()) {
-    return Err(NS_ERROR_INVALID_ARG);
-  }
-  if (!aCheckFn(*wrapper)) {
-    return nullptr;
-  }
-  if (wrapper->is<Pref*>()) {
-    return wrapper->as<Pref*>();
-  }
-
-  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
-  if (!entry) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
-  Pref* pref = entry->mPref;
-  pref->FromWrapper(*wrapper);
-  return pref;
 }
 
 static nsresult
@@ -1686,36 +1169,22 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  Pref* pref = nullptr;
-  if (gSharedMap) {
-    auto result =
-      pref_LookupForModify(aPrefName, [&](const PrefWrapper& aWrapper) {
-        return !aWrapper.Matches(aType, aKind, aValue, aIsSticky, aIsLocked);
-      });
-    if (result.isOk() && !(pref = result.unwrap())) {
-      // No changes required.
-      return NS_OK;
-    }
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!pref) {
-    auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
-    if (!entry) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    pref = entry->mPref;
-
-    if (pref->IsTypeNone()) {
-      // New entry. Set the type.
-      pref->SetType(aType);
-    }
+  Pref* pref = entry->mPref;
+  if (pref->IsTypeNone()) {
+    // New entry. Set the type.
+    pref->SetType(aType);
   }
 
   bool valueChanged = false;
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
     rv = pref->SetDefaultValue(
-      aType, aValue, aIsSticky, aIsLocked, &valueChanged);
+      aType, aValue, aIsSticky, aIsLocked, aFromInit, &valueChanged);
   } else {
     MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
     rv = pref->SetUserValue(aType, aValue, aFromInit, &valueChanged);
@@ -1737,7 +1206,7 @@ pref_SetPref(const char* aPrefName,
     if (aKind == PrefValueKind::User && XRE_IsParentProcess()) {
       Preferences::HandleDirty();
     }
-    NotifyCallbacks(aPrefName, PrefWrapper(pref));
+    NotifyCallbacks(aPrefName);
   }
 
   return NS_OK;
@@ -1765,12 +1234,9 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 }
 
 static void
-NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref)
+NotifyCallbacks(const char* aPrefName)
 {
   bool reentered = gCallbacksInProgress;
-
-  gCallbackPref = aPref;
-  auto cleanup = MakeScopeExit([]() { gCallbackPref = nullptr; });
 
   // Nodes must not be deleted while gCallbacksInProgress is true.
   // Nodes that need to be deleted are marked for deletion by nulling
@@ -2887,9 +2353,10 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
-  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(pref->NameString());
+      prefArray.AppendElement(pref->Name());
     }
   }
 
@@ -3523,10 +2990,6 @@ PreferenceServiceReporter::CollectReports(
     node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
   }
 
-  if (gSharedMap) {
-    sizes.mMisc += mallocSizeOf(gSharedMap);
-  }
-
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
                      KIND_HEAP,
                      UNITS_BYTES,
@@ -3581,17 +3044,6 @@ PreferenceServiceReporter::CollectReports(
                      UNITS_BYTES,
                      sizes.mMisc,
                      "Miscellaneous memory used by libpref.");
-
-  if (gSharedMap) {
-    if (XRE_IsParentProcess()) {
-      MOZ_COLLECT_REPORT("explicit/preferences/shared-memory-map",
-                         KIND_NONHEAP,
-                         UNITS_BYTES,
-                         gSharedMap->MapSize(),
-                         "The shared memory mapping used to share a "
-                         "snapshot of preference values across processes.");
-    }
-  }
 
   nsPrefBranch* rootBranch =
     static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
@@ -3817,19 +3269,11 @@ Preferences::GetInstanceForService()
   sPreferences = new Preferences();
 
   MOZ_ASSERT(!gHashTable);
-  gHashTable =
-    new PLDHashTable(&pref_HashTableOps,
-                     sizeof(PrefEntry),
-                     (XRE_IsParentProcess() ? kHashTableInitialLengthParent
-                                            : kHashTableInitialLengthContent));
+  gHashTable = new PLDHashTable(
+    &pref_HashTableOps, sizeof(PrefEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
-
-#ifdef ACCESS_COUNTS
-  MOZ_ASSERT(!gAccessCounts);
-  gAccessCounts = new AccessCountsHashTable();
-#endif
 
   gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
   gCacheDataDesc = "set by GetInstanceForService() (1)";
@@ -3964,12 +3408,6 @@ Preferences::~Preferences()
   delete gTelemetryLoadData;
   gTelemetryLoadData = nullptr;
 
-#ifdef ACCESS_COUNTS
-  delete gAccessCounts;
-#endif
-
-  gSharedMap = nullptr;
-
   gPrefNameArena.Clear();
 }
 
@@ -3988,7 +3426,7 @@ Preferences::SerializePreferences(nsCString& aStr)
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
-    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
+    if (pref->MustSendToContentProcesses() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(aStr);
     }
   }
@@ -4019,48 +3457,6 @@ Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen)
   MOZ_ASSERT(!gContentProcessPrefsAreInited);
   gContentProcessPrefsAreInited = true;
 #endif
-}
-
-/* static */ FileDescriptor
-Preferences::EnsureSnapshot(size_t* aSize)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  if (!gSharedMap) {
-    SharedPrefMapBuilder builder;
-
-    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
-
-      pref->AddToMap(builder);
-    }
-
-    gSharedMap = new SharedPrefMap(std::move(builder));
-
-    // Once we've built a snapshot of the database, there's no need to continue
-    // storing dynamic copies of the preferences it contains. Once we reset the
-    // hashtable, preference lookups will fall back to the snapshot for any
-    // preferences not in the dynamic hashtable.
-    //
-    // And since the majority of the database is now contained in the snapshot,
-    // we can initialize the hashtable with the expected number of per-session
-    // changed preferences, rather than the expected total number of
-    // preferences.
-    gHashTable->ClearAndPrepareForLength(kHashTableInitialLengthContent);
-    gPrefNameArena.Clear();
-  }
-
-  *aSize = gSharedMap->MapSize();
-  return gSharedMap->CloneFileDescriptor();
-}
-
-/* static */ void
-Preferences::InitSnapshot(const FileDescriptor& aHandle, size_t aSize)
-{
-  MOZ_ASSERT(!XRE_IsParentProcess());
-  MOZ_ASSERT(!gSharedMap);
-
-  gSharedMap = new SharedPrefMap(aHandle, aSize);
 }
 
 /* static */ void
@@ -4161,11 +3557,7 @@ Preferences::ResetPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
-  if (gSharedMap) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  gHashTable->ClearAndPrepareForLength(kHashTableInitialLengthParent);
+  gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
   return InitInitialObjects(/* isStartup */ false).isOk() ? NS_OK
@@ -4279,25 +3671,14 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   //   needlessly, but that's ok because this case is rare.
   //
   if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
-    // If the preference exists in the shared map, we need to keep the dynamic
-    // entry around to mask it.
-    if (gSharedMap->Has(pref->Name())) {
-      pref->SetType(PrefType::None);
-    } else {
-      gHashTable->RemoveEntry(entry);
-    }
-    pref = nullptr;
+    gHashTable->RemoveEntry(entry);
   }
 
   // Note: we don't have to worry about HandleDirty() because we are setting
   // prefs in the content process that have come from the parent process.
 
   if (valueChanged) {
-    if (pref) {
-      NotifyCallbacks(prefName, PrefWrapper(pref));
-    } else {
-      NotifyCallbacks(prefName);
-    }
+    NotifyCallbacks(prefName);
   }
 }
 
@@ -4363,9 +3744,10 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 NS_IMETHODIMP
 Preferences::ReadStats(nsIPrefStatsCallback* aCallback)
 {
-#ifdef ACCESS_COUNTS
-  for (auto iter = gAccessCounts->Iter(); !iter.Done(); iter.Next()) {
-    aCallback->Visit(iter.Key(), iter.Data());
+#ifdef DEBUG
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    PrefEntry* entry = static_cast<PrefEntry*>(iter.Get());
+    aCallback->Visit(entry->mPref->Name(), entry->mAccessCount);
   }
 
   return NS_OK;
@@ -4377,8 +3759,10 @@ Preferences::ReadStats(nsIPrefStatsCallback* aCallback)
 NS_IMETHODIMP
 Preferences::ResetStats()
 {
-#ifdef ACCESS_COUNTS
-  gAccessCounts->Clear();
+#ifdef DEBUG
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    static_cast<PrefEntry*>(iter.Get())->mAccessCount = 0;
+  }
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4746,28 +4130,6 @@ Preferences::InitInitialObjects(bool aIsStartup)
   // will override the former.
   StaticPrefs::InitAll(aIsStartup);
 
-  if (!XRE_IsParentProcess()) {
-    MOZ_ASSERT(gSharedMap);
-
-    // We got our initial preference values from the content process, so we
-    // don't need to add them to the DB. For static var caches, though, the
-    // current preference values may differ from their static defaults. So we
-    // still need to notify callbacks for each of our shared prefs which have
-    // user values.
-    //
-    // While it is technically also possible for the default values to have
-    // changed at runtime, and therefore not match the static defaults, we don't
-    // support that for static preferences in this configuration, and therefore
-    // ignore the possibility.
-    for (auto& pref : gSharedMap->Iter()) {
-      if (pref.HasUserValue()) {
-        NotifyCallbacks(pref.Name(), PrefWrapper(pref));
-      }
-    }
-
-    return Ok();
-  }
-
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
   // - jar:$gre/omni.jar!/defaults/pref/*.js
@@ -4954,9 +4316,8 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() ? pref->GetBoolValue(aKind, aResult)
-                       : NS_ERROR_UNEXPECTED;
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4967,9 +4328,8 @@ Preferences::GetInt(const char* aPrefName,
   MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() ? pref->GetIntValue(aKind, aResult)
-                       : NS_ERROR_UNEXPECTED;
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4996,9 +4356,8 @@ Preferences::GetCString(const char* aPrefName,
 
   aResult.SetIsVoid(true);
 
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() ? pref->GetCStringValue(aKind, aResult)
-                       : NS_ERROR_UNEXPECTED;
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -5131,15 +4490,14 @@ Preferences::Lock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Lock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref;
-  MOZ_TRY_VAR(pref,
-              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
-                return !aPref.IsLocked();
-              }));
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  if (pref) {
+  if (!pref->IsLocked()) {
     pref->SetIsLocked(true);
-    NotifyCallbacks(aPrefName, PrefWrapper(pref));
+    NotifyCallbacks(aPrefName);
   }
 
   return NS_OK;
@@ -5151,15 +4509,14 @@ Preferences::Unlock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Unlock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref;
-  MOZ_TRY_VAR(pref,
-              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
-                return aPref.IsLocked();
-              }));
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  if (pref) {
+  if (pref->IsLocked()) {
     pref->SetIsLocked(false);
-    NotifyCallbacks(aPrefName, PrefWrapper(pref));
+    NotifyCallbacks(aPrefName);
   }
 
   return NS_OK;
@@ -5170,8 +4527,8 @@ Preferences::IsLocked(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() && pref->IsLocked();
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->IsLocked();
 }
 
 /* static */ nsresult
@@ -5180,27 +4537,16 @@ Preferences::ClearUser(const char* aPrefName)
   ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  auto result = pref_LookupForModify(
-    aPrefName, [](const PrefWrapper& aPref) { return aPref.HasUserValue(); });
-  if (result.isErr()) {
-    return NS_OK;
-  }
-
-  if (Pref* pref = result.unwrap()) {
+  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
+  Pref* pref;
+  if (entry && (pref = entry->mPref) && pref->HasUserValue()) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      if (!gSharedMap || !gSharedMap->Has(pref->Name())) {
-        gHashTable->Remove(aPrefName);
-      } else {
-        pref->SetType(PrefType::None);
-      }
-
-      NotifyCallbacks(aPrefName);
-    } else {
-      NotifyCallbacks(aPrefName, PrefWrapper(pref));
+      gHashTable->RemoveEntry(entry);
     }
 
+    NotifyCallbacks(aPrefName);
     Preferences::HandleDirty();
   }
   return NS_OK;
@@ -5211,8 +4557,8 @@ Preferences::HasUserValue(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() && pref->HasUserValue();
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->HasUserValue();
 }
 
 /* static */ int32_t
@@ -5220,12 +4566,8 @@ Preferences::GetType(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
 
-  if (!gHashTable) {
-    return PREF_INVALID;
-  }
-
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  if (!pref.isSome()) {
+  Pref* pref;
+  if (!gHashTable || !(pref = pref_HashTableLookup(aPrefName))) {
     return PREF_INVALID;
   }
 
@@ -5861,29 +5203,22 @@ InitVarCachePref(const nsACString& aName,
 /* static */ void
 StaticPrefs::InitAll(bool aIsStartup)
 {
-  // For prefs like these:
-  //
-  //   PREF("foo.bar.baz", bool, true)
-  //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
-  //
-  // we generate registration calls:
-  //
-  //   if (isParent)
-  //     SetPref_bool("foo.bar.baz", true);
-  //   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
-  //                    aIsStartup);
-  //
-  // The SetPref_*() functions have a type suffix to avoid ambiguity between
-  // prefs having int32_t and float default values. That suffix is not needed
-  // for the InitVarCachePref() functions because they take a pointer parameter,
-  // which prevents automatic int-to-float coercion.
-  //
-  // In content processes, we rely on the parent to send us the correct initial
-  // values via shared memory, so we do not re-initialize them here.
-  bool isParent = XRE_IsParentProcess();
-#define PREF(name, cpp_type, value)                                            \
-  if (isParent)                                                                \
-    SetPref_##cpp_type(name, value);
+// For prefs like these:
+//
+//   PREF("foo.bar.baz", bool, true)
+//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+//
+// we generate registration calls:
+//
+//   SetPref_bool("foo.bar.baz", true);
+//   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
+//                    aIsStartup);
+//
+// The SetPref_*() functions have a type suffix to avoid ambiguity between
+// prefs having int32_t and float default values. That suffix is not needed for
+// the InitVarCachePref() functions because they take a pointer parameter,
+// which prevents automatic int-to-float coercion.
+#define PREF(name, cpp_type, value) SetPref_##cpp_type(name, value);
 #define VARCACHE_PREF(name, id, cpp_type, value)                               \
   InitVarCachePref(NS_LITERAL_CSTRING(name),                                   \
                    &StaticPrefs::sVarCache_##id,                               \
