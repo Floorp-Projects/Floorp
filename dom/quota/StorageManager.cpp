@@ -358,7 +358,7 @@ ExecuteOpOnMainOrWorkerThread(nsIGlobalObject* aGlobal,
       RefPtr<EstimateWorkerMainThreadRunnable> runnnable =
         new EstimateWorkerMainThreadRunnable(promiseProxy->GetWorkerPrivate(),
                                              promiseProxy);
-      runnnable->Dispatch(Terminating, aRv);
+      runnnable->Dispatch(Canceling, aRv);
 
       break;
     }
@@ -367,7 +367,7 @@ ExecuteOpOnMainOrWorkerThread(nsIGlobalObject* aGlobal,
       RefPtr<PersistedWorkerMainThreadRunnable> runnnable =
         new PersistedWorkerMainThreadRunnable(promiseProxy->GetWorkerPrivate(),
                                               promiseProxy);
-      runnnable->Dispatch(Terminating, aRv);
+      runnnable->Dispatch(Canceling, aRv);
 
       break;
     }

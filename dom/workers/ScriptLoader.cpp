@@ -2214,7 +2214,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aLoadInfos.IsEmpty(), "Bad arguments!");
 
-  AutoSyncLoopHolder syncLoop(aWorkerPrivate, Terminating);
+  AutoSyncLoopHolder syncLoop(aWorkerPrivate, Canceling);
   nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
   if (!syncLoopTarget) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -2298,7 +2298,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
     new ChannelGetterRunnable(aParent, aScriptURL, aLoadInfo);
 
   ErrorResult rv;
-  getter->Dispatch(Terminating, rv);
+  getter->Dispatch(Canceling, rv);
   if (rv.Failed()) {
     NS_ERROR("Failed to dispatch!");
     return rv.StealNSResult();

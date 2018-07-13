@@ -174,12 +174,6 @@ public:
   }
 
   bool
-  Terminate()
-  {
-    return Notify(Terminating);
-  }
-
-  bool
   Close();
 
   // The passed principal must be the Worker principal in case of a
@@ -590,7 +584,7 @@ public:
     AssertIsOnParentThread();
 
     MutexAutoLock lock(mMutex);
-    return mParentStatus < Terminating;
+    return mParentStatus < Canceling;
   }
 
   WorkerStatus
@@ -1226,7 +1220,7 @@ private:
       status = mStatus;
     }
 
-    if (status < Terminating) {
+    if (status < Canceling) {
       return true;
     }
 
@@ -1342,9 +1336,8 @@ private:
   // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
   //    traverse the 'hidden' mParentEventTargetRef pointer. This is the exposed
   //    Worker webidl object. Doing this, CC will be able to detect a cycle and
-  //    Unlink is called. In Unlink, Worker calls Terminate().
-  // 2. Worker::Terminate() is called - the shutdown procedure starts
-  //    immediately.
+  //    Unlink is called. In Unlink, Worker calls Cancel().
+  // 2. Worker::Cancel() is called - the shutdown procedure starts immediately.
   // 3. WorkerScope::Close() is called - Similar to point 2.
   // 4. xpcom-shutdown notification - We call Kill().
   RefPtr<Worker> mParentEventTargetRef;

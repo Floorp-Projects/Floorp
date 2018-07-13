@@ -398,7 +398,7 @@ Request::Constructor(const GlobalObject& aGlobal,
           RefPtr<ReferrerSameOriginChecker> checker =
             new ReferrerSameOriginChecker(worker, referrerURL, rv);
           IgnoredErrorResult error;
-          checker->Dispatch(Terminating, error);
+          checker->Dispatch(Canceling, error);
           if (error.Failed() || NS_FAILED(rv)) {
             referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);
           }
