@@ -977,6 +977,10 @@ GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObje
     uint32_t offset = script->yieldAndAwaitOffsets()[genObj->yieldAndAwaitIndex()];
     frame->setOverridePc(script->offsetToPC(offset));
 
+    // In the interpreter, GeneratorObject::resume marks the generator as running,
+    // so we do the same.
+    genObj->setRunning();
+
     MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
     MOZ_ALWAYS_FALSE(js::GeneratorThrowOrReturn(cx, frame, genObj, arg, resumeKind));
     return false;
