@@ -347,12 +347,8 @@ var gIdentityHandler = {
     // Firstly, populate the state properties required to display the UI. See
     // the documentation of the individual properties for details.
     this.setURI(uri);
-    this._sslStatus = gBrowser.securityUI
-                              .QueryInterface(Ci.nsISSLStatusProvider)
-                              .SSLStatus;
-    if (this._sslStatus) {
-      this._sslStatus.QueryInterface(Ci.nsISSLStatus);
-    }
+    this._sslStatus = gBrowser.securityUI.secInfo &&
+                      gBrowser.securityUI.secInfo.SSLStatus;
 
     // Then, update the user interface with the available data.
     this.refreshIdentityBlock();
