@@ -270,7 +270,7 @@ public:
     void          Init();
     void          Shutdown();
 
-    nsCacheEntry *GetEntry( const nsCString * key);
+    nsCacheEntry *GetEntry( const nsCString * key) const;
     nsresult      AddEntry( nsCacheEntry *entry);
     void          RemoveEntry( nsCacheEntry *entry);
 

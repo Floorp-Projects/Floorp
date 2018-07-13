@@ -243,7 +243,7 @@ class nsAtomSubTable
   void AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
                                     AtomsSizes& aSizes);
 
-  AtomTableEntry* Search(AtomTableKey& aKey)
+  AtomTableEntry* Search(AtomTableKey& aKey) const
   {
     mLock.AssertCurrentThreadOwns();
     return static_cast<AtomTableEntry*>(mTable.Search(&aKey));
