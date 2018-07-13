@@ -13,8 +13,7 @@ const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const REGEX_PANEL =
-  /^toolbox-tab-(?:webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage)$/;
+const REGEX_PANEL = /webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
