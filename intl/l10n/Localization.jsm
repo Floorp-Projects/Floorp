@@ -263,6 +263,7 @@ class Localization {
       case "nsPref:changed":
         switch (data) {
           case "intl.l10n.pseudo":
+            L10nRegistry.ctxCache.clear();
             this.onChange();
         }
         break;

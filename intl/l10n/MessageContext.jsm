@@ -1908,5 +1908,4 @@ class MessageContext {
 }
 
 this.MessageContext = MessageContext;
-this.FluentResource = FluentResource;
-var EXPORTED_SYMBOLS = ["MessageContext", "FluentResource"];
+var EXPORTED_SYMBOLS = ["MessageContext"];
