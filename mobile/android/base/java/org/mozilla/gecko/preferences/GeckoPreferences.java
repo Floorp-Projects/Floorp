@@ -75,8 +75,8 @@ import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
-import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.updater.UpdateServiceHelper.AutoDownloadPolicy;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.EventCallback;
@@ -1124,7 +1124,7 @@ public class GeckoPreferences
         if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
         } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
-            UpdateServiceHelper.setAutoDownloadPolicy(this, UpdateService.AutoDownloadPolicy.get((String) newValue));
+            UpdateServiceHelper.setAutoDownloadPolicy(this, AutoDownloadPolicy.get((String) newValue));
         } else if (PREFS_UPDATER_URL.equals(prefName)) {
             UpdateServiceHelper.setUpdateUrl(this, (String) newValue);
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
