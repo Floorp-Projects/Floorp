@@ -849,11 +849,6 @@ toolbarspring {
   }
 }
 
-#editBMPanel_tagsSelector {
-  /* override default listbox width from xul.css */
-  width: auto;
-}
-
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   display: none;
 }
