@@ -2320,22 +2320,29 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     // those are happening over Xrays anyway, which means they get the
     // canonical "then" function and content can't see our
     // PromiseAllResolveElement.
-    RootedObject valuesArray(cx);
+    RootedArrayObject valuesArray(cx);
+    RootedValue valuesArrayVal(cx);
     if (IsWrapper(promiseObj)) {
         JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
         MOZ_ASSERT(unwrappedPromiseObj);
 
-        AutoRealm ar(cx, unwrappedPromiseObj);
-        valuesArray = NewDenseFullyAllocatedArray(cx, 0);
-    } else {
-        valuesArray = NewDenseFullyAllocatedArray(cx, 0);
-    }
-    if (!valuesArray)
-        return false;
+        {
+            AutoRealm ar(cx, unwrappedPromiseObj);
+            valuesArray = NewDenseEmptyArray(cx);
+            if (!valuesArray)
+                return false;
+        }
 
-    RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
-    if (!cx->compartment()->wrap(cx, &valuesArrayVal))
-        return false;
+        valuesArrayVal.setObject(*valuesArray);
+        if (!cx->compartment()->wrap(cx, &valuesArrayVal))
+            return false;
+    } else {
+        valuesArray = NewDenseEmptyArray(cx);
+        if (!valuesArray)
+            return false;
+
+        valuesArrayVal.setObject(*valuesArray);
+    }
 
     // Step 4.
     // Create our data holder that holds all the things shared across
@@ -2354,7 +2361,6 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     // Step 6.
     RootedValue nextValue(cx);
     RootedValue nextPromise(cx);
-    RootedId indexId(cx);
     RootedValue rejectFunVal(cx, ObjectValue(*resultCapability.reject()));
     RootedValue resolveFunVal(cx);
     RootedValue staticResolve(cx);
@@ -2391,8 +2397,8 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
             // mostly do this for performance; we could go ahead and do the define via
             // a cross-compartment proxy instead...
             AutoRealm ar(cx, valuesArray);
-            indexId = INT_TO_JSID(index);
-            if (!DefineDataProperty(cx, valuesArray, indexId, UndefinedHandleValue))
+
+            if (!NewbornArrayPush(cx, valuesArray, UndefinedValue()))
                 return false;
         }
 
