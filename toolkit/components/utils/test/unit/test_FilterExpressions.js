@@ -158,6 +158,85 @@ add_task(async function testKeys() {
   equal(pong, 2, "Properties are not reifed");
 });
 
+add_task(async function testLength() {
+  equal(
+    await FilterExpressions.eval("[1, null, {a: 2, b: 3}, Infinity]|length"),
+    4,
+    "length returns the length of the array it's applied to"
+  );
+
+  equal(
+    await FilterExpressions.eval("[]|length"),
+    0,
+    "length is zero for an empty array"
+  );
+
+  // Should be undefined for non-Arrays
+  equal(
+    await FilterExpressions.eval("5|length"),
+    undefined,
+    "length is undefined when applied to numbers"
+  );
+  equal(
+    await FilterExpressions.eval("null|length"),
+    undefined,
+    "length is undefined when applied to null"
+  );
+  equal(
+    await FilterExpressions.eval("undefined|length"),
+    undefined,
+    "length is undefined when applied to undefined"
+  );
+  equal(
+    await FilterExpressions.eval("{a: 1, b: 2, c: 3}|length"),
+    undefined,
+    "length is undefined when applied to non-Array objects"
+  );
+});
+
+add_task(async function testMapToProperty() {
+  Assert.deepEqual(
+    await FilterExpressions.eval('[{a: 1}, {a: {b: 10}}, {a: [5,6,7,8]}]|mapToProperty("a")'),
+    [1, {b: 10}, [5, 6, 7, 8]],
+    "mapToProperty returns an array of values when applied to an array of objects all with the property defined"
+  );
+
+  Assert.deepEqual(
+    await FilterExpressions.eval('[]|mapToProperty("a")'),
+    [],
+    "mapToProperty returns an empty array when applied to an empty array"
+  );
+
+  Assert.deepEqual(
+    await FilterExpressions.eval('[{a: 1}, {b: 2}, {a: 3}]|mapToProperty("a")'),
+    [1, undefined, 3],
+    "mapToProperty returns an array with undefined entries where the property is undefined"
+  );
+
+  // Should be undefined for non-Arrays
+  equal(
+    await FilterExpressions.eval('5|mapToProperty("a")'),
+    undefined,
+    "mapToProperty returns undefined when applied numbers"
+  );
+  equal(
+    await FilterExpressions.eval('null|mapToProperty("a")'),
+    undefined,
+    "mapToProperty returns undefined when applied null"
+  );
+  equal(
+    await FilterExpressions.eval('undefined|mapToProperty("a")'),
+    undefined,
+    "mapToProperty returns undefined when applied undefined"
+  );
+  equal(
+    await FilterExpressions.eval('{a: 1, b: 2, c: 3}|mapToProperty("a")'),
+    undefined,
+    "mapToProperty returns undefined when applied non-Array objects"
+  );
+});
+
+
 // intersect tests
 add_task(async function testIntersect() {
   let val;
