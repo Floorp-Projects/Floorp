@@ -32,7 +32,6 @@
 #define HB_UNICODE_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-object-private.hh"
 
 
 extern HB_INTERNAL const uint8_t _hb_modified_combining_class[256];

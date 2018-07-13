@@ -28,6 +28,7 @@
 #define HB_DEBUG_HH
 
 #include "hb-private.hh"
+#include "hb-dsalgs.hh"
 
 
 #ifndef HB_DEBUG

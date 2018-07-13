@@ -31,7 +31,12 @@ AntiTracking.runTest("Image cache - should load the image twice.",
     img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/image.sjs",
     await new Promise(resolve => { img.onload = resolve; });
     ok(true, "Image 4 loaded");
-  });
+  },
+  null, // cleanup function
+  null, // no extra prefs
+  false, // no window open test
+  false // no user-interaction test
+);
 
 // We still want to see just 2 requests.
 add_task(async _ => {

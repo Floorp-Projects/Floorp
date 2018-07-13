@@ -148,9 +148,10 @@ const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(RawGeckoElementBorrowed 
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
-                              ComputedStyleBorrowedOrNull parent_context,
-                              RawGeckoPresContextBorrowed pres_context, ServoComputedDataBorrowed values,
-                              mozilla::CSSPseudoElementType pseudo_type, nsAtom* pseudo_tag);
+                              RawGeckoPresContextBorrowed pres_context,
+                              ServoComputedDataBorrowed values,
+                              mozilla::CSSPseudoElementType pseudo_type,
+                              nsAtom* pseudo_tag);
 void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* context);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view

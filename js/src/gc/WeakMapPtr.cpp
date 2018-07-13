@@ -65,7 +65,7 @@ JS::WeakMapPtr<K, V>::init(JSContext* cx)
 {
     MOZ_ASSERT(!initialized());
     typename WeakMapDetails::Utils<K, V>::PtrType map =
-        cx->zone()->new_<typename WeakMapDetails::Utils<K,V>::Type>(cx);
+        cx->new_<typename WeakMapDetails::Utils<K,V>::Type>(cx);
     if (!map || !map->init())
         return false;
     ptr = map;

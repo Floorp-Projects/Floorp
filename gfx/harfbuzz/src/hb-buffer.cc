@@ -124,14 +124,14 @@ hb_buffer_t::enlarge (unsigned int size)
   hb_glyph_info_t *new_info = nullptr;
   bool separate_out = out_info != info;
 
-  if (unlikely (_hb_unsigned_int_mul_overflows (size, sizeof (info[0]))))
+  if (unlikely (hb_unsigned_mul_overflows (size, sizeof (info[0]))))
     goto done;
 
   while (size >= new_allocated)
     new_allocated += (new_allocated >> 1) + 32;
 
   static_assert ((sizeof (info[0]) == sizeof (pos[0])), "");
-  if (unlikely (_hb_unsigned_int_mul_overflows (new_allocated, sizeof (info[0]))))
+  if (unlikely (hb_unsigned_mul_overflows (new_allocated, sizeof (info[0]))))
     goto done;
 
   new_pos = (hb_glyph_position_t *) realloc (pos, new_allocated * sizeof (pos[0]));

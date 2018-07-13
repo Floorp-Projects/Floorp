@@ -5,6 +5,7 @@
 
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -182,14 +183,16 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->GetIsTrackingResource();
+    if (isForeign && isTrackingResource &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                uri)) {
+      firstPartyStorageAccessGranted = true;
+    }
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   mozilla::OriginAttributes attrs;
   if (loadInfo) {
     attrs = loadInfo->GetOriginAttributes();
-    if (loadInfo->IsFirstPartyStorageAccessGrantedFor(uri)) {
-      firstPartyStorageAccessGranted = true;
-    }
   }
   URIParams uriParams;
   SerializeURI(uri, uriParams);
@@ -573,14 +576,15 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   bool isTrackingResource = false;
+  bool firstPartyStorageAccessGranted = false;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->GetIsTrackingResource();
-  }
-
-  bool firstPartyStorageAccessGranted = false;
-  if (loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-    firstPartyStorageAccessGranted = true;
+    if (isForeign && isTrackingResource &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                aHostURI)) {
+      firstPartyStorageAccessGranted = true;
+    }
   }
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
@@ -629,9 +633,15 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   bool isTrackingResource = false;
+  bool firstPartyStorageAccessGranted = false;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->GetIsTrackingResource();
+    if (isForeign && isTrackingResource &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                aHostURI)) {
+      firstPartyStorageAccessGranted = true;
+    }
   }
 
   nsDependentCString cookieString(aCookieString);
@@ -647,15 +657,11 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams channelURIParams;
   SerializeURI(channelURI, channelURIParams);
 
-  bool firstPartyStorageAccessGranted = false;
   mozilla::OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo) {
       attrs = loadInfo->GetOriginAttributes();
-      if (loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-        firstPartyStorageAccessGranted = true;
-      }
     }
   }
 

@@ -655,11 +655,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         UniquePtr<void, JS::FreePolicy> buf;
         if (!fitsInline && len > 0) {
-            buf.reset(cx->zone()->pod_calloc<uint8_t>(nbytes));
-            if (!buf) {
-                ReportOutOfMemory(cx);
+            buf.reset(cx->pod_calloc<uint8_t>(nbytes));
+            if (!buf)
                 return nullptr;
-            }
         }
 
         TypedArrayObject* obj = NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind);

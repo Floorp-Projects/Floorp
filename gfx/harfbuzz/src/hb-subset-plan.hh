@@ -32,7 +32,6 @@
 #include "hb-subset.h"
 #include "hb-subset-private.hh"
 
-#include "hb-object-private.hh"
 #include "hb-map-private.hh"
 
 struct hb_subset_plan_t

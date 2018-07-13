@@ -60,6 +60,20 @@
   visibility: collapse;
 }
 
+#editBMPanel_tagsSelector > richlistitem > image {
+  -moz-appearance: checkbox;
+  -moz-box-align: center;
+  margin: 0px 2px;
+  border: 1px solid -moz-DialogText;
+  min-width: 13px;
+  min-height: 13px;
+  background: -moz-Field no-repeat 50% 50%;
+}
+
+#editBMPanel_tagsSelector > richlistitem[checked="true"] > image {
+  background-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
 
 /* ----- BOOKMARK PANEL DROPDOWN MENU ITEMS ----- */
 

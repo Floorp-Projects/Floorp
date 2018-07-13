@@ -7422,7 +7422,7 @@ CClosure::Create(JSContext* cx,
 
     // Allocate a buffer for the return value.
     size_t rvSize = CType::GetSize(fninfo->mReturnType);
-    errResult = result->zone()->make_pod_array<uint8_t>(rvSize);
+    errResult = cx->make_pod_array<uint8_t>(rvSize);
     if (!errResult)
       return nullptr;
 
@@ -7714,12 +7714,9 @@ CData::Create(JSContext* cx,
   } else {
     // Initialize our own buffer.
     size_t size = CType::GetSize(typeObj);
-    data = dataObj->zone()->pod_malloc<char>(size);
-    if (!data) {
-      // Report a catchable allocation error.
-      JS_ReportAllocationOverflow(cx);
+    data = cx->pod_malloc<char>(size);
+    if (!data)
       return nullptr;
-    }
 
     if (!source)
       memset(data, 0, size);

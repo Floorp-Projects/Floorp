@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
@@ -2040,19 +2041,20 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   bool isTrackingResource = false;
+  bool firstPartyStorageAccessGranted = false;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->GetIsTrackingResource();
+
+    if (isForeign && isTrackingResource &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                aHostURI)) {
+      firstPartyStorageAccessGranted = true;
+    }
   }
 
   OriginAttributes attrs;
-  bool firstPartyStorageAccessGranted = false;
   if (aChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-      firstPartyStorageAccessGranted = true;
-    }
-
     NS_GetOriginAttributes(aChannel, attrs);
   }
 
@@ -2146,19 +2148,21 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   bool isTrackingResource = false;
+  bool firstPartyStorageAccessGranted = false;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->GetIsTrackingResource();
+
+    if (isForeign && isTrackingResource &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                aHostURI)) {
+      firstPartyStorageAccessGranted = true;
+    }
   }
 
   OriginAttributes attrs;
-  bool firstPartyStorageAccessGranted = false;
   if (aChannel) {
     NS_GetOriginAttributes(aChannel, attrs);
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->IsFirstPartyStorageAccessGrantedFor(aHostURI)) {
-      firstPartyStorageAccessGranted = true;
-    }
   }
 
   nsDependentCString cookieString(aCookieHeader);

@@ -30,7 +30,6 @@
 #define HB_OPEN_TYPE_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-blob-private.hh"
 #include "hb-face-private.hh"
 
@@ -230,7 +229,7 @@ struct hb_sanitize_context_t :
   inline bool check_array (const void *base, unsigned int record_size, unsigned int len) const
   {
     const char *p = (const char *) base;
-    bool overflows = _hb_unsigned_int_mul_overflows (len, record_size);
+    bool overflows = hb_unsigned_mul_overflows (len, record_size);
     unsigned int array_size = record_size * len;
     bool ok = !overflows && this->check_range (base, array_size);
 
@@ -1033,6 +1032,7 @@ struct ArrayOf
   DEFINE_SIZE_ARRAY (sizeof (LenType), arrayZ);
 };
 template <typename Type> struct LArrayOf : ArrayOf<Type, HBUINT32> {};
+typedef ArrayOf<HBUINT8, HBUINT8> PString;
 
 /* Array of Offset's */
 template <typename Type, typename OffsetType=HBUINT16>
@@ -1177,7 +1177,7 @@ struct BinSearchHeader
   {
     len.set (v);
     assert (len == v);
-    entrySelector.set (MAX (1u, _hb_bit_storage (v)) - 1);
+    entrySelector.set (MAX (1u, hb_bit_storage (v)) - 1);
     searchRange.set (16 * (1u << entrySelector));
     rangeShift.set (v * 16 > searchRange
 		    ? 16 * v - searchRange

@@ -23,6 +23,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/MessagePortTimelineMarker.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
 #include "mozilla/Unused.h"
@@ -253,7 +254,7 @@ MessagePort::UnshippedEntangle(MessagePort* aEntangledPort)
 void
 MessagePort::Initialize(const nsID& aUUID,
                         const nsID& aDestinationUUID,
-                        uint32_t aSequenceID, bool mNeutered,
+                        uint32_t aSequenceID, bool aNeutered,
                         ErrorResult& aRv)
 {
   MOZ_ASSERT(mIdentifier);
@@ -261,7 +262,7 @@ MessagePort::Initialize(const nsID& aUUID,
   mIdentifier->destinationUuid() = aDestinationUUID;
   mIdentifier->sequenceId() = aSequenceID;
 
-  if (mNeutered) {
+  if (aNeutered) {
     // If this port is neutered we don't want to keep it alive artificially nor
     // we want to add listeners or WorkerRefs.
     mState = eStateDisentangled;
@@ -508,11 +509,10 @@ MessagePort::CloseInternal(bool aSoftly)
   }
 
   if (mState == eStateUnshippedEntangled) {
-    MOZ_ASSERT(mUnshippedEntangledPort);
+    MOZ_DIAGNOSTIC_ASSERT(mUnshippedEntangledPort);
 
     // This avoids loops.
     RefPtr<MessagePort> port = std::move(mUnshippedEntangledPort);
-    MOZ_ASSERT(mUnshippedEntangledPort == nullptr);
 
     mState = eStateDisentangledForClose;
     port->CloseInternal(aSoftly);
@@ -743,13 +743,13 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     MOZ_ASSERT(mUnshippedEntangledPort);
     MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
+    RefPtr<MessagePort> port = std::move(mUnshippedEntangledPort);
+
     // Disconnect the entangled port and connect it to PBackground.
-    if (!mUnshippedEntangledPort->ConnectToPBackground()) {
+    if (!port->ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
       return;
     }
-
-    mUnshippedEntangledPort = nullptr;
 
     // In this case, we don't need to be connected to the PBackground service.
     if (mMessages.IsEmpty()) {
@@ -800,7 +800,11 @@ MessagePort::Closed()
 bool
 MessagePort::ConnectToPBackground()
 {
-  mState = eStateEntangling;
+  RefPtr<MessagePort> self = this;
+  auto raii = MakeScopeExit([self] {
+    self->mState = eStateDisentangled;
+    self->UpdateMustKeepAlive();
+  });
 
   mozilla::ipc::PBackgroundChild* actorChild =
     mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
@@ -820,6 +824,9 @@ MessagePort::ConnectToPBackground()
   MOZ_ASSERT(mActor);
 
   mActor->SetPort(this);
+  mState = eStateEntangling;
+
+  raii.release();
   return true;
 }
 
@@ -847,10 +854,7 @@ MessagePort::UpdateMustKeepAlive()
 void
 MessagePort::DisconnectFromOwner()
 {
-  if (mIsKeptAlive) {
-    CloseForced();
-  }
-
+  CloseForced();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
