@@ -34,11 +34,11 @@ open class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         Config.custom(CONFIG_URL).whenComplete { value: Config ->
-            account = FirefoxAccount(value, CLIENT_ID)
+            account = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
         }
 
         findViewById<View>(R.id.button).setOnClickListener {
-            account?.beginOAuthFlow(REDIRECT_URL, scopes, false)?.whenComplete { openTab(it) }
+            account?.beginOAuthFlow(scopes, false)?.whenComplete { openTab(it) }
         }
     }
 

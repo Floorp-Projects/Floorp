@@ -31,10 +31,11 @@ internal interface FxaClient : Library {
     fun fxa_get_release_config(e: Error.ByReference): RawConfig
     fun fxa_get_custom_config(content_base: String, e: Error.ByReference): RawConfig
 
-    fun fxa_new(config: RawConfig, clientId: String, e: Error.ByReference): RawFxAccount
+    fun fxa_new(config: RawConfig, clientId: String, redirectUri: String, e: Error.ByReference): RawFxAccount
     fun fxa_from_credentials(
         config: RawConfig,
         clientId: String,
+        redirectUri: String,
         webChannelResponse: String,
         e: Error.ByReference
     ): RawFxAccount
@@ -43,7 +44,6 @@ internal interface FxaClient : Library {
 
     fun fxa_begin_oauth_flow(
         fxa: RawFxAccount,
-        redirectUri: String,
         scopes: String,
         wantsKeys: Boolean,
         e: Error.ByReference

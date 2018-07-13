@@ -6,18 +6,20 @@ package mozilla.components.service.fxa
 
 class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxAccount>() {
 
-    constructor(config: Config, clientId: String): this(null) {
-        this.rawPointer = safeSync { e -> FxaClient.INSTANCE.fxa_new(config.consumePointer(), clientId, e) }
+    constructor(config: Config, clientId: String, redirectUri: String): this(null) {
+        this.rawPointer = safeSync { e ->
+            FxaClient.INSTANCE.fxa_new(config.consumePointer(), clientId, redirectUri, e)
+        }
     }
 
     override fun destroy(p: RawFxAccount) {
         safeSync { FxaClient.INSTANCE.fxa_free(p) }
     }
 
-    fun beginOAuthFlow(redirectURI: String, scopes: Array<String>, wantsKeys: Boolean): FxaResult<String> {
+    fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): FxaResult<String> {
         return safeAsync { e ->
             val scope = scopes.joinToString(" ")
-            val p = FxaClient.INSTANCE.fxa_begin_oauth_flow(validPointer(), redirectURI, scope, wantsKeys, e)
+            val p = FxaClient.INSTANCE.fxa_begin_oauth_flow(validPointer(), scope, wantsKeys, e)
             getAndConsumeString(p) ?: ""
         }
     }
@@ -71,10 +73,15 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
     }
 
     companion object {
-        fun from(config: Config, clientId: String, webChannelResponse: String): FxaResult<FirefoxAccount> {
+        fun from(
+            config: Config,
+            clientId: String,
+            redirectUri: String,
+            webChannelResponse: String
+        ): FxaResult<FirefoxAccount> {
             return RustObject.safeAsync { e ->
                 val p = FxaClient.INSTANCE.fxa_from_credentials(config.consumePointer(),
-                        clientId, webChannelResponse, e)
+                        clientId, redirectUri, webChannelResponse, e)
                 FirefoxAccount(p)
             }
         }
