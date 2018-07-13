@@ -616,7 +616,7 @@ RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedFunction reject(cx, &args.callee().as<JSFunction>());
-    RootedValue reasonVal(cx, args.get(0));
+    HandleValue reasonVal = args.get(0);
 
     // Steps 1-2.
     RootedValue promiseVal(cx, reject->getExtendedSlot(RejectFunctionSlot_Promise));
@@ -759,7 +759,7 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedFunction resolve(cx, &args.callee().as<JSFunction>());
-    RootedValue resolutionVal(cx, args.get(0));
+    HandleValue resolutionVal = args.get(0);
 
     // Steps 3-4 (reordered).
     // We use the reference to the reject function as a signal for whether
@@ -1202,7 +1202,6 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
     MOZ_ASSERT(state == JS::PromiseState::Fulfilled || state == JS::PromiseState::Rejected);
 
     RootedObject reactions(cx, &reactionsVal.toObject());
-    RootedObject reaction(cx);
 
     if (reactions->is<PromiseReactionRecord>() ||
         IsWrapper(reactions) ||
@@ -1211,10 +1210,11 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
         return EnqueuePromiseReactionJob(cx, reactions, valueOrReason, state);
     }
 
-    RootedNativeObject reactionsList(cx, &reactions->as<NativeObject>());
+    HandleNativeObject reactionsList = reactions.as<NativeObject>();
     size_t reactionsCount = reactionsList->getDenseInitializedLength();
     MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
 
+    RootedObject reaction(cx);
     RootedValue reactionVal(cx);
     for (size_t i = 0; i < reactionsCount; i++) {
         reactionVal = reactionsList->getDenseElement(i);
@@ -1394,7 +1394,7 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 1-2.
-    Rooted<PromiseReactionRecord*> reaction(cx, &reactionObj->as<PromiseReactionRecord>());
+    Handle<PromiseReactionRecord*> reaction = reactionObj.as<PromiseReactionRecord>();
     if (reaction->isDefaultResolvingHandler())
         return DefaultResolvingPromiseReactionJob(cx, reaction, args.rval());
     if (reaction->isAsyncFunction())
@@ -1804,7 +1804,7 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 2.
-    RootedValue executorVal(cx, args.get(0));
+    HandleValue executorVal = args.get(0);
     if (!IsCallable(executorVal))
         return ReportIsNotFunction(cx, executorVal);
     RootedObject executor(cx, &executorVal.toObject());
@@ -1900,8 +1900,10 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     if (needsWrapping) {
         MOZ_ASSERT(proto);
         usedProto = CheckedUnwrap(proto);
-        if (!usedProto)
+        if (!usedProto) {
+            ReportAccessDenied(cx);
             return nullptr;
+        }
     }
 
 
@@ -1989,10 +1991,10 @@ static bool
 Promise_static_all(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue iterable(cx, args.get(0));
+    HandleValue iterable = args.get(0);
 
     // Step 2 (reordered).
-    RootedValue CVal(cx, args.thisv());
+    HandleValue CVal = args.thisv();
     if (!CVal.isObject()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
                                   "Receiver of Promise.all call");
@@ -2410,7 +2412,7 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
         return false;
     }
-    RootedNativeObject values(cx, &valuesObj->as<NativeObject>());
+    HandleNativeObject values = valuesObj.as<NativeObject>();
 
     // Step 6 (moved under step 10).
     // Step 7 (moved to step 9).
@@ -2454,10 +2456,10 @@ static bool
 Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue iterable(cx, args.get(0));
+    HandleValue iterable = args.get(0);
 
     // Step 2 (reordered).
-    RootedValue CVal(cx, args.thisv());
+    HandleValue CVal = args.thisv();
     if (!CVal.isObject()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
                                   "Receiver of Promise.race call");
@@ -2642,8 +2644,8 @@ static bool
 Promise_reject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue thisVal(cx, args.thisv());
-    RootedValue argVal(cx, args.get(0));
+    HandleValue thisVal = args.thisv();
+    HandleValue argVal = args.get(0);
     JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, RejectMode);
     if (!result)
         return false;
@@ -2671,8 +2673,8 @@ static bool
 Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue thisVal(cx, args.thisv());
-    RootedValue argVal(cx, args.get(0));
+    HandleValue thisVal = args.thisv();
+    HandleValue argVal = args.get(0);
     JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, ResolveMode);
     if (!result)
         return false;
@@ -2979,7 +2981,7 @@ bool
 js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind completionKind)
 {
     // Step 1.
-    RootedValue thisVal(cx, args.thisv());
+    HandleValue thisVal = args.thisv();
 
     // Step 2.
     Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
@@ -3013,7 +3015,6 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     // Step 4.
     RootedObject iter(cx, asyncIter->iterator());
 
-    RootedValue resultVal(cx);
     RootedValue func(cx);
     if (completionKind == CompletionKind::Normal) {
         // 11.1.3.2.1 steps 5-6 (partially).
@@ -3063,6 +3064,8 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     RootedValue iterVal(cx, ObjectValue(*iter));
     FixedInvokeArgs<1> args2(cx);
     args2[0].set(args.get(0));
+
+    RootedValue resultVal(cx);
     if (!js::Call(cx, func, iterVal, args2, &resultVal))
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
@@ -3457,8 +3460,7 @@ Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled
     RootedObject promiseObj(cx, &promiseVal.toObject());
     Rooted<PromiseObject*> promise(cx);
 
-    bool isPromise = promiseObj->is<PromiseObject>();
-    if (isPromise) {
+    if (promiseObj->is<PromiseObject>()) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
         RootedObject unwrappedPromiseObj(cx, CheckedUnwrap(promiseObj));
@@ -3676,7 +3678,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         }
 
         // 25.4.5.3., step 5.
-        Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
+        Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
         if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultPromise,
                                 resolveFun, rejectFun))
         {
@@ -3735,7 +3737,7 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
     if (!blockedPromise_->is<PromiseObject>())
         return true;
 
-    Rooted<PromiseObject*> promise(cx, &unwrappedPromiseObj->as<PromiseObject>());
+    Handle<PromiseObject*> promise = unwrappedPromiseObj.as<PromiseObject>();
     return AddDummyPromiseReactionForDebugger(cx, promise, blockedPromise);
 }
 
@@ -3760,7 +3762,6 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
 
     // 25.4.5.3.1 steps 7.a,b.
     RootedValue reactionsVal(cx, promise->reactions());
-    RootedNativeObject reactions(cx);
 
     if (reactionsVal.isUndefined()) {
         // If no reactions existed so far, just store the reaction record directly.
@@ -3785,6 +3786,7 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
     if (reactionsObj->is<PromiseReactionRecord>()) {
         // If a single reaction existed so far, create a list and store the
         // old and the new reaction in it.
+        RootedNativeObject reactions(cx);
         reactions = NewDenseFullyAllocatedArray(cx, 2);
         if (!reactions)
             return false;
@@ -3798,7 +3800,7 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
     } else {
         // Otherwise, just store the new reaction.
         MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
-        reactions = &reactionsObj->as<NativeObject>();
+        HandleNativeObject reactions = reactionsObj.as<NativeObject>();
         uint32_t len = reactions->getDenseInitializedLength();
         if (reactions->ensureDenseElements(cx, 0, len + 1) != DenseElementResult::Success)
             return false;
