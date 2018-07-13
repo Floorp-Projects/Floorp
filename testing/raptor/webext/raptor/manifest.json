@@ -22,8 +22,8 @@
     {
       "matches": ["*://*/Speedometer/index.html*",
                   "*://*/StyleBench/*",
-                  "*://*/webaudio/*",
-                  "*://*/MotionMark/*"],
+                  "*://*/MotionMark/*",
+                  "*://*/SunSpider/*"],
       "js": ["benchmark-relay.js"]
     }
   ],
