@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
@@ -7078,7 +7079,7 @@ nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI)
     return;
   }
 
-  inner->AddFirstPartyStorageAccessGrantedFor(origin, true);
+  AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin, inner);
 }
 
 //*****************************************************************************

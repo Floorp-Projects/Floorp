@@ -7,4 +7,16 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'DOM: Security')
 
+EXPORTS.mozilla = [
+    'AntiTrackingCommon.h',
+]
+
+UNIFIED_SOURCES += [
+    'AntiTrackingCommon.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
