@@ -3,14 +3,14 @@
 "use strict";
 
 const { RootActor } = require("devtools/server/actors/root");
-const { DebuggerServer } = require("devtools/server/main");
+const { ActorRegistry } = require("devtools/server/actor-registry");
 
 /**
  * Root actor that doesn't have the bulk trait.
  */
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
-    globalActorFactories: DebuggerServer.globalActorFactories
+    globalActorFactories: ActorRegistry.globalActorFactories
   });
   root.applicationType = "xpcshell-tests";
   root.traits = {
