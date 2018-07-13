@@ -34,6 +34,8 @@ async function test_ntp_theme(theme, isBrightText) {
 
   await extension.startup();
 
+  Services.ppmm.sharedData.flush();
+
   await ContentTask.spawn(browser, {
     isBrightText,
     background: hexToCSS(theme.colors.ntp_background),
@@ -52,6 +54,8 @@ async function test_ntp_theme(theme, isBrightText) {
   });
 
   await extension.unload();
+
+  Services.ppmm.sharedData.flush();
 
   await ContentTask.spawn(browser, {
     originalBackground,
