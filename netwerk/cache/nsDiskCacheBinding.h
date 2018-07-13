@@ -103,7 +103,7 @@ public:
     nsDiskCacheBinding *    CreateBinding(nsCacheEntry *       entry,
                                           nsDiskCacheRecord *  record);
 
-    nsDiskCacheBinding *    FindActiveBinding(uint32_t  hashNumber);
+    nsDiskCacheBinding *    FindActiveBinding(uint32_t  hashNumber) const;
     void                    RemoveBinding(nsDiskCacheBinding * binding);
     bool                    ActiveBindings();
 

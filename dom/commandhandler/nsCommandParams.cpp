@@ -295,8 +295,7 @@ nsCommandParams::RemoveValue(const char* aName)
 nsCommandParams::HashEntry*
 nsCommandParams::GetNamedEntry(const char* aName) const
 {
-  return static_cast<HashEntry*>(
-           const_cast<PLDHashTable&>(mValuesHash).Search((void*)aName));
+  return static_cast<HashEntry*>(mValuesHash.Search((void*)aName));
 }
 
 nsCommandParams::HashEntry*

@@ -1,6 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* global getPropertyValue */
 
 "use strict";
 
@@ -16,16 +17,6 @@ add_task(async function() {
 
   await testKeywordValues(inspector, viewDoc);
 });
-
-function getPropertyValue(viewDoc, name) {
-  const selector = `#font-editor .font-value-slider[name=${name}]`;
-  return {
-    value: viewDoc.querySelector(selector).value,
-    // Ensure unit dropdown exists before querying its value
-    unit: viewDoc.querySelector(selector + ` ~ .font-unit-select`) &&
-          viewDoc.querySelector(selector + ` ~ .font-unit-select`).value
-  };
-}
 
 async function testKeywordValues(inspector, viewDoc) {
   await selectNode(".bold-text", inspector);

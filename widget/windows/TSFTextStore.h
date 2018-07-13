@@ -700,8 +700,9 @@ protected:
       eKeyboardEvent,
     };
     Type mType;
-    // For eCompositionStart and eSetSelection
+    // For eCompositionStart, eCompositionEnd and eSetSelection
     LONG mSelectionStart;
+    // For eCompositionStart and eSetSelection
     LONG mSelectionLength;
     // For eCompositionStart, eCompositionUpdate and eCompositionEnd
     nsString mData;
@@ -738,30 +739,27 @@ protected:
   }
 
   /**
-   * WasTextInsertedWithoutCompositionAt() checks if text was inserted without
-   * composition immediately before (e.g., see InsertTextAtSelectionInternal()).
+   * IsLastPendingActionCompositionEndAt() checks whether the previous pending
+   * action is committing composition whose range starts from aStart and its
+   * length is aLength.  In other words, this checks whether new composition
+   * which will replace same range as previous pending commit can be merged
+   * with the previous composition.
    *
    * @param aStart              The inserted offset you expected.
    * @param aLength             The inserted text length you expected.
-   * @return                    true if the last pending actions are
-   *                            eCompositionStart and eCompositionEnd and
-   *                            aStart and aLength match their information.
+   * @return                    true if the last pending action is
+   *                            eCompositionEnd and it inserted the text
+   *                            between aStart and aStart + aLength.
    */
-  bool WasTextInsertedWithoutCompositionAt(LONG aStart, LONG aLength) const
+  bool IsLastPendingActionCompositionEndAt(LONG aStart, LONG aLength) const
   {
-    if (mPendingActions.Length() < 2) {
+    if (mPendingActions.IsEmpty()) {
       return false;
     }
     const PendingAction& pendingLastAction = mPendingActions.LastElement();
-    if (pendingLastAction.mType != PendingAction::Type::eCompositionEnd ||
-        pendingLastAction.mData.Length() != ULONG(aLength)) {
-      return false;
-    }
-    const PendingAction& pendingPreLastAction =
-      mPendingActions[mPendingActions.Length() - 2];
-    return pendingPreLastAction.mType ==
-             PendingAction::Type::eCompositionStart &&
-           pendingPreLastAction.mSelectionStart == aStart;
+    return pendingLastAction.mType == PendingAction::Type::eCompositionEnd &&
+           pendingLastAction.mSelectionStart == aStart &&
+           pendingLastAction.mData.Length() == static_cast<ULONG>(aLength);
   }
 
   bool IsPendingCompositionUpdateIncomplete() const
@@ -892,19 +890,17 @@ protected:
     /**
      * RestoreCommittedComposition() restores the committed string as
      * composing string.  If InsertTextAtSelection() or something is called
-     * before a call of OnStartComposition(), there is a pending
-     * compositionstart and a pending compositionend.  In this case, we
-     * need to cancel the pending compositionend and continue the composition.
+     * before a call of OnStartComposition() or previous composition is
+     * committed and new composition is restarted to clean up the commited
+     * string, there is a pending compositionend.  In this case, we need to
+     * cancel the pending compositionend and continue the composition.
      *
      * @param aCompositionView          The composition view.
-     * @param aPendingCompositionStart  The pending compositionstart which
-     *                                  started the committed composition.
      * @param aCanceledCompositionEnd   The pending compositionend which is
      *                                  canceled for restarting the composition.
      */
     void RestoreCommittedComposition(
                          ITfCompositionView* aCompositionView,
-                         const PendingAction& aPendingCompositionStart,
                          const PendingAction& aCanceledCompositionEnd);
     void EndComposition(const PendingAction& aCompEnd);
 

@@ -422,7 +422,7 @@ nsCacheEntryHashTable::Shutdown()
 
 
 nsCacheEntry *
-nsCacheEntryHashTable::GetEntry( const nsCString * key)
+nsCacheEntryHashTable::GetEntry( const nsCString * key) const
 {
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!initialized)  return nullptr;

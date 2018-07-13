@@ -9,7 +9,6 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 let { Assert } = require("resource://testing-common/Assert.jsm");
 const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-const defer = require("devtools/shared/defer");
 const flags = require("devtools/shared/flags");
 let { TargetFactory } = require("devtools/client/framework/target");
 let { Toolbox } = require("devtools/client/framework/toolbox");
@@ -37,15 +36,15 @@ function onNextAnimationFrame(fn) {
 }
 
 function setState(component, newState) {
-  const deferred = defer();
-  component.setState(newState, onNextAnimationFrame(deferred.resolve));
-  return deferred.promise;
+  return new Promise(resolve => {
+    component.setState(newState, onNextAnimationFrame(resolve));
+  });
 }
 
 function setProps(component, newState) {
-  const deferred = defer();
-  component.setProps(newState, onNextAnimationFrame(deferred.resolve));
-  return deferred.promise;
+  return new Promise(resolve => {
+    component.setProps(newState, onNextAnimationFrame(resolve));
+  });
 }
 
 function dumpn(msg) {

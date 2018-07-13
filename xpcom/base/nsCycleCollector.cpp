@@ -956,7 +956,7 @@ public:
   }
 
 private:
-  PtrToNodeEntry* FindNodeEntry(void* aPtr)
+  PtrToNodeEntry* FindNodeEntry(void* aPtr) const
   {
     return static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Search(aPtr));
   }

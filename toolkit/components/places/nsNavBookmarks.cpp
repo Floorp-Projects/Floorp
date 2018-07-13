@@ -195,6 +195,16 @@ nsNavBookmarks::StoreLastInsertedId(const nsACString& aTable,
 }
 
 
+Atomic<int64_t> nsNavBookmarks::sTotalSyncChanges(0);
+
+
+void // static
+nsNavBookmarks::NoteSyncChange()
+{
+  sTotalSyncChanges++;
+}
+
+
 nsresult
 nsNavBookmarks::Init()
 {
@@ -346,6 +356,14 @@ nsNavBookmarks::GetMobileFolder(int64_t* aRoot)
   int64_t id = mDB->GetMobileFolderId();
   NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
   *aRoot = id;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavBookmarks::GetTotalSyncChanges(int64_t* aTotalSyncChanges)
+{
+  *aTotalSyncChanges = sTotalSyncChanges;
   return NS_OK;
 }
 
