@@ -1,3 +1,22 @@
+# 0.14 (2018-07-13)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180704100138 (2018.07.04, 1c235a552c32ba6c97e6030c497c49f72c7d48a8)
+    * Beta: 62.0b5 (801112336847960bbb9a018695cf09ea437dc137)
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **support-test**: A new component with helpers for testing components.
+* **browser-session**: New method `SessionManager.removeSessions()` for removing all sessions *except custom tab sessions*. `SessionManager.selectedSession` is now nullable. `SessionManager.selectedSessionOrThrow` can be used in apps that will always have at least one selected session and that do not want to deal with a nullable type.
+* **feature-sessions**: `SessionIntentProcessor` can now be configured to open new tabs for incoming [Intents](https://developer.android.com/reference/android/content/Intent).
+* **ui-icons**: Mirrored `mozac_ic_pin` and `mozac_ic_pin_filled` icons.
+* **service-firefox-accounts**: Renamed the component from *service-fxa* for clarity. Introduced `FxaResult.whenComplete()` to be called when the `FxaResult` and the whole chain of `then` calls is completed with a value. Synchronized blocks invoking Rust calls.
+* Various bugfixes and refactorings (see commits below for details)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.13...v0.14), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/12?closed=1)
+
 # 0.13 (2018-07-06)
 
 * Compiled against:
