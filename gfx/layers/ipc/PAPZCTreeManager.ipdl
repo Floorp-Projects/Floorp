@@ -35,11 +35,6 @@ namespace layers {
  * PAPZCTreeManagerParent lives in the compositor thread, while PAPZCTreeManagerChild
  * lives in the main thread of the main or the content process. APZCTreeManagerParent
  * and APZCTreeManagerChild implement this protocol.
- *
- * There is one instance of PAPZCTreeManager for each top-level window, plus one
- * instance for each tab. The child instances are managed by the RemoteCompositorSession
- * and TabChild classes, respectively. The parent instances are held in the
- * compositor's sIndirectLayerTrees structure.
  */
 protocol PAPZCTreeManager
 {
