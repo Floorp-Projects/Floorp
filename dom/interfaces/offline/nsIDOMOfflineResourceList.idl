@@ -13,28 +13,6 @@ interface nsIDOMOfflineResourceList : nsISupports
    */
   readonly attribute nsISupports mozItems;
 
-  /**
-   * State of the application cache this object is associated with.
-   */
-
-  /* This object is not associated with an application cache. */
-  const unsigned short UNCACHED = 0;
-
-  /* The application cache is not being updated. */
-  const unsigned short IDLE = 1;
-
-  /* The manifest is being fetched and checked for updates */
-  const unsigned short CHECKING = 2;
-
-  /* Resources are being downloaded to be added to the cache */
-  const unsigned short DOWNLOADING = 3;
-
-  /* There is a new version of the application cache available */
-  const unsigned short UPDATEREADY = 4;
-
-  /* The application cache group is now obsolete. */
-  const unsigned short OBSOLETE = 5;
-
   readonly attribute unsigned short status;
 
   /**

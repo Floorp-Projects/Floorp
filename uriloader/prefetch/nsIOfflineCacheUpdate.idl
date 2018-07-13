@@ -61,7 +61,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
-   * defined in nsIDOMOfflineResourceList.
+   * defined in OfflineResourceList.webidl.
    */
   readonly attribute unsigned short status;
 
