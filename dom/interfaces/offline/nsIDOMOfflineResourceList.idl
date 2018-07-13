@@ -14,11 +14,6 @@ interface nsIDOMOfflineResourceList : nsISupports
   readonly attribute nsISupports mozItems;
 
   /**
-   * Begin the application update process on the associated application cache.
-   */
-  void update();
-
-  /**
    * Swap in the newest version of the application cache, or disassociate
    * from the cache if the cache group is obsolete.
    */
