@@ -6,15 +6,16 @@ package mozilla.components.service.fretboard.storage.atomicfile
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
-import android.util.AtomicFile
 import mozilla.components.service.fretboard.Experiment
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 
 @RunWith(AndroidJUnit4::class)
 class FlatFileExperimentStorageTest {
@@ -28,13 +29,13 @@ class FlatFileExperimentStorageTest {
                 Experiment.Bucket(20, 0),
                 1526991669)
         )
-        val atomicFile = AtomicFile(File(InstrumentationRegistry.getContext().filesDir, "experiments.json"))
-        assertFalse(atomicFile.baseFile.exists())
-        FlatFileExperimentStorage(atomicFile).save(experiments)
-        assertTrue(atomicFile.baseFile.exists())
-        val experimentsJson = JSONObject(String(atomicFile.readFully()))
+        val file = File(InstrumentationRegistry.getContext().filesDir, "experiments.json")
+        assertFalse(file.exists())
+        FlatFileExperimentStorage(file).save(experiments)
+        assertTrue(file.exists())
+        val experimentsJson = JSONObject(String(Files.readAllBytes(Paths.get(file.absolutePath))))
         checkSavedExperimentsJson(experimentsJson)
-        atomicFile.delete()
+        file.delete()
     }
 
     private fun checkSavedExperimentsJson(experimentsJson: JSONObject) {
@@ -54,7 +55,7 @@ class FlatFileExperimentStorageTest {
         assertEquals(0, experimentBuckets.getInt("min"))
         assertEquals("sample-description", experimentJson.getString("description"))
         assertEquals("sample-id", experimentJson.getString("id"))
-        assertEquals(1526991669, experimentJson.getLong("last_modified"))
+        assertEquals(1526991669L, experimentJson.getLong("last_modified"))
     }
 
     @Test
@@ -63,7 +64,8 @@ class FlatFileExperimentStorageTest {
         file.writer().use {
             it.write("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}]}""")
         }
-        val experiments = FlatFileExperimentStorage(AtomicFile(file)).retrieve()
+        val experiments = FlatFileExperimentStorage(file).retrieve()
+        file.delete()
         assertEquals(1, experiments.size)
         assertEquals("sample-id", experiments[0].id)
         assertEquals("sample-description", experiments[0].description)
@@ -73,13 +75,13 @@ class FlatFileExperimentStorageTest {
         assertEquals("sample-appId", experiments[0].match?.appId)
         assertEquals(20, experiments[0].bucket?.max)
         assertEquals(0, experiments[0].bucket?.min)
-        assertEquals(1526991669, experiments[0].lastModified)
+        assertEquals(1526991669L, experiments[0].lastModified)
     }
 
     @Test
     fun testRetrieveFileNotFound() {
         val file = File(InstrumentationRegistry.getContext().filesDir, "missingFile.json")
-        val experiments = FlatFileExperimentStorage(AtomicFile(file)).retrieve()
+        val experiments = FlatFileExperimentStorage(file).retrieve()
         assertEquals(0, experiments.size)
     }
 }
