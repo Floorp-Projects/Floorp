@@ -22,6 +22,7 @@
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
+class nsDOMOfflineResourceList;
 class nsDOMWindowList;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
@@ -614,7 +615,7 @@ public:
 
   virtual mozilla::dom::Element* GetFrameElement() = 0;
 
-  virtual already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() = 0;
+  virtual nsDOMOfflineResourceList* GetApplicationCache() = 0;
 
   virtual bool GetFullScreen() = 0;
 
