@@ -48,6 +48,8 @@ dependencies {
         implementation "com.android.support:appcompat-v7:$support_library_version"
         implementation "com.android.support:support-annotations:$support_library_version"
         implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
+        implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
+        implementation "com.google.android.gms:play-services-ads-identifier:$google_play_services_version"
     }
 }
 
