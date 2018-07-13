@@ -222,6 +222,113 @@ public:
 const static bool kUseSimpleContextDefault = false;
 
 /******************************************************************************
+ * SelectionStyleProvider
+ *
+ * IME (e.g., fcitx, ~4.2.8.3) may look up selection colors of widget, which
+ * is related to the window associated with the IM context, to support any
+ * colored widgets.  Our editor (like <input type="text">) is rendered as
+ * native GtkTextView as far as possible by default and if editor color is
+ * changed by web apps, nsTextFrame may swap background color of foreground
+ * color of composition string for making composition string is always
+ * visually distinct in normal text.
+ *
+ * So, we would like IME to set style of composition string to good colors
+ * in GtkTextView.  Therefore, this class overwrites selection colors of
+ * our widget with selection colors of GtkTextView so that it's possible IME
+ * to refer selection colors of GtkTextView via our widget.
+ ******************************************************************************/
+
+class SelectionStyleProvider final
+{
+public:
+    static SelectionStyleProvider* GetInstance()
+    {
+        if (sHasShutDown) {
+            return nullptr;
+        }
+        if (!sInstance) {
+            sInstance = new SelectionStyleProvider();
+        }
+        return sInstance;
+    }
+
+    static void Shutdown()
+    {
+      if (sInstance) {
+          g_object_unref(sInstance->mProvider);
+      }
+      delete sInstance;
+      sInstance = nullptr;
+      sHasShutDown = true;
+    }
+
+    // aGDKWindow is a GTK window which will be associated with an IM context.
+    void AttachTo(GdkWindow* aGDKWindow)
+    {
+        GtkWidget* widget = nullptr;
+        // gdk_window_get_user_data() typically returns pointer to widget that
+        // window belongs to.  If it's widget, fcitx retrieves selection colors
+        // of them.  So, we need to overwrite its style.
+        gdk_window_get_user_data(aGDKWindow, (gpointer*)&widget);
+        if (GTK_IS_WIDGET(widget)) {
+            gtk_style_context_add_provider(
+                gtk_widget_get_style_context(widget),
+                GTK_STYLE_PROVIDER(mProvider),
+                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+    }
+
+    void OnThemeChanged()
+    {
+        // fcitx refers GtkStyle::text[GTK_STATE_SELECTED] and
+        // GtkStyle::bg[GTK_STATE_SELECTED] (although pair of text and *base*
+        // or *fg* and bg is correct).  gtk_style_update_from_context() will
+        // set these colors using the widget's GtkStyleContext and so the
+        // colors can be controlled by a ":selected" CSS rule.
+        nsAutoCString style(":selected{");
+        // FYI: LookAndFeel always returns selection colors of GtkTextView.
+        nscolor selectionForegroundColor;
+        if (NS_SUCCEEDED(LookAndFeel::GetColor(
+                             LookAndFeel::eColorID_TextSelectForeground,
+                             &selectionForegroundColor))) {
+            double alpha =
+              static_cast<double>(NS_GET_A(selectionForegroundColor)) / 0xFF;
+            style.AppendPrintf("color:rgba(%u,%u,%u,%f);",
+                               NS_GET_R(selectionForegroundColor),
+                               NS_GET_G(selectionForegroundColor),
+                               NS_GET_B(selectionForegroundColor), alpha);
+        }
+        nscolor selectionBackgroundColor;
+        if (NS_SUCCEEDED(LookAndFeel::GetColor(
+                             LookAndFeel::eColorID_TextSelectBackground,
+                             &selectionBackgroundColor))) {
+            double alpha =
+              static_cast<double>(NS_GET_A(selectionBackgroundColor)) / 0xFF;
+            style.AppendPrintf("background-color:rgba(%u,%u,%u,%f);",
+                               NS_GET_R(selectionBackgroundColor),
+                               NS_GET_G(selectionBackgroundColor),
+                               NS_GET_B(selectionBackgroundColor), alpha);
+        }
+        style.AppendLiteral("}");
+        gtk_css_provider_load_from_data(mProvider, style.get(), -1, nullptr);
+    }
+
+private:
+    static SelectionStyleProvider* sInstance;
+    static bool sHasShutDown;
+    GtkCssProvider* const mProvider;
+
+    SelectionStyleProvider()
+      : mProvider(gtk_css_provider_new())
+    {
+        OnThemeChanged();
+    }
+};
+
+SelectionStyleProvider* SelectionStyleProvider::sInstance = nullptr;
+bool SelectionStyleProvider::sHasShutDown = false;
+
+/******************************************************************************
  * IMContextWrapper
  ******************************************************************************/
 
@@ -362,6 +469,11 @@ IMContextWrapper::Init()
     MOZ_ASSERT(container, "container is null");
     GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(container));
 
+    // Overwrite selection colors of the window before associating the window
+    // with IM context since IME may look up selection colors via IM context
+    // to support any colored widgets.
+    SelectionStyleProvider::GetInstance()->AttachTo(gdkWindow);
+
     // NOTE: gtk_im_*_new() abort (kill) the whole process when it fails.
     //       So, we don't need to check the result.
 
@@ -461,6 +573,13 @@ IMContextWrapper::Init()
          mSimpleContext, mDummyContext,
          gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(mContext)),
          PR_GetEnv("XMODIFIERS")));
+}
+
+/* static */
+void
+IMContextWrapper::Shutdown()
+{
+    SelectionStyleProvider::Shutdown();
 }
 
 IMContextWrapper::~IMContextWrapper()
@@ -1362,6 +1481,16 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
             ResetIME();
         }
     }
+}
+
+/* static */
+void
+IMContextWrapper::OnThemeChanged()
+{
+    if (!SelectionStyleProvider::GetInstance()) {
+        return;
+    }
+    SelectionStyleProvider::GetInstance()->OnThemeChanged();
 }
 
 /* static */
