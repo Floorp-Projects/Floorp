@@ -26,6 +26,7 @@ const Services = require("Services");
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
+const { ActorRegistry } = require("devtools/server/actor-registry");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
@@ -91,7 +92,7 @@ Services.console.registerListener(listener);
  * Initialize the testing debugger server.
  */
 function initTestDebuggerServer() {
-  DebuggerServer.registerModule("devtools/server/actors/thread", {
+  ActorRegistry.registerModule("devtools/server/actors/thread", {
     prefix: "script",
     constructor: "ScriptActor",
     type: { global: true, target: true }
