@@ -14,9 +14,7 @@ const dedupe = new Dedupe(site => site && site.url);
 const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
-    initialized: false,
-    // The version of the system-addon
-    version: null
+    initialized: false
   },
   Snippets: {initialized: false},
   TopSites: {

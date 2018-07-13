@@ -18,12 +18,8 @@ const RESOURCE_HOST = "activity-stream";
 const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
 const RESOURCE_BASE = "resource://activity-stream";
 
-const ACTIVITY_STREAM_OPTIONS = {newTabURL: "about:newtab"};
-
 let activityStream;
 let modulesToUnload = new Set();
-let startupData;
-let startupReason;
 let waitingForBrowserReady = true;
 
 // Lazily load ActivityStream then find related modules to unload
@@ -57,18 +53,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "ActivityStream",
 /**
  * init - Initializes an instance of ActivityStream. This could be called by
  *        the startup() function exposed by bootstrap.js.
- *
- * @param  {string} reason - Reason for initialization. Could be install, upgrade, or PREF_ON
  */
-function init(reason) {
+function init() {
   // Don't re-initialize
   if (activityStream && activityStream.initialized) {
     return;
   }
-  const options = Object.assign({}, startupData || {}, ACTIVITY_STREAM_OPTIONS);
-  activityStream = new ActivityStream(options);
+  activityStream = new ActivityStream();
   try {
-    activityStream.init(reason);
+    activityStream.init();
   } catch (e) {
     Cu.reportError(e);
   }
@@ -125,7 +118,7 @@ function migratePref(oldPrefName, cbIfNotDefault) {
  */
 function onBrowserReady() {
   waitingForBrowserReady = false;
-  init(startupReason);
+  init();
 
   // Do a one time migration of Tiles about:newtab prefs that have been modified
   migratePref("browser.newtabpage.rows", rows => {
@@ -171,11 +164,6 @@ this.startup = function startup(data, reason) {
                                     Services.io.newURI("chrome/content/", null, data.resourceURI),
                                     resProto.ALLOW_CONTENT_ACCESS);
 
-  // Cache startup data which contains stuff like the version number, etc.
-  // so we can use it when we init
-  startupData = data;
-  startupReason = reason;
-
   // Only start Activity Stream up when the browser UI is ready
   if (Services.startup.startingUp) {
     Services.obs.addObserver(observe, BROWSER_READY_NOTIFICATION);
@@ -189,8 +177,6 @@ this.shutdown = function shutdown(data, reason) {
   resProto.setSubstitution(RESOURCE_HOST, null);
 
   // Uninitialize Activity Stream
-  startupData = null;
-  startupReason = null;
   uninit(reason);
 
   // Stop waiting for browser to be ready

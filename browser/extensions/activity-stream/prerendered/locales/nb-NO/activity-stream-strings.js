@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Skriv inn e-postadressen din",
   "firstrun_form_sub_header": "for å fortsette til Firefox Sync.",
   "firstrun_email_input_placeholder": "E-post",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Gyldig e-post er nødvendig",
   "firstrun_extra_legal_links": "Ved å fortsette, godtar du {terms} og {privacy}.",
   "firstrun_terms_of_service": "Tjenestevilkår",
   "firstrun_privacy_notice": "Personvernbestemmelser",

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602962
 
 <script class="testbody" type="application/javascript"><![CDATA[
 /** Test for Bug 602962 **/
-var scrollbox, sbo, content;
+var scrollbox, content;
 var scrollX = 0, scrollY = 0;
 
 var oldWidth = 0, oldHeight = 0;
@@ -30,15 +30,14 @@ function openWindow() {
 
 function doTest() {
   scrollbox = win.document.getElementById("page-scrollbox");
-  sbo = scrollbox.boxObject;
   content = win.document.getElementById("page-box");
   content.style.width = 400 + "px";
-  
+
   win.addEventListener("resize", function() {
     win.removeEventListener("resize", arguments.callee, false);
 
     setTimeout(function(){
-      sbo.scrollBy(200, 0);
+      scrollbox.scrollBy(200,0);
       resize();
     },0);
   }, false);
@@ -49,13 +48,13 @@ function doTest() {
 }
 
 function resize() {
-  scrollX = sbo.positionX;
-  scrollY = sbo.positionY;
+ scrollX = scrollbox.scrollLeft;
+ scrollY = scrollbox.scrollTop;
 
   win.addEventListener("resize", function() {
     content.style.width = (oldWidth + 400) + "px";
     win.removeEventListener("resize", arguments.callee, true);
-    
+
     setTimeout(function() {
       finish();
     }, 0);
@@ -71,10 +70,10 @@ function finish() {
     setTimeout(finish, 0);
     return;
   }
-  sbo.scrollBy(scrollX, scrollY);
+  scrollbox.scrollBy(scrollX, scrollY);
 
-  is(sbo.positionX, 200, "Scroll X should have been restored to the value before the resize");
-  is(sbo.positionY, 0, "Scroll Y should have been restored to the value before the resize");
+  is(scrollbox.scrollLeft, 200, "Scroll Left should have been restored to the value before the resize");
+  is(scrollbox.scrollTop, 0, "Scroll Top should have been restored to the value before the resize");
 
   is(win.outerWidth, oldWidth, "Width should be resized");
   is(win.outerHeight, oldHeight, "Height should be resized");

@@ -28,7 +28,7 @@ public:
   nsresult Remove(const ChunkSet& aOther);
   void Clear();
 
-  nsresult Write(nsIOutputStream* aOut);
+  nsresult Write(nsIOutputStream* aOut) const;
   nsresult Read(nsIInputStream* aIn, uint32_t aNumElements);
 
 private:

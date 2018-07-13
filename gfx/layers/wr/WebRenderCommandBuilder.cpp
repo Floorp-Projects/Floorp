@@ -753,6 +753,7 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
       if (currentClip.HasClip()) {
         aContext->Save();
         currentClip.ApplyTo(aContext, this->mAppUnitsPerDevPixel);
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         matrix = aContext->CurrentMatrix();
       }
@@ -766,6 +767,7 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
 
       if (currentClip.HasClip()) {
         aContext->Restore();
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         aContext->SetMatrix(matrix);
       }

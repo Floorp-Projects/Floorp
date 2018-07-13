@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Эл. поштаны енгізіңіз",
   "firstrun_form_sub_header": "Firefox синхрондауына жалғастыру үшін.",
   "firstrun_email_input_placeholder": "Эл. пошта",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Жарамды эл. пошта адресі керек",
   "firstrun_extra_legal_links": "Жалғастырсаңыз, {terms} және {privacy} шарттарымен келісесіз.",
   "firstrun_terms_of_service": "Қолдану шарттары",
   "firstrun_privacy_notice": "Жекелік ескертуі",

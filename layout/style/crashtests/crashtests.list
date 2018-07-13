@@ -162,10 +162,10 @@ load 1278463-1.html
 pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
 load 1277908-2.html
 load 1282076-1.html
-pref(dom.animations-api.core.enabled,true) load 1282076-2.html
-pref(dom.animations-api.core.enabled,true) load 1290994-1.html
-pref(dom.animations-api.core.enabled,true) load 1290994-2.html
-pref(dom.animations-api.core.enabled,true) load 1290994-3.html
+load 1282076-2.html
+load 1290994-1.html
+load 1290994-2.html
+load 1290994-3.html
 load 1290994-4.html
 load 1314531.html
 load 1315889-1.html

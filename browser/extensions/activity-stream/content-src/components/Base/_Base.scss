@@ -15,6 +15,10 @@
 }
 
 main {
+  .hide-main & {
+    visibility: hidden;
+  }
+
   margin: auto;
   // Offset the snippets container so things at the bottom of the page are still
   // visible when snippets / onboarding are visible. Adjust for other spacing.

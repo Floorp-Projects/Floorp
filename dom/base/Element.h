@@ -595,6 +595,10 @@ protected:
   already_AddRefed<ShadowRoot> AttachShadowInternal(
     ShadowRootMode, ErrorResult& aError);
 
+  MOZ_CAN_RUN_SCRIPT
+  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
+                                     FlushType aFlushType = FlushType::Layout);
+
 private:
   // Need to allow the ESM, nsGlobalWindow, and the focus manager to
   // set our state
@@ -1982,15 +1986,6 @@ private:
    * @return the frame's client area
    */
   MOZ_CAN_RUN_SCRIPT nsRect GetClientAreaRect();
-
-  /**
-   * Get a scrollframe for the element, if any.  If aFrame is not null, the
-   * element's primary frame (after whatever flushing is needed) will be
-   * returned in *aFrame.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  nsIScrollableFrame* GetScrollFrame(nsIFrame **aFrame = nullptr,
-                                     FlushType aFlushType = FlushType::Layout);
 
   // Prevent people from doing pointless checks/casts on Element instances.
   void IsElement() = delete;

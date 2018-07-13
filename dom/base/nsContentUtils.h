@@ -2349,14 +2349,6 @@ public:
     return sAnimationsAPICoreEnabled;
   }
 
-  /*
-   * Returns true if the DOM Animations Element.animate() API should be enabled.
-   */
-  static bool AnimationsAPIElementAnimateEnabled()
-  {
-    return sAnimationsAPIElementAnimateEnabled;
-  }
-
   /**
    * Returns true if the getBoxQuads API should be enabled.
    */
@@ -3415,7 +3407,6 @@ private:
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
-  static bool sAnimationsAPIElementAnimateEnabled;
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
