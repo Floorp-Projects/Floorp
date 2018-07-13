@@ -30,7 +30,6 @@
 #define HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-buffer-private.hh"
 #include "hb-map-private.hh"
 #include "hb-ot-layout-gdef-table.hh"
@@ -388,7 +387,7 @@ struct hb_ot_apply_context_t :
     inline bool prev (void)
     {
       assert (num_items > 0);
-      while (idx >= num_items)
+      while (idx > num_items - 1)
       {
 	idx--;
 	const hb_glyph_info_t &info = c->buffer->out_info[idx];

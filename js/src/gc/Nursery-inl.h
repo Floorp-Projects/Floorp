@@ -115,7 +115,7 @@ static inline T*
 AllocateObjectBuffer(JSContext* cx, JSObject* obj, uint32_t count)
 {
     if (cx->helperThread())
-        return cx->zone()->pod_malloc<T>(count);
+        return cx->pod_malloc<T>(count);
     size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
     T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
     if (!buffer)

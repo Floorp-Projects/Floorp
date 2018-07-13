@@ -1081,10 +1081,6 @@ TabChild::DestroyWindow()
         mRemoteFrame = nullptr;
     }
 
-    if (mApzcTreeManager) {
-      mApzcTreeManager->Destroy();
-      mApzcTreeManager = nullptr;
-    }
 
     if (mLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);

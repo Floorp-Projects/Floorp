@@ -30,7 +30,6 @@
 #define HB_OT_LAYOUT_COMMON_PRIVATE_HH
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-ot-layout-private.hh"
 #include "hb-open-type-private.hh"
 #include "hb-set-private.hh"
@@ -832,7 +831,12 @@ struct CoverageFormat2
       c = &c_;
       coverage = 0;
       i = 0;
-      j = c->rangeRecord.len ? c_.rangeRecord[0].start : 0;
+      j = c->rangeRecord.len ? c->rangeRecord[0].start : 0;
+      if (unlikely (c->rangeRecord[0].start > c->rangeRecord[0].end))
+      {
+        /* Broken table. Skip. */
+        i = c->rangeRecord.len;
+      }
     }
     inline bool more (void) { return i < c->rangeRecord.len; }
     inline void next (void)
@@ -842,7 +846,14 @@ struct CoverageFormat2
         i++;
 	if (more ())
 	{
+	  hb_codepoint_t old = j;
 	  j = c->rangeRecord[i].start;
+	  if (unlikely (j <= old))
+	  {
+	    /* Broken table. Skip. Important to avoid DoS. */
+	   i = c->rangeRecord.len;
+	   return;
+	  }
 	  coverage = c->rangeRecord[i].value;
 	}
 	return;
@@ -855,7 +866,8 @@ struct CoverageFormat2
 
     private:
     const struct CoverageFormat2 *c;
-    unsigned int i, j, coverage;
+    unsigned int i, coverage;
+    hb_codepoint_t j;
   };
   private:
 

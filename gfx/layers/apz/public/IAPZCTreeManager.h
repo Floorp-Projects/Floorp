@@ -136,8 +136,6 @@ public:
    */
   virtual APZInputBridge* InputBridge() = 0;
 
-  virtual void Destroy() {}
-
 protected:
 
   // Discourage destruction outside of decref

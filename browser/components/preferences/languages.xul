@@ -15,7 +15,7 @@
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
-        onload="gLanguagesDialog.init();"
+        onload="gLanguagesDialog.onLoad();"
         helpTopic="prefs-languages"
         ondialoghelp="openPrefsHelp()">
 
@@ -49,11 +49,9 @@
       </columns>
       <rows>
         <row flex="1">
-          <listbox id="activeLanguages" flex="1" rows="6"
-                    seltype="multiple" onselect="gLanguagesDialog.onLanguageSelect();"
-                    preference="intl.accept_languages"
-                    onsyncfrompreference="return gLanguagesDialog.readAcceptLanguages();"
-                    onsynctopreference="return gLanguagesDialog.writeAcceptLanguages();"/>
+          <richlistbox id="activeLanguages" flex="1" height="200"
+                       seltype="multiple"
+                       onselect="gLanguagesDialog.onLanguageSelect();"/>
           <vbox>
             <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
                     data-l10n-id="languages-customize-moveup"

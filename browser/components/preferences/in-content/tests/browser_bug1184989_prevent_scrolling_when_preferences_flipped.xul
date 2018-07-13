@@ -15,13 +15,6 @@
       <checkbox id="checkbox" label="checkbox" />
     </hbox>
 
-    <hbox style="height: 50px;">
-      <listbox id="listbox">
-        <listitem id="listitem" label="listitem" />
-        <listitem label="listitem" />
-      </listbox>
-    </hbox>
-
     <hbox>
       <radiogroup id="radiogroup">
         <radio id="radio" label="radio" />

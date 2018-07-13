@@ -747,8 +747,6 @@ var gEditItemOverlay = {
     if (tagsSelectorRow.collapsed)
       return;
 
-    // Save the current scroll position and restore it after the rebuild.
-    let firstIndex = tagsSelector.getIndexOfFirstVisibleRow();
     let selectedIndex = tagsSelector.selectedIndex;
     let selectedTag = selectedIndex >= 0 ? tagsSelector.selectedItem.label
                                          : null;
@@ -759,24 +757,22 @@ var gEditItemOverlay = {
 
     let tagsInField = this._getTagsArrayFromTagsInputField();
     let allTags = PlacesUtils.tagging.allTags;
-    for (let tag of allTags) {
-      let elt = document.createElement("listitem");
-      elt.setAttribute("type", "checkbox");
-      elt.setAttribute("label", tag);
+    let fragment = document.createDocumentFragment();
+    for (var i = 0; i < allTags.length; i++) {
+      let tag = allTags[i];
+      let elt = document.createElement("richlistitem");
+      elt.appendChild(document.createElement("image"));
+      let label = document.createElement("label");
+      label.setAttribute("value", tag);
+      elt.appendChild(label);
       if (tagsInField.includes(tag))
         elt.setAttribute("checked", "true");
-      tagsSelector.appendChild(elt);
+      fragment.appendChild(elt);
       if (selectedTag === tag)
-        selectedIndex = tagsSelector.getIndexOfItem(elt);
+        selectedIndex = i;
     }
+    tagsSelector.appendChild(fragment);
 
-    // Restore position.
-    // The listbox allows to scroll only if the required offset doesn't
-    // overflow its capacity, thus need to adjust the index for removals.
-    firstIndex =
-      Math.min(firstIndex,
-               tagsSelector.itemCount - tagsSelector.getNumberOfVisibleRows());
-    tagsSelector.scrollToIndex(firstIndex);
     if (selectedIndex >= 0 && tagsSelector.itemCount > 0) {
       selectedIndex = Math.min(selectedIndex, tagsSelector.itemCount - 1);
       tagsSelector.selectedIndex = selectedIndex;
@@ -796,12 +792,17 @@ var gEditItemOverlay = {
       this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
-      tagsSelector.addEventListener("CheckboxStateChange", this);
+      tagsSelector.addEventListener("mousedown", this);
+      tagsSelector.addEventListener("keypress", this);
     } else {
       expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
       tagsSelectorRow.collapsed = true;
+
+      // This is a no-op if we've removed the listener.
+      tagsSelector.removeEventListener("mousedown", this);
+      tagsSelector.removeEventListener("keypress", this);
     }
   },
 
@@ -845,30 +846,50 @@ var gEditItemOverlay = {
   },
 
   // EventListener
-  handleEvent(aEvent) {
-    switch (aEvent.type) {
-    case "CheckboxStateChange":
-      // Update the tags field when items are checked/unchecked in the listbox
-      let tags = this._getTagsArrayFromTagsInputField();
-      let tagCheckbox = aEvent.target;
-
-      let curTagIndex = tags.indexOf(tagCheckbox.label);
-      let tagsSelector = this._element("tagsSelector");
-      tagsSelector.selectedItem = tagCheckbox;
-
-      if (tagCheckbox.checked) {
-        if (curTagIndex == -1)
-          tags.push(tagCheckbox.label);
-      } else if (curTagIndex != -1) {
-        tags.splice(curTagIndex, 1);
+  handleEvent(event) {
+    switch (event.type) {
+    case "mousedown":
+      if (event.button == 0) {
+        // Make sure the event is triggered on an item and not the empty space.
+        let item = event.target.closest("richlistbox,richlistitem");
+        if (item.localName == "richlistitem") {
+          this.toggleItemCheckbox(item);
+        }
       }
-      this._element("tagsField").value = tags.join(", ");
-      this._updateTags();
+      break;
+    case "keypress":
+      if (event.key == " ") {
+        let item = event.target.currentItem;
+        if (item) {
+          this.toggleItemCheckbox(item);
+        }
+      }
       break;
     case "unload":
       this.uninitPanel(false);
       break;
     }
+  },
+
+  toggleItemCheckbox(item) {
+    // Update the tags field when items are checked/unchecked in the listbox
+    let tags = this._getTagsArrayFromTagsInputField();
+
+    let curTagIndex = tags.indexOf(item.label);
+    let tagsSelector = this._element("tagsSelector");
+    tagsSelector.selectedItem = item;
+
+    if (!item.hasAttribute("checked")) {
+      item.setAttribute("checked", "true");
+      if (curTagIndex == -1)
+        tags.push(item.label);
+    } else {
+      item.removeAttribute("checked");
+      if (curTagIndex != -1)
+        tags.splice(curTagIndex, 1);
+    }
+    this._element("tagsField").value = tags.join(", ");
+    this._updateTags();
   },
 
   _initTagsField() {

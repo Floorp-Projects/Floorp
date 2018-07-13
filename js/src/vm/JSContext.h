@@ -171,6 +171,27 @@ struct JSContext : public JS::RootingContext,
     /* Clear the pending exception (if any) due to OOM. */
     void recoverFromOutOfMemory();
 
+    /*
+     * This variation of calloc will call the large-allocation-failure callback
+     * on OOM and retry the allocation.
+     */
+    template <typename T>
+    T* pod_callocCanGC(size_t numElems, arena_id_t arena = js::MallocArena) {
+        T* p = pod_calloc<T>(numElems, arena);
+        if (MOZ_LIKELY(!!p))
+            return p;
+        size_t bytes;
+        if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
+            reportAllocationOverflow();
+            return nullptr;
+        }
+        p = static_cast<T*>(runtime()->onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
+        if (!p)
+            return nullptr;
+        updateMallocCounter(bytes);
+        return p;
+    }
+
     void updateMallocCounter(size_t nbytes);
 
     void reportAllocationOverflow() {

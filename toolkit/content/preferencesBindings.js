@@ -439,7 +439,6 @@ const Preferences = window.Preferences = (function() {
       case "colorpicker":
       case "radiogroup":
       case "textbox":
-      case "listbox":
       case "menulist":
         return true;
       }
