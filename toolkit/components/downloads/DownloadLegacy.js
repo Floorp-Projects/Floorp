@@ -97,9 +97,7 @@ DownloadLegacyTransfer.prototype = {
           download._blockedByParentalControls = true;
         }
 
-        download.saver.onTransferStarted(
-                         aRequest,
-                         this._cancelable instanceof Ci.nsIHelperAppLauncher);
+        download.saver.onTransferStarted(aRequest);
 
         // To handle asynchronous cancellation properly, we should hook up the
         // handler only after we have been notified that the main request

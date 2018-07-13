@@ -581,6 +581,28 @@ function isValidDate(aDate) {
 }
 
 /**
+ * Waits for the download annotations to be set for the given page, required
+ * because the addDownload method will add these to the database asynchronously.
+ */
+function waitForAnnotation(sourceUriSpec, annotationName) {
+  let sourceUri = Services.io.newURI(sourceUriSpec);
+  return new Promise(resolve => {
+    PlacesUtils.annotations.addObserver({
+      onPageAnnotationSet(page, name) {
+        if (!page.equals(sourceUri) || name != annotationName) {
+          return;
+        }
+        PlacesUtils.annotations.removeObserver(this);
+        resolve();
+      },
+      onItemAnnotationSet() {},
+      onPageAnnotationRemoved() {},
+      onItemAnnotationRemoved() {},
+    });
+  });
+}
+
+/**
  * Position of the first byte served by the "interruptible_resumable.txt"
  * handler during the most recent response.
  */

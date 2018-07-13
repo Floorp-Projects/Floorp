@@ -16,40 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
 let baseDate = new Date("2000-01-01");
 
 /**
- * Waits for the download annotations to be set for the given page, required
- * because the addDownload method will add these to the database asynchronously.
- */
-function waitForAnnotations(sourceUriSpec) {
-  let sourceUri = Services.io.newURI(sourceUriSpec);
-  let destinationFileUriSet = false;
-  let metaDataSet = false;
-  return new Promise(resolve => {
-    PlacesUtils.annotations.addObserver({
-      onPageAnnotationSet(page, name) {
-        if (!page.equals(sourceUri)) {
-          return;
-        }
-        switch (name) {
-          case "downloads/destinationFileURI":
-            destinationFileUriSet = true;
-            break;
-          case "downloads/metaData":
-            metaDataSet = true;
-            break;
-        }
-        if (destinationFileUriSet && metaDataSet) {
-          PlacesUtils.annotations.removeObserver(this);
-          resolve();
-        }
-      },
-      onItemAnnotationSet() {},
-      onPageAnnotationRemoved() {},
-      onItemAnnotationRemoved() {},
-    });
-  });
-}
-
-/**
  * Non-fatal assertion used to test whether the downloads in the list already
  * match the expected state.
  */
@@ -184,7 +150,8 @@ add_task(async function test_DownloadHistory() {
 
     // Add the download to history using the XPCOM service, then use the
     // DownloadHistory module to save the associated metadata.
-    let promiseAnnotations = waitForAnnotations(properties.source.url);
+    let promiseFileAnnotation = waitForAnnotation(properties.source.url, "downloads/destinationFileURI");
+    let promiseMetaAnnotation = waitForAnnotation(properties.source.url, "downloads/metaData");
     let promiseVisit = promiseWaitForVisit(properties.source.url);
     gDownloadHistory.addDownload(Services.io.newURI(properties.source.url),
                                  null,
@@ -192,7 +159,7 @@ add_task(async function test_DownloadHistory() {
                                  NetUtil.newURI(targetFile));
     await promiseVisit;
     DownloadHistory.updateMetaData(download);
-    await promiseAnnotations;
+    await Promise.all([promiseFileAnnotation, promiseMetaAnnotation]);
   }
 
   // Add all the test downloads to history.
