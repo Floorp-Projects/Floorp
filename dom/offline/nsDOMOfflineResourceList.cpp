@@ -333,74 +333,109 @@ nsDOMOfflineResourceList::IndexedGetter(uint32_t aIndex, bool& aFound,
   CopyUTF8toUTF16(mCachedKeys[aIndex], aURI);
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozAdd(const nsAString& aURI, ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
-  if (aURI.Length() > MAX_URI_LENGTH) return NS_ERROR_DOM_BAD_URI;
+  if (aURI.Length() > MAX_URI_LENGTH) {
+    aRv.Throw(NS_ERROR_DOM_BAD_URI);
+    return;
+  }
 
   // this will fail if the URI is not absolute
   nsCOMPtr<nsIURI> requestedURI;
   rv = NS_NewURI(getter_AddRefs(requestedURI), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsAutoCString scheme;
   rv = requestedURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   bool match;
   rv = mManifestURI->SchemeIs(scheme.get(), &match);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!match) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
   }
 
-  ErrorResult res;
-  uint32_t length = GetMozLength(res);
-  if (NS_WARN_IF(res.Failed())) {
-    return res.StealNSResult();
+  if (!match) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  uint32_t length = GetMozLength(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
   uint32_t maxEntries =
     Preferences::GetUint(kMaxEntriesPref, DEFAULT_MAX_ENTRIES);
 
-  if (length > maxEntries) return NS_ERROR_NOT_AVAILABLE;
+  if (length > maxEntries) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
 
   ClearCachedKeys();
 
   nsCOMPtr<nsIOfflineCacheUpdate> update =
     do_CreateInstance(NS_OFFLINECACHEUPDATE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsAutoCString clientID;
   rv = appCache->GetClientID(clientID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->InitPartial(mManifestURI, clientID,
                            mDocumentURI, mLoadingPrincipal);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->AddDynamicURI(requestedURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->Schedule();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
 NS_IMETHODIMP
