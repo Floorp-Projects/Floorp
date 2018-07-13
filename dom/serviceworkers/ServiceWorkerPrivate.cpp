@@ -671,20 +671,13 @@ private:
  * termination during the execution of life cycle events. It is responsible
  * with advancing the job queue for install/activate tasks.
  */
-class LifeCycleEventWatcher final : public ExtendableEventCallback,
-                                    public WorkerHolder
+class LifeCycleEventWatcher final : public ExtendableEventCallback
 {
-  WorkerPrivate* mWorkerPrivate;
+  RefPtr<StrongWorkerRef> mWorkerRef;
   RefPtr<LifeCycleEventCallback> mCallback;
-  bool mDone;
 
   ~LifeCycleEventWatcher()
   {
-    if (mDone) {
-      return;
-    }
-
-    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
     // XXXcatalinb: If all the promises passed to waitUntil go out of scope,
     // the resulting Promise.all will be cycle collected and it will drop its
     // native handlers (including this object). Instead of waiting for a timeout
@@ -695,22 +688,17 @@ class LifeCycleEventWatcher final : public ExtendableEventCallback,
 public:
   NS_INLINE_DECL_REFCOUNTING(LifeCycleEventWatcher, override)
 
-  LifeCycleEventWatcher(WorkerPrivate* aWorkerPrivate,
-                        LifeCycleEventCallback* aCallback)
-    : WorkerHolder("LifeCycleEventWatcher")
-    , mWorkerPrivate(aWorkerPrivate)
-    , mCallback(aCallback)
-    , mDone(false)
+  explicit LifeCycleEventWatcher(LifeCycleEventCallback* aCallback)
+    : mCallback(aCallback)
   {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
   }
 
   bool
   Init()
   {
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
 
     // We need to listen for worker termination in case the event handler
     // never completes or never resolves the waitUntil promise. There are
@@ -719,24 +707,18 @@ public:
     //    case the registration/update promise will be rejected
     // 2. A new service worker is registered which will terminate the current
     //    installing worker.
-    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate, Canceling))) {
-      NS_WARNING("LifeCycleEventWatcher failed to add feature.");
-      ReportResult(false);
+    RefPtr<LifeCycleEventWatcher> self = this;
+    mWorkerRef =
+      StrongWorkerRef::Create(workerPrivate, "LifeCycleEventWatcher",
+                              [self]() {
+      self->ReportResult(false);
+    });
+    if (NS_WARN_IF(!mWorkerRef)) {
+      mCallback->SetResult(false);
+      nsresult rv = workerPrivate->DispatchToMainThread(mCallback);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
       return false;
     }
-
-    return true;
-  }
-
-  bool
-  Notify(WorkerStatus aStatus) override
-  {
-    if (aStatus < Canceling) {
-      return true;
-    }
-
-    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
-    ReportResult(false);
 
     return true;
   }
@@ -744,27 +726,25 @@ public:
   void
   ReportResult(bool aResult)
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
 
-    if (mDone) {
+    if (!mWorkerRef) {
       return;
     }
-    mDone = true;
 
     mCallback->SetResult(aResult);
-    nsresult rv = mWorkerPrivate->DispatchToMainThread(mCallback);
+    nsresult rv = mWorkerRef->Private()->DispatchToMainThread(mCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_CRASH("Failed to dispatch life cycle event handler.");
     }
 
-    ReleaseWorker();
+    mWorkerRef = nullptr;
   }
 
   void
   FinishedWithResult(ExtendableEventResult aResult) override
   {
-    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
     ReportResult(aResult == Resolved);
 
     // Note, all WaitUntil() rejections are reported to client consoles
@@ -798,8 +778,7 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
   // It is important to initialize the watcher before actually dispatching
   // the event in order to catch worker termination while the event handler
   // is still executing. This can happen with infinite loops, for example.
-  RefPtr<LifeCycleEventWatcher> watcher =
-    new LifeCycleEventWatcher(aWorkerPrivate, mCallback);
+  RefPtr<LifeCycleEventWatcher> watcher = new LifeCycleEventWatcher(mCallback);
 
   if (!watcher->Init()) {
     return true;
