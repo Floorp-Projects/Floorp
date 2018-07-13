@@ -325,7 +325,7 @@ private:
 
     nsresult AddRequestInfo(nsIRequest* aRequest);
     void RemoveRequestInfo(nsIRequest* aRequest);
-    nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
+    nsRequestInfo *GetRequestInfo(nsIRequest* aRequest) const;
     void ClearRequestInfoHash();
     int64_t CalculateMaxProgress();
 ///    void DumpChannelInfo(void);
