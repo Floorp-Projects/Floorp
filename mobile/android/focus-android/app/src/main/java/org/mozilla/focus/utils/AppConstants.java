@@ -22,10 +22,6 @@ public final class AppConstants {
 
     private AppConstants() {}
 
-    public static boolean isDevBuild() {
-        return BUILD_TYPE_DEBUG.equals(BuildConfig.BUILD_TYPE);
-    }
-
     public static boolean isKlarBuild() {
         return PRODUCT_FLAVOR_KLAR.equals(BuildConfig.FLAVOR_product);
     }
@@ -37,6 +33,10 @@ public final class AppConstants {
     public static boolean isGeckoBuild(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(ENGINE_PREF_STRING_KEY, Config.DEFAULT_NEW_RENDERER);
+    }
+
+    public static boolean isDevBuild() {
+        return !isReleaseBuild();
     }
 
     public static boolean supportsDownloadingFiles() {
