@@ -123,11 +123,7 @@ body {
   background-color: var(--theme-highlight-bluegrey);
 }
 
-.theme-fg-color4 {
-  color: var(--theme-highlight-orange);
-}
-
-.theme-fg-color6,
+.theme-fg-color4,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
 .variable-or-property .token-string,
@@ -140,7 +136,6 @@ body {
   background-color: hsl(24,85%,39%);
 }
 
-.theme-fg-color7,
 .cm-s-mozilla .cm-atom,
 .cm-s-mozilla .cm-quote,
 .cm-s-mozilla .cm-error,

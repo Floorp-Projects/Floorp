@@ -97,6 +97,7 @@ private:
            nsIPrincipal* aTriggeringPrincipal,
            nsIPrincipal* aPrincipalToInherit,
            nsIPrincipal* aSandboxedLoadingPrincipal,
+           nsIPrincipal* aTopLevelStorageAreaPrincipal,
            nsIURI* aResultPrincipalURI,
            const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
            const Maybe<mozilla::dom::ClientInfo>& aReservedClientInfo,
@@ -105,7 +106,6 @@ private:
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
            LoadTainting aTainting,
-           const nsTArray<nsString>& aFirstPartyStorageAccessGrantedOrigins,
            bool aUpgradeInsecureRequests,
            bool aBrowserUpgradeInsecureRequests,
            bool aBrowserWouldUpgradeInsecureRequests,
@@ -160,6 +160,7 @@ private:
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal>           mSandboxedLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal>           mTopLevelStorageAreaPrincipal;
   nsCOMPtr<nsIURI>                 mResultPrincipalURI;
 
   Maybe<mozilla::dom::ClientInfo>               mClientInfo;
@@ -174,7 +175,6 @@ private:
   nsSecurityFlags                  mSecurityFlags;
   nsContentPolicyType              mInternalContentPolicyType;
   LoadTainting                     mTainting;
-  nsTArray<nsString>               mFirstPartyStorageAccessGrantedOrigins;
   bool                             mUpgradeInsecureRequests;
   bool                             mBrowserUpgradeInsecureRequests;
   bool                             mBrowserWouldUpgradeInsecureRequests;

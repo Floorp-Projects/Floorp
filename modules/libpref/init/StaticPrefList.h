@@ -1120,6 +1120,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Anti-tracking permission expiration
+VARCACHE_PREF(
+  "privacy.restrict3rdpartystorage.expiration",
+   privacy_restrict3rdpartystorage_expiration,
+  uint32_t, 2592000000 // 30 days
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------

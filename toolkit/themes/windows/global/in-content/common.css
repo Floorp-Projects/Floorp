@@ -54,8 +54,7 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
 /* Use a 2px border so that selected row highlight is still visible behind
     an existing high-contrast border that uses the background color */
 @media (-moz-windows-default-theme: 0) {
-  xul|treechildren::-moz-tree-row(selected),
-  xul|listbox xul|listitem[selected="true"] {
+  xul|treechildren::-moz-tree-row(selected) {
      border: 2px dotted Highlight;
   }
 }

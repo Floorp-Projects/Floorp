@@ -2336,11 +2336,11 @@ sha_get_hashType(int hashbits)
 }
 
 HASH_HashType
-hash_string_to_hashType(const char * src)
+hash_string_to_hashType(const char *src)
 {
     HASH_HashType shaAlg = HASH_AlgNULL;
     if (strncmp(src, "SHA-1", 5) == 0) {
-         shaAlg = HASH_AlgSHA1;
+        shaAlg = HASH_AlgSHA1;
     } else if (strncmp(src, "SHA-224", 7) == 0) {
         shaAlg = HASH_AlgSHA224;
     } else if (strncmp(src, "SHA-256", 7) == 0) {
@@ -2350,7 +2350,7 @@ hash_string_to_hashType(const char * src)
     } else if (strncmp(src, "SHA-512", 7) == 0) {
         shaAlg = HASH_AlgSHA512;
     } else if (strncmp(src, "SHA1", 4) == 0) {
-         shaAlg = HASH_AlgSHA1;
+        shaAlg = HASH_AlgSHA1;
     } else if (strncmp(src, "SHA224", 6) == 0) {
         shaAlg = HASH_AlgSHA224;
     } else if (strncmp(src, "SHA256", 6) == 0) {
@@ -2657,7 +2657,7 @@ ecdsa_siggen_test(char *reqfn)
             src++; /* skip the comma */
             /* set the SHA Algorithm */
             shaAlg = hash_string_to_hashType(src);
-            if (shaAlg == HASH_AlgNULL){
+            if (shaAlg == HASH_AlgNULL) {
                 fprintf(ecdsaresp, "ERROR: Unable to find SHAAlg type");
                 goto loser;
             }
@@ -2977,15 +2977,15 @@ loser:
 void
 ecdh_functional(char *reqfn, PRBool response)
 {
-    char buf[256];   /* holds one line from the input REQUEST file.
+    char buf[256];  /* holds one line from the input REQUEST file.
                          * needs to be large enough to hold the longest
                          * line "Qx = <144 hex digits>\n".
                          */
     FILE *ecdhreq;  /* input stream from the REQUEST file */
     FILE *ecdhresp; /* output stream to the RESPONSE file */
-    char curve[16];  /* "nistxddd" */
+    char curve[16]; /* "nistxddd" */
     unsigned char hashBuf[HASH_LENGTH_MAX];
-    ECParams *ecparams[MAX_ECC_PARAMS] = {NULL};
+    ECParams *ecparams[MAX_ECC_PARAMS] = { NULL };
     ECPrivateKey *ecpriv = NULL;
     ECParams *current_ecparams = NULL;
     SECItem pubkey;
@@ -3026,15 +3026,17 @@ ecdh_functional(char *reqfn, PRBool response)
 
                 src = &buf[1];
                 /* skip passed the colon */
-                while (*src && *src != ':') src++;
+                while (*src && *src != ':')
+                    src++;
                 if (*src != ':') {
                     fprintf(stderr,
-                        "No colon in curve selected statement\n%s", buf);
+                            "No colon in curve selected statement\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 dst = &curve[4];
                 *dst++ = tolower(*src);
                 src += 2; /* skip the hyphen */
@@ -3051,8 +3053,7 @@ ecdh_functional(char *reqfn, PRBool response)
                     fprintf(stderr, "Unknown curve %s.", curve);
                     goto loser;
                 }
-                if (EC_DecodeParams(encodedparams, &ecparams[current_curve])
-                                                        != SECSuccess) {
+                if (EC_DecodeParams(encodedparams, &ecparams[current_curve]) != SECSuccess) {
                     fprintf(stderr, "Curve %s not supported.\n", curve);
                     goto loser;
                 }
@@ -3068,7 +3069,7 @@ ecdh_functional(char *reqfn, PRBool response)
                     fprintf(stderr, "bad curve type defined (%c)\n", buf[2]);
                     goto loser;
                 }
-                    current_ecparams = ecparams[current_curve];
+                current_ecparams = ecparams[current_curve];
                 if (current_ecparams == NULL) {
                     fprintf(stderr, "no curve defined for type %c defined\n",
                             buf[2]);
@@ -3076,17 +3077,19 @@ ecdh_functional(char *reqfn, PRBool response)
                 }
                 /* skip passed the colon */
                 src = &buf[1];
-                while (*src && *src != '-') src++;
+                while (*src && *src != '-')
+                    src++;
                 if (*src != '-') {
                     fprintf(stderr,
-                        "No data in curve selected statement\n%s",buf);
+                            "No data in curve selected statement\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 hash = hash_string_to_hashType(src);
-                if (hash == HASH_AlgNULL){
+                if (hash == HASH_AlgNULL) {
                     fprintf(ecdhresp, "ERROR: Unable to find SHAAlg type");
                     goto loser;
                 }
@@ -3101,7 +3104,7 @@ ecdh_functional(char *reqfn, PRBool response)
             fputs(buf, ecdhresp);
             if (current_ecparams == NULL) {
                 fprintf(stderr, "no curve defined for type %c defined\n",
-                            buf[2]);
+                        buf[2]);
                 goto loser;
             }
             len = (current_ecparams->fieldID.size + 7) >> 3;
@@ -3140,30 +3143,30 @@ ecdh_functional(char *reqfn, PRBool response)
             }
             /* validate CAVS public key */
             if (EC_ValidatePublicKey(current_ecparams, &pubkey) != SECSuccess) {
-                fprintf(stderr,"BAD key detected\n");
+                fprintf(stderr, "BAD key detected\n");
                 goto loser;
             }
 
             /* generate ECC key pair */
             if (EC_NewKey(current_ecparams, &ecpriv) != SECSuccess) {
-                fprintf(stderr,"Failed to generate new key\n");
+                fprintf(stderr, "Failed to generate new key\n");
                 goto loser;
             }
             /* validate UIT generated public key */
             if (EC_ValidatePublicKey(current_ecparams, &ecpriv->publicValue) !=
-                    SECSuccess) {
-                fprintf(stderr,"generate key did not validate\n");
+                SECSuccess) {
+                fprintf(stderr, "generate key did not validate\n");
                 goto loser;
             }
             /* output UIT public key */
             uit_len = ecpriv->publicValue.len;
             if (uit_len % 2 == 0) {
-                fprintf(stderr,"generate key had invalid public value len\n");
+                fprintf(stderr, "generate key had invalid public value len\n");
                 goto loser;
             }
             uit_len = (uit_len - 1) / 2;
             if (ecpriv->publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
-                fprintf(stderr,"generate key was compressed\n");
+                fprintf(stderr, "generate key was compressed\n");
                 goto loser;
             }
             fputs("QeIUTx = ", ecdhresp);
@@ -3175,14 +3178,14 @@ ecdh_functional(char *reqfn, PRBool response)
             fputs(buf, ecdhresp);
             fputc('\n', ecdhresp);
             /* ECDH */
-            if (ECDH_Derive(&pubkey,current_ecparams, &ecpriv->privateValue,
-                        PR_FALSE, &ZZ) != SECSuccess) {
-                fprintf(stderr,"Derive failed\n");
+            if (ECDH_Derive(&pubkey, current_ecparams, &ecpriv->privateValue,
+                            PR_FALSE, &ZZ) != SECSuccess) {
+                fprintf(stderr, "Derive failed\n");
                 goto loser;
             }
             /* output hash of ZZ */
-            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
-                fprintf(stderr,"hash of derived key failed\n");
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess) {
+                fprintf(stderr, "hash of derived key failed\n");
                 goto loser;
             }
             SECITEM_FreeItem(&ZZ, PR_FALSE);
@@ -3200,7 +3203,7 @@ loser:
     if (ecpriv != NULL) {
         PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
     }
-    for (i=0; i < MAX_ECC_PARAMS; i++) {
+    for (i = 0; i < MAX_ECC_PARAMS; i++) {
         if (ecparams[i] != NULL) {
             PORT_FreeArena(ecparams[i]->arena, PR_FALSE);
             ecparams[i] = NULL;
@@ -3212,7 +3215,7 @@ loser:
     fclose(ecdhreq);
 }
 
-#define MATCH_OPENSSL 1 
+#define MATCH_OPENSSL 1
 /*
  * Perform the ECDH Validity Test.
  *
@@ -3223,17 +3226,17 @@ loser:
 void
 ecdh_verify(char *reqfn, PRBool response)
 {
-    char buf[256];   /* holds one line from the input REQUEST file.
+    char buf[256];  /* holds one line from the input REQUEST file.
                          * needs to be large enough to hold the longest
                          * line "Qx = <144 hex digits>\n".
                          */
     FILE *ecdhreq;  /* input stream from the REQUEST file */
     FILE *ecdhresp; /* output stream to the RESPONSE file */
-    char curve[16];  /* "nistxddd" */
+    char curve[16]; /* "nistxddd" */
     unsigned char hashBuf[HASH_LENGTH_MAX];
     unsigned char cavsHashBuf[HASH_LENGTH_MAX];
     unsigned char private_data[MAX_ECKEY_LEN];
-    ECParams *ecparams[MAX_ECC_PARAMS] =  {NULL};
+    ECParams *ecparams[MAX_ECC_PARAMS] = { NULL };
     ECParams *current_ecparams = NULL;
     SECItem pubkey;
     SECItem ZZ;
@@ -3273,15 +3276,17 @@ ecdh_verify(char *reqfn, PRBool response)
 
                 src = &buf[1];
                 /* skip passed the colon */
-                while (*src && *src != ':') src++;
+                while (*src && *src != ':')
+                    src++;
                 if (*src != ':') {
                     fprintf(stderr,
-                        "No colon in curve selected statement\n%s", buf);
+                            "No colon in curve selected statement\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 dst = &curve[4];
                 *dst++ = tolower(*src);
                 src += 2; /* skip the hyphen */
@@ -3298,8 +3303,7 @@ ecdh_verify(char *reqfn, PRBool response)
                     fprintf(stderr, "Unknown curve %s.\n", curve);
                     goto loser;
                 }
-                if (EC_DecodeParams(encodedparams, &ecparams[current_curve])
-                                                        != SECSuccess) {
+                if (EC_DecodeParams(encodedparams, &ecparams[current_curve]) != SECSuccess) {
                     fprintf(stderr, "Curve %s not supported.\n", curve);
                     goto loser;
                 }
@@ -3315,7 +3319,7 @@ ecdh_verify(char *reqfn, PRBool response)
                     fprintf(stderr, "bad curve type defined (%c)\n", buf[2]);
                     goto loser;
                 }
-                    current_ecparams = ecparams[current_curve];
+                current_ecparams = ecparams[current_curve];
                 if (current_ecparams == NULL) {
                     fprintf(stderr, "no curve defined for type %c defined\n",
                             buf[2]);
@@ -3323,17 +3327,19 @@ ecdh_verify(char *reqfn, PRBool response)
                 }
                 /* skip passed the colon */
                 src = &buf[1];
-                while (*src && *src != '-') src++;
+                while (*src && *src != '-')
+                    src++;
                 if (*src != '-') {
                     fprintf(stderr,
-                        "No data in curve selected statement\n%s",buf);
+                            "No data in curve selected statement\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 hash = hash_string_to_hashType(src);
-                if (hash == HASH_AlgNULL){
+                if (hash == HASH_AlgNULL) {
                     fprintf(ecdhresp, "ERROR: Unable to find SHAAlg type");
                     goto loser;
                 }
@@ -3348,7 +3354,7 @@ ecdh_verify(char *reqfn, PRBool response)
             fputs(buf, ecdhresp);
             if (current_ecparams == NULL) {
                 fprintf(stderr, "no curve defined for type %c defined\n",
-                            buf[2]);
+                        buf[2]);
                 goto loser;
             }
             len = (current_ecparams->fieldID.size + 7) >> 3;
@@ -3416,20 +3422,20 @@ ecdh_verify(char *reqfn, PRBool response)
             /* validate CAVS public key */
             if (EC_ValidatePublicKey(current_ecparams, &pubkey) != SECSuccess) {
 #ifdef MATCH_OPENSSL
-		fprintf(ecdhresp, "Result = F\n");
+                fprintf(ecdhresp, "Result = F\n");
 #else
-		fprintf(ecdhresp, "Result = F # key didn't validate\n");
+                fprintf(ecdhresp, "Result = F # key didn't validate\n");
 #endif
                 continue;
             }
 
             /* ECDH */
             if (ECDH_Derive(&pubkey, current_ecparams, &private_value,
-                        PR_FALSE, &ZZ) != SECSuccess) {
-                fprintf(stderr,"Derive failed\n");
+                            PR_FALSE, &ZZ) != SECSuccess) {
+                fprintf(stderr, "Derive failed\n");
                 goto loser;
             }
-            /* output  ZZ */
+/* output  ZZ */
 #ifndef MATCH_OPENSSL
             fputs("Z = ", ecdhresp);
             to_hex_str(buf, ZZ.data, ZZ.len);
@@ -3437,8 +3443,8 @@ ecdh_verify(char *reqfn, PRBool response)
             fputc('\n', ecdhresp);
 #endif
 
-            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
-                fprintf(stderr,"hash of derived key failed\n");
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess) {
+                fprintf(stderr, "hash of derived key failed\n");
                 goto loser;
             }
             SECITEM_FreeItem(&ZZ, PR_FALSE);
@@ -3450,12 +3456,12 @@ ecdh_verify(char *reqfn, PRBool response)
 #endif
             if (memcmp(hashBuf, cavsHashBuf, fips_hashLen(hash)) != 0) {
 #ifdef MATCH_OPENSSL
-		fprintf(ecdhresp, "Result = F\n");
+                fprintf(ecdhresp, "Result = F\n");
 #else
-		fprintf(ecdhresp, "Result = F # hash doesn't match\n");
+                fprintf(ecdhresp, "Result = F # hash doesn't match\n");
 #endif
             } else {
-		fprintf(ecdhresp, "Result = P\n");
+                fprintf(ecdhresp, "Result = P\n");
             }
 #ifndef MATCH_OPENSSL
             fputc('\n', ecdhresp);
@@ -3464,7 +3470,7 @@ ecdh_verify(char *reqfn, PRBool response)
         }
     }
 loser:
-    for (i=0; i < MAX_ECC_PARAMS; i++) {
+    for (i = 0; i < MAX_ECC_PARAMS; i++) {
         if (ecparams[i] != NULL) {
             PORT_FreeArena(ecparams[i]->arena, PR_FALSE);
             ecparams[i] = NULL;
@@ -3487,19 +3493,19 @@ loser:
 void
 dh_functional(char *reqfn, PRBool response)
 {
-    char buf[1024];   /* holds one line from the input REQUEST file.
+    char buf[1024]; /* holds one line from the input REQUEST file.
                          * needs to be large enough to hold the longest
                          * line "YephCAVS = <512 hex digits>\n".
                          */
-    FILE *dhreq;  /* input stream from the REQUEST file */
-    FILE *dhresp; /* output stream to the RESPONSE file */
+    FILE *dhreq;    /* input stream from the REQUEST file */
+    FILE *dhresp;   /* output stream to the RESPONSE file */
     unsigned char hashBuf[HASH_LENGTH_MAX];
     DSAPrivateKey *dsapriv = NULL;
     PQGParams pqg = { 0 };
-    unsigned char pubkeydata[DSA_MAX_P_BITS/8];
+    unsigned char pubkeydata[DSA_MAX_P_BITS / 8];
     SECItem pubkey;
     SECItem ZZ;
-    unsigned int i,j;
+    unsigned int i, j;
     unsigned int pgySize;
     HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
 
@@ -3517,16 +3523,18 @@ dh_functional(char *reqfn, PRBool response)
                 const char *src;
                 /* skip passed the colon */
                 src = &buf[1];
-                while (*src && *src != '-') src++;
+                while (*src && *src != '-')
+                    src++;
                 if (*src != '-') {
-                    fprintf(stderr, "No hash specified\n%s",buf);
+                    fprintf(stderr, "No hash specified\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 hash = hash_string_to_hashType(src);
-                if (hash == HASH_AlgNULL){
+                if (hash == HASH_AlgNULL) {
                     fprintf(dhresp, "ERROR: Unable to find SHAAlg type");
                     goto loser;
                 }
@@ -3546,7 +3554,7 @@ dh_functional(char *reqfn, PRBool response)
                 pqg.prime.len = pqg.base.len = pgySize;
 
                 /* set q to the max allows */
-                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS/ 8);
+                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS / 8);
                 pqg.subPrime.len = DSA_MAX_Q_BITS / 8;
                 fputs(buf, dhresp);
                 continue;
@@ -3627,7 +3635,7 @@ dh_functional(char *reqfn, PRBool response)
             /* generate FCC key pair, nist uses pqg rather then pg,
              * so use DSA to generate the key */
             if (DSA_NewKey(&pqg, &dsapriv) != SECSuccess) {
-                fprintf(stderr,"Failed to generate new key\n");
+                fprintf(stderr, "Failed to generate new key\n");
                 goto loser;
             }
             fputs("XephemIUT = ", dhresp);
@@ -3639,14 +3647,14 @@ dh_functional(char *reqfn, PRBool response)
             fputs(buf, dhresp);
             fputc('\n', dhresp);
             /* DH */
-            if (DH_Derive(&pubkey,&pqg.prime, &dsapriv->privateValue,
-                        &ZZ, pqg.prime.len) != SECSuccess) {
-                fprintf(stderr,"Derive failed\n");
+            if (DH_Derive(&pubkey, &pqg.prime, &dsapriv->privateValue,
+                          &ZZ, pqg.prime.len) != SECSuccess) {
+                fprintf(stderr, "Derive failed\n");
                 goto loser;
             }
             /* output hash of ZZ */
-            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
-                fprintf(stderr,"hash of derived key failed\n");
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess) {
+                fprintf(stderr, "hash of derived key failed\n");
                 goto loser;
             }
             SECITEM_FreeItem(&ZZ, PR_FALSE);
@@ -3667,7 +3675,7 @@ loser:
     fclose(dhreq);
 }
 
-#define MATCH_OPENSSL 1 
+#define MATCH_OPENSSL 1
 /*
  * Perform the DH Validity Test.
  *
@@ -3678,21 +3686,21 @@ loser:
 void
 dh_verify(char *reqfn, PRBool response)
 {
-    char buf[1024];   /* holds one line from the input REQUEST file.
+    char buf[1024]; /* holds one line from the input REQUEST file.
                          * needs to be large enough to hold the longest
                          * line "YephCAVS = <512 hex digits>\n".
                          */
-    FILE *dhreq;  /* input stream from the REQUEST file */
-    FILE *dhresp; /* output stream to the RESPONSE file */
+    FILE *dhreq;    /* input stream from the REQUEST file */
+    FILE *dhresp;   /* output stream to the RESPONSE file */
     unsigned char hashBuf[HASH_LENGTH_MAX];
     unsigned char cavsHashBuf[HASH_LENGTH_MAX];
     PQGParams pqg = { 0 };
-    unsigned char pubkeydata[DSA_MAX_P_BITS/8];
-    unsigned char privkeydata[DSA_MAX_P_BITS/8];
+    unsigned char pubkeydata[DSA_MAX_P_BITS / 8];
+    unsigned char privkeydata[DSA_MAX_P_BITS / 8];
     SECItem pubkey;
     SECItem privkey;
     SECItem ZZ;
-    unsigned int i,j;
+    unsigned int i, j;
     unsigned int pgySize;
     HASH_HashType hash = HASH_AlgNULL; /* type of SHA Alg */
 
@@ -3710,16 +3718,18 @@ dh_verify(char *reqfn, PRBool response)
                 const char *src;
                 /* skip passed the colon */
                 src = &buf[1];
-                while (*src && *src != '-') src++;
+                while (*src && *src != '-')
+                    src++;
                 if (*src != '-') {
-                    fprintf(stderr, "No hash specified\n%s",buf);
+                    fprintf(stderr, "No hash specified\n%s", buf);
                     goto loser;
                 }
                 src++;
                 /* skip to the first non-space */
-                while (*src && *src == ' ') src++;
+                while (*src && *src == ' ')
+                    src++;
                 hash = hash_string_to_hashType(src);
-                if (hash == HASH_AlgNULL){
+                if (hash == HASH_AlgNULL) {
                     fprintf(dhresp, "ERROR: Unable to find SHAAlg type");
                     goto loser;
                 }
@@ -3739,7 +3749,7 @@ dh_verify(char *reqfn, PRBool response)
                 pqg.prime.len = pqg.base.len = pgySize;
 
                 /* set q to the max allows */
-                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS/ 8);
+                SECITEM_AllocItem(NULL, &pqg.subPrime, DSA_MAX_Q_BITS / 8);
                 pqg.subPrime.len = DSA_MAX_Q_BITS / 8;
                 fputs(buf, dhresp);
                 continue;
@@ -3844,20 +3854,20 @@ dh_verify(char *reqfn, PRBool response)
             }
             from_hex_str(cavsHashBuf, fips_hashLen(hash), &buf[i]);
             /* do the DH operation*/
-            if (DH_Derive(&pubkey,&pqg.prime, &privkey,
-                        &ZZ, pqg.prime.len) != SECSuccess) {
-                fprintf(stderr,"Derive failed\n");
+            if (DH_Derive(&pubkey, &pqg.prime, &privkey,
+                          &ZZ, pqg.prime.len) != SECSuccess) {
+                fprintf(stderr, "Derive failed\n");
                 goto loser;
             }
-            /* output  ZZ */
+/* output  ZZ */
 #ifndef MATCH_OPENSSL
             fputs("Z = ", dhresp);
             to_hex_str(buf, ZZ.data, ZZ.len);
             fputs(buf, dhresp);
             fputc('\n', dhresp);
 #endif
-            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess ) {
-                fprintf(stderr,"hash of derived key failed\n");
+            if (fips_hashBuf(hash, hashBuf, ZZ.data, ZZ.len) != SECSuccess) {
+                fprintf(stderr, "hash of derived key failed\n");
                 goto loser;
             }
             SECITEM_FreeItem(&ZZ, PR_FALSE);
@@ -3868,9 +3878,9 @@ dh_verify(char *reqfn, PRBool response)
             fputc('\n', dhresp);
 #endif
             if (memcmp(hashBuf, cavsHashBuf, fips_hashLen(hash)) != 0) {
-		fprintf(dhresp, "Result = F\n");
+                fprintf(dhresp, "Result = F\n");
             } else {
-		fprintf(dhresp, "Result = P\n");
+                fprintf(dhresp, "Result = P\n");
             }
 #ifndef MATCH_OPENSSL
             fputc('\n', dhresp);

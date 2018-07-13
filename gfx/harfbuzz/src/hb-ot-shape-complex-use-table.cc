@@ -560,7 +560,7 @@ static const USE_TABLE_ELEMENT_TYPE use_table[] = {
 
   /* Grantha */
 
-  /* 11300 */ VMAbv, VMAbv, VMPst, VMPst,     O,     B,     B,     B,     B,     B,     B,     B,     B,     O,     O,     B,
+  /* 11300 */ VMAbv, VMAbv, VMAbv, VMPst,     O,     B,     B,     B,     B,     B,     B,     B,     B,     O,     O,     B,
   /* 11310 */     B,     O,     O,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,
   /* 11320 */     B,     B,     B,     B,     B,     B,     B,     B,     B,     O,     B,     B,     B,     B,     B,     B,
   /* 11330 */     B,     O,     B,     B,     O,     B,     B,     B,     B,     B,     O, CMBlw, CMBlw,     B,  VPst,  VPst,
@@ -673,7 +673,7 @@ static const USE_TABLE_ELEMENT_TYPE use_table[] = {
   /* 11C10 */     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,
   /* 11C20 */     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,  VPst,
   /* 11C30 */  VAbv,  VAbv,  VBlw,  VBlw,  VBlw,  VBlw,  VBlw,     O,  VAbv,  VAbv,  VAbv,  VAbv, VMAbv, VMAbv, VMPst,     H,
-  /* 11C40 */     B,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,
+  /* 11C40 */     B,     O,     O,     O,    GB,    GB,     O,     O,     O,     O,     O,     O,     O,     O,     O,     O,
   /* 11C50 */     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,
   /* 11C60 */     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     B,     O,     O,     O,
 

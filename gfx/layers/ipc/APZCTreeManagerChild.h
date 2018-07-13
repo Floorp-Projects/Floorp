@@ -26,8 +26,7 @@ public:
 
   void SetCompositorSession(RemoteCompositorSession* aSession);
   void SetInputBridge(APZInputBridgeChild* aInputBridge);
-
-  void Destroy() override;
+  void Destroy();
 
   void
   SetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
