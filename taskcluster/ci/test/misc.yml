@@ -33,7 +33,8 @@ geckoview-junit:
     max-run-time: 3600
     chunks:
         by-test-platform:
-            android-em-4.3-arm7-api-16/debug: 3
+            android-em-4.3-arm7-api-16/debug: 4
+            android-em-4.3-arm7-api-16/opt: 2
             default: 1
     mozharness:
         script: android_emulator_unittest.py
