@@ -3469,12 +3469,10 @@ JSScript::makeTypes(JSContext* cx)
 
     unsigned count = TypeScript::NumTypeSets(this);
 
-    TypeScript* typeScript = (TypeScript*)
-        zone()->pod_calloc<uint8_t>(TypeScript::SizeIncludingTypeArray(count));
-    if (!typeScript) {
-        ReportOutOfMemory(cx);
+    size_t size = TypeScript::SizeIncludingTypeArray(count);
+    auto typeScript = reinterpret_cast<TypeScript*>(cx->pod_calloc<uint8_t>(size));
+    if (!typeScript)
         return false;
-    }
 
 #ifdef JS_CRASH_DIAGNOSTICS
     {
@@ -3772,11 +3770,10 @@ TypeNewScript::makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
     while (cursor->kind != Initializer::DONE) { cursor++; }
     size_t initializerLength = cursor - newScript->initializerList + 1;
 
-    nativeNewScript->initializerList = cx->zone()->pod_calloc<Initializer>(initializerLength);
-    if (!nativeNewScript->initializerList) {
-        ReportOutOfMemory(cx);
+    nativeNewScript->initializerList = cx->pod_calloc<Initializer>(initializerLength);
+    if (!nativeNewScript->initializerList)
         return nullptr;
-    }
+
     PodCopy(nativeNewScript->initializerList, newScript->initializerList, initializerLength);
 
     return nativeNewScript.release();

@@ -25,7 +25,6 @@
  */
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-ot-shape-complex-arabic-private.hh"
 #include "hb-ot-shape-private.hh"
 

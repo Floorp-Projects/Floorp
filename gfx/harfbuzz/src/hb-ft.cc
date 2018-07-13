@@ -28,7 +28,6 @@
  */
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 
 #include "hb-ft.h"
 

@@ -191,13 +191,11 @@ Gecko_GetAssignedNodes(RawGeckoElementBorrowed aElement)
 }
 
 void
-Gecko_ComputedStyle_Init(
-    mozilla::ComputedStyle* aStyle,
-    const mozilla::ComputedStyle* aParentContext,
-    RawGeckoPresContextBorrowed aPresContext,
-    const ServoComputedData* aValues,
-    mozilla::CSSPseudoElementType aPseudoType,
-    nsAtom* aPseudoTag)
+Gecko_ComputedStyle_Init(mozilla::ComputedStyle* aStyle,
+                         RawGeckoPresContextBorrowed aPresContext,
+                         const ServoComputedData* aValues,
+                         mozilla::CSSPseudoElementType aPseudoType,
+                         nsAtom* aPseudoTag)
 {
   auto* presContext = const_cast<nsPresContext*>(aPresContext);
   new (KnownNotNull, aStyle) mozilla::ComputedStyle(

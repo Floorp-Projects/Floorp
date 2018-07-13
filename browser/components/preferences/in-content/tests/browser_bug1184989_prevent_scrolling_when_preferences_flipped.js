@@ -23,14 +23,6 @@ add_task(async function() {
     ok(checkbox.checked, "Checkbox is checked");
     await checkPageScrolling(container, "checkbox");
 
-    // Test listbox
-    let listbox = doc.getElementById("listbox");
-    let listitem = doc.getElementById("listitem");
-    listbox.focus();
-    EventUtils.sendString(" ");
-    ok(listitem.selected, "Listitem is selected");
-    await checkPageScrolling(container, "listbox");
-
     // Test radio
     let radiogroup = doc.getElementById("radiogroup");
     radiogroup.focus();

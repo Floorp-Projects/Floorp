@@ -28,8 +28,6 @@
 
 #include "hb-private.hh"
 
-#include "hb-mutex-private.hh"
-#include "hb-object-private.hh"
 
 #include <locale.h>
 #ifdef HAVE_XLOCALE_H
@@ -545,6 +543,7 @@ hb_script_get_horizontal_direction (hb_script_t script)
 
     /* https://github.com/harfbuzz/harfbuzz/issues/1000 */
     case HB_SCRIPT_OLD_ITALIC:
+    case HB_SCRIPT_RUNIC:
 
       return HB_DIRECTION_INVALID;
   }

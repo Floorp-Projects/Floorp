@@ -12,6 +12,7 @@
 #include "nsDocument.h"
 #include "nsIDocumentInlines.h"
 #include "mozilla/AnimationComparator.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
@@ -12454,7 +12455,8 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  nsGlobalWindowInner::Cast(openerInner)->AddFirstPartyStorageAccessGrantedFor(origin);
+  AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+                                                           openerInner);
 }
 
 bool

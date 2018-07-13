@@ -718,7 +718,7 @@ CodeGeneratorShared::createNativeToBytecodeScriptList(JSContext* cx)
     }
 
     // Allocate array for list.
-    JSScript** data = cx->zone()->pod_malloc<JSScript*>(scriptList.length());
+    JSScript** data = cx->pod_malloc<JSScript*>(scriptList.length());
     if (!data)
         return false;
 
@@ -765,7 +765,7 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext* cx, JitCode* 
     MOZ_ASSERT(numRegions > 0);
 
     // Writer is done, copy it to sized buffer.
-    uint8_t* data = cx->zone()->pod_malloc<uint8_t>(writer.length());
+    uint8_t* data = cx->pod_malloc<uint8_t>(writer.length());
     if (!data) {
         js_free(nativeToBytecodeScriptList_);
         return false;
@@ -921,7 +921,7 @@ CodeGeneratorShared::generateCompactTrackedOptimizationsMap(JSContext* cx, JitCo
     MOZ_ASSERT(attemptsTableOffset > typesTableOffset);
 
     // Copy over the table out of the writer's buffer.
-    uint8_t* data = cx->zone()->pod_malloc<uint8_t>(writer.length());
+    uint8_t* data = cx->pod_malloc<uint8_t>(writer.length());
     if (!data)
         return false;
 

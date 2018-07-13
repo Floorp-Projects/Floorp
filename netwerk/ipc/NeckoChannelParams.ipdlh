@@ -42,11 +42,11 @@ struct LoadInfoArgs
   PrincipalInfo               triggeringPrincipalInfo;
   OptionalPrincipalInfo       principalToInheritInfo;
   OptionalPrincipalInfo       sandboxedLoadingPrincipalInfo;
+  OptionalPrincipalInfo       topLevelStorageAreaPrincipalInfo;
   OptionalURIParams           resultPrincipalURI;
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
   uint32_t                    tainting;
-  nsString[]                  firstPartyStorageAccessGrantedOrigins;
   bool                        upgradeInsecureRequests;
   bool                        browserUpgradeInsecureRequests;
   bool                        browserWouldUpgradeInsecureRequests;

@@ -78,6 +78,9 @@ main (int argc, char **argv)
   case OpenTypeFontFile::Typ1Tag:
     printf ("Obsolete Apple Type1 font in SFNT container\n");
     break;
+  case OpenTypeFontFile::DFontTag:
+    printf ("DFont Mac Resource Fork\n");
+    break;
   default:
     printf ("Unknown font format\n");
     break;

@@ -1557,6 +1557,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
+    assertSameCompartment(cx, target);
     MOZ_ASSERT(!target->hasDetachedBuffer(),
                "shouldn't set elements if underlying buffer is detached");
 
@@ -1578,7 +1579,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     Scalar::Type unsafeSrcTypeCrossCompartment = unsafeSrcCrossCompartment->type();
     size_t sourceByteLen = count * TypedArrayElemSize(unsafeSrcTypeCrossCompartment);
 
-    auto copyOfSrcData = target->zone()->make_pod_array<uint8_t>(sourceByteLen);
+    auto copyOfSrcData = cx->make_pod_array<uint8_t>(sourceByteLen);
     if (!copyOfSrcData)
         return false;
 
@@ -2955,7 +2956,7 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     const unsigned char* compressed = compressedSources;
     uint32_t compressedLen = GetCompressedSize();
-    auto src = selfHostingGlobal_->zone()->make_pod_array<char>(srcLen);
+    auto src = cx->make_pod_array<char>(srcLen);
     if (!src || !DecompressString(compressed, compressedLen,
                                   reinterpret_cast<unsigned char*>(src.get()), srcLen))
     {

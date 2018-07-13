@@ -878,6 +878,19 @@ interface nsILoadInfo : nsISupports
   [noscript] readonly attribute nsIPrincipal sandboxedLoadingPrincipal;
 
   /**
+   * Return the top-level storage area principal, which is the principal of
+   * the top-level window if it's not a 3rd party context, non tracking
+   * resource.
+   */
+  [noscript] readonly attribute nsIPrincipal topLevelStorageAreaPrincipal;
+
+  /**
+   * A C++-friendly version of topLevelStorageAreaPrincipal.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(TopLevelStorageAreaPrincipal)]
+  nsIPrincipal binaryTopLevelStorageAreaPrincipal();
+
+  /**
    * Note which client (i.e. global) initiated this network request.  All
    * nsGlobalWindow and WorkerPrivate can be converted to a ClientInfo to
    * be set here.  While this is being added to support service worker
@@ -1020,15 +1033,4 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, nostdcall, notxpcom]
   void SynthesizeServiceWorkerTainting(in LoadTainting aTainting);
-
-  /**
-   * This is the origin that has access storage granted also if 3rd party and
-   * in the tracking protection list.
-   */
-  [noscript, notxpcom, nostdcall]
-  StringArrayRef getFirstPartyStorageAccessGrantedOrigins();
-  [noscript, notxpcom, nostdcall]
-  bool isFirstPartyStorageAccessGrantedFor(in nsIURI aURI);
-  [noscript, notxpcom, nostdcall]
-  void addFirstPartyStorageAccessGrantedFor(in AString aOrigin);
 };

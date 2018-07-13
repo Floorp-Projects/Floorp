@@ -29,7 +29,6 @@
 #define HB_SHAPER coretext
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-shaper-impl-private.hh"
 
 #include "hb-coretext.h"
