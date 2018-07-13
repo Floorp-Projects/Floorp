@@ -402,7 +402,7 @@ static const optionFreeDef freeOptList[] = {
     { CIPHER_NAME("TLS-VERSION-MAX"), NSS_TLS_VERSION_MAX_POLICY },
     /* constraints on DTLS Protocols */
     { CIPHER_NAME("DTLS-VERSION-MIN"), NSS_DTLS_VERSION_MIN_POLICY },
-    { CIPHER_NAME("DTLS-VERSION-MAX"), NSS_DTLS_VERSION_MIN_POLICY }
+    { CIPHER_NAME("DTLS-VERSION-MAX"), NSS_DTLS_VERSION_MAX_POLICY }
 };
 
 static const policyFlagDef policyFlagList[] = {
