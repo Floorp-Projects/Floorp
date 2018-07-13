@@ -13,8 +13,6 @@ interface nsIDOMOfflineResourceList : nsISupports
    */
   readonly attribute nsISupports mozItems;
 
-  readonly attribute unsigned short status;
-
   /**
    * Begin the application update process on the associated application cache.
    */
