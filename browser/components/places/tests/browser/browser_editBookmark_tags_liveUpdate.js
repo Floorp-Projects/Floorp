@@ -9,7 +9,7 @@ function checkTagsSelector(aAvailableTags, aCheckedTags) {
       "Found expected number of tags in the tags selector");
 
   Array.prototype.forEach.call(children, function(aChild) {
-    let tag = aChild.getAttribute("label");
+    let tag = aChild.querySelector("label").getAttribute("value");
     ok(true, "Found tag '" + tag + "' in the selector");
     ok(aAvailableTags.includes(tag), "Found expected tag");
     let checked = aChild.getAttribute("checked") == "true";

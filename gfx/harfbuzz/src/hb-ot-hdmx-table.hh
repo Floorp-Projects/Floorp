@@ -199,7 +199,7 @@ struct hdmx
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && version == 0 &&
-		  !_hb_unsigned_int_mul_overflows (num_records, size_device_record) &&
+		  !hb_unsigned_mul_overflows (num_records, size_device_record) &&
 		  size_device_record >= DeviceRecord::min_size &&
 		  c->check_range (this, get_size()));
   }

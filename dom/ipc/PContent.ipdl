@@ -1160,11 +1160,11 @@ parent:
     async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
 
     /*
-     * A 3rd party context (aPrincipal) has received the permission granted to
-     * have access to aGrantedOrigin when loaded by aParentOrigin.
+     * A 3rd party tracking origin (aTrackingOrigin) has received the permission
+     * granted to have access to aGrantedOrigin when loaded by aParentPrincipal.
      */
-    async FirstPartyStorageAccessGrantedForOrigin(Principal aPrincipal,
-                                                  nsCString aParentOrigin,
+    async FirstPartyStorageAccessGrantedForOrigin(Principal aParentPrincipal,
+                                                  nsCString aTrackingOrigin,
                                                   nsCString aGrantedOrigin);
 
 both:

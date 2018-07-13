@@ -277,13 +277,13 @@ endif
 check: $(DEF_FILES) # For check-symbols.sh
 CLEANFILES += $(DEF_FILES)
 harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
-	$(AM_V_GEN) headers="$^" $(srcdir)/gen-def.py "$@"
+	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 harfbuzz-subset.def: $(HB_SUBSET_headers)
-	$(AM_V_GEN) headers="$^" $(srcdir)/gen-def.py "$@"
+	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 harfbuzz-icu.def: $(HB_ICU_headers)
-	$(AM_V_GEN) headers="$^" $(srcdir)/gen-def.py "$@"
+	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 harfbuzz-gobject.def: $(HB_GOBJECT_headers)
-	$(AM_V_GEN) headers="$^" $(srcdir)/gen-def.py "$@"
+	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 
 
 GENERATORS = \

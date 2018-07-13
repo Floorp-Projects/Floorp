@@ -379,7 +379,7 @@ ElementEditor.prototype = {
 
     const val = this.doc.createElement("span");
     val.classList.add("attr-value");
-    val.classList.add("theme-fg-color6");
+    val.classList.add("theme-fg-color4");
     inner.appendChild(val);
 
     inner.appendChild(this.doc.createTextNode('"'));

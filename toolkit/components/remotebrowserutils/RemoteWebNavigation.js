@@ -80,9 +80,10 @@ RemoteWebNavigation.prototype = {
       try {
         let uri = makeURI(aURI);
         let principal = aTriggeringPrincipal;
-        // We usually have a aTriggeringPrincipal assigned, but in case we don't
-        // have one, create it with OA inferred from the current context.
-        if (!principal) {
+        // We usually have a aTriggeringPrincipal assigned, but in case we
+        // don't have one or if it's a SystemPrincipal, let's create it with OA
+        // inferred from the current context.
+        if (!principal || principal.isSystemPrincipal) {
           let attrs = {
             userContextId: this._browser.getAttribute("usercontextid") || 0,
             privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(this._browser) ? 1 : 0
