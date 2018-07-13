@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.helpers;
 
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
@@ -13,6 +14,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.text.format.DateUtils;
+import android.util.DisplayMetrics;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.AppConstants;
@@ -149,14 +151,23 @@ public final class TestHelper {
             .resourceId(getAppName() + ":id/add_to_homescreen")
             .enabled(true));
     public static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .className("android.widget.Button")
-            .instance(0)
+            .resourceId(getAppName() + ":id/addtohomescreen_dialog_cancel")
             .enabled(true));
     public static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/addtohomescreen_dialog_add")
             .enabled(true));
+
+    private static String getAddAutoButtonText() {
+        if (!AppConstants.isGeckoBuild()) {
+            return "OK"; // Focus (one exception: also on klarGeckoArmDebug w/ 6p, API 26 only)
+        } else {
+            return "ADD AUTOMATICALLY"; // Klar
+        }
+    }
+    private static String addAutoButtonText = getAddAutoButtonText();
+
     public static UiObject AddautoBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .text("ADD AUTOMATICALLY")
+            .text(addAutoButtonText)
             .enabled(true));
     public static UiObject shortcutTitle = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/edit_title")
@@ -226,6 +237,25 @@ public final class TestHelper {
             }
             assertTrue(notificationOpenItem.exists());
         }
+    }
+
+    public static final int X_OFFSET = 20;
+    public static final int Y_OFFSET = 500;
+    public static final int STEPS = 10;
+
+    private static DisplayMetrics devicePixels() {
+        DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+        return metrics;
+    }
+
+    public static void swipeScreenLeft() {
+        DisplayMetrics metrics = devicePixels();
+        mDevice.swipe(metrics.widthPixels - X_OFFSET, Y_OFFSET, 0, Y_OFFSET, STEPS);
+    }
+
+    public static void swipeScreenRight() {
+        DisplayMetrics metrics = devicePixels();
+        mDevice.swipe(X_OFFSET, Y_OFFSET, metrics.widthPixels, Y_OFFSET, STEPS);
     }
 
     public static void waitForIdle() {

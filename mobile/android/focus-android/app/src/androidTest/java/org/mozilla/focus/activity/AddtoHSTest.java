@@ -37,6 +37,8 @@ import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
 public class AddtoHSTest {
     private static final String TEST_PATH = "/";
     private MockWebServer webServer;
+    private int webServerPort;
+    private String webServerBookmarkName;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule  = new ActivityTestRule<MainActivity>(MainActivity.class) {
@@ -53,14 +55,16 @@ public class AddtoHSTest {
                     .apply();
 
             webServer = new MockWebServer();
+            // note: requesting getPort() will automatically start the mock server,
+            //       so if you use the 2 lines, do not try to start server or it will choke.
+            webServerPort = webServer.getPort();
+            webServerBookmarkName = "localhost_" + Integer.toString(webServerPort);
 
             try {
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("plain_test.html")));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("plain_test.html")));
-
-                webServer.start();
             } catch (IOException e) {
                 throw new AssertionError("Could not start web server", e);
             }
@@ -112,7 +116,7 @@ public class AddtoHSTest {
 
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
-                .description("For Testing Purpose")
+                .description(webServerBookmarkName)
                 .enabled(true));
 
         // Open website, and click 'Add to homescreen'
@@ -138,7 +142,7 @@ public class AddtoHSTest {
 
         //Edit shortcut text
         TestHelper.shortcutTitle.click();
-        TestHelper.shortcutTitle.setText("For Testing Purpose");
+        TestHelper.shortcutTitle.setText(webServerBookmarkName);
         TestHelper.AddtoHSOKBtn.click();
 
         // For Android O, we need additional steps
@@ -163,7 +167,7 @@ public class AddtoHSTest {
     public void NonameTest() throws UiObjectNotFoundException {
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
-                .description("localhost")
+                .description(webServerBookmarkName)
                 .enabled(true));
 
         // Open website, and click 'Add to homescreen'
@@ -180,7 +184,7 @@ public class AddtoHSTest {
 
         openAddtoHSDialog();
 
-        // Add to Home screen dialog is now shown
+        // "Add to Home screen" dialog is now shown
         TestHelper.shortcutTitle.waitForExists(waitingTime);
 
         Assert.assertTrue(TestHelper.shortcutTitle.isEnabled());
@@ -188,9 +192,9 @@ public class AddtoHSTest {
         Assert.assertTrue(TestHelper.AddtoHSOKBtn.isEnabled());
         Assert.assertTrue(TestHelper.AddtoHSCancelBtn.isEnabled());
 
-        //remove shortcut text
+        //replace shortcut text
         TestHelper.shortcutTitle.click();
-        TestHelper.shortcutTitle.setText("");
+        TestHelper.shortcutTitle.setText(webServerBookmarkName);
         TestHelper.AddtoHSOKBtn.click();
 
         // For Android O, we need additional steps
@@ -201,6 +205,9 @@ public class AddtoHSTest {
             welcomeBtn.click();
         }
         //App is sent to background, in launcher now
+        //Start from home and then swipe, to ensure we land where we want to search for shortcut
+        TestHelper.mDevice.pressHome();
+        TestHelper.swipeScreenLeft();
         shortcutIcon.waitForExists(waitingTime);
         Assert.assertTrue(shortcutIcon.isEnabled());
         shortcutIcon.click();
@@ -231,7 +238,7 @@ public class AddtoHSTest {
 
         openAddtoHSDialog();
 
-        // Add to Home screen dialog is now shown
+        // "Add to Home screen" dialog is now shown
         TestHelper.shortcutTitle.waitForExists(waitingTime);
         TestHelper.AddtoHSOKBtn.click();
 
@@ -243,7 +250,11 @@ public class AddtoHSTest {
         if (welcomeBtn.exists()) {
             welcomeBtn.click();
         }
+
         //App is sent to background, in launcher now
+        //Start from home and then swipe, to ensure we land where we want to search for shortcut
+        TestHelper.mDevice.pressHome();
+        TestHelper.swipeScreenLeft();
         shortcutIcon.waitForExists(waitingTime);
         Assert.assertTrue(shortcutIcon.isEnabled());
         shortcutIcon.click();
