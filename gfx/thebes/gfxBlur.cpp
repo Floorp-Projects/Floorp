@@ -955,13 +955,6 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                const gfxRect& aDirtyRect,
                                const gfxRect& aSkipRect)
 {
-  printf("blur rect %f %f %f %f  radii %f/%f %f/%f %f/%f %f/%f\n",
-    (float)aRect.x, (float)aRect.y, (float)aRect.width, (float)aRect.height,
-    (float)aCornerRadii->radii[0].width, (float)aCornerRadii->radii[0].height,
-    (float)aCornerRadii->radii[1].width, (float)aCornerRadii->radii[1].height,
-    (float)aCornerRadii->radii[2].width, (float)aCornerRadii->radii[2].height,
-    (float)aCornerRadii->radii[3].width, (float)aCornerRadii->radii[3].height
-  );
   const double maxSize = (double)gfxPlatform::MaxTextureSize();
   const double maxPos = (double)std::numeric_limits<std::int16_t>::max();
   if (aRect.width > maxSize || aRect.height > maxSize ||
