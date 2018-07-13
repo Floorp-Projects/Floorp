@@ -265,25 +265,31 @@ nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, ErrorResult& aRv)
   return types & nsIApplicationCache::ITEM_DYNAMIC;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetMozLength(uint32_t *aLength)
+uint32_t
+nsDOMOfflineResourceList::GetMozLength(ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return 0;
+  }
 
   if (!mManifestURI) {
-    *aLength = 0;
-    return NS_OK;
+    return 0;
   }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
 
   rv = CacheKeys();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
 
-  *aLength = mCachedKeysCount;
-  return NS_OK;
+  return mCachedKeysCount;
 }
 
 NS_IMETHODIMP
@@ -345,9 +351,11 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  uint32_t length;
-  rv = GetMozLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult res;
+  uint32_t length = GetMozLength(res);
+  if (NS_WARN_IF(res.Failed())) {
+    return res.StealNSResult();
+  }
   uint32_t maxEntries =
     Preferences::GetUint(kMaxEntriesPref, DEFAULT_MAX_ENTRIES);
 
