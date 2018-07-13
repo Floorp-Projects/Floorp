@@ -439,19 +439,19 @@ enum ReactionRecordSlots {
 // ES2016, 25.4.1.2.
 class PromiseReactionRecord : public NativeObject
 {
-  static constexpr size_t REACTION_FLAG_RESOLVED = 0x1;
-  static constexpr size_t REACTION_FLAG_FULFILLED = 0x2;
-  static constexpr size_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
-  static constexpr size_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
-  static constexpr size_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
-  static constexpr size_t REACTION_FLAG_DEBUGGER_DUMMY = 0x20;
+    static constexpr uint32_t REACTION_FLAG_RESOLVED = 0x1;
+    static constexpr uint32_t REACTION_FLAG_FULFILLED = 0x2;
+    static constexpr uint32_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
+    static constexpr uint32_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
+    static constexpr uint32_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
+    static constexpr uint32_t REACTION_FLAG_DEBUGGER_DUMMY = 0x20;
 
-  void setFlagOnInitialState(size_t flag) {
-      int32_t flags = this->flags();
-      MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
-      flags |= flag;
-      setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
-  }
+    void setFlagOnInitialState(uint32_t flag) {
+        int32_t flags = this->flags();
+        MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
+        flags |= flag;
+        setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+    }
 
   public:
     static const Class class_;
@@ -1211,12 +1211,12 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
     }
 
     HandleNativeObject reactionsList = reactions.as<NativeObject>();
-    size_t reactionsCount = reactionsList->getDenseInitializedLength();
+    uint32_t reactionsCount = reactionsList->getDenseInitializedLength();
     MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
 
     RootedObject reaction(cx);
     RootedValue reactionVal(cx);
-    for (size_t i = 0; i < reactionsCount; i++) {
+    for (uint32_t i = 0; i < reactionsCount; i++) {
         reactionVal = reactionsList->getDenseElement(i);
         MOZ_RELEASE_ASSERT(reactionVal.isObject());
         reaction = &reactionVal.toObject();
@@ -1263,9 +1263,9 @@ DefaultResolvingPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*>
     }
 
     // Steps 7-9.
-    size_t hookSlot = resolutionMode == RejectMode
-                      ? ReactionRecordSlot_Reject
-                      : ReactionRecordSlot_Resolve;
+    uint32_t hookSlot = resolutionMode == RejectMode
+                        ? ReactionRecordSlot_Reject
+                        : ReactionRecordSlot_Resolve;
     RootedObject callee(cx, reaction->getFixedSlot(hookSlot).toObjectOrNull());
     RootedObject promiseObj(cx, reaction->promise());
     if (!RunResolutionFunction(cx, callee, handlerResult, resolutionMode, promiseObj))
@@ -1450,9 +1450,9 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 7-9.
-    size_t hookSlot = resolutionMode == RejectMode
-                      ? ReactionRecordSlot_Reject
-                      : ReactionRecordSlot_Resolve;
+    uint32_t hookSlot = resolutionMode == RejectMode
+                        ? ReactionRecordSlot_Reject
+                        : ReactionRecordSlot_Resolve;
     RootedObject callee(cx, reaction->getFixedSlot(hookSlot).toObjectOrNull());
     RootedObject promiseObj(cx, reaction->promise());
     if (!RunResolutionFunction(cx, callee, handlerResult, resolutionMode, promiseObj))
@@ -3883,9 +3883,9 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     uint32_t len = reactions->getDenseInitializedLength();
     MOZ_ASSERT(len >= 2);
 
-    size_t valuesIndex = 0;
+    uint32_t valuesIndex = 0;
     Rooted<PromiseReactionRecord*> reaction(cx);
-    for (size_t i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         reaction = &reactions->getDenseElement(i).toObject().as<PromiseReactionRecord>();
 
         // Not all reactions have a Promise on them.
