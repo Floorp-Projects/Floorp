@@ -26,11 +26,6 @@ interface XULDocument : Document {
 
   readonly attribute XULCommandDispatcher? commandDispatcher;
 
-  [Throws]
-  readonly attribute long width;
-  [Throws]
-  readonly attribute long height;
-
   NodeList getElementsByAttribute(DOMString name,
                                   [TreatNullAs=EmptyString] DOMString value);
   [Throws]

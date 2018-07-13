@@ -103,7 +103,7 @@
                 <image class="fxaProfileImage"/>
               </vbox>
               <vbox flex="1" pack="center">
-                <hbox>
+                <hbox align="center">
                   <image class="fxaLoginRejectedWarning"/>
                   <description flex="1"
                     class="l10nArgsEmailAddress"
@@ -123,7 +123,7 @@
                 <image class="fxaProfileImage"/>
               </vbox>
               <vbox flex="1" pack="center">
-                <hbox>
+                <hbox align="center">
                   <image class="fxaLoginRejectedWarning"/>
                   <description flex="1"
                     class="l10nArgsEmailAddress"

@@ -6,4 +6,5 @@ DIST_INSTALL = False
 
 SimplePrograms(['Injector'])
 
-TEST_HARNESS_FILES.gtest += ['!Injector.exe']
+if CONFIG['COMPILE_ENVIRONMENT']:
+   TEST_HARNESS_FILES.gtest += ['!Injector.exe']

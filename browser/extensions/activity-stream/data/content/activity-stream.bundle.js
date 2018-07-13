@@ -1543,7 +1543,7 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
     this.sendNewTabRehydrated(App);
     addLocaleDataForReactIntl(locale);
     if (this.props.isFirstrun) {
-      global.document.body.classList.add("welcome");
+      global.document.body.classList.add("welcome", "hide-main");
     }
   }
 
@@ -1568,9 +1568,9 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
 
   updateTheme() {
     const bodyClassName = ["activity-stream",
-    // If we skipped the about:welcome overlay and removed the CSS class
-    // we don't want to add it back to the Activity Stream view
-    document.body.classList.contains("welcome") ? "welcome" : ""].filter(v => v).join(" ");
+    // If we skipped the about:welcome overlay and removed the CSS classes
+    // we don't want to add them back to the Activity Stream view
+    document.body.classList.contains("welcome") ? "welcome" : "", document.body.classList.contains("hide-main") ? "hide-main" : ""].filter(v => v).join(" ");
     global.document.body.className = bodyClassName;
   }
 
@@ -4644,6 +4644,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
 
   removeOverlay() {
     window.removeEventListener("visibilitychange", this.removeOverlay);
+    document.body.classList.remove("hide-main");
     this.setState({ show: false });
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.
@@ -4696,7 +4697,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     );
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
       "div",
-      { className: `overlay-wrapper ${this.state.show ? "show " : ""}` },
+      { className: `overlay-wrapper ${this.state.show ? "show" : ""}` },
       react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", { className: "background" }),
       react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
         "div",
@@ -7691,9 +7692,7 @@ const dedupe = new Dedupe(site => site && site.url);
 const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
-    initialized: false,
-    // The version of the system-addon
-    version: null
+    initialized: false
   },
   Snippets: { initialized: false },
   TopSites: {

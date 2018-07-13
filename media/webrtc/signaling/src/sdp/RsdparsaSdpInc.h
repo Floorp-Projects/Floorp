@@ -230,10 +230,9 @@ struct RustSdpAttributeRemoteCandidate {
   uint32_t port;
 };
 
-// TODO: Add field indicating whether direction was specified
-// See Bug 1438536.
 struct RustSdpAttributeExtmap {
   uint16_t id;
+  bool direction_specified;
   RustDirection direction;
   StringView url;
   StringView extensionAttributes;

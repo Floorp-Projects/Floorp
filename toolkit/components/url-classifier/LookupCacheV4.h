@@ -19,7 +19,7 @@ class LookupCacheV4 final : public LookupCache
 public:
   explicit LookupCacheV4(const nsACString& aTableName,
                          const nsACString& aProvider,
-                         nsIFile* aStoreFile)
+                         nsCOMPtr<nsIFile>& aStoreFile)
     : LookupCache(aTableName, aProvider, aStoreFile) {}
 
   virtual nsresult Init() override;
@@ -50,8 +50,8 @@ public:
 
 protected:
   virtual nsresult ClearPrefixes() override;
-  virtual nsresult StoreToFile(nsIFile* aFile) override;
-  virtual nsresult LoadFromFile(nsIFile* aFile) override;
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual size_t SizeOfPrefixSet() const override;
 
 private:

@@ -166,7 +166,8 @@ const TEST_GLOBAL = {
       createNullPrincipal() {},
       getSystemPrincipal() {}
     },
-    wm: {getMostRecentWindow: () => window}
+    wm: {getMostRecentWindow: () => window},
+    appinfo: {appBuildID: "20180710100040"}
   },
   XPCOMUtils: {
     defineLazyGetter(_1, _2, f) { f(); },

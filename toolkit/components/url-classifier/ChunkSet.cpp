@@ -152,7 +152,7 @@ ChunkSet::Clear()
 }
 
 nsresult
-ChunkSet::Write(nsIOutputStream* aOut)
+ChunkSet::Write(nsIOutputStream* aOut) const
 {
   nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
 

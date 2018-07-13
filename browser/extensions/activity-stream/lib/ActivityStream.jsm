@@ -278,15 +278,9 @@ for (const config of FEEDS_DATA) {
 this.ActivityStream = class ActivityStream {
   /**
    * constructor - Initializes an instance of ActivityStream
-   *
-   * @param  {object} options Options for the ActivityStream instance
-   * @param  {string} options.id Add-on ID. e.g. "activity-stream@mozilla.org".
-   * @param  {string} options.version Version of the add-on. e.g. "0.1.0"
-   * @param  {string} options.newTabURL URL of New Tab page on which A.S. is displayed. e.g. "about:newtab"
    */
-  constructor(options = {}) {
+  constructor() {
     this.initialized = false;
-    this.options = options;
     this.store = new Store();
     this.feeds = FEEDS_CONFIG;
     this._defaultPrefs = new DefaultPrefs(PREFS_CONFIG);
@@ -300,7 +294,7 @@ this.ActivityStream = class ActivityStream {
       // Hook up the store and let all feeds and pages initialize
       this.store.init(this.feeds, ac.BroadcastToContent({
         type: at.INIT,
-        data: {version: this.options.version}
+        data: {}
       }), {type: at.UNINIT});
 
       this.initialized = true;

@@ -181,16 +181,16 @@ LookupCacheV4::ClearPrefixes()
 }
 
 nsresult
-LookupCacheV4::StoreToFile(nsIFile* aFile)
+LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile)
 {
   return mVLPrefixSet->StoreToFile(aFile);
 }
 
 nsresult
-LookupCacheV4::LoadFromFile(nsIFile* aFile)
+LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
 {
   nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -198,14 +198,14 @@ LookupCacheV4::LoadFromFile(nsIFile* aFile)
   rv = LoadMetadata(state, checksum);
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_METADATA_CORRUPT,
                         rv == NS_ERROR_FILE_CORRUPTED);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = VerifyChecksum(checksum);
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_LOAD_CORRUPT,
                         rv == NS_ERROR_FILE_CORRUPTED);
-
+  Unused << NS_WARN_IF(NS_FAILED(rv));
   return rv;
 }
 

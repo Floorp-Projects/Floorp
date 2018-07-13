@@ -1162,11 +1162,6 @@ BookmarksStore.prototype = {
     this._itemsToDelete.clear();
   },
 
-  async GUIDForId(id) {
-    let guid = await PlacesUtils.promiseItemGuid(id);
-    return PlacesSyncUtils.bookmarks.guidToRecordId(guid);
-  },
-
   async idForGUID(guid) {
     // guid might be a String object rather than a string.
     guid = PlacesSyncUtils.bookmarks.recordIdToGuid(guid.toString());

@@ -11,7 +11,12 @@
  *
  */
 
-[scriptable, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
+
+%{C++
+class nsCommandParams;
+%}
+
+[scriptable, builtinclass, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
 interface nsICommandParams : nsISupports
 {
   /*
@@ -48,7 +53,7 @@ interface nsICommandParams : nsISupports
   long        getLongValue(in string name);
   double      getDoubleValue(in string name);
   AString     getStringValue(in string name);
-  string      getCStringValue(in string name);
+  ACString    getCStringValue(in string name);
   nsISupports getISupportsValue(in string name);
 
   /*
@@ -66,7 +71,7 @@ interface nsICommandParams : nsISupports
   void        setLongValue(in string name, in long value);
   void        setDoubleValue(in string name, in double value);
   void        setStringValue(in string name, in AString value);
-  void        setCStringValue(in string name, in string value);
+  void        setCStringValue(in string name, in ACString value);
   void        setISupportsValue(in string name, in nsISupports value);
 
   /*
@@ -75,6 +80,15 @@ interface nsICommandParams : nsISupports
    * Remove the specified parameter from the list.
    */
   void        removeValue(in string name);
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsCommandParams.h.  Consumers need to #include that header.
+   */
+  inline nsCommandParams* AsCommandParams();
+  inline const nsCommandParams* AsCommandParams() const;
+%}
 };
 
 // {f7fa4581-238e-11d5-a73c-ab64fb68f2bc}

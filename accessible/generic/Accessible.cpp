@@ -1355,10 +1355,11 @@ void
 Accessible::Value(nsString& aValue) const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry)
-    return;
 
-  if (roleMapEntry->valueRule != eNoValue) {
+  if ((roleMapEntry && roleMapEntry->valueRule != eNoValue) ||
+      // Bug 1475376: aria-valuetext should also be supported for implicit ARIA
+      // roles; e.g. <input type="range">.
+      HasNumericValue()) {
     // aria-valuenow is a number, and aria-valuetext is the optional text
     // equivalent. For the string value, we will try the optional text
     // equivalent first.
@@ -1371,6 +1372,10 @@ Accessible::Value(nsString& aValue) const
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow,
                                      aValue);
     }
+    return;
+  }
+
+  if (!roleMapEntry) {
     return;
   }
 

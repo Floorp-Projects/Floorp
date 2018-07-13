@@ -101,7 +101,7 @@ describe("PlacesFeed", () => {
       const data = {url: "pear.com", title: "A pear"};
       const _target = {browser: {ownerGlobal() {}}};
       feed.onAction({type: at.BOOKMARK_URL, data, _target});
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.addBookmark, data, _target.browser);
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.addBookmark, data, _target.browser.ownerGlobal);
     });
     it("should delete a bookmark on DELETE_BOOKMARK_BY_ID", () => {
       feed.onAction({type: at.DELETE_BOOKMARK_BY_ID, data: "g123kd"});

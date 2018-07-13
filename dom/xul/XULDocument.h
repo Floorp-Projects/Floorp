@@ -153,8 +153,6 @@ public:
     {
         return mCommandDispatcher;
     }
-    int32_t GetWidth(ErrorResult& aRv);
-    int32_t GetHeight(ErrorResult& aRv);
     already_AddRefed<nsINodeList>
       GetElementsByAttribute(const nsAString& aAttribute,
                              const nsAString& aValue);
@@ -180,8 +178,6 @@ protected:
 
     nsresult Init(void) override;
     nsresult StartLayout(void);
-
-    nsresult GetViewportSize(int32_t* aWidth, int32_t* aHeight);
 
     nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,

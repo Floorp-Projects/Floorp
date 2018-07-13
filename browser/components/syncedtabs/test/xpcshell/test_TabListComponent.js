@@ -130,8 +130,8 @@ add_task(async function testActions() {
 
   sinon.spy(windowMock.top.PlacesCommandHook, "bookmarkLink");
   component.onBookmarkTab("uri", "title");
-  Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "uri");
-  Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][2], "title");
+  Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][0], "uri");
+  Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "title");
 
   sinon.spy(windowMock, "openTrustedLinkIn");
   component.onOpenTab("uri", "where", "params");

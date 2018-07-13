@@ -56,16 +56,6 @@ describe("ActivityStream", () => {
     it("should call .store.init", () => {
       assert.calledOnce(as.store.init);
     });
-    it("should pass to Store an INIT event with the right version", () => {
-      as = new ActivityStream({version: "1.2.3"});
-      sandbox.stub(as.store, "init");
-      sandbox.stub(as._defaultPrefs, "init");
-
-      as.init();
-
-      const [, action] = as.store.init.firstCall.args;
-      assert.propertyVal(action.data, "version", "1.2.3");
-    });
     it("should pass to Store an INIT event for content", () => {
       as.init();
 

@@ -14,7 +14,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 
 ```js
 {
-  "addon_version": "1.0.0",
+  "addon_version": "20180710100040",
   "client_id": "374dc4d8-0cb2-4ac5-a3cf-c5a9bc3c602e",
   "locale": "en-US",
   "version": "62.0a1",
@@ -36,7 +36,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 {
   // These fields are sent from the client
   "action": "activity_stream_session",
-  "addon_version": "1.0.0",
+  "addon_version": "20180710100040",
   "client_id": "374dc4d8-0cb2-4ac5-a3cf-c5a9bc3c602e",
   "locale": "en-US",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
@@ -60,7 +60,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 {
   "action": "activity_stream_user_event",
   "action_position": "3",
-  "addon_version": "1.0.0",
+  "addon_version": "20180710100040",
   "client_id": "374dc4d8-0cb2-4ac5-a3cf-c5a9bc3c602e",
   "event": "click or scroll or search or delete",
   "locale": "en-US",
@@ -84,7 +84,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 ```js
 {
   "action": "activity_stream_performance_event",
-  "addon_version": "1.0.0",
+  "addon_version": "20180710100040",
   "client_id": "374dc4d8-0cb2-4ac5-a3cf-c5a9bc3c602e",
   "event": "previewCacheHit",
   "event_id": "45f1912165ca4dfdb5c1c2337dbdc58f",
@@ -108,7 +108,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 ```js
 {
   "action": "activity_stream_undesired_event",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "event": "MISSING_IMAGE",
   "locale": "en-US",
@@ -132,7 +132,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "client_id": "n/a",
   "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"]
@@ -147,7 +147,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "client_id": "n/a",
   "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "pocket",
   "page": "unknown",
@@ -169,7 +169,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "action": ["snippets_user_event" | "onboarding_user_event"],
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "source": "pocket",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
@@ -181,7 +181,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 |-----|-------------|:-----:|
 | `action_position` | [Optional] The index of the element in the `source` that was clicked. | :one:
 | `action` | [Required] Either `activity_stream_event`, `activity_stream_session`, or `activity_stream_performance`. | :one:
-| `addon_version` | [Required] The version of the Activity Stream addon. | :one:
+| `addon_version` | [Required] Firefox build ID, i.e. `Services.appinfo.appBuildID`. | :one:
 | `client_id` | [Required] An identifier for this client. | :one:
 | `card_type` | [Optional] ("bookmark", "pocket", "trending", "pinned") | :one:
 | `date` | [Auto populated by Onyx] The date in YYYY-MM-DD format. | :three:

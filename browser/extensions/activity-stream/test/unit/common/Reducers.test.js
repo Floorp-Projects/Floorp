@@ -13,13 +13,6 @@ describe("Reducers", () => {
 
       assert.propertyVal(nextState, "initialized", true);
     });
-    it("should set initialized and version on INIT", () => {
-      const action = {type: "INIT", data: {version: "1.2.3"}};
-
-      const nextState = App(undefined, action);
-
-      assert.propertyVal(nextState, "version", "1.2.3");
-    });
   });
   describe("TopSites", () => {
     it("should return the initial state", () => {

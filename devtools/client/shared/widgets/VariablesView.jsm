@@ -791,7 +791,7 @@ VariablesView.prototype = {
       aItem.collapse();
     }
     aItem._target.focus();
-    this.boxObject.ensureElementIsVisible(aItem._arrow);
+    this._list.ensureElementIsVisible(aItem._arrow);
     return true;
   },
 
@@ -3975,7 +3975,7 @@ Editable.prototype = {
 
     // Replace the specified label with a textbox input element.
     label.parentNode.replaceChild(input, label);
-    this._variable._variablesView.boxObject.ensureElementIsVisible(input);
+    this._variable._variablesView._list.ensureElementIsVisible(input);
     input.select();
 
     // When the value is a string (displayed as "value"), then we probably want
@@ -4009,8 +4009,8 @@ Editable.prototype = {
     this._input.parentNode.replaceChild(this.label, this._input);
     this._input = null;
 
-    const { boxObject } = this._variable._variablesView;
-    boxObject.scrollBy(-this._variable._target, 0);
+    const scrollbox = this._variable._variablesView._list;
+    scrollbox.scrollBy(-this._variable._target, 0);
     this._variable.locked = false;
     this._variable.twisty = this._prevExpandable;
     this._variable.expanded = this._prevExpanded;

@@ -1390,14 +1390,13 @@ MediaPipelineTransmit::SetDescription()
 
   if (!mDomTrack) {
     description += "no track]";
-    return;
+  } else {
+    nsString nsTrackId;
+    mDomTrack->GetId(nsTrackId);
+    std::string trackId(NS_ConvertUTF16toUTF8(nsTrackId).get());
+    description += trackId;
+    description += "]";
   }
-
-  nsString nsTrackId;
-  mDomTrack->GetId(nsTrackId);
-  std::string trackId(NS_ConvertUTF16toUTF8(nsTrackId).get());
-  description += trackId;
-  description += "]";
 
   RUN_ON_THREAD(
     mStsThread,

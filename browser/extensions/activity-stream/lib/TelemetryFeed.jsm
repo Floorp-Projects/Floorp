@@ -288,9 +288,8 @@ this.TelemetryFeed = class TelemetryFeed {
    * @return {obj}    A telemetry ping
    */
   createPing(portID) {
-    const appInfo = this.store.getState().App;
     const ping = {
-      addon_version: appInfo.version,
+      addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.getAppLocaleAsLangTag(),
       user_prefs: this.userPreferences
     };
@@ -366,10 +365,9 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   createASRouterEvent(action) {
-    const appInfo = this.store.getState().App;
     const ping = {
       client_id: "n/a",
-      addon_version: appInfo.version,
+      addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.getAppLocaleAsLangTag(),
       impression_id: this._impressionId
     };
