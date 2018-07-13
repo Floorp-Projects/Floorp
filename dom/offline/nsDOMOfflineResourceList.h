@@ -70,10 +70,8 @@ public:
 
   uint16_t GetStatus(ErrorResult& aRv);
 
-  void Update(ErrorResult& aRv)
-  {
-    aRv = Update();
-  }
+  void Update(ErrorResult& aRv);
+
   void SwapCache(ErrorResult& aRv)
   {
     aRv = SwapCache();
