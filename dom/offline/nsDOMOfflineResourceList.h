@@ -68,12 +68,8 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  uint16_t GetStatus(ErrorResult& aRv)
-  {
-    uint16_t status = 0;
-    aRv = GetStatus(&status);
-    return status;
-  }
+  uint16_t GetStatus(ErrorResult& aRv);
+
   void Update(ErrorResult& aRv)
   {
     aRv = Update();
