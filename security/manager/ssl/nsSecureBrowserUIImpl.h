@@ -10,14 +10,13 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "nsCOMPtr.h"
 #include "nsINetUtil.h"
-#include "nsISSLStatusProvider.h"
 #include "nsISecureBrowserUI.h"
 #include "nsISecurityEventSink.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
-class nsISSLStatus;
+class nsITransportSecurityInfo;
 class nsIChannel;
 
 #define NS_SECURE_BROWSER_UI_CID \
@@ -26,8 +25,7 @@ class nsIChannel;
 
 class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
                               public nsIWebProgressListener,
-                              public nsSupportsWeakReference,
-                              public nsISSLStatusProvider
+                              public nsSupportsWeakReference
 {
   friend class mozilla::ReentrancyGuard;
 
@@ -37,7 +35,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSISECUREBROWSERUI
-  NS_DECL_NSISSLSTATUSPROVIDER
 
 protected:
   virtual ~nsSecureBrowserUIImpl() {};
@@ -87,7 +84,7 @@ protected:
   void ObtainEventSink(nsIChannel *channel,
                        nsCOMPtr<nsISecurityEventSink> &sink);
 
-  nsCOMPtr<nsISSLStatus> mSSLStatus;
+  nsCOMPtr<nsITransportSecurityInfo> mSecInfo;
   nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
 
   PLDHashTable mTransferringRequests;
