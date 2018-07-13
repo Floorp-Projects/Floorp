@@ -226,6 +226,7 @@ DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc)
   return;
 }
 
+#if defined(NIGHTLY_BUILD)
 TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA)
 {
   DoTest_CreateRemoteThread_LoadLibrary([](const nsString& dllPath,
@@ -275,3 +276,4 @@ TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExA)
     aThreadParam = (uintptr_t)dllPathC.get();
   });
 }
+#endif //  defined(NIGHTLY_BUILD)
