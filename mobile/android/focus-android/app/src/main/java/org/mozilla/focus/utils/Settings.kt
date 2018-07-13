@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
-import mozilla.components.browser.search.SearchEngine
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
