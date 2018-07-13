@@ -14,14 +14,6 @@ interface nsIDOMOfflineResourceList : nsISupports
   readonly attribute nsISupports mozItems;
 
   /**
-   * Check that an entry exists in the list of dynamically-managed entries.
-   *
-   * @param uri
-   *        The resource to check.
-   */
-  boolean mozHasItem(in DOMString uri);
-
-  /**
    * Get the number of dynamically-managed entries.
    * @status DEPRECATED
    *         Clients should use the "items" attribute.
