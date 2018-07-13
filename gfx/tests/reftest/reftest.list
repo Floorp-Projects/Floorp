@@ -13,6 +13,5 @@ fuzzy(100,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted 
 == 1435143.html 1435143-ref.html
 == 1444904.html 1444904-ref.html
 == 1451168.html 1451168-ref.html
-== 1474722.html 1474722-ref.html
 fuzzy(5-32,21908-26354) fuzzy-if(webrender,0-1,0-3) == 1463802.html 1463802-ref.html
 == 1461313.html 1461313-ref.html
