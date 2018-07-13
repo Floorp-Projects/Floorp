@@ -132,7 +132,6 @@ public class GeckoThread extends Thread {
 
     /* package */ static final String EXTRA_ARGS = "args";
     private static final String EXTRA_PREFS_FD = "prefsFd";
-    private static final String EXTRA_PREF_MAP_FD = "prefMapFd";
     private static final String EXTRA_IPC_FD = "ipcFd";
     private static final String EXTRA_CRASH_FD = "crashFd";
     private static final String EXTRA_CRASH_ANNOTATION_FD = "crashAnnotationFd";
@@ -154,8 +153,7 @@ public class GeckoThread extends Thread {
 
     private synchronized boolean init(final GeckoProfile profile, final String[] args,
                                       final Bundle extras, final int flags,
-                                      final int prefsFd, final int prefMapFd,
-                                      final int ipcFd,
+                                      final int prefsFd, final int ipcFd,
                                       final int crashFd,
                                       final int crashAnnotationFd) {
         ThreadUtils.assertOnUiThread();
@@ -171,7 +169,6 @@ public class GeckoThread extends Thread {
 
         mExtras = (extras != null) ? new Bundle(extras) : new Bundle(3);
         mExtras.putInt(EXTRA_PREFS_FD, prefsFd);
-        mExtras.putInt(EXTRA_PREF_MAP_FD, prefMapFd);
         mExtras.putInt(EXTRA_IPC_FD, ipcFd);
         mExtras.putInt(EXTRA_CRASH_FD, crashFd);
         mExtras.putInt(EXTRA_CRASH_ANNOTATION_FD, crashAnnotationFd);
@@ -184,20 +181,18 @@ public class GeckoThread extends Thread {
     public static boolean initMainProcess(final GeckoProfile profile, final String[] args,
                                           final Bundle extras, final int flags) {
         return INSTANCE.init(profile, args, extras, flags, /* fd */ -1,
-                             /* fd */ -1, /* fd */ -1, /* fd */ -1,
-                             /* fd */ -1);
+                             /* fd */ -1, /* fd */ -1, /* fd */ -1);
     }
 
     public static boolean initChildProcess(final String[] args,
                                            final Bundle extras,
                                            final int flags,
                                            final int prefsFd,
-                                           final int prefMapFd,
                                            final int ipcFd,
                                            final int crashFd,
                                            final int crashAnnotationFd) {
         return INSTANCE.init(/* profile */ null, args, extras, flags,
-                             prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd);
+                             prefsFd, ipcFd, crashFd, crashAnnotationFd);
     }
 
     private static boolean canUseProfile(final Context context, final GeckoProfile profile,
@@ -502,7 +497,6 @@ public class GeckoThread extends Thread {
         // And go.
         GeckoLoader.nativeRun(args,
                               mExtras.getInt(EXTRA_PREFS_FD, -1),
-                              mExtras.getInt(EXTRA_PREF_MAP_FD, -1),
                               mExtras.getInt(EXTRA_IPC_FD, -1),
                               mExtras.getInt(EXTRA_CRASH_FD, -1),
                               mExtras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1));

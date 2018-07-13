@@ -397,17 +397,8 @@ XRE_API(const char*,
         XRE_ChildProcessTypeToString, (GeckoProcessType aProcessType))
 
 #if defined(MOZ_WIDGET_ANDROID)
-struct XRE_AndroidChildFds
-{
-  int mPrefsFd;
-  int mPrefMapFd;
-  int mIpcFd;
-  int mCrashFd;
-  int mCrashAnnotationFd;
-};
-
 XRE_API(void,
-        XRE_SetAndroidChildFds, (JNIEnv* env, const XRE_AndroidChildFds& fds))
+        XRE_SetAndroidChildFds, (JNIEnv* env, int prefsFd, int ipcFd, int crashFd, int crashAnnotationFd))
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 XRE_API(void,

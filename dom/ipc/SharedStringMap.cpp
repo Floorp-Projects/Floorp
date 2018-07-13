@@ -90,7 +90,8 @@ SharedStringMap::Find(const nsCString& aKey, size_t* aIndex)
 void
 SharedStringMapBuilder::Add(const nsCString& aKey, const nsString& aValue)
 {
-  mEntries.Put(aKey, {mKeyTable.Add(aKey), mValueTable.Add(aValue)});
+  mEntries.Put(aKey, {{mKeyTable.Add(aKey), aKey.Length()},
+                      {mValueTable.Add(aValue), aValue.Length()}});
 }
 
 Result<Ok, nsresult>
