@@ -228,6 +228,9 @@ public:
   static void StoreLastInsertedId(const nsACString& aTable,
                                   const int64_t aLastInsertedId);
 
+  static mozilla::Atomic<int64_t> sTotalSyncChanges;
+  static void NoteSyncChange();
+
 private:
   static nsNavBookmarks* gBookmarksService;
 
