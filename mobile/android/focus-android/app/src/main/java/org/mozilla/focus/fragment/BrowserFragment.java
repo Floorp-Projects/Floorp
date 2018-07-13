@@ -65,7 +65,7 @@ import org.mozilla.focus.findinpage.FindInPageCoordinator;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.browser.BrowserMenu;
 import org.mozilla.focus.menu.context.WebContextMenu;
-import org.mozilla.focus.observer.AverageLoadTimeObserver;
+import org.mozilla.focus.observer.LoadTimeObserver;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.popup.PopupUtils;
 import org.mozilla.focus.session.NullSession;
@@ -323,7 +323,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         setBlockingEnabled(session.isBlockingEnabled());
         setShouldRequestDesktop(session.shouldRequestDesktopSite());
 
-        session.getLoading().observe(this, new AverageLoadTimeObserver(session));
+        LoadTimeObserver.addObservers(session, this);
 
         session.getLoading().observe(this, new NonNullObserver<Boolean>() {
             @Override

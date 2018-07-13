@@ -56,6 +56,10 @@ object TelemetryWrapper {
 
     private const val MAXIMUM_CUSTOM_TAB_EXTRAS = 10
 
+    private const val HISTOGRAM_SIZE = 200
+    private const val BUCKET_SIZE_MS = 100
+    private const val HISTOGRAM_MIN_INDEX = 0
+
     private val isEnabledByDefault: Boolean
         get() = !AppConstants.isKlarBuild()
 
@@ -165,7 +169,7 @@ object TelemetryWrapper {
         val SOURCE = "source"
         val SUCCESS = "success"
         val ERROR_CODE = "error_code"
-        val AVERAGE = "average"
+        val HISTOGRAM = "histogram"
     }
 
     enum class BrowserContextMenuValue {
@@ -288,19 +292,19 @@ object TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue()
     }
 
-    private var numLoads: Int = 0
-    private var averageTime: Double = 0.0
+    private var histogram = IntArray(HISTOGRAM_SIZE)
 
     @JvmStatic
-    fun addLoadToAverage(newLoadTime: Long) {
-        numLoads++
-        averageTime += (newLoadTime - averageTime) / numLoads
-    }
+    fun addLoadToHistogram(newLoadTime: Long) {
+        var histogramLoadIndex = (newLoadTime / BUCKET_SIZE_MS).toInt()
 
-    @JvmStatic
-    private fun resetAverageLoad() {
-        numLoads = 0
-        averageTime = 0.0
+        if (histogramLoadIndex > (HISTOGRAM_SIZE - 2)) {
+            histogramLoadIndex = HISTOGRAM_SIZE - 1
+        } else if (histogramLoadIndex < HISTOGRAM_MIN_INDEX) {
+            histogramLoadIndex = HISTOGRAM_MIN_INDEX
+        }
+
+        histogram[histogramLoadIndex]++
     }
 
     @JvmStatic
@@ -320,11 +324,15 @@ object TelemetryWrapper {
     fun stopSession() {
         TelemetryHolder.get().recordSessionEnd()
 
-        if (numLoads > 0) {
-            TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.BROWSER)
-                    .extra(Extra.AVERAGE, averageTime.toString()).queue()
-            resetAverageLoad()
+        val histogramEvent = TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.BROWSER)
+        val histogramAsJSONObject = JSONObject()
+        for (bucketIndex in histogram.indices) {
+            histogramAsJSONObject.put((bucketIndex * BUCKET_SIZE_MS).toString(), histogram[bucketIndex])
         }
+        histogramEvent.extra(Extra.HISTOGRAM, histogramAsJSONObject.toString()).queue()
+
+        // Clear histogram array after queueing it
+        histogram = IntArray(HISTOGRAM_SIZE)
 
         TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue()
     }
