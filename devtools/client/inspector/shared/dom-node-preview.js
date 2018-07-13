@@ -110,7 +110,7 @@ DomNodePreview.prototype = {
         parent: this.idEl,
         nodeType: "span",
         attributes: {
-          "class": "theme-fg-color6"
+          "class": "theme-fg-color4"
         },
         textContent: "#"
       });
@@ -120,7 +120,7 @@ DomNodePreview.prototype = {
       parent: this.idEl,
       nodeType: "span",
       attributes: {
-        "class": "attribute-value theme-fg-color6"
+        "class": "attribute-value theme-fg-color4"
       }
     });
 
@@ -149,7 +149,7 @@ DomNodePreview.prototype = {
         parent: this.classEl,
         nodeType: "span",
         attributes: {
-          "class": "theme-fg-color6"
+          "class": "theme-fg-color4"
         },
         textContent: "."
       });
@@ -159,7 +159,7 @@ DomNodePreview.prototype = {
       parent: this.classEl,
       nodeType: "span",
       attributes: {
-        "class": "attribute-value theme-fg-color6"
+        "class": "attribute-value theme-fg-color4"
       }
     });
 
