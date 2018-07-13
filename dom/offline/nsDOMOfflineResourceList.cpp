@@ -225,34 +225,44 @@ nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
+bool
+nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return false;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
   }
 
   nsAutoCString key;
   rv = GetCacheKey(aURI, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
   uint32_t types;
   rv = appCache->GetTypes(key, &types);
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
-    *aExists = false;
-    return NS_OK;
+    return false;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
-  *aExists = ((types & nsIApplicationCache::ITEM_DYNAMIC) != 0);
-  return NS_OK;
+  return types & nsIApplicationCache::ITEM_DYNAMIC;
 }
 
 NS_IMETHODIMP

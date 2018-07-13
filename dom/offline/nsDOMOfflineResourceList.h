@@ -93,12 +93,7 @@ public:
   IMPL_EVENT_HANDLER(obsolete)
 
   already_AddRefed<mozilla::dom::DOMStringList> GetMozItems(ErrorResult& aRv);
-  bool MozHasItem(const nsAString& aURI, ErrorResult& aRv)
-  {
-    bool hasItem = false;
-    aRv = MozHasItem(aURI, &hasItem);
-    return hasItem;
-  }
+  bool MozHasItem(const nsAString& aURI, ErrorResult& aRv);
   uint32_t GetMozLength(ErrorResult& aRv)
   {
     uint32_t length = 0;
