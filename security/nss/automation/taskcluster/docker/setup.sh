@@ -22,6 +22,7 @@ apt_packages+=('locales')
 apt_packages+=('ninja-build')
 apt_packages+=('pkg-config')
 apt_packages+=('zlib1g-dev')
+apt_packages+=('cmake')
 
 # 32-bit builds
 apt_packages+=('lib32z1-dev')

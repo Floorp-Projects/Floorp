@@ -247,7 +247,7 @@ def parse_arguments():
     tests = [
         "cipher", "lowhash", "chains", "cert", "dbtests", "tools", "fips",
         "sdr", "crmf", "smime", "ssl", "ocsp", "merge", "pkits", "ec",
-        "gtests", "ssl_gtests", "bogo"
+        "gtests", "ssl_gtests", "bogo", "interop"
     ]
     parser_test.add_argument(
         'test', choices=tests, help="Available tests", action=testAction)
