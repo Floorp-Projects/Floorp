@@ -216,15 +216,6 @@ nsDOMOfflineResourceList::GetMozItems(ErrorResult& aRv)
   return items.forget();
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
-{
-  ErrorResult rv;
-  RefPtr<DOMStringList> items = GetMozItems(rv);
-  items.forget(aItems);
-  return rv.StealNSResult();
-}
-
 bool
 nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, ErrorResult& aRv)
 {
