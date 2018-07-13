@@ -47,10 +47,6 @@ crashtest:
         by-test-platform:
             linux32/debug: both
             default: true
-    tier:
-        by-test-platform:
-            .*-qr/.*: 1
-            default: default
 
 jsreftest:
     description: "JS Reftest run"
@@ -79,10 +75,6 @@ jsreftest:
             android-em.*: 7200
             windows10-64-ccov/debug: 7200
             default: 3600
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 reftest:
     description: "Reftest run"
@@ -124,10 +116,6 @@ reftest:
                 macosx64/opt: false
                 windows10-64.*/opt: false
                 default: true
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 reftest-gpu:
     description: "Reftest GPU run"
