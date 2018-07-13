@@ -52,8 +52,8 @@
       
       // Windows resizes children to 0x0. Code in nsWindow filters these changes out. Without
       // this all sorts of screwy things can happen in child widgets.
-      ok(document.height > 0, "document height should not be zero for a minimized window!");
-      ok(document.width > 0, "document width should not be zero for a minimized window!");
+      ok(document.documentElement.clientHeight > 0, "document height should not be zero for a minimized window!");
+      ok(document.documentElement.clientWidth > 0, "document width should not be zero for a minimized window!");
       
       // Make sure size mode changes are reflected in the widget.
       win.restore();

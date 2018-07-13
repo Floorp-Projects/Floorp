@@ -30,7 +30,7 @@ export class _Base extends React.PureComponent {
     this.sendNewTabRehydrated(App);
     addLocaleDataForReactIntl(locale);
     if (this.props.isFirstrun) {
-      global.document.body.classList.add("welcome");
+      global.document.body.classList.add("welcome", "hide-main");
     }
   }
 
@@ -56,9 +56,10 @@ export class _Base extends React.PureComponent {
   updateTheme() {
     const bodyClassName = [
       "activity-stream",
-      // If we skipped the about:welcome overlay and removed the CSS class
-      // we don't want to add it back to the Activity Stream view
-      document.body.classList.contains("welcome") ? "welcome" : ""
+      // If we skipped the about:welcome overlay and removed the CSS classes
+      // we don't want to add them back to the Activity Stream view
+      document.body.classList.contains("welcome") ? "welcome" : "",
+      document.body.classList.contains("hide-main") ? "hide-main" : ""
     ].filter(v => v).join(" ");
     global.document.body.className = bodyClassName;
   }

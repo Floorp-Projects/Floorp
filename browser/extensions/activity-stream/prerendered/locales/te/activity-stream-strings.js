@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "ఈ ఈమెయిలును ఇవ్వండి",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "ఈమెయిలు",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "సరైన ఈమెయిలు తప్పనిసరి",
   "firstrun_extra_legal_links": "కొనసాగడం ద్వారా మీరు {terms}, {privacy} లను అంగీకరిస్తున్నారు.",
   "firstrun_terms_of_service": "సేవా నియమాలు",
   "firstrun_privacy_notice": "అంతరంగికత గమనిక",

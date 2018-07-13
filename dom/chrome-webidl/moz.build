@@ -46,7 +46,8 @@ WEBIDL_FILES = [
     'StructuredCloneHolder.webidl',
     'WebExtensionContentScript.webidl',
     'WebExtensionPolicy.webidl',
-    'XULFrameElement.webidl'
+    'XULFrameElement.webidl',
+    'XULScrollElement.webidl'
 ]
 
 if CONFIG['MOZ_PLACES']:

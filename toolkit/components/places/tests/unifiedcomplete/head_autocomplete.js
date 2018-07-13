@@ -290,16 +290,11 @@ async function check_autocomplete(test) {
 }
 
 var addBookmark = async function(aBookmarkObj) {
-  Assert.ok(!!aBookmarkObj.uri, "Bookmark object contains an uri");
-  let parentId = aBookmarkObj.parentId ? aBookmarkObj.parentId
-                                       : PlacesUtils.unfiledBookmarksFolderId;
-
-  let bm = await PlacesUtils.bookmarks.insert({
-    parentGuid: (await PlacesUtils.promiseItemGuid(parentId)),
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: aBookmarkObj.title || "A bookmark",
     url: aBookmarkObj.uri
   });
-  await PlacesUtils.promiseItemId(bm.guid);
 
   if (aBookmarkObj.keyword) {
     await PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,

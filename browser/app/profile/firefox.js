@@ -75,9 +75,7 @@ pref("extensions.webextensions.default-content-security-policy", "script-src 'se
 pref("extensions.webextensions.remote", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("extensions.webextensions.background-delayed-startup", true);
-#endif
 
 // Extensions that should not be flagged as legacy in about:addons
 pref("extensions.legacy.exceptions", "testpilot@cliqz.com,@testpilot-containers,jid1-NeEaf3sAHdKHPA@jetpack,@activity-streams,pulse@mozilla.com,@testpilot-addon,@min-vid,tabcentertest1@mozilla.com,snoozetabs@mozilla.com,speaktome@mozilla.com,hoverpad@mozilla.com");

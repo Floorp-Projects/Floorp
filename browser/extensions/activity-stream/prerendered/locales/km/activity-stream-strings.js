@@ -10,7 +10,7 @@ window.gActivityStreamStrings = {
   "type_label_bookmarked": "បាន​ចំណាំ",
   "type_label_recommended": "និន្នាការ",
   "type_label_pocket": "Saved to Pocket",
-  "type_label_downloaded": "Downloaded",
+  "type_label_downloaded": "បានទាញយក",
   "menu_action_bookmark": "ចំណាំ",
   "menu_action_remove_bookmark": "លុប​ចំណាំ​ចេញ",
   "menu_action_open_new_window": "បើក​នៅ​ក្នុង​បង្អួច​ថ្មី",

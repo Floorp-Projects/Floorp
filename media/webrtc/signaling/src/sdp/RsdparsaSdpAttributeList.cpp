@@ -1149,7 +1149,7 @@ RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList)
     RustSdpAttributeExtmap& rustExtmap = rustExtmaps[i];
     std::string name = convertStringView(rustExtmap.url);
     SdpDirectionAttribute::Direction direction;
-    bool directionSpecified = true;
+    bool directionSpecified = rustExtmap.direction_specified;
     switch(rustExtmap.direction) {
       case RustDirection::kRustRecvonly:
         direction = SdpDirectionAttribute::kRecvonly;
@@ -1161,9 +1161,7 @@ RsdparsaSdpAttributeList::LoadExtmap(RustAttributeList* attributeList)
         direction = SdpDirectionAttribute::kSendrecv;
         break;
       case RustDirection::kRustInactive:
-        // TODO: Fix this, see Bug 1438544
-        direction = SdpDirectionAttribute::kSendrecv;
-        directionSpecified = false;
+        direction = SdpDirectionAttribute::kInactive;
         break;
     }
     std::string extensionAttributes;

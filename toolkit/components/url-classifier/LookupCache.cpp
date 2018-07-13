@@ -67,7 +67,7 @@ void CStringToHexString(const nsACString& aIn, nsACString& aOut)
 
 LookupCache::LookupCache(const nsACString& aTableName,
                          const nsACString& aProvider,
-                         nsIFile* aRootStoreDir)
+                         nsCOMPtr<nsIFile>& aRootStoreDir)
   : mPrimed(false)
   , mTableName(aTableName)
   , mProvider(aProvider)
@@ -87,7 +87,7 @@ LookupCache::Open()
 }
 
 nsresult
-LookupCache::UpdateRootDirHandle(nsIFile* aNewRootStoreDirectory)
+LookupCache::UpdateRootDirHandle(nsCOMPtr<nsIFile>& aNewRootStoreDirectory)
 {
   nsresult rv;
 
@@ -704,13 +704,13 @@ LookupCacheV2::ClearPrefixes()
 }
 
 nsresult
-LookupCacheV2::StoreToFile(nsIFile* aFile)
+LookupCacheV2::StoreToFile(nsCOMPtr<nsIFile>& aFile)
 {
   return mPrefixSet->StoreToFile(aFile);
 }
 
 nsresult
-LookupCacheV2::LoadFromFile(nsIFile* aFile)
+LookupCacheV2::LoadFromFile(nsCOMPtr<nsIFile>& aFile)
 {
   return mPrefixSet->LoadFromFile(aFile);
 }

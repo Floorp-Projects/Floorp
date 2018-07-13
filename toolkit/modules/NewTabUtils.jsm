@@ -1309,10 +1309,7 @@ var ActivityStreamLinks = {
    */
   addBookmark(aData, aBrowserWindow) {
       const {url, title} = aData;
-      return aBrowserWindow.PlacesCommandHook.bookmarkLink(
-              PlacesUtils.bookmarksMenuFolderId,
-              url,
-              title);
+      return aBrowserWindow.PlacesCommandHook.bookmarkLink(url, title);
   },
 
   /**

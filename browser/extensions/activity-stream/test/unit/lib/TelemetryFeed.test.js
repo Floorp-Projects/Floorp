@@ -19,10 +19,6 @@ describe("TelemetryFeed", () => {
   let sandbox;
   let expectedUserPrefs;
   let browser = {getAttribute() { return "true"; }};
-  let store = {
-    dispatch() {},
-    getState() { return {App: {version: "1.0.0"}}; }
-  };
   let instance;
   let clock;
   class PingCentre {sendPing() {} uninit() {}}
@@ -54,7 +50,6 @@ describe("TelemetryFeed", () => {
     globals.set("PingCentre", PingCentre);
     globals.set("UTEventReporting", UTEventReporting);
     instance = new TelemetryFeed();
-    instance.store = store;
   });
   afterEach(() => {
     clock.restore();
@@ -743,7 +738,6 @@ describe("TelemetryFeed", () => {
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
       instance = new TelemetryFeed();
-      instance.store = store;
 
       const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
       const action = {type: at.AS_ROUTER_TELEMETRY_USER_EVENT, data: {event: "CLICK"}};

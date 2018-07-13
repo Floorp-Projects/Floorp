@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "შეიყვანეთ თქვენი ელფოსტა",
   "firstrun_form_sub_header": "Firefox Sync-ზე გადასასვლელად.",
   "firstrun_email_input_placeholder": "ელფოსტა",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "მართებული ელფოსტის მითითება აუცილებელია",
   "firstrun_extra_legal_links": "გაგრძელების შემთხვევაში, თქვენ ეთანხმებით {terms} და {privacy}.",
   "firstrun_terms_of_service": "გამოყენების პირობებსა",
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",

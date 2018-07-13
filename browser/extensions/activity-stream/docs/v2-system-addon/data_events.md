@@ -56,7 +56,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown" ],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "action": "activity_stream_event",
   "user_prefs": 7
@@ -76,7 +76,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -99,7 +99,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -122,7 +122,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -145,7 +145,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -167,7 +167,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -189,7 +189,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -212,7 +212,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -235,7 +235,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -252,7 +252,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -269,7 +269,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -287,7 +287,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7
 }
@@ -327,7 +327,7 @@ All `"activity_stream_session"` pings have the following basic shape. Some field
   "action": "activity_stream_session",
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "session_duration": 4199,
@@ -426,7 +426,7 @@ This reports all the Pocket recommended articles (a list of `id`s) when the user
   "client_id": "n/a",
   "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
@@ -447,7 +447,7 @@ This reports the user's interaction with those Pocket tiles.
   "client_id": "n/a",
   "session_id": "n/a",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
@@ -473,7 +473,7 @@ This reports the duration of the domain affinity calculation in milliseconds.
 {
   "action": "activity_stream_performance_event",
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7,
   "event": "topstories.domain.affinity.calculation.ms",
@@ -493,7 +493,7 @@ This reports when the addon fails to initialize
 {
   "action": "activity_stream_undesired_event",
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "user_prefs": 7,
   "event": "ADDON_INIT_FAILED",
@@ -514,7 +514,7 @@ This reports the impression of Activity Stream Router.
   "action": ["snippets_user_event" | "onboarding_user_event"],
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "source": "pocket",
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
@@ -531,7 +531,7 @@ This reports the user's interaction with Activity Stream Router.
 {
   "client_id": "n/a",
   "action": ["snippets_user_event" | "onboarding_user_event"],
-  "addon_version": "1.0.12",
+  "addon_version": "20180710100040",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",

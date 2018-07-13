@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Firefox Sync’e devam etmek için",
   "firstrun_form_sub_header": "e-posta adresinizi yazın.",
   "firstrun_email_input_placeholder": "E-posta",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Geçerli bir e-posta gerekiyor",
   "firstrun_extra_legal_links": "Devam ederseniz {terms} ve {privacy} kabul etmiş sayılırsınız.",
   "firstrun_terms_of_service": "Kullanım Koşullarını",
   "firstrun_privacy_notice": "Gizlilik Bildirimini",

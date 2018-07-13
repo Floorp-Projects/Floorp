@@ -8,6 +8,7 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 import os
+import signal
 import subprocess
 import sys
 
@@ -137,11 +138,19 @@ class ProcessExecutionMixin(LoggingMixin):
             p.run()
             p.processOutput()
             status = None
+            sig = None
             while status is None:
                 try:
-                    status = p.wait()
+                    if sig is None:
+                        status = p.wait()
+                    else:
+                        status = p.kill(sig=sig)
                 except KeyboardInterrupt:
-                    status = p.kill()
+                    if sig is None:
+                        sig = signal.SIGINT
+                    elif sig == signal.SIGINT:
+                        # If we've already tried SIGINT, escalate.
+                        sig = signal.SIGKILL
 
         if ensure_exit_code is False:
             return status
