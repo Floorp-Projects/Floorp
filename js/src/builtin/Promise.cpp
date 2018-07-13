@@ -601,8 +601,13 @@ IsSettledMaybeWrappedPromise(JSObject* promise)
     return promise->as<PromiseObject>().state() != JS::PromiseState::Pending;
 }
 
-static MOZ_MUST_USE bool RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj,
-                                                   HandleValue reason);
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue reason);
+
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectPromiseInternal(JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason);
 
 // ES2016, 25.4.1.3.1.
 static bool
@@ -955,6 +960,13 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
     return true;
 }
 
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectPromiseInternal(JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason)
+{
+    return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected);
+}
+
 // ES2016, 25.4.1.4.
 static MOZ_MUST_USE bool
 FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue value_)
@@ -1241,7 +1253,7 @@ DefaultResolvingPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*>
         if (reaction->targetState() == JS::PromiseState::Fulfilled)
             ok = ResolvePromiseInternal(cx, promiseToResolve, argument);
         else
-            ok = RejectMaybeWrappedPromise(cx, promiseToResolve, argument);
+            ok = RejectPromiseInternal(cx, promiseToResolve, argument);
 
         if (!ok) {
             resolutionMode = RejectMode;
@@ -1558,7 +1570,7 @@ PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc, Value* vp)
     if (promise->as<PromiseObject>().state() != JS::PromiseState::Pending)
         return true;
 
-    return RejectMaybeWrappedPromise(cx, promise, exception);
+    return RejectPromiseInternal(cx, promise.as<PromiseObject>(), exception);
 }
 
 /**
@@ -2190,7 +2202,7 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     if (!promiseObj)
         return true;
 
-    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
+    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
@@ -2200,7 +2212,7 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     if (mode == ResolveMode)
         return ResolvePromiseInternal(cx, promise, result);
 
-    return RejectMaybeWrappedPromise(cx, promiseObj, result);
+    return RejectPromiseInternal(cx, promise, result);
 }
 
 // ES2016, 25.4.4.1.1.
@@ -2876,7 +2888,7 @@ js::AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise)
     if (!MaybeGetAndClearException(cx, &exc))
         return false;
 
-    if (!RejectMaybeWrappedPromise(cx, resultPromise, exc))
+    if (!RejectPromiseInternal(cx, resultPromise, exc))
         return false;
 
     // Step 3.g.
@@ -2987,7 +2999,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
             return false;
 
         // Step 3.b.
-        if (!RejectMaybeWrappedPromise(cx, resultPromise, badGeneratorError))
+        if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError))
             return false;
 
         // Step 3.c.
@@ -3037,7 +3049,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
         // Step 7.
         if (func.isNullOrUndefined()) {
             // Step 7.a.
-            if (!RejectMaybeWrappedPromise(cx, resultPromise, args.get(0)))
+            if (!RejectPromiseInternal(cx, resultPromise, args.get(0)))
                 return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
             // Step 7.b.
@@ -3166,7 +3178,7 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
             asyncGenObj->cacheRequest(request);
 
             // Step 6.
-            if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
+            if (!RejectPromiseInternal(cx, resultPromise, exception))
                 return false;
 
             // Steps 7-8.
@@ -3333,7 +3345,7 @@ js::AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal,
             return false;
 
         // Step 3.b.
-        if (!RejectMaybeWrappedPromise(cx, resultPromise, badGeneratorError))
+        if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError))
             return false;
 
         // Step 3.c.
