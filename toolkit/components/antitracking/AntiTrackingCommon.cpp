@@ -17,8 +17,6 @@
 #include "nsPIDOMWindow.h"
 #include "prtime.h"
 
-// Anti-tracking permission expiration
-#define ANTITRACKING_EXPIRATION 2592000000 // 30 days.
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
 
 using namespace mozilla;
@@ -134,7 +132,9 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
     return;
   }
 
-  int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + ANTITRACKING_EXPIRATION;
+  uint32_t expirationTime =
+    StaticPrefs::privacy_restrict3rdpartystorage_expiration();
+  int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
 
   nsAutoCString type;
   CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
