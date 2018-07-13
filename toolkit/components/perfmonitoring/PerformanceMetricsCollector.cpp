@@ -63,13 +63,17 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
     mozilla::dom::Sequence<mozilla::dom::CategoryDispatchDictionary> items;
 
     for (const CategoryDispatch& entry : result.items()) {
+      uint32_t count = entry.count();
+      if (count == 0) {
+        continue;
+      }
       CategoryDispatchDictionary* item = items.AppendElement(fallible);
       if (NS_WARN_IF(!item)) {
         Abort(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
       item->mCategory = entry.category();
-      item->mCount = entry.count();
+      item->mCount = count;
     }
 
     PerformanceInfoDictionary* data = mData.AppendElement(fallible);
