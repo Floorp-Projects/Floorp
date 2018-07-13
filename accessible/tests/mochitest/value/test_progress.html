@@ -26,6 +26,7 @@
       testValue("pr_one", "100%", 1, 0, 1, 0);
       testValue("pr_42", "100%", 42, 0, 1, 0);
       testValue("pr_21", "50%", 21, 0, 42, 0);
+      testValue("pr_valuetext", "value", 0, 0, 1, 0);
 
       SimpleTest.finish();
     }
@@ -56,5 +57,7 @@
   <progress id="pr_one" value="1">this will be read by legacy browsers</progress>
   <progress id="pr_42" value="42">this will be read by legacy browsers</progress>
   <progress id="pr_21" value="21" max="42">this will be read by legacy browsers</progress>
+  <!-- aria-valuetext should work due to implicit progressbar role (bug 1475376) -->
+  <progress id="pr_valuetext" aria-valuetext="value">this will be read by legacy browsers</progress>
 </body>
 </html>

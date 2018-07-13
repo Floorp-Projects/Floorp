@@ -25,6 +25,7 @@
       testValue("range_step", "50", 50, 0, 100, 1);
       testValue("range_min42", "71", 71, 42, 100, 1);
       testValue("range_max42", "21", 21, 0, 42, 1);
+      testValue("range_valuetext", "value", 50, 0, 100, 1);
 
       SimpleTest.finish();
     }
@@ -54,5 +55,7 @@
   <input type="range" id="range_step" step="1">
   <input type="range" id="range_min42" min="42">
   <input type="range" id="range_max42" max="42">
+  <!-- aria-valuetext should work due to implicit slider role (bug 1475376) -->
+  <input type="range" id="range_valuetext" aria-valuetext="value">
 </body>
 </html>
