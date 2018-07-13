@@ -163,7 +163,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 }
 
 int32_t
-nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
+nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName) const
 {
   NS_ASSERTION(mNameArray, "not inited");
 
@@ -176,7 +176,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 }
 
 int32_t
-nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
+nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName) const
 {
   NS_ASSERTION(mNameArray, "not inited");
 

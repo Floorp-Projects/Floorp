@@ -1396,7 +1396,8 @@ void nsDocLoader::RemoveRequestInfo(nsIRequest *aRequest)
   mRequestInfoHash.Remove(aRequest);
 }
 
-nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
+nsDocLoader::nsRequestInfo*
+nsDocLoader::GetRequestInfo(nsIRequest* aRequest) const
 {
   return static_cast<nsRequestInfo*>(mRequestInfoHash.Search(aRequest));
 }

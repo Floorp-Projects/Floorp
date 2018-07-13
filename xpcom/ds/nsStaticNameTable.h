@@ -33,8 +33,8 @@ class nsStaticCaseInsensitiveNameTable
 public:
   enum { NOT_FOUND = -1 };
 
-  int32_t          Lookup(const nsACString& aName);
-  int32_t          Lookup(const nsAString& aName);
+  int32_t          Lookup(const nsACString& aName) const;
+  int32_t          Lookup(const nsAString& aName) const;
   const nsCString& GetStringValue(int32_t aIndex);
 
   nsStaticCaseInsensitiveNameTable(const char* const aNames[], int32_t aLength);
