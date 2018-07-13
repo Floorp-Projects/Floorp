@@ -2970,7 +2970,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     RootedValue thisVal(cx, args.thisv());
 
     // Step 2.
-    RootedObject resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
     if (!resultPromise)
         return false;
 
@@ -3161,7 +3161,7 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
                 return false;
 
             // Step 5.
-            RootedObject resultPromise(cx, request->promise());
+            Rooted<PromiseObject*> resultPromise(cx, request->promise());
 
             asyncGenObj->cacheRequest(request);
 
@@ -3188,7 +3188,7 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
                 return false;
 
             // Step 5.
-            RootedObject resultPromise(cx, request->promise());
+            Rooted<PromiseObject*> resultPromise(cx, request->promise());
 
             asyncGenObj->cacheRequest(request);
 
@@ -3321,7 +3321,7 @@ js::AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal,
     // Step 1 (implicit).
 
     // Step 2.
-    RootedObject resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
     if (!resultPromise)
         return false;
 

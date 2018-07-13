@@ -62,7 +62,7 @@ class AsyncGeneratorRequest : public NativeObject
         Slots,
     };
 
-    void init(CompletionKind completionKind, const Value& completionValue, JSObject* promise) {
+    void init(CompletionKind completionKind, const Value& completionValue, PromiseObject* promise) {
         setFixedSlot(Slot_CompletionKind, Int32Value(static_cast<int32_t>(completionKind)));
         setFixedSlot(Slot_CompletionValue, completionValue);
         setFixedSlot(Slot_Promise, ObjectValue(*promise));
@@ -79,7 +79,8 @@ class AsyncGeneratorRequest : public NativeObject
     static const Class class_;
 
     static AsyncGeneratorRequest* create(JSContext* cx, CompletionKind completionKind,
-                                         HandleValue completionValue, HandleObject promise);
+                                         HandleValue completionValue,
+                                         Handle<PromiseObject*> promise);
 
     CompletionKind completionKind() const {
         return static_cast<CompletionKind>(getFixedSlot(Slot_CompletionKind).toInt32());
@@ -87,8 +88,8 @@ class AsyncGeneratorRequest : public NativeObject
     JS::Value completionValue() const {
         return getFixedSlot(Slot_CompletionValue);
     }
-    JSObject* promise() const {
-        return &getFixedSlot(Slot_Promise).toObject();
+    PromiseObject* promise() const {
+        return &getFixedSlot(Slot_Promise).toObject().as<PromiseObject>();
     }
 };
 
@@ -230,7 +231,7 @@ class AsyncGeneratorObject : public NativeObject
                                                 Handle<AsyncGeneratorObject*> asyncGenObj,
                                                 CompletionKind completionKind,
                                                 HandleValue completionValue,
-                                                HandleObject promise);
+                                                Handle<PromiseObject*> promise);
 
     // Stores the given request to the generator's cache after clearing its data
     // slots.  The cached request will be reused in the subsequent createRequest
