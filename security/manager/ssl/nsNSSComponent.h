@@ -84,17 +84,16 @@ private:
   nsresult setEnabledTLSVersions();
   nsresult RegisterObservers();
 
-  void MaybeEnableFamilySafetyCompatibility();
   void MaybeImportEnterpriseRoots();
+  void UnloadEnterpriseRoots();
+
+  void MaybeEnableFamilySafetyCompatibility();
+  void UnloadFamilySafetyRoot();
+
 #ifdef XP_WIN
-  void ImportEnterpriseRootsForLocation(
-    DWORD locationFlag, const mozilla::MutexAutoLock& proofOfLock);
   nsresult MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
                                        bool& wasFamilySafetyRoot);
   nsresult LoadFamilySafetyRoot();
-  void UnloadFamilySafetyRoot();
-
-  void UnloadEnterpriseRoots();
 #endif // XP_WIN
 
   // mLoadableRootsLoadedMonitor protects mLoadableRootsLoaded.
@@ -114,11 +113,8 @@ private:
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
   nsString mMitmCanaryIssuer;
   bool mMitmDetecionEnabled;
-#ifdef XP_WIN
-  mozilla::UniqueCERTCertificate mFamilySafetyRoot;
-#endif // XP_WIN
-  // Currently this will always be null on non-Windows platforms.
   mozilla::UniqueCERTCertList mEnterpriseRoots;
+  mozilla::UniqueCERTCertificate mFamilySafetyRoot;
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;
