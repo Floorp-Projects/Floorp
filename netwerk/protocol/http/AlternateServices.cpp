@@ -15,8 +15,6 @@
 #include "nsThreadUtils.h"
 #include "nsHttpTransaction.h"
 #include "NullHttpTransaction.h"
-#include "nsISSLStatusProvider.h"
-#include "nsISSLStatus.h"
 #include "nsISSLSocketControl.h"
 #include "nsIWellKnownOpportunisticUtils.h"
 

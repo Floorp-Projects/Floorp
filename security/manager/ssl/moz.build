@@ -36,7 +36,6 @@ XPIDL_SOURCES += [
     'nsISecurityUITelemetry.idl',
     'nsISiteSecurityService.idl',
     'nsISSLStatus.idl',
-    'nsISSLStatusProvider.idl',
     'nsITokenDialogs.idl',
     'nsITokenPasswordDialogs.idl',
     'nsIX509Cert.idl',

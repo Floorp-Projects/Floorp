@@ -8,22 +8,20 @@ var EXPORTED_SYMBOLS = ["RemoteSecurityUI"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function RemoteSecurityUI() {
-    this._SSLStatus = null;
+    this._secInfo = null;
     this._state = 0;
 }
 
 RemoteSecurityUI.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISSLStatusProvider, Ci.nsISecureBrowserUI]),
-
-  // nsISSLStatusProvider
-  get SSLStatus() { return this._SSLStatus; },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISecureBrowserUI]),
 
   // nsISecureBrowserUI
   get state() { return this._state; },
   get tooltipText() { return ""; },
+  get secInfo() { return this._secInfo; },
 
-  _update(aStatus, aState) {
-    this._SSLStatus = aStatus;
+  _update(aSecInfo, aState) {
+    this._secInfo = aSecInfo;
     this._state = aState;
   }
 };
