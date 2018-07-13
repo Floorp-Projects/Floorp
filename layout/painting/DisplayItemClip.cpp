@@ -353,6 +353,100 @@ AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBo
   aOut->Or(*aOut, r);
 }
 
+static void
+AccumulateRoundedRectDifference(const DisplayItemClip::RoundedRect& aR1,
+                                const DisplayItemClip::RoundedRect& aR2,
+                                const nsRect& aBounds,
+                                const nsRect& aOtherBounds,
+                                nsRegion* aOut)
+{
+  const nsRect& rect1 = aR1.mRect;
+  const nsRect& rect2 = aR2.mRect;
+
+  // If the two rectangles are totally disjoint, just add them both - otherwise we'd
+  // end up adding one big enclosing rect
+  if (!rect1.Intersects(rect2) || memcmp(aR1.mRadii, aR2.mRadii, sizeof(aR1.mRadii))) {
+    aOut->Or(*aOut, rect1.Intersect(aBounds));
+    aOut->Or(*aOut, rect2.Intersect(aOtherBounds));
+    return;
+  }
+
+  nscoord lowestBottom = std::max(rect1.YMost(), rect2.YMost());
+  nscoord highestTop = std::min(rect1.Y(), rect2.Y());
+  nscoord maxRight = std::max(rect1.XMost(), rect2.XMost());
+  nscoord minLeft = std::min(rect1.X(), rect2.X());
+
+  // At this point, we know that the radii haven't changed, and that the bounds
+  // are different in some way. To explain how this works, consider the case
+  // where the rounded rect has just been translated along the X direction.
+  // |          ______________________ _ _ _ _ _ _            |
+  // |        /           /            \           \          |
+  // |       |                          |                     |
+  // |       |     aR1   |              |     aR2   |         |
+  // |       |                          |                     |
+  // |        \ __________\___________ / _ _ _ _ _ /          |
+  // |                                                        |
+  // The invalidation region will be as if we lopped off the left rounded part
+  // of aR2, and the right rounded part of aR1, and XOR'd them:
+  // |          ______________________ _ _ _ _ _ _            |
+  // |       -/-----------/-          -\-----------\-         |
+  // |       |--------------          --|------------         |
+  // |       |-----aR1---|--          --|-----aR2---|         |
+  // |       |--------------          --|------------         |
+  // |       -\ __________\-__________-/ _ _ _ _ _ /-          |
+  // |                                                        |
+  // The logic below just implements this idea, but generalized to both the
+  // X and Y dimensions. The "(...)Adjusted(...)" values represent the lopped
+  // off sides.
+  nscoord highestAdjustedBottom =
+    std::min(rect1.YMost() - aR1.mRadii[eCornerBottomLeftY],
+             std::min(rect1.YMost() - aR1.mRadii[eCornerBottomRightY],
+                      std::min(rect2.YMost() - aR2.mRadii[eCornerBottomLeftY],
+                               rect2.YMost() - aR2.mRadii[eCornerBottomRightY])));
+  nscoord lowestAdjustedTop =
+    std::max(rect1.Y() + aR1.mRadii[eCornerTopLeftY],
+             std::max(rect1.Y() + aR1.mRadii[eCornerTopRightY],
+                      std::max(rect2.Y() + aR2.mRadii[eCornerTopLeftY],
+                               rect2.Y() + aR2.mRadii[eCornerTopRightY])));
+
+  nscoord minAdjustedRight =
+    std::min(rect1.XMost() - aR1.mRadii[eCornerTopRightX],
+             std::min(rect1.XMost() - aR1.mRadii[eCornerBottomRightX],
+                      std::min(rect2.XMost() - aR2.mRadii[eCornerTopRightX],
+                               rect2.XMost() - aR2.mRadii[eCornerBottomRightX])));
+  nscoord maxAdjustedLeft =
+    std::max(rect1.X() + aR1.mRadii[eCornerTopLeftX],
+             std::max(rect1.X() + aR1.mRadii[eCornerBottomLeftX],
+                      std::max(rect2.X() + aR2.mRadii[eCornerTopLeftX],
+                               rect2.X() + aR2.mRadii[eCornerBottomLeftX])));
+
+  // We only want to add an invalidation rect if the bounds have changed. If we always
+  // added all of the 4 rects below, we would always be invalidating a border around the
+  // rects, even in cases where we just translated along the X or Y axis.
+  nsRegion r;
+  // First, or with the Y delta rects, wide along the X axis
+  if (rect1.Y() != rect2.Y()) {
+    r.Or(r, nsRect(minLeft, highestTop,
+                   maxRight - minLeft, lowestAdjustedTop - highestTop));
+  }
+  if (rect1.YMost() != rect2.YMost()) {
+    r.Or(r, nsRect(minLeft, highestAdjustedBottom,
+                   maxRight - minLeft, lowestBottom - highestAdjustedBottom));
+  }
+  // Then, or with the X delta rects, narrow along the Y axis
+  if (rect1.X() != rect2.X()) {
+    r.Or(r, nsRect(minLeft, lowestAdjustedTop,
+                   maxAdjustedLeft - minLeft, highestAdjustedBottom - lowestAdjustedTop));
+  }
+  if (rect1.XMost() != rect2.XMost()) {
+    r.Or(r, nsRect(minAdjustedRight, lowestAdjustedTop,
+                   maxRight - minAdjustedRight, highestAdjustedBottom - lowestAdjustedTop));
+  }
+
+  r.And(r, aBounds.Union(aOtherBounds));
+  aOut->Or(*aOut, r);
+}
+
 void
 DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
                                                const nsRect& aBounds,
@@ -373,9 +467,11 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
   }
   for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
     if (mRoundedClipRects[i] + aOffset != aOther.mRoundedClipRects[i]) {
-      // The corners make it tricky so we'll just add both rects here.
-      aDifference->Or(*aDifference, mRoundedClipRects[i].mRect.Intersect(aBounds));
-      aDifference->Or(*aDifference, aOther.mRoundedClipRects[i].mRect.Intersect(aOtherBounds));
+      AccumulateRoundedRectDifference(mRoundedClipRects[i] + aOffset,
+                                      aOther.mRoundedClipRects[i],
+                                      aBounds,
+                                      aOtherBounds,
+                                      aDifference);
     }
   }
 }
