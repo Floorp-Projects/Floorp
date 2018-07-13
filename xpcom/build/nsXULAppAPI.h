@@ -400,6 +400,7 @@ XRE_API(const char*,
 struct XRE_AndroidChildFds
 {
   int mPrefsFd;
+  int mPrefMapFd;
   int mIpcFd;
   int mCrashFd;
   int mCrashAnnotationFd;
