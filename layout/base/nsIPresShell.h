@@ -1667,6 +1667,14 @@ public:
     return mScrollPositionClampingScrollPortSize;
   }
 
+  void SetVisualViewportOffset(const nsPoint& aScrollOffset) {
+    mVisualViewportOffset = aScrollOffset;
+  }
+
+  nsPoint GetVisualViewportOffset() const {
+    return mVisualViewportOffset;
+  }
+
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
   virtual void ThemeChanged() = 0;
@@ -1744,6 +1752,8 @@ protected:
   uint64_t                  mPaintCount;
 
   nsSize                    mScrollPositionClampingScrollPortSize;
+
+  nsPoint                   mVisualViewportOffset;
 
   // A list of stack weak frames. This is a pointer to the last item in the list.
   AutoWeakFrame*            mAutoWeakFrames;

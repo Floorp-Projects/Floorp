@@ -17,7 +17,7 @@ const Services = require("Services");
 const { ChromeDebuggerActor } = require("devtools/server/actors/thread");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const { ActorPool } = require("devtools/server/main");
+const { ActorPool } = require("devtools/server/actors/common");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 

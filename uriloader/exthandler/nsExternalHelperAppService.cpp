@@ -83,7 +83,6 @@
 
 #include "nsIWindowWatcher.h"
 
-#include "nsIDownloadHistory.h" // to mark downloads as visited
 #include "nsDocShellCID.h"
 
 #include "nsCRT.h"
@@ -2159,17 +2158,6 @@ nsresult nsExternalAppHandler::CreateTransfer()
                        mMimeInfo, mTimeDownloadStarted, mTempFile, this,
                        channel && NS_UsePrivateBrowsing(channel));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Now let's add the download to history
-  nsCOMPtr<nsIDownloadHistory> dh(do_GetService(NS_DOWNLOADHISTORY_CONTRACTID));
-  if (dh) {
-    if (channel && !NS_UsePrivateBrowsing(channel)) {
-      nsCOMPtr<nsIURI> referrer;
-      NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
-
-      dh->AddDownload(mSourceUrl, referrer, mTimeDownloadStarted, target);
-    }
-  }
 
   // If we were cancelled since creating the transfer, just return. It is
   // always ok to return NS_OK if we are cancelled. Callers of this function

@@ -5,14 +5,22 @@
   <script type="text/javascript">
 
   var myWorker;
+  var shared;
+
   function init() {
    myWorker = new Worker('ping_worker.js');
    for (let i = 0; i++; i < 10) myWorker.postMessage("ping");
+
+   shared = new SharedWorker('shared_worker.js');
+   shared.port.start();
+   shared.port.onmessage = function(e) {
+     console.log(e);
+   }
   }
 
   </script>
 </head>
 <body onload="init()">
-  <h1>A page with a worker</h1>
+  <h1>A page with a worker and a shared worker</h1>
 </body>
 </html>

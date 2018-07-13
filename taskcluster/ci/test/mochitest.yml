@@ -43,6 +43,10 @@ mochitest:
         by-test-platform:
             windows10-64-qr/debug: []  # bug 1424755
             default: built-projects
+    tier:
+        by-test-platform:
+            windows10-64-qr/debug: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
+            default: default
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
@@ -265,10 +269,6 @@ mochitest-gpu:
                     - --test-suite=mochitest-plain-gpu
                 default:
                     - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 mochitest-media:
     description: "Mochitest media run"
@@ -305,7 +305,6 @@ mochitest-media:
     tier:
         by-test-platform:
             android-hw.*: 3
-            linux64-qr/.*: 1
             default: default
 
 mochitest-plain-headless:
@@ -366,10 +365,6 @@ mochitest-webgl1-core:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
@@ -393,10 +388,6 @@ mochitest-webgl1-ext:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
@@ -420,10 +411,6 @@ mochitest-webgl2-core:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
@@ -449,10 +436,6 @@ mochitest-webgl2-ext:
     mozharness:
         mochitest-flavor: plain
         chunked: true
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
 
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
@@ -478,7 +461,3 @@ mochitest-webgl2-deqp:
     mozharness:
         mochitest-flavor: plain
         chunked: true
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default

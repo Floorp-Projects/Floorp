@@ -1672,6 +1672,8 @@ Database::InitFunctions()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SqrtFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = NoteSyncChangeFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1718,6 +1720,8 @@ Database::InitTempEntities()
   rv = mMainConn->ExecuteSimpleSQL(CREATE_KEYWORDS_FOREIGNCOUNT_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_KEYWORDS_FOREIGNCOUNT_AFTERUPDATE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_DELETED_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

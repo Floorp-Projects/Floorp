@@ -73,25 +73,23 @@ function testWorkerMarkerUI(node) {
  */
 function evalInDebuggee(script) {
   let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let deferred = defer();
 
   if (!mm) {
     throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
   }
+  return new Promise(resolve => {
+    let id = generateUUID().toString();
+    mm.sendAsyncMessage("devtools:test:eval", {script: script, id: id});
+    mm.addMessageListener("devtools:test:eval:response", handler);
 
-  let id = generateUUID().toString();
-  mm.sendAsyncMessage("devtools:test:eval", { script: script, id: id });
-  mm.addMessageListener("devtools:test:eval:response", handler);
+    function handler({data}) {
+      if (id !== data.id) {
+        return;
+      }
 
-  function handler({ data }) {
-    if (id !== data.id) {
-      return;
+      mm.removeMessageListener("devtools:test:eval:response", handler);
+      resolve(data.value);
     }
-
-    mm.removeMessageListener("devtools:test:eval:response", handler);
-    deferred.resolve(data.value);
-  }
-
-  return deferred.promise;
+  });
 }
 /* eslint-enable */

@@ -2495,12 +2495,22 @@ window._gBrowser = {
           gBrowser._numPinnedTabs;
         break;
       case this.closingTabsEnum.OTHER:
-        tabsToClose = this.visibleTabs.length - 1 - gBrowser._numPinnedTabs;
+        if (!aTab) {
+          throw new Error("Required argument missing: aTab");
+        }
+        if (aTab.multiselected) {
+          tabsToClose = this.visibleTabs.filter(tab => !tab.multiselected && !tab.pinned).length;
+        } else {
+          // If aTab is pinned, it will already be considered
+          // with gBrowser._numPinnedTabs.
+          tabsToClose = this.visibleTabs.length - gBrowser._numPinnedTabs -
+            (aTab.pinned ? 0 : 1);
+        }
         break;
       case this.closingTabsEnum.TO_END:
-        if (!aTab)
+        if (!aTab) {
           throw new Error("Required argument missing: aTab");
-
+        }
         tabsToClose = this.getTabsToTheEndFrom(aTab).length;
         break;
       case this.closingTabsEnum.MULTI_SELECTED:
@@ -2578,14 +2588,23 @@ window._gBrowser = {
     this.removeTabs(tabs);
   },
 
+  /**
+   * In a multi-select context, all unpinned and unselected tabs are removed.
+   * Otherwise all unpinned tabs except aTab are removed.
+   */
   removeAllTabsBut(aTab) {
-    if (!this.warnAboutClosingTabs(this.closingTabsEnum.OTHER)) {
+    if (!this.warnAboutClosingTabs(this.closingTabsEnum.OTHER, aTab)) {
       return;
     }
 
-    let tabs = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
-    this.selectedTab = aTab;
-    this.removeTabs(tabs);
+    let tabsToRemove = [];
+    if (aTab && aTab.multiselected) {
+      tabsToRemove = this.visibleTabs.filter(tab => !tab.multiselected && !tab.pinned);
+    } else {
+      tabsToRemove = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
+      this.selectedTab = aTab;
+    }
+    this.removeTabs(tabsToRemove);
   },
 
   removeMultiSelectedTabs() {

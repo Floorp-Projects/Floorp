@@ -124,19 +124,17 @@ function getUnicodeConverter() {
 }
 
 function asyncCopy(data, file) {
-  let deferred = defer();
-
   let string = JSON.stringify(data);
   let inputStream = getUnicodeConverter().convertToInputStream(string);
   let outputStream = FileUtils.openSafeFileOutputStream(file);
 
-  NetUtil.asyncCopy(inputStream, outputStream, status => {
-    if (!Components.isSuccessCode(status)) {
-      deferred.reject(new Error("Could not save data to file."));
-    }
-    deferred.resolve();
+  return new Promise((resolve, reject) => {
+    NetUtil.asyncCopy(inputStream, outputStream, status => {
+      if (!Components.isSuccessCode(status)) {
+        reject(new Error("Could not save data to file."));
+      }
+      resolve();
+    });
   });
-
-  return deferred.promise;
 }
 /* eslint-enable */

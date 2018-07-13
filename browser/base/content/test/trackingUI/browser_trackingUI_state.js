@@ -21,8 +21,6 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 var TrackingProtection = null;
 var tabbrowser = null;
 
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
-
 registerCleanupFunction(function() {
   TrackingProtection = tabbrowser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -33,6 +31,9 @@ registerCleanupFunction(function() {
   }
 });
 
+// This is a special version of "hidden" that doesn't check for item
+// visibility and just asserts the display and opacity attributes.
+// That way we can test elements even when their panel is hidden...
 function hidden(sel) {
   let win = tabbrowser.ownerGlobal;
   let el = win.document.querySelector(sel);
@@ -51,10 +52,11 @@ function testBenignPage() {
   info("Non-tracking content must not be blocked");
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
-  ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
-  ok(!TrackingProtection.icon.hasAttribute("tooltiptext"), "icon: no tooltip");
+  ok(!TrackingProtection.iconBox.hasAttribute("state"), "icon box: no state");
+  ok(!TrackingProtection.iconBox.hasAttribute("tooltiptext"), "icon box: no tooltip");
 
-  ok(hidden("#tracking-protection-icon"), "icon is hidden");
+  let doc = tabbrowser.ownerGlobal.document;
+  ok(BrowserTestUtils.is_hidden(doc.getElementById("tracking-protection-icon-box")), "icon box is hidden");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
   ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");
@@ -70,10 +72,11 @@ function testBenignPageWithException() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
   ok(TrackingProtection.content.hasAttribute("hasException"), "content has exception attribute");
-  ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
-  ok(!TrackingProtection.icon.hasAttribute("tooltiptext"), "icon: no tooltip");
+  ok(!TrackingProtection.iconBox.hasAttribute("state"), "icon box: no state");
+  ok(!TrackingProtection.iconBox.hasAttribute("tooltiptext"), "icon box: no tooltip");
 
-  ok(hidden("#tracking-protection-icon"), "icon is hidden");
+  let doc = tabbrowser.ownerGlobal.document;
+  ok(BrowserTestUtils.is_hidden(doc.getElementById("tracking-protection-icon-box")), "icon box is hidden");
   is(!hidden("#tracking-action-block"), TrackingProtection.enabled,
      "blockButton is visible if TP is on");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
@@ -92,12 +95,13 @@ function testTrackingPage(window) {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "blocked-tracking-content",
       'content: state="blocked-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("state"), "blocked-tracking-content",
-      'icon: state="blocked-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("tooltiptext"),
+  is(TrackingProtection.iconBox.getAttribute("state"), "blocked-tracking-content",
+      'icon box: state="blocked-tracking-content"');
+  is(TrackingProtection.iconBox.getAttribute("tooltiptext"),
      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
 
-  ok(!hidden("#tracking-protection-icon"), "icon is visible");
+  let doc = tabbrowser.ownerGlobal.document;
+  ok(BrowserTestUtils.is_visible(doc.getElementById("tracking-protection-icon-box")), "icon box is visible");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
   ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");
 
@@ -123,13 +127,14 @@ function testTrackingPageUnblocked() {
   is(TrackingProtection.content.getAttribute("state"), "loaded-tracking-content",
       'content: state="loaded-tracking-content"');
   if (TrackingProtection.enabled) {
-    is(TrackingProtection.icon.getAttribute("state"), "loaded-tracking-content",
-        'icon: state="loaded-tracking-content"');
-    is(TrackingProtection.icon.getAttribute("tooltiptext"),
+    is(TrackingProtection.iconBox.getAttribute("state"), "loaded-tracking-content",
+        'icon box: state="loaded-tracking-content"');
+    is(TrackingProtection.iconBox.getAttribute("tooltiptext"),
        gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
   }
 
-  is(!hidden("#tracking-protection-icon"), TrackingProtection.enabled, "icon is visible if TP is on");
+  let doc = tabbrowser.ownerGlobal.document;
+  is(BrowserTestUtils.is_visible(doc.getElementById("tracking-protection-icon-box")), TrackingProtection.enabled, "icon box is visible if TP is on");
   is(!hidden("#tracking-action-block"), TrackingProtection.enabled, "blockButton is visible if TP is on");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
   ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");

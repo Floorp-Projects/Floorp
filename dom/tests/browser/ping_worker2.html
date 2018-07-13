@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript">
+
+  var shared;
+
+  function init() {
+   shared = new SharedWorker('shared_worker.js');
+   shared.port.start();
+   for (let i = 0; i++; i < 10) shared.port.postMessage(["ok"]);
+  }
+
+  </script>
+</head>
+<body onload="init()">
+  <h1>A page with a shared worker</h1>
+</body>
+</html>

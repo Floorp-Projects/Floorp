@@ -228,6 +228,7 @@
   "AFTER INSERT ON moz_bookmarks FOR EACH ROW " \
   "BEGIN " \
     "SELECT store_last_inserted_id('moz_bookmarks', NEW.id); " \
+    "SELECT note_sync_change() WHERE NEW.syncChangeCounter > 0; " \
     "UPDATE moz_places " \
     "SET foreign_count = foreign_count + 1 " \
     "WHERE id = NEW.fk;" \
@@ -236,14 +237,16 @@
 
 #define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterupdate_trigger " \
-  "AFTER UPDATE OF fk ON moz_bookmarks FOR EACH ROW " \
+  "AFTER UPDATE OF fk, syncChangeCounter ON moz_bookmarks FOR EACH ROW " \
   "BEGIN " \
+    "SELECT note_sync_change() " \
+    "WHERE NEW.syncChangeCounter <> OLD.syncChangeCounter; " \
     "UPDATE moz_places " \
     "SET foreign_count = foreign_count + 1 " \
-    "WHERE id = NEW.fk;" \
+    "WHERE OLD.fk <> NEW.fk AND id = NEW.fk;" \
     "UPDATE moz_places " \
     "SET foreign_count = foreign_count - 1 " \
-    "WHERE id = OLD.fk;" \
+    "WHERE OLD.fk <> NEW.fk AND id = OLD.fk;" \
   "END" \
 )
 
@@ -285,6 +288,14 @@
   "AFTER INSERT ON moz_icons FOR EACH ROW " \
   "BEGIN " \
     "SELECT store_last_inserted_id('moz_icons', NEW.id); " \
+  "END" \
+)
+
+#define CREATE_BOOKMARKS_DELETED_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_bookmarks_deleted_afterinsert_v1_trigger " \
+  "AFTER INSERT ON moz_bookmarks_deleted FOR EACH ROW " \
+  "BEGIN " \
+    "SELECT note_sync_change(); " \
   "END" \
 )
 

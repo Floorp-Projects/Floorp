@@ -395,7 +395,8 @@ function _setupDebuggerServer(breakpointFiles, callback) {
   let { OriginalLocation } = require("devtools/server/actors/common");
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
-  DebuggerServer.addActors("resource://testing-common/dbg-actors.js");
+  let { createRootActor } = require("resource://testing-common/dbg-actors.js");
+  DebuggerServer.setRootActor(createRootActor);
   DebuggerServer.allowChromeProcess = true;
 
   // An observer notification that tells us when we can "resume" script

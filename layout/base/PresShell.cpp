@@ -8574,7 +8574,7 @@ PresShell::SuppressDisplayport(bool aEnabled)
 {
   if (aEnabled) {
     mActiveSuppressDisplayport++;
-  } else {
+  } else if (mActiveSuppressDisplayport > 0) {
     bool isSuppressed = IsDisplayportSuppressed();
     mActiveSuppressDisplayport--;
     if (isSuppressed && !IsDisplayportSuppressed()) {
@@ -8584,8 +8584,6 @@ PresShell::SuppressDisplayport(bool aEnabled)
       }
     }
   }
-
-  MOZ_ASSERT(mActiveSuppressDisplayport >= 0);
 }
 
 static bool sDisplayPortSuppressionRespected = true;

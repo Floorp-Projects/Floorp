@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Distance effect of a PannerNode with the position set via AudioParams (Bug 1472550)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ SimpleTest.waitForExplicitFinish();
+ var o = new OfflineAudioContext(2, 256, 44100);
+
+ // We want a stereo constant source.
+ var b = o.createBuffer(2, 1, 44100);
+ b.getChannelData(0)[0] = 1;
+ b.getChannelData(1)[0] = 1;
+ var c = o.createBufferSource();
+ c.buffer = b;
+ c.loop = true;
+
+ var p = o.createPanner();
+ p.positionY.setValueAtTime(1, 0);
+ p.positionX.setValueAtTime(1, 0);
+ p.positionZ.setValueAtTime(1, 0);
+
+ // Set the listener somewhere far
+ o.listener.setPosition(20, 2, 20);
+
+ c.start();
+ c.connect(p).connect(o.destination);
+
+ o.startRendering().then((ab) => {
+   // Check that the distance attenuates the sound.
+   ok(ab.getChannelData(0)[0] < 0.1, "left channel must be very quiet");
+   ok(ab.getChannelData(1)[0] < 0.1, "right channel must be very quiet");
+   SimpleTest.finish();
+ });
+</script>
+</pre>
+</body>
+</html>

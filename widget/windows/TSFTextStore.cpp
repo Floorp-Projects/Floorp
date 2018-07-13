@@ -5041,17 +5041,19 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
     PendingAction* compositionEnd = mPendingActions.AppendElement();
     compositionEnd->mType = PendingAction::Type::eCompositionEnd;
     compositionEnd->mData = aInsertStr;
+    compositionEnd->mSelectionStart = compositionStart->mSelectionStart;
 
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
       ("0x%p   TSFTextStore::InsertTextAtSelectionInternal() "
        "appending pending compositionstart and compositionend... "
        "PendingCompositionStart={ mSelectionStart=%d, "
        "mSelectionLength=%d }, PendingCompositionEnd={ mData=\"%s\" "
-       "(Length()=%u) }",
+       "(Length()=%u), mSelectionStart=%d }",
        this, compositionStart->mSelectionStart,
        compositionStart->mSelectionLength,
        GetEscapedUTF8String(compositionEnd->mData).get(),
-       compositionEnd->mData.Length()));
+       compositionEnd->mData.Length(),
+       compositionEnd->mSelectionStart));
   }
 
   contentForTSF.ReplaceSelectedTextWith(aInsertStr);
@@ -5146,18 +5148,22 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
   CompleteLastActionIfStillIncomplete();
 
   // TIP may have inserted text at selection before calling
-  // OnStartComposition().  In this case, we've already created a pair of
-  // pending compositionstart and pending compositionend.  If the pending
-  // compositionstart occurred same range as this composition, it was the
-  // start of this composition.  In such case, we should cancel the pending
-  // compositionend and start composition normally.
+  // OnStartComposition().  In this case, we've already created a pending
+  // compositionend.  If new composition replaces all commit string of the
+  // pending compositionend, we should cancel the pending compositionend and
+  // keep the previous composition normally.
+  // On Windows 7, MS-IME for Korean, MS-IME 2010 for Korean and MS Old Hangul
+  // may start composition with calling InsertTextAtSelection() and
+  // OnStartComposition() with this order (bug 1208043).
+  // On Windows 10, MS Pinyin, MS Wubi, MS ChangJie and MS Quick commits
+  // last character and replace it with empty string with new composition
+  // when user removes last character of composition string with Backspace
+  // key (bug 1462257).
   if (!aPreserveSelection &&
-      WasTextInsertedWithoutCompositionAt(aStart, aLength)) {
+      IsLastPendingActionCompositionEndAt(aStart, aLength)) {
     const PendingAction& pendingCompositionEnd = mPendingActions.LastElement();
-    const PendingAction& pendingCompositionStart =
-      mPendingActions[mPendingActions.Length() - 2];
-    contentForTSF.RestoreCommittedComposition(
-      aComposition, pendingCompositionStart, pendingCompositionEnd);
+    contentForTSF.RestoreCommittedComposition(aComposition,
+                                              pendingCompositionEnd);
     mPendingActions.RemoveLastElement();
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
       ("0x%p   TSFTextStore::RecordCompositionStartAction() "
@@ -5239,6 +5245,7 @@ TSFTextStore::RecordCompositionEndAction()
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::Type::eCompositionEnd;
   action->mData = mComposition.mString;
+  action->mSelectionStart = mComposition.mStart;
 
   Content& contentForTSF = ContentForTSFRef();
   if (!contentForTSF.IsInitialized()) {
@@ -7150,24 +7157,21 @@ TSFTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
 void
 TSFTextStore::Content::RestoreCommittedComposition(
                          ITfCompositionView* aCompositionView,
-                         const PendingAction& aPendingCompositionStart,
                          const PendingAction& aCanceledCompositionEnd)
 {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(aCompositionView);
   MOZ_ASSERT(!mComposition.mView);
-  MOZ_ASSERT(aPendingCompositionStart.mType ==
-               PendingAction::Type::eCompositionStart);
   MOZ_ASSERT(aCanceledCompositionEnd.mType ==
                PendingAction::Type::eCompositionEnd);
   MOZ_ASSERT(GetSubstring(
-               static_cast<uint32_t>(aPendingCompositionStart.mSelectionStart),
+               static_cast<uint32_t>(aCanceledCompositionEnd.mSelectionStart),
                static_cast<uint32_t>(aCanceledCompositionEnd.mData.Length())) ==
                aCanceledCompositionEnd.mData);
 
   // Restore the committed string as composing string.
   mComposition.Start(aCompositionView,
-                     aPendingCompositionStart.mSelectionStart,
+                     aCanceledCompositionEnd.mSelectionStart,
                      aCanceledCompositionEnd.mData);
   mLatestCompositionStartOffset = mComposition.mStart;
   mLatestCompositionEndOffset = mComposition.EndOffset();
