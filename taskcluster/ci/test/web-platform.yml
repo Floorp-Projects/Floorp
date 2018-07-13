@@ -34,8 +34,12 @@ web-platform-tests:
             default: true
     run-on-projects:
         by-test-platform:
-            linux64-qr/.*: ['release', 'try']
+            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            default: default
     mozharness:
         chunked: true
         extra-options:
@@ -84,8 +88,12 @@ web-platform-tests-reftests:
             default: true
     run-on-projects:
         by-test-platform:
-            linux64-qr/.*: ['release', 'try']
+            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            default: default
     mozharness:
         extra-options:
             - --test-type=reftest
@@ -124,8 +132,12 @@ web-platform-tests-wdspec:
             - --test-type=wdspec
     run-on-projects:
         by-test-platform:
-            linux64-qr/.*: ['release', 'try']
+            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            default: default
 
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
