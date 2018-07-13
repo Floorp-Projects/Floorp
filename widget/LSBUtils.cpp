@@ -8,6 +8,7 @@
 
 #include <unistd.h>
 #include "base/process_util.h"
+#include "mozilla/FileUtils.h"
 
 namespace mozilla {
 namespace widget {
@@ -47,7 +48,7 @@ GetLSBRelease(nsACString& aDistributor,
     return false;
   }
 
-  FILE* stream = fdopen(pipefd[0], "r");
+  ScopedCloseFile stream(fdopen(pipefd[0], "r"));
   if (!stream) {
     NS_WARNING("Could not wrap fd!");
     close(pipefd[0]);
@@ -62,12 +63,8 @@ GetLSBRelease(nsACString& aDistributor,
              dist, desc, release, codename) != 4)
   {
     NS_WARNING("Failed to parse lsb_release!");
-    fclose(stream);
-    close(pipefd[0]);
     return false;
   }
-  fclose(stream);
-  close(pipefd[0]);
 
   aDistributor.Assign(dist);
   aDescription.Assign(desc);
