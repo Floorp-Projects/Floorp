@@ -358,7 +358,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        Hook to modify the packet before it is sent. Feel free to return a
    *        promise.
    */
-  _pauseAndRespond: async function(frame, reason, onPacket = k => k) {
+  _pauseAndRespond: function(frame, reason, onPacket = k => k) {
     try {
       const packet = this._paused(frame);
       if (!packet) {
@@ -378,7 +378,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
             new Error("Attempted to pause in a script with a sourcemap but " +
                       "could not find original location.")
           );
-          return undefined;
+          return;
         }
 
         packet.frame.where = {
@@ -398,8 +398,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           .then(pkt => {
             this.conn.send(pkt);
           });
-
-        return undefined;
       });
 
       this._pushThreadPause();
