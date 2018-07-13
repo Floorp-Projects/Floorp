@@ -111,7 +111,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "Crypto.h"
-#include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
@@ -3134,7 +3133,7 @@ nsGlobalWindowInner::DeviceSensorsEnabled(JSContext* aCx, JSObject* aObj)
   return Preferences::GetBool("device.sensors.enabled");
 }
 
-nsIDOMOfflineResourceList*
+nsDOMOfflineResourceList*
 nsGlobalWindowInner::GetApplicationCache(ErrorResult& aError)
 {
   if (!mApplicationCache) {
@@ -3165,14 +3164,10 @@ nsGlobalWindowInner::GetApplicationCache(ErrorResult& aError)
   return mApplicationCache;
 }
 
-already_AddRefed<nsIDOMOfflineResourceList>
+nsDOMOfflineResourceList*
 nsGlobalWindowInner::GetApplicationCache()
 {
-  ErrorResult dummy;
-  nsCOMPtr<nsIDOMOfflineResourceList> applicationCache =
-    GetApplicationCache(dummy);
-  dummy.SuppressException();
-  return applicationCache.forget();
+  return GetApplicationCache(IgnoreErrors());
 }
 
 Crypto*
@@ -5886,8 +5881,7 @@ nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     // Instantiate the application object now. It observes update belonging to
     // this window's document and correctly updates the applicationCache object
     // state.
-    nsCOMPtr<nsIDOMOfflineResourceList> applicationCache = GetApplicationCache();
-    nsCOMPtr<nsIObserver> observer = do_QueryInterface(applicationCache);
+    nsCOMPtr<nsIObserver> observer = GetApplicationCache();
     if (observer)
       observer->Observe(aSubject, aTopic, aData);
 
