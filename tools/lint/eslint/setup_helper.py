@@ -92,8 +92,10 @@ def eslint_setup(should_clobber=False):
 
     extra_parameters = ["--loglevel=error"]
 
-    # Install ESLint and external plugins
-    cmd = [npm_path, "install"]
+    # Install ESLint and external plugins. We pass `--no-package-lock` to avoid
+    # unexpected/unwanted npm changes to package-lock.json passing into the
+    # tree.
+    cmd = [npm_path, "install", "--no-package-lock"]
     cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint", cmd):
