@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["FormLikeFactory"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 /**
  * A factory to generate FormLike objects that represent a set of related fields
  * which aren't necessarily marked up with a <form> element. FormLike's emulate
@@ -73,21 +75,31 @@ let FormLikeFactory = {
     }
 
     let doc = aField.ownerDocument;
-    let elements = [];
-    for (let el of rootElement.querySelectorAll("input, select")) {
-      // Exclude elements inside the rootElement that are already in a <form> as
-      // they will be handled by their own FormLike.
-      if (!el.form) {
-        elements.push(el);
-      }
-    }
+
     let formLike = {
       action: doc.baseURI,
       autocomplete: "on",
-      elements,
       ownerDocument: doc,
       rootElement,
     };
+
+    // FormLikes can be created when fields are inserted into the DOM. When
+    // many, many fields are inserted one after the other, we create many
+    // FormLikes, and computing the elements list becomes more and more
+    // expensive. Making the elements list lazy means that it'll only
+    // be computed when it's eventually needed (if ever).
+    XPCOMUtils.defineLazyGetter(formLike, "elements", function() {
+      let elements = [];
+      for (let el of this.rootElement.querySelectorAll("input, select")) {
+        // Exclude elements inside the rootElement that are already in a <form> as
+        // they will be handled by their own FormLike.
+        if (!el.form) {
+          elements.push(el);
+        }
+      }
+
+      return elements;
+    });
 
     this._addToJSONProperty(formLike);
     return formLike;
