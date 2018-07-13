@@ -81,7 +81,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   , mDocumentURI(aDocumentURI)
   , mLoadingPrincipal(aLoadingPrincipal)
   , mExposeCacheUpdateStatus(true)
-  , mStatus(nsIDOMOfflineResourceList::IDLE)
+  , mStatus(OfflineResourceList_Binding::IDLE)
   , mCachedKeys(nullptr)
   , mCachedKeysCount(0)
 {
@@ -495,7 +495,7 @@ nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
   // to an UNCACHED.
   if (rv == NS_ERROR_DOM_INVALID_STATE_ERR ||
       !nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
+    *aStatus = OfflineResourceList_Binding::UNCACHED;
     return NS_OK;
   }
 
@@ -504,7 +504,7 @@ nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
   // If this object is not associated with a cache, return UNCACHED
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
+    *aStatus = OfflineResourceList_Binding::UNCACHED;
     return NS_OK;
   }
 
@@ -512,13 +512,13 @@ nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
   // If there is an update in process, use its status.
   if (mCacheUpdate && mExposeCacheUpdateStatus) {
     rv = mCacheUpdate->GetStatus(aStatus);
-    if (NS_SUCCEEDED(rv) && *aStatus != nsIDOMOfflineResourceList::IDLE) {
+    if (NS_SUCCEEDED(rv) && *aStatus != OfflineResourceList_Binding::IDLE) {
       return NS_OK;
     }
   }
 
   if (mAvailableApplicationCache) {
-    *aStatus = nsIDOMOfflineResourceList::UPDATEREADY;
+    *aStatus = OfflineResourceList_Binding::UPDATEREADY;
     return NS_OK;
   }
 
@@ -576,7 +576,7 @@ nsDOMOfflineResourceList::SwapCache()
     mAvailableApplicationCache->GetClientID(availClientId);
     if (availClientId == currClientId)
       return NS_ERROR_DOM_INVALID_STATE_ERR;
-  } else if (mStatus != OBSOLETE) {
+  } else if (mStatus != OfflineResourceList_Binding::OBSOLETE) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
@@ -593,7 +593,7 @@ nsDOMOfflineResourceList::SwapCache()
   }
 
   mAvailableApplicationCache = nullptr;
-  mStatus = nsIDOMOfflineResourceList::IDLE;
+  mStatus = OfflineResourceList_Binding::IDLE;
 
   return NS_OK;
 }
@@ -688,7 +688,7 @@ nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
       SendEvent(NS_LITERAL_STRING(NOUPDATE_STR));
       break;
     case STATE_OBSOLETE:
-      mStatus = nsIDOMOfflineResourceList::OBSOLETE;
+      mStatus = OfflineResourceList_Binding::OBSOLETE;
       mAvailableApplicationCache = nullptr;
       SendEvent(NS_LITERAL_STRING(OBSOLETE_STR));
       break;
@@ -839,7 +839,7 @@ nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
   mCacheUpdate = nullptr;
 
   if (NS_SUCCEEDED(rv) && succeeded && !partial) {
-    mStatus = nsIDOMOfflineResourceList::IDLE;
+    mStatus = OfflineResourceList_Binding::IDLE;
     if (isUpgrade) {
       SendEvent(NS_LITERAL_STRING(UPDATEREADY_STR));
     } else {
