@@ -157,7 +157,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* a3rd
   }
 
   if (!nsContentUtils::IsThirdPartyWindowOrChannel(a3rdPartyTrackingWindow,
-                                                   nullptr, nullptr) ||
+                                                   nullptr, aURI) ||
       !nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
     return true;
   }
@@ -243,6 +243,54 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   nsAutoCString type;
   CreatePermissionKey(NS_ConvertUTF16toUTF8(trackingOrigin),
                       NS_ConvertUTF16toUTF8(origin), type);
+
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
+    return false;
+  }
+
+  uint32_t result = 0;
+  rv = pm->TestPermissionFromPrincipal(parentPrincipal, type.get(), &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return result == nsIPermissionManager::ALLOW_ACTION;
+}
+
+/* static */ bool
+AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aFirstPartyWindow,
+                                                             nsIURI* aURI)
+{
+  MOZ_ASSERT(aFirstPartyWindow);
+  MOZ_ASSERT(!nsContentUtils::IsTrackingResourceWindow(aFirstPartyWindow));
+  MOZ_ASSERT(aURI);
+
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
+    return true;
+  }
+
+  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aFirstPartyWindow,
+                                                   nullptr, aURI)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrincipal> parentPrincipal =
+    nsGlobalWindowInner::Cast(aFirstPartyWindow)->GetPrincipal();
+  if (NS_WARN_IF(!parentPrincipal)) {
+    return false;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  NS_ConvertUTF16toUTF8 utf8Origin(origin);
+
+  nsAutoCString type;
+  CreatePermissionKey(utf8Origin, utf8Origin, type);
 
   nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
   if (NS_WARN_IF(!pm)) {
