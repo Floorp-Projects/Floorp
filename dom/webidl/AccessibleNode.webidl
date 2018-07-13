@@ -6,7 +6,7 @@
 
 [Func="mozilla::dom::AccessibleNode::IsAOMEnabled"]
 interface AccessibleNode {
-  readonly attribute DOMString role;
+  readonly attribute DOMString computedRole;
   [Frozen, Cached, Pure]
   readonly attribute sequence<DOMString> states;
   [Frozen, Cached, Pure]
@@ -18,27 +18,48 @@ interface AccessibleNode {
   [Throws]
   any get(DOMString attribute);
 
+  attribute DOMString? role;
+  attribute DOMString? roleDescription;
+
+  // Accessible label and descriptor
+  attribute DOMString? label;
+
+  // Global states and properties
+  attribute DOMString? current;
+
   // Accessible properties
+  attribute DOMString? autocomplete;
+  attribute DOMString? keyShortcuts;
   attribute boolean? modal;
   attribute boolean? multiline;
   attribute boolean? multiselectable;
+  attribute DOMString? orientation;
   attribute boolean? readOnly;
   attribute boolean? required;
+  attribute DOMString? sort;
 
   // Range values
+  attribute DOMString? placeholder;
   attribute double? valueMax;
   attribute double? valueMin;
   attribute double? valueNow;
+  attribute DOMString? valueText;
 
   // Accessible states
+  attribute DOMString? checked;
   attribute boolean? disabled;
   attribute boolean? expanded;
+  attribute DOMString? hasPopUp;
   attribute boolean? hidden;
+  attribute DOMString? invalid;
+  attribute DOMString? pressed;
   attribute boolean? selected;
 
   // Live regions
   attribute boolean? atomic;
   attribute boolean? busy;
+  attribute DOMString? live;
+  attribute DOMString? relevant;
 
   // Collections.
   attribute long? colCount;
