@@ -558,34 +558,43 @@ nsDOMOfflineResourceList::Update(ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::SwapCache()
+void
+nsDOMOfflineResourceList::SwapCache(ErrorResult& aRv)
 {
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> currentAppCache = GetDocumentAppCache();
   if (!currentAppCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   // Check the current and potentially newly available cache are not identical.
   if (mAvailableApplicationCache == currentAppCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   if (mAvailableApplicationCache) {
     nsCString currClientId, availClientId;
     currentAppCache->GetClientID(currClientId);
     mAvailableApplicationCache->GetClientID(availClientId);
-    if (availClientId == currClientId)
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    if (availClientId == currClientId) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
   } else if (mStatus != OfflineResourceList_Binding::OBSOLETE) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   ClearCachedKeys();
@@ -597,13 +606,14 @@ nsDOMOfflineResourceList::SwapCache()
   // We will disassociate from the cache in that case.
   if (appCacheContainer) {
     rv = appCacheContainer->SetApplicationCache(mAvailableApplicationCache);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
   }
 
   mAvailableApplicationCache = nullptr;
   mStatus = OfflineResourceList_Binding::IDLE;
-
-  return NS_OK;
 }
 
 void

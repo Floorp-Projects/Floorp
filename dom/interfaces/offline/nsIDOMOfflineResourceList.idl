@@ -12,10 +12,4 @@ interface nsIDOMOfflineResourceList : nsISupports
    * Get the list of dynamically-managed entries.
    */
   readonly attribute nsISupports mozItems;
-
-  /**
-   * Swap in the newest version of the application cache, or disassociate
-   * from the cache if the cache group is obsolete.
-   */
-  void swapCache();
 };
