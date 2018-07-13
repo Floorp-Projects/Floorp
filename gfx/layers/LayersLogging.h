@@ -19,6 +19,8 @@
 #include "nsRegion.h"                   // for nsRegion, nsIntRegion
 #include "nscore.h"                     // for nsACString, etc
 
+struct nsRectAbsolute;
+
 namespace mozilla {
 
 namespace gfx {
@@ -47,6 +49,10 @@ AppendToString(std::stringstream& aStream, const nsPoint& p,
 
 void
 AppendToString(std::stringstream& aStream, const nsRect& r,
+               const char* pfx="", const char* sfx="");
+
+void
+AppendToString(std::stringstream& aStream, const nsRectAbsolute& r,
                const char* pfx="", const char* sfx="");
 
 template<class T>
@@ -94,6 +100,30 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRectTyped<T>& 
   aStream << nsPrintfCString(
     "(x=%d, y=%d, w=%d, h=%d)",
     r.X(), r.Y(), r.Width(), r.Height()).get();
+  aStream << sfx;
+}
+
+template<class T>
+void
+AppendToString(std::stringstream& aStream, const mozilla::gfx::RectAbsoluteTyped<T>& r,
+               const char* pfx="", const char* sfx="")
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(l=%f, t=%f, r=%f, b=%f)",
+    r.Left(), r.Top(), r.Right(), r.Bottom()).get();
+  aStream << sfx;
+}
+
+template<class T>
+void
+AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRectAbsoluteTyped<T>& r,
+               const char* pfx="", const char* sfx="")
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(l=%d, t=%d, r=%d, b=%d)",
+    r.Left(), r.Top(), r.Right(), r.Bottom()).get();
   aStream << sfx;
 }
 
