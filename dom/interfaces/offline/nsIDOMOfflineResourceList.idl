@@ -8,8 +8,4 @@
 [uuid(6044702d-e4a9-420c-b711-558b7d6a3b9f)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
-  /**
-   * Get the list of dynamically-managed entries.
-   */
-  readonly attribute nsISupports mozItems;
 };
