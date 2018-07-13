@@ -14,6 +14,7 @@
 
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
+#include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/ScopeExit.h"
 
 namespace {
@@ -47,19 +48,16 @@ bool LaunchApp(const std::vector<std::string>& argv,
   });
 
   // Turn fds_to_remap array into a set of dup2 calls.
-  for (const auto& fd_map : options.fds_to_remap) {
+  mozilla::ipc::FileDescriptorShuffle shuffle;
+  if (!shuffle.Init(options.fds_to_remap)) {
+    return false;
+  }
+  for (const auto& fd_map : shuffle.Dup2Sequence()) {
     int src_fd = fd_map.first;
     int dest_fd = fd_map.second;
 
-    if (src_fd == dest_fd) {
-      int flags = fcntl(src_fd, F_GETFD);
-      if (flags != -1) {
-        fcntl(src_fd, F_SETFD, flags & ~FD_CLOEXEC);
-      }
-    } else {
-      if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
-        return false;
-      }
+    if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
+      return false;
     }
   }
 
