@@ -1833,7 +1833,7 @@ Notification::GetPermission(nsIGlobalObject* aGlobal, ErrorResult& aRv)
     MOZ_ASSERT(worker);
     RefPtr<GetPermissionRunnable> r =
       new GetPermissionRunnable(worker);
-    r->Dispatch(Terminating, aRv);
+    r->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return NotificationPermission::Denied;
     }
@@ -2589,7 +2589,7 @@ Notification::ShowPersistentNotification(JSContext* aCx,
     worker->AssertIsOnWorkerThread();
     RefPtr<CheckLoadRunnable> loadChecker =
       new CheckLoadRunnable(worker, NS_ConvertUTF16toUTF8(aScope));
-    loadChecker->Dispatch(Terminating, aRv);
+    loadChecker->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
