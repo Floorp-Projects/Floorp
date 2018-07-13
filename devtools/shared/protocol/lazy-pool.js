@@ -51,7 +51,7 @@ exports.LazyPool = LazyPool;
  * |pool|. _extraActors is treated as a cache for lazy actors
  *
  * The target actor uses this to instantiate actors that other
- * parts of the browser have specified with DebuggerServer.addTargetScopedActor
+ * parts of the browser have specified with ActorRegistry.addTargetScopedActor
  *
  * @param factories
  *     An object whose own property names are the names of properties to add to
