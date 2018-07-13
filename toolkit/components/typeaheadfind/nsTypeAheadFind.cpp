@@ -1130,8 +1130,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     }
   }
   else {
-    // Error sound
-    if (mTypeAheadBuffer.Length() > mLastFindLength)
+    // Error sound, except when whole word matching is ON.
+    if (!mEntireWord && mTypeAheadBuffer.Length() > mLastFindLength)
       PlayNotFoundSound();
   }
 
