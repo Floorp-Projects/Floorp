@@ -14,15 +14,6 @@ interface nsIDOMOfflineResourceList : nsISupports
   readonly attribute nsISupports mozItems;
 
   /**
-   * Add an item to the list of dynamically-managed entries.  The resource
-   * will be fetched into the application cache.
-   *
-   * @param uri
-   *        The resource to add.
-   */
-  void mozAdd(in DOMString uri);
-
-  /**
    * Remove an item from the list of dynamically-managed entries.  If this
    * was the last reference to a URI in the application cache, the cache
    * entry will be removed.
