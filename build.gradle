@@ -51,7 +51,7 @@ buildscript {
     }
 
     ext.kotlin_version = '1.2.41'
-    ext.support_library_version = '23.4.0'
+    ext.support_library_version = '26.1.0'
 
     if (gradle.mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
         ext.google_play_services_version = '8.4.0'

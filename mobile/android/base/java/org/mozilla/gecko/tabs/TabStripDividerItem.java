@@ -5,16 +5,16 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.R;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.ViewUtils;
 import android.view.View;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ViewUtil;
 
 class TabStripDividerItem extends RecyclerView.ItemDecoration {
     private final int margin;
@@ -39,7 +39,7 @@ class TabStripDividerItem extends RecyclerView.ItemDecoration {
      * {@code view}.
      */
     private static boolean drawLeftDividerForView(View view, RecyclerView parent) {
-        final boolean isLTR = !ViewUtils.isLayoutRtl(parent);
+        final boolean isLTR = !ViewUtil.isLayoutRtl(parent);
         final int position = parent.getChildAdapterPosition(view);
         // No left divider if this is the leftmost tab or this tab is currently pressed.
         final boolean isLeftmostTab = isLTR ? position == 0 : position == parent.getAdapter().getItemCount() - 1;
@@ -71,7 +71,7 @@ class TabStripDividerItem extends RecyclerView.ItemDecoration {
 
         // RTL positions start from the right, but offsets are still LTR since view is LTR.
         final int leftOffset, rightOffset;
-        if (ViewUtils.isLayoutRtl(parent)) {
+        if (ViewUtil.isLayoutRtl(parent)) {
             leftOffset = position == parent.getAdapter().getItemCount() - 1 ? 0 : margin;
             rightOffset = position == 0 ? 0 : margin;
         } else {

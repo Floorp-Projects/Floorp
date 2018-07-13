@@ -195,4 +195,14 @@ public class ViewUtil {
             textView.setTextDirection(View.TEXT_DIRECTION_LTR);
         }
     }
+
+    /**
+     * Get if the resolved layout direction is <em>right to left</em> or <em>left to right</em>.
+     * @param view View to get layout direction for
+     * @return <code>true</code> if the horizontal layout direction of this view is from <em>right to left</em><br>
+     *     <code>false</code> if the horizontal layout direction of this view is from <em>left to right</em>
+     */
+    public static boolean isLayoutRtl(final View view) {
+        return ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_RTL;
+    }
 }

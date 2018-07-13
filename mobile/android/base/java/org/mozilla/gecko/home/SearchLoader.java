@@ -72,6 +72,7 @@ class SearchLoader {
     public static void restart(LoaderManager manager, int loaderId,
                                LoaderCallbacks<Cursor> callbacks, String searchTerm,
                                EnumSet<FilterFlags> flags) {
+        manager.destroyLoader(loaderId);
         final Bundle args = createArgs(searchTerm, flags);
         manager.restartLoader(loaderId, args, callbacks);
     }

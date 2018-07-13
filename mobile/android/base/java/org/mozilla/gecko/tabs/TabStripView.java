@@ -5,11 +5,6 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.ThreadUtils;
-
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -21,12 +16,17 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.ViewUtils;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.ViewUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -226,7 +226,7 @@ public class TabStripView extends RecyclerView
         final int transparent = 0x0;
         final int inBetween = 0x11292C29;
         final int darkest = 0xDD292C29;
-        if (ViewUtils.isLayoutRtl(this)) {
+        if (ViewUtil.isLayoutRtl(this)) {
             fadingEdgePaint.setShader(new LinearGradient(0, 0, fadingEdgeSize, 0,
                     new int[] { darkest, inBetween, transparent },
                     new float[] { 0, 0.6f, 1.0f }, Shader.TileMode.CLAMP));
@@ -269,7 +269,7 @@ public class TabStripView extends RecyclerView
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        final boolean isLTR = !ViewUtils.isLayoutRtl(this);
+        final boolean isLTR = !ViewUtil.isLayoutRtl(this);
         final float strength = getFadingEdgeStrength(isLTR);
         if (strength > 0.0f) {
             if (isLTR) {

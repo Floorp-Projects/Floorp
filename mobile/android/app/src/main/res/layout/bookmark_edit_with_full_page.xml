@@ -18,7 +18,7 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:background="@color/text_and_tabs_tray_grey"
         android:minHeight="?actionBarSize"
-        app:navigationIcon="@drawable/abc_ic_clear_mtrl_alpha"
+        app:navigationIcon="@drawable/abc_ic_clear_material"
         app:subtitleTextColor="@android:color/white"
         app:titleTextColor="@android:color/white" />
 

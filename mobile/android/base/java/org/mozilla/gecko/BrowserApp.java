@@ -1331,12 +1331,17 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
-            @Override
-            public void onFilter(String searchText, AutocompleteHandler handler) {
-                filterEditingMode(searchText, handler);
-            }
-        });
+        // Website suggestions for address bar inputs should not be enabled when running in automation.
+        // After the upgrade to support library v.26 it could fail otherwise unrelated Robocop tests
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1385464#c3
+        if (!isInAutomation) {
+            mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
+                @Override
+                public void onFilter(String searchText, AutocompleteHandler handler) {
+                    filterEditingMode(searchText, handler);
+                }
+            });
+        }
 
         mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
