@@ -103,4 +103,14 @@ public class GeckoCustomTabsService extends CustomTabsService {
 
         return null;
     }
+
+    @Override
+    protected boolean requestPostMessageChannel(CustomTabsSessionToken sessionToken, Uri postMessageOrigin) {
+        return false;
+    }
+
+    @Override
+    protected int postMessage(CustomTabsSessionToken sessionToken, String message, Bundle extras) {
+        return RESULT_FAILURE_DISALLOWED;
+    }
 }
