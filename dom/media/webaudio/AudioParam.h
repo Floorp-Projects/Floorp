@@ -45,7 +45,7 @@ public:
 
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
   // object.
-  AudioParam* SetValueCurveAtTime(const nsTArray<float>& aValues,
+  AudioParam* SetValueCurveAtTime(const Float32Array& aValues,
                                   double aStartTime,
                                   double aDuration,
                                   ErrorResult& aRv)
@@ -54,9 +54,11 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+    aValues.ComputeLengthAndData();
+
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve,
-                         aStartTime, 0.0f, 0.0f, aDuration, aValues.Elements(),
+                         aStartTime, 0.0f, 0.0f, aDuration, aValues.Data(),
                          aValues.Length());
     return this;
   }

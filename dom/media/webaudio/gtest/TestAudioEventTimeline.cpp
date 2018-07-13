@@ -202,6 +202,12 @@ TEST(AudioEventTimeline, InvalidEvents)
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   timeline.SetValueCurveAtTime(nullptr, 0, 1.0, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve1, ArrayLength(badCurve1), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_TYPE_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve2, ArrayLength(badCurve2), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_TYPE_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve3, ArrayLength(badCurve3), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_TYPE_ERR, "Correct error code returned");
   timeline.SetValueCurveAtTime(curve, ArrayLength(curve), NaN, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   timeline.SetValueCurveAtTime(curve, ArrayLength(curve), Infinity, 1.0, rv);
