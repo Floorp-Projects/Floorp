@@ -176,7 +176,7 @@ WorkerNavigator::GetUserAgent(nsString& aUserAgent, CallerType aCallerType,
   RefPtr<GetUserAgentRunnable> runnable =
     new GetUserAgentRunnable(workerPrivate, aUserAgent);
 
-  runnable->Dispatch(Terminating, aRv);
+  runnable->Dispatch(Canceling, aRv);
 }
 
 uint64_t

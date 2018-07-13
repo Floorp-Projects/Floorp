@@ -67,7 +67,7 @@ ClientManager::ClientManager()
     // We need AllowIdleShutdownStart since every worker thread will
     // have a ClientManager to support creating its ClientSource.
     workerHolderToken =
-      WorkerHolderToken::Create(workerPrivate, Terminating,
+      WorkerHolderToken::Create(workerPrivate, Canceling,
                                 WorkerHolderToken::AllowIdleShutdownStart);
     if (NS_WARN_IF(!workerHolderToken)) {
       Shutdown();

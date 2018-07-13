@@ -6755,7 +6755,7 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode)
   if (Element* element = Element::FromNode(aNode)) {
     if (const nsDOMAttributeMap* map = element->GetAttributeMap()) {
       while (true) {
-        nsCOMPtr<nsIAttribute> attr;
+        RefPtr<Attr> attr;
         {
           // Use an iterator to get an arbitrary attribute from the
           // cache. The iterator must be destroyed before any other
@@ -6767,8 +6767,6 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode)
           }
           attr = iter.UserData();
         }
-        NS_ASSERTION(attr.get(),
-                     "non-nsIAttribute somehow made it into the hashmap?!");
 
         BlastSubtreeToPieces(attr);
 

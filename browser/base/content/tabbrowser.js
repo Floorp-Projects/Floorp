@@ -1904,7 +1904,11 @@ window._gBrowser = {
         case "currentURI":
           getter = () => {
             let url = SessionStore.getLazyTabValue(aTab, "url");
-            return Services.io.newURI(url);
+            // Avoid recreating the same nsIURI object over and over again...
+            if (browser._cachedCurrentURI) {
+              return browser._cachedCurrentURI;
+            }
+            return browser._cachedCurrentURI = Services.io.newURI(url);
           };
           break;
         case "didStartLoadSinceLastUserTyping":
@@ -1988,6 +1992,7 @@ window._gBrowser = {
     let { uriIsAboutBlank, remoteType, usingPreloadedContent } =
     aTab._browserParams;
     delete aTab._browserParams;
+    delete aTab._cachedCurrentURI;
 
     let notificationbox = this.getNotificationBox(browser);
     let uniqueId = this._generateUniquePanelID();

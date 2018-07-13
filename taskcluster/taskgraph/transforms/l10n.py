@@ -97,8 +97,8 @@ l10n_description_schema = Schema({
 
     Optional('run-on-projects'): job_description_schema['run-on-projects'],
 
-    # task object of the dependent task
-    Required('dependent-task'): object,
+    # dictionary of dependent task objects, keyed by kind.
+    Required('dependent-tasks'): {basestring: object},
 
     # worker-type to utilize
     Required('worker-type'): _by_platform(basestring),
@@ -197,7 +197,7 @@ def _remove_locales(locales, to_remove=None):
 @transforms.add
 def setup_name(config, jobs):
     for job in jobs:
-        dep = job['dependent-task']
+        dep = job['dependent-tasks']['build']
         # Set the name to the same as the dep task, without kind name.
         # Label will get set automatically with this kinds name.
         job['name'] = job.get('name',
@@ -208,7 +208,7 @@ def setup_name(config, jobs):
 @transforms.add
 def copy_in_useful_magic(config, jobs):
     for job in jobs:
-        dep = job['dependent-task']
+        dep = job['dependent-tasks']['build']
         attributes = copy_attributes_from_dependent_job(dep)
         attributes.update(job.get('attributes', {}))
         # build-platform is needed on `job` for by-build-platform
@@ -229,20 +229,19 @@ def validate_early(config, jobs):
 def setup_nightly_dependency(config, jobs):
     """ Sets up a task dependency to the signing job this relates to """
     for job in jobs:
-        job['dependencies'] = {'unsigned-build': job['dependent-task'].label}
+        job['dependencies'] = {'build': job['dependent-tasks']['build'].label}
         if job['attributes']['build_platform'].startswith('win') or \
                 job['attributes']['build_platform'].startswith('linux'):
-            # Weave these in and just assume they will be there in the resulting graph
             job['dependencies'].update({
-                'signed-build': 'build-signing-{}'.format(job['name']),
+                'build-signing': job['dependent-tasks']['build-signing'].label,
             })
         if job['attributes']['build_platform'].startswith('macosx'):
             job['dependencies'].update({
-                'repackage': 'repackage-{}'.format(job['name'])
+                'repackage': job['dependent-tasks']['repackage'].label
             })
         if job['attributes']['build_platform'].startswith('win'):
             job['dependencies'].update({
-                'repackage-signed': 'repackage-signing-{}'.format(job['name'])
+                'repackage-signing': job['dependent-tasks']['repackage-signing'].label
             })
         yield job
 

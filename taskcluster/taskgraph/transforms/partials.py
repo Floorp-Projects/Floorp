@@ -81,6 +81,9 @@ def make_task_description(config, jobs):
 
         signing_task = None
         for dependency in sorted(dependencies.keys()):
+            if 'repackage-signing-l10n' in dependency:
+                signing_task = dependency
+                break
             if 'repackage-signing' in dependency:
                 signing_task = dependency
                 break

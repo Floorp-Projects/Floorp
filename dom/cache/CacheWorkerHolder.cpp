@@ -20,7 +20,7 @@ CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate, Behavior aBehavior)
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
   RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder(aBehavior);
-  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, Terminating))) {
+  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, Canceling))) {
     return nullptr;
   }
 
@@ -93,9 +93,9 @@ CacheWorkerHolder::Notify(WorkerStatus aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
 
-  // When the service worker thread is stopped we will get Terminating,
-  // but nothing higher than that.  We must shut things down at Terminating.
-  if (aStatus < Terminating || mNotified) {
+  // When the service worker thread is stopped we will get Canceling,
+  // but nothing higher than that.  We must shut things down at Canceling.
+  if (aStatus < Canceling || mNotified) {
     return true;
   }
 

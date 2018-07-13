@@ -130,7 +130,7 @@ Worker::Terminate()
   NS_ASSERT_OWNINGTHREAD(Worker);
 
   if (mWorkerPrivate) {
-    mWorkerPrivate->Terminate();
+    mWorkerPrivate->Cancel();
     mWorkerPrivate = nullptr;
   }
 }

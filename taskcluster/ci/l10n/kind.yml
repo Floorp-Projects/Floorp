@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-loader: taskgraph.loader.single_dep:loader
+loader: taskgraph.loader.multi_dep:loader
 
+group-by: platform
 
 transforms:
    - taskgraph.transforms.l10n:transforms
@@ -13,6 +14,9 @@ transforms:
 
 kind-dependencies:
    - build
+   - build-signing
+   - repackage
+   - repackage-signing
    - toolchain
 
 only-for-build-platforms:
@@ -99,27 +103,27 @@ job-template:
          linux.*:   # linux64 and 32 get same treatment here
             EN_US_PACKAGE_NAME: target.tar.bz2
             EN_US_BINARY_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/{artifact_prefix}
+               task-reference: https://queue.taskcluster.net/v1/task/<build-signing>/artifacts/{artifact_prefix}
             MAR_TOOLS_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+               task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
          macosx64:
             EN_US_PACKAGE_NAME: target.dmg
             EN_US_BINARY_URL:
                task-reference: https://queue.taskcluster.net/v1/task/<repackage>/artifacts/{artifact_prefix}
             MAR_TOOLS_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+               task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
          win.*:
             EN_US_PACKAGE_NAME: target.zip
             EN_US_BINARY_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/{artifact_prefix}
+               task-reference: https://queue.taskcluster.net/v1/task/<build-signing>/artifacts/{artifact_prefix}
             EN_US_INSTALLER_BINARY_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<repackage-signed>/artifacts/{artifact_prefix}
+               task-reference: https://queue.taskcluster.net/v1/task/<repackage-signing>/artifacts/{artifact_prefix}
             MAR_TOOLS_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+               task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}/host/bin
          android-api-16:
             EN_US_PACKAGE_NAME: target.apk
             EN_US_BINARY_URL:
-               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}
+               task-reference: https://queue.taskcluster.net/v1/task/<build>/artifacts/{artifact_prefix}
    mozharness:
       config:
          by-build-platform:
