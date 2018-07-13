@@ -438,27 +438,37 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI, ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozRemove(const nsAString& aURI, ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   nsAutoCString key;
   rv = GetCacheKey(aURI, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   ClearCachedKeys();
 
@@ -469,9 +479,10 @@ nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
   // finished.  Need to bring this issue up.
 
   rv = appCache->UnmarkEntry(key, nsIApplicationCache::ITEM_DYNAMIC);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
 NS_IMETHODIMP

@@ -105,10 +105,7 @@ public:
     return rv.Failed() ? 0 : length;
   }
   void MozAdd(const nsAString& aURI, ErrorResult& aRv);
-  void MozRemove(const nsAString& aURI, ErrorResult& aRv)
-  {
-    aRv = MozRemove(aURI);
-  }
+  void MozRemove(const nsAString& aURI, ErrorResult& aRv);
 
 protected:
   virtual ~nsDOMOfflineResourceList();

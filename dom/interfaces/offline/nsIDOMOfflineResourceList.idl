@@ -14,16 +14,6 @@ interface nsIDOMOfflineResourceList : nsISupports
   readonly attribute nsISupports mozItems;
 
   /**
-   * Remove an item from the list of dynamically-managed entries.  If this
-   * was the last reference to a URI in the application cache, the cache
-   * entry will be removed.
-   *
-   * @param uri
-   *        The resource to remove.
-   */
-  void mozRemove(in DOMString uri);
-
-  /**
    * State of the application cache this object is associated with.
    */
 
