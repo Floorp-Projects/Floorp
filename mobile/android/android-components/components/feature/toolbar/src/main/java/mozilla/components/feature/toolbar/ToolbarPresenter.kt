@@ -65,22 +65,16 @@ class ToolbarPresenter(
         }
     }
 
-    override fun onUrlChanged() {
-        activeSession?.let { session ->
-            toolbar.url = session.url
-            toolbar.setSearchTerms(session.searchTerms)
-        }
+    override fun onUrlChanged(session: Session, url: String) {
+        toolbar.url = url
+        toolbar.setSearchTerms(session.searchTerms)
     }
 
-    override fun onProgress() {
-        activeSession?.let { session ->
-            toolbar.displayProgress(session.progress)
-        }
+    override fun onProgress(session: Session, progress: Int) {
+        toolbar.displayProgress(progress)
     }
 
-    override fun onSearch() {
-        activeSession?.let { session ->
-            toolbar.setSearchTerms(session.searchTerms)
-        }
+    override fun onSearch(session: Session, searchTerms: String) {
+        toolbar.setSearchTerms(searchTerms)
     }
 }

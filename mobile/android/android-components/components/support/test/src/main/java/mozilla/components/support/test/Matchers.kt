@@ -16,5 +16,14 @@ fun <T> any(): T {
     return uninitialized()
 }
 
+/**
+ * Mockito matcher that matches if the argument is the same as the provided value.
+ *
+ * (The version from Mockito doesn't work correctly with Kotlin code.)
+ */
+fun <T> eq(value: T): T {
+    return Mockito.eq(value) ?: value
+}
+
 @Suppress("UNCHECKED_CAST")
 private fun <T> uninitialized(): T = null as T

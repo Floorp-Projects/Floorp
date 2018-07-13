@@ -59,7 +59,7 @@ class TabViewHolder(
         session?.unregister(this)
     }
 
-    override fun onUrlChanged() {
-        session?.let { tabView.text = it.url }
+    override fun onUrlChanged(session: Session, url: String) {
+        tabView.text = url
     }
 }

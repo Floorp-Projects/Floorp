@@ -29,13 +29,13 @@ class Session(
      * Interface to be implemented by classes that want to observe a session.
      */
     interface Observer {
-        fun onUrlChanged() = Unit
-        fun onProgress() = Unit
-        fun onLoadingStateChanged() = Unit
-        fun onNavigationStateChanged() = Unit
-        fun onSearch() = Unit
-        fun onSecurityChanged() = Unit
-        fun onCustomTabConfigChanged() = Unit
+        fun onUrlChanged(session: Session, url: String) = Unit
+        fun onProgress(session: Session, progress: Int) = Unit
+        fun onLoadingStateChanged(session: Session, loading: Boolean) = Unit
+        fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) = Unit
+        fun onSearch(session: Session, searchTerms: String) = Unit
+        fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
+        fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
     }
 
     /**
@@ -52,42 +52,42 @@ class Session(
      * The currently loading or loaded URL.
      */
     var url: String by Delegates.observable(initialUrl) {
-        _, old, new -> notifyObservers(old, new) { onUrlChanged() }
+        _, old, new -> notifyObservers(old, new) { onUrlChanged(this@Session, new) }
     }
 
     /**
      * The progress loading the current URL.
      */
     var progress: Int by Delegates.observable(0) {
-        _, old, new -> notifyObservers(old, new) { onProgress() }
+        _, old, new -> notifyObservers(old, new) { onProgress(this@Session, new) }
     }
 
     /**
      * Loading state, true if this session's url is currently loading, otherwise false.
      */
     var loading: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers(old, new) { onLoadingStateChanged() }
+        _, old, new -> notifyObservers(old, new) { onLoadingStateChanged(this@Session, new) }
     }
 
     /**
      * Navigation state, true if there's an history item to go back to, otherwise false.
      */
     var canGoBack: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged() }
+        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged(this@Session, new, canGoForward) }
     }
 
     /**
      * Navigation state, true if there's an history item to go forward to, otherwise false.
      */
     var canGoForward: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged() }
+        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged(this@Session, canGoBack, new) }
     }
 
     /**
      * The currently / last used search terms.
      */
     var searchTerms: String by Delegates.observable("") {
-        _, _, new -> notifyObservers { if (!new.isEmpty()) onSearch() }
+        _, _, new -> notifyObservers { if (!new.isEmpty()) onSearch(this@Session, new) }
     }
 
     /**
@@ -95,14 +95,14 @@ class Session(
      * for a secure URL, as well as the host and SSL certificate authority, if applicable.
      */
     var securityInfo: SecurityInfo by Delegates.observable(SecurityInfo()) {
-        _, old, new -> notifyObservers(old, new) { onSecurityChanged() }
+        _, old, new -> notifyObservers(old, new) { onSecurityChanged(this@Session, new) }
     }
 
     /**
      * Configuration data in case this session is used for a Custom Tab.
      */
     var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) {
-        _, _, _ -> notifyObservers { onCustomTabConfigChanged() }
+        _, _, new -> notifyObservers { onCustomTabConfigChanged(this@Session, new) }
     }
 
     /**

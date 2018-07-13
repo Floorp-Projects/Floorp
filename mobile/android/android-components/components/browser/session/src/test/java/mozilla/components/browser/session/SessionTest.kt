@@ -5,6 +5,8 @@
 package mozilla.components.browser.session
 
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -24,9 +26,9 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.notifyObservers { onUrlChanged() }
+        session.notifyObservers { onUrlChanged(session, "https://getpocket.com") }
 
-        verify(observer).onUrlChanged()
+        verify(observer).onUrlChanged(eq(session), eq("https://getpocket.com"))
         verifyNoMoreInteractions(observer)
     }
 
@@ -37,17 +39,17 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.notifyObservers { onUrlChanged() }
+        session.notifyObservers { onUrlChanged(session, "https://getpocket.com") }
 
-        verify(observer).onUrlChanged()
+        verify(observer).onUrlChanged(session, "https://getpocket.com")
         verifyNoMoreInteractions(observer)
 
         reset(observer)
 
         session.unregister(observer)
-        session.notifyObservers { onUrlChanged() }
+        session.notifyObservers { onUrlChanged(session, "https://www.firefox.com") }
 
-        verify(observer, never()).onUrlChanged()
+        verify(observer, never()).onUrlChanged(any(), any())
         verifyNoMoreInteractions(observer)
     }
 
@@ -61,7 +63,7 @@ class SessionTest {
         session.url = "http://www.firefox.com"
 
         assertEquals("http://www.firefox.com", session.url)
-        verify(observer).onUrlChanged()
+        verify(observer).onUrlChanged(eq(session), eq("http://www.firefox.com"))
         verifyNoMoreInteractions(observer)
     }
 
@@ -75,7 +77,7 @@ class SessionTest {
         session.progress = 75
 
         assertEquals(75, session.progress)
-        verify(observer).onProgress()
+        verify(observer).onProgress(eq(session), eq(75))
         verifyNoMoreInteractions(observer)
     }
 
@@ -89,7 +91,7 @@ class SessionTest {
         session.loading = true
 
         assertEquals(true, session.loading)
-        verify(observer).onLoadingStateChanged()
+        verify(observer).onLoadingStateChanged(eq(session), eq(true))
         verifyNoMoreInteractions(observer)
     }
 
@@ -102,11 +104,11 @@ class SessionTest {
 
         session.canGoBack = true
         assertEquals(true, session.canGoBack)
-        verify(observer).onNavigationStateChanged()
+        verify(observer).onNavigationStateChanged(eq(session), eq(true), eq(false))
 
         session.canGoForward = true
         assertEquals(true, session.canGoForward)
-        verify(observer, times(2)).onNavigationStateChanged()
+        verify(observer).onNavigationStateChanged(eq(session), eq(true), eq(true))
 
         verifyNoMoreInteractions(observer)
     }
@@ -121,7 +123,7 @@ class SessionTest {
         session.url = "https://www.mozilla.org"
 
         assertEquals("https://www.mozilla.org", session.url)
-        verify(observer, never()).onUrlChanged()
+        verify(observer, never()).onUrlChanged(eq(session), eq("https://www.mozilla.org"))
         verifyNoMoreInteractions(observer)
     }
 
@@ -136,27 +138,42 @@ class SessionTest {
         session.searchTerms = "mozilla android"
 
         assertEquals("mozilla android", session.searchTerms)
-        verify(observer, times(1)).onSearch()
+        verify(observer, times(1)).onSearch(eq(session), eq("mozilla android"))
         verifyNoMoreInteractions(observer)
     }
 
     @Test
     fun `observer is notified when security info is set`() {
-        val observer = mock(Session.Observer::class.java)
+        var info: Session.SecurityInfo? = null
+
+        val observer = object : Session.Observer {
+            override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+                info = securityInfo
+            }
+        }
 
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
         session.securityInfo = Session.SecurityInfo(true, "mozilla.org", "issuer")
 
-        assertEquals(Session.SecurityInfo(true, "mozilla.org", "issuer"), session.securityInfo)
-        verify(observer, times(1)).onSecurityChanged()
-        verifyNoMoreInteractions(observer)
+        assertEquals(Session.SecurityInfo(true, "mozilla.org", "issuer"),
+            session.securityInfo)
+
+        assertNotNull(info)
+        assertEquals(true, info!!.secure)
+        assertEquals("mozilla.org", info!!.host)
+        assertEquals("issuer", info!!.issuer)
     }
 
     @Test
     fun `observer is notified when custom tab config is set`() {
-        val observer = mock(Session.Observer::class.java)
+        var config: CustomTabConfig? = null
+        val observer = object : Session.Observer {
+            override fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) {
+                config = customTabConfig
+            }
+        }
 
         val session = Session("https://www.mozilla.org")
         session.register(observer)
@@ -167,8 +184,9 @@ class SessionTest {
         session.customTabConfig = customTabConfig
 
         assertEquals(customTabConfig, session.customTabConfig)
-        verify(observer, times(1)).onCustomTabConfigChanged()
-        verifyNoMoreInteractions(observer)
+
+        assertNotNull(config)
+        assertEquals("id", config!!.id)
     }
 
     @Test
