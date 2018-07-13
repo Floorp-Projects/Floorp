@@ -33,6 +33,10 @@ talos-bcv:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    tier:
+        by-test-platform:
+            .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
+            default: default
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -46,6 +50,10 @@ talos-bcv-profiling:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
             default: ['mozilla-central', 'try']
+    tier:
+        by-test-platform:
+            .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
+            default: default
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -484,6 +492,10 @@ talos-xperf:
         by-test-platform:
             windows7-32.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
             default: []
+    tier:
+        by-test-platform:
+            windows7-32.*: default
+            default: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
     mozharness:
         extra-options:
             - --suite=xperf
