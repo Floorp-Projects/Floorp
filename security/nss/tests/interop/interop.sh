@@ -24,8 +24,8 @@ interop_init()
   cd "${HOSTDIR}/interop"
   INTEROP=${INTEROP:=tls_interop}
   if [ ! -d "$INTEROP" ]; then
-    git clone -q https://github.com/ttaubert/tls-interop "$INTEROP"
-    git -C "$INTEROP" checkout -q d07b28ac32b390dea1c9bcca5c56716247d23e5e
+    git clone -q https://github.com/jallmann/tls-interop "$INTEROP"
+    git -C "$INTEROP" checkout -q befbbde4e9e3ff78a6f90dc3170755bddcb1a2ef
   fi
   INTEROP=$(cd "$INTEROP";pwd -P)
 
@@ -33,9 +33,17 @@ interop_init()
   BORING=${BORING:=boringssl}
   if [ ! -d "$BORING" ]; then
     git clone -q https://boringssl.googlesource.com/boringssl "$BORING"
-    git -C "$BORING" checkout -q ea80f9d5df4c302de391e999395e1c87f9c786b3
+    git -C "$BORING" checkout -q 3815720cf31339b1739f8ad1c21205105412c6b5
   fi
   BORING=$(cd "$BORING";pwd -P)
+  mkdir "$BORING/build"
+  cd "$BORING/build"
+  
+  # Build boring explicitly with gcc because it fails on builds where 
+  # CC=clang-5.0, for example asan-builds.
+  export CC=gcc
+  cmake ..
+  make
 
   SCRIPTNAME="interop.sh"
   html_head "interop test"
@@ -54,9 +62,10 @@ interop_run()
   test_name=$1
   client=$2
   server=$3
+  client_writes_first=$4
 
   (cd "$INTEROP";
-   cargo run -- --client "$client" --server "$server" --rootdir "$BORING"/ssl/test/runner/ --test-cases cases.json) 2>interop-${test_name}.errors | tee interop-${test_name}.log
+   cargo run -- --client "$client" --server "$server" --rootdir "$BORING"/ssl/test/runner/ --test-cases cases.json $client_writes_first ) 2>interop-${test_name}.errors | tee interop-${test_name}.log
   RESULT=${PIPESTATUS[0]}
   html_msg "${RESULT}" 0 "Interop" "Run successfully"
   if [ $RESULT -ne 0 ]; then
@@ -67,10 +76,10 @@ interop_run()
   html_msg $? 1 "Interop" "No failures"
 }
 
-cd "$(dirname "$0")"
-SOURCE_DIR="$PWD"/../..
 interop_init
 NSS_SHIM="$BINDIR"/nss_bogo_shim
 BORING_SHIM="$BORING"/build/ssl/test/bssl_shim
 interop_run "nss_nss" ${NSS_SHIM} ${NSS_SHIM}
+interop_run "bssl_nss" ${BORING_SHIM} ${NSS_SHIM}
+interop_run "nss_bssl" ${NSS_SHIM} ${BORING_SHIM} "--client-writes-first"
 interop_cleanup
