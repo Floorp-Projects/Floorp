@@ -1291,7 +1291,7 @@ JS_malloc(JSContext* cx, size_t nbytes)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return static_cast<void*>(cx->zone()->pod_malloc<uint8_t>(nbytes));
+    return static_cast<void*>(cx->maybe_pod_malloc<uint8_t>(nbytes));
 }
 
 JS_PUBLIC_API(void*)
@@ -1299,8 +1299,8 @@ JS_realloc(JSContext* cx, void* p, size_t oldBytes, size_t newBytes)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return static_cast<void*>(cx->zone()->pod_realloc<uint8_t>(static_cast<uint8_t*>(p), oldBytes,
-                                                                newBytes));
+    return static_cast<void*>(cx->maybe_pod_realloc<uint8_t>(static_cast<uint8_t*>(p),
+                                                             oldBytes, newBytes));
 }
 
 JS_PUBLIC_API(void)
