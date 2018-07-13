@@ -321,4 +321,24 @@ class InlineAutocompleteEditTextTest {
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
         assertEquals("text", et.text.toString())
     }
+
+    @Test
+    fun testRemoveAutocompleteOnComposing() {
+        val et = InlineAutocompleteEditText(context, attributes)
+        val ic = et.onCreateInputConnection(mock(EditorInfo::class.java))
+
+        ic?.setComposingText("text", 1)
+        assertEquals("text", et.text.toString())
+
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
+        assertEquals("text completed", et.text.toString())
+
+        // Simulating a backspace which should remove the autocomplete and leave original text
+        ic?.setComposingText("tex", 1)
+        assertEquals("text", et.text.toString())
+
+        // Verify that we finished composing
+        assertEquals(-1, BaseInputConnection.getComposingSpanStart(et.text))
+        assertEquals(-1, BaseInputConnection.getComposingSpanEnd(et.text))
+    }
 }
