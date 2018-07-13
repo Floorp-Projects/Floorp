@@ -140,7 +140,7 @@ private:
   void DisconnectFromOwner() override;
 
   void Initialize(const nsID& aUUID, const nsID& aDestinationUUID,
-                  uint32_t aSequenceID, bool mNeutered, ErrorResult& aRv);
+                  uint32_t aSequenceID, bool aNeutered, ErrorResult& aRv);
 
   bool ConnectToPBackground();
 
