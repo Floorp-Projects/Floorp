@@ -21,9 +21,21 @@ class AntiTrackingCommon final
 public:
   // This method returns true if the URI has first party storage access when
   // loaded inside the passed 3rd party context tracking resource window.
+  // If the window is first party context, please use
+  // MaybeIsFirstPartyStorageAccessGrantedFor();
   static bool
   IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
                                       nsIURI* aURI);
+
+  // Note: you should use IsFirstPartyStorageAccessGrantedFor() passing the
+  // nsIHttpChannel! Use this method _only_ if the channel is not available.
+  // For first party window, it's impossible to know if the aURI is a tracking
+  // resource synchronously, so here we return the best guest: if we are sure
+  // that the permission is granted for the origin of aURI, this method returns
+  // true, otherwise false.
+  static bool
+  MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aFirstPartyWindow,
+                                           nsIURI* aURI);
 
   // This can be called only if the a3rdPartyTrackingChannel is _really_ a 3rd
   // party context and marked as tracking resource.

@@ -20,30 +20,51 @@ add_task(async function() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  info("Loading a tracking scripts");
+  info("Loading tracking scripts and tracking images");
   await ContentTask.spawn(browser, null, async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs";
+      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
-
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs";
+      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      await p;
+    }
+
+    // Let's load an image twice here.
+    {
+      let img = content.document.createElement("img");
+      let p = new content.Promise(resolve => { img.onload = resolve; });
+      content.document.body.appendChild(img);
+      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      await p;
+    }
+    {
+      let img = content.document.createElement("img");
+      let p = new content.Promise(resolve => { img.onload = resolve; });
+      content.document.body.appendChild(img);
+      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs?result")
+  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
-      is(text, 0, "No cookies received.");
+      is(text, 0, "Cookies received for images");
+    });
+
+  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
+    .then(r => r.text())
+    .then(text => {
+      is(text, 0, "Cookies received for scripts");
     });
 
   info("Creating a 3rd party content");
@@ -85,30 +106,51 @@ add_task(async function() {
     });
   });
 
-  info("Loading a tracking scripts again");
+  info("Loading tracking scripts and tracking images again");
   await ContentTask.spawn(browser, null, async function() {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs";
+      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
       await p;
     }
-
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => { src.onload = resolve; });
       content.document.body.appendChild(src);
-      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs";
+      src.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=script";
+      await p;
+    }
+
+    // Let's load an image twice here.
+    {
+      let img = content.document.createElement("img");
+      let p = new content.Promise(resolve => { img.onload = resolve; });
+      content.document.body.appendChild(img);
+      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
+      await p;
+    }
+    {
+      let img = content.document.createElement("img");
+      let p = new content.Promise(resolve => { img.onload = resolve; });
+      content.document.body.appendChild(img);
+      img.src = "https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?what=image";
       await p;
     }
   });
 
-  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/script.sjs?result")
+  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=image")
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received received.");
+      is(text, 1, "One cookie received for images.");
+    });
+
+  await fetch("https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/subResources.sjs?result&what=script")
+    .then(r => r.text())
+    .then(text => {
+      is(text, 1, "One cookie received received for scripts.");
     });
 
   info("Removing the tab");
