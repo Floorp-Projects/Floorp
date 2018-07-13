@@ -62,7 +62,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList,
                                    mPendingEvents)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMOfflineResourceList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -172,10 +171,6 @@ nsDOMOfflineResourceList::Disconnect()
     mListenerManager = nullptr;
   }
 }
-
-//
-// nsDOMOfflineResourceList::nsIDOMOfflineResourceList
-//
 
 already_AddRefed<DOMStringList>
 nsDOMOfflineResourceList::GetMozItems(ErrorResult& aRv)

@@ -8,7 +8,6 @@
 #define nsDOMOfflineResourceList_h___
 
 #include "nscore.h"
-#include "nsIDOMOfflineResourceList.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheService.h"
@@ -35,7 +34,6 @@ class Event;
 } // namespace mozilla
 
 class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
-                                       public nsIDOMOfflineResourceList,
                                        public nsIObserver,
                                        public nsIOfflineCacheUpdateObserver,
                                        public nsSupportsWeakReference
@@ -44,7 +42,6 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMOFFLINERESOURCELIST
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
