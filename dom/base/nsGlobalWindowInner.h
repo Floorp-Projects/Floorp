@@ -64,7 +64,7 @@ class nsIBaseWindow;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
-class nsIDOMOfflineResourceList;
+class nsDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
 class nsIJSID;
@@ -684,8 +684,8 @@ public:
        const nsAString& aName,
        const nsAString& aOptions,
        mozilla::ErrorResult& aError);
-  nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
+  nsDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
+  nsDOMOfflineResourceList* GetApplicationCache() override;
 
 #if defined(MOZ_WIDGET_ANDROID)
   int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
@@ -1420,7 +1420,7 @@ protected:
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
-  nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
+  RefPtr<nsDOMOfflineResourceList> mApplicationCache;
 
   using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;
   mozilla::UniquePtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
