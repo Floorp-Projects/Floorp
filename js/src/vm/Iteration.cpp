@@ -56,6 +56,9 @@ typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
 
 static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
+// Beware!  This function may have to trace incompletely-initialized
+// |NativeIterator| allocations if the |IdToString| in that constructor recurs
+// into this code.
 void
 NativeIterator::trace(JSTracer* trc)
 {
@@ -66,11 +69,24 @@ NativeIterator::trace(JSTracer* trc)
     if (iterObj_)
         TraceManuallyBarrieredEdge(trc, &iterObj_, "iterObj");
 
+    // The limits below are correct at every instant of |NativeIterator|
+    // initialization, with the end-pointer incremented as each new guard is
+    // created, so they're safe to use here.
     std::for_each(guardsBegin(), guardsEnd(),
                   [trc](HeapReceiverGuard& guard) {
                       guard.trace(trc);
                   });
 
+    // But as properties must be created *before* guards, |propertiesBegin()|
+    // that depends on |guardsEnd()| having its final value can't safely be
+    // used.  Until this is fully initialized, use |propertyCursor_| instead,
+    // which points at the start of properties even in partially initialized
+    // |NativeIterator|s.  (|propertiesEnd()| is safe at all times with respect
+    // to the properly-chosen beginning.)
+    //
+    // Note that we must trace all properties (not just those not yet visited,
+    // or just visited, due to |NativeIterator::previousPropertyWas|) for
+    // |NativeIterator|s to be reusable.
     GCPtrFlatString* begin = MOZ_LIKELY(isInitialized()) ? propertiesBegin() : propertyCursor_;
     std::for_each(begin, propertiesEnd(),
                   [trc](GCPtrFlatString& prop) {
@@ -674,7 +690,7 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
     propertyCursor_(reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
     propertiesEnd_(propertyCursor_),
     guardKey_(guardKey),
-    flags_(0)
+    flags_(0) // note: no Flags::Initialized
 {
     MOZ_ASSERT(!*hadError);
 
@@ -740,6 +756,8 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
         MOZ_ASSERT(i == numGuards);
     }
 
+    // |guardsEnd_| is now guaranteed to point at the start of properties, so
+    // we can mark this initialized.
     MOZ_ASSERT(static_cast<void*>(guardsEnd_) == propertyCursor_);
     markInitialized();
 

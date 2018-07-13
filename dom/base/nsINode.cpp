@@ -283,7 +283,7 @@ nsINode::SubtreeRoot() const
   //     or mSubtreeRoot is updated in BindToTree/UnbindFromTree.
   // 2.b nsIContent nodes in a shadow tree - Are never in the document,
   //     ignore mSubtreeRoot and return the containing shadow root.
-  // 4. nsIAttribute nodes - Are never in the document, and mSubtreeRoot
+  // 4. Attr nodes - Are never in the document, and mSubtreeRoot
   //    is always 'this' (as set in nsINode's ctor).
   nsINode* node;
   if (IsInUncomposedDoc()) {

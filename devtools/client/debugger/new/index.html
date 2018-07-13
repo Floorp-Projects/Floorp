@@ -15,18 +15,12 @@
   <div id="mount"></div>
   <script type="application/javascript" src="chrome://devtools/content/shared/theme-switching.js"></script>
   <script type="text/javascript">
-    try {
-      const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-      const { require } = BrowserLoader({
-        baseURI: "resource://devtools/client/debugger/new",
-        window,
-      });
-      Debugger = require("devtools/client/debugger/new/src/main");
-    } catch(e) {
-      dump("Exception happened while loading the debugger:\n");
-      dump(e + "\n");
-      dump(e.stack + "\n");
-    }
+    const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
+    const { require } = BrowserLoader({
+      baseURI: "resource://devtools/client/debugger/new",
+      window,
+    });
+    Debugger = require("devtools/client/debugger/new/src/main");
   </script>
 </body>
 

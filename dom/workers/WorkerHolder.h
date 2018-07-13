@@ -25,8 +25,6 @@ class WorkerPrivate;
  * +=============+=============+=================+==========+
  * |   Closing   |     yes     |       no        |    no    |
  * +-------------+-------------+-----------------+----------+
- * | Terminating |     yes     |       yes       |   yes    |
- * +-------------+-------------+-----------------+----------+
  * |  Canceling  |     yes     |       yes       |   yes    |
  * +-------------+-------------+-----------------+----------+
  * |   Killing   |     yes     |       yes       |   yes    |
@@ -47,11 +45,6 @@ enum WorkerStatus
   // to be notified because the behavior of APIs/Components should not change
   // during this status yet.
   Closing,
-
-  // Outer script called terminate() on the worker or the worker object was
-  // garbage collected in its outer script. Setting this status causes the
-  // worker to abort immediately and clear its queue of events.
-  Terminating,
 
   // Either the user navigated away from the owning page or the owning page fell
   // out of bfcache. Setting this status causes the worker to abort immediately.

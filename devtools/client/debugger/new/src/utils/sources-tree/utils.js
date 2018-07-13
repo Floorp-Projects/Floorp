@@ -22,6 +22,8 @@ var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
 
 var _source = require("../source");
 
+var _getURL = require("./getURL");
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -69,8 +71,8 @@ function isSource(item) {
   return item.type === "source";
 }
 
-function getFileExtension(url = "") {
-  const parsedUrl = (0, _url.parse)(url).pathname;
+function getFileExtension(source) {
+  const parsedUrl = (0, _getURL.getURL)(source).path;
 
   if (!parsedUrl) {
     return "";
@@ -80,7 +82,7 @@ function getFileExtension(url = "") {
 }
 
 function isNotJavaScript(source) {
-  return ["css", "svg", "png"].includes(getFileExtension(source.url));
+  return ["css", "svg", "png"].includes(getFileExtension(source));
 }
 
 function isInvalidUrl(url, source) {

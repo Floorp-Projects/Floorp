@@ -178,7 +178,7 @@ FileBlobImpl::GetType(nsAString& aType)
         new GetTypeRunnable(workerPrivate, this);
 
       ErrorResult rv;
-      runnable->Dispatch(Terminating, rv);
+      runnable->Dispatch(Canceling, rv);
       if (NS_WARN_IF(rv.Failed())) {
         rv.SuppressException();
       }

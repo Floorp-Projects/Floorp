@@ -36,7 +36,7 @@ const def = {
   filename: ""
 };
 
-function _getURL(source, debuggeeUrl) {
+function _getURL(source, defaultDomain) {
   const {
     url
   } = source;
@@ -98,11 +98,9 @@ function _getURL(source, debuggeeUrl) {
           group: "file://"
         };
       } else if (host === null) {
-        // use anonymous group for weird URLs
-        const defaultDomain = (0, _url.parse)(debuggeeUrl).host;
         return { ...def,
           path: url,
-          group: defaultDomain,
+          group: defaultDomain || "",
           filename
         };
       }
@@ -125,12 +123,12 @@ function _getURL(source, debuggeeUrl) {
   };
 }
 
-function getURL(source, debuggeeUrl = "") {
+function getURL(source, debuggeeUrl) {
   if (urlMap.has(source)) {
     return urlMap.get(source) || def;
   }
 
-  const url = _getURL(source, debuggeeUrl);
+  const url = _getURL(source, debuggeeUrl || "");
 
   urlMap.set(source, url);
   return url;

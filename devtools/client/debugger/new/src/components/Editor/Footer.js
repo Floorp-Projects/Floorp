@@ -148,23 +148,23 @@ class SourceFooter extends _react.PureComponent {
       selectedSource
     } = this.props;
 
-    if (mappedSource) {
-      const filename = (0, _source.getFilename)(mappedSource);
-      const tooltip = L10N.getFormatStr("sourceFooter.mappedSourceTooltip", filename);
-      const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
-      const mappedSourceLocation = {
-        sourceId: selectedSource.id,
-        line: 1,
-        column: 1
-      };
-      return _react2.default.createElement("button", {
-        className: "mapped-source",
-        onClick: () => jumpToMappedLocation(mappedSourceLocation),
-        title: tooltip
-      }, _react2.default.createElement("span", null, title));
+    if (!mappedSource) {
+      return null;
     }
 
-    return null;
+    const filename = (0, _source.getFilename)(mappedSource);
+    const tooltip = L10N.getFormatStr("sourceFooter.mappedSourceTooltip", filename);
+    const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
+    const mappedSourceLocation = {
+      sourceId: selectedSource.id,
+      line: 1,
+      column: 1
+    };
+    return _react2.default.createElement("button", {
+      className: "mapped-source",
+      onClick: () => jumpToMappedLocation(mappedSourceLocation),
+      title: tooltip
+    }, _react2.default.createElement("span", null, title));
   }
 
   render() {

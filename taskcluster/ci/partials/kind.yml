@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
    - repackage-signing
+   - repackage-signing-l10n
 
 only-for-attributes:
    - nightly

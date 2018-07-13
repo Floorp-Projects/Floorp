@@ -70,7 +70,6 @@ EXPORTS += [
     'nsGlobalWindowInner.h',  # Because binding headers include it.
     'nsGlobalWindowOuter.h',  # Because binding headers include it.
     'nsIAnimationObserver.h',
-    'nsIAttribute.h',
     'nsIContent.h',
     'nsIContentInlines.h',
     'nsIContentIterator.h',

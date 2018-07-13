@@ -48,6 +48,7 @@
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
+#include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/psm/PSMContentListener.h"
@@ -592,7 +593,9 @@ mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
                                             nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                            nsTArray<SystemFontListEntry>&& aFontList)
+                                            nsTArray<SystemFontListEntry>&& aFontList,
+                                            const FileDescriptor& aSharedDataMapFile,
+                                            const uint32_t& aSharedDataMapSize)
 {
   if (!sShutdownCanary) {
     return IPC_OK();
@@ -603,6 +606,9 @@ ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
+
+  mSharedData = new SharedMap(ProcessGlobal::Get(), aSharedDataMapFile,
+                              aSharedDataMapSize);
 
   return IPC_OK();
 }
@@ -2378,6 +2384,8 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
 
   BlobURLProtocolHandler::RemoveDataEntries();
 
+  mSharedData = nullptr;
+
   mAlertObservers.Clear();
 
   mIdleObservers.Clear();
@@ -2552,6 +2560,26 @@ ContentChild::RecvRegisterStringBundles(nsTArray<mozilla::dom::StringBundleDescr
   for (auto& descriptor : aDescriptors) {
     stringBundleService->RegisterContentBundle(descriptor.bundleURL(), descriptor.mapFile(),
                                                descriptor.mapSize());
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
+                                   const uint32_t& aMapSize,
+                                   nsTArray<IPCBlob>&& aBlobs,
+                                   nsTArray<nsCString>&& aChangedKeys)
+{
+  if (mSharedData) {
+    nsTArray<RefPtr<BlobImpl>> blobImpls(aBlobs.Length());
+    for (auto& ipcBlob : aBlobs) {
+      blobImpls.AppendElement(IPCBlobUtils::Deserialize(ipcBlob));
+    }
+
+    mSharedData->Update(aMapFile, aMapSize,
+                        std::move(blobImpls),
+                        std::move(aChangedKeys));
   }
 
   return IPC_OK();
