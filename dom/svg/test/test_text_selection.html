@@ -54,8 +54,8 @@ function selection_is(s, text)
 
 function deselect()
 {
-  // Click outside text to deselect.
-  click(1, 1);
+  // Click outside text (and outside all <rect> elements>) to deselect.
+  click(15, 15);
   selection_is("", "deselecting by clicking outside text");
 }
 

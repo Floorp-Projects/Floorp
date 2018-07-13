@@ -84,3 +84,10 @@ foreignObject {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
 }
+
+/* Make SVG shapes unselectable to avoid triggering AccessibleCaret on tap.
+   <mesh> will be supported in bug 1238882. */
+circle, ellipse, line, mesh, path, polygon, polyline, rect {
+  -moz-user-select: none;
+}
+
