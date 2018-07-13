@@ -95,16 +95,9 @@ public:
   already_AddRefed<mozilla::dom::DOMStringList> GetMozItems(ErrorResult& aRv);
   bool MozHasItem(const nsAString& aURI, ErrorResult& aRv);
   uint32_t GetMozLength(ErrorResult& aRv);
-  void MozItem(uint32_t aIndex, nsAString& aURI, ErrorResult& aRv)
-  {
-    aRv = MozItem(aIndex, aURI);
-  }
+  void MozItem(uint32_t aIndex, nsAString& aURI, ErrorResult& aRv);
   void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aURI,
-                     ErrorResult& aRv)
-  {
-    MozItem(aIndex, aURI, aRv);
-    aFound = !aURI.IsVoid();
-  }
+                     ErrorResult& aRv);
   uint32_t Length()
   {
     mozilla::IgnoredErrorResult rv;
