@@ -9,7 +9,7 @@
 function PostInitTargetScopedActor(connection) {}
 
 PostInitTargetScopedActor.prototype = {
-  actorPostfix: "postInitTab",
+  actorPostfix: "postInitTargetScoped",
   onPing(request) {
     return { message: "pong" };
   },
@@ -18,8 +18,4 @@ PostInitTargetScopedActor.prototype = {
 PostInitTargetScopedActor.prototype.requestTypes = {
   "ping": PostInitTargetScopedActor.prototype.onPing,
 };
-
-DebuggerServer.addTargetScopedActor({
-  constructorName: "PostInitTargetScopedActor",
-  constructorFun: PostInitTargetScopedActor,
-}, "postInitTargetScopedActor");
+exports.PostInitTargetScopedActor = PostInitTargetScopedActor;

@@ -78,7 +78,7 @@ DocGroup::ReportPerformanceInfo()
 #else
   uint32_t pid = getpid();
 #endif
-  uint64_t pwid = 0;
+  uint64_t windowID = 0;
   uint16_t count = 0;
   uint64_t duration = 0;
   bool isTopLevel = false;
@@ -88,8 +88,17 @@ DocGroup::ReportPerformanceInfo()
   for (const auto& document : *this) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
     MOZ_ASSERT(doc);
+    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+    if (!docURI) {
+      continue;
+    }
+    docURI->GetHost(host);
+    // If the host is empty, using the url
+    if (host.IsEmpty()) {
+      host = docURI->GetSpecOrDefault();
+    }
     // looking for the top level document URI
-    nsPIDOMWindowInner* win = doc->GetInnerWindow();
+    nsPIDOMWindowOuter* win = doc->GetWindow();
     if (!win) {
       continue;
     }
@@ -101,20 +110,12 @@ DocGroup::ReportPerformanceInfo()
     if (!top) {
       continue;
     }
-    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
-    if (!docURI) {
-      continue;
-    }
-    pwid = top->WindowID();
+    windowID = top->WindowID();
     isTopLevel = outer->IsTopLevelWindow();
-    docURI->GetHost(host);
-    // If the host is empty, using the url
-    if (host.IsEmpty()) {
-      docURI->GetSpec(host);
-    }
     break;
   }
 
+  MOZ_ASSERT(!host.IsEmpty());
   duration = mPerformanceCounter->GetExecutionDuration();
   FallibleTArray<CategoryDispatch> items;
 
@@ -125,11 +126,11 @@ DocGroup::ReportPerformanceInfo()
     CategoryDispatch item = CategoryDispatch(index, count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(host, pid, pwid, duration, false, isTopLevel, items);
+      return PerformanceInfo(host, pid, windowID, duration, false, isTopLevel, items);
     }
   }
 
-  return PerformanceInfo(host, pid, pwid, duration, false, isTopLevel, items);
+  return PerformanceInfo(host, pid, windowID, duration, false, isTopLevel, items);
 }
 
 nsresult

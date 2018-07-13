@@ -192,7 +192,7 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
  *  FindActiveEntry :  to find active colliding entry so we can doom it
  */
 nsDiskCacheBinding *
-nsDiskCacheBindery::FindActiveBinding(uint32_t  hashNumber)
+nsDiskCacheBindery::FindActiveBinding(uint32_t  hashNumber) const
 {
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     // find hash entry for key

@@ -16,7 +16,11 @@ async function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.addActors(ACTORS_URL);
+  DebuggerServer.registerModule(ACTORS_URL, {
+    prefix: "error",
+    constructor: "ErrorActor",
+    type: { global: true },
+  });
 
   const transport = DebuggerServer.connectPipe();
   const gClient = new DebuggerClient(transport);

@@ -112,7 +112,7 @@ public:
 
     static Native2WrappedNativeMap* newMap(int length);
 
-    inline XPCWrappedNative* Find(nsISupports* Obj)
+    inline XPCWrappedNative* Find(nsISupports* Obj) const
     {
         MOZ_ASSERT(Obj,"bad param");
         auto entry = static_cast<Entry*>(mTable.Search(Obj));
@@ -178,7 +178,7 @@ public:
 
     static IID2WrappedJSClassMap* newMap(int length);
 
-    inline nsXPCWrappedJSClass* Find(REFNSIID iid)
+    inline nsXPCWrappedJSClass* Find(REFNSIID iid) const
     {
         auto entry = static_cast<Entry*>(mTable.Search(&iid));
         return entry ? entry->value : nullptr;
@@ -232,7 +232,7 @@ public:
 
     static IID2NativeInterfaceMap* newMap(int length);
 
-    inline XPCNativeInterface* Find(REFNSIID iid)
+    inline XPCNativeInterface* Find(REFNSIID iid) const
     {
         auto entry = static_cast<Entry*>(mTable.Search(&iid));
         return entry ? entry->value : nullptr;
@@ -290,7 +290,7 @@ public:
 
     static ClassInfo2NativeSetMap* newMap(int length);
 
-    inline XPCNativeSet* Find(nsIClassInfo* info)
+    inline XPCNativeSet* Find(nsIClassInfo* info) const
     {
         auto entry = static_cast<Entry*>(mTable.Search(info));
         return entry ? entry->value : nullptr;
@@ -343,7 +343,7 @@ public:
 
     static ClassInfo2WrappedNativeProtoMap* newMap(int length);
 
-    inline XPCWrappedNativeProto* Find(nsIClassInfo* info)
+    inline XPCWrappedNativeProto* Find(nsIClassInfo* info) const
     {
         auto entry = static_cast<Entry*>(mTable.Search(info));
         return entry ? entry->value : nullptr;
@@ -401,7 +401,7 @@ public:
 
     static NativeSetMap* newMap(int length);
 
-    inline XPCNativeSet* Find(XPCNativeSetKey* key)
+    inline XPCNativeSet* Find(XPCNativeSetKey* key) const
     {
         auto entry = static_cast<Entry*>(mTable.Search(key));
         return entry ? entry->key_value : nullptr;

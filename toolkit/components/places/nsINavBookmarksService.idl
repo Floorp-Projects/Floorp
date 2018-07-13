@@ -302,6 +302,26 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute long long mobileFolder;
 
   /**
+   * The total number of Sync changes (inserts, updates, deletes, merges, and
+   * uploads) recorded since Places startup for all bookmarks.
+   *
+   * Note that this is *not* the number of bookmark syncs. It's a monotonically
+   * increasing counter incremented for every change that affects a bookmark's
+   * `syncChangeCounter`.
+   *
+   * The counter can be used to avoid keeping an exclusive transaction open for
+   * time-consuming work. One way to do that is to store the current value of
+   * the counter, do the work, start a transaction, check the current value
+   * again, and compare it to the stored value to determine if the database
+   * changed during the work.
+   *
+   * The bookmarks mirror does this to check for changes between building and
+   * applying a merged tree. This avoids blocking the main Places connection
+   * during the merge, and ensures that the new tree still applies cleanly.
+   */
+  readonly attribute long long totalSyncChanges;
+
+  /**
    * This value should be used for APIs that allow passing in an index
    * where an index is not known, or not required to be specified.
    * e.g.: When appending an item to a folder.

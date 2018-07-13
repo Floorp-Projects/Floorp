@@ -78,7 +78,7 @@ function init(msg) {
 
     const { ContentProcessTargetActor } =
         loader.require("devtools/server/actors/targets/content-process");
-    const { ActorPool } = loader.require("devtools/server/main");
+    const { ActorPool } = loader.require("devtools/server/actors/common");
     const actor = new ContentProcessTargetActor(conn);
     const actorPool = new ActorPool(conn);
     actorPool.addActor(actor);

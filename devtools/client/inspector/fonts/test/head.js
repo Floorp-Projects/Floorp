@@ -37,7 +37,7 @@ selectNode = async function(node, inspector, reason) {
  */
 var openFontInspectorForURL = async function(url) {
   const tab = await addTab(url);
-  const {toolbox, inspector} = await openInspector();
+  const {toolbox, inspector, testActor } = await openInspector();
 
   // Call selectNode again here to force a fontinspector update since we don't
   // know if the fontinspector-updated event has been sent while the inspector
@@ -46,6 +46,7 @@ var openFontInspectorForURL = async function(url) {
 
   return {
     tab,
+    testActor,
     toolbox,
     inspector,
     view: inspector.fontinspector
@@ -203,4 +204,46 @@ function getURL(fontEl) {
  */
 function getFamilyName(fontEl) {
   return fontEl.querySelector(".font-family-name").textContent;
+}
+
+/**
+ * Get the value and unit of a CSS font property or font axis from the font editor.
+ *
+ * @param  {document} viewDoc
+ *         Host document of the font inspector panel.
+ * @param  {String} name
+ *         Font property name or axis tag
+ * @return {Object}
+ *         Object with the value and unit of the given font property or axis tag
+ *         from the corresponding input fron the font editor.
+ *         @Example:
+ *         {
+ *          value: {Number|String|null}
+ *          unit: {String|null}
+ *         }
+ */
+function getPropertyValue(viewDoc, name) {
+  const selector = `#font-editor .font-value-slider[name=${name}]`;
+  return {
+    // Ensure value input exists before querying its value
+    value: viewDoc.querySelector(selector) &&
+           parseFloat(viewDoc.querySelector(selector).value),
+    // Ensure unit dropdown exists before querying its value
+    unit: viewDoc.querySelector(selector + ` ~ .font-unit-select`) &&
+          viewDoc.querySelector(selector + ` ~ .font-unit-select`).value
+  };
+}
+
+/**
+ * Wait for a predicate to return a result.
+ *
+ * @param  {Function} condition
+ *         Invoked every 10ms for a maximum of 500 retries until it returns a truthy
+ *         value.
+ * @return {Promise}
+ *         A promise that is resolved with the result of the condition.
+ */
+async function waitFor(condition) {
+  await BrowserTestUtils.waitForCondition(condition, "waitFor", 10, 500);
+  return condition();
 }

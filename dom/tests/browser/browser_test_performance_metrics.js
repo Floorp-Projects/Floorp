@@ -7,6 +7,7 @@
 const ROOT_URL = "http://example.com/browser/dom/tests/browser";
 const DUMMY_URL = ROOT_URL + "/dummy.html";
 const WORKER_URL = ROOT_URL + "/ping_worker.html";
+const WORKER_URL2 = ROOT_URL + "/ping_worker2.html";
 
 
 let nextId = 0;
@@ -52,8 +53,11 @@ add_task(async function test() {
     gBrowser, opening: "about:memory", forceNewProcess: false
   });
 
+  let page3 = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser, opening: WORKER_URL
+  });
   // load a 4th tab with a worker
-  await BrowserTestUtils.withNewTab({ gBrowser, url: WORKER_URL },
+  await BrowserTestUtils.withNewTab({ gBrowser, url: WORKER_URL2 },
     async function(browser) {
     // grab events..
     let workerDuration = 0;
@@ -64,9 +68,22 @@ add_task(async function test() {
     let aboutMemoryFound = false;
     let parentProcessEvent = false;
     let workerEvent = false;
+    let subFrameIds = [];
+    let topLevelIds = [];
+    let sharedWorker = false;
 
     function exploreResults(data) {
       for (let entry of data) {
+        sharedWorker = entry.host.endsWith("shared_worker.js") || sharedWorker;
+
+        Assert.ok(entry.host != "" || entry.windowId !=0,
+                  "An entry should have a host or a windowId");
+        if (entry.windowId != 0 && !entry.isToplevel && !entry.isWorker && !subFrameIds.includes(entry.windowId)) {
+          subFrameIds.push(entry.windowId);
+        }
+        if (entry.isTopLevel && !topLevelIds.includes(entry.windowId)) {
+          topLevelIds.push(entry.windowId);
+        }
         if (entry.host == "example.com" && entry.isTopLevel) {
           isTopLevel = true;
         }
@@ -84,6 +101,7 @@ add_task(async function test() {
         }
         // let's look at the data we got back
         for (let item of entry.items) {
+          Assert.ok(item.count > 0, "Categories with an empty count are dropped");
           if (entry.isWorker) {
             workerTotal += item.count;
           } else {
@@ -104,6 +122,12 @@ add_task(async function test() {
     Assert.ok(parentProcessEvent, "parent process sent back some events");
     Assert.ok(isTopLevel, "example.com as a top level window");
     Assert.ok(aboutMemoryFound, "about:memory");
+    Assert.ok(sharedWorker, "We got some info from a shared worker");
+
+    // checking that subframes are not orphans
+    for (let frameId of subFrameIds) {
+      Assert.ok(topLevelIds.includes(frameId), "subframe is not orphan ");
+    }
 
     // Doing a second call, we shoud get bigger values
     let previousWorkerDuration = workerDuration;
@@ -122,5 +146,6 @@ add_task(async function test() {
 
   BrowserTestUtils.removeTab(page1);
   BrowserTestUtils.removeTab(page2);
+  BrowserTestUtils.removeTab(page3);
   SpecialPowers.clearUserPref("dom.performance.enable_scheduler_timing");
 });

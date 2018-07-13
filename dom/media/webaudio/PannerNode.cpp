@@ -567,11 +567,16 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
       orientationZ[0] = mOrientationZ.GetValueAtTime(tick);
     }
 
-    float computedGain[2*WEBAUDIO_BLOCK_SIZE + 4];
+    float buffer[3*WEBAUDIO_BLOCK_SIZE + 4];
     bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
-    float* alignedComputedGain = ALIGNED16(computedGain);
-    ASSERT_ALIGNED16(alignedComputedGain);
+    float* alignedPanningL = ALIGNED16(buffer);
+    float* alignedPanningR = alignedPanningL + WEBAUDIO_BLOCK_SIZE;
+    float* alignedGain = alignedPanningR + WEBAUDIO_BLOCK_SIZE;
+    ASSERT_ALIGNED16(alignedPanningL);
+    ASSERT_ALIGNED16(alignedPanningR);
+    ASSERT_ALIGNED16(alignedGain);
+
     for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
       ThreeDPoint position(mPositionX.HasSimpleValue() ? positionX[0] : positionX[counter],
                            mPositionY.HasSimpleValue() ? positionY[0] : positionY[counter],
@@ -611,17 +616,24 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
       distanceGain = ComputeDistanceGain(position);
 
       // Actually compute the left and right gain.
-      float gainL = cos(0.5 * M_PI * normalizedAzimuth) * aInput.mVolume * distanceGain * coneGain;
-      float gainR = sin(0.5 * M_PI * normalizedAzimuth) * aInput.mVolume * distanceGain * coneGain;
+      float gainL = cos(0.5 * M_PI * normalizedAzimuth);
+      float gainR = sin(0.5 * M_PI * normalizedAzimuth);
 
-      alignedComputedGain[counter] = gainL;
-      alignedComputedGain[WEBAUDIO_BLOCK_SIZE + counter] = gainR;
+
+      alignedPanningL[counter] = gainL;
+      alignedPanningR[counter] = gainR;
+      alignedGain[counter] = aInput.mVolume * distanceGain * coneGain;
       onLeft[counter] = azimuth <= 0;
     }
 
-    // Apply the gain to the output buffer
-    ApplyStereoPanning(aInput, aOutput, alignedComputedGain, &alignedComputedGain[WEBAUDIO_BLOCK_SIZE], onLeft);
+    // Apply the panning to the output buffer
+    ApplyStereoPanning(aInput, aOutput, alignedPanningL, alignedPanningR, onLeft);
 
+    // Apply the input volume, cone and distance gain to the output buffer.
+    float* outputL = aOutput->ChannelFloatsForWrite(0);
+    float* outputR = aOutput->ChannelFloatsForWrite(1);
+    AudioBlockInPlaceScale(outputL, alignedGain);
+    AudioBlockInPlaceScale(outputR, alignedGain);
   }
 }
 

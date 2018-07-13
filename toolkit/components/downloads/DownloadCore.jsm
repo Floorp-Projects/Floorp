@@ -2365,14 +2365,8 @@ this.DownloadLegacySaver.prototype = {
    *
    * @param aRequest
    *        nsIRequest associated to the status update.
-   * @param aAlreadyAddedToHistory
-   *        Indicates that the nsIExternalHelperAppService component already
-   *        added the download to the browsing history, unless it was started
-   *        from a private browsing window.  When this parameter is false, the
-   *        download is added to the browsing history here.  Private downloads
-   *        are never added to history even if this parameter is false.
    */
-  onTransferStarted(aRequest, aAlreadyAddedToHistory) {
+  onTransferStarted(aRequest) {
     // Store a reference to the request, used in some cases when handling
     // completion, and also checked during the download by unit tests.
     this.request = aRequest;
@@ -2396,9 +2390,7 @@ this.DownloadLegacySaver.prototype = {
       this.download.source.referrer = aRequest.referrer.spec;
     }
 
-    if (!aAlreadyAddedToHistory) {
-      this.addToHistory();
-    }
+    this.addToHistory();
   },
 
   /**

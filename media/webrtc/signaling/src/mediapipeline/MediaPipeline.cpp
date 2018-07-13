@@ -2123,7 +2123,6 @@ MediaPipelineReceiveAudio::DetachMedia()
   ASSERT_ON_THREAD(mMainThread);
   if (mListener) {
     mListener->EndTrack();
-    mListener = nullptr;
   }
 }
 
@@ -2321,7 +2320,6 @@ MediaPipelineReceiveVideo::DetachMedia()
   static_cast<VideoSessionConduit*>(mConduit.get())->DetachRenderer();
   if (mListener) {
     mListener->EndTrack();
-    mListener = nullptr;
   }
 }
 

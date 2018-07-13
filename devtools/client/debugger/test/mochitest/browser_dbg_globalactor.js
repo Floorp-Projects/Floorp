@@ -15,7 +15,11 @@ function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.addActors(ACTORS_URL);
+  DebuggerServer.registerModule(ACTORS_URL, {
+    prefix: "testOne",
+    constructor: "TestActor1",
+    type: { global: true },
+  });
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
@@ -24,9 +28,9 @@ function test() {
       "Root actor should identify itself as a browser.");
 
     gClient.listTabs().then(aResponse => {
-      let globalActor = aResponse.testGlobalActor1;
+      let globalActor = aResponse.testOneActor;
       ok(globalActor, "Found the test global actor.");
-      ok(globalActor.includes("test_one"),
+      ok(globalActor.includes("testOne"),
         "testGlobalActor1's actorPrefix should be used.");
 
       gClient.request({ to: globalActor, type: "ping" }, aResponse => {
@@ -40,7 +44,7 @@ function test() {
           let count = 0;
           for (let connID of Object.getOwnPropertyNames(DebuggerServer._connections)) {
             let conn = DebuggerServer._connections[connID];
-            let actorPrefix = conn._prefix + "test_one";
+            let actorPrefix = conn._prefix + "testOne";
             for (let pool of conn._extraPools) {
               count += Object.keys(pool._actors).filter(e => {
                 return e.startsWith(actorPrefix);
@@ -48,8 +52,8 @@ function test() {
             }
           }
 
-          is(count, 2,
-            "Only two actor exists in all pools. One target-scoped actor and one global.");
+          is(count, 1,
+            "Only one actor exists in all pools. One global actor.");
 
           gClient.close().then(finish);
         });

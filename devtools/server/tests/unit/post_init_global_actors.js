@@ -18,8 +18,4 @@ PostInitGlobalActor.prototype = {
 PostInitGlobalActor.prototype.requestTypes = {
   "ping": PostInitGlobalActor.prototype.onPing,
 };
-
-DebuggerServer.addGlobalActor({
-  constructorName: "PostInitGlobalActor",
-  constructorFun: PostInitGlobalActor,
-}, "postInitGlobalActor");
+exports.PostInitGlobalActor = PostInitGlobalActor;

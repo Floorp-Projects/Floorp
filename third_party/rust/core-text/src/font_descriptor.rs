@@ -15,11 +15,12 @@ use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::set::CFSetRef;
 use core_foundation::string::{CFString, CFStringRef};
-use core_foundation::url::{CFURLCopyFileSystemPath, kCFURLPOSIXPathStyle, CFURL};
+use core_foundation::url::CFURL;
 use core_graphics::base::CGFloat;
 
 use libc::c_void;
 use std::mem;
+use std::path::PathBuf;
 
 /*
 * CTFontTraits.h
@@ -92,29 +93,29 @@ impl StylisticClassAccessors for CTFontStylisticClass {
             | kCTFontSlabSerifsClass
             | kCTFontFreeformSerifsClass;
 
-        return (*self & any_serif_class) != 0;
+        (*self & any_serif_class) != 0
     }
 
     fn is_sans_serif(&self) -> bool {
-        return (*self & kCTFontSansSerifClass) != 0;
+        (*self & kCTFontSansSerifClass) != 0
     }
 
     fn is_script(&self) -> bool {
-        return (*self & kCTFontScriptsClass) != 0;
+        (*self & kCTFontScriptsClass) != 0
     }
 
     fn is_fantasy(&self) -> bool {
-        return (*self & kCTFontOrnamentalsClass) != 0;
+        (*self & kCTFontOrnamentalsClass) != 0
     }
 
     fn is_symbols(&self) -> bool {
-        return (*self & kCTFontSymbolicClass) != 0;
+        (*self & kCTFontSymbolicClass) != 0
     }
 }
 
 pub type CTFontAttributes = CFDictionary;
 
-pub type CTFontTraits = CFDictionary;
+pub type CTFontTraits = CFDictionary<CFString, CFType>;
 
 pub trait TraitAccessors {
     fn symbolic_traits(&self) -> CTFontSymbolicTraits;
@@ -124,14 +125,13 @@ pub trait TraitAccessors {
 }
 
 trait TraitAccessorPrivate {
-    unsafe fn extract_number_for_key(&self, key: CFStringRef) -> CFNumber;
+    fn extract_number_for_key(&self, key: CFStringRef) -> CFNumber;
 }
 
 impl TraitAccessorPrivate for CTFontTraits {
-    unsafe fn extract_number_for_key(&self, key: CFStringRef) -> CFNumber {
-        let cftype = self.get_CFType(mem::transmute(key));
-        assert!(cftype.instance_of::<CFNumber>());
-        CFNumber::wrap_under_get_rule(mem::transmute(cftype.as_CFTypeRef()))
+    fn extract_number_for_key(&self, key: CFStringRef) -> CFNumber {
+        let cftype = self.get(key);
+        cftype.downcast::<CFNumber>().unwrap()
     }
 
 }
@@ -240,7 +240,7 @@ impl CTFontDescriptor {
         }
     }
 
-    pub fn font_path(&self) -> Option<String> {
+    pub fn font_path(&self) -> Option<PathBuf> {
         unsafe {
             let value = CTFontDescriptorCopyAttribute(self.0, kCTFontURLAttribute);
             if value.is_null() {
@@ -250,11 +250,7 @@ impl CTFontDescriptor {
             let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFURL>());
             let url = CFURL::wrap_under_get_rule(mem::transmute(value.as_CFTypeRef()));
-            let path = CFString::wrap_under_create_rule(CFURLCopyFileSystemPath(
-                url.as_concrete_TypeRef(),
-                kCFURLPOSIXPathStyle,
-            )).to_string();
-            Some(path)
+            url.to_path()
         }
     }
 
@@ -269,7 +265,7 @@ impl CTFontDescriptor {
     }
 }
 
-pub fn new_from_attributes(attributes: &CFDictionary) -> CTFontDescriptor {
+pub fn new_from_attributes(attributes: &CFDictionary<CFString, CFType>) -> CTFontDescriptor {
     unsafe {
         let result: CTFontDescriptorRef =
             CTFontDescriptorCreateWithAttributes(attributes.as_concrete_TypeRef());
@@ -277,12 +273,20 @@ pub fn new_from_attributes(attributes: &CFDictionary) -> CTFontDescriptor {
     }
 }
 
-pub fn new_from_variations(variations: &CFDictionary) -> CTFontDescriptor {
+pub fn new_from_variations(variations: &CFDictionary<CFString, CFNumber>) -> CTFontDescriptor {
     unsafe {
-        let var_key = CFType::wrap_under_get_rule(mem::transmute(kCTFontVariationAttribute));
+        let var_key = CFString::wrap_under_get_rule(kCTFontVariationAttribute);
         let var_val = CFType::wrap_under_get_rule(variations.as_CFTypeRef());
         let attributes = CFDictionary::from_CFType_pairs(&[(var_key, var_val)]);
         new_from_attributes(&attributes)
+    }
+}
+
+pub fn new_from_postscript_name(name: &CFString) -> CTFontDescriptor {
+    unsafe {
+        let result: CTFontDescriptorRef =
+            CTFontDescriptorCreateWithNameAndSize(name.as_concrete_TypeRef(), 0.0);
+        CTFontDescriptor::wrap_under_create_rule(result)
     }
 }
 

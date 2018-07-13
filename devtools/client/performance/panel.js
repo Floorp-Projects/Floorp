@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const defer = require("devtools/shared/defer");
-
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 function PerformancePanel(iframeWindow, toolbox) {
@@ -30,8 +28,6 @@ PerformancePanel.prototype = {
     if (this._opening) {
       return this._opening;
     }
-    const deferred = defer();
-    this._opening = deferred.promise;
 
     this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gTarget = this.target;
@@ -64,7 +60,9 @@ PerformancePanel.prototype = {
     this.isReady = true;
     this.emit("ready");
 
-    deferred.resolve(this);
+    this._opening = new Promise(resolve => {
+      resolve(this);
+    });
     return this._opening;
   },
 

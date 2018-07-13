@@ -485,19 +485,28 @@ WorkerDebugger::ReportPerformanceInfo()
   uint32_t pid = getpid();
 #endif
   bool isTopLevel= false;
-  uint64_t pwid = 0;
-  nsPIDOMWindowInner* win = mWorkerPrivate->GetWindow();
+  uint64_t windowID = mWorkerPrivate->WindowID();
+
+  // Walk up to our containing page and its window
+  WorkerPrivate* wp = mWorkerPrivate;
+  while (wp->GetParent()) {
+    wp = wp->GetParent();
+  }
+  nsPIDOMWindowInner* win = wp->GetWindow();
   if (win) {
     nsPIDOMWindowOuter* outer = win->GetOuterWindow();
     if (outer) {
       nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
       if (top) {
-        pwid = top->WindowID();
-        isTopLevel = pwid == mWorkerPrivate->WindowID();
+        windowID = top->WindowID();
+        isTopLevel = outer->IsTopLevelWindow();
       }
     }
   }
 
+  // getting the worker URL
+  RefPtr<nsIURI> scriptURI = mWorkerPrivate->GetResolvedScriptURI();
+  nsCString url = scriptURI->GetSpecOrDefault();
 
   // Workers only produce metrics for a single category - DispatchCategory::Worker.
   // We still return an array of CategoryDispatch so the PerformanceInfo
@@ -505,7 +514,6 @@ WorkerDebugger::ReportPerformanceInfo()
   FallibleTArray<CategoryDispatch> items;
   uint64_t duration = 0;
   uint16_t count = 0;
-  RefPtr<nsIURI> uri = mWorkerPrivate->GetResolvedScriptURI();
 
   RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
   if (perf) {
@@ -514,13 +522,11 @@ WorkerDebugger::ReportPerformanceInfo()
     CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
-                            true, isTopLevel, items);
+      return PerformanceInfo(url, pid, windowID, duration, true, isTopLevel, items);
     }
   }
 
-  return PerformanceInfo(uri->GetSpecOrDefault(), pid, pwid, duration,
-                         true, isTopLevel, items);
+  return PerformanceInfo(url, pid, windowID, duration, true, isTopLevel, items);
 }
 
 } // dom namespace

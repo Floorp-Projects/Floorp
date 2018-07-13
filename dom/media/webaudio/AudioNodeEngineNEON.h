@@ -28,6 +28,10 @@ void
 AudioBufferInPlaceScale_NEON(float* aBlock,
                              float aScale,
                              uint32_t aSize);
+void
+AudioBufferInPlaceScale_NEON(float* aBlock,
+                             float* aScale,
+                             uint32_t aSize);
 
 void
 AudioBlockPanStereoToStereo_NEON(const float aInputL[WEBAUDIO_BLOCK_SIZE],

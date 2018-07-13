@@ -590,6 +590,32 @@ private:
   ~SqrtFunction() {}
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Note Sync Change Function
+
+/**
+ * Bumps the global Sync change counter. See the comment above
+ * `totalSyncChanges` in `nsINavBookmarksService` for a more detailed
+ * explanation.
+ */
+class NoteSyncChangeFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~NoteSyncChangeFunction() {}
+};
+
 } // namespace places
 } // namespace mozilla
 

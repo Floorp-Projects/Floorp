@@ -10,52 +10,27 @@
  */
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
-var { ActorPool, OriginalLocation, RegisteredActorFactory,
+var { ActorPool, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
-var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
-  require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
-DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
-  // eslint-disable-next-line no-shadow
-  const { DebuggerSocket } = require("devtools/shared/security/socket");
-  return DebuggerSocket;
-});
-DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
-  return require("devtools/shared/security/auth");
-});
-DevToolsUtils.defineLazyGetter(this, "generateUUID", () => {
+loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
+loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
+loader.lazyRequireGetter(this, "LocalDebuggerTransport", "devtools/shared/transport/local-transport", true);
+loader.lazyRequireGetter(this, "ChildDebuggerTransport", "devtools/shared/transport/child-transport", true);
+loader.lazyRequireGetter(this, "WorkerThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
+loader.lazyRequireGetter(this, "MainThreadWorkerDebuggerTransport", "devtools/shared/transport/worker-transport", true);
+
+loader.lazyGetter(this, "generateUUID", () => {
   // eslint-disable-next-line no-shadow
   const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
                            .getService(Ci.nsIUUIDGenerator);
   return generateUUID;
 });
 
-// Overload `Components` to prevent DevTools loader exception on Components
-// object usage
-// eslint-disable-next-line no-unused-vars
-Object.defineProperty(this, "Components", {
-  get() {
-    return require("chrome").components;
-  }
-});
-
 const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
   "resource://devtools/server/startup/content-process.js";
-
-function loadSubScript(url) {
-  try {
-    Services.scriptloader.loadSubScript(url, this);
-  } catch (e) {
-    const errorStr = "Error loading: " + url + ":\n" +
-                   (e.fileName ? "at " + e.fileName + " : " + e.lineNumber + "\n" : "") +
-                   e + " - " + e.stack + "\n";
-    dump(errorStr);
-    reportError(errorStr);
-    throw e;
-  }
-}
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
@@ -159,7 +134,7 @@ var DebuggerServer = {
     }
 
     if (!this.rootlessServer && !this.createRootActor) {
-      throw new Error("Use DebuggerServer.addActors() to add a root actor " +
+      throw new Error("Use DebuggerServer.setRootActor() to add a root actor " +
                       "implementation.");
     }
   },
@@ -198,18 +173,6 @@ var DebuggerServer = {
    */
   registerAllActors() {
     this.registerActors({ root: true, browser: true, target: true });
-  },
-
-  /**
-   * Load a subscript into the debugging global.
-   *
-   * @param url string A url that will be loaded as a subscript into the
-   *        debugging global.  The user must load at least one script
-   *        that implements a createRootActor() function to create the
-   *        server's root actor.
-   */
-  addActors(url) {
-    loadSubScript.call(this, url);
   },
 
   /**
@@ -603,7 +566,7 @@ var DebuggerServer = {
     this._checkInit();
 
     const transport = isWorker ?
-                    new WorkerDebuggerTransport(scopeOrManager, prefix) :
+                    new WorkerThreadWorkerDebuggerTransport(scopeOrManager, prefix) :
                     new ChildDebuggerTransport(scopeOrManager, prefix);
 
     return this._onConnection(transport, prefix, true);
@@ -772,7 +735,7 @@ var DebuggerServer = {
           dbg.removeListener(listener);
 
           // Step 7: Create a transport for the connection to the worker.
-          const transport = new WorkerDebuggerTransport(dbg, id);
+          const transport = new MainThreadWorkerDebuggerTransport(dbg, id);
           transport.ready();
           transport.hooks = {
             onClosed: () => {
@@ -1336,25 +1299,7 @@ DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
 
 EventEmitter.decorate(DebuggerServer);
 
-if (this.exports) {
-  exports.DebuggerServer = DebuggerServer;
-  exports.ActorPool = ActorPool;
-  exports.OriginalLocation = OriginalLocation;
-}
-
-// Needed on B2G (See header note)
-this.DebuggerServer = DebuggerServer;
-this.ActorPool = ActorPool;
-this.OriginalLocation = OriginalLocation;
-
-// When using DebuggerServer.addActors, some symbols are expected to be in
-// the scope of the added actor even before the corresponding modules are
-// loaded, so let's explicitly bind the expected symbols here.
-var includes = ["Components", "Ci", "Cu", "require", "Services", "DebuggerServer",
-                "ActorPool", "DevToolsUtils"];
-includes.forEach(name => {
-  DebuggerServer[name] = this[name];
-});
+exports.DebuggerServer = DebuggerServer;
 
 /**
  * Creates a DebuggerServerConnection.

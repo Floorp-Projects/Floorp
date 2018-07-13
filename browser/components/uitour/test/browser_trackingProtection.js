@@ -5,7 +5,7 @@ const PREF_TP_ENABLED = "privacy.trackingprotection.enabled";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
 const TOOLTIP_PANEL = document.getElementById("UITourTooltip");
-const TOOLTIP_ANCHOR = document.getElementById("tracking-protection-icon");
+const TOOLTIP_ANCHOR = document.getElementById("tracking-protection-icon-animatable-box");
 
 var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
