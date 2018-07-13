@@ -600,7 +600,6 @@ var NetworkHelper = {
      */
 
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-    securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
 
     const wpl = Ci.nsIWebProgressListener;
     const NSSErrorsService = Cc["@mozilla.org/nss_errors_service;1"]

@@ -3116,7 +3116,7 @@ Checker.prototype = {
     // Set MitM pref.
     try {
       var sslStatus = request.channel.QueryInterface(Ci.nsIRequest)
-                        .securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                        .securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
                         .SSLStatus.QueryInterface(Ci.nsISSLStatus);
       if (sslStatus && sslStatus.serverCert && sslStatus.serverCert.issuerName) {
         Services.prefs.setStringPref("security.pki.mitm_canary_issuer",
