@@ -120,7 +120,7 @@
       <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
                 accesskey="&moveToNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
+                oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator id="context_sendTabToDevice_separator" class="sync-ui-item"/>
       <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
             class="sync-ui-item"
