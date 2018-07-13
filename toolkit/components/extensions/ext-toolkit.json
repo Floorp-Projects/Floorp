@@ -160,6 +160,14 @@
       ["storage"]
     ]
   },
+  "telemetry": {
+    "url": "chrome://extensions/content/parent/ext-telemetry.js",
+    "schema": "chrome://extensions/content/schemas/telemetry.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["telemetry"]
+    ]
+  },
   "test": {
     "schema": "chrome://extensions/content/schemas/test.json",
     "scopes": ["content_child"]
