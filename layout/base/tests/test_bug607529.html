@@ -23,15 +23,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
      back, and verify that the animations are still running.  */
 
   var doneOneLoad = false;
+  var done = false;
 
   /** Test for Bug 607529 **/
-  var done = false;
+
+  function closeWindowAndFinish() {
+    w.close();
+    window.onmessage = null;
+    SimpleTest.finish();
+  }
+
   window.onmessage = function(e) {
     isnot(e.data, "notcached", "Should never end up not being cached");
   
-    if (e.data == "loaded" && !doneOneLoad) {
-      doneOneLoad = true;
-      w.location = "file_bug607529-1.html";
+    if (e.data == "loaded") {
+      if (!doneOneLoad) {
+        doneOneLoad = true;
+        w.location = "file_bug607529-1.html";
+      } else {
+        // This is unexpected, but it can happen on Android, probably when
+        // bfcache gets purged due to memory pressure. Hence, "soft fail" there.
+        var message = "onload handler shouldn't fire on restore from bfcache";
+        if (navigator.appVersion.includes("Android")) {
+          todo(false, message);
+        } else {
+          ok(false, message);
+        }
+        // In any case, more messages aren't coming, so finish up.
+        closeWindowAndFinish();
+      }
     }
     else if (e.data == "goback") {
       w.history.back();
@@ -44,17 +64,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
       // more than one callbackHappened message before we manage to close it.
       // Protect against calling SimpleTest.finish() more than once.
       if (!done) {
-        w.close();
-        window.onmessage = null;
-        SimpleTest.finish();
+        closeWindowAndFinish();
         done = true;
       }
     } else {
       try {
         var msg = JSON.parse(e.data);
       } catch (ex) {
-        // Diagnostic for Bug 1462983: if JSON.parse throws, pause to print
-        // the string that it choked on, and then resume throwing the exception.
+        // In case JSON.parse throws, we pause to print the string that it
+        // choked on, and then resume throwing the exception.
         ok(false, "JSON.parse threw, when passed string '" + e.data + "'");
         throw ex;
       }
