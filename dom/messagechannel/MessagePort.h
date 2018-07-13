@@ -140,7 +140,7 @@ private:
   };
 
   void Initialize(const nsID& aUUID, const nsID& aDestinationUUID,
-                  uint32_t aSequenceID, bool mNeutered, State aState,
+                  uint32_t aSequenceID, bool aNeutered, State aState,
                   ErrorResult& aRv);
 
   bool ConnectToPBackground();
