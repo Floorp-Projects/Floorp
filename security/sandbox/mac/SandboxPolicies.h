@@ -644,6 +644,9 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (global-name "com.apple.inputmethodkit.getxpcendpoint")
       (global-name "com.apple.decalog4.incoming")
       (global-name "com.apple.windowserver.active"))
+  ; bug 1475707
+  (if (= macosMinorVersion 9)
+     (allow mach-lookup (global-name "com.apple.xpcd")))
 
   ; Fonts
   (allow file-read*
