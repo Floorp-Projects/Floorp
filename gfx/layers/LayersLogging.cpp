@@ -12,6 +12,7 @@
 #include "nsDebug.h"                    // for NS_ERROR
 #include "nsPoint.h"                    // for nsPoint
 #include "nsRect.h"                     // for nsRect
+#include "nsRectAbsolute.h"             // for nsRectAbsolute
 #include "base/basictypes.h"
 
 using namespace mozilla::gfx;
@@ -65,6 +66,17 @@ AppendToString(std::stringstream& aStream, const nsRect& r,
   aStream << nsPrintfCString(
     "(x=%d, y=%d, w=%d, h=%d)",
     r.X(), r.Y(), r.Width(), r.Height()).get();
+  aStream << sfx;
+}
+
+void
+AppendToString(std::stringstream& aStream, const nsRectAbsolute& r,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(l=%d, t=%d, r=%d, b=%d)",
+    r.Left(), r.Top(), r.Right(), r.Bottom()).get();
   aStream << sfx;
 }
 
