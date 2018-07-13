@@ -1242,7 +1242,7 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
                                             const base::file_handle_mapping_vector& fds_to_remap,
                                             ProcessHandle* process_handle)
 {
-  MOZ_RELEASE_ASSERT((2 <= fds_to_remap.size()) && (fds_to_remap.size() <= 5));
+  MOZ_RELEASE_ASSERT((2 <= fds_to_remap.size()) && (fds_to_remap.size() <= 4));
   JNIEnv* const env = mozilla::jni::GetEnvForThread();
   MOZ_ASSERT(env);
 
@@ -1258,19 +1258,18 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
   // which they append to fds_to_remap. There must be a better way to do it.
   // See bug 1440207.
   int32_t prefsFd = fds_to_remap[0].first;
-  int32_t prefMapFd = fds_to_remap[1].first;
-  int32_t ipcFd = fds_to_remap[2].first;
+  int32_t ipcFd = fds_to_remap[1].first;
   int32_t crashFd = -1;
   int32_t crashAnnotationFd = -1;
+  if (fds_to_remap.size() == 3) {
+    crashAnnotationFd = fds_to_remap[2].first;
+  }
   if (fds_to_remap.size() == 4) {
+    crashFd = fds_to_remap[2].first;
     crashAnnotationFd = fds_to_remap[3].first;
   }
-  if (fds_to_remap.size() == 5) {
-    crashFd = fds_to_remap[3].first;
-    crashAnnotationFd = fds_to_remap[4].first;
-  }
 
-  int32_t handle = java::GeckoProcessManager::Start(type, jargs, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd);
+  int32_t handle = java::GeckoProcessManager::Start(type, jargs, prefsFd, ipcFd, crashFd, crashAnnotationFd);
 
   if (process_handle) {
     *process_handle = handle;
