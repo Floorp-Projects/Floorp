@@ -47,6 +47,7 @@ AccessibleNode::AccessibleNode(nsINode* aNode) :
     mIntProperties(3),
     mUIntProperties(6),
     mBooleanProperties(0),
+    mStringProperties(16),
     mDOMNode(aNode)
 {
   nsAccessibilityService* accService = GetOrCreateAccService();
@@ -77,7 +78,7 @@ AccessibleNode::GetParentObject() const
 }
 
 void
-AccessibleNode::GetRole(nsAString& aRole)
+AccessibleNode::GetComputedRole(nsAString& aRole)
 {
   if (mIntl) {
     nsAccessibilityService* accService = GetOrCreateAccService();

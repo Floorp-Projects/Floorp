@@ -41,6 +41,15 @@
     });
   }
 
+  function testStringProp(anode, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    let text = "This is a string test";
+    anode[prop] = text;
+    is(anode[prop], text, `anode.${prop} was assigned "${text}"`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
+
   function testBoolProp(anode, prop) {
     is(anode[prop], null, `anode.${prop} should be null`);
     anode[prop] = true;
@@ -80,7 +89,7 @@
     let anode = ifrDoc.accessibleNode;
     ok(anode, "DOM document has accessible node");
 
-    is(anode.role, "document", "correct role of a document accessible node");
+    is(anode.computedRole, "document", "correct role of a document accessible node");
     is(anode.DOMNode, ifrDoc, "correct DOM Node of a document accessible node");
 
     // States may differ depending on the document state, for example, if it is
@@ -133,6 +142,15 @@
     for (let i = 0; i < attrs.length; i++) {
       ok(attrs.includes(anode.attributes[i]),
          `${anode.attributes[i]} attribute is expected and found`);
+    }
+
+    const strProps = ["autocomplete", "checked", "current", "hasPopUp", "invalid",
+                      "keyShortcuts", "label", "live", "orientation", "placeholder",
+                      "pressed", "relevant", "role", "roleDescription", "sort",
+                      "valueText"];
+
+    for (const strProp of strProps) {
+      testStringProp(anode, strProp);
     }
 
     const boolProps = ["atomic", "busy", "disabled", "expanded", "hidden", "modal",

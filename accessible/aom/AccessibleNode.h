@@ -40,11 +40,28 @@ struct ParentObject;
     SetProperty(AOM##typeName##Property::e##name, a##name); \
   }                                                         \
 
+#define ANODE_STRING_FUNC(name)                              \
+  void Get##name(nsAString& a##name)                         \
+  {                                                          \
+    return GetProperty(AOMStringProperty::e##name, a##name); \
+  }                                                          \
+                                                             \
+  void Set##name(const nsAString& a##name)                   \
+  {                                                          \
+    SetProperty(AOMStringProperty::e##name, a##name);        \
+  }                                                          \
+
 #define ANODE_PROPS(typeName, type, ...)                     \
   enum class AOM##typeName##Property {                       \
     MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))              \
   };                                                         \
   MOZ_FOR_EACH(ANODE_FUNC, (typeName, type,), (__VA_ARGS__)) \
+
+#define ANODE_STRING_PROPS(...)                               \
+  enum class AOMStringProperty {                              \
+    MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))               \
+  };                                                          \
+  MOZ_FOR_EACH(ANODE_STRING_FUNC, (), (__VA_ARGS__))          \
 
 #define ANODE_ACCESSOR_MUTATOR(typeName, type, defVal)                          \
   nsDataHashtable<nsUint32HashKey, type> m##typeName##Properties;               \
@@ -80,7 +97,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   dom::ParentObject GetParentObject() const;
 
-  void GetRole(nsAString& aRole);
+  void GetComputedRole(nsAString& aRole);
   void GetStates(nsTArray<nsString>& aStates);
   void GetAttributes(nsTArray<nsString>& aAttributes);
   nsINode* GetDOMNode();
@@ -92,6 +109,25 @@ public:
            ErrorResult& aRv);
 
   static bool IsAOMEnabled(JSContext*, JSObject*);
+
+  ANODE_STRING_PROPS(
+    Autocomplete,
+    Checked,
+    Current,
+    HasPopUp,
+    Invalid,
+    KeyShortcuts,
+    Label,
+    Live,
+    Orientation,
+    Placeholder,
+    Pressed,
+    Relevant,
+    Role,
+    RoleDescription,
+    Sort,
+    ValueText
+  )
 
   ANODE_PROPS(Boolean, bool,
     Atomic,
@@ -133,6 +169,23 @@ protected:
   AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;
   virtual ~AccessibleNode();
 
+  void GetProperty(AOMStringProperty aProperty, nsAString& aRetval) {
+    nsString data;
+    if (!mStringProperties.Get(static_cast<int>(aProperty), &data)) {
+      SetDOMStringToNull(data);
+    }
+    aRetval = data;
+  }
+
+  void SetProperty(AOMStringProperty aProperty, const nsAString& aValue) {
+    if (DOMStringIsNull(aValue)) {
+      mStringProperties.Remove(static_cast<int>(aProperty));
+    } else {
+      nsString value(aValue);
+      mStringProperties.Put(static_cast<int>(aProperty), value);
+    }
+  }
+
   dom::Nullable<bool> GetProperty(AOMBooleanProperty aProperty)
   {
     int num = static_cast<int>(aProperty);
@@ -163,6 +216,7 @@ protected:
   // The 2k'th bit indicates whether the k'th boolean property is used(1) or not(0)
   // and 2k+1'th bit contains the property's value(1:true, 0:false)
   uint32_t mBooleanProperties;
+  nsDataHashtable<nsUint32HashKey, nsString> mStringProperties;
 
   RefPtr<a11y::Accessible> mIntl;
   RefPtr<nsINode> mDOMNode;
