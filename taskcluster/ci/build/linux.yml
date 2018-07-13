@@ -973,6 +973,7 @@ linux64-ccov/debug:
         - linux64-clang
         - linux64-rust
         - linux64-gcc
+        - linux64-sccache
 
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"
@@ -1002,6 +1003,7 @@ linux64-ccov/opt:
         - linux64-clang
         - linux64-rust
         - linux64-gcc
+        - linux64-sccache
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"
