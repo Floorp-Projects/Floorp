@@ -292,26 +292,45 @@ nsDOMOfflineResourceList::GetMozLength(ErrorResult& aRv)
   return mCachedKeysCount;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI,
+                                  ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  bool found;
+  IndexedGetter(aIndex, found, aURI, aRv);
+  if (!aRv.Failed() && !found) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+  }
+}
+
+void
+nsDOMOfflineResourceList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                        nsAString& aURI, ErrorResult& aRv)
+{
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SetDOMStringToNull(aURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = CacheKeys();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
-  if (aIndex >= mCachedKeysCount)
-    return NS_ERROR_NOT_AVAILABLE;
+  if (aIndex >= mCachedKeysCount) {
+    aFound = false;
+    return;
+  }
 
+  aFound = true;
   CopyUTF8toUTF16(mCachedKeys[aIndex], aURI);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
