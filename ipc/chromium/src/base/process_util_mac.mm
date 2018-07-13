@@ -40,9 +40,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-    MOZ_CRASH("base::LaunchApp: posix_spawn_file_actions_init failed");
-#endif
     return false;
   }
   auto file_actions_guard = mozilla::MakeScopeExit([&file_actions] {
@@ -61,9 +58,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
       }
     } else {
       if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-        MOZ_CRASH("base::LaunchApp: posix_spawn_file_actions_adddup2 failed");
-#endif
         return false;
       }
     }
@@ -72,9 +66,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
   if (posix_spawnattr_init(&spawnattr) != 0) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-    MOZ_CRASH("base::LaunchApp: posix_spawnattr_init failed");
-#endif
     return false;
   }
   auto spawnattr_guard = mozilla::MakeScopeExit([&spawnattr] {
@@ -85,19 +76,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // that aren't named in `file_actions`.  (This is an Apple-specific
   // extension to posix_spawn.)
   if (posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT) != 0) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-    MOZ_CRASH("base::LaunchApp: posix_spawnattr_setflags failed");
-#endif
     return false;
   }
 
   // Exempt std{in,out,err} from being closed by POSIX_SPAWN_CLOEXEC_DEFAULT.
   for (int fd = 0; fd <= STDERR_FILENO; ++fd) {
     if (posix_spawn_file_actions_addinherit_np(&file_actions, fd) != 0) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-      MOZ_CRASH("base::LaunchApp: posix_spawn_file_actions_addinherit_np "
-                "failed");
-#endif
       return false;
     }
   }
@@ -112,16 +96,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-    if (!spawn_succeeded && !process_handle_valid) {
-      MOZ_CRASH("base::LaunchApp: spawn_succeeded is false and "
-                "process_handle_valid is false");
-    } else if (!spawn_succeeded) {
-      MOZ_CRASH("base::LaunchApp: spawn_succeeded is false");
-    } else {
-      MOZ_CRASH("base::LaunchApp: process_handle_valid is false");
-    }
-#endif
     retval = false;
   } else {
     gProcessLog.print("==> process %d launched child process %d\n",
