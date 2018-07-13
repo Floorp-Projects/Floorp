@@ -257,8 +257,8 @@ class OSXBootstrapper(BaseBootstrapper):
             if b'license' in e.output:
                 xcodebuild = self.which('xcodebuild')
                 try:
-                    subprocess.check_call([xcodebuild, '-license'],
-                                          stderr=subprocess.STDOUT)
+                    self.check_output([xcodebuild, '-license'],
+                                      stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as e:
                     if b'requires admin privileges' in e.output:
                         self.run_as_root([xcodebuild, '-license'])
