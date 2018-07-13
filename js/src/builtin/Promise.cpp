@@ -610,8 +610,10 @@ class PromiseReactionRecord : public NativeObject
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
         return getFixedSlot(handlerArgSlot());
     }
-    JSObject* incumbentGlobalObject() {
-        return getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject).toObjectOrNull();
+    JSObject* getAndClearIncumbentGlobalObject() {
+        JSObject* obj = getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject).toObjectOrNull();
+        setFixedSlot(ReactionRecordSlot_IncumbentGlobalObject, UndefinedValue());
+        return obj;
     }
 };
 
@@ -975,7 +977,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // much better than having to store the original global as a private value
     // because we couldn't wrap it to store it as a normal JS value.
     RootedObject global(cx);
-    if (JSObject* objectFromIncumbentGlobal = reaction->incumbentGlobalObject()) {
+    if (JSObject* objectFromIncumbentGlobal = reaction->getAndClearIncumbentGlobalObject()) {
         objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
         MOZ_ASSERT(objectFromIncumbentGlobal);
         global = &objectFromIncumbentGlobal->nonCCWGlobal();
