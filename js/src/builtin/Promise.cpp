@@ -1520,9 +1520,7 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
         MOZ_ASSERT(IsCallable(handlerVal));
 
         // Step 6.
-        FixedInvokeArgs<1> args2(cx);
-        args2[0].set(argument);
-        if (!Call(cx, handlerVal, UndefinedHandleValue, args2, &handlerResult)) {
+        if (!Call(cx, handlerVal, UndefinedHandleValue, argument, &handlerResult)) {
             resolutionMode = RejectMode;
             if (!MaybeGetAndClearException(cx, &handlerResult))
                 return false;
@@ -1591,11 +1589,8 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     if (!MaybeGetAndClearException(cx, &rval))
         return false;
 
-    FixedInvokeArgs<1> rejectArgs(cx);
-    rejectArgs[0].set(rval);
-
     RootedValue rejectVal(cx, ObjectValue(*rejectFn));
-    return Call(cx, rejectVal, UndefinedHandleValue, rejectArgs, &rval);
+    return Call(cx, rejectVal, UndefinedHandleValue, rval, &rval);
 }
 
 static MOZ_MUST_USE bool
@@ -2019,7 +2014,6 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     bool success;
     {
         FixedInvokeArgs<2> args(cx);
-
         args[0].setObject(*resolveFn);
         args[1].setObject(*rejectFn);
 
@@ -2033,12 +2027,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         if (!MaybeGetAndClearException(cx, &exceptionVal))
             return nullptr;
 
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].set(exceptionVal);
-
         RootedValue calleeOrRval(cx, ObjectValue(*rejectFn));
-        if (!Call(cx, calleeOrRval, UndefinedHandleValue, args, &calleeOrRval))
+        if (!Call(cx, calleeOrRval, UndefinedHandleValue, exceptionVal, &calleeOrRval))
             return nullptr;
     }
 
@@ -2278,9 +2268,7 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     assertSameCompartment(cx, promiseObj);
     if (resolutionFun) {
         RootedValue calleeOrRval(cx, ObjectValue(*resolutionFun));
-        FixedInvokeArgs<1> resolveArgs(cx);
-        resolveArgs[0].set(result);
-        return Call(cx, calleeOrRval, UndefinedHandleValue, resolveArgs, &calleeOrRval);
+        return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
     }
 
     if (!promiseObj)
@@ -3378,11 +3366,8 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     // 11.1.3.2.1 steps 5-6 (partially).
     // 11.1.3.2.2, 11.1.3.2.3 steps 8-9.
     RootedValue iterVal(cx, ObjectValue(*iter));
-    FixedInvokeArgs<1> args2(cx);
-    args2[0].set(args.get(0));
-
     RootedValue resultVal(cx);
-    if (!js::Call(cx, func, iterVal, args2, &resultVal))
+    if (!Call(cx, func, iterVal, args.get(0), &resultVal))
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
     // 11.1.3.2.1 steps 5-6 (partially).
@@ -4120,11 +4105,8 @@ PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValu
     if (!cx->compartment()->wrap(cx, &funVal))
         return false;
 
-    FixedInvokeArgs<1> args(cx);
-    args[0].set(resolutionValue);
-
     RootedValue dummy(cx);
-    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
+    return Call(cx, funVal, UndefinedHandleValue, resolutionValue, &dummy);
 }
 
 /* static */ bool
@@ -4140,11 +4122,8 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
     RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
     MOZ_ASSERT(IsCallable(funVal));
 
-    FixedInvokeArgs<1> args(cx);
-    args[0].set(rejectionValue);
-
     RootedValue dummy(cx);
-    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
+    return Call(cx, funVal, UndefinedHandleValue, rejectionValue, &dummy);
 }
 
 /* static */ void
