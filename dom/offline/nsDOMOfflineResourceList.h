@@ -94,12 +94,7 @@ public:
 
   already_AddRefed<mozilla::dom::DOMStringList> GetMozItems(ErrorResult& aRv);
   bool MozHasItem(const nsAString& aURI, ErrorResult& aRv);
-  uint32_t GetMozLength(ErrorResult& aRv)
-  {
-    uint32_t length = 0;
-    aRv = GetMozLength(&length);
-    return length;
-  }
+  uint32_t GetMozLength(ErrorResult& aRv);
   void MozItem(uint32_t aIndex, nsAString& aURI, ErrorResult& aRv)
   {
     aRv = MozItem(aIndex, aURI);
