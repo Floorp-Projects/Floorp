@@ -256,14 +256,14 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
 }
 
 PLDHashNumber
-PLDHashTable::Hash1(PLDHashNumber aHash0)
+PLDHashTable::Hash1(PLDHashNumber aHash0) const
 {
   return aHash0 >> mHashShift;
 }
 
 void
 PLDHashTable::Hash2(PLDHashNumber aHash0,
-                    uint32_t& aHash2Out, uint32_t& aSizeMaskOut)
+                    uint32_t& aHash2Out, uint32_t& aSizeMaskOut) const
 {
   uint32_t sizeLog2 = kHashBits - mHashShift;
   uint32_t sizeMask = (PLDHashNumber(1) << sizeLog2) - 1;
@@ -293,17 +293,19 @@ PLDHashTable::Hash2(PLDHashNumber aHash0,
 
 // Match an entry's mKeyHash against an unstored one computed from a key.
 /* static */ bool
-PLDHashTable::MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aKeyHash)
+PLDHashTable::MatchEntryKeyhash(const PLDHashEntryHdr* aEntry,
+                                const PLDHashNumber aKeyHash)
 {
   return (aEntry->mKeyHash & ~kCollisionFlag) == aKeyHash;
 }
 
 // Compute the address of the indexed entry in table.
 PLDHashEntryHdr*
-PLDHashTable::AddressEntry(uint32_t aIndex)
+PLDHashTable::AddressEntry(uint32_t aIndex) const
 {
-  return reinterpret_cast<PLDHashEntryHdr*>(
-    mEntryStore.Get() + aIndex * mEntrySize);
+  return const_cast<PLDHashEntryHdr*>(
+    reinterpret_cast<const PLDHashEntryHdr*>(
+      mEntryStore.Get() + aIndex * mEntrySize));
 }
 
 PLDHashTable::~PLDHashTable()
@@ -354,7 +356,7 @@ PLDHashTable::Clear()
 // these differences are worthwhile.
 template <PLDHashTable::SearchReason Reason>
 PLDHashEntryHdr* NS_FASTCALL
-PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
+PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash) const
 {
   MOZ_ASSERT(mEntryStore.Get());
   NS_ASSERTION(!(aKeyHash & kCollisionFlag),
@@ -421,7 +423,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 // Avoiding the need for |aKey| means we can avoid needing a way to map entries
 // to keys, which means callers can use complex key types more easily.
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
-PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
+PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash) const
 {
   MOZ_ASSERT(mEntryStore.Get());
   NS_ASSERTION(!(aKeyHash & kCollisionFlag),
@@ -511,7 +513,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
 }
 
 MOZ_ALWAYS_INLINE PLDHashNumber
-PLDHashTable::ComputeKeyHash(const void* aKey)
+PLDHashTable::ComputeKeyHash(const void* aKey) const
 {
   MOZ_ASSERT(mEntryStore.Get());
 
@@ -528,7 +530,7 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
 }
 
 PLDHashEntryHdr*
-PLDHashTable::Search(const void* aKey)
+PLDHashTable::Search(const void* aKey) const
 {
 #ifdef DEBUG
   AutoReadOp op(mChecker);
