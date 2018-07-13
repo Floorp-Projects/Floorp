@@ -182,9 +182,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @WrapForJNI
     private static int start(final String type, final String[] args,
-                             final int prefsFd, final int ipcFd,
+                             final int prefsFd, final int prefMapFd,
+                             final int ipcFd,
                              final int crashFd, final int crashAnnotationFd) {
-        return INSTANCE.start(type, args, prefsFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+        return INSTANCE.start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
     }
 
     private int filterFlagsForChild(int flags) {
@@ -192,7 +193,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER);
     }
 
-    private int start(final String type, final String[] args, final int prefsFd,
+    private int start(final String type, final String[] args,
+                      final int prefsFd, final int prefMapFd,
                       final int ipcFd, final int crashFd,
                       final int crashAnnotationFd, final boolean retry) {
         final ChildConnection connection = getConnection(type);
@@ -203,11 +205,13 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         final Bundle extras = GeckoThread.getActiveExtras();
         final ParcelFileDescriptor prefsPfd;
+        final ParcelFileDescriptor prefMapPfd;
         final ParcelFileDescriptor ipcPfd;
         final ParcelFileDescriptor crashPfd;
         final ParcelFileDescriptor crashAnnotationPfd;
         try {
             prefsPfd = ParcelFileDescriptor.fromFd(prefsFd);
+            prefMapPfd = ParcelFileDescriptor.fromFd(prefMapFd);
             ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
             crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
             crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
@@ -220,8 +224,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         boolean started = false;
         try {
-            started = child.start(this, args, extras, flags, prefsPfd, ipcPfd, crashPfd,
-                                  crashAnnotationPfd);
+            started = child.start(this, args, extras, flags, prefsPfd, prefMapPfd,
+                                  ipcPfd, crashPfd, crashAnnotationPfd);
         } catch (final RemoteException e) {
         }
 
@@ -232,7 +236,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
             Log.w(LOGTAG, "Attempting to kill running child " + type);
             connection.unbind();
-            return start(type, args, prefsFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
+            return start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
         }
 
         try {
