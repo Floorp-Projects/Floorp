@@ -2111,70 +2111,38 @@ window._gBrowser = {
   },
 
   // eslint-disable-next-line complexity
-  addTab(aURI, aReferrerURI, aCharset, aPostData, aOwner, aAllowThirdPartyFixup) {
-    "use strict";
-
-    var aTriggeringPrincipal;
-    var aReferrerPolicy;
-    var aFromExternal;
-    var aRelatedToCurrent;
-    var aSkipAnimation;
-    var aAllowMixedContent;
-    var aForceNotRemote;
-    var aPreferredRemoteType;
-    var aNoReferrer;
-    var aUserContextId;
-    var aEventDetail;
-    var aSameProcessAsFrameLoader;
-    var aOriginPrincipal;
-    var aDisallowInheritPrincipal;
-    var aOpener;
-    var aOpenerBrowser;
-    var aCreateLazyBrowser;
-    var aSkipBackgroundNotify;
-    var aNextTabParentId;
-    var aNoInitialLabel;
-    var aFocusUrlBar;
-    var aName;
-    var aBulkOrderedOpen;
-    var aIndex;
-    var aPinned;
-    if (arguments.length == 2 &&
-        typeof arguments[1] == "object" &&
-        !(arguments[1] instanceof Ci.nsIURI)) {
-      let params = arguments[1];
-      aTriggeringPrincipal = params.triggeringPrincipal;
-      aReferrerURI = params.referrerURI;
-      aReferrerPolicy = params.referrerPolicy;
-      aCharset = params.charset;
-      aPostData = params.postData;
-      aOwner = params.ownerTab;
-      aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-      aFromExternal = params.fromExternal;
-      aRelatedToCurrent = params.relatedToCurrent;
-      aSkipAnimation = params.skipAnimation;
-      aAllowMixedContent = params.allowMixedContent;
-      aForceNotRemote = params.forceNotRemote;
-      aPreferredRemoteType = params.preferredRemoteType;
-      aNoReferrer = params.noReferrer;
-      aUserContextId = params.userContextId;
-      aEventDetail = params.eventDetail;
-      aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
-      aOriginPrincipal = params.originPrincipal;
-      aDisallowInheritPrincipal = params.disallowInheritPrincipal;
-      aOpener = params.opener;
-      aOpenerBrowser = params.openerBrowser;
-      aCreateLazyBrowser = params.createLazyBrowser;
-      aSkipBackgroundNotify = params.skipBackgroundNotify;
-      aNextTabParentId = params.nextTabParentId;
-      aNoInitialLabel = params.noInitialLabel;
-      aFocusUrlBar = params.focusUrlBar;
-      aName = params.name;
-      aBulkOrderedOpen = params.bulkOrderedOpen;
-      aIndex = params.index;
-      aPinned = params.pinned;
-    }
-
+  addTab(aURI, {
+    allowMixedContent,
+    allowThirdPartyFixup,
+    bulkOrderedOpen,
+    charset,
+    createLazyBrowser,
+    disallowInheritPrincipal,
+    eventDetail,
+    focusUrlBar,
+    forceNotRemote,
+    fromExternal,
+    index,
+    name,
+    nextTabParentId,
+    noInitialLabel,
+    noReferrer,
+    opener,
+    openerBrowser,
+    originPrincipal,
+    ownerTab,
+    pinned,
+    postData,
+    preferredRemoteType,
+    referrerPolicy,
+    referrerURI,
+    relatedToCurrent,
+    sameProcessAsFrameLoader,
+    skipAnimation,
+    skipBackgroundNotify,
+    triggeringPrincipal,
+    userContextId,
+  } = {}) {
     // if we're adding tabs, we're past interrupt mode, ditch the owner
     if (this.selectedTab.owner) {
       this.selectedTab.owner = null;
@@ -2189,13 +2157,15 @@ window._gBrowser = {
     //
     // Otherwise, if the tab is related to the current tab (e.g.,
     // because it was opened by a link click), use the selected tab as
-    // the owner. If aReferrerURI is set, and we don't have an
+    // the owner. If referrerURI is set, and we don't have an
     // explicit relatedToCurrent arg, we assume that the tab is
-    // related to the current tab, since aReferrerURI is null or
+    // related to the current tab, since referrerURI is null or
     // undefined if the tab is opened from an external application or
     // bookmark (i.e. somewhere other than an existing tab).
-    let relatedToCurrent = aRelatedToCurrent == null ? !!aReferrerURI : aRelatedToCurrent;
-    let openerTab = ((aOpenerBrowser && this.getTabForBrowser(aOpenerBrowser)) ||
+    if (relatedToCurrent == null) {
+      relatedToCurrent = !!referrerURI;
+    }
+    let openerTab = ((openerBrowser && this.getTabForBrowser(openerBrowser)) ||
       (relatedToCurrent && this.selectedTab));
 
     var t = document.createElementNS(this._XUL_NS, "tab");
@@ -2209,14 +2179,14 @@ window._gBrowser = {
     } catch (ex) { /* we'll try to fix up this URL later */ }
 
     let lazyBrowserURI;
-    if (aCreateLazyBrowser && aURI != "about:blank") {
+    if (createLazyBrowser && aURI != "about:blank") {
       lazyBrowserURI = aURIObject;
       aURI = "about:blank";
     }
 
     var uriIsAboutBlank = aURI == "about:blank";
 
-    if (!aNoInitialLabel) {
+    if (!noInitialLabel) {
       if (isBlankPageURL(aURI)) {
         t.setAttribute("label", this.tabContainer.emptyTabTitle);
       } else {
@@ -2227,20 +2197,20 @@ window._gBrowser = {
 
     // Related tab inherits current tab's user context unless a different
     // usercontextid is specified
-    if (aUserContextId == null && openerTab) {
-      aUserContextId = openerTab.getAttribute("usercontextid") || 0;
+    if (userContextId == null && openerTab) {
+      userContextId = openerTab.getAttribute("usercontextid") || 0;
     }
 
-    if (aUserContextId) {
-      t.setAttribute("usercontextid", aUserContextId);
+    if (userContextId) {
+      t.setAttribute("usercontextid", userContextId);
       ContextualIdentityService.setTabStyle(t);
     }
 
-    if (aSkipBackgroundNotify) {
+    if (skipBackgroundNotify) {
       t.setAttribute("skipbackgroundnotify", true);
     }
 
-    if (aPinned) {
+    if (pinned) {
       t.setAttribute("pinned", "true");
     }
 
@@ -2251,7 +2221,7 @@ window._gBrowser = {
     // When overflowing, new tabs are scrolled into view smoothly, which
     // doesn't go well together with the width transition. So we skip the
     // transition in that case.
-    let animate = !aSkipAnimation && !aPinned &&
+    let animate = !skipAnimation && !pinned &&
       this.tabContainer.getAttribute("overflow") != "true" &&
       this.animationsEnabled;
     if (!animate) {
@@ -2272,20 +2242,21 @@ window._gBrowser = {
 
     try {
       // If this new tab is owned by another, assert that relationship
-      if (aOwner)
-        t.owner = aOwner;
+      if (ownerTab) {
+        t.owner = ownerTab;
+      }
 
       // Ensure we have an index if one was not provided. _insertTabAt
       // will do some additional validation.
-      if (typeof aIndex != "number") {
+      if (typeof index != "number") {
         // Move the new tab after another tab if needed.
-        if (!aBulkOrderedOpen &&
+        if (!bulkOrderedOpen &&
             ((openerTab &&
               Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) ||
              Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent"))) {
 
           let lastRelatedTab = openerTab && this._lastRelatedTabMap.get(openerTab);
-          aIndex = (lastRelatedTab || openerTab || this.selectedTab)._tPos + 1;
+          index = (lastRelatedTab || openerTab || this.selectedTab)._tPos + 1;
 
           if (lastRelatedTab) {
             lastRelatedTab.owner = null;
@@ -2298,27 +2269,27 @@ window._gBrowser = {
           }
         } else {
           // This is intentionally past bounds, see the comment below on insertBefore.
-          aIndex = this.tabs.length;
+          index = this.tabs.length;
         }
       }
       // Ensure position respectes tab pinned state.
-      if (aPinned) {
-        aIndex = Math.min(aIndex, this._numPinnedTabs);
+      if (pinned) {
+        index = Math.min(index, this._numPinnedTabs);
       } else {
-        aIndex = Math.max(aIndex, this._numPinnedTabs);
+        index = Math.max(index, this._numPinnedTabs);
       }
 
       // use .item() instead of [] because dragging to the end of the strip goes out of
       // bounds: .item() returns null (so it acts like appendChild), but [] throws
-      let tabAfter = this.tabs.item(aIndex);
+      let tabAfter = this.tabs.item(index);
       this.tabContainer.insertBefore(t, tabAfter);
       if (tabAfter) {
         this._updateTabsAfterInsert();
       } else {
-        t._tPos = aIndex;
+        t._tPos = index;
       }
 
-      if (aPinned) {
+      if (pinned) {
         this._updateTabBarForPinnedTabs();
       }
       this.tabContainer._setPositionalAttributes();
@@ -2327,30 +2298,29 @@ window._gBrowser = {
 
       // If we don't have a preferred remote type, and we have a remote
       // opener, use the opener's remote type.
-      if (!aPreferredRemoteType && aOpenerBrowser) {
-        aPreferredRemoteType = aOpenerBrowser.remoteType;
+      if (!preferredRemoteType && openerBrowser) {
+        preferredRemoteType = openerBrowser.remoteType;
       }
 
       // If URI is about:blank and we don't have a preferred remote type,
       // then we need to use the referrer, if we have one, to get the
       // correct remote type for the new tab.
-      if (uriIsAboutBlank && !aPreferredRemoteType && aReferrerURI) {
-        aPreferredRemoteType =
-          E10SUtils.getRemoteTypeForURI(aReferrerURI.spec,
-            gMultiProcessBrowser);
+      if (uriIsAboutBlank && !preferredRemoteType && referrerURI) {
+        preferredRemoteType =
+          E10SUtils.getRemoteTypeForURI(referrerURI.spec, gMultiProcessBrowser);
       }
 
       let remoteType =
-        aForceNotRemote ? E10SUtils.NOT_REMOTE :
+        forceNotRemote ? E10SUtils.NOT_REMOTE :
         E10SUtils.getRemoteTypeForURI(aURI, gMultiProcessBrowser,
-          aPreferredRemoteType);
+          preferredRemoteType);
 
       // If we open a new tab with the newtab URL in the default
       // userContext, check if there is a preloaded browser ready.
       // Private windows are not included because both the label and the
       // icon for the tab would be set incorrectly (see bug 1195981).
       if (aURI == BROWSER_NEW_TAB_URL &&
-          !aUserContextId &&
+          !userContextId &&
           !PrivateBrowsingUtils.isWindowPrivate(window)) {
         b = this._getPreloadedBrowser();
         if (b) {
@@ -2363,17 +2333,17 @@ window._gBrowser = {
         b = this._createBrowser({
           remoteType,
           uriIsAboutBlank,
-          userContextId: aUserContextId,
-          sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
-          openerWindow: aOpener,
-          nextTabParentId: aNextTabParentId,
-          name: aName
+          userContextId,
+          sameProcessAsFrameLoader,
+          openerWindow: opener,
+          nextTabParentId,
+          name,
         });
       }
 
       t.linkedBrowser = b;
 
-      if (aFocusUrlBar) {
+      if (focusUrlBar) {
         b._urlbarFocused = true;
       }
 
@@ -2382,17 +2352,17 @@ window._gBrowser = {
       t._browserParams = {
         uriIsAboutBlank,
         remoteType,
-        usingPreloadedContent
+        usingPreloadedContent,
       };
 
       // If the caller opts in, create a lazy browser.
-      if (aCreateLazyBrowser) {
+      if (createLazyBrowser) {
         this._createLazyBrowser(t);
 
         if (lazyBrowserURI) {
           // Lazy browser must be explicitly registered so tab will appear as
           // a switch-to-tab candidate in autocomplete.
-          this._unifiedComplete.registerOpenPage(lazyBrowserURI, aUserContextId);
+          this._unifiedComplete.registerOpenPage(lazyBrowserURI, userContextId);
           b.registeredOpenURI = lazyBrowserURI;
         }
       } else {
@@ -2420,48 +2390,51 @@ window._gBrowser = {
     // Dispatch a new tab notification.  We do this once we're
     // entirely done, so that things are in a consistent state
     // even if the event listener opens or closes tabs.
-    var detail = aEventDetail || {};
-    var evt = new CustomEvent("TabOpen", { bubbles: true, detail });
+    let evt = new CustomEvent("TabOpen", { bubbles: true, detail: eventDetail || {} });
     t.dispatchEvent(evt);
     Services.telemetry.recordEvent("savant", "tab", "open", null, { subcategory: "frame" });
 
-    if (!usingPreloadedContent && aOriginPrincipal && aURI) {
+    if (!usingPreloadedContent && originPrincipal && aURI) {
       let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
       // Unless we know for sure we're not inheriting principals,
       // force the about:blank viewer to have the right principal:
       if (!aURIObject ||
-        (doGetProtocolFlags(aURIObject) & URI_INHERITS_SECURITY_CONTEXT)) {
-        b.createAboutBlankContentViewer(aOriginPrincipal);
+          (doGetProtocolFlags(aURIObject) & URI_INHERITS_SECURITY_CONTEXT)) {
+        b.createAboutBlankContentViewer(originPrincipal);
       }
     }
 
     // If we didn't swap docShells with a preloaded browser
     // then let's just continue loading the page normally.
-    if (!usingPreloadedContent && (!uriIsAboutBlank || aDisallowInheritPrincipal)) {
+    if (!usingPreloadedContent && (!uriIsAboutBlank || disallowInheritPrincipal)) {
       // pretend the user typed this so it'll be available till
       // the document successfully loads
-      if (aURI && !gInitialPages.includes(aURI))
+      if (aURI && !gInitialPages.includes(aURI)) {
         b.userTypedValue = aURI;
+      }
 
       let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      if (aAllowThirdPartyFixup) {
+      if (allowThirdPartyFixup) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
       }
-      if (aFromExternal)
+      if (fromExternal) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-      if (aAllowMixedContent)
+      }
+      if (allowMixedContent) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
-      if (aDisallowInheritPrincipal)
+      }
+      if (disallowInheritPrincipal) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+      }
       try {
         b.loadURI(aURI, {
           flags,
-          triggeringPrincipal: aTriggeringPrincipal,
-          referrerURI: aNoReferrer ? null : aReferrerURI,
-          referrerPolicy: aReferrerPolicy,
-          charset: aCharset,
-          postData: aPostData,
+          triggeringPrincipal,
+          referrerURI: noReferrer ? null : referrerURI,
+          referrerPolicy,
+          charset,
+          postData,
         });
       } catch (ex) {
         Cu.reportError(ex);
@@ -2480,7 +2453,7 @@ window._gBrowser = {
     }
 
     // Additionally send pinned tab events
-    if (aPinned) {
+    if (pinned) {
       this._notifyPinnedStatus(t);
     }
 
