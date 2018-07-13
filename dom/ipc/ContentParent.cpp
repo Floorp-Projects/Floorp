@@ -29,6 +29,7 @@
 #include "mozilla/a11y/AccessibleWrap.h"
 #include "mozilla/a11y/Compatibility.h"
 #endif
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -117,7 +118,6 @@
 #include "nsDebugImpl.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
-#include "nsGlobalWindowInner.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
@@ -5760,12 +5760,12 @@ ContentParent::RecvBHRThreadHang(const HangDetails& aDetails)
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPrincipal,
-                                                           const nsCString& aParentOrigin,
+ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
+                                                           const nsCString& aTrackingOrigin,
                                                            const nsCString& aGrantedOrigin)
 {
-  nsGlobalWindowInner::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(aPrincipal,
-                                                                                  aParentOrigin,
-                                                                                  aGrantedOrigin);
+  AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(aParentPrincipal,
+                                                                                 aTrackingOrigin,
+                                                                                 aGrantedOrigin);
   return IPC_OK();
 }

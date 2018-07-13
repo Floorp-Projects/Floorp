@@ -1225,8 +1225,8 @@ public:
     const HangDetails& aHangDetails) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPrincipal,
-                                              const nsCString& aParentOrigin,
+  RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
+                                              const nsCString& aTrackingOrigin,
                                               const nsCString& aGrantedOrigin) override;
 
   // Notify the ContentChild to enable the input event prioritization when
