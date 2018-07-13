@@ -370,15 +370,15 @@
             input.hidden = false;
 
             input.value = this.view.getCellText(row, column);
-            var selectText = function selectText() {
+
+            setTimeout(() => {
               input.select();
               input.inputField.focus();
-            };
-            setTimeout(selectText, 0);
+              this.setAttribute("editing", "true");
+            }, 0);
 
             this._editingRow = row;
             this._editingColumn = column;
-            this.setAttribute("editing", "true");
 
             box.invalidateCell(row, column);
             return true;
