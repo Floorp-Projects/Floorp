@@ -26,7 +26,9 @@ function initExceptionDialog() {
   gNsISecTel = Ci.nsISecurityUITelemetry;
 
   var brandName = gBundleBrand.getString("brandShortName");
-  setText("warningText", gPKIBundle.getFormattedString("addExceptionBrandedWarning2", [brandName]));
+  setText("warningText",
+          gPKIBundle.getFormattedString("addExceptionBrandedWarning2",
+                                        [brandName]));
   gDialog.getButton("extra1").disabled = true;
 
   var args = window.arguments;
@@ -75,7 +77,7 @@ function initExceptionDialog() {
 function grabCert(req, evt) {
   if (req.channel && req.channel.securityInfo) {
     gSSLStatus = req.channel.securityInfo
-                    .QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+                    .QueryInterface(Ci.nsITransportSecurityInfo).SSLStatus;
     gCert = gSSLStatus ? gSSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert
                        : null;
   }
@@ -159,7 +161,8 @@ function resetDialog() {
  */
 function handleTextChange() {
   var checkCertButton = document.getElementById("checkCertButton");
-  checkCertButton.disabled = !(document.getElementById("locationTextBox").value);
+  checkCertButton.disabled =
+                    !(document.getElementById("locationTextBox").value);
   if (gNeedReset) {
     gNeedReset = false;
     resetDialog();
@@ -201,7 +204,8 @@ function updateCertStatus() {
         }
       }
       if (gSSLStatus.isUntrusted) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
+        bucketId +=
+          gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
         if (!use1) {
           use1 = true;
           shortDesc = uts;
@@ -229,7 +233,8 @@ function updateCertStatus() {
       pe.disabled = inPrivateBrowsing;
       pe.checked = !inPrivateBrowsing;
 
-      setText("headerDescription", gPKIBundle.getString("addExceptionInvalidHeader"));
+      setText("headerDescription",
+              gPKIBundle.getString("addExceptionInvalidHeader"));
     } else {
       shortDesc = "addExceptionValidShort";
       longDesc  = "addExceptionValidLong";
@@ -301,22 +306,27 @@ function addException() {
   var overrideService = Cc["@mozilla.org/security/certoverride;1"]
                           .getService(Ci.nsICertOverrideService);
   var flags = 0;
-  let confirmBucketId = gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
+  let confirmBucketId =
+        gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
   if (gSSLStatus.isUntrusted) {
     flags |= overrideService.ERROR_UNTRUSTED;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
+    confirmBucketId +=
+        gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
   }
   if (gSSLStatus.isDomainMismatch) {
     flags |= overrideService.ERROR_MISMATCH;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
+    confirmBucketId +=
+           gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
   }
   if (gSSLStatus.isNotValidAtThisTime) {
     flags |= overrideService.ERROR_TIME;
-    confirmBucketId += gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
+    confirmBucketId +=
+           gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
   }
 
   var permanentCheckbox = document.getElementById("permanent");
-  var shouldStorePermanently = permanentCheckbox.checked && !inPrivateBrowsingMode();
+  var shouldStorePermanently = permanentCheckbox.checked &&
+                               !inPrivateBrowsingMode();
   if (!permanentCheckbox.checked) {
     gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_TOP_DONT_REMEMBER_EXCEPTION);
   }
