@@ -30,6 +30,243 @@
 #include "hb-private.hh"
 
 
+/* Void! For when we need a expression-type of void. */
+typedef const struct _hb_void_t *hb_void_t;
+#define HB_VOID ((const _hb_void_t *) nullptr)
+
+
+/*
+ * Bithacks.
+ */
+
+/* Return the number of 1 bits in v. */
+template <typename T>
+static inline HB_CONST_FUNC unsigned int
+hb_popcount (T v)
+{
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && defined(__OPTIMIZE__)
+  if (sizeof (T) <= sizeof (unsigned int))
+    return __builtin_popcount (v);
+
+  if (sizeof (T) <= sizeof (unsigned long))
+    return __builtin_popcountl (v);
+
+  if (sizeof (T) <= sizeof (unsigned long long))
+    return __builtin_popcountll (v);
+#endif
+
+  if (sizeof (T) <= 4)
+  {
+    /* "HACKMEM 169" */
+    uint32_t y;
+    y = (v >> 1) &033333333333;
+    y = v - y - ((y >>1) & 033333333333);
+    return (((y + (y >> 3)) & 030707070707) % 077);
+  }
+
+  if (sizeof (T) == 8)
+  {
+    unsigned int shift = 32;
+    return hb_popcount<uint32_t> ((uint32_t) v) + hb_popcount ((uint32_t) (v >> shift));
+  }
+
+  if (sizeof (T) == 16)
+  {
+    unsigned int shift = 64;
+    return hb_popcount<uint64_t> ((uint64_t) v) + hb_popcount ((uint64_t) (v >> shift));
+  }
+
+  assert (0);
+  return 0; /* Shut up stupid compiler. */
+}
+
+/* Returns the number of bits needed to store number */
+template <typename T>
+static inline HB_CONST_FUNC unsigned int
+hb_bit_storage (T v)
+{
+  if (unlikely (!v)) return 0;
+
+#if defined(__GNUC__) && (__GNUC__ >= 4) && defined(__OPTIMIZE__)
+  if (sizeof (T) <= sizeof (unsigned int))
+    return sizeof (unsigned int) * 8 - __builtin_clz (v);
+
+  if (sizeof (T) <= sizeof (unsigned long))
+    return sizeof (unsigned long) * 8 - __builtin_clzl (v);
+
+  if (sizeof (T) <= sizeof (unsigned long long))
+    return sizeof (unsigned long long) * 8 - __builtin_clzll (v);
+#endif
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1500) || defined(__MINGW32__)
+  if (sizeof (T) <= sizeof (unsigned int))
+  {
+    unsigned long where;
+    _BitScanReverse (&where, v);
+    return 1 + where;
+  }
+# if _WIN64
+  if (sizeof (T) <= 8)
+  {
+    unsigned long where;
+    _BitScanReverse64 (&where, v);
+    return 1 + where;
+  }
+# endif
+#endif
+
+  if (sizeof (T) <= 4)
+  {
+    /* "bithacks" */
+    const unsigned int b[] = {0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000};
+    const unsigned int S[] = {1, 2, 4, 8, 16};
+    unsigned int r = 0;
+    for (int i = 4; i >= 0; i--)
+      if (v & b[i])
+      {
+	v >>= S[i];
+	r |= S[i];
+      }
+    return r + 1;
+  }
+  if (sizeof (T) <= 8)
+  {
+    /* "bithacks" */
+    const uint64_t b[] = {0x2ULL, 0xCULL, 0xF0ULL, 0xFF00ULL, 0xFFFF0000ULL, 0xFFFFFFFF00000000ULL};
+    const unsigned int S[] = {1, 2, 4, 8, 16, 32};
+    unsigned int r = 0;
+    for (int i = 5; i >= 0; i--)
+      if (v & b[i])
+      {
+	v >>= S[i];
+	r |= S[i];
+      }
+    return r + 1;
+  }
+  if (sizeof (T) == 16)
+  {
+    unsigned int shift = 64;
+    return (v >> shift) ? hb_bit_storage<uint64_t> ((uint64_t) (v >> shift)) + shift :
+			  hb_bit_storage<uint64_t> ((uint64_t) v);
+  }
+
+  assert (0);
+  return 0; /* Shut up stupid compiler. */
+}
+
+/* Returns the number of zero bits in the least significant side of v */
+template <typename T>
+static inline HB_CONST_FUNC unsigned int
+hb_ctz (T v)
+{
+  if (unlikely (!v)) return 0;
+
+#if defined(__GNUC__) && (__GNUC__ >= 4) && defined(__OPTIMIZE__)
+  if (sizeof (T) <= sizeof (unsigned int))
+    return __builtin_ctz (v);
+
+  if (sizeof (T) <= sizeof (unsigned long))
+    return __builtin_ctzl (v);
+
+  if (sizeof (T) <= sizeof (unsigned long long))
+    return __builtin_ctzll (v);
+#endif
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1500) || defined(__MINGW32__)
+  if (sizeof (T) <= sizeof (unsigned int))
+  {
+    unsigned long where;
+    _BitScanForward (&where, v);
+    return where;
+  }
+# if _WIN64
+  if (sizeof (T) <= 8)
+  {
+    unsigned long where;
+    _BitScanForward64 (&where, v);
+    return where;
+  }
+# endif
+#endif
+
+  if (sizeof (T) <= 4)
+  {
+    /* "bithacks" */
+    unsigned int c = 32;
+    v &= - (int32_t) v;
+    if (v) c--;
+    if (v & 0x0000FFFF) c -= 16;
+    if (v & 0x00FF00FF) c -= 8;
+    if (v & 0x0F0F0F0F) c -= 4;
+    if (v & 0x33333333) c -= 2;
+    if (v & 0x55555555) c -= 1;
+    return c;
+  }
+  if (sizeof (T) <= 8)
+  {
+    /* "bithacks" */
+    unsigned int c = 64;
+    v &= - (int64_t) (v);
+    if (v) c--;
+    if (v & 0x00000000FFFFFFFFULL) c -= 32;
+    if (v & 0x0000FFFF0000FFFFULL) c -= 16;
+    if (v & 0x00FF00FF00FF00FFULL) c -= 8;
+    if (v & 0x0F0F0F0F0F0F0F0FULL) c -= 4;
+    if (v & 0x3333333333333333ULL) c -= 2;
+    if (v & 0x5555555555555555ULL) c -= 1;
+    return c;
+  }
+  if (sizeof (T) == 16)
+  {
+    unsigned int shift = 64;
+    return (uint64_t) v ? hb_bit_storage<uint64_t> ((uint64_t) v) :
+			  hb_bit_storage<uint64_t> ((uint64_t) (v >> shift)) + shift;
+  }
+
+  assert (0);
+  return 0; /* Shut up stupid compiler. */
+}
+
+
+/*
+ * Tiny stuff.
+ */
+
+#undef MIN
+template <typename Type>
+static inline Type MIN (const Type &a, const Type &b) { return a < b ? a : b; }
+
+#undef MAX
+template <typename Type>
+static inline Type MAX (const Type &a, const Type &b) { return a > b ? a : b; }
+
+static inline unsigned int DIV_CEIL (const unsigned int a, unsigned int b)
+{ return (a + (b - 1)) / b; }
+
+
+#undef  ARRAY_LENGTH
+template <typename Type, unsigned int n>
+static inline unsigned int ARRAY_LENGTH (const Type (&)[n]) { return n; }
+/* A const version, but does not detect erratically being called on pointers. */
+#define ARRAY_LENGTH_CONST(__array) ((signed int) (sizeof (__array) / sizeof (__array[0])))
+
+static inline bool
+hb_unsigned_mul_overflows (unsigned int count, unsigned int size)
+{
+  return (size > 0) && (count >= ((unsigned int) -1) / size);
+}
+
+static inline unsigned int
+hb_ceil_to_4 (unsigned int v)
+{
+  return ((v - 1) | 3) + 1;
+}
+
+
+/*
+ * Sort and search.
+ */
+
 static inline void *
 hb_bsearch_r (const void *key, const void *base,
 	      size_t nmemb, size_t size,
@@ -51,7 +288,6 @@ hb_bsearch_r (const void *key, const void *base,
   }
   return nullptr;
 }
-
 
 
 /* From https://github.com/noporpoise/sort_r */
@@ -157,5 +393,472 @@ static inline void hb_sort_r(void *base, size_t nel, size_t width,
 {
     sort_r_simple(base, nel, width, compar, arg);
 }
+
+
+template <typename T, typename T2> static inline void
+hb_stable_sort (T *array, unsigned int len, int(*compar)(const T *, const T *), T2 *array2)
+{
+  for (unsigned int i = 1; i < len; i++)
+  {
+    unsigned int j = i;
+    while (j && compar (&array[j - 1], &array[i]) > 0)
+      j--;
+    if (i == j)
+      continue;
+    /* Move item i to occupy place for item j, shift what's in between. */
+    {
+      T t = array[i];
+      memmove (&array[j + 1], &array[j], (i - j) * sizeof (T));
+      array[j] = t;
+    }
+    if (array2)
+    {
+      T2 t = array2[i];
+      memmove (&array2[j + 1], &array2[j], (i - j) * sizeof (T2));
+      array2[j] = t;
+    }
+  }
+}
+
+template <typename T> static inline void
+hb_stable_sort (T *array, unsigned int len, int(*compar)(const T *, const T *))
+{
+  hb_stable_sort (array, len, compar, (int *) nullptr);
+}
+
+static inline hb_bool_t
+hb_codepoint_parse (const char *s, unsigned int len, int base, hb_codepoint_t *out)
+{
+  /* Pain because we don't know whether s is nul-terminated. */
+  char buf[64];
+  len = MIN (ARRAY_LENGTH (buf) - 1, len);
+  strncpy (buf, s, len);
+  buf[len] = '\0';
+
+  char *end;
+  errno = 0;
+  unsigned long v = strtoul (buf, &end, base);
+  if (errno) return false;
+  if (*end) return false;
+  *out = v;
+  return true;
+}
+
+
+#define HB_VECTOR_INIT {0, 0, false, nullptr}
+template <typename Type, unsigned int StaticSize=8>
+struct hb_vector_t
+{
+  unsigned int len;
+  unsigned int allocated;
+  bool successful;
+  Type *arrayZ;
+  Type static_array[StaticSize];
+
+  void init (void)
+  {
+    len = 0;
+    allocated = ARRAY_LENGTH (static_array);
+    successful = true;
+    arrayZ = static_array;
+  }
+
+  inline Type& operator [] (unsigned int i)
+  {
+    if (unlikely (i >= len))
+      return Crap (Type);
+    return arrayZ[i];
+  }
+  inline const Type& operator [] (unsigned int i) const
+  {
+    if (unlikely (i >= len))
+      return Null(Type);
+    return arrayZ[i];
+  }
+
+  inline Type *push (void)
+  {
+    if (unlikely (!resize (len + 1)))
+      return &Crap(Type);
+    return &arrayZ[len - 1];
+  }
+  inline Type *push (const Type& v)
+  {
+    Type *p = push ();
+    *p = v;
+    return p;
+  }
+
+  /* Allocate for size but don't adjust len. */
+  inline bool alloc (unsigned int size)
+  {
+    if (unlikely (!successful))
+      return false;
+
+    if (likely (size <= allocated))
+      return true;
+
+    /* Reallocate */
+
+    unsigned int new_allocated = allocated;
+    while (size >= new_allocated)
+      new_allocated += (new_allocated >> 1) + 8;
+
+    Type *new_array = nullptr;
+
+    if (arrayZ == static_array)
+    {
+      new_array = (Type *) calloc (new_allocated, sizeof (Type));
+      if (new_array)
+        memcpy (new_array, arrayZ, len * sizeof (Type));
+    }
+    else
+    {
+      bool overflows = (new_allocated < allocated) || hb_unsigned_mul_overflows (new_allocated, sizeof (Type));
+      if (likely (!overflows))
+        new_array = (Type *) realloc (arrayZ, new_allocated * sizeof (Type));
+    }
+
+    if (unlikely (!new_array))
+    {
+      successful = false;
+      return false;
+    }
+
+    arrayZ = new_array;
+    allocated = new_allocated;
+
+    return true;
+  }
+
+  inline bool resize (int size_)
+  {
+    unsigned int size = size_ < 0 ? 0u : (unsigned int) size_;
+    if (!alloc (size))
+      return false;
+
+    if (size > len)
+      memset (arrayZ + len, 0, (size - len) * sizeof (*arrayZ));
+
+    len = size;
+    return true;
+  }
+
+  inline void pop (void)
+  {
+    if (!len) return;
+    len--;
+  }
+
+  inline void remove (unsigned int i)
+  {
+     if (unlikely (i >= len))
+       return;
+     memmove (static_cast<void *> (&arrayZ[i]),
+	      static_cast<void *> (&arrayZ[i + 1]),
+	      (len - i - 1) * sizeof (Type));
+     len--;
+  }
+
+  inline void shrink (int size_)
+  {
+    unsigned int size = size_ < 0 ? 0u : (unsigned int) size_;
+     if (size < len)
+       len = size;
+  }
+
+  template <typename T>
+  inline Type *find (T v) {
+    for (unsigned int i = 0; i < len; i++)
+      if (arrayZ[i] == v)
+	return &arrayZ[i];
+    return nullptr;
+  }
+  template <typename T>
+  inline const Type *find (T v) const {
+    for (unsigned int i = 0; i < len; i++)
+      if (arrayZ[i] == v)
+	return &arrayZ[i];
+    return nullptr;
+  }
+
+  inline void qsort (int (*cmp)(const void*, const void*))
+  {
+    ::qsort (arrayZ, len, sizeof (Type), cmp);
+  }
+
+  inline void qsort (void)
+  {
+    ::qsort (arrayZ, len, sizeof (Type), Type::cmp);
+  }
+
+  inline void qsort (unsigned int start, unsigned int end)
+  {
+    ::qsort (arrayZ + start, end - start, sizeof (Type), Type::cmp);
+  }
+
+  template <typename T>
+  inline Type *lsearch (const T &x)
+  {
+    for (unsigned int i = 0; i < len; i++)
+      if (0 == this->arrayZ[i].cmp (&x))
+	return &arrayZ[i];
+    return nullptr;
+  }
+
+  template <typename T>
+  inline Type *bsearch (const T &x)
+  {
+    unsigned int i;
+    return bfind (x, &i) ? &arrayZ[i] : nullptr;
+  }
+  template <typename T>
+  inline const Type *bsearch (const T &x) const
+  {
+    unsigned int i;
+    return bfind (x, &i) ? &arrayZ[i] : nullptr;
+  }
+  template <typename T>
+  inline bool bfind (const T &x, unsigned int *i) const
+  {
+    int min = 0, max = (int) this->len - 1;
+    while (min <= max)
+    {
+      int mid = (min + max) / 2;
+      int c = this->arrayZ[mid].cmp (&x);
+      if (c < 0)
+        max = mid - 1;
+      else if (c > 0)
+        min = mid + 1;
+      else
+      {
+        *i = mid;
+	return true;
+      }
+    }
+    if (max < 0 || (max < (int) this->len && this->arrayZ[max].cmp (&x) > 0))
+      max++;
+    *i = max;
+    return false;
+  }
+
+  inline void fini (void)
+  {
+    if (arrayZ != static_array)
+      free (arrayZ);
+    arrayZ = nullptr;
+    allocated = len = 0;
+  }
+};
+
+
+#define HB_LOCKABLE_SET_INIT {HB_VECTOR_INIT}
+template <typename item_t, typename lock_t>
+struct hb_lockable_set_t
+{
+  hb_vector_t <item_t, 1> items;
+
+  inline void init (void) { items.init (); }
+
+  template <typename T>
+  inline item_t *replace_or_insert (T v, lock_t &l, bool replace)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item) {
+      if (replace) {
+	item_t old = *item;
+	*item = v;
+	l.unlock ();
+	old.fini ();
+      }
+      else {
+        item = nullptr;
+	l.unlock ();
+      }
+    } else {
+      item = items.push (v);
+      l.unlock ();
+    }
+    return item;
+  }
+
+  template <typename T>
+  inline void remove (T v, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item) {
+      item_t old = *item;
+      *item = items[items.len - 1];
+      items.pop ();
+      l.unlock ();
+      old.fini ();
+    } else {
+      l.unlock ();
+    }
+  }
+
+  template <typename T>
+  inline bool find (T v, item_t *i, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (item)
+      *i = *item;
+    l.unlock ();
+    return !!item;
+  }
+
+  template <typename T>
+  inline item_t *find_or_insert (T v, lock_t &l)
+  {
+    l.lock ();
+    item_t *item = items.find (v);
+    if (!item) {
+      item = items.push (v);
+    }
+    l.unlock ();
+    return item;
+  }
+
+  inline void fini (lock_t &l)
+  {
+    if (!items.len) {
+      /* No need for locking. */
+      items.fini ();
+      return;
+    }
+    l.lock ();
+    while (items.len) {
+      item_t old = items[items.len - 1];
+	items.pop ();
+	l.unlock ();
+	old.fini ();
+	l.lock ();
+    }
+    items.fini ();
+    l.unlock ();
+  }
+
+};
+
+
+template <typename Type>
+struct hb_auto_t : Type
+{
+  hb_auto_t (void) { Type::init (); }
+  ~hb_auto_t (void) { Type::fini (); }
+  private: /* Hide */
+  void init (void) {}
+  void fini (void) {}
+};
+
+struct hb_bytes_t
+{
+  inline hb_bytes_t (void) : bytes (nullptr), len (0) {}
+  inline hb_bytes_t (const char *bytes_, unsigned int len_) : bytes (bytes_), len (len_) {}
+
+  inline int cmp (const hb_bytes_t &a) const
+  {
+    if (len != a.len)
+      return (int) a.len - (int) len;
+
+    return memcmp (a.bytes, bytes, len);
+  }
+  static inline int cmp (const void *pa, const void *pb)
+  {
+    hb_bytes_t *a = (hb_bytes_t *) pa;
+    hb_bytes_t *b = (hb_bytes_t *) pb;
+    return b->cmp (*a);
+  }
+
+  const char *bytes;
+  unsigned int len;
+};
+
+
+struct HbOpOr
+{
+  static const bool passthru_left = true;
+  static const bool passthru_right = true;
+  template <typename T> static void process (T &o, const T &a, const T &b) { o = a | b; }
+};
+struct HbOpAnd
+{
+  static const bool passthru_left = false;
+  static const bool passthru_right = false;
+  template <typename T> static void process (T &o, const T &a, const T &b) { o = a & b; }
+};
+struct HbOpMinus
+{
+  static const bool passthru_left = true;
+  static const bool passthru_right = false;
+  template <typename T> static void process (T &o, const T &a, const T &b) { o = a & ~b; }
+};
+struct HbOpXor
+{
+  static const bool passthru_left = true;
+  static const bool passthru_right = true;
+  template <typename T> static void process (T &o, const T &a, const T &b) { o = a ^ b; }
+};
+
+
+/* Compiler-assisted vectorization. */
+
+/* Type behaving similar to vectorized vars defined using __attribute__((vector_size(...))),
+ * using vectorized operations if HB_VECTOR_SIZE is set to **bit** numbers (eg 128).
+ * Define that to 0 to disable. */
+template <typename elt_t, unsigned int byte_size>
+struct hb_vector_size_t
+{
+  elt_t& operator [] (unsigned int i) { return u.v[i]; }
+  const elt_t& operator [] (unsigned int i) const { return u.v[i]; }
+
+  template <class Op>
+  inline hb_vector_size_t process (const hb_vector_size_t &o) const
+  {
+    hb_vector_size_t r;
+#if HB_VECTOR_SIZE
+    if (HB_VECTOR_SIZE && 0 == (byte_size * 8) % HB_VECTOR_SIZE)
+      for (unsigned int i = 0; i < ARRAY_LENGTH (u.vec); i++)
+	Op::process (r.u.vec[i], u.vec[i], o.u.vec[i]);
+    else
+#endif
+      for (unsigned int i = 0; i < ARRAY_LENGTH (u.v); i++)
+	Op::process (r.u.v[i], u.v[i], o.u.v[i]);
+    return r;
+  }
+  inline hb_vector_size_t operator | (const hb_vector_size_t &o) const
+  { return process<HbOpOr> (o); }
+  inline hb_vector_size_t operator & (const hb_vector_size_t &o) const
+  { return process<HbOpAnd> (o); }
+  inline hb_vector_size_t operator ^ (const hb_vector_size_t &o) const
+  { return process<HbOpXor> (o); }
+  inline hb_vector_size_t operator ~ () const
+  {
+    hb_vector_size_t r;
+#if HB_VECTOR_SIZE && 0
+    if (HB_VECTOR_SIZE && 0 == (byte_size * 8) % HB_VECTOR_SIZE)
+      for (unsigned int i = 0; i < ARRAY_LENGTH (u.vec); i++)
+	r.u.vec[i] = ~u.vec[i];
+    else
+#endif
+    for (unsigned int i = 0; i < ARRAY_LENGTH (u.v); i++)
+      r.u.v[i] = ~u.v[i];
+    return r;
+  }
+
+  private:
+  static_assert (byte_size / sizeof (elt_t) * sizeof (elt_t) == byte_size, "");
+  union {
+    elt_t v[byte_size / sizeof (elt_t)];
+#if HB_VECTOR_SIZE
+    typedef unsigned long vec_t __attribute__((vector_size (HB_VECTOR_SIZE / 8)));
+    vec_t vec[byte_size / sizeof (vec_t)];
+#endif
+  } u;
+};
+
 
 #endif /* HB_DSALGS_HH */

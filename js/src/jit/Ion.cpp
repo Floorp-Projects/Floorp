@@ -914,7 +914,7 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
                    paddedRuntimeSize +
                    paddedSafepointSize +
                    paddedSharedStubSize;
-    IonScript* script = cx->zone()->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
+    IonScript* script = cx->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
     if (!script)
         return nullptr;
     new (script) IonScript(compilationId);

@@ -49,6 +49,7 @@
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
 #include "gfxQuartzSurface.h"
+#include "nsCocoaFeatures.h"
 #elif defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h"
 #elif defined(ANDROID)
@@ -2719,6 +2720,13 @@ gfxPlatform::InitOMTPConfig()
     omtp.ForceDisable(FeatureStatus::Broken, "OMTP is not supported when using cairo",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_PREF"));
   }
+
+#ifdef XP_MACOSX
+  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+    omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked before OSX 10.10",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_OSX_MAVERICKS"));
+  }
+#endif
 
   if (InSafeMode()) {
     omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",

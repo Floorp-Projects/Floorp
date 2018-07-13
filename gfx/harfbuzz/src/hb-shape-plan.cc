@@ -25,7 +25,6 @@
  */
 
 #include "hb-private.hh"
-#include "hb-debug.hh"
 #include "hb-shape-plan-private.hh"
 #include "hb-shaper-private.hh"
 #include "hb-font-private.hh"

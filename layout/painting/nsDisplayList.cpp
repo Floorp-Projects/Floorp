@@ -2643,7 +2643,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
         rootPresContext->CollectPluginGeometryUpdates(layerManager);
       }
 
-      WebRenderLayerManager* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
+      auto* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
       nsIDocShell* docShell = presContext->GetDocShell();
       nsTArray<wr::WrFilterOp> wrFilters;
@@ -4295,7 +4295,7 @@ nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuild
     return;
   }
 
-  const nsDisplayBackgroundGeometry* geometry = static_cast<const nsDisplayBackgroundGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayBackgroundGeometry*>(aGeometry);
 
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
@@ -4522,7 +4522,8 @@ nsDisplayThemedBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuil
                                                      const nsDisplayItemGeometry* aGeometry,
                                                      nsRegion* aInvalidRegion) const
 {
-  const nsDisplayThemedBackgroundGeometry* geometry = static_cast<const nsDisplayThemedBackgroundGeometry*>(aGeometry);
+  auto* geometry =
+    static_cast<const nsDisplayThemedBackgroundGeometry*>(aGeometry);
 
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
@@ -5229,7 +5230,7 @@ nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                            const nsDisplayItemGeometry* aGeometry,
                                            nsRegion* aInvalidRegion) const
 {
-  const nsDisplayBorderGeometry* geometry = static_cast<const nsDisplayBorderGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayBorderGeometry*>(aGeometry);
   bool snap;
 
   if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap))) {
@@ -5273,8 +5274,8 @@ nsDisplayBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
 };
 
 void
-nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
-                       gfxContext* aCtx) {
+nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx)
+{
   nsPoint offset = ToReferenceFrame();
 
   PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
@@ -5515,7 +5516,7 @@ nsDisplayBoxShadowOuter::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilde
                                                    const nsDisplayItemGeometry* aGeometry,
                                                    nsRegion* aInvalidRegion) const
 {
-  const nsDisplayBoxShadowOuterGeometry* geometry =
+  auto* geometry =
     static_cast<const nsDisplayBoxShadowOuterGeometry*>(aGeometry);
   bool snap;
   if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
@@ -6280,8 +6281,7 @@ nsDisplayOpacity::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayItemGeometry* aGeometry,
                                             nsRegion* aInvalidRegion) const
 {
-  const nsDisplayOpacityGeometry* geometry =
-    static_cast<const nsDisplayOpacityGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayOpacityGeometry*>(aGeometry);
 
   bool snap;
   if (mOpacity != geometry->mOpacity) {
@@ -8897,10 +8897,10 @@ nsCharClipDisplayItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 
 void
 nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) const
+                                                 const nsDisplayItemGeometry* aGeometry,
+                                                 nsRegion* aInvalidRegion) const
 {
-  const nsCharClipGeometry* geometry = static_cast<const nsCharClipGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsCharClipGeometry*>(aGeometry);
 
   bool snap;
   nsRect newRect = geometry->mBounds;
@@ -8975,8 +8975,7 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                const nsDisplayItemGeometry* aGeometry,
                                                nsRegion* aInvalidRegion) const
 {
-  const nsDisplaySVGEffectGeometry* geometry =
-    static_cast<const nsDisplaySVGEffectGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplaySVGEffectGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (geometry->mFrameOffsetToReferenceFrame != ToReferenceFrame() ||
@@ -9277,8 +9276,7 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   nsDisplaySVGEffects::ComputeInvalidationRegion(aBuilder, aGeometry,
                                                  aInvalidRegion);
 
-  const nsDisplayMaskGeometry* geometry =
-    static_cast<const nsDisplayMaskGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayMaskGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
 
@@ -9550,8 +9548,7 @@ nsDisplayFilter::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   nsDisplaySVGEffects::ComputeInvalidationRegion(aBuilder, aGeometry,
                                                  aInvalidRegion);
 
-  const nsDisplayFilterGeometry* geometry =
-    static_cast<const nsDisplayFilterGeometry*>(aGeometry);
+  auto* geometry = static_cast<const nsDisplayFilterGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&
       geometry->ShouldInvalidateToSyncDecodeImages()) {

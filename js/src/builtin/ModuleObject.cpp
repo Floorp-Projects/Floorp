@@ -773,20 +773,15 @@ ModuleObject::create(JSContext* cx)
     if (!self)
         return nullptr;
 
-    Zone* zone = cx->zone();
-    IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>();
-    if (!bindings) {
-        ReportOutOfMemory(cx);
+    IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
+    if (!bindings)
         return nullptr;
-    }
 
     self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
 
-    FunctionDeclarationVector* funDecls = zone->new_<FunctionDeclarationVector>(zone);
-    if (!funDecls) {
-        ReportOutOfMemory(cx);
+    FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>(cx->zone());
+    if (!funDecls)
         return nullptr;
-    }
 
     self->initReservedSlot(FunctionDeclarationsSlot, PrivateValue(funDecls));
     return self;
@@ -1133,12 +1128,9 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObje
     MOZ_ASSERT(!self->namespace_());
     MOZ_ASSERT(exports->is<ArrayObject>());
 
-    Zone* zone = cx->zone();
-    auto bindings = zone->make_unique<IndirectBindingMap>();
-    if (!bindings) {
-        ReportOutOfMemory(cx);
+    auto bindings = cx->make_unique<IndirectBindingMap>();
+    if (!bindings)
         return nullptr;
-    }
 
     auto ns = ModuleNamespaceObject::create(cx, self, exports, std::move(bindings));
     if (!ns)

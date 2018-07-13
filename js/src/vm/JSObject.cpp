@@ -1579,7 +1579,7 @@ NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     }
 
     if (size_t ndynamic = dynamicSlotsCount(nfixed, values.length(), obj->getClass())) {
-        obj->slots_ = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
+        obj->slots_ = cx->pod_malloc<HeapSlot>(ndynamic);
         if (!obj->slots_)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(obj->slots_, ndynamic);

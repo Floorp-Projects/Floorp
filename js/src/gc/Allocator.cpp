@@ -111,7 +111,7 @@ GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind, size_t thingSize,
 {
     HeapSlot* slots = nullptr;
     if (nDynamicSlots) {
-        slots = cx->zone()->pod_malloc<HeapSlot>(nDynamicSlots);
+        slots = cx->maybe_pod_malloc<HeapSlot>(nDynamicSlots);
         if (MOZ_UNLIKELY(!slots)) {
             if (allowGC)
                 ReportOutOfMemory(cx);

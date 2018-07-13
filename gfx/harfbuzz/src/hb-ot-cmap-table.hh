@@ -89,7 +89,7 @@ struct CmapSubtableFormat4
     this->length.set (get_sub_table_size (segments));
 
     this->segCountX2.set (segments.len * 2);
-    this->entrySelector.set (MAX (1u, _hb_bit_storage (segments.len)) - 1);
+    this->entrySelector.set (MAX (1u, hb_bit_storage (segments.len)) - 1);
     this->searchRange.set (2 * (1u << this->entrySelector));
     this->rangeShift.set (segments.len * 2 > this->searchRange
                           ? 2 * segments.len - this->searchRange

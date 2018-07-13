@@ -511,7 +511,7 @@ struct AlternateSubstFormat1
     hb_mask_t lookup_mask = c->lookup_mask;
 
     /* Note: This breaks badly if two features enabled this lookup together. */
-    unsigned int shift = _hb_ctz (lookup_mask);
+    unsigned int shift = hb_ctz (lookup_mask);
     unsigned int alt_index = ((lookup_mask & glyph_mask) >> shift);
 
     if (unlikely (alt_index > alt_set.len || alt_index == 0)) return_trace (false);

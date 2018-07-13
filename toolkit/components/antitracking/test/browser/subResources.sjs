@@ -6,15 +6,26 @@ const IMAGE = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
 function handleRequest(aRequest, aResponse) {
   aResponse.setStatusLine(aRequest.httpVersion, 200);
 
-  if (aRequest.queryString.includes("result")) {
-    aResponse.write(getState("hints") || 0);
-    setState("hints", "0");
-  } else {
-    let hints = parseInt(getState("hints") || 0) + 1;
-    setState("hints", hints.toString());
+  let key = aRequest.queryString.includes("what=script") ? "script" : "image";
 
-    aResponse.setHeader("Set-Cookie", "foopy=1");
+  if (aRequest.queryString.includes("result")) {
+    aResponse.write(getState(key) || 0);
+    setState(key, "0");
+    return;
+  }
+
+  if (aRequest.hasHeader('Cookie')) {
+    let hints = parseInt(getState(key) || 0) + 1;
+    setState(key, hints.toString());
+  }
+
+  aResponse.setHeader("Set-Cookie", "foopy=1");
+
+  if (key == "script") {
+    aResponse.setHeader("Content-Type", "text/javascript", false);
+    aResponse.write("42;");
+  } else {
     aResponse.setHeader("Content-Type", "image/png", false);
     aResponse.write(IMAGE);
- }
+  }
 }

@@ -619,12 +619,9 @@ CreatePropertyIterator(JSContext* cx, Handle<JSObject*> objBeingIterated,
                   "allocate");
 
     size_t extraCount = props.length() + numGuards * 2;
-    void* mem =
-        cx->zone()->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraCount);
-    if (!mem) {
-        ReportOutOfMemory(cx);
+    void* mem = cx->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraCount);
+    if (!mem)
         return nullptr;
-    }
 
     // This also registers |ni| with |propIter|.
     bool hadError = false;
