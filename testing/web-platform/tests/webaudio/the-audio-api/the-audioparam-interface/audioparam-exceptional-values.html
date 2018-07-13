@@ -45,7 +45,7 @@
             let defaultFuncArg = (value) => [value, 1];
 
             // Test the value parameter
-            doTests(should, gain, TypeError, nonFiniteValues, [
+            doTests(should, gain, 'TypeError', nonFiniteValues, [
               {automationName: 'setValueAtTime', funcArg: defaultFuncArg}, {
                 automationName: 'linearRampToValueAtTime',
                 funcArg: defaultFuncArg
@@ -75,7 +75,7 @@
             let defaultFuncArg = (startTime) => [1, startTime];
 
             // Test the time parameter
-            doTests(should, gain, TypeError, nonFiniteValues, [
+            doTests(should, gain, 'TypeError', nonFiniteValues, [
               {automationName: 'setValueAtTime', funcArg: defaultFuncArg},
               {
                 automationName: 'linearRampToValueAtTime',
@@ -112,7 +112,7 @@
             // contents of the array are not important.
             let curve = new Float32Array(3);
 
-            doTests(should, gain, TypeError, nonFiniteValues, [
+            doTests(should, gain, 'TypeError', nonFiniteValues, [
               {
                 automationName: 'setValueCurveAtTime',
                 funcArg: (startTime) => [curve, startTime, 1]
@@ -121,7 +121,7 @@
 
             // Non-finite values for the curve should signal an error
             doTests(
-                should, gain, TypeError,
+                should, gain, 'TypeError',
                 [[1, 2, Infinity, 3], [1, NaN, 2, 3]], [{
                   automationName: 'setValueCurveAtTime',
                   funcArg: (c) => [c, 1, 1]
