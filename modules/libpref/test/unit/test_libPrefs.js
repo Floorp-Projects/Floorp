@@ -235,9 +235,9 @@ function run_test() {
 
   // locking and unlocking a nonexistent pref should throw
   do_check_throws(function() {
-    ps.lockPref("DefaultPref.nonexistent");}, Cr.NS_ERROR_ILLEGAL_VALUE);
+    ps.lockPref("DefaultPref.nonexistent");}, Cr.NS_ERROR_UNEXPECTED);
   do_check_throws(function() {
-    ps.unlockPref("DefaultPref.nonexistent");}, Cr.NS_ERROR_ILLEGAL_VALUE);
+    ps.unlockPref("DefaultPref.nonexistent");}, Cr.NS_ERROR_UNEXPECTED);
 
   // getting a locked pref branch should return the "default" value
   Assert.ok(!ps.prefIsLocked("DefaultPref.char"));
