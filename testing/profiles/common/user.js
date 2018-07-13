@@ -7,6 +7,8 @@ user_pref("browser.dom.window.dump.enabled", true);
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
+// For Activity Stream firstrun page, use an empty string to avoid fetching.
+user_pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "");
 // Tell the search service we are running in the US.  This also has the desired
 // side-effect of preventing our geoip lookup.
 user_pref("browser.search.countryCode", "US");
