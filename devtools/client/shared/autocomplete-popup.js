@@ -155,10 +155,9 @@ AutocompletePopup.prototype = {
    *        The position of the item to select.
    */
   selectItemAtIndex: function(index) {
-    if (typeof index !== "number") {
-      // If no index was provided, select the item closest to the input.
-      const isAboveInput = this.position === "top";
-      index = isAboveInput ? this.itemCount - 1 : 0;
+    if (!Number.isInteger(index)) {
+      // If no index was provided, select the first item.
+      index = 0;
     }
     this.selectedIndex = index;
   },
