@@ -10,8 +10,7 @@
 // Helper function for add_read_only_cert_override_test. Probably doesn't need
 // to be called directly.
 function add_read_only_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                               .SSLStatus;
+  let sslstatus = aSecurityInfo.SSLStatus;
   let bits =
     (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
     (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |

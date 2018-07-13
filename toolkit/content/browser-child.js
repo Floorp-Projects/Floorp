@@ -215,7 +215,7 @@ var WebProgressListener = {
     let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.state = aState;
-    json.status = SecurityUI.getSSLStatusAsString();
+    json.secInfo = SecurityUI.getSecInfoAsString();
 
     json.matchedList = null;
     if (aRequest && aRequest instanceof Ci.nsIClassifiedChannel) {
@@ -374,15 +374,17 @@ var WebNavigation =  {
 WebNavigation.init();
 
 var SecurityUI = {
-  getSSLStatusAsString() {
-    let status = docShell.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+  getSecInfoAsString() {
+    let secInfo = docShell.securityUI.secInfo;
 
-    if (status) {
-      let helper = Cc["@mozilla.org/network/serialization-helper;1"]
-                      .getService(Ci.nsISerializationHelper);
+    if (secInfo) {
+      if (secInfo) {
+        let helper = Cc["@mozilla.org/network/serialization-helper;1"]
+                        .getService(Ci.nsISerializationHelper);
 
-      status.QueryInterface(Ci.nsISerializable);
-      return helper.serializeToString(status);
+        secInfo.QueryInterface(Ci.nsISerializable);
+        return helper.serializeToString(secInfo);
+      }
     }
 
     return null;

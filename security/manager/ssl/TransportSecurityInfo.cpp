@@ -51,7 +51,6 @@ TransportSecurityInfo::TransportSecurityInfo()
 NS_IMPL_ISUPPORTS(TransportSecurityInfo,
                   nsITransportSecurityInfo,
                   nsIInterfaceRequestor,
-                  nsISSLStatusProvider,
                   nsIAssociatedContentSecurity,
                   nsISerializable,
                   nsIClassInfo)
@@ -365,7 +364,7 @@ TransportSecurityInfo::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 TransportSecurityInfo::GetSSLStatus(nsISSLStatus** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);

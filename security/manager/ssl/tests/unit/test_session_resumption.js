@@ -41,9 +41,7 @@ function add_resume_non_ev_with_override_test() {
       ok(transportSecurityInfo.securityState &
          Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
          "expired.example.com should have STATE_CERT_USER_OVERRIDDEN flag");
-      let sslStatus = transportSecurityInfo
-                        .QueryInterface(Ci.nsISSLStatusProvider)
-                        .SSLStatus;
+      let sslStatus = transportSecurityInfo.SSLStatus;
       ok(!sslStatus.succeededCertChain,
          "ev-test.example.com should not have succeededCertChain set");
       ok(!sslStatus.isDomainMismatch,
@@ -68,9 +66,7 @@ function add_one_ev_test() {
       ok(!(transportSecurityInfo.securityState &
            Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN),
          "ev-test.example.com should not have STATE_CERT_USER_OVERRIDDEN flag");
-      let sslStatus = transportSecurityInfo
-                        .QueryInterface(Ci.nsISSLStatusProvider)
-                        .SSLStatus;
+      let sslStatus = transportSecurityInfo.SSLStatus;
       ok(sslStatus.succeededCertChain,
          "ev-test.example.com should have succeededCertChain set");
       ok(!sslStatus.isDomainMismatch,
@@ -130,9 +126,7 @@ function add_one_non_ev_test() {
       ok(!(transportSecurityInfo.securityState &
            Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN),
          `${GOOD_DOMAIN} should not have STATE_CERT_USER_OVERRIDDEN flag`);
-      let sslStatus = transportSecurityInfo
-                        .QueryInterface(Ci.nsISSLStatusProvider)
-                        .SSLStatus;
+      let sslStatus = transportSecurityInfo.SSLStatus;
       ok(sslStatus.succeededCertChain,
          `${GOOD_DOMAIN} should have succeededCertChain set`);
       ok(!sslStatus.isDomainMismatch,

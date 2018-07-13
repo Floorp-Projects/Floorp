@@ -720,8 +720,7 @@ FakeSSLStatus.prototype = {
 // Helper function for add_cert_override_test. Probably doesn't need to be
 // called directly.
 function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                               .SSLStatus;
+  let sslstatus = aSecurityInfo.SSLStatus;
   let bits =
     (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
     (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
@@ -749,8 +748,7 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
               Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
               "Cert override flag should be set on the security state");
     if (aExpectedSSLStatus) {
-      let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                                  .SSLStatus;
+      let sslstatus = aSecurityInfo.SSLStatus;
       if (aExpectedSSLStatus.failedCertChain) {
         ok(aExpectedSSLStatus.failedCertChain.equals(sslstatus.failedCertChain));
       }
@@ -763,8 +761,7 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
 // SSLStatus set on it. In this case, the error was not overridable anyway, so
 // we consider it a success.
 function attempt_adding_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                               .SSLStatus;
+  let sslstatus = aSecurityInfo.SSLStatus;
   if (sslstatus) {
     let bits =
       (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |

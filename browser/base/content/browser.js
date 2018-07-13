@@ -2994,8 +2994,7 @@ var BrowserOnClick = {
         }
 
         securityInfo = getSecurityInfo(securityInfoAsString);
-        sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                                .SSLStatus;
+        sslStatus = securityInfo.SSLStatus;
         let params = { exceptionAdded: false,
                        sslStatus };
 
@@ -3036,8 +3035,7 @@ var BrowserOnClick = {
         }
 
         securityInfo = getSecurityInfo(securityInfoAsString);
-        sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                                .SSLStatus;
+        sslStatus = securityInfo.SSLStatus;
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
         let validityInfo = {
