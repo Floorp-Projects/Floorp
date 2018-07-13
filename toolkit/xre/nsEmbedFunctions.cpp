@@ -248,6 +248,7 @@ XRE_SetAndroidChildFds (JNIEnv* env, const XRE_AndroidChildFds& fds)
 {
   mozilla::jni::SetGeckoThreadEnv(env);
   mozilla::dom::SetPrefsFd(fds.mPrefsFd);
+  mozilla::dom::SetPrefMapFd(fds.mPrefMapFd);
   IPC::Channel::SetClientChannelFd(fds.mIpcFd);
   CrashReporter::SetNotificationPipeForChild(fds.mCrashFd);
   CrashReporter::SetCrashAnnotationPipeForChild(fds.mCrashAnnotationFd);
