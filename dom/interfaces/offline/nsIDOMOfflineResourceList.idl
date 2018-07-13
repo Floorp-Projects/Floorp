@@ -14,13 +14,6 @@ interface nsIDOMOfflineResourceList : nsISupports
   readonly attribute nsISupports mozItems;
 
   /**
-   * Get the URI of a dynamically-managed entry.
-   * @status DEPRECATED
-   *         Clients should use the "items" attribute.
-   */
-  DOMString mozItem(in unsigned long index);
-
-  /**
    * Add an item to the list of dynamically-managed entries.  The resource
    * will be fetched into the application cache.
    *
