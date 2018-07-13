@@ -36,6 +36,11 @@ public class JobIdsConstants {
 
     private static final int JOB_ID_FILE_CLEANUP = 1008;
 
+    private static final int JOB_ID_UPDATES_REGISTER = 1009;
+    private static final int JOB_ID_UPDATES_CHECK_FOR = 1010;
+    private static final int JOB_ID_UPDATES_DOWNLOAD = 1011;
+    private static final int JOB_ID_UPDATES_APPLY = 1012;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -70,6 +75,22 @@ public class JobIdsConstants {
 
     public static int getIdForFileCleanupJob() {
         return getIdWithOffset(JOB_ID_FILE_CLEANUP);
+    }
+
+    public static int getIdForUpdatesRegisterJob() {
+        return getIdWithOffset(JOB_ID_UPDATES_REGISTER);
+    }
+
+    public static int getIdForUpdatesCheckJob() {
+        return getIdWithOffset(JOB_ID_UPDATES_CHECK_FOR);
+    }
+
+    public static int getIdForUpdatesDownloadJob() {
+        return getIdWithOffset(JOB_ID_UPDATES_DOWNLOAD);
+    }
+
+    public static int getIdForUpdatesApplyJob() {
+        return getIdWithOffset(JOB_ID_UPDATES_APPLY);
     }
 
     private static boolean isReleaseBuild() {

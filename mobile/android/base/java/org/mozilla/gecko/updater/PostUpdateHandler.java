@@ -11,6 +11,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.BuildConfig;
 import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -27,7 +28,8 @@ import java.io.OutputStream;
  * Perform tasks in the background after the app has been installed/updated.
  */
 public class PostUpdateHandler extends BrowserAppDelegateWithReference {
-    private static final String LOGTAG = "PostUpdateHandler";
+    private static final String LOGTAG = "GeckoPostUpdateHandler";
+    private static final boolean DEBUG = false;
 
     @Override
     public void onStart(final BrowserApp browserApp) {
@@ -38,7 +40,13 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
 
                 // Check if this is a new installation or if the app has been updated since the last start.
                 if (!AppConstants.MOZ_APP_BUILDID.equals(prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null))) {
-                    Log.d(LOGTAG, "Build ID changed since last start: '" + AppConstants.MOZ_APP_BUILDID + "', '" + prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null) + "'");
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "Build ID changed since last start: '" +
+                                AppConstants.MOZ_APP_BUILDID +
+                                "', '" +
+                                prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null)
+                                + "'");
+                    }
 
                     // Copy the bundled system add-ons from the APK to the data directory.
                     copyFeaturesFromAPK(browserApp);
@@ -51,7 +59,9 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
      * Copies the /assets/features folder out of the APK and into the app's data directory.
      */
     private void copyFeaturesFromAPK(BrowserApp browserApp) {
-        Log.d(LOGTAG, "Copying system add-ons from APK to dataDir");
+        if (DEBUG) {
+            Log.d(LOGTAG, "Copying system add-ons from APK to dataDir");
+        }
 
         final String dataDir = browserApp.getApplicationInfo().dataDir;
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(browserApp);
@@ -63,7 +73,9 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
             for (int i = 0; i < assetNames.length; i++) {
                 final String assetPath = "features/" + assetNames[i];
 
-                Log.d(LOGTAG, "Copying '" + assetPath + "' from APK to dataDir");
+                if (DEBUG) {
+                    Log.d(LOGTAG, "Copying '" + assetPath + "' from APK to dataDir");
+                }
 
                 final InputStream assetStream = assetManager.open(assetPath);
                 final File outFile = getDataFile(dataDir, assetPath);
@@ -101,7 +113,9 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
         File dir = outFile.getParentFile();
 
         if (!dir.exists()) {
-            Log.d(LOGTAG, "Creating " + dir.getAbsolutePath());
+            if (DEBUG) {
+                Log.d(LOGTAG, "Creating " + dir.getAbsolutePath());
+            }
             if (!dir.mkdirs()) {
                 Log.e(LOGTAG, "Unable to create directories: " + dir.getAbsolutePath());
                 return null;
