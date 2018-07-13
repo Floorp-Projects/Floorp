@@ -72,10 +72,7 @@ public:
 
   void Update(ErrorResult& aRv);
 
-  void SwapCache(ErrorResult& aRv)
-  {
-    aRv = SwapCache();
-  }
+  void SwapCache(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(checking)
   IMPL_EVENT_HANDLER(error)
