@@ -180,7 +180,7 @@ function getFilename(source) {
   const {
     filename
   } = (0, _sourcesTree.getURL)(source);
-  return filename;
+  return getRawSourceURL(filename);
 }
 /**
  * Provides a middle-trunated filename
@@ -460,5 +460,5 @@ function getSourceClassnames(source, sourceMetaData) {
     return "blackBox";
   }
 
-  return sourceTypes[(0, _sourcesTree.getFileExtension)(source.url)] || defaultClassName;
+  return sourceTypes[(0, _sourcesTree.getFileExtension)(source)] || defaultClassName;
 }

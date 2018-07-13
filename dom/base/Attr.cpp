@@ -27,16 +27,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsWrapperCacheInlines.h"
 
-nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
-                           already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-: nsINode(aNodeInfo), mAttrMap(aAttrMap)
-{
-}
-
-nsIAttribute::~nsIAttribute()
-{
-}
-
 namespace mozilla {
 namespace dom {
 
@@ -46,7 +36,7 @@ bool Attr::sInitialized;
 Attr::Attr(nsDOMAttributeMap *aAttrMap,
            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
            const nsAString  &aValue)
-  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
+  : nsINode(aNodeInfo), mAttrMap(aAttrMap), mValue(aValue)
 {
   MOZ_ASSERT(mNodeInfo, "We must get a nodeinfo here!");
   MOZ_ASSERT(mNodeInfo->NodeType() == ATTRIBUTE_NODE,
@@ -89,7 +79,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Attr)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(Attr)
-  return tmp->HasKnownLiveWrapperAndDoesNotNeedTracing(static_cast<nsIAttribute*>(tmp));
+  return tmp->HasKnownLiveWrapperAndDoesNotNeedTracing(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Attr)
@@ -99,7 +89,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 // QueryInterface implementation for Attr
 NS_INTERFACE_TABLE_HEAD(Attr)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(Attr, nsINode, nsIAttribute, EventTarget)
+  NS_INTERFACE_TABLE(Attr, nsINode, EventTarget)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Attr)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))

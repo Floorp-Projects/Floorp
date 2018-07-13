@@ -11,6 +11,8 @@ var _collapseTree = require("./collapseTree");
 
 var _utils = require("./utils");
 
+var _treeOrder = require("./treeOrder");
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -20,10 +22,11 @@ function createTree({
   projectRoot
 }) {
   const uncollapsedTree = (0, _utils.createDirectoryNode)("root", "", []);
+  const debuggeeHost = (0, _treeOrder.getDomain)(debuggeeUrl);
 
   for (const sourceId in sources) {
     const source = sources[sourceId];
-    (0, _addToTree.addToTree)(uncollapsedTree, source, debuggeeUrl, projectRoot);
+    (0, _addToTree.addToTree)(uncollapsedTree, source, debuggeeHost, projectRoot);
   }
 
   const sourceTree = (0, _collapseTree.collapseTree)(uncollapsedTree);

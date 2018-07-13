@@ -409,7 +409,7 @@ protected:
 public:
   // Dispatch the runnable to the main thread.  If dispatch to main thread
   // fails, or if the worker is in a state equal or greater of aFailStatus, an
-  // error will be reported on aRv. Normally you want to use 'Terminating' for
+  // error will be reported on aRv. Normally you want to use 'Canceling' for
   // aFailStatus, except if you want an infallible runnable. In this case, use
   // 'Killing'.
   // In that case the error MUST be propagated out to script.

@@ -198,7 +198,7 @@ RemoteServiceWorkerContainerImpl::RemoteServiceWorkerContainerImpl()
     MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
 
     workerHolderToken =
-      WorkerHolderToken::Create(workerPrivate, Terminating,
+      WorkerHolderToken::Create(workerPrivate, Canceling,
                                 WorkerHolderToken::AllowIdleShutdownStart);
 
     if (NS_WARN_IF(!workerHolderToken)) {
