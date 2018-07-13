@@ -1422,5 +1422,36 @@ namespace places {
     return NS_OK;
   }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Note Sync Change Function
+
+  /* static */
+  nsresult
+  NoteSyncChangeFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<NoteSyncChangeFunction> function =
+      new NoteSyncChangeFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("note_sync_change"), 0, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    NoteSyncChangeFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  NoteSyncChangeFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                         nsIVariant **_result)
+  {
+    nsNavBookmarks::NoteSyncChange();
+    *_result = nullptr;
+    return NS_OK;
+  }
+
 } // namespace places
 } // namespace mozilla

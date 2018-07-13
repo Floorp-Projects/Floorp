@@ -284,17 +284,20 @@ add_task(async function test_onItemAdded() {
     await startTracking();
 
     _("Insert a folder using the sync API");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let syncFolderID = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Sync Folder",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     let syncFolderGUID = await PlacesUtils.promiseItemGuid(syncFolderID);
     await verifyTrackedItems(["menu", syncFolderGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
 
     await resetTracker();
     await startTracking();
 
     _("Insert a bookmark using the sync API");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let syncBmkID = PlacesUtils.bookmarks.insertBookmark(syncFolderID,
       CommonUtils.makeURI("https://example.org/sync"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -302,6 +305,7 @@ add_task(async function test_onItemAdded() {
     let syncBmkGUID = await PlacesUtils.promiseItemGuid(syncBmkID);
     await verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -315,6 +319,7 @@ add_task(async function test_async_onItemAdded() {
     await startTracking();
 
     _("Insert a folder using the async API");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let asyncFolder = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -322,11 +327,13 @@ add_task(async function test_async_onItemAdded() {
     });
     await verifyTrackedItems(["menu", asyncFolder.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
 
     await resetTracker();
     await startTracking();
 
     _("Insert a bookmark using the async API");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let asyncBmk = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       parentGuid: asyncFolder.guid,
@@ -335,11 +342,13 @@ add_task(async function test_async_onItemAdded() {
     });
     await verifyTrackedItems([asyncFolder.guid, asyncBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
 
     await resetTracker();
     await startTracking();
 
     _("Insert a separator using the async API");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let asyncSep = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -347,6 +356,7 @@ add_task(async function test_async_onItemAdded() {
     });
     await verifyTrackedItems(["menu", asyncSep.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -371,6 +381,7 @@ add_task(async function test_async_onItemChanged() {
     await startTracking();
 
     _("Update the bookmark using the async API");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.update({
       guid: fxBmk.guid,
       title: "Download Firefox",
@@ -382,6 +393,7 @@ add_task(async function test_async_onItemChanged() {
 
     await verifyTrackedItems([fxBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 1);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -405,6 +417,7 @@ add_task(async function test_onItemChanged_itemDates() {
     await startTracking();
 
     _("Reset the bookmark's added date, should not be tracked");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let dateAdded = new Date(Date.now() - DAY_IN_MS);
     await PlacesUtils.bookmarks.update({
       guid: fx_bm.guid,
@@ -412,10 +425,12 @@ add_task(async function test_onItemChanged_itemDates() {
     });
     await verifyTrackedCount(0);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges);
 
     await resetTracker();
 
     _("Reset the bookmark's added date and another property, should be tracked");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     dateAdded = new Date();
     await PlacesUtils.bookmarks.update({
       guid: fx_bm.guid,
@@ -424,15 +439,18 @@ add_task(async function test_onItemChanged_itemDates() {
     });
     await verifyTrackedItems([fx_bm.guid]);
     Assert.equal(tracker.score, 2 * SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 1);
 
     await resetTracker();
 
     _("Set the bookmark's last modified date");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let fx_id = await PlacesUtils.promiseItemId(fx_bm.guid);
     let dateModified = Date.now() * 1000;
     PlacesUtils.bookmarks.setItemLastModified(fx_id, dateModified);
     await verifyTrackedItems([fx_bm.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 1);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -465,11 +483,13 @@ add_task(async function test_onItemTagged() {
     await startTracking();
 
     _("Tag the item");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     PlacesUtils.tagging.tagURI(uri, ["foo"]);
 
     // bookmark should be tracked, folder should not be.
     await verifyTrackedItems([bGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 6);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -498,10 +518,12 @@ add_task(async function test_onItemUntagged() {
     await startTracking();
 
     _("Remove the tag");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     PlacesUtils.tagging.untagURI(uri, ["foo"]);
 
     await verifyTrackedItems([fx1GUID, fx2GUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -541,10 +563,12 @@ add_task(async function test_async_onItemUntagged() {
     await startTracking();
 
     _("Remove the tag using the async bookmarks API");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.remove(fxTag.guid);
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -595,6 +619,7 @@ add_task(async function test_async_onItemTagged() {
     });
 
     _("Tag an item using the async bookmarks API");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       parentGuid: tag.guid,
@@ -603,6 +628,7 @@ add_task(async function test_async_onItemTagged() {
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -632,6 +658,7 @@ add_task(async function test_async_onItemKeywordChanged() {
     await startTracking();
 
     _("Add a keyword for both items");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.keywords.insert({
       keyword: "the_keyword",
       url: "http://getfirefox.com",
@@ -640,6 +667,7 @@ add_task(async function test_async_onItemKeywordChanged() {
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -673,10 +701,12 @@ add_task(async function test_async_onItemKeywordDeleted() {
     await startTracking();
 
     _("Remove the keyword");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.keywords.remove("the_keyword");
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -831,6 +861,7 @@ add_task(async function test_onLivemarkAdded() {
     await startTracking();
 
     _("Insert a livemark");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     let livemark = await PlacesUtils.livemarks.addLivemark({
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       // Use a local address just in case, to avoid potential aborts for
@@ -844,6 +875,7 @@ add_task(async function test_onLivemarkAdded() {
     // Two observer notifications: one for creating the livemark folder, and
     // one for setting the "livemark/feedURI" anno on the folder.
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -866,12 +898,14 @@ add_task(async function test_onLivemarkDeleted() {
     await startTracking();
 
     _("Remove a livemark");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.livemarks.removeLivemark({
       guid: livemark.guid,
     });
 
     await verifyTrackedItems(["menu", livemark.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -966,6 +1000,7 @@ add_task(async function test_async_onItemMoved_update() {
     await startTracking();
 
     _("Repositioning a bookmark should track the folder");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.update({
       guid: tbBmk.guid,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -973,9 +1008,11 @@ add_task(async function test_async_onItemMoved_update() {
     });
     await verifyTrackedItems(["menu"]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 1);
     await resetTracker();
 
     _("Reparenting a bookmark should track both folders and the bookmark");
+    totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.update({
       guid: tbBmk.guid,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -983,6 +1020,7 @@ add_task(async function test_async_onItemMoved_update() {
     });
     await verifyTrackedItems(["menu", "toolbar", tbBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1023,6 +1061,7 @@ add_task(async function test_async_onItemMoved_reorder() {
     await startTracking();
 
     _("Reorder bookmarks");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
       [mozBmk.guid, fxBmk.guid, tbBmk.guid]);
 
@@ -1030,6 +1069,7 @@ add_task(async function test_async_onItemMoved_reorder() {
     // bump the score for every changed item.
     await verifyTrackedItems(["menu"]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 1);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1126,6 +1166,7 @@ add_task(async function test_treeMoved() {
     await startTracking();
 
     // Move folder 2 to be a sibling of folder1.
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.update({
       guid: folder2.guid,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -1135,6 +1176,7 @@ add_task(async function test_treeMoved() {
     // the menu and both folders should be tracked, the children should not be.
     await verifyTrackedItems(["menu", folder1.guid, folder2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1160,10 +1202,12 @@ add_task(async function test_onItemDeleted() {
     await startTracking();
 
     // Delete the last item - the item and parent should be tracked.
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     PlacesUtils.bookmarks.removeItem(tb_id);
 
     await verifyTrackedItems(["menu", tb_guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1192,10 +1236,12 @@ add_task(async function test_async_onItemDeleted() {
     await startTracking();
 
     _("Delete the first item");
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.remove(fxBmk.guid);
 
     await verifyTrackedItems(["menu", fxBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1270,6 +1316,7 @@ add_task(async function test_async_onItemDeleted_eraseEverything() {
       guid: bugsChildFolder.guid,
       syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
     });
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     await PlacesUtils.bookmarks.eraseEverything();
 
     // bugsChildFolder's sync status is still "NEW", so it shouldn't be
@@ -1280,6 +1327,7 @@ add_task(async function test_async_onItemDeleted_eraseEverything() {
                               tbBmk.guid, "unfiled", bzBmk.guid,
                               bugsGrandChildBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 8);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 11);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1321,10 +1369,12 @@ add_task(async function test_onItemDeleted_tree() {
     await startTracking();
 
     // Delete folder2 - everything we created should be tracked.
+    let totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
     PlacesUtils.bookmarks.removeItem(folder2_id);
 
     await verifyTrackedItems([fx_guid, tb_guid, folder1_guid, folder2_guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(PlacesUtils.bookmarks.totalSyncChanges, totalSyncChanges + 5);
   } finally {
     _("Clean up.");
     await cleanup();
