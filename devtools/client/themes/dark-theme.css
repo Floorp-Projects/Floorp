@@ -131,8 +131,7 @@ body {
   background-color: var(--theme-highlight-bluegrey);
 }
 
-.theme-fg-color4,
-.theme-fg-color6 {
+.theme-fg-color4 {
   color: var(--theme-highlight-purple);
 }
 
@@ -148,7 +147,6 @@ body {
   background-color: #b26b47;
 }
 
-.theme-fg-color7,
 .cm-s-mozilla .cm-atom,
 .cm-s-mozilla .cm-quote,
 .cm-s-mozilla .cm-error,
