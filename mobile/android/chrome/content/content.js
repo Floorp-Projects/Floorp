@@ -360,8 +360,7 @@ var AboutCertErrorListener = {
     let securityInfo = docShell.failedChannel && docShell.failedChannel.securityInfo;
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
                 .QueryInterface(Ci.nsISerializable);
-    let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                                                .SSLStatus;
+    let sslStatus = securityInfo.SSLStatus;
     this._setTechDetails(sslStatus, securityInfo, ownerDoc.location.href);
   },
 };

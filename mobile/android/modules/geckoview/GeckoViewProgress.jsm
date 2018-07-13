@@ -159,8 +159,7 @@ var IdentityHandler = {
       result.host = uri.host;
     }
 
-    let status = aBrowser.securityUI.QueryInterface(Ci.nsISSLStatusProvider)
-                         .SSLStatus.QueryInterface(Ci.nsISSLStatus);
+    let status = aBrowser.securityUI.secInfo.SSLStatus;
     let cert = status.serverCert;
 
     result.organization = cert.organization;
