@@ -118,19 +118,7 @@ MemMapSnapshot::Freeze(AutoMemMap& aMem)
   MOZ_TRY(NS_NewNativeLocalFile(mPath, /* followLinks = */ false,
                                 getter_AddRefs(file)));
 
-  auto result = aMem.init(file);
-#ifdef XP_LINUX
-  // On Linux automation runs, every few hundred thousand calls, our attempt to
-  // stat the file that we just successfully opened fails with EBADF (bug
-  // 1472889). Presumably this is a race with a background thread that double
-  // closes a file, but is difficult to diagnose, so work around it by making a
-  // second mapping attempt if the first one fails.
-  if (!result.isOk()) {
-    aMem.reset();
-    result = aMem.init(file);
-  }
-#endif
-  return result;
+  return aMem.init(file);
 }
 
 #else
