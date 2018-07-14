@@ -15,6 +15,7 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/SynchronizedEventQueue.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TimeStamp.h"
@@ -31,11 +32,16 @@ class ThreadEventTarget;
 
 using mozilla::NotNull;
 
+class nsThreadEnumerator;
+
 // A native thread
 class nsThread
   : public nsIThreadInternal
   , public nsISupportsPriority
+  , private mozilla::LinkedListElement<nsThread>
 {
+  friend mozilla::LinkedList<nsThread>;
+  friend mozilla::LinkedListElement<nsThread>;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
@@ -132,11 +138,15 @@ public:
 
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent);
 
+  static nsThreadEnumerator Enumerate();
+
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
 protected:
   friend class nsThreadShutdownEvent;
+
+  friend class nsThreadEnumerator;
 
   virtual ~nsThread();
 
@@ -151,6 +161,9 @@ protected:
   }
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
+
+  static mozilla::OffTheBooksMutex& ThreadListMutex();
+  static mozilla::LinkedList<nsThread>& ThreadList();
 
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
@@ -182,6 +195,20 @@ protected:
   mozilla::TimeStamp mCurrentEventStart;
   uint32_t mCurrentEventLoopDepth;
   RefPtr<mozilla::PerformanceCounter> mCurrentPerformanceCounter;
+};
+
+class MOZ_STACK_CLASS nsThreadEnumerator final
+{
+public:
+  nsThreadEnumerator()
+    : mMal(nsThread::ThreadListMutex())
+  {}
+
+  auto begin() { return nsThread::ThreadList().begin(); }
+  auto end() { return nsThread::ThreadList().end(); }
+
+private:
+  mozilla::OffTheBooksMutexAutoLock mMal;
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \

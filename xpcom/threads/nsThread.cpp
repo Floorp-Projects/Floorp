@@ -376,6 +376,26 @@ struct ThreadInitData {
 
 }
 
+/* static */ mozilla::OffTheBooksMutex&
+nsThread::ThreadListMutex()
+{
+  static OffTheBooksMutex sMutex("nsThread::ThreadListMutex");
+  return sMutex;
+}
+
+/* static */ LinkedList<nsThread>&
+nsThread::ThreadList()
+{
+  static LinkedList<nsThread> sList;
+  return sList;
+}
+
+/* static */ nsThreadEnumerator
+nsThread::Enumerate()
+{
+  return {};
+}
+
 /*static*/ void
 nsThread::ThreadFunc(void* aArg)
 {
@@ -568,6 +588,7 @@ nsThread::~nsThread()
 {
   NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
                "shouldn't be waiting on other threads to shutdown");
+  MOZ_ASSERT(!isInList());
 #ifdef DEBUG
   // We deliberately leak these so they can be tracked by the leak checker.
   // If you're having nsThreadShutdownContext leaks, you can set:
@@ -599,6 +620,11 @@ nsThread::Init(const nsACString& aName)
                        PR_JOINABLE_THREAD, mStackSize)) {
     NS_RELEASE_THIS();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    ThreadList().insertBack(this);
   }
 
   // ThreadFunc will wait for this event to be run before it tries to access
@@ -713,6 +739,13 @@ nsThread::ShutdownInternal(bool aSync)
   // Prevent multiple calls to this method
   if (!mShutdownRequired.compareExchange(true, false)) {
     return nullptr;
+  }
+
+  {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    if (isInList()) {
+      removeFrom(ThreadList());
+    }
   }
 
   NotNull<nsThread*> currentThread =
