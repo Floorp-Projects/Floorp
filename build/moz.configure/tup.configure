@@ -55,6 +55,12 @@ def check_tup_min_rustc_version(tup, rustc_info):
         die('Cannot build with tup and rustc %s. please update to at least '
             'rustc %s to continue.', rustc_info.version, min_rustc_version)
 
+@depends(tup, target, build_project)
+def tup_and_non_linux(tup, target, build_project):
+    if tup and (target.kernel != 'Linux' or build_project != 'browser'):
+        die('The tup backend can only be used to build the browser on Linux. '
+            'Use the make backend until your target is supported.')
+
 option('--upload-tup-db', help= 'Upload the tup database from an automated build.')
 
 @depends('--upload-tup-db')

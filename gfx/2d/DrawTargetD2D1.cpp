@@ -255,7 +255,24 @@ DrawTargetD2D1::DrawFilter(FilterNode *aNode,
   FilterNodeD2D1* node = static_cast<FilterNodeD2D1*>(aNode);
   node->WillDraw(this);
 
-  mDC->DrawImage(node->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+  if (aOptions.mAlpha == 1.0f) {
+    mDC->DrawImage(node->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+  } else {
+    RefPtr<ID2D1Image> image;
+    node->OutputEffect()->GetOutput(getter_AddRefs(image));
+
+    Matrix mat = Matrix::Translation(aDestPoint);
+
+    RefPtr<ID2D1ImageBrush> imageBrush;
+    mDC->CreateImageBrush(image,
+                          D2D1::ImageBrushProperties(D2DRect(aSourceRect)),
+                          D2D1::BrushProperties(aOptions.mAlpha, D2DMatrix(mat)),
+                          getter_AddRefs(imageBrush));
+    mDC->FillRectangle(D2D1::RectF(aDestPoint.x, aDestPoint.y,
+                                   aDestPoint.x + aSourceRect.width,
+                                   aDestPoint.y + aSourceRect.height),
+                       imageBrush);
+  }
 
   FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 }

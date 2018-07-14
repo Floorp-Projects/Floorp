@@ -1311,14 +1311,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 62 uses schema version 51.
-
       if (currentSchemaVersion < 52) {
         rv = MigrateV52Up();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 63 uses schema version 52.
+      // Firefox 62 uses schema version 52.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<

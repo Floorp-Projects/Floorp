@@ -134,7 +134,7 @@ pub unsafe extern "C" fn sdp_get_media_bandwidth_vec(sdp_media: *const SdpMedia)
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_media_has_connection(sdp_media: *const SdpMedia) -> bool {
-    (*sdp_media).has_connection()
+    (*sdp_media).get_connection().is_some()
 }
 
 #[no_mangle]

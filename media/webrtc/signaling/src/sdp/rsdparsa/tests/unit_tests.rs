@@ -25,9 +25,8 @@ m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
     assert_eq!(msection.get_port(), 0);
     assert_eq!(*msection.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
-    assert!(!msection.has_attributes());
-    assert!(!msection.has_bandwidth());
-    assert!(!msection.has_connection());
+    assert!(msection.get_attributes().is_empty());
+    assert!(msection.get_bandwidth().is_empty());
     assert!(msection.get_connection().is_none());
 }
 
@@ -73,6 +72,40 @@ m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
 }
 
 #[test]
+fn parse_minimal_sdp_with_most_media_types() {
+    let sdp = "v=0\r\n
+o=- 0 0 IN IP4 0.0.0.0\r\n
+s=-\r\n
+t=0 0\r\n
+m=video 0 UDP/TLS/RTP/SAVPF 0\r\n
+b=AS:1\r\n
+b=CT:123\r\n
+b=TIAS:12345\r\n
+c=IN IP4 0.0.0.0\r\n
+a=sendrecv\r\n";
+    let sdp_res = rsdparsa::parse_sdp(sdp, false);
+    assert!(sdp_res.is_ok());
+    let sdp_opt = sdp_res.ok();
+    assert!(sdp_opt.is_some());
+    let sdp = sdp_opt.unwrap();
+    assert_eq!(sdp.version, 0);
+    assert_eq!(sdp.session, "-");
+    assert_eq!(sdp.attribute.len(), 0);
+    assert_eq!(sdp.media.len(), 1);
+
+    let msection = &(sdp.media[0]);
+    assert_eq!(*msection.get_type(),
+               rsdparsa::media_type::SdpMediaValue::Video);
+    assert_eq!(msection.get_port(), 0);
+    assert_eq!(*msection.get_proto(),
+               rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
+    assert!(!msection.get_bandwidth().is_empty());
+    assert!(!msection.get_connection().is_none());
+    assert!(!msection.get_attributes().is_empty());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Sendrecv).is_some());
+}
+
+#[test]
 fn parse_firefox_audio_offer() {
     let sdp = "v=0\r\n
 o=mozilla...THIS_IS_SDPARTA-52.0a1 506705521068071134 0 IN IP4 0.0.0.0\r\n
@@ -112,10 +145,21 @@ a=ssrc:2655508255 cname:{735484ea-4f6c-f74a-bd66-7425f8476c2e}\r\n";
     assert_eq!(msection.get_port(), 9);
     assert_eq!(*msection.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
-    assert!(msection.has_attributes());
-    assert!(msection.has_connection());
     assert!(msection.get_connection().is_some());
-    assert!(!msection.has_bandwidth());
+    assert!(msection.get_bandwidth().is_empty());
+    assert!(!msection.get_attributes().is_empty());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Sendrecv).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Extmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Fmtp).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IcePwd).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IceUfrag).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Mid).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Mid).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Msid).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::RtcpMux).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Rtpmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Setup).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Ssrc).is_some());
 }
 
 #[test]
@@ -169,6 +213,22 @@ a=ssrc:2709871439 cname:{735484ea-4f6c-f74a-bd66-7425f8476c2e}";
     assert_eq!(msection.get_port(), 9);
     assert_eq!(*msection.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
+    assert!(msection.get_connection().is_some());
+    assert!(msection.get_bandwidth().is_empty());
+    assert!(!msection.get_attributes().is_empty());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Recvonly).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Extmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Fmtp).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IcePwd).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IceUfrag).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Mid).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Mid).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Msid).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Rtcpfb).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::RtcpMux).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Rtpmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Setup).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Ssrc).is_some());
 }
 
 #[test]
@@ -206,6 +266,22 @@ a=ssrc:3376683177 cname:{62f78ee0-620f-a043-86ca-b69f189f1aea}\r\n";
     assert_eq!(msection.get_port(), 49760);
     assert_eq!(*msection.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::DtlsSctp);
+    assert!(msection.get_connection().is_some());
+    assert!(msection.get_bandwidth().is_empty());
+    assert!(!msection.get_attributes().is_empty());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Sendrecv).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Extmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IcePwd).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::IceUfrag).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::EndOfCandidates).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Mid).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Msid).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Rtcpfb).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::RtcpMux).is_some());
+    assert!(!msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Rtpmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Sctpmap).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Setup).is_some());
+    assert!(msection.get_attribute(rsdparsa::attribute_type::SdpAttributeType::Ssrc).is_some());
 }
 
 #[test]
@@ -311,9 +387,9 @@ a=ssrc:2673335628 label:b6ec5178-c611-403f-bbec-3833ed547c09\r\n";
     assert_eq!(msection1.get_port(), 9);
     assert_eq!(*msection1.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
-    assert!(msection1.has_attributes());
-    assert!(msection1.has_connection());
-    assert!(!msection1.has_bandwidth());
+    assert!(!msection1.get_attributes().is_empty());
+    assert!(msection1.get_connection().is_some());
+    assert!(msection1.get_bandwidth().is_empty());
 
     let msection2 = &(sdp.media[1]);
     assert_eq!(*msection2.get_type(),
@@ -321,9 +397,9 @@ a=ssrc:2673335628 label:b6ec5178-c611-403f-bbec-3833ed547c09\r\n";
     assert_eq!(msection2.get_port(), 9);
     assert_eq!(*msection2.get_proto(),
                rsdparsa::media_type::SdpProtocolValue::UdpTlsRtpSavpf);
-    assert!(msection2.has_attributes());
-    assert!(msection2.has_connection());
-    assert!(!msection2.has_bandwidth());
+    assert!(!msection2.get_attributes().is_empty());
+    assert!(msection2.get_connection().is_some());
+    assert!(msection2.get_bandwidth().is_empty());
 }
 
 #[test]
