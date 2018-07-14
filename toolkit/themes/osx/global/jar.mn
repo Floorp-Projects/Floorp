@@ -33,6 +33,7 @@ toolkit.jar:
   skin/classic/global/textbox.css
   skin/classic/global/toolbar.css
   skin/classic/global/toolbarbutton.css
+  skin/classic/global/tooltip.css
 * skin/classic/global/tree.css
   skin/classic/global/wizard.css
 * skin/classic/global/alerts/alert.css                               (alerts/alert.css)
