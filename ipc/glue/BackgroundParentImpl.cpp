@@ -252,6 +252,52 @@ BackgroundParentImpl::RecvFlushPendingFileDeletions()
   return IPC_OK();
 }
 
+BackgroundParentImpl::PBackgroundLocalStorageCacheParent*
+BackgroundParentImpl::AllocPBackgroundLocalStorageCacheParent(
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const nsCString& aOriginKey,
+                                            const uint32_t& aPrivateBrowsingId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return
+    mozilla::dom::AllocPBackgroundLocalStorageCacheParent(aPrincipalInfo,
+                                                          aOriginKey,
+                                                          aPrivateBrowsingId);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLocalStorageCacheConstructor(
+                                     PBackgroundLocalStorageCacheParent* aActor,
+                                     const PrincipalInfo& aPrincipalInfo,
+                                     const nsCString& aOriginKey,
+                                     const uint32_t& aPrivateBrowsingId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return
+    mozilla::dom::RecvPBackgroundLocalStorageCacheConstructor(
+                                                            this,
+                                                            aActor,
+                                                            aPrincipalInfo,
+                                                            aOriginKey,
+                                                            aPrivateBrowsingId);
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLocalStorageCacheParent(
+                                     PBackgroundLocalStorageCacheParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLocalStorageCacheParent(aActor);
+}
+
 auto
 BackgroundParentImpl::AllocPBackgroundStorageParent(const nsString& aProfilePath)
   -> PBackgroundStorageParent*
@@ -283,34 +329,6 @@ BackgroundParentImpl::DeallocPBackgroundStorageParent(
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvBroadcastLocalStorageChange(
-                                            const nsString& aDocumentURI,
-                                            const nsString& aKey,
-                                            const nsString& aOldValue,
-                                            const nsString& aNewValue,
-                                            const PrincipalInfo& aPrincipalInfo,
-                                            const bool& aIsPrivate)
-{
-  // Let's inform the StorageActivityService about this change.
-  dom::StorageActivityService::SendActivity(aPrincipalInfo);
-
-  nsTArray<PBackgroundParent*> liveActorArray;
-  if (NS_WARN_IF(!BackgroundParent::GetLiveActorArray(this, liveActorArray))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  for (auto* liveActor : liveActorArray) {
-    if (liveActor != this) {
-      Unused << liveActor->SendDispatchLocalStorageChange(
-        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
-        nsString(aNewValue), aPrincipalInfo, aIsPrivate);
-    }
-  }
-
-  return IPC_OK();
 }
 
 PPendingIPCBlobParent*

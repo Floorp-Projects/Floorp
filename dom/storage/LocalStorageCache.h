@@ -21,6 +21,7 @@ namespace mozilla {
 namespace dom {
 
 class LocalStorage;
+class LocalStorageCacheChild;
 class LocalStorageManager;
 class StorageUsage;
 class StorageDBBridge;
@@ -76,6 +77,23 @@ protected:
 class LocalStorageCache : public LocalStorageCacheBridge
 {
 public:
+  void
+  AssertIsOnOwningThread() const
+  {
+    NS_ASSERT_OWNINGTHREAD(LocalStorage);
+  }
+
+  void
+  SetActor(LocalStorageCacheChild* aActor);
+
+  void
+  ClearActor()
+  {
+    AssertIsOnOwningThread();
+
+    mActor = nullptr;
+  }
+
   NS_IMETHOD_(void) Release(void) override;
 
   enum MutationSource {
@@ -181,6 +199,13 @@ private:
   // Helper to get one of the 3 data sets (regular, private, session)
   Data& DataSet(const LocalStorage* aStorage);
 
+  // Used for firing storage events and synchronization of caches in other
+  // content processes.
+  void NotifyObservers(const LocalStorage* aStorage,
+                       const nsString& aKey,
+                       const nsString& aOldValue,
+                       const nsString& aNewValue);
+
   // Whether the storage change is about to persist
   bool Persist(const LocalStorage* aStorage) const;
 
@@ -209,6 +234,14 @@ private:
   // Reference to the usage counter object we check on for eTLD+1 quota limit.
   // Obtained from the manager during initialization (Init method).
   RefPtr<StorageUsage> mUsage;
+
+  // The LocalStorageCacheChild is created at the same time of this class.
+  // In normal operation, the actor will be synchronously cleared in our
+  // destructor when we tell it to delete itself.  In a shutdown-related edge
+  // case in the parent process for JSM's, it is possible for the actor to be
+  // destroyed while this class remains alive, in which case it will be nulled
+  // out.
+  LocalStorageCacheChild* mActor;
 
   // The origin this cache belongs to in the "DB format", i.e. reversed
   nsCString mOriginNoSuffix;
