@@ -17,8 +17,8 @@ test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-ch
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-effect.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-display-property.html stacking-context-animation-ref.html
 == stacking-context-transform-losing-css-animation-in-delay.html stacking-context-animation-ref.html
-test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-composition-changed-from-accumulate-to-replace.html style-updates-for-iteration-composite-ref.html
-test-pref(dom.animations-api.core.enabled,true) == style-updates-on-iteration-composition-changed-from-replace-to-accumulate.html style-updates-for-iteration-composite-ref.html
-test-pref(dom.animations-api.core.enabled,true) == style-updates-on-current-iteration-changed.html style-updates-for-iteration-composite-ref.html
+test-pref(dom.animations-api.core.enabled,true) test-pref(dom.animations-api.compositing.enabled,true) == style-updates-on-iteration-composition-changed-from-accumulate-to-replace.html style-updates-for-iteration-composite-ref.html
+test-pref(dom.animations-api.core.enabled,true) test-pref(dom.animations-api.compositing.enabled,true) == style-updates-on-iteration-composition-changed-from-replace-to-accumulate.html style-updates-for-iteration-composite-ref.html
+test-pref(dom.animations-api.core.enabled,true) test-pref(dom.animations-api.compositing.enabled,true) == style-updates-on-current-iteration-changed.html style-updates-for-iteration-composite-ref.html
 test-pref(dom.animations-api.core.enabled,true) == cancel-animation-with-selector-matching.html about:blank
 == child-in-animating-element-display-none.html child-in-animating-element-display-none-ref.html
