@@ -140,7 +140,7 @@ class GeckoViewContent extends GeckoViewModule {
           return;
         }
 
-        const callback = this._saveStateCallbacks.get(aMsg.data.id)
+        const callback = this._saveStateCallbacks.get(aMsg.data.id);
         if (aMsg.data.error) {
           callback.onError(aMsg.data.error);
         } else {
