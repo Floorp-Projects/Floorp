@@ -14,7 +14,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function test_contentscript_shadowDOM() {
   const PREFS = {
-    "dom.webcomponents.shadowdom.enabled": true
+    "dom.webcomponents.shadowdom.enabled": true,
   };
 
   // Set prefs to our initial values.
@@ -35,9 +35,9 @@ add_task(async function test_contentscript_shadowDOM() {
   }
 
   function contentScript() {
-    var host = document.getElementById("host");
+    let host = document.getElementById("host");
     browser.test.assertTrue("openOrClosedShadowRoot" in host, "Should have openOrClosedShadowRoot in Element.");
-    var shadowRoot = host.openOrClosedShadowRoot;
+    let shadowRoot = host.openOrClosedShadowRoot;
     browser.test.assertEq(shadowRoot.mode, "closed", "Should have closed ShadowRoot.");
     browser.test.sendMessage("contentScript");
   }
