@@ -36,6 +36,12 @@ public:
     return mCache;
   }
 
+  const nsString&
+  DocumentURI() const
+  {
+    return mDocumentURI;
+  }
+
   bool PrincipalEquals(nsIPrincipal* aPrincipal);
 
   LocalStorage(nsPIDOMWindowInner* aWindow,
@@ -77,24 +83,6 @@ public:
 
   bool IsPrivate() const { return mIsPrivate; }
 
-  // aStorage can be null if this method is called by ContentChild.
-  //
-  // aImmediateDispatch is for use by (main-thread) IPC code so that PContent
-  // ordering can be maintained.  Without this, the event would be enqueued and
-  // run in a future turn of the event loop, potentially allowing other PContent
-  // Recv* methods to trigger script that wants to assume our localstorage
-  // changes have already been applied.  This is the case for message manager
-  // messages which are used by ContentTask testing logic and webextensions.
-  static void
-  DispatchStorageEvent(const nsAString& aDocumentURI,
-                       const nsAString& aKey,
-                       const nsAString& aOldValue,
-                       const nsAString& aNewValue,
-                       nsIPrincipal* aPrincipal,
-                       bool aIsPrivate,
-                       Storage* aStorage,
-                       bool aImmediateDispatch);
-
   void
   ApplyEvent(StorageEvent* aStorageEvent);
 
@@ -115,9 +103,9 @@ private:
   // Whether this storage is running in private-browsing window.
   bool mIsPrivate : 1;
 
-  void BroadcastChangeNotification(const nsAString& aKey,
-                                   const nsAString& aOldValue,
-                                   const nsAString& aNewValue);
+  void OnChange(const nsAString& aKey,
+                const nsAString& aOldValue,
+                const nsAString& aNewValue);
 };
 
 } // namespace dom
