@@ -99,7 +99,7 @@ add_task(async function test_title_through_slot() {
     let doc = content.document;
     let host = doc.createElement("div");
     host.title = "light";
-    host.innerHTML = "<div style='width: 200px; height: 200px;'>light</div>"
+    host.innerHTML = "<div style='width: 200px; height: 200px;'>light</div>";
     doc.body.appendChild(host);
     host.setAttribute("style", "position: absolute; top: 0; left: 0;");
     var sr = host.attachShadow({ mode: "closed" });
