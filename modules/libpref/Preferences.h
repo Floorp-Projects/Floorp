@@ -67,6 +67,54 @@ struct TypedPrefChangeFunc
   CallbackType mCallback;
 };
 
+// Similar to PrefChangedFunc, but for use with instance methods.
+//
+// Any instance method with this signature may be passed to the
+// PREF_CHANGE_METHOD macro, which will wrap it into a typesafe preference
+// callback function, which accepts a preference name as its first argument, and
+// an instance of the appropriate class as the second.
+//
+// When called, the wrapper will forward the call to the wrapped method on the
+// given instance, with the notified preference as its only argument.
+typedef void(PrefChangedMethod)(const char* aPref);
+
+namespace detail {
+// Helper to extract the instance type from any instance method. For an instance
+// method `Method = U T::*`, InstanceType<Method>::Type returns T.
+template<typename T>
+struct InstanceType;
+
+template<typename T, typename U>
+struct InstanceType<U T::*>
+{
+  using Type = T;
+};
+
+// A wrapper for a PrefChangeMethod instance method which forwards calls to the
+// wrapped method on the given instance.
+template<typename T, PrefChangedMethod T::*Method>
+void
+PrefChangeMethod(const char* aPref, T* aInst)
+{
+  ((*aInst).*Method)(aPref);
+}
+} // namespace detail
+
+// Creates a wrapper around an instance method, with the signature of
+// PrefChangedMethod, from an arbitrary class, so that it can be used as a
+// preference callback. The closure data passed to RegisterCallback must be an
+// instance of this class.
+//
+// Note: This is implemented as a macro rather than a pure template function
+// because, prior to C++17, value template arguments must have their types
+// fully-specified. Once all of our supported compilers have C++17 support, we
+// can give PrefChangeMethod a single <auto Method> argument, and use
+// PrefChangeMethod<&meth> directly.
+#define PREF_CHANGE_METHOD(meth)                                               \
+  (&::mozilla::detail::PrefChangeMethod<                                       \
+    ::mozilla::detail::InstanceType<decltype(&meth)>::Type,                    \
+    &meth>)
+
 class PreferenceServiceReporter;
 
 namespace dom {
