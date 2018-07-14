@@ -177,7 +177,7 @@ add_task(async function navigate_around() {
       max: 110,
     },
     "network.loadinfo.skip_type_assertion": {
-      max: 110,
+      max: 130,
     },
     "security.insecure_connection_icon.pbmode.enabled": {
       min: 20,
