@@ -215,6 +215,26 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   return true;
 }
 
+BackgroundChildImpl::PBackgroundLocalStorageCacheChild*
+BackgroundChildImpl::AllocPBackgroundLocalStorageCacheChild(
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const nsCString& aOriginKey,
+                                            const uint32_t& aPrivateBrowsingId)
+{
+  MOZ_CRASH("PBackgroundLocalStorageChild actors should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundLocalStorageCacheChild(
+                                      PBackgroundLocalStorageCacheChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
 BackgroundChildImpl::PBackgroundStorageChild*
 BackgroundChildImpl::AllocPBackgroundStorageChild(const nsString& aProfilePath)
 {
@@ -673,32 +693,6 @@ BackgroundChildImpl::DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelCh
   RefPtr<net::HttpBackgroundChannelChild> child =
     dont_AddRef(static_cast<net::HttpBackgroundChannelChild*>(aActor));
   return true;
-}
-
-mozilla::ipc::IPCResult
-BackgroundChildImpl::RecvDispatchLocalStorageChange(
-                                            const nsString& aDocumentURI,
-                                            const nsString& aKey,
-                                            const nsString& aOldValue,
-                                            const nsString& aNewValue,
-                                            const PrincipalInfo& aPrincipalInfo,
-                                            const bool& aIsPrivate)
-{
-  if (!NS_IsMainThread()) {
-    return IPC_OK();
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  LocalStorage::DispatchStorageEvent(aDocumentURI, aKey, aOldValue, aNewValue,
-                                     principal, aIsPrivate, nullptr, true);
-
-  return IPC_OK();
 }
 
 bool
