@@ -88,7 +88,8 @@ public:
                                  gfxContext* aCtx,
                                  nsSVGFilterPaintCallback *aPaintCallback,
                                  const nsRegion* aDirtyArea,
-                                 imgDrawingParams& aImgParams);
+                                 imgDrawingParams& aImgParams,
+                                 float aOpacity = 1.0f);
 
   /**
    * Returns the post-filter area that could be dirtied when the given
@@ -168,7 +169,7 @@ private:
    * by passing it as the aPostFilterDirtyRegion argument to the
    * nsFilterInstance constructor.
    */
-  void Render(gfxContext* aCtx, imgDrawingParams& aImgParams);
+  void Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float aOpacity = 1.0f);
 
   const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
   {
