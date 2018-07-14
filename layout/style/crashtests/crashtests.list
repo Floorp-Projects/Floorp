@@ -176,7 +176,7 @@ load 1321357-1.html
 load 1328535-1.html
 load 1331272.html
 HTTP load 1333001-1.html
-pref(dom.animations-api.core.enabled,true) load 1340344.html
+pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1340344.html
 load 1342316-1.html
 load 1344210.html
 load 1356601-1.html
@@ -195,11 +195,11 @@ load 1381420-1.html
 load 1381682.html
 load 1382672.html
 load 1382710.html
-pref(dom.animations-api.core.enabled,true) load 1383493-1.html
+pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1383493-1.html
 load 1383001.html
 load 1383001-2.html
 load 1383319.html
-pref(dom.animations-api.core.enabled,true) load 1383589-1.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) load 1383589-1.html
 load 1383975.html
 load border-image-visited-link.html
 load content-only-on-link-before.html
@@ -219,14 +219,14 @@ load 1387499.html
 load 1388234.html
 load 1391577.html
 load 1393189.html
-load 1393580.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) load 1393580.html
 load 1389645.html
 load 1390726.html
 load 1393791.html
 load 1384232.html
 load 1395725.html
 load 1396041.html
-load 1397363-1.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) load 1397363-1.html
 load 1397439-1.html
 load 1395719.html
 load 1397091.html
@@ -239,7 +239,7 @@ load 1400325.html
 load 1400926.html
 load 1400936-1.html
 load 1400936-2.html
-load 1401256.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) load 1401256.html
 load 1401692.html
 load 1401706.html
 load 1401801.html
@@ -275,7 +275,7 @@ load 1413361.html
 load 1413670.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1415353.html
 load 1418059.html
-test-pref(dom.animations-api.core.enabled,true) load 1418867.html
+test-pref(dom.animations-api.core.enabled,true) test-pref(dom.animations-api.implicit-keyframes.enabled,true) load 1418867.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1419554.html
 load 1426312.html
 load 1439793.html

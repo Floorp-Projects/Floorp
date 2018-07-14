@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+// Tests for cases we should throw an exception for if implicit keyframes are
+// disabled.
+var gTests = [
+  { desc: "single Keyframe value",
+    keyframes: { left: "100px" } },
+  { desc: "single Keyframe with no offset",
+    keyframes: [{ left: "100px" }] },
+  { desc: "single Keyframe with 0% offset",
+    keyframes: [{ left: "100px", offset: 0 }] },
+  { desc: "single Keyframe with 100% offset",
+    keyframes: [{ left: "100px", offset: 1 }] },
+  { desc: "multiple Keyframes with missing 0% Keyframe",
+    keyframes: [{ left: "100px", offset: 0.25 },
+                { left: "200px", offset: 0.50 },
+                { left: "300px", offset: 1.00 }] },
+  { desc: "multiple Keyframes with missing 100% Keyframe",
+    keyframes: [{ left: "100px", offset: 0.00 },
+                { left: "200px", offset: 0.50 },
+                { left: "300px", offset: 0.75 }] },
+  { desc: "multiple Keyframes with missing properties on first Keyframe",
+    keyframes: [{ left: "100px", offset: 0.0 },
+                { left: "200px", top: "200px", offset: 0.5 },
+                { left: "300px", top: "300px", offset: 1.0 }] },
+  { desc: "multiple Keyframes with missing properties on last Keyframe",
+    keyframes: [{ left: "100px", top: "200px", offset: 0.0 },
+                { left: "200px", top: "200px", offset: 0.5 },
+                { left: "300px", offset: 1.0 }] },
+];
+
+gTests.forEach(function(subtest) {
+  test(function(t) {
+    var div = addDiv(t);
+    assert_throws("NotSupportedError", function() {
+      div.animate(subtest.keyframes, 100 * MS_PER_SEC);
+    });
+  }, "Element.animate() throws with " + subtest.desc);
+});
+
+done();
+</script>
+</body>
