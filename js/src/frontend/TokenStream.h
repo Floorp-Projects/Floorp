@@ -1152,10 +1152,18 @@ class SourceUnits
     static constexpr size_t WindowRadius = ErrorMetadata::lineOfContextRadius;
 
     /**
-     * From absolute offset |offset|, find an absolute offset, no further than
-     * |WindowRadius| code units away from |offset|, such that all code units
-     * from |offset| to that offset encode valid, non-LineTerminator code
-     * points.
+     * From absolute offset |offset|, search backward to find an absolute
+     * offset within source text, no further than |WindowRadius| code units
+     * away from |offset|, such that all code points from that offset to
+     * |offset| are valid, non-LineTerminator code points.
+     */
+    size_t findWindowStart(size_t offset);
+
+    /**
+     * From absolute offset |offset|, find an absolute offset within source
+     * text, no further than |WindowRadius| code units away from |offset|, such
+     * that all code units from |offset| to that offset are valid,
+     * non-LineTerminator code points.
      */
     size_t findWindowEnd(size_t offset);
 
@@ -1313,6 +1321,21 @@ class TokenStreamCharsBase
      */
     MOZ_MUST_USE bool fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
 
+    /**
+     * Add a null-terminated line of context to error information, for the line
+     * in |sourceUnits| that contains |offset|.  Also record the window's
+     * length and the offset of the error in the window.  (Don't bother adding
+     * a line of context if it would be empty.)
+     *
+     * The window will contain no LineTerminators of any kind, and it will not
+     * extend more than |SourceUnits::WindowRadius| to either side of |offset|,
+     * nor into the previous or next lines.
+     *
+     * This function is quite internal, and you probably should be calling one
+     * of its existing callers instead.
+     */
+    MOZ_MUST_USE bool addLineOfContext(JSContext* cx, ErrorMetadata* err, uint32_t offset);
+
   protected:
     /** Code units in the source code being tokenized. */
     SourceUnits sourceUnits;
@@ -1450,6 +1473,11 @@ class GeneralTokenStreamChars
     using CharsBase = TokenStreamCharsBase<CharT>;
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<CharT>;
 
+  private:
+    using CharsBase::addLineOfContext;
+    // Deliberately don't |using CharsBase::sourceUnits| because of bug 1472569.  :-(
+
+  private:
     Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
 
     /**
@@ -1572,14 +1600,25 @@ class GeneralTokenStreamChars
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
 
     /**
-     * Compute a line of context for an otherwise-filled-in |err| at the given
-     * offset in this token stream.
+     * If possible, compute a line of context for an otherwise-filled-in |err|
+     * at the given offset in this token stream.
      *
      * This function is very-internal: almost certainly you should use one of
      * its callers instead.  It basically exists only to make those callers
      * more readable.
      */
-    MOZ_MUST_USE bool internalComputeLineOfContext(ErrorMetadata* err, uint32_t offset);
+    MOZ_MUST_USE bool internalComputeLineOfContext(ErrorMetadata* err, uint32_t offset) {
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+        // We only have line-start information for the current line.  If the error
+        // is on a different line, we can't easily provide context.  (This means
+        // any error in a multi-line token, e.g. an unterminated multiline string
+        // literal, won't have context.)
+        if (err->lineNumber != anyChars.lineno)
+            return true;
+
+        return addLineOfContext(anyChars.cx, err, offset);
+    }
 
   public:
     JSAtom* getRawTemplateStringAtom() {

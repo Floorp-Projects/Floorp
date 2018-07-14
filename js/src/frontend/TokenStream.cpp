@@ -624,6 +624,64 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
 
 template<>
 size_t
+SourceUnits<char16_t>::findWindowStart(size_t offset)
+{
+    // This is JS's understanding of UTF-16 that allows lone surrogates, so
+    // we have to exclude lone surrogates from [windowStart, offset) ourselves.
+
+    const char16_t* const earliestPossibleStart = codeUnitPtrAt(startOffset_);
+
+    const char16_t* const initial = codeUnitPtrAt(offset);
+    const char16_t* p = initial;
+
+    auto HalfWindowSize = [&p, &initial]() { return PointerRangeSize(p, initial); };
+
+    while (true) {
+        MOZ_ASSERT(earliestPossibleStart <= p);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p <= earliestPossibleStart || HalfWindowSize() >= WindowRadius)
+            break;
+
+        char16_t c = p[-1];
+
+        // This stops at U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR in
+        // string and template literals.  These code points do affect line and
+        // column coordinates, even as they encode their literal values.
+        if (isRawEOLChar(c))
+            break;
+
+        // Don't allow invalid UTF-16 in pre-context.  (Current users don't
+        // require this, and this behavior isn't currently imposed on
+        // pre-context, but these facts might change someday.)
+
+        if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c)))
+            break;
+
+        // Optimistically include the code unit, reverting below if needed.
+        p--;
+
+        // If it's not a surrogate at all, keep going.
+        if (MOZ_LIKELY(!unicode::IsTrailSurrogate(c)))
+            continue;
+
+        // Stop if we don't have a usable surrogate pair.
+        if (HalfWindowSize() >= WindowRadius ||
+            p <= earliestPossibleStart || // trail surrogate at low end
+            !unicode::IsLeadSurrogate(p[-1])) // no paired lead surrogate
+        {
+            p++;
+            break;
+        }
+
+        p--;
+    }
+
+    MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+    return offset - HalfWindowSize();
+}
+
+template<>
+size_t
 SourceUnits<char16_t>::findWindowEnd(size_t offset)
 {
     const char16_t* const initial = codeUnitPtrAt(offset);
@@ -821,6 +879,47 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::currentLineAndColumn(uint32_t* line,
     anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
+template<>
+bool
+TokenStreamCharsBase<Utf8Unit>::addLineOfContext(JSContext* cx, ErrorMetadata* err,
+                                                 uint32_t offset)
+{
+    // The specialization below is almost usable if changed to be a definition
+    // for any CharT, but it demands certain UTF-8-specific functionality that
+    // has't been defined yet.  Use a placeholder definition until such
+    // functionality is in place.
+    return true;
+}
+
+template<>
+bool
+TokenStreamCharsBase<char16_t>::addLineOfContext(JSContext* cx, ErrorMetadata* err,
+                                                 uint32_t offset)
+{
+    size_t windowStart = sourceUnits.findWindowStart(offset);
+    size_t windowEnd = sourceUnits.findWindowEnd(offset);
+
+    size_t windowLength = windowEnd - windowStart;
+    MOZ_ASSERT(windowLength <= SourceUnits::WindowRadius * 2);
+
+    // Create the windowed string, not including the potential line
+    // terminator.
+    StringBuffer windowBuf(cx);
+    if (!windowBuf.append(sourceUnits.codeUnitPtrAt(windowStart), windowLength) ||
+        !windowBuf.append('\0'))
+    {
+        return false;
+    }
+
+    err->lineOfContext.reset(windowBuf.stealChars());
+    if (!err->lineOfContext)
+        return false;
+
+    err->lineLength = windowLength;
+    err->tokenOffset = offset - windowStart;
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::computeErrorMetadata(ErrorMetadata* err,
@@ -841,59 +940,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeErrorMetadata(ErrorMetadata* 
     // Add a line of context from this TokenStream to help with debugging.
     return internalComputeLineOfContext(err, offset);
 }
-
-template<typename CharT, class AnyCharsAccess>
-bool
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::internalComputeLineOfContext(ErrorMetadata* err,
-                                                                             uint32_t offset)
-{
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    // We only have line-start information for the current line.  If the error
-    // is on a different line, we can't easily provide context.  (This means
-    // any error in a multi-line token, e.g. an unterminated multiline string
-    // literal, won't have context.)
-    if (err->lineNumber != anyChars.lineno)
-        return true;
-
-    constexpr size_t windowRadius = SourceUnits::WindowRadius;
-
-    // The window must start within the current line, no earlier than
-    // |windowRadius| characters before |offset|.
-    MOZ_ASSERT(offset >= anyChars.linebase);
-    size_t windowStart = (offset - anyChars.linebase > windowRadius) ?
-                         offset - windowRadius :
-                         anyChars.linebase;
-
-    // The window must start within the portion of the current line that we
-    // actually have in our buffer.
-    if (windowStart < this->sourceUnits.startOffset())
-        windowStart = this->sourceUnits.startOffset();
-
-    // The window must end no further than |windowRadius| after |offset| within
-    // the current line.
-    size_t windowEnd = this->sourceUnits.findWindowEnd(offset);
-    size_t windowLength = windowEnd - windowStart;
-    MOZ_ASSERT(windowLength <= windowRadius * 2);
-
-    // Create the windowed string, not including the potential line
-    // terminator.
-    StringBuffer windowBuf(anyChars.cx);
-    if (!windowBuf.append(this->sourceUnits.codeUnitPtrAt(windowStart), windowLength) ||
-        !windowBuf.append('\0'))
-    {
-        return false;
-    }
-
-    err->lineOfContext.reset(windowBuf.stealChars());
-    if (!err->lineOfContext)
-        return false;
-
-    err->lineLength = windowLength;
-    err->tokenOffset = offset - windowStart;
-    return true;
-}
-
 
 template<typename CharT, class AnyCharsAccess>
 bool
