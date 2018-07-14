@@ -2612,6 +2612,21 @@ nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aGlobal)
   return doc->IsShadowDOMEnabled();
 }
 
+// static
+bool
+nsDocument::IsShadowDOMEnabledAndCallerIsChromeOrAddon(JSContext* aCx,
+                                                       JSObject* aObject)
+{
+  if (IsShadowDOMEnabled(aCx, aObject)) {
+    nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+    return principal &&
+      (nsContentUtils::IsSystemPrincipal(principal) ||
+       principal->GetIsAddonOrExpandedAddonPrincipal());
+  }
+
+  return false;
+}
+
 bool
 nsDocument::IsShadowDOMEnabled(const nsINode* aNode)
 {
