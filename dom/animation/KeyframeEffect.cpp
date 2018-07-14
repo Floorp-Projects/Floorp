@@ -21,6 +21,7 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetComputedStyle
@@ -28,7 +29,6 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
-#include "nsDocument.h" // For nsDocument::IsWebAnimationsEnabled
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
@@ -88,23 +88,15 @@ KeyframeEffect::WrapObject(JSContext* aCx,
   return KeyframeEffect_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-IterationCompositeOperation KeyframeEffect::IterationComposite(
-  CallerType /*aCallerType*/) const
+IterationCompositeOperation KeyframeEffect::IterationComposite() const
 {
   return mEffectOptions.mIterationComposite;
 }
 
 void
 KeyframeEffect::SetIterationComposite(
-  const IterationCompositeOperation& aIterationComposite,
-  CallerType aCallerType)
+  const IterationCompositeOperation& aIterationComposite)
 {
-  // Ignore iterationComposite if the Web Animations API is not enabled,
-  // then the default value 'Replace' will be used.
-  if (!nsDocument::IsWebAnimationsEnabled(aCallerType)) {
-    return;
-  }
-
   if (mEffectOptions.mIterationComposite == aIterationComposite) {
     return;
   }
@@ -597,9 +589,9 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
 {
   KeyframeEffectParams result;
   if (aOptions.IsUnrestrictedDouble() ||
-      // Ignore iterationComposite if the Web Animations API is not enabled,
-      // then the default value 'Replace' will be used.
-      !nsDocument::IsWebAnimationsEnabled(aCallerType)) {
+      // Ignore iterationComposite and composite if the corresponding pref is
+      // not set. The default value 'Replace' will be used instead.
+      !StaticPrefs::dom_animations_api_compositing_enabled()) {
     return result;
   }
 
