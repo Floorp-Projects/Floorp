@@ -50,9 +50,14 @@
 #include "mozilla/dom/ContentChild.h"
 
 #ifdef XP_LINUX
+#ifdef __GLIBC__
+#include <gnu/libc-version.h>
+#endif
+#include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sched.h>
+#include <stdio.h>
 #endif
 
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
@@ -412,6 +417,62 @@ nsThread::ThreadFunc(void* aArg)
   if (!initData->name.IsEmpty()) {
     NS_SetCurrentThreadName(initData->name.BeginReading());
   }
+
+#ifdef XP_LINUX
+  {
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_getattr_np(pthread_self(), &attr);
+
+    size_t stackSize;
+    pthread_attr_getstack(&attr, &self->mStackBase, &stackSize);
+
+    // Glibc prior to 2.27 reports the stack size and base including the guard
+    // region, so we need to compensate for it to get accurate accounting.
+    // Also, this behavior difference isn't guarded by a versioned symbol, so we
+    // actually need to check the runtime glibc version, not the version we were
+    // compiled against.
+    static bool sAdjustForGuardSize = ({
+#ifdef __GLIBC__
+      unsigned major, minor;
+      sscanf(gnu_get_libc_version(), "%u.%u", &major, &minor) < 2 ||
+        major < 2 || (major == 2 && minor < 27);
+#else
+      false;
+#endif
+    });
+    if (sAdjustForGuardSize) {
+      size_t guardSize;
+      pthread_attr_getguardsize(&attr, &guardSize);
+
+      // Note: This assumes that the stack grows down, as is the case on all of
+      // our tier 1 platforms. On platforms where the stack grows up, the
+      // mStackBase adjustment is unnecessary, but doesn't cause any harm other
+      // than under-counting stack memory usage by one page.
+      self->mStackBase = reinterpret_cast<char*>(self->mStackBase) + guardSize;
+      stackSize -= guardSize;
+    }
+
+    self->mStackSize = stackSize;
+
+    // This is a bit of a hack.
+    //
+    // We really do want the NOHUGEPAGE flag on our thread stacks, since we
+    // don't expect any of them to need anywhere near 2MB of space. But setting
+    // it here is too late to have an effect, since the first stack page has
+    // already been faulted in existence, and NSPR doesn't give us a way to set
+    // it beforehand.
+    //
+    // What this does get us, however, is a different set of VM flags on our
+    // thread stacks compared to normal heap memory. Which makes the Linux
+    // kernel report them as separate regions, even when they are adjacent to
+    // heap memory. This allows us to accurately track the actual memory
+    // consumption of our allocated stacks.
+    madvise(self->mStackBase, stackSize, MADV_NOHUGEPAGE);
+
+    pthread_attr_destroy(&attr);
+  }
+#endif
 
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
