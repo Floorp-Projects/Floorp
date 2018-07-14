@@ -175,6 +175,8 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
     MOZ_ASSERT(dummy->State() != Promise::PromiseState::Rejected,
                "suspend failed");
   }
+
+  FFTBlock::MainThreadInit();
 }
 
 nsresult
