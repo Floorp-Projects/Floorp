@@ -1217,12 +1217,9 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
 
     // make the new object and return it.
 
-    JSObject* newobj = xpc_NewIDObject(cx, obj, id);
-    if (!newobj) {
+    if (!xpc::ID2JSValue(cx, id, args.rval())) {
         return NS_ERROR_UNEXPECTED;
     }
-
-    args.rval().setObject(*newobj);
     return NS_OK;
 }
 
