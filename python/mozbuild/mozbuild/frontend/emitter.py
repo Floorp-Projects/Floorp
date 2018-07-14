@@ -849,7 +849,12 @@ class TreeMetadataEmitter(LoggingMixin):
             srcs = sources[symbol]
             gen_srcs = gen_sources[symbol]
             context_srcs = context.get(symbol, [])
+            seen_sources = set()
             for f in context_srcs:
+                if f in seen_sources:
+                    raise SandboxValidationError('Source file should only '
+                        'be added to %s once: %s' % (symbol, f), context)
+                seen_sources.add(f)
                 full_path = f.full_path
                 if isinstance(f, SourcePath):
                     srcs.append(full_path)

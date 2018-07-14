@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     'CryptoTask.cpp',
     'CSTrustDomain.cpp',
     'DataStorage.cpp',
+    'EnterpriseRoots.cpp',
     'LocalCertService.cpp',
     'nsCertOverrideService.cpp',
     'nsClientAuthRemember.cpp',

@@ -380,7 +380,9 @@ private:
 
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
   JS::AutoHideScriptedCaller mCallerOverride;
+#ifdef MOZ_GECKO_PROFILER
   AutoProfilerLabel mAutoProfilerLabel;
+#endif
 };
 
 /*

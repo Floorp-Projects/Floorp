@@ -430,8 +430,8 @@ class GitRepository(Repository):
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--porcelain']
-        if untracked:
-            args.append('--untracked-files')
+        if not untracked:
+            args.append('--untracked-files=no')
         if ignored:
             args.append('--ignored')
 

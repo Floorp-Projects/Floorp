@@ -1089,22 +1089,13 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   gfxContextAutoSaveRestore autoSR(&context);
   EffectOffsets offsets = MoveContextOriginToUserSpace(firstFrame, aParams);
 
-  if (opacity != 1.0f) {
-    context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
-                                  nullptr, Matrix());
-  }
-
   /* Paint the child and apply filters */
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
                                      offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
 
   nsFilterInstance::PaintFilteredFrame(frame, &context, &callback,
-                                       &dirtyRegion, aParams.imgParams);
-
-  if (opacity != 1.0f) {
-    context.PopGroupAndBlend();
-  }
+                                       &dirtyRegion, aParams.imgParams, opacity);
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {

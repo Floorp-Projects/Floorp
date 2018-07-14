@@ -509,23 +509,23 @@ private:
   union Extra {
     // mMessage is set by ThrowErrorWithMessage and reported (and deallocated)
     // by SetPendingExceptionWithMessage.
+    MOZ_INIT_OUTSIDE_CTOR
     Message* mMessage; // valid when IsErrorWithMessage()
 
     // mJSException is set (and rooted) by ThrowJSException and reported (and
     // unrooted) by SetPendingJSException.
+    MOZ_INIT_OUTSIDE_CTOR
     JS::Value mJSException; // valid when IsJSException()
 
     // mDOMExceptionInfo is set by ThrowDOMException and reported (and
     // deallocated) by SetPendingDOMException.
+    MOZ_INIT_OUTSIDE_CTOR
     DOMExceptionInfo* mDOMExceptionInfo; // valid when IsDOMException()
 
     // |mJSException| has a non-trivial constructor and therefore MUST be
     // placement-new'd into existence.
     MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
-    Extra()
-      : mMessage(nullptr)
-    {
-    }
+    Extra() {}
     MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
   } mExtra;
 
