@@ -5,16 +5,12 @@
 <div id="log"></div>
 <script>
 'use strict';
-setup({explicit_done: true});
+
+setup({ explicit_done: true });
 SpecialPowers.pushPrefEnv(
-  {
-    set: [
-      ["dom.animations-api.core.enabled", true],
-      ["dom.animations-api.timelines.enabled", true],
-    ],
-  },
+  { set: [['dom.animations-api.timelines.enabled', false]] },
   function() {
-    window.open("file_deferred_start.html");
+    window.open('file_disable_animations_api_timelines.html');
   }
 );
 </script>
