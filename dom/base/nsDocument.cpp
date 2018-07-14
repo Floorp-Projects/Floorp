@@ -12592,17 +12592,21 @@ struct PrefStore
     Preferences::AddBoolVarCache(&mPluginsHttpOnly,
                                  "plugins.http_https_only");
 
-    Preferences::RegisterCallbacks(UpdateStringPrefs, gCallbackPrefs, this);
+    Preferences::RegisterCallbacks(
+      PREF_CHANGE_METHOD(PrefStore::UpdateStringPrefs),
+      gCallbackPrefs, this);
 
     UpdateStringPrefs();
   }
 
   ~PrefStore()
   {
-    Preferences::UnregisterCallbacks(UpdateStringPrefs, gCallbackPrefs, this);
+    Preferences::UnregisterCallbacks(
+      PREF_CHANGE_METHOD(PrefStore::UpdateStringPrefs),
+      gCallbackPrefs, this);
   }
 
-  void UpdateStringPrefs()
+  void UpdateStringPrefs(const char* aPref = nullptr)
   {
     Preferences::GetCString("urlclassifier.flashAllowTable", mAllowTables);
     Preferences::GetCString("urlclassifier.flashAllowExceptTable", mAllowExceptionsTables);
@@ -12610,11 +12614,6 @@ struct PrefStore
     Preferences::GetCString("urlclassifier.flashExceptTable", mDenyExceptionsTables);
     Preferences::GetCString("urlclassifier.flashSubDocTable", mSubDocDenyTables);
     Preferences::GetCString("urlclassifier.flashSubDocExceptTable", mSubDocDenyExceptionsTables);
-  }
-
-  static void UpdateStringPrefs(const char*, PrefStore* aSelf)
-  {
-    aSelf->UpdateStringPrefs();
   }
 
   bool mFlashBlockEnabled;
