@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include PBackgroundSharedTypes;
+
+namespace mozilla {
+namespace dom {
+
+async protocol PBackgroundLocalStorageCache
+{
+  manager PBackground;
+
+parent:
+  async DeleteMe();
+
+  async Notify(nsString documentURI,
+               nsString key,
+               nsString oldValue,
+               nsString newValue);
+
+child:
+  // The principalInfo and privateBrowsingId could instead be retained by the
+  // LocalStorageCacheChild/LocalStorageCache instead of being re-transmitted.
+  // However, these changes are a temporary optimization intended for uplift,
+  // and this constant factor overhead is very small compared to the upside of
+  // filtering.
+  async Observe(PrincipalInfo principalInfo,
+                uint32_t privateBrowsingId,
+                nsString documentURI,
+                nsString key,
+                nsString oldValue,
+                nsString newValue);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla
