@@ -467,7 +467,7 @@ int nr_transport_addr_is_teredo(nr_transport_addr *addr)
       case NR_IPV6:
         {
           UINT4* addrTop = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr);
-          if ((*addrTop & htonl(0xFFFF0000)) == htonl(0x20010000))
+          if ((*addrTop & htonl(0xFFFFFFFF)) == htonl(0x20010000))
             return(1);
         }
         break;
