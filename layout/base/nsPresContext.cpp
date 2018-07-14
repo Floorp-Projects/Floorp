@@ -150,13 +150,6 @@ nsPresContext::IsDOMPaintEventPending()
 }
 
 void
-nsPresContext::PrefChangedCallback(const char* aPrefName, nsPresContext* aPresContext)
-{
-  NS_ASSERTION(aPresContext, "bad instance data");
-  aPresContext->PreferenceChanged(aPrefName);
-}
-
-void
 nsPresContext::ForceReflowForFontInfoUpdate()
 {
   // We can trigger reflow by pretending a font.* preference has changed;
@@ -321,10 +314,12 @@ nsPresContext::Destroy()
   }
 
   // Unregister preference callbacks
-  Preferences::UnregisterPrefixCallbacks(nsPresContext::PrefChangedCallback,
-                                         gPrefixCallbackPrefs, this);
-  Preferences::UnregisterCallbacks(nsPresContext::PrefChangedCallback,
-                                   gExactCallbackPrefs, this);
+  Preferences::UnregisterPrefixCallbacks(
+    PREF_CHANGE_METHOD(nsPresContext::PreferenceChanged),
+    gPrefixCallbackPrefs, this);
+  Preferences::UnregisterCallbacks(
+    PREF_CHANGE_METHOD(nsPresContext::PreferenceChanged),
+    gExactCallbackPrefs, this);
 
   mRefreshDriver = nullptr;
 }
@@ -858,10 +853,12 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   }
 
   // Register callbacks so we're notified when the preferences change
-  Preferences::RegisterPrefixCallbacks(nsPresContext::PrefChangedCallback,
-                                       gPrefixCallbackPrefs, this);
-  Preferences::RegisterCallbacks(nsPresContext::PrefChangedCallback,
-                                 gExactCallbackPrefs, this);
+  Preferences::RegisterPrefixCallbacks(
+    PREF_CHANGE_METHOD(nsPresContext::PreferenceChanged),
+    gPrefixCallbackPrefs, this);
+  Preferences::RegisterCallbacks(
+    PREF_CHANGE_METHOD(nsPresContext::PreferenceChanged),
+    gExactCallbackPrefs, this);
 
   nsresult rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
