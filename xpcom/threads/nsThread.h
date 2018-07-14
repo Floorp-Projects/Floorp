@@ -74,6 +74,8 @@ public:
   const void* StackBase() const { return mStackBase; }
   size_t StackSize() const { return mStackSize; }
 
+  uint32_t ThreadId() const { return mThreadId; }
+
   // If this flag is true, then the nsThread was created using
   // nsIThreadManager::NewThread.
   bool ShutdownRequired()
@@ -177,6 +179,7 @@ protected:
   nsAutoTObserverArray<NotNull<nsCOMPtr<nsIThreadObserver>>, 2> mEventObservers;
 
   int32_t   mPriority;
+  uint32_t  mThreadId;
   PRThread* mThread;
   uint32_t  mNestedEventLoopDepth;
   uint32_t  mStackSize;
