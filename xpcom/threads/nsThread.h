@@ -71,6 +71,9 @@ public:
     return mThread;
   }
 
+  const void* StackBase() const { return mStackBase; }
+  size_t StackSize() const { return mStackSize; }
+
   // If this flag is true, then the nsThread was created using
   // nsIThreadManager::NewThread.
   bool ShutdownRequired()
@@ -177,6 +180,7 @@ protected:
   PRThread* mThread;
   uint32_t  mNestedEventLoopDepth;
   uint32_t  mStackSize;
+  void*     mStackBase = nullptr;
 
   // The shutdown context for ourselves.
   struct nsThreadShutdownContext* mShutdownContext;
