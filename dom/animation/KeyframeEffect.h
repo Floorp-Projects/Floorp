@@ -174,13 +174,9 @@ public:
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;
 
-  // aCallerType is not used in the getter so we supply a default value so that
-  // internal users don't need to specify this value.
-  IterationCompositeOperation IterationComposite(
-    CallerType aCallerType = CallerType::System) const;
+  IterationCompositeOperation IterationComposite() const;
   void SetIterationComposite(
-    const IterationCompositeOperation& aIterationComposite,
-    CallerType aCallerType);
+    const IterationCompositeOperation& aIterationComposite);
 
   CompositeOperation Composite() const;
   void SetComposite(const CompositeOperation& aComposite);

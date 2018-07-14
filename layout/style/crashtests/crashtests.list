@@ -195,7 +195,7 @@ load 1381420-1.html
 load 1381682.html
 load 1382672.html
 load 1382710.html
-pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1383493-1.html
+pref(dom.animations-api.compositing.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1383493-1.html
 load 1383001.html
 load 1383001-2.html
 load 1383319.html
@@ -226,7 +226,7 @@ load 1393791.html
 load 1384232.html
 load 1395725.html
 load 1396041.html
-pref(dom.animations-api.implicit-keyframes.enabled,true) load 1397363-1.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.compositing.enabled,true) load 1397363-1.html
 load 1397439-1.html
 load 1395719.html
 load 1397091.html
