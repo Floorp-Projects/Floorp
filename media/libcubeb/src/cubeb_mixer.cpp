@@ -525,6 +525,19 @@ struct cubeb_mixer
   {
     if (_context._in_ch_count <= _context._out_ch_count) {
       // Not enough channels to copy, fill the gaps with silence.
+      if (_context._in_ch_count == 1 && _context._out_ch_count >= 2) {
+        // Special case for upmixing mono input to stereo and more. We will
+        // duplicate the mono channel to the first two channels. On most system,
+        // the first two channels are for left and right. It is commonly
+        // expected that mono will on both left+right channels
+        for (uint32_t i = 0; i < frames; i++) {
+          output_buffer[0] = output_buffer[1] = *input_buffer;
+          PodZero(output_buffer + 2, _context._out_ch_count - 2);
+          output_buffer += _context._out_ch_count;
+          input_buffer++;
+        }
+        return;
+      }
       for (uint32_t i = 0; i < frames; i++) {
         PodCopy(output_buffer, input_buffer, _context._in_ch_count);
         output_buffer += _context._in_ch_count;
@@ -533,18 +546,6 @@ struct cubeb_mixer
         output_buffer += _context._out_ch_count - _context._in_ch_count;
       }
     } else {
-      if (_context._in_ch_count == 1 && _context._out_ch_count >= 2) {
-        // Special case for upmixing mono input to stereo and more. We will
-        // duplicate the mono channel to the first two channels. On most system,
-        // the first two channels are for left and right. It is commonly
-        // expected that mono will on both left+right channels
-        for (uint32_t i = 0; i < frames; i++) {
-          output_buffer[0] = output_buffer[1] = *input_buffer;
-          output_buffer += _context._out_ch_count ;
-          input_buffer++;
-        }
-        return;
-      }
       for (uint32_t i = 0; i < frames; i++) {
         PodCopy(output_buffer, input_buffer, _context._out_ch_count);
         output_buffer += _context._out_ch_count;
