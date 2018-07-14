@@ -160,6 +160,8 @@ public:
 
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
+  static bool IsWebAnimationsGetAnimationsEnabled(JSContext* aCx,
+                                                  JSObject* aObject);
   static bool AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
                                                        JSObject* aObject);
   static bool AreWebAnimationsTimelinesEnabled(JSContext* aCx,

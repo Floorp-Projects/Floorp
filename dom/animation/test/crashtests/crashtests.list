@@ -14,7 +14,7 @@ load 1282691-1.html
 pref(dom.animations-api.core.enabled,true) load 1291413-1.html
 pref(dom.animations-api.core.enabled,true) load 1291413-2.html
 pref(dom.animations-api.compositing.enabled,true) load 1304886-1.html
-pref(dom.animations-api.core.enabled,true) load 1309198-1.html
+pref(dom.animations-api.getAnimations.enabled,true) load 1309198-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1322382-1.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1322291-1.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1322291-2.html
@@ -24,7 +24,7 @@ pref(dom.animations-api.implicit-keyframes.enabled,true) load 1323119-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1324554-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.compositing.enabled,true) load 1325193-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1330190-1.html
-pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.compositing.enabled,true) load 1330190-2.html
+pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.compositing.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) load 1330190-2.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.compositing.enabled,true) load 1330513-1.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.timelines.enabled,true) load 1333539-1.html
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.timelines.enabled,true) load 1333539-2.html

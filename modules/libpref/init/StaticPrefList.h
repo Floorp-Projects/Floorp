@@ -104,6 +104,24 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for Document.getAnimations() and Element.getAnimations()
+// supported?
+//
+// Before enabling this by default, make sure also CSSPseudoElement interface
+// has been spec'ed properly, or we should add a separate pref for
+// CSSPseudoElement interface. See Bug 1174575 for further details.
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "dom.animations-api.getAnimations.enabled",
+   dom_animations_api_getAnimations_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Is support for animations from the Web Animations API without 0%/100%
 // keyframes enabled?
 #ifdef RELEASE_OR_BETA

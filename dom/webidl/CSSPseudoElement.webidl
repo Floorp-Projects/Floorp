@@ -15,7 +15,7 @@
 // this interface.
 // What we implement here is a minimal subset of the two definitions which we
 // ship behind a pref until the specification issues have been resolved.
-[Func="nsDocument::IsWebAnimationsEnabled"]
+[Func="nsDocument::IsWebAnimationsGetAnimationsEnabled"]
 interface CSSPseudoElement {
   readonly attribute DOMString type;
   readonly attribute Element parentElement;
