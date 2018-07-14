@@ -102,7 +102,13 @@ nsXULTooltipListener::MouseOut(Event* aEvent)
   // hide the tooltip
   if (currentTooltip) {
     // which node did the mouse leave?
-    nsCOMPtr<nsINode> targetNode = do_QueryInterface(aEvent->GetTarget());
+    EventTarget* eventTarget = aEvent->GetComposedTarget();
+    nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
+    if (content && !content->GetContainingShadow()) {
+      eventTarget = aEvent->GetTarget();
+    }
+
+    nsCOMPtr<nsINode> targetNode = do_QueryInterface(eventTarget);
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
@@ -173,7 +179,11 @@ nsXULTooltipListener::MouseMove(Event* aEvent)
   // showing and the tooltip hasn't been displayed since the mouse entered
   // the node, then start the timer to show the tooltip.
   if (!currentTooltip && !mTooltipShownOnce) {
-    nsCOMPtr<EventTarget> eventTarget = aEvent->GetTarget();
+    nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
+    nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
+    if (content && !content->GetContainingShadow()) {
+      eventTarget = aEvent->GetTarget();
+    }
 
     // don't show tooltips attached to elements outside of a menu popup
     // when hovering over an element inside it. The popupsinherittooltip
