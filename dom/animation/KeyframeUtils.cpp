@@ -451,7 +451,8 @@ ConvertKeyframeSequence(JSContext* aCx,
       keyframe->mOffset.emplace(keyframeDict.mOffset.Value());
     }
 
-    if (!keyframeDict.mComposite.IsNull()) {
+    if (StaticPrefs::dom_animations_api_compositing_enabled() &&
+        !keyframeDict.mComposite.IsNull()) {
       keyframe->mComposite.emplace(keyframeDict.mComposite.Value());
     }
 
@@ -1186,26 +1187,28 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   //
   // This corresponds to step 5, "Otherwise," branch, substep 12 of
   // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
-  const FallibleTArray<Nullable<dom::CompositeOperation>>* compositeOps =
-    nullptr;
-  AutoTArray<Nullable<dom::CompositeOperation>, 1> singleCompositeOp;
-  auto& composite = keyframeDict.mComposite;
-  if (composite.IsCompositeOperation()) {
-    singleCompositeOp.AppendElement(composite.GetAsCompositeOperation());
-    const FallibleTArray<Nullable<dom::CompositeOperation>>& asFallibleArray =
-      singleCompositeOp;
-    compositeOps = &asFallibleArray;
-  } else if (composite.IsCompositeOperationOrNullSequence()) {
-    compositeOps = &composite.GetAsCompositeOperationOrNullSequence();
-  }
+  if (StaticPrefs::dom_animations_api_compositing_enabled()) {
+    const FallibleTArray<Nullable<dom::CompositeOperation>>* compositeOps =
+      nullptr;
+    AutoTArray<Nullable<dom::CompositeOperation>, 1> singleCompositeOp;
+    auto& composite = keyframeDict.mComposite;
+    if (composite.IsCompositeOperation()) {
+      singleCompositeOp.AppendElement(composite.GetAsCompositeOperation());
+      const FallibleTArray<Nullable<dom::CompositeOperation>>& asFallibleArray =
+        singleCompositeOp;
+      compositeOps = &asFallibleArray;
+    } else if (composite.IsCompositeOperationOrNullSequence()) {
+      compositeOps = &composite.GetAsCompositeOperationOrNullSequence();
+    }
 
-  // Fill in and repeat as needed.
-  if (compositeOps && !compositeOps->IsEmpty()) {
-    size_t length = compositeOps->Length();
-    for (size_t i = 0; i < aResult.Length(); i++) {
-      if (!compositeOps->ElementAt(i % length).IsNull()) {
-        aResult[i].mComposite.emplace(
-          compositeOps->ElementAt(i % length).Value());
+    // Fill in and repeat as needed.
+    if (compositeOps && !compositeOps->IsEmpty()) {
+      size_t length = compositeOps->Length();
+      for (size_t i = 0; i < aResult.Length(); i++) {
+        if (!compositeOps->ElementAt(i % length).IsNull()) {
+          aResult[i].mComposite.emplace(
+            compositeOps->ElementAt(i % length).Value());
+        }
       }
     }
   }
