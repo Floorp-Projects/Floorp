@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1382545
     prefName += reduceTimerPrecision ? "privacy.reduceTimerPrecision " : "";
     SpecialPowers.pushPrefEnv({"set":
       [
-        ["dom.animations-api.core.enabled", true],
+        ["dom.animations-api.timelines.enabled", true],
         ["privacy.resistFingerprinting", resistFingerprinting],
         ["privacy.reduceTimerPrecision", reduceTimerPrecision],
         ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]

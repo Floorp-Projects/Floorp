@@ -160,6 +160,8 @@ public:
 
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
+  static bool AreWebAnimationsTimelinesEnabled(JSContext* aCx,
+                                               JSObject* aObject);
 
   virtual void EndUpdate() override;
   virtual void BeginLoad() override;
