@@ -71,6 +71,52 @@ test(t => {
 }, 'KeyframeEffectOptions.composite should be ignored if the'
    + ' compositing pref is disabled');
 
+test(t => {
+  const div = addDiv(t);
+  const anim1 = div.animate({ marginLeft: ['0px', '100px'] }, 100 * MS_PER_SEC);
+  anim1.pause();
+  anim1.currentTime = 50 * MS_PER_SEC;
+
+  const anim2 = div.animate(
+    [
+      { marginLeft: '0px', composite: 'add' },
+      { marginLeft: '100px', composite: 'add' },
+    ],
+    100 * MS_PER_SEC
+  );
+  anim2.pause();
+  anim2.currentTime = 50 * MS_PER_SEC;
+
+  assert_equals(
+    getComputedStyle(div).marginLeft,
+    '50px',
+    'Animations should NOT add together'
+  );
+}, 'composite member is ignored on keyframes when using array notation');
+
+test(t => {
+  const div = addDiv(t);
+  const anim1 = div.animate(
+    { marginLeft: ['0px', '100px'] },
+    100 * MS_PER_SEC
+  );
+  anim1.pause();
+  anim1.currentTime = 50 * MS_PER_SEC;
+
+  const anim2 = div.animate(
+    { marginLeft: ['0px', '100px'], composite: ['add', 'add'] },
+    100 * MS_PER_SEC
+  );
+  anim2.pause();
+  anim2.currentTime = 50 * MS_PER_SEC;
+
+  assert_equals(
+    getComputedStyle(div).marginLeft,
+    '50px',
+    'Animations should NOT add together'
+  );
+}, 'composite member is ignored on keyframes when using object notation');
+
 done();
 </script>
 </body>
