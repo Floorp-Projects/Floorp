@@ -8,8 +8,11 @@ import android.util.AtomicFile
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentStorage
 import java.io.FileNotFoundException
+import java.io.File
 
-class FlatFileExperimentStorage(private val atomicFile: AtomicFile) : ExperimentStorage {
+class FlatFileExperimentStorage(file: File) : ExperimentStorage {
+    private val atomicFile: AtomicFile = AtomicFile(file)
+
     override fun retrieve(): List<Experiment> {
         try {
             val experimentsJson = String(atomicFile.readFully())
