@@ -41,11 +41,11 @@ def read_build_config(docdir):
 
     reader = BuildReader(fakeconfig())
     for path, name, key, value in reader.find_sphinx_variables(relevant_mozbuild_path):
-        reldir = os.path.join(os.path.dirname(path), value)
+        reldir = os.path.dirname(path)
 
         if name == 'SPHINX_TREES':
             # If we're building a subtree, only process that specific subtree.
-            absdir = os.path.join(build.topsrcdir, reldir)
+            absdir = os.path.join(build.topsrcdir, reldir, value)
             if not is_main and absdir not in (docdir, MAIN_DOC_PATH):
                 continue
 
@@ -53,14 +53,14 @@ def read_build_config(docdir):
             if key.startswith('/'):
                 key = key[1:]
             else:
-                key = os.path.join(reldir, key)
+                key = os.path.normpath(os.path.join(reldir, key))
 
             if key in trees:
                 raise Exception('%s has already been registered as a destination.' % key)
-            trees[key] = reldir
+            trees[key] = os.path.join(reldir, value)
 
         if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
-            python_package_dirs.add(reldir)
+            python_package_dirs.add(os.path.join(reldir, value))
 
     return trees, python_package_dirs
 

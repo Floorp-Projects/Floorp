@@ -130,7 +130,7 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   }
 
   // Create a popupgroup element for chrome privileged top level non-XUL
-  // documents to support context menus.
+  // documents to support context menus and tooltips.
   if (PresContext()->IsChrome() && PresContext()->IsRoot() &&
       doc->AllowXULXBL() && !doc->IsXULDocument()) {
     nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
@@ -144,6 +144,23 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
 
     aElements.AppendElement(mPopupgroupContent);
+
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nullptr,
+                                          kNameSpaceID_XUL,
+                                          nsINode::ELEMENT_NODE);
+
+    rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget(),
+                          dom::NOT_FROM_PARSER);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default,
+                             NS_LITERAL_STRING("true"), false);
+    // Set the page attribute so the XBL binding will find the text for the
+    // tooltip from the currently hovered element.
+    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::page,
+                             NS_LITERAL_STRING("true"), false);
+
+    aElements.AppendElement(mTooltipContent);
   }
 
   return NS_OK;
@@ -157,6 +174,9 @@ nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32
   }
   if (mPopupgroupContent) {
     aElements.AppendElement(mPopupgroupContent);
+  }
+  if (mTooltipContent) {
+    aElements.AppendElement(mTooltipContent);
   }
 }
 
@@ -187,6 +207,9 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
   aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
   if (mPopupgroupContent) {
     aPostDestroyData.AddAnonymousContent(mPopupgroupContent.forget());
+  }
+  if (mTooltipContent) {
+    aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
   }
 
   MOZ_ASSERT(!mPopupSetFrame ||
@@ -307,15 +330,15 @@ nsCanvasFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
 Element*
 nsCanvasFrame::GetDefaultTooltip()
 {
-  NS_WARNING("GetDefaultTooltip not implemented");
-  return nullptr;
+  return mTooltipContent;
 }
 
 void
 nsCanvasFrame::SetDefaultTooltip(Element* aTooltip)
 {
-  NS_WARNING("SetDefaultTooltip not implemented");
-  return;
+  MOZ_ASSERT(!aTooltip || aTooltip == mTooltipContent,
+             "Default tooltip should be anonymous content tooltip.");
+  mTooltipContent = aTooltip;
 }
 
 void

@@ -43,6 +43,7 @@ class Element;
 } // namespace mozilla
 
 class nsAtom;
+class nsXULTooltipListener;
 
 // nsXULWindow
 
@@ -107,6 +108,10 @@ protected:
    bool       LoadMiscPersistentAttributesFromXUL();
    void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();
+
+   bool NeedsTooltipListener();
+   void AddTooltipSupport();
+   void RemoveTooltipSupport();
 
    NS_IMETHOD GetWindowDOMWindow(mozIDOMWindowProxy** aDOMWindow);
    mozilla::dom::Element* GetWindowDOMElement() const;

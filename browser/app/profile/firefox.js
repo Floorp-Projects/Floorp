@@ -1258,6 +1258,9 @@ pref("browser.newtabpage.activity-stream.debug", false);
 
 pref("browser.library.activity-stream.enabled", true);
 
+// The remote FxA root content URL for the Activity Stream firstrun page.
+pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com/");
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

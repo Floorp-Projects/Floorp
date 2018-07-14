@@ -15,14 +15,14 @@
           "name": {
             "type": "string"
           },
-          "is_default": {
+          "isDefault": {
             "type": "boolean"
           },
           "alias": {
             "type": "string",
             "optional": true
           },
-          "favicon_url": {
+          "favIconUrl": {
             "type": "string",
             "optional": true,
             "format": "url"
@@ -43,6 +43,7 @@
         "type": "function",
         "requireUserInput": true,
         "description": "Perform a search.",
+        "async": true,
         "parameters": [
           {
             "name": "engineName",

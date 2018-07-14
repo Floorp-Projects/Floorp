@@ -135,6 +135,7 @@ protected:
 private:
   nsPopupSetFrame* mPopupSetFrame;
   nsCOMPtr<mozilla::dom::Element> mPopupgroupContent;
+  nsCOMPtr<mozilla::dom::Element> mTooltipContent;
 };
 
 /**

@@ -243,7 +243,8 @@ add_task(async function test_devtools_page_panels_create() {
   }
 
   const longPrefix = (new Array(80)).fill("x").join("");
-  const EXTENSION_ID = `${longPrefix}@create-devtools-panel.test`;
+  // Extension ID includes "inspector" to verify Bug 1474379 doesn't regress.
+  const EXTENSION_ID = `${longPrefix}-inspector@create-devtools-panel.test`;
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
