@@ -266,6 +266,10 @@ partial interface Element {
 
   [BinaryName="assignedSlotByMode", Func="nsDocument::IsShadowDOMEnabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
+
+  [ChromeOnly, BinaryName="assignedSlot", Func="nsDocument::IsShadowDOMEnabled"]
+  readonly attribute HTMLSlotElement? openOrClosedAssignedSlot;
+
   [CEReactions, Unscopable, SetterThrows, Func="nsDocument::IsShadowDOMEnabled"]
            attribute DOMString slot;
 };
