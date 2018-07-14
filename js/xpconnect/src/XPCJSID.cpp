@@ -618,23 +618,14 @@ nsJSCID::NewID(const char* str)
     return idObj.forget();
 }
 
-static const nsID*
-GetIIDArg(uint32_t argc, const JS::Value& val, JSContext* cx)
+static Maybe<nsID>
+GetIIDArg(uint32_t argc, JS::HandleValue val, JSContext* cx)
 {
-    const nsID* iid;
-
     // If an IID was passed in then use it
     if (argc) {
-        JSObject* iidobj;
-        if (val.isPrimitive() ||
-            !(iidobj = val.toObjectOrNull()) ||
-            !(iid = xpc_JSObjectToID(cx, iidobj))) {
-            return nullptr;
-        }
-    } else
-        iid = &NS_GET_IID(nsISupports);
-
-    return iid;
+        return xpc::JSValue2ID(cx, val);
+    }
+    return Some(NS_GET_IID(nsISupports));
 }
 
 NS_IMETHODIMP
@@ -651,7 +642,7 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext* cx,
     }
 
     // If an IID was passed in then use it
-    const nsID* iid = GetIIDArg(optionalArgc, iidval, cx);
+    Maybe<nsID> iid = GetIIDArg(optionalArgc, iidval, cx);
     if (!iid) {
         return NS_ERROR_XPC_BAD_IID;
     }
@@ -663,7 +654,7 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext* cx,
     }
 
     nsCOMPtr<nsISupports> inst;
-    rv = compMgr->CreateInstance(mDetails->ID(), nullptr, *iid, getter_AddRefs(inst));
+    rv = compMgr->CreateInstance(mDetails->ID(), nullptr, iid.ref(), getter_AddRefs(inst));
     MOZ_ASSERT(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
 
     NS_ENSURE_SUCCESS(rv, NS_ERROR_XPC_CI_RETURNED_FAILURE);
@@ -671,7 +662,7 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext* cx,
       return NS_ERROR_XPC_CI_RETURNED_FAILURE;
     }
 
-    rv = nsContentUtils::WrapNative(cx, inst, iid, retval);
+    rv = nsContentUtils::WrapNative(cx, inst, iid.ptr(), retval);
     if (NS_FAILED(rv) || retval.isPrimitive()) {
         return NS_ERROR_XPC_CANT_CREATE_WN;
     }
@@ -693,7 +684,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext* cx, uint8_t optionalArgc,
     }
 
     // If an IID was passed in then use it
-    const nsID* iid = GetIIDArg(optionalArgc, iidval, cx);
+    Maybe<nsID> iid = GetIIDArg(optionalArgc, iidval, cx);
     if (!iid) {
         return NS_ERROR_XPC_BAD_IID;
     }
@@ -705,7 +696,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext* cx, uint8_t optionalArgc,
     }
 
     nsCOMPtr<nsISupports> srvc;
-    rv = svcMgr->GetService(mDetails->ID(), *iid, getter_AddRefs(srvc));
+    rv = svcMgr->GetService(mDetails->ID(), iid.ref(), getter_AddRefs(srvc));
     MOZ_ASSERT(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
 
     NS_ENSURE_SUCCESS(rv, NS_ERROR_XPC_GS_RETURNED_FAILURE);
@@ -714,7 +705,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext* cx, uint8_t optionalArgc,
     }
 
     RootedValue v(cx);
-    rv = nsContentUtils::WrapNative(cx, srvc, iid, &v);
+    rv = nsContentUtils::WrapNative(cx, srvc, iid.ptr(), &v);
     if (NS_FAILED(rv) || !v.isObject()) {
         return NS_ERROR_XPC_CANT_CREATE_WN;
     }
@@ -782,61 +773,74 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative* wrapper,
 }
 
 /***************************************************************************/
-// additional utilities...
+// Public Methods
 
-JSObject*
-xpc_NewIDObject(JSContext* cx, HandleObject scope, const nsID& aID)
+namespace xpc {
+
+Maybe<nsID>
+JSValue2ID(JSContext* aCx, JS::HandleValue aVal)
 {
-    RootedObject obj(cx);
-
-    nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aID);
-    if (iid) {
-        nsIXPConnect* xpc = nsIXPConnect::XPConnect();
-        if (xpc) {
-            xpc->WrapNative(cx, scope, static_cast<nsISupports*>(iid),
-                            NS_GET_IID(nsIJSID), obj.address());
-        }
-    }
-    return obj;
-}
-
-// note: returned pointer is only valid while |obj| remains alive!
-const nsID*
-xpc_JSObjectToID(JSContext* cx, JSObject* obj)
-{
-    if (!cx || !obj) {
-        return nullptr;
+    if (!aVal.isObject()) {
+        return Nothing();
     }
 
-    // NOTE: this call does NOT addref
-    XPCWrappedNative* wrapper = nullptr;
-    obj = js::CheckedUnwrap(obj);
-    if (obj && IS_WN_REFLECTOR(obj)) {
-        wrapper = XPCWrappedNative::Get(obj);
+    JS::RootedObject obj(aCx, js::CheckedUnwrap(&aVal.toObject()));
+    if (!obj || !IS_WN_REFLECTOR(obj)) {
+        return Nothing();
     }
-    if (wrapper &&
-        (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
-         wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
-         wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID)))) {
-        return ((nsIJSID*)wrapper->GetIdentityObject())->GetID();
+
+    XPCWrappedNative* wrapper = XPCWrappedNative::Get(obj);
+    if (!wrapper || !(wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID)) ||
+                      wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
+                      wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID)))) {
+        return Nothing();
     }
-    return nullptr;
+
+    nsIJSID* jsid = static_cast<nsIJSID*>(wrapper->GetIdentityObject());
+    return Some(*jsid->GetID());
 }
 
 bool
-xpc_JSObjectIsID(JSContext* cx, JSObject* obj)
+ID2JSValue(JSContext* aCx, const nsID& aId, JS::MutableHandleValue aVal)
 {
-    MOZ_ASSERT(cx && obj, "bad param");
-    // NOTE: this call does NOT addref
-    XPCWrappedNative* wrapper = nullptr;
-    obj = js::CheckedUnwrap(obj);
-    if (obj && IS_WN_REFLECTOR(obj)) {
-        wrapper = XPCWrappedNative::Get(obj);
-    }
-    return wrapper &&
-           (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
-            wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
-            wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID)));
+    nsCOMPtr<nsIJSID> jsid = nsJSID::NewID(aId);
+    return jsid && NS_SUCCEEDED(
+        nsContentUtils::WrapNative(aCx, jsid, &NS_GET_IID(nsIJSID), aVal));
 }
 
+bool
+IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
+                JS::MutableHandleValue aVal)
+{
+    nsCOMPtr<nsIJSIID> jsid = nsJSIID::NewID(&aInfo);
+    return jsid && NS_SUCCEEDED(
+        nsContentUtils::WrapNative(aCx, jsid, &NS_GET_IID(nsIJSIID), aVal));
+}
+
+bool
+ClassID2JSValue(JSContext* aCx, const nsCID& aId, JS::MutableHandleValue aVal)
+{
+    char idstr[NSID_LENGTH];
+    aId.ToProvidedString(idstr);
+
+    nsCOMPtr<nsIJSCID> jsid = nsJSCID::NewID(idstr);
+    return jsid && NS_SUCCEEDED(
+        nsContentUtils::WrapNative(aCx, jsid, &NS_GET_IID(nsIJSCID), aVal));
+}
+
+bool
+ContractID2JSValue(JSContext* aCx, const nsACString& aContract,
+                   JS::MutableHandleValue aVal)
+{
+    if (aContract.IsEmpty() || aContract.First() == '{') {
+        return false;
+    }
+
+    nsCOMPtr<nsIJSCID> jsid =
+        nsJSCID::NewID(PromiseFlatCString(aContract).get());
+    return jsid && NS_SUCCEEDED(
+        nsContentUtils::WrapNative(aCx, jsid, &NS_GET_IID(nsIJSCID), aVal));
+}
+
+} // namespace xpc
 

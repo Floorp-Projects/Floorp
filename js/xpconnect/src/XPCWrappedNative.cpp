@@ -1452,14 +1452,15 @@ CallMethodHelper::QueryInterfaceFastPath()
         return false;
     }
 
-    const nsID* iid = xpc_JSObjectToID(mCallContext, &mArgv[0].toObject());
+    JS::RootedValue iidarg(mCallContext, mArgv[0]);
+    Maybe<nsID> iid = xpc::JSValue2ID(mCallContext, iidarg);
     if (!iid) {
         ThrowBadParam(NS_ERROR_XPC_BAD_CONVERT_JS, 0, mCallContext);
         return false;
     }
 
     nsISupports* qiresult = nullptr;
-    mInvokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
+    mInvokeResult = mCallee->QueryInterface(iid.ref(), (void**) &qiresult);
 
     if (NS_FAILED(mInvokeResult)) {
         ThrowBadResult(mInvokeResult, mCallContext);
@@ -1471,7 +1472,7 @@ CallMethodHelper::QueryInterfaceFastPath()
     bool success =
         XPCConvert::NativeData2JS(&v, &qiresult,
                                   { nsXPTType::T_INTERFACE_IS },
-                                  iid, 0, &err);
+                                  iid.ptr(), 0, &err);
     NS_IF_RELEASE(qiresult);
 
     if (!success) {
