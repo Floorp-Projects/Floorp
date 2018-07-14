@@ -7,6 +7,7 @@
 #include "nsThread.h"
 
 #include "base/message_loop.h"
+#include "base/platform_thread.h"
 
 // Chromium's logging can sometimes leak through...
 #ifdef LOG
@@ -410,6 +411,7 @@ nsThread::ThreadFunc(void* aArg)
   nsThread* self = initData->thread;  // strong reference
 
   self->mThread = PR_GetCurrentThread();
+  self->mThreadId = uint32_t(PlatformThread::CurrentId());
   self->mVirtualThread = GetCurrentVirtualThread();
   self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
