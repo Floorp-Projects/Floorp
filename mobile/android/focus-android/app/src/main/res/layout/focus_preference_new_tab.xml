@@ -57,8 +57,8 @@
             android:orientation="horizontal">
             <ImageView
                 android:id="@android:id/icon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:importantForAccessibility="no"
                 android:layout_marginEnd="16dp" />
         </LinearLayout>
