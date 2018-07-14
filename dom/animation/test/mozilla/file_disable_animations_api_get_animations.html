@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+test(t => {
+  assert_false('getAnimations' in addDiv(t));
+}, 'Element.getAnimations() is not available when getAnimations pref is'
+    + ' disabled');
+
+test(t => {
+  assert_false('getAnimations' in document);
+}, 'Document.getAnimations() is not available when getAnimations pref is'
+    + ' disabled');
+
+test(t => {
+  assert_false('CSSPseudoElement' in window);
+}, 'CSSPseudoElement interface is not available when getAnimations pref is'
+    + ' disabled');
+
+done();
+</script>
+</body>
