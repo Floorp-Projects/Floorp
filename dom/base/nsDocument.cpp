@@ -3308,6 +3308,17 @@ nsDocument::IsWebAnimationsEnabled(CallerType aCallerType)
 }
 
 bool
+nsDocument::AreWebAnimationsImplicitKeyframesEnabled(JSContext* aCx,
+                                                     JSObject* /*unused*/
+)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return nsContentUtils::IsSystemCaller(aCx) ||
+         StaticPrefs::dom_animations_api_implicit_keyframes_enabled();
+}
+
+bool
 nsDocument::AreWebAnimationsTimelinesEnabled(JSContext* aCx,
                                              JSObject* /*unused*/
 )

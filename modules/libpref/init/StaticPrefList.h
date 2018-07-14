@@ -91,6 +91,20 @@ VARCACHE_PREF(
 // DOM prefs
 //---------------------------------------------------------------------------
 
+// Is support for animations from the Web Animations API without 0%/100%
+// keyframes enabled?
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "dom.animations-api.implicit-keyframes.enabled",
+   dom_animations_api_implicit_keyframes_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Is support for timelines from the Web Animations API enabled?
 #ifdef RELEASE_OR_BETA
 # define PREF_VALUE false

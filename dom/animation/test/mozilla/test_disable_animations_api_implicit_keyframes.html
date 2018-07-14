@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+'use strict';
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.implicit-keyframes.enabled", false]]},
+  function() {
+    window.open("file_disable_animations_api_implicit_keyframes.html");
+  });
+</script>
