@@ -7,7 +7,7 @@ use api::{DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat, 
 use api::{MixBlendMode, PipelineId};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::{ClipStore};
-use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, ClipScrollNodeIndex};
 use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
@@ -31,7 +31,7 @@ const MIN_TARGET_SIZE: u32 = 2048;
 
 #[derive(Debug)]
 pub struct ScrollbarPrimitive {
-    pub scroll_frame_index: SpatialNodeIndex,
+    pub scroll_frame_index: ClipScrollNodeIndex,
     pub prim_index: PrimitiveIndex,
     pub frame_rect: LayoutRect,
 }
