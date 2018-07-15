@@ -7,11 +7,11 @@ use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, L
 use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle};
 use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
+use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId, TransformIndex};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
-use gpu_types::{BoxShadowStretchMode, TransformIndex};
+use gpu_types::{BoxShadowStretchMode};
 use prim_store::{ClipData, ImageMaskData};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
@@ -257,39 +257,19 @@ impl ClipSource {
             }
         }
     }
-
-    pub fn is_rect(&self) -> bool {
-        match *self {
-            ClipSource::Rectangle(..) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_image_or_line_decoration_clip(&self) -> bool {
-        match *self {
-            ClipSource::Image(..) | ClipSource::LineDecoration(..) => true,
-            _ => false,
-        }
-    }
 }
 
 #[derive(Debug)]
 pub struct ClipSources {
     pub clips: Vec<(ClipSource, GpuCacheHandle)>,
     pub local_inner_rect: LayoutRect,
-    pub local_outer_rect: Option<LayoutRect>,
-    pub only_rectangular_clips: bool,
-    pub has_image_or_line_decoration_clip: bool,
+    pub local_outer_rect: Option<LayoutRect>
 }
 
 impl ClipSources {
     pub fn new(clips: Vec<ClipSource>) -> Self {
         let (local_inner_rect, local_outer_rect) = Self::calculate_inner_and_outer_rects(&clips);
 
-        let has_image_or_line_decoration_clip =
-            clips.iter().any(|clip| clip.is_image_or_line_decoration_clip());
-        let only_rectangular_clips =
-            !has_image_or_line_decoration_clip && clips.iter().all(|clip| clip.is_rect());
         let clips = clips
             .into_iter()
             .map(|clip| (clip, GpuCacheHandle::new()))
@@ -299,8 +279,6 @@ impl ClipSources {
             clips,
             local_inner_rect,
             local_outer_rect,
-            only_rectangular_clips,
-            has_image_or_line_decoration_clip,
         }
     }
 
