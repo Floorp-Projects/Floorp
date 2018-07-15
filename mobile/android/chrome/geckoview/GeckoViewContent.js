@@ -158,8 +158,18 @@ class GeckoViewContent extends GeckoViewContentModule {
           // Short circuit and return the pending state if we're in the process of restoring
           sendAsyncMessage("GeckoView:SaveStateFinish", {state: JSON.stringify(this._savedState), id: aMsg.data.id});
         } else {
-          let state = this.collectSessionState();
-          sendAsyncMessage("GeckoView:SaveStateFinish", {state: JSON.stringify(state), id: aMsg.data.id});
+          try {
+            let state = this.collectSessionState();
+            sendAsyncMessage("GeckoView:SaveStateFinish", {
+              state: state ? JSON.stringify(state) : null,
+              id: aMsg.data.id
+            });
+          } catch (e) {
+            sendAsyncMessage("GeckoView:SaveStateFinish", {
+              error: e.message,
+              id: aMsg.data.id
+            });
+          }
         }
         break;
 

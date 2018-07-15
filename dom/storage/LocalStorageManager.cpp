@@ -246,9 +246,38 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
       }
     }
 
+    PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundActor)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    PrincipalInfo principalInfo;
+    rv = mozilla::ipc::PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    uint32_t privateBrowsingId;
+    rv = aPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     // There is always a single instance of a cache per scope
     // in a single instance of a DOM storage manager.
     cache = PutCache(originAttrSuffix, originKey, aPrincipal);
+
+    LocalStorageCacheChild* actor = new LocalStorageCacheChild(cache);
+
+    MOZ_ALWAYS_TRUE(
+      backgroundActor->SendPBackgroundLocalStorageCacheConstructor(
+                                                            actor,
+                                                            principalInfo,
+                                                            originKey,
+                                                            privateBrowsingId));
+
+    cache->SetActor(actor);
   }
 
   if (aRetval) {
