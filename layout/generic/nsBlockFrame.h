@@ -540,7 +540,7 @@ public:
   }
 
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
-                      bool aReparentSiblings, ReparentingDirection aDirection);
+                      bool aReparentSiblings);
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 

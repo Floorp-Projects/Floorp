@@ -134,11 +134,6 @@ enum class DrawStringFlags {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
 
-enum class ReparentingDirection {
-  Backwards,
-  Forwards
-};
-
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
