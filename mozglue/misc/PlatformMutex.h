@@ -29,10 +29,6 @@ public:
   MFBT_API MutexImpl();
   MFBT_API ~MutexImpl();
 
-  bool operator==(const MutexImpl& rhs) {
-    return platformData_ == rhs.platformData_;
-  }
-
 protected:
   MFBT_API void lock();
   MFBT_API void unlock();
@@ -42,6 +38,7 @@ private:
   void operator=(const MutexImpl&) = delete;
   MutexImpl(MutexImpl&&) = delete;
   void operator=(MutexImpl&&) = delete;
+  bool operator==(const MutexImpl& rhs) = delete;
 
   void mutexLock();
 #ifdef XP_DARWIN

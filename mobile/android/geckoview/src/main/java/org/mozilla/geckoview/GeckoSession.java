@@ -202,36 +202,65 @@ public class GeckoSession extends LayerSession
                     final int where = convertGeckoTarget(message.getInt("where"));
                     final int flags = filterFlags(message.getInt("flags"));
 
-                    delegate.onLoadRequest(GeckoSession.this, uri, where, flags,
-                        new GeckoResponse<Boolean>() {
-                            @Override
-                            public void respond(Boolean handled) {
-                                callback.sendSuccess(handled);
-                            }
-                        });
+                    final GeckoResult<Boolean> result = delegate.onLoadRequest(GeckoSession.this,
+                            uri, where, flags);
+
+                    if (result == null) {
+                        callback.sendSuccess(null);
+                        return;
+                    }
+
+                    result.then(new GeckoResult.OnValueListener<Boolean, Void>() {
+                        @Override
+                        public GeckoResult<Void> onValue(Boolean value) throws Throwable {
+                            ThreadUtils.assertOnUiThread();
+                            callback.sendSuccess(value);
+                            return null;
+                        }
+                    }, new GeckoResult.OnExceptionListener<Void>() {
+                        @Override
+                        public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                            callback.sendError(exception.getMessage());
+                            return null;
+                        }
+                    });
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
-                    delegate.onNewSession(GeckoSession.this, uri,
-                        new GeckoResponse<GeckoSession>() {
-                            @Override
-                            public void respond(GeckoSession session) {
-                                if (session == null) {
-                                    callback.sendSuccess(null);
-                                    return;
-                                }
+                    final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
+                    if (result == null) {
+                        callback.sendSuccess(null);
+                        return;
+                    }
 
-                                if (session.isOpen()) {
-                                    throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
-                                }
-
-                                if (GeckoSession.this.mWindow == null) {
-                                    callback.sendError("Session is not attached to a window");
-                                } else {
-                                    session.open(GeckoSession.this.mWindow.runtime);
-                                    callback.sendSuccess(session.getId());
-                                }
+                    result.then(new GeckoResult.OnValueListener<GeckoSession, Void>() {
+                        @Override
+                        public GeckoResult<Void> onValue(GeckoSession session) throws Throwable {
+                            ThreadUtils.assertOnUiThread();
+                            if (session == null) {
+                                callback.sendSuccess(null);
+                                return null;
                             }
-                        });
+
+                            if (session.isOpen()) {
+                                throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
+                            }
+
+                            if (GeckoSession.this.mWindow == null) {
+                                callback.sendError("Session is not attached to a window");
+                            } else {
+                                session.open(GeckoSession.this.mWindow.runtime);
+                                callback.sendSuccess(session.getId());
+                            }
+
+                            return null;
+                        }
+                    }, new GeckoResult.OnExceptionListener<Void>() {
+                        @Override
+                        public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                            callback.sendError(exception.getMessage());
+                            return null;
+                        }
+                    });
                 }
             }
         };
@@ -2223,14 +2252,16 @@ public class GeckoSession extends LayerSession
          * @param flags The load request flags.
          *              One or more of {@link #LOAD_REQUEST_IS_USER_TRIGGERED
          *              LOAD_REQUEST_*}.
-         * @param response A response which will state whether or not the load
-         *                 was handled. If unhandled, Gecko will continue the
-         *                 load as normal.
+         *
+         * @return A {@link GeckoResult} with a boolean value which indicates whether or
+         *         not the load was handled. If unhandled, Gecko will continue the
+         *         load as normal. If handled (true value), Gecko will abandon the load.
+         *         A null return value is interpreted as false (unhandled).
          */
-        void onLoadRequest(GeckoSession session, String uri,
-                           @TargetWindow int target,
-                           @LoadRequestFlags int flags,
-                           GeckoResponse<Boolean> response);
+        @Nullable GeckoResult<Boolean> onLoadRequest(@NonNull GeckoSession session,
+                                                     @NonNull String uri,
+                                                     @TargetWindow int target,
+                                                     @LoadRequestFlags int flags);
 
         /**
         * A request has been made to open a new session. The URI is provided only for
@@ -2240,9 +2271,11 @@ public class GeckoSession extends LayerSession
         * @param session The GeckoSession that initiated the callback.
         * @param uri The URI to be loaded.
         *
-        * @param response A Response which will hold the returned GeckoSession
+        * @return A {@link GeckoResult} which holds the returned GeckoSession. May be null, in
+         *        which case the request for a new window by web content will fail. e.g.,
+         *        <code>window.open()</code> will return null.
         */
-        void onNewSession(GeckoSession session, String uri, GeckoResponse<GeckoSession> response);
+        @Nullable GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession session, @NonNull String uri);
     }
 
     /**

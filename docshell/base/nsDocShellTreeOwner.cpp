@@ -1218,7 +1218,7 @@ ChromeTooltipListener::MouseMove(Event* aMouseEvent)
   if (!mShowingTooltip && !mTooltipShownOnce) {
     nsIEventTarget* target = nullptr;
 
-    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetTarget();
+    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetComposedTarget();
     if (eventTarget) {
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
       nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
@@ -1317,6 +1317,12 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
 {
   auto self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
   if (self && self->mPossibleTooltipNode) {
+    if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
+      // release tooltip target if there is one, NO MATTER WHAT
+      self->mPossibleTooltipNode = nullptr;
+      return;
+    }
+
     // The actual coordinates we want to put the tooltip at are relative to the
     // toplevel docshell of our mWebBrowser.  We know what the screen
     // coordinates of the mouse event were, which means we just need the screen
