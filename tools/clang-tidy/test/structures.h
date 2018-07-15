@@ -37,7 +37,9 @@ class basic_string {
 public:
   typedef basic_string<T> _Type;
   basic_string() {}
-   basic_string(const T *p);
+  basic_string(const T *p);
+  basic_string(const T *p, size_t count);
+  basic_string(size_t count, char ch);
   ~basic_string() {}
   size_t size() const;
   bool empty() const;

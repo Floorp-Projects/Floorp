@@ -54,6 +54,8 @@ clang_checkers:
     publish: !!bool yes
   - name: misc-macro-repeated-side-effects
     publish: !!bool yes
+  - name: misc-string-constructor
+    publish: !!bool yes
   - name: misc-suspicious-missing-comma
     publish: !!bool yes
   - name: misc-suspicious-semicolon
