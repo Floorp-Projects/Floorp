@@ -458,14 +458,7 @@ this.browserAction = class extends ExtensionAPI {
         node.removeAttribute("badgeStyle");
       }
 
-      let {style, legacy} = this.iconData.get(tabData.icon);
-      const LEGACY_CLASS = "toolbarbutton-legacy-addon";
-      if (legacy) {
-        node.classList.add(LEGACY_CLASS);
-      } else {
-        node.classList.remove(LEGACY_CLASS);
-      }
-
+      let style = this.iconData.get(tabData.icon);
       node.setAttribute("style", style);
     };
     if (sync) {
@@ -476,47 +469,30 @@ this.browserAction = class extends ExtensionAPI {
   }
 
   getIconData(icons) {
-    let baseSize = 16;
-    let {icon, size} = IconDetails.getPreferredIcon(icons, this.extension, baseSize);
-
-    let legacy = false;
-
-    // If the best available icon size is not divisible by 16, check if we have
-    // an 18px icon to fall back to, and trim off the padding instead.
-    if (size % 16 && typeof icon === "string" && !icon.endsWith(".svg")) {
-      let result = IconDetails.getPreferredIcon(icons, this.extension, 18);
-
-      if (result.size % 18 == 0) {
-        baseSize = 18;
-        icon = result.icon;
-        legacy = true;
-      }
-    }
-
-    let getIcon = (size, theme) => {
-      let {icon} = IconDetails.getPreferredIcon(icons, this.extension, size);
+    let getIcon = (icon, theme) => {
       if (typeof icon === "object") {
         return IconDetails.escapeUrl(icon[theme]);
       }
       return IconDetails.escapeUrl(icon);
     };
 
-    let getStyle = (name, size) => {
+    let getStyle = (name, icon) => {
       return `
-        --webextension-${name}: url("${getIcon(size, "default")}");
-        --webextension-${name}-light: url("${getIcon(size, "light")}");
-        --webextension-${name}-dark: url("${getIcon(size, "dark")}");
+        --webextension-${name}: url("${getIcon(icon, "default")}");
+        --webextension-${name}-light: url("${getIcon(icon, "light")}");
+        --webextension-${name}-dark: url("${getIcon(icon, "dark")}");
       `;
     };
 
-    let style = `
-      ${getStyle("menupanel-image", 32)}
-      ${getStyle("menupanel-image-2x", 64)}
-      ${getStyle("toolbar-image", baseSize)}
-      ${getStyle("toolbar-image-2x", baseSize * 2)}
+    let icon16 = IconDetails.getPreferredIcon(icons, this.extension, 16).icon;
+    let icon32 = IconDetails.getPreferredIcon(icons, this.extension, 32).icon;
+    let icon64 = IconDetails.getPreferredIcon(icons, this.extension, 64).icon;
+    return `
+      ${getStyle("menupanel-image", icon32)}
+      ${getStyle("menupanel-image-2x", icon64)}
+      ${getStyle("toolbar-image", icon16)}
+      ${getStyle("toolbar-image-2x", icon32)}
     `;
-
-    return {style, legacy};
   }
 
   /**

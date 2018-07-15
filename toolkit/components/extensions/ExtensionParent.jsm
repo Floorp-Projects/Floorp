@@ -1517,7 +1517,7 @@ let IconDetails = {
     return {size, icon: DEFAULT};
   },
 
-  convertImageURLToDataURL(imageURL, contentWindow, browserWindow, size = 18) {
+  convertImageURLToDataURL(imageURL, contentWindow, browserWindow, size = 16) {
     return new Promise((resolve, reject) => {
       let image = new contentWindow.Image();
       image.onload = function() {
