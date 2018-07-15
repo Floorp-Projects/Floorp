@@ -1,0 +1,1 @@
+"[[\"warning\", \"Potential leak of memory pointed to by 'p'\", \"clang-analyzer-cplusplus.NewDeleteLeaks\"]]"
