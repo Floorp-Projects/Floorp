@@ -2616,6 +2616,15 @@ public:
   }
 
   /**
+   * Returns true if this item needs to have its geometry updated, despite
+   * returning empty invalidation region.
+   */
+  virtual bool NeedsGeometryUpdates() const
+  {
+    return false;
+  }
+
+  /**
    * Some items such as those calling into the native themed widget machinery
    * have to be painted on the content process. In this case it is best to avoid
    * allocating layers that serializes and forwards the work to the compositor.
@@ -5224,6 +5233,16 @@ public:
                             const DisplayItemClipChain* aClip) override;
   virtual bool CanApplyOpacity() const override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+
+  bool NeedsGeometryUpdates() const override
+  {
+    // For flattened nsDisplayOpacity items, ComputeInvalidationRegion() only
+    // handles invalidation for changed |mOpacity|. In order to keep track of
+    // the current bounds of the item for invalidation, nsDisplayOpacityGeometry
+    // for the corresponding DisplayItemData needs to be updated, even if the
+    // reported invalidation region is empty.
+    return mChildOpacityState == ChildOpacityState::Deferred;
+  }
 
   /**
    * Returns true if ShouldFlattenAway() applied opacity to children.
