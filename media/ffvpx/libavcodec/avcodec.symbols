@@ -53,6 +53,9 @@ av_parser_close
 av_parser_init
 av_parser_next
 av_parser_parse2
+av_rdft_calc
+av_rdft_end
+av_rdft_init
 av_register_codec_parser
 av_register_hwaccel
 av_shrink_packet
