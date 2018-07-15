@@ -70,6 +70,17 @@ protected:
   DeallocPBackgroundIndexedDBUtilsChild(PBackgroundIndexedDBUtilsChild* aActor)
                                         override;
 
+  virtual PBackgroundLocalStorageCacheChild*
+  AllocPBackgroundLocalStorageCacheChild(const PrincipalInfo& aPrincipalInfo,
+                                         const nsCString& aOriginKey,
+                                         const uint32_t& aPrivateBrowsingId)
+                                         override;
+
+  virtual bool
+  DeallocPBackgroundLocalStorageCacheChild(
+                                       PBackgroundLocalStorageCacheChild* aActor)
+                                       override;
+
   virtual PBackgroundStorageChild*
   AllocPBackgroundStorageChild(const nsString& aProfilePath) override;
 
@@ -226,14 +237,6 @@ protected:
 
   virtual bool
   DeallocPHttpBackgroundChannelChild(PHttpBackgroundChannelChild* aActor) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
-                                 const nsString& aKey,
-                                 const nsString& aOldValue,
-                                 const nsString& aNewValue,
-                                 const PrincipalInfo& aPrincipalInfo,
-                                 const bool& aIsPrivate) override;
 
   bool
   GetMessageSchedulerGroups(const Message& aMsg, SchedulerGroupSet& aGroups) override;

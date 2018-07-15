@@ -21,7 +21,6 @@ interfaces = [
     'xul',
     'security',
     'storage',
-    'offline',
     'geolocation',
     'notification',
     'push',

@@ -56,6 +56,13 @@ public class GeckoResultTest {
         mDone = false;
     }
 
+    @Test(expected = RuntimeException.class)
+    public void createWithoutLooper() {
+        // Without @UiThreadTest this will be run in a worker
+        // thread that does not have a Looper.
+        new GeckoResult<Integer>();
+    }
+
     @Test
     @UiThreadTest
     public void thenWithResult() {
@@ -95,12 +102,18 @@ public class GeckoResultTest {
 
     @Test
     @UiThreadTest
-    public void testEquals() {
-        final GeckoResult<Integer> result = GeckoResult.fromValue(42);
-        final GeckoResult<Integer> result2 = new GeckoResult<>(result);
+    public void testCopy() {
+        final GeckoResult<Integer> result = new GeckoResult<>(GeckoResult.fromValue(42));
+        result.then(new OnValueListener<Integer, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(Integer value) throws Throwable {
+                assertThat("Value should match", value, equalTo(42));
+                done();
+                return null;
+            }
+        });
 
-        assertThat("Results should be equal", result, equalTo(result2));
-        assertThat("Hashcode should be equal", result.hashCode(), equalTo(result2.hashCode()));
+        waitUntilDone();
     }
 
     @Test(expected = IllegalStateException.class)
@@ -157,6 +170,33 @@ public class GeckoResultTest {
 
         thread.start();
         waitUntilDone();
+    }
+
+    @Test
+    @UiThreadTest
+    public void dispatchOnInitialThread() throws InterruptedException {
+        final Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                final Thread dispatchThread = Thread.currentThread();
+
+                GeckoResult.fromValue(42).then(new OnValueListener<Integer, Void>() {
+                    @Override
+                    public GeckoResult<Void> onValue(Integer value) throws Throwable {
+                        assertThat("Thread should match", Thread.currentThread(),
+                                equalTo(dispatchThread));
+                        Looper.myLooper().quit();
+                        return null;
+                    }
+                });
+
+                Looper.loop();
+            }
+        });
+
+        thread.start();
+        thread.join();
     }
 
     @Test
