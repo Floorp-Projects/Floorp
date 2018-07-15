@@ -23,11 +23,87 @@ namespace dom {
 
 namespace {
 
+typedef nsClassHashtable<nsCStringHashKey, nsTArray<LocalStorageCacheParent*>>
+  LocalStorageCacheParentHashtable;
+
+StaticAutoPtr<LocalStorageCacheParentHashtable> gLocalStorageCacheParents;
+
 StorageDBChild* sStorageChild = nullptr;
 
 // False until we shut the storage child down.
 bool sStorageChildDown = false;
 
+}
+
+LocalStorageCacheChild::LocalStorageCacheChild(LocalStorageCache* aCache)
+  : mCache(aCache)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCache);
+  aCache->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(LocalStorageCacheChild);
+}
+
+LocalStorageCacheChild::~LocalStorageCacheChild()
+{
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(LocalStorageCacheChild);
+}
+
+void
+LocalStorageCacheChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mCache) {
+    mCache->ClearActor();
+    mCache = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundLocalStorageCacheChild::SendDeleteMe());
+  }
+}
+
+void
+LocalStorageCacheChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mCache) {
+    mCache->ClearActor();
+    mCache = nullptr;
+  }
+}
+
+mozilla::ipc::IPCResult
+LocalStorageCacheChild::RecvObserve(const PrincipalInfo& aPrincipalInfo,
+                                    const uint32_t& aPrivateBrowsingId,
+                                    const nsString& aDocumentURI,
+                                    const nsString& aKey,
+                                    const nsString& aOldValue,
+                                    const nsString& aNewValue)
+{
+  AssertIsOnOwningThread();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  Storage::NotifyChange(/* aStorage */ nullptr,
+                        principal,
+                        aKey,
+                        aOldValue,
+                        aNewValue,
+                        /* aStorageType */ u"localStorage",
+                        aDocumentURI,
+                        /* aIsPrivate */ !!aPrivateBrowsingId,
+                        /* aImmediateDispatch */ true);
+
+  return IPC_OK();
 }
 
 // ----------------------------------------------------------------------------
@@ -394,6 +470,88 @@ ShutdownObserver::Observe(nsISupports* aSubject,
   }
 
   return NS_OK;
+}
+
+LocalStorageCacheParent::LocalStorageCacheParent(
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const nsACString& aOriginKey,
+                                            uint32_t aPrivateBrowsingId)
+  : mPrincipalInfo(aPrincipalInfo)
+  , mOriginKey(aOriginKey)
+  , mPrivateBrowsingId(aPrivateBrowsingId)
+  , mActorDestroyed(false)
+{
+  AssertIsOnBackgroundThread();
+}
+
+LocalStorageCacheParent::~LocalStorageCacheParent()
+{
+  MOZ_ASSERT(mActorDestroyed);
+}
+
+void
+LocalStorageCacheParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+
+  MOZ_ASSERT(gLocalStorageCacheParents);
+
+  nsTArray<LocalStorageCacheParent*>* array;
+  gLocalStorageCacheParents->Get(mOriginKey, &array);
+  MOZ_ASSERT(array);
+
+  array->RemoveElement(this);
+
+  if (array->IsEmpty()) {
+    gLocalStorageCacheParents->Remove(mOriginKey);
+  }
+
+  if (!gLocalStorageCacheParents->Count()) {
+    gLocalStorageCacheParents = nullptr;
+  }
+}
+
+mozilla::ipc::IPCResult
+LocalStorageCacheParent::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  IProtocol* mgr = Manager();
+  if (!PBackgroundLocalStorageCacheParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+LocalStorageCacheParent::RecvNotify(const nsString& aDocumentURI,
+                                    const nsString& aKey,
+                                    const nsString& aOldValue,
+                                    const nsString& aNewValue)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gLocalStorageCacheParents);
+
+  nsTArray<LocalStorageCacheParent*>* array;
+  gLocalStorageCacheParents->Get(mOriginKey, &array);
+  MOZ_ASSERT(array);
+
+  for (LocalStorageCacheParent* localStorageCacheParent : *array) {
+    if (localStorageCacheParent != this) {
+      Unused << localStorageCacheParent->SendObserve(mPrincipalInfo,
+                                                     mPrivateBrowsingId,
+                                                     aDocumentURI,
+                                                     aKey,
+                                                     aOldValue,
+                                                     aNewValue);
+    }
+  }
+
+  return IPC_OK();
 }
 
 // ----------------------------------------------------------------------------
@@ -1227,6 +1385,66 @@ ObserverSink::Observe(const char* aTopic,
 /*******************************************************************************
  * Exported functions
  ******************************************************************************/
+
+PBackgroundLocalStorageCacheParent*
+AllocPBackgroundLocalStorageCacheParent(
+                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                              const nsCString& aOriginKey,
+                              const uint32_t& aPrivateBrowsingId)
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<LocalStorageCacheParent> actor =
+    new LocalStorageCacheParent(aPrincipalInfo, aOriginKey, aPrivateBrowsingId);
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult
+RecvPBackgroundLocalStorageCacheConstructor(
+                              mozilla::ipc::PBackgroundParent* aBackgroundActor,
+                              PBackgroundLocalStorageCacheParent* aActor,
+                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                              const nsCString& aOriginKey,
+                              const uint32_t& aPrivateBrowsingId)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  auto* actor = static_cast<LocalStorageCacheParent*>(aActor);
+
+  if (!gLocalStorageCacheParents) {
+    gLocalStorageCacheParents = new LocalStorageCacheParentHashtable();
+  }
+
+  nsTArray<LocalStorageCacheParent*>* array;
+  if (!gLocalStorageCacheParents->Get(aOriginKey, &array)) {
+    array = new nsTArray<LocalStorageCacheParent*>();
+    gLocalStorageCacheParents->Put(aOriginKey, array);
+  }
+  array->AppendElement(actor);
+
+  // We are currently trusting the content process not to lie to us.  It is
+  // future work to consult the ClientManager to determine whether this is a
+  // legitimate origin for the content process.
+
+  return IPC_OK();
+}
+
+bool
+DeallocPBackgroundLocalStorageCacheParent(
+                                     PBackgroundLocalStorageCacheParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<LocalStorageCacheParent> actor =
+    dont_AddRef(static_cast<LocalStorageCacheParent*>(aActor));
+
+  return true;
+}
 
 PBackgroundStorageParent*
 AllocPBackgroundStorageParent(const nsString& aProfilePath)

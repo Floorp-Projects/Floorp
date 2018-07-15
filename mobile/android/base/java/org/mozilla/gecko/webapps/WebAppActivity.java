@@ -39,6 +39,7 @@ import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.geckoview.GeckoResponse;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -383,29 +384,25 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadRequest(final GeckoSession session, final String urlStr,
-                              final int target,
-                              final int flags,
-                              final GeckoResponse<Boolean> response) {
+    public GeckoResult<Boolean> onLoadRequest(final GeckoSession session, final String urlStr,
+                                              final int target,
+                                              final int flags) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
             // We can't really handle this, so deny it?
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
-            response.respond(true);
-            return;
+            return GeckoResult.fromValue(true);
         }
 
         if (mManifest.isInScope(uri) && target != TARGET_WINDOW_NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
-            response.respond(false);
-            return;
+            return GeckoResult.fromValue(false);
         }
 
         if ("javascript".equals(uri.getScheme())) {
             // These URIs will fail the scope check but should still be loaded in the PWA.
-            response.respond(false);
-            return;
+            return GeckoResult.fromValue(false);
         }
 
         if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()) ||
@@ -433,12 +430,12 @@ public class WebAppActivity extends AppCompatActivity
                 Log.w(LOGTAG, "No activity handler found for: " + urlStr);
             }
         }
-        response.respond(true);
+
+        return GeckoResult.fromValue(true);
     }
 
     @Override
-    public void onNewSession(final GeckoSession session, final String uri,
-                             final GeckoResponse<GeckoSession> response) {
+    public GeckoResult<GeckoSession> onNewSession(final GeckoSession session, final String uri) {
         // We should never get here because we abort loads that need a new session in onLoadRequest()
         throw new IllegalStateException("Unexpected new session");
     }

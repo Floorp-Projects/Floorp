@@ -46,7 +46,7 @@ function onLoaded()
 
   try
   {
-    window.opener.OfflineTest.ok(applicationCache.status == SpecialPowers.Ci.nsIDOMOfflineResourceList.UNCACHED,
+    window.opener.OfflineTest.ok(applicationCache.status == OfflineResourceList.UNCACHED,
         "there is no associated application cache");
   }
   catch (ex)

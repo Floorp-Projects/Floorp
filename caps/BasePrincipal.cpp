@@ -283,6 +283,13 @@ BasePrincipal::GetIsSystemPrincipal(bool* aResult)
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetIsAddonOrExpandedAddonPrincipal(bool* aResult)
+{
+  *aResult = AddonPolicy() || ContentScriptAddonPolicy();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 {
   if (NS_WARN_IF(!ToJSValue(aCx, mOriginAttributes, aVal))) {

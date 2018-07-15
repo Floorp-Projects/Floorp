@@ -5,6 +5,7 @@
 include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
+include protocol PBackgroundLocalStorageCache;
 include protocol PBackgroundStorage;
 include protocol PBackgroundTest;
 include protocol PBroadcastChannel;
@@ -65,6 +66,7 @@ sync protocol PBackground
   manages PAsmJSCacheEntry;
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
+  manages PBackgroundLocalStorageCache;
   manages PBackgroundStorage;
   manages PBackgroundTest;
   manages PBroadcastChannel;
@@ -106,14 +108,11 @@ parent:
   // Use only for testing!
   async FlushPendingFileDeletions();
 
-  async PBackgroundStorage(nsString profilePath);
+  async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
+                                     nsCString originKey,
+                                     uint32_t privateBrowsingId);
 
-  async BroadcastLocalStorageChange(nsString documentURI,
-                                    nsString key,
-                                    nsString oldValue,
-                                    nsString newValue,
-                                    PrincipalInfo principalInfo,
-                                    bool isPrivate);
+  async PBackgroundStorage(nsString profilePath);
 
   async PVsync();
 
@@ -174,13 +173,6 @@ child:
   async PParentToChildStream();
 
   async PPendingIPCBlob(IPCBlob blob);
-
-  async DispatchLocalStorageChange(nsString documentURI,
-                                   nsString key,
-                                   nsString oldValue,
-                                   nsString newValue,
-                                   PrincipalInfo principalInfo,
-                                   bool isPrivate);
 
 both:
   // PIPCBlobInputStream is created on the parent side only if the child starts

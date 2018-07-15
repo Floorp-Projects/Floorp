@@ -62,7 +62,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList,
                                    mPendingEvents)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMOfflineResourceList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -81,7 +80,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   , mDocumentURI(aDocumentURI)
   , mLoadingPrincipal(aLoadingPrincipal)
   , mExposeCacheUpdateStatus(true)
-  , mStatus(nsIDOMOfflineResourceList::IDLE)
+  , mStatus(OfflineResourceList_Binding::IDLE)
   , mCachedKeys(nullptr)
   , mCachedKeysCount(0)
 {
@@ -173,10 +172,6 @@ nsDOMOfflineResourceList::Disconnect()
   }
 }
 
-//
-// nsDOMOfflineResourceList::nsIDOMOfflineResourceList
-//
-
 already_AddRefed<DOMStringList>
 nsDOMOfflineResourceList::GetMozItems(ErrorResult& aRv)
 {
@@ -216,177 +211,250 @@ nsDOMOfflineResourceList::GetMozItems(ErrorResult& aRv)
   return items.forget();
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
+bool
+nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, ErrorResult& aRv)
 {
-  ErrorResult rv;
-  RefPtr<DOMStringList> items = GetMozItems(rv);
-  items.forget(aItems);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
-{
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return false;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
   }
 
   nsAutoCString key;
   rv = GetCacheKey(aURI, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
   uint32_t types;
   rv = appCache->GetTypes(key, &types);
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
-    *aExists = false;
-    return NS_OK;
+    return false;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return false;
+  }
 
-  *aExists = ((types & nsIApplicationCache::ITEM_DYNAMIC) != 0);
-  return NS_OK;
+  return types & nsIApplicationCache::ITEM_DYNAMIC;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetMozLength(uint32_t *aLength)
+uint32_t
+nsDOMOfflineResourceList::GetMozLength(ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return 0;
+  }
 
   if (!mManifestURI) {
-    *aLength = 0;
-    return NS_OK;
+    return 0;
   }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
 
   rv = CacheKeys();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
 
-  *aLength = mCachedKeysCount;
-  return NS_OK;
+  return mCachedKeysCount;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI,
+                                  ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  bool found;
+  IndexedGetter(aIndex, found, aURI, aRv);
+  if (!aRv.Failed() && !found) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+  }
+}
+
+void
+nsDOMOfflineResourceList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                        nsAString& aURI, ErrorResult& aRv)
+{
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SetDOMStringToNull(aURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = CacheKeys();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
-  if (aIndex >= mCachedKeysCount)
-    return NS_ERROR_NOT_AVAILABLE;
+  if (aIndex >= mCachedKeysCount) {
+    aFound = false;
+    return;
+  }
 
+  aFound = true;
   CopyUTF8toUTF16(mCachedKeys[aIndex], aURI);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozAdd(const nsAString& aURI, ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
-  if (aURI.Length() > MAX_URI_LENGTH) return NS_ERROR_DOM_BAD_URI;
+  if (aURI.Length() > MAX_URI_LENGTH) {
+    aRv.Throw(NS_ERROR_DOM_BAD_URI);
+    return;
+  }
 
   // this will fail if the URI is not absolute
   nsCOMPtr<nsIURI> requestedURI;
   rv = NS_NewURI(getter_AddRefs(requestedURI), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsAutoCString scheme;
   rv = requestedURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   bool match;
   rv = mManifestURI->SchemeIs(scheme.get(), &match);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!match) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
   }
 
-  uint32_t length;
-  rv = GetMozLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!match) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  uint32_t length = GetMozLength(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
   uint32_t maxEntries =
     Preferences::GetUint(kMaxEntriesPref, DEFAULT_MAX_ENTRIES);
 
-  if (length > maxEntries) return NS_ERROR_NOT_AVAILABLE;
+  if (length > maxEntries) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
 
   ClearCachedKeys();
 
   nsCOMPtr<nsIOfflineCacheUpdate> update =
     do_CreateInstance(NS_OFFLINECACHEUPDATE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsAutoCString clientID;
   rv = appCache->GetClientID(clientID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->InitPartial(mManifestURI, clientID,
                            mDocumentURI, mLoadingPrincipal);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->AddDynamicURI(requestedURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   rv = update->Schedule();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
+void
+nsDOMOfflineResourceList::MozRemove(const nsAString& aURI, ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
 
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   nsAutoCString key;
   rv = GetCacheKey(aURI, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   ClearCachedKeys();
 
@@ -397,13 +465,14 @@ nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
   // finished.  Need to bring this issue up.
 
   rv = appCache->UnmarkEntry(key, nsIApplicationCache::ITEM_DYNAMIC);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
+uint16_t
+nsDOMOfflineResourceList::GetStatus(ErrorResult& aRv)
 {
   nsresult rv = Init();
 
@@ -412,89 +481,106 @@ nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
   // to an UNCACHED.
   if (rv == NS_ERROR_DOM_INVALID_STATE_ERR ||
       !nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
-    return NS_OK;
+    return OfflineResourceList_Binding::UNCACHED;
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return 0;
+  }
 
   // If this object is not associated with a cache, return UNCACHED
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
-    return NS_OK;
+    return OfflineResourceList_Binding::UNCACHED;
   }
 
 
   // If there is an update in process, use its status.
   if (mCacheUpdate && mExposeCacheUpdateStatus) {
-    rv = mCacheUpdate->GetStatus(aStatus);
-    if (NS_SUCCEEDED(rv) && *aStatus != nsIDOMOfflineResourceList::IDLE) {
-      return NS_OK;
+    uint16_t status;
+    rv = mCacheUpdate->GetStatus(&status);
+    if (NS_SUCCEEDED(rv) && status != OfflineResourceList_Binding::IDLE) {
+      return status;
     }
   }
 
   if (mAvailableApplicationCache) {
-    *aStatus = nsIDOMOfflineResourceList::UPDATEREADY;
-    return NS_OK;
+    return OfflineResourceList_Binding::UPDATEREADY;
   }
 
-  *aStatus = mStatus;
-  return NS_OK;
+  return mStatus;
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::Update()
+void
+nsDOMOfflineResourceList::Update(ErrorResult& aRv)
 {
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
     do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
 
   nsCOMPtr<nsIOfflineCacheUpdate> update;
   rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI, mLoadingPrincipal,
                                      window, getter_AddRefs(update));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::SwapCache()
+void
+nsDOMOfflineResourceList::SwapCache(ErrorResult& aRv)
 {
   nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsCOMPtr<nsIApplicationCache> currentAppCache = GetDocumentAppCache();
   if (!currentAppCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   // Check the current and potentially newly available cache are not identical.
   if (mAvailableApplicationCache == currentAppCache) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   if (mAvailableApplicationCache) {
     nsCString currClientId, availClientId;
     currentAppCache->GetClientID(currClientId);
     mAvailableApplicationCache->GetClientID(availClientId);
-    if (availClientId == currClientId)
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
-  } else if (mStatus != OBSOLETE) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    if (availClientId == currClientId) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+  } else if (mStatus != OfflineResourceList_Binding::OBSOLETE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   ClearCachedKeys();
@@ -506,13 +592,14 @@ nsDOMOfflineResourceList::SwapCache()
   // We will disassociate from the cache in that case.
   if (appCacheContainer) {
     rv = appCacheContainer->SetApplicationCache(mAvailableApplicationCache);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
   }
 
   mAvailableApplicationCache = nullptr;
-  mStatus = nsIDOMOfflineResourceList::IDLE;
-
-  return NS_OK;
+  mStatus = OfflineResourceList_Binding::IDLE;
 }
 
 void
@@ -605,7 +692,7 @@ nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
       SendEvent(NS_LITERAL_STRING(NOUPDATE_STR));
       break;
     case STATE_OBSOLETE:
-      mStatus = nsIDOMOfflineResourceList::OBSOLETE;
+      mStatus = OfflineResourceList_Binding::OBSOLETE;
       mAvailableApplicationCache = nullptr;
       SendEvent(NS_LITERAL_STRING(OBSOLETE_STR));
       break;
@@ -756,7 +843,7 @@ nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
   mCacheUpdate = nullptr;
 
   if (NS_SUCCEEDED(rv) && succeeded && !partial) {
-    mStatus = nsIDOMOfflineResourceList::IDLE;
+    mStatus = OfflineResourceList_Binding::IDLE;
     if (isUpgrade) {
       SendEvent(NS_LITERAL_STRING(UPDATEREADY_STR));
     } else {

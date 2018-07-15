@@ -40,6 +40,7 @@ gtest:
     run-on-projects:
         by-test-platform:
             windows.*-pgo/.*: []  # permafails on pgo
+            windows.*-msvc/opt: []  # msvc opt builds are pgo
             windows.*-nightly/.*: []  # permafails on nightly too
             windows10-64-asan/opt: []  # permafails on asan too
             .*-devedition/.*: []  # don't run on devedition
