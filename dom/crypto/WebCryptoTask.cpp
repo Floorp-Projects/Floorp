@@ -485,7 +485,10 @@ class AesTask : public ReturnArrayBufferViewTask,
 public:
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
           CryptoKey& aKey, bool aEncrypt)
-    : mSymKey(aKey.GetSymKey())
+    : mMechanism(CKM_INVALID_MECHANISM)
+    , mSymKey(aKey.GetSymKey())
+    , mTagLength(0)
+    , mCounterLength(0)
     , mEncrypt(aEncrypt)
   {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
@@ -494,7 +497,10 @@ public:
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
           CryptoKey& aKey, const CryptoOperationData& aData,
           bool aEncrypt)
-    : mSymKey(aKey.GetSymKey())
+    : mMechanism(CKM_INVALID_MECHANISM)
+    , mSymKey(aKey.GetSymKey())
+    , mTagLength(0)
+    , mCounterLength(0)
     , mEncrypt(aEncrypt)
   {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
@@ -1649,6 +1655,7 @@ public:
       const nsAString& aFormat,
       const ObjectOrString& aAlgorithm, bool aExtractable,
       const Sequence<nsString>& aKeyUsages)
+    : mModulusLength(0)
   {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
@@ -1657,6 +1664,7 @@ public:
       const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
       const ObjectOrString& aAlgorithm, bool aExtractable,
       const Sequence<nsString>& aKeyUsages)
+    : mModulusLength(0)
   {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
@@ -2326,6 +2334,9 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     nsIGlobalObject* aGlobal, JSContext* aCx, const ObjectOrString& aAlgorithm,
     bool aExtractable, const Sequence<nsString>& aKeyUsages)
   : mKeyPair(new CryptoKeyPair())
+  , mMechanism(CKM_INVALID_MECHANISM)
+  , mRsaParams()
+  , mDhParams()
 {
   mArena = UniquePLArenaPool(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!mArena) {
@@ -2566,13 +2577,17 @@ public:
   DeriveHkdfBitsTask(JSContext* aCx,
       const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
     : mSymKey(aKey.GetSymKey())
+    , mMechanism(CKM_INVALID_MECHANISM)
   {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                       CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mSymKey(aKey.GetSymKey())
+    : mLengthInBits(0)
+    , mLengthInBytes(0)
+    , mSymKey(aKey.GetSymKey())
+    , mMechanism(CKM_INVALID_MECHANISM)
   {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
@@ -2716,13 +2731,17 @@ public:
   DerivePbkdfBitsTask(JSContext* aCx,
       const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
     : mSymKey(aKey.GetSymKey())
+    , mHashOidTag(SEC_OID_UNKNOWN)
   {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                       CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-    : mSymKey(aKey.GetSymKey())
+    : mLength(0)
+    , mIterations(0)
+    , mSymKey(aKey.GetSymKey())
+    , mHashOidTag(SEC_OID_UNKNOWN)
   {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);

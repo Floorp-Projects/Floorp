@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.673';
-var pdfjsBuild = '31012570';
+var pdfjsVersion = '2.0.688';
+var pdfjsBuild = '61db85ab';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.673';
+    let workerVersion = '2.0.688';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -715,7 +715,7 @@ exports.WorkerMessageHandler = WorkerMessageHandler;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.toRomanNumerals = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(3);
 
@@ -1091,15 +1091,6 @@ var UnexpectedResponseException = function UnexpectedResponseExceptionClosure() 
   UnexpectedResponseException.constructor = UnexpectedResponseException;
   return UnexpectedResponseException;
 }();
-var NotImplementedException = function NotImplementedExceptionClosure() {
-  function NotImplementedException(msg) {
-    this.message = msg;
-  }
-  NotImplementedException.prototype = new Error();
-  NotImplementedException.prototype.name = 'NotImplementedException';
-  NotImplementedException.constructor = NotImplementedException;
-  return NotImplementedException;
-}();
 var MissingDataException = function MissingDataExceptionClosure() {
   function MissingDataException(begin, end) {
     this.begin = begin;
@@ -1347,34 +1338,27 @@ var Util = function UtilClosure() {
     }
     return result;
   };
-  var ROMAN_NUMBER_MAP = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM', '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
-  Util.toRoman = function Util_toRoman(number, lowerCase) {
-    assert(Number.isInteger(number) && number > 0, 'The number should be a positive integer.');
-    var pos,
-        romanBuf = [];
-    while (number >= 1000) {
-      number -= 1000;
-      romanBuf.push('M');
-    }
-    pos = number / 100 | 0;
-    number %= 100;
-    romanBuf.push(ROMAN_NUMBER_MAP[pos]);
-    pos = number / 10 | 0;
-    number %= 10;
-    romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
-    romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
-    var romanStr = romanBuf.join('');
-    return lowerCase ? romanStr.toLowerCase() : romanStr;
-  };
-  Util.inherit = function Util_inherit(sub, base, prototype) {
-    sub.prototype = Object.create(base.prototype);
-    sub.prototype.constructor = sub;
-    for (var prop in prototype) {
-      sub.prototype[prop] = prototype[prop];
-    }
-  };
   return Util;
 }();
+const ROMAN_NUMBER_MAP = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM', '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+function toRomanNumerals(number, lowerCase = false) {
+  assert(Number.isInteger(number) && number > 0, 'The number should be a positive integer.');
+  let pos,
+      romanBuf = [];
+  while (number >= 1000) {
+    number -= 1000;
+    romanBuf.push('M');
+  }
+  pos = number / 100 | 0;
+  number %= 100;
+  romanBuf.push(ROMAN_NUMBER_MAP[pos]);
+  pos = number / 10 | 0;
+  number %= 10;
+  romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
+  romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
+  const romanStr = romanBuf.join('');
+  return lowerCase ? romanStr.toLowerCase() : romanStr;
+}
 var PDFStringTranslateTable = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2D8, 0x2C7, 0x2C6, 0x2D9, 0x2DD, 0x2DB, 0x2DA, 0x2DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2022, 0x2020, 0x2021, 0x2026, 0x2014, 0x2013, 0x192, 0x2044, 0x2039, 0x203A, 0x2212, 0x2030, 0x201E, 0x201C, 0x201D, 0x2018, 0x2019, 0x201A, 0x2122, 0xFB01, 0xFB02, 0x141, 0x152, 0x160, 0x178, 0x17D, 0x131, 0x142, 0x153, 0x161, 0x17E, 0, 0x20AC];
 function stringToPDFString(str) {
   var i,
@@ -1471,7 +1455,6 @@ exports.InvalidPDFException = InvalidPDFException;
 exports.MissingDataException = MissingDataException;
 exports.MissingPDFException = MissingPDFException;
 exports.NativeImageDecoding = NativeImageDecoding;
-exports.NotImplementedException = NotImplementedException;
 exports.PasswordException = PasswordException;
 exports.PasswordResponses = PasswordResponses;
 exports.StreamType = StreamType;
@@ -1479,6 +1462,7 @@ exports.TextRenderingMode = TextRenderingMode;
 exports.UnexpectedResponseException = UnexpectedResponseException;
 exports.UnknownErrorException = UnknownErrorException;
 exports.Util = Util;
+exports.toRomanNumerals = toRomanNumerals;
 exports.XRefParseException = XRefParseException;
 exports.FormatError = FormatError;
 exports.arrayByteLength = arrayByteLength;
@@ -4610,167 +4594,153 @@ var _document = __w_pdfjs_require__(10);
 
 var _stream = __w_pdfjs_require__(14);
 
-var BasePdfManager = function BasePdfManagerClosure() {
-  function BasePdfManager() {
-    (0, _util.unreachable)('Cannot initialize BaseManagerManager');
-  }
-  BasePdfManager.prototype = {
-    get docId() {
-      return this._docId;
-    },
-    get password() {
-      return this._password;
-    },
-    get docBaseUrl() {
-      var docBaseUrl = null;
-      if (this._docBaseUrl) {
-        var absoluteUrl = (0, _util.createValidAbsoluteUrl)(this._docBaseUrl);
-        if (absoluteUrl) {
-          docBaseUrl = absoluteUrl.href;
-        } else {
-          (0, _util.warn)('Invalid absolute docBaseUrl: "' + this._docBaseUrl + '".');
-        }
-      }
-      return (0, _util.shadow)(this, 'docBaseUrl', docBaseUrl);
-    },
-    onLoadedStream: function BasePdfManager_onLoadedStream() {
-      throw new _util.NotImplementedException();
-    },
-    ensureDoc: function BasePdfManager_ensureDoc(prop, args) {
-      return this.ensure(this.pdfDocument, prop, args);
-    },
-    ensureXRef: function BasePdfManager_ensureXRef(prop, args) {
-      return this.ensure(this.pdfDocument.xref, prop, args);
-    },
-    ensureCatalog: function BasePdfManager_ensureCatalog(prop, args) {
-      return this.ensure(this.pdfDocument.catalog, prop, args);
-    },
-    getPage: function BasePdfManager_getPage(pageIndex) {
-      return this.pdfDocument.getPage(pageIndex);
-    },
-    cleanup: function BasePdfManager_cleanup() {
-      return this.pdfDocument.cleanup();
-    },
-    ensure: function BasePdfManager_ensure(obj, prop, args) {
-      return new _util.NotImplementedException();
-    },
-    requestRange: function BasePdfManager_requestRange(begin, end) {
-      return new _util.NotImplementedException();
-    },
-    requestLoadedStream: function BasePdfManager_requestLoadedStream() {
-      return new _util.NotImplementedException();
-    },
-    sendProgressiveData: function BasePdfManager_sendProgressiveData(chunk) {
-      return new _util.NotImplementedException();
-    },
-    updatePassword: function BasePdfManager_updatePassword(password) {
-      this._password = password;
-    },
-    terminate: function BasePdfManager_terminate() {
-      return new _util.NotImplementedException();
+class BasePdfManager {
+  constructor() {
+    if (this.constructor === BasePdfManager) {
+      (0, _util.unreachable)('Cannot initialize BasePdfManager.');
     }
-  };
-  return BasePdfManager;
-}();
-var LocalPdfManager = function LocalPdfManagerClosure() {
-  function LocalPdfManager(docId, data, password, evaluatorOptions, docBaseUrl) {
+  }
+  get docId() {
+    return this._docId;
+  }
+  get password() {
+    return this._password;
+  }
+  get docBaseUrl() {
+    let docBaseUrl = null;
+    if (this._docBaseUrl) {
+      const absoluteUrl = (0, _util.createValidAbsoluteUrl)(this._docBaseUrl);
+      if (absoluteUrl) {
+        docBaseUrl = absoluteUrl.href;
+      } else {
+        (0, _util.warn)(`Invalid absolute docBaseUrl: "${this._docBaseUrl}".`);
+      }
+    }
+    return (0, _util.shadow)(this, 'docBaseUrl', docBaseUrl);
+  }
+  onLoadedStream() {
+    (0, _util.unreachable)('Abstract method `onLoadedStream` called');
+  }
+  ensureDoc(prop, args) {
+    return this.ensure(this.pdfDocument, prop, args);
+  }
+  ensureXRef(prop, args) {
+    return this.ensure(this.pdfDocument.xref, prop, args);
+  }
+  ensureCatalog(prop, args) {
+    return this.ensure(this.pdfDocument.catalog, prop, args);
+  }
+  getPage(pageIndex) {
+    return this.pdfDocument.getPage(pageIndex);
+  }
+  cleanup() {
+    return this.pdfDocument.cleanup();
+  }
+  ensure(obj, prop, args) {
+    (0, _util.unreachable)('Abstract method `ensure` called');
+  }
+  requestRange(begin, end) {
+    (0, _util.unreachable)('Abstract method `requestRange` called');
+  }
+  requestLoadedStream() {
+    (0, _util.unreachable)('Abstract method `requestLoadedStream` called');
+  }
+  sendProgressiveData(chunk) {
+    (0, _util.unreachable)('Abstract method `sendProgressiveData` called');
+  }
+  updatePassword(password) {
+    this._password = password;
+  }
+  terminate() {
+    (0, _util.unreachable)('Abstract method `terminate` called');
+  }
+}
+class LocalPdfManager extends BasePdfManager {
+  constructor(docId, data, password, evaluatorOptions, docBaseUrl) {
+    super();
     this._docId = docId;
     this._password = password;
     this._docBaseUrl = docBaseUrl;
     this.evaluatorOptions = evaluatorOptions;
-    var stream = new _stream.Stream(data);
+    const stream = new _stream.Stream(data);
     this.pdfDocument = new _document.PDFDocument(this, stream);
-    this._loadedStreamCapability = (0, _util.createPromiseCapability)();
-    this._loadedStreamCapability.resolve(stream);
+    this._loadedStreamPromise = Promise.resolve(stream);
   }
-  _util.Util.inherit(LocalPdfManager, BasePdfManager, {
-    ensure: function LocalPdfManager_ensure(obj, prop, args) {
-      return new Promise(function (resolve, reject) {
+  ensure(obj, prop, args) {
+    return new Promise(function (resolve) {
+      const value = obj[prop];
+      if (typeof value === 'function') {
+        resolve(value.apply(obj, args));
+      } else {
+        resolve(value);
+      }
+    });
+  }
+  requestRange(begin, end) {
+    return Promise.resolve();
+  }
+  requestLoadedStream() {}
+  onLoadedStream() {
+    return this._loadedStreamPromise;
+  }
+  terminate() {}
+}
+class NetworkPdfManager extends BasePdfManager {
+  constructor(docId, pdfNetworkStream, args, evaluatorOptions, docBaseUrl) {
+    super();
+    this._docId = docId;
+    this._password = args.password;
+    this._docBaseUrl = docBaseUrl;
+    this.msgHandler = args.msgHandler;
+    this.evaluatorOptions = evaluatorOptions;
+    this.streamManager = new _chunked_stream.ChunkedStreamManager(pdfNetworkStream, {
+      msgHandler: args.msgHandler,
+      url: args.url,
+      length: args.length,
+      disableAutoFetch: args.disableAutoFetch,
+      rangeChunkSize: args.rangeChunkSize
+    });
+    this.pdfDocument = new _document.PDFDocument(this, this.streamManager.getStream());
+  }
+  ensure(obj, prop, args) {
+    return new Promise((resolve, reject) => {
+      let ensureHelper = () => {
         try {
-          var value = obj[prop];
-          var result;
+          const value = obj[prop];
+          let result;
           if (typeof value === 'function') {
             result = value.apply(obj, args);
           } else {
             result = value;
           }
           resolve(result);
-        } catch (e) {
-          reject(e);
-        }
-      });
-    },
-    requestRange: function LocalPdfManager_requestRange(begin, end) {
-      return Promise.resolve();
-    },
-    requestLoadedStream: function LocalPdfManager_requestLoadedStream() {},
-    onLoadedStream: function LocalPdfManager_onLoadedStream() {
-      return this._loadedStreamCapability.promise;
-    },
-    terminate: function LocalPdfManager_terminate() {}
-  });
-  return LocalPdfManager;
-}();
-var NetworkPdfManager = function NetworkPdfManagerClosure() {
-  function NetworkPdfManager(docId, pdfNetworkStream, args, evaluatorOptions, docBaseUrl) {
-    this._docId = docId;
-    this._password = args.password;
-    this._docBaseUrl = docBaseUrl;
-    this.msgHandler = args.msgHandler;
-    this.evaluatorOptions = evaluatorOptions;
-    var params = {
-      msgHandler: args.msgHandler,
-      url: args.url,
-      length: args.length,
-      disableAutoFetch: args.disableAutoFetch,
-      rangeChunkSize: args.rangeChunkSize
-    };
-    this.streamManager = new _chunked_stream.ChunkedStreamManager(pdfNetworkStream, params);
-    this.pdfDocument = new _document.PDFDocument(this, this.streamManager.getStream());
-  }
-  _util.Util.inherit(NetworkPdfManager, BasePdfManager, {
-    ensure: function NetworkPdfManager_ensure(obj, prop, args) {
-      var pdfManager = this;
-      return new Promise(function (resolve, reject) {
-        function ensureHelper() {
-          try {
-            var result;
-            var value = obj[prop];
-            if (typeof value === 'function') {
-              result = value.apply(obj, args);
-            } else {
-              result = value;
-            }
-            resolve(result);
-          } catch (e) {
-            if (!(e instanceof _util.MissingDataException)) {
-              reject(e);
-              return;
-            }
-            pdfManager.streamManager.requestRange(e.begin, e.end).then(ensureHelper, reject);
+        } catch (ex) {
+          if (!(ex instanceof _util.MissingDataException)) {
+            reject(ex);
+            return;
           }
+          this.streamManager.requestRange(ex.begin, ex.end).then(ensureHelper, reject);
         }
-        ensureHelper();
-      });
-    },
-    requestRange: function NetworkPdfManager_requestRange(begin, end) {
-      return this.streamManager.requestRange(begin, end);
-    },
-    requestLoadedStream: function NetworkPdfManager_requestLoadedStream() {
-      this.streamManager.requestAllChunks();
-    },
-    sendProgressiveData: function NetworkPdfManager_sendProgressiveData(chunk) {
-      this.streamManager.onReceiveData({ chunk });
-    },
-    onLoadedStream: function NetworkPdfManager_onLoadedStream() {
-      return this.streamManager.onLoadedStream();
-    },
-    terminate: function NetworkPdfManager_terminate() {
-      this.streamManager.abort();
-    }
-  });
-  return NetworkPdfManager;
-}();
+      };
+      ensureHelper();
+    });
+  }
+  requestRange(begin, end) {
+    return this.streamManager.requestRange(begin, end);
+  }
+  requestLoadedStream() {
+    this.streamManager.requestAllChunks();
+  }
+  sendProgressiveData(chunk) {
+    this.streamManager.onReceiveData({ chunk });
+  }
+  onLoadedStream() {
+    return this.streamManager.onLoadedStream();
+  }
+  terminate() {
+    this.streamManager.abort();
+  }
+}
 exports.LocalPdfManager = LocalPdfManager;
 exports.NetworkPdfManager = NetworkPdfManager;
 
@@ -6040,7 +6010,7 @@ var Catalog = function CatalogClosure() {
             break;
           case 'R':
           case 'r':
-            currentLabel = _util.Util.toRoman(currentIndex, style === 'r');
+            currentLabel = (0, _util.toRomanNumerals)(currentIndex, style === 'r');
             break;
           case 'A':
           case 'a':
@@ -7037,123 +7007,115 @@ var XRef = function XRefClosure() {
   };
   return XRef;
 }();
-var NameOrNumberTree = function NameOrNumberTreeClosure() {
-  function NameOrNumberTree(root, xref) {
-    (0, _util.unreachable)('Cannot initialize NameOrNumberTree.');
+class NameOrNumberTree {
+  constructor(root, xref, type) {
+    if (this.constructor === NameOrNumberTree) {
+      (0, _util.unreachable)('Cannot initialize NameOrNumberTree.');
+    }
+    this.root = root;
+    this.xref = xref;
+    this._type = type;
   }
-  NameOrNumberTree.prototype = {
-    getAll: function NameOrNumberTree_getAll() {
-      var dict = Object.create(null);
-      if (!this.root) {
-        return dict;
-      }
-      var xref = this.xref;
-      var processed = new _primitives.RefSet();
-      processed.put(this.root);
-      var queue = [this.root];
-      while (queue.length > 0) {
-        var i, n;
-        var obj = xref.fetchIfRef(queue.shift());
-        if (!(0, _primitives.isDict)(obj)) {
-          continue;
-        }
-        if (obj.has('Kids')) {
-          var kids = obj.get('Kids');
-          for (i = 0, n = kids.length; i < n; i++) {
-            var kid = kids[i];
-            if (processed.has(kid)) {
-              throw new _util.FormatError(`Duplicate entry in "${this._type}" tree.`);
-            }
-            queue.push(kid);
-            processed.put(kid);
-          }
-          continue;
-        }
-        var entries = obj.get(this._type);
-        if (Array.isArray(entries)) {
-          for (i = 0, n = entries.length; i < n; i += 2) {
-            dict[xref.fetchIfRef(entries[i])] = xref.fetchIfRef(entries[i + 1]);
-          }
-        }
-      }
+  getAll() {
+    const dict = Object.create(null);
+    if (!this.root) {
       return dict;
-    },
-    get: function NameOrNumberTree_get(key) {
-      if (!this.root) {
-        return null;
+    }
+    const xref = this.xref;
+    const processed = new _primitives.RefSet();
+    processed.put(this.root);
+    const queue = [this.root];
+    while (queue.length > 0) {
+      const obj = xref.fetchIfRef(queue.shift());
+      if (!(0, _primitives.isDict)(obj)) {
+        continue;
       }
-      var xref = this.xref;
-      var kidsOrEntries = xref.fetchIfRef(this.root);
-      var loopCount = 0;
-      var MAX_LEVELS = 10;
-      var l, r, m;
-      while (kidsOrEntries.has('Kids')) {
-        if (++loopCount > MAX_LEVELS) {
-          (0, _util.warn)('Search depth limit reached for "' + this._type + '" tree.');
-          return null;
-        }
-        var kids = kidsOrEntries.get('Kids');
-        if (!Array.isArray(kids)) {
-          return null;
-        }
-        l = 0;
-        r = kids.length - 1;
-        while (l <= r) {
-          m = l + r >> 1;
-          var kid = xref.fetchIfRef(kids[m]);
-          var limits = kid.get('Limits');
-          if (key < xref.fetchIfRef(limits[0])) {
-            r = m - 1;
-          } else if (key > xref.fetchIfRef(limits[1])) {
-            l = m + 1;
-          } else {
-            kidsOrEntries = xref.fetchIfRef(kids[m]);
-            break;
+      if (obj.has('Kids')) {
+        const kids = obj.get('Kids');
+        for (let i = 0, ii = kids.length; i < ii; i++) {
+          const kid = kids[i];
+          if (processed.has(kid)) {
+            throw new _util.FormatError(`Duplicate entry in "${this._type}" tree.`);
           }
+          queue.push(kid);
+          processed.put(kid);
         }
-        if (l > r) {
-          return null;
-        }
+        continue;
       }
-      var entries = kidsOrEntries.get(this._type);
+      const entries = obj.get(this._type);
       if (Array.isArray(entries)) {
-        l = 0;
-        r = entries.length - 2;
-        while (l <= r) {
-          m = l + r & ~1;
-          var currentKey = xref.fetchIfRef(entries[m]);
-          if (key < currentKey) {
-            r = m - 2;
-          } else if (key > currentKey) {
-            l = m + 2;
-          } else {
-            return xref.fetchIfRef(entries[m + 1]);
-          }
+        for (let i = 0, ii = entries.length; i < ii; i += 2) {
+          dict[xref.fetchIfRef(entries[i])] = xref.fetchIfRef(entries[i + 1]);
         }
       }
+    }
+    return dict;
+  }
+  get(key) {
+    if (!this.root) {
       return null;
     }
-  };
-  return NameOrNumberTree;
-}();
-var NameTree = function NameTreeClosure() {
-  function NameTree(root, xref) {
-    this.root = root;
-    this.xref = xref;
-    this._type = 'Names';
+    const xref = this.xref;
+    let kidsOrEntries = xref.fetchIfRef(this.root);
+    let loopCount = 0;
+    const MAX_LEVELS = 10;
+    while (kidsOrEntries.has('Kids')) {
+      if (++loopCount > MAX_LEVELS) {
+        (0, _util.warn)('Search depth limit reached for "' + this._type + '" tree.');
+        return null;
+      }
+      const kids = kidsOrEntries.get('Kids');
+      if (!Array.isArray(kids)) {
+        return null;
+      }
+      let l = 0,
+          r = kids.length - 1;
+      while (l <= r) {
+        const m = l + r >> 1;
+        const kid = xref.fetchIfRef(kids[m]);
+        const limits = kid.get('Limits');
+        if (key < xref.fetchIfRef(limits[0])) {
+          r = m - 1;
+        } else if (key > xref.fetchIfRef(limits[1])) {
+          l = m + 1;
+        } else {
+          kidsOrEntries = xref.fetchIfRef(kids[m]);
+          break;
+        }
+      }
+      if (l > r) {
+        return null;
+      }
+    }
+    const entries = kidsOrEntries.get(this._type);
+    if (Array.isArray(entries)) {
+      let l = 0,
+          r = entries.length - 2;
+      while (l <= r) {
+        const m = l + r & ~1;
+        const currentKey = xref.fetchIfRef(entries[m]);
+        if (key < currentKey) {
+          r = m - 2;
+        } else if (key > currentKey) {
+          l = m + 2;
+        } else {
+          return xref.fetchIfRef(entries[m + 1]);
+        }
+      }
+    }
+    return null;
   }
-  _util.Util.inherit(NameTree, NameOrNumberTree, {});
-  return NameTree;
-}();
-var NumberTree = function NumberTreeClosure() {
-  function NumberTree(root, xref) {
-    this.root = root;
-    this.xref = xref;
-    this._type = 'Nums';
+}
+class NameTree extends NameOrNumberTree {
+  constructor(root, xref) {
+    super(root, xref, 'Names');
   }
-  _util.Util.inherit(NumberTree, NameOrNumberTree, {});
-  return NumberTree;
-}();
+}
+class NumberTree extends NameOrNumberTree {
+  constructor(root, xref) {
+    super(root, xref, 'Nums');
+  }
+}
 var FileSpec = function FileSpecClosure() {
   function FileSpec(root, xref) {
     if (!root || !(0, _primitives.isDict)(root)) {
@@ -21661,8 +21623,8 @@ var _parser = __w_pdfjs_require__(13);
 var _stream = __w_pdfjs_require__(14);
 
 var BUILT_IN_CMAPS = ['Adobe-GB1-UCS2', 'Adobe-CNS1-UCS2', 'Adobe-Japan1-UCS2', 'Adobe-Korea1-UCS2', '78-EUC-H', '78-EUC-V', '78-H', '78-RKSJ-H', '78-RKSJ-V', '78-V', '78ms-RKSJ-H', '78ms-RKSJ-V', '83pv-RKSJ-H', '90ms-RKSJ-H', '90ms-RKSJ-V', '90msp-RKSJ-H', '90msp-RKSJ-V', '90pv-RKSJ-H', '90pv-RKSJ-V', 'Add-H', 'Add-RKSJ-H', 'Add-RKSJ-V', 'Add-V', 'Adobe-CNS1-0', 'Adobe-CNS1-1', 'Adobe-CNS1-2', 'Adobe-CNS1-3', 'Adobe-CNS1-4', 'Adobe-CNS1-5', 'Adobe-CNS1-6', 'Adobe-GB1-0', 'Adobe-GB1-1', 'Adobe-GB1-2', 'Adobe-GB1-3', 'Adobe-GB1-4', 'Adobe-GB1-5', 'Adobe-Japan1-0', 'Adobe-Japan1-1', 'Adobe-Japan1-2', 'Adobe-Japan1-3', 'Adobe-Japan1-4', 'Adobe-Japan1-5', 'Adobe-Japan1-6', 'Adobe-Korea1-0', 'Adobe-Korea1-1', 'Adobe-Korea1-2', 'B5-H', 'B5-V', 'B5pc-H', 'B5pc-V', 'CNS-EUC-H', 'CNS-EUC-V', 'CNS1-H', 'CNS1-V', 'CNS2-H', 'CNS2-V', 'ETHK-B5-H', 'ETHK-B5-V', 'ETen-B5-H', 'ETen-B5-V', 'ETenms-B5-H', 'ETenms-B5-V', 'EUC-H', 'EUC-V', 'Ext-H', 'Ext-RKSJ-H', 'Ext-RKSJ-V', 'Ext-V', 'GB-EUC-H', 'GB-EUC-V', 'GB-H', 'GB-V', 'GBK-EUC-H', 'GBK-EUC-V', 'GBK2K-H', 'GBK2K-V', 'GBKp-EUC-H', 'GBKp-EUC-V', 'GBT-EUC-H', 'GBT-EUC-V', 'GBT-H', 'GBT-V', 'GBTpc-EUC-H', 'GBTpc-EUC-V', 'GBpc-EUC-H', 'GBpc-EUC-V', 'H', 'HKdla-B5-H', 'HKdla-B5-V', 'HKdlb-B5-H', 'HKdlb-B5-V', 'HKgccs-B5-H', 'HKgccs-B5-V', 'HKm314-B5-H', 'HKm314-B5-V', 'HKm471-B5-H', 'HKm471-B5-V', 'HKscs-B5-H', 'HKscs-B5-V', 'Hankaku', 'Hiragana', 'KSC-EUC-H', 'KSC-EUC-V', 'KSC-H', 'KSC-Johab-H', 'KSC-Johab-V', 'KSC-V', 'KSCms-UHC-H', 'KSCms-UHC-HW-H', 'KSCms-UHC-HW-V', 'KSCms-UHC-V', 'KSCpc-EUC-H', 'KSCpc-EUC-V', 'Katakana', 'NWP-H', 'NWP-V', 'RKSJ-H', 'RKSJ-V', 'Roman', 'UniCNS-UCS2-H', 'UniCNS-UCS2-V', 'UniCNS-UTF16-H', 'UniCNS-UTF16-V', 'UniCNS-UTF32-H', 'UniCNS-UTF32-V', 'UniCNS-UTF8-H', 'UniCNS-UTF8-V', 'UniGB-UCS2-H', 'UniGB-UCS2-V', 'UniGB-UTF16-H', 'UniGB-UTF16-V', 'UniGB-UTF32-H', 'UniGB-UTF32-V', 'UniGB-UTF8-H', 'UniGB-UTF8-V', 'UniJIS-UCS2-H', 'UniJIS-UCS2-HW-H', 'UniJIS-UCS2-HW-V', 'UniJIS-UCS2-V', 'UniJIS-UTF16-H', 'UniJIS-UTF16-V', 'UniJIS-UTF32-H', 'UniJIS-UTF32-V', 'UniJIS-UTF8-H', 'UniJIS-UTF8-V', 'UniJIS2004-UTF16-H', 'UniJIS2004-UTF16-V', 'UniJIS2004-UTF32-H', 'UniJIS2004-UTF32-V', 'UniJIS2004-UTF8-H', 'UniJIS2004-UTF8-V', 'UniJISPro-UCS2-HW-V', 'UniJISPro-UCS2-V', 'UniJISPro-UTF8-V', 'UniJISX0213-UTF32-H', 'UniJISX0213-UTF32-V', 'UniJISX02132004-UTF32-H', 'UniJISX02132004-UTF32-V', 'UniKS-UCS2-H', 'UniKS-UCS2-V', 'UniKS-UTF16-H', 'UniKS-UTF16-V', 'UniKS-UTF32-H', 'UniKS-UTF32-V', 'UniKS-UTF8-H', 'UniKS-UTF8-V', 'V', 'WP-Symbol'];
-var CMap = function CMapClosure() {
-  function CMap(builtInCMap) {
+class CMap {
+  constructor(builtInCMap = false) {
     this.codespaceRanges = [[], [], [], []];
     this.numCodespaceRanges = 0;
     this._map = [];
@@ -21671,162 +21633,152 @@ var CMap = function CMapClosure() {
     this.useCMap = null;
     this.builtInCMap = builtInCMap;
   }
-  CMap.prototype = {
-    addCodespaceRange(n, low, high) {
-      this.codespaceRanges[n - 1].push(low, high);
-      this.numCodespaceRanges++;
-    },
-    mapCidRange(low, high, dstLow) {
-      while (low <= high) {
-        this._map[low++] = dstLow++;
-      }
-    },
-    mapBfRange(low, high, dstLow) {
-      var lastByte = dstLow.length - 1;
-      while (low <= high) {
-        this._map[low++] = dstLow;
-        dstLow = dstLow.substr(0, lastByte) + String.fromCharCode(dstLow.charCodeAt(lastByte) + 1);
-      }
-    },
-    mapBfRangeToArray(low, high, array) {
-      var i = 0,
-          ii = array.length;
-      while (low <= high && i < ii) {
-        this._map[low] = array[i++];
-        ++low;
-      }
-    },
-    mapOne(src, dst) {
-      this._map[src] = dst;
-    },
-    lookup(code) {
-      return this._map[code];
-    },
-    contains(code) {
-      return this._map[code] !== undefined;
-    },
-    forEach(callback) {
-      let map = this._map;
-      let length = map.length;
-      if (length <= 0x10000) {
-        for (let i = 0; i < length; i++) {
-          if (map[i] !== undefined) {
-            callback(i, map[i]);
-          }
-        }
-      } else {
-        for (let i in map) {
+  addCodespaceRange(n, low, high) {
+    this.codespaceRanges[n - 1].push(low, high);
+    this.numCodespaceRanges++;
+  }
+  mapCidRange(low, high, dstLow) {
+    while (low <= high) {
+      this._map[low++] = dstLow++;
+    }
+  }
+  mapBfRange(low, high, dstLow) {
+    var lastByte = dstLow.length - 1;
+    while (low <= high) {
+      this._map[low++] = dstLow;
+      dstLow = dstLow.substr(0, lastByte) + String.fromCharCode(dstLow.charCodeAt(lastByte) + 1);
+    }
+  }
+  mapBfRangeToArray(low, high, array) {
+    let i = 0,
+        ii = array.length;
+    while (low <= high && i < ii) {
+      this._map[low] = array[i++];
+      ++low;
+    }
+  }
+  mapOne(src, dst) {
+    this._map[src] = dst;
+  }
+  lookup(code) {
+    return this._map[code];
+  }
+  contains(code) {
+    return this._map[code] !== undefined;
+  }
+  forEach(callback) {
+    let map = this._map;
+    let length = map.length;
+    if (length <= 0x10000) {
+      for (let i = 0; i < length; i++) {
+        if (map[i] !== undefined) {
           callback(i, map[i]);
         }
       }
-    },
-    charCodeOf(value) {
-      let map = this._map;
-      if (map.length <= 0x10000) {
-        return map.indexOf(value);
+    } else {
+      for (let i in map) {
+        callback(i, map[i]);
       }
-      for (let charCode in map) {
-        if (map[charCode] === value) {
-          return charCode | 0;
-        }
-      }
-      return -1;
-    },
-    getMap() {
-      return this._map;
-    },
-    readCharCode(str, offset, out) {
-      var c = 0;
-      var codespaceRanges = this.codespaceRanges;
-      var codespaceRangesLen = this.codespaceRanges.length;
-      for (var n = 0; n < codespaceRangesLen; n++) {
-        c = (c << 8 | str.charCodeAt(offset + n)) >>> 0;
-        var codespaceRange = codespaceRanges[n];
-        for (var k = 0, kk = codespaceRange.length; k < kk;) {
-          var low = codespaceRange[k++];
-          var high = codespaceRange[k++];
-          if (c >= low && c <= high) {
-            out.charcode = c;
-            out.length = n + 1;
-            return;
-          }
-        }
-      }
-      out.charcode = 0;
-      out.length = 1;
-    },
-    get length() {
-      return this._map.length;
-    },
-    get isIdentityCMap() {
-      if (!(this.name === 'Identity-H' || this.name === 'Identity-V')) {
-        return false;
-      }
-      if (this._map.length !== 0x10000) {
-        return false;
-      }
-      for (var i = 0; i < 0x10000; i++) {
-        if (this._map[i] !== i) {
-          return false;
-        }
-      }
-      return true;
     }
-  };
-  return CMap;
-}();
-var IdentityCMap = function IdentityCMapClosure() {
-  function IdentityCMap(vertical, n) {
-    CMap.call(this);
+  }
+  charCodeOf(value) {
+    const map = this._map;
+    if (map.length <= 0x10000) {
+      return map.indexOf(value);
+    }
+    for (let charCode in map) {
+      if (map[charCode] === value) {
+        return charCode | 0;
+      }
+    }
+    return -1;
+  }
+  getMap() {
+    return this._map;
+  }
+  readCharCode(str, offset, out) {
+    let c = 0;
+    const codespaceRanges = this.codespaceRanges;
+    for (let n = 0, nn = codespaceRanges.length; n < nn; n++) {
+      c = (c << 8 | str.charCodeAt(offset + n)) >>> 0;
+      const codespaceRange = codespaceRanges[n];
+      for (let k = 0, kk = codespaceRange.length; k < kk;) {
+        const low = codespaceRange[k++];
+        const high = codespaceRange[k++];
+        if (c >= low && c <= high) {
+          out.charcode = c;
+          out.length = n + 1;
+          return;
+        }
+      }
+    }
+    out.charcode = 0;
+    out.length = 1;
+  }
+  get length() {
+    return this._map.length;
+  }
+  get isIdentityCMap() {
+    if (!(this.name === 'Identity-H' || this.name === 'Identity-V')) {
+      return false;
+    }
+    if (this._map.length !== 0x10000) {
+      return false;
+    }
+    for (let i = 0; i < 0x10000; i++) {
+      if (this._map[i] !== i) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+class IdentityCMap extends CMap {
+  constructor(vertical, n) {
+    super();
     this.vertical = vertical;
     this.addCodespaceRange(n, 0, 0xffff);
   }
-  _util.Util.inherit(IdentityCMap, CMap, {});
-  IdentityCMap.prototype = {
-    addCodespaceRange: CMap.prototype.addCodespaceRange,
-    mapCidRange(low, high, dstLow) {
-      (0, _util.unreachable)('should not call mapCidRange');
-    },
-    mapBfRange(low, high, dstLow) {
-      (0, _util.unreachable)('should not call mapBfRange');
-    },
-    mapBfRangeToArray(low, high, array) {
-      (0, _util.unreachable)('should not call mapBfRangeToArray');
-    },
-    mapOne(src, dst) {
-      (0, _util.unreachable)('should not call mapCidOne');
-    },
-    lookup(code) {
-      return Number.isInteger(code) && code <= 0xffff ? code : undefined;
-    },
-    contains(code) {
-      return Number.isInteger(code) && code <= 0xffff;
-    },
-    forEach(callback) {
-      for (var i = 0; i <= 0xffff; i++) {
-        callback(i, i);
-      }
-    },
-    charCodeOf(value) {
-      return Number.isInteger(value) && value <= 0xffff ? value : -1;
-    },
-    getMap() {
-      var map = new Array(0x10000);
-      for (var i = 0; i <= 0xffff; i++) {
-        map[i] = i;
-      }
-      return map;
-    },
-    readCharCode: CMap.prototype.readCharCode,
-    get length() {
-      return 0x10000;
-    },
-    get isIdentityCMap() {
-      (0, _util.unreachable)('should not access .isIdentityCMap');
+  mapCidRange(low, high, dstLow) {
+    (0, _util.unreachable)('should not call mapCidRange');
+  }
+  mapBfRange(low, high, dstLow) {
+    (0, _util.unreachable)('should not call mapBfRange');
+  }
+  mapBfRangeToArray(low, high, array) {
+    (0, _util.unreachable)('should not call mapBfRangeToArray');
+  }
+  mapOne(src, dst) {
+    (0, _util.unreachable)('should not call mapCidOne');
+  }
+  lookup(code) {
+    return Number.isInteger(code) && code <= 0xffff ? code : undefined;
+  }
+  contains(code) {
+    return Number.isInteger(code) && code <= 0xffff;
+  }
+  forEach(callback) {
+    for (let i = 0; i <= 0xffff; i++) {
+      callback(i, i);
     }
-  };
-  return IdentityCMap;
-}();
+  }
+  charCodeOf(value) {
+    return Number.isInteger(value) && value <= 0xffff ? value : -1;
+  }
+  getMap() {
+    const map = new Array(0x10000);
+    for (let i = 0; i <= 0xffff; i++) {
+      map[i] = i;
+    }
+    return map;
+  }
+  get length() {
+    return 0x10000;
+  }
+  get isIdentityCMap() {
+    (0, _util.unreachable)('should not access .isIdentityCMap');
+  }
+}
 var BinaryCMapReader = function BinaryCMapReaderClosure() {
   function hexToInt(a, size) {
     var n = 0;
@@ -23887,24 +23839,34 @@ var Font = function FontClosure() {
           } else if (op === 0x2B && !tooComplexToFollowFunctions) {
             if (!inFDEF && !inELSE) {
               funcId = stack[stack.length - 1];
-              ttContext.functionsUsed[funcId] = true;
-              if (funcId in ttContext.functionsStackDeltas) {
-                stack.length += ttContext.functionsStackDeltas[funcId];
-              } else if (funcId in ttContext.functionsDefined && !functionsCalled.includes(funcId)) {
-                callstack.push({
-                  data,
-                  i,
-                  stackTop: stack.length - 1
-                });
-                functionsCalled.push(funcId);
-                pc = ttContext.functionsDefined[funcId];
-                if (!pc) {
-                  (0, _util.warn)('TT: CALL non-existent function');
-                  ttContext.hintsValid = false;
-                  return;
+              if (isNaN(funcId)) {
+                (0, _util.info)('TT: CALL empty stack (or invalid entry).');
+              } else {
+                ttContext.functionsUsed[funcId] = true;
+                if (funcId in ttContext.functionsStackDeltas) {
+                  let newStackLength = stack.length + ttContext.functionsStackDeltas[funcId];
+                  if (newStackLength < 0) {
+                    (0, _util.warn)('TT: CALL invalid functions stack delta.');
+                    ttContext.hintsValid = false;
+                    return;
+                  }
+                  stack.length = newStackLength;
+                } else if (funcId in ttContext.functionsDefined && !functionsCalled.includes(funcId)) {
+                  callstack.push({
+                    data,
+                    i,
+                    stackTop: stack.length - 1
+                  });
+                  functionsCalled.push(funcId);
+                  pc = ttContext.functionsDefined[funcId];
+                  if (!pc) {
+                    (0, _util.warn)('TT: CALL non-existent function');
+                    ttContext.hintsValid = false;
+                    return;
+                  }
+                  data = pc.data;
+                  i = pc.i;
                 }
-                data = pc.data;
-                i = pc.i;
               }
             }
           } else if (op === 0x2C && !tooComplexToFollowFunctions) {
@@ -34292,16 +34254,19 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
     }
     parse(code);
   }
-  var noop = '';
-  function CompiledFont(fontMatrix) {
-    this.compiledGlyphs = Object.create(null);
-    this.compiledCharCodeToGlyphId = Object.create(null);
-    this.fontMatrix = fontMatrix;
-  }
-  CompiledFont.prototype = {
+  const NOOP = [];
+  class CompiledFont {
+    constructor(fontMatrix) {
+      if (this.constructor === CompiledFont) {
+        (0, _util.unreachable)('Cannot initialize CompiledFont.');
+      }
+      this.fontMatrix = fontMatrix;
+      this.compiledGlyphs = Object.create(null);
+      this.compiledCharCodeToGlyphId = Object.create(null);
+    }
     getPathJs(unicode) {
-      var cmap = lookupCmap(this.cmap, unicode);
-      var fn = this.compiledGlyphs[cmap.glyphId];
+      const cmap = lookupCmap(this.cmap, unicode);
+      let fn = this.compiledGlyphs[cmap.glyphId];
       if (!fn) {
         fn = this.compileGlyph(this.glyphs[cmap.glyphId], cmap.glyphId);
         this.compiledGlyphs[cmap.glyphId] = fn;
@@ -34310,10 +34275,10 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
         this.compiledCharCodeToGlyphId[cmap.charCode] = cmap.glyphId;
       }
       return fn;
-    },
+    }
     compileGlyph(code, glyphId) {
       if (!code || code.length === 0 || code[0] === 14) {
-        return noop;
+        return NOOP;
       }
       let fontMatrix = this.fontMatrix;
       if (this.isCFFCIDFont) {
@@ -34325,7 +34290,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
           (0, _util.warn)('Invalid fd index for glyph index.');
         }
       }
-      var cmds = [];
+      const cmds = [];
       cmds.push({ cmd: 'save' });
       cmds.push({
         cmd: 'transform',
@@ -34338,45 +34303,43 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
       this.compileGlyphImpl(code, cmds, glyphId);
       cmds.push({ cmd: 'restore' });
       return cmds;
-    },
+    }
     compileGlyphImpl() {
       (0, _util.unreachable)('Children classes should implement this.');
-    },
+    }
     hasBuiltPath(unicode) {
-      var cmap = lookupCmap(this.cmap, unicode);
+      const cmap = lookupCmap(this.cmap, unicode);
       return this.compiledGlyphs[cmap.glyphId] !== undefined && this.compiledCharCodeToGlyphId[cmap.charCode] !== undefined;
     }
-  };
-  function TrueTypeCompiled(glyphs, cmap, fontMatrix) {
-    fontMatrix = fontMatrix || [0.000488, 0, 0, 0.000488, 0, 0];
-    CompiledFont.call(this, fontMatrix);
-    this.glyphs = glyphs;
-    this.cmap = cmap;
   }
-  _util.Util.inherit(TrueTypeCompiled, CompiledFont, {
+  class TrueTypeCompiled extends CompiledFont {
+    constructor(glyphs, cmap, fontMatrix) {
+      super(fontMatrix || [0.000488, 0, 0, 0.000488, 0, 0]);
+      this.glyphs = glyphs;
+      this.cmap = cmap;
+    }
     compileGlyphImpl(code, cmds) {
       compileGlyf(code, cmds, this);
     }
-  });
-  function Type2Compiled(cffInfo, cmap, fontMatrix, glyphNameMap) {
-    fontMatrix = fontMatrix || [0.001, 0, 0, 0.001, 0, 0];
-    CompiledFont.call(this, fontMatrix);
-    this.glyphs = cffInfo.glyphs;
-    this.gsubrs = cffInfo.gsubrs || [];
-    this.subrs = cffInfo.subrs || [];
-    this.cmap = cmap;
-    this.glyphNameMap = glyphNameMap || (0, _glyphlist.getGlyphsUnicode)();
-    this.gsubrsBias = this.gsubrs.length < 1240 ? 107 : this.gsubrs.length < 33900 ? 1131 : 32768;
-    this.subrsBias = this.subrs.length < 1240 ? 107 : this.subrs.length < 33900 ? 1131 : 32768;
-    this.isCFFCIDFont = cffInfo.isCFFCIDFont;
-    this.fdSelect = cffInfo.fdSelect;
-    this.fdArray = cffInfo.fdArray;
   }
-  _util.Util.inherit(Type2Compiled, CompiledFont, {
+  class Type2Compiled extends CompiledFont {
+    constructor(cffInfo, cmap, fontMatrix, glyphNameMap) {
+      super(fontMatrix || [0.001, 0, 0, 0.001, 0, 0]);
+      this.glyphs = cffInfo.glyphs;
+      this.gsubrs = cffInfo.gsubrs || [];
+      this.subrs = cffInfo.subrs || [];
+      this.cmap = cmap;
+      this.glyphNameMap = glyphNameMap || (0, _glyphlist.getGlyphsUnicode)();
+      this.gsubrsBias = this.gsubrs.length < 1240 ? 107 : this.gsubrs.length < 33900 ? 1131 : 32768;
+      this.subrsBias = this.subrs.length < 1240 ? 107 : this.subrs.length < 33900 ? 1131 : 32768;
+      this.isCFFCIDFont = cffInfo.isCFFCIDFont;
+      this.fdSelect = cffInfo.fdSelect;
+      this.fdArray = cffInfo.fdArray;
+    }
     compileGlyphImpl(code, cmds, glyphId) {
       compileCharString(code, cmds, this, glyphId);
     }
-  });
+  }
   return {
     create: function FontRendererFactory_create(font, seacAnalysisEnabled) {
       var data = new Uint8Array(font.data);
