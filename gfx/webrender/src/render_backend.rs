@@ -14,7 +14,7 @@ use api::channel::{MsgReceiver, Payload};
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
-use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
+use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
 use display_list_flattener::DisplayListFlattener;
@@ -89,9 +89,9 @@ struct Document {
 
     view: DocumentView,
 
-    /// The ClipScrollTree for this document which tracks SpatialNodes, ClipNodes, and ClipChains.
-    /// This is stored here so that we are able to preserve scrolling positions between rendered
-    /// frames.
+    /// The ClipScrollTree for this document which tracks both ClipScrollNodes and ClipChains.
+    /// This is stored here so that we are able to preserve scrolling positions between
+    /// rendered frames.
     clip_scroll_tree: ClipScrollTree,
 
     /// The id of the current frame.
@@ -313,7 +313,7 @@ impl Document {
     pub fn scroll_nearest_scrolling_ancestor(
         &mut self,
         scroll_location: ScrollLocation,
-        scroll_node_index: Option<SpatialNodeIndex>,
+        scroll_node_index: Option<ClipScrollNodeIndex>,
     ) -> bool {
         self.clip_scroll_tree.scroll_nearest_scrolling_ancestor(scroll_location, scroll_node_index)
     }

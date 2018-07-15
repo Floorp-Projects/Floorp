@@ -187,7 +187,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             }
             let tag_val = match axis.find(kCTFontVariationAxisIdentifierKey as *const _) {
                 Some(tag_ptr) => {
-                    let tag: CFNumber = TCFType::wrap_under_get_rule(*tag_ptr as CFNumberRef);
+                    let tag: CFNumber = TCFType::wrap_under_get_rule(tag_ptr as CFNumberRef);
                     if !tag.instance_of::<CFNumber>() {
                         return ct_font;
                     }
@@ -204,7 +204,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             };
 
             let name: CFString = match axis.find(kCTFontVariationAxisNameKey as *const _) {
-                Some(name_ptr) => TCFType::wrap_under_get_rule(*name_ptr as CFStringRef),
+                Some(name_ptr) => TCFType::wrap_under_get_rule(name_ptr as CFStringRef),
                 None => return ct_font,
             };
             if !name.instance_of::<CFString>() {
@@ -213,7 +213,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
 
             let min_val = match axis.find(kCTFontVariationAxisMinimumValueKey as *const _) {
                 Some(min_ptr) => {
-                    let min: CFNumber = TCFType::wrap_under_get_rule(*min_ptr as CFNumberRef);
+                    let min: CFNumber = TCFType::wrap_under_get_rule(min_ptr as CFNumberRef);
                     if !min.instance_of::<CFNumber>() {
                         return ct_font;
                     }
@@ -226,7 +226,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             };
             let max_val = match axis.find(kCTFontVariationAxisMaximumValueKey as *const _) {
                 Some(max_ptr) => {
-                    let max: CFNumber = TCFType::wrap_under_get_rule(*max_ptr as CFNumberRef);
+                    let max: CFNumber = TCFType::wrap_under_get_rule(max_ptr as CFNumberRef);
                     if !max.instance_of::<CFNumber>() {
                         return ct_font;
                     }
@@ -239,7 +239,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             };
             let def_val = match axis.find(kCTFontVariationAxisDefaultValueKey as *const _) {
                 Some(def_ptr) => {
-                    let def: CFNumber = TCFType::wrap_under_get_rule(*def_ptr as CFNumberRef);
+                    let def: CFNumber = TCFType::wrap_under_get_rule(def_ptr as CFNumberRef);
                     if !def.instance_of::<CFNumber>() {
                         return ct_font;
                     }

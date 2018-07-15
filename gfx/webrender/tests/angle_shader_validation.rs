@@ -18,11 +18,9 @@ struct Shader {
 
 const SHADER_PREFIX: &str = "#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024\n";
 
-const BRUSH_FEATURES: &[&str] = &["", "ALPHA_PASS"];
 const CLIP_FEATURES: &[&str] = &["TRANSFORM"];
 const CACHE_FEATURES: &[&str] = &[""];
-const GRADIENT_FEATURES: &[&str] = &[ "", "DITHERING", "ALPHA_PASS", "DITHERING,ALPHA_PASS" ];
-const PRIM_FEATURES: &[&str] = &[""];
+const PRIM_FEATURES: &[&str] = &["", "TRANSFORM"];
 
 const SHADERS: &[Shader] = &[
     // Clip mask shaders
@@ -45,7 +43,7 @@ const SHADERS: &[Shader] = &[
     // Cache shaders
     Shader {
         name: "cs_blur",
-        features: &[ "ALPHA_TARGET", "COLOR_TARGET" ],
+        features: CACHE_FEATURES,
     },
     Shader {
         name: "cs_border_segment",
@@ -58,43 +56,36 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "ps_text_run",
-        features: &[ "", "GLYPH_TRANSFORM" ],
+        features: PRIM_FEATURES,
     },
     // Brush shaders
     Shader {
         name: "brush_yuv_image",
-        features: &[
-            "",
-            "YUV_NV12",
-            "YUV_PLANAR",
-            "YUV_INTERLEAVED",
-            "TEXTURE_2D,YUV_NV12",
-            "YUV_NV12,ALPHA_PASS",
-        ],
+        features: &["", "YUV_NV12", "YUV_PLANAR", "YUV_INTERLEAVED", "YUV_NV12,TEXTURE_RECT"],
     },
     Shader {
         name: "brush_solid",
-        features: BRUSH_FEATURES,
+        features: &[],
     },
     Shader {
         name: "brush_image",
-        features: BRUSH_FEATURES,
+        features: &["", "ALPHA_PASS"],
     },
     Shader {
         name: "brush_blend",
-        features: BRUSH_FEATURES,
+        features: &[],
     },
     Shader {
         name: "brush_mix_blend",
-        features: BRUSH_FEATURES,
+        features: &[],
     },
     Shader {
         name: "brush_radial_gradient",
-        features: GRADIENT_FEATURES,
+        features: &[ "DITHERING" ],
     },
     Shader {
         name: "brush_linear_gradient",
-        features: GRADIENT_FEATURES,
+        features: &[],
     },
 ];
 
@@ -117,7 +108,7 @@ fn validate_shaders() {
             features.push_str(SHADER_PREFIX);
 
             for feature in config.split(",") {
-                features.push_str(&format!("#define WR_FEATURE_{}\n", feature));
+                features.push_str(&format!("#define WR_FEATURE_{}", feature));
             }
 
             let (vs, fs) =
