@@ -100,7 +100,7 @@ public:
   already_AddRefed<nsContentList>
   GetElementsByClassName(const nsAString& aClasses);
 
-  ~DocumentOrShadowRoot();
+  ~DocumentOrShadowRoot() = default;
 
   Element* GetPointerLockElement();
   Element* GetFullscreenElement();
