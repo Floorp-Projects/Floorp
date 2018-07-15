@@ -90,3 +90,6 @@ int abort() { return 0; }
 
 std::size_t strlen(const char *s);
 char *strncat(char *s1, const char *s2, std::size_t n);
+
+void free(void *ptr);
+void *malloc(std::size_t size);
