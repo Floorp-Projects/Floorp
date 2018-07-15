@@ -11,6 +11,8 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
+  - name: clang-analyzer-cplusplus.NewDelete
+    publish: !!bool yes
   - name: clang-analyzer-deadcode.DeadStores
     publish: !!bool yes
   - name: clang-analyzer-security.FloatLoopCounter
