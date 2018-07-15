@@ -1149,9 +1149,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
              "and decrement sRefreshDriverCount.");
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
-  mMostRecentTick = mMostRecentRefresh;
-  mNextThrottledFrameRequestTick = mMostRecentTick;
-  mNextRecomputeVisibilityTick = mMostRecentTick;
+  mNextThrottledFrameRequestTick = mMostRecentRefresh;
+  mNextRecomputeVisibilityTick = mMostRecentRefresh;
 
   ++sRefreshDriverCount;
 }
@@ -1819,9 +1818,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     return;
   }
 
-  TimeStamp previousRefresh = mMostRecentRefresh;
-
-  mMostRecentRefresh = aNowTime;
   mMostRecentRefreshEpochTime = aNowEpoch;
 
   if (IsWaitingForPaint(aNowTime)) {
@@ -1830,7 +1826,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     // and keep waiting.
     return;
   }
-  mMostRecentTick = aNowTime;
+
+  TimeStamp previousRefresh = mMostRecentRefresh;
+  mMostRecentRefresh = aNowTime;
+
   if (mRootRefresh) {
     mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
@@ -2272,10 +2271,10 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
   }
 
   if (mWaitingForTransaction) {
-    if (mSkippedPaints && aTime > (mMostRecentTick + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
+    if (mSkippedPaints && aTime > (mMostRecentRefresh + TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
       // XXX - Bug 1303369 - too many false positives.
       //gfxCriticalNote << "Refresh driver waiting for the compositor for "
-      //                << (aTime - mMostRecentTick).ToSeconds()
+      //                << (aTime - mMostRecentRefresh).ToSeconds()
       //                << " seconds.";
       mWarningThreshold *= 2;
     }
