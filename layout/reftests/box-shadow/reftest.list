@@ -15,13 +15,13 @@ fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,999) fuzzy-if(skiaContent,1,12) fuzzy-i
 
 fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),98,152) fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,19-19,50-50) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
-random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
-== boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
-random-if(d2d) fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+fuzzy-if(skiaContent,1,17) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
+fuzzy-if(skiaContent,1,17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
+random-if(d2d) fuzzy-if(skiaContent,1,212) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy-if(skiaContent,1,50) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
-random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
-random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
-random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
+random-if(d2d) fuzzy-if(skiaContent,1,14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+random-if(d2d) fuzzy-if(skiaContent,1,22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
+random-if(d2d) fuzzy-if(skiaContent,1,36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(2,440) fails-if(webrender) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html

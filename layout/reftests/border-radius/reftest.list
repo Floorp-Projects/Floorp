@@ -51,8 +51,8 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(skiaContent,1,77) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,97) == clipping-5-refi.html clipping-5-ref.html
 fuzzy-if(true,1,7) fuzzy-if(d2d,55,95) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
-fuzzy-if(Android,8,469) fuzzy-if(skiaContent,21,74) fuzzy-if(winWidget,144,335) fuzzy-if(webrender&&cocoaWidget,98-98,279-279) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical, bug 1392106
-fuzzy-if(true,2,29) fuzzy-if(d2d,46,71) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,28,96) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
+fuzzy-if(Android,8,469) fuzzy-if(skiaContent,21,76) fuzzy-if(winWidget,144,335) fuzzy-if(webrender&&cocoaWidget,98-98,279-279) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical, bug 1392106
+fuzzy-if(true,2,29) fuzzy-if(d2d,46,71) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,28,97) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) fuzzy-if(d2d,59,342) fuzzy-if(d3d11&&advancedLayers&&!d2d,30,3) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
@@ -78,7 +78,7 @@ fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 fuzzy(255,20) random-if(winWidget) fuzzy-if(skiaContent,255,610) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(d2d,98,157) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,59,145) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(d2d,98,157) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,59,146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
 == transforms-1.html transforms-1-ref.html
 
