@@ -87,3 +87,5 @@ int abort() { return 0; }
 #define assert(x)                                                              \
   if (!(x))                                                                    \
   (void)abort()
+
+char *strncat(char *s1, const char *s2, std::size_t n);
