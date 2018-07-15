@@ -36,6 +36,8 @@ clang_checkers:
     publish: !!bool yes
   - name: clang-analyzer-unix.cstring.BadSizeArg
     publish: !!bool yes
+  - name: clang-analyzer-unix.cstring.NullArg
+    publish: !!bool yes
   - name: misc-argument-comment
     publish: !!bool yes
   - name: misc-assert-side-effect
