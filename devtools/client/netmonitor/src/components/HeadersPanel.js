@@ -212,6 +212,7 @@ class HeadersPanel extends Component {
 
     if (status) {
       const statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
+      const inputWidth = statusText.length + 1;
       const toggleRawHeadersClassList = ["devtools-button", "raw-headers-button"];
       if (this.state.rawHeadersOpened) {
         toggleRawHeadersClassList.push("checked");
@@ -222,6 +223,13 @@ class HeadersPanel extends Component {
             className: "tabpanel-summary-label headers-summary-label",
           }, SUMMARY_STATUS),
           StatusCode({ item }),
+          input({
+            className: "tabpanel-summary-value textbox-input devtools-monospace"
+              + " status-text",
+            readOnly: true,
+            value: `${statusText}`,
+            size: `${inputWidth}`,
+          }),
           statusCodeDocURL ? MDNLink({
             url: statusCodeDocURL,
           }) : span({
