@@ -6,7 +6,9 @@
 
 #include "avcodec.h"
 
+typedef struct FFTContext FFTContext;
 typedef struct H264PredContext H264PredContext;
+typedef struct RDFTContext RDFTContext;
 typedef struct VideoDSPContext VideoDSPContext;
 typedef struct VP8DSPContext VP8DSPContext;
 typedef struct VP9DSPContext VP9DSPContext;
@@ -856,6 +858,11 @@ AVBitStreamFilter ff_noise_bsf;
 AVBitStreamFilter ff_remove_extradata_bsf;
 AVBitStreamFilter ff_text2movsub_bsf;
 
+void ff_fft_init_aarch64(FFTContext *s) {}
+void ff_fft_init_arm(FFTContext *s) {}
+void ff_fft_init_mips(FFTContext *s) {}
+void ff_fft_init_ppc(FFTContext *s) {}
+void ff_rdft_init_arm(RDFTContext *s) {}
 void ff_h264_pred_init_aarch64(H264PredContext *h, int codec_id,
                                const int bit_depth,
                                const int chroma_format_idc) {}
