@@ -1,4 +1,4 @@
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,4) pref(layout.css.shape-outside.enabled,true) == dynamic-shape-outside-1.html dynamic-shape-outside-1-ref.html
+fuzzy-if(skiaContent,1,161) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,161) pref(layout.css.shape-outside.enabled,true) == dynamic-shape-outside-1.html dynamic-shape-outside-1-ref.html
 
 == shape-outside-empty-circle-1.html shape-outside-empty-point-ref.html
 == shape-outside-empty-circle-2.html shape-outside-empty-circle-ref.html

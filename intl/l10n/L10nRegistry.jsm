@@ -1,6 +1,6 @@
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+const { MessageContext, FluentResource } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -76,10 +76,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
  * and will produce a new set of permutations placing the language pack provided resources
  * at the top.
  */
-
 const L10nRegistry = {
   sources: new Map(),
-  ctxCache: new Map(),
   bootstrap: null,
 
   /**
@@ -95,8 +93,29 @@ const L10nRegistry = {
       await this.bootstrap;
     }
     const sourcesOrder = Array.from(this.sources.keys()).reverse();
+    const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
     for (const locale of requestedLangs) {
-      yield * generateContextsForLocale(locale, sourcesOrder, resourceIds);
+      for (const fetchPromises of generateResourceSetsForLocale(locale, sourcesOrder, resourceIds)) {
+        const ctx = await Promise.all(fetchPromises).then(
+          dataSets => {
+            const ctx = new MessageContext(locale, {
+              ...MSG_CONTEXT_OPTIONS,
+              transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
+            });
+            for (const data of dataSets) {
+              if (data === null) {
+                return null;
+              }
+              ctx.addResource(data);
+            }
+            return ctx;
+          },
+          () => null
+        );
+        if (ctx !== null) {
+          yield ctx;
+        }
+      }
     }
   },
 
@@ -126,7 +145,6 @@ const L10nRegistry = {
       throw new Error(`Source with name "${source.name}" is not registered.`);
     }
     this.sources.set(source.name, source);
-    this.ctxCache.clear();
     Services.locale.setAvailableLocales(this.getAvailableLocales());
   },
 
@@ -159,21 +177,6 @@ const L10nRegistry = {
 };
 
 /**
- * A helper function for generating unique context ID used for caching
- * MessageContexts.
- *
- * @param {String} locale
- * @param {Array} sourcesOrder
- * @param {Array} resourceIds
- * @returns {String}
- */
-function generateContextID(locale, sourcesOrder, resourceIds) {
-  const sources = sourcesOrder.join(",");
-  const ids = resourceIds.join(",");
-  return `${locale}|${sources}|${ids}`;
-}
-
-/**
  * This function generates an iterator over MessageContexts for a single locale
  * for a given list of resourceIds for all possible combinations of sources.
  *
@@ -187,7 +190,7 @@ function generateContextID(locale, sourcesOrder, resourceIds) {
  * @param {Array} [resolvedOrder]
  * @returns {AsyncIterator<MessageContext>}
  */
-async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
+function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
   const resolvedLength = resolvedOrder.length;
   const resourcesLength = resourceIds.length;
 
@@ -208,14 +211,11 @@ async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, res
     // If the number of resolved sources equals the number of resources,
     // create the right context and return it if it loads.
     if (resolvedLength + 1 === resourcesLength) {
-      const ctx = await generateContext(locale, order, resourceIds);
-      if (ctx !== null) {
-        yield ctx;
-      }
+      yield generateResourceSet(locale, order, resourceIds);
     } else if (resolvedLength < resourcesLength) {
       // otherwise recursively load another generator that walks over the
       // partially resolved list of sources.
-      yield * generateContextsForLocale(locale, sourcesOrder, resourceIds, order);
+      yield * generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, order);
     }
   }
 }
@@ -346,35 +346,10 @@ const PSEUDO_STRATEGIES = {
  * @param {Array} resourceIds
  * @returns {Promise<MessageContext>}
  */
-function generateContext(locale, sourcesOrder, resourceIds) {
-  const ctxId = generateContextID(locale, sourcesOrder, resourceIds);
-  if (L10nRegistry.ctxCache.has(ctxId)) {
-    return L10nRegistry.ctxCache.get(ctxId);
-  }
-
-  const fetchPromises = resourceIds.map((resourceId, i) => {
+function generateResourceSet(locale, sourcesOrder, resourceIds) {
+  return resourceIds.map((resourceId, i) => {
     return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId);
   });
-
-  const ctxPromise = Promise.all(fetchPromises).then(
-    dataSets => {
-      const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
-      const ctx = new MessageContext(locale, {
-        ...MSG_CONTEXT_OPTIONS,
-        transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
-      });
-      for (const data of dataSets) {
-        if (data === null) {
-          return null;
-        }
-        ctx.addMessages(data);
-      }
-      return ctx;
-    },
-    () => null
-  );
-  L10nRegistry.ctxCache.set(ctxId, ctxPromise);
-  return ctxPromise;
 }
 
 /**
@@ -454,7 +429,9 @@ class FileSource {
       if (this.cache[fullPath] === false) {
         return Promise.reject(`The source has no resources for path "${fullPath}"`);
       }
-      if (this.cache[fullPath].then) {
+      // `true` means that the file is indexed, but hasn't
+      // been fetched yet.
+      if (this.cache[fullPath] !== true) {
         return this.cache[fullPath];
       }
     } else if (this.indexed) {
@@ -462,7 +439,7 @@ class FileSource {
       }
     return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
       data => {
-        return this.cache[fullPath] = data;
+        return this.cache[fullPath] = FluentResource.fromString(data);
       },
       err => {
         this.cache[fullPath] = false;
