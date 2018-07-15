@@ -4767,6 +4767,52 @@ nsDisplayBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
 }
 
 void
+nsDisplayBackgroundColor::PaintWithClip(nsDisplayListBuilder* aBuilder,
+                                        gfxContext* aCtx,
+                                        const DisplayItemClip& aClip)
+{
+  MOZ_ASSERT(mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip != StyleGeometryBox::Text);
+  if (mColor == Color()) {
+    return;
+  }
+
+  nsRect fillRect = mBackgroundRect;
+  if (aClip.HasClip()) {
+    fillRect.IntersectRect(fillRect, aClip.GetClipRect());
+  }
+
+  DrawTarget* dt = aCtx->GetDrawTarget();
+  int32_t A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect bounds = ToRect(nsLayoutUtils::RectToGfxRect(fillRect, A2D));
+  MaybeSnapToDevicePixels(bounds, *dt);
+  ColorPattern fill(ToDeviceColor(mColor));
+
+  if (aClip.GetRoundedRectCount()) {
+    MOZ_ASSERT(aClip.GetRoundedRectCount() == 1);
+
+    AutoTArray<DisplayItemClip::RoundedRect, 1> roundedRect;
+    aClip.AppendRoundedRects(&roundedRect);
+
+    bool pushedClip = false;
+    if (!fillRect.Contains(roundedRect[0].mRect)) {
+      dt->PushClipRect(bounds);
+      pushedClip = true;
+    }
+
+    RefPtr<Path> path = aClip.MakeRoundedRectPath(*aCtx->GetDrawTarget(),
+                                                  A2D,
+                                                  roundedRect[0]);
+    dt->Fill(path, fill);
+    if (pushedClip) {
+      dt->PopClip();
+    }
+  } else {
+    dt->FillRect(bounds, fill);
+  }
+}
+
+
+void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 gfxContext* aCtx)
 {

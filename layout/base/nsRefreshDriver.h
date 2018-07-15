@@ -513,7 +513,6 @@ private:
   // The number is doubled every time the threshold is hit.
   uint64_t mWarningThreshold;
   mozilla::TimeStamp mMostRecentRefresh;
-  mozilla::TimeStamp mMostRecentTick;
   mozilla::TimeStamp mTickStart;
   mozilla::TimeStamp mNextThrottledFrameRequestTick;
   mozilla::TimeStamp mNextRecomputeVisibilityTick;

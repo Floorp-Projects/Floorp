@@ -2466,11 +2466,24 @@ public:
   }
 
   /**
+   * Returns true if this item supports PaintWithClip, where the clipping
+   * is used directly as the primitive geometry instead of needing an explicit
+   * clip.
+   */
+  virtual bool CanPaintWithClip(const DisplayItemClip& aClip) { return false; }
+
+  /**
    * Actually paint this item to some rendering context.
    * Content outside mVisibleRect need not be painted.
    * aCtx must be set up as for nsDisplayList::Paint.
    */
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {}
+
+  /**
+   * Same as Paint, except provides a clip to use the geometry to draw with.
+   * Must not be called unless CanPaintWithClip returned true.
+   */
+  virtual void PaintWithClip(nsDisplayListBuilder* aBuilder, gfxContext* aCtx, const DisplayItemClip& aClip) {}
 
 #ifdef MOZ_DUMP_PAINTING
   /**
@@ -4413,6 +4426,7 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  virtual void PaintWithClip(nsDisplayListBuilder* aBuilder, gfxContext* aCtx, const DisplayItemClip& aClip) override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4437,6 +4451,18 @@ public:
   {
     *aSnap = true;
     return mBackgroundRect;
+  }
+
+  virtual bool CanPaintWithClip(const DisplayItemClip& aClip) override
+  {
+    mozilla::StyleGeometryBox clip = mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip;
+    if (clip == mozilla::StyleGeometryBox::Text) {
+      return false;
+    }
+    if (aClip.GetRoundedRectCount() > 1) {
+      return false;
+    }
+    return true;
   }
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override

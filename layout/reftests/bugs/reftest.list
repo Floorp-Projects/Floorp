@@ -1440,7 +1440,7 @@ fuzzy-if(skiaContent,1,3) == 521525-1.html 521525-1-ref.html
 == 523096-1.html 523096-1-ref.html
 random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 524175-1.html 524175-1-ref.html
-fuzzy-if(skiaContent,1,50) == 526463-1.html 526463-1-ref.html
+fuzzy-if(skiaContent,5,50) == 526463-1.html 526463-1-ref.html
 == 527464-1.html 527464-ref.html
 == 528038-1a.html 528038-1-ref.html
 == 528038-1b.html 528038-1-ref.html
@@ -2070,7 +2070,7 @@ test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
 fuzzy(74,2234) random-if(webrender) == 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,66,574) fuzzy-if(d2d,89,777) fuzzy-if(!Android&&!d2d,1,31219) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(Android,66,574) fuzzy-if(d2d,89,777) fuzzy-if(!Android&&!d2d,1,31341) == 1425243-2.html 1425243-2-ref.html
 == 1430869.html 1430869-ref.html
 == 1432541.html 1432541-ref.html
 pref(layout.css.moz-document.url-prefix-hack.enabled,true) == 1446470.html 1035091-ref.html
