@@ -13,6 +13,8 @@ clang_checkers:
     publish: !!bool no
   - name: clang-analyzer-cplusplus.NewDelete
     publish: !!bool yes
+  - name: clang-analyzer-cplusplus.NewDeleteLeaks
+    publish: !!bool yes
   - name: clang-analyzer-deadcode.DeadStores
     publish: !!bool yes
   - name: clang-analyzer-security.FloatLoopCounter
