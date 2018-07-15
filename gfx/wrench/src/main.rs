@@ -63,7 +63,6 @@ mod cgfont_to_data;
 use binary_frame_reader::BinaryFrameReader;
 use gleam::gl;
 use glutin::GlContext;
-use glutin::dpi::{LogicalPosition, LogicalSize};
 use perf::PerfHarness;
 use png::save_flipped;
 use rawtest::RawtestHarness;
@@ -184,39 +183,35 @@ impl WindowWrapper {
     fn get_inner_size(&self) -> DeviceUintSize {
         //HACK: `winit` needs to figure out its hidpi story...
         #[cfg(target_os = "macos")]
-        fn inner_size(window: &winit::Window) -> LogicalSize {
-            let LogicalSize { width, height } = window.get_inner_size().unwrap();
-            let factor = window.get_hidpi_factor();
-            LogicalSize::new(width * factor, height * factor)
+        fn inner_size(window: &winit::Window) -> (u32, u32) {
+            let (w, h) = window.get_inner_size().unwrap();
+            let factor = window.hidpi_factor();
+            ((w as f32 * factor) as _, (h as f32 * factor) as _)
         }
         #[cfg(not(target_os = "macos"))]
-        fn inner_size(window: &winit::Window) -> LogicalSize {
+        fn inner_size(window: &winit::Window) -> (u32, u32) {
             window.get_inner_size().unwrap()
         }
-        let LogicalSize { width, height } = match *self {
+        let (w, h) = match *self {
             WindowWrapper::Window(ref window, _) => inner_size(window.window()),
             WindowWrapper::Angle(ref window, ..) => inner_size(window),
-            WindowWrapper::Headless(ref context, _) => LogicalSize::new(context.width as f64, context.height as f64),
+            WindowWrapper::Headless(ref context, _) => (context.width, context.height),
         };
-        DeviceUintSize::new(width as u32, height as u32)
+        DeviceUintSize::new(w, h)
     }
 
     fn hidpi_factor(&self) -> f32 {
         match *self {
-            WindowWrapper::Window(ref window, _) => window.get_hidpi_factor() as f32,
-            WindowWrapper::Angle(ref window, ..) => window.get_hidpi_factor() as f32,
+            WindowWrapper::Window(ref window, _) => window.hidpi_factor(),
+            WindowWrapper::Angle(ref window, ..) => window.hidpi_factor(),
             WindowWrapper::Headless(_, _) => 1.0,
         }
     }
 
     fn resize(&mut self, size: DeviceUintSize) {
         match *self {
-            WindowWrapper::Window(ref mut window, _) => {
-                window.set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
-            },
-            WindowWrapper::Angle(ref mut window, ..) => {
-                window.set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
-            },
+            WindowWrapper::Window(ref mut window, _) => window.set_inner_size(size.width, size.height),
+            WindowWrapper::Angle(ref mut window, ..) => window.set_inner_size(size.width, size.height),
             WindowWrapper::Headless(_, _) => unimplemented!(), // requites Glutin update
         }
     }
@@ -264,7 +259,7 @@ fn make_window(
             let window_builder = winit::WindowBuilder::new()
                 .with_title("WRench")
                 .with_multitouch()
-                .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
+                .with_dimensions(size.width, size.height);
 
             let init = |context: &glutin::GlContext| {
                 unsafe {
@@ -588,7 +583,7 @@ fn render<'a>(
                 winit::WindowEvent::Focused(..) => {
                     do_render = true;
                 }
-                winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
+                winit::WindowEvent::CursorMoved { position: (x, y), .. } => {
                     cursor_position = WorldPoint::new(x as f32, y as f32);
                     do_render = true;
                 }

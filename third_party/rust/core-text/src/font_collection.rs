@@ -9,7 +9,7 @@
 
 use font_descriptor;
 use font_descriptor::{CTFontDescriptor, CTFontDescriptorCreateMatchingFontDescriptors};
-use font_manager::{CTFontManagerCopyAvailableFontFamilyNames, CTFontManagerCopyAvailablePostScriptNames};
+use font_manager::CTFontManagerCopyAvailableFontFamilyNames;
 
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFTypeID, TCFType};
@@ -19,6 +19,7 @@ use core_foundation::set::CFSet;
 use core_foundation::string::{CFString, CFStringRef};
 
 use libc::c_void;
+use std::ptr;
 
 #[repr(C)]
 pub struct __CTFontCollection(c_void);
@@ -72,7 +73,7 @@ pub fn create_for_family(family: &str) -> Option<CTFontCollection> {
         let family_attr = CFString::wrap_under_get_rule(kCTFontFamilyNameAttribute);
         let family_name: CFString = family.parse().unwrap();
         let specified_attrs = CFDictionary::from_CFType_pairs(&[
-            (family_attr.clone(), family_name.as_CFType())
+            (family_attr.as_CFType(), family_name.as_CFType())
         ]);
 
         let wildcard_desc: CTFontDescriptor =
@@ -81,7 +82,7 @@ pub fn create_for_family(family: &str) -> Option<CTFontCollection> {
         let matched_descs = CTFontDescriptorCreateMatchingFontDescriptors(
                 wildcard_desc.as_concrete_TypeRef(),
                 mandatory_attrs.as_concrete_TypeRef());
-        if matched_descs.is_null() {
+        if matched_descs == ptr::null() {
             return None;
         }
         let matched_descs = CFArray::wrap_under_create_rule(matched_descs);
@@ -94,12 +95,6 @@ pub fn create_for_family(family: &str) -> Option<CTFontCollection> {
 pub fn get_family_names() -> CFArray<CFString> {
     unsafe {
         CFArray::wrap_under_create_rule(CTFontManagerCopyAvailableFontFamilyNames())
-    }
-}
-
-pub fn get_postscript_names() -> CFArray<CFString> {
-    unsafe {
-        CFArray::wrap_under_create_rule(CTFontManagerCopyAvailablePostScriptNames())
     }
 }
 
