@@ -237,6 +237,7 @@
 
 .network-monitor .headers-summary .status-text {
     width: auto!important;
+    margin-left: 4px;
 }
 
 /* Response tabpanel */
