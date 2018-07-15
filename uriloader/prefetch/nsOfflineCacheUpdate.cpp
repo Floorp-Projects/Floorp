@@ -13,9 +13,9 @@
 #include "nsICachingChannel.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/OfflineResourceListBinding.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMOfflineResourceList.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -2285,13 +2285,13 @@ nsOfflineCacheUpdate::GetStatus(uint16_t *aStatus)
 {
     switch (mState) {
     case STATE_CHECKING :
-        *aStatus = nsIDOMOfflineResourceList::CHECKING;
+        *aStatus = dom::OfflineResourceList_Binding::CHECKING;
         return NS_OK;
     case STATE_DOWNLOADING :
-        *aStatus = nsIDOMOfflineResourceList::DOWNLOADING;
+        *aStatus = dom::OfflineResourceList_Binding::DOWNLOADING;
         return NS_OK;
     default :
-        *aStatus = nsIDOMOfflineResourceList::IDLE;
+        *aStatus = dom::OfflineResourceList_Binding::IDLE;
         return NS_OK;
     }
 

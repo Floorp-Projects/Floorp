@@ -4,7 +4,7 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
@@ -12,13 +12,17 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
+import android.os.Looper
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
+
+import kotlin.concurrent.thread
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -43,13 +47,13 @@ class ContentDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int,
-                                       response: GeckoResponse<Boolean>) {
-                response.respond(false)
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                return null
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
             }
 
             @AssertCalled(count = 1)
@@ -154,5 +158,30 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Scroll position should match",
                 mainSession.evaluateJS("window.scrollY") as Double,
                 closeTo(100.0, .5))
+    }
+
+    @Test fun saveStateSync() {
+        val startUri = createTestUrl(SAVE_STATE_PATH)
+        mainSession.loadUri(startUri)
+        sessionRule.waitForPageStop()
+
+        var worker = thread {
+            Looper.prepare()
+
+            var thread = Thread.currentThread()
+            mainSession.saveState().then<Void> { _: GeckoSession.SessionState? ->
+                assertThat("We should be on the worker thread", Thread.currentThread(),
+                        equalTo(thread))
+                Looper.myLooper().quit()
+                null
+            }
+
+            Looper.loop()
+        }
+
+        worker.join(sessionRule.timeoutMillis)
+        if (worker.isAlive) {
+            throw UiThreadUtils.TimeoutException("Timed out")
+        }
     }
 }
