@@ -1,0 +1,1 @@
+"[[\"warning\", \"Potential buffer overflow. Replace with 'sizeof(dest) - strlen(dest) - 1' or use a safer 'strlcat' API\", \"clang-analyzer-unix.cstring.BadSizeArg\"]]"
