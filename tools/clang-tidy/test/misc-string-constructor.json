@@ -1,0 +1,1 @@
+"[[\"warning\", \"string constructor parameters are probably swapped; expecting string(count, character)\", \"misc-string-constructor\"], [\"warning\", \"length is bigger then string literal size\", \"misc-string-constructor\"], [\"warning\", \"constructor creating an empty string\", \"misc-string-constructor\"]]"
