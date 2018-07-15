@@ -12,17 +12,17 @@
 
 [package]
 name = "core-graphics"
-version = "0.14.0"
+version = "0.13.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Core Graphics for OS X"
 homepage = "https://github.com/servo/core-graphics-rs"
 license = "MIT / Apache-2.0"
-repository = "https://github.com/servo/core-foundation-rs"
+repository = "https://github.com/servo/core-graphics-rs"
 [dependencies.bitflags]
 version = "1.0"
 
 [dependencies.core-foundation]
-version = "0.6"
+version = "0.5"
 
 [dependencies.foreign-types]
 version = "0.3.0"
