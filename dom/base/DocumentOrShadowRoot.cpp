@@ -25,13 +25,6 @@ DocumentOrShadowRoot::DocumentOrShadowRoot(nsIDocument& aDoc)
   , mKind(Kind::Document)
 {}
 
-DocumentOrShadowRoot::~DocumentOrShadowRoot()
-{
-  for (StyleSheet* sheet : mStyleSheets) {
-    sheet->ClearAssociatedDocumentOrShadowRoot();
-  }
-}
-
 StyleSheetList&
 DocumentOrShadowRoot::EnsureDOMStyleSheets()
 {
