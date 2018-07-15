@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<title>Bug 1472465</title>
+<style type="text/css">
+#container {
+  border: 1px solid;
+  width: 500px;
+  height: 500px;
+  overflow: hidden;
+}
+
+#box {
+  opacity: 0.1;
+  position: absolute;
+  top: 100px
+  left: 100px;
+  z-index:1;
+  background-color: green;
+  width: 100px;
+  height: 100px;
+}
+
+#bg {
+  position:relative;
+  width: 2500px;
+  height: 2500px;
+  left: 300px;
+  top: 300px;
+}
+</style>
+
+<script type="text/javascript">
+function changeOpacity() {
+  var box = document.querySelector("#box");
+  box.style.opacity = "1.0";
+
+  document.documentElement.removeAttribute("class");
+}
+
+function moveBg() {
+  var bg = document.querySelector("#bg");
+  bg.style.top = "0px";
+  bg.style.left = "0px";
+
+  setTimeout(changeOpacity, 200);
+}
+
+function doTest() {
+  moveBg();
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+
+</head>
+<body>
+<div id="container">
+    <div id="bg">
+        <div id="box">
+          Text to force layer state to inactive, that will get flattened.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
