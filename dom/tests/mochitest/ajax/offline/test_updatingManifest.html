@@ -156,7 +156,7 @@ function implicitCached()
       "https://example.com/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
 
   // Cache object status
-  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.IDLE,
+  OfflineTest.is(applicationCache.status, OfflineResourceList.IDLE,
       "we have associated application cache (1)");
 
   OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1");
@@ -210,7 +210,7 @@ function manifestUpdated()
         "https://example.com/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
 
     // Cache object status
-    OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
+    OfflineTest.is(applicationCache.status, OfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (2)");
 
     var entries = [
@@ -259,7 +259,7 @@ function manifestUpdated()
         "https://example.com/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
 
     // Cache object status
-    OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
+    OfflineTest.is(applicationCache.status, OfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (3)");
 
     OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1 because cache was not swapped");
@@ -303,10 +303,10 @@ function manifestNoUpdate()
   OfflineTest.ok(gStep == 3, "Got manifestNoUpdate in step 3, gStep=" + gStep);
   ++gStep;
 
-  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
+  OfflineTest.is(applicationCache.status, OfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (4)");
   applicationCache.swapCache();
-  OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.IDLE,
+  OfflineTest.is(applicationCache.status, OfflineResourceList.IDLE,
         "we have associated application cache (4)");
 
   gGotFrameVersion = 0;

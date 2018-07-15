@@ -6,6 +6,7 @@
 package org.mozilla.geckoview.test.util
 
 import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 
 import android.view.inputmethod.CursorAnchorInfo
@@ -53,13 +54,12 @@ class Callbacks private constructor() {
         }
 
         override fun onLoadRequest(session: GeckoSession, uri: String, where: Int,
-                                   flags: Int,
-                                   response: GeckoResponse<Boolean>) {
-            response.respond(false)
+                                   flags: Int): GeckoResult<Boolean>? {
+            return null
         }
 
-        override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-            response.respond(null)
+        override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+            return null;
         }
     }
 

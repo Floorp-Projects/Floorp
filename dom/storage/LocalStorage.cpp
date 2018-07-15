@@ -134,7 +134,7 @@ LocalStorage::SetItem(const nsAString& aKey, const nsAString& aData,
   }
 
   if (!aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION)) {
-    BroadcastChangeNotification(aKey, old, aData);
+    OnChange(aKey, old, aData);
   }
 }
 
@@ -154,7 +154,7 @@ LocalStorage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
   }
 
   if (!aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION)) {
-    BroadcastChangeNotification(aKey, old, VoidString());
+    OnChange(aKey, old, VoidString());
   }
 }
 
@@ -172,47 +172,24 @@ LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
   }
 
   if (!aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION)) {
-    BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
+    OnChange(VoidString(), VoidString(), VoidString());
   }
 }
 
 void
-LocalStorage::BroadcastChangeNotification(const nsAString& aKey,
-                                          const nsAString& aOldValue,
-                                          const nsAString& aNewValue)
+LocalStorage::OnChange(const nsAString& aKey,
+                       const nsAString& aOldValue,
+                       const nsAString& aNewValue)
 {
-  if (Principal()) {
-    // We want to send a message to the parent in order to broadcast the
-    // StorageEvent correctly to any child process.
-
-    PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
-    MOZ_ASSERT(actor);
-
-    PrincipalInfo principalInfo;
-    nsresult rv = PrincipalToPrincipalInfo(Principal(), &principalInfo);
-    if (!NS_WARN_IF(NS_FAILED(rv))) {
-      Unused << NS_WARN_IF(!actor->SendBroadcastLocalStorageChange(
-        mDocumentURI, nsString(aKey), nsString(aOldValue), nsString(aNewValue),
-        principalInfo, mIsPrivate));
-    }
-  }
-
-  DispatchStorageEvent(mDocumentURI, aKey, aOldValue, aNewValue,
-                       Principal(), mIsPrivate, this, false);
-}
-
-/* static */ void
-LocalStorage::DispatchStorageEvent(const nsAString& aDocumentURI,
-                                   const nsAString& aKey,
-                                   const nsAString& aOldValue,
-                                   const nsAString& aNewValue,
-                                   nsIPrincipal* aPrincipal,
-                                   bool aIsPrivate,
-                                   Storage* aStorage,
-                                   bool aImmediateDispatch)
-{
-  NotifyChange(aStorage, aPrincipal, aKey, aOldValue, aNewValue,
-               u"localStorage", aDocumentURI, aIsPrivate, aImmediateDispatch);
+  NotifyChange(/* aStorage */ this,
+               Principal(),
+               aKey,
+               aOldValue,
+               aNewValue,
+               /* aStorageType */ u"localStorage",
+               mDocumentURI,
+               mIsPrivate,
+               /* aImmediateDispatch */ false);
 }
 
 void

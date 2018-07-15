@@ -39,11 +39,44 @@ class Pref;
 class PrefValue;
 } // namespace dom
 
+namespace ipc {
+class FileDescriptor;
+} // namespace ipc
+
 struct PrefsSizes;
 
+// Xlib.h defines Bool as a macro constant. Don't try to define this enum if
+// it's already been included.
+#ifndef Bool
+
+// Keep this in sync with PrefType in parser/src/lib.rs.
+enum class PrefType : uint8_t
+{
+  None = 0, // only used when neither the default nor user value is set
+  String = 1,
+  Int = 2,
+  Bool = 3,
+};
+
+#endif
+
 #ifdef XP_UNIX
+// We need to send two shared memory descriptors to every child process:
+//
+// 1) A read-only/write-protected snapshot of the initial state of the
+//    preference database. This memory is shared between all processes, and
+//    therefore cannot be modified once it has been created.
+//
+// 2) A set of changes on top of the snapshot, containing the current values of
+//    all preferences which have changed since it was created.
+//
+// Since the second set will be different for every process, and the first set
+// cannot be modified, it is unfortunately not possible to combine them into a
+// single file descriptor.
+//
 // XXX: bug 1440207 is about improving how fixed fds such as this are used.
 static const int kPrefsFileDescriptor = 8;
+static const int kPrefMapFileDescriptor = 9;
 #endif
 
 // Keep this in sync with PrefType in parser/src/lib.rs.
@@ -480,6 +513,9 @@ public:
   // prefs in bulk from the parent process, via shared memory.
   static void SerializePreferences(nsCString& aStr);
   static void DeserializePreferences(char* aStr, size_t aPrefsLen);
+
+  static mozilla::ipc::FileDescriptor EnsureSnapshot(size_t* aSize);
+  static void InitSnapshot(const mozilla::ipc::FileDescriptor&, size_t aSize);
 
   // When a single pref is changed in the parent process, these methods are
   // used to pass the update to content processes.

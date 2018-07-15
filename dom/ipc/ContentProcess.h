@@ -50,8 +50,10 @@ private:
 };
 
 #ifdef ANDROID
-// Android doesn't use -prefsHandle, it gets that FD another way.
+// Android doesn't use -prefsHandle or -prefMapHandle. It gets those FDs
+// another way.
 void SetPrefsFd(int aFd);
+void SetPrefMapFd(int aFd);
 #endif
 
 } // namespace dom

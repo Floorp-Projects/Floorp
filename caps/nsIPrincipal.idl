@@ -320,6 +320,12 @@ interface nsIPrincipal : nsISerializable
      * Returns true iff this is the system principal.
      */
     [infallible] readonly attribute boolean isSystemPrincipal;
+
+    /**
+     * Returns true iff the principal is either an addon principal or
+     * an expanded principal, which contains at least one addon principal.
+     */
+    [infallible] readonly attribute boolean isAddonOrExpandedAddonPrincipal;
 };
 
 /**

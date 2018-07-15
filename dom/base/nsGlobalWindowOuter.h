@@ -61,7 +61,6 @@ class nsIBaseWindow;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
-class nsIDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
 class nsIJSID;

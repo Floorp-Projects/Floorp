@@ -48,7 +48,7 @@ class AutoLockMonitor : public LockGuard<Mutex>
     { }
 
     bool isFor(Monitor& other) const {
-        return monitor.lock_ == other.lock_;
+        return &monitor.lock_ == &other.lock_;
     }
 
     void wait(ConditionVariable& condVar) {
@@ -93,7 +93,7 @@ class AutoUnlockMonitor
     }
 
     bool isFor(Monitor& other) const {
-        return monitor.lock_ == other.lock_;
+        return &monitor.lock_ == &other.lock_;
     }
 };
 

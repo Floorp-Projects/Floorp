@@ -308,6 +308,10 @@ public class CrashReporterService extends IntentService {
 
             OutputStream os = new GZIPOutputStream(conn.getOutputStream());
             for (String key : extras.keySet()) {
+                if (key.equals(PAGE_URL_KEY)) {
+                    continue;
+                }
+
                 if (!key.equals(SERVER_URL_KEY) && !key.equals(NOTES_KEY)) {
                     sendPart(os, boundary, key, extras.get(key));
                 }

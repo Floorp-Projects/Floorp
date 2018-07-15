@@ -196,6 +196,8 @@ public:
   // Check whether shadow DOM is enabled for aGlobal.
   static bool IsShadowDOMEnabled(JSContext* aCx, JSObject* aGlobal);
   // Check whether shadow DOM is enabled for the document this node belongs to.
+  // Same as above, but also checks that the caller is either chrome or some addon.
+  static bool IsShadowDOMEnabledAndCallerIsChromeOrAddon(JSContext* aCx, JSObject* aObject);
   static bool IsShadowDOMEnabled(const nsINode* aNode);
 
 public:

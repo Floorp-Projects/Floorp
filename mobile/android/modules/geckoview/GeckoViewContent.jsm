@@ -139,7 +139,13 @@ class GeckoViewContent extends GeckoViewModule {
           warn `Failed to save state due to missing callback`;
           return;
         }
-        this._saveStateCallbacks.get(aMsg.data.id).onSuccess(aMsg.data.state);
+
+        const callback = this._saveStateCallbacks.get(aMsg.data.id);
+        if (aMsg.data.error) {
+          callback.onError(aMsg.data.error);
+        } else {
+          callback.onSuccess(aMsg.data.state);
+        }
         this._saveStateCallbacks.delete(aMsg.data.id);
         break;
     }

@@ -18,10 +18,11 @@
  * https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
  */
 
-interface ApplicationCache;
 interface IID;
 interface nsIBrowserDOMWindow;
 interface XULControllers;
+
+typedef OfflineResourceList ApplicationCache;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 [PrimaryGlobal, LegacyUnenumerableNamedProperties, NeedResolve]
