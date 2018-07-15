@@ -4654,7 +4654,7 @@ class PDFHistory {
     if (!this.initialized) {
       return;
     }
-    if (namedDest && typeof namedDest !== 'string' || !(explicitDest instanceof Array) || !(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.linkService.pagesCount)) {
+    if (namedDest && typeof namedDest !== 'string' || !Array.isArray(explicitDest) || !(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.linkService.pagesCount)) {
       console.error('PDFHistory.push: Invalid parameters.');
       return;
     }
@@ -4891,7 +4891,7 @@ function isDestArraysEqual(firstDest, secondDest) {
     if (typeof first !== typeof second) {
       return false;
     }
-    if (first instanceof Array || second instanceof Array) {
+    if (Array.isArray(first) || Array.isArray(second)) {
       return false;
     }
     if (first !== null && typeof first === 'object' && second !== null) {
@@ -4907,7 +4907,7 @@ function isDestArraysEqual(firstDest, secondDest) {
     }
     return first === second || Number.isNaN(first) && Number.isNaN(second);
   }
-  if (!(firstDest instanceof Array && secondDest instanceof Array)) {
+  if (!(Array.isArray(firstDest) && Array.isArray(secondDest))) {
     return false;
   }
   if (firstDest.length !== secondDest.length) {
@@ -5033,7 +5033,7 @@ class PDFLinkService {
         explicitDest: dest
       });
     }).then(data => {
-      if (!(data.explicitDest instanceof Array)) {
+      if (!Array.isArray(data.explicitDest)) {
         console.error(`PDFLinkService.navigateTo: "${data.explicitDest}" is` + ` not a valid destination array, for dest="${dest}".`);
         return;
       }
@@ -5044,7 +5044,7 @@ class PDFLinkService {
     if (typeof dest === 'string') {
       return this.getAnchorUrl('#' + escape(dest));
     }
-    if (dest instanceof Array) {
+    if (Array.isArray(dest)) {
       let str = JSON.stringify(dest);
       return this.getAnchorUrl('#' + escape(str));
     }
@@ -5112,7 +5112,7 @@ class PDFLinkService {
       dest = unescape(hash);
       try {
         dest = JSON.parse(dest);
-        if (!(dest instanceof Array)) {
+        if (!Array.isArray(dest)) {
           dest = dest.toString();
         }
       } catch (ex) {}
@@ -5180,7 +5180,7 @@ class PDFLinkService {
   }
 }
 function isValidExplicitDestination(dest) {
-  if (!(dest instanceof Array)) {
+  if (!Array.isArray(dest)) {
     return false;
   }
   let destLength = dest.length,
@@ -5981,7 +5981,7 @@ class PDFThumbnailViewer {
     }
     if (!labels) {
       this._pageLabels = null;
-    } else if (!(labels instanceof Array && this.pdfDocument.numPages === labels.length)) {
+    } else if (!(Array.isArray(labels) && this.pdfDocument.numPages === labels.length)) {
       this._pageLabels = null;
       console.error('PDFThumbnailViewer_setPageLabels: Invalid page labels.');
     } else {
@@ -6755,7 +6755,7 @@ class BaseViewer {
     }
     if (!labels) {
       this._pageLabels = null;
-    } else if (!(labels instanceof Array && this.pdfDocument.numPages === labels.length)) {
+    } else if (!(Array.isArray(labels) && this.pdfDocument.numPages === labels.length)) {
       this._pageLabels = null;
       console.error(`${this._name}.setPageLabels: Invalid page labels.`);
     } else {
