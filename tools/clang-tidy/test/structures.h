@@ -46,11 +46,14 @@ public:
   size_t find (const char* s, size_t pos = 0) const;
   const T *c_str() const;
   _Type& assign(const T *s);
+  basic_string<T> &operator=(T ch);
   basic_string<T> *operator+=(const basic_string<T> &) {}
   friend basic_string<T> operator+(const basic_string<T> &, const basic_string<T> &) {}
 };
 typedef basic_string<char> string;
 typedef basic_string<wchar_t> wstring;
+
+string to_string(int value);
 
 template <typename T>
 struct default_delete {};
