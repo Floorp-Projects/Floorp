@@ -12,16 +12,16 @@
 
 [package]
 name = "core-text"
-version = "10.0.0"
+version = "9.2.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to the Core Text framework."
 license = "MIT/Apache-2.0"
-repository = "https://github.com/servo/core-foundation-rs"
+repository = "https://github.com/servo/core-text-rs"
 [dependencies.core-foundation]
-version = "0.6"
+version = "0.5"
 
 [dependencies.core-graphics]
-version = "0.14"
+version = "0.13"
 
 [dependencies.foreign-types]
 version = "0.3"
