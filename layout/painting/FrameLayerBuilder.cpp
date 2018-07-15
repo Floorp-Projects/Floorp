@@ -6404,11 +6404,15 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       tmpClip.RemoveRoundedCorners();
       clip = &tmpClip;
     }
+    bool itemPaintsOwnClip = false;
     if (clipTracker.HasClip(opacityNesting) != clip->HasClip() ||
         (clip->HasClip() && *clip != currentClip)) {
       clipTracker.PopClipIfNeeded(opacityNesting);
 
-      if (clip->HasClip()) {
+      if (item->CanPaintWithClip(*clip)) {
+        MOZ_ASSERT(!cdi.mInactiveLayerManager);
+        itemPaintsOwnClip = true;
+      } else if (clip->HasClip()) {
         currentClip = *clip;
         clipTracker.SaveClip(opacityNesting);
         currentClip.ApplyTo(aContext, appUnitsPerDevPixel);
@@ -6432,7 +6436,11 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       } else
 #endif
       {
-        item->Paint(aBuilder, aContext);
+        if (itemPaintsOwnClip) {
+          item->PaintWithClip(aBuilder, aContext, *clip);
+        } else {
+          item->Paint(aBuilder, aContext);
+        }
       }
     }
   }
