@@ -6,8 +6,7 @@
 
 from __future__ import absolute_import, print_function
 
-import BaseHTTPServer
-import SimpleHTTPServer
+
 import errno
 import logging
 import threading
@@ -15,15 +14,22 @@ import posixpath
 import socket
 import sys
 import os
-import urllib
-import urlparse
 import re
 import moznetwork
 import time
-from SocketServer import ThreadingMixIn
+
+from six import iteritems
+from six.moves.socketserver import ThreadingMixIn
+from six.moves.BaseHTTPServer import HTTPServer
+
+from six.moves.urllib.parse import (
+    urlsplit,
+    unquote,
+)
+from six.moves.SimpleHTTPServer import SimpleHTTPRequestHandler
 
 
-class EasyServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class EasyServer(ThreadingMixIn, HTTPServer):
     allow_reuse_address = True
     acceptable_errors = (errno.EPIPE, errno.ECONNABORTED)
 
@@ -50,7 +56,7 @@ class Request(object):
     def __init__(self, uri, headers, rfile=None):
         self.uri = uri
         self.headers = headers
-        parsed = urlparse.urlsplit(uri)
+        parsed = urlsplit(uri)
         for i, attr in enumerate(self.uri_attrs):
             setattr(self, attr, parsed[i])
         try:
@@ -63,7 +69,7 @@ class Request(object):
             self.body = None
 
 
-class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class RequestHandler(SimpleHTTPRequestHandler):
 
     docroot = os.getcwd()  # current working directory at time of import
     proxy_host_dirs = False
@@ -72,7 +78,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     request = None
 
     def __init__(self, *args, **kwargs):
-        SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
+        SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
         self.extensions_map['.svg'] = 'image/svg+xml'
 
     def _try_handler(self, method):
@@ -89,7 +95,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 (response_code, headerdict, data) = \
                     handler['function'](self.request, *m.groups())
                 self.send_response(response_code)
-                for (keyword, value) in headerdict.iteritems():
+                for (keyword, value) in iteritems(headerdict):
                     self.send_header(keyword, value)
                 self.end_headers()
                 self.wfile.write(data)
@@ -102,9 +108,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """Find the on-disk path to serve this request from,
         using self.path_mappings and self.docroot.
         Return (url_path, disk_path)."""
-        path_components = filter(None, self.request.path.split('/'))
-        for prefix, disk_path in self.path_mappings.iteritems():
-            prefix_components = filter(None, prefix.split('/'))
+        path_components = list(filter(None, self.request.path.split('/')))
+        for prefix, disk_path in iteritems(self.path_mappings):
+            prefix_components = list(filter(None, prefix.split('/')))
             if len(path_components) < len(prefix_components):
                 continue
             if path_components[:len(prefix_components)] == prefix_components:
@@ -115,7 +121,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return None
 
     def parse_request(self):
-        retval = SimpleHTTPServer.SimpleHTTPRequestHandler.parse_request(self)
+        retval = SimpleHTTPRequestHandler.parse_request(self)
         self.request = Request(self.path, self.headers, self.rfile)
         return retval
 
@@ -129,7 +135,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if self.request.netloc and self.proxy_host_dirs:
                     self.path = '/' + self.request.netloc + \
                         self.path
-                SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+                SimpleHTTPRequestHandler.do_GET(self)
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -158,9 +164,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # except we serve from self.docroot instead of os.getcwd(), and
         # parse_request()/do_GET() have already stripped the query string and
         # fragment and mangled the path for proxying, if required.
-        path = posixpath.normpath(urllib.unquote(self.path))
+        path = posixpath.normpath(unquote(self.path))
         words = path.split('/')
-        words = filter(None, words)
+        words = list(filter(None, words))
         path = self.disk_root
         for word in words:
             drive, word = os.path.splitdrive(word)

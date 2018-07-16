@@ -25,13 +25,18 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - autocomplete popup navigation and tab key usage test</body>`;
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
-  const {
-    autocompletePopup: popup,
-    completeNode,
-  } = jsterm;
+  const { autocompletePopup: popup } = jsterm;
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -63,19 +68,19 @@ add_task(async function() {
   const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  is(completeNode.value, prefix + "item3", "completeNode.value holds item3");
+  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 1, "index 1 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
-  is(completeNode.value, prefix + "item2", "completeNode.value holds item2");
+  checkJsTermCompletionValue(jsterm, prefix + "item2", "completeNode.value holds item2");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  is(completeNode.value, prefix + "item3", "completeNode.value holds item3");
+  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
 
   let currentSelectionIndex = popup.selectedIndex;
 
@@ -104,5 +109,5 @@ add_task(async function() {
   ok(!popup.isOpen, "popup is not open");
   is(jsterm.getInputValue(), "window.foo.item3",
      "completion was successful after KEY_Tab");
-  ok(!completeNode.value, "completeNode is empty");
-});
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+}

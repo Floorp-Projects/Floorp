@@ -41,10 +41,9 @@ addLoadEvent(function() {
     ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
   });
 
-  // real || imag
-  expectException(function() {
+  expectNoException(function() {
     new PeriodicWave(ac, {});
-  }, DOMException.INDEX_SIZE_ERR);
+  });
 
   // real.size == imag.size
   expectException(function() {
