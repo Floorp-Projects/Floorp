@@ -742,7 +742,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // when floats are inserted before it.
   if (StyleClear::None != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
-    mBCoord = ClearFloats(mBCoord, floatDisplay->PhysicalBreakType(wm));
+    mBCoord = ClearFloats(mBCoord, floatDisplay->mBreakType);
   }
   // Get the band of available space with respect to margin box.
   nsFlowAreaRect floatAvailableSpace =

@@ -3951,7 +3951,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands;
     use style::values::specified::BorderStyle;
-    use style::values::specified::Float;
+    use style::values::specified::{Clear, Float};
     use style::values::generics::font::FontStyle;
 
     let long = get_longhand_from_id!(property);
@@ -3972,10 +3972,22 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
                 _ => unreachable!(),
             }
         },
+        Clear => {
+            const LEFT: u32 = structs::StyleClear::Left as u32;
+            const RIGHT: u32 = structs::StyleClear::Right as u32;
+            const NONE: u32 = structs::StyleClear::None as u32;
+            const BOTH: u32 = structs::StyleClear::Both as u32;
+            match value {
+                LEFT => Clear::Left,
+                RIGHT => Clear::Right,
+                NONE => Clear::None,
+                BOTH => Clear::Both,
+                _ => unreachable!(),
+            }
+        },
         VerticalAlign => longhands::vertical_align::SpecifiedValue::from_gecko_keyword(value),
         TextAlign => longhands::text_align::SpecifiedValue::from_gecko_keyword(value),
         TextEmphasisPosition => longhands::text_emphasis_position::SpecifiedValue::from_gecko_keyword(value),
-        Clear => longhands::clear::SpecifiedValue::from_gecko_keyword(value),
         FontSize => {
             // We rely on Gecko passing in font-size values (0...7) here.
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
