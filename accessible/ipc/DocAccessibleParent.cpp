@@ -397,7 +397,6 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
                                                   const int32_t& aNewStartOffset,
                                                   const int32_t& aNewEndOffset,
                                                   const int16_t& aReason,
-                                                  const int16_t& aBoundaryType,
                                                   const bool& aFromUser)
 {
   ProxyAccessible* target = GetAccessible(aID);
@@ -408,7 +407,7 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
   ProxyVirtualCursorChangeEvent(target,
                                 newPosition, aOldStartOffset, aOldEndOffset,
                                 oldPosition, aNewStartOffset, aNewEndOffset,
-                                aReason, aBoundaryType, aFromUser);
+                                aReason, aFromUser);
 #endif
 
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
@@ -420,7 +419,7 @@ DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
                                        aOldStartOffset, aOldEndOffset,
                                        GetXPCAccessible(newPosition),
                                        aNewStartOffset, aNewEndOffset,
-                                       aBoundaryType, aReason);
+                                       aReason);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();

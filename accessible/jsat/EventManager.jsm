@@ -155,9 +155,8 @@ this.EventManager.prototype = {
         }
 
         this.present(
-          Presentation.pivotChanged(position, event.oldAccessible,
-                                    event.newStartOffset, event.newEndOffset,
-                                    event.reason, event.boundaryType));
+          Presentation.pivotChanged(position, event.oldAccessible, event.reason,
+                                    event.newStartOffset, event.newEndOffset));
 
         break;
       }
