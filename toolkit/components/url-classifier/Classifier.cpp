@@ -246,8 +246,10 @@ Classifier::Open(nsIFile& aCacheDirectory)
 void
 Classifier::Close()
 {
-  // Close will be called by PreShutdown, so it is important to note that
+  // Close will be called by PreShutdown, set |mUpdateInterrupted| here
+  // to abort an ongoing update if possible. It is important to note that
   // things put here should not affect an ongoing update thread.
+  mUpdateInterrupted = true;
   mIsClosed = true;
   DropStores();
 }
