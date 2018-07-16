@@ -45,6 +45,8 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
+
+
 @RunWith(AndroidJUnit4.class)
 public class CustomTabTest {
     private static final String MENU_ITEM_LABEL = "TestItem4223";

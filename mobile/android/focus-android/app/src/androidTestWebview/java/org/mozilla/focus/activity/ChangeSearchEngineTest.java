@@ -32,8 +32,9 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
 
 // This test checks the search engine can be changed
+// https://testrail.stage.mozaws.net/index.php?/cases/view/47588
 @RunWith(Parameterized.class)
-public class SearchEngineSelectionTest {
+public class ChangeSearchEngineTest {
     @Parameterized.Parameter
     public String mSearchEngine;
 

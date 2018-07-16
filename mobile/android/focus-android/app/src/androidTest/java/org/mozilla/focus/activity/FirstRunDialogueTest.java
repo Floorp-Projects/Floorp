@@ -23,8 +23,9 @@ import org.mozilla.focus.helpers.TestHelper;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
+// https://testrail.stage.mozaws.net/index.php?/cases/view/40062
 @RunWith(AndroidJUnit4.class)
-public class OnBoardingTest {
+public class FirstRunDialogueTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -51,18 +52,21 @@ public class OnBoardingTest {
     }
 
     @Test
-    public void OnBoardingTest() throws UiObjectNotFoundException {
+    public void FirstRunDialogueTest() throws UiObjectNotFoundException {
 
         // Let's search for something
         TestHelper.firstSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.firstSlide.exists());
         TestHelper.nextBtn.click();
+
         TestHelper.secondSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.secondSlide.exists());
         TestHelper.nextBtn.click();
+
         TestHelper.thirdSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.thirdSlide.exists());
         TestHelper.nextBtn.click();
+
         TestHelper.lastSlide.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.lastSlide.exists());
         TestHelper.finishBtn.click();

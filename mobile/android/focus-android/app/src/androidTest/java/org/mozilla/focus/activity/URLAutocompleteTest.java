@@ -50,8 +50,9 @@ import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.mDevice;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
+// https://testrail.stage.mozaws.net/index.php?/cases/view/104577
 @RunWith(AndroidJUnit4.class)
-public class URLCompletionTest {
+public class URLAutocompleteTest {
     private String site = "680news.com";
 
     // From API 24 and above

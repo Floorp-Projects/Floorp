@@ -27,8 +27,9 @@ import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test checks all the headings in the Settings menu are there
+// https://testrail.stage.mozaws.net/index.php?/cases/view/40064
 @RunWith(AndroidJUnit4.class)
-public class SettingsAppearanceTest {
+public class AccessSettingsTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -55,22 +56,27 @@ public class SettingsAppearanceTest {
     }
 
     @Test
-    public void settingsScreenTest() throws UiObjectNotFoundException {
+    public void AccessSettingsTest() throws UiObjectNotFoundException {
 
         UiObject languageHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Language")
                 .resourceId("android:id/title"));
+
         UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Privacy & Security")
                 .resourceId("android:id/title"));
+
         UiObject searchHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Search")
                 .resourceId("android:id/title"));
+
         UiObject defaultHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .textContains("default browser")
                 .resourceId("android:id/title"));
+
         UiObject defaultSwitch = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/switch_widget"));
+
         UiObject mozHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Mozilla")
                 .resourceId("android:id/title"));

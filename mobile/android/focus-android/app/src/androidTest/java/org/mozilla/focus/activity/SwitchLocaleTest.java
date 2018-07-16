@@ -36,6 +36,7 @@ import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test checks all the headings in the Settings menu are there
+// https://testrail.stage.mozaws.net/index.php?/cases/view/47587
 @RunWith(AndroidJUnit4.class)
 public class SwitchLocaleTest {
 

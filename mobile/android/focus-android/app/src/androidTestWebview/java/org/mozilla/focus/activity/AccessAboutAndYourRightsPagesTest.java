@@ -35,8 +35,9 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.openMenu;
 
 // This test visits each page and checks whether some essential elements are being displayed
+// https://testrail.stage.mozaws.net/index.php?/cases/view/81664
 @RunWith(AndroidJUnit4.class)
-public class PageVisitTest {
+public class AccessAboutAndYourRightsPagesTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<MainActivity>(MainActivity.class) {
@@ -72,11 +73,10 @@ public class PageVisitTest {
     }
 
     @Test
-    public void visitPagesTest() {
+    public void AccessAboutAndYourRightsPagesTest() {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         // What's new page
-
         openMenu();
 
         clickMenuItem(R.id.whats_new);
@@ -85,7 +85,6 @@ public class PageVisitTest {
         pressBack();
 
         // Help page
-
         openMenu();
 
         clickMenuItem(R.id.help);
@@ -94,7 +93,6 @@ public class PageVisitTest {
         pressBack();
 
         // Go to settings
-
         openMenu();
         clickMenuItem(R.id.settings);
 

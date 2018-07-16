@@ -35,8 +35,9 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test erases URL and checks for message
+// https://testrail.stage.mozaws.net/index.php?/cases/view/40068
 @RunWith(AndroidJUnit4.class)
-public class TrashcanTest {
+public class EraseAllUserDataTest {
     private static final String TEST_PATH = "/";
     private MockWebServer webServer;
 

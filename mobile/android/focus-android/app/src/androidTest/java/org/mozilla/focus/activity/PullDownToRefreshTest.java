@@ -46,6 +46,8 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.findElemen
 import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.Matchers.containsString;
 
+
+// https://testrail.stage.mozaws.net/index.php?/cases/view/94146
 @RunWith(AndroidJUnit4.class)
 @Ignore("Pull to refresh is currently disabled in all builds")
 public class PullDownToRefreshTest {
