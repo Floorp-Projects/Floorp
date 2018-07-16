@@ -56,6 +56,19 @@ class AndroidPresentor {
       androidEvents.push({eventType: AndroidEvents.VIEW_HOVER_EXIT, text: []});
     }
 
+    if (aPosition != aOldPosition) {
+      let info = this._infoFromContext(context);
+      let eventType = isExploreByTouch ?
+        AndroidEvents.VIEW_HOVER_ENTER :
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED;
+      androidEvents.push({...info, eventType});
+
+      try {
+        context.accessibleForBounds.scrollTo(
+          Ci.nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE);
+      } catch (e) {}
+    }
+
     if (aBoundaryType != Ci.nsIAccessiblePivot.NO_BOUNDARY) {
       const adjustedText = context.textAndAdjustedOffsets;
 
@@ -65,18 +78,11 @@ class AndroidPresentor {
         fromIndex: adjustedText.startOffset,
         toIndex: adjustedText.endOffset
       });
-    } else {
-      let info = this._infoFromContext(context);
-      let eventType = isExploreByTouch ?
-        AndroidEvents.VIEW_HOVER_ENTER :
-        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED;
-      androidEvents.push({...info, eventType});
-    }
 
-    try {
-      context.accessibleForBounds.scrollTo(
+      aPosition.QueryInterface(Ci.nsIAccessibleText).scrollSubstringTo(
+        aStartOffset, aEndOffset,
         Ci.nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE);
-    } catch (e) {}
+    }
 
     if (context.accessible) {
       this.displayedAccessibles.set(context.accessible.document.window, context);

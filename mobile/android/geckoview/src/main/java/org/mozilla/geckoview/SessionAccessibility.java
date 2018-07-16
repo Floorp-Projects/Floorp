@@ -140,8 +140,7 @@ public class SessionAccessibility {
                             info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT);
                             info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
                                                           AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD |
-                                                          AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE |
-                                                          AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH);
+                                                          AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE);
                             break;
                         }
                         return info;

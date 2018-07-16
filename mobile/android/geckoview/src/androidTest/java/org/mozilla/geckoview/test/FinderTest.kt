@@ -141,7 +141,7 @@ class FinderTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val result = sessionRule.waitForResult(mainSession.finder.find(
-                "lore", GeckoSession.FINDER_FIND_LINKS_ONLY))
+                "nim", GeckoSession.FINDER_FIND_LINKS_ONLY))
 
         assertThat("Total count should be correct", result.total, equalTo(1))
         assertThat("Flags should be correct",
