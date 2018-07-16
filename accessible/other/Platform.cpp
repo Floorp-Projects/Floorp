@@ -64,7 +64,7 @@ a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
 void
 a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible*, ProxyAccessible*,
                                     int32_t, int32_t, ProxyAccessible*,
-                                    int32_t, int32_t, int16_t, int16_t, bool)
+                                    int32_t, int32_t, uint16_t, bool)
 {
 }
 #endif

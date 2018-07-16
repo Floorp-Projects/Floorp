@@ -187,14 +187,13 @@ AccVCChangeEvent::
                    int32_t aOldStart, int32_t aOldEnd,
                    Accessible* aNewAccessible,
                    int32_t aNewStart, int32_t aNewEnd,
-                   int16_t aReason, int16_t aBoundaryType,
-                   EIsFromUserInput aIsFromUserInput) :
+                   int16_t aReason, EIsFromUserInput aIsFromUserInput) :
     AccEvent(::nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED, aAccessible,
              aIsFromUserInput),
     mOldAccessible(aOldAccessible), mNewAccessible(aNewAccessible),
     mOldStart(aOldStart), mNewStart(aNewStart),
     mOldEnd(aOldEnd),  mNewEnd(aNewEnd),
-    mReason(aReason), mBoundaryType(aBoundaryType)
+    mReason(aReason)
 {
 }
 
@@ -259,8 +258,7 @@ a11y::MakeXPCEvent(AccEvent* aEvent)
                                                  ToXPC(vcc->NewAccessible()),
                                                  vcc->NewStartOffset(),
                                                  vcc->NewEndOffset(),
-                                                 vcc->Reason(),
-                                                 vcc->BoundaryType());
+                                                 vcc->Reason());
     return xpEvent.forget();
   }
 

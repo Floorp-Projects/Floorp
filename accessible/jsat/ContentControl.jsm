@@ -474,9 +474,8 @@ this.ContentControl.prototype = {
         if (aOptions.forcePresent) {
           this._contentScope.get().sendAsyncMessage(
             "AccessFu:Present", Presentation.pivotChanged(
-              vc.position, null, vc.startOffset, vc.endOffset,
-              Ci.nsIAccessiblePivot.REASON_NONE,
-              Ci.nsIAccessiblePivot.NO_BOUNDARY));
+              vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
+              vc.startOffset, vc.endOffset));
         }
       };
 
