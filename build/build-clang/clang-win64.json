@@ -14,6 +14,8 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
+      "bug38139.patch",
+      "bug38105.patch",
       "loosen-msvc-detection.patch"
     ]
 }

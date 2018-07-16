@@ -1,0 +1,49 @@
+ThinLTO build fix from https://bugs.llvm.org/show_bug.cgi?id=38105#c4 and https://reviews.llvm.org/D49138
+
+--- a/llvm/include/llvm/LTO/LTO.h
++++ b/llvm/include/llvm/LTO/LTO.h
+@@ -365,7 +365,7 @@
+
+   void addModuleToGlobalRes(ArrayRef<InputFile::Symbol> Syms,
+                             ArrayRef<SymbolResolution> Res, unsigned Partition,
+-                            bool InSummary);
++                            bool InSummary, const Triple &TT);
+
+   // These functions take a range of symbol resolutions [ResI, ResE) and consume
+   // the resolutions used by a single input module by incrementing ResI. After
+--- a/llvm/lib/LTO/LTO.cpp
++++ b/llvm/lib/LTO/LTO.cpp
+@@ -420,7 +420,8 @@
+ // their partitions.
+ void LTO::addModuleToGlobalRes(ArrayRef<InputFile::Symbol> Syms,
+                                ArrayRef<SymbolResolution> Res,
+-                               unsigned Partition, bool InSummary) {
++                               unsigned Partition, bool InSummary,
++                               const Triple &TT) {
+   auto *ResI = Res.begin();
+   auto *ResE = Res.end();
+   (void)ResE;
+@@ -428,7 +429,13 @@
+     assert(ResI != ResE);
+     SymbolResolution Res = *ResI++;
+
+-    auto &GlobalRes = GlobalResolutions[Sym.getName()];
++    StringRef Name = Sym.getName();
++    // Strip the __imp_ prefix from COFF dllimport symbols (similar to the
++    // way they are handled by lld), otherwise we can end up with two
++    // global resolutions (one with and one for a copy of the symbol without).
++    if (TT.isOSBinFormatCOFF() && Name.startswith("__imp_"))
++      Name = Name.substr(strlen("__imp_"));
++    auto &GlobalRes = GlobalResolutions[Name];
+     GlobalRes.UnnamedAddr &= Sym.isUnnamedAddr();
+     if (Res.Prevailing) {
+       assert(!GlobalRes.Prevailing &&
+@@ -518,7 +525,7 @@
+   auto ModSyms = Input.module_symbols(ModI);
+   addModuleToGlobalRes(ModSyms, {ResI, ResE},
+                        LTOInfo->IsThinLTO ? ThinLTO.ModuleMap.size() + 1 : 0,
+-                       LTOInfo->HasSummary);
++                       LTOInfo->HasSummary, Triple(Input.getTargetTriple()));
+
+   if (LTOInfo->IsThinLTO)
+     return addThinLTO(BM, ModSyms, ResI, ResE);
