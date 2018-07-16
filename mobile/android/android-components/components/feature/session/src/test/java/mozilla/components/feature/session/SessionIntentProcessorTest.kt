@@ -7,6 +7,7 @@ package mozilla.components.feature.session
 import android.content.Intent
 import android.support.customtabs.CustomTabsIntent
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -43,12 +44,15 @@ class SessionIntentProcessorTest {
 
     @Test
     fun testProcessWithDefaultHandlers() {
+        val engine = mock(Engine::class.java)
+        val sessionManager = spy(SessionManager(engine))
+        val useCases = SessionUseCases(sessionManager)
         val handler = SessionIntentProcessor(useCases, sessionManager)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
 
         val engineSession = mock(EngineSession::class.java)
-        `when`(sessionManager.getOrCreateEngineSession(anySession())).thenReturn(engineSession)
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
         `when`(intent.dataString).thenReturn("")
         handler.process(intent)
@@ -57,6 +61,11 @@ class SessionIntentProcessorTest {
         `when`(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
         verify(engineSession).loadUrl("http://mozilla.org")
+
+        val session = sessionManager.all[0]
+        assertNotNull(session)
+        assertEquals("http://mozilla.org", session.url)
+        assertEquals(Source.ACTION_VIEW, session.source)
     }
 
     @Test
@@ -138,6 +147,7 @@ class SessionIntentProcessorTest {
         val customTabSession = sessionManager.all[0]
         assertNotNull(customTabSession)
         assertEquals("http://mozilla.org", customTabSession.url)
+        assertEquals(Source.CUSTOM_TAB, customTabSession.source)
         assertNotNull(customTabSession.customTabConfig)
     }
 

@@ -6,11 +6,13 @@ package mozilla.components.browser.session.storage
 
 import android.util.AtomicFile
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.json.JSONException
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -241,6 +243,21 @@ class DefaultSessionStorageTest {
         storage.start(SessionManager(engine))
         storage.stop()
         verify(scheduledFuture).cancel(ArgumentMatchers.eq(false))
+    }
+
+    @Test
+    fun testDeserializeWithInvalidSource() {
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+
+        val json = JSONObject()
+        json.put("url", "testUrl")
+        json.put("source", Source.NEW_TAB.name)
+        assertEquals(Source.NEW_TAB, storage.deserializeSession("testId", json).source)
+
+        val jsonInvalid = JSONObject()
+        jsonInvalid.put("url", "testUrl")
+        jsonInvalid.put("source", "invalidSource")
+        assertEquals(Source.NONE, storage.deserializeSession("testId", jsonInvalid).source)
     }
 
     @Suppress("UNCHECKED_CAST")

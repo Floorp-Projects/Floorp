@@ -5,6 +5,7 @@
 package mozilla.components.feature.tabs
 
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import org.junit.Assert.assertEquals
 import mozilla.components.support.test.mock
@@ -48,5 +49,6 @@ class TabsUseCasesTest {
 
         assertEquals(1, sessionManager.size)
         assertEquals("https://www.mozilla.org", sessionManager.selectedSessionOrThrow.url)
+        assertEquals(Source.NEW_TAB, sessionManager.selectedSessionOrThrow.source)
     }
 }

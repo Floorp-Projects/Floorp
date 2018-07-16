@@ -7,6 +7,7 @@ package mozilla.components.feature.session
 import android.content.Intent
 import android.text.TextUtils
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
@@ -33,7 +34,7 @@ class SessionIntentProcessor(
             TextUtils.isEmpty(url) -> false
 
             CustomTabConfig.isCustomTabIntent(safeIntent) -> {
-                val session = Session(url).apply {
+                val session = Session(url, Source.CUSTOM_TAB).apply {
                     this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent)
                 }
                 sessionManager.add(session)
@@ -44,9 +45,9 @@ class SessionIntentProcessor(
 
             else -> {
                 val session = if (openNewTab) {
-                    Session(url).also { sessionManager.add(it, selected = true) }
+                    Session(url, Source.ACTION_VIEW).also { sessionManager.add(it, selected = true) }
                 } else {
-                    sessionManager.selectedSession ?: Session(url)
+                    sessionManager.selectedSession ?: Session(url, Source.ACTION_VIEW)
                 }
 
                 sessionUseCases.loadUrl.invoke(url, session)

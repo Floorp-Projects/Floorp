@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -201,23 +202,23 @@ class SessionTest {
         var session = Session("https://www.mozilla.org")
         assertNotNull(session.id)
 
-        session = Session("https://www.mozilla.org", "s1")
+        session = Session("https://www.mozilla.org", Source.NONE, "s1")
         assertNotNull(session.id)
         assertEquals("s1", session.id)
     }
 
     @Test
     fun `sessions with the same id are equal`() {
-        val session1 = Session("http://mozilla.org", "123ABC")
-        val session2 = Session("http://mozilla.org", "123ABC")
+        val session1 = Session("http://mozilla.org", Source.NONE, "123ABC")
+        val session2 = Session("http://mozilla.org", Source.NONE, "123ABC")
 
         assertEquals(session1, session2)
     }
 
     @Test
     fun `session ID is used for hashCode`() {
-        val session1 = Session("http://mozilla.org", "123ABC")
-        val session2 = Session("http://mozilla.org", "123ABC")
+        val session1 = Session("http://mozilla.org", Source.NONE, "123ABC")
+        val session2 = Session("http://mozilla.org", Source.NONE, "123ABC")
 
         val map = mapOf(session1 to "test")
         assertEquals("test", map[session2])

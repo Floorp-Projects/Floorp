@@ -7,6 +7,7 @@ package mozilla.components.browser.session.storage
 import android.content.Context
 import android.util.AtomicFile
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -140,12 +141,18 @@ class DefaultSessionStorage(
     internal fun serializeSession(session: Session): JSONObject {
         return JSONObject().apply {
             put("url", session.url)
+            put("source", session.source.name)
         }
     }
 
     @Throws(JSONException::class)
     internal fun deserializeSession(id: String, json: JSONObject): Session {
-        return Session(json.getString("url"), id)
+        val source = try {
+            Source.valueOf(json.getString("source"))
+        } catch (e: IllegalArgumentException) {
+            Source.NONE
+        }
+        return Session(json.getString("url"), source, id)
     }
 
     private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
@@ -153,7 +160,7 @@ class DefaultSessionStorage(
             return JSONObject()
         }
         return JSONObject().apply {
-            engineSession.saveState().forEach({ k, v -> if (shouldSerialize(v)) put(k, v) })
+            engineSession.saveState().forEach { k, v -> if (shouldSerialize(v)) put(k, v) }
         }
     }
 

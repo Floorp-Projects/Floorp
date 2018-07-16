@@ -5,6 +5,7 @@
 package mozilla.components.feature.tabs
 
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 
 /**
@@ -49,7 +50,7 @@ class TabsUseCases(
          * @param selectTab True (default) if the new tab should be selected immediately.
          */
         fun invoke(url: String, selectTab: Boolean = true) {
-            val session = Session(url)
+            val session = Session(url, Source.NEW_TAB)
             sessionManager.add(session, selected = selectTab)
         }
     }
