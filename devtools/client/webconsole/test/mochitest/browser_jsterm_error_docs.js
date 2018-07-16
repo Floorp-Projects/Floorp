@@ -6,6 +6,14 @@
 const TEST_URI = "data:text/html,Test error documentation";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
@@ -30,4 +38,4 @@ add_task(async function() {
     ok(learnMoreLink, `There is a [Learn More] link for "${errorMessageName}" error`);
     is(learnMoreLink.title, title, `The link has the expected "${title}" title`);
   }
-});
+}

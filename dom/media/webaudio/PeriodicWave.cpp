@@ -26,7 +26,7 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
   , mDisableNormalization(aDisableNormalization)
 {
   MOZ_ASSERT(aContext);
-  MOZ_ASSERT(aRealData || aImagData);
+  MOZ_ASSERT((aRealData || aImagData) || aLength == 2);
 
   // Caller should have checked this and thrown.
   MOZ_ASSERT(aLength > 0);
@@ -44,21 +44,29 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
   auto data = static_cast<float*>(buffer->Data());
   mCoefficients.mBuffer = std::move(buffer);
 
-  if (aRealData) {
-    PodCopy(data, aRealData, aLength);
-  } else {
+  if (!aRealData && !aImagData) {
     PodZero(data, aLength);
-  }
-  mCoefficients.mChannelData.AppendElement(data);
-
-  data += aLength;
-  if (aImagData) {
-    PodCopy(data, aImagData, aLength);
+    mCoefficients.mChannelData.AppendElement(data);
+    data += aLength;
+    data[0] = 0.0f;
+    data[1] = 1.0f;
+    mCoefficients.mChannelData.AppendElement(data);
   } else {
-    PodZero(data, aLength);
-  }
-  mCoefficients.mChannelData.AppendElement(data);
+    if (aRealData) {
+      PodCopy(data, aRealData, aLength);
+    } else {
+      PodZero(data, aLength);
+    }
+    mCoefficients.mChannelData.AppendElement(data);
 
+    data += aLength;
+    if (aImagData) {
+      PodCopy(data, aImagData, aLength);
+    } else {
+      PodZero(data, aLength);
+    }
+    mCoefficients.mChannelData.AppendElement(data);
+  }
   mCoefficients.mVolume = 1.0f;
   mCoefficients.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
@@ -69,10 +77,6 @@ PeriodicWave::Constructor(const GlobalObject& aGlobal,
                           const PeriodicWaveOptions& aOptions,
                           ErrorResult& aRv)
 {
-  if (!aOptions.mReal.WasPassed() && !aOptions.mImag.WasPassed()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return nullptr;
-  }
 
   if (aOptions.mReal.WasPassed() && aOptions.mImag.WasPassed() &&
       aOptions.mReal.Value().Length() != aOptions.mImag.Value().Length()) {
@@ -80,8 +84,17 @@ PeriodicWave::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  uint32_t length =
-    aOptions.mReal.WasPassed() ? aOptions.mReal.Value().Length() : aOptions.mImag.Value().Length();
+  uint32_t length = 0;
+  if (aOptions.mReal.WasPassed()) {
+    length = aOptions.mReal.Value().Length();
+  } else if (aOptions.mImag.WasPassed()) {
+    length = aOptions.mImag.Value().Length();
+  } else {
+    // If nothing has been passed, this PeriodicWave will be a sine wave: 2
+    // elements for each array, the second imaginary component set to 1.0.
+    length = 2;
+  }
+
   if (length == 0) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;

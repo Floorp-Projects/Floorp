@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_VERSION = '0.7'
-deps = ['moznetwork >= 0.24']
+deps = ['moznetwork >= 0.24', 'mozinfo >= 1.0.0', 'six >= 1.10.0']
 
 setup(name='mozhttpd',
       version=PACKAGE_VERSION,

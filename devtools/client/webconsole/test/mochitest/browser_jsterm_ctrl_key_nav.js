@@ -15,214 +15,267 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 804845 and bug 619598";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const {jsterm} = await openNewTabAndConsole(TEST_URI);
 
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
-  is(jsterm.inputNode.selectionStart, 0);
-  is(jsterm.inputNode.selectionEnd, 0);
+  checkJsTermCursor(jsterm, 0, "Cursor is at the start of the input");
 
   testSingleLineInputNavNoHistory(jsterm);
   testMultiLineInputNavNoHistory(jsterm);
   await testNavWithHistory(jsterm);
-});
+}
 
 function testSingleLineInputNavNoHistory(jsterm) {
-  const inputNode = jsterm.inputNode;
+  const checkInput = (expected, assertionInfo) =>
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
+
   // Single char input
   EventUtils.sendString("1");
-  is(inputNode.selectionStart, 1, "caret location after single char input");
+  checkInput("1|", "caret location after single char input");
 
   // nav to start/end with ctrl-a and ctrl-e;
   synthesizeLineStartKey();
-  is(inputNode.selectionStart, 0,
-     "caret location after single char input and ctrl-a");
+  checkInput("|1", "caret location after single char input and ctrl-a");
 
   synthesizeLineEndKey();
-  is(inputNode.selectionStart, 1,
-     "caret location after single char input and ctrl-e");
+  checkInput("1|", "caret location after single char input and ctrl-e");
 
   // Second char input
   EventUtils.sendString("2");
+  checkInput("12|", "caret location after second char input");
+
   // nav to start/end with up/down keys; verify behaviour using ctrl-p/ctrl-n
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(inputNode.selectionStart, 0,
-     "caret location after two char input and KEY_ArrowUp");
+  checkInput("|12", "caret location after two char input and KEY_ArrowUp");
+
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(inputNode.selectionStart, 2,
-     "caret location after two char input and KEY_ArrowDown");
+  checkInput("12|", "caret location after two char input and KEY_ArrowDown");
 
   synthesizeLineStartKey();
-  is(inputNode.selectionStart, 0,
-     "move caret to beginning of 2 char input with ctrl-a");
+  checkInput("|12", "move caret to beginning of 2 char input with ctrl-a");
+
   synthesizeLineStartKey();
-  is(inputNode.selectionStart, 0,
-     "no change of caret location on repeat ctrl-a");
-  synthesizeLineUpKey();
-  is(inputNode.selectionStart, 0,
-     "no change of caret location on ctrl-p from beginning of line");
-
-  synthesizeLineEndKey();
-  is(inputNode.selectionStart, 2,
-     "move caret to end of 2 char input with ctrl-e");
-  synthesizeLineEndKey();
-  is(inputNode.selectionStart, 2,
-     "no change of caret location on repeat ctrl-e");
-  synthesizeLineDownKey();
-  is(inputNode.selectionStart, 2,
-     "no change of caret location on ctrl-n from end of line");
+  checkInput("|12", "no change of caret location on repeat ctrl-a");
 
   synthesizeLineUpKey();
-  is(inputNode.selectionStart, 0, "ctrl-p moves to start of line");
+  checkInput("|12", "no change of caret location on ctrl-p from beginning of line");
+
+  synthesizeLineEndKey();
+  checkInput("12|", "move caret to end of 2 char input with ctrl-e");
+
+  synthesizeLineEndKey();
+  checkInput("12|", "no change of caret location on repeat ctrl-e");
 
   synthesizeLineDownKey();
-  is(inputNode.selectionStart, 2, "ctrl-n moves to end of line");
+  checkInput("12|", "no change of caret location on ctrl-n from end of line");
+
+  synthesizeLineUpKey();
+  checkInput("|12", "ctrl-p moves to start of line");
+
+  synthesizeLineDownKey();
+  checkInput("12|", "ctrl-n moves to end of line");
 }
 
 function testMultiLineInputNavNoHistory(jsterm) {
-  const inputNode = jsterm.inputNode;
+  const checkInput = (expected, assertionInfo) =>
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
+
   const lineValues = ["one", "2", "something longer", "", "", "three!"];
   jsterm.setInputValue("");
   // simulate shift-return
-  for (let i = 0; i < lineValues.length; i++) {
-    jsterm.setInputValue(jsterm.getInputValue() + lineValues[i]);
+  for (const lineValue of lineValues) {
+    jsterm.setInputValue(jsterm.getInputValue() + lineValue);
     EventUtils.synthesizeKey("KEY_Enter", {shiftKey: true});
   }
-  const inputValue = jsterm.getInputValue();
-  is(inputNode.selectionStart, inputNode.selectionEnd);
-  is(inputNode.selectionStart, inputValue.length,
-     "caret at end of multiline input");
 
-  // possibility newline is represented by one ('\r', '\n') or two
-  // ('\r\n') chars
-  const newlineString = inputValue.match(/(\r\n?|\n\r?)$/)[0];
+  checkInput(
+`one
+2
+something longer
+
+
+three!
+|`, "caret at end of multiline input");
 
   // Ok, test navigating within the multi-line string!
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  let expectedStringAfterCarat = lineValues[5] + newlineString;
-  is(jsterm.getInputValue().slice(inputNode.selectionStart), expectedStringAfterCarat,
-     "up arrow from end of multiline");
+  checkInput(
+`one
+2
+something longer
+
+
+|three!
+`, "up arrow from end of multiline");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(jsterm.getInputValue().slice(inputNode.selectionStart), "",
-     "down arrow from within multiline");
+  checkInput(
+`one
+2
+something longer
+
+
+three!
+|`, "down arrow from within multiline");
 
   // navigate up through input lines
   synthesizeLineUpKey();
-  is(jsterm.getInputValue().slice(inputNode.selectionStart), expectedStringAfterCarat,
-     "ctrl-p from end of multiline");
+  checkInput(
+`one
+2
+something longer
 
-  for (let i = 4; i >= 0; i--) {
+
+|three!
+`, "ctrl-p from end of multiline");
+
+  for (let i = 0; i < 5; i++) {
     synthesizeLineUpKey();
-    expectedStringAfterCarat = lineValues[i] + newlineString +
-      expectedStringAfterCarat;
-    is(jsterm.getInputValue().slice(inputNode.selectionStart),
-      expectedStringAfterCarat, "ctrl-p from within line " + i +
-      " of multiline input");
   }
+
+  checkInput(
+`|one
+2
+something longer
+
+
+three!
+`, "reached start of input");
+
   synthesizeLineUpKey();
-  is(inputNode.selectionStart, 0, "reached start of input");
-  is(jsterm.getInputValue(), inputValue,
-     "no change to multiline input on ctrl-p from beginning of multiline");
+  checkInput(
+`|one
+2
+something longer
+
+
+three!
+`, "no change to multiline input on ctrl-p from beginning of multiline");
 
   // navigate to end of first line
   synthesizeLineEndKey();
-  let caretPos = inputNode.selectionStart;
-  let expectedStringBeforeCarat = lineValues[0];
-  is(jsterm.getInputValue().slice(0, caretPos), expectedStringBeforeCarat,
-     "ctrl-e into multiline input");
+  checkInput(
+`one|
+2
+something longer
+
+
+three!
+`, "ctrl-e into multiline input");
+
   synthesizeLineEndKey();
-  is(inputNode.selectionStart, caretPos,
-     "repeat ctrl-e doesn't change caret position in multiline input");
+  checkInput(
+`one|
+2
+something longer
 
-  // navigate down one line; ctrl-a to the beginning; ctrl-e to end
-  for (let i = 1; i < lineValues.length; i++) {
-    synthesizeLineDownKey();
-    synthesizeLineStartKey();
-    caretPos = inputNode.selectionStart;
-    expectedStringBeforeCarat += newlineString;
-    is(jsterm.getInputValue().slice(0, caretPos), expectedStringBeforeCarat,
-       "ctrl-a to beginning of line " + (i + 1) + " in multiline input");
 
-    synthesizeLineEndKey();
-    caretPos = inputNode.selectionStart;
-    expectedStringBeforeCarat += lineValues[i];
-    is(jsterm.getInputValue().slice(0, caretPos), expectedStringBeforeCarat,
-       "ctrl-e to end of line " + (i + 1) + "in multiline input");
-  }
+three!
+`, "repeat ctrl-e doesn't change caret position in multiline input");
+
+  synthesizeLineDownKey();
+  synthesizeLineStartKey();
+  checkInput(
+`one
+|2
+something longer
+
+
+three!
+`);
+
+  synthesizeLineEndKey();
+  synthesizeLineDownKey();
+  synthesizeLineStartKey();
+  checkInput(
+`one
+2
+|something longer
+
+
+three!
+`);
 }
 
 async function testNavWithHistory(jsterm) {
-  const inputNode = jsterm.inputNode;
+  const checkInput = (expected, assertionInfo) =>
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
 
   // NOTE: Tests does NOT currently define behaviour for ctrl-p/ctrl-n with
   // caret placed _within_ single line input
   const values = [
-    '"single line input"',
-    '"a longer single-line input to check caret repositioning"',
-    '"multi-line"\n"input"\n"here!"',
+    "single line input",
+    "a longer single-line input to check caret repositioning",
+    "multi-line\ninput\nhere",
   ];
 
   // submit to history
-  for (let i = 0; i < values.length; i++) {
-    jsterm.setInputValue(values[i]);
+  for (const value of values) {
+    jsterm.setInputValue(value);
     await jsterm.execute();
   }
-  is(inputNode.selectionStart, 0, "caret location at start of empty line");
+
+  checkInput("|", "caret location at start of empty line");
 
   synthesizeLineUpKey();
-  is(inputNode.selectionStart, values[values.length - 1].length,
-     "caret location correct at end of last history input");
+  checkInput("multi-line\ninput\nhere|", "caret location at end of last history input");
 
-  // Navigate backwards history with ctrl-p
-  for (let i = values.length - 1; i > 0; i--) {
-    const match = values[i].match(/(\n)/g);
-    if (match) {
-      // multi-line inputs won't update from history unless caret at beginning
-      synthesizeLineStartKey();
-      for (let j = 0; j < match.length; j++) {
-        synthesizeLineUpKey();
-      }
-      synthesizeLineUpKey();
-    } else {
-      // single-line inputs will update from history from end of line
-      synthesizeLineUpKey();
-    }
-    is(jsterm.getInputValue(), values[i - 1],
-       "ctrl-p updates inputNode from backwards history values[" + i - 1 + "]");
-  }
+  synthesizeLineStartKey();
+  checkInput("multi-line\ninput\n|here",
+    "caret location at beginning of last line of last history input");
 
-  let inputValue = jsterm.getInputValue();
   synthesizeLineUpKey();
-  is(inputNode.selectionStart, 0,
-     "ctrl-p at beginning of history moves caret location to beginning " +
-     "of line");
-  is(jsterm.getInputValue(), inputValue,
-     "no change to input value on ctrl-p from beginning of line");
+  checkInput("multi-line\n|input\nhere",
+    "caret location at beginning of second line of last history input");
 
-  // Navigate forwards history with ctrl-n
-  for (let i = 1; i < values.length; i++) {
-    synthesizeLineDownKey();
-    is(jsterm.getInputValue(), values[i],
-       "ctrl-n updates inputNode from forwards history values[" + i + "]");
-    is(inputNode.selectionStart, values[i].length,
-       "caret location correct at end of history input for values[" + i + "]");
-  }
+  synthesizeLineUpKey();
+  checkInput("|multi-line\ninput\nhere",
+    "caret location at beginning of first line of last history input");
+
+  synthesizeLineUpKey();
+  checkInput("a longer single-line input to check caret repositioning|",
+    "caret location at the end of second history input");
+
+  synthesizeLineUpKey();
+  checkInput("single line input|", "caret location at the end of first history input");
+
+  synthesizeLineUpKey();
+  checkInput("|single line input",
+    "ctrl-p at beginning of history moves caret location to beginning of line");
+
   synthesizeLineDownKey();
-  ok(!jsterm.getInputValue(), "ctrl-n at end of history updates to empty input");
+  checkInput("a longer single-line input to check caret repositioning|",
+    "caret location at the end of second history input");
+
+  synthesizeLineDownKey();
+  checkInput("multi-line\ninput\nhere|", "caret location at end of last history input");
+
+  synthesizeLineDownKey();
+  checkInput("|", "ctrl-n at end of history updates to empty input");
 
   // Simulate editing multi-line
-  inputValue = "one\nlinebreak";
+  const inputValue = "one\nlinebreak";
   jsterm.setInputValue(inputValue);
+  checkInput("one\nlinebreak|");
 
   // Attempt nav within input
   synthesizeLineUpKey();
-  is(jsterm.getInputValue(), inputValue,
-     "ctrl-p from end of multi-line does not trigger history");
+  checkInput("one|\nlinebreak", "ctrl-p from end of multi-line does not trigger history");
 
   synthesizeLineStartKey();
+  checkInput("|one\nlinebreak");
+
   synthesizeLineUpKey();
-  is(jsterm.getInputValue(), values[values.length - 1],
-     "ctrl-p from start of multi-line triggers history");
+  checkInput("multi-line\ninput\nhere|",
+    "ctrl-p from start of multi-line triggers history");
 }
 
 function synthesizeLineStartKey() {

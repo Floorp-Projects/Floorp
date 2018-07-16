@@ -16,6 +16,14 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - Autocomplete popup on array</body>`;
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   const {
@@ -38,4 +46,4 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Escape");
 
   await onPopupClose;
-});
+}

@@ -430,8 +430,15 @@ class GitRepository(Repository):
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--porcelain']
-        if not untracked:
+
+        # Even in --porcelain mode, behavior is affected by the
+        # ``status.showUntrackedFiles`` option, which means we need to be
+        # explicit about how to treat untracked files.
+        if untracked:
+            args.append('--untracked-files=all')
+        else:
             args.append('--untracked-files=no')
+
         if ignored:
             args.append('--ignored')
 
