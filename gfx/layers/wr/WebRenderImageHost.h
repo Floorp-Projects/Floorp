@@ -66,6 +66,11 @@ public:
 
   virtual void CleanupResources() override;
 
+  uint32_t GetDroppedFrames() override
+  {
+    return GetDroppedFramesAndReset();
+  }
+
   virtual WebRenderImageHost* AsWebRenderImageHost() override { return this; }
 
   TextureHost* GetAsTextureHostForComposite();
