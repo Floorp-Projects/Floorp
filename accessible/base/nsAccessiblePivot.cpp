@@ -380,6 +380,10 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
         startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
         endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
         break;
+      case LINE_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_LINE_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_LINE_END;
+        break;
       default:
         return NS_ERROR_INVALID_ARG;
     }
@@ -505,6 +509,10 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
       case WORD_BOUNDARY:
         startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
         endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+        break;
+      case LINE_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_LINE_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_LINE_END;
         break;
       default:
         return NS_ERROR_INVALID_ARG;
