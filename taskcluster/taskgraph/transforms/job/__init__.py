@@ -20,7 +20,6 @@ from taskgraph.util.schema import (
     validate_schema,
     Schema,
 )
-from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
@@ -79,9 +78,7 @@ job_description_schema = Schema({
     }),
 
     # A list of artifacts to install from 'fetch' tasks.
-    Optional('fetches'): {
-        basestring: [basestring],
-    },
+    Optional('fetches'): [basestring],
 
     # A description of how to run this job.
     'run': {
@@ -144,57 +141,41 @@ def get_attribute(dict, key, attributes, attribute_name):
 
 @transforms.add
 def use_fetches(config, jobs):
-    all_fetches = {}
+    artifacts = {}
 
     for task in config.kind_dependencies_tasks:
         if task.kind != 'fetch':
             continue
 
         name = task.label.replace('%s-' % task.kind, '')
-        get_attribute(all_fetches, name, task.attributes, 'fetch-artifact')
+        get_attribute(artifacts, name, task.attributes, 'fetch-artifact')
 
     for job in jobs:
-        fetches = job.pop('fetches', None)
-        if not fetches:
-            yield job
-            continue
+        fetches = job.pop('fetches', [])
 
         # Hack added for `mach artifact toolchain` to support reading toolchain
         # kinds in isolation.
-        if 'fetch' in fetches and config.params.get('ignore_fetches'):
-            fetches['fetch'][:] = []
+        if config.params.get('ignore_fetches'):
+            fetches[:] = []
 
-        job_fetches = []
-        name = job.get('name', job.get('label'))
-        dependencies = job.setdefault('dependencies', {})
-        prefix = get_artifact_prefix(job)
-        for kind, artifacts in fetches.items():
-            if kind == 'fetch':
-                for fetch in artifacts:
-                    if fetch not in all_fetches:
-                        raise Exception('Missing fetch job for {kind}-{name}: {fetch}'.format(
-                            kind=config.kind, name=name, fetch=fetch))
+        for fetch in fetches:
+            if fetch not in artifacts:
+                raise Exception('Missing fetch job for %s-%s: %s' % (
+                    config.kind, job['name'], fetch))
 
-                    path = all_fetches[fetch]
-                    if not path.startswith('public/'):
-                        raise Exception('Non-public artifacts not supported for {kind}-{name}: '
-                                        '{fetch}'.format(kind=config.kind, name=name, fetch=fetch))
+            if not artifacts[fetch].startswith('public/'):
+                raise Exception('non-public artifacts not supported')
 
-                    dep = 'fetch-{}'.format(fetch)
-                    dependencies[dep] = dep
-                    job_fetches.append('{path}@<{dep}>'.format(path=path, dep=dep))
+        if fetches:
+            job.setdefault('dependencies', {}).update(
+                ('fetch-%s' % f, 'fetch-%s' % f)
+                for f in fetches)
 
-            else:
-                if kind not in dependencies:
-                    raise Exception("{name} can't fetch {kind} artifacts because "
-                                    "it has no {kind} dependencies!".format(name=name, kind=kind))
+            env = job.setdefault('worker', {}).setdefault('env', {})
+            env['MOZ_FETCHES'] = {'task-reference': ' '.join(
+                '%s@<fetch-%s>' % (artifacts[f], f)
+                for f in fetches)}
 
-                for path in artifacts:
-                    job_fetches.append('{prefix}/{path}@<{dep}>'.format(
-                        prefix=prefix, path=path, dep=kind))
-
-        env = job.setdefault('worker', {}).setdefault('env', {})
-        env['MOZ_FETCHES'] = {'task-reference': ' '.join(job_fetches)}
         yield job
 
 
