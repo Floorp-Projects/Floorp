@@ -9,27 +9,64 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Test console select all";
 
-add_task(async function testCtrlA() {
-  const hud = await openNewTabAndConsole(TEST_URI);
+add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
 
-  const jsterm = hud.jsterm;
+async function performTests() {
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+
   jsterm.setInputValue("Ignore These Four Words");
-  const inputNode = jsterm.inputNode;
 
   // Test select all with (cmd|control) + a.
   EventUtils.synthesizeKey("a", { accelKey: true });
 
-  const inputLength = inputNode.selectionEnd - inputNode.selectionStart;
+  const inputLength = getSelectionTextLength(jsterm);
   is(inputLength, jsterm.getInputValue().length, "Select all of input");
 
-  // (cmd|control) + e cannot be disabled on Linux so skip this section on that
-  // OS.
+  // (cmd|control) + e cannot be disabled on Linux so skip this section on that OS.
   if (Services.appinfo.OS !== "Linux") {
    // Test do nothing on Control + E.
     jsterm.setInputValue("Ignore These Four Words");
-    inputNode.selectionStart = 0;
+    setCursorAtStart(jsterm);
     EventUtils.synthesizeKey("e", { accelKey: true });
-    is(inputNode.selectionStart, 0,
-      "control|cmd + e does not move to end of input");
+    checkSelectionStart(jsterm, 0, "control|cmd + e does not move to end of input");
   }
-});
+}
+
+function getSelectionTextLength(jsterm) {
+  if (jsterm.inputNode) {
+    return jsterm.inputNode.selectionEnd - jsterm.inputNode.selectionStart;
+  }
+
+  if (jsterm.editor) {
+    return jsterm.editor.getSelection().length;
+  }
+
+  return null;
+}
+
+function setCursorAtStart(jsterm) {
+  if (jsterm.inputNode) {
+    jsterm.inputNode.selectionStart = 0;
+  }
+
+  if (jsterm.editor) {
+    jsterm.editor.setCursor({line: 0, ch: 0});
+  }
+}
+
+function checkSelectionStart(jsterm, expectedCursorIndex, assertionInfo) {
+  if (jsterm.inputNode) {
+    const { selectionStart } = jsterm.inputNode;
+    is(selectionStart, expectedCursorIndex, assertionInfo);
+  } else {
+    const [ selection ] = jsterm.editor.codeMirror.listSelections();
+    const { head} = selection;
+    is(head.ch, expectedCursorIndex, assertionInfo);
+  }
+}

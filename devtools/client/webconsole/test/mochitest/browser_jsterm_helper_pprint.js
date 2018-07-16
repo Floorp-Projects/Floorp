@@ -6,6 +6,14 @@
 const TEST_URI = "data:text/html,Test <code>pprint()</code> jsterm helper";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
@@ -31,4 +39,4 @@ add_task(async function() {
   jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
   message = await onMessage;
   ok(message, "`pprint(function)` shows function source");
-});
+}

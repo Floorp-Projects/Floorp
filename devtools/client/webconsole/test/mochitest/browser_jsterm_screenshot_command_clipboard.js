@@ -13,6 +13,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 const dpr = "--dpr 1";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   ok(hud, "web console opened");
 
@@ -23,7 +31,7 @@ add_task(async function() {
   // overflow
   await createScrollbarOverflow();
   await testFullpageClipboardScrollbar(hud);
-});
+}
 
 async function testClipboard(hud) {
   const command = `:screenshot --clipboard ${dpr}`;
