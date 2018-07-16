@@ -19,10 +19,8 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
@@ -367,15 +365,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         applyInputStyle(linearLayout, input);
 
-        View widget = input.getView(mContext);
-
-        // Make sure the widget will not be chopped on smaller screens
-        LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        parentParams.gravity = Gravity.CENTER;
-        widget.setLayoutParams(parentParams);
-
-        linearLayout.addView(widget);
+        linearLayout.addView(input.getView(mContext));
 
         return linearLayout;
     }
