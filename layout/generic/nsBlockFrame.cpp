@@ -842,7 +842,8 @@ nsBlockFrame::GetPrefISize(gfxContext *aRenderingContext)
         if (!data.mLineIsEmpty || BlockCanIntersectFloats(line->mFirstChild)) {
           breakType = StyleClear::Both;
         } else {
-          breakType = line->mFirstChild->StyleDisplay()->mBreakType;
+          breakType = line->mFirstChild->
+            StyleDisplay()->PhysicalBreakType(data.mLineContainerWM);
         }
         data.ForceBreak(breakType);
         data.mCurrentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
@@ -3225,7 +3226,8 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
   // Prepare the block reflow engine
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
 
-  StyleClear breakType = frame->StyleDisplay()->mBreakType;
+  StyleClear breakType = frame->StyleDisplay()->
+    PhysicalBreakType(aState.mReflowInput.GetWritingMode());
   if (StyleClear::None != aState.mFloatBreakType) {
     breakType = nsLayoutUtils::CombineBreakType(breakType,
                                                 aState.mFloatBreakType);
@@ -4344,7 +4346,8 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
     nextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
   }
 
-  StyleFloat floatStyle = aFloat->StyleDisplay()->mFloat;
+  StyleFloat floatStyle =
+    aFloat->StyleDisplay()->PhysicalFloats(aState.mReflowInput.GetWritingMode());
   if (floatStyle == StyleFloat::Left) {
     aState.FloatManager()->SetSplitLeftFloatAcrossBreak();
   } else {

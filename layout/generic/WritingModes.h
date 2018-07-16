@@ -2187,6 +2187,32 @@ nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
                           : MaxHeightDependsOnContainer();
 }
 
+inline mozilla::StyleFloat
+nsStyleDisplay::PhysicalFloats(mozilla::WritingMode aWM) const
+{
+  using StyleFloat = mozilla::StyleFloat;
+  if (mFloat == StyleFloat::InlineStart) {
+    return aWM.IsBidiLTR() ? StyleFloat::Left : StyleFloat::Right;
+  }
+  if (mFloat == StyleFloat::InlineEnd) {
+    return aWM.IsBidiLTR() ? StyleFloat::Right : StyleFloat::Left;
+  }
+  return mFloat;
+}
+
+inline mozilla::StyleClear
+nsStyleDisplay::PhysicalBreakType(mozilla::WritingMode aWM) const
+{
+  using StyleClear = mozilla::StyleClear;
+  if (mBreakType == StyleClear::InlineStart) {
+    return aWM.IsBidiLTR() ? StyleClear::Left : StyleClear::Right;
+  }
+  if (mBreakType == StyleClear::InlineEnd) {
+    return aWM.IsBidiLTR() ? StyleClear::Right : StyleClear::Left;
+  }
+  return mBreakType;
+}
+
 inline bool
 nsStyleMargin::HasBlockAxisAuto(mozilla::WritingMode aWM) const
 {

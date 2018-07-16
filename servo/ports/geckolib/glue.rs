@@ -3951,7 +3951,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands;
     use style::values::specified::BorderStyle;
-    use style::values::specified::Float;
     use style::values::generics::font::FontStyle;
 
     let long = get_longhand_from_id!(property);
@@ -3959,22 +3958,14 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
 
     let prop = match_wrap_declared! { long,
         MozUserModify => longhands::_moz_user_modify::SpecifiedValue::from_gecko_keyword(value),
+        // TextEmphasisPosition => FIXME implement text-emphasis-position
         Direction => longhands::direction::SpecifiedValue::from_gecko_keyword(value),
         Display => longhands::display::SpecifiedValue::from_gecko_keyword(value),
-        Float => {
-            const LEFT: u32 = structs::StyleFloat::Left as u32;
-            const RIGHT: u32 = structs::StyleFloat::Right as u32;
-            const NONE: u32 = structs::StyleFloat::None as u32;
-            match value {
-                LEFT => Float::Left,
-                RIGHT => Float::Right,
-                NONE => Float::None,
-                _ => unreachable!(),
-            }
-        },
+        Float => longhands::float::SpecifiedValue::from_gecko_keyword(value),
         VerticalAlign => longhands::vertical_align::SpecifiedValue::from_gecko_keyword(value),
         TextAlign => longhands::text_align::SpecifiedValue::from_gecko_keyword(value),
         TextEmphasisPosition => longhands::text_emphasis_position::SpecifiedValue::from_gecko_keyword(value),
+        Clear => longhands::clear::SpecifiedValue::from_gecko_keyword(value),
         FontSize => {
             // We rely on Gecko passing in font-size values (0...7) here.
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
