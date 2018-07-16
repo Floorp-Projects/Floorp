@@ -17,6 +17,13 @@ types.addDictType("imageData", {
   size: "json"
 });
 
+types.addDictType("windowDimensions", {
+  // The window innerWidth
+  innerWidth: "nullable:number",
+  // The window innerHeight
+  innerHeight: "nullable:number",
+});
+
 /**
  * Returned from any call that might return a node that isn't connected to root
  * by nodes the child has seen, such as querySelector.
@@ -123,6 +130,10 @@ const nodeSpec = generateActorSpec({
         value: RetVal("string")
       }
     },
+    getOwnerGlobalDimensions: {
+      request: {},
+      response: RetVal("windowDimensions")
+    }
   }
 });
 
