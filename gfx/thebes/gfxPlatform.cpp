@@ -2728,9 +2728,6 @@ gfxPlatform::InitOMTPConfig()
   if (InSafeMode()) {
     omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
                       NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
-  } else if (gfxPrefs::TileEdgePaddingEnabled()) {
-    omtp.ForceDisable(FeatureStatus::Blocked, "OMTP does not yet support tiling with edge padding",
-                      NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_TILING"));
   }
 
   if (omtp.IsEnabled()) {
