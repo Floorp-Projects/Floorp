@@ -1695,7 +1695,10 @@ var gBrowserInit = {
                 window.arguments[4] || false, referrerPolicy, userContextId,
                 // pass the origin principal (if any) and force its use to create
                 // an initial about:blank viewer if present:
-                window.arguments[7], !!window.arguments[7], window.arguments[8]);
+                window.arguments[7], !!window.arguments[7], window.arguments[8],
+                // TODO fix allowInheritPrincipal
+                // (this is required by javascript: drop to the new window) Bug 1475201
+                true);
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -2384,7 +2387,7 @@ function BrowserTryToCloseWindow() {
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  userContextId, originPrincipal, forceAboutBlankViewerInCurrent,
-                 triggeringPrincipal) {
+                 triggeringPrincipal, allowInheritPrincipal = false) {
   try {
     openLinkIn(uri, "current",
                { referrerURI: referrer,
@@ -2395,6 +2398,7 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  originPrincipal,
                  triggeringPrincipal,
                  forceAboutBlankViewerInCurrent,
+                 allowInheritPrincipal,
                });
   } catch (e) {}
 }
@@ -3563,6 +3567,9 @@ var newTabButtonObserver = {
         let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewTabWith(data.url, shiftKey, {
+          // TODO fix allowInheritPrincipal
+          // (this is required by javascript: drop to the new window) Bug 1475201
+          allowInheritPrincipal: true,
           postData: data.postData,
           allowThirdPartyFixup: true,
           triggeringPrincipal,
@@ -3595,6 +3602,9 @@ var newWindowButtonObserver = {
         let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
         openNewWindowWith(data.url, {
+          // TODO fix allowInheritPrincipal
+          // (this is required by javascript: drop to the new window) Bug 1475201
+          allowInheritPrincipal: true,
           postData: data.postData,
           allowThirdPartyFixup: true,
           triggeringPrincipal,
@@ -6096,7 +6106,7 @@ function middleMousePaste(event) {
         lastLocationChange == gBrowser.selectedBrowser.lastLocationChange) {
       openUILink(data.url, event,
                  { ignoreButton: true,
-                   disallowInheritPrincipal: !data.mayInheritPrincipal,
+                   allowInheritPrincipal: data.mayInheritPrincipal,
                    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
                  });
     }
