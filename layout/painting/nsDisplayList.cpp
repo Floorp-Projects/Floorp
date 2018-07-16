@@ -7637,6 +7637,7 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
 {
+  mShouldFlatten = false;
   mHasBounds = false;
   mStoredList.SetClipChain(nullptr, true);
   mStoredList.SetBuildingRect(mChildrenBuildingRect);
@@ -7688,6 +7689,18 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder);
   UpdateBoundsFor3D(aBuilder);
+}
+
+bool
+nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
+{
+  if (gfxVars::UseWebRender() || !gfxPrefs::LayoutFlattenTransform()) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mShouldFlatten);
+  mShouldFlatten = GetTransform().Is2D();
+  return mShouldFlatten;
 }
 
 /* Returns the delta specified by the transform-origin property.
