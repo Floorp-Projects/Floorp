@@ -759,6 +759,9 @@ BrowserGlue.prototype = {
 
     // Initialize the default l10n resource sources for L10nRegistry.
     let locales = Services.locale.getPackagedLocales();
+    const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+    L10nRegistry.registerSource(greSource);
+
     const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
     L10nRegistry.registerSource(appSource);
 
