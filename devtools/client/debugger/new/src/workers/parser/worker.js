@@ -22,9 +22,9 @@ var _frameworks = require("./frameworks");
 
 var _pausePoints = require("./pausePoints");
 
-var _mapOriginalExpression = require("./mapOriginalExpression");
+var _mapExpression = require("./mapExpression");
 
-var _mapOriginalExpression2 = _interopRequireDefault(_mapOriginalExpression);
+var _mapExpression2 = _interopRequireDefault(_mapExpression);
 
 var _devtoolsUtils = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-utils"];
 
@@ -50,5 +50,5 @@ self.onmessage = workerHandler({
   hasSyntaxError: _validate.hasSyntaxError,
   getFramework: _frameworks.getFramework,
   getPausePoints: _pausePoints.getPausePoints,
-  mapOriginalExpression: _mapOriginalExpression2.default
+  mapExpression: _mapExpression2.default
 });
