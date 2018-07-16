@@ -1796,8 +1796,27 @@ WebConsoleActor.prototype =
    * @param string url
    *        The URL of the request to search for.
    */
-  getNetworkEventActorForURL(url) {
-    return this._networkEventActorsByURL.get(url);
+  getRequestContentForURL(url) {
+    // When running in Parent Process, call the NetworkMonitorActor directly.
+    if (this.networkMonitorActor) {
+      return this.networkMonitorActor.getRequestContentForURL(url);
+    } else if (this.networkMonitorActorId) {
+      // Otherwise, if the netmonitor is started, but on the parent process,
+      // pipe the data through the message manager
+      const messageManager = this.parentActor.messageManager;
+      return new Promise(resolve => {
+        const onMessage = ({ data }) => {
+          if (data.url == url) {
+            messageManager.removeMessageListener("debug:request-content", onMessage);
+            resolve(data.content);
+          }
+        };
+        messageManager.addMessageListener("debug:request-content", onMessage);
+        messageManager.sendAsyncMessage("debug:request-content", { url });
+      });
+    }
+    // Finally, if the netmonitor is not started at all, return null
+    return null;
   },
 
   /**
