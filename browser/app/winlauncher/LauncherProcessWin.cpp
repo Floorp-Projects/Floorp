@@ -104,16 +104,60 @@ ProcessCmdLine(int& aArgc, wchar_t* aArgv[])
   return result;
 }
 
+#if defined(MOZ_LAUNCHER_PROCESS)
+
+static mozilla::Maybe<bool>
+IsSameBinaryAsParentProcess()
+{
+  mozilla::Maybe<DWORD> parentPid = mozilla::nt::GetParentProcessId();
+  if (!parentPid) {
+    return mozilla::Nothing();
+  }
+
+  nsAutoHandle parentProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
+                                           FALSE, parentPid.value()));
+  if (!parentProcess.get()) {
+    return mozilla::Nothing();
+  }
+
+  WCHAR parentExe[MAX_PATH + 1] = {};
+  DWORD parentExeLen = mozilla::ArrayLength(parentExe);
+  if (!::QueryFullProcessImageNameW(parentProcess.get(), 0, parentExe,
+                                    &parentExeLen)) {
+    return mozilla::Nothing();
+  }
+
+  WCHAR ourExe[MAX_PATH + 1] = {};
+  DWORD ourExeOk = ::GetModuleFileNameW(nullptr, ourExe,
+                                        mozilla::ArrayLength(ourExe));
+  if (!ourExeOk || ourExeOk == mozilla::ArrayLength(ourExe)) {
+    return mozilla::Nothing();
+  }
+
+  bool isSame = parentExeLen == ourExeOk &&
+                !_wcsnicmp(ourExe, parentExe, ourExeOk);
+  return mozilla::Some(isSame);
+}
+
+#endif // defined(MOZ_LAUNCHER_PROCESS)
+
 namespace mozilla {
 
-// Eventually we want to be able to set a build config flag such that, when set,
-// this function will always return true.
 bool
 RunAsLauncherProcess(int& argc, wchar_t** argv)
 {
+#if defined(MOZ_LAUNCHER_PROCESS)
+  Maybe<bool> isChildOfFirefox = IsSameBinaryAsParentProcess();
+  if (!isChildOfFirefox) {
+    return true;
+  }
+
+  return !isChildOfFirefox.value();
+#else
   return CheckArg(argc, argv, L"launcher",
                   static_cast<const wchar_t**>(nullptr),
-                  CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+                  CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg) == ARG_FOUND;
+#endif // defined(MOZ_LAUNCHER_PROCESS)
 }
 
 int
