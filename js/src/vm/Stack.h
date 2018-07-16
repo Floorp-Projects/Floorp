@@ -1915,9 +1915,8 @@ class InterpreterFrameIterator
 // asJSJit() and asWasm(), but the user has to be careful not to have those be
 // used after JitFrameIter leaves the scope or the operator++ is called.
 //
-// TODO(bug 1360211) In particular, this can handle the transition from wasm to
-// ion and from ion to wasm, since these will be interleaved in the same
-// JitActivation.
+// In particular, this can handle the transition from wasm to jit and from jit
+// to wasm, since these can be interleaved in the same JitActivation.
 class JitFrameIter
 {
   protected:
