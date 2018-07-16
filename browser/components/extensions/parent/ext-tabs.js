@@ -572,7 +572,7 @@ this.tabs = class extends ExtensionAPI {
             } else {
               url = window.BROWSER_NEW_TAB_URL;
             }
-            // Only set disallowInheritPrincipal on non-discardable urls as it
+            // Only set allowInheritPrincipal on discardable urls as it
             // will override creating a lazy browser.  Setting triggeringPrincipal
             // will ensure other cases are handled, but setting it may prevent
             // creating about and data urls.
@@ -580,12 +580,15 @@ this.tabs = class extends ExtensionAPI {
             if (!discardable) {
               // Make sure things like about:blank and data: URIs never inherit,
               // and instead always get a NullPrincipal.
-              options.disallowInheritPrincipal = true;
+              options.allowInheritPrincipal = false;
               // Falling back to codebase here as about: requires it, however is safe.
               principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(url), {
                 userContextId: options.userContextId,
                 privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser) ? 1 : 0,
               });
+            } else {
+              options.allowInheritPrincipal = true;
+              options.triggeringPrincipal = context.principal;
             }
 
             tabListener.initTabReady();
