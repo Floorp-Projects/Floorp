@@ -586,17 +586,20 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable
   nsString mFileName;
   uint32_t mLineNum;
   uint32_t mColumnNum;
+  nsString mScriptSample;
 
 public:
   LogViolationDetailsRunnable(WorkerPrivate* aWorker,
                               const nsString& aFileName,
                               uint32_t aLineNum,
-                              uint32_t aColumnNum)
+                              uint32_t aColumnNum,
+                              const nsAString& aScriptSample)
     : WorkerMainThreadRunnable(aWorker,
                                NS_LITERAL_CSTRING("RuntimeService :: LogViolationDetails"))
     , mFileName(aFileName)
     , mLineNum(aLineNum)
     , mColumnNum(aColumnNum)
+    , mScriptSample(aScriptSample)
   {
     MOZ_ASSERT(aWorker);
   }
@@ -608,12 +611,24 @@ private:
 };
 
 bool
-ContentSecurityPolicyAllows(JSContext* aCx)
+ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleValue aValue)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   worker->AssertIsOnWorkerThread();
 
   if (worker->GetReportCSPViolations()) {
+    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aValue));
+    if (NS_WARN_IF(!jsString)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
+    nsAutoJSString scriptSample;
+    if (NS_WARN_IF(!scriptSample.init(aCx, jsString))) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
     nsString fileName;
     uint32_t lineNum = 0;
     uint32_t columnNum = 0;
@@ -626,7 +641,8 @@ ContentSecurityPolicyAllows(JSContext* aCx)
     }
 
     RefPtr<LogViolationDetailsRunnable> runnable =
-        new LogViolationDetailsRunnable(worker, fileName, lineNum, columnNum);
+        new LogViolationDetailsRunnable(worker, fileName, lineNum, columnNum,
+                                        scriptSample);
 
     ErrorResult rv;
     runnable->Dispatch(Killing, rv);
@@ -2638,12 +2654,10 @@ LogViolationDetailsRunnable::MainThreadRun()
 
   nsIContentSecurityPolicy* csp = mWorkerPrivate->GetCSP();
   if (csp) {
-    NS_NAMED_LITERAL_STRING(scriptSample,
-        "Call to eval() or related function blocked by CSP.");
     if (mWorkerPrivate->GetReportCSPViolations()) {
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                nullptr, // triggering element
-                               mFileName, scriptSample, mLineNum, mColumnNum,
+                               mFileName, mScriptSample, mLineNum, mColumnNum,
                                EmptyString(), EmptyString());
     }
   }

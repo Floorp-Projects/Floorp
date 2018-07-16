@@ -222,7 +222,7 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
     MOZ_ASSERT_IF(evalType == INDIRECT_EVAL, IsGlobalLexicalEnvironment(env));
     AssertInnerizedEnvironmentChain(cx, *env);
 
-    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, cx->global())) {
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, v, cx->global())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
@@ -327,7 +327,8 @@ js::DirectEvalStringFromIon(JSContext* cx,
 {
     AssertInnerizedEnvironmentChain(cx, *env);
 
-    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, cx->global())) {
+    RootedValue v(cx, StringValue(str));
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, v, cx->global())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }

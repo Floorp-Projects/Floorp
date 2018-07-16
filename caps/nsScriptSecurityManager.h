@@ -88,7 +88,7 @@ private:
 
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
     static bool
-    ContentSecurityPolicyPermitsJSAction(JSContext *cx);
+    ContentSecurityPolicyPermitsJSAction(JSContext *cx, JS::HandleValue aValue);
 
     static bool
     JSPrincipalsSubsume(JSPrincipals *first, JSPrincipals *second);

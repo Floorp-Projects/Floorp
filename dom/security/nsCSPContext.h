@@ -128,6 +128,11 @@ class nsCSPContext : public nsIContentSecurityPolicy
       return mLoadingContext;
     }
 
+    static uint32_t ScriptSampleMaxLength()
+    {
+      return std::max(sScriptSampleMaxLength, 0);
+    }
+
   private:
     bool permitsInternal(CSPDirective aDir,
                          mozilla::dom::Element* aTriggeringElement,
@@ -152,11 +157,6 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                uint32_t aColumnNumber);
 
     static int32_t sScriptSampleMaxLength;
-
-    static uint32_t ScriptSampleMaxLength()
-    {
-      return std::max(sScriptSampleMaxLength, 0);
-    }
 
     static bool sViolationEventsEnabled;
 

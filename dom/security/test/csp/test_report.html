@@ -57,7 +57,7 @@ window.checkResults = function(reportObj) {
 
   is(cspReport["source-file"], docUri, "Incorrect source-file");
 
-  is(cspReport["script-sample"], "\n    var foo = \"propEscFoo\";\n    var bar...",
+  is(cspReport["script-sample"], "\n    var foo = \"propEscFoo\";\n    var bar…",
      "Incorrect script-sample");
 
   is(cspReport["line-number"], 7, "Incorrect line-number");
