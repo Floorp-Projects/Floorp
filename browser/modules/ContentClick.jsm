@@ -77,6 +77,8 @@ var ContentClick = {
       params.userContextId = json.originAttributes.userContextId;
     }
 
+    params.allowInheritPrincipal = true;
+
     window.openLinkIn(json.href, where, params);
   }
 };
