@@ -7,8 +7,8 @@
 
 "use strict";
 
-const toolId1 = "test-tool-1";
-const toolId2 = "test-tool-2";
+const toolId1 = "testtool1";
+const toolId2 = "testtool2";
 
 function test() {
   addTab("about:blank").then(runTests1);
