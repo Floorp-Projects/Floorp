@@ -113,10 +113,9 @@ public:
     }
     nsTArray<RefPtr<MediaDeviceInfo>> infos;
     for (auto& device : devices) {
-      nsString type;
-      device->GetType(type);
-      bool isVideo = type.EqualsLiteral("video");
-      bool isAudio = type.EqualsLiteral("audio");
+      MediaDevice* dev = static_cast<MediaDevice*>(device.get());
+      bool isVideo = dev->mKind == dom::MediaDeviceKind::Videoinput;
+      bool isAudio = dev->mKind == dom::MediaDeviceKind::Audioinput;
       if (isVideo || isAudio) {
         MediaDeviceKind kind = isVideo ?
             MediaDeviceKind::Videoinput : MediaDeviceKind::Audioinput;
