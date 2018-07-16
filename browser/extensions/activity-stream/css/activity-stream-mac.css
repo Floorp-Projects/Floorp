@@ -233,7 +233,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll; }
-  body.hide-onboarding, body.hide-main > #onboarding-overlay-button {
+  body.hide-onboarding > #onboarding-overlay-button,
+  body.hide-main > #onboarding-overlay-button {
     display: none !important; }
   body.hide-main > #onboarding-notification-bar {
     display: none; }
@@ -1847,6 +1848,9 @@ a.firstrun-link {
       height: 30px;
       padding: 4px 0 6px;
       font-size: 15px; }
+      .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active {
+        box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+        transition: box-shadow 150ms; }
 
 .SimpleSnippet.tall {
   padding: 27px 0; }
@@ -1979,6 +1983,9 @@ a.firstrun-link {
       .onboardingMessage .onboardingButton {
         float: none;
         margin-top: 30px; } }
+    .onboardingMessage .onboardingButton:focus, .onboardingMessage .onboardingButton.active {
+      box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+      transition: box-shadow 150ms; }
   .onboardingMessage::before {
     content: '';
     height: 220px;
