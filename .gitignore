@@ -15,6 +15,7 @@ ID
 
 # Vim swap files.
 .*.sw[a-z]
+.sw[a-z]
 
 # Emacs directory variable files.
 **/.dir-locals.el
