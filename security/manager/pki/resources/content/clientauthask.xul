@@ -33,11 +33,10 @@
     </groupbox>
     <groupbox>
     <description style="font-weight: bold;">&clientAuthAsk.message2;</description>
-    <broadcaster id="certSelected" oncommand="onCertSelected();"/>
     <!-- The items in this menulist must never be sorted,
          but remain in the order filled by the application
     -->
-    <menulist id="nicknames" observes="certSelected">
+    <menulist id="nicknames" oncommand="onCertSelected();">
         <menupopup/>
     </menulist>
     <description>&clientAuthAsk.message3;</description>

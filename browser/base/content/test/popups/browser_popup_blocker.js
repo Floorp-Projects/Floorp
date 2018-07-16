@@ -56,7 +56,7 @@ add_task(async function test_opening_blocked_popups() {
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
 
   // Press the button.
-  let allow = menu.querySelector("[observes='blockedPopupAllowSite']");
+  let allow = document.getElementById("blockedPopupAllowSite");
   allow.doCommand();
   await BrowserTestUtils.waitForCondition(() =>
     popupTabs.length == 2 &&

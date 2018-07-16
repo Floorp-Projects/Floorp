@@ -399,19 +399,20 @@
                 observes="bookmarkThisPageBroadcaster"
                 key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
+                disabled="true"
 #ifndef XP_MACOSX
                 class="menuitem-iconic"
 #endif
                 label="&subscribeToPageMenuitem.label;"
                 oncommand="return FeedHandler.subscribeToFeed(null, event);"
                 onclick="checkForMiddleClick(this, event);"
-                observes="singleFeedMenuitemState"/>
+                />
       <menu id="subscribeToPageMenupopup"
+            hidden="true"
 #ifndef XP_MACOSX
             class="menu-iconic"
 #endif
-            label="&subscribeToPageMenupopup.label;"
-            observes="multipleFeedsMenuState">
+            label="&subscribeToPageMenupopup.label;">
         <menupopup id="subscribeToPageSubmenuMenupopup"
                    onpopupshowing="return FeedHandler.buildFeedList(event.target);"
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
@@ -511,8 +512,12 @@
                     accesskey="&webDeveloperMenu.accesskey;">
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_pageSource"
-                            observes="devtoolsMenuBroadcaster_PageSource"
-                            accesskey="&pageSourceCmd.accesskey;"/>
+                            label="&pageSourceCmd.label;"
+                            key="key_viewSource"
+                            command="View:PageSource"
+                            accesskey="&pageSourceCmd.accesskey;">
+                    <observes element="canViewSource" attribute="disabled"/>
+                  </menuitem>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"
@@ -609,14 +614,14 @@
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           label="&reportDeceptiveSiteMenu.title;"
                           accesskey="&reportDeceptiveSiteMenu.accesskey;"
-                          observes="reportPhishingBroadcaster"
+                          disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"
                           hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
                           label="&safeb.palm.notdeceptive.label;"
                           accesskey="&safeb.palm.notdeceptive.accesskey;"
-                          observes="reportPhishingErrorBroadcaster"
+                          disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
                           onclick="checkForMiddleClick(this, event);"
                           hidden="true"/>
