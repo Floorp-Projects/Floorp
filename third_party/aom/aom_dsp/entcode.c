@@ -9,10 +9,6 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "./config.h"
-#endif
-
 #include "aom_dsp/entcode.h"
 
 /*Given the current total integer number of bits used and the current value of

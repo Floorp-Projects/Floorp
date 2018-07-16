@@ -53,10 +53,9 @@ public class FileCleanupController {
 
         recordCleanupScheduled(sharedPrefs);
 
-        final Intent fileCleanupIntent = new Intent(context, FileCleanupService.class);
-        fileCleanupIntent.setAction(FileCleanupService.ACTION_DELETE_FILES);
-        fileCleanupIntent.putExtra(FileCleanupService.EXTRA_FILE_PATHS_TO_DELETE, getFilesToCleanup(profilePath + "/"));
-        context.startService(fileCleanupIntent);
+        final Intent fileCleanupIntent =
+                FileCleanupService.getFileCleanupIntent(context, getFilesToCleanup(profilePath + "/"));
+        FileCleanupService.enqueueWork(context, fileCleanupIntent);
     }
 
     private static boolean isCleanupReady(final SharedPreferences sharedPrefs) {

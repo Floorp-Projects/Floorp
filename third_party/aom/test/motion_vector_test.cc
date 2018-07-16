@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -22,7 +22,8 @@ namespace {
 
 // Encoding modes
 const libaom_test::TestMode kEncodingModeVectors[] = {
-  ::libaom_test::kTwoPassGood, ::libaom_test::kOnePassGood,
+  ::libaom_test::kTwoPassGood,
+  ::libaom_test::kOnePassGood,
 };
 
 // Encoding speeds
@@ -82,7 +83,7 @@ TEST_P(MotionVectorTestLarge, OverallTest) {
   // Reduce the test clip's resolution while testing on 32-bit system.
   if (sizeof(void *) == 4) {
     width = 2048;
-    height = 1080;
+    height = 360;
   }
 
   cfg_.rc_target_bitrate = 24000;

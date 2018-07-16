@@ -9,6 +9,17 @@
         <service android:name="com.leanplum.LeanplumLocalPushListenerService" android:exported="false"
             android:enabled="true" />
 
+        <service android:name="com.leanplum.LeanplumPushListenerService" android:exported="false">
+            <intent-filter>
+                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                 <category android:name="@ANDROID_PACKAGE_NAME@" />
+            </intent-filter>
+        </service>
+
+         <!-- Leanplum GCM Registration Job Service. -->
+         <service android:name="com.leanplum.LeanplumGcmRegistrationJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
         <!-- Leanplum GCM Instance ID Service -->
         <service android:name="com.leanplum.LeanplumPushInstanceIDService" android:exported="false"
             android:enabled="true">

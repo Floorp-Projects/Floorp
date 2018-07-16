@@ -979,7 +979,7 @@ TestShellParent* GetOrCreateTestShellParent()
 bool
 XRE_SendTestShellCommand(JSContext* aCx,
                          JSString* aCommand,
-                         void* aCallback)
+                         JS::Value* aCallback)
 {
     JS::RootedString cmd(aCx, aCommand);
     TestShellParent* tsp = GetOrCreateTestShellParent();
@@ -996,8 +996,7 @@ XRE_SendTestShellCommand(JSContext* aCx,
         tsp->SendPTestShellCommandConstructor(command));
     NS_ENSURE_TRUE(callback, false);
 
-    JS::Value callbackVal = *reinterpret_cast<JS::Value*>(aCallback);
-    NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
+    NS_ENSURE_TRUE(callback->SetCallback(aCx, *aCallback), false);
 
     return true;
 }

@@ -16,111 +16,7 @@
 #include "av1/common/seg_common.h"
 #include "av1/common/blockd.h"
 
-#if CONFIG_NEW_QUANT
-// Bin widths expressed as a fraction over 128 of the quant stepsize,
-// for the quantization bins 0-4.
-// So a value x indicates the bin is actually factor x/128 of the
-// nominal quantization step.  For the zero bin, the width is only
-// for one side of zero, so the actual width is twice that.
-//
-// Functions with nuq correspond to "non uniform quantization"
-// TODO(sarahparker, debargha): Optimize these tables
-
-typedef struct {
-  uint8_t knots[NUQ_KNOTS];  // offsets
-  uint8_t doff;              // dequantization
-} qprofile_type;
-
-static const qprofile_type nuq[QUANT_PROFILES][COEF_BANDS] = {
-  {
-      // lossless
-      { { 64, 128, 128 }, 0 },  // dc, band 0
-      { { 64, 128, 128 }, 0 },  // band 1
-      { { 64, 128, 128 }, 0 },  // band 2
-      { { 64, 128, 128 }, 0 },  // band 3
-      { { 64, 128, 128 }, 0 },  // band 4
-      { { 64, 128, 128 }, 0 },  // band 5
-  },
-  {
-      { { 64, 128, 128 }, 4 },   // dc, band 0
-      { { 64, 128, 128 }, 6 },   // band 1
-      { { 64, 128, 128 }, 8 },   // band 2
-      { { 64, 128, 128 }, 10 },  // band 3
-      { { 72, 128, 128 }, 12 },  // band 4
-      { { 80, 128, 128 }, 14 }   // band 5
-  },
-  {
-      { { 64, 128, 128 }, 6 },   // dc, band 0
-      { { 64, 128, 128 }, 8 },   // band 1
-      { { 64, 128, 128 }, 10 },  // band 2
-      { { 64, 128, 128 }, 12 },  // band 3
-      { { 72, 128, 128 }, 14 },  // band 4
-      { { 80, 128, 128 }, 16 }   // band 5
-  },
-  {
-      { { 64, 128, 128 }, 8 },   // dc, band 0
-      { { 64, 128, 128 }, 10 },  // band 1
-      { { 64, 128, 128 }, 12 },  // band 2
-      { { 72, 128, 128 }, 14 },  // band 3
-      { { 76, 128, 128 }, 16 },  // band 4
-      { { 80, 128, 128 }, 18 }   // band 5
-  }
-};
-
-static const uint8_t *get_nuq_knots(int band, int q_profile) {
-  return nuq[q_profile][band].knots;
-}
-
-static INLINE int16_t quant_to_doff_fixed(int band, int q_profile) {
-  return nuq[q_profile][band].doff;
-}
-
-// get cumulative bins
-static INLINE void get_cuml_bins_nuq(int q, int band, tran_low_t *cuml_bins,
-                                     int q_profile) {
-  const uint8_t *knots = get_nuq_knots(band, q_profile);
-  int16_t cuml_knots[NUQ_KNOTS];
-  int i;
-  cuml_knots[0] = knots[0];
-  for (i = 1; i < NUQ_KNOTS; ++i) cuml_knots[i] = cuml_knots[i - 1] + knots[i];
-  for (i = 0; i < NUQ_KNOTS; ++i)
-    cuml_bins[i] = ROUND_POWER_OF_TWO(cuml_knots[i] * q, 7);
-}
-
-void av1_get_dequant_val_nuq(int q, int band, tran_low_t *dq,
-                             tran_low_t *cuml_bins, int q_profile) {
-  const uint8_t *knots = get_nuq_knots(band, q_profile);
-  tran_low_t cuml_bins_[NUQ_KNOTS], *cuml_bins_ptr;
-  tran_low_t doff;
-  int i;
-  cuml_bins_ptr = (cuml_bins ? cuml_bins : cuml_bins_);
-  get_cuml_bins_nuq(q, band, cuml_bins_ptr, q_profile);
-  dq[0] = 0;
-  for (i = 1; i < NUQ_KNOTS; ++i) {
-    doff = quant_to_doff_fixed(band, q_profile);
-    doff = ROUND_POWER_OF_TWO(doff * knots[i], 7);
-    dq[i] =
-        cuml_bins_ptr[i - 1] + ROUND_POWER_OF_TWO((knots[i] - doff * 2) * q, 8);
-  }
-  doff = quant_to_doff_fixed(band, q_profile);
-  dq[NUQ_KNOTS] =
-      cuml_bins_ptr[NUQ_KNOTS - 1] + ROUND_POWER_OF_TWO((64 - doff) * q, 7);
-}
-
-tran_low_t av1_dequant_abscoeff_nuq(int v, int q, const tran_low_t *dq) {
-  if (v <= NUQ_KNOTS)
-    return dq[v];
-  else
-    return dq[NUQ_KNOTS] + (v - NUQ_KNOTS) * q;
-}
-
-tran_low_t av1_dequant_coeff_nuq(int v, int q, const tran_low_t *dq) {
-  tran_low_t dqmag = av1_dequant_abscoeff_nuq(abs(v), q, dq);
-  return (v < 0 ? -dqmag : dqmag);
-}
-#endif  // CONFIG_NEW_QUANT
-
-static const int16_t dc_qlookup[QINDEX_RANGE] = {
+static const int16_t dc_qlookup_Q3[QINDEX_RANGE] = {
   4,    8,    8,    9,    10,  11,  12,  12,  13,  14,  15,   16,   17,   18,
   19,   19,   20,   21,   22,  23,  24,  25,  26,  26,  27,   28,   29,   30,
   31,   32,   32,   33,   34,  35,  36,  37,  38,  38,  39,   40,   41,   42,
@@ -142,8 +38,7 @@ static const int16_t dc_qlookup[QINDEX_RANGE] = {
   1184, 1232, 1282, 1336,
 };
 
-#if CONFIG_HIGHBITDEPTH
-static const int16_t dc_qlookup_10[QINDEX_RANGE] = {
+static const int16_t dc_qlookup_10_Q3[QINDEX_RANGE] = {
   4,    9,    10,   13,   15,   17,   20,   22,   25,   28,   31,   34,   37,
   40,   43,   47,   50,   53,   57,   60,   64,   68,   71,   75,   78,   82,
   86,   90,   93,   97,   101,  105,  109,  113,  116,  120,  124,  128,  132,
@@ -166,7 +61,7 @@ static const int16_t dc_qlookup_10[QINDEX_RANGE] = {
   3953, 4089, 4236, 4394, 4559, 4737, 4929, 5130, 5347,
 };
 
-static const int16_t dc_qlookup_12[QINDEX_RANGE] = {
+static const int16_t dc_qlookup_12_Q3[QINDEX_RANGE] = {
   4,     12,    18,    25,    33,    41,    50,    60,    70,    80,    91,
   103,   115,   127,   140,   153,   166,   180,   194,   208,   222,   237,
   251,   266,   281,   296,   312,   327,   343,   358,   374,   390,   405,
@@ -192,9 +87,8 @@ static const int16_t dc_qlookup_12[QINDEX_RANGE] = {
   13501, 13913, 14343, 14807, 15290, 15812, 16356, 16943, 17575, 18237, 18949,
   19718, 20521, 21387,
 };
-#endif
 
-static const int16_t ac_qlookup[QINDEX_RANGE] = {
+static const int16_t ac_qlookup_Q3[QINDEX_RANGE] = {
   4,    8,    9,    10,   11,   12,   13,   14,   15,   16,   17,   18,   19,
   20,   21,   22,   23,   24,   25,   26,   27,   28,   29,   30,   31,   32,
   33,   34,   35,   36,   37,   38,   39,   40,   41,   42,   43,   44,   45,
@@ -217,8 +111,7 @@ static const int16_t ac_qlookup[QINDEX_RANGE] = {
   1567, 1597, 1628, 1660, 1692, 1725, 1759, 1793, 1828,
 };
 
-#if CONFIG_HIGHBITDEPTH
-static const int16_t ac_qlookup_10[QINDEX_RANGE] = {
+static const int16_t ac_qlookup_10_Q3[QINDEX_RANGE] = {
   4,    9,    11,   13,   16,   18,   21,   24,   27,   30,   33,   37,   40,
   44,   48,   51,   55,   59,   63,   67,   71,   75,   79,   83,   88,   92,
   96,   100,  105,  109,  114,  118,  122,  127,  131,  136,  140,  145,  149,
@@ -241,7 +134,7 @@ static const int16_t ac_qlookup_10[QINDEX_RANGE] = {
   6268, 6388, 6512, 6640, 6768, 6900, 7036, 7172, 7312,
 };
 
-static const int16_t ac_qlookup_12[QINDEX_RANGE] = {
+static const int16_t ac_qlookup_12_Q3[QINDEX_RANGE] = {
   4,     13,    19,    27,    35,    44,    54,    64,    75,    87,    99,
   112,   126,   139,   154,   168,   183,   199,   214,   230,   247,   263,
   280,   297,   314,   331,   349,   366,   384,   402,   420,   438,   456,
@@ -267,64 +160,88 @@ static const int16_t ac_qlookup_12[QINDEX_RANGE] = {
   22766, 23214, 23662, 24126, 24590, 25070, 25551, 26047, 26559, 27071, 27599,
   28143, 28687, 29247,
 };
-#endif
 
-int16_t av1_dc_quant(int qindex, int delta, aom_bit_depth_t bit_depth) {
-#if CONFIG_HIGHBITDEPTH
+// Coefficient scaling and quantization with AV1 TX are tailored to
+// the AV1 TX transforms.  Regardless of the bit-depth of the input,
+// the transform stages scale the coefficient values up by a factor of
+// 8 (3 bits) over the scale of the pixel values.  Thus, for 8-bit
+// input, the coefficients have effectively 11 bits of scale depth
+// (8+3), 10-bit input pixels result in 13-bit coefficient depth
+// (10+3) and 12-bit pixels yield 15-bit (12+3) coefficient depth.
+// All quantizers are built using this invariant of x8, 3-bit scaling,
+// thus the Q3 suffix.
+
+// A partial exception to this rule is large transforms; to avoid
+// overflow, TX blocks with > 256 pels (>16x16) are scaled only
+// 4-times unity (2 bits) over the pixel depth, and TX blocks with
+// over 1024 pixels (>32x32) are scaled up only 2x unity (1 bit).
+// This descaling is found via av1_tx_get_scale().  Thus, 16x32, 32x16
+// and 32x32 transforms actually return Q2 coefficients, and 32x64,
+// 64x32 and 64x64 transforms return Q1 coefficients.  However, the
+// quantizers are de-scaled down on-the-fly by the same amount
+// (av1_tx_get_scale()) during quantization, and as such the
+// dequantized/decoded coefficients, even for large TX blocks, are always
+// effectively Q3. Meanwhile, quantized/coded coefficients are Q0
+// because Qn quantizers are applied to Qn tx coefficients.
+
+// Note that encoder decision making (which uses the quantizer to
+// generate several bespoke lamdas for RDO and other heuristics)
+// expects quantizers to be larger for higher-bitdepth input.  In
+// addition, the minimum allowable quantizer is 4; smaller values will
+// underflow to 0 in the actual quantization routines.
+
+int16_t av1_dc_quant_Q3(int qindex, int delta, aom_bit_depth_t bit_depth) {
   switch (bit_depth) {
-    case AOM_BITS_8: return dc_qlookup[clamp(qindex + delta, 0, MAXQ)];
-    case AOM_BITS_10: return dc_qlookup_10[clamp(qindex + delta, 0, MAXQ)];
-    case AOM_BITS_12: return dc_qlookup_12[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_8: return dc_qlookup_Q3[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_10: return dc_qlookup_10_Q3[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_12: return dc_qlookup_12_Q3[clamp(qindex + delta, 0, MAXQ)];
     default:
       assert(0 && "bit_depth should be AOM_BITS_8, AOM_BITS_10 or AOM_BITS_12");
       return -1;
   }
-#else
-  (void)bit_depth;
-  return dc_qlookup[clamp(qindex + delta, 0, MAXQ)];
-#endif
 }
 
-int16_t av1_ac_quant(int qindex, int delta, aom_bit_depth_t bit_depth) {
-#if CONFIG_HIGHBITDEPTH
+int16_t av1_ac_quant_Q3(int qindex, int delta, aom_bit_depth_t bit_depth) {
   switch (bit_depth) {
-    case AOM_BITS_8: return ac_qlookup[clamp(qindex + delta, 0, MAXQ)];
-    case AOM_BITS_10: return ac_qlookup_10[clamp(qindex + delta, 0, MAXQ)];
-    case AOM_BITS_12: return ac_qlookup_12[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_8: return ac_qlookup_Q3[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_10: return ac_qlookup_10_Q3[clamp(qindex + delta, 0, MAXQ)];
+    case AOM_BITS_12: return ac_qlookup_12_Q3[clamp(qindex + delta, 0, MAXQ)];
     default:
       assert(0 && "bit_depth should be AOM_BITS_8, AOM_BITS_10 or AOM_BITS_12");
       return -1;
   }
-#else
-  (void)bit_depth;
-  return ac_qlookup[clamp(qindex + delta, 0, MAXQ)];
-#endif
 }
 
-int16_t av1_qindex_from_ac(int ac, aom_bit_depth_t bit_depth) {
+// In AV1 TX, the coefficients are always scaled up a factor of 8 (3
+// bits), so QTX == Q3.
+
+int16_t av1_dc_quant_QTX(int qindex, int delta, aom_bit_depth_t bit_depth) {
+  return av1_dc_quant_Q3(qindex, delta, bit_depth);
+}
+
+int16_t av1_ac_quant_QTX(int qindex, int delta, aom_bit_depth_t bit_depth) {
+  return av1_ac_quant_Q3(qindex, delta, bit_depth);
+}
+
+int16_t av1_qindex_from_ac_Q3(int ac_Q3, aom_bit_depth_t bit_depth) {
   int i;
-  const int16_t *tab = ac_qlookup;
-  ac *= 4;
-#if CONFIG_HIGHBITDEPTH
+  const int16_t *tab = ac_qlookup_Q3;
   switch (bit_depth) {
     case AOM_BITS_10: {
-      tab = ac_qlookup_10;
-      ac *= 4;
+      tab = ac_qlookup_10_Q3;
       break;
     }
     case AOM_BITS_12: {
-      tab = ac_qlookup_12;
-      ac *= 16;
+      tab = ac_qlookup_12_Q3;
       break;
     }
     default:
       assert(0 && "bit_depth should be AOM_BITS_8, AOM_BITS_10 or AOM_BITS_12");
       return -1;
   }
-#endif
   (void)bit_depth;
   for (i = 0; i < QINDEX_RANGE; i++) {
-    if (ac <= tab[i]) return i;
+    if (ac_Q3 <= tab[i]) return i;
   }
   return QINDEX_RANGE - 1;
 }
@@ -333,55 +250,47 @@ int av1_get_qindex(const struct segmentation *seg, int segment_id,
                    int base_qindex) {
   if (segfeature_active(seg, segment_id, SEG_LVL_ALT_Q)) {
     const int data = get_segdata(seg, segment_id, SEG_LVL_ALT_Q);
-    const int seg_qindex =
-        seg->abs_delta == SEGMENT_ABSDATA ? data : base_qindex + data;
+    const int seg_qindex = base_qindex + data;
     return clamp(seg_qindex, 0, MAXQ);
   } else {
     return base_qindex;
   }
 }
 
-#if CONFIG_AOM_QM
-const qm_val_t *aom_iqmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
-                       TX_SIZE tx_size, int is_intra) {
-  return &cm->giqmatrix[qmlevel][!!is_chroma][!!is_intra][tx_size][0];
+const qm_val_t *av1_iqmatrix(AV1_COMMON *cm, int qmlevel, int plane,
+                             TX_SIZE tx_size) {
+  return &cm->giqmatrix[qmlevel][plane][tx_size][0];
 }
-const qm_val_t *aom_qmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
-                      TX_SIZE tx_size, int is_intra) {
-  return &cm->gqmatrix[qmlevel][!!is_chroma][!!is_intra][tx_size][0];
+const qm_val_t *av1_qmatrix(AV1_COMMON *cm, int qmlevel, int plane,
+                            TX_SIZE tx_size) {
+  return &cm->gqmatrix[qmlevel][plane][tx_size][0];
 }
 
-#if CONFIG_CHROMA_2X2
-#define QM_TOTAL_SIZE 3348
-#else
 #define QM_TOTAL_SIZE 3344
-#endif
-static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
-static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
+static const qm_val_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
+static const qm_val_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
 
-void aom_qm_init(AV1_COMMON *cm) {
-  int q, c, f, t;
+void av1_qm_init(AV1_COMMON *cm) {
+  const int num_planes = av1_num_planes(cm);
+  int q, c, t;
   int current;
   for (q = 0; q < NUM_QM_LEVELS; ++q) {
-    for (c = 0; c < 2; ++c) {
-      for (f = 0; f < 2; ++f) {
-        current = 0;
-        for (t = 0; t < TX_SIZES_ALL; ++t) {
-          const int size = tx_size_2d[t];
-          // Don't use QM for sizes > 32x32
-          if (q == NUM_QM_LEVELS - 1 || size > 1024) {
-            cm->gqmatrix[q][c][f][t] = NULL;
-            cm->giqmatrix[q][c][f][t] = NULL;
-          } else {
-            assert(current + size <= QM_TOTAL_SIZE);
-            cm->gqmatrix[q][c][f][t] = &wt_matrix_ref[AOMMIN(
-                NUM_QM_LEVELS - 1, f == 0 ? q + DEFAULT_QM_INTER_OFFSET : q)][c]
-                                                     [current];
-            cm->giqmatrix[q][c][f][t] = &iwt_matrix_ref[AOMMIN(
-                NUM_QM_LEVELS - 1, f == 0 ? q + DEFAULT_QM_INTER_OFFSET : q)][c]
-                                                       [current];
-            current += size;
-          }
+    for (c = 0; c < num_planes; ++c) {
+      current = 0;
+      for (t = 0; t < TX_SIZES_ALL; ++t) {
+        const int size = tx_size_2d[t];
+        const int qm_tx_size = av1_get_adjusted_tx_size(t);
+        if (q == NUM_QM_LEVELS - 1) {
+          cm->gqmatrix[q][c][t] = NULL;
+          cm->giqmatrix[q][c][t] = NULL;
+        } else if (t != qm_tx_size) {  // Reuse matrices for 'qm_tx_size'
+          cm->gqmatrix[q][c][t] = cm->gqmatrix[q][c][qm_tx_size];
+          cm->giqmatrix[q][c][t] = cm->giqmatrix[q][c][qm_tx_size];
+        } else {
+          assert(current + size <= QM_TOTAL_SIZE);
+          cm->gqmatrix[q][c][t] = &wt_matrix_ref[q][c >= 1][current];
+          cm->giqmatrix[q][c][t] = &iwt_matrix_ref[q][c >= 1][current];
+          current += size;
         }
       }
     }
@@ -399,13 +308,9 @@ void aom_qm_init(AV1_COMMON *cm) {
    frequency domain according to different nominal viewing
    distances.
  */
-static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
+static const qm_val_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        43, 86, 86, 166,
-#endif
         /* Size 4x4 */
         32, 43, 73, 97, 43, 67, 94, 110, 73, 94, 137, 150, 97, 110, 150, 200,
         /* Size 8x8 */
@@ -632,10 +537,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         89, 88, 87, 90, 93, 97, 99, 105, 107, 115, 116, 124, 127, 135, 139, 146,
         152, 159, 166, 171, 182, 186, 191, 193, 201, 203, 204 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        50, 62, 62, 100,
-#endif
         /* Size 4x4 */
         35, 46, 57, 66, 46, 60, 69, 71, 57, 69, 90, 90, 66, 71, 90, 109,
         /* Size 8x8 */
@@ -848,10 +749,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        39, 82, 82, 155,
-#endif
         /* Size 4x4 */
         32, 41, 69, 92, 41, 63, 88, 103, 69, 88, 127, 140, 92, 103, 140, 184,
         /* Size 8x8 */
@@ -1076,10 +973,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         94, 96, 101, 102, 110, 111, 118, 121, 129, 132, 138, 144, 150, 156, 161,
         171, 174, 179, 181, 188, 188, 190 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        48, 60, 60, 97,
-#endif
         /* Size 4x4 */
         33, 45, 56, 64, 45, 58, 66, 69, 56, 66, 86, 87, 64, 69, 87, 105,
         /* Size 8x8 */
@@ -1291,10 +1184,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        39, 76, 76, 140,
-#endif
         /* Size 4x4 */
         32, 38, 63, 86, 38, 56, 78, 97, 63, 78, 113, 130, 86, 97, 130, 169,
         /* Size 8x8 */
@@ -1515,10 +1404,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         97, 98, 105, 106, 113, 115, 122, 125, 131, 136, 141, 147, 151, 160, 163,
         168, 169, 175, 175, 176 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        48, 58, 58, 91,
-#endif
         /* Size 4x4 */
         32, 45, 53, 63, 45, 55, 62, 67, 53, 62, 80, 84, 63, 67, 84, 101,
         /* Size 8x8 */
@@ -1730,10 +1615,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        36, 71, 71, 134,
-#endif
         /* Size 4x4 */
         32, 37, 58, 81, 37, 54, 72, 91, 58, 72, 102, 121, 81, 91, 121, 156,
         /* Size 8x8 */
@@ -1953,10 +1834,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         108, 110, 116, 119, 124, 129, 134, 139, 142, 150, 153, 157, 157, 163,
         163, 163 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        47, 55, 55, 89,
-#endif
         /* Size 4x4 */
         32, 45, 51, 61, 45, 54, 59, 65, 51, 59, 75, 81, 61, 65, 81, 97,
         /* Size 8x8 */
@@ -2168,10 +2045,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        35, 63, 63, 117,
-#endif
         /* Size 4x4 */
         32, 34, 53, 75, 34, 49, 64, 81, 53, 64, 91, 112, 75, 81, 112, 140,
         /* Size 8x8 */
@@ -2387,10 +2260,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         105, 111, 113, 118, 122, 126, 131, 134, 141, 143, 147, 147, 152, 151,
         152 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        47, 52, 52, 82,
-#endif
         /* Size 4x4 */
         32, 46, 49, 58, 46, 53, 55, 62, 49, 55, 70, 78, 58, 62, 78, 91,
         /* Size 8x8 */
@@ -2601,10 +2470,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        35, 58, 58, 105,
-#endif
         /* Size 4x4 */
         32, 34, 49, 72, 34, 48, 60, 79, 49, 60, 82, 104, 72, 79, 104, 134,
         /* Size 8x8 */
@@ -2817,10 +2682,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         69, 69, 73, 73, 78, 78, 84, 84, 90, 90, 96, 96, 103, 103, 110, 110, 118,
         118, 125, 125, 133, 133, 136, 136, 141 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        47, 50, 50, 76,
-#endif
         /* Size 4x4 */
         32, 46, 47, 57, 46, 53, 54, 60, 47, 54, 66, 75, 57, 60, 75, 89,
         /* Size 8x8 */
@@ -3031,10 +2892,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        34, 52, 52, 89,
-#endif
         /* Size 4x4 */
         32, 33, 45, 62, 33, 39, 51, 64, 45, 51, 71, 87, 62, 64, 87, 108,
         /* Size 8x8 */
@@ -3246,10 +3103,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         65, 64, 64, 69, 69, 73, 74, 77, 79, 81, 85, 86, 91, 91, 98, 99, 103,
         105, 108, 112, 114, 119, 119, 127, 127 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        41, 48, 48, 69,
-#endif
         /* Size 4x4 */
         31, 42, 47, 53, 42, 48, 50, 54, 47, 50, 61, 67, 53, 54, 67, 78,
         /* Size 8x8 */
@@ -3460,10 +3313,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 47, 47, 75,
-#endif
         /* Size 4x4 */
         32, 33, 42, 55, 33, 38, 46, 57, 42, 46, 63, 75, 55, 57, 75, 92,
         /* Size 8x8 */
@@ -3673,10 +3522,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         58, 62, 63, 65, 68, 68, 72, 73, 76, 79, 79, 84, 85, 88, 92, 92, 97, 98,
         100, 105, 105, 109 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        39, 47, 47, 63,
-#endif
         /* Size 4x4 */
         31, 41, 46, 51, 41, 48, 48, 51, 46, 48, 58, 62, 51, 51, 62, 71,
         /* Size 8x8 */
@@ -3887,10 +3732,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 42, 42, 64,
-#endif
         /* Size 4x4 */
         32, 32, 38, 51, 32, 35, 40, 49, 38, 40, 54, 64, 51, 49, 64, 81,
         /* Size 8x8 */
@@ -4099,10 +3940,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         49, 49, 51, 54, 54, 57, 60, 60, 63, 65, 65, 69, 71, 72, 75, 76, 77, 81,
         82, 83, 87, 87 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        38, 45, 45, 59,
-#endif
         /* Size 4x4 */
         31, 38, 47, 49, 38, 47, 46, 46, 47, 46, 54, 57, 49, 46, 57, 66,
         /* Size 8x8 */
@@ -4313,10 +4150,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 38, 38, 54,
-#endif
         /* Size 4x4 */
         32, 32, 35, 43, 32, 34, 37, 43, 35, 37, 48, 54, 43, 43, 54, 65,
         /* Size 8x8 */
@@ -4525,10 +4358,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         45, 45, 45, 45, 47, 50, 50, 51, 55, 56, 56, 58, 60, 60, 62, 66, 66, 67,
         69, 70, 70, 73 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 45, 45, 54,
-#endif
         /* Size 4x4 */
         31, 37, 47, 47, 37, 44, 47, 45, 47, 47, 53, 53, 47, 45, 53, 59,
         /* Size 8x8 */
@@ -4739,10 +4568,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 34, 34, 48,
-#endif
         /* Size 4x4 */
         32, 32, 34, 38, 32, 33, 35, 39, 34, 35, 39, 45, 38, 39, 45, 54,
         /* Size 8x8 */
@@ -4951,10 +4776,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         42, 42, 42, 42, 42, 42, 42, 45, 48, 48, 48, 50, 54, 54, 54, 56, 58, 58,
         58, 60, 63, 63 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 46, 46, 53,
-#endif
         /* Size 4x4 */
         31, 34, 42, 47, 34, 39, 45, 46, 42, 45, 48, 49, 47, 46, 49, 54,
         /* Size 8x8 */
@@ -5165,10 +4986,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 33, 33, 39,
-#endif
         /* Size 4x4 */
         32, 32, 32, 35, 32, 32, 33, 35, 32, 33, 35, 38, 35, 35, 38, 46,
         /* Size 8x8 */
@@ -5377,10 +5194,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         34, 35, 36, 36, 36, 36, 37, 38, 38, 38, 38, 40, 41, 42, 42, 42, 44, 47,
         48, 48, 48, 49 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 42, 42, 48,
-#endif
         /* Size 4x4 */
         31, 32, 38, 46, 32, 34, 41, 46, 38, 41, 47, 47, 46, 46, 47, 52,
         /* Size 8x8 */
@@ -5591,10 +5404,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 35,
-#endif
         /* Size 4x4 */
         31, 32, 32, 32, 32, 32, 32, 33, 32, 32, 33, 34, 32, 33, 34, 35,
         /* Size 8x8 */
@@ -5803,10 +5612,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         33, 33, 33, 33, 33, 34, 34, 34, 34, 34, 34, 35, 35, 36, 36, 36, 36, 36,
         36, 37, 38, 38 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 38, 38, 46,
-#endif
         /* Size 4x4 */
         31, 31, 34, 38, 31, 32, 35, 40, 34, 35, 39, 43, 38, 40, 43, 47,
         /* Size 8x8 */
@@ -6017,10 +5822,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 33,
-#endif
         /* Size 4x4 */
         31, 31, 31, 32, 31, 32, 32, 32, 31, 32, 32, 32, 32, 32, 32, 33,
         /* Size 8x8 */
@@ -6229,10 +6030,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33, 33, 33, 33, 34, 34, 34,
         34, 34, 34, 34 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 33, 33, 36,
-#endif
         /* Size 4x4 */
         31, 31, 31, 34, 31, 31, 31, 35, 31, 31, 32, 35, 34, 35, 35, 39,
         /* Size 8x8 */
@@ -6443,10 +6240,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 31, 31, 32,
-#endif
         /* Size 4x4 */
         31, 31, 31, 31, 31, 32, 32, 32, 31, 32, 32, 32, 31, 32, 32, 32,
         /* Size 8x8 */
@@ -6655,10 +6448,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         32, 32, 32, 32 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 31, 31, 31,
-#endif
         /* Size 4x4 */
         31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31,
         /* Size 8x8 */
@@ -6869,10 +6658,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 32,
-#endif
         /* Size 4x4 */
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         /* Size 8x8 */
@@ -7081,10 +6866,6 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         32, 32, 32, 32 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 32,
-#endif
         /* Size 4x4 */
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         /* Size 8x8 */
@@ -7295,13 +7076,9 @@ static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
 };
 
-static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
+static const qm_val_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        24, 12, 12, 6,
-#endif
         /* Size 4x4 */
         32, 24, 14, 11, 24, 15, 11, 9, 14, 11, 7, 7, 11, 9, 7, 5,
         /* Size 8x8 */
@@ -7494,10 +7271,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         11, 11, 11, 10, 10, 10, 9, 9, 8, 8, 8, 7, 7, 7, 6, 6, 6, 6, 6, 5, 5, 5,
         5, 5 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        20, 17, 17, 10,
-#endif
         /* Size 4x4 */
         29, 22, 18, 16, 22, 17, 15, 14, 18, 15, 11, 11, 16, 14, 11, 9,
         /* Size 8x8 */
@@ -7708,10 +7481,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        26, 12, 12, 7,
-#endif
         /* Size 4x4 */
         32, 25, 15, 11, 25, 16, 12, 10, 15, 12, 8, 7, 11, 10, 7, 6,
         /* Size 8x8 */
@@ -7907,10 +7676,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         12, 12, 12, 12, 12, 11, 11, 11, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6,
         6, 6, 6, 6, 5, 5, 5 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        21, 17, 17, 11,
-#endif
         /* Size 4x4 */
         31, 23, 18, 16, 23, 18, 16, 15, 18, 16, 12, 12, 16, 15, 12, 10,
         /* Size 8x8 */
@@ -8121,10 +7886,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        26, 13, 13, 7,
-#endif
         /* Size 4x4 */
         32, 27, 16, 12, 27, 18, 13, 11, 16, 13, 9, 8, 12, 11, 8, 6,
         /* Size 8x8 */
@@ -8321,10 +8082,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         12, 12, 12, 12, 13, 12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 8, 8, 8, 8, 7,
         7, 7, 6, 6, 6, 6, 6, 6, 6 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        21, 18, 18, 11,
-#endif
         /* Size 4x4 */
         32, 23, 19, 16, 23, 19, 17, 15, 19, 17, 13, 12, 16, 15, 12, 10,
         /* Size 8x8 */
@@ -8535,10 +8292,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        28, 14, 14, 8,
-#endif
         /* Size 4x4 */
         32, 28, 18, 13, 28, 19, 14, 11, 18, 14, 10, 8, 13, 11, 8, 7,
         /* Size 8x8 */
@@ -8735,10 +8488,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         11, 12, 12, 12, 13, 13, 13, 13, 13, 12, 12, 12, 11, 11, 10, 10, 9, 9, 9,
         9, 8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        22, 19, 19, 12,
-#endif
         /* Size 4x4 */
         32, 23, 20, 17, 23, 19, 17, 16, 20, 17, 14, 13, 17, 16, 13, 11,
         /* Size 8x8 */
@@ -8949,10 +8698,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        29, 16, 16, 9,
-#endif
         /* Size 4x4 */
         32, 30, 19, 14, 30, 21, 16, 13, 19, 16, 11, 9, 14, 13, 9, 7,
         /* Size 8x8 */
@@ -9152,10 +8897,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         7, 7, 7, 8, 12, 12, 12, 13, 13, 13, 13, 14, 13, 13, 12, 12, 12, 11, 11,
         11, 10, 10, 9, 9, 9, 8, 8, 8, 8, 7, 7, 7, 7, 7, 7, 7 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        22, 20, 20, 12,
-#endif
         /* Size 4x4 */
         32, 22, 21, 18, 22, 19, 19, 17, 21, 19, 15, 13, 18, 17, 13, 11,
         /* Size 8x8 */
@@ -9366,10 +9107,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        29, 18, 18, 10,
-#endif
         /* Size 4x4 */
         32, 30, 21, 14, 30, 21, 17, 13, 21, 17, 12, 10, 14, 13, 10, 8,
         /* Size 8x8 */
@@ -9571,10 +9308,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         10, 9, 9, 9, 9, 8, 8, 8, 13, 14, 14, 14, 14, 14, 14, 15, 15, 14, 14, 13,
         13, 12, 12, 11, 11, 11, 11, 10, 10, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 7 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        22, 20, 20, 13,
-#endif
         /* Size 4x4 */
         32, 22, 22, 18, 22, 19, 19, 17, 22, 19, 16, 14, 18, 17, 14, 12,
         /* Size 8x8 */
@@ -9785,10 +9518,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        30, 20, 20, 12,
-#endif
         /* Size 4x4 */
         32, 31, 23, 17, 31, 26, 20, 16, 23, 20, 14, 12, 17, 16, 12, 9,
         /* Size 8x8 */
@@ -9997,10 +9726,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         15, 14, 14, 13, 13, 13, 12, 12, 11, 11, 10, 10, 10, 10, 9, 9, 9, 9, 9,
         8, 8 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        25, 21, 21, 15,
-#endif
         /* Size 4x4 */
         33, 24, 22, 19, 24, 21, 20, 19, 22, 20, 17, 15, 19, 19, 15, 13,
         /* Size 8x8 */
@@ -10211,10 +9936,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 22, 22, 14,
-#endif
         /* Size 4x4 */
         32, 31, 24, 19, 31, 27, 22, 18, 24, 22, 16, 14, 19, 18, 14, 11,
         /* Size 8x8 */
@@ -10423,10 +10144,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         18, 17, 16, 16, 15, 15, 14, 14, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10,
         10, 10, 10, 9 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        26, 22, 22, 16,
-#endif
         /* Size 4x4 */
         33, 25, 22, 20, 25, 21, 21, 20, 22, 21, 18, 17, 20, 20, 17, 14,
         /* Size 8x8 */
@@ -10637,10 +10354,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 24, 24, 16,
-#endif
         /* Size 4x4 */
         32, 32, 27, 20, 32, 29, 26, 21, 27, 26, 19, 16, 20, 21, 16, 13,
         /* Size 8x8 */
@@ -10849,10 +10562,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         21, 21, 20, 19, 19, 18, 17, 17, 16, 16, 16, 15, 14, 14, 14, 13, 13, 13,
         12, 12, 12, 12 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        27, 23, 23, 17,
-#endif
         /* Size 4x4 */
         33, 27, 22, 21, 27, 22, 22, 22, 22, 22, 19, 18, 21, 22, 18, 16,
         /* Size 8x8 */
@@ -11063,10 +10772,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 27, 27, 19,
-#endif
         /* Size 4x4 */
         32, 32, 29, 24, 32, 30, 28, 24, 29, 28, 21, 19, 24, 24, 19, 16,
         /* Size 8x8 */
@@ -11275,10 +10980,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         23, 23, 23, 23, 22, 20, 20, 20, 19, 18, 18, 18, 17, 17, 17, 16, 16, 15,
         15, 15, 15, 14 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        31, 23, 23, 19,
-#endif
         /* Size 4x4 */
         33, 28, 22, 22, 28, 23, 22, 23, 22, 22, 19, 19, 22, 23, 19, 17,
         /* Size 8x8 */
@@ -11489,10 +11190,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 30, 30, 21,
-#endif
         /* Size 4x4 */
         32, 32, 30, 27, 32, 31, 29, 26, 30, 29, 26, 23, 27, 26, 23, 19,
         /* Size 8x8 */
@@ -11701,10 +11398,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         24, 24, 24, 24, 24, 24, 24, 23, 21, 21, 21, 20, 19, 19, 19, 18, 18, 18,
         18, 17, 16, 16 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 22, 22, 19,
-#endif
         /* Size 4x4 */
         33, 30, 24, 22, 30, 26, 23, 22, 24, 23, 21, 21, 22, 22, 21, 19,
         /* Size 8x8 */
@@ -11915,10 +11608,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 31, 31, 26,
-#endif
         /* Size 4x4 */
         32, 32, 32, 29, 32, 32, 31, 29, 32, 31, 29, 27, 29, 29, 27, 22,
         /* Size 8x8 */
@@ -12127,10 +11816,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         30, 29, 28, 28, 28, 28, 28, 27, 27, 27, 27, 26, 25, 24, 24, 24, 23, 22,
         21, 21, 21, 21 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 24, 24, 21,
-#endif
         /* Size 4x4 */
         33, 32, 27, 22, 32, 30, 25, 22, 27, 25, 22, 22, 22, 22, 22, 20,
         /* Size 8x8 */
@@ -12341,10 +12026,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 29,
-#endif
         /* Size 4x4 */
         33, 32, 32, 32, 32, 32, 32, 31, 32, 32, 31, 30, 32, 31, 30, 29,
         /* Size 8x8 */
@@ -12553,10 +12234,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30, 29, 29, 28, 28, 28, 28, 28,
         28, 28, 27, 27 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 27, 27, 22,
-#endif
         /* Size 4x4 */
         33, 33, 30, 27, 33, 32, 29, 26, 30, 29, 26, 24, 27, 26, 24, 22,
         /* Size 8x8 */
@@ -12767,10 +12444,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 31,
-#endif
         /* Size 4x4 */
         33, 33, 33, 32, 33, 32, 32, 32, 33, 32, 32, 32, 32, 32, 32, 31,
         /* Size 8x8 */
@@ -12979,10 +12652,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 31, 31, 31, 31, 30, 30, 30,
         30, 30, 30, 30 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 31, 31, 28,
-#endif
         /* Size 4x4 */
         33, 33, 33, 30, 33, 33, 33, 29, 33, 33, 32, 29, 30, 29, 29, 26,
         /* Size 8x8 */
@@ -13193,10 +12862,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 33, 33, 32,
-#endif
         /* Size 4x4 */
         33, 33, 33, 33, 33, 32, 32, 32, 33, 32, 32, 32, 33, 32, 32, 32,
         /* Size 8x8 */
@@ -13405,10 +13070,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         32, 32, 32, 32 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        33, 33, 33, 33,
-#endif
         /* Size 4x4 */
         33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
         /* Size 8x8 */
@@ -13619,10 +13280,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
   {
       { /* Luma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 32,
-#endif
         /* Size 4x4 */
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         /* Size 8x8 */
@@ -13831,10 +13488,6 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         32, 32, 32, 32 },
       { /* Chroma */
-#if CONFIG_CHROMA_2X2
-        /* Size 2x2 */
-        32, 32, 32, 32,
-#endif
         /* Size 4x4 */
         32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
         /* Size 8x8 */
@@ -14044,63 +13697,3 @@ static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
         32, 32, 32, 32 },
   },
 };
-#endif
-
-#if CONFIG_PVQ
-/* Quantization matrices for 8x8. For other block sizes, we currently just do
-   resampling. */
-/* Flat quantization, i.e. optimize for PSNR. */
-const int OD_QM8_Q4_FLAT[] = { 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                               16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                               16, 16, 16, 16, 16, 16, 16, 16, 16 };
-#if 0
-/* M1: MPEG2 matrix for inter (which has a dead zone). */
-const int OD_QM8_Q4[] = {
-  16, 17, 18, 19, 20, 21, 22, 23,
-  17, 18, 19, 20, 21, 22, 23, 24,
-  18, 19, 20, 21, 22, 23, 24, 25,
-  19, 20, 21, 22, 23, 24, 26, 27,
-  20, 21, 22, 23, 25, 26, 27, 28,
-  21, 22, 23, 24, 26, 27, 28, 30,
-  22, 23, 24, 26, 27, 28, 30, 31,
-  23, 24, 25, 27, 28, 30, 31, 33};
-#endif
-#if 0
-/* M2: MPEG2 matrix for intra (no dead zone). */
-const int OD_QM8_Q4[] = {
-  16, 16, 19, 22, 22, 26, 26, 27,
-  16, 16, 22, 22, 26, 27, 27, 29,
-  19, 22, 26, 26, 27, 29, 29, 35,
-  22, 24, 27, 27, 29, 32, 34, 38,
-  26, 27, 29, 29, 32, 35, 38, 46,
-  27, 29, 34, 34, 35, 40, 46, 56,
-  29, 34, 34, 37, 40, 48, 56, 69,
-  34, 37, 38, 40, 48, 58, 69, 83
-};
-#endif
-#if 0
-/* M3: Taken from dump_psnrhvs. */
-const int OD_QM8_Q4[] = {
-  16, 16, 17, 20, 24, 29, 36, 42,
-  16, 17, 17, 19, 22, 26, 31, 37,
-  17, 17, 21, 23, 26, 30, 34, 40,
-  20, 19, 23, 28, 31, 35, 39, 45,
-  24, 22, 26, 31, 36, 41, 46, 51,
-  29, 26, 30, 35, 41, 47, 52, 58,
-  36, 31, 34, 39, 46, 52, 59, 66,
-  42, 37, 40, 45, 51, 58, 66, 73
-};
-#endif
-#if 1
-/* M4: a compromise equal to .5*(M3 + .5*(M2+transpose(M2))) */
-const int OD_QM8_Q4_HVS[] = { 16, 16, 18, 21, 24, 28, 32, 36, 16, 17, 20,
-                              21, 24, 27, 31, 35, 18, 20, 24, 25, 27, 31,
-                              33, 38, 21, 21, 25, 28, 30, 34, 37, 42, 24,
-                              24, 27, 30, 34, 38, 43, 49, 28, 27, 31, 34,
-                              38, 44, 50, 58, 32, 31, 33, 37, 43, 50, 58,
-                              68, 36, 35, 38, 42, 49, 58, 68, 78 };
-#endif
-#endif

@@ -21,7 +21,6 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.robotium.solo.Condition;

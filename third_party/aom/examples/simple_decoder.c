@@ -49,9 +49,7 @@
 // `aom_codec_decode` function. The call takes a pointer to the data
 // (`frame`) and the length of the data (`frame_size`). No application data
 // is associated with the frame in this example, so the `user_priv`
-// parameter is NULL. The `deadline` parameter is left at zero for this
-// example. This parameter is generally only used when doing adaptive post
-// processing.
+// parameter is NULL.
 //
 // Codecs may produce a variable number of output frames for every call to
 // `aom_codec_decode`. These frames are retrieved by the
@@ -81,10 +79,8 @@
 #include <string.h>
 
 #include "aom/aom_decoder.h"
-
-#include "../tools_common.h"
-#include "../video_reader.h"
-#include "./aom_config.h"
+#include "common/tools_common.h"
+#include "common/video_reader.h"
 
 static const char *exec_name;
 
@@ -127,7 +123,7 @@ int main(int argc, char **argv) {
     size_t frame_size = 0;
     const unsigned char *frame =
         aom_video_reader_get_frame(reader, &frame_size);
-    if (aom_codec_decode(&codec, frame, (unsigned int)frame_size, NULL, 0))
+    if (aom_codec_decode(&codec, frame, frame_size, NULL))
       die_codec(&codec, "Failed to decode frame.");
 
     while ((img = aom_codec_get_frame(&codec, &iter)) != NULL) {

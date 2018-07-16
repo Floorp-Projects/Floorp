@@ -24,16 +24,14 @@ extern "C" {
 
 void convert_model_to_params(const double *params, WarpedMotionParams *model);
 
-int is_enough_erroradvantage(double erroradv, int params_cost);
+int is_enough_erroradvantage(double best_erroradvantage, int params_cost,
+                             int erroradv_type);
 
 // Returns the av1_warp_error between "dst" and the result of applying the
 // motion params that result from fine-tuning "wm" to "ref". Note that "wm" is
 // modified in place.
 int64_t refine_integerized_param(WarpedMotionParams *wm,
-                                 TransformationType wmtype,
-#if CONFIG_HIGHBITDEPTH
-                                 int use_hbd, int bd,
-#endif  // CONFIG_HIGHBITDEPTH
+                                 TransformationType wmtype, int use_hbd, int bd,
                                  uint8_t *ref, int r_width, int r_height,
                                  int r_stride, uint8_t *dst, int d_width,
                                  int d_height, int d_stride, int n_refinements,
@@ -54,12 +52,12 @@ int64_t refine_integerized_param(WarpedMotionParams *wm,
   number of inlier feature points for each motion. Params for which the
   num_inliers entry is 0 should be ignored by the caller.
 */
-int compute_global_motion_feature_based(
-    TransformationType type, YV12_BUFFER_CONFIG *frm, YV12_BUFFER_CONFIG *ref,
-#if CONFIG_HIGHBITDEPTH
-    int bit_depth,
-#endif
-    int *num_inliers_by_motion, double *params_by_motion, int num_motions);
+int compute_global_motion_feature_based(TransformationType type,
+                                        YV12_BUFFER_CONFIG *frm,
+                                        YV12_BUFFER_CONFIG *ref, int bit_depth,
+                                        int *num_inliers_by_motion,
+                                        double *params_by_motion,
+                                        int num_motions);
 #ifdef __cplusplus
 }  // extern "C"
 #endif

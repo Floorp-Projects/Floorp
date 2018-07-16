@@ -27,6 +27,12 @@ import android.content.res.Resources;
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 
+/**
+ *  @deprecated due to rising minimal API to 14. This class will be removed in a
+ *  future major release. Please use {@link LeanplumActivityHelper} to track your activities
+ *  automatically.
+ */
+@Deprecated
 public abstract class LeanplumActivity extends Activity {
   private LeanplumActivityHelper helper;
 

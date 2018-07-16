@@ -15,6 +15,7 @@
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/GeneratedImageContent.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
@@ -322,6 +323,9 @@ NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame*
 NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+
+nsIFrame*
+NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*, ComputedStyle*);
 
 
 #ifdef NOISY_FINDFRAME
@@ -1587,6 +1591,21 @@ MoveChildrenTo(nsIFrame* aOldParent,
   }
 }
 
+static bool
+ShouldCreateImageFrameForContent(const Element& aElement, ComputedStyle& aStyle)
+{
+  if (aElement.IsRootOfNativeAnonymousSubtree()) {
+    return false;
+  }
+
+  auto& content = *aStyle.StyleContent();
+  if (content.ContentCount() != 1) {
+    return false;
+  }
+
+  return content.ContentAt(0).GetType() == StyleContentType::Image;
+}
+
 //----------------------------------------------------------------------
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
@@ -1709,7 +1728,7 @@ already_AddRefed<nsIContent>
 nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                               Element* aParentContent,
                                               ComputedStyle* aComputedStyle,
-                                              uint32_t        aContentIndex)
+                                              uint32_t aContentIndex)
 {
   // Get the content value
   const nsStyleContentData& data =
@@ -1717,19 +1736,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
   const StyleContentType type = data.GetType();
 
   switch (type) {
-    case StyleContentType::Image: {
-      imgRequestProxy* image = data.GetImage();
-      if (!image) {
-        // CSS had something specified that couldn't be converted to an
-        // image object
-        return nullptr;
-      }
-
-      // Create an image content object and pass it the image request.
-      // XXX Check if it's an image type we can handle...
-
-      return CreateGenConImageContent(mDocument, image);
-    }
+    case StyleContentType::Image:
+      return GeneratedImageContent::Create(*mDocument, aContentIndex);
 
     case StyleContentType::String:
       return CreateGenConTextNode(aState,
@@ -3618,7 +3626,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
   static const FrameConstructionDataByTag sHTMLData[] = {
     SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
     SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
-                     nsCSSFrameConstructor::FindImgData),
+                     nsCSSFrameConstructor::FindGeneratedImageData),
     { &nsGkAtoms::br,
       FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_LINE_BREAK,
                   NS_NewBRFrame) },
@@ -3650,6 +3658,20 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
 
   return FindDataByTag(aTag, aElement, aComputedStyle, sHTMLData,
                        ArrayLength(sHTMLData));
+}
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindGeneratedImageData(Element* aElement,
+                                              ComputedStyle* aStyle)
+{
+  if (!aElement->IsInNativeAnonymousSubtree()) {
+    return nullptr;
+  }
+
+  static const FrameConstructionData sImgData =
+    SIMPLE_FCDATA(NS_NewImageFrameForGeneratedContentIndex);
+  return &sImgData;
 }
 
 /* static */
@@ -5629,17 +5651,6 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
   return true;
 }
 
-static bool
-ShouldCreateImageFrameForContent(ComputedStyle& aStyle)
-{
-  auto& content = *aStyle.StyleContent();
-  if (content.ContentCount() != 1) {
-    return false;
-  }
-
-  return content.ContentAt(0).GetType() == StyleContentType::Image;
-}
-
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                                          nsIContent* aContent,
@@ -5806,7 +5817,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     // Check for 'content: <image-url>' on the element (which makes us ignore
     // 'display' values other than 'none' or 'contents').
-    if (!data && ShouldCreateImageFrameForContent(*computedStyle)) {
+    if (!data && ShouldCreateImageFrameForContent(*element, *computedStyle)) {
       static const FrameConstructionData sImgData =
         SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
       data = &sImgData;

@@ -16,3 +16,8 @@ text aom_img_plane_width
 text aom_img_plane_height
 text aom_img_set_rect
 text aom_img_wrap
+text aom_img_alloc_with_border
+text aom_uleb_decode
+text aom_uleb_encode
+text aom_uleb_encode_fixed_size
+text aom_uleb_size_in_bytes

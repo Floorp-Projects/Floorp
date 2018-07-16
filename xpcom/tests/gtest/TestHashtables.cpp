@@ -277,6 +277,21 @@ TEST(Hashtable, THashtable)
   ASSERT_EQ(count, uint32_t(0));
 }
 
+TEST(Hashtable, Move)
+{
+  const void* kPtr = reinterpret_cast<void*>(static_cast<uintptr_t>(0xbadc0de));
+
+  nsTHashtable<nsPtrHashKey<const void>> table;
+  table.PutEntry(kPtr);
+
+  nsTHashtable<nsPtrHashKey<const void>> moved = std::move(table);
+  ASSERT_EQ(table.Count(), 0u);
+  ASSERT_EQ(moved.Count(), 1u);
+
+  EXPECT_TRUE(moved.Contains(kPtr));
+  EXPECT_FALSE(table.Contains(kPtr));
+}
+
 TEST(Hashtables, DataHashtable)
 {
   // check a data-hashtable

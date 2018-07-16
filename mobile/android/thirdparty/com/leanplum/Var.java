@@ -516,17 +516,7 @@ public class Var<T> {
    *
    * @return Elements count or 0 if Variable is not a List.
    */
-  @Deprecated
   public int count() {
-    return countInternal();
-  }
-
-  /**
-   * Returns a number of elements contained in a List variable.
-   *
-   * @return Elements count or 0 if Variable is not a List.
-   */
-  private int countInternal() {
     try {
       warnIfNotStarted();
       Object result = VarCache.getMergedValueFromComponentArray(nameComponents);
@@ -547,17 +537,7 @@ public class Var<T> {
    *
    * @return A Number value.
    */
-  @Deprecated
   public Number numberValue() {
-    return numberValueInternal();
-  }
-
-  /**
-   * Gets a value from a variable initialized as Number.
-   *
-   * @return A Number value.
-   */
-  private Number numberValueInternal() {
     warnIfNotStarted();
     return numberValue;
   }

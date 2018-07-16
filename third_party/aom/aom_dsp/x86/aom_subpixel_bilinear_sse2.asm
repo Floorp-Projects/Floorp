@@ -134,6 +134,8 @@
     dec         rcx
 %endm
 
+SECTION .text
+
 global sym(aom_filter_block1d4_v2_sse2) PRIVATE
 sym(aom_filter_block1d4_v2_sse2):
     push        rbp
@@ -202,84 +204,6 @@ sym(aom_filter_block1d16_v2_sse2):
     movdqa        xmm3, xmm1
 
     APPLY_FILTER_16 0
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d4_v2_avg_sse2) PRIVATE
-sym(aom_filter_block1d4_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM_4
-.loop:
-    movd        xmm0, [rsi]                 ;load src
-    movd        xmm1, [rsi + rax]
-
-    APPLY_FILTER_4 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d8_v2_avg_sse2) PRIVATE
-sym(aom_filter_block1d8_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    SAVE_XMM 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM
-.loop:
-    movq        xmm0, [rsi]                 ;0
-    movq        xmm1, [rsi + rax]           ;1
-
-    APPLY_FILTER_8 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d16_v2_avg_sse2) PRIVATE
-sym(aom_filter_block1d16_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    SAVE_XMM 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM
-.loop:
-    movdqu        xmm0, [rsi]               ;0
-    movdqu        xmm1, [rsi + rax]         ;1
-    movdqa        xmm2, xmm0
-    movdqa        xmm3, xmm1
-
-    APPLY_FILTER_16 1
     jnz         .loop
 
     ; begin epilog
@@ -360,86 +284,6 @@ sym(aom_filter_block1d16_h2_sse2):
     movdqa      xmm3, xmm1
 
     APPLY_FILTER_16 0
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d4_h2_avg_sse2) PRIVATE
-sym(aom_filter_block1d4_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM_4
-.loop:
-    movdqu      xmm0, [rsi]                 ;load src
-    movdqa      xmm1, xmm0
-    psrldq      xmm1, 1
-
-    APPLY_FILTER_4 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d8_h2_avg_sse2) PRIVATE
-sym(aom_filter_block1d8_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    SAVE_XMM 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM
-.loop:
-    movdqu      xmm0, [rsi]                 ;load src
-    movdqa      xmm1, xmm0
-    psrldq      xmm1, 1
-
-    APPLY_FILTER_8 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_filter_block1d16_h2_avg_sse2) PRIVATE
-sym(aom_filter_block1d16_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 6
-    SAVE_XMM 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    GET_PARAM
-.loop:
-    movdqu      xmm0,   [rsi]               ;load src
-    movdqu      xmm1,   [rsi + 1]
-    movdqa      xmm2, xmm0
-    movdqa      xmm3, xmm1
-
-    APPLY_FILTER_16 1
     jnz         .loop
 
     ; begin epilog

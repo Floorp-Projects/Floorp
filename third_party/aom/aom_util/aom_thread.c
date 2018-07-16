@@ -16,8 +16,9 @@
 
 #include <assert.h>
 #include <string.h>  // for memset()
-#include "./aom_thread.h"
+
 #include "aom_mem/aom_mem.h"
+#include "aom_util/aom_thread.h"
 
 #if CONFIG_MULTITHREAD
 

@@ -33,6 +33,15 @@ RE_CLANG_WARNING = re.compile(r"""
     \[(?P<flag>[^\]]+)
     """, re.X)
 
+# This captures Clang-cl warning format.
+RE_CLANG_CL_WARNING = re.compile(r"""
+    (?P<file>.*)
+    \((?P<line>\d+),(?P<column>\d+)\)
+    \s?:\s+warning:\s
+    (?P<message>.*)
+    \[(?P<flag>[^\]]+)
+    """, re.X)
+
 # This captures Visual Studio's warning format.
 RE_MSVC_WARNING = re.compile(r"""
     (?P<file>.*)
@@ -329,9 +338,19 @@ class WarningsCollector(object):
 
         # TODO make more efficient so we run minimal regexp matches.
         match_clang = RE_CLANG_WARNING.match(filtered)
+        match_clang_cl = RE_CLANG_CL_WARNING.match(filtered)
         match_msvc = RE_MSVC_WARNING.match(filtered)
         if match_clang:
             d = match_clang.groupdict()
+
+            filename = d['file']
+            warning['line'] = int(d['line'])
+            warning['column'] = int(d['column'])
+            warning['flag'] = d['flag']
+            warning['message'] = d['message'].rstrip()
+
+        elif match_clang_cl:
+            d = match_clang_cl.groupdict()
 
             filename = d['file']
             warning['line'] = int(d['line'])

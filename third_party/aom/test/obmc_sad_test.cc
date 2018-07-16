@@ -14,8 +14,9 @@
 #include "test/function_equivalence_test.h"
 #include "test/register_state_check.h"
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 #define MAX_SB_SQUARE (MAX_SB_SIZE * MAX_SB_SIZE)
@@ -84,13 +85,10 @@ TEST_P(ObmcSadTest, ExtremeValues) {
 }
 
 #if HAVE_SSE4_1
-#if CONFIG_MOTION_VAR
 const ObmcSadTest::ParamType sse4_functions[] = {
-#if CONFIG_EXT_PARTITION
   TestFuncs(aom_obmc_sad128x128_c, aom_obmc_sad128x128_sse4_1),
   TestFuncs(aom_obmc_sad128x64_c, aom_obmc_sad128x64_sse4_1),
   TestFuncs(aom_obmc_sad64x128_c, aom_obmc_sad64x128_sse4_1),
-#endif  // CONFIG_EXT_PARTITION
   TestFuncs(aom_obmc_sad64x64_c, aom_obmc_sad64x64_sse4_1),
   TestFuncs(aom_obmc_sad64x32_c, aom_obmc_sad64x32_sse4_1),
   TestFuncs(aom_obmc_sad32x64_c, aom_obmc_sad32x64_sse4_1),
@@ -108,14 +106,12 @@ const ObmcSadTest::ParamType sse4_functions[] = {
 
 INSTANTIATE_TEST_CASE_P(SSE4_1, ObmcSadTest,
                         ::testing::ValuesIn(sse4_functions));
-#endif  // CONFIG_MOTION_VAR
 #endif  // HAVE_SSE4_1
 
 ////////////////////////////////////////////////////////////////////////////////
 // High bit-depth
 ////////////////////////////////////////////////////////////////////////////////
 
-#if CONFIG_HIGHBITDEPTH
 class ObmcSadHBDTest : public FunctionEquivalenceTest<ObmcSadF> {};
 
 TEST_P(ObmcSadHBDTest, RandomValues) {
@@ -169,13 +165,10 @@ TEST_P(ObmcSadHBDTest, ExtremeValues) {
 }
 
 #if HAVE_SSE4_1
-#if CONFIG_MOTION_VAR
 ObmcSadHBDTest::ParamType sse4_functions_hbd[] = {
-#if CONFIG_EXT_PARTITION
   TestFuncs(aom_highbd_obmc_sad128x128_c, aom_highbd_obmc_sad128x128_sse4_1),
   TestFuncs(aom_highbd_obmc_sad128x64_c, aom_highbd_obmc_sad128x64_sse4_1),
   TestFuncs(aom_highbd_obmc_sad64x128_c, aom_highbd_obmc_sad64x128_sse4_1),
-#endif  // CONFIG_EXT_PARTITION
   TestFuncs(aom_highbd_obmc_sad64x64_c, aom_highbd_obmc_sad64x64_sse4_1),
   TestFuncs(aom_highbd_obmc_sad64x32_c, aom_highbd_obmc_sad64x32_sse4_1),
   TestFuncs(aom_highbd_obmc_sad32x64_c, aom_highbd_obmc_sad32x64_sse4_1),
@@ -193,7 +186,5 @@ ObmcSadHBDTest::ParamType sse4_functions_hbd[] = {
 
 INSTANTIATE_TEST_CASE_P(SSE4_1, ObmcSadHBDTest,
                         ::testing::ValuesIn(sse4_functions_hbd));
-#endif  // CONFIG_MOTION_VAR
 #endif  // HAVE_SSE4_1
-#endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

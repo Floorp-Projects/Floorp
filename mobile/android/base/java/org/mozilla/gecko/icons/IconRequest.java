@@ -23,6 +23,7 @@ public class IconRequest {
     // Those values are written by the IconRequestBuilder class.
     /* package-private */ String pageUrl;
     /* package-private */ boolean privileged;
+    /* package-private */ boolean isPrivate;
     /* package-private */ TreeSet<IconDescriptor> icons;
     /* package-private */ boolean skipNetwork;
     /* package-private */ boolean backgroundThread;
@@ -40,6 +41,7 @@ public class IconRequest {
 
         // Setting some sensible defaults.
         this.privileged = false;
+        this.isPrivate = false;
         this.skipMemory = false;
         this.skipDisk = false;
         this.skipNetwork = false;
@@ -94,6 +96,13 @@ public class IconRequest {
      */
     public boolean isPrivileged() {
         return privileged;
+    }
+
+    /**
+     * Is this request initiated from a tab in private browsing mode?
+     */
+    public boolean isPrivateMode() {
+        return isPrivate;
     }
 
     /**

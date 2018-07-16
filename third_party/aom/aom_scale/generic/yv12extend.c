@@ -10,8 +10,10 @@
  */
 
 #include <assert.h>
-#include "./aom_config.h"
-#include "./aom_scale_rtcd.h"
+
+#include "config/aom_config.h"
+#include "config/aom_scale_rtcd.h"
+
 #include "aom/aom_integer.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
@@ -57,7 +59,6 @@ static void extend_plane(uint8_t *const src, int src_stride, int width,
   }
 }
 
-#if CONFIG_HIGHBITDEPTH
 static void extend_plane_high(uint8_t *const src8, int src_stride, int width,
                               int height, int extend_top, int extend_left,
                               int extend_bottom, int extend_right) {
@@ -98,18 +99,17 @@ static void extend_plane_high(uint8_t *const src8, int src_stride, int width,
     dst_ptr2 += src_stride;
   }
 }
-#endif
 
-void aom_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
+void aom_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf,
+                                     const int num_planes) {
   assert(ybf->border % 2 == 0);
   assert(ybf->y_height - ybf->y_crop_height < 16);
   assert(ybf->y_width - ybf->y_crop_width < 16);
   assert(ybf->y_height - ybf->y_crop_height >= 0);
   assert(ybf->y_width - ybf->y_crop_width >= 0);
 
-#if CONFIG_HIGHBITDEPTH
   if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    for (int plane = 0; plane < 3; ++plane) {
+    for (int plane = 0; plane < num_planes; ++plane) {
       const int is_uv = plane > 0;
       const int plane_border = ybf->border >> is_uv;
       extend_plane_high(
@@ -120,8 +120,7 @@ void aom_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
     }
     return;
   }
-#endif
-  for (int plane = 0; plane < 3; ++plane) {
+  for (int plane = 0; plane < num_planes; ++plane) {
     const int is_uv = plane > 0;
     const int plane_border = ybf->border >> is_uv;
     extend_plane(ybf->buffers[plane], ybf->strides[is_uv],
@@ -132,8 +131,8 @@ void aom_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
   }
 }
 
-#if CONFIG_AV1
-static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
+static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size,
+                         const int num_planes) {
   const int ss_x = ybf->uv_width < ybf->y_width;
   const int ss_y = ybf->uv_height < ybf->y_height;
 
@@ -142,9 +141,8 @@ static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
   assert(ybf->y_height - ybf->y_crop_height >= 0);
   assert(ybf->y_width - ybf->y_crop_width >= 0);
 
-#if CONFIG_HIGHBITDEPTH
   if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    for (int plane = 0; plane < 3; ++plane) {
+    for (int plane = 0; plane < num_planes; ++plane) {
       const int is_uv = plane > 0;
       const int top = ext_size >> (is_uv ? ss_y : 0);
       const int left = ext_size >> (is_uv ? ss_x : 0);
@@ -156,8 +154,7 @@ static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
     }
     return;
   }
-#endif
-  for (int plane = 0; plane < 3; ++plane) {
+  for (int plane = 0; plane < num_planes; ++plane) {
     const int is_uv = plane > 0;
     const int top = ext_size >> (is_uv ? ss_y : 0);
     const int left = ext_size >> (is_uv ? ss_x : 0);
@@ -169,15 +166,16 @@ static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
   }
 }
 
-void aom_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
-  extend_frame(ybf, ybf->border);
+void aom_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf, const int num_planes) {
+  extend_frame(ybf, ybf->border, num_planes);
 }
 
-void aom_extend_frame_inner_borders_c(YV12_BUFFER_CONFIG *ybf) {
+void aom_extend_frame_inner_borders_c(YV12_BUFFER_CONFIG *ybf,
+                                      const int num_planes) {
   const int inner_bw = (ybf->border > AOMINNERBORDERINPIXELS)
                            ? AOMINNERBORDERINPIXELS
                            : ybf->border;
-  extend_frame(ybf, inner_bw);
+  extend_frame(ybf, inner_bw, num_planes);
 }
 
 void aom_extend_frame_borders_y_c(YV12_BUFFER_CONFIG *ybf) {
@@ -187,7 +185,6 @@ void aom_extend_frame_borders_y_c(YV12_BUFFER_CONFIG *ybf) {
   assert(ybf->y_height - ybf->y_crop_height >= 0);
   assert(ybf->y_width - ybf->y_crop_width >= 0);
 
-#if CONFIG_HIGHBITDEPTH
   if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
     extend_plane_high(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
                       ybf->y_crop_height, ext_size, ext_size,
@@ -195,27 +192,23 @@ void aom_extend_frame_borders_y_c(YV12_BUFFER_CONFIG *ybf) {
                       ext_size + ybf->y_width - ybf->y_crop_width);
     return;
   }
-#endif
   extend_plane(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
                ybf->y_crop_height, ext_size, ext_size,
                ext_size + ybf->y_height - ybf->y_crop_height,
                ext_size + ybf->y_width - ybf->y_crop_width);
 }
-#endif  // CONFIG_AV1
 
-#if CONFIG_HIGHBITDEPTH
 static void memcpy_short_addr(uint8_t *dst8, const uint8_t *src8, int num) {
   uint16_t *dst = CONVERT_TO_SHORTPTR(dst8);
   uint16_t *src = CONVERT_TO_SHORTPTR(src8);
   memcpy(dst, src, num * sizeof(uint16_t));
 }
-#endif  // CONFIG_HIGHBITDEPTH
 
 // Copies the source image into the destination image and updates the
 // destination's UMV borders.
 // Note: The frames are assumed to be identical in size.
 void aom_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_bc,
-                           YV12_BUFFER_CONFIG *dst_bc) {
+                           YV12_BUFFER_CONFIG *dst_bc, const int num_planes) {
 #if 0
   /* These assertions are valid in the codec, but the libaom-tester uses
    * this code slightly differently.
@@ -224,12 +217,11 @@ void aom_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_bc,
   assert(src_bc->y_height == dst_bc->y_height);
 #endif
 
-#if CONFIG_HIGHBITDEPTH
   assert((src_bc->flags & YV12_FLAG_HIGHBITDEPTH) ==
          (dst_bc->flags & YV12_FLAG_HIGHBITDEPTH));
 
   if (src_bc->flags & YV12_FLAG_HIGHBITDEPTH) {
-    for (int plane = 0; plane < 3; ++plane) {
+    for (int plane = 0; plane < num_planes; ++plane) {
       const uint8_t *plane_src = src_bc->buffers[plane];
       uint8_t *plane_dst = dst_bc->buffers[plane];
       const int is_uv = plane > 0;
@@ -240,11 +232,10 @@ void aom_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_bc,
         plane_dst += dst_bc->strides[is_uv];
       }
     }
-    aom_yv12_extend_frame_borders_c(dst_bc);
+    aom_yv12_extend_frame_borders_c(dst_bc, num_planes);
     return;
   }
-#endif
-  for (int plane = 0; plane < 3; ++plane) {
+  for (int plane = 0; plane < num_planes; ++plane) {
     const uint8_t *plane_src = src_bc->buffers[plane];
     uint8_t *plane_dst = dst_bc->buffers[plane];
     const int is_uv = plane > 0;
@@ -255,7 +246,7 @@ void aom_yv12_copy_frame_c(const YV12_BUFFER_CONFIG *src_bc,
       plane_dst += dst_bc->strides[is_uv];
     }
   }
-  aom_yv12_extend_frame_borders_c(dst_bc);
+  aom_yv12_extend_frame_borders_c(dst_bc, num_planes);
 }
 
 void aom_yv12_copy_y_c(const YV12_BUFFER_CONFIG *src_ybc,
@@ -264,7 +255,6 @@ void aom_yv12_copy_y_c(const YV12_BUFFER_CONFIG *src_ybc,
   const uint8_t *src = src_ybc->y_buffer;
   uint8_t *dst = dst_ybc->y_buffer;
 
-#if CONFIG_HIGHBITDEPTH
   if (src_ybc->flags & YV12_FLAG_HIGHBITDEPTH) {
     const uint16_t *src16 = CONVERT_TO_SHORTPTR(src);
     uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst);
@@ -275,7 +265,6 @@ void aom_yv12_copy_y_c(const YV12_BUFFER_CONFIG *src_ybc,
     }
     return;
   }
-#endif  // CONFIG_HIGHBITDEPTH
 
   for (row = 0; row < src_ybc->y_height; ++row) {
     memcpy(dst, src, src_ybc->y_width);
@@ -290,7 +279,6 @@ void aom_yv12_copy_u_c(const YV12_BUFFER_CONFIG *src_bc,
   const uint8_t *src = src_bc->u_buffer;
   uint8_t *dst = dst_bc->u_buffer;
 
-#if CONFIG_HIGHBITDEPTH
   if (src_bc->flags & YV12_FLAG_HIGHBITDEPTH) {
     const uint16_t *src16 = CONVERT_TO_SHORTPTR(src);
     uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst);
@@ -301,7 +289,6 @@ void aom_yv12_copy_u_c(const YV12_BUFFER_CONFIG *src_bc,
     }
     return;
   }
-#endif  // CONFIG_HIGHBITDEPTH
 
   for (row = 0; row < src_bc->uv_height; ++row) {
     memcpy(dst, src, src_bc->uv_width);
@@ -316,7 +303,6 @@ void aom_yv12_copy_v_c(const YV12_BUFFER_CONFIG *src_bc,
   const uint8_t *src = src_bc->v_buffer;
   uint8_t *dst = dst_bc->v_buffer;
 
-#if CONFIG_HIGHBITDEPTH
   if (src_bc->flags & YV12_FLAG_HIGHBITDEPTH) {
     const uint16_t *src16 = CONVERT_TO_SHORTPTR(src);
     uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst);
@@ -327,10 +313,98 @@ void aom_yv12_copy_v_c(const YV12_BUFFER_CONFIG *src_bc,
     }
     return;
   }
-#endif  // CONFIG_HIGHBITDEPTH
 
   for (row = 0; row < src_bc->uv_height; ++row) {
     memcpy(dst, src, src_bc->uv_width);
+    src += src_bc->uv_stride;
+    dst += dst_bc->uv_stride;
+  }
+}
+
+void aom_yv12_partial_copy_y_c(const YV12_BUFFER_CONFIG *src_ybc,
+                               YV12_BUFFER_CONFIG *dst_ybc, int hstart,
+                               int hend, int vstart, int vend) {
+  int row;
+  const uint8_t *src = src_ybc->y_buffer;
+  uint8_t *dst = dst_ybc->y_buffer;
+
+  if (src_ybc->flags & YV12_FLAG_HIGHBITDEPTH) {
+    const uint16_t *src16 =
+        CONVERT_TO_SHORTPTR(src + vstart * src_ybc->y_stride + hstart);
+    uint16_t *dst16 =
+        CONVERT_TO_SHORTPTR(dst + vstart * dst_ybc->y_stride + hstart);
+    for (row = vstart; row < vend; ++row) {
+      memcpy(dst16, src16, (hend - hstart) * sizeof(uint16_t));
+      src16 += src_ybc->y_stride;
+      dst16 += dst_ybc->y_stride;
+    }
+    return;
+  }
+  src = (src + vstart * src_ybc->y_stride + hstart);
+  dst = (dst + vstart * dst_ybc->y_stride + hstart);
+
+  for (row = vstart; row < vend; ++row) {
+    memcpy(dst, src, (hend - hstart));
+    src += src_ybc->y_stride;
+    dst += dst_ybc->y_stride;
+  }
+}
+
+void aom_yv12_partial_copy_u_c(const YV12_BUFFER_CONFIG *src_bc,
+                               YV12_BUFFER_CONFIG *dst_bc, int hstart, int hend,
+                               int vstart, int vend) {
+  int row;
+  const uint8_t *src = src_bc->u_buffer;
+  uint8_t *dst = dst_bc->u_buffer;
+
+  if (src_bc->flags & YV12_FLAG_HIGHBITDEPTH) {
+    const uint16_t *src16 =
+        CONVERT_TO_SHORTPTR(src + vstart * src_bc->uv_stride + hstart);
+    uint16_t *dst16 =
+        CONVERT_TO_SHORTPTR(dst + vstart * dst_bc->uv_stride + hstart);
+    for (row = vstart; row < vend; ++row) {
+      memcpy(dst16, src16, (hend - hstart) * sizeof(uint16_t));
+      src16 += src_bc->uv_stride;
+      dst16 += dst_bc->uv_stride;
+    }
+    return;
+  }
+
+  src = (src + vstart * src_bc->uv_stride + hstart);
+  dst = (dst + vstart * dst_bc->uv_stride + hstart);
+
+  for (row = vstart; row < vend; ++row) {
+    memcpy(dst, src, (hend - hstart));
+    src += src_bc->uv_stride;
+    dst += dst_bc->uv_stride;
+  }
+}
+
+void aom_yv12_partial_copy_v_c(const YV12_BUFFER_CONFIG *src_bc,
+                               YV12_BUFFER_CONFIG *dst_bc, int hstart, int hend,
+                               int vstart, int vend) {
+  int row;
+  const uint8_t *src = src_bc->v_buffer;
+  uint8_t *dst = dst_bc->v_buffer;
+
+  if (src_bc->flags & YV12_FLAG_HIGHBITDEPTH) {
+    const uint16_t *src16 =
+        CONVERT_TO_SHORTPTR(src + vstart * src_bc->uv_stride + hstart);
+    uint16_t *dst16 =
+        CONVERT_TO_SHORTPTR(dst + vstart * dst_bc->uv_stride + hstart);
+    for (row = vstart; row < vend; ++row) {
+      memcpy(dst16, src16, (hend - hstart) * sizeof(uint16_t));
+      src16 += src_bc->uv_stride;
+      dst16 += dst_bc->uv_stride;
+    }
+    return;
+  }
+
+  src = (src + vstart * src_bc->uv_stride + hstart);
+  dst = (dst + vstart * dst_bc->uv_stride + hstart);
+
+  for (row = vstart; row < vend; ++row) {
+    memcpy(dst, src, (hend - hstart));
     src += src_bc->uv_stride;
     dst += dst_bc->uv_stride;
   }

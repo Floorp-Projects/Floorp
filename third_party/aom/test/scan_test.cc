@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2018, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -9,122 +9,125 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "av1/common/common_data.h"
-#include "av1/common/scan.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
+#include "av1/common/scan.h"
+#include "av1/common/txb_common.h"
+#include "test/av1_txfm_test.h"
 
-namespace {
+static int scan_test(const int16_t *scan, const int16_t *iscan, int si, int r,
+                     int c, int w) {
+  if (iscan[r * w + c] != si || scan[si] != r * w + c) {
+    printf("r %d c %d ref_iscan %d iscan %d ref_scan %d scan %d\n", r, c, si,
+           iscan[r * w + c], r * w + c, scan[si]);
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
-TEST(ScanTest, av1_augment_prob) {
-  const TX_SIZE tx_size = TX_4X4;
-  const TX_TYPE tx_type = DCT_DCT;
-  const int tx1d_size = tx_size_wide[tx_size];
-  uint32_t prob[16] = { 8, 8, 7, 7, 8, 8, 4, 2, 3, 3, 2, 2, 2, 2, 2, 2 };
-  const uint32_t ref_prob[16] = {
-    8, 8, 7, 7, 8, 8, 4, 2, 3, 3, 2, 2, 2, 2, 2, 2
-  };
-  av1_augment_prob(tx_size, tx_type, prob);
-  for (int r = 0; r < tx1d_size; ++r) {
-    for (int c = 0; c < tx1d_size; ++c) {
-      const uint32_t idx = r * tx1d_size + c;
-      EXPECT_EQ(ref_prob[idx], prob[idx] >> 16);
+int scan_order_test(const SCAN_ORDER *scan_order, int w, int h,
+                    SCAN_MODE mode) {
+  const int16_t *scan = scan_order->scan;
+  const int16_t *iscan = scan_order->iscan;
+  int dim = w + h - 1;
+  if (mode == SCAN_MODE_ZIG_ZAG) {
+    int si = 0;
+    for (int i = 0; i < dim; ++i) {
+      if (i % 2 == 0) {
+        for (int c = 0; c < w; ++c) {
+          int r = i - c;
+          if (r >= 0 && r < h) {
+            if (scan_test(scan, iscan, si, r, c, w)) return 1;
+            ++si;
+          }
+        }
+      } else {
+        for (int r = 0; r < h; ++r) {
+          int c = i - r;
+          if (c >= 0 && c < w) {
+            if (scan_test(scan, iscan, si, r, c, w)) return 1;
+            ++si;
+          }
+        }
+      }
+    }
+  } else if (mode == SCAN_MODE_COL_DIAG) {
+    int si = 0;
+    for (int i = 0; i < dim; ++i) {
+      for (int c = 0; c < w; ++c) {
+        int r = i - c;
+        if (r >= 0 && r < h) {
+          if (scan_test(scan, iscan, si, r, c, w)) return 1;
+          ++si;
+        }
+      }
+    }
+  } else if (mode == SCAN_MODE_ROW_DIAG) {
+    int si = 0;
+    for (int i = 0; i < dim; ++i) {
+      for (int r = 0; r < h; ++r) {
+        int c = i - r;
+        if (c >= 0 && c < w) {
+          if (scan_test(scan, iscan, si, r, c, w)) return 1;
+          ++si;
+        }
+      }
+    }
+  } else if (mode == SCAN_MODE_ROW_1D) {
+    int si = 0;
+    for (int r = 0; r < h; ++r) {
+      for (int c = 0; c < w; ++c) {
+        if (scan_test(scan, iscan, si, r, c, w)) return 1;
+        ++si;
+      }
+    }
+  } else {
+    assert(mode == SCAN_MODE_COL_1D);
+    int si = 0;
+    for (int c = 0; c < w; ++c) {
+      for (int r = 0; r < h; ++r) {
+        if (scan_test(scan, iscan, si, r, c, w)) return 1;
+        ++si;
+      }
     }
   }
+  return 0;
+}
 
-  const SCAN_ORDER *sc = get_default_scan(tx_size, tx_type, 0);
-  const uint32_t mask = (1 << 16) - 1;
-  for (int r = 0; r < tx1d_size; ++r) {
-    for (int c = 0; c < tx1d_size; ++c) {
-      const uint32_t ref_idx = r * tx1d_size + c;
-      const uint32_t scan_idx = mask ^ (prob[r * tx1d_size + c] & mask);
-      const uint32_t idx = sc->scan[scan_idx];
-      EXPECT_EQ(ref_idx, idx);
+TEST(Av1ScanTest, Dependency) {
+  for (int tx_size = TX_4X4; tx_size < TX_SIZES_ALL; ++tx_size) {
+    const int org_rows = tx_size_high[(TX_SIZE)tx_size];
+    const int org_cols = tx_size_wide[(TX_SIZE)tx_size];
+    const int rows = get_txb_high((TX_SIZE)tx_size);
+    const int cols = get_txb_wide((TX_SIZE)tx_size);
+    for (int tx_type = 0; tx_type < TX_TYPES; ++tx_type) {
+      if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(tx_size),
+                                         static_cast<TX_TYPE>(tx_type)) ==
+          false) {
+        continue;
+      }
+      SCAN_MODE scan_mode;
+      TX_CLASS tx_class = tx_type_to_class[(TX_TYPE)tx_type];
+      if (tx_class == TX_CLASS_2D) {
+        if (rows == cols) {
+          scan_mode = SCAN_MODE_ZIG_ZAG;
+        } else if (rows > cols) {
+          scan_mode = SCAN_MODE_ROW_DIAG;
+        } else {
+          scan_mode = SCAN_MODE_COL_DIAG;
+        }
+      } else if (tx_class == TX_CLASS_VERT) {
+        scan_mode = SCAN_MODE_ROW_1D;
+      } else {
+        assert(tx_class == TX_CLASS_HORIZ);
+        scan_mode = SCAN_MODE_COL_1D;
+      }
+      const SCAN_ORDER *scan_order =
+          get_default_scan((TX_SIZE)tx_size, (TX_TYPE)tx_type);
+      ASSERT_EQ(scan_order_test(scan_order, cols, rows, scan_mode), 0)
+          << "scan mismatch tx_class " << tx_class << " tx_type " << tx_type
+          << " tx_w " << org_cols << " tx_h " << org_rows << " scan_mode "
+          << scan_mode << "\n";
     }
   }
 }
-
-#if USE_TOPOLOGICAL_SORT
-TEST(ScanTest, av1_update_sort_order) {
-  const TX_SIZE tx_size = TX_4X4;
-  const TX_TYPE tx_type = DCT_DCT;
-  const uint32_t prob[16] = { 15, 14, 11, 10, 13, 12, 9, 5,
-                              8,  7,  4,  2,  6,  3,  1, 0 };
-  const int16_t ref_sort_order[16] = { 0, 1,  4, 5,  2,  3,  6,  8,
-                                       9, 12, 7, 10, 13, 11, 14, 15 };
-  int16_t sort_order[16];
-  av1_update_sort_order(tx_size, tx_type, prob, sort_order);
-  for (int i = 0; i < 16; ++i) EXPECT_EQ(ref_sort_order[i], sort_order[i]);
-}
-#endif
-
-#if USE_TOPOLOGICAL_SORT
-TEST(ScanTest, av1_update_scan_order) {
-  TX_SIZE tx_size = TX_4X4;
-  const TX_TYPE tx_type = DCT_DCT;
-  const uint32_t prob[16] = { 10, 12, 14, 9, 11, 13, 15, 5,
-                              8,  7,  4,  2, 6,  3,  1,  0 };
-  int16_t sort_order[16];
-  int16_t scan[16];
-  int16_t iscan[16];
-  const int16_t ref_iscan[16] = { 0, 1, 2,  6,  3, 4,  5,  10,
-                                  7, 8, 11, 13, 9, 12, 14, 15 };
-
-  av1_update_sort_order(tx_size, tx_type, prob, sort_order);
-  av1_update_scan_order(tx_size, sort_order, scan, iscan);
-
-  for (int i = 0; i < 16; ++i) {
-    EXPECT_EQ(ref_iscan[i], iscan[i]);
-    EXPECT_EQ(i, scan[ref_iscan[i]]);
-  }
-}
-#endif
-
-TEST(ScanTest, av1_update_neighbors) {
-  TX_SIZE tx_size = TX_4X4;
-  // raster order
-  const int16_t scan[16] = { 0, 1, 2,  3,  4,  5,  6,  7,
-                             8, 9, 10, 11, 12, 13, 14, 15 };
-  int16_t nb[(16 + 1) * 2];
-  const int16_t ref_nb[(16 + 1) * 2] = { 0,  0,  0,  0,  1,  1,  2, 2, 0,
-                                         1,  1,  4,  2,  5,  3,  6, 4, 5,
-                                         5,  8,  6,  9,  7,  10, 8, 9, 9,
-                                         12, 10, 13, 11, 14, 0,  0 };
-
-  // raster order's scan and iscan are the same
-  av1_update_neighbors(tx_size, scan, scan, nb);
-
-  for (int i = 0; i < (16 + 1) * 2; ++i) {
-    EXPECT_EQ(ref_nb[i], nb[i]);
-  }
-}
-
-#if USE_2X2_PROB
-TEST(ScanTest, av1_down_sample_scan_count) {
-  const uint32_t non_zero_count[256] = {
-    13, 12, 11, 10, 0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 13, 9, 10, 8, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 11, 12, 9, 8, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  13, 9, 9, 10, 0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0, 0, 0, 0,  0, 0,  0, 0, 0,
-    0,  0,  0,  0,  0,  0, 0, 0,  0, 0, 0,  0,  0, 0,
-  };
-  const uint32_t ref_non_zero_count_ds[64] = {
-    13, 11, 0, 0, 0, 0, 0, 0, 11, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,  0,  0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,  0,  0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  };
-  uint32_t non_zero_count_ds[64];
-  av1_down_sample_scan_count(non_zero_count_ds, non_zero_count, TX_16X16);
-  for (int i = 0; i < 64; ++i) {
-    EXPECT_EQ(ref_non_zero_count_ds[i], non_zero_count_ds[i]);
-  }
-}
-#endif
-
-}  // namespace

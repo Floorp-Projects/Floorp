@@ -41,6 +41,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
@@ -105,7 +106,7 @@ public class LeanplumInternal {
     triggerAction(context, null);
   }
 
-  private static void triggerAction(final ActionContext context,
+  public static void triggerAction(final ActionContext context,
       final VariablesChangedCallback handledCallback) {
     List<ActionCallback> callbacks;
     synchronized (actionHandlers) {
@@ -229,27 +230,34 @@ public class LeanplumInternal {
     }
 
     if (!actionContexts.isEmpty()) {
-      Collections.sort(actionContexts);
+      Collections.sort(actionContexts, new Comparator<ActionContext>() {
+        @Override
+        public int compare(ActionContext o1, ActionContext o2) {
+          return o1.getPriority() - o2.getPriority();
+        }
+      });
       int priorityThreshold = actionContexts.get(0).getPriority();
+      boolean messageActionTriggered = false;
       for (final ActionContext actionContext : actionContexts) {
-        if (actionContext.getPriority() <= priorityThreshold) {
-          if (actionContext.actionName().equals(ActionManager.HELD_BACK_ACTION_NAME)) {
-            ActionManager.getInstance().recordHeldBackImpression(
-                actionContext.getMessageId(), actionContext.getOriginalMessageId());
-          } else {
-            LeanplumInternal.triggerAction(actionContext, new VariablesChangedCallback() {
-              @Override
-              public void variablesChanged() {
-                try {
-                  ActionManager.getInstance().recordMessageImpression(actionContext.getMessageId());
-                } catch (Throwable t) {
-                  Util.handleException(t);
-                }
-              }
-            });
-          }
-        } else {
+        if (actionContext.getPriority() > priorityThreshold) {
           break;
+        }
+
+        if (actionContext.actionName().equals(ActionManager.HELD_BACK_ACTION_NAME)) {
+          ActionManager.getInstance().recordHeldBackImpression(
+              actionContext.getMessageId(), actionContext.getOriginalMessageId());
+        } else if (!messageActionTriggered) {
+          messageActionTriggered = true;
+          LeanplumInternal.triggerAction(actionContext, new VariablesChangedCallback() {
+            @Override
+            public void variablesChanged() {
+              try {
+                ActionManager.getInstance().recordMessageImpression(actionContext.getMessageId());
+              } catch (Throwable t) {
+                Util.handleException(t);
+              }
+            }
+          });
         }
       }
     }
@@ -384,7 +392,7 @@ public class LeanplumInternal {
       @Override
       public void onResponse(final boolean success) {
         // Geocoder query must be executed on background thread.
-        Util.executeAsyncTask(new AsyncTask<Void, Void, Void>() {
+        Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
           @Override
           protected Void doInBackground(Void... voids) {
             if (!success) {
@@ -413,6 +421,9 @@ public class LeanplumInternal {
                 }
               } catch (IOException e) {
                 Log.e("Failed to connect to Geocoder: " + e);
+              } catch (IllegalArgumentException e) {
+                Log.e("Invalid latitude or longitude values: " + e);
+              } catch (Throwable ignored) {
               }
             }
             Request req = Request.post(Constants.Methods.SET_USER_ATTRIBUTES, params);
@@ -532,10 +543,6 @@ public class LeanplumInternal {
       for (Map.Entry<String, T> entry : attributes.entrySet()) {
         T value = entry.getValue();
 
-        if (value == null) {
-          continue;
-        }
-
         // Validate lists.
         if (allowLists && value instanceof Iterable<?>) {
           boolean valid = true;
@@ -556,7 +563,7 @@ public class LeanplumInternal {
             Date date = CollectionUtil.uncheckedCast(value);
             value = CollectionUtil.uncheckedCast(date.getTime());
           }
-          if (!isValidScalarValue(value, argName)) {
+          if (value != null && !isValidScalarValue(value, argName)) {
             continue;
           }
         }

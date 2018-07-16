@@ -12,7 +12,8 @@
 #include <emmintrin.h>
 #include <xmmintrin.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 static INLINE __m128i load_coefficients(const tran_low_t *coeff_ptr) {

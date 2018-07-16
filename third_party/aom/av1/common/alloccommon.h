@@ -23,23 +23,23 @@ struct BufferPool;
 
 void av1_remove_common(struct AV1Common *cm);
 
+int av1_alloc_above_context_buffers(struct AV1Common *cm,
+                                    int num_alloc_above_contexts);
+void av1_free_above_context_buffers(struct AV1Common *cm,
+                                    int num_free_above_contexts);
 int av1_alloc_context_buffers(struct AV1Common *cm, int width, int height);
 void av1_init_context_buffers(struct AV1Common *cm);
 void av1_free_context_buffers(struct AV1Common *cm);
 
 void av1_free_ref_frame_buffers(struct BufferPool *pool);
-#if CONFIG_LOOP_RESTORATION
 void av1_alloc_restoration_buffers(struct AV1Common *cm);
 void av1_free_restoration_buffers(struct AV1Common *cm);
-#endif  // CONFIG_LOOP_RESTORATION
 
 int av1_alloc_state_buffers(struct AV1Common *cm, int width, int height);
 void av1_free_state_buffers(struct AV1Common *cm);
 
 void av1_set_mb_mi(struct AV1Common *cm, int width, int height);
 int av1_get_MBs(int width, int height);
-
-void av1_swap_current_and_last_seg_map(struct AV1Common *cm);
 
 #ifdef __cplusplus
 }  // extern "C"

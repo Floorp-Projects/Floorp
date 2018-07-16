@@ -221,6 +221,13 @@ static XP_CHAR lastCrashTimeFilename[XP_PATH_MAX] = {0};
 // with the current process that gets lost when we fork so we need to
 // explicitly pass it to am
 static char* androidUserSerial = nullptr;
+
+// Before Android 8 we needed to use "startservice" to start the crash reporting service.
+// After Android 8 we need to use "start-foreground-service"
+static const char* androidStartServiceCommand = nullptr;
+// After targeting API 26 (Oreo) we ned to use a JobIntentService for the background
+// work regarding crash reporting. That Service needs a unique Job Id.
+static const char* androidCrashReporterJobId = nullptr;
 #endif
 
 // this holds additional data sent via the API
@@ -842,20 +849,22 @@ LaunchCrashReporterActivity(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
     if (androidUserSerial) {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
-                       "startservice",
+                       androidStartServiceCommand,
                        "--user", androidUserSerial,
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", aProgramPath,
                        "--es", "minidumpPath", aMinidumpPath,
+                       "--ei", "jobId", androidCrashReporterJobId,
                        "--ez", "minidumpSuccess", aSucceeded ? "true" : "false",
                        (char*)0);
     } else {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
-                       "startservice",
+                       androidStartServiceCommand,
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", aProgramPath,
                        "--es", "minidumpPath", aMinidumpPath,
+                       "--ei", "jobId", androidCrashReporterJobId,
                        "--ez", "minidumpSuccess", aSucceeded ? "true" : "false",
                        (char*)0);
     }
@@ -1551,6 +1560,21 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   } else {
     nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporterService");
     crashReporterPath = ToNewCString(package);
+  }
+
+  const char *deviceAndroidVersion = PR_GetEnv("MOZ_ANDROID_DEVICE_SDK_VERSION");
+  if (deviceAndroidVersion != nullptr) {
+    const int deviceSdkVersion = atol(deviceAndroidVersion);
+    if (deviceSdkVersion >= 26) {
+      androidStartServiceCommand = (char*)"start-foreground-service";
+    } else {
+      androidStartServiceCommand = (char*)"startservice";
+    }
+  }
+
+  const char *crashReporterJobId = PR_GetEnv("MOZ_ANDROID_CRASH_REPORTER_JOB_ID");
+  if (crashReporterJobId != nullptr) {
+    androidCrashReporterJobId = crashReporterJobId;
   }
 #endif // !defined(MOZ_WIDGET_ANDROID)
 

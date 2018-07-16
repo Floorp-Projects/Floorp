@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+#define DELTAQ_MODULATION 0  // 0: variance based, 1: wavelet AC energy based
+
 struct macroblock;
 struct yv12_buffer_config;
 struct AV1_COMP;
@@ -27,7 +29,7 @@ struct ThreadData;
 
 void av1_setup_src_planes(struct macroblock *x,
                           const struct yv12_buffer_config *src, int mi_row,
-                          int mi_col);
+                          int mi_col, const int num_planes);
 
 void av1_encode_frame(struct AV1_COMP *cpi);
 
@@ -35,12 +37,6 @@ void av1_init_tile_data(struct AV1_COMP *cpi);
 void av1_encode_tile(struct AV1_COMP *cpi, struct ThreadData *td, int tile_row,
                      int tile_col);
 
-void av1_update_tx_type_count(const struct AV1Common *cm, MACROBLOCKD *xd,
-#if CONFIG_TXK_SEL
-                              int blk_row, int blk_col, int block, int plane,
-#endif
-                              BLOCK_SIZE bsize, TX_SIZE tx_size,
-                              FRAME_COUNTS *counts);
 #ifdef __cplusplus
 }  // extern "C"
 #endif

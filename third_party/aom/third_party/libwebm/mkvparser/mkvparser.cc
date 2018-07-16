@@ -22,12 +22,8 @@
 
 #include "common/webmids.h"
 
-// disable deprecation warnings for auto_ptr
-#if defined(__GNUC__) && __GNUC__ >= 5
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
 namespace mkvparser {
+const long long kStringElementSizeLimit = 20 * 1000 * 1000;
 const float MasteringMetadata::kValueNotPresent = FLT_MAX;
 const long long Colour::kValueNotPresent = LLONG_MAX;
 const float Projection::kValueNotPresent = FLT_MAX;
@@ -330,7 +326,7 @@ long UnserializeString(IMkvReader* pReader, long long pos, long long size,
   delete[] str;
   str = NULL;
 
-  if (size >= LONG_MAX || size < 0)
+  if (size >= LONG_MAX || size < 0 || size > kStringElementSizeLimit)
     return E_FILE_FORMAT_INVALID;
 
   // +1 for '\0' terminator
@@ -5015,7 +5011,7 @@ bool MasteringMetadata::Parse(IMkvReader* reader, long long mm_start,
   if (!reader || *mm)
     return false;
 
-  std::auto_ptr<MasteringMetadata> mm_ptr(new MasteringMetadata());
+  std::unique_ptr<MasteringMetadata> mm_ptr(new MasteringMetadata());
   if (!mm_ptr.get())
     return false;
 
@@ -5104,7 +5100,7 @@ bool Colour::Parse(IMkvReader* reader, long long colour_start,
   if (!reader || *colour)
     return false;
 
-  std::auto_ptr<Colour> colour_ptr(new Colour());
+  std::unique_ptr<Colour> colour_ptr(new Colour());
   if (!colour_ptr.get())
     return false;
 
@@ -5202,7 +5198,7 @@ bool Projection::Parse(IMkvReader* reader, long long start, long long size,
   if (!reader || *projection)
     return false;
 
-  std::auto_ptr<Projection> projection_ptr(new Projection());
+  std::unique_ptr<Projection> projection_ptr(new Projection());
   if (!projection_ptr.get())
     return false;
 
@@ -7975,6 +7971,11 @@ long long Block::GetTimeCode(const Cluster* pCluster) const {
 
   const long long tc0 = pCluster->GetTimeCode();
   assert(tc0 >= 0);
+
+  // Check if tc0 + m_timecode would overflow.
+  if (tc0 < 0 || LLONG_MAX - tc0 < m_timecode) {
+    return -1;
+  }
 
   const long long tc = tc0 + m_timecode;
 

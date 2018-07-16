@@ -2175,7 +2175,8 @@ WasmGlobalObject::trace(JSTracer* trc, JSObject* obj)
 WasmGlobalObject::finalize(FreeOp*, JSObject* obj)
 {
     WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
-    js_delete(global->cell());
+    if (!global->isNewborn())
+        js_delete(global->cell());
 }
 
 /* static */ WasmGlobalObject*
@@ -2188,14 +2189,17 @@ WasmGlobalObject::create(JSContext* cx, HandleVal hval, bool isMutable)
     if (!obj)
         return nullptr;
 
+    MOZ_ASSERT(obj->isNewborn());
     MOZ_ASSERT(obj->isTenured(), "assumed by set_global post barriers");
 
     // It's simpler to initialize the cell after the object has been created,
     // to avoid needing to root the cell before the object creation.
 
     Cell* cell = js_new<Cell>();
-    if (!cell)
+    if (!cell) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     const Val& val = hval.get();
     switch (val.type().code()) {

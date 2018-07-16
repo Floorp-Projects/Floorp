@@ -5,10 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.preferences.GeckoPreferences;
-
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -21,6 +17,9 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
+
+import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 
 public class DataReportingNotification {
 
@@ -66,6 +65,7 @@ public class DataReportingNotification {
     /**
      * Launch a notification of the data policy, and record notification time and version.
      */
+    @SuppressWarnings("NewApi")
     public static void notifyDataPolicy(Context context, SharedPreferences sharedPrefs) {
         boolean result = false;
         try {
@@ -97,7 +97,7 @@ public class DataReportingNotification {
             // Bold the notification title of the ticker text, which is the same string as notificationTitle.
             tickerText.setSpan(new StyleSpan(Typeface.BOLD), 0, notificationTitle.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 
-            Notification notification = new NotificationCompat.Builder(context)
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                                         .setContentTitle(notificationTitle)
                                         .setContentText(notificationSummary)
                                         .setSmallIcon(R.drawable.ic_status_logo)
@@ -106,12 +106,15 @@ public class DataReportingNotification {
                                         .setStyle(new NotificationCompat.BigTextStyle()
                                                                         .bigText(notificationBigSummary))
                                         .addAction(R.drawable.firefox_settings_alert, notificationAction, contentIntent)
-                                        .setTicker(tickerText)
-                                        .build();
+                                        .setTicker(tickerText);
+
+            if (!AppConstants.Versions.preO) {
+                notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            }
 
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             int notificationID = ALERT_NAME_DATAREPORTING_NOTIFICATION.hashCode();
-            notificationManager.notify(notificationID, notification);
+            notificationManager.notify(notificationID, notificationBuilder.build());
 
             // Record version and notification time.
             SharedPreferences.Editor editor = sharedPrefs.edit();

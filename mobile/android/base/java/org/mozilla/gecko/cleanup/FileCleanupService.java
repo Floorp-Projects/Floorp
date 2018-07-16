@@ -6,9 +6,13 @@
 
 package org.mozilla.gecko.cleanup;
 
-import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentService;
 import android.util.Log;
+
+import org.mozilla.gecko.JobIdsConstants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,24 +34,25 @@ import java.util.ArrayList;
  *
  * The major trade-off is that this Service is very dangerous if it's exported... so don't do that!
  */
-public class FileCleanupService extends IntentService {
+public class FileCleanupService extends JobIntentService {
     private static final String LOGTAG = "Gecko" + FileCleanupService.class.getSimpleName();
-    private static final String WORKER_THREAD_NAME = LOGTAG + "Worker";
 
-    public static final String ACTION_DELETE_FILES = "org.mozilla.gecko.intent.action.DELETE_FILES";
-    public static final String EXTRA_FILE_PATHS_TO_DELETE = "org.mozilla.gecko.file_paths_to_delete";
+    private static final String ACTION_DELETE_FILES = "org.mozilla.gecko.intent.action.DELETE_FILES";
+    private static final String EXTRA_FILE_PATHS_TO_DELETE = "org.mozilla.gecko.file_paths_to_delete";
 
-    public FileCleanupService() {
-        super(WORKER_THREAD_NAME);
+    public static void enqueueWork(@NonNull final Context context, @NonNull final Intent workIntent) {
+        enqueueWork(context, FileCleanupService.class, JobIdsConstants.getIdForFileCleanupJob(), workIntent);
+    }
 
-        // We're likely to get scheduled again - let's wait until then in order to avoid:
-        //   * The coding complexity of re-running this
-        //   * Consuming system resources: we were probably killed for resource conservation purposes
-        setIntentRedelivery(false);
+    public static Intent getFileCleanupIntent(Context context, ArrayList<String> filesToCleanup) {
+        Intent intent = new Intent(context, FileCleanupService.class);
+        intent.setAction(FileCleanupService.ACTION_DELETE_FILES);
+        intent.putExtra(FileCleanupService.EXTRA_FILE_PATHS_TO_DELETE, filesToCleanup);
+        return intent;
     }
 
     @Override
-    protected void onHandleIntent(final Intent intent) {
+    protected void onHandleWork(@NonNull final Intent intent) {
         if (!isIntentValid(intent)) {
             return;
         }
@@ -57,6 +62,14 @@ public class FileCleanupService extends IntentService {
             final File file = new File(path);
             file.delete();
         }
+    }
+
+    @Override
+    public boolean onStopCurrentWork() {
+        // We're likely to get scheduled again - let's wait until then in order to avoid:
+        //   * The coding complexity of re-running this
+        //   * Consuming system resources: we were probably killed for resource conservation purposes
+        return false;
     }
 
     private static boolean isIntentValid(final Intent intent) {

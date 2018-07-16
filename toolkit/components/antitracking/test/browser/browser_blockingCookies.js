@@ -4,6 +4,8 @@ AntiTracking.runTest("Set/Get Cookies",
   // Blocking callback
   async _ => {
     is(document.cookie, "", "No cookies for me");
+    document.cookie = "name=value";
+    is(document.cookie, "", "No cookies for me");
 
     await fetch("server.sjs").then(r => r.text()).then(text => {
       is(text, "cookie-not-present", "We should not have cookies");
@@ -23,6 +25,11 @@ AntiTracking.runTest("Set/Get Cookies",
     await fetch("server.sjs").then(r => r.text()).then(text => {
       is(text, "cookie-not-present", "We should not have cookies");
     });
+
+    document.cookie = "name=value";
+    ok(document.cookie.includes("name=value"), "Some cookies for me");
+    ok(document.cookie.includes("foopy=1"), "Some cookies for me");
+
     await fetch("server.sjs").then(r => r.text()).then(text => {
       is(text, "cookie-present", "We should have cookies");
     });

@@ -56,6 +56,7 @@ build_target() {
 
   mkdir "${target}"
   cd "${target}"
+  # TODO(tomfinegan@google.com): switch to cmake.
   eval "${LIBAOM_SOURCE_DIR}/configure" --target="${target}" \
     ${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS} ${target_specific_flags} \
     ${devnull}

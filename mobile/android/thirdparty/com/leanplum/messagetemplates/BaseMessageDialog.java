@@ -32,11 +32,59 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.graphics.drawable.shapes.Shape;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.TypedValue;
-import android.view.Display;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.leanplum.ActionContext;
+import com.leanplum.Leanplum;
+import com.leanplum.utils.BitmapUtil;
+import com.leanplum.utils.SizeUtil;
+import com.leanplum.views.BackgroundImageView;
+import com.leanplum.views.CloseButton;
+
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Map;
+
+/**
+ * Base dialog used to display the Center Popup, Interstitial, Web Interstitial, HTML template.
+ *
+ * @author Martin Yanakiev, Anna Orlova
+ */
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Typeface;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
+import android.graphics.drawable.shapes.Shape;
+import android.os.Build;
+import android.os.Handler;
+import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -85,22 +133,8 @@ public class BaseMessageDialog extends Dialog {
   private boolean isHtml = false;
   private boolean isClosing = false;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      final Window window = getWindow();
-      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-      window.setStatusBarColor(Color.TRANSPARENT);
-
-      int flags = window.getDecorView().getSystemUiVisibility();
-      flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-      window.getDecorView().setSystemUiVisibility(flags);
-    }
-  }
-
   protected BaseMessageDialog(Activity activity, boolean fullscreen, BaseMessageOptions options,
-      WebInterstitialOptions webOptions, HTMLOptions htmlOptions) {
+                              WebInterstitialOptions webOptions, HTMLOptions htmlOptions) {
     super(activity, getTheme(activity));
 
     SizeUtil.init(activity);
@@ -116,7 +150,7 @@ public class BaseMessageDialog extends Dialog {
     }
     dialogView = new RelativeLayout(activity);
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     dialogView.setBackgroundColor(Color.TRANSPARENT);
     dialogView.setLayoutParams(layoutParams);
 
@@ -146,9 +180,9 @@ public class BaseMessageDialog extends Dialog {
       } else {
         window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
         if (htmlOptions != null &&
-            MessageTemplates.Args.HTML_ALIGN_BOTTOM.equals(htmlOptions.getHtmlAlign())) {
+                MessageTemplates.Args.HTML_ALIGN_BOTTOM.equals(htmlOptions.getHtmlAlign())) {
           dialogView.setGravity(Gravity.BOTTOM);
         }
       }
@@ -158,7 +192,7 @@ public class BaseMessageDialog extends Dialog {
   @Override
   public void onWindowFocusChanged(boolean hasFocus) {
     try {
-      if (webView != null && Build.VERSION.SDK_INT >= 11) {
+      if (webView != null) {
         if (hasFocus) {
           webView.onResume();
         } else {
@@ -227,7 +261,7 @@ public class BaseMessageDialog extends Dialog {
     CloseButton closeButton = new CloseButton(context);
     closeButton.setId(103);
     RelativeLayout.LayoutParams closeLayout = new RelativeLayout.LayoutParams(
-        LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     if (fullscreen) {
       closeLayout.addRule(RelativeLayout.ALIGN_PARENT_TOP, dialogView.getId());
       closeLayout.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, dialogView.getId());
@@ -255,22 +289,34 @@ public class BaseMessageDialog extends Dialog {
     RelativeLayout.LayoutParams layoutParams;
     if (fullscreen) {
       layoutParams = new RelativeLayout.LayoutParams(
-          LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+              LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     } else if (isHtml) {
       int height = SizeUtil.dpToPx(context, htmlOptions.getHtmlHeight());
-      layoutParams = new RelativeLayout.LayoutParams(
-          LayoutParams.MATCH_PARENT, height);
-    } else {
-
-      // Make sure the dialog fits on screen.
-      Display display = context.getWindowManager().getDefaultDisplay();
-      Point size = new Point();
-      if (Build.VERSION.SDK_INT >= 13) {
-        display.getSize(size);
+      HTMLOptions.Size htmlWidth = htmlOptions.getHtmlWidth();
+      if (htmlWidth == null || TextUtils.isEmpty(htmlWidth.type)) {
+        layoutParams = new RelativeLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, height);
       } else {
-        size = new Point(display.getHeight(), display.getHeight());
+        int width = htmlWidth.value;
+        if ("%".equals(htmlWidth.type)) {
+          Point size = SizeUtil.getDisplaySize(context);
+          width = size.x * width / 100;
+        } else {
+          width = SizeUtil.dpToPx(context, width);
+        }
+        layoutParams = new RelativeLayout.LayoutParams(width, height);
       }
 
+      layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+      int htmlYOffset = htmlOptions.getHtmlYOffset(context);
+      if (MessageTemplates.Args.HTML_ALIGN_BOTTOM.equals(htmlOptions.getHtmlAlign())) {
+        layoutParams.bottomMargin = htmlYOffset;
+      } else {
+        layoutParams.topMargin = htmlYOffset;
+      }
+    } else {
+      // Make sure the dialog fits on screen.
+      Point size = SizeUtil.getDisplaySize(context);
       int width = SizeUtil.dpToPx(context, ((CenterPopupOptions) options).getWidth());
       int height = SizeUtil.dpToPx(context, ((CenterPopupOptions) options).getHeight());
 
@@ -315,9 +361,9 @@ public class BaseMessageDialog extends Dialog {
 
       View message = createMessageView(context);
       ((RelativeLayout.LayoutParams) message.getLayoutParams())
-          .addRule(RelativeLayout.BELOW, title.getId());
+              .addRule(RelativeLayout.BELOW, title.getId());
       ((RelativeLayout.LayoutParams) message.getLayoutParams())
-          .addRule(RelativeLayout.ABOVE, button.getId());
+              .addRule(RelativeLayout.ABOVE, button.getId());
       view.addView(message, message.getLayoutParams());
     } else if (isWeb) {
       WebView webView = createWebView(context);
@@ -336,6 +382,7 @@ public class BaseMessageDialog extends Dialog {
     return new RoundRectShape(outerRadii, null, null);
   }
 
+  // setBackgroundDrawable was deprecated at API 16.
   @SuppressWarnings("deprecation")
   private ImageView createBackgroundImageView(Context context, boolean fullscreen) {
     BackgroundImageView view = new BackgroundImageView(context, fullscreen);
@@ -356,7 +403,7 @@ public class BaseMessageDialog extends Dialog {
       view.setBackgroundDrawable(footerBackground);
     }
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     view.setLayoutParams(layoutParams);
     return view;
   }
@@ -364,7 +411,7 @@ public class BaseMessageDialog extends Dialog {
   private RelativeLayout createTitleView(Context context) {
     RelativeLayout view = new RelativeLayout(context);
     view.setLayoutParams(new LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
     TextView title = new TextView(context);
     title.setPadding(0, SizeUtil.dp5, 0, SizeUtil.dp5);
@@ -374,7 +421,7 @@ public class BaseMessageDialog extends Dialog {
     title.setTextSize(TypedValue.COMPLEX_UNIT_SP, SizeUtil.textSize0);
     title.setTypeface(null, Typeface.BOLD);
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
     layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
     layoutParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
     title.setLayoutParams(layoutParams);
@@ -386,7 +433,7 @@ public class BaseMessageDialog extends Dialog {
   private TextView createMessageView(Context context) {
     TextView view = new TextView(context);
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     view.setLayoutParams(layoutParams);
     view.setGravity(Gravity.CENTER);
     view.setText(options.getMessageText());
@@ -398,7 +445,7 @@ public class BaseMessageDialog extends Dialog {
   private WebView createWebView(Context context) {
     WebView view = new WebView(context);
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     view.setLayoutParams(layoutParams);
     view.setWebViewClient(new WebViewClient() {
       @SuppressWarnings("deprecation")
@@ -472,18 +519,18 @@ public class BaseMessageDialog extends Dialog {
       webViewSettings.setAllowFileAccessFromFileURLs(true);
       webViewSettings.setAllowUniversalAccessFromFileURLs(true);
     }
-    if (Build.VERSION.SDK_INT >= 11) {
-      webViewSettings.setBuiltInZoomControls(false);
-      webViewSettings.setDisplayZoomControls(false);
-    }
+
+    webViewSettings.setBuiltInZoomControls(false);
+    webViewSettings.setDisplayZoomControls(false);
     webViewSettings.setSupportZoom(false);
 
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     webView.setLayoutParams(layoutParams);
     final Dialog currentDialog = this;
     webView.setWebChromeClient(new WebChromeClient());
     webView.setWebViewClient(new WebViewClient() {
+      // shouldOverrideUrlLoading(WebView wView, String url) was deprecated at API 24.
       @SuppressWarnings("deprecation")
       @Override
       public boolean shouldOverrideUrlLoading(WebView wView, String url) {
@@ -516,7 +563,7 @@ public class BaseMessageDialog extends Dialog {
 
             try {
               paramsMap = ActionContext.mapFromJson(new JSONObject(queryComponentsFromUrl(url,
-                  "parameters")));
+                      "parameters")));
             } catch (Exception ignored) {
             }
 
@@ -532,7 +579,7 @@ public class BaseMessageDialog extends Dialog {
 
         // Action URL or track action URL event.
         if (url.contains(htmlOptions.getActionUrl()) ||
-            url.contains(htmlOptions.getTrackActionUrl())) {
+                url.contains(htmlOptions.getTrackActionUrl())) {
           cancel();
           String queryComponentsFromUrl = queryComponentsFromUrl(url, "action");
           try {
@@ -591,7 +638,7 @@ public class BaseMessageDialog extends Dialog {
   private TextView createAcceptButton(Context context) {
     TextView view = new TextView(context);
     RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-        LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
     layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
     layoutParams.setMargins(0, 0, 0, SizeUtil.dp5);
@@ -603,7 +650,7 @@ public class BaseMessageDialog extends Dialog {
     view.setTypeface(null, Typeface.BOLD);
 
     BitmapUtil.stateBackgroundDarkerByPercentage(view,
-        options.getAcceptButtonBackgroundColor(), 30);
+            options.getAcceptButtonBackgroundColor(), 30);
 
     view.setTextSize(TypedValue.COMPLEX_UNIT_SP, SizeUtil.textSize0_1);
     view.setOnClickListener(new View.OnClickListener() {
@@ -620,7 +667,7 @@ public class BaseMessageDialog extends Dialog {
 
   private static int getTheme(Activity activity) {
     boolean full = (activity.getWindow().getAttributes().flags &
-        WindowManager.LayoutParams.FLAG_FULLSCREEN) == WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            WindowManager.LayoutParams.FLAG_FULLSCREEN) == WindowManager.LayoutParams.FLAG_FULLSCREEN;
     if (full) {
       return android.R.style.Theme_Translucent_NoTitleBar_Fullscreen;
     } else {

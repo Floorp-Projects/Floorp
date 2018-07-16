@@ -14,7 +14,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "./v64_intrinsics_c.h"
+
+#include "aom_dsp/simd/v64_intrinsics_c.h"
 
 /* Fallback to plain, unoptimised C. */
 
@@ -71,6 +72,8 @@ SIMD_INLINE v64 v64_dup_32(uint32_t x) { return c_v64_dup_32(x); }
 
 SIMD_INLINE v64 v64_add_8(v64 a, v64 b) { return c_v64_add_8(a, b); }
 SIMD_INLINE v64 v64_add_16(v64 a, v64 b) { return c_v64_add_16(a, b); }
+SIMD_INLINE v64 v64_sadd_u8(v64 a, v64 b) { return c_v64_sadd_u8(a, b); }
+SIMD_INLINE v64 v64_sadd_s8(v64 a, v64 b) { return c_v64_sadd_s8(a, b); }
 SIMD_INLINE v64 v64_sadd_s16(v64 a, v64 b) { return c_v64_sadd_s16(a, b); }
 SIMD_INLINE v64 v64_add_32(v64 a, v64 b) { return c_v64_add_32(a, b); }
 SIMD_INLINE v64 v64_sub_8(v64 a, v64 b) { return c_v64_sub_8(a, b); }
@@ -99,6 +102,9 @@ SIMD_INLINE v64 v64_unpacklo_s8_s16(v64 a) { return c_v64_unpacklo_s8_s16(a); }
 SIMD_INLINE v64 v64_unpackhi_s8_s16(v64 a) { return c_v64_unpackhi_s8_s16(a); }
 SIMD_INLINE v64 v64_pack_s32_s16(v64 a, v64 b) {
   return c_v64_pack_s32_s16(a, b);
+}
+SIMD_INLINE v64 v64_pack_s32_u16(v64 a, v64 b) {
+  return c_v64_pack_s32_u16(a, b);
 }
 SIMD_INLINE v64 v64_pack_s16_u8(v64 a, v64 b) {
   return c_v64_pack_s16_u8(a, b);
@@ -156,6 +162,7 @@ SIMD_INLINE v64 v64_madd_us8(v64 a, v64 b) { return c_v64_madd_us8(a, b); }
 
 SIMD_INLINE v64 v64_avg_u8(v64 a, v64 b) { return c_v64_avg_u8(a, b); }
 SIMD_INLINE v64 v64_rdavg_u8(v64 a, v64 b) { return c_v64_rdavg_u8(a, b); }
+SIMD_INLINE v64 v64_rdavg_u16(v64 a, v64 b) { return c_v64_rdavg_u16(a, b); }
 SIMD_INLINE v64 v64_avg_u16(v64 a, v64 b) { return c_v64_avg_u16(a, b); }
 SIMD_INLINE v64 v64_min_u8(v64 a, v64 b) { return c_v64_min_u8(a, b); }
 SIMD_INLINE v64 v64_max_u8(v64 a, v64 b) { return c_v64_max_u8(a, b); }

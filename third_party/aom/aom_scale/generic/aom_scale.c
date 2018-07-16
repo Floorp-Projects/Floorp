@@ -18,9 +18,10 @@
  ***************************************************************************/
 
 /****************************************************************************
-*  Header Files
-****************************************************************************/
-#include "./aom_scale_rtcd.h"
+ *  Header Files
+ ****************************************************************************/
+#include "config/aom_scale_rtcd.h"
+
 #include "aom_mem/aom_mem.h"
 #include "aom_scale/aom_scale.h"
 #include "aom_scale/yv12config.h"
@@ -475,11 +476,11 @@ void aom_scale_frame(YV12_BUFFER_CONFIG *src, YV12_BUFFER_CONFIG *dst,
                      unsigned char *temp_area, unsigned char temp_height,
                      unsigned int hscale, unsigned int hratio,
                      unsigned int vscale, unsigned int vratio,
-                     unsigned int interlaced) {
+                     unsigned int interlaced, const int num_planes) {
   const int dw = (hscale - 1 + src->y_width * hratio) / hscale;
   const int dh = (vscale - 1 + src->y_height * vratio) / vscale;
 
-  for (int plane = 0; plane < 3; ++plane) {
+  for (int plane = 0; plane < num_planes; ++plane) {
     const int is_uv = plane > 0;
     const int plane_dw = dw >> is_uv;
     const int plane_dh = dh >> is_uv;

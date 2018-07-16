@@ -32,6 +32,7 @@ import android.widget.ListView;
 public class TabHistoryFragment extends Fragment implements OnItemClickListener, OnClickListener {
     private static final String ARG_LIST = "historyPageList";
     private static final String ARG_INDEX = "index";
+    private static final String ARG_PRIVATE_MODE = "private";
     private static final String BACK_STACK_ID = "backStateId";
 
     private List<TabHistoryPage> historyPageList;
@@ -45,11 +46,12 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
 
     }
 
-    public static TabHistoryFragment newInstance(List<TabHistoryPage> historyPageList, int toIndex) {
+    public static TabHistoryFragment newInstance(List<TabHistoryPage> historyPageList, int toIndex, boolean isPrivate) {
         final TabHistoryFragment fragment = new TabHistoryFragment();
         final Bundle args = new Bundle();
         args.putParcelableArrayList(ARG_LIST, (ArrayList<? extends Parcelable>) historyPageList);
         args.putInt(ARG_INDEX, toIndex);
+        args.putBoolean(ARG_PRIVATE_MODE, isPrivate);
         fragment.setArguments(args);
         return fragment;
     }
@@ -79,7 +81,8 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
         Bundle bundle = getArguments();
         historyPageList = bundle.getParcelableArrayList(ARG_LIST);
         toIndex = bundle.getInt(ARG_INDEX);
-        final ArrayAdapter<TabHistoryPage> urlAdapter = new TabHistoryAdapter(getActivity(), historyPageList);
+        boolean isPrivate = bundle.getBoolean(ARG_PRIVATE_MODE);
+        final ArrayAdapter<TabHistoryPage> urlAdapter = new TabHistoryAdapter(getActivity(), historyPageList, isPrivate);
         dialogList.setAdapter(urlAdapter);
         dialogList.setOnItemClickListener(this);
     }
@@ -153,11 +156,13 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
     private static class TabHistoryAdapter extends ArrayAdapter<TabHistoryPage> {
         private final List<TabHistoryPage> pages;
         private final Context context;
+        private final boolean isPrivate;
 
-        public TabHistoryAdapter(Context context, List<TabHistoryPage> pages) {
+        public TabHistoryAdapter(Context context, List<TabHistoryPage> pages, boolean isPrivate) {
             super(context, R.layout.tab_history_item_row, pages);
             this.context = context;
             this.pages = pages;
+            this.isPrivate = isPrivate;
         }
 
         @Override
@@ -167,7 +172,7 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
                 row = new TabHistoryItemRow(context, null);
             }
 
-            row.update(pages.get(position), position == 0, position == pages.size() - 1);
+            row.update(pages.get(position), position == 0, position == pages.size() - 1, isPrivate);
             return row;
         }
     }

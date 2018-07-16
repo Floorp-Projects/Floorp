@@ -22,13 +22,17 @@
 package com.leanplum.activities;
 
 import android.accounts.AccountAuthenticatorActivity;
-import android.annotation.SuppressLint;
 import android.content.res.Resources;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 
-@SuppressLint("Registered")
+/**
+ *  @deprecated due to rising minimal API to 14. This class will be removed in a
+ *  future major release. Please use {@link LeanplumActivityHelper} to track your activities
+ *  automatically.
+ */
+@Deprecated
 public class LeanplumAccountAuthenticatorActivity extends AccountAuthenticatorActivity {
   private LeanplumActivityHelper helper;
 

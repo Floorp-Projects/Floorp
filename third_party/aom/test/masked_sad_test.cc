@@ -18,8 +18,9 @@
 #include "test/register_state_check.h"
 #include "test/util.h"
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 using libaom_test::ACMRandom;
@@ -32,7 +33,7 @@ typedef unsigned int (*MaskedSADFunc)(const uint8_t *src, int src_stride,
                                       const uint8_t *second_pred,
                                       const uint8_t *msk, int msk_stride,
                                       int invert_mask);
-typedef std::tr1::tuple<MaskedSADFunc, MaskedSADFunc> MaskedSADParam;
+typedef ::testing::tuple<MaskedSADFunc, MaskedSADFunc> MaskedSADParam;
 
 class MaskedSADTest : public ::testing::TestWithParam<MaskedSADParam> {
  public:
@@ -89,13 +90,12 @@ TEST_P(MaskedSADTest, OperationCheck) {
       << "First failed at test case " << first_failure;
 }
 
-#if CONFIG_HIGHBITDEPTH
 typedef unsigned int (*HighbdMaskedSADFunc)(const uint8_t *src, int src_stride,
                                             const uint8_t *ref, int ref_stride,
                                             const uint8_t *second_pred,
                                             const uint8_t *msk, int msk_stride,
                                             int invert_mask);
-typedef std::tr1::tuple<HighbdMaskedSADFunc, HighbdMaskedSADFunc>
+typedef ::testing::tuple<HighbdMaskedSADFunc, HighbdMaskedSADFunc>
     HighbdMaskedSADParam;
 
 class HighbdMaskedSADTest
@@ -155,17 +155,14 @@ TEST_P(HighbdMaskedSADTest, OperationCheck) {
       << "Error: High BD Masked SAD Test, C output doesn't match SSSE3 output. "
       << "First failed at test case " << first_failure;
 }
-#endif  // CONFIG_HIGHBITDEPTH
 
-using std::tr1::make_tuple;
+using ::testing::make_tuple;
 
 #if HAVE_SSSE3
 const MaskedSADParam msad_test[] = {
-#if CONFIG_EXT_PARTITION
   make_tuple(&aom_masked_sad128x128_ssse3, &aom_masked_sad128x128_c),
   make_tuple(&aom_masked_sad128x64_ssse3, &aom_masked_sad128x64_c),
   make_tuple(&aom_masked_sad64x128_ssse3, &aom_masked_sad64x128_c),
-#endif  // CONFIG_EXT_PARTITION
   make_tuple(&aom_masked_sad64x64_ssse3, &aom_masked_sad64x64_c),
   make_tuple(&aom_masked_sad64x32_ssse3, &aom_masked_sad64x32_c),
   make_tuple(&aom_masked_sad32x64_ssse3, &aom_masked_sad32x64_c),
@@ -183,16 +180,13 @@ const MaskedSADParam msad_test[] = {
 
 INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, MaskedSADTest,
                         ::testing::ValuesIn(msad_test));
-#if CONFIG_HIGHBITDEPTH
 const HighbdMaskedSADParam hbd_msad_test[] = {
-#if CONFIG_EXT_PARTITION
   make_tuple(&aom_highbd_masked_sad128x128_ssse3,
              &aom_highbd_masked_sad128x128_c),
   make_tuple(&aom_highbd_masked_sad128x64_ssse3,
              &aom_highbd_masked_sad128x64_c),
   make_tuple(&aom_highbd_masked_sad64x128_ssse3,
              &aom_highbd_masked_sad64x128_c),
-#endif  // CONFIG_EXT_PARTITION
   make_tuple(&aom_highbd_masked_sad64x64_ssse3, &aom_highbd_masked_sad64x64_c),
   make_tuple(&aom_highbd_masked_sad64x32_ssse3, &aom_highbd_masked_sad64x32_c),
   make_tuple(&aom_highbd_masked_sad32x64_ssse3, &aom_highbd_masked_sad32x64_c),
@@ -210,6 +204,5 @@ const HighbdMaskedSADParam hbd_msad_test[] = {
 
 INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, HighbdMaskedSADTest,
                         ::testing::ValuesIn(hbd_msad_test));
-#endif  // CONFIG_HIGHBITDEPTH
 #endif  // HAVE_SSSE3
 }  // namespace

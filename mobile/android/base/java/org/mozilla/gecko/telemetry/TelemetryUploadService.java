@@ -4,17 +4,14 @@
 
 package org.mozilla.gecko.telemetry;
 
-import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentService;
 import android.util.Log;
-import ch.boye.httpclientandroidlib.HttpHeaders;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.ClientProtocolException;
-import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.JobIdsConstants;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
@@ -36,14 +33,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import ch.boye.httpclientandroidlib.HttpHeaders;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+
 /**
  * The service that handles retrieving a list of telemetry pings to upload from the given
  * {@link TelemetryPingStore}, uploading those payloads to the associated server, and reporting
  * back to the Store which uploads were a success.
  */
-public class TelemetryUploadService extends IntentService {
+public class TelemetryUploadService extends JobIntentService {
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + TelemetryUploadService.class.getSimpleName(), 0, 23);
-    private static final String WORKER_THREAD_NAME = LOGTAG + "Worker";
 
     public static final String ACTION_UPLOAD = "upload";
     public static final String EXTRA_STORE = "store";
@@ -58,12 +60,8 @@ public class TelemetryUploadService extends IntentService {
         }
     }
 
-    public TelemetryUploadService() {
-        super(WORKER_THREAD_NAME);
-
-        // Intent redelivery can fail hard (e.g. we OOM as we try to upload, the Intent gets redelivered, repeat)
-        // so for simplicity, we avoid it. We expect the upload service to eventually get called again by the caller.
-        setIntentRedelivery(false);
+    public static void enqueueWork(@NonNull final Context context, @NonNull final Intent workIntent) {
+        enqueueWork(context, TelemetryUploadService.class, JobIdsConstants.getIdForTelemetryUploadJob(), workIntent);
     }
 
     /**
@@ -71,7 +69,7 @@ public class TelemetryUploadService extends IntentService {
      *   * EXTRA_STORE: A {@link TelemetryPingStore} where the pings to upload are located
      */
     @Override
-    public void onHandleIntent(final Intent intent) {
+    protected void onHandleWork(@NonNull Intent intent) {
         Log.d(LOGTAG, "Service started");
 
         if (!isReadyToUpload(this, intent)) {
@@ -88,8 +86,18 @@ public class TelemetryUploadService extends IntentService {
             // pending Intents in the queue so we don't waste resources (e.g. battery)
             // trying to upload when there's likely to be another connection failure.
             Log.d(LOGTAG, "Clearing Intent queue due to connection failures");
+
+            // TODO investigate the opportunity and possible implications of calling stopSelf()
+            // in this JobIntentService when running on >= Oreo - bug 1468284
             stopSelf();
         }
+    }
+
+    @Override
+    public boolean onStopCurrentWork() {
+        // The work could fail hard (e.g. we OOM as we try to upload) so we will not restart it.
+        // We expect the upload service to eventually get called again by the caller.
+        return false;
     }
 
     /**

@@ -25,6 +25,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.leanplum.internal.Constants;
+import com.leanplum.internal.LeanplumManifestHelper;
 import com.leanplum.internal.Log;
 import com.leanplum.internal.Util;
 
@@ -43,7 +45,22 @@ public class LeanplumPushReceiver extends BroadcastReceiver {
         Log.e("Received a null intent.");
         return;
       }
-      LeanplumPushService.openNotification(context, intent.getExtras());
+      // Parse manifest and pull metadata which contains client broadcast receiver class.
+      String receiver = LeanplumManifestHelper.parseNotificationMetadata();
+      // If receiver isn't found we will open up notification with default activity
+      if (receiver == null) {
+        Log.d("Custom broadcast receiver class not set, using default one.");
+        LeanplumPushService.openNotification(context, intent);
+      } else {
+        Log.d("Custom broadcast receiver class found, using it to handle push notifications.");
+        // Forward Intent to a client broadcast receiver.
+        Intent forwardIntent = new Intent();
+        // Add action to be able to differentiate between multiple intents.
+        forwardIntent.setAction(LeanplumPushService.LEANPLUM_NOTIFICATION);
+        forwardIntent.setClassName(context, receiver);
+        forwardIntent.putExtras(intent.getExtras());
+        context.sendBroadcast(forwardIntent);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }

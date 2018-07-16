@@ -11,7 +11,8 @@
 
 #ifndef AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
 #define AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
-#include "./aom_config.h"
+
+#include "config/aom_config.h"
 
 #define ADDRESS_STORAGE_SIZE sizeof(size_t)
 

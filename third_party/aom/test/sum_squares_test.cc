@@ -15,8 +15,9 @@
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_ports/mem.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
@@ -39,87 +40,80 @@ typedef libaom_test::FuncParam<SSI16Func> TestFuncs;
 class SumSquaresTest : public ::testing::TestWithParam<TestFuncs> {
  public:
   virtual ~SumSquaresTest() {}
-  virtual void SetUp() { params_ = this->GetParam(); }
+  virtual void SetUp() {
+    params_ = this->GetParam();
+    rnd_.Reset(ACMRandom::DeterministicSeed());
+    src_ = reinterpret_cast<int16_t *>(aom_memalign(16, 256 * 256 * 2));
+    ASSERT_TRUE(src_ != NULL);
+  }
 
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  virtual void TearDown() {
+    libaom_test::ClearSystemState();
+    aom_free(src_);
+  }
+  void RunTest(int isRandom);
+
+  void GenRandomData(int width, int height, int stride) {
+    const int msb = 11;  // Up to 12 bit input
+    const int limit = 1 << (msb + 1);
+    for (int ii = 0; ii < height; ii++) {
+      for (int jj = 0; jj < width; jj++) {
+        src_[ii * stride + jj] = rnd_(2) ? rnd_(limit) : -rnd_(limit);
+      }
+    }
+  }
+
+  void GenExtremeData(int width, int height, int stride) {
+    const int msb = 11;  // Up to 12 bit input
+    const int limit = 1 << (msb + 1);
+    const int val = rnd_(2) ? limit - 1 : -(limit - 1);
+    for (int ii = 0; ii < height; ii++) {
+      for (int jj = 0; jj < width; jj++) {
+        src_[ii * stride + jj] = val;
+      }
+    }
+  }
 
  protected:
   TestFuncs params_;
+  int16_t *src_;
+  ACMRandom rnd_;
 };
 
-TEST_P(SumSquaresTest, OperationCheck) {
-  ACMRandom rnd(ACMRandom::DeterministicSeed());
-  DECLARE_ALIGNED(16, int16_t, src[256 * 256]);
-
+void SumSquaresTest::RunTest(int isRandom) {
   int failed = 0;
-
-  const int msb = 11;  // Up to 12 bit input
-  const int limit = 1 << (msb + 1);
-
   for (int k = 0; k < kNumIterations; k++) {
-    int width = 4 * rnd(32);   // Up to 128x128
-    int height = 4 * rnd(32);  // Up to 128x128
-    int stride = 4 << rnd(7);  // Up to 256 stride
-    while (stride < width) {   // Make sure it's valid
-      stride = 4 << rnd(7);
+    const int width = 4 * (rnd_(31) + 1);   // Up to 128x128
+    const int height = 4 * (rnd_(31) + 1);  // Up to 128x128
+    int stride = 4 << rnd_(7);              // Up to 256 stride
+    while (stride < width) {                // Make sure it's valid
+      stride = 4 << rnd_(7);
     }
-
-    for (int ii = 0; ii < height; ii++) {
-      for (int jj = 0; jj < width; jj++) {
-        src[ii * stride + jj] = rnd(2) ? rnd(limit) : -rnd(limit);
-      }
+    if (isRandom) {
+      GenRandomData(width, height, stride);
+    } else {
+      GenExtremeData(width, height, stride);
     }
-
-    const uint64_t res_ref = params_.ref_func(src, stride, width, height);
+    const uint64_t res_ref = params_.ref_func(src_, stride, width, height);
     uint64_t res_tst;
     ASM_REGISTER_STATE_CHECK(res_tst =
-                                 params_.tst_func(src, stride, width, height));
+                                 params_.tst_func(src_, stride, width, height));
 
     if (!failed) {
       failed = res_ref != res_tst;
       EXPECT_EQ(res_ref, res_tst)
-          << "Error: Sum Squares Test"
-          << " C output does not match optimized output.";
+          << "Error: Sum Squares Test [" << width << "x" << height
+          << "] C output does not match optimized output.";
     }
   }
 }
 
+TEST_P(SumSquaresTest, OperationCheck) {
+  RunTest(1);  // GenRandomData
+}
+
 TEST_P(SumSquaresTest, ExtremeValues) {
-  ACMRandom rnd(ACMRandom::DeterministicSeed());
-  DECLARE_ALIGNED(16, int16_t, src[256 * 256]);
-
-  int failed = 0;
-
-  const int msb = 11;  // Up to 12 bit input
-  const int limit = 1 << (msb + 1);
-
-  for (int k = 0; k < kNumIterations; k++) {
-    int width = 4 * rnd(32);   // Up to 128x128
-    int height = 4 * rnd(32);  // Up to 128x128
-    int stride = 4 << rnd(7);  // Up to 256 stride
-    while (stride < width) {   // Make sure it's valid
-      stride = 4 << rnd(7);
-    }
-
-    int val = rnd(2) ? limit - 1 : -(limit - 1);
-    for (int ii = 0; ii < height; ii++) {
-      for (int jj = 0; jj < width; jj++) {
-        src[ii * stride + jj] = val;
-      }
-    }
-
-    const uint64_t res_ref = params_.ref_func(src, stride, width, height);
-    uint64_t res_tst;
-    ASM_REGISTER_STATE_CHECK(res_tst =
-                                 params_.tst_func(src, stride, width, height));
-
-    if (!failed) {
-      failed = res_ref != res_tst;
-      EXPECT_EQ(res_ref, res_tst)
-          << "Error: Sum Squares Test"
-          << " C output does not match optimized output.";
-    }
-  }
+  RunTest(0);  // GenExtremeData
 }
 
 #if HAVE_SSE2

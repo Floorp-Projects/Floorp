@@ -6,7 +6,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
@@ -96,7 +95,12 @@ public class ChromeCastDisplay implements GeckoPresentationDisplay {
                     int code = errorReason.getStatusCode();
                     callback.sendError("Fail to start presentation. Error code: " + code);
                 }
-        });
+
+                @Override
+                public void onRemoteDisplaySessionEnded(CastRemoteDisplayLocalService castRemoteDisplayLocalService) {
+
+                }
+            });
     }
 
     @Override

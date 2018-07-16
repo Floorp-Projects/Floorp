@@ -47,27 +47,17 @@ class LeanplumGcmProvider extends LeanplumCloudMessagingProvider {
   private static final String ERROR_PHONE_REGISTRATION_ERROR = "PHONE_REGISTRATION_ERROR";
   private static final String ERROR_TOO_MANY_REGISTRATIONS = "TOO_MANY_REGISTRATIONS";
 
-  private static final String SEND_PERMISSION = "com.google.android.c2dm.permission.SEND";
-  private static final String RECEIVE_PERMISSION = "com.google.android.c2dm.permission.RECEIVE";
-  private static final String RECEIVE_ACTION = "com.google.android.c2dm.intent.RECEIVE";
-  private static final String REGISTRATION_ACTION = "com.google.android.c2dm.intent.REGISTRATION";
-  private static final String INSTANCE_ID_ACTION = "com.google.android.gms.iid.InstanceID";
-  private static final String PUSH_LISTENER_SERVICE = "com.leanplum.LeanplumPushListenerService";
-  private static final String GCM_RECEIVER = "com.google.android.gms.gcm.GcmReceiver";
-  private static final String PUSH_INSTANCE_ID_SERVICE =
-      "com.leanplum.LeanplumPushInstanceIDService";
-
   private static String senderIds;
 
+  /**
+   * Sets GCM sender id.
+   *
+   * @param senderId Sender id.
+   */
   static void setSenderId(String senderId) {
     senderIds = senderId;
   }
 
-  /**
-   * Stores the GCM sender ID in the application's {@code SharedPreferences}.
-   *
-   * @param context application's context.
-   */
   @Override
   public void storePreferences(Context context) {
     super.storePreferences(context);
@@ -76,6 +66,7 @@ class LeanplumGcmProvider extends LeanplumCloudMessagingProvider {
         Constants.Defaults.PROPERTY_SENDER_IDS, senderIds);
   }
 
+  @Override
   public String getRegistrationId() {
     String registrationId = null;
     try {
@@ -117,52 +108,62 @@ class LeanplumGcmProvider extends LeanplumCloudMessagingProvider {
     return registrationId;
   }
 
+  @Override
   public boolean isInitialized() {
     return senderIds != null || getCurrentRegistrationId() != null;
   }
 
-  public boolean isManifestSetUp() {
+  @Override
+  public boolean isManifestSetup() {
     Context context = Leanplum.getContext();
     if (context == null) {
       return false;
     }
+    try {
+      boolean hasPermissions = LeanplumManifestHelper.checkPermission(LeanplumManifestHelper.GCM_RECEIVE_PERMISSION, false, true)
+          && (LeanplumManifestHelper.checkPermission(context.getPackageName() + ".gcm.permission.C2D_MESSAGE", true, false)
+          || LeanplumManifestHelper.checkPermission(context.getPackageName() + ".permission.C2D_MESSAGE", true, true));
 
-    boolean hasPermissions = LeanplumManifestHelper.checkPermission(RECEIVE_PERMISSION, false, true)
-        && (LeanplumManifestHelper.checkPermission(context.getPackageName() +
-        ".gcm.permission.C2D_MESSAGE", true, false) || LeanplumManifestHelper.checkPermission(
-        context.getPackageName() + ".permission.C2D_MESSAGE", true, true));
+      boolean hasGcmReceiver = LeanplumManifestHelper.checkComponent(
+          LeanplumManifestHelper.ApplicationComponent.RECEIVER, LeanplumManifestHelper.GCM_RECEIVER,
+          true, LeanplumManifestHelper.GCM_SEND_PERMISSION, Arrays.asList(LeanplumManifestHelper.GCM_RECEIVE_ACTION,
+              LeanplumManifestHelper.GCM_REGISTRATION_ACTION), context.getPackageName());
+      boolean hasPushReceiver = LeanplumManifestHelper.checkComponent(LeanplumManifestHelper.ApplicationComponent.RECEIVER,
+          LeanplumManifestHelper.LP_PUSH_RECEIVER, false, null,
+          Collections.singletonList(LeanplumManifestHelper.LP_PUSH_LISTENER_SERVICE), context.getPackageName());
 
-    boolean hasGcmReceiver = LeanplumManifestHelper.checkComponent(
-        LeanplumManifestHelper.getReceivers(), GCM_RECEIVER, true, SEND_PERMISSION,
-        Arrays.asList(RECEIVE_ACTION, REGISTRATION_ACTION), context.getPackageName());
-    boolean hasPushReceiver = LeanplumManifestHelper.checkComponent(
-        LeanplumManifestHelper.getReceivers(), PUSH_RECEIVER, false, null,
-        Collections.singletonList(PUSH_LISTENER_SERVICE), null);
+      boolean hasReceivers = hasGcmReceiver && hasPushReceiver;
 
-    boolean hasReceivers = hasGcmReceiver && hasPushReceiver;
+      boolean hasPushListenerService = LeanplumManifestHelper.checkComponent(
+          LeanplumManifestHelper.ApplicationComponent.SERVICE,
+          LeanplumManifestHelper.LP_PUSH_LISTENER_SERVICE, false, null,
+          Collections.singletonList(LeanplumManifestHelper.GCM_RECEIVE_ACTION), context.getPackageName());
+      boolean hasInstanceIdService = LeanplumManifestHelper.checkComponent(
+          LeanplumManifestHelper.ApplicationComponent.SERVICE,
+          LeanplumManifestHelper.LP_PUSH_INSTANCE_ID_SERVICE, false, null,
+          Collections.singletonList(LeanplumManifestHelper.GCM_INSTANCE_ID_ACTION), context.getPackageName());
+      boolean hasRegistrationService = LeanplumManifestHelper.checkComponent(
+          LeanplumManifestHelper.ApplicationComponent.SERVICE,
+          LeanplumManifestHelper.LP_PUSH_REGISTRATION_SERVICE, false, null, null, context.getPackageName());
 
-    boolean hasPushListenerService = LeanplumManifestHelper.checkComponent(
-        LeanplumManifestHelper.getServices(), PUSH_LISTENER_SERVICE, false, null,
-        Collections.singletonList(RECEIVE_ACTION), null);
-    boolean hasPushInstanceIDService = LeanplumManifestHelper.checkComponent(
-        LeanplumManifestHelper.getServices(), PUSH_INSTANCE_ID_SERVICE, false, null,
-        Collections.singletonList(INSTANCE_ID_ACTION), null);
-    boolean hasPushRegistrationService = LeanplumManifestHelper.checkComponent(
-        LeanplumManifestHelper.getServices(), PUSH_REGISTRATION_SERVICE, false, null, null, null);
+      boolean hasServices = hasPushListenerService && hasInstanceIdService && hasRegistrationService;
 
-    boolean hasServices = hasPushListenerService && hasPushInstanceIDService
-        && hasPushRegistrationService;
-
-    return hasPermissions && hasReceivers && hasServices;
+      if (hasPermissions && hasReceivers && hasServices) {
+        Log.i("Google Cloud Messaging is setup correctly.");
+        return true;
+      }
+    } catch (Throwable t) {
+      Util.handleException(t);
+    }
+    Log.e("Failed to setup Google Cloud Messaging, check your manifest configuration.");
+    return false;
   }
 
-  /**
-   * Unregister from GCM.
-   */
+  @Override
   public void unregister() {
     try {
       InstanceID.getInstance(Leanplum.getContext()).deleteInstanceID();
-      Log.i("Application was unregistred from GCM.");
+      Log.i("Application was unregistered from GCM.");
     } catch (Exception e) {
       Log.e("Failed to unregister from GCM.");
     }

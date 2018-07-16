@@ -13,7 +13,8 @@
 #include <memory.h>
 #include <math.h>
 
-#include "./av1_rtcd.h"
+#include "config/av1_rtcd.h"
+
 #include "av1/encoder/corner_match.h"
 
 #define SEARCH_SZ 9

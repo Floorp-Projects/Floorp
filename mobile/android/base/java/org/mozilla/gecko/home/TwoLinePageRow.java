@@ -204,14 +204,11 @@ public class TwoLinePageRow extends ThemedLinearLayout
      * selected tab.
      */
     protected void updateDisplayedUrl() {
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        final boolean isPrivate = (selectedTab != null) && (selectedTab.isPrivate());
-
         // We always want to display the underlying page url, however for readermode pages
         // we navigate to the about:reader equivalent, hence we need to use that url when finding
         // existing tabs
         final String navigationUrl = mHasReaderCacheItem ? ReaderModeUtils.getAboutReaderForUrl(mPageUrl) : mPageUrl;
-        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate);
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isCurrentTabInPrivateMode());
 
 
         if (!mShowIcons || tab == null) {
@@ -280,6 +277,7 @@ public class TwoLinePageRow extends ThemedLinearLayout
         } else if (bookmarkId < BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {
             mOngoingIconLoad = Icons.with(getContext())
                     .pageUrl(pageURL)
+                    .setPrivateMode(isCurrentTabInPrivateMode())
                     .skipNetwork()
                     .privileged(true)
                     .icon(IconDescriptor.createGenericIcon(
@@ -289,6 +287,7 @@ public class TwoLinePageRow extends ThemedLinearLayout
         } else {
             mOngoingIconLoad = Icons.with(getContext())
                     .pageUrl(pageURL)
+                    .setPrivateMode(isCurrentTabInPrivateMode())
                     .skipNetwork()
                     .build()
                     .execute(mFavicon.createIconCallback());
@@ -304,6 +303,15 @@ public class TwoLinePageRow extends ThemedLinearLayout
 
         mTitle.setPrivateMode(isPrivate);
         mUrl.setPrivateMode(isPrivate);
+    }
+
+    /**
+     * @return true if this view is shown inside a private tab, independent of whether
+     * a private mode theme is applied via <code>setPrivateMode(true)</code>.
+     */
+    private boolean isCurrentTabInPrivateMode() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        return tab != null && tab.isPrivate();
     }
 
     /**

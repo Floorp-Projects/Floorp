@@ -14,7 +14,8 @@
 
 #include <stdlib.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"

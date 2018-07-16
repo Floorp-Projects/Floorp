@@ -5,8 +5,11 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -73,6 +76,8 @@ public class GeckoApplication extends Application
     private static final String LOG_TAG = "GeckoApplication";
     public static final String ACTION_DEBUG = "org.mozilla.gecko.DEBUG";
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
+
+    private static NotificationChannel defaultNotificationChannel = null;
 
     private boolean mInBackground;
     private boolean mPausedGecko;
@@ -234,6 +239,7 @@ public class GeckoApplication extends Application
         return new GeckoRuntimeSettings.Builder()
                 .javaCrashReportingEnabled(true)
                 .nativeCrashReportingEnabled(true)
+                .crashReportingJobId(JobIdsConstants.getIdForCrashReporter())
                 .arguments(getDefaultGeckoArgs());
     }
 
@@ -350,6 +356,10 @@ public class GeckoApplication extends Application
 
         IntentHelper.init();
 
+        if (!AppConstants.Versions.preO) {
+            createDefaultNotificationChannel();
+        }
+
         EventDispatcher.getInstance().registerGeckoThreadListener(mListener,
                 "Distribution:GetDirectories",
                 null);
@@ -420,6 +430,20 @@ public class GeckoApplication extends Application
         } catch (Exception e) {
             Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
             return false;
+        }
+    }
+
+    @TargetApi(26)
+    private void createDefaultNotificationChannel() {
+        final String DEFAULT_CHANNEL = AppConstants.MOZ_APP_DISPLAYNAME;
+        final String DEFAULT_NAME = AppConstants.MOZ_APP_DISPLAYNAME;
+        final int DEFAULT_IMPORTANCE = NotificationManager.IMPORTANCE_HIGH;
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        defaultNotificationChannel = notificationManager.getNotificationChannel(DEFAULT_CHANNEL);
+        if (defaultNotificationChannel == null) {
+            defaultNotificationChannel = new NotificationChannel(DEFAULT_CHANNEL, DEFAULT_NAME, DEFAULT_IMPORTANCE);
+            notificationManager.createNotificationChannel(defaultNotificationChannel);
         }
     }
 
@@ -618,6 +642,10 @@ public class GeckoApplication extends Application
         }
     }
 
+    public static NotificationChannel getDefaultNotificationChannel() {
+        return defaultNotificationChannel;
+    }
+
     public boolean isApplicationInBackground() {
         return mInBackground;
     }
@@ -674,15 +702,27 @@ public class GeckoApplication extends Application
     }
 
     public static void createBrowserShortcut(final String title, final String url) {
-      Icons.with(GeckoAppShell.getApplicationContext())
+        createBrowserShortcut(title, url, true);
+    }
+
+    private static void createBrowserShortcut(final String title, final String url, final boolean skipMemoryCache) {
+        // Try to fetch the icon from the disk cache. The memory cache is
+        // initially skipped to avoid the use of downsized icons.
+        Icons.with(GeckoAppShell.getApplicationContext())
               .pageUrl(url)
               .skipNetwork()
-              .skipMemory()
+              .skipMemoryIf(skipMemoryCache)
               .forLauncherIcon()
               .build()
               .execute(new IconCallback() {
                   @Override
                   public void onIconResponse(final IconResponse response) {
+                      if (response.isGenerated() && skipMemoryCache) {
+                          // The icon was not found in the disk cache.
+                          // Fall back to the memory cache.
+                          createBrowserShortcut(title, url, false);
+                          return;
+                      }
                       createShortcutWithIcon(title, url, response.getBitmap());
                   }
               });

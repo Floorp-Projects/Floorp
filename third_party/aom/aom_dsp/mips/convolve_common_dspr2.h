@@ -14,7 +14,8 @@
 
 #include <assert.h>
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom/aom_integer.h"
 #include "aom_dsp/mips/common_dspr2.h"
 
@@ -28,18 +29,6 @@ void aom_convolve2_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
                                const int16_t *filter_x, int x_step_q4,
                                const int16_t *filter_y, int y_step_q4, int w,
                                int h);
-
-void aom_convolve2_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
-                                   uint8_t *dst, ptrdiff_t dst_stride,
-                                   const int16_t *filter_x, int x_step_q4,
-                                   const int16_t *filter_y, int y_step_q4,
-                                   int w, int h);
-
-void aom_convolve2_avg_vert_dspr2(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x, int x_step_q4,
-                                  const int16_t *filter_y, int y_step_q4, int w,
-                                  int h);
 
 void aom_convolve2_dspr2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
                          ptrdiff_t dst_stride, const int16_t *filter, int w,

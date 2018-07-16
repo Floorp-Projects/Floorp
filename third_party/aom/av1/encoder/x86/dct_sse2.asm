@@ -63,7 +63,6 @@ cglobal fwht4x4, 3, 4, 8, input, output, stride
   psllw           m0,        2
   psllw           m1,        2
 
-%if CONFIG_HIGHBITDEPTH
   ; sign extension
   mova            m2,             m0
   mova            m3,             m1
@@ -79,9 +78,5 @@ cglobal fwht4x4, 3, 4, 8, input, output, stride
   mova            [outputq + 16], m2
   mova            [outputq + 32], m1
   mova            [outputq + 48], m3
-%else
-  mova            [outputq],      m0
-  mova            [outputq + 16], m1
-%endif
 
   RET

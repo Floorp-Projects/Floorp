@@ -12,7 +12,8 @@
 #ifndef AV1_ENCODER_HASH_MOTION_H_
 #define AV1_ENCODER_HASH_MOTION_H_
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom/aom_integer.h"
 #include "aom_scale/yv12config.h"
 #include "third_party/vector/vector.h"
@@ -29,7 +30,9 @@ typedef struct _block_hash {
   uint32_t hash_value2;
 } block_hash;
 
-typedef struct _hash_table { Vector **p_lookup_table; } hash_table;
+typedef struct _hash_table {
+  Vector **p_lookup_table;
+} hash_table;
 
 void av1_hash_table_init(hash_table *p_hash_table);
 void av1_hash_table_destroy(hash_table *p_hash_table);
@@ -63,7 +66,8 @@ int av1_hash_is_horizontal_perfect(const YV12_BUFFER_CONFIG *picture,
 int av1_hash_is_vertical_perfect(const YV12_BUFFER_CONFIG *picture,
                                  int block_size, int x_start, int y_start);
 void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
-                              uint32_t *hash_value1, uint32_t *hash_value2);
+                              uint32_t *hash_value1, uint32_t *hash_value2,
+                              int use_highbitdepth);
 
 #ifdef __cplusplus
 }  // extern "C"

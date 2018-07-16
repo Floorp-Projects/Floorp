@@ -5,18 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.UUID;
-
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -28,6 +16,17 @@ import android.os.Process;
 import android.util.Log;
 
 import org.mozilla.geckoview.BuildConfig;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
@@ -299,28 +298,41 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             final String component = javaPkg + ".CrashReporterService";
             final String action = javaPkg + ".reportCrash";
             final ProcessBuilder pb;
+            final int crashReporterJobId = GeckoThread.getCrashReporterJobId();
 
             if (context != null) {
                 final Intent intent = new Intent(action);
-                intent.setComponent(new ComponentName(pkg, component));
+                intent.putExtra("jobId", crashReporterJobId);
                 intent.putExtra("minidumpPath", dumpFile);
-                context.startService(intent);
+                CrashReporterService.enqueueWork(context, intent);
                 return true;
             }
 
-            if (Build.VERSION.SDK_INT < 17) {
+            final int deviceSdkVersion = Build.VERSION.SDK_INT;
+            if (deviceSdkVersion < 17) {
                 pb = new ProcessBuilder(
-                    "/system/bin/am", "start",
+                    "/system/bin/am",
+                    "startservice",
                     "-a", action,
                     "-n", pkg + '/' + component,
-                    "--es", "minidumpPath", dumpFile);
+                    "--es", "minidumpPath", dumpFile,
+                    "--ei", "jobId", String.valueOf(crashReporterJobId));
             } else {
+                final String startServiceCommand;
+                if (deviceSdkVersion >= 26) {
+                    startServiceCommand = "start-foreground-service";
+                } else {
+                    startServiceCommand = "startservice";
+                }
+
                 pb = new ProcessBuilder(
-                    "/system/bin/am", "start",
+                    "/system/bin/am",
+                    startServiceCommand,
                     "--user", /* USER_CURRENT_OR_SELF */ "-3",
                     "-a", action,
                     "-n", pkg + '/' + component,
-                    "--es", "minidumpPath", dumpFile);
+                    "--es", "minidumpPath", dumpFile,
+                    "--ei", "jobId", String.valueOf(crashReporterJobId));
             }
 
             pb.start().waitFor();

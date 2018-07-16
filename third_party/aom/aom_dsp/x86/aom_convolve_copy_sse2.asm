@@ -50,7 +50,6 @@ cglobal convolve_%1, 4, 7, 4+AUX_XMM_REGS, src, src_stride, \
   cmp r4d, 32
   je .w32
 
-%if CONFIG_AV1 && CONFIG_EXT_PARTITION
   cmp r4d, 64
   je .w64
 %ifidn %2, highbd
@@ -159,50 +158,6 @@ cglobal convolve_%1, 4, 7, 4+AUX_XMM_REGS, src, src_stride, \
   sub                    r4d, 1
   jnz .loop128
   RET
-
-%else  ; CONFIG_AV1 && CONFIG_EXT_PARTITION
-
-%ifidn %2, highbd
-  cmp r4d, 64
-  je .w64
-
-  mov                    r4d, dword hm
-.loop128:
-  movu                    m0, [srcq]
-  movu                    m1, [srcq+16]
-  movu                    m2, [srcq+32]
-  movu                    m3, [srcq+48]
-%ifidn %1, avg
-  pavg                    m0, [dstq]
-  pavg                    m1, [dstq+16]
-  pavg                    m2, [dstq+32]
-  pavg                    m3, [dstq+48]
-%endif
-  mova             [dstq   ], m0
-  mova             [dstq+16], m1
-  mova             [dstq+32], m2
-  mova             [dstq+48], m3
-  movu                    m0, [srcq+64]
-  movu                    m1, [srcq+80]
-  movu                    m2, [srcq+96]
-  movu                    m3, [srcq+112]
-  add                   srcq, src_strideq
-%ifidn %1, avg
-  pavg                    m0, [dstq+64]
-  pavg                    m1, [dstq+80]
-  pavg                    m2, [dstq+96]
-  pavg                    m3, [dstq+112]
-%endif
-  mova             [dstq+64], m0
-  mova             [dstq+80], m1
-  mova             [dstq+96], m2
-  mova            [dstq+112], m3
-  add                   dstq, dst_strideq
-  sub                    r4d, 1
-  jnz .loop128
-  RET
-%endif
-%endif  ; CONFIG_AV1 && CONFIG_EXT_PARTITION
 
 .w64:
   mov                    r4d, dword hm
@@ -339,7 +294,4 @@ cglobal convolve_%1, 4, 7, 4+AUX_XMM_REGS, src, src_stride, \
 INIT_XMM sse2
 convolve_fn copy
 convolve_fn avg
-%if CONFIG_HIGHBITDEPTH
 convolve_fn copy, highbd
-convolve_fn avg, highbd
-%endif

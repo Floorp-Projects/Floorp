@@ -1,0 +1,15 @@
+ThinLTO build fix from https://bugs.llvm.org/show_bug.cgi?id=38139#c5
+
+diff --git a/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp b/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
+--- a/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
++++ b/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
+@@ -904,6 +904,9 @@
+     legacy::PassManagerBase &PM) {
+   PerformThinLTO = true;
+
++  if (LibraryInfo)
++    PM.add(new TargetLibraryInfoWrapperPass(*LibraryInfo));
++
+   if (VerifyInput)
+     PM.add(createVerifierPass());
+

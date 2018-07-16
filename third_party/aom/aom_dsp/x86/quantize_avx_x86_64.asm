@@ -44,16 +44,11 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   mova                            m0, [zbinq]              ; m0 = zbin
 
   ; Get DC and first 15 AC coeffs - in this special case, that is all.
-%if CONFIG_HIGHBITDEPTH
   ; coeff stored as 32bit numbers but we process them as 16 bit numbers
   mova                            m9, [coeffq]
   packssdw                        m9, [coeffq+16]          ; m9 = c[i]
   mova                           m10, [coeffq+32]
   packssdw                       m10, [coeffq+48]          ; m10 = c[i]
-%else
-  mova                            m9, [coeffq]             ; m9 = c[i]
-  mova                           m10, [coeffq+16]          ; m10 = c[i]
-%endif
 
   mov                             r0, eobmp                ; Output pointer
   mov                             r1, qcoeffmp             ; Output pointer
@@ -76,15 +71,10 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   ptest                          m14, m14
   jnz .single_nonzero
 
-%if CONFIG_HIGHBITDEPTH
   mova                       [r1   ], ymm5
   mova                       [r1+32], ymm5
   mova                       [r2   ], ymm5
   mova                       [r2+32], ymm5
-%else
-  mova                          [r1], ymm5
-  mova                          [r2], ymm5
-%endif
   mov                           [r0], word 0
 
   vzeroupper
@@ -124,7 +114,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pand                            m8, m7
   pand                           m13, m12
 
-%if CONFIG_HIGHBITDEPTH
   ; Store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m8
   punpckhwd                       m6, m8, m6
@@ -136,16 +125,11 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pmovsxwd                       m11, m13
   mova                  [qcoeffq+32], m11
   mova                  [qcoeffq+48], m6
-%else
-  mova                  [qcoeffq   ], m8
-  mova                  [qcoeffq+16], m13
-%endif
 
   pmullw                          m8, m3                   ; dqc[i] = qc[i] * q
   punpckhqdq                      m3, m3
   pmullw                         m13, m3                   ; dqc[i] = qc[i] * q
 
-%if CONFIG_HIGHBITDEPTH
   ; Store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m8
   punpckhwd                       m6, m8, m6
@@ -157,10 +141,6 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pmovsxwd                       m11, m13
   mova                 [dqcoeffq+32], m11
   mova                 [dqcoeffq+48], m6
-%else
-  mova                 [dqcoeffq   ], m8
-  mova                 [dqcoeffq+16], m13
-%endif
 
   mova                            m6, [iscanq]            ; m6 = scan[i]
   mova                           m11, [iscanq+16]         ; m11 = scan[i]
@@ -229,29 +209,20 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
 
   DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, d5, eob
 
-%if CONFIG_HIGHBITDEPTH
+
   lea                         coeffq, [  coeffq+ncoeffq*4]
   lea                        qcoeffq, [ qcoeffq+ncoeffq*4]
   lea                       dqcoeffq, [dqcoeffq+ncoeffq*4]
-%else
-  lea                         coeffq, [  coeffq+ncoeffq*2]
-  lea                        qcoeffq, [ qcoeffq+ncoeffq*2]
-  lea                       dqcoeffq, [dqcoeffq+ncoeffq*2]
-%endif
+
   lea                         iscanq, [  iscanq+ncoeffq*2]
   neg                        ncoeffq
 
   ; get DC and first 15 AC coeffs
-%if CONFIG_HIGHBITDEPTH
   ; coeff stored as 32bit numbers & require 16bit numbers
   mova                            m9, [coeffq+ncoeffq*4+ 0]
   packssdw                        m9, [coeffq+ncoeffq*4+16]
   mova                           m10, [coeffq+ncoeffq*4+32]
   packssdw                       m10, [coeffq+ncoeffq*4+48]
-%else
-  mova                            m9, [coeffq+ncoeffq*2+ 0] ; m9 = c[i]
-  mova                           m10, [coeffq+ncoeffq*2+16] ; m10 = c[i]
-%endif
 
   pabsw                           m6, m9                   ; m6 = abs(m9)
   pabsw                          m11, m10                  ; m11 = abs(m10)
@@ -264,16 +235,10 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   ptest                          m14, m14
   jnz .first_nonzero
 
-%if CONFIG_HIGHBITDEPTH
   mova        [qcoeffq+ncoeffq*4   ], ymm5
   mova        [qcoeffq+ncoeffq*4+32], ymm5
   mova       [dqcoeffq+ncoeffq*4   ], ymm5
   mova       [dqcoeffq+ncoeffq*4+32], ymm5
-%else
-  mova           [qcoeffq+ncoeffq*2], ymm5
-  mova          [dqcoeffq+ncoeffq*2], ymm5
-%endif
-
   add                        ncoeffq, mmsize
 
   punpckhqdq                      m1, m1
@@ -302,7 +267,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pand                            m8, m7
   pand                           m13, m12
 
-%if CONFIG_HIGHBITDEPTH
   ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m8
   punpckhwd                       m6, m8, m6
@@ -314,10 +278,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pmovsxwd                       m11, m13
   mova        [qcoeffq+ncoeffq*4+32], m11
   mova        [qcoeffq+ncoeffq*4+48], m6
-%else
-  mova        [qcoeffq+ncoeffq*2+ 0], m8
-  mova        [qcoeffq+ncoeffq*2+16], m13
-%endif
 
 %ifidn %1, b_32x32
   pabsw                           m8, m8
@@ -333,7 +293,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   psignw                         m13, m10
 %endif
 
-%if CONFIG_HIGHBITDEPTH
   ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m8
   punpckhwd                       m6, m8, m6
@@ -345,10 +304,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pmovsxwd                       m11, m13
   mova       [dqcoeffq+ncoeffq*4+32], m11
   mova       [dqcoeffq+ncoeffq*4+48], m6
-%else
-  mova       [dqcoeffq+ncoeffq*2+ 0], m8
-  mova       [dqcoeffq+ncoeffq*2+16], m13
-%endif
 
   pcmpeqw                         m8, m5                    ; m8 = c[i] == 0
   pcmpeqw                        m13, m5                    ; m13 = c[i] == 0
@@ -363,16 +318,11 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
 
 .ac_only_loop:
 
-%if CONFIG_HIGHBITDEPTH
   ; pack coeff from 32bit to 16bit array
   mova                            m9, [coeffq+ncoeffq*4+ 0]
   packssdw                        m9, [coeffq+ncoeffq*4+16]
   mova                           m10, [coeffq+ncoeffq*4+32]
   packssdw                       m10, [coeffq+ncoeffq*4+48]
-%else
-  mova                            m9, [coeffq+ncoeffq*2+ 0] ; m9 = c[i]
-  mova                           m10, [coeffq+ncoeffq*2+16] ; m10 = c[i]
-%endif
 
   pabsw                           m6, m9                   ; m6 = abs(m9)
   pabsw                          m11, m10                  ; m11 = abs(m10)
@@ -385,15 +335,11 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   ptest                          m14, m14
   jnz .rest_nonzero
 
-%if CONFIG_HIGHBITDEPTH
   mova        [qcoeffq+ncoeffq*4+ 0], ymm5
   mova        [qcoeffq+ncoeffq*4+32], ymm5
   mova       [dqcoeffq+ncoeffq*4+ 0], ymm5
   mova       [dqcoeffq+ncoeffq*4+32], ymm5
-%else
-  mova        [qcoeffq+ncoeffq*2+ 0], ymm5
-  mova       [dqcoeffq+ncoeffq*2+ 0], ymm5
-%endif
+
   add                        ncoeffq, mmsize
   jnz .ac_only_loop
 
@@ -424,7 +370,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pand                           m14, m7
   pand                           m13, m12
 
-%if CONFIG_HIGHBITDEPTH
   ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m14
   punpckhwd                       m6, m14, m6
@@ -436,10 +381,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pmovsxwd                       m11, m13
   mova        [qcoeffq+ncoeffq*4+32], m11
   mova        [qcoeffq+ncoeffq*4+48], m6
-%else
-  mova        [qcoeffq+ncoeffq*2+ 0], m14
-  mova        [qcoeffq+ncoeffq*2+16], m13
-%endif
 
 %ifidn %1, b_32x32
   pabsw                          m14, m14
@@ -454,7 +395,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   psignw                         m13, m10
 %endif
 
-%if CONFIG_HIGHBITDEPTH
   ; store 16bit numbers as 32bit numbers in array pointed to by qcoeff
   pcmpgtw                         m6, m5, m14
   punpckhwd                       m6, m14, m6
@@ -466,10 +406,6 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   pmovsxwd                       m11, m13
   mova       [dqcoeffq+ncoeffq*4+32], m11
   mova       [dqcoeffq+ncoeffq*4+48], m6
-%else
-  mova       [dqcoeffq+ncoeffq*2+ 0], m14
-  mova       [dqcoeffq+ncoeffq*2+16], m13
-%endif
 
   pcmpeqw                        m14, m5                    ; m14 = c[i] == 0
   pcmpeqw                        m13, m5                    ; m13 = c[i] == 0
@@ -510,27 +446,16 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
 
 DEFINE_ARGS dqcoeff, ncoeff, qcoeff, eob
 
-%if CONFIG_HIGHBITDEPTH
   lea                       dqcoeffq, [dqcoeffq+ncoeffq*4]
   lea                        qcoeffq, [ qcoeffq+ncoeffq*4]
-%else
-  lea                       dqcoeffq, [dqcoeffq+ncoeffq*2]
-  lea                        qcoeffq, [ qcoeffq+ncoeffq*2]
-%endif
-
   neg                        ncoeffq
   pxor                            m7, m7
 
 .blank_loop:
-%if CONFIG_HIGHBITDEPTH
   mova       [dqcoeffq+ncoeffq*4+ 0], ymm7
   mova       [dqcoeffq+ncoeffq*4+32], ymm7
   mova        [qcoeffq+ncoeffq*4+ 0], ymm7
   mova        [qcoeffq+ncoeffq*4+32], ymm7
-%else
-  mova       [dqcoeffq+ncoeffq*2+ 0], ymm7
-  mova        [qcoeffq+ncoeffq*2+ 0], ymm7
-%endif
   add                        ncoeffq, mmsize
   jl .blank_loop
 
@@ -543,5 +468,3 @@ DEFINE_ARGS dqcoeff, ncoeff, qcoeff, eob
 INIT_XMM avx
 QUANTIZE_FN b, 7
 QUANTIZE_FN b_32x32, 7
-
-END

@@ -115,6 +115,7 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .remoteDebuggingEnabled(true)
                     .nativeCrashReportingEnabled(true)
                     .javaCrashReportingEnabled(true)
+                    .crashReportingJobId(1024)
                     .consoleOutput(true)
                     .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL);
 
