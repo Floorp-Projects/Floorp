@@ -1,2 +1,3 @@
 . $topsrcdir/build/win32/mozconfig.vs2017
 . "$topsrcdir/build/mozconfig.clang-cl"
+. "$topsrcdir/build/mozconfig.lld-link"
