@@ -61,6 +61,11 @@ interface AccessibleNode {
   attribute DOMString? live;
   attribute DOMString? relevant;
 
+  // Other relationships
+  attribute AccessibleNode? activeDescendant;
+  attribute AccessibleNode? details;
+  attribute AccessibleNode? errorMessage;
+
   // Collections.
   attribute long? colCount;
   attribute unsigned long? colIndex;
