@@ -14,13 +14,17 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionClientTest {
+    companion object {
+        val GOOGLE_MOCK: SearchSuggestionFetcher = { "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]" }
+    }
+
     @Test
     fun `Get a list of results based on a search engine`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient(searchEngine, { "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]" } )
+        val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK)
 
         runBlocking {
             val results = client.getSuggestions("firefox")

@@ -12,7 +12,7 @@ import java.util.Locale
 /**
  * A data class representing a search engine.
  */
-class SearchEngine internal constructor(
+class  SearchEngine internal constructor(
     val identifier: String,
     val name: String,
     val icon: Bitmap,

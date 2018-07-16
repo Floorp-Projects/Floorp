@@ -1,8 +1,10 @@
 package mozilla.components.browser.search.parser
 
+import mozilla.components.browser.search.SearchEngine
 import org.json.JSONArray
+import org.json.JSONObject
 
-fun JSONArray.asSequence(): Sequence<Any> {
+private fun JSONArray.asSequence(): Sequence<Any> {
     return object : Sequence<Any> {
 
         override fun iterator() = object : Iterator<Any> {
@@ -18,13 +20,51 @@ fun JSONArray.asSequence(): Sequence<Any> {
     }
 }
 
-
 typealias Parser = (String) -> List<String>
-val googleParser: Parser = { input ->
-    JSONArray(input)
-            .getJSONArray(1)
-            .asSequence()
-            .map { it as? String }
-            .filterNotNull()
-            .toList()
+
+private fun fromArrayResult(resultsIndex: Int): Parser {
+    return { input ->
+        JSONArray(input)
+                .getJSONArray(resultsIndex)
+                .asSequence()
+                .map { it as? String }
+                .filterNotNull()
+                .toList()
+    }
+}
+
+private fun fromObjectResult(resultsKey: String): Parser {
+    return { input ->
+        JSONObject(input)
+                .getJSONArray(resultsKey)
+                .asSequence()
+                .map { it as? String }
+                .filterNotNull()
+                .toList()
+    }
+}
+
+private fun qwantParserBuilder(): Parser {
+    return { input ->
+        JSONObject(input)
+                .getJSONObject("data")
+                .getJSONArray("items")
+                .asSequence()
+                .map { it as? JSONObject }
+                .map { it?.getString("value") }
+                .filterNotNull()
+                .toList()
+    }
+}
+
+val defaultParser = fromArrayResult(1)
+val azerdictParser = fromObjectResult("suggestions")
+val daumParser = fromObjectResult("items")
+val qwantParser = qwantParserBuilder()
+
+fun selectParser(searchEngine: SearchEngine): Parser = when(searchEngine.name) {
+    "Azerdict" -> azerdictParser
+    "다음지도" -> daumParser
+    "Qwant" -> qwantParser
+    else -> defaultParser
 }
