@@ -227,20 +227,20 @@ public:
 
   MediaEnginePrefs mPrefs;
 
-  typedef nsTArray<RefPtr<MediaDevice>> SourceSet;
+  typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
 
   virtual int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;
   virtual void OnDeviceChange() override;
 private:
-  typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
+  typedef media::Pledge<MediaDeviceSet*, dom::MediaStreamError*> PledgeMediaDeviceSet;
   typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
   typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
-  static void AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey);
-  static already_AddRefed<nsIWritableVariant> ToJSArray(SourceSet& aDevices);
+  static void AnonymizeDevices(MediaDeviceSet& aDevices, const nsACString& aOriginKey);
+  static already_AddRefed<nsIWritableVariant> ToJSArray(MediaDeviceSet& aDevices);
 private:
   enum class DeviceEnumerationType :uint8_t {
     Normal, // Enumeration should not return loopback or fake devices
@@ -248,14 +248,14 @@ private:
     Loopback /* Enumeration should return loopback device(s) (possibly in
              addition to normal devices) */
   };
-  already_AddRefed<PledgeSourceSet>
+  already_AddRefed<PledgeMediaDeviceSet>
   EnumerateRawDevices(uint64_t aWindowId,
                       dom::MediaSourceEnum      aVideoInputType,
                       dom::MediaSourceEnum      aAudioInputType,
                       MediaSinkEnum             aAudioOutputType,
                       DeviceEnumerationType     aVideoInputEnumType = DeviceEnumerationType::Normal,
                       DeviceEnumerationType     aAudioInputEnumType = DeviceEnumerationType::Normal);
-  already_AddRefed<PledgeSourceSet>
+  already_AddRefed<PledgeMediaDeviceSet>
   EnumerateDevicesImpl(uint64_t aWindowId,
                        dom::MediaSourceEnum      aVideoInputType,
                        dom::MediaSourceEnum      aAudioInputType,
@@ -266,7 +266,7 @@ private:
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,
       bool aIsChrome,
-      RefPtr<media::Refcountable<UniquePtr<SourceSet>>>& aSources);
+      RefPtr<media::Refcountable<UniquePtr<MediaDeviceSet>>>& aSources);
 
   void GetPref(nsIPrefBranch *aBranch, const char *aPref,
                const char *aData, int32_t *aVal);
@@ -308,7 +308,7 @@ private:
 
   static StaticRefPtr<MediaManager> sSingleton;
 
-  media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
+  media::CoatCheck<PledgeMediaDeviceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   nsTArray<nsString> mDeviceIDs;
 public:
