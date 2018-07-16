@@ -12,6 +12,7 @@
 #include "MediaEngineTabVideoSource.h"
 #include "MediaEngineRemoteVideoSource.h"
 #include "MediaTrackConstraints.h"
+#include "mozilla/dom/MediaDeviceInfo.h"
 #include "mozilla/Logging.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIPrefService.h"
@@ -316,6 +317,23 @@ void
 MediaEngineWebRTC::EnumerateSpeakerDevices(uint64_t aWindowId,
                                            nsTArray<RefPtr<MediaDevice> >* aDevices)
 {
+  nsTArray<RefPtr<AudioDeviceInfo>> devices;
+  CubebUtils::GetDeviceCollection(devices, CubebUtils::Output);
+  for (auto& device : devices) {
+    MOZ_ASSERT(device->GetDeviceID().isSome());
+    if (device->State() == CUBEB_DEVICE_STATE_ENABLED) {
+      MOZ_ASSERT(device->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
+      nsString uuid(device->FriendlyName());
+      // If, for example, input and output are in the same device, uuid
+      // would be the same for both which ends up to create the same
+      // deviceIDs (in JS).
+      uuid.Append(NS_LITERAL_STRING("_Speaker"));
+      aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                                device->FriendlyName(),
+                                dom::MediaDeviceKind::Audiooutput,
+                                uuid));
+    }
+  }
 }
 
 void
