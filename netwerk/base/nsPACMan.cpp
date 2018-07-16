@@ -5,17 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPACMan.h"
-#include "nsThreadUtils.h"
+
+#include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAuthPrompt.h"
-#include "nsIPromptFactory.h"
+#include "nsIDHCPClient.h"
 #include "nsIHttpChannel.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsNetUtil.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIPromptFactory.h"
+#include "nsIProtocolProxyService.h"
 #include "nsISystemProxySettings.h"
-#include "nsContentUtils.h"
-#include "mozilla/Preferences.h"
+#include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 //-----------------------------------------------------------------------------
 
@@ -26,6 +29,8 @@ LazyLogModule gProxyLog("proxy");
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gProxyLog, LogLevel::Debug, args)
+#define MOZ_WPAD_URL "http://wpad/wpad.dat"
+#define MOZ_DHCP_WPAD_OPTION 252
 
 // The PAC thread does evaluations of both PAC files and
 // nsISystemProxySettings because they can both block the calling thread and we
@@ -75,6 +80,26 @@ GetExtraJSContextHeapSize()
   return extraSize < 0 ? 0 : extraSize;
 }
 
+// Read network proxy type from preference
+// Used to verify that the preference is WPAD in nsPACMan::ConfigureWPAD
+nsresult
+GetNetworkProxyTypeFromPref(int32_t* type)
+{
+  *type = 0;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  if (!prefs) {
+    LOG(("Failed to get a preference service object"));
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  }
+  nsresult rv = prefs->GetIntPref("network.proxy.type", type);
+  if (!NS_SUCCEEDED(rv)) {
+    LOG(("Failed to retrieve network.proxy.type from prefs"));
+    return rv;
+  }
+  LOG(("network.proxy.type pref retrieved: %d\n", *type));
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -92,12 +117,12 @@ public:
   {
   }
 
-  void SetPACString(const nsCString &pacString)
+  void SetPACString(const nsACString &pacString)
   {
     mPACString = pacString;
   }
 
-  void SetPACURL(const nsCString &pacURL)
+  void SetPACURL(const nsACString &pacURL)
   {
     mPACURL = pacURL;
   }
@@ -191,14 +216,43 @@ public:
   }
 
 private:
-    RefPtr<nsPACMan> mPACMan;
+  RefPtr<nsPACMan> mPACMan;
+};
+
+
+//-----------------------------------------------------------------------------
+
+// ConfigureWPADComplete allows the PAC thread to tell the main thread that
+// the URL for the PAC file has been found
+class ConfigureWPADComplete final : public Runnable
+{
+public:
+  ConfigureWPADComplete(nsPACMan *aPACMan, const nsACString &aPACURISpec)
+    : Runnable("net::ConfigureWPADComplete"),
+     mPACMan(aPACMan),
+     mPACURISpec(aPACURISpec)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+    mPACMan->AssignPACURISpec(mPACURISpec);
+    mPACMan->ContinueLoadingAfterPACUriKnown();
+    return NS_OK;
+  }
+
+private:
+  RefPtr<nsPACMan> mPACMan;
+  nsCString mPACURISpec;
 };
 
 //-----------------------------------------------------------------------------
 
 // ExecutePACThreadAction is used to proxy actions from the main
-// thread onto the PAC thread. There are 3 options: process the queue,
-// cancel the queue, and setup the javascript context with a new PAC file
+// thread onto the PAC thread. There are 4 options: process the queue,
+// cancel the queue, query DHCP for the PAC option
+// and setup the javascript context with a new PAC file
 
 class ExecutePACThreadAction final : public Runnable
 {
@@ -211,6 +265,7 @@ public:
     , mCancelStatus(NS_OK)
     , mSetupPAC(false)
     , mExtraHeapSize(0)
+    , mConfigureWPAD(false)
   { }
 
   void CancelQueue (nsresult status)
@@ -221,13 +276,18 @@ public:
 
   void SetupPAC (const char *text,
                  uint32_t datalen,
-                 nsCString &pacURI,
+                 const nsACString &pacURI,
                  uint32_t extraHeapSize)
   {
     mSetupPAC = true;
     mSetupPACData.Assign(text, datalen);
     mSetupPACURI = pacURI;
     mExtraHeapSize = extraHeapSize;
+  }
+
+  void ConfigureWPAD()
+  {
+    mConfigureWPAD = true;
   }
 
   NS_IMETHOD Run() override
@@ -254,6 +314,15 @@ public:
       return NS_OK;
     }
 
+    if (mConfigureWPAD) {
+      nsAutoCString spec;
+      mConfigureWPAD = false;
+      mPACMan->ConfigureWPAD(spec);
+      RefPtr<ConfigureWPADComplete> runnable = new ConfigureWPADComplete(mPACMan, spec);
+      mPACMan->Dispatch(runnable.forget());
+      return NS_OK;
+    }
+
     mPACMan->ProcessPendingQ();
     return NS_OK;
   }
@@ -268,6 +337,7 @@ private:
   uint32_t             mExtraHeapSize;
   nsCString            mSetupPACData;
   nsCString            mSetupPACURI;
+  bool                 mConfigureWPAD;
 };
 
 //-----------------------------------------------------------------------------
@@ -289,7 +359,7 @@ PendingPACQuery::PendingPACQuery(nsPACMan* pacMan,
 }
 
 void
-PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
+PendingPACQuery::Complete(nsresult status, const nsACString &pacString)
 {
   if (!mCallback)
     return;
@@ -302,7 +372,7 @@ PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
 }
 
 void
-PendingPACQuery::UseAlternatePACFile(const nsCString &pacURL)
+PendingPACQuery::UseAlternatePACFile(const nsACString &pacURL)
 {
   if (!mCallback)
     return;
@@ -337,6 +407,9 @@ nsPACMan::nsPACMan(nsIEventTarget *mainThreadEventTarget)
   , mShutdown(false)
   , mLoadFailureCount(0)
   , mInProgress(false)
+  , mAutoDetect(false)
+  , mWPADOverDHCPEnabled(false)
+  , mProxyConfigType(0)
 {
   MOZ_ASSERT(NS_IsMainThread(), "pacman must be created on main thread");
   if (!sThreadLocalSetup){
@@ -354,6 +427,7 @@ nsPACMan::~nsPACMan()
   if (mPACThread) {
     if (NS_IsMainThread()) {
       mPACThread->Shutdown();
+      mPACThread = nullptr;
     }
     else {
       RefPtr<ShutdownThread> runnable = new ShutdownThread(mPACThread);
@@ -396,7 +470,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri,
       TimeStamp::Now() > mScheduledReload) {
     LOG(("nsPACMan::AsyncGetProxyForURI reload as scheduled\n"));
 
-    LoadPACFromURI(EmptyCString());
+    LoadPACFromURI(mAutoDetect? EmptyCString(): mPACURISpec);
   }
 
   RefPtr<PendingPACQuery> query =
@@ -429,16 +503,15 @@ nsPACMan::PostQuery(PendingPACQuery *query)
 }
 
 nsresult
-nsPACMan::LoadPACFromURI(const nsCString &spec)
+nsPACMan::LoadPACFromURI(const nsACString &aSpec)
 {
   NS_ENSURE_STATE(!mShutdown);
-  NS_ENSURE_ARG(!spec.IsEmpty() || !mPACURISpec.IsEmpty());
 
   nsCOMPtr<nsIStreamLoader> loader =
       do_CreateInstance(NS_STREAMLOADER_CONTRACTID);
   NS_ENSURE_STATE(loader);
 
-  LOG(("nsPACMan::LoadPACFromURI %s\n", spec.get()));
+  LOG(("nsPACMan::LoadPACFromURI aSpec: %s\n", aSpec.BeginReading()));
   // Since we might get called from nsProtocolProxyService::Init, we need to
   // post an event back to the main thread before we try to use the IO service.
   //
@@ -459,16 +532,65 @@ nsPACMan::LoadPACFromURI(const nsCString &spec)
   CancelExistingLoad();
 
   mLoader = loader;
-  if (!spec.IsEmpty()) {
-    mPACURISpec = spec;
-    mPACURIRedirectSpec.Truncate();
-    mNormalPACURISpec.Truncate(); // set at load time
-    mLoadFailureCount = 0;  // reset
-  }
+  mPACURIRedirectSpec.Truncate();
+  mNormalPACURISpec.Truncate(); // set at load time
+  mLoadFailureCount = 0;  // reset
+  mAutoDetect = aSpec.IsEmpty();
+  mPACURISpec.Assign(aSpec);
 
   // reset to Null
   mScheduledReload = TimeStamp();
   return NS_OK;
+}
+
+nsresult
+nsPACMan::GetPACFromDHCP(nsACString &aSpec)
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
+  if (!mDHCPClient) {
+    LOG(("nsPACMan::GetPACFromDHCP DHCP option %d query failed because there is no DHCP client available\n", MOZ_DHCP_WPAD_OPTION));
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult rv;
+  rv = mDHCPClient->GetOption(MOZ_DHCP_WPAD_OPTION, aSpec);
+  if (NS_FAILED(rv)) {
+    LOG(("nsPACMan::GetPACFromDHCP DHCP option %d query failed with result %d\n", MOZ_DHCP_WPAD_OPTION, (uint32_t)rv));
+  } else {
+    LOG(("nsPACMan::GetPACFromDHCP DHCP option %d query succeeded, finding PAC URL %s\n", MOZ_DHCP_WPAD_OPTION, aSpec.BeginReading()));
+  }
+  return rv;
+}
+
+nsresult
+nsPACMan::ConfigureWPAD(nsACString &aSpec)
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
+
+  MOZ_RELEASE_ASSERT(mProxyConfigType == nsIProtocolProxyService::PROXYCONFIG_WPAD,
+            "WPAD is being executed when not selected by user");
+
+  aSpec.Truncate();
+  if (mWPADOverDHCPEnabled) {
+    GetPACFromDHCP(aSpec);
+  }
+
+  if (aSpec.IsEmpty()) {
+    // We diverge from the WPAD spec here in that we don't walk the
+    // hosts's FQDN, stripping components until we hit a TLD.  Doing so
+    // is dangerous in the face of an incomplete list of TLDs, and TLDs
+    // get added over time.  We could consider doing only a single
+    // substitution of the first component, if that proves to help
+    // compatibility.
+    aSpec.AssignLiteral(MOZ_WPAD_URL);
+  }
+  return NS_OK;
+}
+
+void
+nsPACMan::AssignPACURISpec(const nsACString &aSpec)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+  mPACURISpec.Assign(aSpec);
 }
 
 void
@@ -483,6 +605,29 @@ nsPACMan::StartLoading()
     return;
   }
 
+  if (mAutoDetect) {
+    GetNetworkProxyTypeFromPref(&mProxyConfigType);
+    RefPtr<ExecutePACThreadAction> wpadConfigurer =
+      new ExecutePACThreadAction(this);
+    wpadConfigurer->ConfigureWPAD();
+    if (mPACThread) {
+      mPACThread->Dispatch(wpadConfigurer, nsIEventTarget::DISPATCH_NORMAL);
+    }
+  } else {
+    ContinueLoadingAfterPACUriKnown();
+  }
+}
+
+void
+nsPACMan::ContinueLoadingAfterPACUriKnown()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+
+  // CancelExistingLoad was called...
+  if (!mLoader) {
+    PostCancelPendingQ(NS_ERROR_ABORT);
+    return;
+  }
   if (NS_SUCCEEDED(mLoader->Init(this, nullptr))) {
     // Always hit the origin server when loading PAC.
     nsCOMPtr<nsIIOService> ios = do_GetIOService();
@@ -800,6 +945,7 @@ nsresult
 nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
 {
   mSystemProxySettings = systemProxySettings;
+  mDHCPClient = do_GetService(NS_DHCPCLIENT_CONTRACTID);
 
   nsresult rv =
     NS_NewNamedThread("ProxyResolution", getter_AddRefs(mPACThread));

@@ -382,6 +382,11 @@ textarea.jsterm-input-node:focus {
   border-bottom-right-radius: 0;
 }
 
+.jsterm-cm .cm-auto-complete-shadow-text::after {
+  content: attr(title);
+  color: var(--theme-comment);
+}
+
 /* Security styles */
 
 .message.security > .indent {

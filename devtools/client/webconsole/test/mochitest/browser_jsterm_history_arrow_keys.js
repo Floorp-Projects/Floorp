@@ -30,8 +30,11 @@ async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 
+  const checkInput = (expected, assertionInfo) =>
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
+
   jsterm.focus();
-  ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
+  checkInput("|", "input is empty");
 
   info("Execute each test value in the console");
   for (const value of TEST_VALUES) {
@@ -39,94 +42,67 @@ async function performTests() {
     await jsterm.execute();
   }
 
-  const values = TEST_VALUES;
-
   EventUtils.synthesizeKey("KEY_ArrowUp");
-
-  is(jsterm.getInputValue(), values[4], "VK_UP: jsterm.getInputValue() #4 is correct");
-  is(getCaretPosition(jsterm), values[4].length, "caret location is correct");
+  checkInput("document.location|", "↑: input #4 is correct");
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-
-  is(jsterm.getInputValue(), values[3], "VK_UP: jsterm.getInputValue() #3 is correct");
-  is(getCaretPosition(jsterm), values[3].length, "caret location is correct");
+  checkInput("document;\nwindow;\ndocument.body|", "↑: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
-  info("Select text and ensure hitting arrow up twice won't navigate the history");
-  setCursorAtPosition(jsterm, values[3].length - 2);
-  EventUtils.synthesizeKey("KEY_ArrowUp");
-  EventUtils.synthesizeKey("KEY_ArrowUp");
-
-  is(jsterm.getInputValue(), values[3],
-    "VK_UP two times: jsterm.getInputValue() #3 is correct");
-  is(getCaretPosition(jsterm), jsterm.getInputValue().indexOf("\n"),
-    "caret location is correct");
-  ok(inputHasNoSelection(jsterm));
+  info("Move cursor and ensure hitting arrow up twice won't navigate the history");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  checkInput("document;\nwindow;\ndocument.bo|dy");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  is(jsterm.getInputValue(), values[3],
-     "VK_UP again: jsterm.getInputValue() #3 is correct");
-  is(getCaretPosition(jsterm), 0, "caret location is correct");
+  checkInput("document;|\nwindow;\ndocument.body", "↑↑: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-
-  is(jsterm.getInputValue(), values[2], "VK_UP: jsterm.getInputValue() #2 is correct");
-
-  EventUtils.synthesizeKey("KEY_ArrowUp");
-
-  is(jsterm.getInputValue(), values[1], "VK_UP: jsterm.getInputValue() #1 is correct");
+  checkInput("|document;\nwindow;\ndocument.body", "↑ again: input #3 is correct");
+  ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
+  checkInput("document.body|", "↑: input #2 is correct");
 
-  is(jsterm.getInputValue(), values[0], "VK_UP: jsterm.getInputValue() #0 is correct");
-  is(getCaretPosition(jsterm), values[0].length, "caret location is correct");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  checkInput("window|", "↑: input #1 is correct");
+
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  checkInput("document|", "↑: input #0 is correct");
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[1], "VK_DOWN: jsterm.getInputValue() #1 is correct");
-  is(getCaretPosition(jsterm), values[1].length, "caret location is correct");
+  checkInput("window|", "↓: input #1 is correct");
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[2], "VK_DOWN: jsterm.getInputValue() #2 is correct");
+  checkInput("document.body|", "↓: input #2 is correct");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[3], "VK_DOWN: jsterm.getInputValue() #3 is correct");
-  is(getCaretPosition(jsterm), values[3].length, "caret location is correct");
+  checkInput("document;\nwindow;\ndocument.body|", "↓: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
   setCursorAtPosition(jsterm, 2);
+  checkInput("do|cument;\nwindow;\ndocument.body");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[3],
-    "VK_DOWN two times: jsterm.getInputValue() #3 is correct");
-
-  ok(getCaretPosition(jsterm) > jsterm.getInputValue().lastIndexOf("\n")
-    && inputHasNoSelection(jsterm),
-    "caret location is correct");
-
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[3],
-     "VK_DOWN again: jsterm.getInputValue() #3 is correct");
-  is(getCaretPosition(jsterm), values[3].length, "caret location is correct");
+  checkInput("document;\nwindow;\ndo|cument.body", "↓↓: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-
-  is(jsterm.getInputValue(), values[4], "VK_DOWN: jsterm.getInputValue() #4 is correct");
+  checkInput("document;\nwindow;\ndocument.body|", "↓ again: input #3 is correct");
+  ok(inputHasNoSelection(jsterm));
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
+  checkInput("document.location|", "↓: input #4 is correct");
 
-  ok(!jsterm.getInputValue(), "VK_DOWN: jsterm.getInputValue() is empty");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  checkInput("|", "↓: input is empty");
 }
 
 function setCursorAtPosition(jsterm, pos) {
@@ -149,16 +125,6 @@ function setCursorAtPosition(jsterm, pos) {
   }
 
   return inputNode.setSelectionRange(pos, pos);
-}
-
-function getCaretPosition(jsterm) {
-  const {inputNode, editor} = jsterm;
-
-  if (editor) {
-    return editor.getDoc().getRange({line: 0, ch: 0}, editor.getCursor()).length;
-  }
-
-  return inputNode.selectionStart;
 }
 
 function inputHasNoSelection(jsterm) {

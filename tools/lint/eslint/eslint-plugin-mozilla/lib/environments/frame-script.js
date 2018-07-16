@@ -14,6 +14,7 @@ module.exports = {
     addWeakMessageListener: false,
     atob: false,
     btoa: false,
+    chromeOuterWindowID: false,
     content: false,
     docShell: false,
     privateNoteIntentionalCrash: false,

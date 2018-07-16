@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
@@ -14,72 +13,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "nsISubstitutingProtocolHandler");
 
 const RESOURCE_HOST = "activity-stream";
-
-const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
-const RESOURCE_BASE = "resource://activity-stream";
-
-let activityStream;
-let modulesToUnload = new Set();
-let waitingForBrowserReady = true;
-
-// Lazily load ActivityStream then find related modules to unload
-XPCOMUtils.defineLazyModuleGetter(this, "ActivityStream",
-  "resource://activity-stream/lib/ActivityStream.jsm", null, null, () => {
-    // Helper to fetch a resource directory listing and call back with each item
-    const processListing = async (uri, cb) => {
-      try {
-        (await (await fetch(uri)).text())
-          .split("\n").slice(2).forEach(line => cb(line.split(" ").slice(1)));
-      } catch (e) {
-        // Silently ignore listings that fail to load
-        // probably because the resource: has been unloaded
-      }
-    };
-
-    // Look for modules one level deeper than the top resource URI
-    processListing(RESOURCE_BASE, ([directory, , , type]) => {
-      if (type === "DIRECTORY") {
-        // Look into this directory for .jsm files
-        const subDir = `${RESOURCE_BASE}/${directory}`;
-        processListing(subDir, ([name]) => {
-          if (name && name.search(/\.jsm$/) !== -1) {
-            modulesToUnload.add(`${subDir}/${name}`);
-          }
-        });
-      }
-    });
-  });
-
-/**
- * init - Initializes an instance of ActivityStream. This could be called by
- *        the startup() function exposed by bootstrap.js.
- */
-function init() {
-  // Don't re-initialize
-  if (activityStream && activityStream.initialized) {
-    return;
-  }
-  activityStream = new ActivityStream();
-  try {
-    activityStream.init();
-  } catch (e) {
-    Cu.reportError(e);
-  }
-}
-
-/**
- * uninit - Uninitializes the activityStream instance, if it exsits.This could be
- *          called by the shutdown() function exposed by bootstrap.js.
- *
- * @param  {type} reason Reason for uninitialization. Could be uninstall, upgrade, or PREF_OFF
- */
-function uninit(reason) {
-  // Make sure to only uninit once in case both pref change and shutdown happen
-  if (activityStream) {
-    activityStream.uninit(reason);
-    activityStream = null;
-  }
-}
 
 /**
  * Check if an old pref has a custom value to migrate. Clears the pref so that
@@ -113,12 +46,14 @@ function migratePref(oldPrefName, cbIfNotDefault) {
   Services.prefs.clearUserPref(oldPrefName);
 }
 
-/**
- * onBrowserReady - Continues startup of the add-on after browser is ready.
- */
-function onBrowserReady() {
-  waitingForBrowserReady = false;
-  init();
+// The functions below are required by bootstrap.js
+
+this.install = function install(data, reason) {};
+
+this.startup = function startup(data, reason) {
+  resProto.setSubstitutionWithFlags(RESOURCE_HOST,
+                                    Services.io.newURI("chrome/content/", null, data.resourceURI),
+                                    resProto.ALLOW_CONTENT_ACCESS);
 
   // Do a one time migration of Tiles about:newtab prefs that have been modified
   migratePref("browser.newtabpage.rows", rows => {
@@ -140,57 +75,10 @@ function onBrowserReady() {
   migratePref("browser.newtabpage.activity-stream.topSitesCount", count => {
     Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", Math.ceil(count / 6));
   });
-}
-
-/**
- * observe - nsIObserver callback to handle various browser notifications.
- */
-function observe(subject, topic, data) {
-  switch (topic) {
-    case BROWSER_READY_NOTIFICATION:
-      Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
-      // Avoid running synchronously during this event that's used for timing
-      Services.tm.dispatchToMainThread(() => onBrowserReady());
-      break;
-  }
-}
-
-// The functions below are required by bootstrap.js
-
-this.install = function install(data, reason) {};
-
-this.startup = function startup(data, reason) {
-  resProto.setSubstitutionWithFlags(RESOURCE_HOST,
-                                    Services.io.newURI("chrome/content/", null, data.resourceURI),
-                                    resProto.ALLOW_CONTENT_ACCESS);
-
-  // Only start Activity Stream up when the browser UI is ready
-  if (Services.startup.startingUp) {
-    Services.obs.addObserver(observe, BROWSER_READY_NOTIFICATION);
-  } else {
-    // Handle manual install or automatic install after manual uninstall
-    onBrowserReady();
-  }
 };
 
 this.shutdown = function shutdown(data, reason) {
   resProto.setSubstitution(RESOURCE_HOST, null);
-
-  // Uninitialize Activity Stream
-  uninit(reason);
-
-  // Stop waiting for browser to be ready
-  if (waitingForBrowserReady) {
-    Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
-  }
-
-  // Unload any add-on modules that might might have been imported
-  modulesToUnload.forEach(Cu.unload);
 };
 
-this.uninstall = function uninstall(data, reason) {
-  if (activityStream) {
-    activityStream.uninstall(reason);
-    activityStream = null;
-  }
-};
+this.uninstall = function uninstall(data, reason) {};

@@ -16,6 +16,14 @@ const TEST_URI = `data:text/html,
 `;
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
 
@@ -28,4 +36,4 @@ add_task(async function() {
   jsterm.execute("$x('.//li', document.body)[0]");
   message = await onMessage;
   ok(message, "`$x()` result can be used right away");
-});
+}

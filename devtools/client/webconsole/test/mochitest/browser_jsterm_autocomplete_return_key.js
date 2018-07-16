@@ -25,11 +25,16 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - test pressing return with open popup</body>`;
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
-  const {
-    autocompletePopup: popup,
-    completeNode,
-  } = jsterm;
+  const { autocompletePopup: popup } = jsterm;
 
   const onPopUpOpen = popup.once("popup-opened");
 
@@ -57,7 +62,7 @@ add_task(async function() {
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
   const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
-  is(completeNode.value, prefix + "item3", "completeNode.value holds item3");
+  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
 
   info("press Return to accept suggestion. wait for popup to hide");
   const onPopupClose = popup.once("popup-closed");
@@ -68,5 +73,5 @@ add_task(async function() {
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
   is(jsterm.getInputValue(), "window.foobar.item3",
     "completion was successful after KEY_Enter");
-  ok(!completeNode.value, "completeNode is empty");
-});
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+}

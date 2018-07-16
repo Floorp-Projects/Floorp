@@ -6,6 +6,14 @@
 const TEST_URI = "data:text/html,Test <code>clear()</code> jsterm helper";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessage = waitForMessage(hud, "message");
@@ -19,4 +27,4 @@ add_task(async function() {
   hud.jsterm.execute("clear()");
   await onCleared;
   ok(true, "Console was cleared");
-});
+}

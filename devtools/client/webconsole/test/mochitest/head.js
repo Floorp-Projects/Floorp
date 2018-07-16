@@ -351,9 +351,9 @@ function hasFocus(node) {
  *
  * @param {JsTerm} jsterm
  * @param {String} value : The value to set the jsterm to.
- * @param {Integer} caretIndexOffset : A number that will be added to value.length
- *                  when setting the caret. A negative number will place the caret
- *                  in (end - offset) position. Default to 0 (caret set at the end)
+ * @param {Integer} caretPosition : The index where to place the cursor. A negative
+ *                  number will place the caret at (value.length - offset) position.
+ *                  Default to value.length (caret set at the end).
  * @param {Integer} completionType : One of the following jsterm property
  *                   - COMPLETE_FORWARD
  *                   - COMPLETE_BACKWARD
@@ -363,11 +363,29 @@ function hasFocus(node) {
  *                  Will default to COMPLETE_HINT_ONLY.
  * @returns {Promise} resolves when the jsterm is completed.
  */
-function jstermSetValueAndComplete(jsterm, value, caretIndexOffset = 0, completionType) {
-  const {inputNode} = jsterm;
-  inputNode.value = value;
-  const index = value.length + caretIndexOffset;
-  inputNode.setSelectionRange(index, index);
+function jstermSetValueAndComplete(
+  jsterm,
+  value,
+  caretPosition = value.length,
+  completionType
+) {
+  jsterm.setInputValue(value);
+
+  if (caretPosition < 0) {
+    caretPosition = value.length + caretPosition;
+  }
+
+  if (Number.isInteger(caretPosition)) {
+    if (jsterm.inputNode) {
+      const {inputNode} = jsterm;
+      inputNode.value = value;
+      inputNode.setSelectionRange(caretPosition, caretPosition);
+    }
+
+    if (jsterm.editor) {
+      jsterm.editor.setCursor(jsterm.editor.getPosition(caretPosition));
+    }
+  }
 
   return jstermComplete(jsterm, completionType);
 }
@@ -389,6 +407,120 @@ function jstermComplete(jsterm, completionType = jsterm.COMPLETE_HINT_ONLY) {
   const updated = jsterm.once("autocomplete-updated");
   jsterm.complete(completionType);
   return updated;
+}
+
+/**
+ * Checks if the jsterm has the expected completion value.
+ *
+ * @param {JsTerm} jsterm
+ * @param {String} expectedValue
+ * @param {String} assertionInfo: Description of the assertion passed to `is`.
+ */
+function checkJsTermCompletionValue(jsterm, expectedValue, assertionInfo) {
+  const completionValue = getJsTermCompletionValue(jsterm);
+  if (completionValue === null) {
+    ok(false, "Couldn't retrieve the completion value");
+  }
+
+  info(`Expects "${expectedValue}", is "${completionValue}"`);
+
+  if (jsterm.completeNode) {
+    is(completionValue, expectedValue, assertionInfo);
+  } else {
+    // CodeMirror jsterm doesn't need to add prefix-spaces.
+    is(completionValue, expectedValue.trim(), assertionInfo);
+  }
+}
+
+/**
+ * Checks if the cursor on jsterm is at the expected position.
+ *
+ * @param {JsTerm} jsterm
+ * @param {Integer} expectedCursorIndex
+ * @param {String} assertionInfo: Description of the assertion passed to `is`.
+ */
+function checkJsTermCursor(jsterm, expectedCursorIndex, assertionInfo) {
+  if (jsterm.inputNode) {
+    const {selectionStart, selectionEnd} = jsterm.inputNode;
+    is(selectionStart, expectedCursorIndex, assertionInfo);
+    ok(selectionStart === selectionEnd);
+  } else {
+    is(jsterm.editor.getCursor().ch, expectedCursorIndex, assertionInfo);
+  }
+}
+
+/**
+ * Checks the jsterm value and the cursor position given an expected string containing
+ * a "|" to indicate the expected cursor position.
+ *
+ * @param {JsTerm} jsterm
+ * @param {String} expectedStringWithCursor:
+ *                  String with a "|" to indicate the expected cursor position.
+ *                  For example, this is how you assert an empty value with the focus "|",
+ *                  and this indicates the value should be "test" and the cursor at the
+ *                  end of the input: "test|".
+ * @param {String} assertionInfo: Description of the assertion passed to `is`.
+ */
+function checkJsTermValueAndCursor(jsterm, expectedStringWithCursor, assertionInfo) {
+  info(`Checking jsterm state: \n${expectedStringWithCursor}`);
+  if (!expectedStringWithCursor.includes("|")) {
+    ok(false,
+      `expectedStringWithCursor must contain a "|" char to indicate cursor position`);
+  }
+
+  const inputValue = expectedStringWithCursor.replace("|", "");
+  is(jsterm.getInputValue(), inputValue, "jsterm has expected value");
+  if (jsterm.inputNode) {
+    is(jsterm.inputNode.selectionStart, jsterm.inputNode.selectionEnd);
+    is(jsterm.inputNode.selectionStart, expectedStringWithCursor.indexOf("|"),
+      assertionInfo);
+  } else {
+    const lines = expectedStringWithCursor.split("\n");
+    const lineWithCursor = lines.findIndex(line => line.includes("|"));
+    const {ch, line} = jsterm.editor.getCursor();
+    is(line, lineWithCursor, assertionInfo + " - correct line");
+    is(ch, lines[lineWithCursor].indexOf("|"), assertionInfo + " - correct ch");
+  }
+}
+
+/**
+ * Returns the jsterm completion value, whether there's CodeMirror enabled or not.
+ *
+ * @param {JsTerm} jsterm
+ * @returns {String}
+ */
+function getJsTermCompletionValue(jsterm) {
+  if (jsterm.completeNode) {
+    return jsterm.completeNode.value;
+  }
+
+  if (jsterm.editor) {
+    return jsterm.editor.getAutoCompletionText();
+  }
+
+  return null;
+}
+
+/**
+ * Returns a boolean indicating if the jsterm is focused, whether there's CodeMirror
+ * enabled or not.
+ *
+ * @param {JsTerm} jsterm
+ * @returns {Boolean}
+ */
+function isJstermFocused(jsterm) {
+  const document = jsterm.outputNode.ownerDocument;
+  const documentIsFocused = document.hasFocus();
+
+  if (jsterm.inputNode) {
+    return document.activeElement == jsterm.inputNode && documentIsFocused;
+  }
+
+  if (jsterm.editor) {
+    return documentIsFocused && jsterm.editor.hasFocus();
+  }
+
+  return false;
 }
 
 /**
