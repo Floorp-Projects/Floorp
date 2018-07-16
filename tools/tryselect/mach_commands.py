@@ -54,11 +54,19 @@ class TryConfig(object):
         desc = "The default selector to use when running `mach try` without a subcommand."
         choices = Registrar.command_handlers['try'].subcommand_handlers.keys()
 
-        return [('try.default', 'string', desc, 'syntax', {'choices': choices})]
+        return [
+            ('try.default', 'string', desc, 'syntax', {'choices': choices}),
+            ('try.maxhistory', 'int', "Maximum number of pushes to save in history.", 10),
+        ]
 
 
 @CommandProvider
 class TrySelect(MachCommandBase):
+
+    def __init__(self, context):
+        super(TrySelect, self).__init__(context)
+        from tryselect import push
+        push.MAX_HISTORY = self._mach_context.settings['try']['maxhistory']
 
     @Command('try',
              category='ci',
@@ -140,6 +148,15 @@ class TrySelect(MachCommandBase):
         """
         from tryselect.selectors.fuzzy import run_fuzzy_try
         return run_fuzzy_try(**kwargs)
+
+    @SubCommand('try',
+                'again',
+                description='Schedule a previously generated (non try syntax) '
+                            'push again.',
+                parser=get_parser('again'))
+    def try_again(self, **kwargs):
+        from tryselect.selectors.again import run_try_again
+        return run_try_again(**kwargs)
 
     @SubCommand('try',
                 'empty',
