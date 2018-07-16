@@ -8,6 +8,7 @@ import json
 import os
 import sys
 
+from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object, MissingVCSExtension
 
@@ -38,22 +39,35 @@ UNCOMMITTED_CHANGES = """
 ERROR please commit changes before continuing
 """.strip()
 
+MAX_HISTORY = 10
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 vcs = get_repository_object(build.topsrcdir)
+history_path = os.path.join(get_state_dir()[0], 'history', 'try_task_configs.json')
 
 
-def write_task_config(labels, templates=None):
-    config = os.path.join(vcs.path, 'try_task_config.json')
-    with open(config, 'w') as fh:
-        try_task_config = {'tasks': sorted(labels)}
-        if templates:
-            try_task_config['templates'] = templates
-
+def write_task_config(try_task_config):
+    config_path = os.path.join(vcs.path, 'try_task_config.json')
+    with open(config_path, 'w') as fh:
         json.dump(try_task_config, fh, indent=2, separators=(',', ':'))
         fh.write('\n')
-    return config
+    return config_path
+
+
+def write_task_config_history(msg, try_task_config):
+    if not os.path.isfile(history_path):
+        if not os.path.isdir(os.path.dirname(history_path)):
+            os.makedirs(os.path.dirname(history_path))
+        history = []
+    else:
+        with open(history_path, 'r') as fh:
+            history = fh.read().strip().splitlines()
+
+    history.insert(0, json.dumps([msg, try_task_config]))
+    history = history[:MAX_HISTORY]
+    with open(history_path, 'w') as fh:
+        fh.write('\n'.join(history))
 
 
 def check_working_directory(push=True):
@@ -65,7 +79,8 @@ def check_working_directory(push=True):
         sys.exit(1)
 
 
-def push_to_try(method, msg, labels=None, templates=None, push=True, closed_tree=False):
+def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
+                push=True, closed_tree=False):
     check_working_directory(push)
 
     # Format the commit message
@@ -73,9 +88,17 @@ def push_to_try(method, msg, labels=None, templates=None, push=True, closed_tree
     commit_message = ('%s%s\n\nPushed via `mach try %s`' %
                       (msg, closed_tree_string, method))
 
-    config = None
     if labels or labels == []:
-        config = write_task_config(labels, templates)
+        try_task_config = {'tasks': sorted(labels)}
+        if templates:
+            try_task_config['templates'] = templates
+        if push:
+            write_task_config_history(msg, try_task_config)
+
+    config = None
+    if try_task_config:
+        config = write_task_config(try_task_config)
+
     try:
         if not push:
             print("Commit message:")

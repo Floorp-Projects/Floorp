@@ -11,6 +11,14 @@
 const TEST_URI = "data:text/html;charset=utf-8,test for bug 592442";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   try {
@@ -19,4 +27,4 @@ add_task(async function() {
   } catch (ex) {
     ok(false, "an error was thrown when an extraneous bracket was inserted");
   }
-});
+}

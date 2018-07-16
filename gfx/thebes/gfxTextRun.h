@@ -327,6 +327,12 @@ public:
     }
 
     /**
+     * Computes the minimum advance width for a substring assuming line
+     * breaking is allowed everywhere.
+     */
+    gfxFloat GetMinAdvanceWidth(Range aRange);
+
+    /**
      * Clear all stored line breaks for the given range (both before and after),
      * and then set the line-break state before aRange.start to aBreakBefore and
      * after the last cluster to aBreakAfter.

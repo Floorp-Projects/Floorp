@@ -16,9 +16,17 @@ XPCOMUtils.defineLazyServiceGetter(
 const stringToCopy = "foobazbarBug642615";
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
+});
+
+async function performTests() {
   const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
   ui.clearOutput();
-  ok(!jsterm.completeNode.value, "no completeNode.value");
+  ok(!getJsTermCompletionValue(jsterm), "no completeNode.value");
 
   jsterm.setInputValue("doc");
 
@@ -27,7 +35,7 @@ add_task(async function() {
   EventUtils.sendString("u");
   await onAutocompleteUpdated;
 
-  const completionValue = jsterm.completeNode.value;
+  const completionValue = getJsTermCompletionValue(jsterm);
 
   info(`Copy "${stringToCopy}" in clipboard`);
   await waitForClipboardPromise(() =>
@@ -36,20 +44,21 @@ add_task(async function() {
   jsterm.setInputValue("docu");
   info("wait for completion update after clipboard paste");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
-  goDoCommand("cmd_paste");
+  EventUtils.synthesizeKey("v", {accelKey: true});
 
   await onAutocompleteUpdated;
 
-  ok(!jsterm.completeNode.value, "no completion value after paste");
+  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste");
 
   info("wait for completion update after undo");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
 
-  goDoCommand("cmd_undo");
+  EventUtils.synthesizeKey("z", {accelKey: true});
 
   await onAutocompleteUpdated;
 
-  is(jsterm.completeNode.value, completionValue, "same completeNode.value after undo");
+  checkJsTermCompletionValue(jsterm, completionValue,
+    "same completeNode.value after undo");
 
   info("wait for completion update after clipboard paste (ctrl-v)");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -57,5 +66,5 @@ add_task(async function() {
   EventUtils.synthesizeKey("v", {accelKey: true});
 
   await onAutocompleteUpdated;
-  ok(!jsterm.completeNode.value, "no completion value after paste (ctrl-v)");
-});
+  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste (ctrl-v)");
+}

@@ -10,19 +10,22 @@
 const TEST_URI = "data:text/html,Testing jsterm with no input";
 
 add_task(async function() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  testCompletion(hud);
+  // Run test with legacy JsTerm
+  await performTests();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await performTests();
 });
 
-function testCompletion(hud) {
+async function performTests() {
+  const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
-  const input = jsterm.inputNode;
 
   // With empty input, tab through
   jsterm.setInputValue("");
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "", "inputnode is empty - matched");
-  ok(!hasFocus(input), "input isn't focused anymore");
+  ok(!isJstermFocused(jsterm), "input isn't focused anymore");
   jsterm.focus();
 
   // With non-empty input, insert a tab
@@ -30,5 +33,5 @@ function testCompletion(hud) {
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "window.Bug583816\t",
      "input content - matched");
-  ok(hasFocus(input), "input is still focused");
+  ok(isJstermFocused(jsterm), "input is still focused");
 }
