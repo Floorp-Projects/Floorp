@@ -23,5 +23,3 @@ pref(layout.css.overflow-clip-box.enabled,true) == contain-paint-clip-006.html c
 == contain-size-flex-001.html contain-size-flex-001-ref.html
 fuzzy-if(webrender&&winWidget,3,2) == contain-size-inline-flex-001.html contain-size-inline-flex-001-ref.html # bug 1474093
 == contain-size-multicol-001.html contain-size-multicol-001-ref.html
-== contain-size-multicol-002.html contain-size-multicol-002-ref.html
-== contain-size-multicol-003.html contain-size-multicol-003-ref.html
