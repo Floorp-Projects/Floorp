@@ -4605,13 +4605,15 @@ const TopSiteList = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"]
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_StartupOverlay", function() { return _StartupOverlay; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "StartupOverlay", function() { return StartupOverlay; });
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(16);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
 
 
 
@@ -4629,8 +4631,33 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
 
     this.state = {
       emailInput: "",
-      overlayRemoved: false
+      overlayRemoved: false,
+      flowId: "",
+      flowBeginTime: 0
     };
+    this.didFetch = false;
+  }
+
+  componentWillUpdate() {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      if (_this.props.fxa_endpoint && !_this.didFetch) {
+        try {
+          _this.didFetch = true;
+          const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow`);
+          if (response.status === 200) {
+            const { flowId, flowBeginTime } = yield response.json();
+            _this.setState({ flowId, flowBeginTime });
+          }
+        } catch (error) {
+          _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { value: "FXA_METRICS_ERROR" } }));
+        }
+      }
+    })();
+  }
+
+  componentDidMount() {
     this.initScene();
   }
 
@@ -4661,12 +4688,12 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
   }
 
   onSubmit() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__["actionCreators"].UserEvent({ event: "SUBMIT_EMAIL" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SUBMIT_EMAIL" }));
     window.addEventListener("visibilitychange", this.removeOverlay);
   }
 
   clickSkip() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__["actionCreators"].UserEvent({ event: "SKIPPED_SIGNIN" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SKIPPED_SIGNIN" }));
     this.removeOverlay();
   }
 
@@ -4687,14 +4714,15 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
 
     let termsLink = react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
       "a",
-      { href: "https://accounts.firefox.com/legal/terms", target: "_blank", rel: "noopener noreferrer" },
-      react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_terms_of_service" })
+      { href: `${this.props.fxa_endpoint}/legal/terms`, target: "_blank", rel: "noopener noreferrer" },
+      react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_terms_of_service" })
     );
     let privacyLink = react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
       "a",
-      { href: "https://accounts.firefox.com/legal/privacy", target: "_blank", rel: "noopener noreferrer" },
-      react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_privacy_notice" })
+      { href: `${this.props.fxa_endpoint}/legal/privacy`, target: "_blank", rel: "noopener noreferrer" },
+      react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_privacy_notice" })
     );
+
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
       "div",
       { className: `overlay-wrapper ${this.state.show ? "show" : ""}` },
@@ -4711,17 +4739,17 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "h1",
               { className: "firstrun-title" },
-              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_title" })
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_title" })
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "p",
               { className: "firstrun-content" },
-              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_content" })
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_content" })
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "a",
               { className: "firstrun-link", href: "https://www.mozilla.org/firefox/features/sync/", target: "_blank", rel: "noopener noreferrer" },
-              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_learn_more_link" })
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_learn_more_link" })
             )
           ),
           react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
@@ -4730,22 +4758,24 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "p",
               { className: "form-header" },
-              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_form_header" }),
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_form_header" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "span",
                 { className: "sub-header" },
-                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_form_sub_header" })
+                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_form_sub_header" })
               )
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "form",
-              { method: "get", action: "https://accounts.firefox.com", target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
+              { method: "get", action: this.props.fxa_endpoint, target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "service", type: "hidden", value: "sync" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "action", type: "hidden", value: "email" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "context", type: "hidden", value: "fx_desktop_v3" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "entrypoint", type: "hidden", value: "activity-stream-firstrun" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "utm_source", type: "hidden", value: "activity-stream" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "utm_campaign", type: "hidden", value: "firstrun" }),
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "flow_id", type: "hidden", value: this.state.flowId }),
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "flow_begin_time", type: "hidden", value: this.state.flowBeginTime }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "span",
                 { className: "error" },
@@ -4755,7 +4785,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "div",
                 { className: "extra-links" },
-                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
+                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
                   id: "firstrun_extra_legal_links",
                   values: {
                     terms: termsLink,
@@ -4765,13 +4795,13 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "button",
                 { className: "continue-button", type: "submit" },
-                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_continue_to_login" })
+                react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_continue_to_login" })
               )
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "button",
               { className: "skip-button", disabled: !!this.state.emailInput, onClick: this.clickSkip },
-              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: "firstrun_skip_login" })
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "firstrun_skip_login" })
             )
           )
         )
@@ -4780,7 +4810,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
   }
 }
 
-const StartupOverlay = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])()(Object(react_intl__WEBPACK_IMPORTED_MODULE_0__["injectIntl"])(_StartupOverlay));
+const getState = state => ({ fxa_endpoint: state.Prefs.values.fxa_endpoint });
+const StartupOverlay = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(getState)(Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(_StartupOverlay));
 
 /***/ }),
 /* 37 */
@@ -8100,7 +8131,7 @@ class ModalOverlay_ModalOverlay extends external_React_default.a.PureComponent {
           { className: "footer" },
           external_React_default.a.createElement(
             "button",
-            { onClick: this.props.onDoneButton, className: "button primary modalButton" },
+            { tabIndex: "2", onClick: this.props.onDoneButton, className: "button primary modalButton" },
             " ",
             button_label,
             " "
@@ -8161,7 +8192,7 @@ class OnboardingMessage_OnboardingCard extends external_React_default.a.PureComp
           null,
           external_React_default.a.createElement(
             "button",
-            { className: "button onboardingButton", onClick: this.onClick },
+            { tabIndex: "1", className: "button onboardingButton", onClick: this.onClick },
             " ",
             content.button_label,
             " "

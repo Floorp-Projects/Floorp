@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Tajpu vian retpoŝtan adreson",
   "firstrun_form_sub_header": "por pluiri al Spegulado de Firefox.",
   "firstrun_email_input_placeholder": "Retpoŝta adreso",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Valida retpoŝta adreso postulata",
   "firstrun_extra_legal_links": "Se vi daŭrigas vi akceptas la {terms} kaj {privacy}.",
   "firstrun_terms_of_service": "kondiĉojn de uzo",
   "firstrun_privacy_notice": "rimarkon pri privateco",
