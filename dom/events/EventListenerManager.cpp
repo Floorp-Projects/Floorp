@@ -858,30 +858,23 @@ EventListenerManager::SetEventHandler(nsAtom* aName,
     rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (csp) {
-      // let's generate a script sample and pass it as aContent,
-      // it will not match the hash, but allows us to pass
-      // the script sample in aContent.
-      nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
-      aName->ToString(attr);
-      nsCOMPtr<nsINode> domNode(do_QueryInterface(mTarget));
-      if (domNode) {
-        tagName = domNode->NodeName();
-      }
-      // build a "script sample" based on what we know about this element
-      scriptSample.Assign(attr);
-      scriptSample.AppendLiteral(" attribute on ");
-      scriptSample.Append(tagName);
-      scriptSample.AppendLiteral(" element");
+    unsigned lineNum = 0;
+    unsigned columnNum = 0;
 
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    if (cx && !JS::DescribeScriptedCaller(cx, nullptr, &lineNum, &columnNum)) {
+      JS_ClearPendingException(cx);
+    }
+
+    if (csp) {
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                 EmptyString(), // aNonce
                                 true, // aParserCreated (true because attribute event handler)
                                 aElement,
-                                scriptSample,
-                                0,             // aLineNumber
-                                0,             // aColumnNumber
+                                aBody,
+                                lineNum,
+                                columnNum,
                                 &allowsInlineScript);
       NS_ENSURE_SUCCESS(rv, rv);
 

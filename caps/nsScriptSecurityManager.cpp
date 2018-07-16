@@ -471,7 +471,8 @@ NS_IMPL_ISUPPORTS(nsScriptSecurityManager,
 ///////////////// Security Checks /////////////////
 
 bool
-nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
+nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx,
+                                                              JS::HandleValue aValue)
 {
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
     nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
@@ -494,12 +495,22 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     }
 
     if (reportViolation) {
+        JS::Rooted<JSString*> jsString(cx, JS::ToString(cx, aValue));
+        if (NS_WARN_IF(!jsString)) {
+          JS_ClearPendingException(cx);
+          return false;
+        }
+
+        nsAutoJSString scriptSample;
+        if (NS_WARN_IF(!scriptSample.init(cx, jsString))) {
+          JS_ClearPendingException(cx);
+          return false;
+        }
+
+        JS::AutoFilename scriptFilename;
         nsAutoString fileName;
         unsigned lineNum = 0;
         unsigned columnNum = 0;
-        NS_NAMED_LITERAL_STRING(scriptSample, "call to eval() or related function blocked by CSP");
-
-        JS::AutoFilename scriptFilename;
         if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum,
                                        &columnNum)) {
             if (const char *file = scriptFilename.get()) {
