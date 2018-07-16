@@ -21,8 +21,12 @@
 #include "mozilla/LazyIdleThread.h"
 #include "nsIObserverService.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Promise.h"
 
+#include <shellapi.h>
 #include "WinUtils.h"
+
+using mozilla::dom::Promise;
 
 // The amount of time, in milliseconds, that our IO thread will stay alive after the last event it processes.
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
@@ -177,91 +181,68 @@ NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t *aMaxItems)
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, bool *_retval)
+NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
+                                             Promise** aPromise)
 {
-  NS_ENSURE_ARG_POINTER(removedItems);
-
-  *_retval = false;
-
   ReentrantMonitorAutoEnter lock(mMonitor);
-  if (!mJumpListMgr)
+  if (!mJumpListMgr) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  if(sBuildingList)
-    AbortListBuild();
-
-  IObjectArray *objArray;
-
-  // The returned objArray of removed items are for manually removed items.
-  // This does not return items which are removed because they were previously
-  // part of the jump list but are no longer part of the jump list.
-  if (SUCCEEDED(mJumpListMgr->BeginList(&mMaxItems, IID_PPV_ARGS(&objArray)))) {
-    if (objArray) {
-      TransferIObjectArrayToIMutableArray(objArray, removedItems);
-      objArray->Release();
-    }
-
-    RemoveIconCacheForItems(removedItems);
-
-    sBuildingList = true;
-    *_retval = true;
-    return NS_OK;
   }
 
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod<StoreCopyPassByRRef<RefPtr<Promise>>>("InitListBuild",
+                                                            this,
+                                                            &JumpListBuilder::DoInitListBuild,
+                                                            promise);
+  nsresult rv = mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  promise.forget(aPromise);
   return NS_OK;
 }
 
-// Ensures that we don't have old ICO files that aren't in our jump lists
-// anymore left over in the cache.
-nsresult JumpListBuilder::RemoveIconCacheForItems(nsIMutableArray *items)
+void JumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise)
 {
-  NS_ENSURE_ARG_POINTER(items);
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  MOZ_ASSERT(mJumpListMgr);
 
-  nsresult rv;
-  uint32_t length;
-  items->GetLength(&length);
-  for (uint32_t i = 0; i < length; ++i) {
+  if(sBuildingList) {
+    AbortListBuild();
+  }
 
-    //Obtain an IJumpListItem and get the type
-    nsCOMPtr<nsIJumpListItem> item = do_QueryElementAt(items, i);
-    if (!item) {
-      continue;
-    }
-    int16_t type;
-    if (NS_FAILED(item->GetType(&type))) {
-      continue;
-    }
+  nsTArray<nsString> urisToRemove;
+  RefPtr<IObjectArray> objArray;
+  HRESULT hr = mJumpListMgr->BeginList(&mMaxItems,
+                                       IID_PPV_ARGS(static_cast<IObjectArray**>
+                                                    (getter_AddRefs(objArray))));
+  // The returned objArray of removed items are for manually removed items.
+  // This does not return items which are removed because they were previously
+  // part of the jump list but are no longer part of the jump list.
+  if (SUCCEEDED(hr) && objArray) {
+    sBuildingList = true;
+    RemoveIconCacheAndGetJumplistShortcutURIs(objArray, urisToRemove);
+  }
 
-    // If the item is a shortcut, remove its associated icon if any
-    if (type == nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT) {
-      nsCOMPtr<nsIJumpListShortcut> shortcut = do_QueryInterface(item);
-      if (shortcut) {
-        nsCOMPtr<nsIURI> uri;
-        rv = shortcut->GetFaviconPageUri(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv) && uri) {
-
-          // The local file path is stored inside the nsIURI
-          // Get the nsIURI spec which stores the local path for the icon to remove
-          nsAutoCString spec;
-          nsresult rv = uri->GetSpec(spec);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          nsCOMPtr<nsIRunnable> event
-            = new mozilla::widget::AsyncDeleteIconFromDisk(NS_ConvertUTF8toUTF16(spec));
-          mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
-
-          // The shortcut was generated from an IShellLinkW so IShellLinkW can
-          // only tell us what the original icon is and not the URI.
-          // So this field was used only temporarily as the actual icon file
-          // path.  It should be cleared.
-          shortcut->SetFaviconPageUri(nullptr);
-        }
-      }
-    }
-
-  } // end for
-
-  return NS_OK;
+  NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildResolve",
+                                                 [urisToRemove = std::move(urisToRemove),
+                                                  promise = std::move(aPromise)]() {
+    promise->MaybeResolve(urisToRemove);
+  }));
 }
 
 // Ensures that we have no old ICO files left in the jump list cache
@@ -542,51 +523,64 @@ bool JumpListBuilder::IsSeparator(nsCOMPtr<nsIJumpListItem>& item)
   return false;
 }
 
-// TransferIObjectArrayToIMutableArray - used in converting removed items
-// to our objects.
-nsresult JumpListBuilder::TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems)
+// RemoveIconCacheAndGetJumplistShortcutURIs - does multiple things to
+// avoid unnecessary extra XPCOM incantations. For each object in the input
+// array,  if it's an IShellLinkW, this deletes the cached icon and adds the
+// url param to a list of URLs to be removed from the places database.
+void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray *aObjArray,
+                                                                nsTArray<nsString>& aURISpecs)
 {
-  NS_ENSURE_ARG_POINTER(objArray);
-  NS_ENSURE_ARG_POINTER(removedItems);
-
-  nsresult rv;
+  MOZ_ASSERT(!NS_IsMainThread());
 
   uint32_t count = 0;
-  objArray->GetCount(&count);
-
-  nsCOMPtr<nsIJumpListItem> item;
+  aObjArray->GetCount(&count);
 
   for (uint32_t idx = 0; idx < count; idx++) {
-    IShellLinkW * pLink = nullptr;
-    IShellItem * pItem = nullptr;
+    RefPtr<IShellLinkW> pLink;
 
-    if (SUCCEEDED(objArray->GetAt(idx, IID_IShellLinkW, (LPVOID*)&pLink))) {
-      nsCOMPtr<nsIJumpListShortcut> shortcut =
-        do_CreateInstance(kJumpListShortcutCID, &rv);
-      if (NS_FAILED(rv))
-        return NS_ERROR_UNEXPECTED;
-      rv = JumpListShortcut::GetJumpListShortcut(pLink, shortcut);
-      item = do_QueryInterface(shortcut);
-    }
-    else if (SUCCEEDED(objArray->GetAt(idx, IID_IShellItem, (LPVOID*)&pItem))) {
-      nsCOMPtr<nsIJumpListLink> link =
-        do_CreateInstance(kJumpListLinkCID, &rv);
-      if (NS_FAILED(rv))
-        return NS_ERROR_UNEXPECTED;
-      rv = JumpListLink::GetJumpListLink(pItem, link);
-      item = do_QueryInterface(link);
+    if (FAILED(aObjArray->GetAt(idx, IID_IShellLinkW,
+                                static_cast<void**>(getter_AddRefs(pLink))))) {
+      continue;
     }
 
-    if (pLink)
-      pLink->Release();
-    if (pItem)
-      pItem->Release();
+    wchar_t buf[MAX_PATH];
+    HRESULT hres = pLink->GetArguments(buf, MAX_PATH);
+    if (SUCCEEDED(hres)) {
+      LPWSTR *arglist;
+      int32_t numArgs;
 
-    if (NS_SUCCEEDED(rv)) {
-      removedItems->AppendElement(item);
+      arglist = ::CommandLineToArgvW(buf, &numArgs);
+      if(arglist && numArgs > 0) {
+        nsString spec(arglist[0]);
+        aURISpecs.AppendElement(std::move(spec));
+        ::LocalFree(arglist);
+      }
+    }
+
+    int iconIdx = 0;
+    hres = pLink->GetIconLocation(buf, MAX_PATH, &iconIdx);
+    if (SUCCEEDED(hres)) {
+      nsDependentString spec(buf);
+      DeleteIconFromDisk(spec);
     }
   }
-  return NS_OK;
+}
+
+void JumpListBuilder::DeleteIconFromDisk(const nsAString& aPath)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  // Check that we aren't deleting some arbitrary file that is not an icon
+  if (StringTail(aPath, 4).LowerCaseEqualsASCII(".ico")) {
+    // Construct the parent path of the passed in path
+    nsCOMPtr<nsIFile> icoFile;
+    nsresult rv = NS_NewLocalFile(aPath, true, getter_AddRefs(icoFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    icoFile->Remove(false);
+  }
 }
 
 NS_IMETHODIMP JumpListBuilder::Observe(nsISupports* aSubject,

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bug 1472465</title>
+<style type="text/css">
+#container {
+  border: 1px solid;
+  width: 500px;
+  height: 500px;
+  overflow: hidden;
+}
+
+#box {
+  opacity: 1.0;
+  position: absolute;
+  top: 100px
+  left: 100px;
+  z-index:1;
+  background-color: green;
+  width: 100px;
+  height: 100px;
+}
+
+#bg {
+  position:relative;
+  width: 2500px;
+  height: 2500px;
+  left: 0px;
+  top: 0px;
+}
+</style>
+
+</head>
+<body>
+<div id="container">
+    <div id="bg">
+        <div id="box">
+          Text to force layer state to inactive, that will get flattened.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
