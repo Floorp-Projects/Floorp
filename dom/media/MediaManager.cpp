@@ -10,6 +10,7 @@
 #include "MediaStreamGraph.h"
 #include "MediaTimer.h"
 #include "mozilla/dom/MediaStreamTrack.h"
+#include "mozilla/dom/MediaDeviceInfo.h"
 #include "MediaStreamListener.h"
 #include "nsArray.h"
 #include "nsContentUtils.h"
@@ -823,13 +824,48 @@ MediaDevice::MediaDevice(MediaEngineSource* aSource,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(aSource)
-  , mIsVideo(MediaEngineSource::IsVideo(mSource->GetMediaSource()))
+  , mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource())) ?
+          dom::MediaDeviceKind::Videoinput : dom::MediaDeviceKind::Audioinput)
   , mScary(mSource->GetScary())
-  , mType(mIsVideo ? NS_LITERAL_STRING("video") : NS_LITERAL_STRING("audio"))
+  , mType(NS_ConvertUTF8toUTF16(dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value))
   , mName(aName)
   , mID(aID)
   , mRawID(aRawID)
 {
+  MOZ_ASSERT(mSource);
+}
+
+MediaDevice::MediaDevice(const nsString& aName,
+                         const dom::MediaDeviceKind aKind,
+                         const nsString& aID,
+                         const nsString& aRawID)
+  : mSource(nullptr)
+  , mKind(aKind)
+  , mScary(false)
+  , mType(NS_ConvertUTF8toUTF16(dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value))
+  , mName(aName)
+  , mID(aID)
+  , mRawID(aRawID)
+{
+  // For now this ctor is used only for Audiooutput.
+  // It could be used for Audioinput and Videoinput
+  // when we do not instantiate a MediaEngineSource
+  // during EnumerateDevices.
+  MOZ_ASSERT(mKind == dom::MediaDeviceKind::Audiooutput);
+}
+
+MediaDevice::MediaDevice(const MediaDevice* aOther,
+                         const nsString& aID,
+                         const nsString& aRawID)
+  : mSource(aOther->mSource)
+  , mKind(aOther->mKind)
+  , mScary(aOther->mScary)
+  , mType(aOther->mType)
+  , mName(aOther->mName)
+  , mID(aID)
+  , mRawID(aRawID)
+{
+  MOZ_ASSERT(aOther);
 }
 
 /**
@@ -885,6 +921,7 @@ MediaDevice::GetBestFitnessDistance(
     bool aIsChrome)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
 
   nsString mediaSource;
   GetMediaSource(mediaSource);
@@ -949,6 +986,7 @@ void
 MediaDevice::GetSettings(dom::MediaTrackSettings& aOutSettings) const
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mSource);
   mSource->GetSettings(aOutSettings);
 }
 
@@ -968,6 +1006,7 @@ MediaDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
                       const char** aOutBadConstraint)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->Allocate(aConstraints,
                            aPrefs,
                            mID,
@@ -982,6 +1021,7 @@ MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
                       const PrincipalHandle& aPrincipalHandle)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->SetTrack(mAllocationHandle, aStream, aTrackID, aPrincipalHandle);
 }
 
@@ -989,6 +1029,7 @@ nsresult
 MediaDevice::Start()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->Start(mAllocationHandle);
 }
 
@@ -998,6 +1039,7 @@ MediaDevice::Reconfigure(const dom::MediaTrackConstraints &aConstraints,
                          const char** aOutBadConstraint)
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->Reconfigure(mAllocationHandle,
                               aConstraints,
                               aPrefs,
@@ -1009,6 +1051,7 @@ nsresult
 MediaDevice::FocusOnSelectedSource()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->FocusOnSelectedSource(mAllocationHandle);
 }
 
@@ -1016,6 +1059,7 @@ nsresult
 MediaDevice::Stop()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->Stop(mAllocationHandle);
 }
 
@@ -1023,6 +1067,7 @@ nsresult
 MediaDevice::Deallocate()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
+  MOZ_ASSERT(mSource);
   return mSource->Deallocate(mAllocationHandle);
 }
 
@@ -1035,6 +1080,7 @@ MediaDevice::Pull(const RefPtr<SourceMediaStream>& aStream,
   // This is on the graph thread, but mAllocationHandle is safe since we never
   // change it after it's been set, which is guaranteed to happen before
   // registering the listener for pulls.
+  MOZ_ASSERT(mSource);
   mSource->Pull(mAllocationHandle, aStream, aTrackID, aDesiredTime, aPrincipal);
 }
 
@@ -1043,6 +1089,7 @@ MediaDevice::GetMediaSource() const
 {
   // Threadsafe because mSource is const. GetMediaSource() might have other
   // requirements.
+  MOZ_ASSERT(mSource);
   return mSource->GetMediaSource();
 }
 
@@ -1564,9 +1611,11 @@ MediaManager::SelectSettings(
     nsTArray<RefPtr<MediaDevice>> audios;
 
     for (auto& source : sources) {
-      if (source->mIsVideo) {
+      MOZ_ASSERT(source->mKind == dom::MediaDeviceKind::Videoinput ||
+                 source->mKind == dom::MediaDeviceKind::Audioinput);
+      if (source->mKind == dom::MediaDeviceKind::Videoinput) {
         videos.AppendElement(source);
-      } else {
+      } else if (source->mKind == dom::MediaDeviceKind::Audioinput) {
         audios.AppendElement(source);
       }
     }
@@ -2951,10 +3000,7 @@ MediaManager::AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey
       device->GetId(id);
       nsString rawId(id);
       AnonymizeId(id, aOriginKey);
-      device = new MediaDevice(device->mSource,
-                               device->mName,
-                               id,
-                               rawId);
+      device = new MediaDevice(device, id, rawId);
     }
   }
 }
@@ -3645,16 +3691,17 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
           continue;
         }
 
-        nsString type;
-        device->GetType(type);
-        if (type.EqualsLiteral("video")) {
+        // Casting here is safe because a MediaDevice is created
+        // only in Gecko side, JS can only query for an instance.
+        MediaDevice* dev = static_cast<MediaDevice*>(device.get());
+        if (dev->mKind == dom::MediaDeviceKind::Videoinput) {
           if (!videoFound) {
-            task->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
+            task->SetVideoDevice(dev);
             videoFound = true;
           }
-        } else if (type.EqualsLiteral("audio")) {
+        } else if (dev->mKind == dom::MediaDeviceKind::Audioinput) {
           if (!audioFound) {
-            task->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
+            task->SetAudioDevice(dev);
             audioFound = true;
           }
         } else {
