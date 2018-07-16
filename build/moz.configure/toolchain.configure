@@ -1323,12 +1323,16 @@ js_option('--enable-lto',
           help='Enable LTO')
 
 
-@depends('--enable-lto', c_compiler)
+@depends('--enable-lto', 'MOZ_PGO', c_compiler)
 @imports('multiprocessing')
-def lto(value, c_compiler):
+def lto(value, pgo, c_compiler):
     cflags = []
     ldflags = []
     enabled = None
+
+    # MSVC's implementation of PGO implies LTO. Make clang-cl match this.
+    if c_compiler.type == 'clang-cl' and pgo and value.origin == 'default':
+        value = ['thin']
 
     if value:
         enabled = True
