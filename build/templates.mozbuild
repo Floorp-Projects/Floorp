@@ -53,6 +53,9 @@ def Library(name):
     '''Template for libraries.'''
     LIBRARY_NAME = name
 
+@template
+def AllowCompilerWarnings():
+    COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
 
 @template
 def RustLibrary(name, features=None, target_dir=None):
@@ -60,6 +63,8 @@ def RustLibrary(name, features=None, target_dir=None):
     Library(name)
 
     IS_RUST_LIBRARY = True
+    # Some Rust build scripts compile C/C++ sources, don't error on warnings for them.
+    AllowCompilerWarnings()
 
     if features:
         RUST_LIBRARY_FEATURES = features
@@ -125,6 +130,8 @@ def HostRustLibrary(name, features=None):
     HostLibrary(name)
 
     IS_RUST_LIBRARY = True
+    # Some Rust build scripts compile C/C++ sources, don't error on warnings for them.
+    AllowCompilerWarnings()
 
     if features:
         HOST_RUST_LIBRARY_FEATURES = features
@@ -136,10 +143,6 @@ def DisableStlWrapping():
 @template
 def NoVisibilityFlags():
     COMPILE_FLAGS['VISIBILITY'] = []
-
-@template
-def AllowCompilerWarnings():
-    COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
 
 @template
 def ForceInclude(*headers):
