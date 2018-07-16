@@ -372,17 +372,29 @@ void
 GMPRemoveTest::gmp_Decode()
 {
   // from gmp-fake.cpp
+  #pragma pack(push, 1)
   struct EncodedFrame {
-    uint32_t length_;
-    uint8_t h264_compat_;
-    uint32_t magic_;
-    uint32_t width_;
-    uint32_t height_;
-    uint8_t y_;
-    uint8_t u_;
-    uint8_t v_;
-    uint32_t timestamp_;
+    struct SPSNalu {
+      uint32_t size_;
+      uint8_t payload[14];
+    } sps_nalu;
+    struct PPSNalu {
+      uint32_t size_;
+      uint8_t payload[4];
+    } pps_nalu;
+    struct IDRNalu {
+      uint32_t size_;
+      uint8_t h264_compat_;
+      uint32_t magic_;
+      uint32_t width_;
+      uint32_t height_;
+      uint8_t y_;
+      uint8_t u_;
+      uint8_t v_;
+      uint32_t timestamp_;
+    } idr_nalu;
   };
+  #pragma pack(pop)
 
   GMPVideoFrame* absFrame;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &absFrame);
@@ -394,8 +406,12 @@ GMPRemoveTest::gmp_Decode()
   EXPECT_EQ(err, GMPNoErr);
 
   EncodedFrame* frameData = reinterpret_cast<EncodedFrame*>(frame->Buffer());
-  frameData->magic_ = 0x4652414d;
-  frameData->width_ = frameData->height_ = 16;
+  frameData->sps_nalu.size_ = sizeof(EncodedFrame::SPSNalu) - sizeof(uint32_t);
+  frameData->pps_nalu.size_ = sizeof(EncodedFrame::PPSNalu) - sizeof(uint32_t);
+  frameData->idr_nalu.size_ = sizeof(EncodedFrame::IDRNalu) - sizeof(uint32_t);
+  frameData->idr_nalu.h264_compat_ = 5;
+  frameData->idr_nalu.magic_ = 0x004000b8;
+  frameData->idr_nalu.width_ = frameData->idr_nalu.height_ = 16;
 
   nsTArray<uint8_t> empty;
   nsresult rv = mDecoder->Decode(std::move(frame), false /* aMissingFrames */, empty);
