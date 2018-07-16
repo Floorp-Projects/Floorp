@@ -246,6 +246,12 @@ var PermissionPromptPrototype = {
   onBeforeShow() {},
 
   /**
+   * If the prompt was be shown to the user, this callback will
+   * be called just after its been hidden.
+   */
+  onAfterShow() {},
+
+  /**
    * Will determine if a prompt should be shown to the user, and if so,
    * will show it.
    *
@@ -358,10 +364,19 @@ var PermissionPromptPrototype = {
     // Permission prompts are always persistent; the close button is controlled by a pref.
     options.persistent = true;
     options.hideClose = !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton");
-    // When the docshell of the browser is aboout to be swapped to another one,
-    // the "swapping" event is called. Returning true causes the notification
-    // to be moved to the new browser.
-    options.eventCallback = topic => topic == "swapping";
+    options.eventCallback = (topic) => {
+      // When the docshell of the browser is aboout to be swapped to another one,
+      // the "swapping" event is called. Returning true causes the notification
+      // to be moved to the new browser.
+      if (topic == "swapping") {
+        return true;
+      }
+      // The prompt has been removed, notify the PermissionUI.
+      if (topic == "removed") {
+        this.onAfterShow();
+      }
+      return false;
+    };
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,
@@ -817,7 +832,27 @@ AutoplayPermissionPrompt.prototype = {
     }];
   },
 
+  onAfterShow() {
+    // Remove the event listener to prevent any leaks.
+    this.browser.removeEventListener(
+      "DOMAudioPlaybackStarted", this.handlePlaybackStart);
+  },
+
   onBeforeShow() {
+    // Hide the prompt if the tab starts playing media.
+    this.handlePlaybackStart = () => {
+      let chromeWin = this.browser.ownerGlobal;
+      if (!chromeWin.PopupNotifications) {
+        return;
+      }
+      let notification = chromeWin.PopupNotifications.getNotification(
+        this.notificationID, this.browser);
+      if (notification) {
+        chromeWin.PopupNotifications.remove(notification);
+      }
+    };
+    this.browser.addEventListener(
+      "DOMAudioPlaybackStarted", this.handlePlaybackStart);
   },
 };
 

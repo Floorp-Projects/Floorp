@@ -317,7 +317,7 @@ static nscolor
 ExtractColor(ComputedStyle* aStyle, const nsStyleSVGPaint& aPaintServer)
 {
   return aPaintServer.Type() == eStyleSVGPaintType_Color
-    ? aPaintServer.GetColor() : NS_RGBA(0, 0, 0, 0);
+    ? aPaintServer.GetColor(aStyle) : NS_RGBA(0, 0, 0, 0);
 }
 
 #define STYLE_FIELD(struct_, field_) aField == &struct_::field_ ||
