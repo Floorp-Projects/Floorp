@@ -57,7 +57,7 @@
             android:id="@+id/toolbarBottomBorder"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:alpha="0.30"
+            android:alpha="0.20"
             android:background="@color/photonGrey90"
             android:layout_gravity="bottom" />
 
