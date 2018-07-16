@@ -50,7 +50,7 @@ public:
 
   virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  gfx::IntSize GetImageSize() const override;
+  gfx::IntSize GetImageSize() override;
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
