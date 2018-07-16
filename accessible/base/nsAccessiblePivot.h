@@ -53,6 +53,7 @@ private:
   bool NotifyOfPivotChange(Accessible* aOldAccessible,
                            int32_t aOldStart, int32_t aOldEnd,
                            PivotMoveReason aReason,
+                           TextBoundaryType aBoundaryType,
                            bool aIsFromUserInput);
 
   /*
