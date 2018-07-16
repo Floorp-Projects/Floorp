@@ -63,6 +63,11 @@ function nextTest() {
   SimpleTest.executeSoon(runNextTest);
 }
 
+var gHeadlessSkipList = [
+  { test: "file_fullscreen-plugins.html", reason: "bug 1409805" },
+  { test: "file_fullscreen-scrollbar.html", reason: "bug 1468648" },
+];
+
 var gLinuxE10sSkipList = [
   { "test": "file_fullscreen-plugins.html", "reason": "bug 1330553" },
   { "test": "file_fullscreen-api.html", "reason": "bug 1332040" },
@@ -70,20 +75,25 @@ var gLinuxE10sSkipList = [
 ];
 
 function shouldSkipTest(test) {
-  if (SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless &&
-      test == "file_fullscreen-plugins.html") {
-    todo(false, `${test} skipped due to bug 1409805`);
-    return true;
-  }
-
-  if (!SpecialPowers.isMainProcess() &&
-      navigator.platform.includes('Linux')) {
-    for (let item of gLinuxE10sSkipList) {
+  function checkList(list) {
+    for (let item of list) {
       if (item.test == test) {
         todo(false, `${test} skipped due to ${item.reason}`);
         return true;
       }
     }
+    return false;
+  }
+
+  if (SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless &&
+      checkList(gHeadlessSkipList)) {
+    return true;
+  }
+
+  if (!SpecialPowers.isMainProcess() &&
+      navigator.platform.includes('Linux') &&
+      checkList(gLinuxE10sSkipList)) {
+    return true;
   }
   return false;
 }
