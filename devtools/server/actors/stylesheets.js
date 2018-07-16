@@ -143,46 +143,6 @@ function getSheetText(sheet, consoleActor) {
 exports.getSheetText = getSheetText;
 
 /**
- * Try to fetch the stylesheet text from the network monitor.  If it was enabled during
- * the load, it should have a copy of the text saved.
- *
- * @param string href
- *        The URL of the sheet to fetch.
- */
-function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
-  if (!consoleActor) {
-    return null;
-  }
-  const request = consoleActor.getNetworkEventActorForURL(href);
-  if (!request) {
-    return null;
-  }
-  const content = request._response.content;
-  if (request._discardResponseBody || request._truncated || !content || !content.size) {
-    // Do not return the stylesheet text if there is no meaningful content or if it's
-    // still loading. Let the caller handle it by doing its own separate request.
-    return null;
-  }
-
-  if (content.text.type != "longString") {
-    // For short strings, the text is available directly.
-    return {
-      content: content.text,
-      contentType: content.mimeType,
-    };
-  }
-  // For long strings, look up the actor that holds the full text.
-  const longStringActor = consoleActor.conn._getOrCreateActor(content.text.actor);
-  if (!longStringActor) {
-    return null;
-  }
-  return {
-    content: longStringActor.str,
-    contentType: content.mimeType,
-  };
-}
-
-/**
  * Get the charset of the stylesheet.
  */
 function getCSSCharset(sheet) {
@@ -217,9 +177,12 @@ function getCSSCharset(sheet) {
 async function fetchStylesheet(sheet, consoleActor) {
   const href = sheet.href;
 
-  let result = fetchStylesheetFromNetworkMonitor(href, consoleActor);
-  if (result) {
-    return result;
+  let result;
+  if (consoleActor) {
+    result = await consoleActor.getRequestContentForURL(href);
+    if (result) {
+      return result;
+    }
   }
 
   const options = {
