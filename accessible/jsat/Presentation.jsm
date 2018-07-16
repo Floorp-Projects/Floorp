@@ -36,9 +36,10 @@ class AndroidPresentor {
    *   position.
    * @param {int} aReason the reason for the pivot change.
    *   See nsIAccessiblePivot.
-   * @param {bool} aIsFromUserInput the pivot change was invoked by the user
+   * @param {bool} aBoundaryType the boundary type for the text movement
+   * or NO_BOUNDARY if it was not a text movement. See nsIAccessiblePivot.
    */
-  pivotChanged(aPosition, aOldPosition, aReason, aStartOffset, aEndOffset) {
+  pivotChanged(aPosition, aOldPosition, aStartOffset, aEndOffset, aReason, aBoundaryType) {
     let context = new PivotContext(
       aPosition, aOldPosition, aStartOffset, aEndOffset);
     if (!context.accessible) {
@@ -55,7 +56,7 @@ class AndroidPresentor {
       androidEvents.push({eventType: AndroidEvents.VIEW_HOVER_EXIT, text: []});
     }
 
-    if (aReason === Ci.nsIAccessiblePivot.REASON_TEXT) {
+    if (aBoundaryType != Ci.nsIAccessiblePivot.NO_BOUNDARY) {
       const adjustedText = context.textAndAdjustedOffsets;
 
       androidEvents.push({
@@ -203,17 +204,6 @@ class AndroidPresentor {
   tabStateChanged(aDocObj, aPageState) {
     return this.announce(
       UtteranceGenerator.genForTabStateChange(aDocObj, aPageState));
-  }
-
-  /**
-   * The current tab has changed.
-   * @param {PivotContext} aDocContext context object for tab's
-   *   document.
-   * @param {PivotContext} aVCContext context object for tab's current
-   *   virtual cursor position.
-   */
-  tabSelected(aDocContext, aVCContext) {
-    return this.pivotChanged(aVCContext, Ci.nsIAccessiblePivot.REASON_NONE);
   }
 
   /**
