@@ -15,20 +15,37 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionClientTest {
     companion object {
-        val GOOGLE_MOCK: SearchSuggestionFetcher = { "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]" }
+        val GOOGLE_MOCK_RESPONSE: SearchSuggestionFetcher = { "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]" }
+        val QWANT_MOCK_RESPONSE: SearchSuggestionFetcher = { "{\"status\":\"success\",\"data\":{\"items\":[{\"value\":\"firefox (video game)\",\"suggestType\":3},{\"value\":\"firefox addons\",\"suggestType\":12},{\"value\":\"firefox\",\"suggestType\":2},{\"value\":\"firefox quantum\",\"suggestType\":12},{\"value\":\"firefox focus\",\"suggestType\":12}],\"special\":[],\"availableQwick\":[]}}" }
     }
 
     @Test
-    fun `Get a list of results based on a search engine`() {
+    fun `Get a list of results based on the Google search engine`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK)
+        val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK_RESPONSE)
 
         runBlocking {
             val results = client.getSuggestions("firefox")
             val expectedResults = listOf("firefox", "firefox for mac", "firefox quantum", "firefox update", "firefox esr", "firefox focus", "firefox addons", "firefox extensions", "firefox nightly", "firefox clear cache")
+
+            assertEquals(expectedResults, results)
+        }
+    }
+
+    @Test
+    fun `Get a list of results based on a non google search engine`() {
+        val searchEngine = SearchEngineParser().load(
+                RuntimeEnvironment.application.assets,
+                "google", "searchplugins/qwant.xml")
+
+        val client = SearchSuggestionClient(searchEngine, QWANT_MOCK_RESPONSE)
+
+        runBlocking {
+            val results = client.getSuggestions("firefox")
+            val expectedResults = listOf("firefox (video game)", "firefox addons", "firefox", "firefox quantum", "firefox focus")
 
             assertEquals(expectedResults, results)
         }

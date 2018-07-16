@@ -20,7 +20,8 @@ private fun JSONArray.asSequence(): Sequence<Any> {
     }
 }
 
-typealias Parser = (String) -> List<String>
+typealias JSONResponse = String
+typealias Parser = (JSONResponse) -> List<String>
 
 private fun fromArrayResult(resultsIndex: Int): Parser {
     return { input ->
