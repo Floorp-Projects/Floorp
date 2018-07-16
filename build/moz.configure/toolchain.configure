@@ -1326,36 +1326,36 @@ js_option('--enable-lto',
 @depends('--enable-lto', c_compiler)
 @imports('multiprocessing')
 def lto(value, c_compiler):
-    flags = []
+    cflags = []
     ldflags = []
 
     # clang and clang-cl
     if c_compiler.type in ('clang', 'clang-cl'):
         if len(value) and value[0].lower() == 'full':
-            flags.append("-flto")
+            cflags.append("-flto")
             ldflags.append("-flto")
         elif value:
-            flags.append("-flto=thin")
+            cflags.append("-flto=thin")
             ldflags.append("-flto=thin")
 
     # gcc and other compilers
     elif value:
         num_cores = multiprocessing.cpu_count()
-        flags.append("-flto")
-        flags.append("-flifetime-dse=1")
+        cflags.append("-flto")
+        cflags.append("-flifetime-dse=1")
 
         ldflags.append("-flto=%s" % num_cores)
         ldflags.append("-flifetime-dse=1")
 
     return namespace(
         enabled="1" if value else None,
-        flags=flags,
+        cflags=cflags,
         ldflags=ldflags
     )
 
 
 add_old_configure_assignment('MOZ_LTO', lto.enabled)
-add_old_configure_assignment('MOZ_LTO_CFLAGS', lto.flags)
+add_old_configure_assignment('MOZ_LTO_CFLAGS', lto.cflags)
 add_old_configure_assignment('MOZ_LTO_LDFLAGS', lto.ldflags)
 
 # ASAN
