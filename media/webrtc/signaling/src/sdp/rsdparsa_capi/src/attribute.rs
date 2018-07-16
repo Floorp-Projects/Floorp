@@ -1151,6 +1151,26 @@ pub unsafe extern "C" fn sdp_get_remote_candidates(attributes: *const Vec<SdpAtt
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_candidate_count(attributes: *const Vec<SdpAttribute>) -> size_t {
+    count_attribute((*attributes).as_slice(), RustSdpAttributeType::Candidate)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_candidates(attributes: *const Vec<SdpAttribute>, _ret_size: size_t,
+                                            ret: *mut *const Vec<String>) {
+    let attr_strings: Vec<String> = (*attributes).iter().filter_map( |x| {
+        if let SdpAttribute::Candidate(ref attr) = *x {
+            // The serialized attribute starts with "candidate:...", this needs to be removed
+           Some(attr.to_string()[10..].to_string())
+        } else {
+           None
+        }
+    }).collect();
+
+    *ret = Box::into_raw(Box::from(attr_strings));
+}
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeRidParameters {

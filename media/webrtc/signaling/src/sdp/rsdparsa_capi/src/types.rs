@@ -77,6 +77,12 @@ pub unsafe extern "C" fn string_vec_get_view(vec: *const Vec<String>,
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn free_boxed_string_vec(ptr: *mut Vec<String>) -> nsresult {
+    drop(Box::from_raw(ptr));
+    NS_OK
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn f32_vec_len(vec: *const Vec<f32>) -> size_t {
     (*vec).len()
 }
