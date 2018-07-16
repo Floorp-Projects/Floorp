@@ -27,6 +27,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLProgressElement.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsIDocumentInlines.h"
 #include <algorithm>
 
@@ -349,7 +350,9 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aWidgetType == StyleAppearance::Textfield ||
           aWidgetType == StyleAppearance::TextfieldMultiline ||
           aWidgetType == StyleAppearance::Listbox ||
-          aWidgetType == StyleAppearance::Menulist) &&
+          aWidgetType == StyleAppearance::Menulist ||
+          (aWidgetType == StyleAppearance::MenulistButton &&
+           StaticPrefs::layout_css_webkit_appearance_enabled())) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
                                                NS_AUTHOR_SPECIFIED_BORDER |
