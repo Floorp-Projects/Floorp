@@ -301,6 +301,7 @@ extern "C" {
 size_t string_vec_len(const StringVec* vec);
 nsresult string_vec_get_view(const StringVec* vec, size_t index,
                              StringView* str);
+nsresult free_boxed_string_vec(StringVec* vec);
 
 size_t f32_vec_len(const F32Vec* vec);
 nsresult f32_vec_get(const F32Vec* vec, size_t index, float* ret);
@@ -458,6 +459,11 @@ size_t sdp_get_remote_candidate_count(const RustAttributeList* aList);
 void sdp_get_remote_candidates(const RustAttributeList* aList,
                                size_t listSize,
                                RustSdpAttributeRemoteCandidate* ret);
+
+size_t sdp_get_candidate_count(const RustAttributeList* aList);
+void sdp_get_candidates(const RustAttributeList* aLisst,
+                        size_t listSize,
+                        StringVec** ret);
 
 size_t sdp_get_rid_count(const RustAttributeList* aList);
 void sdp_get_rids(const RustAttributeList* aList, size_t listSize,
