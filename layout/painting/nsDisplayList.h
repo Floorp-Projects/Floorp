@@ -6337,6 +6337,11 @@ public:
   }
 #endif
 
+  virtual void RestoreState() override
+  {
+    mShouldFlatten = false;
+  }
+
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
     mHasBounds = false;
@@ -6368,6 +6373,14 @@ public:
   {
     return mStoredList.GetChildren();
   }
+
+  virtual RetainedDisplayList* GetSameCoordinateSystemChildren() const override
+  {
+    return mShouldFlatten ? mStoredList.GetChildren()
+                          : nullptr;
+  }
+
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
 
   virtual void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) override
   {
@@ -6428,6 +6441,11 @@ public:
       bool snap;
       aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
     }
+  }
+
+  bool NeedsGeometryUpdates() const override
+  {
+    return mShouldFlatten;
   }
 
   virtual const nsIFrame* ReferenceFrameForChildren() const override {
@@ -6707,6 +6725,8 @@ private:
   bool mTransformPreserves3DInited;
   // True if async animation of the transform is allowed.
   bool mAllowAsyncAnimation;
+  // True if this nsDisplayTransform should get flattened
+  bool mShouldFlatten;
 };
 
 /* A display item that applies a perspective transformation to a single
