@@ -702,9 +702,7 @@ private:
   bool mIsAsync;
   CompositableHandle mAsyncContainerHandle;
 
-  nsTArray<FrameID> mFrameIDsNotYetComposited;
-  // ProducerID for last current image(s), including the frames in
-  // mFrameIDsNotYetComposited
+  // ProducerID for last current image(s)
   ProducerID mCurrentProducerID;
 
   RefPtr<ImageContainerListener> mNotifyCompositeListener;
