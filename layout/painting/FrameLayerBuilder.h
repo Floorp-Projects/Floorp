@@ -49,7 +49,9 @@ enum class DisplayItemEntryType {
   ITEM,
   PUSH_OPACITY,
   PUSH_OPACITY_WITH_BG,
-  POP_OPACITY
+  POP_OPACITY,
+  PUSH_TRANSFORM,
+  POP_TRANSFORM
 };
 
 /**

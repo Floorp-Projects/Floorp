@@ -133,6 +133,50 @@ struct DisplayItemEntry {
   DisplayItemEntryType mType;
 };
 
+enum class MarkerType {
+  StartMarker,
+  EndMarker
+};
+
+template<MarkerType markerType>
+static bool
+AddMarkerIfNeeded(nsDisplayItem* aItem,
+                  std::deque<DisplayItemEntry>& aMarkers)
+{
+  const DisplayItemType type = aItem->GetType();
+  if (type != DisplayItemType::TYPE_OPACITY &&
+      type != DisplayItemType::TYPE_TRANSFORM) {
+    return false;
+  }
+
+  DisplayItemEntryType marker;
+
+// Just a fancy way to avoid writing two separate functions to select between
+// PUSH and POP markers. This is done during compile time based on |markerType|.
+#define GET_MARKER(start_marker, end_marker)\
+std::conditional<markerType == MarkerType::StartMarker,\
+                 std::integral_constant<DisplayItemEntryType, start_marker>,\
+                 std::integral_constant<DisplayItemEntryType, end_marker>\
+                >::type::value;
+
+  switch (type) {
+    case DisplayItemType::TYPE_OPACITY:
+      marker = GET_MARKER(DisplayItemEntryType::PUSH_OPACITY,
+                          DisplayItemEntryType::POP_OPACITY);
+      break;
+    case DisplayItemType::TYPE_TRANSFORM:
+      marker = GET_MARKER(DisplayItemEntryType::PUSH_TRANSFORM,
+                          DisplayItemEntryType::POP_TRANSFORM);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid display item type!");
+      break;
+  }
+
+  aMarkers.emplace_back(aItem, marker);
+  return true;
+}
+
 class FLBDisplayItemIterator : protected FlattenedDisplayItemIterator
 {
 public:
@@ -188,8 +232,7 @@ private:
       return;
     }
 
-    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
-      mMarkers.emplace_back(aItem, DisplayItemEntryType::PUSH_OPACITY);
+    if (AddMarkerIfNeeded<MarkerType::StartMarker>(aItem, mMarkers)) {
       mActiveMarkers.AppendElement(aItem);
     }
 
@@ -203,11 +246,12 @@ private:
       return;
     }
 
-    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
-      mMarkers.emplace_back(aItem, DisplayItemEntryType::POP_OPACITY);
+    if (AddMarkerIfNeeded<MarkerType::EndMarker>(aItem, mMarkers)) {
       mActiveMarkers.RemoveLastElement();
     }
   }
+
+  bool NextItemWantsInactiveLayer();
 
   std::deque<DisplayItemEntry> mMarkers;
   AutoTArray<nsDisplayItem*, 4> mActiveMarkers;
@@ -1577,6 +1621,16 @@ protected:
 };
 
 bool
+FLBDisplayItemIterator::NextItemWantsInactiveLayer()
+{
+  LayerState layerState = mNext->GetLayerState(mState->mBuilder,
+                                               mState->mManager,
+                                               mState->mParameters);
+
+  return layerState == LayerState::LAYER_INACTIVE;
+}
+
+bool
 FLBDisplayItemIterator::ShouldFlattenNextItem()
 {
   if (!mNext) {
@@ -1587,7 +1641,13 @@ FLBDisplayItemIterator::ShouldFlattenNextItem()
     return false;
   }
 
-  if (mNext->GetType() == DisplayItemType::TYPE_OPACITY) {
+  const DisplayItemType type = mNext->GetType();
+  if (type != DisplayItemType::TYPE_OPACITY &&
+      type != DisplayItemType::TYPE_TRANSFORM) {
+    return true;
+  }
+
+  if (type == DisplayItemType::TYPE_OPACITY) {
     nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*>(mNext);
 
     if (opacity->OpacityAppliedToChildren()) {
@@ -1595,25 +1655,16 @@ FLBDisplayItemIterator::ShouldFlattenNextItem()
       // been applied to children.
       return true;
     }
-
-    if (!mState->mManager->IsWidgetLayerManager()) {
-      // Do not flatten opacity inside an inactive layer tree.
-      return false;
-    }
-
-    LayerState layerState = mNext->GetLayerState(mState->mBuilder,
-                                                 mState->mManager,
-                                                 mState->mParameters);
-
-    // Do not flatten opacity if child display items require an active layer.
-    if (layerState != LayerState::LAYER_NONE &&
-        layerState != LayerState::LAYER_INACTIVE) {
-      return false;
-    }
-
-    mStoreMarker = true;
   }
 
+  if (mState->IsInInactiveLayer() || !NextItemWantsInactiveLayer()) {
+    // Do not flatten nested inactive display items, or display items that want
+    // an active layer.
+    return false;
+  }
+
+  // Flatten inactive nsDisplayOpacity and nsDisplayTransform.
+  mStoreMarker = true;
   return true;
 }
 
