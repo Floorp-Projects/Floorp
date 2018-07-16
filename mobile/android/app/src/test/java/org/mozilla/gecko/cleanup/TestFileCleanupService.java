@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.cleanup;
 
+import android.content.Context;
 import android.content.Intent;
 
 import org.junit.Rule;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests the methods of {@link FileCleanupService}.
@@ -43,8 +45,9 @@ public class TestFileCleanupService {
     }
 
     private void onHandleIntent(final ArrayList<String> filePaths) {
+        final Context context = mock(Context.class);
         final FileCleanupService service = new FileCleanupService();
-        final Intent fileCleanupIntent = FileCleanupService.getFileCleanupIntent(filePaths);
+        final Intent fileCleanupIntent = FileCleanupService.getFileCleanupIntent(context, filePaths);
         service.onHandleWork(fileCleanupIntent);
     }
 

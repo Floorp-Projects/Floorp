@@ -54,7 +54,7 @@ public class FileCleanupController {
         recordCleanupScheduled(sharedPrefs);
 
         final Intent fileCleanupIntent =
-                FileCleanupService.getFileCleanupIntent(getFilesToCleanup(profilePath + "/"));
+                FileCleanupService.getFileCleanupIntent(context, getFilesToCleanup(profilePath + "/"));
         FileCleanupService.enqueueWork(context, fileCleanupIntent);
     }
 
