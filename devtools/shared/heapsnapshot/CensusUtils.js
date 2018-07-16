@@ -80,6 +80,14 @@ EDGES.internalType = function(breakdown, report) {
   }));
 };
 
+EDGES.descriptiveType = function(breakdown, report) {
+  return Object.keys(report).map(key => ({
+    edge: key,
+    referent: report[key],
+    breakdown: breakdown.then
+  }));
+};
+
 EDGES.objectClass = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
@@ -94,6 +102,7 @@ EDGES.coarseType = function(breakdown, report) {
     { edge: "scripts", referent: report.scripts, breakdown: breakdown.scripts },
     { edge: "strings", referent: report.strings, breakdown: breakdown.strings },
     { edge: "other", referent: report.other, breakdown: breakdown.other },
+    { edge: "domNode", referent: report.domNode, breakdown: breakdown.domNode },
   ];
 };
 
