@@ -12,7 +12,6 @@ import java.util.GregorianCalendar;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.AllCapsTextView;
-import org.mozilla.gecko.widget.FocusableDatePicker;
 import org.mozilla.gecko.widget.DateTimePicker;
 
 import android.content.Context;
@@ -179,8 +178,7 @@ public abstract class PromptInput {
         @Override
         public View getView(Context context) throws UnsupportedOperationException {
             if (mType.equals("date")) {
-                // FocusableDatePicker allow us to have priority in responding to scroll events.
-                DatePicker input = new FocusableDatePicker(context);
+                DatePicker input = new DatePicker(context);
                 try {
                     if (!TextUtils.isEmpty(mValue)) {
                         GregorianCalendar calendar = new GregorianCalendar();
