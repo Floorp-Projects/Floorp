@@ -206,7 +206,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       // This float is in our band.
 
       // Shrink our band's width if needed.
-      StyleFloat floatStyle = fi.mFrame->StyleDisplay()->PhysicalFloats(aWM);
+      StyleFloat floatStyle = fi.mFrame->StyleDisplay()->mFloat;
 
       // When aBandInfoType is BandFromPoint, we're only intended to
       // consider a point along the y axis rather than a band.
@@ -283,7 +283,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
     info.mLeftBEnd = nscoord_MIN;
     info.mRightBEnd = nscoord_MIN;
   }
-  StyleFloat floatStyle = aFloatFrame->StyleDisplay()->PhysicalFloats(aWM);
+  StyleFloat floatStyle = aFloatFrame->StyleDisplay()->mFloat;
   MOZ_ASSERT(floatStyle == StyleFloat::Left || floatStyle == StyleFloat::Right,
              "Unexpected float style!");
   nscoord& sideBEnd =
@@ -316,7 +316,7 @@ nsFloatManager::CalculateRegionFor(WritingMode          aWM,
     // Preserve the right margin-edge for left floats and the left
     // margin-edge for right floats
     const nsStyleDisplay* display = aFloat->StyleDisplay();
-    StyleFloat floatStyle = display->PhysicalFloats(aWM);
+    StyleFloat floatStyle = display->mFloat;
     if ((StyleFloat::Left == floatStyle) == aWM.IsBidiLTR()) {
       region.IStart(aWM) = region.IEnd(aWM);
     }

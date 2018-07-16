@@ -78,6 +78,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Content",
     "CounterIncrement",
     "CounterReset",
+    "Float",
     "FontFamily",
     "FontFeatureSettings",
     "FontLanguageOverride",
