@@ -72,6 +72,13 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
         }
     }
 
+    fun toJSONString(): String? {
+        return safeSync { e ->
+            val p = FxaClient.INSTANCE.fxa_to_json(validPointer(), e)
+            getAndConsumeString(p)
+        }
+    }
+
     companion object {
         fun from(
             config: Config,

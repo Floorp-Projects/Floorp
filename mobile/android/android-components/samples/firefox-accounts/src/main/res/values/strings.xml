@@ -6,4 +6,6 @@
     <string name="app_name">FxA Android Demo</string>
     <string name="sign_in">FxA Sign In</string>
     <string name="signed_in">Signed in: %1$s</string>
+    <string name="log_out">FxA Log Out</string>
+    <string name="logged_out">Logged out!</string>
 </resources>
