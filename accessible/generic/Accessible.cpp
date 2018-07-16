@@ -937,8 +937,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
             vcEvent->OldStartOffset(), vcEvent->OldEndOffset(),
             position ? reinterpret_cast<uintptr_t>(position->UniqueID()) : 0,
             vcEvent->NewStartOffset(), vcEvent->NewEndOffset(),
-            vcEvent->Reason(), vcEvent->BoundaryType(),
-            vcEvent->IsFromUserInput());
+            vcEvent->Reason(), vcEvent->IsFromUserInput());
           break;
         }
 #if defined(XP_WIN)
