@@ -12,8 +12,9 @@
 #include <stdio.h>
 #include <tmmintrin.h>
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/blend.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/x86/synonyms.h"
@@ -75,11 +76,9 @@ static INLINE unsigned int masked_sad4xh_ssse3(
                                  ref_stride, msk, msk_stride, n);             \
   }
 
-#if CONFIG_EXT_PARTITION
 MASKSADMXN_SSSE3(128, 128)
 MASKSADMXN_SSSE3(128, 64)
 MASKSADMXN_SSSE3(64, 128)
-#endif  // CONFIG_EXT_PARTITION
 MASKSADMXN_SSSE3(64, 64)
 MASKSADMXN_SSSE3(64, 32)
 MASKSADMXN_SSSE3(32, 64)
@@ -93,18 +92,12 @@ MASKSAD8XN_SSSE3(8)
 MASKSAD8XN_SSSE3(4)
 MASKSAD4XN_SSSE3(8)
 MASKSAD4XN_SSSE3(4)
-#if CONFIG_EXT_PARTITION_TYPES
 MASKSAD4XN_SSSE3(16)
 MASKSADMXN_SSSE3(16, 4)
 MASKSAD8XN_SSSE3(32)
 MASKSADMXN_SSSE3(32, 8)
 MASKSADMXN_SSSE3(16, 64)
 MASKSADMXN_SSSE3(64, 16)
-#if CONFIG_EXT_PARTITION
-MASKSADMXN_SSSE3(32, 128)
-MASKSADMXN_SSSE3(128, 32)
-#endif  // CONFIG_EXT_PARTITION
-#endif  // CONFIG_EXT_PARTITION_TYPES
 
 static INLINE unsigned int masked_sad_ssse3(const uint8_t *src_ptr,
                                             int src_stride,
@@ -239,7 +232,6 @@ static INLINE unsigned int masked_sad4xh_ssse3(
   return (sad + 31) >> 6;
 }
 
-#if CONFIG_HIGHBITDEPTH
 // For width a multiple of 8
 static INLINE unsigned int highbd_masked_sad_ssse3(
     const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
@@ -277,11 +269,9 @@ static INLINE unsigned int highbd_masked_sad4xh_ssse3(
                                         ref8, ref_stride, msk, msk_stride, n); \
   }
 
-#if CONFIG_EXT_PARTITION
 HIGHBD_MASKSADMXN_SSSE3(128, 128)
 HIGHBD_MASKSADMXN_SSSE3(128, 64)
 HIGHBD_MASKSADMXN_SSSE3(64, 128)
-#endif  // CONFIG_EXT_PARTITION
 HIGHBD_MASKSADMXN_SSSE3(64, 64)
 HIGHBD_MASKSADMXN_SSSE3(64, 32)
 HIGHBD_MASKSADMXN_SSSE3(32, 64)
@@ -295,18 +285,12 @@ HIGHBD_MASKSADMXN_SSSE3(8, 8)
 HIGHBD_MASKSADMXN_SSSE3(8, 4)
 HIGHBD_MASKSAD4XN_SSSE3(8)
 HIGHBD_MASKSAD4XN_SSSE3(4)
-#if CONFIG_EXT_PARTITION_TYPES
 HIGHBD_MASKSAD4XN_SSSE3(16)
 HIGHBD_MASKSADMXN_SSSE3(16, 4)
 HIGHBD_MASKSADMXN_SSSE3(8, 32)
 HIGHBD_MASKSADMXN_SSSE3(32, 8)
 HIGHBD_MASKSADMXN_SSSE3(16, 64)
 HIGHBD_MASKSADMXN_SSSE3(64, 16)
-#if CONFIG_EXT_PARTITION
-HIGHBD_MASKSADMXN_SSSE3(32, 128)
-HIGHBD_MASKSADMXN_SSSE3(128, 32)
-#endif  // CONFIG_EXT_PARTITION
-#endif  // CONFIG_EXT_PARTITION_TYPES
 
 static INLINE unsigned int highbd_masked_sad_ssse3(
     const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
@@ -424,5 +408,3 @@ static INLINE unsigned int highbd_masked_sad4xh_ssse3(
   int sad = _mm_cvtsi128_si32(res);
   return (sad + 31) >> 6;
 }
-
-#endif

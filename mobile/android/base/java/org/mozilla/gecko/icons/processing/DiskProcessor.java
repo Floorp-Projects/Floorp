@@ -8,7 +8,7 @@ import org.mozilla.gecko.util.StringUtils;
 public class DiskProcessor implements Processor {
     @Override
     public void process(IconRequest request, IconResponse response) {
-        if (request.shouldSkipDisk()) {
+        if (request.shouldSkipDisk() || request.isPrivateMode()) {
             return;
         }
 

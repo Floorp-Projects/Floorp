@@ -174,19 +174,11 @@ public class DownloadContentCatalog {
     }
 
     public void persistChanges() {
-        new Thread(LOGTAG + "-Persist") {
-            public void run() {
-                writeToDisk();
-            }
-        }.start();
+        writeToDisk();
     }
 
     private void startLoadFromDisk() {
-        new Thread(LOGTAG + "-Load") {
-            public void run() {
-                loadFromDisk();
-            }
-        }.start();
+        loadFromDisk();
     }
 
     private void awaitLoadingCatalogLocked() {

@@ -48,6 +48,7 @@ import com.leanplum.LeanplumDeviceIdMode;
 import com.leanplum.LeanplumException;
 import com.leanplum.internal.Constants.Methods;
 import com.leanplum.internal.Constants.Params;
+import com.leanplum.utils.SharedPreferencesUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -91,6 +92,7 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class Util {
   private static final Executor asyncExecutor = Executors.newCachedThreadPool();
+  private static final Executor singleThreadExecutor = Executors.newSingleThreadExecutor();
 
   private static final String ACCESS_WIFI_STATE_PERMISSION = "android.permission.ACCESS_WIFI_STATE";
 
@@ -350,9 +352,6 @@ public class Util {
     }
     Context context = Leanplum.getContext();
     try {
-      versionName = LeanplumManifestHelper.getAppVersionName();
-      // If we didn't get application version name from AndroidManifest.xml - will try to get it
-      // from PackageInfo.
       if (TextUtils.isEmpty(versionName)) {
         PackageInfo pInfo = context.getPackageManager().getPackageInfo(
             context.getPackageName(), 0);
@@ -723,11 +722,20 @@ public class Util {
     return CollectionUtil.uncheckedCast(current);
   }
 
-  public static <T> void executeAsyncTask(AsyncTask<T, ?, ?> task, T... params) {
-    if (Build.VERSION.SDK_INT >= 11) {
-      task.executeOnExecutor(asyncExecutor, params);
+  /**
+   * Execute async task on single thread Executer or cached thread pool Executer.
+   *
+   * @param singleThread True if needs to be executed on single thread Executer, otherwise it will
+   * use cached thread pool Executer.
+   * @param task Async task to execute.
+   * @param params Params.
+   */
+  public static <T> void executeAsyncTask(boolean singleThread, AsyncTask<T, ?, ?> task,
+      T... params) {
+    if (singleThread) {
+      task.executeOnExecutor(singleThreadExecutor, params);
     } else {
-      task.execute(params);
+      task.executeOnExecutor(asyncExecutor, params);
     }
   }
 
@@ -794,11 +802,7 @@ public class Util {
 
     SharedPreferences.Editor editor = preferences.edit();
     editor.putBoolean(Constants.Keys.INSTALL_TIME_INITIALIZED, true);
-    try {
-      editor.apply();
-    } catch (NoSuchMethodError e) {
-      editor.commit();
-    }
+    SharedPreferencesUtil.commitChanges(editor);
   }
 
   /**

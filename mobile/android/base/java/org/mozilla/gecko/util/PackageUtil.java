@@ -7,6 +7,7 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -50,6 +51,15 @@ public class PackageUtil {
         }
 
         return null;
+    }
+
+    public static String getDefaultBrowserPackage(@NonNull final Context context) {
+        final ResolveInfo resolveInfo = getDefaultBrowser(context);
+        if (resolveInfo != null) {
+            return resolveInfo.activityInfo.packageName;
+        } else {
+            return null;
+        }
     }
 
     /**

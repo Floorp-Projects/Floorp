@@ -9,9 +9,6 @@ import android.util.Log;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 
-import org.mozilla.gecko.push.PushService;
-import org.mozilla.gecko.util.ThreadUtils;
-
 /**
  * This service is notified by the on-device Google Play Services library if an
  * in-use token needs to be updated.  We simply pass through to AndroidPushService.
@@ -24,12 +21,8 @@ public class GcmInstanceIDListenerService extends InstanceIDListenerService {
      */
     @Override
     public void onTokenRefresh() {
-        Log.d("GeckoPushGCM", "Token refresh request received.  Processing on background thread.");
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                PushService.getInstance(GcmInstanceIDListenerService.this).onRefresh();
-            }
-        });
+        Log.d("GeckoPushGCM", "Token refresh request received");
+
+        GcmTokenRefreshService.enqueueWork(this);
     }
 }

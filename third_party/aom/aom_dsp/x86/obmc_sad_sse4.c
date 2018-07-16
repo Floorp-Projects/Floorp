@@ -12,7 +12,8 @@
 #include <assert.h>
 #include <immintrin.h>
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom_ports/mem.h"
 #include "aom/aom_integer.h"
 
@@ -24,9 +25,11 @@
 // 8 bit
 ////////////////////////////////////////////////////////////////////////////////
 
-static INLINE unsigned int obmc_sad_w4(const uint8_t *pre, const int pre_stride,
-                                       const int32_t *wsrc, const int32_t *mask,
-                                       const int height) {
+static AOM_FORCE_INLINE unsigned int obmc_sad_w4(const uint8_t *pre,
+                                                 const int pre_stride,
+                                                 const int32_t *wsrc,
+                                                 const int32_t *mask,
+                                                 const int height) {
   const int pre_step = pre_stride - 4;
   int n = 0;
   __m128i v_sad_d = _mm_setzero_si128();
@@ -59,11 +62,9 @@ static INLINE unsigned int obmc_sad_w4(const uint8_t *pre, const int pre_stride,
   return xx_hsum_epi32_si32(v_sad_d);
 }
 
-static INLINE unsigned int obmc_sad_w8n(const uint8_t *pre,
-                                        const int pre_stride,
-                                        const int32_t *wsrc,
-                                        const int32_t *mask, const int width,
-                                        const int height) {
+static AOM_FORCE_INLINE unsigned int obmc_sad_w8n(
+    const uint8_t *pre, const int pre_stride, const int32_t *wsrc,
+    const int32_t *mask, const int width, const int height) {
   const int pre_step = pre_stride - width;
   int n = 0;
   __m128i v_sad_d = _mm_setzero_si128();
@@ -119,11 +120,9 @@ static INLINE unsigned int obmc_sad_w8n(const uint8_t *pre,
     }                                                          \
   }
 
-#if CONFIG_EXT_PARTITION
 OBMCSADWXH(128, 128)
 OBMCSADWXH(128, 64)
 OBMCSADWXH(64, 128)
-#endif  // CONFIG_EXT_PARTITION
 OBMCSADWXH(64, 64)
 OBMCSADWXH(64, 32)
 OBMCSADWXH(32, 64)
@@ -137,25 +136,22 @@ OBMCSADWXH(8, 8)
 OBMCSADWXH(8, 4)
 OBMCSADWXH(4, 8)
 OBMCSADWXH(4, 4)
-#if CONFIG_EXT_PARTITION_TYPES
 OBMCSADWXH(4, 16)
 OBMCSADWXH(16, 4)
 OBMCSADWXH(8, 32)
 OBMCSADWXH(32, 8)
 OBMCSADWXH(16, 64)
 OBMCSADWXH(64, 16)
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // High bit-depth
 ////////////////////////////////////////////////////////////////////////////////
 
-#if CONFIG_HIGHBITDEPTH
-static INLINE unsigned int hbd_obmc_sad_w4(const uint8_t *pre8,
-                                           const int pre_stride,
-                                           const int32_t *wsrc,
-                                           const int32_t *mask,
-                                           const int height) {
+static AOM_FORCE_INLINE unsigned int hbd_obmc_sad_w4(const uint8_t *pre8,
+                                                     const int pre_stride,
+                                                     const int32_t *wsrc,
+                                                     const int32_t *mask,
+                                                     const int height) {
   const uint16_t *pre = CONVERT_TO_SHORTPTR(pre8);
   const int pre_step = pre_stride - 4;
   int n = 0;
@@ -189,11 +185,9 @@ static INLINE unsigned int hbd_obmc_sad_w4(const uint8_t *pre8,
   return xx_hsum_epi32_si32(v_sad_d);
 }
 
-static INLINE unsigned int hbd_obmc_sad_w8n(const uint8_t *pre8,
-                                            const int pre_stride,
-                                            const int32_t *wsrc,
-                                            const int32_t *mask,
-                                            const int width, const int height) {
+static AOM_FORCE_INLINE unsigned int hbd_obmc_sad_w8n(
+    const uint8_t *pre8, const int pre_stride, const int32_t *wsrc,
+    const int32_t *mask, const int width, const int height) {
   const uint16_t *pre = CONVERT_TO_SHORTPTR(pre8);
   const int pre_step = pre_stride - width;
   int n = 0;
@@ -250,11 +244,9 @@ static INLINE unsigned int hbd_obmc_sad_w8n(const uint8_t *pre8,
     }                                                             \
   }
 
-#if CONFIG_EXT_PARTITION
 HBD_OBMCSADWXH(128, 128)
 HBD_OBMCSADWXH(128, 64)
 HBD_OBMCSADWXH(64, 128)
-#endif  // CONFIG_EXT_PARTITION
 HBD_OBMCSADWXH(64, 64)
 HBD_OBMCSADWXH(64, 32)
 HBD_OBMCSADWXH(32, 64)
@@ -268,12 +260,9 @@ HBD_OBMCSADWXH(8, 8)
 HBD_OBMCSADWXH(8, 4)
 HBD_OBMCSADWXH(4, 8)
 HBD_OBMCSADWXH(4, 4)
-#if CONFIG_EXT_PARTITION_TYPES
 HBD_OBMCSADWXH(4, 16)
 HBD_OBMCSADWXH(16, 4)
 HBD_OBMCSADWXH(8, 32)
 HBD_OBMCSADWXH(32, 8)
 HBD_OBMCSADWXH(16, 64)
 HBD_OBMCSADWXH(64, 16)
-#endif
-#endif  // CONFIG_HIGHBITDEPTH

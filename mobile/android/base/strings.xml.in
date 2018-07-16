@@ -342,6 +342,7 @@
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
   <string name="datareporting_wifi_title">&datareporting_wifi_title2;</string>
   <string name="datareporting_wifi_geolocation_summary">&datareporting_wifi_geolocation_summary4;</string>
+  <string name="datareporting_stumbler_notification_title">&datareporting_stumbler_notification_title;</string>
 
   <string name="search">&search;</string>
   <string name="reload">&reload;</string>
@@ -599,10 +600,7 @@
 
   <string name="unsupported_sdk_version">&unsupported_sdk_version;</string>
   <string name="corrupt_apk">&corrupt_apk;</string>
-  <string name="eol_notification_title">&eol_notification_title2;</string>
-  <string name="eol_notification_summary">&eol_notification_summary;</string>
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/honeycomb -->
-  <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/unsupported-version</string>
 
   <string name="whatsnew_notification_title">&whatsnew_notification_title;</string>
   <string name="whatsnew_notification_summary">&whatsnew_notification_summary;</string>
@@ -643,4 +641,9 @@
   <string name="pwa_add_to_launcher_badge">&pwa_add_to_launcher_badge2;</string>
   <string name="pwa_onboarding_sumo">&pwa_onboarding_sumo;</string>
   <string name="pwa_continue_to_website">&pwa_continue_to_website;</string>
+
+  <string name="pip_play_button_title">&pip_play_button_title;</string>
+  <string name="pip_play_button_description">&pip_play_button_description;</string>
+  <string name="pip_pause_button_title">&pip_pause_button_title;</string>
+  <string name="pip_pause_button_description">&pip_pause_button_description;</string>
 </resources>

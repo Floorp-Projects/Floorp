@@ -11,13 +11,14 @@
 
 #include <immintrin.h> /* AVX2 */
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_ports/mem.h"
 
-void aom_lpf_horizontal_edge_8_avx2(unsigned char *s, int p,
-                                    const unsigned char *_blimit,
-                                    const unsigned char *_limit,
-                                    const unsigned char *_thresh) {
+void aom_lpf_horizontal_16_avx2(unsigned char *s, int p,
+                                const unsigned char *_blimit,
+                                const unsigned char *_limit,
+                                const unsigned char *_thresh) {
   __m128i mask, hev, flat, flat2;
   const __m128i zero = _mm_set1_epi16(0);
   const __m128i one = _mm_set1_epi8(1);
@@ -368,7 +369,7 @@ DECLARE_ALIGNED(32, static const uint8_t, filt_loopfilter_avx2[32]) = {
   8, 128, 9, 128, 10, 128, 11, 128, 12, 128, 13, 128, 14, 128, 15, 128
 };
 
-void aom_lpf_horizontal_edge_16_avx2(unsigned char *s, int p,
+void aom_lpf_horizontal_16_dual_avx2(unsigned char *s, int p,
                                      const unsigned char *_blimit,
                                      const unsigned char *_limit,
                                      const unsigned char *_thresh) {

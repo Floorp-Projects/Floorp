@@ -18,11 +18,14 @@ void aom_daala_start_encode(daala_writer *br, uint8_t *source) {
   od_ec_enc_init(&br->ec, 62025);
 }
 
-void aom_daala_stop_encode(daala_writer *br) {
+int aom_daala_stop_encode(daala_writer *br) {
+  int nb_bits;
   uint32_t daala_bytes;
   unsigned char *daala_data;
   daala_data = od_ec_enc_done(&br->ec, &daala_bytes);
+  nb_bits = od_ec_enc_tell(&br->ec);
   memcpy(br->buffer, daala_data, daala_bytes);
   br->pos = daala_bytes;
   od_ec_enc_clear(&br->ec);
+  return nb_bits;
 }

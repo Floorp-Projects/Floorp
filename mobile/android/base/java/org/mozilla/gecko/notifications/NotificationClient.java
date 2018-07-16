@@ -5,28 +5,28 @@
 
 package org.mozilla.gecko.notifications;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
-
-import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.BitmapUtils;
+
+import java.util.HashMap;
 
 /**
  * Client for posting notifications.
@@ -99,7 +99,7 @@ public final class NotificationClient implements NotificationListener {
 
         if (persistentData != null) {
             final Intent persistentIntent = GeckoService.getIntentToCreateServices(
-                    mContext, "persistent-notification-click", persistentData);
+                    "persistent-notification-click", persistentData);
             clickIntent.putExtra(PERSISTENT_INTENT_EXTRA, persistentIntent);
         }
 
@@ -112,7 +112,7 @@ public final class NotificationClient implements NotificationListener {
 
         if (persistentData != null) {
             final Intent persistentIntent = GeckoService.getIntentToCreateServices(
-                    mContext, "persistent-notification-close", persistentData);
+                    "persistent-notification-close", persistentData);
             closeIntent.putExtra(PERSISTENT_INTENT_EXTRA, persistentIntent);
         }
 
@@ -139,6 +139,7 @@ public final class NotificationClient implements NotificationListener {
      * @param contentIntent  Intent used when the notification is clicked
      * @param deleteIntent   Intent used when the notification is closed
      */
+    @SuppressLint("NewApi")
     private void add(final String name, final String imageUrl, final String host,
                      final String alertTitle, final String alertText,
                      final PendingIntent contentIntent, final PendingIntent deleteIntent) {
@@ -153,6 +154,10 @@ public final class NotificationClient implements NotificationListener {
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(alertText)
                         .setSummaryText(host));
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         // Fetch icon.
         if (!imageUrl.isEmpty()) {
@@ -213,6 +218,7 @@ public final class NotificationClient implements NotificationListener {
      * @param progressMax   max progress of item being updated
      * @param alertText     text of the notification
      */
+    @SuppressLint("NewApi")
     public void update(final String name, final long progress,
                        final long progressMax, final String alertText) {
         Notification notification;
@@ -223,14 +229,18 @@ public final class NotificationClient implements NotificationListener {
             return;
         }
 
-        notification = new NotificationCompat.Builder(mContext)
+        final Notification.Builder notificationBuilder = new Notification.Builder(mContext)
                 .setContentText(alertText)
                 .setSmallIcon(notification.icon)
                 .setWhen(notification.when)
                 .setContentIntent(notification.contentIntent)
-                .setProgress((int) progressMax, (int) progress, false)
-                .build();
+                .setProgress((int) progressMax, (int) progress, false);
 
+        if (!AppConstants.Versions.preO) {
+            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
+
+        notification = notificationBuilder.build();
         add(name, notification);
     }
 
@@ -299,13 +309,35 @@ public final class NotificationClient implements NotificationListener {
         return false;
     }
 
-    private void setForegroundNotificationLocked(final String name,
-                                                 final Notification notification) {
+    private void setForegroundNotificationLocked(@NonNull final String name,
+                                                 @NonNull final Notification notification) {
         mForegroundNotification = name;
 
         final Intent intent = new Intent(mContext, NotificationService.class);
         intent.putExtra(NotificationService.EXTRA_NOTIFICATION, notification);
-        mContext.startService(intent);
+        toggleForegroundService(intent);
+    }
+
+    private void removeForegroundNotificationLocked() {
+        mForegroundNotification = null;
+
+        final Intent intent = new Intent(mContext, NotificationService.class);
+        intent.putExtra(NotificationService.EXTRA_ACTION_STOP, true);
+        toggleForegroundService(intent);
+    }
+
+    /**
+     * Method used to toggle the NotificationService.
+     * When the intent is passed with {@link NotificationService#EXTRA_ACTION_STOP} we are queueing a stopSelf action.
+     * @param intent
+     */
+    @SuppressLint("NewApi")
+    private void toggleForegroundService(Intent intent) {
+        if (AppConstants.Versions.preO) {
+            mContext.startService(intent);
+        } else {
+            mContext.startForegroundService(intent);
+        }
     }
 
     private void updateForegroundNotificationLocked(final String oldName) {
@@ -328,6 +360,6 @@ public final class NotificationClient implements NotificationListener {
             }
         }
 
-        setForegroundNotificationLocked(null, null);
+        removeForegroundNotificationLocked();
     }
 }

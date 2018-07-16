@@ -25,11 +25,14 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.text.TextUtils;
 import android.util.Log;
+
 import com.leanplum.ActionArgs;
 import com.leanplum.ActionContext;
 import com.leanplum.Leanplum;
 import com.leanplum.utils.SizeUtil;
+
 import org.json.JSONException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +55,7 @@ class HTMLOptions {
   private ActionContext actionContext;
   private String htmlAlign;
   private int htmlHeight;
+  private Size htmlWidth;
   private Size htmlYOffset;
   private boolean htmlTabOutsideToClose;
 
@@ -65,9 +69,10 @@ class HTMLOptions {
     this.setTrackActionUrl(context.stringNamed(MessageTemplates.Args.TRACK_ACTION_URL));
     this.setHtmlAlign(context.stringNamed(MessageTemplates.Args.HTML_ALIGN));
     this.setHtmlHeight(context.numberNamed(MessageTemplates.Args.HTML_HEIGHT).intValue());
+    this.setHtmlWidth(context.stringNamed(MessageTemplates.Args.HTML_WIDTH));
     this.setHtmlYOffset(context.stringNamed(MessageTemplates.Args.HTML_Y_OFFSET));
     this.setHtmlTabOutsideToClose(context.booleanNamed(
-            MessageTemplates.Args.HTML_TAP_OUTSIDE_TO_CLOSE));
+        MessageTemplates.Args.HTML_TAP_OUTSIDE_TO_CLOSE));
   }
 
   /**
@@ -148,11 +153,6 @@ class HTMLOptions {
     return map;
   }
 
-  static class Size {
-    int value;
-    String type;
-  }
-
   /**
    * Get HTML template file.
    *
@@ -180,8 +180,14 @@ class HTMLOptions {
     try {
       htmlString = (htmlTemplate.replace("##Vars##",
           ActionContext.mapToJsonObject(htmlArgs).toString()));
+      try {
+        htmlString = context.fillTemplate(htmlString);
+      } catch (Throwable ignored) {
+      }
     } catch (JSONException e) {
       Log.e("Leanplum", "Cannot convert map of arguments to JSON object.");
+    } catch (Throwable t) {
+      Log.e("Leanplum", "Cannot get html template.", t);
     }
     return htmlString.replace("\\/", "/");
   }
@@ -197,16 +203,13 @@ class HTMLOptions {
     return htmlHeight;
   }
 
-  private void setHtmlHeight(int htmlHeight) {
-    this.htmlHeight = htmlHeight;
+  // Gets html width.
+  Size getHtmlWidth() {
+    return htmlWidth;
   }
 
-  String getHtmlAlign() {
-    return htmlAlign;
-  }
-
-  private void setHtmlAlign(String htmlAlign) {
-    this.htmlAlign = htmlAlign;
+  private void setHtmlWidth(String htmlWidth) {
+    this.htmlWidth = getSizeValueAndType(htmlWidth);
   }
 
   //Gets html y offset in pixels.
@@ -260,6 +263,18 @@ class HTMLOptions {
 
   private void setHtmlTabOutsideToClose(boolean htmlTabOutsideToClose) {
     this.htmlTabOutsideToClose = htmlTabOutsideToClose;
+  }
+
+  private void setHtmlHeight(int htmlHeight) {
+    this.htmlHeight = htmlHeight;
+  }
+
+  String getHtmlAlign() {
+    return htmlAlign;
+  }
+
+  private void setHtmlAlign(String htmlAlign) {
+    this.htmlAlign = htmlAlign;
   }
 
   ActionContext getActionContext() {
@@ -329,5 +344,10 @@ class HTMLOptions {
         .with(MessageTemplates.Args.TRACK_URL, MessageTemplates.Values.DEFAULT_TRACK_URL)
         .with(MessageTemplates.Args.HTML_ALIGN, MessageTemplates.Values.DEFAULT_HTML_ALING)
         .with(MessageTemplates.Args.HTML_HEIGHT, MessageTemplates.Values.DEFAULT_HTML_HEIGHT);
+  }
+
+  static class Size {
+    int value;
+    String type;
   }
 }

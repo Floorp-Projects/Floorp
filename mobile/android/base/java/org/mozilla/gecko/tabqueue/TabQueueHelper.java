@@ -5,15 +5,6 @@
 
 package org.mozilla.gecko.tabqueue;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -21,7 +12,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
-import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
@@ -31,6 +21,15 @@ import android.view.WindowManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,6 +220,7 @@ public class TabQueueHelper {
      * @param context
      * @param tabsQueued
      */
+    @SuppressWarnings("NewApi")
     public static void showNotification(final Context context, final int tabsQueued, final List<String> urls) {
         ThreadUtils.assertNotOnUiThread();
 
@@ -253,6 +253,10 @@ public class TabQueueHelper {
                                                      .setColor(ContextCompat.getColor(context, R.color.fennec_ui_accent))
                                                      .setNumber(tabsQueued)
                                                      .setContentIntent(pendingIntent);
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(TabQueueHelper.TAB_QUEUE_NOTIFICATION_ID, builder.build());

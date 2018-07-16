@@ -5,8 +5,9 @@
 
 package org.mozilla.gecko.widget;
 
+import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.support.annotation.NonNull;
-import android.support.v4.animation.AnimatorCompatHelper;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPropertyAnimatorCompat;
 import android.support.v4.view.ViewPropertyAnimatorListener;
@@ -41,6 +42,8 @@ import java.util.List;
  * </ul>
  */
 public class DefaultItemAnimatorBase extends SimpleItemAnimator {
+    private static TimeInterpolator defaultInterpolator;
+
     private List<RecyclerView.ViewHolder> pendingRemovals = new ArrayList<>();
     private List<RecyclerView.ViewHolder> pendingAdditions = new ArrayList<>();
     private List<MoveInfo> pendingMoves = new ArrayList<>();
@@ -481,7 +484,10 @@ public class DefaultItemAnimatorBase extends SimpleItemAnimator {
     }
 
     protected void resetAnimation(RecyclerView.ViewHolder holder) {
-        AnimatorCompatHelper.clearInterpolator(holder.itemView);
+        if (defaultInterpolator == null) {
+            defaultInterpolator = new ValueAnimator().getInterpolator();
+        }
+        holder.itemView.animate().setInterpolator(defaultInterpolator);
         endAnimation(holder);
     }
 

@@ -15,8 +15,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/ssim.h"
 #include "aom_ports/system_state.h"
 
@@ -25,12 +27,11 @@ typedef struct fs_ctx fs_ctx;
 
 #define SSIM_C1 (255 * 255 * 0.01 * 0.01)
 #define SSIM_C2 (255 * 255 * 0.03 * 0.03)
-#if CONFIG_HIGHBITDEPTH
 #define SSIM_C1_10 (1023 * 1023 * 0.01 * 0.01)
 #define SSIM_C1_12 (4095 * 4095 * 0.01 * 0.01)
 #define SSIM_C2_10 (1023 * 1023 * 0.03 * 0.03)
 #define SSIM_C2_12 (4095 * 4095 * 0.03 * 0.03)
-#endif
+
 #define FS_MINI(_a, _b) ((_a) < (_b) ? (_a) : (_b))
 #define FS_MAXI(_a, _b) ((_a) > (_b) ? (_a) : (_b))
 
@@ -139,8 +140,8 @@ static void fs_downsample_level(fs_ctx *_ctx, int _l) {
 
 static void fs_downsample_level0(fs_ctx *_ctx, const uint8_t *_src1,
                                  int _s1ystride, const uint8_t *_src2,
-                                 int _s2ystride, int _w, int _h, uint32_t bd,
-                                 uint32_t shift) {
+                                 int _s2ystride, int _w, int _h, uint32_t shift,
+                                 int buf_is_hbd) {
   uint32_t *dst1;
   uint32_t *dst2;
   int w;
@@ -161,7 +162,7 @@ static void fs_downsample_level0(fs_ctx *_ctx, const uint8_t *_src1,
       int i1;
       i0 = 2 * i;
       i1 = FS_MINI(i0 + 1, _w);
-      if (bd == 8 && shift == 0) {
+      if (!buf_is_hbd) {
         dst1[j * w + i] =
             _src1[j0 * _s1ystride + i0] + _src1[j0 * _s1ystride + i1] +
             _src1[j1 * _s1ystride + i0] + _src1[j1 * _s1ystride + i1];
@@ -198,13 +199,10 @@ static void fs_apply_luminance(fs_ctx *_ctx, int _l, int bit_depth) {
   int i;
   int j;
   double ssim_c1 = SSIM_C1;
-#if CONFIG_HIGHBITDEPTH
+
   if (bit_depth == 10) ssim_c1 = SSIM_C1_10;
   if (bit_depth == 12) ssim_c1 = SSIM_C1_12;
-#else
-  assert(bit_depth == 8);
-  (void)bit_depth;
-#endif
+
   w = _ctx->level[_l].w;
   h = _ctx->level[_l].h;
   col_sums_x = _ctx->col_buf;
@@ -323,13 +321,8 @@ static void fs_calc_structure(fs_ctx *_ctx, int _l, int bit_depth) {
   int i;
   int j;
   double ssim_c2 = SSIM_C2;
-#if CONFIG_HIGHBITDEPTH
   if (bit_depth == 10) ssim_c2 = SSIM_C2_10;
   if (bit_depth == 12) ssim_c2 = SSIM_C2_12;
-#else
-  assert(bit_depth == 8);
-  (void)bit_depth;
-#endif
 
   w = _ctx->level[_l].w;
   h = _ctx->level[_l].h;
@@ -448,14 +441,14 @@ static double convert_ssim_db(double _ssim, double _weight) {
 
 static double calc_ssim(const uint8_t *_src, int _systride, const uint8_t *_dst,
                         int _dystride, int _w, int _h, uint32_t _bd,
-                        uint32_t _shift) {
+                        uint32_t _shift, int buf_is_hbd) {
   fs_ctx ctx;
   double ret;
   int l;
   ret = 1;
   fs_ctx_init(&ctx, _w, _h, FS_NLEVELS);
-  fs_downsample_level0(&ctx, _src, _systride, _dst, _dystride, _w, _h, _bd,
-                       _shift);
+  fs_downsample_level0(&ctx, _src, _systride, _dst, _dystride, _w, _h, _shift,
+                       buf_is_hbd);
   for (l = 0; l < FS_NLEVELS - 1; l++) {
     fs_calc_structure(&ctx, l, _bd);
     ret *= fs_average(&ctx, l);
@@ -476,18 +469,19 @@ double aom_calc_fastssim(const YV12_BUFFER_CONFIG *source,
   uint32_t bd_shift = 0;
   aom_clear_system_state();
   assert(bd >= in_bd);
-
+  assert(source->flags == dest->flags);
+  int buf_is_hbd = source->flags & YV12_FLAG_HIGHBITDEPTH;
   bd_shift = bd - in_bd;
 
   *ssim_y = calc_ssim(source->y_buffer, source->y_stride, dest->y_buffer,
                       dest->y_stride, source->y_crop_width,
-                      source->y_crop_height, in_bd, bd_shift);
+                      source->y_crop_height, in_bd, bd_shift, buf_is_hbd);
   *ssim_u = calc_ssim(source->u_buffer, source->uv_stride, dest->u_buffer,
                       dest->uv_stride, source->uv_crop_width,
-                      source->uv_crop_height, in_bd, bd_shift);
+                      source->uv_crop_height, in_bd, bd_shift, buf_is_hbd);
   *ssim_v = calc_ssim(source->v_buffer, source->uv_stride, dest->v_buffer,
                       dest->uv_stride, source->uv_crop_width,
-                      source->uv_crop_height, in_bd, bd_shift);
+                      source->uv_crop_height, in_bd, bd_shift, buf_is_hbd);
   ssimv = (*ssim_y) * .8 + .1 * ((*ssim_u) + (*ssim_v));
   return convert_ssim_db(ssimv, 1.0);
 }

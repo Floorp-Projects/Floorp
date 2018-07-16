@@ -234,6 +234,18 @@ var Utils = { // jshint ignore:line
     return new Rect(objX.value, objY.value, objW.value, objH.value);
   },
 
+  getTextSelection: function getTextSelection(aAccessible) {
+    const accText = aAccessible.QueryInterface(Ci.nsIAccessibleText);
+    const start = {}, end = {};
+    if (accText.selectionCount) {
+      accText.getSelectionBounds(0, start, end);
+    } else {
+      start.value = end.value = accText.caretOffset;
+    }
+
+    return [start.value, end.value];
+  },
+
   getTextBounds: function getTextBounds(aAccessible, aStart, aEnd,
                                         aPreserveContentScale) {
     let accText = aAccessible.QueryInterface(Ci.nsIAccessibleText);

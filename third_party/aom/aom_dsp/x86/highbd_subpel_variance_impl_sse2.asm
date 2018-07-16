@@ -94,7 +94,7 @@ SECTION .text
 %define filter_idx_shift 5
 
 
-%ifdef PIC    ; 64bit PIC
+%if ARCH_X86_64
   %if %2 == 1 ; avg
     cglobal highbd_sub_pixel_avg_variance%1xh, 9, 10, 13, src, src_stride, \
                                       x_offset, y_offset, \
@@ -102,19 +102,20 @@ SECTION .text
                                       sec, sec_stride, height, sse
     %define sec_str sec_strideq
   %else
-    cglobal highbd_sub_pixel_variance%1xh, 7, 8, 13, src, src_stride, x_offset, \
-                                  y_offset, dst, dst_stride, height, sse
+    cglobal highbd_sub_pixel_variance%1xh, 7, 8, 13, src, src_stride, \
+                                  x_offset, y_offset, \
+                                  dst, dst_stride, height, sse
   %endif
   %define block_height heightd
   %define bilin_filter sseq
 %else
-  %if ARCH_X86=1 && CONFIG_PIC=1
+  %if CONFIG_PIC=1
     %if %2 == 1 ; avg
       cglobal highbd_sub_pixel_avg_variance%1xh, 7, 7, 13, src, src_stride, \
-                                  x_offset, y_offset, \
-                                  dst, dst_stride, \
-                                  sec, sec_stride, \
-                                  height, sse, g_bilin_filter, g_pw_8
+                                        x_offset, y_offset, \
+                                        dst, dst_stride, \
+                                        sec, sec_stride, height, sse, \
+                                        g_bilin_filter, g_pw_8
       %define block_height dword heightm
       %define sec_str sec_stridemp
 
@@ -133,8 +134,9 @@ SECTION .text
       LOAD_IF_USED 0, 1         ; load eax, ecx back
     %else
       cglobal highbd_sub_pixel_variance%1xh, 7, 7, 13, src, src_stride, \
-                                x_offset, y_offset, dst, dst_stride, height, \
-                                sse, g_bilin_filter, g_pw_8
+                                    x_offset, y_offset, \
+                                    dst, dst_stride, height, sse, \
+                                    g_bilin_filter, g_pw_8
       %define block_height heightd
 
       ; Store bilin_filter and pw_8 location in stack
@@ -153,22 +155,16 @@ SECTION .text
     %endif
   %else
     %if %2 == 1 ; avg
-      cglobal highbd_sub_pixel_avg_variance%1xh, 7 + 2 * ARCH_X86_64, \
-                        7 + 2 * ARCH_X86_64, 13, src, src_stride, \
-                                             x_offset, y_offset, \
-                                             dst, dst_stride, \
-                                             sec, sec_stride, \
-                                             height, sse
-      %if ARCH_X86_64
-      %define block_height heightd
-      %define sec_str sec_strideq
-      %else
+      cglobal highbd_sub_pixel_avg_variance%1xh, 7, 7, 13, src, src_stride, \
+                                        x_offset, y_offset, \
+                                        dst, dst_stride, \
+                                        sec, sec_stride, height, sse
       %define block_height dword heightm
       %define sec_str sec_stridemp
-      %endif
     %else
       cglobal highbd_sub_pixel_variance%1xh, 7, 7, 13, src, src_stride, \
-                              x_offset, y_offset, dst, dst_stride, height, sse
+                                    x_offset, y_offset, \
+                                    dst, dst_stride, height, sse
       %define block_height heightd
     %endif
 
@@ -287,14 +283,14 @@ SECTION .text
 
 .x_zero_y_nonhalf:
   ; x_offset == 0 && y_offset == bilin interpolation
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           y_offsetd, filter_idx_shift
 %if ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+y_offsetq]
   mova                 m9, [bilin_filter+y_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_y_a m8
 %define filter_y_b m9
 %define filter_rnd m10
@@ -311,7 +307,7 @@ SECTION .text
   add           y_offsetq, bilin_filter
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -514,14 +510,14 @@ SECTION .text
 
 .x_half_y_nonhalf:
   ; x_offset == 0.5 && y_offset == bilin interpolation
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           y_offsetd, filter_idx_shift
 %if ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+y_offsetq]
   mova                 m9, [bilin_filter+y_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_y_a m8
 %define filter_y_b m9
 %define filter_rnd m10
@@ -538,7 +534,7 @@ SECTION .text
   add           y_offsetq, bilin_filter
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -636,14 +632,14 @@ SECTION .text
   jnz .x_nonhalf_y_nonzero
 
   ; x_offset == bilin interpolation && y_offset == 0
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift
 %if ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+x_offsetq]
   mova                 m9, [bilin_filter+x_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_rnd m10
@@ -660,7 +656,7 @@ SECTION .text
   add           x_offsetq, bilin_filter
 %define filter_x_a [x_offsetq]
 %define filter_x_b [x_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -735,14 +731,14 @@ SECTION .text
   jne .x_nonhalf_y_nonhalf
 
   ; x_offset == bilin interpolation && y_offset == 0.5
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift
 %if ARCH_X86_64 && mmsize == 16
   mova                 m8, [bilin_filter+x_offsetq]
   mova                 m9, [bilin_filter+x_offsetq+16]
-  mova                m10, [pw_8]
+  mova                m10, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_rnd m10
@@ -759,7 +755,7 @@ SECTION .text
   add           x_offsetq, bilin_filter
 %define filter_x_a [x_offsetq]
 %define filter_x_b [x_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 
@@ -862,8 +858,8 @@ SECTION .text
 
 .x_nonhalf_y_nonhalf:
 ; loading filter - this is same as in 8-bit depth
-%ifdef PIC
-  lea        bilin_filter, [bilin_filter_m]
+%if ARCH_X86_64
+  lea        bilin_filter, [GLOBAL(bilin_filter_m)]
 %endif
   shl           x_offsetd, filter_idx_shift ; filter_idx_shift = 5
   shl           y_offsetd, filter_idx_shift
@@ -872,7 +868,7 @@ SECTION .text
   mova                 m9, [bilin_filter+x_offsetq+16]
   mova                m10, [bilin_filter+y_offsetq]
   mova                m11, [bilin_filter+y_offsetq+16]
-  mova                m12, [pw_8]
+  mova                m12, [GLOBAL(pw_8)]
 %define filter_x_a m8
 %define filter_x_b m9
 %define filter_y_a m10
@@ -900,7 +896,7 @@ SECTION .text
 %define filter_x_b [x_offsetq+16]
 %define filter_y_a [y_offsetq]
 %define filter_y_b [y_offsetq+16]
-%define filter_rnd [pw_8]
+%define filter_rnd [GLOBAL(pw_8)]
 %endif
 %endif
 ; end of load filter

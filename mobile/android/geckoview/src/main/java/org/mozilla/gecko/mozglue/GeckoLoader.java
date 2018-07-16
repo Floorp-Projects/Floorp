@@ -21,6 +21,7 @@ import android.os.Environment;
 import java.util.ArrayList;
 import android.util.Log;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.geckoview.BuildConfig;
@@ -107,6 +108,9 @@ public final class GeckoLoader {
 
         putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
 
+        final int crashReporterJobId = GeckoThread.getCrashReporterJobId();
+        putenv("MOZ_ANDROID_CRASH_REPORTER_JOB_ID=" + crashReporterJobId);
+
         setupDownloadEnvironment(context);
 
         // profile home path
@@ -137,6 +141,8 @@ public final class GeckoLoader {
         }
 
         putenv("LANG=" + Locale.getDefault().toString());
+
+        putenv("MOZ_ANDROID_DEVICE_SDK_VERSION=" + Build.VERSION.SDK_INT);
 
         // env from extras could have reset out linker flags; set them again.
         loadLibsSetupLocked(context);

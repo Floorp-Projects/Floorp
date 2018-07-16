@@ -4,12 +4,14 @@
 
 package org.mozilla.mozstumbler.service.mainthread;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.mozstumbler.service.stumblerthread.StumblerService;
 
 /**
@@ -19,6 +21,7 @@ import org.mozilla.mozstumbler.service.stumblerthread.StumblerService;
 public class SystemReceiver extends BroadcastReceiver {
     static final String LOG_TAG = "StumblerSystemReceiver";
 
+    @SuppressLint("NewApi")
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) {
@@ -34,7 +37,11 @@ public class SystemReceiver extends BroadcastReceiver {
 
         final Intent startServiceIntent = new Intent(context, StumblerService.class);
         startServiceIntent.putExtra(StumblerService.ACTION_NOT_FROM_HOST_APP, true);
-        context.startService(startServiceIntent);
+        if (AppConstants.Versions.preO) {
+            context.startService(startServiceIntent);
+        } else {
+            context.startForegroundService(startServiceIntent);
+        }
 
         Log.d(LOG_TAG, "Responded to a system intent");
     }

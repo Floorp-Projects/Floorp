@@ -584,11 +584,31 @@ html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
   background: white;
 }
 
+/* Show the url scheme in a static box when overflowing to the left */
+hbox.urlbar-input-box {
+  position: relative;
+}
+html|input.urlbar-scheme {
+  position: absolute;
+  height: 100%;
+  visibility: hidden;
+  direction: ltr;
+  pointer-events: none;
+}
+
+/* Visible if the urlbar is not focused and it overflows at the start.
+   Uses the required-valid trick to check if it contains a value */
+html|input.urlbar-scheme[textoverflow="start"]:not([focused]):valid {
+  visibility: visible;
+}
+
 /* Fade out URL on overflow */
-html|input.urlbar-input[textoverflow]:not([focused]) {
-  /* Don't need to worry about RTL here since we use direction:ltr for the
-     input field. */
-  mask-image: linear-gradient(to left, transparent, black 3em);
+html|input.urlbar-input[textoverflow="end"]:not([focused]) {
+  mask-image: linear-gradient(to left, transparent, black 3ch);
+}
+
+html|input.urlbar-input[textoverflow="start"]:not([focused]) {
+  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
