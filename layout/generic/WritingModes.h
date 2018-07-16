@@ -2187,19 +2187,6 @@ nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
                           : MaxHeightDependsOnContainer();
 }
 
-inline mozilla::StyleClear
-nsStyleDisplay::PhysicalBreakType(mozilla::WritingMode aWM) const
-{
-  using StyleClear = mozilla::StyleClear;
-  if (mBreakType == StyleClear::InlineStart) {
-    return aWM.IsBidiLTR() ? StyleClear::Left : StyleClear::Right;
-  }
-  if (mBreakType == StyleClear::InlineEnd) {
-    return aWM.IsBidiLTR() ? StyleClear::Right : StyleClear::Left;
-  }
-  return mBreakType;
-}
-
 inline bool
 nsStyleMargin::HasBlockAxisAuto(mozilla::WritingMode aWM) const
 {
