@@ -103,7 +103,8 @@ nsAccessiblePivot::SetPosition(nsIAccessible* aPosition)
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = mEndOffset = -1;
   NotifyOfPivotChange(position, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_NONE, false);
+                      nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY, false);
 
   return NS_OK;
 }
@@ -186,7 +187,8 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
 
   mPosition.swap(acc);
   NotifyOfPivotChange(acc, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_TEXT,
+                      nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY,
                       (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
@@ -418,7 +420,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
     mStartOffset = tempStart;
     mEndOffset = tempEnd;
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT,
+                        nsIAccessiblePivot::REASON_NEXT, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
@@ -550,7 +552,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     mEndOffset = tempEnd;
 
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT,
+                        nsIAccessiblePivot::REASON_PREV, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
@@ -650,7 +652,7 @@ nsAccessiblePivot::MovePivotInternal(Accessible* aPosition,
   mStartOffset = mEndOffset = -1;
 
   return NotifyOfPivotChange(oldPosition, oldStart, oldEnd, aReason,
-                             aIsFromUserInput);
+                             nsIAccessiblePivot::NO_BOUNDARY, aIsFromUserInput);
 }
 
 Accessible*
@@ -852,7 +854,8 @@ nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
 bool
 nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
                                        int32_t aOldStart, int32_t aOldEnd,
-                                       int16_t aReason, bool aIsFromUserInput)
+                                       int16_t aReason, int16_t aBoundaryType,
+                                       bool aIsFromUserInput)
 {
   if (aOldPosition == mPosition &&
       aOldStart == mStartOffset && aOldEnd == mEndOffset)
@@ -865,7 +868,7 @@ nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
     obs->OnPivotChanged(this,
                         xpcOldPos, aOldStart, aOldEnd,
                         ToXPC(mPosition), mStartOffset, mEndOffset,
-                        aReason, aIsFromUserInput);
+                        aReason, aBoundaryType, aIsFromUserInput);
   }
 
   return true;
