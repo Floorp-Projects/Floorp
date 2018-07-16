@@ -335,6 +335,10 @@
 #define NS_SYSTEMPROXYSETTINGS_CONTRACTID \
     "@mozilla.org/system-proxy-settings;1"
 
+// component implementing nsIDHCPClient.
+#define NS_DHCPCLIENT_CONTRACTID \
+    "@mozilla.org/dhcp-client;1"
+
 // service implementing nsIStreamTransportService
 #define NS_STREAMTRANSPORTSERVICE_CONTRACTID \
     "@mozilla.org/network/stream-transport-service;1"

@@ -18,7 +18,7 @@ hg clone http://hg.mozilla.org/mozilla-central
 
 ## Building and running locally
 
-Fortunately, the Firefox team has made a very good job of automating the building process with bootstrap scripts and putting [documentation](https://developer.mozilla.org/En/Simple_Firefox_build) together.
+Fortunately, the Firefox team has made a very good job of automating the building process with bootstrap scripts and putting [documentation](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build) together.
 
 The very first time you are building Firefox, run:
 

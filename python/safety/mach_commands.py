@@ -31,6 +31,7 @@ class MachCommands(MachCommandBase):
     @Command('python-safety', category='testing',
              description='Run python requirements safety checks')
     @CommandArgument('--python',
+                     default='2.7',
                      help='Version of Python for Pipenv to use. When given a '
                           'Python version, Pipenv will automatically scan your '
                           'system for a Python that matches that given version.')
@@ -38,9 +39,7 @@ class MachCommands(MachCommandBase):
         self.logger = commandline.setup_logging(
             "python-safety", {"raw": sys.stdout})
 
-        python = python or self.virtualenv_manager.python_path
-        self.activate_pipenv(pipfile=os.path.join(here, 'Pipfile'), args=[
-                             '--python', python], populate=True)
+        self.activate_pipenv(pipfile=os.path.join(here, 'Pipfile'), python=python, populate=True)
 
         pattern = '**/*requirements*.txt'
         path = mozpath.normsep(os.path.dirname(os.path.dirname(here)))

@@ -12,10 +12,14 @@
 <script>
 "use strict";
 
-function spinEventLoop() {
-  return new Promise((resolve, reject) => {
-    window.requestIdleCallback(() => {
-      resolve();
+function promiseWindowEvent(name, accept) {
+  return new Promise(resolve => {
+    window.addEventListener(name, function listener(event) {
+      if (event.data !== accept) {
+        return;
+      }
+      window.removeEventListener(name, listener);
+      resolve(event);
     });
   });
 }
@@ -80,11 +84,6 @@ add_task(async function test_webRequest_links() {
   // we redirect to style_good which completes the test
   addStylesheet("file_style_redirect.css");
   await extension.awaitMessage("done");
-
-  // waiting for CSS applied.
-  await spinEventLoop();
-  let style = window.getComputedStyle(document.getElementById("test"));
-  is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
 });
 
 add_task(async function test_webRequest_images() {
@@ -132,16 +131,14 @@ add_task(async function test_webRequest_scripts() {
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
   await extension.awaitMessage("continue");
+  let message = promiseWindowEvent("message", "test1");
   addScript("file_script_bad.js");
   await extension.awaitMessage("cancelled");
   // we redirect to script_good which completes the test
-  addScript("file_script_redirect.js");
+  addScript("file_script_redirect.js?q=test1");
   await extension.awaitMessage("done");
 
-  // wait for JS executed
-  await spinEventLoop();
-  is(window.success, 1, "Good script ran");
-  is(window.failure, undefined, "Failure script didn't run");
+  is((await message).data, "test1", "good script ran");
 });
 
 add_task(async function test_webRequest_xhr_get() {
@@ -195,16 +192,16 @@ add_task(async function test_webRequest_checkCached() {
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
   await extension.awaitMessage("continue");
+  let message = promiseWindowEvent("message", "test1");
+
   addImage("file_image_good.png");
-  addScript("file_script_good.js");
+  addScript("file_script_good.js?q=test1");
+
+  is((await message).data, "test1", "good script ran");
+
   addStylesheet("file_style_good.css");
   addScript("nonexistent_script_url.js");
   await extension.awaitMessage("done");
-
-  // wait for JS executed
-  await spinEventLoop();
-  is(window.success, 2, "Good script ran");
-  is(window.failure, undefined, "Failure script didn't run");
 });
 
 add_task(async function test_webRequest_headers() {

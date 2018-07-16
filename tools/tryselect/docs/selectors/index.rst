@@ -5,6 +5,8 @@ These are the currently implemented try selectors:
 
 * :doc:`fuzzy <fuzzy>`: Select tasks using a fuzzy finding algorithm and
   a terminal interface.
+* :doc:`again <again>`: Re-run a previous ``try_task_config.json`` based
+  push.
 * :doc:`empty <empty>`: Don't select any tasks. Taskcluster will still run
   some tasks automatically (like lint and python unittest tasks). Further tasks
   can be chosen with treeherder's ``Add New Jobs`` feature.
