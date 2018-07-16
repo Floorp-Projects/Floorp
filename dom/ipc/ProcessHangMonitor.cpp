@@ -74,6 +74,7 @@ namespace {
 
 class HangMonitorChild
   : public PProcessHangMonitorChild
+  , public BackgroundHangAnnotator
 {
  public:
   explicit HangMonitorChild(ProcessHangMonitor* aMonitor);
@@ -125,6 +126,8 @@ class HangMonitorChild
   }
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
+  void AnnotateHang(BackgroundHangAnnotations& aAnnotations) override;
+
  private:
   void ShutdownOnThread();
 
@@ -132,7 +135,6 @@ class HangMonitorChild
   // may be accessed during the JS interrupt callback.
   static Atomic<HangMonitorChild*, SequentiallyConsistent,
                 recordreplay::Behavior::DontPreserve> sInstance;
-  UniquePtr<BackgroundHangMonitor> mPaintWhileInterruptingJSMonitor;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
   Monitor mMonitor;
@@ -157,7 +159,7 @@ class HangMonitorChild
 
   // Allows us to ensure we NotifyActivity only once, allowing
   // either thread to do so.
-  Atomic<bool> mBHRMonitorActive;
+  Atomic<bool> mPaintWhileInterruptingJSActive;
 };
 
 Atomic<HangMonitorChild*, SequentiallyConsistent,
@@ -311,22 +313,19 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
    mPaintWhileInterruptingJS(false),
    mPaintWhileInterruptingJSForce(false),
    mShutdownDone(false),
-   mIPCOpen(true)
+   mIPCOpen(true),
+   mPaintWhileInterruptingJSActive(false)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mContext = danger::GetJSContext();
-  mPaintWhileInterruptingJSMonitor =
-    MakeUnique<mozilla::BackgroundHangMonitor>("Gecko_Child_ForcePaint",
-                                               128, /* ms timeout for microhangs */
-                                               1024, /* ms timeout for permahangs */
-                                               BackgroundHangMonitor::THREAD_PRIVATE);
+
+  BackgroundHangMonitor::RegisterAnnotator(*this);
 }
 
 HangMonitorChild::~HangMonitorChild()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance == this);
-  mPaintWhileInterruptingJSMonitor = nullptr;
   sInstance = nullptr;
 }
 
@@ -359,6 +358,14 @@ HangMonitorChild::InterruptCallback()
       tabChild->PaintWhileInterruptingJS(paintWhileInterruptingJSEpoch,
                                          paintWhileInterruptingJSForce);
     }
+  }
+}
+
+void
+HangMonitorChild::AnnotateHang(BackgroundHangAnnotations& aAnnotations)
+{
+  if (mPaintWhileInterruptingJSForce) {
+    aAnnotations.AddAnnotation(NS_LITERAL_STRING("PaintWhileInterruptingJS"), true);
   }
 }
 
@@ -455,22 +462,15 @@ HangMonitorChild::RecvPaintWhileInterruptingJS(const TabId& aTabId,
 void
 HangMonitorChild::MaybeStartPaintWhileInterruptingJS()
 {
-  // See Bug 1449662. The body of this function other than assertions
-  // has been temporarily removed to diagnose a tab switch spinner
-  // problem.
-  if (!NS_IsMainThread()) {
-    mMonitor.AssertCurrentThreadOwns();
-  }
+  mPaintWhileInterruptingJSActive = true;
 }
 
 void
 HangMonitorChild::ClearPaintWhileInterruptingJS(const LayersObserverEpoch& aEpoch)
 {
-  // See Bug 1449662. The body of this function other than assertions
-  // has been temporarily removed to diagnose a tab switch spinner
-  // problem.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
+  mPaintWhileInterruptingJSActive = false;
 }
 
 void
