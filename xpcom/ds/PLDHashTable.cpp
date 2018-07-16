@@ -244,11 +244,13 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
   mChecker = std::move(aOther.mChecker);
 #endif
 
-  // Clear up |aOther| so its destruction will be a no-op.
+  // Clear up |aOther| so its destruction will be a no-op and it reports being
+  // empty.
   {
 #ifdef DEBUG
     AutoDestructorOp op(mChecker);
 #endif
+    aOther.mEntryCount = 0;
     aOther.mEntryStore.Set(nullptr, &aOther.mGeneration);
   }
 
