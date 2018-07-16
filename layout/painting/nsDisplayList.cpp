@@ -8340,15 +8340,21 @@ nsDisplayTransform::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData
   return true;
 }
 
+bool
+nsDisplayTransform::ShouldSkipTransform(nsDisplayListBuilder* aBuilder) const
+{
+  return (aBuilder->RootReferenceFrame() == mFrame) &&
+    (aBuilder->IsForGenerateGlyphMask() ||
+     aBuilder->IsForPaintingSelectionBG());
+}
+
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
                                                        LayerManager *aManager,
                                                        const ContainerLayerParameters& aContainerParameters)
 {
   // While generating a glyph mask, the transform vector of the root frame had
   // been applied into the target context, so stop applying it again here.
-  const bool shouldSkipTransform =
-    (aBuilder->RootReferenceFrame() == mFrame) &&
-    (aBuilder->IsForGenerateGlyphMask() || aBuilder->IsForPaintingSelectionBG());
+  const bool shouldSkipTransform = ShouldSkipTransform(aBuilder);
 
   /* For frames without transform, it would not be removed for
    * backface hidden here.  But, it would be removed by the init
