@@ -1677,6 +1677,8 @@ public class BrowserApp extends GeckoApp
         NotificationHelper.destroy();
         GeckoNetworkManager.destroy();
 
+        MmaDelegate.flushResources(this);
+
         super.onDestroy();
     }
 
