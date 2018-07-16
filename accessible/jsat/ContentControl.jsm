@@ -22,6 +22,7 @@ var EXPORTED_SYMBOLS = ["ContentControl"];
 
 const MOVEMENT_GRANULARITY_CHARACTER = 1;
 const MOVEMENT_GRANULARITY_WORD = 2;
+const MOVEMENT_GRANULARITY_LINE = 4;
 
 const CLIPBOARD_COPY = 0x4000;
 const CLIPBOARD_PASTE = 0x8000;
@@ -325,6 +326,9 @@ this.ContentControl.prototype = {
         break;
       case MOVEMENT_GRANULARITY_WORD:
         pivotGranularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
+        break;
+      case MOVEMENT_GRANULARITY_LINE:
+        pivotGranularity = Ci.nsIAccessiblePivot.LINE_BOUNDARY;
         break;
       default:
         return;
