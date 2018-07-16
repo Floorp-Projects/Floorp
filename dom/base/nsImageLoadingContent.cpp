@@ -1165,6 +1165,32 @@ nsImageLoadingContent::CancelImageRequests(bool aNotify)
   ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
 }
 
+nsresult
+nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
+                                           bool aNotify,
+                                           ImageLoadType aImageLoadType)
+{
+  // Our state will change. Watch it.
+  AutoStateChanger changer(this, aNotify);
+
+  // Get rid if our existing images
+  ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+  ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+
+  // Clone the request we were given.
+  RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
+  nsresult rv = aRequest->SyncClone(this, GetOurOwnerDoc(), getter_AddRefs(req));
+  if (NS_SUCCEEDED(rv)) {
+    CloneScriptedRequests(req);
+    TrackImage(req);
+  } else {
+    MOZ_ASSERT(!req, "Shouldn't have non-null request here");
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsIDocument*
 nsImageLoadingContent::GetOurOwnerDoc()
 {

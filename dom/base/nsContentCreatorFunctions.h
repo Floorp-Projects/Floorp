@@ -76,4 +76,11 @@ NS_NewSVGElement(mozilla::dom::Element** aResult,
                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                  mozilla::dom::FromParser aFromParser);
 
+namespace mozilla {
+namespace dom {
+already_AddRefed<nsIContent>
+CreateGenConImageContent(nsIDocument* aDocument, imgRequestProxy* aImageRequest);
+} // namespace dom
+} // namespace mozilla
+
 #endif // nsContentCreatorFunctions_h__
