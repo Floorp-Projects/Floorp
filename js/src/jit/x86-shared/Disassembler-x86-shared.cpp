@@ -162,7 +162,7 @@ uint8_t*
 js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
 {
     VexOperandType type = VEX_PS;
-    uint32_t opcode = OP_HLT;
+    uint32_t opcode = OP_NOP_00;
     uint8_t modrm = 0;
     uint8_t sib = 0;
     uint8_t rex = 0;
