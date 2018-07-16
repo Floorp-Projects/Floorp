@@ -245,6 +245,8 @@ js::Nursery::disable()
     freeChunksFrom(0);
     maxChunkCount_ = 0;
 
+    // We must reset currentEnd_ so that there is no space for anything in the
+    // nursery.  JIT'd code uses this even if the nursery is disabled.
     currentEnd_ = 0;
     currentStringEnd_ = 0;
     runtime()->gc.storeBuffer().disable();
