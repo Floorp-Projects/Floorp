@@ -198,9 +198,16 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
   AutoImageBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
   UpdateFwdTransactionId(aFwdTransactionId);
 
-  for (EditArray::index_type i = 0; i < aEdits.Length(); ++i) {
-    if (!ReceiveCompositableUpdate(aEdits[i])) {
+  for (const auto& edit : aEdits) {
+    RefPtr<CompositableHost> compositable =
+      FindCompositable(edit.compositable());
+    if (!compositable ||
+        !ReceiveCompositableUpdate(edit.detail(), WrapNotNull(compositable))) {
       return IPC_FAIL_NO_REASON(this);
+    }
+    uint32_t dropped = compositable->GetDroppedFrames();
+    if (dropped) {
+      Unused << SendReportFramesDropped(edit.compositable(), dropped);
     }
   }
 

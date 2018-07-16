@@ -9,6 +9,7 @@
 
 #include <vector>                       // for vector
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/NotNull.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
 #include "mozilla/layers/TextureClient.h"
@@ -48,6 +49,8 @@ protected:
    * Handle the IPDL messages that affect PCompositable actors.
    */
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit);
+  bool ReceiveCompositableUpdate(const CompositableOperationDetail& aDetail,
+                                 NotNull<CompositableHost*> aCompositable);
 
   void ReleaseCompositable(const CompositableHandle& aHandle);
 

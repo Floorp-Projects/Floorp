@@ -91,6 +91,11 @@ public:
 
   bool IsOpaque();
 
+  uint32_t GetDroppedFrames() override
+  {
+    return GetDroppedFramesAndReset();
+  }
+
   struct RenderInfo {
     int imageIndex;
     const TimedImage* img;

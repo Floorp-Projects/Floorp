@@ -68,18 +68,26 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   if (!compositable) {
     return false;
   }
-  if (TextureSourceProvider* provider = compositable->GetTextureSourceProvider()) {
+  return ReceiveCompositableUpdate(aEdit.detail(), WrapNotNull(compositable));
+}
+
+bool
+CompositableParentManager::ReceiveCompositableUpdate(
+  const CompositableOperationDetail& aDetail,
+  NotNull<CompositableHost*> aCompositable)
+{
+  if (TextureSourceProvider* provider = aCompositable->GetTextureSourceProvider()) {
     if (!provider->IsValid()) {
       return false;
     }
   }
 
-  switch (aEdit.detail().type()) {
+  switch (aDetail.type()) {
     case CompositableOperationDetail::TOpPaintTextureRegion: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint PaintedLayer"));
 
-      const OpPaintTextureRegion& op = aEdit.detail().get_OpPaintTextureRegion();
-      Layer* layer = compositable->GetLayer();
+      const OpPaintTextureRegion& op = aDetail.get_OpPaintTextureRegion();
+      Layer* layer = aCompositable->GetLayer();
       if (!layer || layer->GetType() != Layer::TYPE_PAINTED) {
         return false;
       }
@@ -89,10 +97,9 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       RenderTraceInvalidateStart(thebes, "FF00FF", op.updatedRegion().GetBounds());
 
-      if (!compositable->UpdateThebes(bufferData,
-                                      op.updatedRegion(),
-                                      thebes->GetValidRegion()))
-      {
+      if (!aCompositable->UpdateThebes(bufferData,
+                                       op.updatedRegion(),
+                                       thebes->GetValidRegion())) {
         return false;
       }
 
@@ -101,8 +108,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     }
     case CompositableOperationDetail::TOpUseTiledLayerBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
-      const OpUseTiledLayerBuffer& op = aEdit.detail().get_OpUseTiledLayerBuffer();
-      TiledContentHost* tiledHost = compositable->AsTiledContentHost();
+      const OpUseTiledLayerBuffer& op = aDetail.get_OpUseTiledLayerBuffer();
+      TiledContentHost* tiledHost = aCompositable->AsTiledContentHost();
 
       NS_ASSERTION(tiledHost, "The compositable is not tiled");
 
@@ -140,16 +147,16 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       break;
     }
     case CompositableOperationDetail::TOpRemoveTexture: {
-      const OpRemoveTexture& op = aEdit.detail().get_OpRemoveTexture();
+      const OpRemoveTexture& op = aDetail.get_OpRemoveTexture();
 
       RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
       MOZ_ASSERT(tex.get());
-      compositable->RemoveTextureHost(tex);
+      aCompositable->RemoveTextureHost(tex);
       break;
     }
     case CompositableOperationDetail::TOpUseTexture: {
-      const OpUseTexture& op = aEdit.detail().get_OpUseTexture();
+      const OpUseTexture& op = aDetail.get_OpUseTexture();
 
       AutoTArray<CompositableHost::TimedTexture,4> textures;
       for (auto& timedTexture : op.textures()) {
@@ -166,7 +173,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         }
       }
       if (textures.Length() > 0) {
-        compositable->UseTextureHost(textures);
+        aCompositable->UseTextureHost(textures);
 
         for (auto& timedTexture : op.textures()) {
           RefPtr<TextureHost> texture = TextureHost::AsTextureHost(timedTexture.textureParent());
@@ -179,13 +186,13 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         }
       }
 
-      if (UsesImageBridge() && compositable->GetLayer()) {
-        ScheduleComposition(compositable);
+      if (UsesImageBridge() && aCompositable->GetLayer()) {
+        ScheduleComposition(aCompositable);
       }
       break;
     }
     case CompositableOperationDetail::TOpUseComponentAlphaTextures: {
-      const OpUseComponentAlphaTextures& op = aEdit.detail().get_OpUseComponentAlphaTextures();
+      const OpUseComponentAlphaTextures& op = aDetail.get_OpUseComponentAlphaTextures();
       RefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
       RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
       if (op.readLockedBlack()) {
@@ -196,7 +203,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
 
       MOZ_ASSERT(texOnBlack && texOnWhite);
-      compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
+      aCompositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
 
       if (texOnBlack) {
         texOnBlack->SetLastFwdTransactionId(mFwdTransactionId);
@@ -213,7 +220,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
 
       if (UsesImageBridge()) {
-        ScheduleComposition(compositable);
+        ScheduleComposition(aCompositable);
       }
       break;
     }
