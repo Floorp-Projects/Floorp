@@ -21,6 +21,7 @@ exports.getFrames = getFrames;
 exports.getGeneratedFrameScope = getGeneratedFrameScope;
 exports.getOriginalFrameScope = getOriginalFrameScope;
 exports.getFrameScopes = getFrameScopes;
+exports.getSelectedFrameBindings = getSelectedFrameBindings;
 exports.getFrameScope = getFrameScope;
 exports.getSelectedScope = getSelectedScope;
 exports.getSelectedScopeMappings = getSelectedScopeMappings;
@@ -379,6 +380,33 @@ function getOriginalFrameScope(state, sourceId, frameId) {
 
 function getFrameScopes(state) {
   return state.pause.frameScopes;
+}
+
+function getSelectedFrameBindings(state) {
+  const scopes = getFrameScopes(state);
+  const selectedFrameId = getSelectedFrameId(state);
+
+  if (!scopes || !selectedFrameId) {
+    return null;
+  }
+
+  const frameScope = scopes.generated[selectedFrameId];
+
+  if (!frameScope || frameScope.pending) {
+    return;
+  }
+
+  let currentScope = frameScope.scope;
+  let frameBindings = [];
+
+  while (currentScope && currentScope.type != "object") {
+    const bindings = Object.keys(currentScope.bindings.variables);
+    const args = [].concat(...currentScope.bindings.arguments.map(argument => Object.keys(argument)));
+    frameBindings = [...frameBindings, ...bindings, ...args];
+    currentScope = currentScope.parent;
+  }
+
+  return frameBindings;
 }
 
 function getFrameScope(state, sourceId, frameId) {

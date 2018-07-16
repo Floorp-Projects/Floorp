@@ -411,15 +411,7 @@ class Editor extends _react.PureComponent {
       editor
     } = this.state;
 
-    if (!nextProps.selectedSource || !editor || !nextProps.selectedLocation) {
-      return false;
-    }
-
-    if (!(0, _source.isLoaded)(nextProps.selectedSource)) {
-      return false;
-    }
-
-    if (!nextProps.selectedLocation.line) {
+    if (!editor || !nextProps.selectedSource || !nextProps.selectedLocation || !(0, _source.isLoaded)(nextProps.selectedSource)) {
       return false;
     }
 
