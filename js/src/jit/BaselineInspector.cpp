@@ -510,6 +510,19 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
           case ICStub::BinaryArith_DoubleWithInt32:
             sawDouble = true;
             break;
+          case ICStub::CacheIR_Regular:
+            switch (ParseCacheIRStub(stubs[i])) {
+              case MIRType::Double:
+                sawDouble = true;
+                break;
+              case MIRType::Int32:
+                sawInt32 = true;
+                break;
+              default:
+                sawOther = true;
+                break;
+            }
+            break;
           default:
             sawOther = true;
             break;
