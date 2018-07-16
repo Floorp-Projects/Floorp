@@ -49,6 +49,7 @@ struct MediaStreamConstraints;
 struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
 enum class CallerType : uint32_t;
+enum class MediaDeviceKind : uint8_t;
 } // namespace dom
 
 namespace ipc {
@@ -73,6 +74,15 @@ public:
                        const nsString& aName,
                        const nsString& aID,
                        const nsString& aRawID = NS_LITERAL_STRING(""));
+
+  explicit MediaDevice(const nsString& aName,
+                       const dom::MediaDeviceKind aKind,
+                       const nsString& aID,
+                       const nsString& aRawID = NS_LITERAL_STRING(""));
+
+  explicit MediaDevice(const MediaDevice* aOther,
+                       const nsString& aID,
+                       const nsString& aRawID);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -118,7 +128,7 @@ private:
 
 public:
   const RefPtr<MediaEngineSource> mSource;
-  const bool mIsVideo;
+  const dom::MediaDeviceKind mKind;
   const bool mScary;
   const nsString mType;
   const nsString mName;
