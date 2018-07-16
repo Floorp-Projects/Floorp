@@ -455,7 +455,7 @@ SendCommand(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (args.length() > 1 && JS_TypeOfValue(cx, args[1]) != JSTYPE_FUNCTION) {
+    if (args.get(1).isObject() && !JS_ObjectIsFunction(cx, &args[1].toObject())) {
         JS_ReportErrorASCII(cx, "Could not convert argument 2 to function!");
         return false;
     }
