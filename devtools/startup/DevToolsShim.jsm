@@ -264,6 +264,9 @@ this.DevToolsShim = {
 
     if (reason) {
       this.telemetry.addEventProperty(
+        "devtools.main", "open", "tools", null, "shortcut", ""
+      );
+      this.telemetry.addEventProperty(
         "devtools.main", "open", "tools", null, "entrypoint", reason
       );
     }

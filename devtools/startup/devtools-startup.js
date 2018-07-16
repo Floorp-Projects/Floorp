@@ -841,6 +841,18 @@ DevToolsStartup.prototype = {
     }
   },
 
+  /**
+   * Send entry point telemetry explaining how the devtools were launched. This
+   * functionality also lives inside `devtools/client/framework/browser-menus.js`
+   * because this codepath is only used the first time a toolbox is opened for a
+   * tab.
+   *
+   * @param {String} reason
+   *        One of "KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu",
+   *        "CommandLine".
+   * @param {String} key
+   *        The key used by a key shortcut.
+   */
   sendEntryPointTelemetry(reason, key = "") {
     if (!reason) {
       return;
