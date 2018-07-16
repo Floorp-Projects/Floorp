@@ -1590,7 +1590,7 @@ already_AddRefed<MediaManager::PledgeChar>
 MediaManager::SelectSettings(
     MediaStreamConstraints& aConstraints,
     bool aIsChrome,
-    RefPtr<Refcountable<UniquePtr<SourceSet>>>& aSources)
+    RefPtr<Refcountable<UniquePtr<MediaDeviceSet>>>& aSources)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<PledgeChar> p = new PledgeChar();
@@ -1680,7 +1680,7 @@ public:
     MediaEnginePrefs& aPrefs,
     const ipc::PrincipalInfo& aPrincipalInfo,
     bool aIsChrome,
-    MediaManager::SourceSet* aSourceSet,
+    MediaManager::MediaDeviceSet* aMediaDeviceSet,
     bool aShouldFocusSource)
     : Runnable("GetUserMediaTask")
     , mConstraints(aConstraints)
@@ -1694,7 +1694,7 @@ public:
     , mIsChrome(aIsChrome)
     , mShouldFocusSource(aShouldFocusSource)
     , mDeviceChosen(false)
-    , mSourceSet(aSourceSet)
+    , mMediaDeviceSet(aMediaDeviceSet)
     , mManager(MediaManager::GetInstance())
   {}
 
@@ -1886,7 +1886,7 @@ private:
 
   bool mDeviceChosen;
 public:
-  nsAutoPtr<MediaManager::SourceSet> mSourceSet;
+  nsAutoPtr<MediaManager::MediaDeviceSet> mMediaDeviceSet;
 private:
   RefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
@@ -1919,7 +1919,7 @@ private:
  * satisfy passed-in constraints. List contains raw id's.
  */
 
-already_AddRefed<MediaManager::PledgeSourceSet>
+already_AddRefed<MediaManager::PledgeMediaDeviceSet>
 MediaManager::EnumerateRawDevices(uint64_t aWindowId,
                                   MediaSourceEnum aVideoInputType,
                                   MediaSourceEnum aAudioInputType,
@@ -1954,7 +1954,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
        __func__, aWindowId,
        static_cast<uint8_t>(aVideoInputType), static_cast<uint8_t>(aAudioInputType),
        static_cast<uint8_t>(aVideoInputEnumType), static_cast<uint8_t>(aAudioInputEnumType)));
-  RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
+  RefPtr<PledgeMediaDeviceSet> p = new PledgeMediaDeviceSet();
   uint32_t id = mOutstandingPledges.Append(*p);
 
   bool hasVideo = aVideoInputType != MediaSourceEnum::Other;
@@ -1994,10 +1994,10 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       realBackend = manager->GetBackend(aWindowId);
     }
 
-    auto result = MakeUnique<SourceSet>();
+    auto result = MakeUnique<MediaDeviceSet>();
 
     if (hasVideo) {
-      SourceSet videos;
+      MediaDeviceSet videos;
       LOG(("EnumerateRawDevices Task: Getting video sources with %s backend",
            aVideoInputEnumType == DeviceEnumerationType::Fake ? "fake" : "real"));
       GetMediaDevices(aVideoInputEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
@@ -2005,7 +2005,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       result->AppendElements(videos);
     }
     if (hasAudio) {
-      SourceSet audios;
+      MediaDeviceSet audios;
       LOG(("EnumerateRawDevices Task: Getting audio sources with %s backend",
            aAudioInputEnumType == DeviceEnumerationType::Fake ? "fake" : "real"));
       GetMediaDevices(aAudioInputEnumType == DeviceEnumerationType::Fake ? fakeBackend : realBackend,
@@ -2013,7 +2013,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       result->AppendElements(audios);
     }
     if (hasAudioOutput) {
-      SourceSet outputs;
+      MediaDeviceSet outputs;
       MOZ_ASSERT(realBackend);
       realBackend->EnumerateDevices(aWindowId,
                                     MediaSourceEnum::Other,
@@ -2027,7 +2027,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       if (!mgr) {
         return NS_OK;
       }
-      RefPtr<PledgeSourceSet> p = mgr->mOutstandingPledges.Remove(id);
+      RefPtr<PledgeMediaDeviceSet> p = mgr->mOutstandingPledges.Remove(id);
       if (p) {
         p->Resolve(result.release());
       }
@@ -2364,12 +2364,12 @@ void MediaManager::OnDeviceChange() {
     // On some Windows machine, if we call EnumerateRawDevices immediately after receiving
     // devicechange event, sometimes we would get outdated devices list.
     PR_Sleep(PR_MillisecondsToInterval(100));
-    RefPtr<PledgeSourceSet> p = self->EnumerateRawDevices(0,
-                                                          MediaSourceEnum::Camera,
-                                                          MediaSourceEnum::Microphone,
-                                                          MediaSinkEnum::Speaker);
-    p->Then([self](SourceSet*& aDevices) mutable {
-      UniquePtr<SourceSet> devices(aDevices);
+    RefPtr<PledgeMediaDeviceSet> p = self->EnumerateRawDevices(0,
+                                                               MediaSourceEnum::Camera,
+                                                               MediaSourceEnum::Microphone,
+                                                               MediaSinkEnum::Speaker);
+    p->Then([self](MediaDeviceSet*& aDevices) mutable {
+      UniquePtr<MediaDeviceSet> devices(aDevices);
       nsTArray<nsString> deviceIDs;
 
       for (auto& device : *devices) {
@@ -2875,19 +2875,19 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
        static_cast<uint8_t>(videoEnumerationType), static_cast<uint8_t>(audioEnumerationType),
        askPermission ? "true" : "false"));
 
-  RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID,
-                                                   videoType,
-                                                   audioType,
-                                                   MediaSinkEnum::Other,
-                                                   videoEnumerationType,
-                                                   audioEnumerationType);
+  RefPtr<PledgeMediaDeviceSet> p = EnumerateDevicesImpl(windowID,
+                                                        videoType,
+                                                        audioType,
+                                                        MediaSinkEnum::Other,
+                                                        videoEnumerationType,
+                                                        audioEnumerationType);
   RefPtr<MediaManager> self = this;
   p->Then([self, onSuccess, onFailure, windowID, c, windowListener,
            sourceListener, askPermission, prefs, isHTTPS, isHandlingUserInput,
-           callID, principalInfo, isChrome, resistFingerprinting](SourceSet*& aDevices) mutable {
+           callID, principalInfo, isChrome, resistFingerprinting](MediaDeviceSet*& aDevices) mutable {
     LOG(("GetUserMedia: post enumeration pledge success callback starting"));
     // grab result
-    auto devices = MakeRefPtr<Refcountable<UniquePtr<SourceSet>>>(aDevices);
+    auto devices = MakeRefPtr<Refcountable<UniquePtr<MediaDeviceSet>>>(aDevices);
 
     // Ensure that our windowID is still good.
     if (!nsGlobalWindowInner::GetInnerWindowWithId(windowID)) {
@@ -3010,7 +3010,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 }
 
 /* static */ void
-MediaManager::AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey)
+MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices, const nsACString& aOriginKey)
 {
   if (!aOriginKey.IsEmpty()) {
     for (RefPtr<MediaDevice>& device : aDevices) {
@@ -3071,7 +3071,7 @@ MediaManager::AnonymizeId(nsAString& aId, const nsACString& aOriginKey)
 
 /* static */
 already_AddRefed<nsIWritableVariant>
-MediaManager::ToJSArray(SourceSet& aDevices)
+MediaManager::ToJSArray(MediaDeviceSet& aDevices)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsVariantCC> var = new nsVariantCC();
@@ -3094,7 +3094,7 @@ MediaManager::ToJSArray(SourceSet& aDevices)
   return var.forget();
 }
 
-already_AddRefed<MediaManager::PledgeSourceSet>
+already_AddRefed<MediaManager::PledgeMediaDeviceSet>
 MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
                                    MediaSourceEnum       aVideoInputType,
                                    MediaSourceEnum       aAudioInputType,
@@ -3113,7 +3113,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
     nsGlobalWindowInner::GetInnerWindowWithId(aWindowId)->AsInner();
 
   // This function returns a pledge, a promise-like object with the future result
-  RefPtr<PledgeSourceSet> pledge = new PledgeSourceSet();
+  RefPtr<PledgeMediaDeviceSet> pledge = new PledgeMediaDeviceSet();
   uint32_t id = mOutstandingPledges.Append(*pledge);
 
   // To get a device list anonymized for a particular origin, we must:
@@ -3128,7 +3128,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
   ipc::PrincipalInfo principalInfo;
   nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
+    RefPtr<PledgeMediaDeviceSet> p = new PledgeMediaDeviceSet();
     RefPtr<MediaStreamError> error =
       new MediaStreamError(window, MediaStreamError::Name::NotAllowedError);
     p->Reject(error);
@@ -3151,20 +3151,20 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
       return;
     }
 
-    RefPtr<PledgeSourceSet> p = mgr->EnumerateRawDevices(aWindowId,
-                                                         aVideoInputType,
-                                                         aAudioInputType,
-                                                         aAudioOutputType,
-                                                         aVideoInputEnumType,
-                                                         aAudioInputEnumType);
+    RefPtr<PledgeMediaDeviceSet> p = mgr->EnumerateRawDevices(aWindowId,
+                                                              aVideoInputType,
+                                                              aAudioInputType,
+                                                              aAudioOutputType,
+                                                              aVideoInputEnumType,
+                                                              aAudioInputEnumType);
     p->Then([id,
              aWindowId,
              aOriginKey,
              aVideoInputEnumType,
              aAudioInputEnumType,
              aVideoInputType,
-             aAudioInputType](SourceSet*& aDevices) mutable {
-      UniquePtr<SourceSet> devices(aDevices); // secondary result
+             aAudioInputType](MediaDeviceSet*& aDevices) mutable {
+      UniquePtr<MediaDeviceSet> devices(aDevices); // secondary result
 
       // Only run if window is still on our active list.
       MediaManager* mgr = MediaManager::GetIfExists();
@@ -3189,7 +3189,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
         }
       }
 
-      RefPtr<PledgeSourceSet> p = mgr->mOutstandingPledges.Remove(id);
+      RefPtr<PledgeMediaDeviceSet> p = mgr->mOutstandingPledges.Remove(id);
       if (!p || !mgr->IsWindowStillActive(aWindowId)) {
         return NS_OK;
       }
@@ -3266,14 +3266,14 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
   if (Preferences::GetBool("media.setsinkid.enabled")) {
     audioOutputType = MediaSinkEnum::Speaker;
   }
-  RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowId,
-                                                   MediaSourceEnum::Camera,
-                                                   MediaSourceEnum::Microphone,
-                                                   audioOutputType,
-                                                   videoEnumerationType,
-                                                   audioEnumerationType);
-  p->Then([onSuccess, windowListener, sourceListener](SourceSet*& aDevices) mutable {
-    UniquePtr<SourceSet> devices(aDevices); // grab result
+  RefPtr<PledgeMediaDeviceSet> p = EnumerateDevicesImpl(windowId,
+                                                        MediaSourceEnum::Camera,
+                                                        MediaSourceEnum::Microphone,
+                                                        audioOutputType,
+                                                        videoEnumerationType,
+                                                        audioEnumerationType);
+  p->Then([onSuccess, windowListener, sourceListener](MediaDeviceSet*& aDevices) mutable {
+    UniquePtr<MediaDeviceSet> devices(aDevices); // grab result
     DebugOnly<bool> rv = windowListener->Remove(sourceListener);
     MOZ_ASSERT(rv);
     nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*devices);
@@ -3316,7 +3316,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
     RefPtr<GetUserMediaTask> task;
     if (!aCallID.Length() || aCallID == callID) {
       if (mActiveCallbacks.Get(callID, getter_AddRefs(task))) {
-        nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*task->mSourceSet);
+        nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*task->mMediaDeviceSet);
         onSuccess->OnSuccess(array);
         return NS_OK;
       }
