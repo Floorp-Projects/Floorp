@@ -95,7 +95,7 @@ bool InImageBridgeChildThread();
  *   - (B) Since the ImageContainer does not use ImageBridge, the image data is swaped.
  *
  * - During composition:
- *   - (A) The CompositableHost has an AsyncID, it looks up the ID in the 
+ *   - (A) The CompositableHost has an AsyncID, it looks up the ID in the
  *   global table to see if there is an image. If there is no image, nothing is rendered.
  *   - (B) The CompositableHost has image data rather than an ID (meaning it is not
  *   using ImageBridge), then it just composites the image data normally.
@@ -193,6 +193,9 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvReportFramesDropped(const CompositableHandle& aHandle, const uint32_t& aFrames) override;
 
   // Create an ImageClient from any thread.
   RefPtr<ImageClient> CreateImageClient(
@@ -403,6 +406,7 @@ private:
    */
   Mutex mContainerMapLock;
   std::unordered_map<uint64_t, RefPtr<ImageContainerListener>> mImageContainerListeners;
+  RefPtr<ImageContainerListener> FindListener(const CompositableHandle& aHandle);
 
 #if defined(XP_WIN)
   /**

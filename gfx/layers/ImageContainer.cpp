@@ -122,6 +122,15 @@ ImageContainerListener::NotifyComposite(const ImageCompositeNotification& aNotif
 }
 
 void
+ImageContainerListener::NotifyDropped(uint32_t aDropped)
+{
+  MutexAutoLock lock(mLock);
+  if (mImageContainer) {
+    mImageContainer->NotifyDropped(aDropped);
+  }
+}
+
+void
 ImageContainerListener::ClearImageContainer()
 {
   MutexAutoLock lock(mLock);
@@ -262,7 +271,7 @@ ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
       mCurrentProducerID = aImages[0].mProducerID;
     } else if (!aImages[0].mTimeStamp.IsNull()) {
       // Check for expired frames
-      for (auto& img : mCurrentImages) {
+      for (const auto& img : mCurrentImages) {
         if (img.mProducerID != aImages[0].mProducerID ||
             img.mTimeStamp.IsNull() ||
             img.mTimeStamp >= aImages[0].mTimeStamp) {
@@ -278,7 +287,6 @@ ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
       const uint32_t maxFrames = 100;
       if (mFrameIDsNotYetComposited.Length() > maxFrames) {
         uint32_t dropFrames = mFrameIDsNotYetComposited.Length() - maxFrames;
-        mDroppedImageCount += dropFrames;
         mFrameIDsNotYetComposited.RemoveElementsAt(0, dropFrames);
       }
     }
@@ -303,7 +311,7 @@ ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
     img->mTimeStamp = aImages[i].mTimeStamp;
     img->mFrameID = aImages[i].mFrameID;
     img->mProducerID = aImages[i].mProducerID;
-    for (auto& oldImg : mCurrentImages) {
+    for (const auto& oldImg : mCurrentImages) {
       if (oldImg.mFrameID == img->mFrameID &&
           oldImg.mProducerID == img->mProducerID) {
         img->mComposited = oldImg.mComposited;
@@ -441,11 +449,7 @@ ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
   if (aNotification.producerID() == mCurrentProducerID) {
     uint32_t i;
     for (i = 0; i < mFrameIDsNotYetComposited.Length(); ++i) {
-      if (mFrameIDsNotYetComposited[i] <= aNotification.frameID()) {
-        if (mFrameIDsNotYetComposited[i] < aNotification.frameID()) {
-          ++mDroppedImageCount;
-        }
-      } else {
+      if (mFrameIDsNotYetComposited[i] > aNotification.frameID()) {
         break;
       }
     }
@@ -458,9 +462,15 @@ ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
   }
 
   if (!aNotification.imageTimeStamp().IsNull()) {
-    mPaintDelay = aNotification.firstCompositeTimeStamp() -
-        aNotification.imageTimeStamp();
+    mPaintDelay =
+      aNotification.firstCompositeTimeStamp() - aNotification.imageTimeStamp();
   }
+}
+
+void
+ImageContainer::NotifyDropped(uint32_t aDropped)
+{
+  mDroppedImageCount += aDropped;
 }
 
 #ifdef XP_WIN
