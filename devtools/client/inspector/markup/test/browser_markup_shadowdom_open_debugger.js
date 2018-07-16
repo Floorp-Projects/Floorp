@@ -1,0 +1,124 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Test that markup view displays a "custom" badge for custom elements.
+// Test that the context menu also has a menu item to show the custom element definition.
+// Test that clicking on any of those opens the debugger.
+// Test that the markup view is correctly updated to show those items if the custom
+// element definition happens after opening the inspector.
+
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
+const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+<test-component></test-component>
+<other-component>some-content</other-component>
+
+<script>
+  "use strict";
+  window.attachTestComponent = function() {
+    customElements.define("test-component", class extends HTMLElement {
+      constructor() {
+        super();
+        let shadowRoot = this.attachShadow({mode: "open"});
+        shadowRoot.innerHTML = "<slot>some default content</slot>";
+      }
+      connectedCallback() {}
+      disconnectedCallback() {}
+    });
+  }
+
+  window.defineOtherComponent = function() {
+    customElements.define('other-component', class extends HTMLParagraphElement {
+      constructor() {
+        super();
+      }
+    }, { extends: 'p' });
+  }
+</script>`);
+
+add_task(async function() {
+  await enableWebComponents();
+
+  const {inspector, toolbox} = await openInspectorForURL(TEST_URL);
+
+  // Test with an element to which we attach a shadow.
+  await runTest(inspector, toolbox, "test-component", "attachTestComponent");
+
+  // Test with an element to which we only add a custom element definition.
+  await runTest(inspector, toolbox, "other-component", "defineOtherComponent");
+});
+
+async function runTest(inspector, toolbox, selector, contentMethod) {
+  // Test element is a regular element (no shadow root or custom element definition).
+  info(`Select <${selector}>.`);
+  await selectNode(selector, inspector);
+  const testFront = await getNodeFront(selector, inspector);
+  const testContainer = inspector.markup.getContainer(testFront);
+  const customBadge = testContainer.elt.querySelector(".markup-badge[data-custom]");
+
+  // Verify that the "custom" badge and menu item are hidden.
+  is(customBadge.style.display, "none", "[custom] badge is hidden");
+  let menuItem = getMenuItem("node-menu-jumptodefinition", inspector);
+  ok(!menuItem, selector + ": The menu item was not found in the contextual menu");
+
+  info("Call the content method that should attach a custom element definition");
+  const mutated = waitForMutation(inspector, "customElementDefined");
+  ContentTask.spawn(gBrowser.selectedBrowser, { contentMethod }, function(args) {
+    content.wrappedJSObject[args.contentMethod]();
+  });
+  await mutated;
+
+  // Test element should now have a custom element definition.
+
+  // Check that the badge opens the debugger.
+  is(customBadge.style.display, "inline-block", "[custom] badge is visible");
+
+  info("Click on the `custom` badge and verify that the debugger opens.");
+  let onDebuggerReady = toolbox.getPanelWhenReady("jsdebugger");
+  customBadge.click();
+  await onDebuggerReady;
+
+  const debuggerContext = createDebuggerContext(toolbox);
+  await waitUntilDebuggerReady(debuggerContext);
+
+  info("Switch to the inspector");
+  await toolbox.selectTool("inspector");
+
+  // Check that the menu item also opens the debugger.
+  menuItem = getMenuItem("node-menu-jumptodefinition", inspector);
+  ok(menuItem, selector + ": The menu item was found in the contextual menu");
+  ok(!menuItem.disabled, selector + ": The menu item is not disabled");
+
+  info("Click on `Jump to Definition` and verify that the debugger opens.");
+  onDebuggerReady = toolbox.getPanelWhenReady("jsdebugger");
+  menuItem.click();
+  await onDebuggerReady;
+
+  await waitUntilDebuggerReady(debuggerContext);
+
+  info("Switch to the inspector");
+  await toolbox.selectTool("inspector");
+}
+
+function getMenuItem(id, inspector) {
+  const allMenuItems = openContextMenuAndGetAllItems(inspector);
+  return allMenuItems.find(i => i.id === "node-menu-jumptodefinition");
+}
+
+async function waitUntilDebuggerReady(debuggerContext) {
+  info("Wait until source is loaded in the debugger");
+
+  // We have to wait until the debugger has fully loaded the source otherwise
+  // we will get unhandled promise rejections.
+  await waitForLoadedSource(debuggerContext, "data:");
+
+  // Have to wait until https://github.com/devtools-html/debugger.html/pull/6189
+  // is released to avoid unhandled promise rejections.
+  await waitForTime(1000);
+}
