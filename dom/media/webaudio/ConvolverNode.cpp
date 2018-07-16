@@ -88,56 +88,7 @@ public:
                     GraphTime aFrom,
                     const AudioBlock& aInput,
                     AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
-    if (!mReverb) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
-
-    AudioBlock input = aInput;
-    if (aInput.IsNull()) {
-      if (mLeftOverData > 0) {
-        mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
-        input.AllocateChannels(1);
-        WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
-      } else {
-        if (mLeftOverData != INT32_MIN) {
-          mLeftOverData = INT32_MIN;
-          aStream->ScheduleCheckForInactive();
-          RefPtr<PlayingRefChanged> refchanged =
-            new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-          aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-            refchanged.forget());
-        }
-        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-        return;
-      }
-    } else {
-      if (aInput.mVolume != 1.0f) {
-        // Pre-multiply the input's volume
-        uint32_t numChannels = aInput.ChannelCount();
-        input.AllocateChannels(numChannels);
-        for (uint32_t i = 0; i < numChannels; ++i) {
-          const float* src = static_cast<const float*>(aInput.mChannelData[i]);
-          float* dest = input.ChannelFloatsForWrite(i);
-          AudioBlockCopyChannelWithScale(src, aInput.mVolume, dest);
-        }
-      }
-
-      if (mLeftOverData <= 0) {
-        RefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-        aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          refchanged.forget());
-      }
-      mLeftOverData = mReverb->impulseResponseLength();
-      MOZ_ASSERT(mLeftOverData > 0);
-    }
-    aOutput->AllocateChannels(2);
-
-    mReverb->process(&input, aOutput);
-  }
+                    bool* aFinished) override;
 
   bool IsActive() const override
   {
@@ -167,6 +118,62 @@ private:
   bool mUseBackgroundThreads;
   bool mNormalize;
 };
+
+void
+ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
+                                  GraphTime aFrom,
+                                  const AudioBlock& aInput,
+                                  AudioBlock* aOutput,
+                                  bool* aFinished)
+{
+  if (!mReverb) {
+    aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+    return;
+  }
+
+  AudioBlock input = aInput;
+  if (aInput.IsNull()) {
+    if (mLeftOverData > 0) {
+      mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
+      input.AllocateChannels(1);
+      WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
+    } else {
+      if (mLeftOverData != INT32_MIN) {
+        mLeftOverData = INT32_MIN;
+        aStream->ScheduleCheckForInactive();
+        RefPtr<PlayingRefChanged> refchanged =
+          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
+        aStream->Graph()->
+          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+      }
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      return;
+    }
+  } else {
+    if (aInput.mVolume != 1.0f) {
+      // Pre-multiply the input's volume
+      uint32_t numChannels = aInput.ChannelCount();
+      input.AllocateChannels(numChannels);
+      for (uint32_t i = 0; i < numChannels; ++i) {
+        const float* src = static_cast<const float*>(aInput.mChannelData[i]);
+        float* dest = input.ChannelFloatsForWrite(i);
+        AudioBlockCopyChannelWithScale(src, aInput.mVolume, dest);
+      }
+    }
+
+    if (mLeftOverData <= 0) {
+      RefPtr<PlayingRefChanged> refchanged =
+        new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
+      aStream->Graph()->
+        DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+    }
+    mLeftOverData = mReverb->impulseResponseLength();
+    MOZ_ASSERT(mLeftOverData > 0);
+  }
+  aOutput->AllocateChannels(2);
+
+  mReverb->process(&input, aOutput);
+}
 
 ConvolverNode::ConvolverNode(AudioContext* aContext)
   : AudioNode(aContext,
