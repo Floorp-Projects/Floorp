@@ -177,9 +177,10 @@ ChannelEventSinkFactory.getService = function() {
   return Cc[SINK_CONTRACT_ID].getService(Ci.nsIChannelEventSink).wrappedJSObject;
 };
 
-function StackTraceCollector(filters) {
+function StackTraceCollector(filters, messageManager) {
   this.filters = filters;
   this.stacktracesById = new Map();
+  this.messageManager = messageManager;
 }
 
 StackTraceCollector.prototype = {
@@ -194,6 +195,12 @@ StackTraceCollector.prototype = {
   },
 
   _saveStackTrace(channel, stacktrace) {
+    if (this.messageManager) {
+      this.messageManager.sendAsyncMessage("debug:request-stack-available", {
+        channelId: channel.channelId,
+        stacktrace
+      });
+    }
     this.stacktracesById.set(channel.channelId, stacktrace);
   },
 
@@ -239,6 +246,12 @@ StackTraceCollector.prototype = {
     const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
       this.stacktracesById.delete(oldId);
+      if (this.messageManager) {
+        this.messageManager.sendAsyncMessage("debug:request-stack-available", {
+          channelId: oldId,
+          stacktrace: null
+        });
+      }
       this._saveStackTrace(newChannel, stacktrace);
     }
   },
@@ -741,9 +754,6 @@ NetworkResponseListener.prototype = {
  *          given the initial network request information as an argument.
  *          onNetworkEvent() must return an object which holds several add*()
  *          methods which are used to add further network request/response information.
- *        - stackTraceCollector
- *          If the owner has this optional property, it will be used as a
- *          StackTraceCollector by the NetworkMonitor.
  */
 function NetworkMonitor(filters, owner) {
   this.filters = filters;
@@ -1134,12 +1144,6 @@ NetworkMonitor.prototype = {
       if (loadingPrincipal && loadingPrincipal.URI) {
         causeUri = loadingPrincipal.URI.spec;
       }
-    }
-
-    // If this is the parent process, there is no stackTraceCollector - the stack
-    // trace will be added in NetworkMonitorChild._onNewEvent.
-    if (this.owner.stackTraceCollector) {
-      stacktrace = this.owner.stackTraceCollector.getStackTrace(event.channelId);
     }
 
     event.cause = {
