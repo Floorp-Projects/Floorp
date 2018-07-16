@@ -14,8 +14,6 @@ XPIDL_MODULE = 'toolkit_perfmonitoring'
 EXTRA_JS_MODULES += [
     'PerformanceStats-content.js',
     'PerformanceStats.jsm',
-    'PerformanceWatcher-content.js',
-    'PerformanceWatcher.jsm',
 ]
 
 XPIDL_SOURCES += [
