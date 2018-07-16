@@ -28,6 +28,7 @@ class GeckoEngineSession(
 
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()
+        geckoSession.contentDelegate = createContentDelegate()
     }
 
     /**
@@ -172,6 +173,37 @@ class GeckoEngineSession(
                 }
             }
         }
+    }
+
+    private fun createContentDelegate() = object : GeckoSession.ContentDelegate {
+        override fun onContextMenu(
+            session: GeckoSession,
+            screenX: Int,
+            screenY: Int,
+            uri: String,
+            elementType: Int,
+            elementSrc: String
+        ) = Unit
+
+        override fun onCrash(session: GeckoSession?) = Unit
+
+        override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) = Unit
+
+        override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
+            notifyObservers {
+                onExternalResource(
+                    url = response.uri,
+                    contentLength = response.contentLength,
+                    contentType = response.contentType,
+                    fileName = response.filename)
+            }
+        }
+
+        override fun onCloseRequest(session: GeckoSession) = Unit
+
+        override fun onTitleChange(session: GeckoSession, title: String) = Unit
+
+        override fun onFocusRequest(session: GeckoSession) = Unit
     }
 
     companion object {

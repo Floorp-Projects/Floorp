@@ -112,6 +112,33 @@ class EngineSessionTest {
         verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verifyNoMoreInteractions(observer)
     }
+
+    @Test
+    fun `registered observer will be notified about download`() {
+        val session = spy(DummyEngineSession())
+
+        val observer = mock(EngineSession.Observer::class.java)
+        session.register(observer)
+
+        session.notifyInternalObservers {
+            onExternalResource(
+                url = "https://download.mozilla.org",
+                fileName = "firefox.apk",
+                contentLength = 1927392,
+                contentType = "application/vnd.android.package-archive",
+                cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
+                userAgent = "Components/1.0")
+        }
+
+        verify(observer).onExternalResource(
+            url = "https://download.mozilla.org",
+            fileName = "firefox.apk",
+            contentLength = 1927392,
+            contentType = "application/vnd.android.package-archive",
+            cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
+            userAgent = "Components/1.0"
+        )
+    }
 }
 
 open class DummyEngineSession : EngineSession() {

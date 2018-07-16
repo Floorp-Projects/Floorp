@@ -11,6 +11,7 @@ import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
 import android.view.View
 import android.view.WindowManager
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -262,11 +263,53 @@ class ObserverRegistryTest {
         assertFalse(observer.notified)
     }
 
+    @Test
+    fun `wrapConsumers will return list of lambdas calling observers`() {
+        val observer1 = TestConsumingObserver(shouldConsume = false)
+        val observer2 = TestConsumingObserver(shouldConsume = true)
+        val observer3 = TestConsumingObserver(shouldConsume = false)
+
+        val registry = ObserverRegistry<TestConsumingObserver>()
+        registry.register(observer1)
+        registry.register(observer2)
+        registry.register(observer3)
+
+        val consumers: List<(Int) -> Boolean> = registry.wrapConsumers { value -> consumeSomething(value) }
+
+        assertFalse(observer1.notified)
+        assertFalse(observer2.notified)
+        assertFalse(observer3.notified)
+
+        val valueToConsume = 23
+        consumers.forEach { it.invoke(valueToConsume) }
+
+        assertTrue(observer1.notified)
+        assertTrue(observer2.notified)
+        assertTrue(observer3.notified)
+
+        assertEquals(valueToConsume, observer1.notifiedWith!!)
+        assertEquals(valueToConsume, observer2.notifiedWith!!)
+        assertEquals(valueToConsume, observer3.notifiedWith!!)
+    }
+
     private class TestObserver {
         var notified: Boolean = false
 
         fun somethingChanged() {
             notified = true
+        }
+    }
+
+    private class TestConsumingObserver(
+        private val shouldConsume: Boolean
+    ) {
+        var notified: Boolean = false
+        var notifiedWith: Int? = null
+
+        fun consumeSomething(value: Int): Boolean {
+            notifiedWith = value
+            notified = true
+            return shouldConsume
         }
     }
 

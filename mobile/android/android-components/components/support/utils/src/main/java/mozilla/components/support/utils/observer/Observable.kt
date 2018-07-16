@@ -50,4 +50,9 @@ interface Observable<T> {
      * Notify all registered observers about a change.
      */
     fun notifyObservers(block: T.() -> Unit)
+
+    /**
+     * Returns a list of lambdas wrapping a consuming method of an observer.
+     */
+    fun <R> wrapConsumers(block: T.(R) -> Boolean): List<(R) -> Boolean>
 }

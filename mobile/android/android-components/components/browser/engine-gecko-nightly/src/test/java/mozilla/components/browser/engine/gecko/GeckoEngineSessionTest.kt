@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -15,12 +16,14 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
+import org.mozilla.geckoview.createMockedWebResponseInfo
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -99,6 +102,31 @@ class GeckoEngineSessionTest {
 
         engineSession.geckoSession.navigationDelegate.onCanGoForward(null, true)
         assertEquals(true, observedCanGoForward)
+    }
+
+    @Test
+    fun testContentDelegateNotifiesObserverAboutDownloads() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        val info: GeckoSession.WebResponseInfo = createMockedWebResponseInfo(
+            uri = "https://download.mozilla.org",
+            contentLength = 42,
+            contentType = "image/png",
+            filename = "image.png"
+        )
+
+        engineSession.geckoSession.contentDelegate.onExternalResponse(mock(), info)
+
+        verify(observer).onExternalResource(
+            url = "https://download.mozilla.org",
+            fileName = "image.png",
+            contentLength = 42,
+            contentType = "image/png",
+            userAgent = null,
+            cookie = null)
     }
 
     @Test

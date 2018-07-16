@@ -109,6 +109,21 @@ class ObserverRegistry<T> : Observable<T> {
     }
 
     /**
+     * Returns a list of lambdas wrapping a consuming method of an observer.
+     */
+    override fun <V> wrapConsumers(block: T.(V) -> Boolean): List<(V) -> Boolean> {
+        val consumers: MutableList<(V) -> Boolean> = mutableListOf()
+
+        synchronized(observers) {
+            observers.forEach { observer ->
+                consumers.add { value -> observer.block(value) }
+            }
+        }
+
+        return consumers
+    }
+
+    /**
      * GenericLifecycleObserver implementation to bind an observer to a Lifecycle.
      */
     private class LifecycleBoundObserver<T>(

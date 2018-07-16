@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.toolbar
 
-import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.toolbar.Toolbar
 
 /**
  * Presenter implementation for a toolbar implementation in order to update the toolbar whenever
