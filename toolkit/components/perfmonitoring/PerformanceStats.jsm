@@ -17,9 +17,6 @@ var EXPORTED_SYMBOLS = ["PerformanceStats"];
  *
  * Data is collected by "Performance Group". Typically, a Performance Group
  * is a frame, or the internals of the application.
- *
- * Generally, if you have the choice between PerformanceStats and PerformanceWatcher,
- * you should favor PerformanceWatcher.
  */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
