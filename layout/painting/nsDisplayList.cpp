@@ -8180,7 +8180,7 @@ nsDisplayTransform::GetInverseTransform() const
 }
 
 Matrix4x4
-nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin)
+nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin) const
 {
   if (!mFrame->HasPerspective() || mTransformGetter || mIsTransformSeparator) {
     if (!mTransformGetter && !mIsTransformSeparator && aOutOrigin) {
