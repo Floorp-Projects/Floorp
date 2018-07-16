@@ -44,8 +44,8 @@ public class FileCleanupService extends JobIntentService {
         enqueueWork(context, FileCleanupService.class, JobIdsConstants.getIdForFileCleanupJob(), workIntent);
     }
 
-    public static Intent getFileCleanupIntent(ArrayList<String> filesToCleanup) {
-        Intent intent = new Intent();
+    public static Intent getFileCleanupIntent(Context context, ArrayList<String> filesToCleanup) {
+        Intent intent = new Intent(context, FileCleanupService.class);
         intent.setAction(FileCleanupService.ACTION_DELETE_FILES);
         intent.putExtra(FileCleanupService.EXTRA_FILE_PATHS_TO_DELETE, filesToCleanup);
         return intent;
