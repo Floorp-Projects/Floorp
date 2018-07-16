@@ -272,7 +272,7 @@ WebRenderImageHost::Unlock()
 }
 
 IntSize
-WebRenderImageHost::GetImageSize() const
+WebRenderImageHost::GetImageSize()
 {
   const TimedImage* img = ChooseImage();
   if (img) {

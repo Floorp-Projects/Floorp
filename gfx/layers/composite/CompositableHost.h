@@ -127,11 +127,12 @@ public:
    * *aPictureRect (if non-null, and the returned TextureHost is non-null)
    * is set to the picture rect.
    */
-  virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) {
+  virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr)
+  {
     return nullptr;
   }
 
-  virtual gfx::IntSize GetImageSize() const
+  virtual gfx::IntSize GetImageSize()
   {
     MOZ_ASSERT(false, "Should have been overridden");
     return gfx::IntSize();

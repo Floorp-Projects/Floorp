@@ -18,7 +18,10 @@ ImageComposite::ImageComposite()
   : mLastFrameID(-1)
   , mLastProducerID(-1)
   , mBias(BIAS_NONE)
-{}
+  , mDroppedFrames(0)
+  , mLastChosenImageIndex(0)
+{
+}
 
 ImageComposite::~ImageComposite()
 {
@@ -87,8 +90,12 @@ ImageComposite::UpdateBias(size_t aImageIndex)
 }
 
 int
-ImageComposite::ChooseImageIndex() const
+ImageComposite::ChooseImageIndex()
 {
+  // ChooseImageIndex is called for all images in the layer when it is visible.
+  // Change to this behaviour would break dropped frames counting calculation:
+  // We rely on this assumption to determine if during successive runs an
+  // image is returned that isn't the one following immediately the previous one
   if (mImages.IsEmpty()) {
     return -1;
   }
@@ -106,15 +113,22 @@ ImageComposite::ChooseImageIndex() const
     return -1;
   }
 
-  uint32_t result = 0;
+  uint32_t result = mLastChosenImageIndex;
   while (result + 1 < mImages.Length() &&
          GetBiasedTime(mImages[result + 1].mTimeStamp) <= now) {
     ++result;
   }
+  if (result - mLastChosenImageIndex > 1) {
+    // We're not returning the same image as the last call to ChooseImageIndex
+    // or the immediately next one. We can assume that the frames not returned
+    // have been dropped as they were too late to be displayed
+    mDroppedFrames += result - mLastChosenImageIndex - 1;
+  }
+  mLastChosenImageIndex = result;
   return result;
 }
 
-const ImageComposite::TimedImage* ImageComposite::ChooseImage() const
+const ImageComposite::TimedImage* ImageComposite::ChooseImage()
 {
   int index = ChooseImageIndex();
   return index >= 0 ? &mImages[index] : nullptr;
@@ -135,11 +149,69 @@ void
 ImageComposite::ClearImages()
 {
   mImages.Clear();
+  mLastChosenImageIndex = 0;
+}
+
+uint32_t
+ImageComposite::ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages)
+{
+  if (mImages.IsEmpty()) {
+    return 0;
+  }
+  uint32_t i = mLastChosenImageIndex;
+  uint32_t newIndex = 0;
+  uint32_t dropped = 0;
+  // See if the new array of images have any images in common with the
+  // previous list that we haven't played yet.
+  uint32_t j = 0;
+  while (i < mImages.Length() && j < aNewImages.Length()) {
+    if (mImages[i].mProducerID != aNewImages[j].mProducerID) {
+      // This is new content, can stop.
+      newIndex = j;
+      break;
+    }
+    int32_t oldFrameID = mImages[i].mFrameID;
+    int32_t newFrameID = aNewImages[j].mFrameID;
+    if (oldFrameID > newFrameID) {
+      // This is an image we have already returned, we don't need to present
+      // it again and can start from this index next time.
+      newIndex = ++j;
+      continue;
+    }
+    if (oldFrameID < mLastFrameID) {
+      // we have already returned that frame previously, ignore.
+      i++;
+      continue;
+    }
+    if (oldFrameID < newFrameID) {
+      // This is a new image, all images prior the new one and not yet
+      // rendered can be considered as dropped. Those images have a FrameID
+      // inferior to the new image.
+      for (++i; i < mImages.Length() && mImages[i].mFrameID < newFrameID &&
+                mImages[i].mProducerID == aNewImages[j].mProducerID;
+           i++) {
+        dropped++;
+      }
+      break;
+    }
+    i++;
+    j++;
+  }
+  if (dropped > 0) {
+    mDroppedFrames += dropped;
+  }
+  if (newIndex >= aNewImages.Length()) {
+    // Somehow none of those images should be rendered (can this happen?)
+    // We will always return the last one for now.
+    newIndex = aNewImages.Length() - 1;
+  }
+  return newIndex;
 }
 
 void
 ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages)
 {
+  mLastChosenImageIndex = ScanForLastFrameIndex(aNewImages);
   mImages = std::move(aNewImages);
 }
 

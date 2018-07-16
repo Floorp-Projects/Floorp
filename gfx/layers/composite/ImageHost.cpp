@@ -448,7 +448,7 @@ ImageHost::Unlock()
 }
 
 IntSize
-ImageHost::GetImageSize() const
+ImageHost::GetImageSize()
 {
   const TimedImage* img = ChooseImage();
   if (img) {
