@@ -1328,27 +1328,35 @@ js_option('--enable-lto',
 def lto(value, c_compiler):
     cflags = []
     ldflags = []
+    enabled = None
 
-    # clang and clang-cl
-    if c_compiler.type in ('clang', 'clang-cl'):
-        if len(value) and value[0].lower() == 'full':
+    if value:
+        enabled = True
+        if c_compiler.type == 'clang':
+            if len(value) and value[0].lower() == 'full':
+                cflags.append("-flto")
+                ldflags.append("-flto")
+            else:
+                cflags.append("-flto=thin")
+                ldflags.append("-flto=thin")
+        elif c_compiler.type == 'clang-cl':
+            if len(value) and value[0].lower() == 'full':
+                cflags.append("-flto")
+            else:
+                cflags.append("-flto=thin")
+            # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
+            # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
+            cflags.append("-fuse-ld=lld");
+        else:
+            num_cores = multiprocessing.cpu_count()
             cflags.append("-flto")
-            ldflags.append("-flto")
-        elif value:
-            cflags.append("-flto=thin")
-            ldflags.append("-flto=thin")
+            cflags.append("-flifetime-dse=1")
 
-    # gcc and other compilers
-    elif value:
-        num_cores = multiprocessing.cpu_count()
-        cflags.append("-flto")
-        cflags.append("-flifetime-dse=1")
-
-        ldflags.append("-flto=%s" % num_cores)
-        ldflags.append("-flifetime-dse=1")
+            ldflags.append("-flto=%s" % num_cores)
+            ldflags.append("-flifetime-dse=1")
 
     return namespace(
-        enabled="1" if value else None,
+        enabled=enabled,
         cflags=cflags,
         ldflags=ldflags
     )
