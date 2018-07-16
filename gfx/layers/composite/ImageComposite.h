@@ -40,6 +40,12 @@ public:
 
   int32_t GetLastFrameID() const { return mLastFrameID; }
   int32_t GetLastProducerID() const { return mLastProducerID; }
+  uint32_t GetDroppedFramesAndReset()
+  {
+    uint32_t dropped = mDroppedFrames;
+    mDroppedFrames = 0;
+    return dropped;
+  }
 
   enum Bias {
     // Don't apply bias to frame times

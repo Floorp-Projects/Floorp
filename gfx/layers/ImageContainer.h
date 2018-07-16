@@ -356,6 +356,7 @@ public:
   explicit ImageContainerListener(ImageContainer* aImageContainer);
 
   void NotifyComposite(const ImageCompositeNotification& aNotification);
+  void NotifyDropped(uint32_t aDropped);
   void ClearImageContainer();
   void DropImageClient();
 private:
@@ -613,11 +614,11 @@ public:
    */
   uint32_t GetDroppedImageCount()
   {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mDroppedImageCount;
   }
 
   void NotifyComposite(const ImageCompositeNotification& aNotification);
+  void NotifyDropped(uint32_t aDropped);
 
   ImageContainerListener* GetImageContainerListener()
   {
@@ -675,8 +676,8 @@ private:
   // See GetPaintDelay. Accessed only with mRecursiveMutex held.
   TimeDuration mPaintDelay;
 
-  // See GetDroppedImageCount. Accessed only with mRecursiveMutex held.
-  uint32_t mDroppedImageCount;
+  // See GetDroppedImageCount.
+  mozilla::Atomic<uint32_t> mDroppedImageCount;
 
   // This is the image factory used by this container, layer managers using
   // this container can set an alternative image factory that will be used to
