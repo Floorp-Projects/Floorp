@@ -250,16 +250,18 @@ private:
   };
   already_AddRefed<PledgeSourceSet>
   EnumerateRawDevices(uint64_t aWindowId,
-                      dom::MediaSourceEnum aVideoType,
-                      dom::MediaSourceEnum aAudioType,
-                      DeviceEnumerationType aVideoEnumType = DeviceEnumerationType::Normal,
-                      DeviceEnumerationType aAudioEnumType = DeviceEnumerationType::Normal);
+                      dom::MediaSourceEnum      aVideoInputType,
+                      dom::MediaSourceEnum      aAudioInputType,
+                      MediaSinkEnum             aAudioOutputType,
+                      DeviceEnumerationType     aVideoInputEnumType = DeviceEnumerationType::Normal,
+                      DeviceEnumerationType     aAudioInputEnumType = DeviceEnumerationType::Normal);
   already_AddRefed<PledgeSourceSet>
   EnumerateDevicesImpl(uint64_t aWindowId,
-                       dom::MediaSourceEnum aVideoType,
-                       dom::MediaSourceEnum aAudioType,
-                       DeviceEnumerationType aVideoEnumType = DeviceEnumerationType::Normal,
-                       DeviceEnumerationType aAudioEnumType = DeviceEnumerationType::Normal);
+                       dom::MediaSourceEnum      aVideoInputType,
+                       dom::MediaSourceEnum      aAudioInputType,
+                       MediaSinkEnum             aAudioOutputType,
+                       DeviceEnumerationType     aVideoInputEnumType,
+                       DeviceEnumerationType     aAudioInputEnumType);
   already_AddRefed<PledgeChar>
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,
