@@ -82,6 +82,10 @@ SVGUseElement::SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo
 SVGUseElement::~SVGUseElement()
 {
   UnlinkSource();
+  MOZ_DIAGNOSTIC_ASSERT(
+    !OwnerDoc()->SVGUseElementNeedsShadowTreeUpdate(*this),
+    "Dying without unbinding?"
+  );
 }
 
 //----------------------------------------------------------------------
@@ -107,6 +111,26 @@ SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
   }
 
   return NS_FAILED(rv1) ? rv1 : rv2;
+}
+
+nsresult
+SVGUseElement::BindToTree(nsIDocument* aDocument,
+                          nsIContent* aParent,
+                          nsIContent* aBindingParent,
+                          bool aCompileEventHandlers)
+{
+  nsresult rv = SVGUseElementBase::BindToTree(aDocument, aParent, aBindingParent, aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  TriggerReclone();
+  return NS_OK;
+}
+
+void
+SVGUseElement::UnbindFromTree(bool aDeep, bool aNullParent)
+{
+  SVGUseElementBase::UnbindFromTree(aDeep, aNullParent);
+  OwnerDoc()->UnscheduleSVGUseElementShadowTreeUpdate(*this);
 }
 
 already_AddRefed<SVGAnimatedString>
@@ -204,21 +228,42 @@ SVGUseElement::NodeWillBeDestroyed(const nsINode *aNode)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIContent>
-SVGUseElement::CreateAnonymousContent()
+void
+SVGUseElement::UpdateShadowTree()
 {
+  MOZ_ASSERT(IsInComposedDoc());
+
   if (mReferencedElementTracker.get()) {
     mReferencedElementTracker.get()->RemoveMutationObserver(this);
   }
 
   LookupHref();
-  nsIContent* targetContent = mReferencedElementTracker.get();
-  if (!targetContent)
-    return nullptr;
+
+  RefPtr<ShadowRoot> shadow = GetShadowRoot();
+  if (!shadow) {
+    shadow = AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+  }
+  MOZ_ASSERT(shadow);
+
+  Element* targetElement = mReferencedElementTracker.get();
+  RefPtr<Element> newElement;
+
+  auto UpdateShadowTree = mozilla::MakeScopeExit([&]() {
+    nsIContent* firstChild = shadow->GetFirstChild();
+    if (firstChild) {
+      MOZ_ASSERT(!firstChild->GetNextSibling());
+      shadow->RemoveChildNode(firstChild, /* aNotify = */ true);
+    }
+
+    if (newElement) {
+      shadow->AppendChildTo(newElement, /* aNotify = */ true);
+    }
+  });
 
   // make sure target is valid type for <use>
   // QIable nsSVGGraphicsElement would eliminate enumerating all elements
-  if (!targetContent->IsAnyOfSVGElements(nsGkAtoms::svg,
+  if (!targetElement ||
+      !targetElement->IsAnyOfSVGElements(nsGkAtoms::svg,
                                          nsGkAtoms::symbol,
                                          nsGkAtoms::g,
                                          nsGkAtoms::path,
@@ -230,88 +275,91 @@ SVGUseElement::CreateAnonymousContent()
                                          nsGkAtoms::polyline,
                                          nsGkAtoms::polygon,
                                          nsGkAtoms::image,
-                                         nsGkAtoms::use))
-    return nullptr;
+                                         nsGkAtoms::use)) {
+    return;
+  }
 
   // circular loop detection
 
   // check 1 - check if we're a document descendent of the target
-  if (nsContentUtils::ContentIsDescendantOf(this, targetContent))
-    return nullptr;
+  if (nsContentUtils::ContentIsShadowIncludingDescendantOf(this, targetElement)) {
+    return;
+  }
 
   // check 2 - check if we're a clone, and if we already exist in the hierarchy
-  if (GetParent() && mOriginal) {
-    for (nsCOMPtr<nsIContent> content = GetParent();
-         content;
-         content = content->GetParent()) {
-      if (content->IsSVGElement(nsGkAtoms::use) &&
-          static_cast<SVGUseElement*>(content.get())->mOriginal == mOriginal) {
-        return nullptr;
+  if (mOriginal) {
+    for (nsINode* parent = GetParentOrHostNode();
+         parent;
+         parent = parent->GetParentOrHostNode()) {
+      SVGUseElement* use = SVGUseElement::FromNode(*parent);
+      if (use && use->mOriginal == mOriginal) {
+        return;
       }
     }
   }
 
-  nsNodeInfoManager* nodeInfoManager =
-    targetContent->OwnerDoc() == OwnerDoc() ?
-      nullptr : OwnerDoc()->NodeInfoManager();
-  nsCOMPtr<nsINode> newnode =
-    nsNodeUtils::Clone(targetContent, true, nodeInfoManager, nullptr,
-                       IgnoreErrors());
-  nsCOMPtr<nsIContent> newcontent = do_QueryInterface(newnode);
+  nsCOMPtr<nsIURI> baseURI = targetElement->GetBaseURI();
+  if (!baseURI) {
+    return;
+  }
 
-  if (!newcontent)
-    return nullptr;
+  {
+    nsNodeInfoManager* nodeInfoManager =
+      targetElement->OwnerDoc() == OwnerDoc()
+        ? nullptr
+        : OwnerDoc()->NodeInfoManager();
 
-  if (newcontent->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
-    nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
+    nsCOMPtr<nsINode> newNode =
+      nsNodeUtils::Clone(targetElement, true, nodeInfoManager, nullptr,
+                         IgnoreErrors());
+    if (!newNode) {
+      return;
+    }
 
+    MOZ_ASSERT(newNode->IsElement());
+    newElement = newNode.forget().downcast<Element>();
+  }
+
+  if (newElement->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
+    auto* newSVGElement = static_cast<nsSVGElement*>(newElement.get());
     if (mLengthAttributes[ATTR_WIDTH].IsExplicitlySet())
-      newElement->SetLength(nsGkAtoms::width, mLengthAttributes[ATTR_WIDTH]);
+      newSVGElement->SetLength(nsGkAtoms::width, mLengthAttributes[ATTR_WIDTH]);
     if (mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet())
-      newElement->SetLength(nsGkAtoms::height, mLengthAttributes[ATTR_HEIGHT]);
+      newSVGElement->SetLength(nsGkAtoms::height, mLengthAttributes[ATTR_HEIGHT]);
   }
 
   // Store the base URI
-  nsCOMPtr<nsIURI> baseURI = targetContent->GetBaseURI();
-  if (!baseURI) {
-    return nullptr;
-  }
   mContentURLData = new URLExtraData(baseURI.forget(),
                                      do_AddRef(OwnerDoc()->GetDocumentURI()),
                                      do_AddRef(NodePrincipal()));
 
-  targetContent->AddMutationObserver(this);
-
-#ifdef DEBUG
-  // Our anonymous clone can get restyled by various things
-  // (e.g. SMIL).  Reconstructing its frame is OK, though, because
-  // it's going to be our _only_ child in the frame tree, so can't get
-  // mis-ordered with anything.
-  newcontent->SetProperty(nsGkAtoms::restylableAnonymousNode,
-                          reinterpret_cast<void*>(true));
-#endif // DEBUG
-
-  return newcontent.forget();
+  targetElement->AddMutationObserver(this);
 }
 
 nsIURI*
 SVGUseElement::GetSourceDocURI()
 {
-  nsIContent* targetContent = mReferencedElementTracker.get();
-  if (!targetContent)
+  nsIContent* targetElement = mReferencedElementTracker.get();
+  if (!targetElement) {
     return nullptr;
+  }
 
-  return targetContent->OwnerDoc()->GetDocumentURI();
+  return targetElement->OwnerDoc()->GetDocumentURI();
+}
+
+static nsINode*
+GetClonedChild(const SVGUseElement& aUseElement)
+{
+  const ShadowRoot* shadow = aUseElement.GetShadowRoot();
+  return shadow ? shadow->GetFirstChild() : nullptr;
 }
 
 bool
 SVGUseElement::OurWidthAndHeightAreUsed() const
 {
-  auto* frame = GetFrame();
-  if (!frame || !frame->GetContentClone()) {
-    return false;
-  }
-  return frame->GetContentClone()->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol);
+  nsINode* clonedChild = GetClonedChild(*this);
+  return clonedChild &&
+    clonedChild->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol);
 }
 
 //----------------------------------------------------------------------
@@ -324,32 +372,30 @@ SVGUseElement::SyncWidthOrHeight(nsAtom* aName)
                "The clue is in the function name");
   NS_ASSERTION(OurWidthAndHeightAreUsed(), "Don't call this");
 
-  auto* frame = GetFrame();
-  nsIContent* clone = frame ? frame->GetContentClone() : nullptr;
-
-  if (OurWidthAndHeightAreUsed()) {
-    auto* target = static_cast<nsSVGElement*>(clone);
-    uint32_t index = *sLengthInfo[ATTR_WIDTH].mName == aName ? ATTR_WIDTH : ATTR_HEIGHT;
-
-    if (mLengthAttributes[index].IsExplicitlySet()) {
-      target->SetLength(aName, mLengthAttributes[index]);
-      return;
-    }
-    if (clone->IsSVGElement(nsGkAtoms::svg)) {
-      // Our width/height attribute is now no longer explicitly set, so we
-      // need to revert the clone's width/height to the width/height of the
-      // content that's being cloned.
-      TriggerReclone();
-      return;
-    }
-    // Our width/height attribute is now no longer explicitly set, so we
-    // need to set the value to 100%
-    nsSVGLength2 length;
-    length.Init(SVGContentUtils::XY, 0xff,
-                100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE);
-    target->SetLength(aName, length);
+  if (!OurWidthAndHeightAreUsed()) {
     return;
   }
+
+  auto* target = nsSVGElement::FromNode(GetClonedChild(*this));
+  uint32_t index = *sLengthInfo[ATTR_WIDTH].mName == aName ? ATTR_WIDTH : ATTR_HEIGHT;
+
+  if (mLengthAttributes[index].IsExplicitlySet()) {
+    target->SetLength(aName, mLengthAttributes[index]);
+    return;
+  }
+  if (target->IsSVGElement(nsGkAtoms::svg)) {
+    // Our width/height attribute is now no longer explicitly set, so we
+    // need to revert the clone's width/height to the width/height of the
+    // content that's being cloned.
+    TriggerReclone();
+    return;
+  }
+  // Our width/height attribute is now no longer explicitly set, so we
+  // need to set the value to 100%
+  nsSVGLength2 length;
+  length.Init(SVGContentUtils::XY, 0xff,
+              100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE);
+  target->SetLength(aName, length);
 }
 
 void
@@ -381,13 +427,9 @@ SVGUseElement::LookupHref()
 void
 SVGUseElement::TriggerReclone()
 {
-  nsIDocument *doc = GetComposedDoc();
-  if (!doc)
-    return;
-  nsIPresShell *presShell = doc->GetShell();
-  if (!presShell)
-    return;
-  presShell->PostRecreateFramesFor(this);
+  if (nsIDocument* doc = GetComposedDoc()) {
+    doc->ScheduleSVGUseElementShadowTreeUpdate(*this);
+  }
 }
 
 void

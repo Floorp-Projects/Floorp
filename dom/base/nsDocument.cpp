@@ -65,6 +65,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/SVGUseElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -7421,8 +7422,7 @@ nsIDocument::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 static bool
 Copy(nsIDocument* aDocument, void* aData)
 {
-  nsTArray<nsCOMPtr<nsIDocument> >* resources =
-    static_cast<nsTArray<nsCOMPtr<nsIDocument> >* >(aData);
+  auto* resources = static_cast<nsTArray<nsCOMPtr<nsIDocument>>*>(aData);
   resources->AppendElement(aDocument);
   return true;
 }
@@ -7435,7 +7435,8 @@ nsIDocument::FlushExternalResources(FlushType aType)
   if (GetDisplayDocument()) {
     return;
   }
-  nsTArray<nsCOMPtr<nsIDocument> > resources;
+
+  nsTArray<nsCOMPtr<nsIDocument>> resources;
   EnumerateExternalResources(Copy, &resources);
 
   for (uint32_t i = 0; i < resources.Length(); i++) {
@@ -9737,6 +9738,43 @@ nsIDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
     aPlugins.AppendElement(iter.Get()->GetKey());
   }
   EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
+}
+
+void
+nsIDocument::ScheduleSVGUseElementShadowTreeUpdate(SVGUseElement& aUseElement)
+{
+  MOZ_ASSERT(aUseElement.IsInComposedDoc());
+
+  mSVGUseElementsNeedingShadowTreeUpdate.PutEntry(&aUseElement);
+
+  if (nsIPresShell* shell = GetShell()) {
+    shell->EnsureStyleFlush();
+  }
+}
+
+void
+nsIDocument::DoUpdateSVGUseElementShadowTrees()
+{
+  MOZ_ASSERT(!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
+  nsTArray<RefPtr<SVGUseElement>> useElementsToUpdate;
+
+  do {
+    useElementsToUpdate.Clear();
+    useElementsToUpdate.SetCapacity(mSVGUseElementsNeedingShadowTreeUpdate.Count());
+
+    {
+      for (auto iter = mSVGUseElementsNeedingShadowTreeUpdate.ConstIter();
+           !iter.Done();
+           iter.Next()) {
+        useElementsToUpdate.AppendElement(iter.Get()->GetKey());
+      }
+      mSVGUseElementsNeedingShadowTreeUpdate.Clear();
+    }
+
+    for (auto& useElement : useElementsToUpdate) {
+      useElement->UpdateShadowTree();
+    }
+  } while (!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
 }
 
 void

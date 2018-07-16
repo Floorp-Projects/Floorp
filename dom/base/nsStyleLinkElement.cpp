@@ -298,8 +298,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   // All instances of nsStyleLinkElement should implement nsIContent.
   MOZ_ASSERT(thisContent);
 
-  if (thisContent->IsInAnonymousSubtree() &&
-      thisContent->IsAnonymousContentInSVGUseSubtree()) {
+  if (thisContent->IsInSVGUseShadowTree()) {
     // Stylesheets in <use>-cloned subtrees are disabled until we figure out
     // how they should behave.
     return Update { };
