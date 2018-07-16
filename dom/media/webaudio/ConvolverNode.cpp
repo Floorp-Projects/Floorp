@@ -99,6 +99,8 @@ public:
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
 
+    amount += mReverbInput.SizeOfExcludingThis(aMallocSizeOf, false);
+
     if (mReverb) {
       amount += mReverb->sizeOfIncludingThis(aMallocSizeOf);
     }
@@ -112,6 +114,8 @@ public:
   }
 
 private:
+  // Keeping mReverbInput across process calls avoids unnecessary reallocation.
+  AudioBlock mReverbInput;
   nsAutoPtr<WebCore::Reverb> mReverb;
   int32_t mLeftOverData;
   float mSampleRate;
@@ -131,12 +135,11 @@ ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
     return;
   }
 
-  AudioBlock input = aInput;
   if (aInput.IsNull()) {
     if (mLeftOverData > 0) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
-      input.AllocateChannels(1);
-      WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
+      mReverbInput.AllocateChannels(1);
+      WriteZeroesToAudioBlock(&mReverbInput, 0, WEBAUDIO_BLOCK_SIZE);
     } else {
       if (mLeftOverData != INT32_MIN) {
         mLeftOverData = INT32_MIN;
@@ -153,12 +156,14 @@ ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
     if (aInput.mVolume != 1.0f) {
       // Pre-multiply the input's volume
       uint32_t numChannels = aInput.ChannelCount();
-      input.AllocateChannels(numChannels);
+      mReverbInput.AllocateChannels(numChannels);
       for (uint32_t i = 0; i < numChannels; ++i) {
         const float* src = static_cast<const float*>(aInput.mChannelData[i]);
-        float* dest = input.ChannelFloatsForWrite(i);
+        float* dest = mReverbInput.ChannelFloatsForWrite(i);
         AudioBlockCopyChannelWithScale(src, aInput.mVolume, dest);
       }
+    } else {
+      mReverbInput = aInput;
     }
 
     if (mLeftOverData <= 0) {
@@ -172,7 +177,7 @@ ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
   }
   aOutput->AllocateChannels(2);
 
-  mReverb->process(&input, aOutput);
+  mReverb->process(&mReverbInput, aOutput);
 }
 
 ConvolverNode::ConvolverNode(AudioContext* aContext)
