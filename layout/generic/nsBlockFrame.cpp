@@ -4346,8 +4346,7 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
     nextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
   }
 
-  StyleFloat floatStyle =
-    aFloat->StyleDisplay()->PhysicalFloats(aState.mReflowInput.GetWritingMode());
+  StyleFloat floatStyle = aFloat->StyleDisplay()->mFloat;
   if (floatStyle == StyleFloat::Left) {
     aState.FloatManager()->SetSplitLeftFloatAcrossBreak();
   } else {

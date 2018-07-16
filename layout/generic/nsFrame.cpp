@@ -5379,7 +5379,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
         }
       }
 
-      StyleFloat floatStyle = floatDisp->PhysicalFloats(wm);
+      StyleFloat floatStyle = floatDisp->mFloat;
       nscoord& floats_cur =
         floatStyle == StyleFloat::Left ? floats_cur_left : floats_cur_right;
       nscoord floatWidth = floatInfo.Width();
@@ -5414,7 +5414,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
       // no longer any floats we need to keep. See below.
       for (FloatInfo& floatInfo : Reversed(mFloats)) {
         const nsStyleDisplay* floatDisp = floatInfo.Frame()->StyleDisplay();
-        if (floatDisp->PhysicalFloats(wm) != clearFloatType) {
+        if (floatDisp->mFloat != clearFloatType) {
           newFloats.AppendElement(floatInfo);
         } else {
           // This is a float on the side that this break directly clears
