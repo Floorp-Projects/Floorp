@@ -8384,10 +8384,6 @@ var _url = __webpack_require__(334);
 
 var url = _interopRequireWildcard(_url);
 
-var _lodashMove = __webpack_require__(3751);
-
-var lodashMove = _interopRequireWildcard(_lodashMove);
-
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -8395,6 +8391,10 @@ var _classnames2 = _interopRequireDefault(_classnames);
 var _devtoolsSplitter = __webpack_require__(1440);
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
+
+var _lodashMove = __webpack_require__(3751);
+
+var _lodashMove2 = _interopRequireDefault(_lodashMove);
 
 var _Svg = __webpack_require__(1359);
 
@@ -8408,6 +8408,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // (eg. "my-module/Test") which is why they are nested in "vendored".
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
+
+
+// Modules imported without destructuring
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -8435,7 +8438,7 @@ const vendored = exports.vendored = {
   "devtools-splitter": _devtoolsSplitter2.default,
   "devtools-utils": devtoolsUtils,
   "fuzzaldrin-plus": fuzzaldrinPlus,
-  "lodash-move": lodashMove,
+  "lodash-move": _lodashMove2.default,
   "react-transition-group/Transition": transition,
   reselect,
   // Svg is required via relative paths, so the key is not imported path.
@@ -8443,8 +8446,6 @@ const vendored = exports.vendored = {
   Svg: _Svg2.default,
   url
 };
-
-// Modules imported without destructuring
 
 /***/ }),
 

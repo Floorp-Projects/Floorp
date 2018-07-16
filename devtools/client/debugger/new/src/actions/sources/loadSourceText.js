@@ -85,7 +85,7 @@ function loadSourceText(source) {
     try {
       await dispatch({
         type: "LOAD_SOURCE_TEXT",
-        sourceId: id,
+        sourceId: source.id,
         [_promise.PROMISE]: loadSource(source, {
           sourceMaps,
           client

@@ -28,19 +28,19 @@ function testForOf(dbg) {
     {
       line: 5,
       column: 7,
-      expression: "doThing",
+      expression: "doThing;",
       result: "doThing(arg)"
     },
     {
       line: 5,
       column: 13,
-      expression: "x",
+      expression: "x;",
       result: "1"
     },
     {
       line: 8,
       column: 16,
-      expression: "doThing",
+      expression: "doThing;",
       result: "doThing(arg)"
     }
   ]);
@@ -59,7 +59,7 @@ function testShadowing(dbg) {
       {
         line: 2,
         column: 9,
-        expression: "aVar",
+        expression: "aVar;",
         result: '"var3"'
       },
       {
@@ -77,7 +77,7 @@ function testShadowing(dbg) {
       {
         line: 10,
         column: 11,
-        expression: "aVar",
+        expression: "aVar;",
         result: '"var3"'
       },
       {
@@ -97,7 +97,7 @@ function testShadowing(dbg) {
       {
         line: 14,
         column: 13,
-        expression: "aVar",
+        expression: "aVar;",
         result: '"var3"'
       },
       {
@@ -145,7 +145,7 @@ function testImportedBindings(dbg) {
     {
       line: 26,
       column: 16,
-      expression: "aNamespace",
+      expression: "aNamespace;",
       fields: [["aNamed", "a-named"], ["default", "a-default"]]
     },
     {
@@ -175,7 +175,7 @@ function testImportedBindings(dbg) {
     {
       line: 35,
       column: 20,
-      expression: "aNamespace2",
+      expression: "aNamespace2;",
       fields: [["aNamed", "a-named2"], ["default", "a-default2"]]
     }
   ]);
