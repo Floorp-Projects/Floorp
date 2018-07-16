@@ -567,6 +567,9 @@ pref("media.recorder.video.frame_drops", true);
 // ALLOWED=0, BLOCKED=1, PROMPT=2, defined in dom/media/Autoplay.idl
 pref("media.autoplay.default", 0);
 
+// By default, don't block WebAudio from playing automatically.
+pref("media.autoplay.block-webaudio", false);
+
 // If "media.autoplay.default" is not ALLOWED, and this pref is true,
 // then audible media would only be allowed to autoplay after website has
 // been activated by specific user gestures, but non-audible
