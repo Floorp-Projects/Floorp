@@ -129,6 +129,10 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
 /* static */ bool
 AutoplayPolicy::IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext)
 {
+  if (!Preferences::GetBool("media.autoplay.block-webaudio", false)) {
+    return true;
+  }
+
   if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED) {
     return true;
   }
