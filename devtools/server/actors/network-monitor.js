@@ -53,6 +53,9 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.onStackTraceAvailable = this.onStackTraceAvailable.bind(this);
       this.messageManager.addMessageListener("debug:request-stack-available",
         this.onStackTraceAvailable);
+      this.onRequestContent = this.onRequestContent.bind(this);
+      this.messageManager.addMessageListener("debug:request-content",
+        this.onRequestContent);
       this.destroy = this.destroy.bind(this);
       this.messageManager.addMessageListener("debug:destroy-network-monitor",
         this.destroy);
@@ -71,6 +74,8 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.stackTraces.clear();
       this.messageManager.removeMessageListener("debug:request-stack-available",
         this.onStackTraceAvailable);
+      this.messageManager.removeMessageListener("debug:request-content",
+        this.onRequestContent);
       this.messageManager.removeMessageListener("debug:destroy-network-monitor",
         this.destroy);
       this.messageManager = null;
@@ -83,6 +88,45 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     } else {
       this.stackTraces.set(msg.data.channelId, msg.data.stacktrace);
     }
+  },
+
+  getRequestContentForURL(url) {
+    const actor = this._networkEventActorsByURL.get(url);
+    if (!actor) {
+      return null;
+    }
+    const content = actor._response.content;
+    if (actor._discardResponseBody || actor._truncated || !content || !content.size) {
+      // Do not return the stylesheet text if there is no meaningful content or if it's
+      // still loading. Let the caller handle it by doing its own separate request.
+      return null;
+    }
+
+    if (content.text.type != "longString") {
+      // For short strings, the text is available directly.
+      return {
+        content: content.text,
+        contentType: content.mimeType,
+      };
+    }
+    // For long strings, look up the actor that holds the full text.
+    const longStringActor = this.conn._getOrCreateActor(content.text.actor);
+    if (!longStringActor) {
+      return null;
+    }
+    return {
+      content: longStringActor.str,
+      contentType: content.mimeType,
+    };
+  },
+
+  onRequestContent(msg) {
+    const { url } = msg.data;
+    const content = this.getRequestContentForURL(url);
+    this.messageManager.sendAsyncMessage("debug:request-content", {
+      url,
+      content,
+    });
   },
 
   getNetworkEventActor(channelId) {
