@@ -40,6 +40,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/StaticPrefs.h"
 
 #ifdef MOZ_X11
 #  ifdef CAIRO_HAS_XLIB_SURFACE
@@ -230,6 +231,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
                                        GtkWidgetState* aState,
                                        gint* aWidgetFlags)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   if (aState) {
     // For XUL checkboxes and radio buttons, the state of the parent
     // determines our state.
@@ -1392,6 +1398,11 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    StyleAppearance aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   switch (aWidgetType) {
     case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
@@ -1481,6 +1492,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
+
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
 
   switch (aWidgetType) {
     case StyleAppearance::ScrollbarbuttonUp:
@@ -1850,6 +1866,11 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return false;
 
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   switch (aWidgetType) {
   // Combobox dropdowns don't support native theming in vertical mode.
   case StyleAppearance::Menulist:
@@ -1980,6 +2001,11 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // XXXdwh At some point flesh all of this out.
   if (aWidgetType == StyleAppearance::MenulistButton ||
       aWidgetType == StyleAppearance::MozMenulistButton ||
@@ -1999,7 +2025,12 @@ nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aWidgetType)
 bool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aWidgetType)
 {
-   if (aWidgetType == StyleAppearance::Menulist ||
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
+  if (aWidgetType == StyleAppearance::Menulist ||
       aWidgetType == StyleAppearance::Button ||
       aWidgetType == StyleAppearance::Treeheadercell)
     return true;

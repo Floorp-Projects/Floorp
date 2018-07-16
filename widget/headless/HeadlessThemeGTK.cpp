@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HeadlessThemeGTK.h"
+
+#include "mozilla/StaticPrefs.h"
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
 
@@ -27,6 +29,11 @@ LayoutDeviceIntMargin
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                                   WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   LayoutDeviceIntMargin result;
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
@@ -122,6 +129,11 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, WidgetType aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
     case StyleAppearance::Radio:
@@ -170,6 +182,11 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
+
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
 
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
@@ -332,6 +349,11 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
   switch (aWidgetType) {
     case StyleAppearance::Button:
     case StyleAppearance::Radio:
@@ -424,6 +446,11 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::WidgetIsContainer(WidgetType aWidgetType)
 {
+  if (aWidgetType == StyleAppearance::MenulistButton &&
+      StaticPrefs::layout_css_webkit_appearance_enabled()) {
+    aWidgetType = StyleAppearance::Menulist;
+  }
+
     if (aWidgetType == StyleAppearance::MenulistButton ||
         aWidgetType == StyleAppearance::MozMenulistButton ||
         aWidgetType == StyleAppearance::Radio ||
