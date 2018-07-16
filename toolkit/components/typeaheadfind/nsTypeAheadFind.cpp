@@ -116,6 +116,7 @@ nsTypeAheadFind::Init(nsIDocShell* aDocShell)
     mDidAddObservers = true;
     // ----------- Listen to prefs ------------------
     nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, true);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = prefInternal->AddObserver("accessibility.typeaheadfind", this, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
