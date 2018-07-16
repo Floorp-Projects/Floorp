@@ -3262,10 +3262,14 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
     }
   }
 
+  MediaSinkEnum audioOutputType = MediaSinkEnum::Other;
+  if (Preferences::GetBool("media.setsinkid.enabled")) {
+    audioOutputType = MediaSinkEnum::Speaker;
+  }
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowId,
                                                    MediaSourceEnum::Camera,
                                                    MediaSourceEnum::Microphone,
-                                                   MediaSinkEnum::Speaker,
+                                                   audioOutputType,
                                                    videoEnumerationType,
                                                    audioEnumerationType);
   p->Then([onSuccess, windowListener, sourceListener](SourceSet*& aDevices) mutable {
