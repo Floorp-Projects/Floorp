@@ -635,6 +635,7 @@ public:
 
   void EnumerateDevices(uint64_t aWindowId,
                         dom::MediaSourceEnum,
+                        MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 private:
@@ -644,6 +645,8 @@ private:
                              nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(uint64_t aWindowId,
                                   nsTArray<RefPtr<MediaDevice>>*);
+  void EnumerateSpeakerDevices(uint64_t aWindowId,
+                               nsTArray<RefPtr<MediaDevice> >*);
 
   nsCOMPtr<nsIThread> mThread;
 
