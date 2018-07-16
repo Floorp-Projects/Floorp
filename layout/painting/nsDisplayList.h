@@ -6445,8 +6445,7 @@ public:
    */
   const Matrix4x4Flagged& GetTransform() const;
   const Matrix4x4Flagged& GetInverseTransform() const;
-
-  Matrix4x4 GetTransformForRendering(mozilla::LayoutDevicePoint* aOutOrigin = nullptr);
+  Matrix4x4 GetTransformForRendering(mozilla::LayoutDevicePoint* aOutOrigin = nullptr) const;
 
   /**
    * Return the transform that is aggregation of all transform on the
