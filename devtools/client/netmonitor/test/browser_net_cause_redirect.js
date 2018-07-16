@@ -10,12 +10,13 @@
 
 add_task(async function() {
   const EXPECTED_REQUESTS = [
-    // Request to HTTP URL, redirects to HTTPS, has callstack
-    { status: 302, hasStack: true },
-    // Serves HTTPS, sets the Strict-Transport-Security header, no stack
-    { status: 200, hasStack: false },
+    // Request to HTTP URL, redirects to HTTPS
+    { status: 302 },
+    // Serves HTTPS, sets the Strict-Transport-Security header
+    // This request is the redirection caused by the first one
+    { status: 200 },
     // Second request to HTTP redirects to HTTPS internally
-    { status: 200, hasStack: true },
+    { status: 200 },
   ];
 
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
@@ -39,7 +40,7 @@ add_task(async function() {
 
   await Promise.all(requests);
 
-  EXPECTED_REQUESTS.forEach(({status, hasStack}, i) => {
+  EXPECTED_REQUESTS.forEach(({status}, i) => {
     const item = getSortedRequests(store.getState()).get(i);
 
     is(item.status, status, `Request #${i} has the expected status`);
@@ -47,12 +48,8 @@ add_task(async function() {
     const { stacktrace } = item;
     const stackLen = stacktrace ? stacktrace.length : 0;
 
-    if (hasStack) {
-      ok(stacktrace, `Request #${i} has a stacktrace`);
-      ok(stackLen > 0, `Request #${i} has a stacktrace with ${stackLen} items`);
-    } else {
-      is(stackLen, 0, `Request #${i} has an empty stacktrace`);
-    }
+    ok(stacktrace, `Request #${i} has a stacktrace`);
+    ok(stackLen > 0, `Request #${i} has a stacktrace with ${stackLen} items`);
   });
 
   // Send a request to reset the HSTS policy to state before the test
