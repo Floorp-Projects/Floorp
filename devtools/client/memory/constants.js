@@ -122,6 +122,7 @@ actions.RESIZE_SHORTEST_PATHS = "resize-shortest-paths";
 
 const COUNT = Object.freeze({ by: "count", count: true, bytes: true });
 const INTERNAL_TYPE = Object.freeze({ by: "internalType", then: COUNT });
+const DESCRIPTIVE_TYPE = Object.freeze({ by: "descriptiveType", then: COUNT });
 const ALLOCATION_STACK = Object.freeze({
   by: "allocationStack", then: COUNT,
   noStack: COUNT
@@ -137,6 +138,7 @@ const COARSE_TYPE = Object.freeze({
     noFilename: INTERNAL_TYPE
   },
   other: INTERNAL_TYPE,
+  domNode: DESCRIPTIVE_TYPE,
 });
 
 exports.censusDisplays = Object.freeze({
@@ -186,6 +188,7 @@ const DOMINATOR_TREE_LABEL_COARSE_TYPE = Object.freeze({
   }),
   strings: INTERNAL_TYPE,
   other: INTERNAL_TYPE,
+  domNode: DESCRIPTIVE_TYPE,
 });
 
 exports.labelDisplays = Object.freeze({

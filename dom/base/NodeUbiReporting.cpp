@@ -64,6 +64,12 @@ JS::ubi::Concrete<nsINode>::size(mozilla::MallocSizeOf mallocSizeOf) const
   return n;
 }
 
+const char16_t*
+JS::ubi::Concrete<nsINode>::descriptiveTypeName() const
+{
+  return get().NodeName().get();
+}
+
 JS::ubi::Node::Size
 JS::ubi::Concrete<nsIDocument>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {

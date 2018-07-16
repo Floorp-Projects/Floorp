@@ -106,31 +106,37 @@ message StackFrame {
 
 // A serialized version of `JS::ubi::Node` and its outgoing edges.
 message Node {
-    optional uint64     id                   = 1;
+    optional uint64     id                     = 1;
 
     // De-duplicated two-byte string.
     oneof TypeNameOrRef {
-        bytes           typeName             = 2;
-        uint64          typeNameRef          = 3;
+        bytes           typeName               = 2;
+        uint64          typeNameRef            = 3;
     }
 
-    optional uint64     size                 = 4;
-    repeated Edge       edges                = 5;
-    optional StackFrame allocationStack      = 6;
+    optional uint64     size                   = 4;
+    repeated Edge       edges                  = 5;
+    optional StackFrame allocationStack        = 6;
 
     // De-duplicated one-byte string.
     oneof JSObjectClassNameOrRef {
-        bytes           jsObjectClassName    = 7;
-        uint64          jsObjectClassNameRef = 8;
+        bytes           jsObjectClassName      = 7;
+        uint64          jsObjectClassNameRef   = 8;
     }
 
     // JS::ubi::CoarseType. Defaults to Other.
-    optional uint32     coarseType           = 9 [default = 0];
+    optional uint32     coarseType             = 9 [default = 0];
 
     // De-duplicated one-byte string.
     oneof ScriptFilenameOrRef {
-        bytes           scriptFilename       = 10;
-        uint64          scriptFilenameRef    = 11;
+        bytes           scriptFilename         = 10;
+        uint64          scriptFilenameRef      = 11;
+    }
+
+    // De-duplicated one-byte string.
+    oneof descriptiveTypeNameOrRef {
+        bytes           descriptiveTypeName    = 12;
+        uint64          descriptiveTypeNameRef = 13;
     }
 }
 
