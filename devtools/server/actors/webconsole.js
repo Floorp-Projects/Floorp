@@ -348,6 +348,12 @@ WebConsoleActor.prototype =
       this.networkMonitorActor = null;
     }
     if (this.networkMonitorActorId) {
+      const messageManager = this.parentActor.messageManager;
+      if (messageManager) {
+        messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
+          actorId: this.networkMonitorActorId
+        });
+      }
       this.networkMonitorActorId = null;
     }
     if (this.networkMonitorChildActor) {
@@ -617,10 +623,11 @@ WebConsoleActor.prototype =
           }
           if (!this.networkMonitorActorId && !this.networkMonitorActor) {
             // Create a StackTraceCollector that's going to be shared both by
-            // the NetworkMonitorChild (getting messages about requests from
-            // parent) and by the NetworkMonitor that directly watches service
-            // workers requests.
-            this.stackTraceCollector = new StackTraceCollector({ window });
+            // the NetworkMonitorActor running in the same process for service worker
+            // requests, as well with the NetworkMonitorActor running in the parent
+            // process. It will communicate via message manager for this one.
+            this.stackTraceCollector = new StackTraceCollector({ window },
+              messageManager);
             this.stackTraceCollector.init();
 
             if (messageManager && processBoundary) {
@@ -639,10 +646,12 @@ WebConsoleActor.prototype =
               // Spawn also one in the child to listen to service workers
               this.networkMonitorChildActor = new NetworkMonitorActor(this.conn,
                 { window },
-                this.actorID);
+                this.actorID,
+                null,
+                this.stackTraceCollector);
             } else {
               this.networkMonitorActor = new NetworkMonitorActor(this.conn, { window },
-                this.actorID);
+                this.actorID, null, this.stackTraceCollector);
             }
           }
           startedListeners.push(listener);
@@ -747,6 +756,12 @@ WebConsoleActor.prototype =
             this.networkMonitorActor = null;
           }
           if (this.networkMonitorActorId) {
+            const messageManager = this.parentActor.messageManager;
+            if (messageManager) {
+              messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
+                actorId: this.networkMonitorActorId
+              });
+            }
             this.networkMonitorActorId = null;
           }
           if (this.networkMonitorChildActor) {
