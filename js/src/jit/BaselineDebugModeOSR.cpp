@@ -1182,6 +1182,9 @@ DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(JSContext* cx,
                                                        uint8_t* oldAddr, uint8_t* newAddr)
 {
     DebugModeOSRVolatileJitFrameIter* iter;
-    for (iter = cx->liveVolatileJitFrameIter_; iter; iter = iter->prev)
+    for (iter = cx->liveVolatileJitFrameIter_; iter; iter = iter->prev) {
+        if (iter->isWasm())
+            continue;
         iter->asJSJit().exchangeReturnAddressIfMatch(oldAddr, newAddr);
+    }
 }
