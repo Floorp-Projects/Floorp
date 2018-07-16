@@ -18,6 +18,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 extern "C" {
 
@@ -552,6 +553,32 @@ RtlGetProcessHeap()
   PTEB teb = ::NtCurrentTeb();
   PPEB peb = teb->ProcessEnvironmentBlock;
   return peb->Reserved4[1];
+}
+
+inline Maybe<DWORD>
+GetParentProcessId()
+{
+  struct PROCESS_BASIC_INFORMATION
+  {
+    NTSTATUS ExitStatus;
+    PPEB PebBaseAddress;
+    ULONG_PTR AffinityMask;
+    KPRIORITY BasePriority;
+    ULONG_PTR UniqueProcessId;
+    ULONG_PTR InheritedFromUniqueProcessId;
+  };
+
+  ULONG returnLength;
+  PROCESS_BASIC_INFORMATION pbi = {};
+  NTSTATUS status = ::NtQueryInformationProcess(::GetCurrentProcess(),
+                                                ProcessBasicInformation,
+                                                &pbi, sizeof(pbi),
+                                                &returnLength);
+  if (!NT_SUCCESS(status)) {
+    return Nothing();
+  }
+
+  return Some(static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF));
 }
 
 } // namespace nt
