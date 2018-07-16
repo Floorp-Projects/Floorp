@@ -144,8 +144,6 @@ enum class StyleFloat : uint8_t {
   None,
   Left,
   Right,
-  InlineStart,
-  InlineEnd
 };
 
 // float-edge
