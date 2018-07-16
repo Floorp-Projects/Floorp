@@ -8,11 +8,7 @@ package org.mozilla.gecko.mma;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -29,6 +25,7 @@ import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.ContextUtils;
+import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.HashMap;
@@ -73,11 +70,15 @@ public class MmaDelegate {
 
     public static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
     private static final String KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT = "android.not_a_preference.fennec.default.browser.status";
+    private static final String KEY_ANDROID_PREF_BOOLEAN_FOCUS_INSTALLED = "android.not_a_preference.focus.package.installed";
+    private static final String KEY_ANDROID_PREF_BOOLEAN_KLAR_INSTALLED = "android.not_a_preference.klar.package.installed";
 
     private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
 
     private static final MmaInterface mmaHelper = MmaConstants.getMma();
     private static Context applicationContext;
+    private static PackageAddedReceiver packageAddedReceiver;
+    private static String activityName;     // used to retrieve Activity's SharedPreferences
 
     public static void init(final Activity activity,
                             final MmaVariablesChangedListener remoteVariablesListener) {
@@ -97,6 +98,10 @@ public class MmaDelegate {
         }
         mmaHelper.event(MmaDelegate.LAUNCH_BROWSER);
 
+        activityName = activity.getLocalClassName();
+        registerInstalledPackagesReceiver(activity);
+        notifyAboutPreviouslyInstalledPackages(activity);
+
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -105,8 +110,18 @@ public class MmaDelegate {
         });
     }
 
+    /**
+     * Stop LeanPlum functionality.
+     */
     public static void stop() {
         mmaHelper.stop();
+    }
+
+    /**
+     * Clear resources used while the app was in foreground.
+     */
+    public static void flushResources(@NonNull final Activity activity) {
+        unregisterInstalledPackagesReceiver(activity);
     }
 
     /* This method must be called at background thread to avoid performance issues in some API level */
@@ -130,32 +145,74 @@ public class MmaDelegate {
             return;
         }
 
-        final SharedPreferences sharedPreferences = activity.getPreferences(Context.MODE_PRIVATE);
+        final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
         final boolean isFennecDefaultBrowser = isDefaultBrowser(activity);
 
         // Only if this is not the first run of LeanPlum and we previously tracked default browser status
         // we can check for changes
-        if (sharedPreferences.contains(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT)) {
+        if (prefs.contains(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT)) {
             // Will only inform LeanPlum of the event if Fennec was not previously the default browser
-            if (!sharedPreferences.getBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, true) && isFennecDefaultBrowser) {
+            if (!prefs.getBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, true) && isFennecDefaultBrowser) {
                 track(CHANGED_DEFAULT_TO_FENNEC);
             }
         }
 
-        sharedPreferences.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, isFennecDefaultBrowser).apply();
+        prefs.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, isFennecDefaultBrowser).apply();
     }
 
+    /**
+     * Track packages installs while the app was not running.
+     */
+    private static void notifyAboutPreviouslyInstalledPackages(@NonNull final Activity activity) {
+        if (!isMmaAllowed(activity)) {
+            return;
+        }
+
+        final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
+        boolean isFocusInstalled = ContextUtils.isPackageInstalled(activity, PACKAGE_NAME_FOCUS);
+        boolean isKlarInstalled = ContextUtils.isPackageInstalled(activity, PACKAGE_NAME_KLAR);
+
+        // Only if this is not the first run of LeanPlum and we previously tracked this events
+        // we can check for changes
+        if (prefs.contains(KEY_ANDROID_PREF_BOOLEAN_FOCUS_INSTALLED)) {
+            // Will only inform LeanPlum of the event if the package was not installed before
+            if (!prefs.getBoolean(KEY_ANDROID_PREF_BOOLEAN_FOCUS_INSTALLED, true) && isFocusInstalled) {
+                // Already know Mma is enabled, safe to call directly and avoid a superfluous check
+                mmaHelper.event(INSTALLED_FOCUS);
+            }
+            if (!prefs.getBoolean(KEY_ANDROID_PREF_BOOLEAN_KLAR_INSTALLED, true) && isKlarInstalled) {
+                mmaHelper.event(INSTALLED_KLAR);
+            }
+        }
+
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY_ANDROID_PREF_BOOLEAN_FOCUS_INSTALLED, isFocusInstalled);
+        editor.putBoolean(KEY_ANDROID_PREF_BOOLEAN_KLAR_INSTALLED, isKlarInstalled);
+        editor.apply();
+    }
+
+    // Method called only by the Receiver which is registered in Activity's onCreate
+    // and unregistered in Activity's onDestroy()
     static void trackJustInstalledPackage(@NonNull final Context context, @NonNull final String packageName,
                                           final boolean firstTimeInstall) {
         if (!isMmaAllowed(context)) {
             return;
         }
 
-        if (packageName.equals(PACKAGE_NAME_FOCUS) && firstTimeInstall) {
+        final boolean justInstalledFocus = packageName.equals(PACKAGE_NAME_FOCUS) && firstTimeInstall;
+        final boolean justInstalledKlar = packageName.equals(PACKAGE_NAME_KLAR) && firstTimeInstall;
+
+        if (justInstalledFocus) {
             // Already know Mma is enabled, safe to call directly and avoid a superfluous check
             mmaHelper.event(INSTALLED_FOCUS);
-        } else if (packageName.equals(PACKAGE_NAME_KLAR) && firstTimeInstall) {
+            final SharedPreferences prefs =
+                    applicationContext.getSharedPreferences(activityName, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_FOCUS_INSTALLED, justInstalledFocus).apply();
+        } else if (justInstalledKlar) {
             mmaHelper.event(INSTALLED_KLAR);
+            final SharedPreferences prefs =
+                    applicationContext.getSharedPreferences(activityName, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_KLAR_INSTALLED, justInstalledKlar).apply();
         }
     }
 
@@ -202,14 +259,8 @@ public class MmaDelegate {
     }
 
     public static boolean isDefaultBrowser(Context context) {
-        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
-        final ResolveInfo info = context.getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        if (info == null) {
-            // No default is set
-            return false;
-        }
-        final String packageName = info.activityInfo.packageName;
-        return (TextUtils.equals(packageName, context.getPackageName()));
+        final String defaultBrowserPackageName = PackageUtil.getDefaultBrowserPackage(context);
+        return (TextUtils.equals(defaultBrowserPackageName, context.getPackageName()));
     }
 
     // Always use pass-in context. Do not use applicationContext here. applicationContext will be null if MmaDelegate.init() is not called.
@@ -231,13 +282,25 @@ public class MmaDelegate {
             return DEBUG_LEANPLUM_DEVICE_ID;
         }
 
-        final SharedPreferences sharedPreferences = activity.getPreferences(Context.MODE_PRIVATE);
-        String deviceId = sharedPreferences.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+        final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
+        String deviceId = prefs.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
         if (deviceId == null) {
             deviceId = UUID.randomUUID().toString();
-            sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
+            prefs.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
         }
         return deviceId;
+    }
+
+    private static void registerInstalledPackagesReceiver(@NonNull final Activity activity) {
+        packageAddedReceiver = new PackageAddedReceiver();
+        activity.registerReceiver(packageAddedReceiver, PackageAddedReceiver.getIntentFilter());
+    }
+
+    private static void unregisterInstalledPackagesReceiver(@NonNull final Activity activity) {
+        if (packageAddedReceiver != null) {
+            activity.unregisterReceiver(packageAddedReceiver);
+            packageAddedReceiver = null;
+        }
     }
 
     public interface MmaVariablesChangedListener {

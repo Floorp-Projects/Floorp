@@ -11,8 +11,9 @@
 
 #include <arm_neon.h>
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 //------------------------------------------------------------------------------
@@ -342,8 +343,6 @@ void aom_d135_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride,
   vst1_lane_u32((uint32_t *)(dst + 3 * stride), r3, 0);
 }
 
-#if !HAVE_NEON_ASM
-
 void aom_v_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride,
                               const uint8_t *above, const uint8_t *left) {
   int i;
@@ -529,4 +528,3 @@ void aom_h_predictor_32x32_neon(uint8_t *dst, ptrdiff_t stride,
     }
   }
 }
-#endif  // !HAVE_NEON_ASM

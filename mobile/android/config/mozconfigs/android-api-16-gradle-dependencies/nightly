@@ -36,6 +36,7 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
+export MOZ_ANDROID_MMA=1
 export MOZ_ANDROID_POCKET=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

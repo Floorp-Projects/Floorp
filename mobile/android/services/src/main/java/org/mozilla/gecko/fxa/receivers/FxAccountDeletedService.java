@@ -4,14 +4,17 @@
 
 package org.mozilla.gecko.fxa.receivers;
 
-import android.app.IntentService;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentService;
 import android.text.TextUtils;
 
+import org.mozilla.gecko.GeckoServicesCreatorService;
+import org.mozilla.gecko.JobIdsConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException;
@@ -20,7 +23,6 @@ import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException.F
 import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -40,21 +42,15 @@ import java.util.concurrent.Executors;
  * to delete their respective pickle files (since, if one remains, the account will be restored
  * when that channel is used).
  */
-public class FxAccountDeletedService extends IntentService {
+public class FxAccountDeletedService extends JobIntentService {
   public static final String LOG_TAG = FxAccountDeletedService.class.getSimpleName();
 
-  public FxAccountDeletedService() {
-    super(LOG_TAG);
+  public static void enqueueWork(@NonNull final Context context, @NonNull final Intent workIntent) {
+    enqueueWork(context, FxAccountDeletedService.class, JobIdsConstants.getIdForProfileDeleteJob(), workIntent);
   }
 
   @Override
-  protected void onHandleIntent(final Intent intent) {
-    // Intent can, in theory, be null. Bug 1025937.
-    if (intent == null) {
-      Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
-      return;
-    }
-
+  protected void onHandleWork(@NonNull Intent intent) {
     final Context context = this;
 
     long intentVersion = intent.getLongExtra(
@@ -83,12 +79,11 @@ public class FxAccountDeletedService extends IntentService {
     // Fire up gecko and unsubscribe push
     final Intent geckoIntent = new Intent();
     geckoIntent.setAction("create-services");
-    geckoIntent.setClassName(context, "org.mozilla.gecko.GeckoService");
     geckoIntent.putExtra("category", "android-push-service");
     geckoIntent.putExtra("data", "android-fxa-unsubscribe");
     geckoIntent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME",
             intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE));
-    context.startService(geckoIntent);
+    GeckoServicesCreatorService.enqueueWork(context, geckoIntent);
 
     // Delete client database and non-local tabs.
     Logger.info(LOG_TAG, "Deleting the entire Fennec clients database and non-local tabs");

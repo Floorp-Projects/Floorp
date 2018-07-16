@@ -6,11 +6,14 @@ package org.mozilla.gecko.fxa.sync;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
-import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentService;
 
+import org.mozilla.gecko.JobIdsConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient;
@@ -22,20 +25,31 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class FxAccountProfileService extends IntentService {
+public class FxAccountProfileService extends JobIntentService {
   private static final String LOG_TAG = "FxAccountProfileService";
   private static final Executor EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
-  public static final String KEY_AUTH_TOKEN = "auth_token";
-  public static final String KEY_PROFILE_SERVER_URI = "profileServerURI";
-  public static final String KEY_RESULT_RECEIVER = "resultReceiver";
+  private static final String KEY_AUTH_TOKEN = "auth_token";
+  private static final String KEY_PROFILE_SERVER_URI = "profileServerURI";
+  private static final String KEY_RESULT_RECEIVER = "resultReceiver";
+
   public static final String KEY_RESULT_STRING = "RESULT_STRING";
 
-  public FxAccountProfileService() {
-    super("FxAccountProfileService");
+  public static void enqueueWork(@NonNull final Context context, @NonNull final Intent workIntent) {
+    enqueueWork(context, FxAccountProfileService.class, JobIdsConstants.getIdForProfileFetchJob(), workIntent);
+  }
+
+  public static Intent getProfileFetchingIntent(@NonNull final String authToken,
+                                              @NonNull final String profileServerURI,
+                                              @NonNull final ResultReceiver callback) {
+    Intent intent = new Intent();
+    intent.putExtra(FxAccountProfileService.KEY_AUTH_TOKEN, authToken);
+    intent.putExtra(FxAccountProfileService.KEY_PROFILE_SERVER_URI, profileServerURI);
+    intent.putExtra(FxAccountProfileService.KEY_RESULT_RECEIVER, callback);
+    return intent;
   }
 
   @Override
-  protected void onHandleIntent(Intent intent) {
+  protected void onHandleWork(@NonNull Intent intent) {
     final String authToken = intent.getStringExtra(KEY_AUTH_TOKEN);
     final String profileServerURI = intent.getStringExtra(KEY_PROFILE_SERVER_URI);
     final ResultReceiver resultReceiver = intent.getParcelableExtra(KEY_RESULT_RECEIVER);

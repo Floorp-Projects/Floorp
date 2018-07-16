@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include <cstdio>
 #include <cstdlib>
@@ -22,30 +22,29 @@
 
 namespace {
 class TileIndependenceTest
-    : public ::libaom_test::CodecTestWith2Params<int, int>,
+    : public ::libaom_test::CodecTestWith3Params<int, int, int>,
       public ::libaom_test::EncoderTest {
  protected:
   TileIndependenceTest()
       : EncoderTest(GET_PARAM(0)), md5_fw_order_(), md5_inv_order_(),
-        n_tile_cols_(GET_PARAM(1)), n_tile_rows_(GET_PARAM(2)) {
+        n_tile_cols_(GET_PARAM(1)), n_tile_rows_(GET_PARAM(2)),
+        n_tile_groups_(GET_PARAM(3)) {
     init_flags_ = AOM_CODEC_USE_PSNR;
     aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
     cfg.w = 704;
-    cfg.h = 144;
+    cfg.h = 576;
     cfg.threads = 1;
     cfg.allow_lowbitdepth = 1;
     fw_dec_ = codec_->CreateDecoder(cfg, 0);
     inv_dec_ = codec_->CreateDecoder(cfg, 0);
     inv_dec_->Control(AV1_INVERT_TILE_DECODE_ORDER, 1);
 
-#if CONFIG_AV1
     if (fw_dec_->IsAV1() && inv_dec_->IsAV1()) {
       fw_dec_->Control(AV1_SET_DECODE_TILE_ROW, -1);
       fw_dec_->Control(AV1_SET_DECODE_TILE_COL, -1);
       inv_dec_->Control(AV1_SET_DECODE_TILE_ROW, -1);
       inv_dec_->Control(AV1_SET_DECODE_TILE_COL, -1);
     }
-#endif
   }
 
   virtual ~TileIndependenceTest() {
@@ -63,10 +62,9 @@ class TileIndependenceTest
     if (video->frame() == 1) {
       encoder->Control(AV1E_SET_TILE_COLUMNS, n_tile_cols_);
       encoder->Control(AV1E_SET_TILE_ROWS, n_tile_rows_);
-#if CONFIG_LOOPFILTERING_ACROSS_TILES
-      encoder->Control(AV1E_SET_TILE_LOOPFILTER, 0);
-#endif  // CONFIG_LOOPFILTERING_ACROSS_TILES
       SetCpuUsed(encoder);
+    } else if (video->frame() == 3) {
+      encoder->Control(AV1E_SET_NUM_TG, n_tile_groups_);
     }
   }
 
@@ -114,15 +112,16 @@ class TileIndependenceTest
  private:
   int n_tile_cols_;
   int n_tile_rows_;
+  int n_tile_groups_;
 };
 
 // run an encode with 2 or 4 tiles, and do the decode both in normal and
 // inverted tile ordering. Ensure that the MD5 of the output in both cases
 // is identical. If so, tiles are considered independent and the test passes.
 TEST_P(TileIndependenceTest, MD5Match) {
-#if CONFIG_EXT_TILE
   cfg_.large_scale_tile = 0;
-#endif  // CONFIG_EXT_TILE
+  fw_dec_->Control(AV1_SET_TILE_MODE, 0);
+  inv_dec_->Control(AV1_SET_TILE_MODE, 0);
   DoTest();
 }
 
@@ -134,36 +133,38 @@ class TileIndependenceTestLarge : public TileIndependenceTest {
 };
 
 TEST_P(TileIndependenceTestLarge, MD5Match) {
-#if CONFIG_EXT_TILE
   cfg_.large_scale_tile = 0;
-#endif  // CONFIG_EXT_TILE
+  fw_dec_->Control(AV1_SET_TILE_MODE, 0);
+  inv_dec_->Control(AV1_SET_TILE_MODE, 0);
   DoTest();
 }
 
 AV1_INSTANTIATE_TEST_CASE(TileIndependenceTest, ::testing::Values(0, 1),
-                          ::testing::Values(0, 1));
+                          ::testing::Values(0, 1), ::testing::Values(1, 2, 4));
 AV1_INSTANTIATE_TEST_CASE(TileIndependenceTestLarge, ::testing::Values(0, 1),
-                          ::testing::Values(0, 1));
+                          ::testing::Values(0, 1), ::testing::Values(1, 2, 4));
 
-#if CONFIG_EXT_TILE
 class TileIndependenceLSTest : public TileIndependenceTest {};
 
-TEST_P(TileIndependenceLSTest, MD5Match) {
+TEST_P(TileIndependenceLSTest, DISABLED_MD5Match) {
   cfg_.large_scale_tile = 1;
+  fw_dec_->Control(AV1_SET_TILE_MODE, 1);
+  inv_dec_->Control(AV1_SET_TILE_MODE, 1);
   DoTest();
 }
 
 class TileIndependenceLSTestLarge : public TileIndependenceTestLarge {};
 
-TEST_P(TileIndependenceLSTestLarge, MD5Match) {
+TEST_P(TileIndependenceLSTestLarge, DISABLED_MD5Match) {
   cfg_.large_scale_tile = 1;
+  fw_dec_->Control(AV1_SET_TILE_MODE, 1);
+  inv_dec_->Control(AV1_SET_TILE_MODE, 1);
   DoTest();
 }
 
 AV1_INSTANTIATE_TEST_CASE(TileIndependenceLSTest, ::testing::Values(1, 2, 32),
-                          ::testing::Values(1, 2, 32));
+                          ::testing::Values(1, 2, 32), ::testing::Values(1));
 AV1_INSTANTIATE_TEST_CASE(TileIndependenceLSTestLarge,
                           ::testing::Values(1, 2, 32),
-                          ::testing::Values(1, 2, 32));
-#endif  // CONFIG_EXT_TILE
+                          ::testing::Values(1, 2, 32), ::testing::Values(1));
 }  // namespace

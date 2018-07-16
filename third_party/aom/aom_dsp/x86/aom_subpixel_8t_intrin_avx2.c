@@ -11,30 +11,11 @@
 
 #include <immintrin.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/x86/convolve.h"
+#include "aom_dsp/x86/convolve_avx2.h"
 #include "aom_ports/mem.h"
-
-// filters for 16_h8 and 16_v8
-DECLARE_ALIGNED(32, static const uint8_t, filt1_global_avx2[32]) = {
-  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt2_global_avx2[32]) = {
-  2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
-  2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt3_global_avx2[32]) = {
-  4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12,
-  4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt4_global_avx2[32]) = {
-  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
-  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14
-};
 
 #if defined(__clang__)
 #if (__clang_major__ > 0 && __clang_major__ < 3) ||            \
@@ -566,10 +547,4 @@ filter8_1dfunction aom_filter_block1d4_h2_ssse3;
 FUN_CONV_1D(horiz, x_step_q4, filter_x, h, src, , avx2);
 FUN_CONV_1D(vert, y_step_q4, filter_y, v, src - src_stride * 3, , avx2);
 
-// void aom_convolve8_avx2(const uint8_t *src, ptrdiff_t src_stride,
-//                          uint8_t *dst, ptrdiff_t dst_stride,
-//                          const int16_t *filter_x, int x_step_q4,
-//                          const int16_t *filter_y, int y_step_q4,
-//                          int w, int h);
-FUN_CONV_2D(, avx2);
 #endif  // HAVE_AX2 && HAVE_SSSE3

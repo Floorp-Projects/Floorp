@@ -11,7 +11,9 @@
 
 #ifndef AV1_COMMON_LOOPFILTER_THREAD_H_
 #define AV1_COMMON_LOOPFILTER_THREAD_H_
-#include "./aom_config.h"
+
+#include "config/aom_config.h"
+
 #include "av1/common/av1_loopfilter.h"
 #include "aom_util/aom_thread.h"
 
@@ -20,16 +22,21 @@ extern "C" {
 #endif
 
 struct AV1Common;
-struct FRAME_COUNTS;
+
+typedef struct AV1LfMTInfo {
+  int mi_row;
+  int plane;
+  int dir;
+} AV1LfMTInfo;
 
 // Loopfilter row synchronization
 typedef struct AV1LfSyncData {
 #if CONFIG_MULTITHREAD
-  pthread_mutex_t *mutex_;
-  pthread_cond_t *cond_;
+  pthread_mutex_t *mutex_[MAX_MB_PLANE];
+  pthread_cond_t *cond_[MAX_MB_PLANE];
 #endif
   // Allocate memory to store the loop-filtered superblock index in each row.
-  int *cur_sb_col;
+  int *cur_sb_col[MAX_MB_PLANE];
   // The optimal sync_range for different resolution and platform should be
   // determined by testing. Currently, it is chosen to be a power-of-2 number.
   int sync_range;
@@ -38,27 +45,72 @@ typedef struct AV1LfSyncData {
   // Row-based parallel loopfilter data
   LFWorkerData *lfdata;
   int num_workers;
+
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *job_mutex;
+#endif
+  AV1LfMTInfo *job_queue;
+  int jobs_enqueued;
+  int jobs_dequeued;
 } AV1LfSync;
 
-// Allocate memory for loopfilter row synchronization.
-void av1_loop_filter_alloc(AV1LfSync *lf_sync, struct AV1Common *cm, int rows,
-                           int width, int num_workers);
+typedef struct AV1LrMTInfo {
+  int v_start;
+  int v_end;
+  int lr_unit_row;
+  int plane;
+  int sync_mode;
+  int v_copy_start;
+  int v_copy_end;
+} AV1LrMTInfo;
+
+typedef struct LoopRestorationWorkerData {
+  int32_t *rst_tmpbuf;
+  void *rlbs;
+  void *lr_ctxt;
+} LRWorkerData;
+
+// Looprestoration row synchronization
+typedef struct AV1LrSyncData {
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *mutex_[MAX_MB_PLANE];
+  pthread_cond_t *cond_[MAX_MB_PLANE];
+#endif
+  // Allocate memory to store the loop-restoration block index in each row.
+  int *cur_sb_col[MAX_MB_PLANE];
+  // The optimal sync_range for different resolution and platform should be
+  // determined by testing. Currently, it is chosen to be a power-of-2 number.
+  int sync_range;
+  int rows;
+  int num_planes;
+
+  int num_workers;
+
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *job_mutex;
+#endif
+  // Row-based parallel loopfilter data
+  LRWorkerData *lrworkerdata;
+
+  AV1LrMTInfo *job_queue;
+  int jobs_enqueued;
+  int jobs_dequeued;
+} AV1LrSync;
 
 // Deallocate loopfilter synchronization related mutex and data.
 void av1_loop_filter_dealloc(AV1LfSync *lf_sync);
 
-// Multi-threaded loopfilter that uses the tile threads.
 void av1_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
-                              struct macroblockd_plane *planes,
-                              int frame_filter_level,
-#if CONFIG_LOOPFILTER_LEVEL
-                              int frame_filter_level_r,
-#endif
-                              int y_only, int partial_frame, AVxWorker *workers,
-                              int num_workers, AV1LfSync *lf_sync);
-
-void av1_accumulate_frame_counts(struct FRAME_COUNTS *acc_counts,
-                                 struct FRAME_COUNTS *counts);
+                              struct macroblockd *mbd, int plane_start,
+                              int plane_end, int partial_frame,
+                              AVxWorker *workers, int num_workers,
+                              AV1LfSync *lf_sync);
+void av1_loop_restoration_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
+                                          struct AV1Common *cm,
+                                          int optimized_lr, AVxWorker *workers,
+                                          int num_workers, AV1LrSync *lr_sync,
+                                          void *lr_ctxt);
+void av1_loop_restoration_dealloc(AV1LrSync *lr_sync, int num_workers);
 
 #ifdef __cplusplus
 }  // extern "C"

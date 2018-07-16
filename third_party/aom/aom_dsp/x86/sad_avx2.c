@@ -9,7 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 #include <immintrin.h>
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_ports/mem.h"
 
 #define FSAD64_H(h)                                                           \

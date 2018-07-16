@@ -17,10 +17,12 @@
 # Environment check: Make sure input is available.
 aomdec_verify_environment() {
   if [ "$(av1_encode_available)" != "yes" ] ; then
-    if [ ! -e "${AV1_WEBM_FILE}" ] || \
-      [ ! -e "${AV1_FPM_WEBM_FILE}" ] || \
-      [ ! -e "${AV1_LT_50_FRAMES_WEBM_FILE}" ] ; then
-      elog "Libaom test data must exist in LIBAOM_TEST_DATA_PATH."
+    if [ ! -e "${AV1_IVF_FILE}" ] || \
+       [ ! -e "${AV1_OBU_ANNEXB_FILE}" ] || \
+       [ ! -e "${AV1_OBU_SEC5_FILE}" ] || \
+       [ ! -e "${AV1_WEBM_FILE}" ]; then
+      elog "Libaom test data must exist before running this test script when " \
+           " encoding is disabled. "
       return 1
     fi
   fi
@@ -38,10 +40,8 @@ aomdec_pipe() {
   local readonly input="$1"
   shift
   if [ ! -e "${input}" ]; then
-    local file="${AOM_TEST_OUTPUT_DIR}/test_encode.ivf"
-    encode_yuv_raw_input_av1 "${file}" --ivf
-  else
-    local file="${input}"
+    elog "Input file ($input) missing in aomdec_pipe()"
+    return 1
   fi
   cat "${file}" | aomdec - "$@" ${devnull}
 }
@@ -63,62 +63,85 @@ aomdec_can_decode_av1() {
   fi
 }
 
+aomdec_av1_ivf() {
+  if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
+    local readonly file="${AV1_IVF_FILE}"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --ivf
+    fi
+    aomdec "${AV1_IVF_FILE}" --summary --noblit
+  fi
+}
+
+aomdec_av1_ivf_error_resilient() {
+  if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
+    local readonly file="av1.error-resilient.ivf"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --ivf --error-resilient=1
+    fi
+    aomdec "${file}" --summary --noblit
+  fi
+}
+
+aomdec_av1_ivf_multithread() {
+  if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
+    local readonly file="${AV1_IVF_FILE}"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --ivf
+    fi
+    for threads in 2 3 4 5 6 7 8; do
+      aomdec "${file}" --summary --noblit --threads=$threads
+    done
+  fi
+}
+
 aomdec_aom_ivf_pipe_input() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    aomdec_pipe "${AOM_IVF_FILE}" --summary --noblit
+    local readonly file="${AV1_IVF_FILE}"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --ivf
+    fi
+    aomdec_pipe "${AV1_IVF_FILE}" --summary --noblit
+  fi
+}
+
+aomdec_av1_obu_annexb() {
+  if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
+    local readonly file="${AV1_OBU_ANNEXB_FILE}"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --obu --annexb=1
+    fi
+    aomdec "${file}" --summary --noblit --annexb
+  fi
+}
+
+aomdec_av1_obu_section5() {
+  if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
+    local readonly file="${AV1_OBU_SEC5_FILE}"
+    if [ ! -e "${file}" ]; then
+      encode_yuv_raw_input_av1 "${file}" --obu
+    fi
+    aomdec "${file}" --summary --noblit
   fi
 }
 
 aomdec_av1_webm() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
-    if [ ! -e "${AV1_WEBM_FILE}" ]; then
-      local file="${AOM_TEST_OUTPUT_DIR}/test_encode.webm"
+    local readonly file="${AV1_WEBM_FILE}"
+    if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}"
-    else
-      aomdec "${AV1_WEBM_FILE}" --summary --noblit
     fi
+    aomdec "${AV1_WEBM_FILE}" --summary --noblit
   fi
 }
 
-aomdec_av1_webm_frame_parallel() {
-  if [ "$(aomdec_can_decode_av1)" = "yes" ] && \
-     [ "$(webm_io_available)" = "yes" ]; then
-    local file
-    if [ ! -e "${AV1_WEBM_FILE}" ]; then
-      file="${AOM_TEST_OUTPUT_DIR}/test_encode.webm"
-      encode_yuv_raw_input_av1 "${file}" "--ivf --error-resilient=1 "
-    else
-      file="${AV1_FPM_WEBM_FILE}"
-    fi
-    for threads in 2 3 4 5 6 7 8; do
-      aomdec "${file}" --summary --noblit --threads=$threads \
-        --frame-parallel
-    done
-  fi
-}
-
-# TODO(vigneshv): Enable or remove this test and associated code.
-DISABLED_aomdec_av1_webm_less_than_50_frames() {
-  # ensure that reaching eof in webm_guess_framerate doesn't result in invalid
-  # frames in actual webm_read_frame calls.
-  if [ "$(aomdec_can_decode_av1)" = "yes" ] && \
-     [ "$(webm_io_available)" = "yes" ]; then
-    local readonly decoder="$(aom_tool_path aomdec)"
-    local readonly expected=10
-    local readonly num_frames=$(${AOM_TEST_PREFIX} "${decoder}" \
-      "${AV1_LT_50_FRAMES_WEBM_FILE}" --summary --noblit 2>&1 \
-      | awk '/^[0-9]+ decoded frames/ { print $1 }')
-    if [ "$num_frames" -ne "$expected" ]; then
-      elog "Output frames ($num_frames) != expected ($expected)"
-      return 1
-    fi
-  fi
-}
-
-aomdec_tests="aomdec_av1_webm
-              aomdec_av1_webm_frame_parallel
+aomdec_tests="aomdec_av1_ivf
+              aomdec_av1_ivf_error_resilient
+              aomdec_av1_ivf_multithread
               aomdec_aom_ivf_pipe_input
-              DISABLED_aomdec_av1_webm_less_than_50_frames"
+              aomdec_av1_obu_annexb
+              aomdec_av1_obu_section5
+              aomdec_av1_webm"
 
 run_tests aomdec_verify_environment "${aomdec_tests}"

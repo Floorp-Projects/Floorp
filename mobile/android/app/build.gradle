@@ -244,7 +244,6 @@ dependencies {
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
         implementation "com.google.android.gms:play-services-base:$google_play_services_version"
         implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
-        implementation "com.google.android.gms:play-services-measurement:$google_play_services_version"
     }
 
     // Include LeakCanary in local builds, but not in official builds.  Mach
@@ -444,6 +443,20 @@ android.applicationVariants.all configureVariantDebugLevel
 // official automation builds and not for local developer builds.
 import groovy.xml.XmlUtil
 
+// Workaround for fixing sub-dependencies upon gradle error:
+// All gms/firebase libraries must use the exact same version specification (mixing versions can
+// lead to runtime crashes). Found versions 15.0.1, 15.0.0. Examples include
+// com.google.android.gms:play-services-base:15.0.1 and com.google.android.gms:play-services-cast:15.0.0
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'com.google.android.gms') {
+                details.useVersion "$google_play_services_version"
+            }
+        }
+    }
+}
+
 android.applicationVariants.all { variant ->
     // Like 'local', 'localOld', or 'official'.
     def audienceDimension = variant.productFlavors[0].name
@@ -465,11 +478,6 @@ android.applicationVariants.all { variant ->
                     xml.depthFirst()
                         .findAll { it.name() == 'activity-alias' && it.'@android:name' == 'org.mozilla.gecko.App' }
                         .each { it.'@android:name' = '.App' }
-
-                    // Second, cull all manifest entries provided by com.google.android.gms.measurement.
-                    xml.depthFirst()
-                        .findAll { it.'@android:name'.text().contains('AppMeasurement') }
-                        .each { it.replaceNode {} }
 
                     manifestOutFile.write(XmlUtil.serialize(xml), 'UTF-8')
                 }

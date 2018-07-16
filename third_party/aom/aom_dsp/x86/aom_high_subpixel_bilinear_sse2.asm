@@ -174,6 +174,8 @@
 %endm
 %endif
 
+SECTION .text
+
 global sym(aom_highbd_filter_block1d4_v2_sse2) PRIVATE
 sym(aom_highbd_filter_block1d4_v2_sse2):
     push        rbp
@@ -243,86 +245,6 @@ sym(aom_highbd_filter_block1d16_v2_sse2):
     movdqu        xmm3, [rsi + 2*rax + 16]
 
     HIGH_APPLY_FILTER_16 0
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-%endif
-
-global sym(aom_highbd_filter_block1d4_v2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d4_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM_4
-.loop:
-    movq        xmm0, [rsi]                 ;load src
-    movq        xmm1, [rsi + 2*rax]
-
-    HIGH_APPLY_FILTER_4 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-%if ARCH_X86_64
-global sym(aom_highbd_filter_block1d8_v2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d8_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    SAVE_XMM 8
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM
-.loop:
-    movdqu      xmm0, [rsi]                 ;0
-    movdqu      xmm1, [rsi + 2*rax]         ;1
-
-    HIGH_APPLY_FILTER_8 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_highbd_filter_block1d16_v2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d16_v2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    SAVE_XMM 9
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM
-.loop:
-    movdqu        xmm0, [rsi]               ;0
-    movdqu        xmm1, [rsi + 2*rax]       ;1
-    movdqu        xmm2, [rsi + 16]
-    movdqu        xmm3, [rsi + 2*rax + 16]
-
-    HIGH_APPLY_FILTER_16 1
     jnz         .loop
 
     ; begin epilog
@@ -404,87 +326,6 @@ sym(aom_highbd_filter_block1d16_h2_sse2):
     movdqu      xmm3,   [rsi + 18]
 
     HIGH_APPLY_FILTER_16 0
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-%endif
-
-global sym(aom_highbd_filter_block1d4_h2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d4_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM_4
-.loop:
-    movdqu      xmm0, [rsi]                 ;load src
-    movdqa      xmm1, xmm0
-    psrldq      xmm1, 2
-
-    HIGH_APPLY_FILTER_4 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-%if ARCH_X86_64
-global sym(aom_highbd_filter_block1d8_h2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d8_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    SAVE_XMM 8
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM
-.loop:
-    movdqu      xmm0, [rsi]                 ;load src
-    movdqu      xmm1, [rsi + 2]
-
-    HIGH_APPLY_FILTER_8 1
-    jnz         .loop
-
-    ; begin epilog
-    pop         rdi
-    pop         rsi
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-global sym(aom_highbd_filter_block1d16_h2_avg_sse2) PRIVATE
-sym(aom_highbd_filter_block1d16_h2_avg_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 7
-    SAVE_XMM 9
-    push        rsi
-    push        rdi
-    ; end prolog
-
-    HIGH_GET_PARAM
-.loop:
-    movdqu      xmm0,   [rsi]               ;load src
-    movdqu      xmm1,   [rsi + 2]
-    movdqu      xmm2,   [rsi + 16]
-    movdqu      xmm3,   [rsi + 18]
-
-    HIGH_APPLY_FILTER_16 1
     jnz         .loop
 
     ; begin epilog

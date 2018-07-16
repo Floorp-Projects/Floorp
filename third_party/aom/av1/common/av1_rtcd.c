@@ -8,9 +8,11 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #define RTCD_C
-#include "./av1_rtcd.h"
+#include "config/av1_rtcd.h"
+
 #include "aom_ports/aom_once.h"
 
 void av1_rtcd() {

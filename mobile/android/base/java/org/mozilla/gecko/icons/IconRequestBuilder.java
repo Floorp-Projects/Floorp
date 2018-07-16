@@ -62,6 +62,15 @@ public class IconRequestBuilder {
     }
 
     /**
+     * Set the private mode to avoid saving the result to the disk.
+     */
+    @CheckResult
+    public IconRequestBuilder setPrivateMode(boolean isPrivate) {
+        internal.isPrivate = isPrivate;
+        return this;
+    }
+
+    /**
      * Skip the network and do not load an icon from a network connection.
      */
     @CheckResult
@@ -94,6 +103,16 @@ public class IconRequestBuilder {
     @CheckResult
     public IconRequestBuilder skipMemory() {
         internal.skipMemory = true;
+        return this;
+    }
+
+    /**
+     * If shouldSkipMemory is true then skip the memory cache and do not return
+     * a previously loaded icon.
+     */
+    @CheckResult
+    public IconRequestBuilder skipMemoryIf(boolean shouldSkipMemory) {
+        internal.skipMemory = shouldSkipMemory;
         return this;
     }
 
@@ -165,6 +184,7 @@ public class IconRequestBuilder {
         IconRequest request = new IconRequest(internal.getContext());
         request.pageUrl = internal.pageUrl;
         request.privileged = internal.privileged;
+        request.isPrivate = internal.isPrivate;
         request.icons = new TreeSet<>(internal.icons);
         request.skipNetwork = internal.skipNetwork;
         request.backgroundThread = internal.backgroundThread;

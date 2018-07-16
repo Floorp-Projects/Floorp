@@ -10,17 +10,16 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -44,7 +43,6 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
@@ -91,7 +89,8 @@ import org.mozilla.gecko.delegates.OfflineTabStatusDelegate;
 import org.mozilla.gecko.delegates.ScreenshotDelegate;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
-import org.mozilla.gecko.dlc.DownloadContentService;
+import org.mozilla.gecko.dlc.DlcStudyService;
+import org.mozilla.gecko.dlc.DlcSyncService;
 import org.mozilla.gecko.extensions.ExtensionPermissionsHelper;
 import org.mozilla.gecko.firstrun.OnboardingHelper;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
@@ -113,6 +112,7 @@ import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.lwt.LightweightTheme;
+import org.mozilla.gecko.media.PictureInPictureController;
 import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
@@ -233,8 +233,6 @@ public class BrowserApp extends GeckoApp
 
     public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
 
-    private static final String EOL_NOTIFIED = "eol_notified";
-
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
 
@@ -242,6 +240,7 @@ public class BrowserApp extends GeckoApp
     public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
     private VideoPlayer mVideoPlayer;
+    private PictureInPictureController mPipController;
     private BrowserToolbar mBrowserToolbar;
     private View doorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
@@ -274,6 +273,7 @@ public class BrowserApp extends GeckoApp
     private boolean mShowingToolbarChromeForActionBar;
 
     private SafeIntent safeStartingIntent;
+    private Intent startingIntentAfterPip;
     private boolean isInAutomation;
 
     private static class MenuItemInfo implements Parcelable {
@@ -727,7 +727,7 @@ public class BrowserApp extends GeckoApp
         if (!isInAutomation && AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
             // Kick off download of app content as early as possible so that in the best case it's
             // available before the user starts using the browser.
-            DownloadContentService.startStudy(this);
+            DlcStudyService.enqueueServiceWork(this);
         }
 
         // This has to be prepared prior to calling GeckoApp.onCreate, because
@@ -792,7 +792,7 @@ public class BrowserApp extends GeckoApp
         // Initialize Tab History Controller.
         tabHistoryController = new TabHistoryController(new OnShowTabHistory() {
             @Override
-            public void onShowHistory(final List<TabHistoryPage> historyPageList, final int toIndex) {
+            public void onShowHistory(final List<TabHistoryPage> historyPageList, final int toIndex, final boolean isPrivate) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -806,7 +806,7 @@ public class BrowserApp extends GeckoApp
                             return;
                         }
 
-                        final TabHistoryFragment fragment = TabHistoryFragment.newInstance(historyPageList, toIndex);
+                        final TabHistoryFragment fragment = TabHistoryFragment.newInstance(historyPageList, toIndex, isPrivate);
                         final FragmentManager fragmentManager = getSupportFragmentManager();
                         GeckoAppShell.getHapticFeedbackDelegate().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                         fragment.show(R.id.tab_history_panel, fragmentManager.beginTransaction(), TAB_HISTORY_FRAGMENT_TAG);
@@ -869,6 +869,7 @@ public class BrowserApp extends GeckoApp
         }
 
         setBrowserToolbarListeners();
+        mPipController = new PictureInPictureController(this);
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
@@ -1046,45 +1047,6 @@ public class BrowserApp extends GeckoApp
                 .buildAndShow();
     }
 
-    private void conditionallyNotifyEOL() {
-        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-        try {
-            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
-            if (!prefs.contains(EOL_NOTIFIED)) {
-
-                // Launch main App to load SUMO url on EOL notification.
-                final String link = getString(R.string.eol_notification_url,
-                                              AppConstants.MOZ_APP_VERSION,
-                                              AppConstants.OS_TARGET,
-                                              Locales.getLanguageTag(Locale.getDefault()));
-
-                final Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-                intent.setData(Uri.parse(link));
-                final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                final Notification notification = new NotificationCompat.Builder(this)
-                        .setContentTitle(getString(R.string.eol_notification_title))
-                        .setContentText(getString(R.string.eol_notification_summary))
-                        .setSmallIcon(R.drawable.ic_status_logo)
-                        .setAutoCancel(true)
-                        .setContentIntent(pendingIntent)
-                        .build();
-
-                final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                final int notificationID = EOL_NOTIFIED.hashCode();
-                notificationManager.notify(notificationID, notification);
-
-                GeckoSharedPrefs.forProfile(this)
-                                .edit()
-                                .putBoolean(EOL_NOTIFIED, true)
-                                .apply();
-            }
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
-        }
-    }
-
     private Class<?> getMediaPlayerManager() {
         if (AppConstants.MOZ_MEDIA_PLAYER) {
             try {
@@ -1228,6 +1190,38 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        try {
+            mPipController.tryEnteringPictureInPictureMode();
+        } catch (IllegalStateException exception) {
+            Log.e(LOGTAG, "Cannot enter in Picture In Picture mode:\n" + exception.getMessage());
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+
+        if (!isInPictureInPictureMode) {
+            mPipController.cleanResources();
+
+            // User clicked a new link to be opened in Firefox.
+            // We returned from Picture-in-picture mode and now must try to open that link.
+            if (startingIntentAfterPip != null) {
+                getApplication().startActivity(startingIntentAfterPip);
+                startingIntentAfterPip = null;
+            } else {
+                // After returning from Picture-in-picture mode the video will still be playing
+                // in fullscreen. But now we have the status bar showing.
+                // Call setFullscreen(..) to hide it and offer the same fullscreen video experience
+                // that the user had before entering in Picture-in-picture mode.
+                ActivityUtils.setFullScreen(this, true);
+            }
+        }
+    }
+
+    @Override
     public void onRestart() {
         super.onRestart();
         if (mIsAbortingAppLaunch) {
@@ -1283,6 +1277,12 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
+        if (mPipController.isInPipMode()) {
+            // If screen is locked we should exit PictureInPicture mode
+            moveTaskToBack(true);
+            mPipController.cleanResources();
+        }
+
         // We only show the guest mode notification when our activity is in the foreground.
         GuestSession.hideNotification(this);
 
@@ -1331,12 +1331,17 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
-            @Override
-            public void onFilter(String searchText, AutocompleteHandler handler) {
-                filterEditingMode(searchText, handler);
-            }
-        });
+        // Website suggestions for address bar inputs should not be enabled when running in automation.
+        // After the upgrade to support library v.26 it could fail otherwise unrelated Robocop tests
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1385464#c3
+        if (!isInAutomation) {
+            mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
+                @Override
+                public void onFilter(String searchText, AutocompleteHandler handler) {
+                    filterEditingMode(searchText, handler);
+                }
+            });
+        }
 
         mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -1671,6 +1676,8 @@ public class BrowserApp extends GeckoApp
         NotificationHelper.destroy();
         GeckoNetworkManager.destroy();
 
+        MmaDelegate.flushResources(this);
+
         super.onDestroy();
     }
 
@@ -1863,8 +1870,7 @@ public class BrowserApp extends GeckoApp
                 if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE &&
                         !IntentUtils.getIsInAutomationFromEnvironment(new SafeIntent(getIntent()))) {
                     // TODO: Better scheduling of DLC actions (Bug 1257492)
-                    DownloadContentService.startSync(this);
-                    DownloadContentService.startVerification(this);
+                    DlcSyncService.enqueueServiceWork(this);
                 }
 
                 break;
@@ -4152,6 +4158,33 @@ public class BrowserApp extends GeckoApp
      */
     @Override
     protected void onNewIntent(Intent externalIntent) {
+
+        // Currently there is no way to exit PictureInPicture mode programmatically
+        // https://issuetracker.google.com/issues/37254459
+        // but because we are "singleTask" we will receive the Intents to open a new link.
+        // When this happens, the new Intent will trigger `onPictureInPictureModeChanged(..)`
+        //
+        // Whenever the user presses a new link to be opened in Firefox we must
+        // cache the received Intent, wait for PictureInPicture mode to end and then act on that Intent.
+        if (mPipController.isInPipMode()) {
+
+            startingIntentAfterPip = externalIntent;
+
+            // Pattern used to exit MultiWindow - https://stackoverflow.com/a/43288507/4249825
+            // also works for us.
+            // Without this the old tab would continue playing media.
+            moveTaskToBack(true);
+            startingIntentAfterPip.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
+            // To enter PictureInPicture mode the video must be playing in fullscreen, which also
+            // means the orientation will be changed to Landscape.
+            // If when pressing the new link the device is actually in Portrait we will force
+            // the activity to enter in Portrait before opening the new tab.
+            setRequestedOrientationForCurrentActivity(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+
+            return;
+        }
+
         final SafeIntent intent = new SafeIntent(externalIntent);
         String action = intent.getAction();
 

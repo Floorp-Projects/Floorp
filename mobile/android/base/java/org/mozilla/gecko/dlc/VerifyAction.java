@@ -14,7 +14,7 @@ import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import java.io.File;
 
 /**
- * Verify: Validate downloaded content. Does it still exist and does it have the correct checksum?
+ * Verify: Validate already downloaded content. Does it still exist and does it have the correct checksum?
  */
 public class VerifyAction extends BaseAction {
     private static final String LOGTAG = "DLCVerifyAction";
@@ -58,6 +58,6 @@ public class VerifyAction extends BaseAction {
     }
 
     protected void startDownloads(Context context) {
-        DownloadContentService.startDownloads(context);
+        DlcDownloadService.enqueueServiceWork(context);
     }
 }

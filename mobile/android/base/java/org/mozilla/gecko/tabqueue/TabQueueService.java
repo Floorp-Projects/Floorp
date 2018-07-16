@@ -5,16 +5,10 @@
 
 package org.mozilla.gecko.tabqueue;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.preferences.GeckoPreferences;
-
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -39,7 +33,16 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -233,6 +236,7 @@ public class TabQueueService extends Service {
 
     }
 
+    @SuppressLint("NewApi")
     @TargetApi(Build.VERSION_CODES.M)
     private void showSettingsNotification() {
         if (AppConstants.Versions.preMarshmallow) {
@@ -248,7 +252,7 @@ public class TabQueueService extends Service {
         final NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle()
                 .bigText(text);
 
-        final Notification notification = new NotificationCompat.Builder(this)
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setContentTitle(getString(R.string.pref_tab_queue_title))
                 .setContentText(text)
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
@@ -257,10 +261,14 @@ public class TabQueueService extends Service {
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setAutoCancel(true)
-                .addAction(R.drawable.ic_action_settings, getString(R.string.tab_queue_prompt_settings_button), pendingIntent)
-                .build();
+                .addAction(R.drawable.ic_action_settings, getString(R.string.tab_queue_prompt_settings_button), pendingIntent);
 
-        NotificationManagerCompat.from(this).notify(R.id.tabQueueSettingsNotification, notification);
+        if (!AppConstants.Versions.preO) {
+            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+        }
+
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(R.id.tabQueueSettingsNotification, notificationBuilder.build());
     }
 
     private void removeView() {

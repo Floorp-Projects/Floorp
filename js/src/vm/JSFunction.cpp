@@ -1748,13 +1748,6 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
                       FunctionAsyncKind asyncKind)
 {
     // Steps 1-5.
-    // Block this call if security callbacks forbid it.
-    Handle<GlobalObject*> global = cx->global();
-    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, global)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_FUNCTION);
-        return false;
-    }
-
     bool isGenerator = generatorKind == GeneratorKind::Generator;
     bool isAsync = asyncKind == FunctionAsyncKind::AsyncFunction;
 
@@ -1853,6 +1846,14 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     RootedString functionText(cx, sb.finishString());
     if (!functionText)
         return false;
+
+    // Block this call if security callbacks forbid it.
+    Handle<GlobalObject*> global = cx->global();
+    RootedValue v(cx, StringValue(functionText));
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, v, global)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_FUNCTION);
+        return false;
+    }
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an

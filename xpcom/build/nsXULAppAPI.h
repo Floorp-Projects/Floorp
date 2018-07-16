@@ -506,7 +506,7 @@ XRE_API(MessageLoop*,
 XRE_API(bool,
         XRE_SendTestShellCommand, (JSContext* aCx,
                                    JSString* aCommand,
-                                   void* aCallback))
+                                   JS::Value* aCallback))
 XRE_API(bool,
         XRE_ShutdownTestShell, ())
 

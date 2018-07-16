@@ -49,7 +49,7 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/activitystream/ActivityStreamPreference.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/dlc/DownloadContentTelemetry.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/preferences/LocaleListPreference.java"/>
-        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/media/MediaControlService.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/media/GeckoMediaControlAgent.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/PrintHelper.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/animation/PropertyAnimator.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/RemotePresentationService.java"/>

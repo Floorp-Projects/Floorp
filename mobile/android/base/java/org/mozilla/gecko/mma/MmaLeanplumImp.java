@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.mma;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.content.Context;
@@ -24,6 +25,7 @@ import com.leanplum.internal.Constants;
 import com.leanplum.internal.LeanplumInternal;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.firstrun.PanelConfig;
 
@@ -81,6 +83,7 @@ public class MmaLeanplumImp implements MmaInterface {
         });
     }
 
+    @SuppressLint("NewApi")
     @Override
     public void setCustomIcon(@DrawableRes final int iconResId) {
         LeanplumPushService.setCustomizer(new LeanplumPushNotificationCustomizer() {
@@ -88,8 +91,10 @@ public class MmaLeanplumImp implements MmaInterface {
             public void customize(NotificationCompat.Builder builder, Bundle notificationPayload) {
                 builder.setSmallIcon(iconResId);
                 builder.setDefaults(Notification.DEFAULT_SOUND);
+                if (!AppConstants.Versions.preO) {
+                    builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+                }
             }
-
         });
     }
 

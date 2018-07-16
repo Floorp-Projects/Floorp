@@ -5,16 +5,22 @@
 package org.mozilla.mozstumbler.service.stumblerthread;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.R;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.Prefs;
 import org.mozilla.mozstumbler.service.stumblerthread.blocklist.WifiBlockListInterface;
@@ -130,6 +136,23 @@ public class StumblerService extends PersistentIntentService
     public void onCreate() {
         super.onCreate();
         setIntentRedelivery(true);
+    }
+
+    @Override
+    @SuppressLint("NewApi")
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!AppConstants.Versions.preO) {
+            final Notification notification = new NotificationCompat.Builder(this, GeckoApplication.getDefaultNotificationChannel().getId())
+                    .setSmallIcon(R.drawable.ic_status_logo)
+                    .setContentTitle(getString(R.string.datareporting_stumbler_notification_title))
+                    .setOngoing(true)
+                    .setShowWhen(false)
+                    .setWhen(0)
+                    .build();
+
+            startForeground(R.id.stumblerNotification, notification);
+        }
+        return START_STICKY;
     }
 
     // Called from the main thread

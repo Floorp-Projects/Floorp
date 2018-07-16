@@ -5,7 +5,8 @@
 
 #include <smmintrin.h>
 
-#include "./av1_rtcd.h"
+#include "config/av1_rtcd.h"
+
 #include "aom_ports/mem.h"
 #include "av1/encoder/corner_match.h"
 
