@@ -559,6 +559,7 @@ MediaEngineDefaultAudioSource::Pull(const RefPtr<const AllocationHandle>& aHandl
 void
 MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
                                      dom::MediaSourceEnum aMediaSource,
+                                     MediaSinkEnum aMediaSink,
                                      nsTArray<RefPtr<MediaDevice>>* aDevices)
 {
   AssertIsOnOwningThread();
@@ -607,6 +608,10 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported source type");
       return;
+  }
+
+  if (aMediaSink == MediaSinkEnum::Speaker) {
+    NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
   }
 }
 
