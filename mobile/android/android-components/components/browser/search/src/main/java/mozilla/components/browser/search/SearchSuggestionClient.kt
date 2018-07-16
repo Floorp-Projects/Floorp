@@ -1,6 +1,5 @@
 package mozilla.components.browser.search
 
-import mozilla.components.browser.search.parser.defaultParser
 import mozilla.components.browser.search.parser.selectParser
 
 typealias SearchSuggestionFetcher = suspend (url: String) -> String?
