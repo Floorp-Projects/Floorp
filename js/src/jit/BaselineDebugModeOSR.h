@@ -82,7 +82,7 @@ class DebugModeOSRVolatileStub
 };
 
 //
-// A JitFrameIter that updates internal JSJitFrameIter in case of
+// A frame iterator that updates internal JSJitFrameIter in case of
 // recompilation of an on-stack baseline script.
 //
 
