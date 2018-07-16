@@ -6407,11 +6407,27 @@ public:
     return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
 
+  nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayTransformGeometry(this, aBuilder,
+                                          GetTransformForRendering(),
+                                          mFrame->PresContext()->AppUnitsPerDevPixel());
+  }
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) const override
   {
-    // We don't need to compute an invalidation region since we have LayerTreeInvalidation
+    const nsDisplayTransformGeometry* geometry =
+      static_cast<const nsDisplayTransformGeometry*>(aGeometry);
+
+    // This code is only called for flattened, inactive transform items.
+    // Only check if the transform has changed. The bounds invalidation should
+    // be handled by the children themselves.
+    if (!geometry->mTransform.FuzzyEqual(GetTransformForRendering())) {
+      bool snap;
+      aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
+    }
   }
 
   virtual const nsIFrame* ReferenceFrameForChildren() const override {
