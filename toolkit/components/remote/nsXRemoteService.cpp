@@ -192,5 +192,5 @@ nsXRemoteService::EnsureAtoms(void)
   sMozUserAtom        = XAtoms[i++];
   sMozProfileAtom     = XAtoms[i++];
   sMozProgramAtom     = XAtoms[i++];
-  sMozCommandLineAtom = XAtoms[i++];
+  sMozCommandLineAtom = XAtoms[i];
 }
