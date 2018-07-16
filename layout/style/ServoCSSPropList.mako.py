@@ -74,12 +74,10 @@ def method(prop):
 # moved or perhaps using a blacklist for the ones with non-layout-dependence
 # but other non-trivial dependence like scrollbar colors.
 SERIALIZED_PREDEFINED_TYPES = [
-    "Clear",
     "Color",
     "Content",
     "CounterIncrement",
     "CounterReset",
-    "Float",
     "FontFamily",
     "FontFeatureSettings",
     "FontLanguageOverride",
