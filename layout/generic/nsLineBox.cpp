@@ -210,6 +210,8 @@ nsLineBox::BreakTypeToString(StyleClear aBreakType)
     case StyleClear::None: return "nobr";
     case StyleClear::Left: return "leftbr";
     case StyleClear::Right: return "rightbr";
+    case StyleClear::InlineStart: return "inlinestartbr";
+    case StyleClear::InlineEnd: return "inlineendbr";
     case StyleClear::Both: return "leftbr+rightbr";
     case StyleClear::Line: return "linebr";
     case StyleClear::Max: return "leftbr+rightbr+linebr";

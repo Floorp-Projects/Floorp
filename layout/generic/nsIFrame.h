@@ -2190,7 +2190,7 @@ public:
     const nsLineList_iterator* mLine;
 
     // The line container. Private, to ensure we always use SetLineContainer
-    // to update it.
+    // to update it (so that we have a chance to store the mLineContainerWM).
     //
     // Note that nsContainerFrame::DoInlineIntrinsicISize will clear the
     // |mLine| and |mLineContainer| fields when following a next-in-flow link,
@@ -2203,6 +2203,9 @@ public:
     void SetLineContainer(nsIFrame* aLineContainer)
     {
       mLineContainer = aLineContainer;
+      if (mLineContainer) {
+        mLineContainerWM = mLineContainer->GetWritingMode();
+      }
     }
     nsIFrame* LineContainer() const { return mLineContainer; }
 
@@ -2222,6 +2225,10 @@ public:
     // should be true at the beginning of a block, after hard breaks
     // and when the last text ended with whitespace.
     bool mSkipWhitespace;
+
+    // Writing mode of the line container (stored here so that we don't
+    // lose track of it if the mLineContainer field is reset).
+    mozilla::WritingMode mLineContainerWM;
 
     // Floats encountered in the lines.
     class FloatInfo {

@@ -742,7 +742,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // when floats are inserted before it.
   if (StyleClear::None != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
-    mBCoord = ClearFloats(mBCoord, floatDisplay->mBreakType);
+    mBCoord = ClearFloats(mBCoord, floatDisplay->PhysicalBreakType(wm));
   }
   // Get the band of available space with respect to margin box.
   nsFlowAreaRect floatAvailableSpace =
@@ -785,7 +785,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Find a place to place the float. The CSS2 spec doesn't want
   // floats overlapping each other or sticking out of the containing
   // block if possible (CSS2 spec section 9.5.1, see the rule list).
-  StyleFloat floatStyle = floatDisplay->mFloat;
+  StyleFloat floatStyle = floatDisplay->PhysicalFloats(wm);
   MOZ_ASSERT(StyleFloat::Left == floatStyle || StyleFloat::Right == floatStyle,
              "Invalid float type!");
 
@@ -1045,7 +1045,8 @@ BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
   //    must have their tops below the top of this float)
   //  * don't waste much time trying to reflow this float again until
   //    after the break
-  StyleFloat floatStyle = aFloat->StyleDisplay()->mFloat;
+  StyleFloat floatStyle =
+    aFloat->StyleDisplay()->PhysicalFloats(mReflowInput.GetWritingMode());
   if (floatStyle == StyleFloat::Left) {
     FloatManager()->SetPushedLeftFloatPastBreak();
   } else {

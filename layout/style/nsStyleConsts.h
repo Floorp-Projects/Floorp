@@ -77,12 +77,11 @@ enum class StyleClear : uint8_t {
   None = 0,
   Left,
   Right,
+  InlineStart,
+  InlineEnd,
   Both,
   // StyleClear::Line can be added to one of the other values in layout
   // so it needs to use a bit value that none of the other values can have.
-  //
-  // FIXME(emilio): Doesn't look like we do that anymore, so probably can be
-  // made a single value instead, and Max removed.
   Line = 8,
   Max = 13  // Max = (Both | Line)
 };
@@ -145,6 +144,8 @@ enum class StyleFloat : uint8_t {
   None,
   Left,
   Right,
+  InlineStart,
+  InlineEnd
 };
 
 // float-edge
