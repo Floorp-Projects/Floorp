@@ -2455,8 +2455,6 @@ private:
   inline bool HasFixedPosContainingBlockStyleInternal(
     mozilla::ComputedStyle&) const;
   void GenerateCombinedTransform();
-public:
-  inline mozilla::StyleClear PhysicalBreakType(mozilla::WritingMode aWM) const;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable

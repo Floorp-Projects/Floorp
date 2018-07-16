@@ -5357,12 +5357,11 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
             // been cleared past
             floats_cur_left = 0,
             floats_cur_right = 0;
-    const WritingMode wm = mLineContainerWM;
 
     for (uint32_t i = 0, i_end = mFloats.Length(); i != i_end; ++i) {
       const FloatInfo& floatInfo = mFloats[i];
       const nsStyleDisplay* floatDisp = floatInfo.Frame()->StyleDisplay();
-      StyleClear breakType = floatDisp->PhysicalBreakType(wm);
+      StyleClear breakType = floatDisp->mBreakType;
       if (breakType == StyleClear::Left ||
           breakType == StyleClear::Right ||
           breakType == StyleClear::Both) {
@@ -5424,7 +5423,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
           // (earlier) floats on that side would be indirectly cleared
           // as well. Thus, we should break out of this loop and stop
           // considering earlier floats to be kept in mFloats.
-          StyleClear floatBreakType = floatDisp->PhysicalBreakType(wm);
+          StyleClear floatBreakType = floatDisp->mBreakType;
           if (floatBreakType != aBreakType &&
               floatBreakType != StyleClear::None) {
             break;
