@@ -1,4 +1,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
+Cu.importGlobalProperties(["TextDecoder"]);
 
 const reportURI = "http://mochi.test:8888/foo.sjs";
 
@@ -27,16 +30,15 @@ var openingObserver = {
           var binstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
           binstream.setInputStream(uploadStream);
 
-          var segments = [];
-          for (var count = uploadStream.available(); count; count = uploadStream.available()) {
-            var data = binstream.readBytes(count);
-            segments.push(data);
-          }
+          let bytes = NetUtil.readInputStream(binstream);
 
-          var reportText = segments.join("");
           // rewind stream as we are supposed to - there will be an assertion later if we don't.
           uploadStream.QueryInterface(Ci.nsISeekableStream).seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
+
+          let textDecoder = new TextDecoder();
+          reportText = textDecoder.decode(bytes);
         }
+
         message.report = reportText;
       } catch (e) {
         message.error = e.toString();

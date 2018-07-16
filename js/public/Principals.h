@@ -65,10 +65,10 @@ typedef bool
 
 /*
  * Used to check if a CSP instance wants to disable eval() and friends.
- * See js_CheckCSPPermitsJSAction() in jsobj.
+ * See GlobalObject::isRuntimeCodeGenEnabled() in vm/GlobalObject.cpp.
  */
 typedef bool
-(* JSCSPEvalChecker)(JSContext* cx);
+(* JSCSPEvalChecker)(JSContext* cx, JS::HandleValue value);
 
 struct JSSecurityCallbacks {
     JSCSPEvalChecker           contentSecurityPolicyAllows;
