@@ -13823,7 +13823,7 @@
     "description": "Total number of http:// and https:// doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
-    "record_in_processes": ["content"],
+    "record_in_processes": ["main", "content"],
     "alert_emails": ["xquan@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1423013, 1423017],
     "expires_in_version": "65",
