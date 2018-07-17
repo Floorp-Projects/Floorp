@@ -10,7 +10,7 @@ var names = [
   "span", "_moz_generated_content_before", "_moz_generated_content_after"
 ];
 
-if (SpecialPowers.getBoolPref("dom.animations-api.core.enabled")) {
+if (SpecialPowers.getBoolPref("dom.animations-api.getAnimations.enabled")) {
   names.forEach(name => {
     var element = document.createElement(name);
     element.animate({ "color": ["red", "blue"] }, { duration: 1000 });

@@ -7,15 +7,8 @@
 'use strict';
 setup({explicit_done: true});
 SpecialPowers.pushPrefEnv(
-  {
-    set: [
-      ["dom.animations-api.core.enabled", true],
-      ["dom.animations-api.getAnimations.enabled", true],
-      ["dom.animations-api.timelines.enabled", true],
-    ],
-  },
+  { "set": [["dom.animations-api.implicit-keyframes.enabled", false]]},
   function() {
-    window.open("file_deferred_start.html");
-  }
-);
+    window.open("file_disable_animations_api_implicit_keyframes.html");
+  });
 </script>

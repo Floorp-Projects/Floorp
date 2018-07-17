@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="nsDocument::IsWebAnimationsEnabled"]
+[Func="nsDocument::AreWebAnimationsTimelinesEnabled"]
 interface AnimationTimeline {
   [BinaryName="currentTimeAsDouble"]
   readonly attribute double? currentTime;

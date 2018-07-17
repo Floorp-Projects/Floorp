@@ -323,9 +323,9 @@ partial interface Document {
 
 // https://drafts.csswg.org/web-animations/#extensions-to-the-document-interface
 partial interface Document {
-  [Func="nsDocument::IsWebAnimationsEnabled"]
+  [Func="nsDocument::AreWebAnimationsTimelinesEnabled"]
   readonly attribute DocumentTimeline timeline;
-  [Func="nsDocument::IsWebAnimationsEnabled"]
+  [Func="nsDocument::IsWebAnimationsGetAnimationsEnabled"]
   sequence<Animation> getAnimations();
 };
 

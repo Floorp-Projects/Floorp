@@ -3068,10 +3068,7 @@ pref("layout.idle_period.time_limit", 1);
 // Whether -webkit-appearance is aliased to -moz-appearance
 pref("layout.css.webkit-appearance.enabled", false);
 
-// Is support for the Web Animations API enabled?
-// Before enabling this by default, make sure also CSSPseudoElement interface
-// has been spec'ed properly, or we should add a separate pref for
-// CSSPseudoElement interface. See Bug 1174575 for further details.
+// Is support for the core interfaces of Web Animations API enabled?
 #ifdef RELEASE_OR_BETA
 pref("dom.animations-api.core.enabled", false);
 #else

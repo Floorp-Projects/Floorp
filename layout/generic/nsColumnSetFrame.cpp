@@ -494,7 +494,11 @@ nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord iSize = 0;
   DISPLAY_MIN_WIDTH(this, iSize);
-  if (mFrames.FirstChild()) {
+
+  if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
+    // We want to ignore this in the case that we're size contained
+    // because our children should not contribute to our
+    // intrinsic size.
     iSize = mFrames.FirstChild()->GetMinISize(aRenderingContext);
   }
   const nsStyleColumn* colStyle = StyleColumn();
@@ -539,7 +543,10 @@ nsColumnSetFrame::GetPrefISize(gfxContext *aRenderingContext)
   nscoord colISize;
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
     colISize = colStyle->mColumnWidth.GetCoordValue();
-  } else if (mFrames.FirstChild()) {
+  } else if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
+    // We want to ignore this in the case that we're size contained
+    // because our children should not contribute to our
+    // intrinsic size.
     colISize = mFrames.FirstChild()->GetPrefISize(aRenderingContext);
   } else {
     colISize = 0;
@@ -908,6 +915,11 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     } else {
       contentSize.BSize(wm) = aConfig.mComputedBSize;
     }
+  } else if (aReflowInput.mStyleDisplay->IsContainSize()) {
+    // If we are intrinsically sized, but are size contained,
+    // we need to behave as if we have no contents. Our BSize
+    // should be zero or minBSize if specified.
+    contentSize.BSize(wm) = aReflowInput.ApplyMinMaxBSize(0);
   } else {
     // We add the "consumed" block-size back in so that we're applying
     // constraints to the correct bSize value, then subtract it again

@@ -215,6 +215,14 @@
   visibility: collapse;
 }
 
+#tracking-protection-icon-animatable-image {
+  --tracking-protection-shield-color: #7f00d6;
+}
+
+:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-animatable-image {
+  --tracking-protection-shield-color: #c069ff;
+}
+
 @keyframes tp-icon-animation {
   from {
     transform: translateX(0);
@@ -225,12 +233,12 @@
     fill-opacity: 0.3;
   }
   39% {
-    fill: #7f00d6;
+    fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
   75% {
     transform: translateX(-1232px);
-    fill: #7f00d6;
+    fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
   to {
@@ -249,12 +257,12 @@
     fill-opacity: 0.3;
   }
   39% {
-    fill: #7f00d6;
+    fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
   75% {
     transform: scaleX(-1) translateX(-1232px);
-    fill: #7f00d6;
+    fill: var(--tracking-protection-shield-color);
     fill-opacity: 1;
   }
   to {

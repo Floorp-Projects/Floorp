@@ -491,7 +491,7 @@ load 1308848-1.html
 load 1308848-2.html
 load 1338772-1.html
 load 1340571.html
-pref(dom.animations-api.core.enabled,true) load 1343139-1.html
+pref(dom.animations-api.implicit-keyframes.enabled,true) load 1343139-1.html
 asserts(0-1) load 1343606.html # bug 1343948
 load 1343937.html
 load 1352380.html

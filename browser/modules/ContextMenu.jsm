@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  findCssSelector: "resource://gre/modules/css-selector.js",
+  findAllCssSelectors: "resource://gre/modules/css-selector.js",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
@@ -453,34 +453,6 @@ class ContextMenu {
     return false;
   }
 
-  /**
-   * Retrieve the array of CSS selectors corresponding to the provided node.
-   *
-   * The selectors are ordered starting with the root document and ending with the deepest
-   * nested frame. Additional items are used if the node is inside a frame, each
-   * representing the CSS selector for finding the frame element in its parent document.
-   *
-   * This format is expected by DevTools in order to handle the Inspect Node context menu
-   * item.
-   *
-   * @param  {aNode}
-   *         The node for which the CSS selectors should be computed
-   * @return {Array}
-   *         An array of CSS selectors to find the target node. Several selectors can be
-   *         needed if the element is nested in frames and not directly in the root
-   *         document. The selectors are ordered starting with the root document and
-   *         ending with the deepest nested frame.
-   */
-  _getNodeSelectors(aNode) {
-    let selectors = [];
-    while (aNode) {
-      selectors.unshift(findCssSelector(aNode));
-      aNode = aNode.ownerGlobal.frameElement;
-    }
-
-    return selectors;
-  }
-
   handleEvent(aEvent) {
     let defaultPrevented = aEvent.defaultPrevented;
 
@@ -557,7 +529,7 @@ class ContextMenu {
     let selectionInfo = BrowserUtils.getSelectionDetails(this.content);
     let loadContext = this.global.docShell.QueryInterface(Ci.nsILoadContext);
     let userContextId = loadContext.originAttributes.userContextId;
-    let popupNodeSelectors = this._getNodeSelectors(aEvent.composedTarget);
+    let popupNodeSelectors = findAllCssSelectors(aEvent.composedTarget);
 
     this._setContext(aEvent);
     let context = this.context;

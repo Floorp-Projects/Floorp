@@ -454,8 +454,7 @@ public class testInputConnection extends JavascriptBridgeTest {
 
             ic.commitText("!", 1);
             // The '!' key causes the input to hide in robocop_input.html,
-            // and there won't be a text/selection update as a result.
-            assertTextAndSelectionAt("Can handle hiding input", ic, "foo", 3);
+            assertTextAndSelectionAt("Can handle hiding input", ic, "foo!", 4);
 
             // Bug 1401737, Editable does not behave correctly after disconnecting from Gecko.
             getJS().syncCall("blur_hiding_input");
