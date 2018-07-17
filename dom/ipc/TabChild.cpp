@@ -411,6 +411,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mHasValidInnerSize(false)
   , mDestroyed(false)
   , mUniqueId(aTabId)
+  , mHasSiblings(true)
   , mIsTransparent(false)
   , mIPCOpen(false)
   , mParentIsActive(false)
@@ -3006,12 +3007,6 @@ void
 TabChild::SendRequestFocus(bool aCanFocus)
 {
   PBrowserChild::SendRequestFocus(aCanFocus);
-}
-
-void
-TabChild::SendGetTabCount(uint32_t* tabCount)
-{
-  PBrowserChild::SendGetTabCount(tabCount);
 }
 
 void
