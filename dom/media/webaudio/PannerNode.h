@@ -41,8 +41,6 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void DestroyMediaStream() override;
-
   void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
   {
     if (aChannelCount > 2) {
@@ -223,14 +221,11 @@ public:
 
 private:
   explicit PannerNode(AudioContext* aContext);
-  ~PannerNode();
+  ~PannerNode() = default;
 
   friend class AudioListener;
   friend class PannerNodeEngine;
   enum EngineParameters {
-    LISTENER_POSITION,
-    LISTENER_FRONT_VECTOR, // unit length
-    LISTENER_RIGHT_VECTOR, // unit length, orthogonal to LISTENER_FRONT_VECTOR
     PANNING_MODEL,
     DISTANCE_MODEL,
     POSITION,
