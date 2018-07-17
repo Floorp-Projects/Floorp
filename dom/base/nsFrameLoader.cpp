@@ -102,7 +102,7 @@
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
-#include "ContentPrincipal.h"
+#include "mozilla/ContentPrincipal.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PPluginWidgetParent.h"
