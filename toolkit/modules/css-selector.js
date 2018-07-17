@@ -25,13 +25,6 @@ function getRootBindingParent(node) {
     return node;
   }
 
-  if (getShadowRoot(node)) {
-    // If the node is under a shadow root, the shadow host is the "binding
-    // parent" but we can create a CSS selector between the shadow root and the
-    // node, so return immediately.
-    return node;
-  }
-
   let parent;
   while ((parent = doc.getBindingParent(node))) {
     node = parent;
@@ -72,31 +65,40 @@ function positionInNodeList(element, nodeList) {
 }
 
 /**
- * Retrieve the document or shadow-root containing the provided node. This will
- * be the topmost element from which the node can be retrieved using
- * querySelectorAll and consequently where to start creating a css selector.
+ * For a provided node, find the appropriate container/node couple so that
+ * container.contains(node) and a CSS selector can be created from the
+ * container to the node.
  */
-function getDocumentOrShadowRoot(node) {
+function findNodeAndContainer(node) {
   const shadowRoot = getShadowRoot(node);
   if (shadowRoot) {
-    // If the node is under a shadow root, return the corresponding
-    // document-fragment.
-    return shadowRoot;
+    // If the node is under a shadow root, the shadowRoot contains the node and
+    // we can find the node via shadowRoot.querySelector(path).
+    return {
+      containingDocOrShadow: shadowRoot,
+      node
+    };
   }
 
-  // Otherwise return the ownerDocument.
-  return node.ownerDocument;
+  // Otherwise, get the root binding parent to get a non anonymous element that
+  // will be accessible from the ownerDocument.
+  const bindingParent = getRootBindingParent(node);
+  return {
+    containingDocOrShadow: bindingParent.ownerDocument,
+    node: bindingParent
+  };
 }
 
 /**
  * Find a unique CSS selector for a given element
- * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
- * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ * @returns a string such that:
+ *   - ele.containingDocOrShadow.querySelector(reply) === ele
+ *   - ele.containingDocOrShadow.querySelectorAll(reply).length === 1
  */
 const findCssSelector = function(ele) {
-  ele = getRootBindingParent(ele);
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
 
-  let containingDocOrShadow = getDocumentOrShadowRoot(ele);
   if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
     // findCssSelector received element not inside document.
     return "";
