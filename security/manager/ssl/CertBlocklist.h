@@ -79,7 +79,7 @@ private:
   nsCOMPtr<nsIFile> mBackingFile;
 
 protected:
-  static void PreferenceChanged(const char* aPref, void* aClosure);
+  static void PreferenceChanged(const char* aPref, CertBlocklist* aBlocklist);
   static uint32_t sLastBlocklistUpdate;
   static uint32_t sLastKintoUpdate;
   static uint32_t sMaxStaleness;

@@ -43,7 +43,7 @@
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
 #ifdef ENABLE_SIMD
-# include "builtin/SIMD.h"
+# include "builtin/SIMDConstants.h"
 #endif
 #ifdef ENABLE_BINARYDATA
 # include "builtin/TypedObject.h"
@@ -57,6 +57,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "jit/JitCommon.h"
+#include "jit/JitSpewer.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/Date.h"

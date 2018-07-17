@@ -104,7 +104,8 @@ static const char * prefList[] = {
     MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
     CACHE_COMPRESSION_LEVEL_PREF,
     SANITIZE_ON_SHUTDOWN_PREF,
-    CLEAR_ON_SHUTDOWN_PREF
+    CLEAR_ON_SHUTDOWN_PREF,
+    nullptr,
 };
 
 // Cache sizes, in KB
@@ -176,6 +177,8 @@ public:
                                       bool shouldUseOldMaxSmartSize);
 
     bool                    PermittedToSmartSize(nsIPrefBranch*, bool firstRun);
+
+    void PrefChanged(const char* aPref);
 
 private:
     bool                    mHaveProfile;
@@ -338,13 +341,9 @@ nsCacheProfilePrefObserver::Install()
     nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
-    for (auto& pref : prefList) {
-        nsCString prefStr;
-        prefStr.AssignLiteral(pref, strlen(pref));
-        rv = branch->AddObserver(prefStr, this, false);
-        if (NS_FAILED(rv))
-            rv2 = rv;
-    }
+    Preferences::RegisterCallbacks(
+        PREF_CHANGE_METHOD(nsCacheProfilePrefObserver::PrefChanged),
+        prefList, this);
 
     // Determine if we have a profile already
     //     Install() is called *after* the profile-after-change notification
@@ -383,8 +382,9 @@ nsCacheProfilePrefObserver::Remove()
         do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return;
-    for (auto& pref : prefList)
-        prefs->RemoveObserver(nsDependentCString(pref), this); // remove cache pref observers
+    Preferences::UnregisterCallbacks(
+        PREF_CHANGE_METHOD(nsCacheProfilePrefObserver::PrefChanged),
+        prefList, this);
 }
 
 void
@@ -399,7 +399,6 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
                                     const char *      topic,
                                     const char16_t * data_unicode)
 {
-    nsresult rv;
     NS_ConvertUTF16toUTF8 data(data_unicode);
     CACHE_LOG_INFO(("Observe [topic=%s data=%s]\n", topic, data.get()));
 
@@ -434,147 +433,146 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         (void)ReadPrefs(branch);
         nsCacheService::OnProfileChanged();
 
-    } else if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
-
-        // ignore pref changes until we're done switch profiles
-        if (!mHaveProfile)
-            return NS_OK;
-
-        nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(subject, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-
-        // which preference changed?
-        if (!strcmp(DISK_CACHE_ENABLE_PREF, data.get())) {
-
-            rv = branch->GetBoolPref(DISK_CACHE_ENABLE_PREF,
-                                     &mDiskCacheEnabled);
-            if (NS_FAILED(rv))
-                return rv;
-            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-
-        } else if (!strcmp(DISK_CACHE_CAPACITY_PREF, data.get())) {
-
-            int32_t capacity = 0;
-            rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
-            if (NS_FAILED(rv))
-                return rv;
-            mDiskCacheCapacity = std::max(0, capacity);
-            nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
-
-        // Update the cache capacity when smart sizing is turned on/off
-        } else if (!strcmp(DISK_CACHE_SMART_SIZE_ENABLED_PREF, data.get())) {
-            // Is the update because smartsizing was turned on, or off?
-            rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
-                                     &mSmartSizeEnabled);
-            if (NS_FAILED(rv))
-                return rv;
-            int32_t newCapacity = 0;
-            if (mSmartSizeEnabled) {
-                nsCacheService::SetDiskSmartSize();
-            } else {
-                // Smart sizing switched off: use user specified size
-                rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &newCapacity);
-                if (NS_FAILED(rv))
-                    return rv;
-                mDiskCacheCapacity = std::max(0, newCapacity);
-                nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
-            }
-        } else if (!strcmp(DISK_CACHE_USE_OLD_MAX_SMART_SIZE_PREF, data.get())) {
-            rv = branch->GetBoolPref(DISK_CACHE_USE_OLD_MAX_SMART_SIZE_PREF,
-                                     &mShouldUseOldMaxSmartSize);
-            if (NS_FAILED(rv))
-                return rv;
-        } else if (!strcmp(DISK_CACHE_MAX_ENTRY_SIZE_PREF, data.get())) {
-            int32_t newMaxSize;
-            rv = branch->GetIntPref(DISK_CACHE_MAX_ENTRY_SIZE_PREF,
-                                    &newMaxSize);
-            if (NS_FAILED(rv))
-                return rv;
-
-            mDiskCacheMaxEntrySize = std::max(-1, newMaxSize);
-            nsCacheService::SetDiskCacheMaxEntrySize(mDiskCacheMaxEntrySize);
-
-#if 0
-        } else if (!strcmp(DISK_CACHE_DIR_PREF, data.get())) {
-            // XXX We probaby don't want to respond to this pref except after
-            // XXX profile changes.  Ideally, there should be somekind of user
-            // XXX notification that the pref change won't take effect until
-            // XXX the next time the profile changes (browser launch)
-#endif
-        } else
-
-        // which preference changed?
-        if (!strcmp(OFFLINE_CACHE_ENABLE_PREF, data.get())) {
-
-            rv = branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
-                                     &mOfflineCacheEnabled);
-            if (NS_FAILED(rv))  return rv;
-            nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
-
-        } else if (!strcmp(OFFLINE_CACHE_CAPACITY_PREF, data.get())) {
-
-            int32_t capacity = 0;
-            rv = branch->GetIntPref(OFFLINE_CACHE_CAPACITY_PREF, &capacity);
-            if (NS_FAILED(rv))  return rv;
-            mOfflineCacheCapacity = std::max(0, capacity);
-            nsCacheService::SetOfflineCacheCapacity(mOfflineCacheCapacity);
-#if 0
-        } else if (!strcmp(OFFLINE_CACHE_DIR_PREF, data.get())) {
-            // XXX We probaby don't want to respond to this pref except after
-            // XXX profile changes.  Ideally, there should be some kind of user
-            // XXX notification that the pref change won't take effect until
-            // XXX the next time the profile changes (browser launch)
-#endif
-        } else
-
-        if (!strcmp(MEMORY_CACHE_ENABLE_PREF, data.get())) {
-
-            rv = branch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF,
-                                     &mMemoryCacheEnabled);
-            if (NS_FAILED(rv))
-                return rv;
-            nsCacheService::SetMemoryCache();
-
-        } else if (!strcmp(MEMORY_CACHE_CAPACITY_PREF, data.get())) {
-
-            mMemoryCacheCapacity = -1;
-            (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
-                                      &mMemoryCacheCapacity);
-            nsCacheService::SetMemoryCache();
-        } else if (!strcmp(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF, data.get())) {
-            int32_t newMaxSize;
-            rv = branch->GetIntPref(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
-                                     &newMaxSize);
-            if (NS_FAILED(rv))
-                return rv;
-
-            mMemoryCacheMaxEntrySize = std::max(-1, newMaxSize);
-            nsCacheService::SetMemoryCacheMaxEntrySize(mMemoryCacheMaxEntrySize);
-        } else if (!strcmp(CACHE_COMPRESSION_LEVEL_PREF, data.get())) {
-            mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
-            (void)branch->GetIntPref(CACHE_COMPRESSION_LEVEL_PREF,
-                                     &mCacheCompressionLevel);
-            mCacheCompressionLevel = std::max(0, mCacheCompressionLevel);
-            mCacheCompressionLevel = std::min(9, mCacheCompressionLevel);
-        } else if (!strcmp(SANITIZE_ON_SHUTDOWN_PREF, data.get())) {
-            rv = branch->GetBoolPref(SANITIZE_ON_SHUTDOWN_PREF,
-                                     &mSanitizeOnShutdown);
-            if (NS_FAILED(rv))
-                return rv;
-            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-        } else if (!strcmp(CLEAR_ON_SHUTDOWN_PREF, data.get())) {
-            rv = branch->GetBoolPref(CLEAR_ON_SHUTDOWN_PREF,
-                                     &mClearCacheOnShutdown);
-            if (NS_FAILED(rv))
-                return rv;
-            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-        }
     } else if (!strcmp("last-pb-context-exited", topic)) {
         nsCacheService::LeavePrivateBrowsing();
     }
 
     return NS_OK;
+}
+
+void
+nsCacheProfilePrefObserver::PrefChanged(const char* aPref)
+{
+    // ignore pref changes until we're done switch profiles
+    if (!mHaveProfile)
+        return;
+    // which preference changed?
+    nsresult rv;
+    if (!strcmp(DISK_CACHE_ENABLE_PREF, aPref)) {
+
+        rv = Preferences::GetBool(DISK_CACHE_ENABLE_PREF,
+                                  &mDiskCacheEnabled);
+        if (NS_FAILED(rv))
+            return;
+        nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
+
+    } else if (!strcmp(DISK_CACHE_CAPACITY_PREF, aPref)) {
+
+        int32_t capacity = 0;
+        rv = Preferences::GetInt(DISK_CACHE_CAPACITY_PREF, &capacity);
+        if (NS_FAILED(rv))
+            return;
+        mDiskCacheCapacity = std::max(0, capacity);
+        nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
+
+    // Update the cache capacity when smart sizing is turned on/off
+    } else if (!strcmp(DISK_CACHE_SMART_SIZE_ENABLED_PREF, aPref)) {
+        // Is the update because smartsizing was turned on, or off?
+        rv = Preferences::GetBool(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
+                                  &mSmartSizeEnabled);
+        if (NS_FAILED(rv))
+            return;
+        int32_t newCapacity = 0;
+        if (mSmartSizeEnabled) {
+            nsCacheService::SetDiskSmartSize();
+        } else {
+            // Smart sizing switched off: use user specified size
+            rv = Preferences::GetInt(DISK_CACHE_CAPACITY_PREF, &newCapacity);
+            if (NS_FAILED(rv))
+                return;
+            mDiskCacheCapacity = std::max(0, newCapacity);
+            nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
+        }
+    } else if (!strcmp(DISK_CACHE_USE_OLD_MAX_SMART_SIZE_PREF, aPref)) {
+        rv = Preferences::GetBool(DISK_CACHE_USE_OLD_MAX_SMART_SIZE_PREF,
+                                  &mShouldUseOldMaxSmartSize);
+        if (NS_FAILED(rv))
+            return;
+    } else if (!strcmp(DISK_CACHE_MAX_ENTRY_SIZE_PREF, aPref)) {
+        int32_t newMaxSize;
+        rv = Preferences::GetInt(DISK_CACHE_MAX_ENTRY_SIZE_PREF,
+                                 &newMaxSize);
+        if (NS_FAILED(rv))
+            return;
+
+        mDiskCacheMaxEntrySize = std::max(-1, newMaxSize);
+        nsCacheService::SetDiskCacheMaxEntrySize(mDiskCacheMaxEntrySize);
+
+#if 0
+    } else if (!strcmp(DISK_CACHE_DIR_PREF, aPref)) {
+        // XXX We probaby don't want to respond to this pref except after
+        // XXX profile changes.  Ideally, there should be somekind of user
+        // XXX notification that the pref change won't take effect until
+        // XXX the next time the profile changes (browser launch)
+#endif
+    } else
+
+    // which preference changed?
+    if (!strcmp(OFFLINE_CACHE_ENABLE_PREF, aPref)) {
+
+        rv = Preferences::GetBool(OFFLINE_CACHE_ENABLE_PREF,
+                                  &mOfflineCacheEnabled);
+        if (NS_FAILED(rv))  return;
+        nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
+
+    } else if (!strcmp(OFFLINE_CACHE_CAPACITY_PREF, aPref)) {
+
+        int32_t capacity = 0;
+        rv = Preferences::GetInt(OFFLINE_CACHE_CAPACITY_PREF, &capacity);
+        if (NS_FAILED(rv))  return;
+        mOfflineCacheCapacity = std::max(0, capacity);
+        nsCacheService::SetOfflineCacheCapacity(mOfflineCacheCapacity);
+#if 0
+    } else if (!strcmp(OFFLINE_CACHE_DIR_PREF, aPref)) {
+        // XXX We probaby don't want to respond to this pref except after
+        // XXX profile changes.  Ideally, there should be some kind of user
+        // XXX notification that the pref change won't take effect until
+        // XXX the next time the profile changes (browser launch)
+#endif
+    } else
+
+    if (!strcmp(MEMORY_CACHE_ENABLE_PREF, aPref)) {
+
+        rv = Preferences::GetBool(MEMORY_CACHE_ENABLE_PREF,
+                                  &mMemoryCacheEnabled);
+        if (NS_FAILED(rv))
+            return;
+        nsCacheService::SetMemoryCache();
+
+    } else if (!strcmp(MEMORY_CACHE_CAPACITY_PREF, aPref)) {
+
+        mMemoryCacheCapacity = -1;
+        (void) Preferences::GetInt(MEMORY_CACHE_CAPACITY_PREF,
+                                   &mMemoryCacheCapacity);
+        nsCacheService::SetMemoryCache();
+    } else if (!strcmp(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF, aPref)) {
+        int32_t newMaxSize;
+        rv = Preferences::GetInt(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
+                                 &newMaxSize);
+        if (NS_FAILED(rv))
+            return;
+
+        mMemoryCacheMaxEntrySize = std::max(-1, newMaxSize);
+        nsCacheService::SetMemoryCacheMaxEntrySize(mMemoryCacheMaxEntrySize);
+    } else if (!strcmp(CACHE_COMPRESSION_LEVEL_PREF, aPref)) {
+        mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
+        (void)Preferences::GetInt(CACHE_COMPRESSION_LEVEL_PREF,
+                                 &mCacheCompressionLevel);
+        mCacheCompressionLevel = std::max(0, mCacheCompressionLevel);
+        mCacheCompressionLevel = std::min(9, mCacheCompressionLevel);
+    } else if (!strcmp(SANITIZE_ON_SHUTDOWN_PREF, aPref)) {
+        rv = Preferences::GetBool(SANITIZE_ON_SHUTDOWN_PREF,
+                                  &mSanitizeOnShutdown);
+        if (NS_FAILED(rv))
+            return;
+        nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
+    } else if (!strcmp(CLEAR_ON_SHUTDOWN_PREF, aPref)) {
+        rv = Preferences::GetBool(CLEAR_ON_SHUTDOWN_PREF,
+                                  &mClearCacheOnShutdown);
+        if (NS_FAILED(rv))
+            return;
+        nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
+    }
 }
 
 // Returns default ("smart") size (in KB) of cache, given available disk space

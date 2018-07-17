@@ -13,6 +13,7 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
+#include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 
 #include "vm/JSContext-inl.h"

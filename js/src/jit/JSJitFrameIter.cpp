@@ -10,6 +10,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
+#include "jit/Safepoints.h"
 
 using namespace js;
 using namespace js::jit;

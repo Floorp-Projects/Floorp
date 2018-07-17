@@ -11,6 +11,10 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
+  - name: clang-analyzer-cplusplus.NewDelete
+    publish: !!bool yes
+  - name: clang-analyzer-cplusplus.NewDeleteLeaks
+    publish: !!bool yes
   - name: clang-analyzer-deadcode.DeadStores
     publish: !!bool yes
   - name: clang-analyzer-security.FloatLoopCounter
@@ -40,9 +44,17 @@ clang_checkers:
     # Name with clang tidy 6.0. We are currently using 5.0
     # - name: bugprone-forward-declaration-namespace
     publish: !!bool yes
+  - name: misc-macro-repeated-side-effects
+    publish: !!bool yes
   - name: misc-suspicious-missing-comma
     publish: !!bool yes
   - name: misc-suspicious-semicolon
+    publish: !!bool yes
+  - name: misc-swapped-arguments
+    publish: !!bool yes
+  - name: misc-unused-alias-decls
+    publish: !!bool yes
+  - name: misc-unused-raii
     publish: !!bool yes
   - name: misc-unused-using-decls
     publish: !!bool yes

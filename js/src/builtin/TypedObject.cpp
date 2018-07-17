@@ -11,7 +11,7 @@
 
 #include "jsutil.h"
 
-#include "builtin/SIMD.h"
+#include "builtin/SIMDConstants.h"
 #include "gc/Marking.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"

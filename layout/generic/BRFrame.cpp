@@ -158,7 +158,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
     }
 
     // Return our reflow status
-    StyleClear breakType = aReflowInput.mStyleDisplay->PhysicalBreakType(wm);
+    StyleClear breakType = aReflowInput.mStyleDisplay->mBreakType;
     if (StyleClear::None == breakType) {
       breakType = StyleClear::Line;
     }

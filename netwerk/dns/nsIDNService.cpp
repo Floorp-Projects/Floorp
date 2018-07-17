@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Preferences.h"
 #include "nsIDNService.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -11,8 +12,6 @@
 #include "nsUnicodeScriptCodes.h"
 #include "harfbuzz/hb.h"
 #include "nsIServiceManager.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "punycode.h"
@@ -28,6 +27,7 @@ const bool kIDNA2008_TransitionalProcessing = false;
 #include "unicode/uscript.h"
 
 using namespace mozilla::unicode;
+using mozilla::Preferences;
 
 //-----------------------------------------------------------------------------
 // RFC 1034 - 3.1. Name space specifications and terminology
@@ -57,8 +57,15 @@ inline bool isOnlySafeChars(const nsString& in, const nsString& blacklist)
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsIDNService,
                   nsIIDNService,
-                  nsIObserver,
                   nsISupportsWeakReference)
+
+static const char* gCallbackPrefs[] = {
+  NS_NET_PREF_IDNBLACKLIST,
+  NS_NET_PREF_SHOWPUNYCODE,
+  NS_NET_PREF_IDNRESTRICTION,
+  NS_NET_PREF_IDNUSEWHITELIST,
+  nullptr,
+};
 
 nsresult nsIDNService::Init()
 {
@@ -69,62 +76,41 @@ nsresult nsIDNService::Init()
   if (prefs)
     prefs->GetBranch(NS_NET_PREF_IDNWHITELIST, getter_AddRefs(mIDNWhitelistPrefBranch));
 
-  nsCOMPtr<nsIPrefBranch> prefInternal(do_QueryInterface(prefs));
-  if (prefInternal) {
-    prefInternal->AddObserver(NS_NET_PREF_IDNBLACKLIST, this, true);
-    prefInternal->AddObserver(NS_NET_PREF_SHOWPUNYCODE, this, true);
-    prefInternal->AddObserver(NS_NET_PREF_IDNRESTRICTION, this, true);
-    prefInternal->AddObserver(NS_NET_PREF_IDNUSEWHITELIST, this, true);
-    prefsChanged(prefInternal, nullptr);
-  }
+  Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
+  prefsChanged(nullptr);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
-                                    const char *aTopic,
-                                    const char16_t *aData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mLock);
-
-  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(aSubject) );
-    if (prefBranch)
-      prefsChanged(prefBranch, aData);
-  }
-  return NS_OK;
-}
-
-void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
+void nsIDNService::prefsChanged(const char *pref)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
+  if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
     nsAutoCString blacklist;
-    nsresult rv = prefBranch->GetStringPref(NS_NET_PREF_IDNBLACKLIST,
-                                            EmptyCString(), 0, blacklist);
+    nsresult rv = Preferences::GetCString(NS_NET_PREF_IDNBLACKLIST,
+                                          blacklist);
     if (NS_SUCCEEDED(rv)) {
       CopyUTF8toUTF16(blacklist, mIDNBlacklist);
     } else {
       mIDNBlacklist.Truncate();
     }
   }
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
+  if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
     bool val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_SHOWPUNYCODE, &val)))
+    if (NS_SUCCEEDED(Preferences::GetBool(NS_NET_PREF_SHOWPUNYCODE, &val)))
       mShowPunycode = val;
   }
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNUSEWHITELIST).Equals(pref)) {
+  if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNUSEWHITELIST).Equals(pref)) {
     bool val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNUSEWHITELIST,
+    if (NS_SUCCEEDED(Preferences::GetBool(NS_NET_PREF_IDNUSEWHITELIST,
                                              &val)))
       mIDNUseWhitelist = val;
   }
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
+  if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
     nsAutoCString profile;
-    if (NS_FAILED(prefBranch->GetCharPref(NS_NET_PREF_IDNRESTRICTION,
+    if (NS_FAILED(Preferences::GetCString(NS_NET_PREF_IDNRESTRICTION,
                                           profile))) {
       profile.Truncate();
     }
@@ -157,6 +143,8 @@ nsIDNService::nsIDNService()
 nsIDNService::~nsIDNService()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  Preferences::UnregisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
 
   uidna_close(mIDNA);
 }

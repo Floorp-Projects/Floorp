@@ -190,6 +190,9 @@ DataStorage::DataStorage(const nsString& aFilename)
 
 DataStorage::~DataStorage()
 {
+  Preferences::UnregisterCallback(PREF_CHANGE_METHOD(DataStorage::PrefChanged),
+                                  "test.datastorage.write_timer_ms",
+                                  this);
 }
 
 // static
@@ -430,10 +433,9 @@ DataStorage::Init(bool& aDataWillPersist,
   // For test purposes, we can set the write timer to be very fast.
   mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
                                     sDataStorageDefaultTimerDelay);
-  rv = Preferences::AddStrongObserver(this, "test.datastorage.write_timer_ms");
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  Preferences::RegisterCallback(PREF_CHANGE_METHOD(DataStorage::PrefChanged),
+                                "test.datastorage.write_timer_ms",
+                                this);
 
   return NS_OK;
 }
@@ -1156,10 +1158,6 @@ DataStorage::Observe(nsISupports* /*aSubject*/, const char* aTopic,
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     MutexAutoLock lock(mMutex);
     mPrivateDataTable.Clear();
-  } else if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
-    MutexAutoLock lock(mMutex);
-    mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
-                                      sDataStorageDefaultTimerDelay);
   }
 
   if (!XRE_IsParentProcess()) {
@@ -1191,6 +1189,14 @@ DataStorage::Observe(nsISupports* /*aSubject*/, const char* aTopic,
   }
 
   return NS_OK;
+}
+
+void
+DataStorage::PrefChanged(const char* aPref)
+{
+  MutexAutoLock lock(mMutex);
+  mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
+                                    sDataStorageDefaultTimerDelay);
 }
 
 DataStorage::Entry::Entry()

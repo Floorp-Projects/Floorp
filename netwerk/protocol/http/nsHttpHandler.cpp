@@ -417,6 +417,26 @@ nsHttpHandler::~nsHttpHandler()
     nsHttp::DestroyAtomTable();
 }
 
+static const char* gCallbackPrefs[] = {
+    HTTP_PREF_PREFIX,
+    UA_PREF_PREFIX,
+    INTL_ACCEPT_LANGUAGES,
+    BROWSER_PREF("disk_cache_ssl"),
+    DONOTTRACK_HEADER_ENABLED,
+    TELEMETRY_ENABLED,
+    H2MANDATORY_SUITE,
+    HTTP_PREF("tcp_keepalive.short_lived_connections"),
+    HTTP_PREF("tcp_keepalive.long_lived_connections"),
+    SAFE_HINT_HEADER_VALUE,
+    SECURITY_PREFIX,
+    TCP_FAST_OPEN_ENABLE,
+    TCP_FAST_OPEN_FAILURE_LIMIT,
+    TCP_FAST_OPEN_STALLS_LIMIT,
+    TCP_FAST_OPEN_STALLS_IDLE,
+    TCP_FAST_OPEN_STALLS_TIMEOUT,
+    nullptr,
+};
+
 nsresult
 nsHttpHandler::Init()
 {
@@ -449,26 +469,11 @@ nsHttpHandler::Init()
     }
 
     // monitor some preference changes
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefBranch) {
-        prefBranch->AddObserver(HTTP_PREF_PREFIX, this, true);
-        prefBranch->AddObserver(UA_PREF_PREFIX, this, true);
-        prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, true);
-        prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
-        prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
-        prefBranch->AddObserver(TELEMETRY_ENABLED, this, true);
-        prefBranch->AddObserver(H2MANDATORY_SUITE, this, true);
-        prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.short_lived_connections"), this, true);
-        prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.long_lived_connections"), this, true);
-        prefBranch->AddObserver(SAFE_HINT_HEADER_VALUE, this, true);
-        prefBranch->AddObserver(SECURITY_PREFIX, this, true);
-        prefBranch->AddObserver(TCP_FAST_OPEN_ENABLE, this, true);
-        prefBranch->AddObserver(TCP_FAST_OPEN_FAILURE_LIMIT, this, true);
-        prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_LIMIT, this, true);
-        prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_IDLE, this, true);
-        prefBranch->AddObserver(TCP_FAST_OPEN_STALLS_TIMEOUT, this, true);
-        PrefsChanged(prefBranch, nullptr);
-    }
+    Preferences::RegisterPrefixCallbacks(
+        PREF_CHANGE_METHOD(nsHttpHandler::PrefsChanged),
+        gCallbackPrefs,
+        this);
+    PrefsChanged(nullptr);
 
     mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
@@ -1160,7 +1165,7 @@ nsHttpHandler::MaxSocketCount()
 }
 
 void
-nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
+nsHttpHandler::PrefsChanged(const char *pref)
 {
     nsresult rv = NS_OK;
     int32_t val;
@@ -1195,14 +1200,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     bool cVar = false;
 
     if (PREF_CHANGED(UA_PREF("compatMode.firefox"))) {
-        rv = prefs->GetBoolPref(UA_PREF("compatMode.firefox"), &cVar);
+        rv = Preferences::GetBool(UA_PREF("compatMode.firefox"), &cVar);
         mCompatFirefoxEnabled = (NS_SUCCEEDED(rv) && cVar);
         mUserAgentIsDirty = true;
     }
 
     // general.useragent.override
     if (PREF_CHANGED(UA_PREF("override"))) {
-        prefs->GetCharPref(UA_PREF("override"), mUserAgentOverride);
+        Preferences::GetCString(UA_PREF("override"), mUserAgentOverride);
         mUserAgentIsDirty = true;
     }
 
@@ -1223,19 +1228,19 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     //
 
     if (PREF_CHANGED(HTTP_PREF("keep-alive.timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("keep-alive.timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("keep-alive.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = PR_SecondsToInterval(clamped(val, 1, 0xffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-attempts"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("request.max-attempts"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("request.max-attempts"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxRequestAttempts = (uint16_t) clamped(val, 1, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-start-delay"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("request.max-start-delay"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxRequestDelay = (uint16_t) clamped(val, 0, 0xffff);
             if (mConnMgr) {
@@ -1250,19 +1255,19 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("response.timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("response.timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("response.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mResponseTimeout = PR_SecondsToInterval(clamped(val, 0, 0xffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("network-changed.timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("network-changed.timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("network-changed.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mNetworkChangedTimeout = clamped(val, 1, 600) * 1000;
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv)) {
 
             mMaxConnections = (uint16_t) clamped((uint32_t)val,
@@ -1280,7 +1285,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-urgent-start-excessive-connections-per-host"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("max-urgent-start-excessive-connections-per-host"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("max-urgent-start-excessive-connections-per-host"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxUrgentExcessiveConns = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr) {
@@ -1295,7 +1300,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-server"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("max-persistent-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxPersistentConnectionsPerServer = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr) {
@@ -1310,7 +1315,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-proxy"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-proxy"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("max-persistent-connections-per-proxy"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxPersistentConnectionsPerProxy = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr) {
@@ -1325,68 +1330,68 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("sendRefererHeader"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerLevel = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.spoofSource"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("referer.spoofSource"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("referer.spoofSource"), &cVar);
         if (NS_SUCCEEDED(rv))
             mSpoofReferrerSource = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.hideOnionSource"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("referer.hideOnionSource"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("referer.hideOnionSource"), &cVar);
         if (NS_SUCCEEDED(rv))
             mHideOnionReferrerSource = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.trimmingPolicy"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("referer.trimmingPolicy"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("referer.trimmingPolicy"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerTrimmingPolicy = (uint8_t) clamped(val, 0, 2);
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.XOriginTrimmingPolicy"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("referer.XOriginTrimmingPolicy"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("referer.XOriginTrimmingPolicy"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerXOriginTrimmingPolicy = (uint8_t) clamped(val, 0, 2);
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.XOriginPolicy"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("referer.XOriginPolicy"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("referer.XOriginPolicy"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerXOriginPolicy = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("redirection-limit"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("redirection-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mRedirectionLimit = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("connection-retry-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("connection-retry-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mIdleSynTimeout = (uint16_t) clamped(val, 0, 3000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("fast-fallback-to-IPv4"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("fast-fallback-to-IPv4"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("fast-fallback-to-IPv4"), &cVar);
         if (NS_SUCCEEDED(rv))
             mFastFallbackToIPv4 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("fallback-connection-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("fallback-connection-timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("fallback-connection-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mFallbackSynTimeout = (uint16_t) clamped(val, 0, 10 * 60);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
         nsAutoCString httpVersion;
-        prefs->GetCharPref(HTTP_PREF("version"), httpVersion);
+        Preferences::GetCString(HTTP_PREF("version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
                 mHttpVersion = HttpVersion::v1_1;
@@ -1399,7 +1404,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("proxy.version"))) {
         nsAutoCString httpVersion;
-        prefs->GetCharPref(HTTP_PREF("proxy.version"), httpVersion);
+        Preferences::GetCString(HTTP_PREF("proxy.version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
                 mProxyHttpVersion = HttpVersion::v1_1;
@@ -1410,14 +1415,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("qos"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("qos"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("qos"), &val);
         if (NS_SUCCEEDED(rv))
             mQoSBits = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
         nsAutoCString accept;
-        rv = prefs->GetCharPref(HTTP_PREF("accept.default"), accept);
+        rv = Preferences::GetCString(HTTP_PREF("accept.default"), accept);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAccept(accept.get());
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1426,7 +1431,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
         nsAutoCString acceptEncodings;
-        rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"), acceptEncodings);
+        rv = Preferences::GetCString(HTTP_PREF("accept-encoding"), acceptEncodings);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAcceptEncodings(acceptEncodings.get(), false);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1435,7 +1440,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding.secure"))) {
         nsAutoCString acceptEncodings;
-        rv = prefs->GetCharPref(HTTP_PREF("accept-encoding.secure"),
+        rv = Preferences::GetCString(HTTP_PREF("accept-encoding.secure"),
                                 acceptEncodings);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAcceptEncodings(acceptEncodings.get(), true);
@@ -1445,7 +1450,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {
         nsAutoCString sval;
-        rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"), sval);
+        rv = Preferences::GetCString(HTTP_PREF("default-socket-type"), sval);
         if (NS_SUCCEEDED(rv)) {
             if (sval.IsEmpty())
                 mDefaultSocketType.SetIsVoid(true);
@@ -1466,7 +1471,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("prompt-temp-redirect"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("prompt-temp-redirect"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("prompt-temp-redirect"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             mPromptTempRedirect = cVar;
         }
@@ -1474,7 +1479,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("assoc-req.enforce"))) {
         cVar = false;
-        rv = prefs->GetBoolPref(HTTP_PREF("assoc-req.enforce"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("assoc-req.enforce"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnforceAssocReq = cVar;
     }
@@ -1482,63 +1487,63 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // enable Persistent caching for HTTPS - bug#205921
     if (PREF_CHANGED(BROWSER_PREF("disk_cache_ssl"))) {
         cVar = false;
-        rv = prefs->GetBoolPref(BROWSER_PREF("disk_cache_ssl"), &cVar);
+        rv = Preferences::GetBool(BROWSER_PREF("disk_cache_ssl"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnablePersistentHttpsCaching = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("phishy-userpass-length"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("phishy-userpass-length"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("phishy-userpass-length"), &val);
         if (NS_SUCCEEDED(rv))
             mPhishyUserPassLength = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("spdy.enabled"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableSpdy = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled.http2"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.http2"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("spdy.enabled.http2"), &cVar);
         if (NS_SUCCEEDED(rv))
             mHttp2Enabled = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled.deps"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.deps"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("spdy.enabled.deps"), &cVar);
         if (NS_SUCCEEDED(rv))
             mUseH2Deps = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enforce-tls-profile"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enforce-tls-profile"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("spdy.enforce-tls-profile"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnforceHttp2TlsProfile = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
         if (NS_SUCCEEDED(rv))
             mCoalesceSpdy = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.persistent-settings"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.persistent-settings"),
+        rv = Preferences::GetBool(HTTP_PREF("spdy.persistent-settings"),
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mSpdyPersistentSettings = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyTimeout = PR_SecondsToInterval(clamped(val, 1, 0xffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
         // keep this within http/2 ranges of 1 to 2^14-1
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.chunk-size"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.chunk-size"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdySendingChunkSize = (uint32_t) clamped(val, 1, 0x3fff);
     }
@@ -1546,7 +1551,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // The amount of idle seconds on a spdy connection before initiating a
     // server ping. 0 will disable.
     if (PREF_CHANGED(HTTP_PREF("spdy.ping-threshold"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-threshold"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.ping-threshold"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyPingThreshold =
                 PR_SecondsToInterval((uint16_t) clamped(val, 0, 0x7fffffff));
@@ -1555,21 +1560,21 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // The amount of seconds to wait for a spdy ping response before
     // closing the session.
     if (PREF_CHANGED(HTTP_PREF("spdy.ping-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.ping-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyPingTimeout =
                 PR_SecondsToInterval((uint16_t) clamped(val, 0, 0x7fffffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.allow-push"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.allow-push"),
+        rv = Preferences::GetBool(HTTP_PREF("spdy.allow-push"),
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mAllowPush = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("altsvc.enabled"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("altsvc.enabled"),
+        rv = Preferences::GetBool(HTTP_PREF("altsvc.enabled"),
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableAltSvc = cVar;
@@ -1577,21 +1582,21 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
 
     if (PREF_CHANGED(HTTP_PREF("altsvc.oe"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("altsvc.oe"),
+        rv = Preferences::GetBool(HTTP_PREF("altsvc.oe"),
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableAltSvcOE = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("originextension"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("originextension"),
+        rv = Preferences::GetBool(HTTP_PREF("originextension"),
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableOriginExtension = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.push-allowance"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.push-allowance"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.push-allowance"), &val);
         if (NS_SUCCEEDED(rv)) {
             mSpdyPushAllowance =
                 static_cast<uint32_t>
@@ -1600,7 +1605,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.pull-allowance"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.pull-allowance"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.pull-allowance"), &val);
         if (NS_SUCCEEDED(rv)) {
             mSpdyPullAllowance =
                 static_cast<uint32_t>(clamped(val, 1024, 0x7fffffff));
@@ -1608,7 +1613,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.default-concurrent"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.default-concurrent"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.default-concurrent"), &val);
         if (NS_SUCCEEDED(rv)) {
             mDefaultSpdyConcurrent =
                 static_cast<uint32_t>(std::max<int32_t>(std::min<int32_t>(val, 9999), 1));
@@ -1618,7 +1623,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // The amount of seconds to wait for a spdy ping response before
     // closing the session.
     if (PREF_CHANGED(HTTP_PREF("spdy.send-buffer-size"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.send-buffer-size"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.send-buffer-size"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdySendBufferSize = (uint32_t) clamped(val, 1500, 0x7fffffff);
     }
@@ -1626,7 +1631,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // The maximum amount of time to wait for socket transport to be
     // established
     if (PREF_CHANGED(HTTP_PREF("connection-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("connection-timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("connection-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             // the pref is in seconds, but the variable is in milliseconds
             mConnectTimeout = clamped(val, 1, 0xffff) * PR_MSEC_PER_SEC;
@@ -1634,7 +1639,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // The maximum amount of time to wait for a tls handshake to finish.
     if (PREF_CHANGED(HTTP_PREF("tls-handshake-timeout"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("tls-handshake-timeout"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("tls-handshake-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             // the pref is in seconds, but the variable is in milliseconds
             mTLSHandshakeTimeout = clamped(val, 1, 0xffff) * PR_MSEC_PER_SEC;
@@ -1643,7 +1648,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // The maximum number of current global half open sockets allowable
     // for starting a new speculative connection.
     if (PREF_CHANGED(HTTP_PREF("speculative-parallel-limit"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("speculative-parallel-limit"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("speculative-parallel-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mParallelSpeculativeConnectLimit = (uint32_t) clamped(val, 0, 1024);
     }
@@ -1651,7 +1656,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // Whether or not to block requests for non head js/css items (e.g. media)
     // while those elements load.
     if (PREF_CHANGED(HTTP_PREF("rendering-critical-requests-prioritization"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
         if (NS_SUCCEEDED(rv))
             mCriticalRequestPrioritization = cVar;
     }
@@ -1659,7 +1664,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // on transition of network.http.diagnostics to true print
     // a bunch of information to the console
     if (pref && PREF_CHANGED(HTTP_PREF("diagnostics"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("diagnostics"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("diagnostics"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar) {
             if (mConnMgr)
                 mConnMgr->PrintDiagnostics();
@@ -1667,14 +1672,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("max_response_header_size"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("max_response_header_size"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("max_response_header_size"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxHttpResponseHeaderSize = val;
         }
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.enable"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("throttle.enable"), &mThrottleEnabled);
+        rv = Preferences::GetBool(HTTP_PREF("throttle.enable"), &mThrottleEnabled);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_ENABLED,
                                             static_cast<int32_t>(mThrottleEnabled));
@@ -1682,12 +1687,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.version"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.version"), &val);
+        Unused << Preferences::GetInt(HTTP_PREF("throttle.version"), &val);
         mThrottleVersion = (uint32_t)clamped(val, 1, 2);
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.suspend-for"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.suspend-for"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("throttle.suspend-for"), &val);
         mThrottleSuspendFor = (uint32_t)clamped(val, 0, 120000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_SUSPEND_FOR,
@@ -1696,7 +1701,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.resume-for"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.resume-for"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("throttle.resume-for"), &val);
         mThrottleResumeFor = (uint32_t)clamped(val, 0, 120000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_RESUME_FOR,
@@ -1705,7 +1710,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.read-limit-bytes"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.read-limit-bytes"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("throttle.read-limit-bytes"), &val);
         mThrottleReadLimit = (uint32_t)clamped(val, 0, 500000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_READ_LIMIT,
@@ -1714,7 +1719,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.read-interval-ms"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.read-interval-ms"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("throttle.read-interval-ms"), &val);
         mThrottleReadInterval = (uint32_t)clamped(val, 0, 120000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_READ_INTERVAL,
@@ -1723,7 +1728,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.hold-time-ms"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("throttle.hold-time-ms"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("throttle.hold-time-ms"), &val);
         mThrottleHoldTime = (uint32_t)clamped(val, 0, 120000);
         if (NS_SUCCEEDED(rv) && mConnMgr) {
             Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_HOLD_TIME,
@@ -1732,7 +1737,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("throttle.max-time-ms"))) {
-      rv = prefs->GetIntPref(HTTP_PREF("throttle.max-time-ms"), &val);
+      rv = Preferences::GetInt(HTTP_PREF("throttle.max-time-ms"), &val);
       mThrottleMaxTime = (uint32_t)clamped(val, 0, 120000);
       if (NS_SUCCEEDED(rv) && mConnMgr) {
         Unused << mConnMgr->UpdateParam(nsHttpConnectionMgr::THROTTLING_MAX_TIME,
@@ -1741,32 +1746,32 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("on_click_priority"))) {
-        Unused << prefs->GetBoolPref(HTTP_PREF("on_click_priority"), &mUrgentStartEnabled);
+        Unused << Preferences::GetBool(HTTP_PREF("on_click_priority"), &mUrgentStartEnabled);
     }
 
     if (PREF_CHANGED(HTTP_PREF("tailing.enabled"))) {
-        Unused << prefs->GetBoolPref(HTTP_PREF("tailing.enabled"), &mTailBlockingEnabled);
+        Unused << Preferences::GetBool(HTTP_PREF("tailing.enabled"), &mTailBlockingEnabled);
     }
     if (PREF_CHANGED(HTTP_PREF("tailing.delay-quantum"))) {
-        Unused << prefs->GetIntPref(HTTP_PREF("tailing.delay-quantum"), &val);
+        Unused << Preferences::GetInt(HTTP_PREF("tailing.delay-quantum"), &val);
         mTailDelayQuantum = (uint32_t)clamped(val, 0, 60000);
     }
     if (PREF_CHANGED(HTTP_PREF("tailing.delay-quantum-after-domcontentloaded"))) {
-        Unused << prefs->GetIntPref(HTTP_PREF("tailing.delay-quantum-after-domcontentloaded"), &val);
+        Unused << Preferences::GetInt(HTTP_PREF("tailing.delay-quantum-after-domcontentloaded"), &val);
         mTailDelayQuantumAfterDCL = (uint32_t)clamped(val, 0, 60000);
     }
     if (PREF_CHANGED(HTTP_PREF("tailing.delay-max"))) {
-        Unused << prefs->GetIntPref(HTTP_PREF("tailing.delay-max"), &val);
+        Unused << Preferences::GetInt(HTTP_PREF("tailing.delay-max"), &val);
         mTailDelayMax = (uint32_t)clamped(val, 0, 60000);
     }
     if (PREF_CHANGED(HTTP_PREF("tailing.total-max"))) {
-        Unused << prefs->GetIntPref(HTTP_PREF("tailing.total-max"), &val);
+        Unused << Preferences::GetInt(HTTP_PREF("tailing.total-max"), &val);
         mTailTotalMax = (uint32_t)clamped(val, 0, 60000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("focused_window_transaction_ratio"))) {
         float ratio = 0;
-        rv = prefs->GetFloatPref(HTTP_PREF("focused_window_transaction_ratio"), &ratio);
+        rv = Preferences::GetFloat(HTTP_PREF("focused_window_transaction_ratio"), &ratio);
         if (NS_SUCCEEDED(rv)) {
             if (ratio > 0 && ratio < 1) {
                 mFocusedWindowTransactionRatio = ratio;
@@ -1793,7 +1798,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(DONOTTRACK_HEADER_ENABLED)) {
         cVar = false;
-        rv = prefs->GetBoolPref(DONOTTRACK_HEADER_ENABLED, &cVar);
+        rv = Preferences::GetBool(DONOTTRACK_HEADER_ENABLED, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mDoNotTrackEnabled = cVar;
         }
@@ -1801,7 +1806,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // Hint option
     if (PREF_CHANGED(SAFE_HINT_HEADER_VALUE)) {
         cVar = false;
-        rv = prefs->GetBoolPref(SAFE_HINT_HEADER_VALUE, &cVar);
+        rv = Preferences::GetBool(SAFE_HINT_HEADER_VALUE, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mSafeHintEnabled = cVar;
         }
@@ -1818,7 +1823,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(TELEMETRY_ENABLED)) {
         cVar = false;
         requestTokenBucketUpdated = true;
-        rv = prefs->GetBoolPref(TELEMETRY_ENABLED, &cVar);
+        rv = Preferences::GetBool(TELEMETRY_ENABLED, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mTelemetryEnabled = cVar;
         }
@@ -1829,7 +1834,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(H2MANDATORY_SUITE)) {
         cVar = false;
-        rv = prefs->GetBoolPref(H2MANDATORY_SUITE, &cVar);
+        rv = Preferences::GetBool(H2MANDATORY_SUITE, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mH2MandatorySuiteEnabled = cVar;
         }
@@ -1841,7 +1846,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(ALLOW_EXPERIMENTS)) {
         cVar = true;
         requestTokenBucketUpdated = true;
-        rv = prefs->GetBoolPref(ALLOW_EXPERIMENTS, &cVar);
+        rv = Preferences::GetBool(ALLOW_EXPERIMENTS, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mAllowExperiments = cVar;
         }
@@ -1850,35 +1855,35 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // network.http.debug-observations
     if (PREF_CHANGED("network.http.debug-observations")) {
         cVar = false;
-        rv = prefs->GetBoolPref("network.http.debug-observations", &cVar);
+        rv = Preferences::GetBool("network.http.debug-observations", &cVar);
         if (NS_SUCCEEDED(rv)) {
             mDebugObservations = cVar;
         }
     }
 
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.enabled"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.enabled"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("pacing.requests.enabled"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketEnabled = cVar;
             requestTokenBucketUpdated = true;
         }
     }
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.min-parallelism"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.min-parallelism"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("pacing.requests.min-parallelism"), &val);
         if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketMinParallelism = static_cast<uint16_t>(clamped(val, 1, 1024));
             requestTokenBucketUpdated = true;
         }
     }
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.hz"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.hz"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("pacing.requests.hz"), &val);
         if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketHz = static_cast<uint32_t>(clamped(val, 1, 10000));
             requestTokenBucketUpdated = true;
         }
     }
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.burst"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.burst"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("pacing.requests.burst"), &val);
         if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketBurst = val ? val : 1;
             requestTokenBucketUpdated = true;
@@ -1890,7 +1895,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // Keepalive values for initial and idle connections.
     if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_connections"))) {
-        rv = prefs->GetBoolPref(
+        rv = Preferences::GetBool(
             HTTP_PREF("tcp_keepalive.short_lived_connections"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar != mTCPKeepaliveShortLivedEnabled) {
             mTCPKeepaliveShortLivedEnabled = cVar;
@@ -1898,14 +1903,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_time"))) {
-        rv = prefs->GetIntPref(
+        rv = Preferences::GetInt(
             HTTP_PREF("tcp_keepalive.short_lived_time"), &val);
         if (NS_SUCCEEDED(rv) && val > 0)
             mTCPKeepaliveShortLivedTimeS = clamped(val, 1, 300); // Max 5 mins.
     }
 
     if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.short_lived_idle_time"))) {
-        rv = prefs->GetIntPref(
+        rv = Preferences::GetInt(
             HTTP_PREF("tcp_keepalive.short_lived_idle_time"), &val);
         if (NS_SUCCEEDED(rv) && val > 0)
             mTCPKeepaliveShortLivedIdleTimeS = clamped(val,
@@ -1914,7 +1919,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // Keepalive values for Long-lived Connections.
     if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.long_lived_connections"))) {
-        rv = prefs->GetBoolPref(
+        rv = Preferences::GetBool(
             HTTP_PREF("tcp_keepalive.long_lived_connections"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar != mTCPKeepaliveLongLivedEnabled) {
             mTCPKeepaliveLongLivedEnabled = cVar;
@@ -1922,7 +1927,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("tcp_keepalive.long_lived_idle_time"))) {
-        rv = prefs->GetIntPref(
+        rv = Preferences::GetInt(
             HTTP_PREF("tcp_keepalive.long_lived_idle_time"), &val);
         if (NS_SUCCEEDED(rv) && val > 0)
             mTCPKeepaliveLongLivedIdleTimeS = clamped(val,
@@ -1931,11 +1936,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("enforce-framing.http1")) ||
         PREF_CHANGED(HTTP_PREF("enforce-framing.soft")) ) {
-        rv = prefs->GetBoolPref(HTTP_PREF("enforce-framing.http1"), &cVar);
+        rv = Preferences::GetBool(HTTP_PREF("enforce-framing.http1"), &cVar);
         if (NS_SUCCEEDED(rv) && cVar) {
             mEnforceH1Framing = FRAMECHECK_STRICT;
         } else {
-            rv = prefs->GetBoolPref(HTTP_PREF("enforce-framing.soft"), &cVar);
+            rv = Preferences::GetBool(HTTP_PREF("enforce-framing.soft"), &cVar);
             if (NS_SUCCEEDED(rv) && cVar) {
                 mEnforceH1Framing = FRAMECHECK_BARELY;
             } else {
@@ -1945,14 +1950,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(TCP_FAST_OPEN_ENABLE)) {
-        rv = prefs->GetBoolPref(TCP_FAST_OPEN_ENABLE, &cVar);
+        rv = Preferences::GetBool(TCP_FAST_OPEN_ENABLE, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mUseFastOpen = cVar;
         }
     }
 
     if (PREF_CHANGED(TCP_FAST_OPEN_FAILURE_LIMIT)) {
-        rv = prefs->GetIntPref(TCP_FAST_OPEN_FAILURE_LIMIT, &val);
+        rv = Preferences::GetInt(TCP_FAST_OPEN_FAILURE_LIMIT, &val);
         if (NS_SUCCEEDED(rv)) {
             if (val < 0) {
                 val = 0;
@@ -1962,7 +1967,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_LIMIT)) {
-        rv = prefs->GetIntPref(TCP_FAST_OPEN_STALLS_LIMIT, &val);
+        rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_LIMIT, &val);
         if (NS_SUCCEEDED(rv)) {
             if (val < 0) {
                 val = 0;
@@ -1972,7 +1977,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_TIMEOUT)) {
-        rv = prefs->GetIntPref(TCP_FAST_OPEN_STALLS_TIMEOUT, &val);
+        rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_TIMEOUT, &val);
         if (NS_SUCCEEDED(rv)) {
             if (val < 0) {
                 val = 0;
@@ -1982,7 +1987,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_IDLE)) {
-        rv = prefs->GetIntPref(TCP_FAST_OPEN_STALLS_IDLE, &val);
+        rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_IDLE, &val);
         if (NS_SUCCEEDED(rv)) {
             if (val < 0) {
                 val = 0;
@@ -1992,7 +1997,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.hpack-default-buffer"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("spdy.default-hpack-buffer"), &val);
+        rv = Preferences::GetInt(HTTP_PREF("spdy.default-hpack-buffer"), &val);
         if (NS_SUCCEEDED(rv)) {
             mDefaultHpackBuffer = val;
         }
@@ -2301,12 +2306,8 @@ nsHttpHandler::Observe(nsISupports *subject,
     LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 
     nsresult rv;
-    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
-        if (prefBranch)
-            PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
-    } else if (!strcmp(topic, "profile-change-net-teardown") ||
-               !strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ) {
+    if (!strcmp(topic, "profile-change-net-teardown") ||
+        !strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ) {
 
         mHandlerActive = false;
 

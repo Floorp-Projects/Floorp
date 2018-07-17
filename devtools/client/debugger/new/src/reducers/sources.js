@@ -26,6 +26,8 @@ var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["r
 
 var _lodashMove = require("devtools/client/debugger/new/dist/vendors").vendored["lodash-move"];
 
+var _lodashMove2 = _interopRequireDefault(_lodashMove);
+
 var _source = require("../utils/source");
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
@@ -33,6 +35,8 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _prefs = require("../utils/prefs");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -256,7 +260,7 @@ function updateTabList(tabs, url, newIndex) {
   if (currentIndex === -1) {
     tabs = [url, ...tabs];
   } else if (newIndex !== undefined) {
-    tabs = (0, _lodashMove.move)(tabs, currentIndex, newIndex);
+    tabs = (0, _lodashMove2.default)(tabs, currentIndex, newIndex);
   }
 
   _prefs.prefs.tabs = tabs;

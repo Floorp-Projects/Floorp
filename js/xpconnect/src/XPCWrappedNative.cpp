@@ -1442,17 +1442,16 @@ CallMethodHelper::InitializeDispatchParams()
     const uint8_t wantsJSContext = mMethodInfo->WantsContext() ? 1 : 0;
     const uint8_t paramCount = mMethodInfo->GetParamCount();
     uint8_t requiredArgs = paramCount;
-    uint8_t hasRetval = 0;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
-    if (mMethodInfo->HasRetval()) {
-        hasRetval = 1;
+    if (mMethodInfo->HasRetval())
         requiredArgs--;
-    }
 
     if (mArgc < requiredArgs || wantsOptArgc) {
-        if (wantsOptArgc)
-            mOptArgcIndex = requiredArgs;
+        if (wantsOptArgc) {
+            // The implicit JSContext*, if we have one, comes first.
+            mOptArgcIndex = requiredArgs + wantsJSContext;
+        }
 
         // skip over any optional arguments
         while (requiredArgs && mMethodInfo->GetParam(requiredArgs-1).IsOptional())
@@ -1464,16 +1463,7 @@ CallMethodHelper::InitializeDispatchParams()
         }
     }
 
-    if (wantsJSContext) {
-        if (wantsOptArgc)
-            // Need to bump mOptArgcIndex up one here.
-            mJSContextIndex = mOptArgcIndex++;
-        else if (mMethodInfo->IsSetter() || mMethodInfo->IsGetter())
-            // For attributes, we always put the JSContext* first.
-            mJSContextIndex = 0;
-        else
-            mJSContextIndex = paramCount - hasRetval;
-    }
+    mJSContextIndex = mMethodInfo->IndexOfJSContext();
 
     // iterate through the params to clear flags (for safe cleanup later)
     for (uint8_t i = 0; i < paramCount + wantsJSContext + wantsOptArgc; i++) {

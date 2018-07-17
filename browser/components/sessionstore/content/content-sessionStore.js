@@ -20,6 +20,8 @@ function debug(msg) {
 ChromeUtils.defineModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
 
+ChromeUtils.defineModuleGetter(this, "ContentRestore",
+  "resource:///modules/sessionstore/ContentRestore.jsm");
 ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 ChromeUtils.defineModuleGetter(this, "ScrollPosition",
@@ -29,9 +31,13 @@ ChromeUtils.defineModuleGetter(this, "SessionHistory",
 ChromeUtils.defineModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 
-ChromeUtils.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
+var contentRestoreInitialized = false;
+
 XPCOMUtils.defineLazyGetter(this, "gContentRestore",
-                            () => { return new ContentRestore(this); });
+                            () => {
+                              contentRestoreInitialized = true;
+                              return new ContentRestore(this);
+                            });
 
 ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
@@ -159,9 +165,11 @@ var EventListener = {
       content.removeEventListener("AboutReaderContentReady", this);
     }
 
-    // Restore the form data and scroll position. If we're not currently
-    // restoring a tab state then this call will simply be a noop.
-    gContentRestore.restoreDocument();
+    if (contentRestoreInitialized) {
+      // Restore the form data and scroll position. If we're not currently
+      // restoring a tab state then this call will simply be a noop.
+      gContentRestore.restoreDocument();
+    }
   }
 };
 
@@ -962,8 +970,10 @@ addEventListener("unload", () => {
   SessionHistoryListener.uninit();
   MessageQueue.uninit();
 
-  // Remove progress listeners.
-  gContentRestore.resetRestore();
+  if (contentRestoreInitialized) {
+    // Remove progress listeners.
+    gContentRestore.resetRestore();
+  }
 
   // We don't need to take care of any StateChangeNotifier observers as they
   // will die with the content script. The same goes for the privacy transition

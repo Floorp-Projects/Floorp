@@ -461,9 +461,8 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   // job for AutoTArray!  (One of the two arrays we're swapping is using an
   // auto buffer, so we're likely not allocating a lot of space here.  But one
   // could, in theory, allocate a huge AutoTArray on the heap.)
-  AutoTArray<nsTArray_Impl<uint8_t, ActualAlloc>, 64> temp;
-  if (!ActualAlloc::Successful(temp.template EnsureCapacity<ActualAlloc>(smallerLength,
-                                                                         aElemSize))) {
+  AutoTArray<uint8_t, 64 * sizeof(void*)> temp;
+  if (!ActualAlloc::Successful(temp.template EnsureCapacity<ActualAlloc>(smallerLength * aElemSize, sizeof(uint8_t)))) {
     return ActualAlloc::FailureResult();
   }
 

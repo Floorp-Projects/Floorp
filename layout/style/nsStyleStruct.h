@@ -2455,12 +2455,6 @@ private:
   inline bool HasFixedPosContainingBlockStyleInternal(
     mozilla::ComputedStyle&) const;
   void GenerateCombinedTransform();
-public:
-  // Return the 'float' and 'clear' properties, with inline-{start,end} values
-  // resolved to {left,right} according to the given writing mode. These are
-  // defined in WritingModes.h.
-  inline mozilla::StyleFloat PhysicalFloats(mozilla::WritingMode aWM) const;
-  inline mozilla::StyleClear PhysicalBreakType(mozilla::WritingMode aWM) const;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable

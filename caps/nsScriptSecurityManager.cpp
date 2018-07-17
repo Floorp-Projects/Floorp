@@ -46,7 +46,6 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsIConsoleService.h"
-#include "nsIObserverService.h"
 #include "nsIOService.h"
 #include "nsIContent.h"
 #include "nsDOMJSUtils.h"
@@ -461,8 +460,7 @@ nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
 // Methods implementing ISupports //
 ////////////////////////////////////
 NS_IMPL_ISUPPORTS(nsScriptSecurityManager,
-                  nsIScriptSecurityManager,
-                  nsIObserver)
+                  nsIScriptSecurityManager)
 
 ///////////////////////////////////////////////////
 // Methods implementing nsIScriptSecurityManager //
@@ -1362,9 +1360,6 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
-/////////////////////////////////////
-// Method implementing nsIObserver //
-/////////////////////////////////////
 const char sJSEnabledPrefName[] = "javascript.enabled";
 const char sFileOriginPolicyPrefName[] =
     "security.fileuri.strict_origin_policy";
@@ -1376,14 +1371,6 @@ static const char* kObservedPrefs[] = {
   nullptr
 };
 
-
-NS_IMETHODIMP
-nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
-                                 const char16_t* aMessage)
-{
-    ScriptSecurityPrefChanged();
-    return NS_OK;
-}
 
 /////////////////////////////////////////////
 // Constructor, Destructor, Initialization //
@@ -1431,7 +1418,10 @@ static StaticRefPtr<nsScriptSecurityManager> gScriptSecMan;
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
 {
-    Preferences::RemoveObservers(this, kObservedPrefs);
+    Preferences::UnregisterPrefixCallbacks(
+       PREF_CHANGE_METHOD(nsScriptSecurityManager::ScriptSecurityPrefChanged),
+       kObservedPrefs,
+       this);
     if (mDomainPolicy) {
         mDomainPolicy->Deactivate();
     }
@@ -1511,7 +1501,7 @@ uint32_t SkipUntil(const nsCString& str, uint32_t base)
 }
 
 inline void
-nsScriptSecurityManager::ScriptSecurityPrefChanged()
+nsScriptSecurityManager::ScriptSecurityPrefChanged(const char* aPref)
 {
     MOZ_ASSERT(mPrefInitialized);
     mIsJavaScriptEnabled =
@@ -1568,7 +1558,10 @@ nsScriptSecurityManager::InitPrefs()
     ScriptSecurityPrefChanged();
 
     // set observer callbacks in case the value of the prefs change
-    Preferences::AddStrongObservers(this, kObservedPrefs);
+    Preferences::RegisterPrefixCallbacks(
+       PREF_CHANGE_METHOD(nsScriptSecurityManager::ScriptSecurityPrefChanged),
+       kObservedPrefs,
+       this);
 
     OriginAttributes::InitPrefs();
 

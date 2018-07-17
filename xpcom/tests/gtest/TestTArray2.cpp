@@ -1086,4 +1086,29 @@ TEST(TArray, test_comparator_objects) {
   ASSERT_TRUE(TestCompareMethods([] (int aLeft, int aRight) { return aLeft - aRight; }));
 }
 
+struct Big
+{
+  uint64_t size[40] = {};
+};
+
+TEST(TArray, test_AutoTArray_SwapElements) {
+  AutoTArray<Big, 40> oneArray;
+  AutoTArray<Big, 40> another;
+
+  for (size_t i = 0; i < 8; ++i) {
+    oneArray.AppendElement(Big());
+  }
+  oneArray[0].size[10] = 1;
+  for (size_t i = 0; i < 9; ++i) {
+    another.AppendElement(Big());
+  }
+  oneArray.SwapElements(another);
+
+  ASSERT_EQ(oneArray.Length(), 9u);
+  ASSERT_EQ(another.Length(), 8u);
+
+  ASSERT_EQ(oneArray[0].size[10], 0u);
+  ASSERT_EQ(another[0].size[10], 1u);
+}
+
 } // namespace TestTArray

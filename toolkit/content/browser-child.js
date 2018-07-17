@@ -32,6 +32,7 @@ var WebProgressListener = {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
+    this.init = null;
   },
 
   uninit() {
@@ -253,6 +254,7 @@ var WebNavigation =  {
     addMessageListener("WebNavigation:Stop", this);
     // This message is used for measuring content process startup performance.
     sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
+    this.init = null;
   },
 
   get webNavigation() {
@@ -391,6 +393,7 @@ var ControllerCommands = {
   init() {
     addMessageListener("ControllerCommands:Do", this);
     addMessageListener("ControllerCommands:DoWithParams", this);
+    this.init = null;
   },
 
   receiveMessage(message) {

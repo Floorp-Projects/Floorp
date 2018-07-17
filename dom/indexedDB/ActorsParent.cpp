@@ -25727,9 +25727,10 @@ NormalTransactionOp::SendSuccessResult()
     GetResponse(response, &responseSize);
 
     if (responseSize >= kMaxMessageSize) {
-      nsPrintfCString("The serialized value is too large"
-                      " (size=%zu bytes, max=%zu bytes).",
-                      responseSize, kMaxMessageSize);
+      nsPrintfCString warning("The serialized value is too large"
+                              " (size=%zu bytes, max=%zu bytes).",
+                              responseSize, kMaxMessageSize);
+      NS_WARNING(warning.get());
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 

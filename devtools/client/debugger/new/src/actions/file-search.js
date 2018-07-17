@@ -90,7 +90,7 @@ function searchContents(query, editor) {
     const modifiers = (0, _selectors.getFileSearchModifiers)(getState());
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
-    if (!query || !editor || !selectedSource || !selectedSource.text || !modifiers) {
+    if (!editor || !selectedSource || !selectedSource.text || !modifiers) {
       return;
     }
 
@@ -98,6 +98,11 @@ function searchContents(query, editor) {
       ed: editor,
       cm: editor.codeMirror
     };
+
+    if (!query) {
+      (0, _editor.clearSearch)(ctx.cm, query);
+      return;
+    }
 
     const _modifiers = modifiers.toJS();
 

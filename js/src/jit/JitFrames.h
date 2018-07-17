@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "jit/JSJitFrameIter.h"
-#include "jit/Safepoints.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 
@@ -23,6 +22,8 @@ enum CalleeTokenTag
     CalleeToken_FunctionConstructing = 0x1,
     CalleeToken_Script = 0x2
 };
+
+struct SafepointSlotEntry;
 
 static const uintptr_t CalleeTokenMask = ~uintptr_t(0x3);
 
