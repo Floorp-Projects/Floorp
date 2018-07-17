@@ -173,16 +173,6 @@ public:
   nsresult UpdateFrecency(int64_t aPlaceId);
 
   /**
-   * Invalidate the frecencies of a list of places, so they will be recalculated
-   * at the first idle-daily notification.
-   *
-   * @param aPlacesIdsQueryString
-   *        Query string containing list of places to be invalidated.  If it's
-   *        an empty string all places will be invalidated.
-   */
-  nsresult invalidateFrecencies(const nsCString& aPlaceIdsQueryString);
-
-  /**
    * These functions return non-owning references to the locale-specific
    * objects for places components.
    */
