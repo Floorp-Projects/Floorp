@@ -13,6 +13,7 @@ body.certerror {
   border-color: #ffe900;
   border-width: 16px;
   width: 100%;
+  justify-content: normal;
 }
 
 body.captiveportal .title {
