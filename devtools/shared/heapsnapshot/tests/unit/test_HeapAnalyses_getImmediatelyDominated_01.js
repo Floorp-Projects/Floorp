@@ -10,6 +10,7 @@ const breakdown = {
   scripts: { by: "count", count: true, bytes: true },
   strings: { by: "count", count: true, bytes: true },
   other: { by: "count", count: true, bytes: true },
+  domNode: { by: "count", count: true, bytes: true },
 };
 
 add_task(async function() {
