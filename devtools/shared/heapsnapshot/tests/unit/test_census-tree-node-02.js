@@ -14,6 +14,7 @@ const BREAKDOWN = {
   strings: countBreakdown,
   scripts: countBreakdown,
   other: { by: "internalType", then: countBreakdown },
+  domNode: countBreakdown,
 };
 
 const REPORT = {
@@ -27,6 +28,7 @@ const REPORT = {
     "js::Shape": { bytes: 30, count: 3 },
     "js::Shape2": { bytes: 40, count: 4 }
   },
+  "domNode": { bytes: 0, count: 0 }
 };
 
 const EXPECTED = {
