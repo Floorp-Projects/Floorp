@@ -84,8 +84,11 @@ testCompile(bool nonSyntactic)
     CHECK(CompileForNonSyntacticScope(cx, options, src, length, &script));
     CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
-    CHECK(CompileForNonSyntacticScope(cx, options, src_16, length, &script));
-    CHECK_EQUAL(script->hasNonSyntacticScope(), true);
+    {
+        JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+        CHECK(CompileForNonSyntacticScope(cx, options, srcBuf, &script));
+        CHECK_EQUAL(script->hasNonSyntacticScope(), true);
+    }
 
 
     CHECK(Compile(cx, options, buf, &script));
@@ -94,8 +97,11 @@ testCompile(bool nonSyntactic)
     CHECK(Compile(cx, options, src, length, &script));
     CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
-    CHECK(Compile(cx, options, src_16, length, &script));
-    CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
+    {
+        JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+        CHECK(Compile(cx, options, srcBuf, &script));
+        CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
+    }
 
 
     options.forceAsync = true;

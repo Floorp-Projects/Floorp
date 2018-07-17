@@ -4941,8 +4941,9 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
       JS::Rooted<JS::Value> unused(aes.cx());
 
-      if (!JS::Evaluate(aes.cx(), options, script.BeginReading(),
-                        script.Length(), &unused) &&
+      JS::SourceBufferHolder srcBuf(script.BeginReading(), script.Length(),
+                                    JS::SourceBufferHolder::NoOwnership);
+      if (!JS::Evaluate(aes.cx(), options, srcBuf, &unused) &&
           !JS_IsExceptionPending(aCx)) {
         retval = false;
         break;

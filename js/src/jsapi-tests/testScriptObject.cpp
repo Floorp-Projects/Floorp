@@ -72,7 +72,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileUCScript(cx, uc_code, code_size, options, &script));
+    JS::SourceBufferHolder srcBuf(uc_code, code_size, JS::SourceBufferHolder::NoOwnership);
+    CHECK(JS_CompileUCScript(cx, srcBuf, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript)
@@ -82,7 +83,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileUCScript(cx, uc_code, 0, options, &script));
+    JS::SourceBufferHolder srcBuf(uc_code, 0, JS::SourceBufferHolder::NoOwnership);
+    CHECK(JS_CompileUCScript(cx, srcBuf, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
@@ -92,7 +94,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipal
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileUCScript(cx, uc_code, code_size, options, &script));
+    JS::SourceBufferHolder srcBuf(uc_code, code_size, JS::SourceBufferHolder::NoOwnership);
+    CHECK(JS_CompileUCScript(cx, srcBuf, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipals)

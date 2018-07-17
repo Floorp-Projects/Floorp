@@ -94,11 +94,12 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
 
   // Compile.
   JS::Rooted<JSFunction*> fun(cx);
+  JS::SourceBufferHolder source(PromiseFlatString(aBody).get(), aBody.Length(),
+                                JS::SourceBufferHolder::NoOwnership);
   if (!JS::CompileFunction(cx, aScopeChain, aOptions,
                            PromiseFlatCString(aName).get(),
                            aArgCount, aArgArray,
-                           PromiseFlatString(aBody).get(),
-                           aBody.Length(), &fun))
+                           source, &fun))
   {
     return NS_ERROR_FAILURE;
   }

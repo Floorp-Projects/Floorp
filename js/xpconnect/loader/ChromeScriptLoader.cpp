@@ -143,7 +143,9 @@ AsyncScriptCompiler::StartCompile(JSContext* aCx)
     }
 
     Rooted<JSScript*> script(aCx);
-    if (!JS::Compile(aCx, mOptions, mScriptText.get(), mScriptLength, &script)) {
+    JS::SourceBufferHolder srcBuf(mScriptText.get(), mScriptLength,
+                                  JS::SourceBufferHolder::NoOwnership);
+    if (!JS::Compile(aCx, mOptions, srcBuf, &script)) {
         return false;
     }
 
