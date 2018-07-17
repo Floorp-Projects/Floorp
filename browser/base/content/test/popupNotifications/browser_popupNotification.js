@@ -29,6 +29,8 @@ var tests = [
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+      is(this.notifyObj.mainActionSource, "button", "main action should have been triggered by button.");
+      is(this.notifyObj.secondaryActionSource, undefined, "shouldn't have a secondary action source.");
     }
   },
   { id: "Test#2",
@@ -44,6 +46,8 @@ var tests = [
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
+      is(this.notifyObj.secondaryActionSource, "button", "secondary action should have been triggered by button.");
     }
   },
   { id: "Test#2b",
