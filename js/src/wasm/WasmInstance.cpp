@@ -18,6 +18,7 @@
 
 #include "wasm/WasmInstance.h"
 
+#include "builtin/SIMD.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"

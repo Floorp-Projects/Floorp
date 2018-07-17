@@ -43,7 +43,7 @@
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
 #ifdef ENABLE_SIMD
-# include "builtin/SIMD.h"
+# include "builtin/SIMDConstants.h"
 #endif
 #ifdef ENABLE_BINARYDATA
 # include "builtin/TypedObject.h"
