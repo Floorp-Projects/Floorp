@@ -10,11 +10,13 @@
 
 #include "jsnum.h"
 
+#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRealm.h"
 #include "jit/JSJitFrameIter.h"
 #include "util/StringBuffer.h"
 #include "vm/JSScript.h"
