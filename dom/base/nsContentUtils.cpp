@@ -8855,18 +8855,17 @@ nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow)
   return httpChannel->GetIsTrackingResource();
 }
 
-// static public
-bool
-nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
-                                              nsIChannel* aChannel,
-                                              nsIURI* aURI)
+static bool
+StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
+                                      nsIChannel* aChannel,
+                                      nsIURI* aURI)
 {
   if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
     return false;
   }
 
   // Let's check if this is a 3rd party context.
-  if (!IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
+  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
     return false;
   }
 
@@ -8902,6 +8901,33 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
 
   return AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
                                                                  uri);
+}
+
+// static public
+bool
+nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
+                                              nsIChannel* aChannel,
+                                              nsIURI* aURI)
+{
+  bool disabled =
+    StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aURI);
+  if (disabled &&
+      StaticPrefs::privacy_restrict3rdpartystorage_ui_enabled()) {
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+    if (!thirdPartyUtil) {
+      return false;
+    }
+
+    nsCOMPtr<mozIDOMWindowProxy> win;
+    nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
+                                                         getter_AddRefs(win));
+    NS_ENSURE_SUCCESS(rv, false);
+    auto* pwin = nsPIDOMWindowOuter::From(win);
+
+    pwin->NotifyContentBlockingState(
+      nsIWebProgressListener::STATE_BLOCKED_TRACKING_COOKIES, aChannel);
+  }
+  return disabled;
 }
 
 // static, private
