@@ -21,6 +21,8 @@ class GeckoEngineSession(
 
     internal var geckoSession = GeckoSession()
 
+    private var initialLoad = true
+
     init {
         geckoSession.open(runtime)
 
@@ -73,13 +75,13 @@ class GeckoEngineSession(
     override fun saveState(): Map<String, Any> = runBlocking {
         val stateMap = CompletableDeferred<Map<String, Any>>()
         launch {
-            geckoSession.saveState({ state ->
+            geckoSession.saveState { state ->
                 if (state != null) {
                     stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
                 } else {
                     stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
                 }
-            })
+            }
         }
         stateMap.await()
     }
@@ -99,6 +101,12 @@ class GeckoEngineSession(
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(session: GeckoSession?, url: String) {
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && url == ABOUT_BLANK) {
+                return
+            }
+            initialLoad = false
+
             notifyObservers { onLocationChange(url) }
         }
 
@@ -135,6 +143,11 @@ class GeckoEngineSession(
             session: GeckoSession?,
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
         ) {
+            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            if (initialLoad && securityInfo?.origin?.startsWith(MOZ_NULL_PRINCIPAL) == true) {
+                return
+            }
+
             notifyObservers {
                 if (securityInfo != null) {
                     onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
@@ -165,5 +178,7 @@ class GeckoEngineSession(
         internal const val PROGRESS_START = 25
         internal const val PROGRESS_STOP = 100
         internal const val GECKO_STATE_KEY = "GECKO_STATE"
+        internal const val MOZ_NULL_PRINCIPAL = "moz-nullprincipal:"
+        internal const val ABOUT_BLANK = "about:blank"
     }
 }
