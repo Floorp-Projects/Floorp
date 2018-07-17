@@ -25,9 +25,9 @@
     <color name="colorInactiveGradientCenter">#7a1a41</color>
     <color name="colorInactiveGradientEnd">#701b5a</color>
 
-    <color name="colorActiveGradientStart">#421c41</color>
-    <color name="colorActiveGradientCenter">#3e1c4d</color>
-    <color name="colorActiveGradientEnd">#271c44</color>
+    <color name="colorActiveGradientStart">#3e1e48</color>
+    <color name="colorActiveGradientCenter">#331e4b</color>
+    <color name="colorActiveGradientEnd">#331e4b</color>
 
     <color name="colorErase">@color/photonMagenta70</color>
     <color name="colorErasePressed">@color/photonMagenta80</color>
