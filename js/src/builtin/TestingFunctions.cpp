@@ -38,6 +38,7 @@
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
+#include "jit/JitRealm.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/StructuredClone.h"

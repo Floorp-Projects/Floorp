@@ -12,7 +12,7 @@
 #include "ds/LifoAlloc.h"
 #include "jit/Bailouts.h"
 #include "jit/IonCode.h"
-#include "jit/MacroAssembler.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"

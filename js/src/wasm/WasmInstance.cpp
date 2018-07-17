@@ -22,6 +22,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
+#include "jit/JitRealm.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 
