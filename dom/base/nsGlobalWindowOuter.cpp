@@ -17,6 +17,8 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "nsISecureBrowserUI.h"
+#include "nsIWebProgressListener.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
@@ -5340,6 +5342,74 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
   event->SetTrusted(true);
 
   aDoc->DispatchEvent(*event);
+}
+
+void
+nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
+                                                nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+  if (!docShell) {
+    return;
+  }
+  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  NS_ENSURE_TRUE_VOID(doc);
+
+  // This event might come after the user has navigated to another page.
+  // To prevent showing the TrackingProtection UI on the wrong page, we need to
+  // check that the loading URI for the channel is the same as the URI currently
+  // loaded in the document.
+  if (!SameLoadingURI(doc, aChannel)) {
+    return;
+  }
+
+  // Notify nsIWebProgressListeners of this security event.
+  // Can be used to change the UI state.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  uint32_t state = 0;
+  nsCOMPtr<nsISecureBrowserUI> securityUI;
+  docShell->GetSecurityUI(getter_AddRefs(securityUI));
+  if (!securityUI) {
+    return;
+  }
+  securityUI->GetState(&state);
+  if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+    doc->SetHasTrackingContentBlocked(true);
+  } else {
+    // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+  }
+  state |= aState;
+
+  eventSink->OnSecurityChange(aChannel, state);
+}
+
+//static
+bool
+nsGlobalWindowOuter::SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel)
+{
+  nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
+  if (!channelLoadInfo || !docURI) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> channelLoadingPrincipal = channelLoadInfo->LoadingPrincipal();
+  if (!channelLoadingPrincipal) {
+    // TYPE_DOCUMENT loads will not have a channelLoadingPrincipal. But top level
+    // loads should not be blocked by Tracking Protection, so we will return
+    // false
+    return false;
+  }
+  nsCOMPtr<nsIURI> channelLoadingURI;
+  channelLoadingPrincipal->GetURI(getter_AddRefs(channelLoadingURI));
+  if (!channelLoadingURI) {
+    return false;
+  }
+  bool equals = false;
+  nsresult rv = docURI->EqualsExceptRef(channelLoadingURI, &equals);
+  return NS_SUCCEEDED(rv) && equals;
 }
 
 // static
