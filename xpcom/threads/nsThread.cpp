@@ -61,6 +61,15 @@
 #include <stdio.h>
 #endif
 
+#ifdef XP_WIN
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
+
+#include <Winbase.h>
+
+using GetCurrentThreadStackLimitsFn = void (WINAPI*)(
+  PULONG_PTR LowLimit, PULONG_PTR HighLimit);
+#endif
+
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
                       !(_POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
@@ -420,8 +429,8 @@ nsThread::ThreadFunc(void* aArg)
     NS_SetCurrentThreadName(initData->name.BeginReading());
   }
 
-#ifdef XP_LINUX
   {
+#if defined(XP_LINUX)
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_getattr_np(pthread_self(), &attr);
@@ -473,8 +482,18 @@ nsThread::ThreadFunc(void* aArg)
     madvise(self->mStackBase, stackSize, MADV_NOHUGEPAGE);
 
     pthread_attr_destroy(&attr);
-  }
+#elif defined(XP_WIN)
+    static const DynamicallyLinkedFunctionPtr<GetCurrentThreadStackLimitsFn>
+      sGetStackLimits(L"kernel32.dll", "GetCurrentThreadStackLimits");
+
+    if (sGetStackLimits) {
+      ULONG_PTR stackBottom, stackTop;
+      sGetStackLimits(&stackBottom, &stackTop);
+      self->mStackBase = reinterpret_cast<void*>(stackBottom);
+      self->mStackSize = stackTop - stackBottom;
+    }
 #endif
+  }
 
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
