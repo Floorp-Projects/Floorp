@@ -13,6 +13,7 @@ import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.NotificationSessionObserver
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
+import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetrySessionObserver
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
@@ -25,6 +26,8 @@ class FocusApplication : LocaleAwareApplication() {
 
     override fun onCreate() {
         super.onCreate()
+
+        SentryWrapper.init(this)
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
