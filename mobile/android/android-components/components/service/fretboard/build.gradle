@@ -13,11 +13,6 @@ android {
         targetSdkVersion rootProject.ext.build['targetSdkVersion']
     }
 
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
-    }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -35,3 +30,11 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
     testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.dependencies['mockwebserver']}"
 }
+
+archivesBaseName = "fretboard"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components',
+        'fretboard',
+        'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.')
