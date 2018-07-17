@@ -92,5 +92,12 @@ for name in cfg.tests:
     testpath = os.path.join(indir, "test.py")
     testscript = open(testpath).read()
     testcode = compile(testscript, testpath, 'exec')
-    exec(testcode, {'test': test, 'equal': equal})
-    print("TEST-PASSED: %s" % name)
+    try:
+        exec(testcode, {'test': test, 'equal': equal})
+    except subprocess.CalledProcessError:
+        print("TEST-FAILED: %s" % name)
+    except StandardError:
+        print("TEST-FAILED: %s" % name)
+        raise
+    else:
+        print("TEST-PASSED: %s" % name)
