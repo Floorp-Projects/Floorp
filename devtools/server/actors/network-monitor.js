@@ -50,7 +50,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.netMonitor.init();
 
     if (this.messageManager) {
-      this.stackTraces = new Map();
+      this.stackTraces = new Set();
       this.onStackTraceAvailable = this.onStackTraceAvailable.bind(this);
       this.messageManager.addMessageListener("debug:request-stack-available",
         this.onStackTraceAvailable);
@@ -94,10 +94,11 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
   },
 
   onStackTraceAvailable(msg) {
+    const { channelId } = msg.data;
     if (!msg.data.stacktrace) {
-      this.stackTraces.delete(msg.data.channelId);
+      this.stackTraces.delete(channelId);
     } else {
-      this.stackTraces.set(msg.data.channelId, msg.data.stacktrace);
+      this.stackTraces.add(channelId);
     }
   },
 
@@ -176,7 +177,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this._netEvents.set(channelId, actor);
 
     if (this.messageManager) {
-      event.cause.stacktrace = this.stackTraces.get(channelId);
+      event.cause.stacktrace = this.stackTraces.has(channelId);
+      if (event.cause.stacktrace) {
+        this.stackTraces.delete(channelId);
+      }
     } else {
       event.cause.stacktrace = this.stackTraceCollector.getStackTrace(channelId);
     }
