@@ -22,6 +22,7 @@ var EXPORTED_SYMBOLS = ["ContentControl"];
 
 const MOVEMENT_GRANULARITY_CHARACTER = 1;
 const MOVEMENT_GRANULARITY_WORD = 2;
+const MOVEMENT_GRANULARITY_LINE = 4;
 
 const CLIPBOARD_COPY = 0x4000;
 const CLIPBOARD_PASTE = 0x8000;
@@ -326,6 +327,9 @@ this.ContentControl.prototype = {
       case MOVEMENT_GRANULARITY_WORD:
         pivotGranularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
         break;
+      case MOVEMENT_GRANULARITY_LINE:
+        pivotGranularity = Ci.nsIAccessiblePivot.LINE_BOUNDARY;
+        break;
       default:
         return;
     }
@@ -474,8 +478,9 @@ this.ContentControl.prototype = {
         if (aOptions.forcePresent) {
           this._contentScope.get().sendAsyncMessage(
             "AccessFu:Present", Presentation.pivotChanged(
-              vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
-              vc.startOffset, vc.endOffset));
+              vc.position, null, vc.startOffset, vc.endOffset,
+              Ci.nsIAccessiblePivot.REASON_NONE,
+              Ci.nsIAccessiblePivot.NO_BOUNDARY));
         }
       };
 
