@@ -51,7 +51,15 @@
             android:id="@+id/toolbarBackgroundView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/background_inactive" />
+            android:background="@drawable/animated_background_url"/>
+
+        <View
+            android:id="@+id/toolbarBottomBorder"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:alpha="0.20"
+            android:background="@color/photonGrey90" />
 
         <FrameLayout
             android:id="@+id/urlInputContainerView"
@@ -64,8 +72,7 @@
             <View
                 android:id="@+id/urlInputBackgroundView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/urlbar_background" />
+                android:layout_height="match_parent" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -91,7 +98,7 @@
                     android:selectAllOnFocus="true"
                     android:textColor="#ffffff"
                     android:textColorHighlight="@color/colorAccent"
-                    android:textColorHint="@color/colorTextInactive"
+                    android:textColorHint="@color/urlBarHintText"
                     android:textSize="15sp"
                     android:textCursorDrawable="@drawable/cursor"
                     android:importantForAutofill="no"
@@ -101,21 +108,21 @@
                     android:id="@+id/clearView"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:src="@drawable/ic_clear"
+                    android:layout_gravity="end"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
-                    android:layout_gravity="end"
-                    android:visibility="gone"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/content_description_clear_input" />
+                    android:contentDescription="@string/content_description_clear_input"
+                    android:src="@drawable/ic_stop"
+                    android:visibility="gone" />
 
                 <org.mozilla.focus.widget.IndicatorMenuButton
                     android:id="@+id/menuView"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:visibility="gone"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/content_description_menu" />
+                    android:contentDescription="@string/content_description_menu"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -141,22 +148,16 @@
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:drawablePadding="16dp"
+            android:background="@color/searchHintBackgroundColor"
             android:drawableStart="@drawable/ic_search"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:lines="1"
-            android:text="Hello World!"
+            android:drawablePadding="16dp"
             android:ellipsize="end"
-            android:textSize="14sp"
+            android:gravity="center_vertical"
+            android:lines="1"
+            android:padding="16dp"
+            android:text="Hello World!"
             android:textColor="@color/searchHintTextColor"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#33ffffff"
-            android:layout_gravity="bottom" />
+            android:textSize="14sp" />
 
     </FrameLayout>
 

@@ -10,16 +10,20 @@
     <color name="colorSettingsTint">#f9f9fa</color>
     <color name="colorAccentSettings">@color/photonBlue50</color>
 
-    <color name="colorGradientStart">#ffa01142</color>
-    <color name="colorGradientCenter">#ff90116D</color>
-    <color name="colorGradientEnd">#ff5c1166</color>
+    <color name="colorGradientStart">#a90742</color>
+    <color name="colorGradientCenter">#970772</color>
+    <color name="colorGradientEnd">#57076a</color>
 
     <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>
 
-    <color name="coloInactiveGradientStart">#421c41</color>
-    <color name="colorInactiveGradientCenter">#3e1c4d</color>
-    <color name="colorInactiveGradientEnd">#271c44</color>
+    <color name="colorInactiveGradientStart">#ff453440</color>
+    <color name="colorInactiveGradientCenter">#ff433446</color>
+    <color name="colorInactiveGradientEnd">#ff3b3445</color>
+
+    <color name="colorActiveGradientStart">#421c41</color>
+    <color name="colorActiveGradientCenter">#3e1c4d</color>
+    <color name="colorActiveGradientEnd">#271c44</color>
 
     <color name="colorErase">@color/photonMagenta70</color>
     <color name="colorErasePressed">@color/photonMagenta80</color>
@@ -40,12 +44,15 @@
     <color name="colorOverlay">#cc000000</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
+    <color name="urlBarHintText">#96f9f9fa</color>
 
     <color name="snackbarBackground">#FF414146</color>
     <color name="snackbarTextColor">#ffffffff</color>
     <color name="snackbarActionText">@color/photonBlue50</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
+    <color name="searchHintBackgroundColor">@color/photonInk80</color>
+    <color name="urlBarInactiveBackgroundColor">#480f1126</color>
 
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
