@@ -120,16 +120,12 @@ let propNameWhitelist = [
    platforms: ["win", "macosx"],
    isFromDevTools: false},
 
-  // These properties *are* actually referenced. Need to find why
-  // their reference isn't getting counted.
+  // These variables are used in a shorthand, but the CSS parser deletes the values
+  // when expanding the shorthands. See https://github.com/w3c/csswg-drafts/issues/2515
   {propName: "--bezier-diagonal-color",
    isFromDevTools: true},
   {propName: "--bezier-grid-color",
    isFromDevTools: true},
-
-  // Bug 1476322 - Doesn't parse CSSKeyframeRules
-  {propName: "--tracking-protection-shield-color",
-   isFromDevTools: false},
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and
@@ -256,15 +252,15 @@ let customPropsToReferencesMap = new Map();
 
 function processCSSRules(sheet) {
   for (let rule of sheet.cssRules) {
-    if (rule instanceof CSSMediaRule) {
+    if (rule instanceof CSSConditionRule || rule instanceof CSSKeyframesRule) {
       processCSSRules(rule);
       continue;
     }
-    if (!(rule instanceof CSSStyleRule))
+    if (!(rule instanceof CSSStyleRule) && !(rule instanceof CSSKeyframeRule))
       continue;
 
     // Extract urls from the css text.
-    // Note: CSSStyleRule.cssText always has double quotes around URLs even
+    // Note: CSSRule.cssText always has double quotes around URLs even
     //       when the original CSS file didn't.
     let urls = rule.cssText.match(/url\("[^"]*"\)/g);
     // Extract props by searching all "--" preceeded by "var(" or a non-word
