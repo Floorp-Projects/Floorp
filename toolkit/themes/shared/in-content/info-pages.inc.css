@@ -17,6 +17,7 @@ body {
   min-height: 100vh;
   padding: 40px 48px;
   align-items: center;
+  justify-content: center;
 }
 
 body.wide-container {
