@@ -27,6 +27,7 @@ class nsDOMWindowList;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsIArray;
+class nsIChannel;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShell;
@@ -1098,6 +1099,10 @@ public:
                         nsIURI* aPopupURI,
                         const nsAString& aPopupWindowName,
                         const nsAString& aPopupWindowFeatures) = 0;
+
+  virtual void
+  NotifyContentBlockingState(unsigned aState,
+                             nsIChannel* aChannel) = 0;
 
   // WebIDL-ish APIs
   void MarkUncollectableForCCGeneration(uint32_t aGeneration)
