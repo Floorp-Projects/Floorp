@@ -18,6 +18,7 @@
 namespace js {
 
 class GlobalObject;
+class SharedArrayRawBuffer;
 
 class AtomicsObject : public NativeObject
 {

@@ -29,6 +29,7 @@ class GlobalObject;
 class TypedArrayObject;
 class WasmFunctionScope;
 class WasmInstanceScope;
+class SharedArrayRawBuffer;
 
 namespace wasm {
 
