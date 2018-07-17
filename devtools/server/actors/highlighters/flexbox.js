@@ -60,12 +60,15 @@ const JUSTIFY_CONTENT = "justify-content";
  * display: [inline-]flex elements.
  *
  * Available Options:
+ * - color(colorValue)
+ *     @param  {String} colorValue
+ *     The color that should be used to draw the highlighter for this flexbox.
  * - showAlignment(isShown)
- *   @param  {Boolean} isShown
- *   Shows the alignment in the flexbox highlighter.
+ *     @param  {Boolean} isShown
+ *     Shows the alignment in the flexbox highlighter.
  * - showFlexBasis(isShown)
- *   @param  {Boolean} isShown
- *   Shows the flex basis in the flexbox highlighter.
+ *     @param  {Boolean} isShown
+ *     Shows the flex basis in the flexbox highlighter.
  */
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -169,6 +172,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return this.getElement("canvas");
   }
 
+  get color() {
+    return this.options.color || DEFAULT_COLOR;
+  }
+
   get ctx() {
     return this.canvas.getCanvasContext("2d");
   }
@@ -211,7 +218,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     ctx.moveTo(0, 0);
     ctx.lineTo(width, height);
 
-    ctx.strokeStyle = DEFAULT_COLOR;
+    ctx.strokeStyle = this.color;
     ctx.stroke();
     ctx.restore();
 
@@ -258,7 +265,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     ctx.moveTo(0, height);
     ctx.lineTo(width, 0);
 
-    ctx.strokeStyle = DEFAULT_COLOR;
+    ctx.strokeStyle = this.color;
     ctx.stroke();
     ctx.restore();
 
@@ -393,7 +400,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.alignItems.lineDash);
     this.ctx.lineWidth = lineWidth * 3;
-    this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.strokeStyle = this.color;
 
     const { bounds } = this.currentQuads.content[0];
     const isColumn = this.flexDirection.startsWith("column");
@@ -493,7 +500,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.edge.lineDash);
     this.ctx.lineWidth = lineWidth;
-    this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.strokeStyle = this.color;
 
     const { bounds } = this.currentQuads.content[0];
     drawRect(this.ctx, 0, 0, bounds.width, bounds.height, this.currentMatrix);
@@ -517,7 +524,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.edge.lineDash);
     this.ctx.lineWidth = 0;
-    this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.strokeStyle = this.color;
     this.ctx.fillStyle = this.getFlexContainerPattern(devicePixelRatio);
 
     const { bounds } = this.currentQuads.content[0];
@@ -572,7 +579,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.item.lineDash);
     this.ctx.lineWidth = lineWidth;
-    this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.strokeStyle = this.color;
 
     const { bounds } = this.currentQuads.content[0];
 
@@ -615,7 +622,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.lineWidth = lineWidth;
-    this.ctx.strokeStyle = DEFAULT_COLOR;
+    this.ctx.strokeStyle = this.color;
 
     const { bounds } = this.currentQuads.content[0];
     const isColumn = this.flexDirection.startsWith("column");
