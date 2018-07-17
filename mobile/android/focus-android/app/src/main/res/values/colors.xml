@@ -17,13 +17,13 @@
     <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>
 
-    <color name="colorInactiveGradientStart">#ff453440</color>
-    <color name="colorInactiveGradientCenter">#ff433446</color>
-    <color name="colorInactiveGradientEnd">#ff3b3445</color>
-
     <color name="colorLoadingGradientStart">#421c41</color>
     <color name="colorLoadingGradientCenter">#3e1c4d</color>
     <color name="colorLoadingGradientEnd">#271c44</color>
+
+    <color name="colorInactiveGradientStart">#7a1a41</color>
+    <color name="colorInactiveGradientCenter">#7a1a41</color>
+    <color name="colorInactiveGradientEnd">#701b5a</color>
 
     <color name="colorActiveGradientStart">#421c41</color>
     <color name="colorActiveGradientCenter">#3e1c4d</color>
@@ -55,8 +55,6 @@
 
     <color name="searchHintTextColor">#ffffffff</color>
     <color name="searchHintBackgroundColor">@color/photonInk80</color>
-
-    <color name="searchInActiveBackgroundColor">#4d202340</color>
 
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
