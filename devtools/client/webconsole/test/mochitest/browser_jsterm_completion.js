@@ -45,19 +45,19 @@ async function performTests() {
   await jstermSetValueAndComplete(
     jsterm, "document.getElem", undefined, jsterm.COMPLETE_FORWARD);
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
-  checkJsTermCompletionValue(jsterm, "                entsByTagNameNS",
+  checkJsTermCompletionValue(jsterm, "                entById",
      "'document.getElem' completion");
 
   // Test pressing tab another time.
   await jsterm.complete(jsterm.COMPLETE_FORWARD);
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
-  checkJsTermCompletionValue(jsterm, "                entsByTagName",
+  checkJsTermCompletionValue(jsterm, "                entsByClassName",
      "'document.getElem' another tab completion");
 
   // Test pressing shift_tab.
   await jstermComplete(jsterm, jsterm.COMPLETE_BACKWARD);
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' untab completion");
-  checkJsTermCompletionValue(jsterm, "                entsByTagNameNS",
+  checkJsTermCompletionValue(jsterm, "                entById",
      "'document.getElem' completion");
 
   ui.clearOutput();
