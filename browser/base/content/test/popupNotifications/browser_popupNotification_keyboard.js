@@ -30,6 +30,8 @@ var tests = [
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
+      is(this.notifyObj.secondaryActionSource, "esc-press", "secondary action should be from ESC key press");
     }
   },
   // Test that for non-persistent notifications, the escape key dismisses the notification.
@@ -48,6 +50,8 @@ var tests = [
       ok(!this.notifyObj.secondaryActionClicked, "secondaryAction was not clicked");
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
       ok(!this.notifyObj.removedCallbackTriggered, "removed callback was not triggered");
+      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
+      is(this.notifyObj.secondaryActionSource, undefined, "shouldn't have a secondary action source.");
       this.notification.remove();
     }
   },

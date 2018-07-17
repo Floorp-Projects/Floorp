@@ -253,7 +253,7 @@ function PopupNotifications(tabbrowser, panel,
         // Ignore focused elements inside the notification.
         getNotificationFromElement(focusedElement) == notification ||
         notification.contains(focusedElement)) {
-      this._onButtonEvent(aEvent, "secondarybuttoncommand", notification);
+      this._onButtonEvent(aEvent, "secondarybuttoncommand", "esc-press", notification);
     }
   };
 
@@ -345,6 +345,11 @@ PopupNotifications.prototype = {
    *          - callback (function): a callback to be invoked when the button is
    *            pressed, is passed an object that contains the following fields:
    *              - checkboxChecked: (boolean) If the optional checkbox is checked.
+   *              - source: (string): the source of the action that initiated the
+   *                callback, either:
+   *                - "button" if popup buttons were directly activated, or
+   *                - "esc-press" if the user pressed the escape key, or
+   *                - "menucommand" if a menu was activated.
    *          - [optional] dismiss (boolean): If this is true, the notification
    *            will be dismissed instead of removed after running the callback.
    *          - [optional] disableHighlight (boolean): If this is true, the button
@@ -809,7 +814,7 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute("oncommand", "PopupNotifications._onCommand(event);");
       if (Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton")) {
-        popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, 'secondarybuttoncommand');");
+        popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, 'secondarybuttoncommand', 'esc-press');");
       } else {
         popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
       }
@@ -1477,7 +1482,7 @@ PopupNotifications.prototype = {
     this._setNotificationUIState(notificationEl);
   },
 
-  _onButtonEvent(event, type, notificationEl = null) {
+  _onButtonEvent(event, type, source = "button", notificationEl = null) {
     if (!notificationEl) {
       notificationEl = getNotificationFromElement(event.originalTarget);
     }
@@ -1541,7 +1546,8 @@ PopupNotifications.prototype = {
     if (action) {
       try {
         action.callback.call(undefined, {
-          checkboxChecked: notificationEl.checkbox.checked
+          checkboxChecked: notificationEl.checkbox.checked,
+          source,
         });
       } catch (error) {
         Cu.reportError(error);
@@ -1569,7 +1575,8 @@ PopupNotifications.prototype = {
 
     try {
       target.action.callback.call(undefined, {
-        checkboxChecked: notificationEl.checkbox.checked
+        checkboxChecked: notificationEl.checkbox.checked,
+        source: "menucommand",
       });
     } catch (error) {
       Cu.reportError(error);
