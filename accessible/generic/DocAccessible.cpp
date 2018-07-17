@@ -683,6 +683,7 @@ DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
                               nsIAccessible* aNewAccessible,
                               int32_t aNewStart, int32_t aNewEnd,
                               PivotMoveReason aReason,
+                              TextBoundaryType aBoundaryType,
                               bool aIsFromUserInput)
 {
   RefPtr<AccEvent> event =
@@ -691,7 +692,8 @@ DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
       aOldStart, aOldEnd,
       (aNewAccessible ? aNewAccessible->ToInternalAccessible() : nullptr),
       aNewStart, aNewEnd,
-      aReason, aIsFromUserInput ? eFromUserInput : eNoUserInput);
+      aReason, aBoundaryType,
+      aIsFromUserInput ? eFromUserInput : eNoUserInput);
   nsEventShell::FireEvent(event);
 
   return NS_OK;

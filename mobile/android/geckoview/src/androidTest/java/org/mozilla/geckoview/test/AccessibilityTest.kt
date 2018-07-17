@@ -65,6 +65,7 @@ class AccessibilityTest : BaseSessionTest() {
         fun onFocused(event: AccessibilityEvent) { }
         fun onTextSelectionChanged(event: AccessibilityEvent) { }
         fun onTextChanged(event: AccessibilityEvent) { }
+        fun onTextTraversal(event: AccessibilityEvent) { }
     }
 
     @Before fun setup() {
@@ -89,6 +90,7 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> newDelegate.onAccessibilityFocused(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> newDelegate.onTextSelectionChanged(event)
                     AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> newDelegate.onTextChanged(event)
+                    AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY -> newDelegate.onTextTraversal(event)
                     else -> {}
                 }
                 return false
@@ -183,10 +185,27 @@ class AccessibilityTest : BaseSessionTest() {
         } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
     }
 
+    private fun waitUntilTextTraversed(fromIndex: Int, toIndex: Int) {
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onTextTraversal(event: AccessibilityEvent) {
+              assertThat("fromIndex matches", event.fromIndex, equalTo(fromIndex))
+              assertThat("toIndex matches", event.toIndex, equalTo(toIndex))
+            }
+        })
+    }
+
     private fun setSelectionArguments(start: Int, end: Int): Bundle {
         val arguments = Bundle(2)
         arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start)
         arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end)
+        return arguments
+    }
+
+    private fun moveByGranularityArguments(granularity: Int, extendSelection: Boolean = false): Bundle {
+        val arguments = Bundle(2)
+        arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT, granularity)
+        arguments.putBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, extendSelection)
         return arguments
     }
 
@@ -239,5 +258,104 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel cruel"))
             }
         })
+    }
+
+    @Test fun testMoveByCharacter() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
+                AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        waitUntilTextTraversed(0, 1) // "L"
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        waitUntilTextTraversed(1, 2) // "o"
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER))
+        waitUntilTextTraversed(0, 1) // "L"
+    }
+
+    @Test fun testMoveByWord() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
+                AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        waitUntilTextTraversed(0, 5) // "Lorem"
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        waitUntilTextTraversed(6, 11) // "ipsum"
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD))
+        waitUntilTextTraversed(0, 5) // "Lorem"
+    }
+
+    @Test fun testMoveByLine() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        provider.performAction(AccessibilityNodeProvider.HOST_VIEW_ID,
+                AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = provider.createAccessibilityNodeInfo(nodeId)
+                assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
+        waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
+        waitUntilTextTraversed(18, 28) // "sit amet, "
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE))
+        waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
     }
 }
