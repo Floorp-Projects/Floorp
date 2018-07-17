@@ -19,11 +19,14 @@ add_task(async function() {
 
 async function performTests() {
   const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  const {autocompletePopup} = jsterm;
 
   // Test typing 'docu'.
   await jstermSetValueAndComplete(jsterm, "docu");
   is(jsterm.getInputValue(), "docu", "'docu' completion (input.value)");
   checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion (completeNode)");
+  is(autocompletePopup.items.length, 1, "autocomplete popup has 1 item");
+  ok(autocompletePopup.isOpen, "autocomplete popup is open with 1 item");
 
   // Test typing 'docu' and press tab.
   await jstermSetValueAndComplete(jsterm, "docu", undefined, jsterm.COMPLETE_FORWARD);
