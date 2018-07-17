@@ -178,8 +178,8 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
   }
 
   // Add myself to the animation controller's master set of animation elements.
-  if (aDocument) {
-    nsSMILAnimationController *controller = aDocument->GetAnimationController();
+  if (nsIDocument* doc = GetComposedDoc()) {
+    nsSMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->RegisterAnimationElement(this);
     }
@@ -314,7 +314,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       AnimationTargetChanged();
     } // else: we unset xlink:href, but we still have href attribute, so keep
       // mHrefTarget linking to href.
-  } else if (IsInUncomposedDoc() &&
+  } else if (IsInComposedDoc() &&
              !(aNamespaceID == kNameSpaceID_XLink &&
                HasAttr(kNameSpaceID_None, nsGkAtoms::href))) {
     // Note: "href" takes priority over xlink:href. So if "xlink:href" is being
