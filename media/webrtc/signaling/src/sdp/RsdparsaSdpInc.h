@@ -72,9 +72,17 @@ enum class RustSdpFormatType {
   kRustStrings
 };
 
+enum class RustSdpAttributeFingerprintHashAlgorithm : uint16_t {
+  kSha1,
+  kSha224,
+  kSha256,
+  kSha384,
+  kSha512,
+};
+
 struct RustSdpAttributeFingerprint {
-  StringView hashAlgorithm;
-  StringView fingerprint;
+  RustSdpAttributeFingerprintHashAlgorithm hashAlgorithm;
+  U8Vec* fingerprint;
 };
 
 enum class RustSdpSetup {

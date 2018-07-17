@@ -573,17 +573,29 @@ RsdparsaSdpAttributeList::LoadFingerprint(RustAttributeList* attributeList)
   sdp_get_fingerprints(attributeList, nFp, rustFingerprints.get());
   auto fingerprints = MakeUnique<SdpFingerprintAttributeList>();
   for(size_t i = 0; i < nFp; i++) {
-    RustSdpAttributeFingerprint& fingerprint = rustFingerprints[i];
-    std::string algorithm = convertStringView(fingerprint.hashAlgorithm);
-    std::string fingerprintToken = convertStringView(fingerprint.fingerprint);
-    std::vector<uint8_t> fingerprintBytes =
-      SdpFingerprintAttributeList::ParseFingerprint(fingerprintToken);
-    if (fingerprintBytes.size() == 0) {
-      // TODO: Should we load fingerprint earlier to detect if it is malformed
-      // and throw a proper error?
-      // TODO: We should improve our error checking. See Bug 1437169.
-      continue;
+    const RustSdpAttributeFingerprint& fingerprint = rustFingerprints[i];
+    std::string algorithm;
+    switch(fingerprint.hashAlgorithm) {
+      case RustSdpAttributeFingerprintHashAlgorithm::kSha1:
+        algorithm = "sha-1";
+        break;
+      case RustSdpAttributeFingerprintHashAlgorithm::kSha224:
+        algorithm = "sha-224";
+        break;
+      case RustSdpAttributeFingerprintHashAlgorithm::kSha256:
+        algorithm = "sha-256";
+        break;
+      case RustSdpAttributeFingerprintHashAlgorithm::kSha384:
+        algorithm = "sha-384";
+        break;
+      case RustSdpAttributeFingerprintHashAlgorithm::kSha512:
+        algorithm = "sha-512";
+        break;
     }
+
+    std::vector<uint8_t> fingerprintBytes =
+                                    convertU8Vec(fingerprint.fingerprint);
+
     fingerprints->PushEntry(algorithm, fingerprintBytes);
   }
   SetAttribute(fingerprints.release());
