@@ -94,6 +94,9 @@ project(':ui-progress').projectDir = new File('components/ui/progress')
 include ':service-firefox-accounts'
 project(':service-firefox-accounts').projectDir = new File('components/service/firefox-accounts')
 
+include ':service-fretboard'
+project(':service-fretboard').projectDir = new File('components/service/fretboard')
+
 include ':service-telemetry'
 project(':service-telemetry').projectDir = new File('components/service/telemetry')
 
