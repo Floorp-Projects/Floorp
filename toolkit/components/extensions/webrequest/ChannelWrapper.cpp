@@ -10,7 +10,7 @@
 #include "xpcpublic.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "SystemPrincipal.h"
+#include "mozilla/SystemPrincipal.h"
 
 #include "NSSErrorsService.h"
 #include "nsITransportSecurityInfo.h"

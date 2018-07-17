@@ -27,7 +27,6 @@ EXPORTS += [
     'ContentPrincipal.h',
     'nsJSPrincipals.h',
     'nsScriptSecurityManager.h',
-    'SystemPrincipal.h',
 ]
 
 EXPORTS.mozilla = [
@@ -35,6 +34,7 @@ EXPORTS.mozilla = [
     'NullPrincipal.h',
     'NullPrincipalURI.h',
     'OriginAttributes.h',
+    'SystemPrincipal.h',
 ]
 
 SOURCES += [
