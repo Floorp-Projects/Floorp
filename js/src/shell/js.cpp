@@ -1985,10 +1985,12 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                     return false;
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
+                JS::SourceBufferHolder srcBuf(chars.begin().get(), chars.length(),
+                                              JS::SourceBufferHolder::NoOwnership);
                 if (envChain.length() == 0) {
-                    (void) JS::Compile(cx, options, chars.begin().get(), chars.length(), &script);
+                    (void) JS::Compile(cx, options, srcBuf, &script);
                 } else {
-                    (void) JS::CompileForNonSyntacticScope(cx, options, chars.begin().get(), chars.length(), &script);
+                    (void) JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script);
                 }
             }
 
@@ -2187,8 +2189,8 @@ Run(JSContext* cx, unsigned argc, Value* vp)
     if (!chars.initTwoByte(cx, str))
         return false;
 
-    const char16_t* ucbuf = chars.twoByteRange().begin().get();
-    size_t buflen = str->length();
+    JS::SourceBufferHolder srcBuf(chars.twoByteRange().begin().get(), str->length(),
+                                  JS::SourceBufferHolder::NoOwnership);
 
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
@@ -2203,7 +2205,7 @@ Run(JSContext* cx, unsigned argc, Value* vp)
                .setFileAndLine(filename.ptr(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, ucbuf, buflen, options, &script))
+        if (!JS_CompileUCScript(cx, srcBuf, options, &script))
             return false;
     }
 
@@ -3549,7 +3551,8 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
         }
         JS::CompileOptions opts(cx);
         opts.setFileAndLine(filename.get(), lineno);
-        if (!JS::Evaluate(cx, opts, src, srclen, args.rval())) {
+        JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+        if (!JS::Evaluate(cx, opts, srcBuf, args.rval())) {
             return false;
         }
     }
@@ -3652,7 +3655,9 @@ WorkerMain(WorkerInput* input)
 
         AutoReportException are(cx);
         RootedScript script(cx);
-        if (!JS::Compile(cx, options, input->chars.get(), input->length, &script))
+        JS::SourceBufferHolder srcBuf(input->chars.get(), input->length,
+                                      JS::SourceBufferHolder::NoOwnership);
+        if (!JS::Compile(cx, options, srcBuf, &script))
             break;
         RootedValue result(cx);
         JS_ExecuteScript(cx, script, &result);
@@ -4238,8 +4243,10 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
            .setIsRunOnce(true)
            .setNoScriptRval(true);
     RootedScript script(cx);
-    const char16_t* chars = stableChars.twoByteRange().begin().get();
-    bool ok = JS_CompileUCScript(cx, chars, scriptContents->length(), options, &script);
+    JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
+                                  scriptContents->length(),
+                                  JS::SourceBufferHolder::NoOwnership);
+    bool ok = JS_CompileUCScript(cx, srcBuf, options, &script);
     args.rval().setUndefined();
     return ok;
 }
@@ -6686,15 +6693,16 @@ EntryPoints(JSContext* cx, unsigned argc, Value* vp)
             AutoStableStringChars stableChars(cx);
             if (!stableChars.initTwoByte(cx, codeString))
                 return false;
-            const char16_t* chars = stableChars.twoByteRange().begin().get();
-            size_t length = codeString->length();
+            JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
+                                          codeString->length(),
+                                          JS::SourceBufferHolder::NoOwnership);
 
             CompileOptions options(cx);
             options.setIntroductionType("entryPoint eval")
                    .setFileAndLine("entryPoint eval", 1);
 
             js::shell::ShellAutoEntryMonitor sarep(cx);
-            if (!JS::Evaluate(cx, options, chars, length, &dummy))
+            if (!JS::Evaluate(cx, options, srcBuf, &dummy))
                 return false;
             return sarep.buildResult(cx, args.rval());
         }
