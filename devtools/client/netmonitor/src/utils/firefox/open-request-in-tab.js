@@ -34,7 +34,7 @@ function openRequestInTab(url, requestPostData) {
     postData.setData(stringStream);
   }
 
-  win.gBrowser.selectedTab = win.gBrowser.addTab(url, null, null, postData);
+  win.gBrowser.selectedTab = win.gBrowser.addTab(url, { postData });
 }
 
 function getInputStreamFromString(data) {
