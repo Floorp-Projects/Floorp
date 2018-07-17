@@ -1899,14 +1899,13 @@ SourceBufferHolder
 ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
   // Return a SourceBufferHolder object holding the script's source text.
+  // Ownership of the buffer is transferred to the resulting SourceBufferHolder.
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
     nsAutoString inlineData;
     aRequest->mElement->GetScriptText(inlineData);
 
-    // Copy string to JS allocated buffer and transfer ownership to
-    // SourceBufferHolder result.
     size_t nbytes = inlineData.Length() * sizeof(char16_t);
     JS::UniqueTwoByteChars chars(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
     MOZ_RELEASE_ASSERT(chars);
@@ -1914,9 +1913,10 @@ ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
     return SourceBufferHolder(std::move(chars), inlineData.Length());
   }
 
-  return SourceBufferHolder(aRequest->ScriptText().begin(),
-                            aRequest->ScriptText().length(),
-                            SourceBufferHolder::NoOwnership);
+  size_t length = aRequest->ScriptText().length();
+  return SourceBufferHolder(aRequest->ScriptText().extractOrCopyRawBuffer(),
+                            length,
+                            SourceBufferHolder::GiveOwnership);
 }
 
 nsresult
