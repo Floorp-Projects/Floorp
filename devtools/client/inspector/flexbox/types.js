@@ -9,7 +9,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 exports.flexbox = {
 
   // The actor ID of the flex container.
-  actorID: PropTypes.number,
+  actorID: PropTypes.string,
+
+  // The color of the flexbox highlighter overlay.
+  color: PropTypes.string,
 
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: PropTypes.bool,
