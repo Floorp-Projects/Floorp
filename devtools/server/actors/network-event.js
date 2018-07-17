@@ -102,14 +102,17 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._cause = networkEvent.cause;
     this._fromCache = networkEvent.fromCache;
     this._fromServiceWorker = networkEvent.fromServiceWorker;
+    this._channelId = networkEvent.channelId;
 
     // Stack trace info isn't sent automatically. The client
     // needs to request it explicitly using getStackTrace
-    // packet.
+    // packet. NetmonitorActor may pass just a boolean instead of the stack
+    // when the actor is in parent process and stack is in the content process.
     this._stackTrace = networkEvent.cause.stacktrace;
     delete networkEvent.cause.stacktrace;
     networkEvent.cause.stacktraceAvailable =
-      !!(this._stackTrace && this._stackTrace.length);
+      !!(this._stackTrace &&
+         (typeof this._stackTrace == "boolean" || this._stackTrace.length));
 
     for (const prop of ["method", "url", "httpVersion", "headersSize"]) {
       this._request[prop] = networkEvent[prop];
@@ -245,9 +248,29 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * @return object
    *         The response packet - stack trace.
    */
-  getStackTrace() {
+  async getStackTrace() {
+    let stacktrace = this._stackTrace;
+    // If _stackTrace was "true", it means we are in parent process
+    // and the stack is available from the content process.
+    // Fetch it lazily from here via the message manager.
+    if (stacktrace && typeof stacktrace == "boolean") {
+      const messageManager = this.netMonitorActor.messageManager;
+      stacktrace = await new Promise(resolve => {
+        const onMessage = ({ data }) => {
+          const { channelId, stack } = data;
+          if (channelId == this._channelId) {
+            messageManager.removeMessageListener("debug:request-stack", onMessage);
+            resolve(stack);
+          }
+        };
+        messageManager.addMessageListener("debug:request-stack", onMessage);
+        messageManager.sendAsyncMessage("debug:request-stack", this._channelId);
+      });
+      this._stackTrace = stacktrace;
+    }
+
     return {
-      stacktrace: this._stackTrace,
+      stacktrace,
     };
   },
 
