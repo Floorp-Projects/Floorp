@@ -218,10 +218,14 @@ interface nsIWebProgressListener : nsISupports
    *
    * STATE_BLOCKED_UNSAFE_CONTENT
    *   Content which againts SafeBrowsing list has been blocked from loading.
+   *
+   * STATE_BLOCKED_TRACKING_COOKIES
+   *   Tracking cookies has been blocked from loading.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT         = 0x00001000;
   const unsigned long STATE_LOADED_TRACKING_CONTENT          = 0x00002000;
   const unsigned long STATE_BLOCKED_UNSAFE_CONTENT           = 0x00004000;
+  const unsigned long STATE_BLOCKED_TRACKING_COOKIES         = 0x00008000;
 
   /**
    * Diagnostic flags
@@ -233,7 +237,7 @@ interface nsIWebProgressListener : nsISupports
    * STATE_CERT_DISTRUST_IMMINENT
    *   The certificate in use will be distrusted in the near future.
    */
-  const unsigned long STATE_CERT_DISTRUST_IMMINENT    = 0x00008000;
+  const unsigned long STATE_CERT_DISTRUST_IMMINENT    = 0x00010000;
 
   /**
    * Security Strength Flags
@@ -256,9 +260,9 @@ interface nsIWebProgressListener : nsISupports
    * STATE_SECURE_LOW
    *   This flag indicates a low degree of security.
    */
-  const unsigned long STATE_SECURE_HIGH     = 0x00040000;
-  const unsigned long STATE_SECURE_MED      = 0x00010000;
-  const unsigned long STATE_SECURE_LOW      = 0x00020000;
+  const unsigned long STATE_SECURE_HIGH     = 0x00080000;
+  const unsigned long STATE_SECURE_MED      = 0x00020000;
+  const unsigned long STATE_SECURE_LOW      = 0x00040000;
 
   /**
     * State bits for EV == Extended Validation == High Assurance
