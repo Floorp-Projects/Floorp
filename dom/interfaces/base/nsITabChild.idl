@@ -20,8 +20,6 @@ interface nsITabChild : nsISupports
 
   [notxpcom] void sendRequestFocus(in boolean canFocus);
 
-  [notxpcom] void sendGetTabCount(out uint32_t tabCount);
-
   [noscript, notxpcom] void enableDisableCommands(in AString action,
                                                   in CommandsArrayRef enabledCommands,
                                                   in CommandsArrayRef disabledCommands);
@@ -33,6 +31,11 @@ interface nsITabChild : nsISupports
                                   [array, size_is(linksCount)] in nsIDroppedLinkItem links);
 
   readonly attribute uint64_t tabId;
+
+  /*
+   * Indicates whether or not there are other tabs in this tab's window.
+   */
+  attribute boolean hasSiblings;
 
   [noscript, notxpcom] void beforeUnloadAdded();
   [noscript, notxpcom] void beforeUnloadRemoved();

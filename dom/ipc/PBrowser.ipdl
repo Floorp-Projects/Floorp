@@ -517,14 +517,6 @@ parent:
                                    uint64_t aObserverId);
     async ClearNativeTouchSequence(uint64_t aObserverId);
 
-    /**
-     * Returns the number of tabs in the window via the out parameter.
-     * If the number of tabs can't be determined, returns 0.
-     *
-     * @param aValue where to store the tab count
-     */
-    sync GetTabCount() returns (uint32_t value);
-
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 
     async SetHasBeforeUnload(bool aHasBeforeUnload);
