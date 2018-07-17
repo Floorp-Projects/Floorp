@@ -19,7 +19,7 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
-#include "builtin/SIMD.h"
+#include "builtin/SIMDConstants.h"
 
 namespace js {
 namespace wasm {
