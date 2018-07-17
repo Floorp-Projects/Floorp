@@ -454,7 +454,8 @@ private:
 
   void ReportErrorToConsole(ScriptLoadRequest *aRequest, nsresult aResult) const;
 
-  nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest);
+  nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
+                                     bool* aCouldCompileOut);
   nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
