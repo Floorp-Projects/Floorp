@@ -28,6 +28,7 @@ chrome/toolkit/skin/classic/global/tabbox.css
 chrome/toolkit/skin/classic/global/textbox.css
 chrome/toolkit/skin/classic/global/toolbar.css
 chrome/toolkit/skin/classic/global/toolbarbutton.css
+chrome/toolkit/skin/classic/global/tooltip.css
 chrome/toolkit/skin/classic/global/tree.css
 chrome/toolkit/skin/classic/global/wizard.css
 modules/commonjs/sdk/ui/button/view/events.js
