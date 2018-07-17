@@ -216,6 +216,18 @@ class HighlightersOverlay {
   }
 
   /**
+   * Create a flexbox highlighter settings object for the provided nodeFront.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront for which we need highlighter settings.
+   */
+  getFlexboxHighlighterSettings(nodeFront) {
+    const { flexbox } = this.store.getState();
+    const color = flexbox.color;
+    return { color };
+  }
+
+  /**
    * Toggle the flexbox highlighter for the given flexbox container element.
    *
    * @param  {NodeFront} node
@@ -245,6 +257,8 @@ class HighlightersOverlay {
     if (!highlighter) {
       return;
     }
+
+    options = Object.assign({}, options, this.getFlexboxHighlighterSettings(node));
 
     const isShown = await highlighter.show(node, options);
     if (!isShown) {

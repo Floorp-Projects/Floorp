@@ -7,6 +7,7 @@
 const {
   CLEAR_FLEXBOX,
   UPDATE_FLEXBOX,
+  UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
 } = require("./index");
 
@@ -28,6 +29,19 @@ module.exports = {
     return {
       type: UPDATE_FLEXBOX,
       flexbox,
+    };
+  },
+
+  /**
+   * Update the color used for the flexbox's highlighter.
+   *
+   * @param  {String} color
+   *         The color to use for this nodeFront's flexbox highlighter.
+   */
+  updateFlexboxColor(color) {
+    return {
+      type: UPDATE_FLEXBOX_COLOR,
+      color,
     };
   },
 
