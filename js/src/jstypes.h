@@ -74,9 +74,9 @@
 // (The gcc release that *fixes* this bug will trigger no warning, and we'll
 // naturally stop bumping this number.)  If you ever trigger this warning with
 // the latest stable gcc, you have rs=jwalden to bump it to the next gcc minor
-// version, e.g. (8, 1, 0) to (8, 2, 0).
+// or major version as needed, e.g. (8, 2, 0) to (8, 3, 0).
 #if MOZ_IS_GCC
-#  if !MOZ_GCC_VERSION_AT_LEAST(8, 1, 0)
+#  if !MOZ_GCC_VERSION_AT_LEAST(8, 2, 0)
 #    define JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #  endif
 #endif
