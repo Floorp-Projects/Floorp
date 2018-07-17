@@ -7,6 +7,11 @@ flake8:
         - build/
         - config/
         - configure.py
+        - gfx/gl/
+        - gfx/layers/
+        - intl/
+        - ipc/pull-chromium.py
+        - ipc/ipdl/
         - js/
         - memory/
         - mobile/
