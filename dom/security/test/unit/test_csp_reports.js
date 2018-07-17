@@ -103,7 +103,7 @@ function run_test() {
                                "/foo/self");
 
   // test that inline script violations cause a report.
-  makeTest(0, {"blocked-uri": ""}, false,
+  makeTest(0, {"blocked-uri": "inline"}, false,
       function(csp) {
         let inlineOK = true;
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
@@ -119,7 +119,7 @@ function run_test() {
       });
 
   // test that eval violations cause a report.
-  makeTest(1, {"blocked-uri": "",
+  makeTest(1, {"blocked-uri": "eval",
                // JSON script-sample is UTF8 encoded
                "script-sample" : "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9",
                "line-number": 1,
@@ -156,7 +156,7 @@ function run_test() {
       });
 
   // test that inline script violations cause a report in report-only policy
-  makeTest(3, {"blocked-uri": ""}, true,
+  makeTest(3, {"blocked-uri": "inline"}, true,
       function(csp) {
         let inlineOK = true;
         inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
@@ -172,7 +172,7 @@ function run_test() {
       });
 
   // test that eval violations cause a report in report-only policy
-  makeTest(4, {"blocked-uri": ""}, true,
+  makeTest(4, {"blocked-uri": "inline"}, true,
       function(csp) {
         let evalOK = true, oReportViolation = {'value': false};
         evalOK = csp.getAllowsEval(oReportViolation);
