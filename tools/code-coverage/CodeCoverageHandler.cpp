@@ -4,7 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
-#ifndef XP_WIN
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
 #include <signal.h>
 #include <unistd.h>
 #endif
