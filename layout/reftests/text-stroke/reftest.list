@@ -3,7 +3,7 @@
 default-preferences pref(layout.css.prefixes.webkit,true)
 
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkWidget||winWidget)) == webkit-text-stroke-property-001.html webkit-text-stroke-property-001-ref.html
-fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) == webkit-text-stroke-property-002.html webkit-text-stroke-property-002-ref.html
+fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&!webrender&&gtkWidget) == webkit-text-stroke-property-002.html webkit-text-stroke-property-002-ref.html
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&gtkWidget) == webkit-text-stroke-property-003.html webkit-text-stroke-property-003-ref.html
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&gtkWidget) == webkit-text-stroke-property-004.html webkit-text-stroke-property-004-ref.html
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkWidget||winWidget)) == webkit-text-stroke-property-005.html webkit-text-stroke-property-005-ref.html
