@@ -32,13 +32,14 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // single selectable listbox
+      // single selectable listbox, the first item is selected by default
 
       var id = "listbox";
       ok(isAccessible(id, [nsIAccessibleSelectable]),
          "No selectable accessible for list of " + id);
 
       var select = getAccessible(id, [nsIAccessibleSelectable]);
+      select.removeItemFromSelection(0);
       testSelectableSelection(select, [ ]);
 
       select.addItemToSelection(1);
@@ -114,35 +115,27 @@
     </body>
 
     <vbox flex="1">
-      <listbox id="listbox">
-        <listcols>
-          <listcol flex="1"/>
-          <listcol flex="1"/>
-        </listcols>
-        <listitem id="lb1_item1">
-          <listcell label="cell0"/>
-          <listcell label="cell1"/>
-        </listitem>
-        <listitem id="lb1_item2">
-          <listcell label="cell3"/>
-          <listcell label="cell4"/>
-        </listitem>
-      </listbox>
+      <richlistbox id="listbox">
+        <richlistitem id="lb1_item1">
+          <label value="cell0"/>
+          <label value="cell1"/>
+        </richlistitem>
+        <richlistitem id="lb1_item2">
+          <label value="cell3"/>
+          <label value="cell4"/>
+        </richlistitem>
+      </richlistbox>
 
-      <listbox id="listbox2" seltype="multiple">
-        <listcols>
-          <listcol flex="1"/>
-          <listcol flex="1"/>
-        </listcols>
-        <listitem id="lb2_item1">
-          <listcell label="cell0"/>
-          <listcell label="cell1"/>
-        </listitem>
-        <listitem id="lb2_item2">
-          <listcell label="cell3"/>
-          <listcell label="cell4"/>
-        </listitem>
-      </listbox>
+      <richlistbox id="listbox2" seltype="multiple">
+        <richlistitem id="lb2_item1">
+          <label value="cell0"/>
+          <label value="cell1"/>
+        </richlistitem>
+        <richlistitem id="lb2_item2">
+          <label value="cell3"/>
+          <label value="cell4"/>
+        </richlistitem>
+      </richlistbox>
 
       <vbox id="debug"/>
     </vbox>
