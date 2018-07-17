@@ -9,8 +9,8 @@
  * same-origin with anything but themselves.
  */
 
-#ifndef NullPrincipal_h
-#define NullPrincipal_h
+#ifndef mozilla_NullPrincipal_h
+#define mozilla_NullPrincipal_h
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
@@ -30,7 +30,9 @@ class nsIURI;
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
-class NullPrincipal final : public mozilla::BasePrincipal
+namespace mozilla {
+
+class NullPrincipal final : public BasePrincipal
 {
 public:
   // This should only be used by deserialization, and the factory constructor.
@@ -64,13 +66,13 @@ public:
   CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty = false);
 
   static already_AddRefed<NullPrincipal>
-  Create(const mozilla::OriginAttributes& aOriginAttributes,
+  Create(const OriginAttributes& aOriginAttributes,
          nsIURI* aURI = nullptr);
 
   static already_AddRefed<NullPrincipal>
   CreateWithoutOriginAttributes();
 
-  nsresult Init(const mozilla::OriginAttributes& aOriginAttributes = mozilla::OriginAttributes(),
+  nsresult Init(const OriginAttributes& aOriginAttributes = OriginAttributes(),
                 nsIURI* aURI = nullptr);
 
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
@@ -91,7 +93,9 @@ private:
   // If aIsFirstParty is true, this NullPrincipal will be initialized base on
   // the aOriginAttributes with FirstPartyDomain set to an unique value, and this
   // value is generated from mURI.path, with ".mozilla" appending at the end.
-  nsresult Init(const mozilla::OriginAttributes& aOriginAttributes, bool aIsFirstParty);
+  nsresult Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty);
 };
 
-#endif // NullPrincipal_h__
+} // mozilla namespace
+
+#endif // mozilla_NullPrincipal_h

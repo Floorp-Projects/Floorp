@@ -36,6 +36,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
@@ -57,7 +58,6 @@
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "Latency.h"
 #include "nsProxyRelease.h"
-#include "NullPrincipal.h"
 #include "nsVariant.h"
 
 // For snprintf
