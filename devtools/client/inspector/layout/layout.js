@@ -15,12 +15,15 @@ const INSPECTOR_L10N =
 
 loader.lazyRequireGetter(this, "FlexboxInspector", "devtools/client/inspector/flexbox/flexbox");
 loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
+loader.lazyRequireGetter(this, "SwatchColorPickerTooltip", "devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip");
 
 class LayoutView {
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
     this.store = inspector.store;
+
+    this.getSwatchColorPickerTooltip = this.getSwatchColorPickerTooltip.bind(this);
 
     this.init();
   }
@@ -42,15 +45,14 @@ class LayoutView {
       onToggleGeometryEditor,
     } = this.inspector.getPanel("boxmodel").getComponentProps();
 
-    this.flexboxInspector = new FlexboxInspector(this.inspector,
-      this.inspector.panelWin);
+    this.flexboxInspector = new FlexboxInspector(this.inspector, this.inspector.panelWin);
     const {
+      onSetFlexboxOverlayColor,
       onToggleFlexboxHighlighter,
     } = this.flexboxInspector.getComponentProps();
 
     this.gridInspector = new GridInspector(this.inspector, this.inspector.panelWin);
     const {
-      getSwatchColorPickerTooltip,
       onSetGridOverlayColor,
       onShowGridOutlineHighlight,
       onToggleGridHighlighter,
@@ -60,7 +62,7 @@ class LayoutView {
     } = this.gridInspector.getComponentProps();
 
     const layoutApp = LayoutApp({
-      getSwatchColorPickerTooltip,
+      getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
       setSelectedNode,
       /**
        * Shows the box model properties under the box model if true, otherwise, hidden by
@@ -68,6 +70,7 @@ class LayoutView {
        */
       showBoxModelProperties: true,
       onHideBoxModelHighlighter,
+      onSetFlexboxOverlayColor,
       onSetGridOverlayColor,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -96,12 +99,36 @@ class LayoutView {
    * Destruction function called when the inspector is destroyed. Cleans up references.
    */
   destroy() {
+    if (this._swatchColorPickerTooltip) {
+      this._swatchColorPickerTooltip.destroy();
+      this._swatchColorPickerTooltip = null;
+    }
+
     this.flexboxInspector.destroy();
     this.gridInspector.destroy();
 
     this.document = null;
     this.inspector = null;
     this.store = null;
+  }
+
+  /**
+   * Retrieve the shared SwatchColorPicker instance.
+   */
+  getSwatchColorPickerTooltip() {
+    return this.swatchColorPickerTooltip;
+  }
+
+  get swatchColorPickerTooltip() {
+    if (!this._swatchColorPickerTooltip) {
+      this._swatchColorPickerTooltip = new SwatchColorPickerTooltip(
+        this.inspector.toolbox.doc,
+        this.inspector,
+        { supportsCssColor4ColorFunction: () => false }
+      );
+    }
+
+    return this._swatchColorPickerTooltip;
   }
 }
 

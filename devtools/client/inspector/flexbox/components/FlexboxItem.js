@@ -7,6 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
 // Reps
@@ -20,8 +21,10 @@ class FlexboxItem extends PureComponent {
   static get propTypes() {
     return {
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
+      getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
     };
@@ -29,8 +32,44 @@ class FlexboxItem extends PureComponent {
 
   constructor(props) {
     super(props);
+
+    this.setFlexboxColor = this.setFlexboxColor.bind(this);
     this.onFlexboxCheckboxClick = this.onFlexboxCheckboxClick.bind(this);
     this.onFlexboxInspectIconClick = this.onFlexboxInspectIconClick.bind(this);
+  }
+
+  componentDidMount() {
+    const {
+      flexbox,
+      getSwatchColorPickerTooltip,
+      onSetFlexboxOverlayColor,
+    } = this.props;
+
+    const swatchEl = findDOMNode(this).querySelector(".flexbox-color-swatch");
+    const tooltip = getSwatchColorPickerTooltip();
+
+    let previousColor;
+    tooltip.addSwatch(swatchEl, {
+      onCommit: this.setFlexboxColor,
+      onPreview: this.setFlexboxColor,
+      onRevert: () => {
+        onSetFlexboxOverlayColor(previousColor);
+      },
+      onShow: () => {
+        previousColor = flexbox.color;
+      },
+    });
+  }
+
+  componentWillUnMount() {
+    const swatchEl = findDOMNode(this).querySelector(".flexbox-color-swatch");
+    const tooltip = this.props.getSwatchColorPickerTooltip();
+    tooltip.removeSwatch(swatchEl);
+  }
+
+  setFlexboxColor() {
+    const color = findDOMNode(this).querySelector(".flexbox-color-value").textContent;
+    this.props.onSetFlexboxOverlayColor(color);
   }
 
   onFlexboxCheckboxClick(e) {
@@ -65,6 +104,7 @@ class FlexboxItem extends PureComponent {
     } = this.props;
     const {
       actorID,
+      color,
       highlighted,
       nodeFront,
     } = flexbox;
@@ -91,7 +131,21 @@ class FlexboxItem extends PureComponent {
             onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
           }
         )
-      )
+      ),
+      dom.div(
+        {
+          className: "flexbox-color-swatch",
+          style: {
+            backgroundColor: color,
+          },
+          title: color,
+        }
+      ),
+      // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
+      // the selected color. This is why we use a span in display: none for now.
+      // Ideally we should modify the SwatchColorPickerTooltip to bypass this requirement.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
+      dom.span({ className: "flexbox-color-value" }, color)
     );
   }
 }
