@@ -5357,12 +5357,11 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
             // been cleared past
             floats_cur_left = 0,
             floats_cur_right = 0;
-    const WritingMode wm = mLineContainerWM;
 
     for (uint32_t i = 0, i_end = mFloats.Length(); i != i_end; ++i) {
       const FloatInfo& floatInfo = mFloats[i];
       const nsStyleDisplay* floatDisp = floatInfo.Frame()->StyleDisplay();
-      StyleClear breakType = floatDisp->PhysicalBreakType(wm);
+      StyleClear breakType = floatDisp->mBreakType;
       if (breakType == StyleClear::Left ||
           breakType == StyleClear::Right ||
           breakType == StyleClear::Both) {
@@ -5379,7 +5378,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
         }
       }
 
-      StyleFloat floatStyle = floatDisp->PhysicalFloats(wm);
+      StyleFloat floatStyle = floatDisp->mFloat;
       nscoord& floats_cur =
         floatStyle == StyleFloat::Left ? floats_cur_left : floats_cur_right;
       nscoord floatWidth = floatInfo.Width();
@@ -5414,7 +5413,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
       // no longer any floats we need to keep. See below.
       for (FloatInfo& floatInfo : Reversed(mFloats)) {
         const nsStyleDisplay* floatDisp = floatInfo.Frame()->StyleDisplay();
-        if (floatDisp->PhysicalFloats(wm) != clearFloatType) {
+        if (floatDisp->mFloat != clearFloatType) {
           newFloats.AppendElement(floatInfo);
         } else {
           // This is a float on the side that this break directly clears
@@ -5424,7 +5423,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
           // (earlier) floats on that side would be indirectly cleared
           // as well. Thus, we should break out of this loop and stop
           // considering earlier floats to be kept in mFloats.
-          StyleClear floatBreakType = floatDisp->PhysicalBreakType(wm);
+          StyleClear floatBreakType = floatDisp->mBreakType;
           if (floatBreakType != aBreakType &&
               floatBreakType != StyleClear::None) {
             break;

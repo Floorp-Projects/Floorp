@@ -177,7 +177,7 @@ public:
 
   void OnMobilePrefChanged();
 
-  static void OnMobilePrefChangedCallback(const char* prefName, void* closure);
+  static void OnMobilePrefChangedCallback(const char* prefName, nsNavHistoryResult* self);
 
 protected:
   virtual ~nsNavHistoryResult();

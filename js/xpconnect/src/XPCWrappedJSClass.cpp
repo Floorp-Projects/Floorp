@@ -953,11 +953,11 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!cx || !IsReflectable(methodIndex))
         return NS_ERROR_FAILURE;
 
-    // [implicit_jscontext] and [optional_argc] have a different calling
-    // convention, which we don't support for JS-implemented components.
-    if (info->WantsOptArgc() || info->WantsContext()) {
-        const char* str = "IDL methods marked with [implicit_jscontext] "
-                          "or [optional_argc] may not be implemented in JS";
+    // [optional_argc] has a different calling convention, which we don't
+    // support for JS-implemented components.
+    if (info->WantsOptArgc()) {
+        const char* str = "IDL methods marked with [optional_argc] may not "
+                          "be implemented in JS";
         // Throw and warn for good measure.
         JS_ReportErrorASCII(cx, "%s", str);
         NS_WARNING(str);

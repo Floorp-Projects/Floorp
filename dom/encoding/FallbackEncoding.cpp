@@ -153,8 +153,7 @@ FallbackEncoding::Initialize()
              "Initializing pre-existing fallback cache.");
   FallbackEncoding::sInstance = new FallbackEncoding;
   Preferences::RegisterCallback(FallbackEncoding::PrefChanged,
-                                "intl.charset.fallback.override",
-                                nullptr);
+                                "intl.charset.fallback.override");
   Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
                                "intl.charset.fallback.tld");
   Preferences::AddBoolVarCache(&sFallbackToUTF8ForFile,

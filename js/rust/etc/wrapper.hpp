@@ -15,6 +15,7 @@ typedef uint32_t HashNumber;
 #include "js/Conversions.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"
+#include "js/StructuredClone.h"
 
 // Replacements for types that are too difficult for rust-bindgen.
 

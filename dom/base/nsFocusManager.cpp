@@ -188,7 +188,9 @@ nsFocusManager::nsFocusManager()
 
 nsFocusManager::~nsFocusManager()
 {
-  Preferences::RemoveObservers(this, kObservedPrefs);
+  Preferences::UnregisterCallbacks(
+    PREF_CHANGE_METHOD(nsFocusManager::PrefChanged),
+    kObservedPrefs, this);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -213,7 +215,9 @@ nsFocusManager::Init()
 
   sTestMode = Preferences::GetBool("focusmanager.testmode", false);
 
-  Preferences::AddWeakObservers(fm, kObservedPrefs);
+  Preferences::RegisterCallbacks(
+    PREF_CHANGE_METHOD(nsFocusManager::PrefChanged),
+    kObservedPrefs, fm);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -230,30 +234,34 @@ nsFocusManager::Shutdown()
   NS_IF_RELEASE(sInstance);
 }
 
+void
+nsFocusManager::PrefChanged(const char* aPref)
+{
+  nsDependentCString pref(aPref);
+  if (pref.EqualsLiteral("accessibility.browsewithcaret")) {
+    UpdateCaretForCaretBrowsingMode();
+  }
+  else if (pref.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
+    nsIContent::sTabFocusModelAppliesToXUL =
+      Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
+                           nsIContent::sTabFocusModelAppliesToXUL);
+  }
+  else if (pref.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
+    sMouseFocusesFormControl =
+      Preferences::GetBool("accessibility.mouse_focuses_formcontrol",
+                           false);
+  }
+  else if (pref.EqualsLiteral("focusmanager.testmode")) {
+    sTestMode = Preferences::GetBool("focusmanager.testmode", false);
+  }
+}
+
 NS_IMETHODIMP
 nsFocusManager::Observe(nsISupports *aSubject,
                         const char *aTopic,
                         const char16_t *aData)
 {
-  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    nsDependentString data(aData);
-    if (data.EqualsLiteral("accessibility.browsewithcaret")) {
-      UpdateCaretForCaretBrowsingMode();
-    }
-    else if (data.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
-      nsIContent::sTabFocusModelAppliesToXUL =
-        Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
-                             nsIContent::sTabFocusModelAppliesToXUL);
-    }
-    else if (data.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
-      sMouseFocusesFormControl =
-        Preferences::GetBool("accessibility.mouse_focuses_formcontrol",
-                             false);
-    }
-    else if (data.EqualsLiteral("focusmanager.testmode")) {
-      sTestMode = Preferences::GetBool("focusmanager.testmode", false);
-    }
-  } else if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
+  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     mActiveWindow = nullptr;
     mFocusedWindow = nullptr;
     mFocusedElement = nullptr;

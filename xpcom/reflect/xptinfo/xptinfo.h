@@ -423,6 +423,22 @@ struct nsXPTMethodInfo
     return mHasRetval ? &Param(mNumParams - 1) : nullptr;
   }
 
+  // If this is an [implicit_jscontext] method, returns the index of the
+  // implicit JSContext* argument in the C++ method's argument list.
+  // Otherwise returns UINT8_MAX.
+  uint8_t IndexOfJSContext() const {
+    if (!WantsContext()) {
+      return UINT8_MAX;
+    }
+    if (IsGetter() || IsSetter()) {
+      // Getters/setters always have the context as first argument.
+      return 0;
+    }
+    // The context comes before the return value, if there is one.
+    MOZ_ASSERT_IF(HasRetval(), ParamCount() > 0);
+    return ParamCount() - uint8_t(HasRetval());
+  }
+
   /////////////////////////////////////////////
   // nsXPTMethodInfo backwards compatibility //
   /////////////////////////////////////////////

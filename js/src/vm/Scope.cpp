@@ -6,6 +6,8 @@
 
 #include "vm/Scope.h"
 
+#include "mozilla/ScopeExit.h"
+
 #include <memory>
 #include <new>
 

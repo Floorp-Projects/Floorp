@@ -11,7 +11,6 @@
 #include "nsHashKeys.h"
 #include "nsAtom.h"
 #include "nsIDocument.h"
-#include "nsIObserver.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
@@ -31,11 +30,10 @@
  *
  */
 
-class nsNameSpaceManager final : public nsIObserver
+class nsNameSpaceManager final : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   virtual nsresult RegisterNameSpace(const nsAString& aURI,
                                      int32_t& aNameSpaceID);
   nsresult RegisterNameSpace(already_AddRefed<nsAtom> aURI,
@@ -67,6 +65,8 @@ public:
   bool mSVGDisabled;
 
 private:
+  void PrefChanged(const char* aPref);
+
   bool Init();
   nsresult AddNameSpace(already_AddRefed<nsAtom> aURI, const int32_t aNameSpaceID);
   nsresult AddDisabledNameSpace(already_AddRefed<nsAtom> aURI, const int32_t aNameSpaceID);

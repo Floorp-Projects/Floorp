@@ -8,11 +8,40 @@
 /*
  * Test interface for https://bugzilla.mozilla.org/show_bug.cgi?id=809674 .
  *
- * This test makes sure that accessing an attribute marked with
- * [implicit_jscontext] will throw without crashing.
+ * This test makes sure that accessing JS-implemented attributes or methods
+ * marked with [implicit_jscontext] works as expected.
+ *
+ * It also makes sure [optional_argc] is not supported on JS-implemented
+ * methods.
  */
 
 [scriptable, uuid(2df46559-da21-49bf-b863-0d7b7bbcbc73)]
 interface nsIXPCTestBug809674 : nsISupports {
-	[implicit_jscontext] attribute jsval jsvalProperty;
+    // Various interesting [implicit_jscontext] cases.
+    [implicit_jscontext] unsigned long addArgs(in unsigned long x, in unsigned long y);
+    [implicit_jscontext] unsigned long addSubMulArgs(in unsigned long x, in unsigned long y,
+                                                     out unsigned long subOut,
+                                                     out unsigned long mulOut);
+    [implicit_jscontext] jsval addVals(in jsval x, in jsval y);
+
+    [implicit_jscontext] unsigned long methodNoArgs();
+    [implicit_jscontext] void methodNoArgsNoRetVal();
+
+    // When there are many arguments, the context is passed on the stack on
+    // most platforms.
+    [implicit_jscontext] unsigned long addMany(in unsigned long x1,
+                                               in unsigned long x2,
+                                               in unsigned long x3,
+                                               in unsigned long x4,
+                                               in unsigned long x5,
+                                               in unsigned long x6,
+                                               in unsigned long x7,
+                                               in unsigned long x8);
+
+    // Attributes can use [implicit_jscontext], too.
+    [implicit_jscontext] attribute jsval valProperty;
+    [implicit_jscontext] attribute unsigned long uintProperty;
+
+    // [optional_argc] is not supported.
+    [optional_argc] void methodWithOptionalArgc();
 };

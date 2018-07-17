@@ -13,6 +13,8 @@ DevToolsModules(
     'frameworks.js',
     'getSymbols.js',
     'index.js',
+    'mapBindings.js',
+    'mapExpression.js',
     'mapOriginalExpression.js',
     'pausePoints.js',
     'sources.js',
