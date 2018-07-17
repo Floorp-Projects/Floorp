@@ -24,7 +24,7 @@ class OnboardingCard extends React.PureComponent {
             <p> {content.text} </p>
           </span>
           <span>
-            <button className="button onboardingButton" onClick={this.onClick}> {content.button_label} </button>
+            <button tabIndex="1" className="button onboardingButton" onClick={this.onClick}> {content.button_label} </button>
           </span>
         </div>
       </div>

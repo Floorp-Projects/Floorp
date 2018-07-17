@@ -93,7 +93,7 @@
               <hbox id="downloadFailed" align="center">
                 <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
               </hbox>
-              <hbox id="adminDisabled" align="center">
+              <hbox id="policyDisabled" align="center">
                 <label>&update.adminDisabled;</label>
               </hbox>
               <hbox id="noUpdatesFound" align="center">

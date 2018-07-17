@@ -275,30 +275,15 @@ interface nsIUpdateChecker : nsISupports
    *          current value of the user's update settings. This is used by
    *          any piece of UI that offers the user the imperative option to
    *          check for updates now, regardless of their update settings.
-   *          force will not work if the system administrator has locked
-   *          the app.update.enabled preference.
+   *          However, if updates are disabled by policy, setting force to true
+   *          will not override the the policy.
    */
   void checkForUpdates(in nsIUpdateCheckListener listener, in boolean force);
 
   /**
-   * Constants for the |stopChecking| function that tell the Checker how long
-   * to stop checking:
-   *
-   * CURRENT_CHECK:     Stops the current (active) check only
-   * CURRENT_SESSION:   Stops all checking for the current session
-   * ANY_CHECKS:        Stops all checking, any session from now on
-   *                    (disables update checking preferences)
-   */
-  const unsigned short CURRENT_CHECK    = 1;
-  const unsigned short CURRENT_SESSION  = 2;
-  const unsigned short ANY_CHECKS       = 3;
-
-  /**
    * Ends any pending update check.
-   * @param   duration
-   *          A value representing the set of checks to stop doing.
    */
-  void stopChecking(in unsigned short duration);
+  void stopCurrentCheck();
 };
 
 /**

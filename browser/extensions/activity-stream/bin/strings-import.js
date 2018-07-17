@@ -7,7 +7,7 @@ const fetch = require("node-fetch");
 /* globals cd, ls, mkdir, rm, ShellString */
 require("shelljs/global");
 
-const DEFAULT_LOCALE = "en-US";
+const {CENTRAL_LOCALES, DEFAULT_LOCALE} = require("./locales");
 const L10N_CENTRAL = "https://hg.mozilla.org/l10n-central";
 const PROPERTIES_PATH = "raw-file/default/browser/chrome/browser/activity-stream/newtab.properties";
 const STRINGS_FILE = "strings.properties";
@@ -16,16 +16,21 @@ const STRINGS_FILE = "strings.properties";
 async function getLocales() {
   console.log(`Getting locales from ${L10N_CENTRAL}`);
 
-  // Add all non-test sub repository locales
+  // Add sub repository locales that mozilla-central builds
   const locales = [];
+  const unbuilt = [];
   const subrepos = await (await fetch(`${L10N_CENTRAL}?style=json`)).json();
   subrepos.entries.forEach(({name}) => {
-    if (name !== "x-testing") {
+    if (CENTRAL_LOCALES.includes(name)) {
       locales.push(name);
+    } else {
+      unbuilt.push(name);
     }
   });
 
-  console.log(`Got ${locales.length} locales: ${locales}`);
+  console.log(`Got ${locales.length} mozilla-central locales: ${locales}`);
+  console.log(`Skipped ${unbuilt.length} unbuilt locales: ${unbuilt}`);
+
   return locales;
 }
 
@@ -62,9 +67,17 @@ async function updateLocales() {
     }
   });
 
-  // Save the properties file for each locale in parallel
-  const locales = await getLocales();
-  const missing = (await Promise.all(locales.map(saveProperties))).filter(v => v);
+  // Save the properties file for each locale one at a time to avoid too many
+  // parallel connections (resulting in ECONNRESET / socket hang up)
+  const missing = [];
+  for (const locale of await getLocales()) {
+    process.stdout.write(`${locale} `);
+    if (await saveProperties(locale)) {
+      missing.push(locale);
+    }
+  }
+
+  console.log("");
   console.log(`Skipped ${missing.length} locales without strings: ${missing.sort()}`);
 
   console.log(`

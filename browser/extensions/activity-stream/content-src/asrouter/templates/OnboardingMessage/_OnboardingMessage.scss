@@ -131,6 +131,12 @@
       float: none;
       margin-top: 30px;
     }
+
+    &:focus,
+    &.active {
+      box-shadow: $shadow-primary;
+      transition: box-shadow 150ms;
+    }
   }
 
 
