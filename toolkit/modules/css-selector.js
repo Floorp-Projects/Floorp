@@ -105,7 +105,7 @@ const findCssSelector = function(ele) {
   ele = node;
 
   if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
-    // findCssSelector received element not inside document.
+    // findCssSelector received element not inside container.
     return "";
   }
 
@@ -213,10 +213,10 @@ const findAllCssSelectors = function(node) {
  * node to the element.
  */
 function getCssPath(ele) {
-  ele = getRootBindingParent(ele);
-  const document = ele.ownerDocument;
-  if (!document || !document.contains(ele)) {
-    // getCssPath received element not inside document.
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
+  if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
+    // getCssPath received element not inside container.
     return "";
   }
 
@@ -264,10 +264,10 @@ function getCssPath(ele) {
  * @returns a string that can be used as an XPath to find the element uniquely.
  */
 function getXPath(ele) {
-  ele = getRootBindingParent(ele);
-  const document = ele.ownerDocument;
-  if (!document || !document.contains(ele)) {
-    // getXPath received element not inside document.
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
+  if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
+    // getXPath received element not inside container.
     return "";
   }
 
