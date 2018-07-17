@@ -891,10 +891,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
                     if self.per_test_coverage:
                         gcov_dir, jsvm_dir = self.set_coverage_env(env)
-                        # Per-test reset/dump is only supported for xpcshell/mochitest and
-                        # Linux for the time being.
+                        # Per-test reset/dump is only supported on Linux for the time being.
                         if not is_baseline_test and \
-                           suite_category in ['mochitest', 'xpcshell'] and \
                            self._is_linux():
                             env['GCOV_RESULTS_DIR'] = tempfile.mkdtemp()
 

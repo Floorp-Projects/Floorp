@@ -16,6 +16,7 @@ Cu.import("chrome://reftest/content/globals.jsm", this);
 Cu.import("chrome://reftest/content/httpd.jsm", this);
 Cu.import("chrome://reftest/content/manifest.jsm", this);
 Cu.import("chrome://reftest/content/StructuredLog.jsm", this);
+Cu.import("chrome://reftest/content/PerTestCoverageUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -512,7 +513,13 @@ function StartTests()
             throw "No tests to run";
 
         g.uriCanvases = {};
-        StartCurrentTest();
+
+        PerTestCoverageUtils.beforeTest()
+        .then(StartCurrentTest)
+        .catch(e => {
+            logger.error("EXCEPTION: " + e);
+            DoneTests();
+        });
     } catch (ex) {
         //g.browser.loadURI('data:text/plain,' + ex);
         ++g.testResults.Exception;
@@ -752,28 +759,32 @@ function StartCurrentURI(aURLTargetType)
 
 function DoneTests()
 {
-    if (g.manageSuite) {
-        g.suiteStarted = false
-        logger.suiteEnd({'results': g.testResults});
-    } else {
-        logger._logData('results', {results: g.testResults});
-    }
-    logger.info("Slowest test took " + g.slowestTestTime + "ms (" + g.slowestTestURL + ")");
-    logger.info("Total canvas count = " + g.recycledCanvases.length);
-    if (g.failedUseWidgetLayers) {
-        LogWidgetLayersFailure();
-    }
+    PerTestCoverageUtils.afterTest()
+    .catch(e => logger.error("EXCEPTION: " + e))
+    .then(() => {
+        if (g.manageSuite) {
+            g.suiteStarted = false
+            logger.suiteEnd({'results': g.testResults});
+        } else {
+            logger._logData('results', {results: g.testResults});
+        }
+        logger.info("Slowest test took " + g.slowestTestTime + "ms (" + g.slowestTestURL + ")");
+        logger.info("Total canvas count = " + g.recycledCanvases.length);
+        if (g.failedUseWidgetLayers) {
+            LogWidgetLayersFailure();
+        }
 
-    function onStopped() {
-        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
-    }
-    if (g.server) {
-        g.server.stop(onStopped);
-    }
-    else {
-        onStopped();
-    }
+        function onStopped() {
+            let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+            appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
+        if (g.server) {
+            g.server.stop(onStopped);
+        }
+        else {
+            onStopped();
+        }
+    });
 }
 
 function UpdateCanvasCache(url, canvas)

@@ -5,6 +5,7 @@ reftest.jar:
   content/AsyncSpellCheckTestHelper.jsm (../../../editor/AsyncSpellCheckTestHelper.jsm)
   content/httpd.jsm (../../../netwerk/test/httpserver/httpd.js)
   content/StructuredLog.jsm (../../../testing/modules/StructuredLog.jsm)
+  content/PerTestCoverageUtils.jsm (../../../tools/code-coverage/PerTestCoverageUtils.jsm)
   content/input.css (../../../editor/reftests/xul/input.css)
   content/moz-bool-pref.css (../../../layout/reftests/css-parsing/moz-bool-pref.css)
   content/progress.css (../../../layout/reftests/forms/progress/style.css)
