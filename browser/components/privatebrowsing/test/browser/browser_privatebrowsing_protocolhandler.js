@@ -7,7 +7,7 @@
 // inside the private browsing mode.
 
 add_task(async function test() {
-  let notificationValue = "Protocol Registration: testprotocol";
+  let notificationValue = "Protocol Registration: web+testprotocol";
   let testURI = "https://example.com/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_protocolhandler_page.html";
 
