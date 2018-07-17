@@ -163,6 +163,7 @@ class App extends Component {
         }),
         JSTerm({
           hud,
+          serviceContainer,
           onPaste: this.onPaste,
           codeMirrorEnabled: jstermCodeMirror,
         }),

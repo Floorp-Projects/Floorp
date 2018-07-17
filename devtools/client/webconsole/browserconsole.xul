@@ -11,6 +11,8 @@
         windowtype="devtools:webconsole"
         width="900" height="350"
         persist="screenX screenY width height sizemode">
+  <link rel="localization" href="toolkit/main-window/editmenu.ftl"/>
+  <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
   <popupset></popupset>
   <iframe src="index.html" flex="1"></iframe>
 </window>
