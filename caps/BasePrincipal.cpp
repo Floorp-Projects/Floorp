@@ -14,9 +14,9 @@
 
 #include "ContentPrincipal.h"
 #include "ExpandedPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsIURIWithPrincipal.h"
-#include "NullPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 

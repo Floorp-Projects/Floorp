@@ -110,7 +110,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "ExpandedPrincipal.h"
-#include "NullPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"

@@ -8,8 +8,8 @@
 
 #include "mozilla/URLExtraData.h"
 
+#include "mozilla/NullPrincipalURI.h"
 #include "nsProxyRelease.h"
-#include "NullPrincipalURI.h"
 
 namespace mozilla {
 
