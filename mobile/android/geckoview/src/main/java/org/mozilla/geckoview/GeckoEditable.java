@@ -327,21 +327,28 @@ import android.view.inputmethod.EditorInfo;
             final int shadowEnd = mShadowNewEnd + Math.max(0, mCurrentOldEnd - mShadowOldEnd);
             final int currentEnd = mCurrentNewEnd + Math.max(0, mShadowOldEnd - mCurrentOldEnd);
 
-            // Remove identical spans that are in the new text from the old text.
-            // Otherwise the new spans won't be inserted due to the text already having
-            // the old spans.
-            Object[] spans = mCurrentText.getSpans(start, currentEnd, Object.class);
-            for (final Object span : spans) {
-                mShadowText.removeSpan(span);
-            }
-
-            // Also remove existing spans that are no longer in the new text.
-            spans = mShadowText.getSpans(start, shadowEnd, Object.class);
+            // Remove existing spans that may no longer be in the new text.
+            Object[] spans = mShadowText.getSpans(start, shadowEnd, Object.class);
             for (final Object span : spans) {
                 mShadowText.removeSpan(span);
             }
 
             mShadowText.replace(start, shadowEnd, mCurrentText, start, currentEnd);
+
+            // The replace() call may not have copied all affected spans, so we re-copy all the
+            // spans manually just in case. Expand bounds by 1 so we get all the spans.
+            spans = mCurrentText.getSpans(Math.max(start - 1, 0),
+                                          Math.min(currentEnd + 1, mCurrentText.length()),
+                                          Object.class);
+            for (final Object span : spans) {
+                if (span == Selection.SELECTION_START || span == Selection.SELECTION_END) {
+                    continue;
+                }
+                mShadowText.setSpan(span,
+                                    mCurrentText.getSpanStart(span),
+                                    mCurrentText.getSpanEnd(span),
+                                    mCurrentText.getSpanFlags(span));
+            }
 
             // SpannableStringBuilder has some internal logic to fix up selections, but we
             // don't want that, so we always fix up the selection a second time.
@@ -382,6 +389,10 @@ import android.view.inputmethod.EditorInfo;
 
         final Object[] o1s = s1.getSpans(0, s1.length(), Object.class);
         final Object[] o2s = s2.getSpans(0, s2.length(), Object.class);
+
+        if (o1s.length != o2s.length) {
+            return false;
+        }
 
         o1loop: for (final Object o1 : o1s) {
             for (final Object o2 : o2s)  {
