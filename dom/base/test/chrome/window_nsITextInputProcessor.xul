@@ -157,7 +157,9 @@ function runBeginInputTransactionMethodTests()
   // Let's confirm that the composing string is NOT committed by above tests.
   TIP1.commitComposition();
   is(input.value, composingStr,
-     description + "TIP1.commitString() without specifying commit string should be committed with the last composing string");
+     description + "TIP1.commitString() without specifying commit string should commit current composition with the last composing string");
+  ok(!TIP1.hasComposition,
+     description + "TIP1.commitString() without specifying commit string should've end composition");
 
   ok(TIP1.beginInputTransaction(window, simpleCallback),
      description + "TIP1.beginInputTransaction() should succeed because there is no composition #2");

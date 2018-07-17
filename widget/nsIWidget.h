@@ -1851,7 +1851,7 @@ public:
      * NS_RAW_NATIVE_IME_CONTEXT, the result is unique even if in a remote
      * process.
      */
-    virtual NativeIMEContext GetNativeIMEContext();
+    virtual NativeIMEContext GetNativeIMEContext() = 0;
 
     /*
      * Given a WidgetKeyboardEvent, this method synthesizes a corresponding
