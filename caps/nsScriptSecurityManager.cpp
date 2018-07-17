@@ -23,7 +23,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "ExpandedPrincipal.h"
 #include "SystemPrincipal.h"
-#include "NullPrincipal.h"
 #include "DomainPolicy.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -59,6 +58,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/NullPrincipal.h"
 #include <stdint.h>
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
