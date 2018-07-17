@@ -57,7 +57,12 @@ function test_sendMouseEventOptionals() {
 
 function test_getUnanimatedComputedStyle() {
   SpecialPowers.pushPrefEnv(
-    { set: [["dom.animations-api.core.enabled", true]] },
+    {
+      set: [
+        ["dom.animations-api.core.enabled", true],
+        ["dom.animations-api.getAnimations.enabled", true],
+      ],
+    },
     () => {
       window.open("file_domwindowutils_animation.html");
     }

@@ -22,7 +22,9 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
@@ -228,6 +230,13 @@ public abstract class PromptInput {
                                                           DateTimePicker.PickersState.MONTH, mMinValue, mMaxValue);
                 mView = (View)input;
             }
+
+            // Make sure the widgets will not be chopped on smaller screens (Bug 1412517)
+            LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            parentParams.gravity = Gravity.CENTER;
+            mView.setLayoutParams(parentParams);
+
             return mView;
         }
 

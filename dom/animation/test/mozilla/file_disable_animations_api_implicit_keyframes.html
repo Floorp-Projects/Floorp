@@ -5,31 +5,17 @@
 <script>
 'use strict';
 
-test(function(t) {
-  var div = addDiv(t);
-  var anim =
-    div.animate({ marginLeft: ['0px', '10px'] },
-                { duration: 100 * MS_PER_SEC,
-                  easing: 'linear',
-                  iterations: 10,
-                  iterationComposite: 'accumulate' });
-  anim.pause();
-
-  // NOTE: We can't check iterationComposite value itself though API since
-  // Animation.effect is also behind the the Web Animations API.  So we just
-  // check that style value is not affected by iterationComposite.
-  anim.currentTime = 200 * MS_PER_SEC;
-  assert_equals(getComputedStyle(div).marginLeft, '0px',
-    'Animated style should not be accumulated when the Web Animations API is ' +
-    'not enabled even if accumulate is specified in the constructor');
-}, 'iterationComposite should not affect at all if the Web Animations API ' +
-   'is not enabled');
-
-// Tests for cases we don't handle and should throw an exception for in case
-// the Web Animation API is disabled.
+// Tests for cases we should throw an exception for if implicit keyframes are
+// disabled.
 var gTests = [
+  { desc: "single Keyframe value",
+    keyframes: { left: "100px" } },
   { desc: "single Keyframe with no offset",
     keyframes: [{ left: "100px" }] },
+  { desc: "single Keyframe with 0% offset",
+    keyframes: [{ left: "100px", offset: 0 }] },
+  { desc: "single Keyframe with 100% offset",
+    keyframes: [{ left: "100px", offset: 1 }] },
   { desc: "multiple Keyframes with missing 0% Keyframe",
     keyframes: [{ left: "100px", offset: 0.25 },
                 { left: "200px", offset: 0.50 },

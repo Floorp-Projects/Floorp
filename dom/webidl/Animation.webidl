@@ -18,7 +18,7 @@ interface Animation : EventTarget {
   attribute DOMString id;
   [Func="nsDocument::IsWebAnimationsEnabled", Pure]
   attribute AnimationEffect? effect;
-  [Func="nsDocument::IsWebAnimationsEnabled"]
+  [Func="nsDocument::AreWebAnimationsTimelinesEnabled"]
   attribute AnimationTimeline? timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;

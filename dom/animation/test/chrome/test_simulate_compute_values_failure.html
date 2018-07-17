@@ -346,14 +346,21 @@ var gTests = [
 setup({explicit_done: true});
 
 SpecialPowers.pushPrefEnv(
-  { set: [["dom.animations-api.core.enabled", false]] },
+  {
+    set: [
+      ["dom.animations-api.core.enabled", false],
+      ["dom.animations-api.implicit-keyframes.enabled", false],
+    ],
+  },
   function() {
     gTests.forEach(function(subtest) {
       test(function(t) {
         var div = addDiv(t);
         var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
-        assert_properties_equal(animation.effect.getProperties(),
-                                subtest.expected);
+        assert_properties_equal(
+          animation.effect.getProperties(),
+          subtest.expected
+        );
       }, subtest.desc);
     });
 

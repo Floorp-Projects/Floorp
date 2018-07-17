@@ -23,6 +23,6 @@ interface Animatable {
   [Throws]
   Animation animate(object? keyframes,
                     optional UnrestrictedDoubleOrKeyframeAnimationOptions options);
-  [Func="nsDocument::IsWebAnimationsEnabled"]
+  [Func="nsDocument::IsWebAnimationsGetAnimationsEnabled"]
   sequence<Animation> getAnimations(optional AnimationFilter filter);
 };
