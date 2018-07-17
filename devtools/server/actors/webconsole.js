@@ -1192,18 +1192,31 @@ WebConsoleActor.prototype =
     for (const key in request.preferences) {
       this._prefs[key] = request.preferences[key];
 
-      if (this.networkMonitor) {
-        if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
-          this.networkMonitor.saveRequestAndResponseBodies = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.saveRequestAndResponseBodies =
-              this._prefs[key];
-          }
-        } else if (key == "NetworkMonitor.throttleData") {
-          this.networkMonitor.throttleData = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.throttleData = this._prefs[key];
-          }
+      if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
+        if (this.networkMonitorActor) {
+          this.networkMonitorActor.netMonitor.saveRequestAndResponseBodies =
+            this._prefs[key];
+        }
+        if (this.networkMonitorChildActor) {
+          this.networkMonitorChildActor.netMonitor.saveRequestAndResponseBodies =
+            this._prefs[key];
+        }
+        if (this.networkMonitorActorId) {
+          const messageManager = this.parentActor.messageManager;
+          messageManager.sendAsyncMessage("debug:netmonitor-preference",
+            { saveRequestAndResponseBodies: this._prefs[key] });
+        }
+      } else if (key == "NetworkMonitor.throttleData") {
+        if (this.networkMonitorActor) {
+          this.networkMonitorActor.netMonitor.throttleData = this._prefs[key];
+        }
+        if (this.networkMonitorChildActor) {
+          this.networkMonitorChildActor.netMonitor.throttleData = this._prefs[key];
+        }
+        if (this.networkMonitorActorId) {
+          const messageManager = this.parentActor.messageManager;
+          messageManager.sendAsyncMessage("debug:netmonitor-preference",
+            { throttleData: this._prefs[key] });
         }
       }
     }
