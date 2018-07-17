@@ -8,6 +8,7 @@
   <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
   <string name="menu_share">শেয়ার…</string>
+  <string name="menu_report_site_issue">সাইট ইস্যু রিপোর্ট করুন</string>
   <string name="menu_open_with_default_browser2">%1$s এ খুলুন</string>
   <string name="menu_open_with_a_browser2">খুলুন…</string>
   <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">ব্রাউজিং ইতিহাস মুছুন</string>
   <string name="text_selection_search_action">ব্যক্তিগতভাবে অনুসন্ধান</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2438;&#2474;&#2472;&#2494;&#2453;&#2503; &#2472;&#2495;&#2479;&#2492;&#2472;&#2509;&#2468;&#2509;&#2480;&#2467; &#2470;&#2503;&#2527;&#2404;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2476;&#2509;&#2479;&#2453;&#2509;&#2468;&#2495;&#2455;&#2468; &#2476;&#2509;&#2480;&#2494;&#2441;&#2460;&#2494;&#2480; &#2489;&#2495;&#2488;&#2494;&#2476;&#2503; &#2447;&#2463;&#2495;&#2453;&#2503; &#2476;&#2509;&#2479;&#2476;&#2489;&#2494;&#2480; &#2453;&#2480;&#2497;&#2472;:\n  "<ul>"\n    "<li>&#2437;&#2509;&#2479;&#2494;&#2474;&#2503;&#2480; &#2478;&#2471;&#2509;&#2479;&#2503;&#2439; &#2437;&#2472;&#2497;&#2488;&#2472;&#2509;&#2471;&#2494;&#2472; &#2447;&#2476;&#2434; &#2476;&#2509;&#2480;&#2494;&#2441;&#2460; &#2453;&#2480;&#2497;&#2472;</li>"\n    "<li>&#2463;&#2509;&#2480;&#2494;&#2453;&#2494;&#2480;&#2470;&#2503;&#2480;&#2453;&#2503; &#2437;&#2476;&#2480;&#2497;&#2470;&#2509;&#2471; &#2453;&#2480;&#2497;&#2472;(&#2437;&#2469;&#2476;&#2494; &#2463;&#2509;&#2480;&#2494;&#2453;&#2494;&#2480;&#2470;&#2503;&#2480; &#2437;&#2472;&#2497;&#2478;&#2468;&#2495; &#2470;&#2495;&#2468;&#2503; &#2488;&#2503;&#2463;&#2495;&#2434;&#2488; &#2438;&#2474;&#2465;&#2503;&#2463; &#2453;&#2480;&#2497;&#2472;)</li>"\n    "<li>&#2488;&#2503;&#2439;&#2488;&#2494;&#2469;&#2503; &#2437;&#2472;&#2497;&#2488;&#2472;&#2509;&#2471;&#2494;&#2472; &#2447;&#2476;&#2434; &#2476;&#2509;&#2480;&#2494;&#2441;&#2460;&#2495;&#2434;&#2527;&#2503;&#2480; &#2474;&#2498;&#2480;&#2509;&#2476;&#2476;&#2480;&#2509;&#2468;&#2496; &#2468;&#2469;&#2509;&#2479; &#2453;&#2497;&#2453;&#2495;&#2480; &#2488;&#2494;&#2469;&#2503; &#2488;&#2480;&#2494;&#2468;&#2503; &#2478;&#2497;&#2459;&#2497;&#2472;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2468;&#2504;&#2480;&#2496; &#2453;&#2480;&#2503;&#2459;&#2503; Mozilla&#2404; &#2438;&#2478;&#2494;&#2470;&#2503;&#2480; &#2478;&#2495;&#2486;&#2472; &#2489;&#2458;&#2509;&#2459;&#2503;, &#2439;&#2472;&#2509;&#2463;&#2494;&#2480;&#2472;&#2503;&#2463;&#2453;&#2503; &#2441;&#2472;&#2509;&#2478;&#2497;&#2453;&#2509;&#2468; &#2480;&#2494;&#2454;&#2494; &#2447;&#2476;&#2434; &#2488;&#2503;&#2463;&#2495;&#2480; &#2455;&#2497;&#2467;&#2455;&#2468; &#2478;&#2494;&#2472; &#2476;&#2460;&#2494;&#2527; &#2480;&#2494;&#2454;&#2468;&#2503; &#2441;&#2510;&#2488;&#2494;&#2489; &#2470;&#2503;&#2451;&#2527;&#2494;&#2404;.<br/>\n<a href="%2$s">&#2438;&#2480;&#2451; &#2460;&#2494;&#2472;&#2497;&#2472;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">গোপনীয়তা ও নিরাপত্তা</string>
+  <string name="preference_privacy_and_security_summary">ট্র্যাকিং, কুকিজ, লগইন, ডাটা পছন্দ</string>
+  <string name="preference_search_summary">ডিফল্ট সেট করুন, অটোকমপ্লিট</string>
+  <string name="preference_mozilla_summary">%1$s সম্বন্ধে, সাহায্য</string>
+  <string name="preference_category_tracking_protection">ট্র্যাকিং সুরক্ষা</string>
+  <string name="preference_category_web_content">ওয়েব কনটেন্ট</string>
+  <string name="preference_category_switching_apps">সুইচিং অ্যাপস</string>
+  <string name="preference_category_general">সাধারণ</string>
+  <string name="preference_category_data_collection_use">ডাটা সংগ্রহ ও ব্যবহার</string>
   <string name="preference_category_search">অনুসন্ধান</string>
   <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
   <string name="preference_state_on">চালু</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ কাস্টোম URL যোগ করুন</string>
   <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
   <string name="custom_autocomplete_quick_add">কাস্টোম URL যোগ করুন</string>
+  <string name="preference_category_cookies">কুকি ও সাইট ডাটা</string>
+  <string name="preference_category_data_choices">ডাটা পছন্দ</string>
   <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
   <string name="preference_autocomplete_learn_more">আরও জানুন</string>
   <string name="preference_autocomplete_custom_summary">কাস্টোম অটোকমপ্লিট URLs যোগ এবং ম্যানেজ করুন।</string>
   <string name="preference_autocomplete_add_title">URL যোগ করতে</string>
   <string name="preference_autocomplete_add_hint">URL পেস্ট অথবা প্রবেশ করান</string>
+  <string name="preference_autocomplete_add_example2">উদাহরণ: mozilla.org</string>
   <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
   <string name="preference_autocomplete_add_confirmation">নতুন কাস্টোম URL যোগ করা হয়েছে।</string>
   <string name="preference_autocomplete_menu_remove">অপসারণ</string>
@@ -148,16 +161,25 @@
   <string name="firstrun_search_title">আপনি খুঁজবেন, আমার মত করে</string>
   <string name="firstrun_search_text">অন্য কিছু খুঁজছেন? সেটিংস এ অন্য ডিফল্ট সার্চ ইঞ্জিন পছন্দ করুন।</string>
   <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
+  <string name="firstrun_shortcut_text">%1$s এ আপনার প্রিয় সাইটে দ্রুত ফিরে আসুন। শুধু %1$s মেনু থেকে \"হোম স্ক্রীনে যোগ করুন\" নির্বাচন করুন।</string>
   <string name="firstrun_privacy_title">গোপনীয়তাকে অভ্যাসে পরিনত করুন</string>
+  <string name="firstrun_privacy_text">আপনার ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন এবং অন্য অ্যাপ্লিকেশন থেকে ওয়েবপেজ খুললে আপনি ব্যক্তিগত ব্রাউজিং এর সুবিধা পাবেন।</string>
   <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
   <string name="firstrun_skip_button">উপেক্ষা</string>
   <string name="firstrun_next_button">পরবর্তী</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">যোগ</string>
   <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
+  <string name="dialog_addtohomescreen_tracking_protection">শর্টকাট ট্র্যাকিং সুরক্ষা নিষ্ক্রিয়তার মাধ্যমে খুলবে</string>
   <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
+  <string name="notification_browsing_session_channel_description">নোাটফিকেশন ট্যাপ করে আপনার %1$s সেশন মুছে ফেলা যাবে। আপনাকে অ্যাপ্লিকেশন খুলতে বা ব্রাউজারে কি চলছে তা দেখার প্রয়োজন হবে না।</string>
   <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
   <string name="download_firefox">Firefox ডাউনলোড করুন</string>
+  <string name="your_rights_content1">%1$s হল Mozilla এবং অন্যান্য অবদানকারীর দ্বারা তৈরি ফ্রি এবং ওপেনসোর্স সফটওয়্যার।</string>
+  <string name="your_rights_content2"><![CDATA["%1$s আপনার কাছে "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" এবং অন্যান্য ওপেনসোর্স লাইসেন্স শর্তাবলীর আওতায় উপলব্ধ।"]]></string>
+  <string name="your_rights_content3"><![CDATA[Mozilla Foundation বা Mozilla , Firefox বা %1$s নাম বা লোগো সহ কোনও পক্ষের ট্রেডমার্কের জন্য আপনার কোন অধিকার বা লাইসেন্স নেই। অতিরিক্ত তথ্য<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2447;&#2454;&#2494;&#2472;&#2503;</a>" পাওয়া যেতে পারে।"]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s এর জন্য অতিরিক্ত সোর্স কোড বিভিন্ন অন্যান্য ফ্রি এবং ওপেনসোর্স "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2482;&#2494;&#2439;&#2488;&#2503;&#2472;&#2509;&#2488;&#2455;&#2497;&#2482;&#2495;&#2480;</a>" অধীনে পাওয়া যায়।"]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s Disconnect, Inc দ্বারা উপলব্ধ ব্লকলিস্টগুলি যেমন "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU &#2460;&#2503;&#2472;&#2494;&#2480;&#2503;&#2482; &#2474;&#2494;&#2476;&#2482;&#2495;&#2453; &#2482;&#2494;&#2439;&#2488;&#2503;&#2472;&#2509;&#2488; v3</a>" এর অধীনে পৃথক এবং স্বাধীন কাজগুলি ব্যবহার করে এবং "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2447;&#2454;&#2494;&#2472;&#2503;</a>।]]></string>
   <string name="gv_prompt_username_hint">ব্যবহারকারীর নাম</string>
   <string name="gv_prompt_password_hint">পাসওয়ার্ড</string>
   <string name="gv_prompt_clear">পরিষ্কার</string>

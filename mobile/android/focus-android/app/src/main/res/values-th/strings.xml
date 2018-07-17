@@ -88,7 +88,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">ส่งข้อมูลการใช้งาน</string>
   <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องจัดหาและปรับปรุง %1$s สำหรับทุกคน</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องให้บริการและปรับปรุง %1$s สำหรับทุกคน</string>
   <string name="preference_privacy_notice">ประกาศความเป็นส่วนตัว</string>
   <string name="preference_about">เกี่ยวกับ %1$s</string>
   <string name="preference_search_installed_search_engines">เครื่องมือค้นหาที่ติดตั้งไว้</string>
@@ -175,11 +175,11 @@
   <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างวาระ %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
   <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
   <string name="download_firefox">ดาวน์โหลด Firefox</string>
-  <string name="your_rights_content1">%1$s เป็นซอฟต์แวร์ฟรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ</string>
+  <string name="your_rights_content1">%1$s เป็นซอฟต์แวร์เสรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ</string>
   <string name="your_rights_content2"><![CDATA["%1$s ให้คุณใช้ภายใต้เงื่อนไขของ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" และสัญญาอนุญาตการเปิดต้นฉบับอื่น ๆ"]]></string>
   <string name="your_rights_content3"><![CDATA["คุณไม่ได้รับสิทธิหรือสัญญาอนุญาตใด ๆ ในเครื่องหมายการค้าของมูลนิธิ Mozilla หรือบุคคลใด ๆ รวมทั้งชื่อหรือโลโก้ Mozilla, Firefox หรือ %1$s ข้อมูลเพิ่มเติมอาจพบได้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#3607;&#3637;&#3656;&#3609;&#3637;&#3656;</a>]]></string>
-  <string name="your_rights_content4"><![CDATA["โค้ดต้นฉบับเพิ่มเติมสำหรับ %1$s ใช้ได้ภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#3626;&#3633;&#3597;&#3597;&#3634;&#3629;&#3609;&#3640;&#3597;&#3634;&#3605;</a>" ฟรีและเปิดต้นฉบับต่าง ๆ"]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s ยังใช้รายการปิดกั้นที่จัดหาโดย Disconnect, Inc. ซึ่งเป็นงานแยกและเป็นอิสระภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" และใช้ได้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#3607;&#3637;&#3656;&#3609;&#3637;&#3656;</a>]]></string>
+  <string name="your_rights_content4"><![CDATA["โค้ดต้นฉบับเพิ่มเติมสำหรับ %1$s ใช้ได้ภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#3626;&#3633;&#3597;&#3597;&#3634;&#3629;&#3609;&#3640;&#3597;&#3634;&#3605;</a>" เสรีและเปิดต้นฉบับต่าง ๆ"]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ยังใช้รายการปิดกั้นที่ให้บริการโดย Disconnect, Inc. ซึ่งเป็นงานแยกและเป็นอิสระภายใต้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" และใช้ได้ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#3607;&#3637;&#3656;&#3609;&#3637;&#3656;</a>]]></string>
   <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
   <string name="gv_prompt_password_hint">รหัสผ่าน</string>
   <string name="gv_prompt_clear">ล้าง</string>
