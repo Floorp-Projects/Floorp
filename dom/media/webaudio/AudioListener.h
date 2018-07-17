@@ -21,6 +21,29 @@ namespace mozilla {
 
 namespace dom {
 
+class AudioListenerEngine final
+{
+public:
+  enum class AudioListenerParameter
+  {
+    POSITION,
+    FRONT, // unit length
+    RIGHT // unit length, orthogonal to FRONT
+  };
+  AudioListenerEngine();
+  void RecvListenerEngineEvent(
+    AudioListenerEngine::AudioListenerParameter aParameter,
+    const ThreeDPoint& aValue);
+  const ThreeDPoint& Position() const;
+  const ThreeDPoint& FrontVector() const;
+  const ThreeDPoint& RightVector() const;
+
+private:
+  ThreeDPoint mPosition;
+  ThreeDPoint mFrontVector;
+  ThreeDPoint mRightVector;
+};
+
 class AudioListener final : public nsWrapperCache
 {
 public:
@@ -38,42 +61,26 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void SetPosition(double aX, double aY, double aZ)
-  {
-    if (WebAudioUtils::FuzzyEqual(mPosition.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mPosition.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mPosition.z, aZ)) {
-      return;
-    }
-    mPosition.x = aX;
-    mPosition.y = aY;
-    mPosition.z = aZ;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
-  }
-
-  const ThreeDPoint& Position() const
-  {
-    return mPosition;
-  }
-
+  void SetPosition(double aX, double aY, double aZ);
   void SetOrientation(double aX, double aY, double aZ,
                       double aXUp, double aYUp, double aZUp);
 
-  void RegisterPannerNode(PannerNode* aPannerNode);
-  void UnregisterPannerNode(PannerNode* aPannerNode);
+  const AudioListenerEngine* Engine() { return mEngine.get(); }
 
 private:
-  ~AudioListener() {}
+  void SendListenerEngineEvent(
+    AudioListenerEngine::AudioListenerParameter aParameter,
+    const ThreeDPoint& aValue);
 
-  void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
+  ~AudioListener() = default;
+
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
 private:
-  friend class PannerNode;
   RefPtr<AudioContext> mContext;
+  const UniquePtr<AudioListenerEngine> mEngine;
   ThreeDPoint mPosition;
   ThreeDPoint mFrontVector;
   ThreeDPoint mRightVector;
-  nsTArray<WeakPtr<PannerNode> > mPanners;
 };
 
 } // namespace dom
