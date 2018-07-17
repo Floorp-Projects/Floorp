@@ -103,7 +103,8 @@ nsAccessiblePivot::SetPosition(nsIAccessible* aPosition)
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = mEndOffset = -1;
   NotifyOfPivotChange(position, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_NONE, false);
+                      nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY, false);
 
   return NS_OK;
 }
@@ -186,7 +187,8 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
 
   mPosition.swap(acc);
   NotifyOfPivotChange(acc, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_TEXT,
+                      nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY,
                       (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
@@ -378,6 +380,10 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
         startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
         endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
         break;
+      case LINE_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_LINE_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_LINE_END;
+        break;
       default:
         return NS_ERROR_INVALID_ARG;
     }
@@ -418,7 +424,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
     mStartOffset = tempStart;
     mEndOffset = tempEnd;
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT,
+                        nsIAccessiblePivot::REASON_NEXT, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
@@ -452,14 +458,13 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     }
 
     // If the search led to the parent of the node we started on (e.g. when
-    // starting on a text leaf), start the text movement from the end of that
-    // node, otherwise we just default to 0.
+    // starting on a text leaf), start the text movement from the end offset
+    // of that node. Otherwise we just default to the last offset in the parent.
     if (tempStart == -1) {
-      if (tempPosition != curPosition)
-        tempStart = text == curPosition->Parent() ?
-                    text->GetChildOffset(curPosition) : text->CharacterCount();
+      if (tempPosition != curPosition && text == curPosition->Parent())
+        tempStart = text->GetChildOffset(curPosition) + nsAccUtils::TextLength(curPosition);
       else
-        tempStart = 0;
+        tempStart = text->CharacterCount();
     }
 
     // If there's no more text on the current node, try to find the previous
@@ -504,6 +509,10 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
       case WORD_BOUNDARY:
         startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
         endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+        break;
+      case LINE_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_LINE_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_LINE_END;
         break;
       default:
         return NS_ERROR_INVALID_ARG;
@@ -551,7 +560,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
     mEndOffset = tempEnd;
 
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT,
+                        nsIAccessiblePivot::REASON_PREV, aBoundary,
                         (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
@@ -651,7 +660,7 @@ nsAccessiblePivot::MovePivotInternal(Accessible* aPosition,
   mStartOffset = mEndOffset = -1;
 
   return NotifyOfPivotChange(oldPosition, oldStart, oldEnd, aReason,
-                             aIsFromUserInput);
+                             nsIAccessiblePivot::NO_BOUNDARY, aIsFromUserInput);
 }
 
 Accessible*
@@ -825,13 +834,17 @@ nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
       if (temp == root)
         break;
 
+      // Unlike traditional pre-order traversal we revisit the parent
+      // nodes when we go up the tree. This is because our starting point
+      // may be a subtree or a leaf. If it's parent matches, it should
+      // take precedent over a sibling.
       if (temp != aAccessible && temp->IsHyperText())
         return temp->AsHyperText();
 
-      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
-
       if (sibling)
         break;
+
+      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
     } while ((temp = temp->Parent()));
 
     if (!sibling)
@@ -849,7 +862,8 @@ nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
 bool
 nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
                                        int32_t aOldStart, int32_t aOldEnd,
-                                       int16_t aReason, bool aIsFromUserInput)
+                                       int16_t aReason, int16_t aBoundaryType,
+                                       bool aIsFromUserInput)
 {
   if (aOldPosition == mPosition &&
       aOldStart == mStartOffset && aOldEnd == mEndOffset)
@@ -862,7 +876,7 @@ nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
     obs->OnPivotChanged(this,
                         xpcOldPos, aOldStart, aOldEnd,
                         ToXPC(mPosition), mStartOffset, mEndOffset,
-                        aReason, aIsFromUserInput);
+                        aReason, aBoundaryType, aIsFromUserInput);
   }
 
   return true;

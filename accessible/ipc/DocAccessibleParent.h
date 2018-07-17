@@ -114,6 +114,7 @@ public:
                                                                const int32_t& aNewStartOffset,
                                                                const int32_t& aNewEndOffset,
                                                                const int16_t& aReason,
+                                                               const int16_t& aBoundaryType,
                                                                const bool& aFromUser) override;
 
   mozilla::ipc::IPCResult RecvRoleChangedEvent(const a11y::role& aRole) final;

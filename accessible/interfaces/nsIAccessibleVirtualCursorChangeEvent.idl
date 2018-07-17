@@ -46,4 +46,9 @@ interface nsIAccessibleVirtualCursorChangeEvent : nsIAccessibleEvent
    * Reason for virtual cursor move.
    */
   readonly attribute short reason;
+
+  /**
+   * Text boundary type for movement, NO_BOUNDARY if none.
+   */
+  readonly attribute short boundaryType;
 };
