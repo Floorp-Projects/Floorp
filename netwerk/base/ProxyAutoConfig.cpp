@@ -412,7 +412,7 @@ bool PACResolve(const nsCString &aHostName, NetAddr *aNetAddr,
 ProxyAutoConfig::ProxyAutoConfig()
   : mJSContext(nullptr)
   , mJSNeedsSetup(false)
-  , mShutdown(true)
+  , mShutdown(false)
   , mIncludePath(false)
   , mExtraHeapSize(0)
 {
@@ -704,8 +704,6 @@ ProxyAutoConfig::Init(const nsCString &aPACURI,
                       uint32_t aExtraHeapSize,
                       nsIEventTarget *aEventTarget)
 {
-  mShutdown = false; // Shutdown needs to be called prior to destruction
-
   mPACURI = aPACURI;
   mPACScript = sPacUtils;
   mPACScript.Append(aPACScript);
