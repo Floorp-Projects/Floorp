@@ -186,7 +186,7 @@ typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintStat
 // Holds the key operations needed to update a tiled content client on the
 // paint thread.
 class CapturedTiledPaintState {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedTiledPaintState)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedPaintState)
 public:
   struct Copy {
     Copy(RefPtr<gfx::DrawTarget> aSource,
