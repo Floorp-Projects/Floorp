@@ -108,8 +108,8 @@ testCompile(bool nonSyntactic)
     OffThreadTask task;
     OffThreadToken* token;
 
-    CHECK(CompileOffThread(cx, options, src_16, length,
-                           task.OffThreadCallback, &task));
+    SourceBufferHolder srcBuf(src_16, length, SourceBufferHolder::NoOwnership);
+    CHECK(CompileOffThread(cx, options, srcBuf, task.OffThreadCallback, &task));
     CHECK(token = task.waitUntilDone(cx));
     CHECK(script = FinishOffThreadScript(cx, token));
     CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
