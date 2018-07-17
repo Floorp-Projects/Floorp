@@ -187,18 +187,25 @@ StackTraceCollector.prototype = {
   init() {
     Services.obs.addObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().registerCollector(this);
+    if (this.messageManager) {
+      this.onGetStack = this.onGetStack.bind(this);
+      this.messageManager.addMessageListener("debug:request-stack", this.onGetStack);
+    }
   },
 
   destroy() {
     Services.obs.removeObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().unregisterCollector(this);
+    if (this.messageManager) {
+      this.messageManager.removeMessageListener("debug:request-stack", this.onGetStack);
+    }
   },
 
   _saveStackTrace(channel, stacktrace) {
     if (this.messageManager) {
       this.messageManager.sendAsyncMessage("debug:request-stack-available", {
         channelId: channel.channelId,
-        stacktrace
+        stacktrace: stacktrace && stacktrace.length > 0
       });
     }
     this.stacktracesById.set(channel.channelId, stacktrace);
@@ -245,13 +252,6 @@ StackTraceCollector.prototype = {
     const oldId = oldChannel.channelId;
     const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
-      this.stacktracesById.delete(oldId);
-      if (this.messageManager) {
-        this.messageManager.sendAsyncMessage("debug:request-stack-available", {
-          channelId: oldId,
-          stacktrace: null
-        });
-      }
       this._saveStackTrace(newChannel, stacktrace);
     }
   },
@@ -260,7 +260,16 @@ StackTraceCollector.prototype = {
     const trace = this.stacktracesById.get(channelId);
     this.stacktracesById.delete(channelId);
     return trace;
-  }
+  },
+
+  onGetStack(msg) {
+    const channelId = msg.data;
+    const stack = this.getStackTrace(channelId);
+    this.messageManager.sendAsyncMessage("debug:request-stack", {
+      channelId,
+      stack,
+    });
+  },
 };
 
 exports.StackTraceCollector = StackTraceCollector;
