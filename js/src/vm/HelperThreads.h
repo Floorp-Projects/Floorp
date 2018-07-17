@@ -589,12 +589,12 @@ CancelOffThreadParses(JSRuntime* runtime);
  */
 bool
 StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                          JS::SourceBufferHolder& srcBuf,
+                          const char16_t* chars, size_t length,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
 StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                          JS::SourceBufferHolder& srcBuf,
+                          const char16_t* chars, size_t length,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
@@ -720,18 +720,18 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>, public JS::OffT
 
 struct ScriptParseTask : public ParseTask
 {
-    JS::SourceBufferHolder data;
+    JS::TwoByteChars data;
 
-    ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+    ScriptParseTask(JSContext* cx, const char16_t* chars, size_t length,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 
 struct ModuleParseTask : public ParseTask
 {
-    JS::SourceBufferHolder data;
+    JS::TwoByteChars data;
 
-    ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+    ModuleParseTask(JSContext* cx, const char16_t* chars, size_t length,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };

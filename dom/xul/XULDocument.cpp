@@ -2376,10 +2376,15 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             rv = mCurrentScriptProto->Compile(srcBuf, uri, 1, this, this);
             if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasScriptObject()) {
                 // We will be notified via OnOffThreadCompileComplete when the
-                // compile finishes. The JS engine has taken ownership of the
-                // source buffer.
-                MOZ_RELEASE_ASSERT(!srcBuf.ownsChars());
+                // compile finishes. Keep the contents of the compiled script
+                // alive until the compilation finishes.
                 mOffThreadCompiling = true;
+                // If the JS engine did not take the source buffer, then take
+                // it back here to ensure it remains alive.
+                mOffThreadCompileStringBuf = srcBuf.take();
+                if (mOffThreadCompileStringBuf) {
+                  mOffThreadCompileStringLength = srcBuf.length();
+                }
                 BlockOnload();
                 return NS_OK;
             }

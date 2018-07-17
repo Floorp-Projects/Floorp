@@ -5180,8 +5180,7 @@ js::TestingFunctionArgumentToScript(JSContext* cx,
 
         RootedScript script(cx);
         CompileOptions options(cx);
-        SourceBufferHolder source(chars, len, SourceBufferHolder::NoOwnership);
-        if (!JS::Compile(cx, options, source, &script))
+        if (!JS::Compile(cx, options, chars, len, &script))
             return nullptr;
         return script;
     }
