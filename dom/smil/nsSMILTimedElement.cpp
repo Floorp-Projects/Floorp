@@ -103,7 +103,7 @@ namespace
       event.mDetail = mDetail;
 
       nsPresContext* context = nullptr;
-      nsIDocument* doc = mTarget->GetUncomposedDoc();
+      nsIDocument* doc = mTarget->GetComposedDoc();
       if (doc) {
         context = doc->GetPresContext();
       }
