@@ -3997,25 +3997,18 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 static bool
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char16_t* chars, size_t length, MutableHandleScript script)
-{
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return ::Compile(cx, options, srcBuf, script);
-}
-
-static bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         const char* bytes, size_t length, MutableHandleScript script)
 {
-    UniqueTwoByteChars chars;
+    char16_t* chars;
     if (options.utf8)
-        chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
-        chars.reset(InflateString(cx, bytes, length));
+        chars = InflateString(cx, bytes, length);
     if (!chars)
         return false;
 
-    return ::Compile(cx, options, chars.get(), length, script);
+    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
+    return ::Compile(cx, options, source, script);
 }
 
 static bool
@@ -4057,13 +4050,6 @@ JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            const char16_t* chars, size_t length, JS::MutableHandleScript script)
-{
-    return ::Compile(cx, options, chars, length, script);
-}
-
-bool
-JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             FILE* file, JS::MutableHandleScript script)
 {
     return ::Compile(cx, options, file, script);
@@ -4092,16 +4078,6 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
     return ::Compile(cx, options, bytes, length, script);
-}
-
-bool
-JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-                                const char16_t* chars, size_t length,
-                                JS::MutableHandleScript script)
-{
-    CompileOptions options(cx, optionsArg);
-    options.setNonSyntacticScope(true);
-    return ::Compile(cx, options, chars, length, script);
 }
 
 bool
@@ -4347,10 +4323,10 @@ JS_CompileScript(JSContext* cx, const char* ascii, size_t length,
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext* cx, const char16_t* chars, size_t length,
+JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
                    const JS::CompileOptions& options, MutableHandleScript script)
 {
-    return ::Compile(cx, options, chars, length, script);
+    return ::Compile(cx, options, srcBuf, script);
 }
 
 JS_PUBLIC_API(bool)
@@ -4571,29 +4547,19 @@ JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
                     const ReadOnlyCompileOptions& options,
                     const char* name, unsigned nargs, const char* const* argnames,
-                    const char16_t* chars, size_t length, MutableHandleFunction fun)
-{
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return CompileFunction(cx, envChain, options, name, nargs, argnames,
-                           srcBuf, fun);
-}
-
-JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
-                    const ReadOnlyCompileOptions& options,
-                    const char* name, unsigned nargs, const char* const* argnames,
                     const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    UniqueTwoByteChars chars;
+    char16_t* chars;
     if (options.utf8)
-        chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
+        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
-        chars.reset(InflateString(cx, bytes, length));
+        chars = InflateString(cx, bytes, length);
     if (!chars)
         return false;
 
+    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
     return CompileFunction(cx, envChain, options, name, nargs, argnames,
-                           chars.get(), length, fun);
+                           source, fun);
 }
 
 JS_PUBLIC_API(bool)
@@ -4772,15 +4738,6 @@ Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions
     return ::Evaluate(cx, scope->kind(), env, optionsArg, srcBuf, rval);
 }
 
-static bool
-Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-         const char16_t* chars, size_t length, MutableHandleValue rval)
-{
-  SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-  RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-  return ::Evaluate(cx, ScopeKind::Global, globalLexical, optionsArg, srcBuf, rval);
-}
-
 extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
              const char* bytes, size_t length, MutableHandleValue rval)
@@ -4827,21 +4784,6 @@ JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions& optionsArg,
              SourceBufferHolder& srcBuf, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, envChain, optionsArg, srcBuf, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-             const char16_t* chars, size_t length, MutableHandleValue rval)
-{
-    return ::Evaluate(cx, optionsArg, chars, length, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions& optionsArg,
-             const char16_t* chars, size_t length, MutableHandleValue rval)
-{
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     return ::Evaluate(cx, envChain, optionsArg, srcBuf, rval);
 }
 
