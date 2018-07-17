@@ -65,6 +65,9 @@ async function testMenuPopup(toolbox) {
       label: "Disabled Item",
       disabled: true,
     }),
+    new MenuItem({
+      l10nID: "foo",
+    }),
   ];
 
   for (const item of MENU_ITEMS) {
@@ -102,6 +105,8 @@ async function testMenuPopup(toolbox) {
   is(menuItems[3].getAttribute("label"), MENU_ITEMS[3].label, "Correct label");
   is(menuItems[3].getAttribute("disabled"), "true", "disabled attr menuitem");
 
+  is(menuItems[4].getAttribute("data-l10n-id"), MENU_ITEMS[4].l10nID, "Correct localization attribute");
+
   await once(menu, "open");
   const closed = once(menu, "close");
   EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.win);
@@ -127,7 +132,7 @@ async function testSubmenu(toolbox) {
     },
   }));
   menu.append(new MenuItem({
-    label: "Submenu parent",
+    l10nID: "submenu-parent",
     submenu: submenu,
   }));
   menu.append(new MenuItem({
@@ -145,8 +150,9 @@ async function testSubmenu(toolbox) {
 
   const menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
   is(menus.length, 2, "Correct number of menus");
-  is(menus[0].getAttribute("label"), "Submenu parent", "Correct label");
+  ok(!menus[0].hasAttribute("label"), "No label: should be set by localization");
   ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
+  is(menus[0].getAttribute("data-l10n-id"), "submenu-parent", "Correct localization attribute");
 
   is(menus[1].getAttribute("accesskey"), "A", "Correct accesskey");
   ok(menus[1].hasAttribute("disabled"), "Correct disabled state");
