@@ -232,7 +232,15 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
     if (rule) {
       aResult.AppendElement(rule);
     } else {
-      MOZ_ASSERT_UNREACHABLE("We should be able to map a raw rule to a rule");
+#ifdef DEBUG
+      nsAutoCString str;
+      fprintf(stderr, "%s\n", str.get());
+      Servo_StyleRule_Debug(rawRule, &str);
+      MOZ_CRASH_UNSAFE_PRINTF(
+        "We should be able to map a raw rule to a rule: %s\n",
+        str.get()
+      );
+#endif
     }
   }
 }

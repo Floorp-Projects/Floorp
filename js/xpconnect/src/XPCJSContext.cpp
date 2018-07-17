@@ -234,24 +234,25 @@ class Watchdog
 #define PREF_MAX_SCRIPT_RUN_TIME_CHROME "dom.max_chrome_script_run_time"
 #define PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT "dom.max_ext_content_script_run_time"
 
-class WatchdogManager : public nsIObserver
+static const char* gCallbackPrefs[] = {
+    "dom.use_watchdog",
+    PREF_MAX_SCRIPT_RUN_TIME_CONTENT,
+    PREF_MAX_SCRIPT_RUN_TIME_CHROME,
+    PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT,
+    nullptr,
+};
+
+class WatchdogManager
 {
   public:
-
-    NS_DECL_ISUPPORTS
     explicit WatchdogManager()
     {
         // All the timestamps start at zero.
         PodArrayZero(mTimestamps);
 
         // Register ourselves as an observer to get updates on the pref.
-        mozilla::Preferences::AddStrongObserver(this, "dom.use_watchdog");
-        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
-        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
-        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
+        Preferences::RegisterCallbacks(PrefsChanged, gCallbackPrefs, this);
     }
-
-  protected:
 
     virtual ~WatchdogManager()
     {
@@ -261,21 +262,18 @@ class WatchdogManager : public nsIObserver
         MOZ_ASSERT(!mWatchdog);
     }
 
+  private:
+
+    static void PrefsChanged(const char* aPref, WatchdogManager* aSelf)
+    {
+        aSelf->RefreshWatchdog();
+    }
+
   public:
 
     void Shutdown()
     {
-        mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
-        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
-        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
-        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT);
-    }
-
-    NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t* aData) override
-    {
-        RefreshWatchdog();
-        return NS_OK;
+        Preferences::UnregisterCallbacks(PrefsChanged, gCallbackPrefs, this);
     }
 
     void
@@ -453,8 +451,6 @@ class WatchdogManager : public nsIObserver
     // We store ContextStateChange on the contexts themselves.
     PRTime mTimestamps[kWatchdogTimestampCategoryCount - 1];
 };
-
-NS_IMPL_ISUPPORTS(WatchdogManager, nsIObserver)
 
 AutoLockWatchdog::AutoLockWatchdog(Watchdog* aWatchdog MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : mWatchdog(aWatchdog)
@@ -733,9 +729,8 @@ bool
 xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
 
 static void
-ReloadPrefsCallback(const char* pref, void* data)
+ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
 {
-    XPCJSContext* xpccx = static_cast<XPCJSContext*>(data);
     JSContext* cx = xpccx->Context();
 
     bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
@@ -1147,7 +1142,7 @@ uint32_t
 XPCJSContext::sInstanceCount;
 
 // static
-StaticRefPtr<WatchdogManager>
+StaticAutoPtr<WatchdogManager>
 XPCJSContext::sWatchdogInstance;
 
 // static

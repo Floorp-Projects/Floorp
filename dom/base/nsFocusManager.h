@@ -57,6 +57,8 @@ public:
   static nsresult Init();
   static void Shutdown();
 
+  void PrefChanged(const char* aPref);
+
   /**
    * Retrieve the single focus manager.
    */

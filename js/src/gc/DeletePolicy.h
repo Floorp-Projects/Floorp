@@ -8,8 +8,11 @@
 #define gc_DeletePolicy_h
 
 #include "js/TracingAPI.h"
+
 #ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
+namespace JS {
+class BigInt;
+} // namespace JS
 #endif
 
 namespace js {

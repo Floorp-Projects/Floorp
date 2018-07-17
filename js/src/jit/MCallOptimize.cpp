@@ -15,7 +15,7 @@
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/MapObject.h"
-#include "builtin/SIMD.h"
+#include "builtin/SIMDConstants.h"
 #include "builtin/String.h"
 #include "builtin/TestingFunctions.h"
 #include "builtin/TypedObject.h"

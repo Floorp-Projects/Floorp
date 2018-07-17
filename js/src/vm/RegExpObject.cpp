@@ -21,6 +21,7 @@
 #include "irregexp/RegExpBytecode.h"
 #endif
 #include "irregexp/RegExpParser.h"
+#include "jit/VMFunctions.h"
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"

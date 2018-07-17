@@ -18,6 +18,7 @@
 #include "js/Class.h"
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"
+#include "js/StructuredClone.h"
 #include "js/Wrapper.h"
 #include "assert.h"
 

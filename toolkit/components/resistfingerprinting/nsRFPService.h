@@ -263,6 +263,8 @@ private:
   void UpdateRFPPref();
   void StartShutdown();
 
+  void PrefChanged(const char* aPref);
+
   static void MaybeCreateSpoofingKeyCodes(const KeyboardLangs aLang,
                                           const KeyboardRegions aRegion);
   static void MaybeCreateSpoofingKeyCodesForEnUS();

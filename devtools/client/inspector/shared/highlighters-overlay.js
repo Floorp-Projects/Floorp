@@ -285,8 +285,9 @@ class HighlightersOverlay {
 
     // Emit the NodeFront of the flexbox container element that the flexbox highlighter
     // was hidden for.
-    this.emit("flexbox-highlighter-hidden", this.flexboxHighlighterShown);
+    const nodeFront = this.flexboxHighlighterShown;
     this.flexboxHighlighterShown = null;
+    this.emit("flexbox-highlighter-hidden", nodeFront);
 
     // Erase flexbox highlighter state.
     this.state.flexbox = null;

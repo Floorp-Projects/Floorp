@@ -19,6 +19,7 @@
 #include "wasm/WasmProcess.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/ScopeExit.h"
 
 #include "vm/MutexIDs.h"
 #include "wasm/WasmBuiltins.h"

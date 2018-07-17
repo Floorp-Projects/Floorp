@@ -522,27 +522,38 @@ uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params * params)
 #endif
 }
 
+static const char* gInitCallbackPrefs[] = {
+  PREF_VOLUME_SCALE,
+  PREF_CUBEB_LATENCY_PLAYBACK,
+  PREF_CUBEB_LATENCY_MSG,
+  PREF_CUBEB_BACKEND,
+  PREF_CUBEB_FORCE_NULL_CONTEXT,
+  PREF_CUBEB_SANDBOX,
+  PREF_AUDIOIPC_POOL_SIZE,
+  PREF_AUDIOIPC_STACK_SIZE,
+  nullptr,
+};
+static const char* gCallbackPrefs[] = {
+  PREF_CUBEB_FORCE_SAMPLE_RATE,
+  // We don't want to call the callback on startup, because the pref is the
+  // empty string by default ("", which means "logging disabled"). Because the
+  // logging can be enabled via environment variables (MOZ_LOG="module:5"),
+  // calling this callback on init would immediately re-disable the logging.
+  PREF_CUBEB_LOGGING_LEVEL,
+  nullptr,
+};
+
 void InitLibrary()
 {
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_VOLUME_SCALE);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_MSG);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_FORCE_SAMPLE_RATE);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_FORCE_NULL_CONTEXT);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_SANDBOX);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_AUDIOIPC_POOL_SIZE);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_AUDIOIPC_STACK_SIZE);
+  Preferences::RegisterCallbacksAndCall(PrefChanged, gInitCallbackPrefs);
+  Preferences::RegisterCallbacks(PrefChanged, gCallbackPrefs);
+
   if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
     cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
   } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
     cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
   }
-  // We don't want to call the callback on startup, because the pref is the
-  // empty string by default ("", which means "logging disabled"). Because the
-  // logging can be enabled via environment variables (MOZ_LOG="module:5"),
-  // calling this callback on init would immediately re-disable the logging.
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
+
 #ifndef MOZ_WIDGET_ANDROID
   AbstractThread::MainThread()->Dispatch(
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
@@ -556,16 +567,8 @@ void InitLibrary()
 
 void ShutdownLibrary()
 {
-  Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_AUDIOIPC_STACK_SIZE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_AUDIOIPC_POOL_SIZE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_SANDBOX);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_FORCE_SAMPLE_RATE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_FORCE_NULL_CONTEXT);
+  Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
+  Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {
