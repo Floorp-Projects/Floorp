@@ -391,7 +391,6 @@ class AnimationInspector {
 
     await this.inspector.getCommonComponentProps()
               .setSelectedNode(nodeFront, { reason: "animation-panel" });
-    await nodeFront.scrollIntoView();
   }
 
   async setAnimationsCurrentTime(currentTime, shouldRefresh) {
