@@ -212,6 +212,17 @@ class MarionetteBranch extends Branch {
   }
 
   /**
+   * Certain log messages that are known to be long are truncated
+   * before they are dumped to stdout.  The `marionette.log.truncate`
+   * preference indicates that the values should not be truncated.
+   *
+   * @return {boolean}
+   */
+  get truncateLog() {
+    return this.get("log.truncate");
+  }
+
+  /**
    * Gets the `marionette.prefs.recommended` preference, signifying
    * whether recommended automation preferences will be set when
    * Marionette is started.
