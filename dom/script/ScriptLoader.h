@@ -504,8 +504,8 @@ private:
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  JS::SourceBufferHolder GetScriptSource(ScriptLoadRequest* aRequest,
-                                         nsAutoString& inlineData);
+  JS::SourceBufferHolder GetScriptSource(JSContext* aCx,
+                                         ScriptLoadRequest* aRequest);
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,
