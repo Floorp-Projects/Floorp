@@ -42,10 +42,14 @@ NS_IMPL_RELEASE_INHERITED(PannerNode, AudioNode)
 class PannerNodeEngine final : public AudioNodeEngine
 {
 public:
-  explicit PannerNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+  explicit PannerNodeEngine(AudioNode* aNode,
+                            AudioDestinationNode* aDestination,
+                            const AudioListenerEngine* aListenerEngine)
     : AudioNodeEngine(aNode)
     , mDestination(aDestination->Stream())
-    // Please keep these default values consistent with PannerNode::PannerNode below.
+    , mListenerEngine(aListenerEngine)
+    // Please keep these default values consistent with PannerNode::PannerNode
+    // below.
     , mPanningModelFunction(&PannerNodeEngine::EqualPowerPanningFunction)
     , mDistanceModelFunction(&PannerNodeEngine::InverseGainFunction)
     , mPositionX(0.)
@@ -144,9 +148,6 @@ public:
   void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) override
   {
     switch (aIndex) {
-    case PannerNode::LISTENER_POSITION: mListenerPosition = aParam; break;
-    case PannerNode::LISTENER_FRONT_VECTOR: mListenerFrontVector = aParam; break;
-    case PannerNode::LISTENER_RIGHT_VECTOR: mListenerRightVector = aParam; break;
     case PannerNode::POSITION:
       mPositionX.SetValue(aParam.x);
       mPositionY.SetValue(aParam.y);
@@ -255,6 +256,9 @@ public:
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
+  // This is set in the ctor, and guaranteed to live longer than this engine:
+  // its lifetime is the same as the AudioContext itself.
+  const AudioListenerEngine* mListenerEngine;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
   PanningModelFunction mPanningModelFunction;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
@@ -271,9 +275,6 @@ public:
   double mConeInnerAngle;
   double mConeOuterAngle;
   double mConeOuterGain;
-  ThreeDPoint mListenerPosition;
-  ThreeDPoint mListenerFrontVector;
-  ThreeDPoint mListenerRightVector;
   int mLeftOverData;
 };
 
@@ -298,19 +299,12 @@ PannerNode::PannerNode(AudioContext* aContext)
   , mConeOuterAngle(360.)
   , mConeOuterGain(0.)
 {
-  mStream = AudioNodeStream::Create(aContext,
-                                    new PannerNodeEngine(this, aContext->Destination()),
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
-  // We should register once we have set up our stream and engine.
-  Context()->Listener()->RegisterPannerNode(this);
-}
-
-PannerNode::~PannerNode()
-{
-  if (Context()) {
-    Context()->UnregisterPannerNode(this);
-  }
+  mStream = AudioNodeStream::Create(
+    aContext,
+    new PannerNodeEngine(
+      this, aContext->Destination(), aContext->Listener()->Engine()),
+    AudioNodeStream::NO_STREAM_FLAGS,
+    aContext->Graph());
 }
 
 /* static */ already_AddRefed<PannerNode>
@@ -373,14 +367,6 @@ JSObject*
 PannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return PannerNode_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void PannerNode::DestroyMediaStream()
-{
-  if (Context()) {
-    Context()->UnregisterPannerNode(this);
-  }
-  AudioNode::DestroyMediaStream();
 }
 
 // Those three functions are described in the spec.
@@ -460,10 +446,8 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 
     // For a stereo source, when both the listener and the panner are in
     // the same spot, and no cone gain is specified, this node is noop.
-    if (inputChannels == 2 &&
-        mListenerPosition ==  position &&
-        mConeInnerAngle == 360 &&
-        mConeOuterAngle == 360) {
+    if (inputChannels == 2 && mListenerEngine->Position() == position &&
+        mConeInnerAngle == 360 && mConeOuterAngle == 360) {
       *aOutput = aInput;
       return;
     }
@@ -622,7 +606,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 void
 PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position, float& aAzimuth, float& aElevation)
 {
-  ThreeDPoint sourceListener = position - mListenerPosition;
+  ThreeDPoint sourceListener = position - mListenerEngine->Position();
   if (sourceListener.IsZero()) {
     aAzimuth = 0.0;
     aElevation = 0.0;
@@ -632,8 +616,8 @@ PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position, float&
   sourceListener.Normalize();
 
   // Project the source-listener vector on the x-z plane.
-  const ThreeDPoint& listenerFront = mListenerFrontVector;
-  const ThreeDPoint& listenerRight = mListenerRightVector;
+  const ThreeDPoint& listenerFront = mListenerEngine->FrontVector();
+  const ThreeDPoint& listenerRight = mListenerEngine->RightVector();
   ThreeDPoint up = listenerRight.CrossProduct(listenerFront);
 
   double upProjection = sourceListener.DotProduct(up);
@@ -682,7 +666,7 @@ PannerNodeEngine::ComputeConeGain(const ThreeDPoint& position,
   }
 
   // Normalized source-listener vector
-  ThreeDPoint sourceToListener = mListenerPosition - position;
+  ThreeDPoint sourceToListener = mListenerEngine->Position() - position;
   sourceToListener.Normalize();
 
   // Angle between the source orientation vector and the source-listener vector
@@ -714,7 +698,7 @@ PannerNodeEngine::ComputeConeGain(const ThreeDPoint& position,
 double
 PannerNodeEngine::ComputeDistanceGain(const ThreeDPoint& position)
 {
-  ThreeDPoint distanceVec = position - mListenerPosition;
+  ThreeDPoint distanceVec = position - mListenerEngine->Position();
   float distance = sqrt(distanceVec.DotProduct(distanceVec));
   return std::max(0.0f, (this->*mDistanceModelFunction)(distance));
 }

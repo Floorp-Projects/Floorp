@@ -653,14 +653,6 @@ AudioContext::UnregisterActiveNode(AudioNode* aNode)
   mActiveNodes.RemoveEntry(aNode);
 }
 
-void
-AudioContext::UnregisterPannerNode(PannerNode* aNode)
-{
-  if (mListener) {
-    mListener->UnregisterPannerNode(aNode);
-  }
-}
-
 uint32_t
 AudioContext::MaxChannelCount() const
 {
