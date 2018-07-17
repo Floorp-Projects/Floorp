@@ -33,4 +33,5 @@ dependencies {
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+    testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.dependencies['mockwebserver']}"
 }

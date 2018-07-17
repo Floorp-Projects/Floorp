@@ -16,11 +16,11 @@ import java.net.URL
  * @param headers headers to provide along with the request
  */
 internal class KintoClient(
-    private val httpClient: HttpClient = HttpURLConnectionHttpClient(),
-    val baseUrl: String,
-    val bucketName: String,
-    val collectionName: String,
-    val headers: Map<String, String>? = null
+        private val httpClient: HttpClient = HttpURLConnectionHttpClient(),
+        val baseUrl: String,
+        val bucketName: String,
+        val collectionName: String,
+        val headers: Map<String, String>? = null
 ) {
 
     /**

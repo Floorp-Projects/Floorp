@@ -4,8 +4,6 @@
 
 package mozilla.components.service.fretboard.storage.flatfile
 
-import android.support.test.InstrumentationRegistry
-import android.support.test.runner.AndroidJUnit4
 import mozilla.components.service.fretboard.Experiment
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -13,11 +11,13 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class FlatFileExperimentStorageTest {
     @Test
     fun testSave() {
@@ -29,7 +29,7 @@ class FlatFileExperimentStorageTest {
                 Experiment.Bucket(20, 0),
                 1526991669)
         )
-        val file = File(InstrumentationRegistry.getContext().filesDir, "experiments.json")
+        val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
         assertFalse(file.exists())
         FlatFileExperimentStorage(file).save(experiments)
         assertTrue(file.exists())
@@ -60,7 +60,7 @@ class FlatFileExperimentStorageTest {
 
     @Test
     fun testRetrieve() {
-        val file = File(InstrumentationRegistry.getContext().filesDir, "experiments.json")
+        val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
         file.writer().use {
             it.write("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}]}""")
         }
@@ -80,7 +80,7 @@ class FlatFileExperimentStorageTest {
 
     @Test
     fun testRetrieveFileNotFound() {
-        val file = File(InstrumentationRegistry.getContext().filesDir, "missingFile.json")
+        val file = File(RuntimeEnvironment.application.filesDir, "missingFile.json")
         val experiments = FlatFileExperimentStorage(file).retrieve()
         assertEquals(0, experiments.size)
     }
