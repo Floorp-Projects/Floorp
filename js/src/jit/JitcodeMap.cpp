@@ -14,6 +14,7 @@
 #include "gc/Marking.h"
 #include "gc/Statistics.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "js/Vector.h"
 #include "vm/GeckoProfiler.h"
@@ -1200,8 +1201,8 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader& reader,
 }
 
 /* static */ uint32_t
-JitcodeRegionEntry::ExpectedRunLength(const CodeGeneratorShared::NativeToBytecode* entry,
-                                      const CodeGeneratorShared::NativeToBytecode* end)
+JitcodeRegionEntry::ExpectedRunLength(const NativeToBytecode* entry,
+                                      const NativeToBytecode* end)
 {
     MOZ_ASSERT(entry < end);
 
@@ -1288,7 +1289,7 @@ struct JitcodeMapBufferWriteSpewer
 /* static */ bool
 JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
                              JSScript** scriptList, uint32_t scriptListSize,
-                             uint32_t runLength, const CodeGeneratorShared::NativeToBytecode* entry)
+                             uint32_t runLength, const NativeToBytecode* entry)
 {
     MOZ_ASSERT(runLength > 0);
     MOZ_ASSERT(runLength <= MAX_RUN_LENGTH);
@@ -1538,8 +1539,8 @@ JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const
 /* static */ bool
 JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
                                JSScript** scriptList, uint32_t scriptListSize,
-                               const CodeGeneratorShared::NativeToBytecode* start,
-                               const CodeGeneratorShared::NativeToBytecode* end,
+                               const NativeToBytecode* start,
+                               const NativeToBytecode* end,
                                uint32_t* tableOffsetOut, uint32_t* numRegionsOut)
 {
     MOZ_ASSERT(tableOffsetOut != nullptr);
@@ -1559,7 +1560,7 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
 
     // Write out runs first.  Keep a vector tracking the positive offsets from payload
     // start to the run.
-    const CodeGeneratorShared::NativeToBytecode* curEntry = start;
+    const NativeToBytecode* curEntry = start;
     js::Vector<uint32_t, 32, SystemAllocPolicy> runOffsets;
 
     while (curEntry != end) {

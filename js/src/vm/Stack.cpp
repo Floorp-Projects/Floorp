@@ -12,6 +12,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
+#include "jit/shared/CodeGenerator-shared.h"
 #include "vm/Debugger.h"
 #include "vm/JSContext.h"
 #include "vm/Opcodes.h"
