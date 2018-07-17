@@ -1762,8 +1762,8 @@ WebConsoleActor.prototype =
    * @param object message
    *        Object with 'request' - the HTTP request details.
    */
-  sendHTTPRequest(message) {
-    const { url, method, headers, body } = message.request;
+  async sendHTTPRequest({ request }) {
+    const { url, method, headers, body } = request;
 
     // Set the loadingNode and loadGroup to the target document - otherwise the
     // request won't show up in the opened netmonitor.
@@ -1799,15 +1799,30 @@ WebConsoleActor.prototype =
 
     NetUtil.asyncFetch(channel, () => {});
 
-    const actor = this.getNetworkEventActor(channel.channelId);
-
-    // map channel to actor so we can associate future events with it
-    this._netEvents.set(channel.channelId, actor);
-
-    return {
-      from: this.actorID,
-      eventActor: actor.form()
-    };
+    // When running in Parent Process, call the NetworkMonitorActor directly.
+    const { channelId } = channel;
+    if (this.networkMonitorActor) {
+      const actor = this.networkMonitorActor.getNetworkEventActor(channelId);
+      return {
+        eventActor: actor.form()
+      };
+    } else if (this.networkMonitorActorId) {
+      // Otherwise, if the netmonitor is started, but on the parent process,
+      // pipe the data through the message manager
+      const messageManager = this.parentActor.messageManager;
+      return new Promise(resolve => {
+        const onMessage = ({ data }) => {
+          messageManager.removeMessageListener("debug:get-network-event-actor",
+            onMessage);
+          resolve({
+            eventActor: data
+          });
+        };
+        messageManager.addMessageListener("debug:get-network-event-actor", onMessage);
+        messageManager.sendAsyncMessage("debug:get-network-event-actor", { channelId });
+      });
+    }
+    return null;
   },
 
   /**
