@@ -491,8 +491,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        nsAutoString inlineData;
-        SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+        SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
         rv = nsJSUtils::CompileModule(cx, srcBuf, global, options, &module);
       }
     }
@@ -1822,9 +1821,7 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
-    JS::SourceBufferHolder srcBuf(aRequest->ScriptText().begin(),
-                                  aRequest->ScriptText().length(),
-                                  JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
     if (!JS::CompileOffThreadModule(cx, options,
                                     srcBuf,
                                     OffThreadScriptLoaderCallback,
@@ -1852,9 +1849,7 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
-    JS::SourceBufferHolder srcBuf(aRequest->ScriptText().begin(),
-                                  aRequest->ScriptText().length(),
-                                  JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
     if (!JS::CompileOffThread(cx, options,
                               srcBuf,
                               OffThreadScriptLoaderCallback,
@@ -1892,19 +1887,22 @@ ScriptLoader::CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest)
 }
 
 SourceBufferHolder
-ScriptLoader::GetScriptSource(ScriptLoadRequest* aRequest, nsAutoString& inlineData)
+ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
   // Return a SourceBufferHolder object holding the script's source text.
-  // |inlineData| is used to hold the text for inline objects.
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
-    // XXX This is inefficient - GetText makes multiple
-    // copies.
+    nsAutoString inlineData;
     aRequest->mElement->GetScriptText(inlineData);
-    return SourceBufferHolder(inlineData.get(),
-                              inlineData.Length(),
-                              SourceBufferHolder::NoOwnership);
+
+    // Copy string to JS allocated buffer and transfer ownership to
+    // SourceBufferHolder result.
+    size_t nbytes = inlineData.Length() * sizeof(char16_t);
+    JS::UniqueTwoByteChars chars(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
+    MOZ_RELEASE_ASSERT(chars);
+    memcpy(chars.get(), inlineData.get(), nbytes);
+    return SourceBufferHolder(std::move(chars), inlineData.Length());
   }
 
   return SourceBufferHolder(aRequest->ScriptText().begin(),
@@ -2354,8 +2352,7 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                                               &script);
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                nsAutoString inlineData;
-                SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+                SourceBufferHolder srcBuf = GetScriptSource(cx, aRequest);
                 rv = exec.CompileAndExec(options, srcBuf, &script);
               }
             }
