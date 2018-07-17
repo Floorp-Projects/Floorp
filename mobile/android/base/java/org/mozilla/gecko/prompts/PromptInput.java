@@ -14,7 +14,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.FocusableDatePicker;
 import org.mozilla.gecko.widget.DateTimePicker;
-import org.mozilla.gecko.widget.FocusableTimePicker;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -211,8 +210,7 @@ public abstract class PromptInput {
                                                           DateTimePicker.PickersState.WEEK, mMinValue, mMaxValue);
                 mView = (View)input;
             } else if (mType.equals("time")) {
-                // FocusableDatePicker allow us to have priority in responding to scroll events.
-                TimePicker input = new FocusableTimePicker(context);
+                TimePicker input = new TimePicker(context);
                 input.setIs24HourView(DateFormat.is24HourFormat(context));
 
                 GregorianCalendar calendar = new GregorianCalendar();
