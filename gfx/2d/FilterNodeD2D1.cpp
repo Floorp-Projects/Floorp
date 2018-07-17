@@ -472,6 +472,7 @@ GetD2D1PropsForIntSize(FilterType aType, uint32_t aIndex, UINT32 *aPropWidth, UI
 static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
 {
   switch (aType) {
+  case FilterType::OPACITY:
   case FilterType::COLOR_MATRIX:
     return CLSID_D2D1ColorMatrix;
   case FilterType::TRANSFORM:
@@ -583,6 +584,10 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
 
   if (aType == FilterType::ARITHMETIC_COMBINE) {
     effect->SetValue(D2D1_ARITHMETICCOMPOSITE_PROP_CLAMP_OUTPUT, TRUE);
+  }
+
+  if (aType == FilterType::OPACITY) {
+    return MakeAndAddRef<FilterNodeOpacityD2D1>(effect, aType);
   }
 
   RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
@@ -869,6 +874,20 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix &aMatrix)
 
   mEffect->SetValue(input, D2DMatrix(aMatrix));
 }
+
+void
+FilterNodeOpacityD2D1::SetAttribute(uint32_t aIndex, Float aValue)
+{
+  D2D1_MATRIX_5X4_F matrix = D2D1::Matrix5x4F(aValue, 0, 0, 0,
+                                              0, aValue, 0, 0,
+                                              0, 0, aValue, 0,
+                                              0, 0, 0, aValue,
+                                              0, 0, 0, 0);
+
+  mEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, matrix);
+  mEffect->SetValue(D2D1_COLORMATRIX_PROP_ALPHA_MODE, D2D1_COLORMATRIX_ALPHA_MODE_STRAIGHT);
+}
+
 
 FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
   : FilterNodeD2D1(nullptr, FilterType::CONVOLVE_MATRIX)

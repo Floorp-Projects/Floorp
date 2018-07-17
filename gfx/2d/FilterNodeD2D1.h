@@ -108,6 +108,17 @@ private:
   IntRect mSourceRect;
 };
 
+class FilterNodeOpacityD2D1 : public FilterNodeD2D1
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeOpacityD2D1, override)
+  explicit FilterNodeOpacityD2D1(ID2D1Effect *aEffect, FilterType aType)
+    : FilterNodeD2D1(aEffect, aType)
+  {}
+
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
+};
+
 class FilterNodeExtendInputAdapterD2D1 : public FilterNodeD2D1
 {
 public:
