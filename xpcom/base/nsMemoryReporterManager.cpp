@@ -25,6 +25,7 @@
 #include "nsMemoryInfoDumper.h"
 #endif
 #include "nsNetCID.h"
+#include "nsThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
@@ -39,6 +40,8 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
 #ifdef XP_WIN
+#include "mozilla/MemoryInfo.h"
+
 #include <process.h>
 #ifndef getpid
 #define getpid _getpid
@@ -58,7 +61,6 @@ using namespace dom;
 #if defined(XP_LINUX)
 
 #include "mozilla/MemoryMapping.h"
-#include "nsThread.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -1402,7 +1404,7 @@ public:
 };
 NS_IMPL_ISUPPORTS(AtomTablesReporter, nsIMemoryReporter)
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_WIN)
 class ThreadStacksReporter final : public nsIMemoryReporter
 {
   ~ThreadStacksReporter() = default;
@@ -1413,8 +1415,10 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
+#ifdef XP_LINUX
     nsTArray<MemoryMapping> mappings(1024);
     MOZ_TRY(GetMemoryMappings(mappings));
+#endif
 
     // Enumerating over active threads requires holding a lock, so we collect
     // info on all threads, and then call our reporter callbacks after releasing
@@ -1432,6 +1436,7 @@ public:
         continue;
       }
 
+#ifdef XP_LINUX
       int idx = mappings.BinaryIndexOf(thread->StackBase());
       if (idx < 0) {
         continue;
@@ -1472,6 +1477,10 @@ public:
       // matches the allocated size of the thread stack.
       MOZ_ASSERT(mappings[idx].Size() == thread->StackSize(),
                  "Mapping region size doesn't match stack allocation size");
+#else
+      auto memInfo = MemoryInfo::Get(thread->StackBase(), thread->StackSize());
+      size_t privateSize = memInfo.Committed();
+#endif
 
       threads.AppendElement(ThreadData{
         nsCString(PR_GetThreadName(thread->GetPRThread())),
@@ -1665,7 +1674,7 @@ nsMemoryReporterManager::Init()
 
   RegisterStrongReporter(new AtomTablesReporter());
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_WIN)
   RegisterStrongReporter(new ThreadStacksReporter());
 #endif
 
