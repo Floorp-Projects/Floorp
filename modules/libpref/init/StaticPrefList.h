@@ -128,7 +128,7 @@ VARCACHE_PREF(
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
 
-#ifdef NIGHTLY
+#ifdef NIGHTLY_BUILD
 # define PREF_VALUE true
 #else
 # define PREF_VALUE false
