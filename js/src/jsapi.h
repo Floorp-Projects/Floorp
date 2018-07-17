@@ -391,14 +391,15 @@ class SourceBufferHolder final
         length_(dataLength),
         ownsChars_(ownership == GiveOwnership)
     {
-        // Ensure that null buffers properly return an unowned, empty,
-        // null-terminated string.
-        static const char16_t NullChar_ = 0;
-        if (!get()) {
-            data_ = &NullChar_;
-            length_ = 0;
-            ownsChars_ = false;
-        }
+        fixEmptyBuffer();
+    }
+
+    SourceBufferHolder(UniqueTwoByteChars&& data, size_t dataLength)
+      : data_(data.release()),
+        length_(dataLength),
+        ownsChars_(true)
+    {
+        fixEmptyBuffer();
     }
 
     SourceBufferHolder(SourceBufferHolder&& other)
@@ -447,6 +448,17 @@ class SourceBufferHolder final
   private:
     SourceBufferHolder(SourceBufferHolder&) = delete;
     SourceBufferHolder& operator=(SourceBufferHolder&) = delete;
+
+    void fixEmptyBuffer() {
+        // Ensure that null buffers properly return an unowned, empty,
+        // null-terminated string.
+        static const char16_t NullChar_ = 0;
+        if (!get()) {
+            data_ = &NullChar_;
+            length_ = 0;
+            ownsChars_ = false;
+        }
+    }
 
     const char16_t* data_;
     size_t length_;
