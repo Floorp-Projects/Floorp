@@ -12,7 +12,30 @@ TestBug809674.prototype = {
   classID: Components.ID("{2df46559-da21-49bf-b863-0d7b7bbcbc73}"),
 
   /* nsIXPCTestBug809674 */
-  jsvalProperty: {},
+  methodWithOptionalArgc() {},
+
+  addArgs(x, y) {
+    return x + y;
+  },
+  addSubMulArgs(x, y, subOut, mulOut) {
+    subOut.value = x - y;
+    mulOut.value = x * y;
+    return x + y;
+  },
+  addVals(x, y) {
+    return x + y;
+  },
+  addMany(x1, x2, x3, x4, x5, x6, x7, x8) {
+    return x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8;
+  },
+
+  methodNoArgs() {
+    return 7;
+  },
+  methodNoArgsNoRetVal() {},
+
+  valProperty: {value: 42},
+  uintProperty: 123,
 };
 
 
