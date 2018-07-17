@@ -41,6 +41,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
     if (!dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    const uint8_t indexOfJSContext = info->IndexOfJSContext();
+
     // args[0] to args[NUM_ARG_REGS] hold floating point register values
     uint64_t* ap = args + NUM_ARG_REGS;
     for(i = 0; i < paramCount; i++, ap++)
@@ -48,6 +50,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+        if (i == indexOfJSContext)
+            ap++;
 
         if(param.IsOut() || !type.IsArithmetic())
         {

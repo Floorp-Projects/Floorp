@@ -37,12 +37,17 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args)
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
 
+    const uint8_t indexOfJSContext = info->IndexOfJSContext();
+
     uint64_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+        if (i == indexOfJSContext)
+            ap++;
 
         if(param.IsOut() || !type.IsArithmetic())
         {

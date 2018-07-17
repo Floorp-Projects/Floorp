@@ -60,6 +60,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     if (!dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    const uint8_t indexOfJSContext = info->IndexOfJSContext();
+
     uint32_t* ap = args;
     uint32_t gpr = 1;    // skip one GPR register
     uint32_t fpr = 0;
@@ -70,6 +72,13 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+        if (i == indexOfJSContext) {
+            if (gpr < GPR_COUNT)
+                gpr++;
+            else
+                ap++;
+        }
 
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
             if (fpr < FPR_COUNT)
