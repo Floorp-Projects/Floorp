@@ -4508,23 +4508,24 @@ nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType)
     }
 
     // Ignore the request if we have more than one tab in the window.
-    uint32_t itemCount = 0;
     if (XRE_IsContentProcess()) {
       nsCOMPtr<nsIDocShell> docShell = GetDocShell();
       if (docShell) {
         nsCOMPtr<nsITabChild> child = docShell->GetTabChild();
-        if (child) {
+        bool hasSiblings = true;
+        if (child &&
+            NS_SUCCEEDED(child->GetHasSiblings(&hasSiblings)) &&
+            hasSiblings) {
           child->SendGetTabCount(&itemCount);
         }
       }
     } else {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
-      if (!treeOwner || NS_FAILED(treeOwner->GetTabCount(&itemCount))) {
-        itemCount = 0;
+      uint32_t itemCount = 0;
+      if (treeOwner && NS_SUCCEEDED(treeOwner->GetTabCount(&itemCount)) &&
+          itemCount > 1) {
+        return false;
       }
-    }
-    if (itemCount > 1) {
-      return false;
     }
   }
 

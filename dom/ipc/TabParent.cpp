@@ -3533,22 +3533,6 @@ TabParent::GetShowInfo()
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvGetTabCount(uint32_t* aValue)
-{
-  *aValue = 0;
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
-  NS_ENSURE_TRUE(xulBrowserWindow, IPC_OK());
-
-  uint32_t tabCount;
-  nsresult rv = xulBrowserWindow->GetTabCount(&tabCount);
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  *aValue = tabCount;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabParent::RecvLookUpDictionary(const nsString& aText,
                                 nsTArray<FontRange>&& aFontRangeArray,
                                 const bool& aIsVertical,
