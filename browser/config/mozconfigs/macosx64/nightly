@@ -9,8 +9,6 @@ if test `uname -s` != Linux; then
   ac_add_options --enable-dtrace
 fi
 
-ac_add_options --enable-lto
-
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
