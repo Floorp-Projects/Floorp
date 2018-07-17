@@ -39,13 +39,14 @@ async function performTests() {
 
   ok(popup.isOpen, "popup is open");
   is(popup.itemCount, 2, "popup.itemCount is correct");
+  is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
+  is(popup.selectedIndex, 1, "popup.selectedIndex is correct");
   ok(!getJsTermCompletionValue(jsterm), "completeNode.value is empty");
 
   const items = popup.getItems().map(e => e.label);
-  const expectedItems = ["testBugB", "testBugA"];
+  const expectedItems = ["testBugA", "testBugB"];
   is(items.join("-"), expectedItems.join("-"), "getItems returns the items we expect");
 
   info("press Tab and wait for popup to hide");
