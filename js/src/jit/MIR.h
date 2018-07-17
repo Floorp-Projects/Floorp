@@ -3154,11 +3154,6 @@ class MGoto
     }
 };
 
-enum BranchDirection {
-    FALSE_BRANCH,
-    TRUE_BRANCH
-};
-
 static inline BranchDirection
 NegateBranchDirection(BranchDirection dir)
 {
