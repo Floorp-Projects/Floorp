@@ -688,6 +688,22 @@ protected:
   virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 };
 
+class FilterNodeOpacitySoftware : public FilterNodeSoftware
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeOpacitySoftware, override)
+  virtual const char* GetName() override { return "Opacity"; }
+  using FilterNodeSoftware::SetAttribute;
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
+protected:
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
+
+  Float mValue = 1.0f;
+};
+
 template<typename LightType, typename LightingType>
 class FilterNodeLightingSoftware : public FilterNodeSoftware
 {
