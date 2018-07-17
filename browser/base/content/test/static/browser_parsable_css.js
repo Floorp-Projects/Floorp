@@ -126,6 +126,10 @@ let propNameWhitelist = [
    isFromDevTools: true},
   {propName: "--bezier-grid-color",
    isFromDevTools: true},
+
+  // Bug 1476322 - Doesn't parse CSSKeyframeRules
+  {propName: "--tracking-protection-shield-color",
+   isFromDevTools: false},
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and
