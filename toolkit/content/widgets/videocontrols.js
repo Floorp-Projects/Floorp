@@ -215,7 +215,7 @@ this.VideoControlsImplPageWidget = class {
         this.updateOrientationState(this.isVideoInFullScreen);
 
         if (this.isAudioOnly) {
-          this.clickToPlay.hidden = true;
+          this.startFadeOut(this.clickToPlay, true);
         }
 
         // If the first frame hasn't loaded, kick off a throbber fade-in.
@@ -235,7 +235,7 @@ this.VideoControlsImplPageWidget = class {
 
         // Set the current status icon.
         if (this.hasError()) {
-          this.clickToPlay.hidden = true;
+          this.startFadeOut(this.clickToPlay, true);
           this.statusIcon.setAttribute("type", "error");
           this.updateErrorText();
           this.setupStatusFader(true);
@@ -283,7 +283,10 @@ this.VideoControlsImplPageWidget = class {
                 control._isHiddenExplicitly = v;
                 control._updateHiddenAttribute();
               },
-              get: () => control.hasAttribute("hidden")
+              get: () => {
+                return control.hasAttribute("hidden") ||
+                  control.classList.contains("fadeout");
+              }
             },
             hiddenByAdjustment: {
               set: (v) => {
@@ -421,7 +424,7 @@ this.VideoControlsImplPageWidget = class {
               this.startFadeOut(this.controlBar);
             }
             if (!this._triggeredByControls) {
-              this.clickToPlay.hidden = true;
+              this.startFadeOut(this.clickToPlay, true);
             }
             this._triggeredByControls = false;
             break;
@@ -462,7 +465,7 @@ this.VideoControlsImplPageWidget = class {
             if (this.video instanceof this.window.HTMLVideoElement &&
                 (this.video.videoWidth == 0 || this.video.videoHeight == 0)) {
               this.isAudioOnly = true;
-              this.clickToPlay.hidden = true;
+              this.startFadeOut(this.clickToPlay, true);
               this.startFadeIn(this.controlBar);
               this.setFullscreenButtonState();
             }
@@ -561,7 +564,7 @@ this.VideoControlsImplPageWidget = class {
             //    any of the child elements for playback during resource selection.
             if (this.hasError()) {
               this.suppressError = false;
-              this.clickToPlay.hidden = true;
+              this.startFadeOut(this.clickToPlay, true);
               this.statusIcon.setAttribute("type", "error");
               this.updateErrorText();
               this.setupStatusFader(true);
@@ -1154,8 +1157,9 @@ this.VideoControlsImplPageWidget = class {
             return;
           }
 
-          // No need to fade in again if the element is visible and not fading out
-          if (!element.hidden && !element.classList.contains("fadeout")) {
+          // No need to fade in again if the hidden property returns false
+          // (not hidden and not fading out.)
+          if (!element.hidden) {
             return;
           }
 
@@ -1167,7 +1171,8 @@ this.VideoControlsImplPageWidget = class {
             this.controlsSpacer.setAttribute("hideCursor", true);
           }
 
-          // No need to fade out if the element is already no visible.
+          // No need to fade out if the hidden property returns true
+          // (hidden or is fading out)
           if (element.hidden) {
             return;
           }
@@ -1310,7 +1315,7 @@ this.VideoControlsImplPageWidget = class {
           if (this.video.error.code != this.video.error.MEDIA_ERR_ABORTED) {
             return;
           }
-          this.statusOverlay.hidden = true;
+          this.startFadeOut(this.statusOverlay, true);
           this.suppressError = true;
           return;
         }
