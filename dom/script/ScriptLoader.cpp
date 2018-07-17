@@ -1822,9 +1822,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
+    JS::SourceBufferHolder srcBuf(aRequest->ScriptText().begin(),
+                                  aRequest->ScriptText().length(),
+                                  JS::SourceBufferHolder::NoOwnership);
     if (!JS::CompileOffThreadModule(cx, options,
-                                    aRequest->ScriptText().begin(),
-                                    aRequest->ScriptText().length(),
+                                    srcBuf,
                                     OffThreadScriptLoaderCallback,
                                     static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1850,9 +1852,11 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
+    JS::SourceBufferHolder srcBuf(aRequest->ScriptText().begin(),
+                                  aRequest->ScriptText().length(),
+                                  JS::SourceBufferHolder::NoOwnership);
     if (!JS::CompileOffThread(cx, options,
-                              aRequest->ScriptText().begin(),
-                              aRequest->ScriptText().length(),
+                              srcBuf,
                               OffThreadScriptLoaderCallback,
                               static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
