@@ -131,8 +131,7 @@ AsyncScriptCompiler::StartCompile(JSContext* aCx)
 {
     Rooted<JSObject*> global(aCx, mGlobalObject->GetGlobalJSObject());
 
-    JS::SourceBufferHolder srcBuf(mScriptText.get(), mScriptLength,
-                                  JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf(std::move(mScriptText), mScriptLength);
     if (JS::CanCompileOffThread(aCx, mOptions, mScriptLength)) {
         if (!JS::CompileOffThread(aCx, mOptions, srcBuf,
                                   OffThreadScriptLoaderCallback,
