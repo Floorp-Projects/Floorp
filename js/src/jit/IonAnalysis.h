@@ -10,13 +10,16 @@
 // This file declares various analysis passes that operate on MIR.
 
 #include "jit/JitAllocPolicy.h"
-#include "jit/MIR.h"
 
 namespace js {
 namespace jit {
 
+class MBasicBlock;
+class MCompare;
+class MDefinition;
 class MIRGenerator;
 class MIRGraph;
+class MTest;
 
 MOZ_MUST_USE bool
 PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph);
@@ -98,8 +101,6 @@ EliminateRedundantChecks(MIRGraph& graph);
 
 MOZ_MUST_USE bool
 AddKeepAliveInstructions(MIRGraph& graph);
-
-class MDefinition;
 
 // Simple linear sum of the form 'n' or 'x + n'.
 struct SimpleLinearSum

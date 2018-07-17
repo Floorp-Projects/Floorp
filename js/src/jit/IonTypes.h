@@ -934,6 +934,11 @@ typedef uint32_t TruncFlags;
 static const TruncFlags TRUNC_UNSIGNED   = TruncFlags(1) << 0;
 static const TruncFlags TRUNC_SATURATING = TruncFlags(1) << 1;
 
+enum BranchDirection {
+    FALSE_BRANCH,
+    TRUE_BRANCH
+};
+
 } // namespace jit
 } // namespace js
 

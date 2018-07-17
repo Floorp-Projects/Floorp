@@ -64,6 +64,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     if (! dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    const uint8_t indexOfJSContext = info->IndexOfJSContext();
+
     uint64_t* ap = args;
     uint64_t tempu64;
 
@@ -71,6 +73,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+        MOZ_CRASH("NYI: support implicit JSContext*, bug 1475699");
 
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
             if (i < FPR_COUNT)

@@ -993,11 +993,27 @@ public:
   }
 
   /**
+   * Get tracking cookies blocked flag for this document.
+   */
+  bool GetHasTrackingCookiesBlocked()
+  {
+    return mHasTrackingCookiesBlocked;
+  }
+
+  /**
    * Set the tracking content blocked flag for this document.
    */
   void SetHasTrackingContentBlocked(bool aHasTrackingContentBlocked)
   {
     mHasTrackingContentBlocked = aHasTrackingContentBlocked;
+  }
+
+  /**
+   * Set the tracking cookies blocked flag for this document.
+   */
+  void SetHasTrackingCookiesBlocked(bool aHasTrackingCookiesBlocked)
+  {
+    mHasTrackingCookiesBlocked = aHasTrackingCookiesBlocked;
   }
 
   /**
@@ -3904,6 +3920,9 @@ protected:
 
   // True if a document has blocked Tracking Content
   bool mHasTrackingContentBlocked : 1;
+
+  // True if a document has blocked Tracking Cookies
+  bool mHasTrackingCookiesBlocked : 1;
 
   // True if a document has loaded Tracking Content
   bool mHasTrackingContentLoaded : 1;

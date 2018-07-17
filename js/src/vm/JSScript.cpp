@@ -35,6 +35,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonCode.h"
+#include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/UniquePtr.h"

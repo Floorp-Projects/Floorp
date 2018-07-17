@@ -209,7 +209,7 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    static void DirectionChanged(const char* aPrefName, void* aData);
+    static void DirectionChanged(const char* aPrefName, XULDocument* aData);
 
     // pseudo constants
     static int32_t gRefCnt;

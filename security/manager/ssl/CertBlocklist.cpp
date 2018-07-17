@@ -628,11 +628,10 @@ CertBlocklist::IsBlocklistFresh(bool* _retval)
 
 /* static */
 void
-CertBlocklist::PreferenceChanged(const char* aPref, void* aClosure)
+CertBlocklist::PreferenceChanged(const char* aPref, CertBlocklist* aBlocklist)
 
 {
-  auto blocklist = static_cast<CertBlocklist*>(aClosure);
-  MutexAutoLock lock(blocklist->mMutex);
+  MutexAutoLock lock(aBlocklist->mMutex);
 
   MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
          ("CertBlocklist::PreferenceChanged %s changed", aPref));

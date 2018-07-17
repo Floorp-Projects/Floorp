@@ -14,7 +14,7 @@
 #include "jstypes.h"
 
 #include "builtin/Eval.h"
-#include "builtin/SIMD.h"
+#include "builtin/SIMDConstants.h"
 #include "gc/Policy.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineDebugModeOSR.h"

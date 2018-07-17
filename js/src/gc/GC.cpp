@@ -223,6 +223,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"
+#include "jit/JitRealm.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"

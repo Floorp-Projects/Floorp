@@ -46,9 +46,10 @@ StaticAutoPtr<CodeCoverageHandler> CodeCoverageHandler::instance;
 
 void CodeCoverageHandler::DumpCounters()
 {
+  printf_stderr("[CodeCoverage] Requested dump for %d.\n", getpid());
+
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
-  printf_stderr("[CodeCoverage] Requested dump.\n");
   counters_dump();
   printf_stderr("[CodeCoverage] Dump completed.\n");
 }
@@ -60,9 +61,10 @@ void CodeCoverageHandler::DumpCountersSignalHandler(int)
 
 void CodeCoverageHandler::ResetCounters()
 {
+  printf_stderr("[CodeCoverage] Requested reset for %d.\n", getpid());
+
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
-  printf_stderr("[CodeCoverage] Requested reset.\n");
   counters_reset();
   printf_stderr("[CodeCoverage] Reset completed.\n");
 }

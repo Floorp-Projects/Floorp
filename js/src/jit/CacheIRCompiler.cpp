@@ -6,6 +6,8 @@
 
 #include "jit/CacheIRCompiler.h"
 
+#include "mozilla/ScopeExit.h"
+
 #include <utility>
 
 #include "jit/IonIC.h"

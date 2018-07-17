@@ -21,12 +21,11 @@ struct Closure
 
 template<typename T, typename U>
 void
-VarChanged(const char* aPrefName, void* aData)
+VarChanged(const char* aPrefName, Closure<T, U>* aClosure)
 {
-  auto closure = static_cast<Closure<T, U>*>(aData);
-  ASSERT_EQ(*closure->mLocation, closure->mExpected);
-  ASSERT_FALSE(closure->mCalled);
-  closure->mCalled = true;
+  ASSERT_EQ(*aClosure->mLocation, aClosure->mExpected);
+  ASSERT_FALSE(aClosure->mCalled);
+  aClosure->mCalled = true;
 }
 
 void

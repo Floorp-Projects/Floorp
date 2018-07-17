@@ -201,6 +201,16 @@ nsIOService::nsIOService()
 {
 }
 
+static const char* gCallbackPrefs[] = {
+    PORT_PREF_PREFIX,
+    MANAGE_OFFLINE_STATUS_PREF,
+    NECKO_BUFFER_CACHE_COUNT_PREF,
+    NECKO_BUFFER_CACHE_SIZE_PREF,
+    NETWORK_NOTIFY_CHANGED_PREF,
+    NETWORK_CAPTIVE_PORTAL_PREF,
+    nullptr,
+};
+
 nsresult
 nsIOService::Init()
 {
@@ -219,17 +229,10 @@ nsIOService::Init()
         mRestrictedPortList.AppendElement(gBadPortList[i]);
 
     // Further modifications to the port list come from prefs
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    GetPrefBranch(getter_AddRefs(prefBranch));
-    if (prefBranch) {
-        prefBranch->AddObserver(PORT_PREF_PREFIX, this, true);
-        prefBranch->AddObserver(MANAGE_OFFLINE_STATUS_PREF, this, true);
-        prefBranch->AddObserver(NECKO_BUFFER_CACHE_COUNT_PREF, this, true);
-        prefBranch->AddObserver(NECKO_BUFFER_CACHE_SIZE_PREF, this, true);
-        prefBranch->AddObserver(NETWORK_NOTIFY_CHANGED_PREF, this, true);
-        prefBranch->AddObserver(NETWORK_CAPTIVE_PORTAL_PREF, this, true);
-        PrefsChanged(prefBranch);
-    }
+    Preferences::RegisterPrefixCallbacks(
+        PREF_CHANGE_METHOD(nsIOService::PrefsChanged),
+        gCallbackPrefs, this);
+    PrefsChanged();
 
     // Register for profile change notifications
     nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
@@ -1217,23 +1220,21 @@ nsIOService::AllowPort(int32_t inPort, const char *scheme, bool *_retval)
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
+nsIOService::PrefsChanged(const char *pref)
 {
-    if (!prefs) return;
-
     // Look for extra ports to block
     if (!pref || strcmp(pref, PORT_PREF("banned")) == 0)
-        ParsePortList(prefs, PORT_PREF("banned"), false);
+        ParsePortList(PORT_PREF("banned"), false);
 
     // ...as well as previous blocks to remove.
     if (!pref || strcmp(pref, PORT_PREF("banned.override")) == 0)
-        ParsePortList(prefs, PORT_PREF("banned.override"), true);
+        ParsePortList(PORT_PREF("banned.override"), true);
 
     if (!pref || strcmp(pref, MANAGE_OFFLINE_STATUS_PREF) == 0) {
         bool manage;
         if (mNetworkLinkServiceInitialized &&
-            NS_SUCCEEDED(prefs->GetBoolPref(MANAGE_OFFLINE_STATUS_PREF,
-                                            &manage))) {
+            NS_SUCCEEDED(Preferences::GetBool(MANAGE_OFFLINE_STATUS_PREF,
+                                              &manage))) {
             LOG(("nsIOService::PrefsChanged ManageOfflineStatus manage=%d\n", manage));
             SetManageOfflineStatus(manage);
         }
@@ -1241,8 +1242,8 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (!pref || strcmp(pref, NECKO_BUFFER_CACHE_COUNT_PREF) == 0) {
         int32_t count;
-        if (NS_SUCCEEDED(prefs->GetIntPref(NECKO_BUFFER_CACHE_COUNT_PREF,
-                                           &count)))
+        if (NS_SUCCEEDED(Preferences::GetInt(NECKO_BUFFER_CACHE_COUNT_PREF,
+                                             &count)))
             /* check for bogus values and default if we find such a value */
             if (count > 0)
                 gDefaultSegmentCount = count;
@@ -1250,8 +1251,8 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (!pref || strcmp(pref, NECKO_BUFFER_CACHE_SIZE_PREF) == 0) {
         int32_t size;
-        if (NS_SUCCEEDED(prefs->GetIntPref(NECKO_BUFFER_CACHE_SIZE_PREF,
-                                           &size)))
+        if (NS_SUCCEEDED(Preferences::GetInt(NECKO_BUFFER_CACHE_SIZE_PREF,
+                                             &size)))
             /* check for bogus values and default if we find such a value
              * the upper limit here is arbitrary. having a 1mb segment size
              * is pretty crazy.  if you remove this, consider adding some
@@ -1265,14 +1266,14 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (!pref || strcmp(pref, NETWORK_NOTIFY_CHANGED_PREF) == 0) {
         bool allow;
-        nsresult rv = prefs->GetBoolPref(NETWORK_NOTIFY_CHANGED_PREF, &allow);
+        nsresult rv = Preferences::GetBool(NETWORK_NOTIFY_CHANGED_PREF, &allow);
         if (NS_SUCCEEDED(rv)) {
             mNetworkNotifyChanged = allow;
         }
     }
 
     if (!pref || strcmp(pref, NETWORK_CAPTIVE_PORTAL_PREF) == 0) {
-        nsresult rv = prefs->GetBoolPref(NETWORK_CAPTIVE_PORTAL_PREF, &gCaptivePortalEnabled);
+        nsresult rv = Preferences::GetBool(NETWORK_CAPTIVE_PORTAL_PREF, &gCaptivePortalEnabled);
         if (NS_SUCCEEDED(rv) && mCaptivePortalService) {
             if (gCaptivePortalEnabled) {
                 static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Start();
@@ -1284,12 +1285,12 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 }
 
 void
-nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove)
+nsIOService::ParsePortList(const char *pref, bool remove)
 {
     nsAutoCString portList;
 
     // Get a pref string and chop it up into a list of ports.
-    prefBranch->GetCharPref(pref, portList);
+    Preferences::GetCString(pref, portList);
     if (!portList.IsVoid()) {
         nsTArray<nsCString> portListArray;
         ParseString(portList, ',', portListArray);
@@ -1322,13 +1323,6 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
 
         }
     }
-}
-
-void
-nsIOService::GetPrefBranch(nsIPrefBranch **result)
-{
-    *result = nullptr;
-    CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
 class nsWakeupNotifier : public Runnable
@@ -1381,11 +1375,7 @@ nsIOService::Observe(nsISupports *subject,
                      const char *topic,
                      const char16_t *data)
 {
-    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
-        if (prefBranch)
-            PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
-    } else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
+    if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mHttpHandlerAlreadyShutingDown) {
           mNetTearingDownStarted = PR_IntervalNow();
         }
@@ -1408,9 +1398,7 @@ nsIOService::Observe(nsISupports *subject,
             mNetworkLinkServiceInitialized = true;
 
             // And now reflect the preference setting
-            nsCOMPtr<nsIPrefBranch> prefBranch;
-            GetPrefBranch(getter_AddRefs(prefBranch));
-            PrefsChanged(prefBranch, MANAGE_OFFLINE_STATUS_PREF);
+            PrefsChanged(MANAGE_OFFLINE_STATUS_PREF);
 
             // Bug 870460 - Read cookie database at an early-as-possible time
             // off main thread. Hence, we have more chance to finish db query

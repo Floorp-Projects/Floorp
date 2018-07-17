@@ -2706,6 +2706,38 @@ html[dir="rtl"] .editor-mount {
   direction: ltr;
 }
 
+.theme-light {
+  --gutter-hover-background-color: #dde1e4;
+}
+
+.theme-dark {
+  --gutter-hover-background-color: #414141;
+}
+
+:not(.empty-line):not(.new-breakpoint)
+  > .CodeMirror-gutter-wrapper:hover
+  > .CodeMirror-linenumber {
+  height: 13px;
+  color: var(--theme-body-color);
+  /* Add 1px offset to the background to match it
+    with the actual breakpoint image dimensions */
+  background: linear-gradient(to bottom, transparent 1px, var(--gutter-hover-background-color) 0);
+}
+
+:not(.empty-line):not(.new-breakpoint)
+  > .CodeMirror-gutter-wrapper:hover
+  > .CodeMirror-linenumber::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    height: 12px;
+    width: 9px;
+    background-color: var(--gutter-hover-background-color);
+    mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
+    mask-size: auto 12px;
+    mask-position: right;
+  }
+
 .editor-wrapper .breakpoints {
   position: absolute;
   top: 0;
@@ -2751,6 +2783,11 @@ html[dir="rtl"] .editor-mount {
   border-radius: 5px;
   border-color: blue;
   border: 1px solid #00b6ff;
+}
+
+.editor .breakpoint {
+    position: absolute;
+    right: -2px;
 }
 
 .editor.new-breakpoint.folding-enabled svg {
