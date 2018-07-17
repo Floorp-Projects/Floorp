@@ -508,7 +508,6 @@ get_quoted_path(const NS_tchar *path)
   NS_tstrcat(c, kQuote);
   c += lenQuote;
   *c = NS_T('\0');
-  c++;
   return s;
 }
 
