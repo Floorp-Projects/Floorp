@@ -29,6 +29,7 @@ async function reloadTopContext(contentPage) {
 async function assertContextReleased(contentPage, description) {
   await contentPage.spawn(description, async assertionDescription => {
     // Force GC, see https://searchfox.org/mozilla-central/rev/b0275bc977ad7fda615ef34b822bba938f2b16fd/testing/talos/talos/tests/devtools/addon/content/damp.js#84-98
+    // and https://searchfox.org/mozilla-central/rev/33c21c060b7f3a52477a73d06ebcb2bf313c4431/xpcom/base/nsMemoryReporterManager.cpp#2574-2585,2591-2594
     let gcCount = 0;
     while (gcCount < 30 && this.contextWeakRef.get() !== null) {
       ++gcCount;
