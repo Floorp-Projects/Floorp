@@ -166,7 +166,7 @@ ScriptLoadRequest::SetTextSource()
 {
   MOZ_ASSERT(IsUnknownDataType());
   mDataType = DataType::eTextSource;
-  mScriptData.emplace(VariantType<Vector<char16_t>>());
+  mScriptData.emplace(VariantType<ScriptTextBuffer>());
 }
 
 void
@@ -175,7 +175,7 @@ ScriptLoadRequest::SetBinASTSource()
 #ifdef JS_BUILD_BINAST
   MOZ_ASSERT(IsUnknownDataType());
   mDataType = DataType::eBinASTSource;
-  mScriptData.emplace(VariantType<Vector<uint8_t>>());
+  mScriptData.emplace(VariantType<BinASTSourceBuffer>());
 #else
   MOZ_CRASH("BinAST not supported");
 #endif
