@@ -404,10 +404,22 @@
     <menupopup id="blockedPopupOptions"
                onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
                onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
-      <menuitem observes="blockedPopupAllowSite"/>
-      <menuitem observes="blockedPopupEditSettings"/>
-      <menuitem observes="blockedPopupDontShowMessage"/>
-      <menuseparator observes="blockedPopupsSeparator"/>
+      <menuitem id="blockedPopupAllowSite"
+                accesskey="&allowPopups.accesskey;"
+                oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
+      <menuitem
+#ifdef XP_WIN
+                label="&editPopupSettings.label;"
+#else
+                label="&editPopupSettingsUnix.label;"
+#endif
+                accesskey="&editPopupSettings.accesskey;"
+                oncommand="gPopupBlockerObserver.editPopupSettings();"/>
+      <menuitem id="blockedPopupDontShowMessage"
+                accesskey="&dontShowMessage.accesskey;"
+                type="checkbox"
+                oncommand="gPopupBlockerObserver.dontShowMessage();"/>
+      <menuseparator id="blockedPopupsSeparator"/>
     </menupopup>
 
     <menupopup id="autohide-context"

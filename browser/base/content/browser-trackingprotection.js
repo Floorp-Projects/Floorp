@@ -41,7 +41,7 @@ var TrackingProtection = {
     this.animatedIcon = $("#tracking-protection-icon-animatable-image");
     this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
 
-    this.broadcaster = $("#trackingProtectionBroadcaster");
+    this.appMenuButton = $("#appMenu-tp-toggle");
 
     this.enableTooltip =
       gNavigatorBundle.getString("trackingProtection.toggle.enable.tooltip");
@@ -131,14 +131,14 @@ var TrackingProtection = {
     this.content.setAttribute("enabled", this.enabled);
 
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      this.broadcaster.setAttribute("enabled", this.enabledInPrivateWindows);
-      this.broadcaster.setAttribute("aria-pressed", this.enabledInPrivateWindows);
-      this.broadcaster.setAttribute("tooltiptext", this.enabledInPrivateWindows ?
+      this.appMenuButton.setAttribute("enabled", this.enabledInPrivateWindows);
+      this.appMenuButton.setAttribute("aria-pressed", this.enabledInPrivateWindows);
+      this.appMenuButton.setAttribute("tooltiptext", this.enabledInPrivateWindows ?
         this.disableTooltipPB : this.enableTooltipPB);
     } else {
-      this.broadcaster.setAttribute("enabled", this.enabledGlobally);
-      this.broadcaster.setAttribute("aria-pressed", this.enabledGlobally);
-      this.broadcaster.setAttribute("tooltiptext", this.enabledGlobally ?
+      this.appMenuButton.setAttribute("enabled", this.enabledGlobally);
+      this.appMenuButton.setAttribute("aria-pressed", this.enabledGlobally);
+      this.appMenuButton.setAttribute("tooltiptext", this.enabledGlobally ?
         this.disableTooltip : this.enableTooltip);
     }
   },

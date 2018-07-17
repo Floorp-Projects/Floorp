@@ -1,5 +1,5 @@
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {FormattedMessage, injectIntl} from "react-intl";
-import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import React from "react";
 
@@ -15,8 +15,29 @@ export class _StartupOverlay extends React.PureComponent {
 
     this.state = {
       emailInput: "",
-      overlayRemoved: false
+      overlayRemoved: false,
+      flowId: "",
+      flowBeginTime: 0
     };
+    this.didFetch = false;
+  }
+
+  async componentWillUpdate() {
+    if (this.props.fxa_endpoint && !this.didFetch) {
+      try {
+        this.didFetch = true;
+        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow`);
+        if (response.status === 200) {
+          const {flowId, flowBeginTime} = await response.json();
+          this.setState({flowId, flowBeginTime});
+        }
+      } catch (error) {
+        this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {value: "FXA_METRICS_ERROR"}}));
+      }
+    }
+  }
+
+  componentDidMount() {
     this.initScene();
   }
 
@@ -71,8 +92,9 @@ export class _StartupOverlay extends React.PureComponent {
       return null;
     }
 
-    let termsLink = (<a href="https://accounts.firefox.com/legal/terms" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_terms_of_service" /></a>);
-    let privacyLink = (<a href="https://accounts.firefox.com/legal/privacy" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_privacy_notice" /></a>);
+    let termsLink = (<a href={`${this.props.fxa_endpoint}/legal/terms`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_terms_of_service" /></a>);
+    let privacyLink = (<a href={`${this.props.fxa_endpoint}/legal/privacy`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_privacy_notice" /></a>);
+
     return (
       <div className={`overlay-wrapper ${this.state.show ? "show" : ""}`}>
         <div className="background" />
@@ -85,13 +107,15 @@ export class _StartupOverlay extends React.PureComponent {
             </div>
             <div className="firstrun-sign-in">
               <p className="form-header"><FormattedMessage id="firstrun_form_header" /><span className="sub-header"><FormattedMessage id="firstrun_form_sub_header" /></span></p>
-              <form method="get" action="https://accounts.firefox.com" target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
+              <form method="get" action={this.props.fxa_endpoint} target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
                 <input name="service" type="hidden" value="sync" />
                 <input name="action" type="hidden" value="email" />
                 <input name="context" type="hidden" value="fx_desktop_v3" />
                 <input name="entrypoint" type="hidden" value="activity-stream-firstrun" />
                 <input name="utm_source" type="hidden" value="activity-stream" />
                 <input name="utm_campaign" type="hidden" value="firstrun" />
+                <input name="flow_id" type="hidden" value={this.state.flowId} />
+                <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
                 <span className="error">{this.props.intl.formatMessage({id: "firstrun_invalid_input"})}</span>
                 <input className="email-input" name="email" type="email" required="true" onInvalid={this.onInputInvalid} placeholder={this.props.intl.formatMessage({id: "firstrun_email_input_placeholder"})} onChange={this.onInputChange} />
                 <div className="extra-links">
@@ -113,4 +137,5 @@ export class _StartupOverlay extends React.PureComponent {
   }
 }
 
-export const StartupOverlay = connect()(injectIntl(_StartupOverlay));
+const getState = state => ({fxa_endpoint: state.Prefs.values.fxa_endpoint});
+export const StartupOverlay = connect(getState)(injectIntl(_StartupOverlay));

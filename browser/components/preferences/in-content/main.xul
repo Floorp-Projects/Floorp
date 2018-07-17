@@ -484,7 +484,7 @@
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
-      <hbox id="adminDisabled" align="start">
+      <hbox id="policyDisabled" align="start">
         <label>&update.adminDisabled;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
@@ -537,15 +537,13 @@
 #endif
 
 #ifdef MOZ_UPDATER
-  <description data-l10n-id="update-application-allow-description"></description>
-  <radiogroup id="updateRadioGroup">
+  <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
+  <radiogroup id="updateRadioGroup" preference="app.update.auto">
     <radio id="autoDesktop"
-           value="auto"
+           value="true"
            data-l10n-id="update-application-auto"/>
-    <radio value="checkOnly"
+    <radio value="false"
            data-l10n-id="update-application-check-choose"/>
-    <radio value="manual"
-           data-l10n-id="update-application-manual"/>
   </radiogroup>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"
