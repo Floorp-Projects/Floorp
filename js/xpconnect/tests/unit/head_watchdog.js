@@ -70,6 +70,7 @@ function checkWatchdog(expectInterrupt) {
   var lastWatchdogWakeup = Cu.getWatchdogTimestamp("WatchdogWakeup");
 
   return new Promise(resolve => {
+    let inBusyWait = false;
     setInterruptCallback(function() {
       // If the watchdog didn't actually trigger the operation callback, ignore
       // this call. This allows us to test the actual watchdog behavior without
@@ -77,6 +78,11 @@ function checkWatchdog(expectInterrupt) {
       if (lastWatchdogWakeup == Cu.getWatchdogTimestamp("WatchdogWakeup")) {
         return true;
       }
+      if (!inBusyWait) {
+        Assert.ok(true, "Not in busy wait, ignoring interrupt callback");
+        return true;
+      }
+
       Assert.ok(expectInterrupt, "Interrupt callback fired");
       setInterruptCallback(undefined);
       setScriptTimeout(oldTimeout);
@@ -86,7 +92,9 @@ function checkWatchdog(expectInterrupt) {
     });
 
     executeSoon(function() {
+      inBusyWait = true;
       busyWait(3000);
+      inBusyWait = false;
       Assert.ok(!expectInterrupt, "Interrupt callback didn't fire");
       setInterruptCallback(undefined);
       setScriptTimeout(oldTimeout);
