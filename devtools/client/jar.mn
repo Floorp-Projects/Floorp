@@ -257,12 +257,14 @@ devtools.jar:
     skin/images/pane-expand.svg (themes/images/pane-expand.svg)
     skin/images/help.svg (themes/images/help.svg)
     skin/images/read-only.svg (themes/images/read-only.svg)
+    skin/images/reveal.svg (themes/images/reveal.svg)
 
     # Debugger
     skin/images/debugger/angular.svg (themes/images/debugger/angular.svg)
     skin/images/debugger/arrow.svg (themes/images/debugger/arrow.svg)
     skin/images/debugger/back.svg (themes/images/debugger/back.svg)
     skin/images/debugger/blackBox.svg (themes/images/debugger/blackBox.svg)
+    skin/images/debugger/breakpoint.svg (themes/images/debugger/breakpoint.svg)
     skin/images/debugger/close.svg (themes/images/debugger/close.svg)
     skin/images/debugger/coffeescript.svg (themes/images/debugger/coffeescript.svg)
     skin/images/debugger/disable-pausing.svg (themes/images/debugger/disable-pausing.svg)

@@ -587,6 +587,25 @@ NS_IMPL_ISUPPORTS(nsSocketTransportService,
                   nsPISocketTransportService,
                   nsIObserver)
 
+static const char* gCallbackPrefs[] = {
+    SEND_BUFFER_PREF,
+    KEEPALIVE_ENABLED_PREF,
+    KEEPALIVE_IDLE_TIME_PREF,
+    KEEPALIVE_RETRY_INTERVAL_PREF,
+    KEEPALIVE_PROBE_COUNT_PREF,
+    MAX_TIME_BETWEEN_TWO_POLLS,
+    TELEMETRY_PREF,
+    MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN,
+    POLLABLE_EVENT_TIMEOUT,
+    nullptr,
+};
+
+/* static */ void
+nsSocketTransportService::PrefCallback(const char* aPref, nsSocketTransportService* aSelf)
+{
+    aSelf->UpdatePrefs();
+}
+
 // called from main thread only
 NS_IMETHODIMP
 nsSocketTransportService::Init()
@@ -612,18 +631,7 @@ nsSocketTransportService::Init()
         thread.swap(mThread);
     }
 
-    nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService) {
-        tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, false);
-        tmpPrefService->AddObserver(KEEPALIVE_ENABLED_PREF, this, false);
-        tmpPrefService->AddObserver(KEEPALIVE_IDLE_TIME_PREF, this, false);
-        tmpPrefService->AddObserver(KEEPALIVE_RETRY_INTERVAL_PREF, this, false);
-        tmpPrefService->AddObserver(KEEPALIVE_PROBE_COUNT_PREF, this, false);
-        tmpPrefService->AddObserver(MAX_TIME_BETWEEN_TWO_POLLS, this, false);
-        tmpPrefService->AddObserver(TELEMETRY_PREF, this, false);
-        tmpPrefService->AddObserver(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN, this, false);
-        tmpPrefService->AddObserver(POLLABLE_EVENT_TIMEOUT, this, false);
-    }
+    Preferences::RegisterCallbacks(PrefCallback, gCallbackPrefs, this);
     UpdatePrefs();
 
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -691,9 +699,7 @@ nsSocketTransportService::ShutdownThread()
         mThread = nullptr;
     }
 
-    nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService)
-        tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
+    Preferences::UnregisterCallbacks(PrefCallback, gCallbackPrefs, this);
 
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
@@ -1291,12 +1297,12 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
 }
 
 void
-nsSocketTransportService::UpdateSendBufferPref(nsIPrefBranch *pref)
+nsSocketTransportService::UpdateSendBufferPref()
 {
     int32_t bufferSize;
 
     // If the pref is set, honor it. 0 means use OS defaults.
-    nsresult rv = pref->GetIntPref(SEND_BUFFER_PREF, &bufferSize);
+    nsresult rv = Preferences::GetInt(SEND_BUFFER_PREF, &bufferSize);
     if (NS_SUCCEEDED(rv)) {
         mSendBufferSize = bufferSize;
         return;
@@ -1312,79 +1318,71 @@ nsSocketTransportService::UpdatePrefs()
 {
     mSendBufferSize = 0;
 
-    nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService) {
-        UpdateSendBufferPref(tmpPrefService);
+    UpdateSendBufferPref();
 
-        // Default TCP Keepalive Values.
-        int32_t keepaliveIdleTimeS;
-        nsresult rv = tmpPrefService->GetIntPref(KEEPALIVE_IDLE_TIME_PREF,
-                                        &keepaliveIdleTimeS);
-        if (NS_SUCCEEDED(rv))
-            mKeepaliveIdleTimeS = clamped(keepaliveIdleTimeS,
-                                          1, kMaxTCPKeepIdle);
+    // Default TCP Keepalive Values.
+    int32_t keepaliveIdleTimeS;
+    nsresult rv = Preferences::GetInt(KEEPALIVE_IDLE_TIME_PREF,
+                                      &keepaliveIdleTimeS);
+    if (NS_SUCCEEDED(rv))
+        mKeepaliveIdleTimeS = clamped(keepaliveIdleTimeS,
+                                      1, kMaxTCPKeepIdle);
 
-        int32_t keepaliveRetryIntervalS;
-        rv = tmpPrefService->GetIntPref(KEEPALIVE_RETRY_INTERVAL_PREF,
-                                        &keepaliveRetryIntervalS);
-        if (NS_SUCCEEDED(rv))
-            mKeepaliveRetryIntervalS = clamped(keepaliveRetryIntervalS,
-                                               1, kMaxTCPKeepIntvl);
+    int32_t keepaliveRetryIntervalS;
+    rv = Preferences::GetInt(KEEPALIVE_RETRY_INTERVAL_PREF,
+                             &keepaliveRetryIntervalS);
+    if (NS_SUCCEEDED(rv))
+        mKeepaliveRetryIntervalS = clamped(keepaliveRetryIntervalS,
+                                           1, kMaxTCPKeepIntvl);
 
-        int32_t keepaliveProbeCount;
-        rv = tmpPrefService->GetIntPref(KEEPALIVE_PROBE_COUNT_PREF,
-                                        &keepaliveProbeCount);
-        if (NS_SUCCEEDED(rv))
-            mKeepaliveProbeCount = clamped(keepaliveProbeCount,
-                                           1, kMaxTCPKeepCount);
-        bool keepaliveEnabled = false;
-        rv = tmpPrefService->GetBoolPref(KEEPALIVE_ENABLED_PREF,
-                                         &keepaliveEnabled);
-        if (NS_SUCCEEDED(rv) && keepaliveEnabled != mKeepaliveEnabledPref) {
-            mKeepaliveEnabledPref = keepaliveEnabled;
-            OnKeepaliveEnabledPrefChange();
-        }
+    int32_t keepaliveProbeCount;
+    rv = Preferences::GetInt(KEEPALIVE_PROBE_COUNT_PREF, &keepaliveProbeCount);
+    if (NS_SUCCEEDED(rv))
+        mKeepaliveProbeCount = clamped(keepaliveProbeCount,
+                                       1, kMaxTCPKeepCount);
+    bool keepaliveEnabled = false;
+    rv = Preferences::GetBool(KEEPALIVE_ENABLED_PREF, &keepaliveEnabled);
+    if (NS_SUCCEEDED(rv) && keepaliveEnabled != mKeepaliveEnabledPref) {
+        mKeepaliveEnabledPref = keepaliveEnabled;
+        OnKeepaliveEnabledPrefChange();
+    }
 
-        int32_t maxTimePref;
-        rv = tmpPrefService->GetIntPref(MAX_TIME_BETWEEN_TWO_POLLS,
-                                        &maxTimePref);
-        if (NS_SUCCEEDED(rv) && maxTimePref >= 0) {
-            mMaxTimePerPollIter = maxTimePref;
-        }
+    int32_t maxTimePref;
+    rv = Preferences::GetInt(MAX_TIME_BETWEEN_TWO_POLLS, &maxTimePref);
+    if (NS_SUCCEEDED(rv) && maxTimePref >= 0) {
+        mMaxTimePerPollIter = maxTimePref;
+    }
 
-        int32_t pollBusyWaitPeriod;
-        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD, &pollBusyWaitPeriod);
-        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriod > 0) {
-            mNetworkLinkChangeBusyWaitPeriod = PR_SecondsToInterval(pollBusyWaitPeriod);
-        }
+    int32_t pollBusyWaitPeriod;
+    rv = Preferences::GetInt(POLL_BUSY_WAIT_PERIOD, &pollBusyWaitPeriod);
+    if (NS_SUCCEEDED(rv) && pollBusyWaitPeriod > 0) {
+        mNetworkLinkChangeBusyWaitPeriod = PR_SecondsToInterval(pollBusyWaitPeriod);
+    }
 
-        int32_t pollBusyWaitPeriodTimeout;
-        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD_TIMEOUT, &pollBusyWaitPeriodTimeout);
-        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriodTimeout > 0) {
-            mNetworkLinkChangeBusyWaitTimeout = PR_SecondsToInterval(pollBusyWaitPeriodTimeout);
-        }
+    int32_t pollBusyWaitPeriodTimeout;
+    rv = Preferences::GetInt(POLL_BUSY_WAIT_PERIOD_TIMEOUT, &pollBusyWaitPeriodTimeout);
+    if (NS_SUCCEEDED(rv) && pollBusyWaitPeriodTimeout > 0) {
+        mNetworkLinkChangeBusyWaitTimeout = PR_SecondsToInterval(pollBusyWaitPeriodTimeout);
+    }
 
-        bool telemetryPref = false;
-        rv = tmpPrefService->GetBoolPref(TELEMETRY_PREF,
-                                         &telemetryPref);
-        if (NS_SUCCEEDED(rv)) {
-            mTelemetryEnabledPref = telemetryPref;
-        }
+    bool telemetryPref = false;
+    rv = Preferences::GetBool(TELEMETRY_PREF, &telemetryPref);
+    if (NS_SUCCEEDED(rv)) {
+        mTelemetryEnabledPref = telemetryPref;
+    }
 
-        int32_t maxTimeForPrClosePref;
-        rv = tmpPrefService->GetIntPref(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN,
-                                        &maxTimeForPrClosePref);
-        if (NS_SUCCEEDED(rv) && maxTimeForPrClosePref >=0) {
-            mMaxTimeForPrClosePref = PR_MillisecondsToInterval(maxTimeForPrClosePref);
-        }
+    int32_t maxTimeForPrClosePref;
+    rv = Preferences::GetInt(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN,
+                             &maxTimeForPrClosePref);
+    if (NS_SUCCEEDED(rv) && maxTimeForPrClosePref >=0) {
+        mMaxTimeForPrClosePref = PR_MillisecondsToInterval(maxTimeForPrClosePref);
+    }
 
-        int32_t pollableEventTimeout;
-        rv = tmpPrefService->GetIntPref(POLLABLE_EVENT_TIMEOUT,
-                                        &pollableEventTimeout);
-        if (NS_SUCCEEDED(rv) && pollableEventTimeout >= 0) {
-            MutexAutoLock lock(mLock);
-            mPollableEventTimeout = TimeDuration::FromSeconds(pollableEventTimeout);
-        }
+    int32_t pollableEventTimeout;
+    rv = Preferences::GetInt(POLLABLE_EVENT_TIMEOUT, &pollableEventTimeout);
+    if (NS_SUCCEEDED(rv) && pollableEventTimeout >= 0) {
+        MutexAutoLock lock(mLock);
+        mPollableEventTimeout = TimeDuration::FromSeconds(pollableEventTimeout);
     }
 
     return NS_OK;
@@ -1438,11 +1436,6 @@ nsSocketTransportService::Observe(nsISupports *subject,
                                   const char16_t *data)
 {
     SOCKET_LOG(("nsSocketTransportService::Observe topic=%s", topic));
-
-    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        UpdatePrefs();
-        return NS_OK;
-    }
 
     if (!strcmp(topic, "profile-initial-state")) {
         if (!Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false)) {

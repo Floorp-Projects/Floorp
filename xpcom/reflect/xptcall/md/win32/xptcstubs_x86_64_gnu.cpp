@@ -51,6 +51,8 @@ PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
 
     NS_ASSERTION(dispatchParams,"no place for params");
 
+    const uint8_t indexOfJSContext = info->IndexOfJSContext();
+
     uint64_t* ap = args;
     uint32_t iCount = 0;
 
@@ -59,6 +61,13 @@ PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
+
+        if (i == indexOfJSContext) {
+            if (iCount < PARAM_GPR_COUNT)
+                iCount++;
+            else
+                ap++;
+        }
 
         if(param.IsOut() || !type.IsArithmetic())
         {

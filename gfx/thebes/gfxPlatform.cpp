@@ -453,29 +453,12 @@ static const char* kObservedPrefs[] = {
     nullptr
 };
 
-class FontPrefsObserver final : public nsIObserver
+static void
+FontPrefChanged(const char* aPref, void* aData)
 {
-    ~FontPrefsObserver() = default;
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS(FontPrefsObserver, nsIObserver)
-
-NS_IMETHODIMP
-FontPrefsObserver::Observe(nsISupports *aSubject,
-                           const char *aTopic,
-                           const char16_t *someData)
-{
-    if (!someData) {
-        NS_ERROR("font pref observer code broken");
-        return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(aPref);
     NS_ASSERTION(gfxPlatform::GetPlatform(), "the singleton instance has gone");
-    gfxPlatform::GetPlatform()->FontsPrefsChanged(NS_ConvertUTF16toUTF8(someData).get());
-
-    return NS_OK;
+    gfxPlatform::GetPlatform()->FontsPrefsChanged(aPref);
 }
 
 class MemoryPressureObserver final : public nsIObserver
@@ -823,8 +806,7 @@ gfxPlatform::Init()
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
     Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
 
-    gPlatform->mFontPrefsObserver = new FontPrefsObserver();
-    Preferences::AddStrongObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
+    Preferences::RegisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
 
     GLContext::PlatformStartup();
 
@@ -998,9 +980,7 @@ gfxPlatform::Shutdown()
     Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
     gPlatform->mSRGBOverrideObserver = nullptr;
 
-    NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
-    Preferences::RemoveObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
-    gPlatform->mFontPrefsObserver = nullptr;
+    Preferences::UnregisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
 
     NS_ASSERTION(gPlatform->mMemoryPressureObserver, "mMemoryPressureObserver has already gone");
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

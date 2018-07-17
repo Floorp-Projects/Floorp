@@ -483,7 +483,7 @@ nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
 
   nsCOMPtr<nsISupportsCString> selfICString(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   if (selfICString) {
-    selfICString->SetData(nsDependentCString("self"));
+    selfICString->SetData(nsDependentCString("inline"));
   }
   nsCOMPtr<nsISupports> selfISupports(do_QueryInterface(selfICString));
 
@@ -672,7 +672,16 @@ nsCSPContext::LogViolationDetails(uint16_t aViolationType,
 
     nsCOMPtr<nsISupportsCString> selfICString(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
     if (selfICString) {
-      selfICString->SetData(nsDependentCString("self"));
+      if (aViolationType == nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL) {
+        selfICString->SetData(nsDependentCString("eval"));
+      } else if (aViolationType == nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT ||
+                 aViolationType == nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE) {
+        selfICString->SetData(nsDependentCString("inline"));
+      } else {
+        // All the other types should have a URL, but just in case, let's use
+        // 'self' here.
+        selfICString->SetData(nsDependentCString("self"));
+      }
     }
     nsCOMPtr<nsISupports> selfISupports(do_QueryInterface(selfICString));
 
@@ -881,6 +890,7 @@ StripURIForReporting(nsIURI* aURI,
 nsresult
 nsCSPContext::GatherSecurityPolicyViolationEventData(
   nsIURI* aBlockedURI,
+  const nsACString& aBlockedString,
   nsIURI* aOriginalURI,
   nsAString& aViolatedDirective,
   uint32_t aViolatedPolicyIndex,
@@ -909,6 +919,8 @@ nsCSPContext::GatherSecurityPolicyViolationEventData(
     nsAutoCString reportBlockedURI;
     StripURIForReporting(aBlockedURI, mSelfURI, reportBlockedURI);
     aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(reportBlockedURI);
+  } else {
+    aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(aBlockedString);
   }
 
   // effective-directive
@@ -1289,8 +1301,15 @@ class CSPReportSenderRunnable final : public Runnable
       mozilla::dom::SecurityPolicyViolationEventInit init;
       // mBlockedContentSource could be a URI or a string.
       nsCOMPtr<nsIURI> blockedURI = do_QueryInterface(mBlockedContentSource);
+      // if mBlockedContentSource is not a URI, it could be a string
+      nsCOMPtr<nsISupportsCString> blockedICString = do_QueryInterface(mBlockedContentSource);
+      nsAutoCString blockedDataStr;
+      if (blockedICString) {
+        blockedICString->GetData(blockedDataStr);
+      }
+
       rv = mCSPContext->GatherSecurityPolicyViolationEventData(
-        blockedURI, mOriginalURI,
+        blockedURI, blockedDataStr, mOriginalURI,
         mViolatedDirective, mViolatedPolicyIndex,
         mSourceFile, mScriptSample, mLineNum, mColumnNum,
         init);
@@ -1308,10 +1327,6 @@ class CSPReportSenderRunnable final : public Runnable
       mCSPContext->SendReports(init, mViolatedPolicyIndex);
 
       // 3) log to console (one per policy violation)
-      // if mBlockedContentSource is not a URI, it could be a string
-      nsCOMPtr<nsISupportsCString> blockedString = do_QueryInterface(mBlockedContentSource);
-
-      nsCString blockedDataStr;
 
       if (blockedURI) {
         blockedURI->GetSpec(blockedDataStr);
@@ -1324,8 +1339,6 @@ class CSPReportSenderRunnable final : public Runnable
             blockedDataStr.Append(NS_ConvertUTF16toUTF8(nsContentUtils::GetLocalizedEllipsis()));
           }
         }
-      } else if (blockedString) {
-        blockedString->GetData(blockedDataStr);
       }
 
       if (blockedDataStr.Length() > 0) {

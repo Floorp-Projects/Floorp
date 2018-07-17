@@ -178,7 +178,7 @@ GetOriginParticular::OnFunctionCall(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString suffix, origin;
-  ExtractOriginData(scope, suffix, origin);
+  ExtractOriginData extractor(scope, suffix, origin);
 
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
 

@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 #include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringFwd.h"
 #include "plstr.h"
@@ -35,8 +34,7 @@ class OriginAttributes;
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsScriptSecurityManager final : public nsIScriptSecurityManager,
-                                      public nsIObserver
+class nsScriptSecurityManager final : public nsIScriptSecurityManager
 {
 public:
     static void Shutdown();
@@ -45,7 +43,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
-    NS_DECL_NSIOBSERVER
 
     static nsScriptSecurityManager*
     GetScriptSecurityManager();
@@ -99,8 +96,8 @@ private:
     nsresult
     InitPrefs();
 
-    inline void
-    ScriptSecurityPrefChanged();
+    void
+    ScriptSecurityPrefChanged(const char* aPref = nullptr);
 
     inline void
     AddSitesToFileURIWhitelist(const nsCString& aSiteList);

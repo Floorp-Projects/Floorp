@@ -94,7 +94,7 @@ private:
   CachedPrefs();
   ~CachedPrefs();
 
-  static void OnPrefsChange(const char* aPrefName, void* );
+  static void OnPrefsChange(const char* aPrefName, CachedPrefs*);
 
   // Whether channels should be annotated as being on the tracking protection
   // list.
@@ -119,24 +119,22 @@ StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 
 // static
 void
-CachedPrefs::OnPrefsChange(const char* aPref, void* aClosure)
+CachedPrefs::OnPrefsChange(const char* aPref, CachedPrefs* aPrefs)
 {
-  CachedPrefs* prefs = static_cast<CachedPrefs*> (aClosure);
-
   if (!strcmp(aPref, URLCLASSIFIER_SKIP_HOSTNAMES)) {
     nsCString skipHostnames;
     Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES, skipHostnames);
     ToLowerCase(skipHostnames);
-    prefs->SetSkipHostnames(skipHostnames);
+    aPrefs->SetSkipHostnames(skipHostnames);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_WHITELIST)) {
     nsCString trackingWhitelist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST,
                             trackingWhitelist);
-    prefs->SetTrackingWhiteList(trackingWhitelist);
+    aPrefs->SetTrackingWhiteList(trackingWhitelist);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_TABLE)) {
     nsCString trackingBlacklist;
     Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE, trackingBlacklist);
-    prefs->SetTrackingBlackList(trackingBlacklist);
+    aPrefs->SetTrackingBlackList(trackingBlacklist);
   }
 }
 
@@ -794,33 +792,6 @@ nsChannelClassifier::HasBeenClassified(nsIChannel *aChannel)
     return tag.EqualsLiteral("1");
 }
 
-//static
-bool
-nsChannelClassifier::SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel)
-{
-  nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
-  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
-  if (!channelLoadInfo || !docURI) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> channelLoadingPrincipal = channelLoadInfo->LoadingPrincipal();
-  if (!channelLoadingPrincipal) {
-    // TYPE_DOCUMENT loads will not have a channelLoadingPrincipal. But top level
-    // loads should not be blocked by Tracking Protection, so we will return
-    // false
-    return false;
-  }
-  nsCOMPtr<nsIURI> channelLoadingURI;
-  channelLoadingPrincipal->GetURI(getter_AddRefs(channelLoadingURI));
-  if (!channelLoadingURI) {
-    return false;
-  }
-  bool equals = false;
-  nsresult rv = docURI->EqualsExceptRef(channelLoadingURI, &equals);
-  return NS_SUCCEEDED(rv) && equals;
-}
-
 // static
 nsresult
 nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
@@ -863,33 +834,13 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
   nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
 
-  // This event might come after the user has navigated to another page.
-  // To prevent showing the TrackingProtection UI on the wrong page, we need to
-  // check that the loading URI for the channel is the same as the URI currently
-  // loaded in the document.
-  if (!SameLoadingURI(doc, channel)) {
-    return NS_OK;
-  }
-
-  // Notify nsIWebProgressListeners of this security event.
-  // Can be used to change the UI state.
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  uint32_t state = 0;
-  nsCOMPtr<nsISecureBrowserUI> securityUI;
-  docShell->GetSecurityUI(getter_AddRefs(securityUI));
-  if (!securityUI) {
-    return NS_OK;
-  }
-  securityUI->GetState(&state);
+  unsigned state;
   if (aErrorCode == NS_ERROR_TRACKING_URI) {
-    doc->SetHasTrackingContentBlocked(true);
-    state |= nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
+    state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
   } else {
-    state |= nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+    state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
-
-  eventSink->OnSecurityChange(channel, state);
+  pwin->NotifyContentBlockingState(state, channel);
 
   // Log a warning to the web console.
   nsCOMPtr<nsIURI> uri;

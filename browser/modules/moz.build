@@ -145,6 +145,7 @@ EXTRA_JS_MODULES += [
     'BrowserErrorReporter.jsm',
     'BrowserUsageTelemetry.jsm',
     'BrowserWindowTracker.jsm',
+    'ClickEventHandler.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
     'ContentLinkHandler.jsm',

@@ -7,6 +7,7 @@ exports.buildQuery = undefined;
 exports.getMatchIndex = getMatchIndex;
 exports.searchSourceForHighlight = searchSourceForHighlight;
 exports.removeOverlay = removeOverlay;
+exports.clearSearch = clearSearch;
 exports.find = find;
 exports.findNext = findNext;
 exports.findPrev = findPrev;

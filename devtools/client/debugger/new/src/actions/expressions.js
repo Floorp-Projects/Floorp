@@ -20,6 +20,8 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _expressions = require("../utils/expressions");
 
+var _prefs = require("../utils/prefs");
+
 var _parser = require("../workers/parser/index");
 
 var parser = _interopRequireWildcard(_parser);
@@ -215,11 +217,12 @@ function getMappedExpression(expression) {
     sourceMaps
   }) {
     const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
+    const bindings = (0, _selectors.getSelectedFrameBindings)(getState());
 
-    if (!mappings) {
+    if (!mappings && !bindings) {
       return expression;
     }
 
-    return parser.mapOriginalExpression(expression, mappings);
+    return parser.mapExpression(expression, mappings, bindings, _prefs.features.mapExpressionBindings);
   };
 }

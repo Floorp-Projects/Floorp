@@ -17,7 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MacroForEach.h"
 
-#include "builtin/SIMD.h"
+#include "builtin/SIMDConstants.h"
 #include "jit/AtomicOp.h"
 #include "jit/BaselineIC.h"
 #include "jit/FixedList.h"
@@ -3152,11 +3152,6 @@ class MGoto
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
-};
-
-enum BranchDirection {
-    FALSE_BRANCH,
-    TRUE_BRANCH
 };
 
 static inline BranchDirection

@@ -436,7 +436,7 @@ private:
 
     // Number of XPCJSContexts currently alive.
     static uint32_t         sInstanceCount;
-    static mozilla::StaticRefPtr<WatchdogManager> sWatchdogInstance;
+    static mozilla::StaticAutoPtr<WatchdogManager> sWatchdogInstance;
     static WatchdogManager* GetWatchdogManager();
 
     // If we spend too much time running JS code in an event handler, then we
