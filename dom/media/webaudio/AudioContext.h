@@ -309,8 +309,6 @@ public:
   // unregistering would not be safe.
   void UnregisterActiveNode(AudioNode* aNode);
 
-  void UnregisterPannerNode(PannerNode* aNode);
-
   uint32_t MaxChannelCount() const;
 
   uint32_t ActiveNodeCount() const;
