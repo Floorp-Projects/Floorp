@@ -57,6 +57,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "jit/JitCommon.h"
+#include "jit/JitSpewer.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
