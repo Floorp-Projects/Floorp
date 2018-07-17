@@ -7,6 +7,4 @@ fi
 ac_add_options --enable-official-branding
 ac_add_options --enable-verify-mar
 
-ac_add_options --enable-lto
-
 . "$topsrcdir/build/mozconfig.common.override"
