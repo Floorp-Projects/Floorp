@@ -36,10 +36,6 @@ splitter[state="collapsed"][substate="before"]:-moz-locale-dir(rtl) {
   cursor: w-resize;
 }
 
-splitter:-moz-lwtheme {
-  background: none;
-}
-
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {
