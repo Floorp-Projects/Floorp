@@ -8,11 +8,34 @@ option('--enable-nodejs',
        help='Require Node.js to build')
 
 
+@depends(host)
+@imports('os')
+@imports(_from='os', _import='environ')
+def node_toolchain_search_path(host):
+    # XXX partly copied from tooltool.py; should be hoisted somewhere central
+
+    # Also add in the location to which `mach bootstrap` or
+    # `mach artifact toolchain` installs clang.
+    mozbuild_state_dir = environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(
+                                     os.path.join('~', '.mozbuild')))
+
+    if host.kernel == "WINNT":
+        mozbuild_node_path = os.path.join(mozbuild_state_dir, 'node')
+    else:
+        mozbuild_node_path = os.path.join(mozbuild_state_dir, 'node', 'bin')
+
+    # We still fallback to the PATH, since on OSes that don't have toolchain
+    # artifacts available to download, Node may be coming from $PATH.
+    path = [environ.get('PATH')]
+    updated_path = [mozbuild_node_path] + path
+
+    return updated_path
+
 # "nodejs" is first in the tuple on the assumption that it's only likely to
 # exist on systems (probably linux distros) where there is a program in the path
 # called "node" that does something else.
 nodejs = check_prog('NODEJS', ('nodejs', 'node',),
-                    allow_missing=True)
+                    allow_missing=True, paths=node_toolchain_search_path)
 
 
 @depends_if(nodejs)
