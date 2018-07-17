@@ -26,6 +26,10 @@ function run_test() {
       by: "internalType",
       then: { by: "count", count: true, bytes: true },
     },
+    domNode: {
+      by: "descriptiveType",
+      then: { by: "count", count: true, bytes: true },
+    }
   };
 
   const REPORT = {
@@ -41,7 +45,8 @@ function run_test() {
     },
     other: {
       "js::Shape": { bytes: 80, count: 8 },
-    }
+    },
+    domNode: { }
   };
 
   const EXPECTED = {
@@ -72,18 +77,18 @@ function run_test() {
                 count: 0,
                 totalCount: 22,
                 children: undefined,
-                id: 14,
-                parent: 13,
+                id: 15,
+                parent: 14,
                 reportLeafIndex: undefined,
               }
             ],
-            id: 13,
-            parent: 12,
+            id: 14,
+            parent: 13,
             reportLeafIndex: undefined,
           }
         ],
-        id: 12,
-        parent: 11,
+        id: 13,
+        parent: 12,
         reportLeafIndex: 9,
       },
       {
@@ -107,18 +112,18 @@ function run_test() {
                 count: 0,
                 totalCount: 22,
                 children: undefined,
-                id: 17,
-                parent: 16,
+                id: 18,
+                parent: 17,
                 reportLeafIndex: undefined,
               }
             ],
-            id: 16,
-            parent: 15,
+            id: 17,
+            parent: 16,
             reportLeafIndex: undefined,
           }
         ],
-        id: 15,
-        parent: 11,
+        id: 16,
+        parent: 12,
         reportLeafIndex: 7,
       },
       {
@@ -142,18 +147,18 @@ function run_test() {
                 count: 0,
                 totalCount: 22,
                 children: undefined,
-                id: 20,
-                parent: 19,
+                id: 21,
+                parent: 20,
                 reportLeafIndex: undefined,
               }
             ],
-            id: 19,
-            parent: 18,
+            id: 20,
+            parent: 19,
             reportLeafIndex: undefined,
           }
         ],
-        id: 18,
-        parent: 11,
+        id: 19,
+        parent: 12,
         reportLeafIndex: 2,
       },
       {
@@ -177,22 +182,22 @@ function run_test() {
                 count: 0,
                 totalCount: 22,
                 children: undefined,
-                id: 23,
-                parent: 22,
+                id: 24,
+                parent: 23,
                 reportLeafIndex: undefined,
               }
             ],
-            id: 22,
-            parent: 21,
+            id: 23,
+            parent: 22,
             reportLeafIndex: undefined,
           }
         ],
-        id: 21,
-        parent: 11,
+        id: 22,
+        parent: 12,
         reportLeafIndex: 5,
       },
     ],
-    id: 11,
+    id: 12,
     parent: undefined,
     reportLeafIndex: undefined,
   };
