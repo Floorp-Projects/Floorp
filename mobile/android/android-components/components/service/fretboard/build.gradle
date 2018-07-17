@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.build['minSdkVersion']
+        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+    }
+
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+    testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.dependencies['mockwebserver']}"
+}
