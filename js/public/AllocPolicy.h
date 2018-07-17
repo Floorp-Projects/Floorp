@@ -26,8 +26,9 @@ enum class AllocFunction {
     Calloc,
     Realloc
 };
-/* Policy for using system memory functions and doing no error reporting. */
-class SystemAllocPolicy
+
+/* Base class allocation policies providing allocation methods. */
+class AllocPolicyBase
 {
   public:
     template <typename T> T* maybe_pod_malloc(size_t numElems) { return js_pod_malloc<T>(numElems); }
@@ -41,6 +42,12 @@ class SystemAllocPolicy
         return maybe_pod_realloc<T>(p, oldSize, newSize);
     }
     void free_(void* p) { js_free(p); }
+};
+
+/* Policy for using system memory functions and doing no error reporting. */
+class SystemAllocPolicy : public AllocPolicyBase
+{
+  public:
     void reportAllocOverflow() const {}
     bool checkSimulatedOOM() const {
         return !js::oom::ShouldFailWithOOM();
@@ -58,7 +65,7 @@ MOZ_COLD JS_FRIEND_API(void) ReportOutOfMemory(JSContext* cx);
  * FIXME bug 647103 - rewrite this in terms of temporary allocation functions,
  * not the system ones.
  */
-class TempAllocPolicy
+class TempAllocPolicy : public AllocPolicyBase
 {
     JSContext* const cx_;
 
@@ -81,23 +88,8 @@ class TempAllocPolicy
     MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_(cx) {}
 
     template <typename T>
-    T* maybe_pod_malloc(size_t numElems) {
-        return js_pod_malloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* maybe_pod_calloc(size_t numElems) {
-        return js_pod_calloc<T>(numElems);
-    }
-
-    template <typename T>
-    T* maybe_pod_realloc(T* prior, size_t oldSize, size_t newSize) {
-        return js_pod_realloc<T>(prior, oldSize, newSize);
-    }
-
-    template <typename T>
     T* pod_malloc(size_t numElems) {
-        T* p = maybe_pod_malloc<T>(numElems);
+        T* p = this->maybe_pod_malloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
             p = onOutOfMemoryTyped<T>(AllocFunction::Malloc, numElems);
         return p;
@@ -105,7 +97,7 @@ class TempAllocPolicy
 
     template <typename T>
     T* pod_calloc(size_t numElems) {
-        T* p = maybe_pod_calloc<T>(numElems);
+        T* p = this->maybe_pod_calloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
             p = onOutOfMemoryTyped<T>(AllocFunction::Calloc, numElems);
         return p;
@@ -113,7 +105,7 @@ class TempAllocPolicy
 
     template <typename T>
     T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
-        T* p2 = maybe_pod_realloc<T>(prior, oldSize, newSize);
+        T* p2 = this->maybe_pod_realloc<T>(prior, oldSize, newSize);
         if (MOZ_UNLIKELY(!p2))
             p2 = onOutOfMemoryTyped<T>(AllocFunction::Realloc, newSize, prior);
         return p2;
