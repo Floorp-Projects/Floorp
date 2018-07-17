@@ -19,6 +19,7 @@
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRealm.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)

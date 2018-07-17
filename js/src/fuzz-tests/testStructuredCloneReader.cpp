@@ -11,6 +11,7 @@
 #include "jsapi.h"
 
 #include "fuzz-tests/tests.h"
+#include "js/StructuredClone.h"
 #include "vm/Interpreter.h"
 
 #include "vm/JSContext-inl.h"

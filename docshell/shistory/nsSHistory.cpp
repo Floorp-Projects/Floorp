@@ -155,6 +155,8 @@ public:
 
   nsSHistoryObserver() {}
 
+  void PrefChanged(const char* aPref);
+
 protected:
   ~nsSHistoryObserver() {}
 };
@@ -163,15 +165,20 @@ StaticRefPtr<nsSHistoryObserver> gObserver;
 
 NS_IMPL_ISUPPORTS(nsSHistoryObserver, nsIObserver)
 
+void
+nsSHistoryObserver::PrefChanged(const char* aPref)
+{
+  nsSHistory::UpdatePrefs();
+  nsSHistory::GloballyEvictContentViewers();
+
+}
+
 NS_IMETHODIMP
 nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData)
 {
-  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    nsSHistory::UpdatePrefs();
-    nsSHistory::GloballyEvictContentViewers();
-  } else if (!strcmp(aTopic, "cacheservice:empty-cache") ||
-             !strcmp(aTopic, "memory-pressure")) {
+  if (!strcmp(aTopic, "cacheservice:empty-cache") ||
+      !strcmp(aTopic, "memory-pressure")) {
     nsSHistory::GloballyEvictAllContentViewers();
   }
 
@@ -351,7 +358,9 @@ nsSHistory::Startup()
   // but keep the per SHistory cached viewer limit constant
   if (!gObserver) {
     gObserver = new nsSHistoryObserver();
-    Preferences::AddStrongObservers(gObserver, kObservedPrefs);
+    Preferences::RegisterCallbacks(
+        PREF_CHANGE_METHOD(nsSHistoryObserver::PrefChanged),
+        kObservedPrefs, gObserver.get());
 
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
@@ -373,7 +382,10 @@ void
 nsSHistory::Shutdown()
 {
   if (gObserver) {
-    Preferences::RemoveObservers(gObserver, kObservedPrefs);
+    Preferences::UnregisterCallbacks(
+        PREF_CHANGE_METHOD(nsSHistoryObserver::PrefChanged),
+        kObservedPrefs, gObserver.get());
+
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
     if (obsSvc) {

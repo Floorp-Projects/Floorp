@@ -197,6 +197,8 @@ private:
   void ShutdownTimer();
   void NotifyObservers(const char* aTopic);
 
+  void PrefChanged(const char* aPref);
+
   bool GetInternal(const nsCString& aKey, Entry* aEntry, DataStorageType aType,
                    const MutexAutoLock& aProofOfLock);
   nsresult PutInternal(const nsCString& aKey, Entry& aEntry,

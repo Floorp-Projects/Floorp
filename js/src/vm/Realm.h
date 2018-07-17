@@ -18,12 +18,12 @@
 
 #include <stddef.h>
 
+#include "builtin/Array.h"
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Compartment.h"
-#include "vm/GlobalObject.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"

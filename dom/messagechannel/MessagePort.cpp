@@ -748,6 +748,8 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     // Disconnect the entangled port and connect it to PBackground.
     if (!port->ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
+      mState = eStateDisentangled;
+      UpdateMustKeepAlive();
       return;
     }
 

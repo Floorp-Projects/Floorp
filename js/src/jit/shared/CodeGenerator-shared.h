@@ -11,6 +11,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
+#include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/LIR.h"
 #include "jit/MacroAssembler.h"
@@ -37,17 +38,6 @@ class OutOfLineTruncateSlow;
 struct ReciprocalMulConstants {
     int64_t multiplier;
     int32_t shiftAmount;
-};
-
-// This should be nested in CodeGeneratorShared, but it is used in
-// optimization tracking implementation and nested classes cannot be
-// forward-declared.
-struct NativeToTrackedOptimizations
-{
-    // [startOffset, endOffset]
-    CodeOffset startOffset;
-    CodeOffset endOffset;
-    const TrackedOptimizations* optimizations;
 };
 
 class CodeGeneratorShared : public LElementVisitor
@@ -110,13 +100,6 @@ class CodeGeneratorShared : public LElementVisitor
     js::Vector<PatchableTLEvent, 0, SystemAllocPolicy> patchableTLEvents_;
     js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif
-
-  public:
-    struct NativeToBytecode {
-        CodeOffset nativeOffset;
-        InlineScriptTree* tree;
-        jsbytecode* pc;
-    };
 
   protected:
     js::Vector<NativeToBytecode, 0, SystemAllocPolicy> nativeToBytecodeList_;

@@ -11,6 +11,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 
 #include "vm/JSContext-inl.h"

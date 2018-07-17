@@ -12,6 +12,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
+#include "jit/shared/CodeGenerator-shared.h"
 #include "vm/Debugger.h"
 #include "vm/JSContext.h"
 #include "vm/Opcodes.h"
@@ -1719,6 +1720,8 @@ jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx, uint8_
     if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
         for (uint32_t i = 0; i < p->value().length(); i++)
             Debugger::handleUnrecoverableIonBailoutError(cx, p->value()[i]);
+        RematerializedFrame::FreeInVector(p->value());
+        rematerializedFrames_->remove(p);
     }
 }
 
