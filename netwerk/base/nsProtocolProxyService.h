@@ -416,7 +416,7 @@ private:
                                   bool isSyncOK,
                                   nsIEventTarget *mainThreadEventTarget);
     bool                          mIsShutdown;
-    nsCOMPtr<nsIEventTarget> mProxySettingTarget;
+    nsCOMPtr<nsIThread>           mProxySettingThread;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProtocolProxyService, NS_PROTOCOL_PROXY_SERVICE_IMPL_CID)
