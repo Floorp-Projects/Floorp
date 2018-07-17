@@ -445,12 +445,14 @@ class UrlInputFragment :
         if (toolbarBackgroundView != null) {
             if (reverse) {
                 toolbarBackgroundView.setBackgroundResource(R.color.searchInActiveBackgroundColor)
+                toolbarBottomBorder.visibility = View.VISIBLE
                 if (!isOverlay) {
                     dismissView?.visibility = View.GONE
                     menuView?.visibility = View.VISIBLE
                 }
             } else {
                 toolbarBackgroundView.setBackgroundResource(R.drawable.background_active)
+                toolbarBottomBorder.visibility = View.GONE
             }
         }
     }
