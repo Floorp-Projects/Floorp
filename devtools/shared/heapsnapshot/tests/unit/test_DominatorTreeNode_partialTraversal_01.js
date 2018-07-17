@@ -38,7 +38,8 @@ const mockSnapshot = {
     objects: { count: 0, bytes: 0 },
     strings: { count: 0, bytes: 0 },
     scripts: { count: 0, bytes: 0 },
-    other: { SomeType: { count: 1, bytes: 10 } }
+    other: { SomeType: { count: 1, bytes: 10 } },
+    domNode: { count: 0, bytes: 0 },
   })
 };
 
@@ -51,6 +52,7 @@ const breakdown = {
     by: "internalType",
     then: { by: "count", count: true, bytes: true }
   },
+  domNode: { by: "count", count: true, bytes: true },
 };
 
 const expected = {

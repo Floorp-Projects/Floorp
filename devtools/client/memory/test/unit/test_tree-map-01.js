@@ -32,8 +32,8 @@ add_task(async function() {
   };
   drawBox(ctx, node, borderWidth, dragZoom, padding);
   ok(true, JSON.stringify([ctx, fillRectValues, strokeRectValues]));
-  equal(ctx.fillStyle, "hsl(210,60%,70%)", "The fillStyle is set");
-  equal(ctx.strokeStyle, "hsl(210,60%,35%)", "The strokeStyle is set");
+  equal(ctx.fillStyle, "hsl(204,60%,70%)", "The fillStyle is set");
+  equal(ctx.strokeStyle, "hsl(204,60%,35%)", "The strokeStyle is set");
   equal(ctx.lineWidth, 1, "The lineWidth is set");
   deepEqual(fillRectValues, [10.5, 20.5, 49, 69], "Draws a filled rectangle");
   deepEqual(strokeRectValues, [10.5, 20.5, 49, 69], "Draws a stroked rectangle");
