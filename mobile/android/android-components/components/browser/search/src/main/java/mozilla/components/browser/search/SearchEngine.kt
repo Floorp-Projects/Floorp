@@ -12,13 +12,15 @@ import java.util.Locale
 /**
  * A data class representing a search engine.
  */
-class  SearchEngine internal constructor(
+class SearchEngine internal constructor(
     val identifier: String,
     val name: String,
     val icon: Bitmap,
     private val resultsUris: List<Uri>,
     private val suggestUri: Uri? = null
 ) {
+    internal val canProvideSearchSuggestions: Boolean = suggestUri != null
+
     init {
         if (resultsUris.isEmpty()) {
             throw IllegalArgumentException("Results uri list should not be empty!")
@@ -36,7 +38,7 @@ class  SearchEngine internal constructor(
     }
 
     /**
-     * Attempts to builds a Uri to get suggestions from this search engine
+     * Builds a URL to get suggestions from this search engine.
      */
     fun buildSuggestionsURL(searchTerm: String): String? {
         val suggestUri = suggestUri ?: return null

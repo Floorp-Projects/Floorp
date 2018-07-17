@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.search
+package mozilla.components.browser.search.suggestions
 
 import kotlinx.coroutines.experimental.runBlocking
-import org.json.JSONArray
+import mozilla.components.browser.search.SearchEngineParser
 import org.json.JSONException
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -27,7 +28,7 @@ class SearchSuggestionClientTest {
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK_RESPONSE)
+        val client = SearchSuggestionClient.create(searchEngine, GOOGLE_MOCK_RESPONSE) ?: return
 
         runBlocking {
             val results = client.getSuggestions("firefox")
@@ -43,7 +44,7 @@ class SearchSuggestionClientTest {
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/qwant.xml")
 
-        val client = SearchSuggestionClient(searchEngine, QWANT_MOCK_RESPONSE)
+        val client = SearchSuggestionClient.create(searchEngine, QWANT_MOCK_RESPONSE) ?: return
 
         runBlocking {
             val results = client.getSuggestions("firefox")
@@ -59,10 +60,20 @@ class SearchSuggestionClientTest {
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient(searchEngine, SERVER_ERROR_RESPONSE)
+        val client = SearchSuggestionClient.create(searchEngine, SERVER_ERROR_RESPONSE) ?: return
 
         runBlocking {
             client.getSuggestions("firefox")
         }
+    }
+
+    @Test
+    fun `Check that a search engine without a suggestURI cant create a SearchSuggestionClient`() {
+        val searchEngine = SearchEngineParser().load(
+                RuntimeEnvironment.application.assets,
+                "google", "searchplugins/drae.xml")
+
+        val client = SearchSuggestionClient.create(searchEngine, { "no-op" })
+        assertNull(client)
     }
 }
