@@ -13,6 +13,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitSpewer.h"
+#include "jit/shared/Assembler-shared.h"
 #include "js/TrackedOptimizationInfo.h"
 #include "vm/TypeInference.h"
 
