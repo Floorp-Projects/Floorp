@@ -186,22 +186,16 @@ promise_test(async t => {
 
   let receivedEvents = [];
   anim.oncancel = event => receivedEvents.push(event);
-  anim.onfinish = event => receivedEvents.push(event);
-  div.ontransitionstart = event => receivedEvents.push(event);
   div.ontransitioncancel = event => receivedEvents.push(event);
 
   await anim.ready;
 
-  anim.finish();
   anim.cancel();
 
   await waitForAnimationFrames(1);
 
   assert_array_equals(receivedEvents.map(event => event.type),
-    [ 'transitionstart',
-      'finish',
-      'cancel',
-      'transitioncancel' ],
+    [ 'cancel', 'transitioncancel' ],
     'Playback and CSS events for the same transition should be sorted by ' +
     'schedule event time and composite order');
 }, 'Sorts events for the same transition');
