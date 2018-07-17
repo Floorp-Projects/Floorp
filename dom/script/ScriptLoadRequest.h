@@ -171,21 +171,28 @@ public:
   void SetBinASTSource();
   void SetBytecode();
 
-  const Vector<char16_t>& ScriptText() const {
+  using ScriptTextBuffer = Vector<char16_t, 0, JSMallocAllocPolicy>;
+  using BinASTSourceBuffer = Vector<uint8_t>;
+
+  const ScriptTextBuffer& ScriptText() const
+  {
     MOZ_ASSERT(IsTextSource());
-    return mScriptData->as<Vector<char16_t>>();
+    return mScriptData->as<ScriptTextBuffer>();
   }
-  Vector<char16_t>& ScriptText() {
+  ScriptTextBuffer& ScriptText()
+  {
     MOZ_ASSERT(IsTextSource());
-    return mScriptData->as<Vector<char16_t>>();
+    return mScriptData->as<ScriptTextBuffer>();
   }
-  const Vector<uint8_t>& ScriptBinASTData() const {
+  const BinASTSourceBuffer& ScriptBinASTData() const
+  {
     MOZ_ASSERT(IsBinASTSource());
-    return mScriptData->as<Vector<uint8_t>>();
+    return mScriptData->as<BinASTSourceBuffer>();
   }
-  Vector<uint8_t>& ScriptBinASTData() {
+  BinASTSourceBuffer& ScriptBinASTData()
+  {
     MOZ_ASSERT(IsBinASTSource());
-    return mScriptData->as<Vector<uint8_t>>();
+    return mScriptData->as<BinASTSourceBuffer>();
   }
 
   enum class ScriptMode : uint8_t {
@@ -252,7 +259,11 @@ public:
   // Holds script source data for non-inline scripts. Don't use nsString so we
   // can give ownership to jsapi. Holds either char16_t source text characters
   // or BinAST encoded bytes depending on mSourceEncoding.
-  Maybe<Variant<Vector<char16_t>, Vector<uint8_t>>> mScriptData;
+  Maybe<Variant<ScriptTextBuffer, BinASTSourceBuffer>> mScriptData;
+
+  // The length of script source text, set when reading completes. This is used
+  // since mScriptData is cleared when the source is passed to the JS engine.
+  size_t mScriptTextLength;
 
   // Holds the SRI serialized hash and the script bytecode for non-inline
   // scripts.
