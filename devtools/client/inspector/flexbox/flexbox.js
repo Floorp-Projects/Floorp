@@ -9,8 +9,14 @@ const { throttle } = require("devtools/client/inspector/shared/utils");
 const {
   clearFlexbox,
   updateFlexbox,
+  updateFlexboxColor,
   updateFlexboxHighlighted,
 } = require("./actions/flexbox");
+
+loader.lazyRequireGetter(this, "parseURL", "devtools/client/shared/source-utils", true);
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+
+const FLEXBOX_COLOR = "#9400FF";
 
 class FlexboxInspector {
   constructor(inspector, window) {
@@ -22,6 +28,7 @@ class FlexboxInspector {
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
     this.onReflow = throttle(this.onReflow, 500, this);
+    this.onSetFlexboxOverlayColor = this.onSetFlexboxOverlayColor.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleFlexboxHighlighter = this.onToggleFlexboxHighlighter.bind(this);
     this.onUpdatePanel = this.onUpdatePanel.bind(this);
@@ -86,8 +93,19 @@ class FlexboxInspector {
 
   getComponentProps() {
     return {
+      getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
+      onSetFlexboxOverlayColor: this.onSetFlexboxOverlayColor,
       onToggleFlexboxHighlighter: this.onToggleFlexboxHighlighter,
     };
+  }
+
+  /**
+   * Returns an object containing the custom flexbox colors for different hosts.
+   *
+   * @return {Object} that maps a host name to a custom flexbox color for a given host.
+   */
+  async getCustomFlexboxColors() {
+    return await asyncStorage.getItem("flexboxInspectorHostColors") || {};
   }
 
   /**
@@ -191,6 +209,31 @@ class FlexboxInspector {
   }
 
   /**
+   * Handler for a change in the flexbox overlay color picker for a flex container.
+   *
+   * @param  {String} color
+   *         A hex string representing the color to use.
+   */
+  async onSetFlexboxOverlayColor(color) {
+    this.store.dispatch(updateFlexboxColor(color));
+
+    const { flexbox } = this.store.getState();
+
+    if (flexbox.highlighted) {
+      this.highlighters.showFlexboxHighlighter(flexbox.nodeFront);
+    }
+
+    const currentUrl = this.inspector.target.url;
+    // Get the hostname, if there is no hostname, fall back on protocol
+    // ex: `data:` uri, and `about:` pages
+    const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
+    const customFlexboxColors = await this.getCustomFlexboxColors();
+
+    customFlexboxColors[hostname] = color;
+    await asyncStorage.setItem("flexboxInspectorHostColors", customFlexboxColors);
+  }
+
+  /**
    * Handler for the inspector sidebar "select" event. Updates the flexbox panel if it
    * is visible.
    */
@@ -241,7 +284,7 @@ class FlexboxInspector {
    * with new flexbox data.
    *
    * @param  {FlexboxFront|Null} flexboxFront
-   *         THe FlexboxFront of the flex container for the current node selection.
+   *         The FlexboxFront of the flex container for the current node selection.
    */
   async update(flexboxFront) {
     // Stop refreshing if the inspector or store is already destroyed or no node is
@@ -292,8 +335,16 @@ class FlexboxInspector {
     const highlighted = this._highlighters &&
       nodeFront == this.highlighters.flexboxHighlighterShown;
 
+    const currentUrl = this.inspector.target.url;
+    // Get the hostname, if there is no hostname, fall back on protocol
+    // ex: `data:` uri, and `about:` pages
+    const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
+    const customColors = await this.getCustomFlexboxColors();
+    const color = customColors[hostname] ? customColors[hostname] : FLEXBOX_COLOR;
+
     this.store.dispatch(updateFlexbox({
       actorID: flexboxFront.actorID,
+      color,
       highlighted,
       nodeFront,
     }));
