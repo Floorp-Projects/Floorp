@@ -17,10 +17,8 @@ class Flexbox extends PureComponent {
   static get propTypes() {
     return {
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
-      getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
-      onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
     };
@@ -29,10 +27,8 @@ class Flexbox extends PureComponent {
   render() {
     const {
       flexbox,
-      getSwatchColorPickerTooltip,
       setSelectedNode,
       onHideBoxModelHighlighter,
-      onSetFlexboxOverlayColor,
       onShowBoxModelHighlighterForNode,
       onToggleFlexboxHighlighter,
     } = this.props;
@@ -50,10 +46,8 @@ class Flexbox extends PureComponent {
               FlexboxItem({
                 key: flexbox.id,
                 flexbox,
-                getSwatchColorPickerTooltip,
                 setSelectedNode,
                 onHideBoxModelHighlighter,
-                onSetFlexboxOverlayColor,
                 onShowBoxModelHighlighterForNode,
                 onToggleFlexboxHighlighter,
               })
