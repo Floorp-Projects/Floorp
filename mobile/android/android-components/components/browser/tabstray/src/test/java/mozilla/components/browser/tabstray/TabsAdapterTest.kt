@@ -51,7 +51,6 @@ class TabsAdapterTest {
 
         val holder1 = adapter.createViewHolder(view, 0)
         val holder2 = adapter.createViewHolder(view, 0)
-        val holder3 = adapter.createViewHolder(view, 0)
 
         val session1: Session = mock()
         val session2: Session = mock()
