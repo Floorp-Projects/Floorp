@@ -316,18 +316,22 @@ nsFieldSetFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
 {
   nscoord legendWidth = 0;
   nscoord contentWidth = 0;
-  if (nsIFrame* legend = GetLegend()) {
-    legendWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, legend, aType);
-  }
+  if (!StyleDisplay()->IsContainSize()) {
+    // Both inner and legend are children, and if the fieldset is
+    // size-contained they should not contribute to the intrinsic size.
+    if (nsIFrame* legend = GetLegend()) {
+      legendWidth =
+        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, legend, aType);
+    }
 
-  if (nsIFrame* inner = GetInner()) {
-    // Ignore padding on the inner, since the padding will be applied to the
-    // outer instead, and the padding computed for the inner is wrong
-    // for percentage padding.
-    contentWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner, aType,
-                                           nsLayoutUtils::IGNORE_PADDING);
+    if (nsIFrame* inner = GetInner()) {
+      // Ignore padding on the inner, since the padding will be applied to the
+      // outer instead, and the padding computed for the inner is wrong
+      // for percentage padding.
+      contentWidth =
+        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner, aType,
+                                             nsLayoutUtils::IGNORE_PADDING);
+    }
   }
 
   return std::max(legendWidth, contentWidth);
@@ -588,6 +592,21 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize finalSize(wm, contentRect.ISize(wm) + border.IStartEnd(wm),
                         mLegendSpace + border.BStartEnd(wm) +
                         (inner ? inner->BSize(wm) : 0));
+  if (aReflowInput.mStyleDisplay->IsContainSize()) {
+    // If we're size-contained, then we must set finalSize to be what
+    // it'd be if we had no children (i.e. if we had no legend and if
+    // 'inner' were empty).  Note: normally the fieldset's own padding
+    // (which we still must honor) would be accounted for as part of
+    // inner's size (see kidReflowInput.Init() call above).  So: since
+    // we're disregarding sizing information from 'inner', we need to
+    // account for that padding ourselves here.
+    nscoord contentBoxBSize =
+      aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE
+      ? aReflowInput.ApplyMinMaxBSize(0)
+      : aReflowInput.ComputedBSize();
+    finalSize.BSize(wm) = contentBoxBSize +
+      aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm);
+  }
   aDesiredSize.SetSize(wm, finalSize);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
@@ -669,6 +688,11 @@ bool
 nsFieldSetFrame::GetVerticalAlignBaseline(WritingMode aWM,
                                           nscoord* aBaseline) const
 {
+  if (StyleDisplay()->IsContainSize()) {
+    // If we are size-contained, our child 'inner' should not
+    // affect how we calculate our baseline.
+    return false;
+  }
   nsIFrame* inner = GetInner();
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
   if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
@@ -684,6 +708,11 @@ nsFieldSetFrame::GetNaturalBaselineBOffset(WritingMode          aWM,
                                            BaselineSharingGroup aBaselineGroup,
                                            nscoord*             aBaseline) const
 {
+  if (StyleDisplay()->IsContainSize()) {
+    // If we are size-contained, our child 'inner' should not
+    // affect how we calculate our baseline.
+    return false;
+  }
   nsIFrame* inner = GetInner();
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
   if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
