@@ -20,7 +20,7 @@ var gAppUpdater;
 
 function onUnload(aEvent) {
   if (gAppUpdater.isChecking)
-    gAppUpdater.checker.stopChecking(Ci.nsIUpdateChecker.CURRENT_CHECK);
+    gAppUpdater.checker.stopCurrentCheck();
   // Safe to call even when there isn't a download in progress.
   gAppUpdater.removeDownloadListener();
   gAppUpdater = null;
@@ -60,8 +60,8 @@ function appUpdater(options = {}) {
   manualLink.href = manualURL;
   document.getElementById("failedLink").href = manualURL;
 
-  if (this.updateDisabledAndLocked) {
-    this.selectPanel("adminDisabled");
+  if (this.updateDisabledByPolicy) {
+    this.selectPanel("policyDisabled");
     return;
   }
 
@@ -78,16 +78,6 @@ function appUpdater(options = {}) {
   if (this.isDownloading) {
     this.startDownload();
     // selectPanel("downloading") is called from setupDownloadingUI().
-    return;
-  }
-
-  // Honor the "Never check for updates" option by not only disabling background
-  // update checks, but also in the About dialog, by presenting a
-  // "Check for updates" button.
-  // If updates are found, the user is then asked if he wants to "Update to <version>".
-  if (!this.updateEnabled ||
-      Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
-    this.selectPanel("checkForUpdates");
     return;
   }
 
@@ -135,25 +125,14 @@ appUpdater.prototype =
            this.um.activeUpdate.state == "downloading";
   },
 
-  // true when updating is disabled by an administrator.
-  get updateDisabledAndLocked() {
-    return (!this.updateEnabled &&
-           Services.prefs.prefIsLocked("app.update.enabled")) ||
-           (Services.policies &&
-           !Services.policies.isAllowed("appUpdate"));
-  },
-
-  // true when updating is enabled.
-  get updateEnabled() {
-    try {
-      return Services.prefs.getBoolPref("app.update.enabled");
-    } catch (e) { }
-    return true; // Firefox default is true
+  // true when updating has been disabled by enterprise policy
+  get updateDisabledByPolicy() {
+    return Services.policies && !Services.policies.isAllowed("appUpdate");
   },
 
   // true when updating in background is enabled.
   get backgroundUpdateEnabled() {
-    return this.updateEnabled &&
+    return !this.updateDisabledByPolicy &&
            gAppUpdater.aus.canStageUpdates;
   },
 

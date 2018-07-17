@@ -16,6 +16,9 @@ lazy_static! {
         ("app.update.auto", Pref::new(false)),
 
         // Disable automatically upgrading Firefox
+        ("app.update.disabledForTesting", Pref::new(true)),
+        // app.update.enabled is being removed. Once Firefox 62 becomes stable,
+        // the line below can be removed as well.
         ("app.update.enabled", Pref::new(false)),
 
         // Enable the dump function, which sends messages to the system

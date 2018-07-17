@@ -18,7 +18,8 @@ body {
   font-size: 16px;
   overflow-y: scroll;
 
-  &.hide-onboarding, &.hide-main > #onboarding-overlay-button {
+  &.hide-onboarding > #onboarding-overlay-button,
+  &.hide-main > #onboarding-overlay-button {
     display: none !important;
   }
 

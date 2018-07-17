@@ -168,7 +168,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["asrouter.snippetsUrl", {
     title: "A custom URL for the AS router snippets",
-    value: ""
+    value: "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br"
   }]
 ]);
 

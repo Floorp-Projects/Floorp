@@ -219,7 +219,7 @@
           <toolbarbutton id="appMenu-tp-toggle"
                          closemenu="none"
                          class="subviewkeynav"
-                         observes="trackingProtectionBroadcaster"
+                         enabled="false"
                          oncommand="TrackingProtection.onGlobalToggleCommand();" />
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator" hidden="true" />

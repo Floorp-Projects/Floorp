@@ -99,6 +99,12 @@
       height: 30px;
       padding: 4px 0 6px;
       font-size: 15px;
+
+      &:focus,
+      &.active {
+        box-shadow: $shadow-primary;
+        transition: box-shadow 150ms;
+      }
     }
   }
 }

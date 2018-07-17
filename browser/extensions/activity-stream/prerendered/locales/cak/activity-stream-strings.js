@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Tatz'ib'aj ri ataqoya'l",
   "firstrun_form_sub_header": "richin yatok pa Firefox Sync.",
   "firstrun_email_input_placeholder": "Taqoya'l",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Najowäx ütz chi taqoya'l",
   "firstrun_extra_legal_links": "Toq nasamajij qa, nawojqaj ri {terms} chuqa' {privacy}.",
   "firstrun_terms_of_service": "Kojqanem Samaj",
   "firstrun_privacy_notice": "Ichinan Na'oj",

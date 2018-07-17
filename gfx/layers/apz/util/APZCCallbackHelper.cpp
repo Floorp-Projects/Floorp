@@ -19,15 +19,16 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/TouchEvents.h"
-#include "nsContentUtils.h"
 #include "nsContainerFrame.h"
-#include "nsIScrollableFrame.h"
-#include "nsLayoutUtils.h"
-#include "nsIInterfaceRequestorUtils.h"
+#include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIDocument.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIScrollableFrame.h"
+#include "nsLayoutUtils.h"
+#include "nsPrintfCString.h"
 #include "nsRefreshDriver.h"
 #include "nsString.h"
 #include "nsView.h"
@@ -105,20 +106,38 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const FrameMetrics& aMetrics, bool& aS
     return geckoScrollPosition;
   }
 
-  // If this is the root content with overflow:hidden, then APZ should not
-  // allow scrolling in such a way that moves the layout viewport.
+  // If this frame is overflow:hidden, then the expectation is that it was
+  // sized in a way that respects its scrollable boundaries. For the root
+  // frame, this means that it cannot be scrolled in such a way that it moves
+  // the layout viewport. For a non-root frame, this means that it cannot be
+  // scrolled at all.
   //
-  // If this is overflow:hidden, but not the root content, then
-  // nsLayoutUtils::CalculateScrollableRectForFrame should have sized the
-  // scrollable rect in a way that prevents APZ from scrolling it at all.
+  // In either case, |targetScrollPosition| should be the same as
+  // |geckoScrollPosition| here.
   //
-  // In either case, targetScrollPosition should be the same as
-  // geckoScrollPosition here.
-  if (aFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
-    MOZ_ASSERT(targetScrollPosition.y == geckoScrollPosition.y);
+  // However, this is slightly racy. We query the overflow property of the
+  // scroll frame at the time the repaint request arrives at the main thread
+  // (i.e., right now), but APZ made the decision of whether or not to allow
+  // scrolling based on the information it had at the time it processed the
+  // scroll event. The overflow property could have changed at some time
+  // between the two events and so APZ may have computed a scrollable region
+  // that is larger than what is actually allowed.
+  //
+  // Currently, we allow the scroll position to change even though the frame is
+  // overflow:hidden (that is, we take |targetScrollPosition|). If this turns
+  // out to be problematic, an alternative solution would be to ignore the
+  // scroll position change (that is, use |geckoScrollPosition|).
+  if (aFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
+      targetScrollPosition.y != geckoScrollPosition.y) {
+    NS_WARNING(nsPrintfCString(
+          "APZCCH: targetScrollPosition.y (%f) != geckoScrollPosition.y (%f)",
+          targetScrollPosition.y, geckoScrollPosition.y).get());
   }
-  if (aFrame->GetScrollbarStyles().mHorizontal == NS_STYLE_OVERFLOW_HIDDEN) {
-    MOZ_ASSERT(targetScrollPosition.x == geckoScrollPosition.x);
+  if (aFrame->GetScrollbarStyles().mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
+      targetScrollPosition.x != geckoScrollPosition.x) {
+    NS_WARNING(nsPrintfCString(
+          "APZCCH: targetScrollPosition.x (%f) != geckoScrollPosition.x (%f)",
+          targetScrollPosition.x, geckoScrollPosition.x).get());
   }
 
   // If the scrollable frame is currently in the middle of an async or smooth

@@ -504,6 +504,10 @@ class FennecInstance(GeckoInstance):
 class DesktopInstance(GeckoInstance):
     desktop_prefs = {
         # Disable application updates
+        "app.update.disabledForTesting": True,
+        "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer": True,
+        # app.update.enabled is being removed. Once Firefox 62 becomes stable,
+        # the line below can be removed as well.
         "app.update.enabled": False,
 
         # Enable output of dump()

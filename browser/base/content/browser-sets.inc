@@ -133,29 +133,9 @@
                  label="&bookmarkThisPageCmd.label;"
                  bookmarklabel="&bookmarkThisPageCmd.label;"
                  editlabel="&editThisBookmarkCmd.label;"/>
-
-    <!-- popup blocking menu items -->
-    <broadcaster id="blockedPopupAllowSite"
-                 accesskey="&allowPopups.accesskey;"
-                 oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
-    <broadcaster id="blockedPopupEditSettings"
-#ifdef XP_WIN
-                 label="&editPopupSettings.label;"
-#else
-                 label="&editPopupSettingsUnix.label;"
-#endif
-                 accesskey="&editPopupSettings.accesskey;"
-                 oncommand="gPopupBlockerObserver.editPopupSettings();"/>
-    <broadcaster id="blockedPopupDontShowMessage"
-                 accesskey="&dontShowMessage.accesskey;"
-                 type="checkbox"
-                 oncommand="gPopupBlockerObserver.dontShowMessage();"/>
-    <broadcaster id="blockedPopupsSeparator"/>
     <broadcaster id="isImage"/>
     <broadcaster id="canViewSource"/>
     <broadcaster id="isFrameImage"/>
-    <broadcaster id="singleFeedMenuitemState" disabled="true"/>
-    <broadcaster id="multipleFeedsMenuState" hidden="true"/>
 
     <!-- Sync broadcasters -->
     <!-- A broadcaster of a number of attributes suitable for "sync now" UI -
@@ -173,16 +153,6 @@
                  sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
-
-    <broadcaster id="devtoolsMenuBroadcaster_PageSource"
-                 label="&pageSourceCmd.label;"
-                 key="key_viewSource"
-                 command="View:PageSource">
-      <observes element="canViewSource" attribute="disabled"/>
-    </broadcaster>
-    <broadcaster id="reportPhishingBroadcaster" disabled="true"/>
-    <broadcaster id="reportPhishingErrorBroadcaster" disabled="true"/>
-    <broadcaster id="trackingProtectionBroadcaster" enabled="false"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">

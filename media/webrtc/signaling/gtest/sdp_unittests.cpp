@@ -1904,6 +1904,7 @@ const std::string kBasicAudioVideoOffer =
 "a=end-of-candidates" CRLF
 "a=ssrc:1111 foo" CRLF
 "a=ssrc:1111 foo:bar" CRLF
+"a=ssrc:1111 msid:1d0cdb4e-5934-4f0f-9f88-40392cb60d31 315b086a-5cb6-4221-89de-caf0b038c79d" CRLF
 "a=imageattr:120 send * recv *" CRLF
 "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
 "a=rid:bar recv pt=120;max-width=800;max-height=600" CRLF
@@ -2157,11 +2158,15 @@ TEST_P(NewSdpTest, CheckSsrc)
   ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
       SdpAttribute::kSsrcAttribute));
   ssrcs = mSdp->GetMediaSection(1).GetAttributeList().GetSsrc().mSsrcs;
-  ASSERT_EQ(2U, ssrcs.size());
+  ASSERT_EQ(3U, ssrcs.size());
   ASSERT_EQ(1111U, ssrcs[0].ssrc);
   ASSERT_EQ("foo", ssrcs[0].attribute);
   ASSERT_EQ(1111U, ssrcs[1].ssrc);
   ASSERT_EQ("foo:bar", ssrcs[1].attribute);
+  ASSERT_EQ(1111U, ssrcs[2].ssrc);
+  ASSERT_EQ("msid:1d0cdb4e-5934-4f0f-9f88-40392cb60d31 "
+                 "315b086a-5cb6-4221-89de-caf0b038c79d",
+            ssrcs[2].attribute);
 }
 
 TEST_P(NewSdpTest, CheckRtpmap) {

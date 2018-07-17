@@ -18,10 +18,10 @@ var gSafeBrowsing = {
       docURI && docURI.spec.startsWith("about:blocked?e=deceptiveBlocked");
 
     // Show/hide the appropriate menu item.
-    document.getElementById("menu_HelpPopup_reportPhishingtoolmenu")
-            .hidden = isPhishingPage;
-    document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu")
-            .hidden = !isPhishingPage;
+    const reportMenu = document.getElementById("menu_HelpPopup_reportPhishingtoolmenu");
+    reportMenu.hidden = isPhishingPage;
+    const reportErrorMenu = document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu");
+    reportErrorMenu.hidden = !isPhishingPage;
 
     // Now look at the currentURI to learn which page we were trying
     // to browse to.
@@ -30,18 +30,16 @@ var gSafeBrowsing = {
 
     const disabledByPolicy = !Services.policies.isAllowed("feedbackCommands");
 
-    const reportBroadcaster = document.getElementById("reportPhishingBroadcaster");
     if (disabledByPolicy || isPhishingPage || !isReportablePage) {
-      reportBroadcaster.setAttribute("disabled", "true");
+      reportMenu.setAttribute("disabled", "true");
     } else {
-      reportBroadcaster.removeAttribute("disabled");
+      reportMenu.removeAttribute("disabled");
     }
 
-    const reportErrorBroadcaster = document.getElementById("reportPhishingErrorBroadcaster");
     if (disabledByPolicy || !isPhishingPage || !isReportablePage) {
-      reportErrorBroadcaster.setAttribute("disabled", "true");
+      reportErrorMenu.setAttribute("disabled", "true");
     } else {
-      reportErrorBroadcaster.removeAttribute("disabled");
+      reportErrorMenu.removeAttribute("disabled");
     }
   },
 

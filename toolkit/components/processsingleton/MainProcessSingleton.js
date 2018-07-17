@@ -22,8 +22,7 @@ MainProcessSingleton.prototype = {
     engineURL = NetUtil.newURI(engineURL, null, pageURL);
 
     let iconURL;
-    let tabbrowser = browser.getTabBrowser();
-    if (browser.mIconURL && (!tabbrowser || tabbrowser.shouldLoadFavIcon(pageURL)))
+    if (browser.mIconURL && browser.mIconURL.startsWith("data:"))
       iconURL = NetUtil.newURI(browser.mIconURL);
 
     try {
@@ -32,9 +31,6 @@ MainProcessSingleton.prototype = {
 
       if (!isWeb.includes(engineURL.scheme))
         throw "Unsupported search engine URL: " + engineURL.spec;
-
-      if (iconURL && !isWeb.includes(iconURL.scheme))
-        throw "Unsupported search icon URL: " + iconURL.spec;
 
       if (Services.policies &&
           !Services.policies.isAllowed("installSearchEngine")) {

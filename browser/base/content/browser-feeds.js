@@ -227,12 +227,12 @@ var FeedHandler = {
 
   get _feedMenuitem() {
     delete this._feedMenuitem;
-    return this._feedMenuitem = document.getElementById("singleFeedMenuitemState");
+    return this._feedMenuitem = document.getElementById("subscribeToPageMenuitem");
   },
 
   get _feedMenupopup() {
     delete this._feedMenupopup;
-    return this._feedMenupopup = document.getElementById("multipleFeedsMenuState");
+    return this._feedMenupopup = document.getElementById("subscribeToPageMenupopup");
   },
 
   /**

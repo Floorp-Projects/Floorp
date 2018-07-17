@@ -5461,22 +5461,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.auto boolean preference is not the default value of true (true values are not submitted)"
   },
-  "UPDATE_NOT_PREF_UPDATE_ENABLED_EXTERNAL": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
-  },
-  "UPDATE_NOT_PREF_UPDATE_ENABLED_NOTIFY": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
-  },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],

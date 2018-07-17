@@ -14,7 +14,7 @@ export const FAKE_LOCAL_PROVIDER = {id: "onboarding", type: "local", messages: F
 export const FAKE_REMOTE_MESSAGES = [
   {id: "qux", template: "simple_template", content: {title: "Qux", body: "hello world"}}
 ];
-export const FAKE_REMOTE_PROVIDER = {id: "remotey", type: "remote", url: "http://fake.com/endpoint"};
+export const FAKE_REMOTE_PROVIDER = {id: "remotey", type: "remote", url: "http://fake.com/endpoint", endpointPref: "remotePref"};
 
 // Stubs methods on RemotePageManager
 export class FakeRemotePageManager {

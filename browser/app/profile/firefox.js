@@ -123,13 +123,6 @@ pref("app.update.log", false);
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
 
-// Whether or not app updates are enabled
-#ifdef MOZ_UPDATER
-pref("app.update.enabled", true);
-#else
-pref("app.update.enabled", false);
-#endif
-
 // Whether or not to use the doorhanger application update UI.
 pref("app.update.doorhanger", true);
 
@@ -145,9 +138,8 @@ pref("app.update.download.promptMaxAttempts", 2);
 // download a fresh installer.
 pref("app.update.elevation.promptMaxAttempts", 2);
 
-// If set to true, the Update Service will automatically download updates when
-// app updates are enabled per the app.update.enabled preference and if the user
-// can apply updates.
+// If set to true, the Update Service will automatically download updates if the
+// user can apply updates.
 pref("app.update.auto", true);
 
 // If set to true, the Update Service will present no UI for any event.
@@ -434,7 +426,11 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 #endif
 
 // Tabbed browser
+#if defined(NIGHTLY_BUILD)
+pref("browser.tabs.multiselect", true);
+#else
 pref("browser.tabs.multiselect", false);
+#endif
 pref("browser.tabs.20FpsThrobber", false);
 pref("browser.tabs.30FpsThrobber", false);
 pref("browser.tabs.closeTabByDblclick", false);

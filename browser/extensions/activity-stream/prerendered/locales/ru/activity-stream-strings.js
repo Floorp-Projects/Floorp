@@ -96,7 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Введите ваш адрес электронной почты",
   "firstrun_form_sub_header": "чтобы продолжить использовать синхронизацию Firefox.",
   "firstrun_email_input_placeholder": "Эл. почта",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Введите действующий адрес электронной почты",
   "firstrun_extra_legal_links": "Продолжая, вы соглашаетесь с {terms} и {privacy}.",
   "firstrun_terms_of_service": "условиями службы",
   "firstrun_privacy_notice": "политикой приватности",
