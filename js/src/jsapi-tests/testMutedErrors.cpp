@@ -54,8 +54,7 @@ eval(const char* asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
     options.setMutedErrors(mutedErrors)
            .setFileAndLine("", 0);
 
-    JS::SourceBufferHolder srcBuf(chars.get(), len, JS::SourceBufferHolder::NoOwnership);
-    return JS::Evaluate(cx, options, srcBuf, rval);
+    return JS::Evaluate(cx, options, chars.get(), len, rval);
 }
 
 bool

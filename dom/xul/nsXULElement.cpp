@@ -2417,7 +2417,7 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
 
     if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aSrcBuf.length())) {
         if (!JS::CompileOffThread(cx, options,
-                                  aSrcBuf,
+                                  aSrcBuf.get(), aSrcBuf.length(),
                                   OffThreadScriptReceiverCallback,
                                   static_cast<void*>(aOffThreadReceiver))) {
             return NS_ERROR_OUT_OF_MEMORY;
