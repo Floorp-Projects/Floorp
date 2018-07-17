@@ -378,7 +378,7 @@ namespace JS {
  *    JS::SourceBufferHolder srcBuf(chars, length, JS::SourceBufferHolder::GiveOwnership);
  *    JS::Compile(cx, options, srcBuf);
  */
-class MOZ_STACK_CLASS SourceBufferHolder final
+class SourceBufferHolder final
 {
   public:
     enum Ownership {
@@ -3648,7 +3648,7 @@ CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t 
 
 extern JS_PUBLIC_API(bool)
 CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
-                 const char16_t* chars, size_t length,
+                 JS::SourceBufferHolder& srcBuf,
                  OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
@@ -3659,7 +3659,7 @@ CancelOffThreadScript(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       const char16_t* chars, size_t length,
+                       JS::SourceBufferHolder& srcBuf,
                        OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSObject*)

@@ -4743,7 +4743,9 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
     if (!job)
         return false;
 
-    if (!JS::CompileOffThread(cx, options, job->sourceChars(), length,
+    JS::SourceBufferHolder srcBuf(job->sourceChars(), length,
+                                  JS::SourceBufferHolder::NoOwnership);
+    if (!JS::CompileOffThread(cx, options, srcBuf,
                               OffThreadCompileScriptCallback, job))
     {
         job->cancel();
@@ -4829,7 +4831,9 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
     if (!job)
         return false;
 
-    if (!JS::CompileOffThreadModule(cx, options, job->sourceChars(), length,
+    JS::SourceBufferHolder srcBuf(job->sourceChars(), length,
+                                  JS::SourceBufferHolder::NoOwnership);
+    if (!JS::CompileOffThreadModule(cx, options, srcBuf,
                                     OffThreadCompileScriptCallback, job))
     {
         job->cancel();

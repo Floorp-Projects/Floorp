@@ -4215,11 +4215,11 @@ JS::CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& option
 
 JS_PUBLIC_API(bool)
 JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
-                     const char16_t* chars, size_t length,
+                     JS::SourceBufferHolder& srcBuf,
                      OffThreadCompileCallback callback, void* callbackData)
 {
-    MOZ_ASSERT(CanCompileOffThread(cx, options, length));
-    return StartOffThreadParseScript(cx, options, chars, length, callback, callbackData);
+    MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
+    return StartOffThreadParseScript(cx, options, srcBuf, callback, callbackData);
 }
 
 JS_PUBLIC_API(JSScript*)
@@ -4240,11 +4240,11 @@ JS::CancelOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 
 JS_PUBLIC_API(bool)
 JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                           const char16_t* chars, size_t length,
+                           JS::SourceBufferHolder& srcBuf,
                            OffThreadCompileCallback callback, void* callbackData)
 {
-    MOZ_ASSERT(CanCompileOffThread(cx, options, length));
-    return StartOffThreadParseModule(cx, options, chars, length, callback, callbackData);
+    MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
+    return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
 }
 
 JS_PUBLIC_API(JSObject*)
