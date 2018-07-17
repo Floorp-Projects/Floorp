@@ -81,9 +81,19 @@ add_task(async function testPermissionDeniedDismiss() {
   gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(false, gBrowser);
 
+  // Pressing ESC results in a temporary block permission on the browser object.
+  // So the global permission for the URL should still be unknown, but the browser
+  // should have a block permission with a temporary scope.
   is(getPermission(testPageURL, "persistent-storage"),
-     Ci.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.UNKNOWN_ACTION,
      "Correct permission set");
+
+  let tempBlock = SitePermissions.getAllForBrowser(gBrowser.selectedBrowser)
+                                 .find(p => p.id == "persistent-storage" &&
+                                            p.state == SitePermissions.BLOCK &&
+                                            p.scope == SitePermissions.SCOPE_TEMPORARY);
+  ok(tempBlock, "Should have a temporary block permission on active browser");
+
   unregisterAllPopupEventHandlers();
   gBrowser.removeCurrentTab();
   removePermission(testPageURL, "persistent-storage");

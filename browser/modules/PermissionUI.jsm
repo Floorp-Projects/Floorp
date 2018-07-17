@@ -312,10 +312,9 @@ var PermissionPromptPrototype = {
           }
 
           if (this.permissionKey) {
-
-            // Permanently store permission.
-            if ((state && state.checkboxChecked) ||
+            if ((state && state.checkboxChecked && state.source != "esc-press") ||
                 promptAction.scope == SitePermissions.SCOPE_PERSISTENT) {
+              // Permanently store permission.
               let scope = SitePermissions.SCOPE_PERSISTENT;
               // Only remember permission for session if in PB mode.
               if (PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
