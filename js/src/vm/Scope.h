@@ -587,6 +587,20 @@ class FunctionScope : public Scope
         // or having defaults will have a nullptr name in the name array to
         // advance the argument slot.
         //
+        // Rest parameter binding is also included in positional formals.
+        // This also becomes nullptr if destructuring.
+        //
+        // The number of positional formals is equal to function.length if
+        // there's no rest, function.length+1 otherwise.
+        //
+        // Destructuring parameters and destructuring rest are included in
+        // "other formals" below.
+        //
+        // "vars" contains the following:
+        //   * function's top level vars if !script()->hasParameterExprs()
+        //   * special internal names (arguments, .this, .generator) if
+        //     they're used.
+        //
         // positional formals - [0, nonPositionalFormalStart)
         //      other formals - [nonPositionalParamStart, varStart)
         //               vars - [varStart, length)
