@@ -18,6 +18,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "pratom.h"
 
+using namespace mozilla;
+
 NS_IMPL_CLASSINFO(SystemPrincipal, nullptr,
                   nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_SYSTEMPRINCIPAL_CID)
