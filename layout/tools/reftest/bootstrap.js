@@ -7,6 +7,17 @@ const Cm = Components.manager;
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+function processTerminated() {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observe(subject, topic) {
+      if (topic == "ipc:content-shutdown") {
+        Services.obs.removeObserver(observe, topic);
+        resolve();
+      }
+    }, "ipc:content-shutdown");
+  });
+}
+
 var WindowListener = {
   onOpenWindow: function(win) {
     Services.wm.removeListener(WindowListener);
@@ -47,9 +58,16 @@ function startup(data, reason) {
                 .getService(Ci.nsIWindowWatcher);
   let dummy = wwatch.openWindow(null, "about:blank", "dummy",
                                 "chrome,dialog=no,left=800,height=200,width=200,all",null);
-  dummy.onload = function() {
+  dummy.onload = async function() {
     // Close pre-existing window
     orig.close();
+
+    ChromeUtils.import("chrome://reftest/content/PerTestCoverageUtils.jsm");
+    if (PerTestCoverageUtils.enabled) {
+      // In PerTestCoverage mode, wait for the process belonging to the window we just closed
+      // to be terminated, to avoid its shutdown interfering when we reset the counters.
+      await processTerminated();
+    }
 
     dummy.focus();
     wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
