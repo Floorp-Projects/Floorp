@@ -739,6 +739,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         start = firstChild;
       }
 
+      // A shadow root is not included in the children returned by the walker, so we can
+      // not use it as start node. However it will be displayed as the first node, so
+      // we use firstChild as a fallback.
+      if (isShadowRoot(start)) {
+        start = firstChild;
+      }
+
       // Start by reading backward from the starting point if we're centering...
       const backwardWalker = getFilteredWalker(start);
       if (backwardWalker.currentNode != firstChild && options.center) {

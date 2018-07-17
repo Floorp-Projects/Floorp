@@ -15,3 +15,6 @@ DevToolsModules(
     'animation.js',
     'current-time-timer.js'
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Animation Inspector')

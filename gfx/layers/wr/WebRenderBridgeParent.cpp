@@ -1658,7 +1658,9 @@ WebRenderBridgeParent::FlushRendering()
     return;
   }
 
-  // XXX: do we need to flush any scene building here?
+  // This gets called during e.g. window resizes, so we need to flush the
+  // scene (which has the display list at the new window size).
+  FlushSceneBuilds();
   FlushFrameGeneration();
   FlushFramePresentation();
 }
