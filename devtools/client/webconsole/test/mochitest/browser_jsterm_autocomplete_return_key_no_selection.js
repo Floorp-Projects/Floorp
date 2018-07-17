@@ -50,15 +50,18 @@ async function performTests() {
 
   info("press Return and wait for popup to hide");
   const onPopUpClose = popup.once("popup-closed");
-  executeSoon(() => EventUtils.synthesizeKey("KEY_Enter"));
+  EventUtils.synthesizeKey("KEY_Enter");
   await onPopUpClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(jsterm.getInputValue(), "", "inputNode is empty after KEY_Enter");
+  is(jsterm.getInputValue(), "window.testBugA",
+    "input was completed with the first item of the popup");
   ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+
+  EventUtils.synthesizeKey("KEY_Enter");
+  is(jsterm.getInputValue(), "", "input is empty after KEY_Enter");
 
   const state = ui.consoleOutput.getStore().getState();
   const entries = getHistoryEntries(state);
-  is(entries[entries.length - 1], "window.testBug",
-     "jsterm history is correct");
+  is(entries[entries.length - 1], "window.testBugA", "jsterm history is correct");
 }
