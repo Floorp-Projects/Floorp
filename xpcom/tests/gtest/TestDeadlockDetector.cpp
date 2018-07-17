@@ -211,6 +211,7 @@ Sanity5_Child()
     return 0;
 }
 
+#if !defined(DISABLE_STORAGE_SANITY5_DEATH_TEST)
 TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity5DeathTest))
 {
     const char* const regex =
@@ -222,6 +223,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity5DeathTest))
         "###!!! ASSERTION: Potential deadlock detected.*";
     ASSERT_DEATH_IF_SUPPORTED(Sanity5_Child(), regex);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Multithreaded tests
