@@ -20,7 +20,6 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 
 loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
-loader.lazyRequireGetter(this, "NetworkEventActor", "devtools/server/actors/network-event", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
@@ -74,8 +73,6 @@ function WebConsoleActor(connection, parentActor) {
 
   this.dbg = this.parentActor.makeDebugger();
 
-  this._netEvents = new Map();
-  this._networkEventActorsByURL = new Map();
   this._gripDepth = 0;
   this._listeners = new Set();
   this._lastConsoleInputEvaluation = undefined;
@@ -129,25 +126,6 @@ WebConsoleActor.prototype =
    * @type object
    */
   _prefs: null,
-
-  /**
-   * Holds a map between nsIChannel objects and NetworkEventActors for requests
-   * created with sendHTTPRequest or found via the network listener.
-   *
-   * @private
-   * @type Map
-   */
-  _netEvents: null,
-
-  /**
-   * Holds a map from URL to NetworkEventActors for requests noticed by the network
-   * listener.  Requests are added when they start, so the actor might not yet have all
-   * data for the request until it has completed.
-   *
-   * @private
-   * @type Map
-   */
-  _networkEventActorsByURL: null,
 
   /**
    * Holds a set of all currently registered listeners.
@@ -395,7 +373,6 @@ WebConsoleActor.prototype =
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
-    this._netEvents.clear();
     this.dbg.enabled = false;
     this.dbg = null;
     this.conn = null;
@@ -1734,58 +1711,6 @@ WebConsoleActor.prototype =
       message: this.prepareConsoleMessageForRemote(message),
     };
     this.conn.send(packet);
-  },
-
-  /**
-   * Handler for network events. This method is invoked when a new network event
-   * is about to be recorded.
-   *
-   * @see NetworkEventActor
-   * @see NetworkMonitor from webconsole/utils.js
-   *
-   * @param object event
-   *        The initial network request event information.
-   * @return object
-   *         A new NetworkEventActor is returned. This is used for tracking the
-   *         network request and response.
-   */
-  onNetworkEvent: function(event) {
-    const actor = this.getNetworkEventActor(event.channelId);
-    actor.init(event);
-
-    this._networkEventActorsByURL.set(actor._request.url, actor);
-
-    const packet = {
-      from: this.actorID,
-      type: "networkEvent",
-      eventActor: actor.form()
-    };
-
-    this.conn.send(packet);
-
-    return actor;
-  },
-
-  /**
-   * Get the NetworkEventActor for a nsIHttpChannel, if it exists,
-   * otherwise create a new one.
-   *
-   * @param string channelId
-   *        The id of the channel for the network event.
-   * @return object
-   *         The NetworkEventActor for the given channel.
-   */
-  getNetworkEventActor: function(channelId) {
-    let actor = this._netEvents.get(channelId);
-    if (actor) {
-      // delete from map as we should only need to do this check once
-      this._netEvents.delete(channelId);
-      return actor;
-    }
-
-    actor = new NetworkEventActor(this);
-    this._actorPool.addActor(actor);
-    return actor;
   },
 
   /**
