@@ -39,9 +39,9 @@
   <textbox id="t11" idmod="t6" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
   <textbox id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
 </hbox>
-<listbox id="t12" idmod="t7">
-  <listitem label="Item One"/>
-</listbox>
+<richlistbox id="t12" idmod="t7">
+  <richlistitem><label value="Item One"/></richlistitem>
+</richlistbox>
 
 <hbox>
   <!-- the tabindex attribute does not apply to non-controls, so it

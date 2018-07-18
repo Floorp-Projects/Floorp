@@ -15,7 +15,6 @@ toolkit.jar:
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/groupbox.css
-  skin/classic/global/listbox.css
   skin/classic/global/menu.css
   skin/classic/global/menulist.css
 * skin/classic/global/notification.css
@@ -52,7 +51,6 @@ toolkit.jar:
   skin/classic/global/arrow/panelarrow-horizontal.svg                (arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg                  (arrow/panelarrow-vertical.svg)
   skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
-  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
   skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                              (dirListing/up.png)

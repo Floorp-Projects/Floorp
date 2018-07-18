@@ -22,6 +22,7 @@
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"
+#include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsWidgetInitData.h"
 #include "mozilla/Attributes.h"

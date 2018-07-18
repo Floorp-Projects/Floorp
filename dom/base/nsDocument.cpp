@@ -255,7 +255,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
-#include "mozilla/dom/ListBoxObject.h"
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
@@ -6361,8 +6360,6 @@ nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
       boxObject = new MenuBoxObject();
     } else if (tag == nsGkAtoms::tree) {
       boxObject = new TreeBoxObject();
-    } else if (tag == nsGkAtoms::listbox) {
-      boxObject = new ListBoxObject();
     } else {
       boxObject = new BoxObject();
     }

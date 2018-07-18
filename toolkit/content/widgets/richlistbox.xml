@@ -505,10 +505,6 @@
 
   <binding id="richlistitem"
            extends="chrome://global/content/bindings/listbox.xml#listitem">
-    <content>
-      <children/>
-    </content>
-
     <implementation>
       <field name="selectedByMouseOver">false</field>
 

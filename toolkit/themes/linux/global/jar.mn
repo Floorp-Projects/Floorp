@@ -14,7 +14,6 @@ toolkit.jar:
 *  skin/classic/global/findBar.css
 *  skin/classic/global/global.css
    skin/classic/global/groupbox.css
-   skin/classic/global/listbox.css
    skin/classic/global/menu.css
    skin/classic/global/menulist.css
    skin/classic/global/netError.css

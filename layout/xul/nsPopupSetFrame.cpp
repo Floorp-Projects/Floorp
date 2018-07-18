@@ -15,6 +15,8 @@
 #include "nsIPopupContainer.h"
 #include "nsMenuPopupFrame.h"
 
+typedef mozilla::ComputedStyle ComputedStyle;
+
 nsIFrame*
 NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
