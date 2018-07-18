@@ -91,7 +91,6 @@ RsdparsaSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
                                                  protocol,addrType,rustAddr);
 
   if (NS_SUCCEEDED(nr)) {
-    std::cout << "Hello World" << std::endl;
     size_t level = mMediaSections.values.size();
     RsdparsaSessionHandle newSessHandle(sdp_new_reference(mSession.get()));
 

@@ -181,3 +181,78 @@ function createContextMenu(hud, parentNode, {
 }
 
 exports.createContextMenu = createContextMenu;
+
+/**
+ * Return an 'edit' menu for a input field. This integrates directly
+ * with docshell commands to provide the right enabled state and editor
+ * functionality.
+ *
+ * You'll need to call menu.popup() yourself, this just returns the Menu instance.
+ *
+ * @returns {Menu}
+ */
+function createEditContextMenu() {
+  const docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell);
+  const menu = new Menu({
+    id: "webconsole-menu"
+  });
+  menu.append(new MenuItem({
+    id: "editmenu-undo",
+    l10nID: "editmenu-undo",
+    disabled: !docshell.isCommandEnabled("cmd_undo"),
+    click: () => {
+      docshell.doCommand("cmd_undo");
+    },
+  }));
+  menu.append(new MenuItem({
+    type: "separator"
+  }));
+  menu.append(new MenuItem({
+    id: "editmenu-cut",
+    l10nID: "editmenu-cut",
+    disabled: !docshell.isCommandEnabled("cmd_cut"),
+    click: () => {
+      docshell.doCommand("cmd_cut");
+    },
+  }));
+  menu.append(new MenuItem({
+    id: "editmenu-copy",
+    l10nID: "editmenu-copy",
+    disabled: !docshell.isCommandEnabled("cmd_copy"),
+    click: () => {
+      docshell.doCommand("cmd_copy");
+    },
+  }));
+  menu.append(new MenuItem({
+    id: "editmenu-paste",
+    l10nID: "editmenu-paste",
+    disabled: !docshell.isCommandEnabled("cmd_paste"),
+    click: () => {
+      docshell.doCommand("cmd_paste");
+    },
+  }));
+  menu.append(new MenuItem({
+    id: "editmenu-delete",
+    l10nID: "editmenu-delete",
+    disabled: !docshell.isCommandEnabled("cmd_delete"),
+    click: () => {
+      docshell.doCommand("cmd_delete");
+    },
+  }));
+  menu.append(new MenuItem({
+    type: "separator"
+  }));
+  menu.append(new MenuItem({
+    id: "editmenu-selectAll",
+    l10nID: "editmenu-select-all",
+    disabled: !docshell.isCommandEnabled("cmd_selectAll"),
+    click: () => {
+      docshell.doCommand("cmd_selectAll");
+    },
+  }));
+  return menu;
+}
+
+exports.createEditContextMenu = createEditContextMenu;

@@ -70,6 +70,8 @@ class JSTerm extends Component {
       history: PropTypes.object.isRequired,
       // Console object.
       hud: PropTypes.object.isRequired,
+      // Needed for opening context menu
+      serviceContainer: PropTypes.object.isRequired,
       // Handler for clipboard 'paste' event (also used for 'drop' event, callback).
       onPaste: PropTypes.func,
       codeMirrorEnabled: PropTypes.bool,
@@ -97,6 +99,7 @@ class JSTerm extends Component {
     this._keyPress = this._keyPress.bind(this);
     this._inputEventHandler = this._inputEventHandler.bind(this);
     this._blurEventHandler = this._blurEventHandler.bind(this);
+    this.onContextMenu = this.onContextMenu.bind(this);
 
     this.SELECTED_FRAME = -1;
 
@@ -128,14 +131,6 @@ class JSTerm extends Component {
      * @type string
      */
     this.lastInputValue = "";
-
-    /**
-     * Tells if the autocomplete popup was navigated since the last open.
-     *
-     * @private
-     * @type boolean
-     */
-    this._autocompletePopupNavigated = false;
 
     this.autocompletePopup = null;
     this.inputNode = null;
@@ -192,9 +187,9 @@ class JSTerm extends Component {
                 return "CodeMirror.Pass";
               }
 
-              if (this._autocompletePopupNavigated &&
-                this.autocompletePopup.isOpen &&
-                this.autocompletePopup.selectedIndex > -1
+              if (
+                this.autocompletePopup.isOpen
+                && this.autocompletePopup.selectedIndex > -1
               ) {
                 return this.acceptProposedCompletion();
               }
@@ -231,9 +226,6 @@ class JSTerm extends Component {
               let inputUpdated;
               if (this.autocompletePopup.isOpen) {
                 inputUpdated = this.complete(this.COMPLETE_BACKWARD);
-                if (inputUpdated) {
-                  this._autocompletePopupNavigated = true;
-                }
               } else if (this.canCaretGoPrevious()) {
                 inputUpdated = this.historyPeruse(HISTORY_BACK);
               }
@@ -248,9 +240,6 @@ class JSTerm extends Component {
               let inputUpdated;
               if (this.autocompletePopup.isOpen) {
                 inputUpdated = this.complete(this.COMPLETE_FORWARD);
-                if (inputUpdated) {
-                  this._autocompletePopupNavigated = true;
-                }
               } else if (this.canCaretGoNext()) {
                 inputUpdated = this.historyPeruse(HISTORY_FORWARD);
               }
@@ -271,12 +260,9 @@ class JSTerm extends Component {
             "Right": () => {
               const haveSuggestion =
                 this.autocompletePopup.isOpen || this.lastCompletion.value;
-              const useCompletion =
-                this.canCaretGoNext() || this._autocompletePopupNavigated;
 
               if (
                 haveSuggestion &&
-                useCompletion &&
                 this.complete(this.COMPLETE_HINT_ONLY) &&
                 this.lastCompletion.value &&
                 this.acceptProposedCompletion()
@@ -334,9 +320,7 @@ class JSTerm extends Component {
 
             "PageUp": () => {
               if (this.autocompletePopup.isOpen) {
-                if (this.complete(this.COMPLETE_PAGEUP)) {
-                  this._autocompletePopupNavigated = true;
-                }
+                this.complete(this.COMPLETE_PAGEUP);
                 return null;
               }
 
@@ -345,9 +329,7 @@ class JSTerm extends Component {
 
             "PageDown": () => {
               if (this.autocompletePopup.isOpen) {
-                if (this.complete(this.COMPLETE_PAGEDOWN)) {
-                  this._autocompletePopupNavigated = true;
-                }
+                this.complete(this.COMPLETE_PAGEDOWN);
                 return null;
               }
 
@@ -845,7 +827,7 @@ class JSTerm extends Component {
         break;
 
       case KeyCodes.DOM_VK_RETURN:
-        if (this._autocompletePopupNavigated &&
+        if (
             this.autocompletePopup.isOpen &&
             this.autocompletePopup.selectedIndex > -1) {
           this.acceptProposedCompletion();
@@ -858,9 +840,6 @@ class JSTerm extends Component {
       case KeyCodes.DOM_VK_UP:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_BACKWARD);
-          if (inputUpdated) {
-            this._autocompletePopupNavigated = true;
-          }
         } else if (this.canCaretGoPrevious()) {
           inputUpdated = this.historyPeruse(HISTORY_BACK);
         }
@@ -872,9 +851,6 @@ class JSTerm extends Component {
       case KeyCodes.DOM_VK_DOWN:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_FORWARD);
-          if (inputUpdated) {
-            this._autocompletePopupNavigated = true;
-          }
         } else if (this.canCaretGoNext()) {
           inputUpdated = this.historyPeruse(HISTORY_FORWARD);
         }
@@ -886,9 +862,6 @@ class JSTerm extends Component {
       case KeyCodes.DOM_VK_PAGE_UP:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_PAGEUP);
-          if (inputUpdated) {
-            this._autocompletePopupNavigated = true;
-          }
         } else {
           this.hud.outputScroller.scrollTop =
             Math.max(0,
@@ -902,9 +875,6 @@ class JSTerm extends Component {
       case KeyCodes.DOM_VK_PAGE_DOWN:
         if (this.autocompletePopup.isOpen) {
           inputUpdated = this.complete(this.COMPLETE_PAGEDOWN);
-          if (inputUpdated) {
-            this._autocompletePopupNavigated = true;
-          }
         } else {
           this.hud.outputScroller.scrollTop =
             Math.min(this.hud.outputScroller.scrollHeight,
@@ -944,17 +914,13 @@ class JSTerm extends Component {
         break;
 
       case KeyCodes.DOM_VK_RIGHT:
-        const cursorAtTheEnd = this.inputNode.selectionStart ==
-                             this.inputNode.selectionEnd &&
-                             this.inputNode.selectionStart ==
-                             inputValue.length;
-        const haveSuggestion = this.autocompletePopup.isOpen ||
-                             this.lastCompletion.value;
-        const useCompletion = cursorAtTheEnd || this._autocompletePopupNavigated;
-        if (haveSuggestion && useCompletion &&
-            this.complete(this.COMPLETE_HINT_ONLY) &&
-            this.lastCompletion.value &&
-            this.acceptProposedCompletion()) {
+        const haveSuggestion = this.autocompletePopup.isOpen || this.lastCompletion.value;
+        if (
+          haveSuggestion &&
+          this.complete(this.COMPLETE_HINT_ONLY) &&
+          this.lastCompletion.value &&
+          this.acceptProposedCompletion()
+        ) {
           event.preventDefault();
         }
         if (this.autocompletePopup.isOpen) {
@@ -1301,7 +1267,7 @@ class JSTerm extends Component {
       value: inputValue,
       matchProp: lastPart,
     };
-    if (items.length > 1 && !popup.isOpen) {
+    if (items.length > 0 && !popup.isOpen) {
       let popupAlignElement;
       let xOffset;
       let yOffset;
@@ -1321,12 +1287,11 @@ class JSTerm extends Component {
 
       if (popupAlignElement) {
         popup.openPopup(popupAlignElement, xOffset, yOffset);
-        this._autocompletePopupNavigated = false;
       }
-    } else if (items.length < 2 && popup.isOpen) {
+    } else if (items.length === 0 && popup.isOpen) {
       popup.hidePopup();
-      this._autocompletePopupNavigated = false;
     }
+
     if (items.length == 1) {
       popup.selectedIndex = 0;
     }
@@ -1381,7 +1346,6 @@ class JSTerm extends Component {
           this.focus();
         });
         this.autocompletePopup.hidePopup();
-        this._autocompletePopupNavigated = false;
       }
     }
   }
@@ -1506,6 +1470,17 @@ class JSTerm extends Component {
       .paddingLeft.replace(/[^0-9.]/g, "") - 4;
   }
 
+  onContextMenu(e) {
+    // The toolbox does it's own edit menu handling with
+    // toolbox-textbox-context-popup and friends. For now, fall
+    // back to use that if running inside the toolbox, but use our
+    // own menu when running in the Browser Console (see Bug 1476097).
+    if (this.props.hud.isBrowserConsole &&
+        Services.prefs.getBoolPref("devtools.browserconsole.html")) {
+      this.props.serviceContainer.openEditContextMenu(e);
+    }
+  }
+
   destroy() {
     this.clearCompletion();
 
@@ -1548,6 +1523,7 @@ class JSTerm extends Component {
         key: "jsterm-container",
         style: {direction: "ltr"},
         "aria-live": "off",
+        onContextMenu: this.onContextMenu,
         ref: node => {
           this.node = node;
         },
@@ -1584,6 +1560,7 @@ class JSTerm extends Component {
           },
           onPaste: onPaste,
           onDrop: onPaste,
+          onContextMenu: this.onContextMenu,
         })
       )
     );
