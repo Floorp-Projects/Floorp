@@ -949,6 +949,26 @@ CodeUnitValue(mozilla::Utf8Unit unit)
 template<typename CharT>
 class TokenStreamCharsBase;
 
+template<typename T>
+inline bool
+IsLineTerminator(T) = delete;
+
+inline bool
+IsLineTerminator(char32_t codePoint)
+{
+    return codePoint == '\n' ||
+           codePoint == '\r' ||
+           codePoint == unicode::LINE_SEPARATOR ||
+           codePoint == unicode::PARA_SEPARATOR;
+}
+
+inline bool
+IsLineTerminator(char16_t unit)
+{
+    // Every LineTerminator fits in char16_t, so this is exact.
+    return IsLineTerminator(static_cast<char32_t>(unit));
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -1130,13 +1150,6 @@ class SourceUnits
 #ifdef DEBUG
         ptr = nullptr;
 #endif
-    }
-
-    static bool isRawEOLChar(int32_t c) {
-        return c == '\n' ||
-               c == '\r' ||
-               c == unicode::LINE_SEPARATOR ||
-               c == unicode::PARA_SEPARATOR;
     }
 
     /**
