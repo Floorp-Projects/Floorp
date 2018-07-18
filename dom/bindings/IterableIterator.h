@@ -57,6 +57,53 @@ protected:
   virtual void TraverseHelper(nsCycleCollectionTraversalCallback& cb) = 0;
 };
 
+// Helpers to call iterator getter methods with the correct arguments, depending
+// on the types they return, and convert the result to JS::Values.
+
+// Helper for Get[Key,Value]AtIndex(uint32_t) methods, which accept an index and
+// return a type supported by ToJSValue.
+template <typename T, typename U>
+bool
+CallIterableGetter(JSContext* aCx, U (T::* aMethod)(uint32_t),
+                   T* aInst, uint32_t aIndex,
+                   JS::MutableHandle<JS::Value> aResult)
+{
+  return ToJSValue(aCx, (aInst->*aMethod)(aIndex), aResult);
+}
+
+template <typename T, typename U>
+bool
+CallIterableGetter(JSContext* aCx, U (T::* aMethod)(uint32_t) const,
+                   const T* aInst, uint32_t aIndex,
+                   JS::MutableHandle<JS::Value> aResult)
+{
+  return ToJSValue(aCx, (aInst->*aMethod)(aIndex), aResult);
+}
+
+
+// Helper for Get[Key,Value]AtIndex(JSContext*, uint32_t, MutableHandleValue)
+// methods, which accept a JS context, index, and mutable result value handle,
+// and return true on success or false on failure.
+template <typename T>
+bool
+CallIterableGetter(JSContext* aCx,
+                   bool (T::* aMethod)(JSContext*, uint32_t, JS::MutableHandle<JS::Value>),
+                   T* aInst, uint32_t aIndex,
+                   JS::MutableHandle<JS::Value> aResult)
+{
+  return (aInst->*aMethod)(aCx, aIndex, aResult);
+}
+
+template <typename T>
+bool
+CallIterableGetter(JSContext* aCx,
+                   bool (T::* aMethod)(JSContext*, uint32_t, JS::MutableHandle<JS::Value>) const,
+                   const T* aInst, uint32_t aIndex,
+                   JS::MutableHandle<JS::Value> aResult)
+{
+  return (aInst->*aMethod)(aCx, aIndex, aResult);
+}
+
 template <typename T>
 class IterableIterator final : public IterableIteratorBase
 {
@@ -78,6 +125,24 @@ public:
     MOZ_ASSERT(mWrapFunc);
   }
 
+  bool
+  GetKeyAtIndex(JSContext* aCx, uint32_t aIndex,
+                JS::MutableHandle<JS::Value> aResult)
+  {
+    return CallIterableGetter(aCx, &T::GetKeyAtIndex,
+                              mIterableObj.get(),
+                              aIndex, aResult);
+  }
+
+  bool
+  GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
+                  JS::MutableHandle<JS::Value> aResult)
+  {
+    return CallIterableGetter(aCx, &T::GetValueAtIndex,
+                              mIterableObj.get(),
+                              aIndex, aResult);
+  }
+
   void
   Next(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv)
   {
@@ -89,7 +154,7 @@ public:
     switch (mIteratorType) {
     case IterableIteratorType::Keys:
     {
-      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &value)) {
+      if (!GetKeyAtIndex(aCx, mIndex, &value)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return;
       }
@@ -98,7 +163,7 @@ public:
     }
     case IterableIteratorType::Values:
     {
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
+      if (!GetValueAtIndex(aCx, mIndex, &value)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return;
       }
@@ -108,11 +173,11 @@ public:
     case IterableIteratorType::Entries:
     {
       JS::Rooted<JS::Value> key(aCx);
-      if (!ToJSValue(aCx, this->mIterableObj->GetKeyAtIndex(mIndex), &key)) {
+      if (!GetKeyAtIndex(aCx, mIndex, &key)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return;
       }
-      if (!ToJSValue(aCx, this->mIterableObj->GetValueAtIndex(mIndex), &value)) {
+      if (!GetValueAtIndex(aCx, mIndex, &value)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return;
       }
