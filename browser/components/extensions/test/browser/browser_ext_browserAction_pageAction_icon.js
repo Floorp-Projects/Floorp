@@ -111,7 +111,6 @@ add_task(async function testDetailsObjects() {
 
       // Various resolutions
       {details: {"path": {"18": "a.png", "36": "a-x2.png"}},
-        legacy: true,
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
           "2": browser.runtime.getURL("data/a-x2.png")}},
@@ -139,7 +138,6 @@ add_task(async function testDetailsObjects() {
         "36": "36.png",
         "48": "48.png",
         "128": "128.png"}},
-        legacy: true,
         resolutions: {
           "1": browser.runtime.getURL("data/18.png"),
           "2": browser.runtime.getURL("data/36.png")},
@@ -206,7 +204,6 @@ add_task(async function testDetailsObjects() {
     for (let [idx, icon] of iconDetails.entries()) {
       tests.push({
         index: idx,
-        legacy: !!icon.legacy,
         menuResolutions: icon.menuResolutions,
         resolutions: icon.resolutions,
       });
@@ -288,9 +285,6 @@ add_task(async function testDetailsObjects() {
       let imageURL = test.resolutions[resolution];
       is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct image at ${resolution}x resolution`);
       is(getListStyleImage(pageActionImage), imageURL, `page action has the correct image at ${resolution}x resolution`);
-
-      let isLegacy = browserActionButton.classList.contains("toolbarbutton-legacy-addon");
-      is(isLegacy, test.legacy, "Legacy class should be present?");
 
       await SpecialPowers.popPrefEnv();
     }
