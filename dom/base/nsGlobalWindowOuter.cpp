@@ -1695,7 +1695,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   bool reUseInnerWindow = (aForceReuseInnerWindow || wouldReuseInnerWindow) &&
                           GetCurrentInnerWindowInternal();
 
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   // We set mDoc even though this is an outer window to avoid
   // having to *always* reach into the inner window to find the
