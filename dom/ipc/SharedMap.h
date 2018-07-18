@@ -96,11 +96,8 @@ public:
    * the program will crash.
    */
   const nsString GetKeyAtIndex(uint32_t aIndex) const;
-  // Note: This function should only be called if the instance has a live,
-  // cached wrapper. If it does not, this function will return null, and assert
-  // in debug builds.
-  // The returned value will always be in the same Realm as that wrapper.
-  JS::Value GetValueAtIndex(uint32_t aIndex) const;
+  bool GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
+                       JS::MutableHandle<JS::Value> aResult) const;
 
 
   /**
