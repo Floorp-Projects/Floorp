@@ -1034,8 +1034,7 @@ button.button-link:not([disabled="true"]):active:hover {
 
 /*** Reset PopupAutoComplete richlistbox styles ***/
 
-#PopupAutoComplete richlistbox,
-#PopupAutoComplete listbox {
+#PopupAutoComplete richlistbox {
   -moz-appearance: initial;
   margin-inline-start: 0;
   border: none;

@@ -116,7 +116,6 @@ load 350128-1.xhtml
 load 350267-1.html
 load 354133-1.html
 load 354766-1.xhtml
-load 354771-1.xul
 load 355989-1.xhtml
 load 355993-1.xhtml
 load 356325-1.xul
@@ -145,11 +144,9 @@ load 372237-1.html
 load 372475-1.xhtml
 load 372550-1.html
 load 373628-1.html
-load 373919.xhtml
 load 374193-1.xhtml
 load 374297-1.html
 load 374297-2.html
-load 376223-1.xhtml
 load 378325-1.html
 load 378682.html
 load 379105-1.xhtml
@@ -161,9 +158,7 @@ load 379920-2.svg
 load 379975.html
 load 380096-1.html
 load 382204-1.html # bug 1323680
-load 383102-1.xhtml
 load 383129-1.html
-load 383806-1.xhtml
 load 384344-1.html
 load 384392-1.xhtml
 load 384392-2.svg
@@ -197,7 +192,6 @@ load 399940-1.xhtml
 load 399946-1.xhtml
 load 399951-1.html
 load 399994-1.html
-load 400185-1.xul
 load 400445-1.xhtml
 load 400904-1.xhtml
 load 401589-1.xul
@@ -228,7 +222,6 @@ load 411870-1.html
 load 412651-1.html
 load 413587-1.svg
 load 414058-1.html
-load 414175-1.xul
 load 415503.xhtml
 load 416107.xhtml # bug 1323652
 HTTP load 419985.html
@@ -241,7 +234,6 @@ load 421432.html
 load 422276.html
 asserts(0-1) load 423107-1.xhtml # bug 866955
 load 425981-1.html
-load 428113.xhtml
 load 428138-1.html
 load 428448-1.html
 load 429088-1.html
@@ -327,7 +319,6 @@ load 500467-1.html
 load 501878-1.html
 load 503936-1.html
 load 507119.html
-load 514104-1.xul
 load 522374-1.html
 load 522374-2.html
 load 526378-1.xul

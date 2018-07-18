@@ -12,7 +12,6 @@ toolkit.jar:
    skin/classic/global/dropmarker.css                      (global/empty.css)
    skin/classic/global/global.css                          (global/empty.css)
    skin/classic/global/groupbox.css                        (global/empty.css)
-   skin/classic/global/listbox.css                         (global/empty.css)
    skin/classic/global/menu.css                            (global/empty.css)
    skin/classic/global/menulist.css                        (global/empty.css)
    skin/classic/global/numberbox.css                       (global/empty.css)
