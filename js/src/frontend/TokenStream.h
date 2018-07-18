@@ -2034,14 +2034,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     }
 
     /**
-     * Get the next code point, converting LineTerminatorSequences to '\n' and
-     * updating internal line-counter state if needed.  Return true on success
-     * and store the code point in |*c|.  Return false and leave |*c| undefined
-     * on failure.
-     */
-    MOZ_MUST_USE bool getCodePoint(int32_t* cp);
-
-    /**
      * Given a just-consumed non-ASCII code unit |lead| (which may also be a
      * full code point, for UTF-16), consume a full code point or
      * LineTerminatorSequence (normalizing it to '\n') and store it in
@@ -2276,7 +2268,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using TokenStreamCharsShared::copyCharBufferTo;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
     using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
-    using SpecializedChars::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
     using GeneralCharsBase::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
@@ -2302,6 +2293,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
                         const CharT* base, size_t length);
+
+    /**
+     * Get the next code point, converting LineTerminatorSequences to '\n' and
+     * updating internal line-counter state if needed.  Return true on success
+     * and store the code point in |*cp|.  Return false and leave |*cp|
+     * undefined on failure.
+     */
+    MOZ_MUST_USE bool getCodePoint(int32_t* cp);
 
     // If there is an invalid escape in a template, report it and return false,
     // otherwise return true.
