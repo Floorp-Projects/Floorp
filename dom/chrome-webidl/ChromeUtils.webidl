@@ -17,7 +17,7 @@
 [ChromeOnly, Exposed=Window]
 interface MozQueryInterface {
   [Throws]
-  legacycaller any (IID aIID);
+  legacycaller any (any aIID);
 };
 
 /**

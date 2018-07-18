@@ -3508,7 +3508,7 @@ XMLHttpRequestMainThread::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 void
-XMLHttpRequestMainThread::GetInterface(JSContext* aCx, nsIJSID* aIID,
+XMLHttpRequestMainThread::GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
                                        JS::MutableHandle<JS::Value> aRetval,
                                        ErrorResult& aRv)
 {
