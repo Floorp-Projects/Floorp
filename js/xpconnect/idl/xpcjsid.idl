@@ -32,6 +32,9 @@ interface nsIJSIID : nsIJSID
 [builtinclass, scriptable, uuid(bf5eb086-9eaa-4694-aec3-fe4aac6119bd)]
 interface nsIJSCID : nsIJSID
 {
+    // re-generate the internal CID value from this nsIJSID's ContractID.
+    void refreshCID();
+
     [implicit_jscontext,optional_argc] jsval createInstance([optional] in jsval iid);
     [implicit_jscontext,optional_argc] jsval getService([optional] in jsval iid);
 };
