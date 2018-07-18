@@ -754,6 +754,10 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY spellAddDictionaries.label "Add Dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
+<!-- LOCALIZATION NOTE (editBookmark.panel.width): width of the bookmark panel.
+     Should be large enough to fully display the Done and Cancel/
+     Remove Bookmark buttons. -->
+<!ENTITY editBookmark.panel.width                    "23em">
 <!ENTITY editBookmark.done.label                     "Done">
 <!ENTITY editBookmark.showForNewBookmarks.label       "Show editor when saving">
 <!ENTITY editBookmark.showForNewBookmarks.accesskey   "S">
