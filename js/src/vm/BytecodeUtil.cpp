@@ -2695,11 +2695,10 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
         return false;
     bool comma = false;
 
-    SrcNoteLineScanner scanner(script->notes(), script->lineno());
     uint64_t hits = 0;
 
-    jsbytecode* end = script->codeEnd();
-    for (jsbytecode* pc = script->code(); pc < end; pc = GetNextPc(pc)) {
+    for (BytecodeRangeWithPosition range(cx, script); !range.empty(); range.popFront()) {
+        jsbytecode *pc = range.frontPC();
         size_t offset = script->pcToOffset(pc);
         JSOp op = JSOp(*pc);
 
@@ -2721,11 +2720,9 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
         if (!NumberValueToStringBuffer(cx, Int32Value(offset), buf))
             return false;
 
-        scanner.advanceTo(offset);
-
         if (!AppendJSONProperty(buf, "line"))
             return false;
-        if (!NumberValueToStringBuffer(cx, Int32Value(scanner.getLine()), buf))
+        if (!NumberValueToStringBuffer(cx, Int32Value(range.frontLineNumber()), buf))
             return false;
 
         {

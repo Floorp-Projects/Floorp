@@ -1,6 +1,7 @@
 // GENERATED CONTENT - DO NOT EDIT
-// Content of this file was automatically extracted from the Service Workers spec.
-// See https://w3c.github.io/ServiceWorker/
+// Content of this file was automatically extracted from the
+// "Service Workers 1" spec.
+// See: https://w3c.github.io/ServiceWorker/v1/
 
 [SecureContext, Exposed=(Window,Worker)]
 interface ServiceWorker : EventTarget {
@@ -11,7 +12,7 @@ interface ServiceWorker : EventTarget {
   // event
   attribute EventHandler onstatechange;
 };
-ServiceWorker includes AbstractWorker;
+ServiceWorker implements AbstractWorker;
 
 enum ServiceWorkerState {
   "installing",
@@ -26,7 +27,6 @@ interface ServiceWorkerRegistration : EventTarget {
   readonly attribute ServiceWorker? installing;
   readonly attribute ServiceWorker? waiting;
   readonly attribute ServiceWorker? active;
-  [SameObject] readonly attribute NavigationPreloadManager navigationPreload;
 
   readonly attribute USVString scope;
   readonly attribute ServiceWorkerUpdateViaCache updateViaCache;
@@ -64,6 +64,7 @@ interface ServiceWorkerContainer : EventTarget {
 
   void startMessages();
 
+
   // events
   attribute EventHandler oncontrollerchange;
   attribute EventHandler onmessage; // event.source of message events is ServiceWorker object
@@ -74,19 +75,6 @@ dictionary RegistrationOptions {
   USVString scope;
   WorkerType type = "classic";
   ServiceWorkerUpdateViaCache updateViaCache = "imports";
-};
-
-[SecureContext, Exposed=(Window,Worker)]
-interface NavigationPreloadManager {
-  Promise<void> enable();
-  Promise<void> disable();
-  Promise<void> setHeaderValue(ByteString value);
-  Promise<NavigationPreloadState> getState();
-};
-
-dictionary NavigationPreloadState {
-  boolean enabled = false;
-  ByteString headerValue;
 };
 
 [Global=(Worker,ServiceWorker), Exposed=ServiceWorker]
@@ -155,20 +143,14 @@ dictionary ExtendableEventInit : EventInit {
 [Constructor(DOMString type, FetchEventInit eventInitDict), Exposed=ServiceWorker]
 interface FetchEvent : ExtendableEvent {
   [SameObject] readonly attribute Request request;
-  readonly attribute Promise<any> preloadResponse;
   readonly attribute DOMString clientId;
-  readonly attribute DOMString resultingClientId;
-  readonly attribute DOMString targetClientId;
 
   void respondWith(Promise<Response> r);
 };
 
 dictionary FetchEventInit : ExtendableEventInit {
   required Request request;
-  required Promise<any> preloadResponse;
   DOMString clientId = "";
-  DOMString resultingClientId = "";
-  DOMString targetClientId = "";
 };
 
 [Constructor(DOMString type, optional ExtendableMessageEventInit eventInitDict), Exposed=ServiceWorker]

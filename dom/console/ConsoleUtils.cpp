@@ -8,7 +8,7 @@
 #include "ConsoleCommon.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "NullPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 
 namespace mozilla {
 namespace dom {

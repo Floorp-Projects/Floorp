@@ -64,9 +64,9 @@
       testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
       testStates("combobox-disabled", STATE_UNAVAILABLE | STATE_HASPOPUP, 0, STATE_FOCUSABLE);
       testStates("listbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
-      testStates("listitem", STATE_FOCUSABLE | STATE_SELECTABLE, 0, STATE_UNAVAILABLE);
+      testStates("listitem", STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED, 0, STATE_UNAVAILABLE);
       testStates("listbox-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
-      testStates("listitem-disabledlistbox", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("listitem-disabledlistbox", STATE_UNAVAILABLE | STATE_SELECTED, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
       testStates("menubar", 0, 0, STATE_FOCUSABLE);
       testStates("menu", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("menu-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
@@ -135,13 +135,17 @@
       </menupopup>
     </menulist>
 
-    <listbox id="listbox">
-      <listitem id="listitem" label="list item"/>
-    </listbox>
+    <richlistbox id="listbox">
+      <richlistitem id="listitem">
+        <label value="list item"/>
+      </richlistitem>
+    </richlistbox>
 
-    <listbox id="listbox-disabled" disabled="true">
-      <listitem id="listitem-disabledlistbox" label="list item"/>
-    </listbox>
+    <richlistbox id="listbox-disabled" disabled="true">
+      <richlistitem id="listitem-disabledlistbox">
+        <label value="list item"/>
+      </richlistitem>
+    </richlistbox>
 
     <toolbox>
       <menubar id="menubar">

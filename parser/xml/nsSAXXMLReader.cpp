@@ -6,10 +6,10 @@
 #include "nsSAXXMLReader.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "NullPrincipal.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"

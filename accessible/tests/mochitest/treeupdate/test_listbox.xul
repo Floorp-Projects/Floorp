@@ -25,8 +25,10 @@
     {
       this.listboxNode = getNode(aListboxID);
 
-      this.listitemNode = document.createElement("listitem");
-      this.listitemNode.setAttribute("label", "item1");
+      this.listitemNode = document.createElement("richlistitem");
+      var label = document.createElement("label");
+      label.setAttribute("value", "item1");
+      this.listitemNode.appendChild(label);
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.listitemNode),
@@ -168,11 +170,11 @@
     </body>
 
     <vbox flex="1">
-      <listbox id="listbox" rows="2">
-        <listitem label="item2"/>
-        <listitem label="item3"/>
-        <listitem label="item4"/>
-      </listbox>
+      <richlistbox id="listbox">
+        <richlistitem><label value="item2"/></richlistitem>
+        <richlistitem><label value="item3"/></richlistitem>
+        <richlistitem><label value="item4"/></richlistitem>
+      </richlistbox>
     </vbox>
   </hbox>
 

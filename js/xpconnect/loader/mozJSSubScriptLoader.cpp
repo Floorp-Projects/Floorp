@@ -15,19 +15,19 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
-#include "ContentPrincipal.h"
-#include "SystemPrincipal.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h" // For xpc::OptionsBase
 #include "js/Wrapper.h"
 
+#include "mozilla/ContentPrincipal.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ScriptPreloader.h"
+#include "mozilla/SystemPrincipal.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Unused.h"

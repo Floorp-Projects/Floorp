@@ -128,7 +128,8 @@ enum class FilterType : int8_t {
   DISTANT_SPECULAR,
   CROP,
   PREMULTIPLY,
-  UNPREMULTIPLY
+  UNPREMULTIPLY,
+  OPACITY
 };
 
 enum class DrawTargetType : int8_t {

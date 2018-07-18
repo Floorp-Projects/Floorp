@@ -9,8 +9,8 @@
 #include "nsString.h"
 #include "ExampleStylesheet.h"
 #include "ServoBindings.h"
-#include "NullPrincipalURI.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/NullPrincipalURI.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

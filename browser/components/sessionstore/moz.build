@@ -22,6 +22,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES.sessionstore = [
     'ContentRestore.jsm',
+    'ContentSessionStore.jsm',
     'DocShellCapabilities.jsm',
     'GlobalState.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',

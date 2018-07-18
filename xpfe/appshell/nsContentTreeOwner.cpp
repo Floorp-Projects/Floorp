@@ -31,8 +31,8 @@
 #include "nsIMIMEInfo.h"
 #include "nsIWidget.h"
 #include "nsWindowWatcher.h"
-#include "NullPrincipal.h"
 #include "mozilla/BrowserElementParent.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsDocShellLoadInfo.h"
 
 #include "nsIScriptObjectPrincipal.h"
