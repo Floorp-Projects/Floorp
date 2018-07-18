@@ -269,24 +269,14 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
             return NS_OK;
         }
 
-        nsCOMPtr<nsIJSIID> nsid = nsJSIID::NewID(info);
-
-        if (nsid) {
-            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
-            RootedObject idobj(cx);
-            if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                             static_cast<nsIJSIID*>(nsid),
-                                             NS_GET_IID(nsIJSIID),
-                                             idobj.address()))) {
-                if (idobj) {
-                    *resolvedp = true;
-                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
-                                                     JSPROP_ENUMERATE |
-                                                     JSPROP_READONLY |
-                                                     JSPROP_PERMANENT |
-                                                     JSPROP_RESOLVING);
-                }
-            }
+        RootedValue iidv(cx);
+        if (xpc::IfaceID2JSValue(cx, *info, &iidv)) {
+            *resolvedp = true;
+            *_retval = JS_DefinePropertyById(cx, obj, id, iidv,
+                                             JSPROP_ENUMERATE |
+                                             JSPROP_READONLY |
+                                             JSPROP_PERMANENT |
+                                             JSPROP_RESOLVING);
         }
     }
     return NS_OK;
@@ -461,27 +451,14 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
             return NS_OK;
         }
 
-        nsCOMPtr<nsIJSIID> nsid = nsJSIID::NewID(info);
-
-        if (!nsid) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        nsIXPConnect* xpc = nsIXPConnect::XPConnect();
-        RootedObject idobj(cx);
-        if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                         static_cast<nsIJSIID*>(nsid),
-                                         NS_GET_IID(nsIJSIID),
-                                         idobj.address()))) {
-            if (idobj) {
-                *resolvedp = true;
-                *_retval =
-                    JS_DefinePropertyById(cx, obj, id, idobj,
-                                          JSPROP_ENUMERATE |
-                                          JSPROP_READONLY |
-                                          JSPROP_PERMANENT |
-                                          JSPROP_RESOLVING);
-            }
+        RootedValue iidv(cx);
+        if (xpc::IfaceID2JSValue(cx, *info, &iidv)) {
+            *resolvedp = true;
+            *_retval = JS_DefinePropertyById(cx, obj, id, iidv,
+                                             JSPROP_ENUMERATE |
+                                             JSPROP_READONLY |
+                                             JSPROP_PERMANENT |
+                                             JSPROP_RESOLVING);
         }
     }
     return NS_OK;
@@ -648,30 +625,19 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
     RootedId id(cx, idArg);
     RootedObject obj(cx, objArg);
 
-    if (!JSID_IS_STRING(id)) {
-        return NS_OK;
-    }
-
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
-    if (name &&
-        name[0] != '{') { // we only allow contractids here
-        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
-        if (nsid) {
-            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
-            RootedObject idobj(cx);
-            if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                             static_cast<nsIJSCID*>(nsid),
-                                             NS_GET_IID(nsIJSCID),
-                                             idobj.address()))) {
-                if (idobj) {
-                    *resolvedp = true;
-                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
-                                                     JSPROP_ENUMERATE |
-                                                     JSPROP_READONLY |
-                                                     JSPROP_PERMANENT |
-                                                     JSPROP_RESOLVING);
-                }
-            }
+    JSAutoByteString name;
+    if (JSID_IS_STRING(id) &&
+        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
+        name.ptr()[0] != '{') { // we only allow contractids here
+        RootedValue cidv(cx);
+        if (xpc::ContractID2JSValue(cx, nsDependentCString(name.ptr()),
+                                    &cidv)) {
+            *resolvedp = true;
+            *_retval = JS_DefinePropertyById(cx, obj, id, cidv,
+                                             JSPROP_ENUMERATE |
+                                             JSPROP_READONLY |
+                                             JSPROP_PERMANENT |
+                                             JSPROP_RESOLVING);
         }
     }
     return NS_OK;
@@ -829,18 +795,12 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
 }
 
 static bool
-IsRegisteredCLSID(const char* str)
+IsRegisteredCLSID(const nsCID& aCID)
 {
-    bool registered;
-    nsID id;
-
-    if (!id.Parse(str)) {
-        return false;
-    }
-
+    bool registered = false;
     nsCOMPtr<nsIComponentRegistrar> compMgr;
     if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
-        NS_FAILED(compMgr->IsCIDRegistered(id, &registered)))
+        NS_FAILED(compMgr->IsCIDRegistered(aCID, &registered)))
         return false;
 
     return registered;
@@ -859,28 +819,21 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
         return NS_OK;
     }
 
+    // we only allow canonical CLSIDs here
+    nsCID cid;
+    JSAutoByteString name;
     RootedString str(cx, JSID_TO_STRING(id));
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
-    if (name && name[0] == '{' &&
-        IsRegisteredCLSID(name.get())) // we only allow canonical CLSIDs here
+    if (name.encodeLatin1(cx, str) && name.ptr()[0] == '{' &&
+        cid.Parse(name.ptr()) && IsRegisteredCLSID(cid))
     {
-        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
-        if (nsid) {
-            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
-            RootedObject idobj(cx);
-            if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                             static_cast<nsIJSCID*>(nsid),
-                                             NS_GET_IID(nsIJSCID),
-                                             idobj.address()))) {
-                if (idobj) {
-                    *resolvedp = true;
-                    *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
-                                                     JSPROP_ENUMERATE |
-                                                     JSPROP_READONLY |
-                                                     JSPROP_PERMANENT |
-                                                     JSPROP_RESOLVING);
-                }
-            }
+        RootedValue cidv(cx);
+        if (xpc::ClassID2JSValue(cx, cid, &cidv)) {
+            *resolvedp = true;
+            *_retval = JS_DefinePropertyById(cx, obj, id, cidv,
+                                             JSPROP_ENUMERATE |
+                                             JSPROP_READONLY |
+                                             JSPROP_PERMANENT |
+                                             JSPROP_RESOLVING);
         }
     }
     return NS_OK;
@@ -1219,7 +1172,7 @@ nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative* wrapper,
                                 HandleValue val, bool* bp, bool* _retval)
 {
     if (bp) {
-        *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIJSID));
+        *bp = xpc::JSValue2ID(cx, val).isSome();
     }
     return NS_OK;
 }
