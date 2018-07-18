@@ -19,6 +19,8 @@
  * HAVING YOUR CHANGES REVIEWED BY enndeakin@gmail.com
  */
 
+@import url("chrome://global/skin/tooltip.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
@@ -662,6 +664,13 @@ tab[selected="true"]:not([ignorefocus="true"]) {
 tabpanels {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-deck;
+}
+
+/********** tooltip *********/
+
+tooltip[titletip="true"] {
+  /* The width of the tooltip isn't limited on cropped <tree> cells. */
+  max-width: none;
 }
 
 /********** progressmeter **********/

@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * This file is imported as a UA stylesheet because the default tooltip is
+ * built as native anonymous content.
+ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+tooltip {
+  -moz-appearance: tooltip;
+  -moz-font-smoothing-background-color: -moz-mac-tooltip;
+  margin-top: 18px;
+  padding: 2px 3px;
+  max-width: 40em;
+  color: InfoText;
+  font: message-box;
+  cursor: default;
+}

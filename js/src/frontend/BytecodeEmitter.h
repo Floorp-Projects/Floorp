@@ -15,6 +15,7 @@
 #include "frontend/BCEParserHandle.h"
 #include "frontend/EitherParser.h"
 #include "frontend/JumpList.h"
+#include "frontend/NameFunctions.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
 #include "vm/BytecodeUtil.h"
@@ -473,7 +474,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitScript(ParseNode* body);
 
     // Emit function code for the tree rooted at body.
-    MOZ_MUST_USE bool emitFunctionScript(ParseNode* body);
+    enum class TopLevelFunction {
+        No,
+        Yes
+    };
+    MOZ_MUST_USE bool emitFunctionScript(ParseNode* fn, TopLevelFunction isTopLevel);
 
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.

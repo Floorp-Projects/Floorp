@@ -1976,7 +1976,9 @@ Gecko_AppendPropertyValuePair(nsTArray<PropertyValuePair>* aProperties,
                               nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(aProperties);
-  return aProperties->AppendElement(PropertyValuePair {aProperty});
+  MOZ_ASSERT(aProperty == eCSSPropertyExtra_variable ||
+             !nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::IsLogical));
+  return aProperties->AppendElement(PropertyValuePair { aProperty });
 }
 
 void
