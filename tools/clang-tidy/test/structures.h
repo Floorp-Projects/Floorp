@@ -1,8 +1,10 @@
 // Proxy file in order to define generic data types, to avoid binding with system headers
 
+typedef __SIZE_TYPE__ size_t;
+
 namespace std {
 
-typedef unsigned long size_t;
+typedef size_t size_t;
 
 template <class T>
 class vector {
@@ -93,10 +95,10 @@ int abort() { return 0; }
   if (!(x))                                                                    \
   (void)abort()
 
-std::size_t strlen(const char *s);
-char *strncat(char *s1, const char *s2, std::size_t n);
+size_t strlen(const char *s);
+char *strncat(char *s1, const char *s2, size_t);
 
 void free(void *ptr);
-void *malloc(std::size_t size);
+void *malloc(size_t size);
 
-void *memset(void *b, int c, std::size_t len);
+void *memset(void *b, int c, size_t len);
