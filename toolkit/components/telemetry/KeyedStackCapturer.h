@@ -46,8 +46,6 @@ public:
    */
   void Clear();
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
 private:
   /**
    * Describes how often a stack was captured.
