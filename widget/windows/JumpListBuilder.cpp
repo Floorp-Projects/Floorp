@@ -34,10 +34,6 @@ using mozilla::dom::Promise;
 namespace mozilla {
 namespace widget {
 
-static NS_DEFINE_CID(kJumpListItemCID,     NS_WIN_JUMPLISTITEM_CID);
-static NS_DEFINE_CID(kJumpListLinkCID,     NS_WIN_JUMPLISTLINK_CID);
-static NS_DEFINE_CID(kJumpListShortcutCID, NS_WIN_JUMPLISTSHORTCUT_CID);
-
 // defined in WinTaskbar.cpp
 extern const wchar_t *gMozillaJumpListIDGeneric;
 
