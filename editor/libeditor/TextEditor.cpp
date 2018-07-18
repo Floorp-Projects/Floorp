@@ -1317,20 +1317,23 @@ TextEditor::GetInputEventTargetContent()
 }
 
 nsresult
-TextEditor::DocumentIsEmpty(bool* aIsEmpty)
+TextEditor::IsEmpty(bool* aIsEmpty) const
 {
-  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!mRules)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aIsEmpty = true;
 
   if (mRules->HasBogusNode()) {
-    *aIsEmpty = true;
     return NS_OK;
   }
 
-  // Even if there is no bogus node, we should be detected as empty document
+  // Even if there is no bogus node, we should be detected as empty editor
   // if all the children are text nodes and these have no content.
   Element* rootElement = GetRoot();
   if (!rootElement) {
-    *aIsEmpty = true;
+    // XXX Why don't we return an error in such case??
     return NS_OK;
   }
 
@@ -1343,14 +1346,17 @@ TextEditor::DocumentIsEmpty(bool* aIsEmpty)
     }
   }
 
-  *aIsEmpty = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 {
-  return DocumentIsEmpty(aDocumentIsEmpty);
+  nsresult rv = IsEmpty(aDocumentIsEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

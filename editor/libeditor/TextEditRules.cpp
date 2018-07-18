@@ -397,7 +397,7 @@ bool
 TextEditRules::DocumentIsEmpty()
 {
   bool retVal = false;
-  if (!mTextEditor || NS_FAILED(mTextEditor->DocumentIsEmpty(&retVal))) {
+  if (!mTextEditor || NS_FAILED(mTextEditor->IsEmpty(&retVal))) {
     retVal = true;
   }
 
