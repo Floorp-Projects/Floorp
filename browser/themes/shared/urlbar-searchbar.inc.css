@@ -298,7 +298,7 @@
   opacity: 0;
 }
 
-#pageActionButton, .share-more-button {
+#pageActionButton {
   list-style-image: url("chrome://browser/skin/page-action.svg");
 }
 
