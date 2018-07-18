@@ -12629,15 +12629,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
   },
-   "D3D9_COMPOSITING_FAILURE_ID": {
-    "record_in_processes": ["main", "content"],
-       "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
-    "expires_in_version": "59",
-    "kind": "count",
-    "keyed": true,
-    "description": "D3D9 compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
-    "bug_numbers": [1002846]
-  },
     "D3D11_COMPOSITING_FAILURE_ID": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
