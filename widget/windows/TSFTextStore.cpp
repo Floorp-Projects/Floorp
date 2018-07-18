@@ -68,7 +68,7 @@ HandleSeparator(nsCString& aDesc)
 static const nsCString
 GetFindFlagName(DWORD aFindFlag)
 {
-  nsAutoCString description;
+  nsCString description;
   if (!aFindFlag) {
     description.AppendLiteral("no flags (0)");
     return description;
@@ -162,7 +162,7 @@ GetCLSIDNameStr(REFCLSID aCLSID)
     return EmptyCString();
   }
 
-  nsAutoCString result;
+  nsCString result;
   result = NS_ConvertUTF16toUTF8(str);
   ::CoTaskMemFree(str);
   return result;
@@ -291,7 +291,7 @@ GetRIIDNameStr(REFIID aRIID)
   nsAutoString key(L"Interface\\");
   key += str;
 
-  nsAutoCString result;
+  nsCString result;
   wchar_t buf[256];
   if (WinUtils::GetRegistryKey(HKEY_CLASSES_ROOT, key.get(), nullptr,
                                buf, sizeof(buf))) {
@@ -371,7 +371,7 @@ GetTextStoreReturnValueName(HRESULT aResult)
 static const nsCString
 GetSinkMaskNameStr(DWORD aSinkMask)
 {
-  nsAutoCString description;
+  nsCString description;
   if (aSinkMask & TS_AS_TEXT_CHANGE) {
     description.AppendLiteral("TS_AS_TEXT_CHANGE");
   }
@@ -408,7 +408,7 @@ GetActiveSelEndName(TsActiveSelEnd aSelEnd)
 static const nsCString
 GetLockFlagNameStr(DWORD aLockFlags)
 {
-  nsAutoCString description;
+  nsCString description;
   if ((aLockFlags & TS_LF_READWRITE) == TS_LF_READWRITE) {
     description.AppendLiteral("TS_LF_READWRITE");
   } else if (aLockFlags & TS_LF_READ) {
@@ -507,7 +507,7 @@ GetClauseAttrName(TF_DA_ATTR_INFO aAttr)
 static nsCString
 GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE& aDispAttr)
 {
-  nsAutoCString str;
+  nsCString str;
   str = "crText:{ ";
   str += GetColorName(aDispAttr.crText);
   str += " }, crBk:{ ";
@@ -549,7 +549,7 @@ GetMouseButtonsName(int16_t aButtons)
   if (!aButtons) {
     return NS_LITERAL_CSTRING("no buttons");
   }
-  nsAutoCString names;
+  nsCString names;
   if (aButtons & WidgetMouseEventBase::eLeftButtonFlag) {
     names = "LeftButton";
   }
@@ -578,7 +578,7 @@ GetModifiersName(Modifiers aModifiers)
   if (aModifiers == MODIFIER_NONE) {
     return NS_LITERAL_CSTRING("no modifiers");
   }
-  nsAutoCString names;
+  nsCString names;
   if (aModifiers & MODIFIER_ALT) {
     names = NS_DOM_KEYNAME_ALT;
   }
