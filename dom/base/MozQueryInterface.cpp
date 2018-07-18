@@ -80,14 +80,15 @@ MozQueryInterface::QueriesTo(const nsIID& aIID) const
 
 void
 MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
-                              nsIJSID* aIID,
+                              JS::Handle<JS::Value> aIID,
                               JS::MutableHandle<JS::Value> aResult,
                               ErrorResult& aRv) const
 {
-  if (!QueriesTo(*aIID->GetID())) {
-    aRv.Throw(NS_ERROR_NO_INTERFACE);
-  } else {
+  Maybe<nsID> id = xpc::JSValue2ID(cx, aIID);
+  if (id && QueriesTo(*id)) {
     aResult.set(thisv);
+  } else {
+    aRv.Throw(NS_ERROR_NO_INTERFACE);
   }
 }
 

@@ -69,7 +69,6 @@ class nsIDOMWindowUtils;
 class nsDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
-class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsITabChild;
@@ -978,7 +977,7 @@ public:
                       nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError);
 
-  void GetInterface(JSContext* aCx, nsIJSID* aIID,
+  void GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
                     JS::MutableHandle<JS::Value> aRetval,
                     mozilla::ErrorResult& aError);
 
