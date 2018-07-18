@@ -9,6 +9,7 @@
 #include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -684,7 +685,8 @@ void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
       for (unsigned int i = 0; i < collection.count; ++i) {
         auto device = collection.device[i];
         RefPtr<AudioDeviceInfo> info =
-          new AudioDeviceInfo(NS_ConvertUTF8toUTF16(device.friendly_name),
+          new AudioDeviceInfo(device.devid,
+                              NS_ConvertUTF8toUTF16(device.friendly_name),
                               NS_ConvertUTF8toUTF16(device.group_id),
                               NS_ConvertUTF8toUTF16(device.vendor_name),
                               ConvertCubebType(device.type),
