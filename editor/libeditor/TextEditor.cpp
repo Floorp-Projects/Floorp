@@ -1362,25 +1362,31 @@ TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 NS_IMETHODIMP
 TextEditor::GetTextLength(int32_t* aCount)
 {
-  NS_ASSERTION(aCount, "null pointer");
+  MOZ_ASSERT(aCount);
 
   // initialize out params
   *aCount = 0;
 
   // special-case for empty document, to account for the bogus node
-  bool docEmpty;
-  nsresult rv = GetDocumentIsEmpty(&docEmpty);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (docEmpty) {
+  bool isEmpty = false;
+  nsresult rv = IsEmpty(&isEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (isEmpty) {
     return NS_OK;
   }
 
-  dom::Element *rootElement = GetRoot();
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIContentIterator> iter =
     do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   uint32_t totalLength = 0;
   iter->Init(rootElement);
