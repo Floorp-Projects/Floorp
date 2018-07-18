@@ -12,6 +12,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/RefPtr.h"
 #include "nsIPrefService.h"
+#include "Tracing.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
@@ -486,6 +487,8 @@ MediaEngineRemoteVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandle
                                    StreamTime aDesiredTime,
                                    const PrincipalHandle& aPrincipalHandle)
 {
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i",
+                               aStream.get(), aTrackID);
   MutexAutoLock lock(mMutex);
   if (mState == kReleased) {
     // We end the track before deallocating, so this is safe.

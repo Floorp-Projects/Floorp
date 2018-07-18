@@ -608,8 +608,12 @@ var gPermissionObject = {
   "autoplay-media": {
     exactHostMatch: true,
     getDefault() {
-      if (Services.prefs.getBoolPref("media.autoplay.enabled")) {
+      let state = Services.prefs.getIntPref("media.autoplay.default",
+                                            Ci.nsIAutoplay.PROMPT);
+      if (state == Ci.nsIAutoplay.ALLOW) {
         return SitePermissions.ALLOW;
+      } if (state == Ci.nsIAutoplay.BLOCK) {
+        return SitePermissions.DENY;
       }
       return SitePermissions.UNKNOWN;
     },

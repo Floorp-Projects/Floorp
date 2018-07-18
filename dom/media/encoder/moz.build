@@ -29,6 +29,8 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     ]
     LOCAL_INCLUDES += ['/media/libyuv/libyuv/include']
 
+DEFINES['TRACING'] = True
+
 FINAL_LIBRARY = 'xul'
 
 # These includes are from Android JB, for use of MediaCodec.

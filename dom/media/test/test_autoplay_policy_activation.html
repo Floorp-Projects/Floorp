@@ -14,7 +14,7 @@
         // Tests that videos can only play audibly in windows/frames
         // which have been activated by same-origin user gesture.
 
-        gTestPrefs.push(["media.autoplay.enabled", false],
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
                         ["media.autoplay.enabled.user-gestures-needed", true]);
 
         SpecialPowers.pushPrefEnv({'set': gTestPrefs}, () => {

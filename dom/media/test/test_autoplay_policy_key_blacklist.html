@@ -18,7 +18,7 @@
         // don't gesture activate documents, and don't unblock
         // audible autoplay.
 
-        gTestPrefs.push(["media.autoplay.enabled", false],
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
           ["media.autoplay.enabled.user-gestures-needed", true]);
 
         SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {

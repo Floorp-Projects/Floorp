@@ -7,11 +7,14 @@
 #ifndef TRACING_H
 #define TRACING_H
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
 
 #include "AsyncLogger.h"
 
-#include <mozilla/Attributes.h>
+#include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 #if defined(_WIN32)
 #include <process.h>
@@ -44,24 +47,31 @@
   #define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)                    \
     AutoTracer budget(gMSGTraceLogger, "Real-time budget", getpid(), 1,        \
                       AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
+  #define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)                              \
+    AutoTracer trace(gMSGTraceLogger, FUNCTION_SIGNATURE, getpid(), 0,         \
+                     AutoTracer::EventType::DURATION,                          \
+                     aFmt, ##__VA_ARGS__);
   #define TRACE()                                                              \
     AutoTracer trace(gMSGTraceLogger, FUNCTION_SIGNATURE, getpid(),            \
                      std::hash<std::thread::id>{}(std::this_thread::get_id()));
-  #define TRACE_COMMENT(aComment)                                              \
+  #define TRACE_COMMENT(aFmt, ...)                                             \
     AutoTracer trace(gMSGTraceLogger, FUNCTION_SIGNATURE, getpid(),            \
                      std::hash<std::thread::id>{}(std::this_thread::get_id()), \
                      AutoTracer::EventType::DURATION,                          \
-                     aComment);
+                     aFmt, ##__VA_ARGS__);
 #else
   #define TRACE_AUDIO_CALLBACK()
   #define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
+  #define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)
   #define TRACE()
-  #define TRACE_COMMENT(aComment)
+  #define TRACE_COMMENT(aFmt, ...)
 #endif
 
 class MOZ_RAII AutoTracer
 {
 public:
+  static const int32_t BUFFER_SIZE = mozilla::AsyncLogger::MAX_MESSAGE_LENGTH / 2;
+
   enum class EventType
   {
     DURATION,
@@ -74,13 +84,39 @@ public:
              uint64_t aTID,
              EventType aEventType = EventType::DURATION,
              const char* aComment = nullptr);
+
+  template<typename... Args>
   AutoTracer(mozilla::AsyncLogger& aLogger,
              const char* aLocation,
              uint64_t aPID,
              uint64_t aTID,
              EventType aEventType,
-             uint64_t aSampleRate,
-             uint64_t aFrames);
+             const char* aFormat,
+             Args... aArgs)
+    : mLogger(aLogger)
+    , mLocation(aLocation)
+    , mComment(mBuffer)
+    , mEventType(aEventType)
+    , mPID(aPID)
+    , mTID(aTID)
+  {
+    MOZ_ASSERT(aEventType == EventType::DURATION);
+    if (aLogger.Enabled()) {
+      int32_t size = snprintf(mBuffer, BUFFER_SIZE, aFormat, aArgs...);
+      size = std::min(size, BUFFER_SIZE - 1);
+      mBuffer[size] = 0;
+      PrintEvent(aLocation, "perf", mComment, TracingPhase::BEGIN, NowInUs(), aPID, aTID);
+    }
+  }
+
+  AutoTracer(mozilla::AsyncLogger& aLogger,
+             const char* aLocation,
+             uint64_t aPID,
+             uint64_t aTID,
+             EventType aEventType,
+             uint64_t aFrames,
+             uint64_t aSampleRate);
+
   ~AutoTracer();
 private:
   uint64_t NowInUs();
@@ -108,11 +144,11 @@ private:
 
   void PrintBudget(const char* aName,
                    const char* aCategory,
-                   const char* aComment,
                    uint64_t aDuration,
                    uint64_t aPID,
                    uint64_t aThread,
-                   uint64_t aFrames);
+                   uint64_t aFrames,
+                   uint64_t aSampleRate);
 
   // The logger to use. It musdt have a lifetime longer than the block an
   // instance of this class traces.
@@ -123,6 +159,8 @@ private:
   // A comment for this trace point, abitrary string literal with a static
   // lifetime.
   const char* mComment;
+  // A buffer used to hold string-formatted traces.
+  char mBuffer[BUFFER_SIZE];
   // The event type, for now either a budget or a duration.
   const EventType mEventType;
   // The process ID of the calling process. Traces are grouped by PID in the

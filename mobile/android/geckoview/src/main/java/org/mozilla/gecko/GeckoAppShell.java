@@ -1711,7 +1711,7 @@ public class GeckoAppShell
         final GeckoProfile profile = GeckoThread.getActiveProfile();
         if (profile != null) {
             File lock = profile.getFile(".parentlock");
-            return lock.exists() && lock.delete();
+            return lock != null && lock.exists() && lock.delete();
         }
         return false;
     }

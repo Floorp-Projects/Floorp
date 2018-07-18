@@ -148,7 +148,6 @@ public:
 #if defined(MOZ_GECKO_PROFILER)
   static void DoStackCapture(const nsACString& aKey);
 #endif
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
   struct Stat {
     uint32_t hitCount;
     uint32_t totalTime;
@@ -220,10 +219,70 @@ NS_IMETHODIMP
 TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize)
 {
-  MOZ_COLLECT_REPORT(
-    "explicit/telemetry", KIND_HEAP, UNITS_BYTES,
-    SizeOfIncludingThis(TelemetryMallocSizeOf),
-    "Memory used by the telemetry system.");
+  mozilla::MallocSizeOf aMallocSizeOf = TelemetryMallocSizeOf;
+
+#define COLLECT_REPORT(name, size, desc) \
+  MOZ_COLLECT_REPORT(name, KIND_HEAP, UNITS_BYTES, size, desc)
+
+  COLLECT_REPORT("explicit/telemetry/impl", aMallocSizeOf(this),
+      "Memory used by the Telemetry core implemenation");
+
+  COLLECT_REPORT("explicit/telemetry/histogram/shallow",
+      TelemetryHistogram::GetMapShallowSizesOfExcludingThis(aMallocSizeOf),
+      "Memory used by the Telemetry Histogram implementation");
+
+  COLLECT_REPORT("explicit/telemetry/scalar/shallow",
+      TelemetryScalar::GetMapShallowSizesOfExcludingThis(aMallocSizeOf),
+      "Memory used by the Telemetry Scalar implemenation");
+
+  COLLECT_REPORT("explicit/telemetry/WebRTC",
+      mWebrtcTelemetry.SizeOfExcludingThis(aMallocSizeOf),
+      "Memory used by WebRTC Telemetry");
+
+  { // Scope for mHashMutex lock
+    MutexAutoLock lock(mHashMutex);
+    COLLECT_REPORT("explicit/telemetry/PrivateSQL",
+        mPrivateSQL.SizeOfExcludingThis(aMallocSizeOf),
+        "Memory used by the PrivateSQL Telemetry");
+
+    COLLECT_REPORT("explicit/telemetry/SanitizedSQL",
+        mSanitizedSQL.SizeOfExcludingThis(aMallocSizeOf),
+        "Memory used by the SanitizedSQL Telemetry");
+  }
+
+  if (sTelemetryIOObserver) {
+    COLLECT_REPORT("explicit/telemetry/IOObserver",
+        sTelemetryIOObserver->SizeOfIncludingThis(aMallocSizeOf),
+        "Memory used by the Telemetry IO Observer");
+  }
+
+#if defined(MOZ_GECKO_PROFILER)
+  COLLECT_REPORT("explicit/telemetry/StackCapturer",
+        mStackCapturer.SizeOfExcludingThis(aMallocSizeOf),
+        "Memory used by the Telemetry Stack capturer");
+#endif
+
+  COLLECT_REPORT("explicit/telemetry/LateWritesStacks",
+        mLateWritesStacks.SizeOfExcludingThis(),
+        "Memory used by the Telemetry LateWrites Stack capturer");
+
+  COLLECT_REPORT("explicit/telemetry/Callbacks",
+        mCallbacks.ShallowSizeOfExcludingThis(aMallocSizeOf),
+        "Memory used by the Telemetry Callbacks array (shallow)");
+
+  COLLECT_REPORT("explicit/telemetry/histogram/data",
+      TelemetryHistogram::GetHistogramSizesOfIncludingThis(aMallocSizeOf),
+      "Memory used by Telemetry Histogram data");
+
+  COLLECT_REPORT("explicit/telemetry/scalar/data",
+      TelemetryScalar::GetScalarSizesOfIncludingThis(aMallocSizeOf),
+      "Memory used by Telemetry Scalar data");
+
+  COLLECT_REPORT("explicit/telemetry/event/data",
+      TelemetryEvent::SizeOfIncludingThis(aMallocSizeOf),
+      "Memory used by Telemetry Event data");
+
+#undef COLLECT_REPORT
 
   return NS_OK;
 }
@@ -1739,33 +1798,6 @@ TelemetryImpl::FlushBatchedChildTelemetry()
 {
   TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
   return NS_OK;
-}
-
-size_t
-TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-{
-  size_t n = aMallocSizeOf(this);
-
-  n += TelemetryHistogram::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
-  n += TelemetryScalar::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
-  n += mWebrtcTelemetry.SizeOfExcludingThis(aMallocSizeOf);
-  { // Scope for mHashMutex lock
-    MutexAutoLock lock(mHashMutex);
-    n += mPrivateSQL.SizeOfExcludingThis(aMallocSizeOf);
-    n += mSanitizedSQL.SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  // It's a bit gross that we measure this other stuff that lives outside of
-  // TelemetryImpl... oh well.
-  if (sTelemetryIOObserver) {
-    n += sTelemetryIOObserver->SizeOfIncludingThis(aMallocSizeOf);
-  }
-
-  n += TelemetryHistogram::GetHistogramSizesofIncludingThis(aMallocSizeOf);
-  n += TelemetryScalar::GetScalarSizesOfIncludingThis(aMallocSizeOf);
-  n += TelemetryEvent::SizeOfIncludingThis(aMallocSizeOf);
-
-  return n;
 }
 
 } // namespace

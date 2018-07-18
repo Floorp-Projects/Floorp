@@ -47,6 +47,7 @@ add_task(async function test_urlbar_new_URL() {
 add_task(async function test_urlbar_fragment_enter() {
   await withTestPage(function(aBrowser) {
     gURLBar.focus();
+    gURLBar.select();
     EventUtils.synthesizeKey("KEY_ArrowRight");
     EventUtils.sendString("#fragment");
     EventUtils.synthesizeKey("KEY_Enter");

@@ -363,24 +363,6 @@ browser.usage:
       - 'main'
       - 'content'
 
-# The following section contains the session restore scalars.
-browser.session.restore:
-  worker_restart_count:
-    bug_numbers:
-      - 1402267
-    description: >
-      A counter incremented every time the SessionFile worker is restarted due
-      to too many failures, as defined in the browser.sessionstore.max_write_failures
-      pref.
-    expires: "64"
-    kind: uint
-    notification_emails:
-      - mdeboer@mozilla.com
-      - session-restore-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
 extensions.updates:
   rdf:
     bug_numbers:

@@ -25,7 +25,7 @@ SimpleTest.registerCleanupFunction(function() {
   SpecialPowers.removeAsyncObserver(observer, "webaudio-node-demise");
 });
 
-SpecialPowers.pushPrefEnv({"set": [["media.autoplay.enabled", false],
+SpecialPowers.pushPrefEnv({"set": [["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
                                    ["media.autoplay.enabled.user-gestures-needed", true]]},
                           startTest);
 

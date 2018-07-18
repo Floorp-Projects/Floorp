@@ -7,9 +7,7 @@
 #include "Tracing.h"
 
 #include <inttypes.h>
-#include <cstdio>
 
-#include "AsyncLogger.h"
 #include "mozilla/TimeStamp.h"
 
 using namespace mozilla;
@@ -40,16 +38,16 @@ AutoTracer::PrintEvent(const char* aName,
 void
 AutoTracer::PrintBudget(const char* aName,
                         const char* aCategory,
-                        const char* aComment,
                         uint64_t aDuration,
                         uint64_t aPID,
                         uint64_t aThread,
-                        uint64_t aFrames)
+                        uint64_t aFrames,
+                        uint64_t aSampleRate)
 {
   mLogger.Log("{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"X\","
               "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64 ", \"pid\": %" PRIu64 ","
-              "\"tid\": %" PRIu64 ", \"args\": { \"comment\": %" PRIu64 "}},",
-              aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames);
+              "\"tid\": %" PRIu64 ", \"args\": { \"comment\": \"%" PRIu64 "/%" PRIu64 "\"}},",
+              aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames, aSampleRate);
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger,
@@ -70,7 +68,7 @@ AutoTracer::AutoTracer(AsyncLogger& aLogger,
 
   if (aLogger.Enabled()) {
     float durationUS = (static_cast<float>(aFrames) / aSampleRate) * 1e6;
-    PrintBudget(aLocation, "perf", mComment, durationUS, mPID, mTID, aFrames);
+    PrintBudget(aLocation, "perf", durationUS, mPID, mTID, aFrames, aSampleRate);
   }
 }
 

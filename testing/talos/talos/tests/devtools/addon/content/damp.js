@@ -87,7 +87,7 @@ Damp.prototype = {
     // as it slow down next executions almost like a cold start.
 
     // See minimizeMemoryUsage code to justify the 3 iterations and the setTimeout:
-    // https://searchfox.org/mozilla-central/source/xpcom/base/nsMemoryReporterManager.cpp#2574-2585
+    // https://searchfox.org/mozilla-central/rev/33c21c060b7f3a52477a73d06ebcb2bf313c4431/xpcom/base/nsMemoryReporterManager.cpp#2574-2585,2591-2594
     for (let i = 0; i < 3; i++) {
       // See minimizeMemoryUsage code here to justify the GC+CC+GC:
       // https://searchfox.org/mozilla-central/rev/be78e6ea9b10b1f5b2b3b013f01d86e1062abb2b/dom/base/nsJSEnvironment.cpp#341-349
