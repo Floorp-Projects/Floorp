@@ -2357,7 +2357,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 pub extern "C" fn wr_dump_display_list(state: &mut WrState) {
     state.frame_builder
          .dl_builder
-         .print_display_list();
+         .print_display_list(0, None, None);
 }
 
 #[no_mangle]
