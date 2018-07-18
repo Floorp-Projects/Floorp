@@ -1404,9 +1404,10 @@ BrowserGlue.prototype = {
 
     // warnAboutClosingTabs checks browser.tabs.warnOnClose and returns if it's
     // ok to close the window. It doesn't actually close the window.
+    let closingTabs = win.gBrowser.tabs.length - win.gBrowser._removingTabs.length;
     if (windowcount == 1) {
       aCancelQuit.data =
-        !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL);
+        !win.gBrowser.warnAboutClosingTabs(closingTabs, win.gBrowser.closingTabsEnum.ALL);
     } else {
       // More than 1 window. Compose our own message.
       let tabSubstring = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindowsTabSnippet");
@@ -1415,7 +1416,7 @@ BrowserGlue.prototype = {
       windowString = PluralForm.get(windowcount, windowString).replace(/#1/, windowcount);
       windowString = windowString.replace(/%(?:1$)?S/i, tabSubstring);
       aCancelQuit.data =
-        !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL, null, windowString);
+        !win.gBrowser.warnAboutClosingTabs(closingTabs, win.gBrowser.closingTabsEnum.ALL, null, windowString);
     }
   },
 
