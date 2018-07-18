@@ -806,6 +806,7 @@ pub struct ClipChainId(pub u64, pub PipelineId);
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ClipId {
+    Spatial(usize, PipelineId),
     Clip(usize, PipelineId),
     ClipChain(ClipChainId),
 }
@@ -815,15 +816,16 @@ const ROOT_SCROLL_NODE_CLIP_ID: usize = 1;
 
 impl ClipId {
     pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {
-        ClipId::Clip(ROOT_SCROLL_NODE_CLIP_ID, pipeline_id)
+        ClipId::Spatial(ROOT_SCROLL_NODE_CLIP_ID, pipeline_id)
     }
 
     pub fn root_reference_frame(pipeline_id: PipelineId) -> ClipId {
-        ClipId::Clip(ROOT_REFERENCE_FRAME_CLIP_ID, pipeline_id)
+        ClipId::Spatial(ROOT_REFERENCE_FRAME_CLIP_ID, pipeline_id)
     }
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
+            ClipId::Spatial(_, pipeline_id) |
             ClipId::Clip(_, pipeline_id) |
             ClipId::ClipChain(ClipChainId(_, pipeline_id)) => pipeline_id,
         }
@@ -831,14 +833,14 @@ impl ClipId {
 
     pub fn is_root_scroll_node(&self) -> bool {
         match *self {
-            ClipId::Clip(1, _) => true,
+            ClipId::Spatial(ROOT_SCROLL_NODE_CLIP_ID, _) => true,
             _ => false,
         }
     }
 
     pub fn is_root_reference_frame(&self) -> bool {
         match *self {
-            ClipId::Clip(1, _) => true,
+            ClipId::Spatial(ROOT_REFERENCE_FRAME_CLIP_ID, _) => true,
             _ => false,
         }
     }

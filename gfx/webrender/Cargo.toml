@@ -71,6 +71,6 @@ freetype = { version = "0.4", default-features = false }
 dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.5"
-core-graphics = "0.13"
-core-text = { version = "9.2.0", default-features = false }
+core-foundation = "0.6"
+core-graphics = "0.14"
+core-text = { version = "10", default-features = false }
