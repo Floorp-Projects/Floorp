@@ -42,6 +42,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -1014,7 +1015,8 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
          mChannelClassifier.get(), channel.get()));
     channel->Cancel(aErrorCode);
   } else {
-    MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());
+    MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation() ||
+               StaticPrefs::privacy_restrict3rdpartystorage_enabled());
 
     // Even with TP disabled, we still want to show the user that there
     // are unblocked trackers on the site, so notify the UI that we loaded
@@ -1199,7 +1201,8 @@ nsChannelClassifier::CheckIsTrackerWithLocalTable(std::function<void()>&& aCallb
     return rv;
   }
 
-  if (!ShouldEnableTrackingProtection() && !ShouldEnableTrackingAnnotation()) {
+  if (!ShouldEnableTrackingProtection() && !ShouldEnableTrackingAnnotation() &&
+      !StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
     return NS_ERROR_FAILURE;
   }
 

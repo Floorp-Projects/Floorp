@@ -330,80 +330,6 @@ private:
   }
 };
 
-class ReportCompileErrorRunnable final : public WorkerRunnable
-{
-public:
-  static void
-  CreateAndDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    RefPtr<ReportCompileErrorRunnable> runnable =
-      new ReportCompileErrorRunnable(aCx, aWorkerPrivate);
-    runnable->Dispatch();
-  }
-
-private:
-  ReportCompileErrorRunnable(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-    : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
-  {
-    aWorkerPrivate->AssertIsOnWorkerThread();
-  }
-
-  void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    // Dispatch may fail if the worker was canceled, no need to report that as
-    // an error, so don't call base class PostDispatch.
-  }
-
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    if (aWorkerPrivate->IsFrozen() ||
-        aWorkerPrivate->IsParentWindowPaused()) {
-      MOZ_ASSERT(!IsDebuggerRunnable());
-      aWorkerPrivate->QueueRunnable(this);
-      return true;
-    }
-
-    if (aWorkerPrivate->IsSharedWorker()) {
-      aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, nullptr,
-                                                    /* isErrorEvent */ false);
-      return true;
-    }
-
-    if (aWorkerPrivate->IsServiceWorker()) {
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      if (swm) {
-        swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                         aWorkerPrivate->ServiceWorkerScope(),
-                         aWorkerPrivate->ScriptURL(),
-                         EmptyString(), EmptyString(), EmptyString(),
-                         0, 0, JSREPORT_ERROR, JSEXN_ERR);
-      }
-      return true;
-    }
-
-    if (!aWorkerPrivate->IsAcceptingEvents()) {
-      return true;
-    }
-
-    RefPtr<mozilla::dom::EventTarget> parentEventTarget =
-      aWorkerPrivate->ParentEventTargetRef();
-    RefPtr<Event> event =
-      Event::Constructor(parentEventTarget, NS_LITERAL_STRING("error"),
-                         EventInit());
-    event->SetTrusted(true);
-
-    parentEventTarget->DispatchEvent(*event);
-    return true;
-  }
-};
-
 class CompileScriptRunnable final : public WorkerRunnable
 {
   nsString mScriptURL;
@@ -469,7 +395,7 @@ private:
     // because all the other errors are handled when the script is loaded.
     // See: https://dom.spec.whatwg.org/#concept-event-fire
     if (rv.Failed() && !rv.IsJSException()) {
-      ReportCompileErrorRunnable::CreateAndDispatch(aCx, aWorkerPrivate);
+      WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(aWorkerPrivate);
       rv.SuppressException();
       return false;
     }

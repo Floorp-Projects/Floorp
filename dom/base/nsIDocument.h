@@ -2911,7 +2911,6 @@ public:
 
   void AddComposedDocShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
   {
-    MOZ_ASSERT(IsShadowDOMEnabled());
     mComposedShadowRoots.PutEntry(&aShadowRoot);
   }
 
@@ -2919,7 +2918,6 @@ public:
 
   void RemoveComposedDocShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
   {
-    MOZ_ASSERT(IsShadowDOMEnabled());
     mComposedShadowRoots.RemoveEntry(&aShadowRoot);
   }
 

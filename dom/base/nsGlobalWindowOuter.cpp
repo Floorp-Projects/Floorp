@@ -7137,9 +7137,8 @@ nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI)
     return;
   }
 
-  // No 3rd party or no tracking resource.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr, nullptr) ||
-      !nsContentUtils::IsTrackingResourceWindow(inner)) {
+  // No 3rd party URL/window.
+  if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr, aURI)) {
     return;
   }
 

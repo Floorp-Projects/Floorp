@@ -26,6 +26,7 @@ toolkit.jar:
    skin/classic/global/textbox.css                         (global/empty.css)
    skin/classic/global/toolbar.css                         (global/empty.css)
    skin/classic/global/toolbarbutton.css                   (global/empty.css)
+   skin/classic/global/tooltip.css                         (global/empty.css)
    skin/classic/global/tree.css                            (global/empty.css)
    skin/classic/global/wizard.css                          (global/empty.css)
    skin/classic/global/scrollbars.css                      (global/empty.css)
