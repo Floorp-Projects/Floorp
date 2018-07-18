@@ -52,7 +52,6 @@ class nsXPCComponents_ID;
 class nsXPCComponents_Exception;
 class nsXPCComponents_Constructor;
 class nsXPCComponents_Utils;
-class nsXPCConstructor;
 
 class AutoMarkingPtr;
 
