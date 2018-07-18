@@ -201,8 +201,8 @@ enum Role {
   ROW = 28,
 
   /**
-   * Represents a cell within a table. It is used for html:td,
-   * xul:tree cell and xul:listcell. Also, see TABLE.
+   * Represents a cell within a table. It is used for html:td and xul:tree cell.
+   * Also, see TABLE.
    */
   CELL = 29,
 

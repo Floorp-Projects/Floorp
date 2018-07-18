@@ -178,7 +178,6 @@ function initPage() {
   }
   if (showCaptivePortalUI) {
     initPageCaptivePortal();
-    updateContainerPosition();
     return;
   }
   if (gIsCertError) {
@@ -295,7 +294,6 @@ function initPage() {
       span.textContent = document.location.hostname;
     }
   }
-  updateContainerPosition();
 }
 
 function updateContainerPosition() {
