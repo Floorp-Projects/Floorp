@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
@@ -93,6 +94,23 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be set to mobile",
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(mobileSubStr))
+    }
+
+    @Test fun telemetry() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val telemetry = sessionRule.runtime.telemetry
+        val result = sessionRule.waitForResult(telemetry.getSnapshots(true))
+
+        assertThat("Histograms should not be null",
+                   result?.get("histograms"), notNullValue())
+        assertThat("Keyed histograms should not be null",
+                   result?.get("keyedHistograms"), notNullValue())
+        assertThat("Scalars should not be null",
+                   result?.get("scalars"), notNullValue())
+        assertThat("Keyed scalars should not be null",
+                   result?.get("keyedScalars"), notNullValue())
     }
 
     @Test fun load() {
