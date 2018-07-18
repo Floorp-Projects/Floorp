@@ -8,8 +8,11 @@
 #define CubebUtils_h_
 
 #include "cubeb/cubeb.h"
-#include "mozilla/dom/AudioDeviceInfo.h"
+#include "nsString.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Maybe.h"
+
+class AudioDeviceInfo;
 
 namespace mozilla {
 namespace CubebUtils {
