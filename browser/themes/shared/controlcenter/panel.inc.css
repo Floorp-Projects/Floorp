@@ -342,15 +342,15 @@ description#identity-popup-content-verifier,
 #tracking-protection-content:not([state]):-moz-any([enabled="false"], :not([hasException])) > #tracking-not-detected,
 #tracking-protection-content:not([state])[enabled="true"][hasException] > #tracking-not-detected-exception,
 /* Blocking tracking, offer buttons to unblock (depending on PBM). */
-#tracking-protection-content[state="blocked-tracking-content"] > #tracking-blocked,
-#main-window:not([privatebrowsingmode]) #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock,
+#tracking-protection-content:not([hasException])[state="blocked-tracking-content"] > #tracking-blocked,
+#main-window:not([privatebrowsingmode]) #tracking-protection-content:not([hasException])[state="blocked-tracking-content"] > #tracking-action-unblock,
 #main-window[privatebrowsingmode] #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock-private,
 /* Enabled and no exception but trackers loaded, probably needs a reload */
 #tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-reload-required,
 #tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-action-reload,
 /* Tracking Loaded */
 #tracking-protection-content[state="loaded-tracking-content"][enabled="false"] > #tracking-loaded,
-#tracking-protection-content[state="loaded-tracking-content"][enabled="true"][hasException] > #tracking-loaded-exception,
+#tracking-protection-content[enabled="true"][hasException] > #tracking-loaded-exception,
 /* Has an exception, offer to block the site again. */
 #tracking-protection-content[enabled="true"][hasException] > #tracking-action-block {
   display: -moz-box;

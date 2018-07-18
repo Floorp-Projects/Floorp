@@ -168,8 +168,10 @@ var TrackingProtection = {
     }
 
     if (hasException) {
+      this.icon.setAttribute("hasException", "true");
       this.content.setAttribute("hasException", "true");
     } else {
+      this.icon.removeAttribute("hasException");
       this.content.removeAttribute("hasException");
     }
 

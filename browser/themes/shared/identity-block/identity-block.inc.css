@@ -147,11 +147,14 @@
 
 /* TRACKING PROTECTION ICON */
 
-#tracking-protection-icon {
+#tracking-protection-icon[state="blocked-tracking-content"] {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
   margin-inline-end: 0;
 }
 
+/* Override the blocked tracking content rule for cases when the user has added an exception
+ * on a different tab to signify that protection is disabled now */
+#tracking-protection-icon[hasException][state="blocked-tracking-content"],
 #tracking-protection-icon[state="loaded-tracking-content"] {
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
