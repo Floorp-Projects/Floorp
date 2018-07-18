@@ -182,35 +182,12 @@ ObjectClient.prototype = {
   }),
 
   /**
-   * Request the value of the object's specified property.
-   *
-   * @param name string The name of the requested property.
-   * @param onResponse function Called with the request's response.
-   */
-  getPropertyValue: DebuggerClient.requester({
-    type: "propertyValue",
-    name: arg(0)
-  }),
-
-  /**
    * Request the prototype of the object.
    *
    * @param onResponse function Called with the request's response.
    */
   getPrototype: DebuggerClient.requester({
     type: "prototype"
-  }),
-
-  /**
-   * Request the value of the object's specified property.
-   *
-   * @param name string The name of the requested property.
-   * @param onResponse function Called with the request's response.
-   */
-  apply: DebuggerClient.requester({
-    type: "apply",
-    this: arg(0),
-    arguments: arg(1),
   }),
 
   /**
