@@ -20,7 +20,6 @@ toolkit.jar:
   skin/classic/global/commonDialog.css
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css
-  skin/classic/global/listbox.css
   skin/classic/global/netError.css
 * skin/classic/global/numberbox.css
 * skin/classic/global/notification.css
