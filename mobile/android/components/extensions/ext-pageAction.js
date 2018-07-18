@@ -169,7 +169,7 @@ class PageAction extends EventEmitter {
     // Bug 1372783: Why is this contentWindow.devicePixelRatio, while
     // convertImageURLToDataURL uses browserWindow.devicePixelRatio?
     let {icon} = IconDetails.getPreferredIcon(this.defaults.icons, this.extension,
-                                              18 * contentWindow.devicePixelRatio);
+                                              16 * contentWindow.devicePixelRatio);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     return IconDetails.convertImageURLToDataURL(icon, contentWindow, browserWindow).then(dataURI => {

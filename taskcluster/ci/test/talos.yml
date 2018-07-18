@@ -32,6 +32,7 @@ talos-bcv:
     run-on-projects:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     tier:
         by-test-platform:
@@ -49,6 +50,7 @@ talos-bcv-profiling:
     run-on-projects:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
+            windows.*msvc/.*: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     tier:
         by-test-platform:
@@ -64,7 +66,10 @@ talos-chrome:
     description: "Talos chrome"
     try-name: chromez
     treeherder-symbol: T(c)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -74,7 +79,10 @@ talos-chrome-profiling:
     description: "Talos profiling chrome"
     try-name: chromez-profiling
     treeherder-symbol: T-P(c)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -92,6 +100,7 @@ talos-damp:
     run-on-projects:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
@@ -101,7 +110,10 @@ talos-damp-profiling:
     description: "Talos profiling devtools"
     try-name: damp-profiling
     treeherder-symbol: T-P(damp)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -112,7 +124,10 @@ talos-dromaeojs:
     description: "Talos dromaeojs"
     try-name: dromaeojs
     treeherder-symbol: T(d)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 2100
     mozharness:
         extra-options:
@@ -122,7 +137,10 @@ talos-dromaeojs-profiling:
     description: "Talos profiling dromaeojs"
     try-name: dromaeojs-profiling
     treeherder-symbol: T-P(d)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 2100
     mozharness:
         extra-options:
@@ -134,7 +152,10 @@ talos-flex:
     try-name: flex
     treeherder-symbol: T(f)
     tier: 3
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -144,7 +165,10 @@ talos-g1:
     description: "Talos g1"
     try-name: g1
     treeherder-symbol: T(g1)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time:
         by-test-platform:
             linux64.*: 2700
@@ -157,7 +181,10 @@ talos-g1-profiling:
     description: "Talos profiling g1"
     try-name: g1-profiling
     treeherder-symbol: T-P(g1)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time:
         by-test-platform:
             linux64.*: 2700
@@ -171,7 +198,10 @@ talos-g3:
     description: "Talos g3"
     try-name: g3
     treeherder-symbol: T(g3)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -181,7 +211,10 @@ talos-g3-profiling:
     description: "Talos profiling g3"
     try-name: g3-profiling
     treeherder-symbol: T-P(g3)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -192,7 +225,10 @@ talos-g4:
     description: "Talos g4"
     try-name: g4
     treeherder-symbol: T(g4)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time:
         by-test-platform:
             linux64.*: 1500
@@ -205,7 +241,10 @@ talos-g4-profiling:
     description: "Talos profiling g4"
     try-name: g4-profiling
     treeherder-symbol: T-P(g4)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     mozharness:
         extra-options:
             - --suite=g4
@@ -219,7 +258,10 @@ talos-g5:
     description: "Talos g5"
     try-name: g5
     treeherder-symbol: T(g5)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
             - --suite=g5
@@ -232,7 +274,10 @@ talos-g5-profiling:
     description: "Talos profiling g5"
     try-name: g5-profiling
     treeherder-symbol: T-P(g5)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     mozharness:
         extra-options:
             - --suite=g5
@@ -246,7 +291,10 @@ talos-h1:
     description: "Talos h1"
     try-name: h1
     treeherder-symbol: T(h1)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
             - --suite=h1
@@ -263,7 +311,10 @@ talos-h2:
         by-test-platform:
             linux64.*: 900
             default: 7200
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
             - --suite=h2
@@ -272,7 +323,10 @@ talos-motionmark:
     description: "Talos motionmark"
     try-name: motionmark
     treeherder-symbol: T(mm)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 3600
     tier:
         by-test-platform:
@@ -287,7 +341,10 @@ talos-motionmark-profiling:
     description: "Talos profiling motionmark"
     try-name: motionmark-profiling
     treeherder-symbol: T-P(mm)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 3600
     tier:
         by-test-platform:
@@ -303,7 +360,10 @@ talos-other:
     description: "Talos other"
     try-name: other
     treeherder-symbol: T(o)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -313,7 +373,10 @@ talos-other-profiling:
     description: "Talos profiling other"
     try-name: other-profiling
     treeherder-symbol: T-P(o)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -324,7 +387,10 @@ talos-perf-reftest:
     description: "Talos perf-reftest"
     try-name: perf-reftest
     treeherder-symbol: T(p)
-    run-on-projects: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -334,7 +400,10 @@ talos-perf-reftest-profiling:
     description: "Talos profiling perf-reftest"
     try-name: perf-reftest-profiling
     treeherder-symbol: T-P(p)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -345,7 +414,10 @@ talos-perf-reftest-singletons:
     description: "Talos perf-reftest singletons"
     try-name: perf-reftest-singletons
     treeherder-symbol: T(ps)
-    run-on-projects: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -355,7 +427,10 @@ talos-perf-reftest-singletons-profiling:
     description: "Talos profiling perf-reftest singletons"
     try-name: perf-reftest-singletons-profiling
     treeherder-symbol: T-P(ps)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -366,7 +441,10 @@ talos-speedometer:
     description: "Talos speedometer"
     try-name: speedometer
     treeherder-symbol: T(sp)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -376,7 +454,10 @@ talos-speedometer-profiling:
     description: "Talos profiling speedometer"
     try-name: speedometer-profiling
     treeherder-symbol: T-P(sp)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -387,7 +468,10 @@ talos-svgr:
     description: "Talos svgr"
     try-name: svgr
     treeherder-symbol: T(s)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -397,7 +481,10 @@ talos-svgr-profiling:
     description: "Talos profiling svgr"
     try-name: svgr-profiling
     treeherder-symbol: T-P(s)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -408,7 +495,10 @@ talos-tp5o:
     description: "Talos tp5o"
     try-name: tp5o
     treeherder-symbol: T(tp)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -418,7 +508,10 @@ talos-tp5o-profiling:
     description: "Talos profiling tp5o"
     try-name: tp5o-profiling
     treeherder-symbol: T-P(tp)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -429,7 +522,10 @@ talos-tp6:
     description: "Talos tp6"
     try-name: tp6
     treeherder-symbol: T(tp6)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -439,7 +535,10 @@ talos-tp6-profiling:
     description: "Talos profiling tp6"
     try-name: tp6-profiling
     treeherder-symbol: T-P(tp6)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -454,6 +553,7 @@ talos-tp6-stylo-threads:
     run-on-projects:
         by-test-platform:
             macosx.*: ['mozilla-beta', 'autoland', 'try']
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
@@ -467,6 +567,7 @@ talos-tps:
     run-on-projects:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
+            windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
@@ -477,7 +578,10 @@ talos-tps-profiling:
     try-name: tps-profiling
     treeherder-symbol: T-P(tps)
     max-run-time: 900
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows.*msvc/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'try']
     mozharness:
         extra-options:
             - --suite=tps
@@ -490,7 +594,8 @@ talos-xperf:
     virtualization: virtual
     run-on-projects:
         by-test-platform:
-            windows7-32.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            windows7-32-msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
+            windows7-32(-pgo)?/.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
             default: []
     tier:
         by-test-platform:

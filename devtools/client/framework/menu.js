@@ -136,54 +136,21 @@ Menu.prototype._createMenuItems = function(parent) {
 
       const menu = doc.createElementNS(XUL_NS, "menu");
       menu.appendChild(menupopup);
-      menu.setAttribute("label", item.label);
-      if (item.disabled) {
-        menu.setAttribute("disabled", "true");
-      }
-      if (item.accelerator) {
-        menu.setAttribute("acceltext", item.accelerator);
-      }
-      if (item.accesskey) {
-        menu.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menu.id = item.id;
-      }
+      applyItemAttributesToNode(item, menu);
       parent.appendChild(menu);
     } else if (item.type === "separator") {
       const menusep = doc.createElementNS(XUL_NS, "menuseparator");
       parent.appendChild(menusep);
     } else {
       const menuitem = doc.createElementNS(XUL_NS, "menuitem");
-      menuitem.setAttribute("label", item.label);
+      applyItemAttributesToNode(item, menuitem);
+
       menuitem.addEventListener("command", () => {
         item.click();
       });
       menuitem.addEventListener("DOMMenuItemActive", () => {
         item.hover();
       });
-
-      if (item.type === "checkbox") {
-        menuitem.setAttribute("type", "checkbox");
-      }
-      if (item.type === "radio") {
-        menuitem.setAttribute("type", "radio");
-      }
-      if (item.disabled) {
-        menuitem.setAttribute("disabled", "true");
-      }
-      if (item.checked) {
-        menuitem.setAttribute("checked", "true");
-      }
-      if (item.accelerator) {
-        menuitem.setAttribute("acceltext", item.accelerator);
-      }
-      if (item.accesskey) {
-        menuitem.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menuitem.id = item.id;
-      }
 
       parent.appendChild(menuitem);
     }
@@ -201,5 +168,34 @@ Menu.sendActionToFirstResponder = () => {
 Menu.buildFromTemplate = () => {
   throw Error("Not implemented");
 };
+
+function applyItemAttributesToNode(item, node) {
+  if (item.l10nID) {
+    node.setAttribute("data-l10n-id", item.l10nID);
+  } else {
+    node.setAttribute("label", item.label);
+    if (item.accelerator) {
+      node.setAttribute("acceltext", item.accelerator);
+    }
+    if (item.accesskey) {
+      node.setAttribute("accesskey", item.accesskey);
+    }
+  }
+  if (item.type === "checkbox") {
+    node.setAttribute("type", "checkbox");
+  }
+  if (item.type === "radio") {
+    node.setAttribute("type", "radio");
+  }
+  if (item.disabled) {
+    node.setAttribute("disabled", "true");
+  }
+  if (item.checked) {
+    node.setAttribute("checked", "true");
+  }
+  if (item.id) {
+    node.id = item.id;
+  }
+}
 
 module.exports = Menu;
