@@ -50,7 +50,7 @@ script.addMessageListener('opening-request-completed', function ml(msg) {
       var cspReport = reportObj["csp-report"];
       // blocked-uri should only be the asciiHost instead of:
       // http://test1.example.com/tests/dom/security/test/csp/file_path_matching.js
-      is(cspReport["blocked-uri"], "http://test1.example.com", "Incorrect blocked-uri");
+      is(cspReport["blocked-uri"], "http://example.com/tests/dom/security/test/csp/file_path_matching_redirect_server.sjs", "Incorrect blocked-uri");
     } catch (e) {
       ok(false, "Could not query report (exception: " + e + ")");
     }
