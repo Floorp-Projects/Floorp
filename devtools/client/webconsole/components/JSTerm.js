@@ -1173,10 +1173,10 @@ class JSTerm extends Component {
     }
     if (this._autocompleteQuery && input.startsWith(this._autocompleteQuery)) {
       let filterBy = input;
-      // Find the last non-alphanumeric other than "_", ":", or "$" if it exists.
-      const lastNonAlpha = input.match(/[^a-zA-Z0-9_$:][a-zA-Z0-9_$:]*$/);
+      // Find the last non-alphanumeric other than _ or $ if it exists.
+      const lastNonAlpha = input.match(/[^a-zA-Z0-9_$][a-zA-Z0-9_$]*$/);
       // If input contains non-alphanumerics, use the part after the last one
-      // to filter the cache.
+      // to filter the cache
       if (lastNonAlpha) {
         filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
       }
