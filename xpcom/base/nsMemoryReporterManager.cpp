@@ -25,12 +25,10 @@
 #include "nsMemoryInfoDumper.h"
 #endif
 #include "nsNetCID.h"
-#include "nsThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -40,8 +38,6 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
 #ifdef XP_WIN
-#include "mozilla/MemoryInfo.h"
-
 #include <process.h>
 #ifndef getpid
 #define getpid _getpid
@@ -59,8 +55,6 @@ using namespace dom;
 #endif  // MOZ_MEMORY
 
 #if defined(XP_LINUX)
-
-#include "mozilla/MemoryMapping.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -95,15 +89,48 @@ GetProcSelfSmapsPrivate(int64_t* aN)
   // little to do with whether the pages are actually shared. /proc/self/smaps
   // on the other hand appears to give us the correct information.
 
-  nsTArray<MemoryMapping> mappings(1024);
-  MOZ_TRY(GetMemoryMappings(mappings));
+  FILE* f = fopen("/proc/self/smaps", "r");
+  if (NS_WARN_IF(!f)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // We carry over the end of the buffer to the beginning to make sure we only
+  // interpret complete lines.
+  static const uint32_t carryOver = 32;
+  static const uint32_t readSize = 4096;
 
   int64_t amount = 0;
-  for (auto& mapping : mappings) {
-    amount += mapping.Private_Clean();
-    amount += mapping.Private_Dirty();
+  char buffer[carryOver + readSize + 1];
+
+  // Fill the beginning of the buffer with spaces, as a sentinel for the first
+  // iteration.
+  memset(buffer, ' ', carryOver);
+
+  for (;;) {
+    size_t bytes = fread(buffer + carryOver, sizeof(*buffer), readSize, f);
+    char* end = buffer + bytes;
+    char* ptr = buffer;
+    end[carryOver] = '\0';
+    // We are looking for lines like "Private_{Clean,Dirty}: 4 kB".
+    while ((ptr = strstr(ptr, "Private"))) {
+      if (ptr >= end) {
+        break;
+      }
+      ptr += sizeof("Private_Xxxxx:");
+      amount += strtol(ptr, nullptr, 10);
+    }
+    if (bytes < readSize) {
+      // We do not expect any match within the end of the buffer.
+      MOZ_ASSERT(!strstr(end, "Private"));
+      break;
+    }
+    // Carry the end of the buffer over to the beginning.
+    memcpy(buffer, end, carryOver);
   }
-  *aN = amount;
+
+  fclose(f);
+  // Convert from kB to bytes.
+  *aN = amount * 1024;
   return NS_OK;
 }
 
@@ -1404,115 +1431,6 @@ public:
 };
 NS_IMPL_ISUPPORTS(AtomTablesReporter, nsIMemoryReporter)
 
-#if defined(XP_LINUX) || defined(XP_WIN)
-class ThreadStacksReporter final : public nsIMemoryReporter
-{
-  ~ThreadStacksReporter() = default;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) override
-  {
-#ifdef XP_LINUX
-    nsTArray<MemoryMapping> mappings(1024);
-    MOZ_TRY(GetMemoryMappings(mappings));
-#endif
-
-    // Enumerating over active threads requires holding a lock, so we collect
-    // info on all threads, and then call our reporter callbacks after releasing
-    // the lock.
-    struct ThreadData
-    {
-      nsCString mName;
-      uint32_t mThreadId;
-      size_t mPrivateSize;
-    };
-    AutoTArray<ThreadData, 32> threads;
-
-    for (auto* thread : nsThread::Enumerate()) {
-      if (!thread->StackBase()) {
-        continue;
-      }
-
-#ifdef XP_LINUX
-      int idx = mappings.BinaryIndexOf(thread->StackBase());
-      if (idx < 0) {
-        continue;
-      }
-      // Referenced() is the combined size of all pages in the region which have
-      // ever been touched, and are therefore consuming memory. For stack
-      // regions, these pages are guaranteed to be un-shared unless we fork
-      // after creating threads (which we don't).
-      size_t privateSize = mappings[idx].Referenced();
-
-      // On Linux, we have to be very careful matching memory regions to thread
-      // stacks.
-      //
-      // To begin with, the kernel only reports VM stats for regions of all
-      // adjacent pages with the same flags, protection, and backing file.
-      // There's no way to get finer-grained usage information for a subset of
-      // those pages.
-      //
-      // Stack segments always have a guard page at the bottom of the stack
-      // (assuming we only support stacks that grow down), so there's no danger
-      // of them being merged with other stack regions. At the top, there's no
-      // protection page, and no way to allocate one without using pthreads
-      // directly and allocating our own stacks. So we get around the problem by
-      // adding an extra VM flag (NOHUGEPAGES) to our stack region, which we
-      // don't expect to be set on any heap regions. But this is not fool-proof.
-      //
-      // A second kink is that different C libraries (and different versions
-      // thereof) report stack base locations and sizes differently with regard
-      // to the guard page. For the libraries that include the guard page in the
-      // stack size base pointer, we need to adjust those values to compensate.
-      // But it's possible that our logic will get out of sync with library
-      // changes, or someone will compile with an unexpected library.
-      //
-      //
-      // The upshot of all of this is that there may be configurations that our
-      // special cases don't cover. And if there are, we want to know about it.
-      // So assert that total size of the memory region we're reporting actually
-      // matches the allocated size of the thread stack.
-      MOZ_ASSERT(mappings[idx].Size() == thread->StackSize(),
-                 "Mapping region size doesn't match stack allocation size");
-#else
-      auto memInfo = MemoryInfo::Get(thread->StackBase(), thread->StackSize());
-      size_t privateSize = memInfo.Committed();
-#endif
-
-      threads.AppendElement(ThreadData{
-        nsCString(PR_GetThreadName(thread->GetPRThread())),
-        thread->ThreadId(),
-        // On Linux, it's possible (but unlikely) that our stack region will
-        // have been merged with adjacent heap regions, in which case we'll get
-        // combined size information for both. So we take the minimum of the
-        // reported private size and the requested stack size to avoid the
-        // possible of majorly over-reporting in that case.
-        std::min(privateSize, thread->StackSize()),
-      });
-    }
-
-    for (auto& thread : threads) {
-      nsPrintfCString path("explicit/thread-stacks/%s (tid=%u)",
-                           thread.mName.get(), thread.mThreadId);
-
-      aHandleReport->Callback(
-          EmptyCString(), path,
-          KIND_NONHEAP, UNITS_BYTES,
-          thread.mPrivateSize,
-          NS_LITERAL_CSTRING("The sizes of thread stacks which have been "
-                             "committed to memory."),
-          aData);
-    }
-
-    return NS_OK;
-  }
-};
-NS_IMPL_ISUPPORTS(ThreadStacksReporter, nsIMemoryReporter)
-#endif
-
 #ifdef DEBUG
 
 // Ideally, this would be implemented in BlockingResourceBase.cpp.
@@ -1673,10 +1591,6 @@ nsMemoryReporterManager::Init()
 #endif
 
   RegisterStrongReporter(new AtomTablesReporter());
-
-#if defined(XP_LINUX) || defined(XP_WIN)
-  RegisterStrongReporter(new ThreadStacksReporter());
-#endif
 
 #ifdef DEBUG
   RegisterStrongReporter(new DeadlockDetectorReporter());
