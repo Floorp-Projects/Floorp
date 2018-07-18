@@ -72,6 +72,7 @@ function testBenignPageWithException() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
   ok(TrackingProtection.content.hasAttribute("hasException"), "content has exception attribute");
+  ok(TrackingProtection.iconBox.hasAttribute("hasException"), "icon box has exception attribute");
   ok(!TrackingProtection.iconBox.hasAttribute("state"), "icon box: no state");
   ok(!TrackingProtection.iconBox.hasAttribute("tooltiptext"), "icon box: no tooltip");
 
@@ -99,6 +100,8 @@ function testTrackingPage(window) {
       'icon box: state="blocked-tracking-content"');
   is(TrackingProtection.iconBox.getAttribute("tooltiptext"),
      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
+  ok(!TrackingProtection.content.hasAttribute("hasException"), "content has no exception attribute");
+  ok(!TrackingProtection.iconBox.hasAttribute("hasException"), "icon box has no exception attribute");
 
   let doc = tabbrowser.ownerGlobal.document;
   ok(BrowserTestUtils.is_visible(doc.getElementById("tracking-protection-icon-box")), "icon box is visible");
@@ -123,6 +126,10 @@ function testTrackingPage(window) {
 
 function testTrackingPageUnblocked() {
   info("Tracking content must be white-listed and not blocked");
+  is(TrackingProtection.content.hasAttribute("hasException"), TrackingProtection.enabled,
+    "content has exception attribute if TP is on");
+  is(TrackingProtection.iconBox.hasAttribute("hasException"), TrackingProtection.enabled,
+    "icon box has exception attribute if TP is on");
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "loaded-tracking-content",
       'content: state="loaded-tracking-content"');
