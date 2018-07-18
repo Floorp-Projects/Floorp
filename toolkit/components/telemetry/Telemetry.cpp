@@ -271,7 +271,7 @@ TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
         "Memory used by the Telemetry Callbacks array (shallow)");
 
   COLLECT_REPORT("explicit/telemetry/histogram/data",
-      TelemetryHistogram::GetHistogramSizesofIncludingThis(aMallocSizeOf),
+      TelemetryHistogram::GetHistogramSizesOfIncludingThis(aMallocSizeOf),
       "Memory used by Telemetry Histogram data");
 
   COLLECT_REPORT("explicit/telemetry/scalar/data",
