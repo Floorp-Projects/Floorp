@@ -23,6 +23,7 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
     this.securityCodeInput = document.createElement("input");
     this.securityCodeInput.autocomplete = "off";
     this.securityCodeInput.size = 3;
+    this.securityCodeInput.classList.add("security-code");
     this.securityCodeInput.addEventListener("change", this);
     this.addLink = document.createElement("a");
     this.addLink.className = "add-link";
