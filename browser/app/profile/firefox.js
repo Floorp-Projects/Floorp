@@ -1064,8 +1064,7 @@ pref("security.sandbox.gmp.win32k-disable", false);
 pref("security.sandbox.content.level", 3);
 #endif
 
-// Enable the Mac Flash sandbox on Nightly and Beta, not Release
-#if defined(EARLY_BETA_OR_EARLIER) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 // Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
 // sandboxed. On Mac these levels are:
 // 0 - "no sandbox"
