@@ -148,6 +148,29 @@
       // span having display:list-item style
       testAccessibleTree("list9", discAccTree);
 
+      // dl with div grouping dt/dd
+      tree =
+        { DEFINITION_LIST: [ // dl
+          { SECTION: [ // div
+            { TERM: [ // dt
+              { TEXT_LEAF: [] },
+            ] },
+            { DEFINITION: [ // dd
+              { TEXT_LEAF: [] }
+            ] },
+          ] },
+          { SECTION: [ // div
+            { TERM: [ // dt
+              { TEXT_LEAF: [] }
+            ] },
+            { DEFINITION: [ // dd
+              { TEXT_LEAF: [] }
+            ] }
+          ] }
+        ] };
+
+      testAccessibleTree("list10", tree);
+
       SimpleTest.finish();
     }
 
@@ -241,5 +264,12 @@
     <span id="l9_li2" style="display:list-item">Apples</span>
     <span id="l9_li3" style="display:list-item">Bananas</span>
   </ul>
+
+  <!-- dl with div grouping dd/dt elements (bug 1476347) -->
+  <dl id="list10">
+    <div><dt>item1</dt><dd>description</dd></div>
+    <div><dt>item2</td><dd>description</dd></div>
+  </dl>
+
 </body>
 </html>
