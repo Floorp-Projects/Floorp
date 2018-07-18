@@ -707,7 +707,7 @@ AddLazyFunctionsForRealm(JSContext* cx, AutoObjectVector& lazyFunctions, AllocKi
 
         if (fun->isInterpretedLazy()) {
             LazyScript* lazy = fun->lazyScriptOrNull();
-            if (lazy && !lazy->isEnclosingScriptLazy() && !lazy->hasUncompletedEnclosingScript()) {
+            if (lazy && lazy->enclosingScriptHasEverBeenCompiled()) {
                 if (!lazyFunctions.append(fun))
                     return false;
             }
