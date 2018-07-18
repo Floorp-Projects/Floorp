@@ -1651,6 +1651,11 @@ protected: // Shouldn't be used by friend classes
   virtual ~EditorBase();
 
   /**
+   * GetDocumentCharsetInternal() returns charset of the document.
+   */
+  nsresult GetDocumentCharsetInternal(nsACString& aCharset) const;
+
+  /**
    * SelectAllInternal() should be used instead of SelectAll() in editor
    * because SelectAll() creates AutoEditActionSetter but we should avoid
    * to create it as far as possible.

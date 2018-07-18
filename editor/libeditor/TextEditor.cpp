@@ -1811,14 +1811,14 @@ TextEditor::OutputToString(const nsAString& aFormatType,
     return rv;
   }
 
-  nsAutoCString charsetStr;
-  rv = GetDocumentCharacterSet(charsetStr);
-  if (NS_FAILED(rv) || charsetStr.IsEmpty()) {
-    charsetStr.AssignLiteral("windows-1252");
+  nsAutoCString charset;
+  rv = GetDocumentCharsetInternal(charset);
+  if (NS_FAILED(rv) || charset.IsEmpty()) {
+    charset.AssignLiteral("windows-1252");
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder =
-    GetAndInitDocEncoder(aFormatType, aFlags, charsetStr);
+    GetAndInitDocEncoder(aFormatType, aFlags, charset);
   if (NS_WARN_IF(!encoder)) {
     return NS_ERROR_FAILURE;
   }
