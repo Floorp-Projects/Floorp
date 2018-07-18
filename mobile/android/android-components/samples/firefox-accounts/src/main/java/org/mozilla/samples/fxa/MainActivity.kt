@@ -94,22 +94,10 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         val data = intent.dataString
 
         if (Intent.ACTION_VIEW == action && data != null) {
-            val txtView: TextView = findViewById(R.id.txtView)
             val url = Uri.parse(data)
             val code = url.getQueryParameter("code")
             val state = url.getQueryParameter("state")
-
-            val handleAuth = { _: OAuthInfo -> account?.getProfile() }
-            val handleProfile = { value: Profile ->
-                runOnUiThread {
-                    txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
-                }
-                account?.toJSONString().let {
-                    getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit()
-                            .putString(FXA_STATE_KEY, it).apply()
-                }
-            }
-            account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
+            displayAndPersistProfile(code, state)
         }
     }
 
@@ -122,15 +110,22 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
+        displayAndPersistProfile(code, state)
+        supportFragmentManager?.popBackStack()
+    }
+
+    private fun displayAndPersistProfile(code: String, state: String) {
         val txtView: TextView = findViewById(R.id.txtView)
         val handleAuth = { _: OAuthInfo -> account?.getProfile() }
         val handleProfile = { value: Profile ->
             runOnUiThread {
                 txtView.text = getString(R.string.signed_in, "${value.displayName ?: ""} ${value.email}")
             }
+            account?.toJSONString().let {
+                getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, it).apply()
+            }
         }
 
         account?.completeOAuthFlow(code, state)?.then(handleAuth)?.whenComplete(handleProfile)
-        supportFragmentManager?.popBackStack()
     }
 }
