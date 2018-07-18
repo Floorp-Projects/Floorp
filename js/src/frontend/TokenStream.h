@@ -946,6 +946,9 @@ CodeUnitValue(mozilla::Utf8Unit unit)
     return unit.toUint8();
 }
 
+template<typename CharT>
+class TokenStreamCharsBase;
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -1068,14 +1071,19 @@ class SourceUnits
         ptr -= n;
     }
 
-    bool matchCodeUnit(CharT c) {
-        if (*ptr == c) {    // this will nullptr-crash if poisoned
+  private:
+    friend class TokenStreamCharsBase<CharT>;
+
+    bool internalMatchCodeUnit(CharT c) {
+        MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
+        if (MOZ_LIKELY(!atEnd()) && *ptr == c) {
             ptr++;
             return true;
         }
         return false;
     }
 
+  public:
     void consumeKnownCodeUnit(CharT c) {
         MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
         MOZ_ASSERT(*ptr == c, "consuming the wrong code unit");
@@ -1225,6 +1233,8 @@ class TokenStreamCharsBase
   : public TokenStreamCharsShared
 {
   protected:
+    TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length, size_t startOffset);
+
     /**
      * Convert a non-EOF code unit returned by |getCodeUnit()| or
      * |peekCodeUnit()| to a CharT code unit.
@@ -1238,18 +1248,34 @@ class TokenStreamCharsBase
         sourceUnits.ungetCodeUnit();
     }
 
-  public:
-    TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length, size_t startOffset);
-
     static MOZ_ALWAYS_INLINE JSAtom*
     atomizeSourceChars(JSContext* cx, const CharT* chars, size_t length);
 
     using SourceUnits = frontend::SourceUnits<CharT>;
 
-    /** Match a non-EOL, non-EOF code unit; return true iff it was matched. */
-    inline bool matchCodeUnit(int32_t expect);
+    /**
+     * Try to match a non-LineTerminator ASCII code point.  Return true iff it
+     * was matched.
+     */
+    bool matchCodeUnit(char expect) {
+        MOZ_ASSERT(mozilla::IsAscii(expect));
+        MOZ_ASSERT(expect != '\r');
+        MOZ_ASSERT(expect != '\n');
+        return this->sourceUnits.internalMatchCodeUnit(CharT(expect));
+    }
 
-  protected:
+    /**
+     * Try to match an ASCII LineTerminator code point.  Return true iff it was
+     * matched.
+     */
+    bool matchLineTerminator(char expect) {
+        MOZ_ASSERT(expect == '\r' || expect == '\n');
+        return this->sourceUnits.internalMatchCodeUnit(CharT(expect));
+    }
+
+    template<typename T> bool matchCodeUnit(T) = delete;
+    template<typename T> bool matchLineTerminator(T) = delete;
+
     int32_t peekCodeUnit() {
         return MOZ_LIKELY(!sourceUnits.atEnd()) ? CodeUnitValue(sourceUnits.peekCodeUnit()) : EOF;
     }
@@ -1300,16 +1326,6 @@ TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t
                                                    size_t length)
 {
     return AtomizeChars(cx, chars, length);
-}
-
-template<typename CharT>
-inline bool
-TokenStreamCharsBase<CharT>::matchCodeUnit(int32_t expect)
-{
-    MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
-    MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-    return MOZ_LIKELY(!this->sourceUnits.atEnd()) &&
-           this->sourceUnits.matchCodeUnit(toCharT(expect));
 }
 
 template<>
@@ -1580,6 +1596,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using SpecializedCharsBase::infallibleConsumeRestOfSingleLineComment;
     using SpecializedCharsBase::infallibleGetNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
+    using CharsBase::matchLineTerminator;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
     using GeneralCharsBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
@@ -1601,10 +1618,12 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         return true;
     }
 
-    // Try to get the next code point, normalizing '\r', '\r\n', '\n', and the
-    // Unicode line/paragraph separators into '\n'.  Also updates internal
-    // line-counter state.  Return true on success and store the code point in
-    // |*c|.  Return false and leave |*c| undefined on failure.
+    /**
+     * Get the next code point, converting LineTerminatorSequences to '\n' and
+     * updating internal line-counter state if needed.  Return true on success
+     * and store the code point in |*c|.  Return false and leave |*c| undefined
+     * on failure.
+     */
     MOZ_MUST_USE bool getCodePoint(int32_t* cp);
 
     /**
@@ -1625,9 +1644,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
                    "getFullAsciiCodePoint called incorrectly");
 
         if (MOZ_UNLIKELY(lead == '\r')) {
-            // NOTE: |this->|-qualify to avoid a gcc bug: see bug 1472569.
-            if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-                this->sourceUnits.matchCodeUnit('\n');
+            matchLineTerminator('\n');
         } else if (MOZ_LIKELY(lead != '\n')) {
             *codePoint = lead;
             return true;
@@ -1788,6 +1805,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using SpecializedChars::getNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchCodeUnit;
+    using CharsBase::matchLineTerminator;
     using GeneralCharsBase::matchUnicodeEscapeIdent;
     using GeneralCharsBase::matchUnicodeEscapeIdStart;
     using GeneralCharsBase::newAtomToken;

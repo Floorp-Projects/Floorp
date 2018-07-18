@@ -487,9 +487,6 @@ TokenStreamAnyChars::undoInternalUpdateLineInfoForEOL()
     lineno--;
 }
 
-// This gets a full code point, starting from an already-consumed leading code
-// unit, normalizing EOL sequences to '\n', also updating line/column info as
-// needed.
 template<class AnyCharsAccess>
 bool
 TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
@@ -510,10 +507,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
             break;
 
         if (MOZ_UNLIKELY(c == '\r')) {
-            // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-            if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-                this->sourceUnits.matchCodeUnit('\n');
-
+            matchLineTerminator('\n');
             break;
         }
 
@@ -1846,9 +1840,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // Skip over EOL chars, updating line state along the way.
         //
         if (c1kind == EOL) {
-            // If it's a \r\n sequence, consume it as a single EOL.
-            if (unit == '\r' && !this->sourceUnits.atEnd())
-                this->sourceUnits.matchCodeUnit('\n');
+            if (unit == '\r')
+                matchLineTerminator('\n');
 
             if (!updateLineInfoForEOL())
                 return badToken();
@@ -2339,8 +2332,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
               case 'v': unit = '\v'; break;
 
               case '\r':
-                if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-                    this->sourceUnits.matchCodeUnit('\n');
+                matchLineTerminator('\n');
                 MOZ_FALLTHROUGH;
               case '\n': {
                 // LineContinuation represents no code points.  We're manually
@@ -2546,10 +2538,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
             if (unit == '\r') {
                 unit = '\n';
-
-                // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-                if (!this->sourceUnits.atEnd())
-                    this->sourceUnits.matchCodeUnit('\n');
+                matchLineTerminator('\n');
             }
 
             if (!updateLineInfoForEOL())
