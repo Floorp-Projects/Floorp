@@ -1404,9 +1404,10 @@ TextEditor::GetTextLength(int32_t* aCount)
 NS_IMETHODIMP
 TextEditor::GetWrapWidth(int32_t* aWrapColumn)
 {
-  NS_ENSURE_TRUE( aWrapColumn, NS_ERROR_NULL_POINTER);
-
-  *aWrapColumn = mWrapColumn;
+  if (NS_WARN_IF(!aWrapColumn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aWrapColumn = WrapWidth();
   return NS_OK;
 }
 
@@ -1747,10 +1748,9 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     docEncoder->SetCharset(aCharset);
   }
 
-  int32_t wc;
-  (void) GetWrapWidth(&wc);
-  if (wc >= 0) {
-    (void) docEncoder->SetWrapColumn(wc);
+  int32_t wrapWidth = WrapWidth();
+  if (wrapWidth >= 0) {
+    Unused << docEncoder->SetWrapColumn(wrapWidth);
   }
 
   // Set the selection, if appropriate.
@@ -1967,27 +1967,28 @@ TextEditor::SharedOutputString(uint32_t aFlags,
 NS_IMETHODIMP
 TextEditor::Rewrap(bool aRespectNewlines)
 {
-  int32_t wrapCol;
-  nsresult rv = GetWrapWidth(&wrapCol);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
   // Rewrap makes no sense if there's no wrap column; default to 72.
-  if (wrapCol <= 0) {
-    wrapCol = 72;
+  int32_t wrapWidth = WrapWidth();
+  if (wrapWidth <= 0) {
+    wrapWidth = 72;
   }
 
   nsAutoString current;
   bool isCollapsed;
-  rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted
-                          | nsIDocumentEncoder::OutputLFLineBreak,
-                          &isCollapsed, current);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
+                                   nsIDocumentEncoder::OutputLFLineBreak,
+                                   &isCollapsed, current);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsString wrapped;
   uint32_t firstLineOffset = 0;   // XXX need to reset this if there is a selection
-  rv = InternetCiter::Rewrap(current, wrapCol, firstLineOffset,
+  rv = InternetCiter::Rewrap(current, wrapWidth, firstLineOffset,
                              aRespectNewlines, wrapped);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (isCollapsed) {
     DebugOnly<nsresult> rv = SelectAllInternal();
