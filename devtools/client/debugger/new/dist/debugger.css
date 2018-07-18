@@ -2721,22 +2721,26 @@ html[dir="rtl"] .editor-mount {
   color: var(--theme-body-color);
   /* Add 1px offset to the background to match it
     with the actual breakpoint image dimensions */
-  background: linear-gradient(to bottom, transparent 1px, var(--gutter-hover-background-color) 0);
+  background: linear-gradient(
+    to bottom,
+    transparent 1px,
+    var(--gutter-hover-background-color) 0
+  );
 }
 
 :not(.empty-line):not(.new-breakpoint)
   > .CodeMirror-gutter-wrapper:hover
   > .CodeMirror-linenumber::after {
-    content: '';
-    position: absolute;
-    top: 1px;
-    height: 12px;
-    width: 9px;
-    background-color: var(--gutter-hover-background-color);
-    mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
-    mask-size: auto 12px;
-    mask-position: right;
-  }
+  content: "";
+  position: absolute;
+  top: 1px;
+  height: 12px;
+  width: 9px;
+  background-color: var(--gutter-hover-background-color);
+  mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
+  mask-size: auto 12px;
+  mask-position: right;
+}
 
 .editor-wrapper .breakpoints {
   position: absolute;
@@ -2786,8 +2790,8 @@ html[dir="rtl"] .editor-mount {
 }
 
 .editor .breakpoint {
-    position: absolute;
-    right: -2px;
+  position: absolute;
+  right: -2px;
 }
 
 .editor.new-breakpoint.folding-enabled svg {

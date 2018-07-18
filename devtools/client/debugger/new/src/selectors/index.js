@@ -198,6 +198,12 @@ Object.defineProperty(exports, "getBreakpointAtLocation", {
     return _breakpointAtLocation.getBreakpointAtLocation;
   }
 });
+Object.defineProperty(exports, "getBreakpointsAtLine", {
+  enumerable: true,
+  get: function () {
+    return _breakpointAtLocation.getBreakpointsAtLine;
+  }
+});
 
 var _visibleBreakpoints = require("./visibleBreakpoints");
 

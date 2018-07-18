@@ -89,7 +89,6 @@ add_task(async function() {
 
   await dbg.actions.jumpToMappedSelectedLocation();
   await stepOut(dbg);
-  await stepOut(dbg);
   assertPausedLocation(dbg);
   assertDebugLine(dbg, 16);
 });

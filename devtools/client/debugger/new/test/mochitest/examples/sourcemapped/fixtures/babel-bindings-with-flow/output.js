@@ -1,4 +1,4 @@
-var babelFlowtypeBindings =
+var babelBindingsWithFlow =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -72,13 +72,15 @@ var babelFlowtypeBindings =
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["default"] = root;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__src_mod__ = __webpack_require__(1);
+// Webpack doesn't map import declarations well, so doing this forces binding
+// processing to only process the binding being cast when searching for
+// matches. That way we can properly test if the flow cast causes problems.
 
-
-
-var aConst = "a-const";
 
 function root() {
-  console.log("pause here", aConst, __WEBPACK_IMPORTED_MODULE_0__src_mod__["a" /* Four */], root);
+  var value = __WEBPACK_IMPORTED_MODULE_0__src_mod__["a" /* aNamed */];
+
+  console.log("pause here", root, value);
 }
 
 /***/ }),
@@ -86,9 +88,8 @@ function root() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Four; });
-/* unused harmony default export */ var _unused_webpack_default_export = ("a-default");
-var Four = "one";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return aNamed; });
+var aNamed = "a-named";
 
 /***/ })
 /******/ ])["default"];
