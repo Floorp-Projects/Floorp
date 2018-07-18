@@ -757,6 +757,87 @@ mediarecorder:
       - main
       - content
 
+media:
+  page_count:
+    bug_numbers:
+      - 1476456
+    description: >
+      The number of times a top level document is loaded.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
+  page_had_media_count:
+    bug_numbers:
+      - 1476456
+    description: >
+      The number of times a document hierarchy contained at least one audible HTMLMediaElement that had play() called upon it.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
+  page_had_play_revoked_count:
+    bug_numbers:
+      - 1476456
+    description: >
+      The number of times a document hierarchy contained at least one muted playing HTMLMediaElement that was paused due to becoming unmuted while not being allowed to autoplay.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
+  autoplay_would_not_be_allowed_count:
+    bug_numbers:
+      - 1476456
+    description: >
+      The number of HTMLMediaElement autoplays on audible HTMLMediaElements which would not be allowed to play if block autoplay was enabled; we'd either prompt for permission to play or block outright depending on user preferences.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
+  autoplay_would_be_allowed_count:
+    bug_numbers:
+      - 1476456
+    description: >
+      The number of HTMLMediaElement autoplays on audible HTMLMediaElements that would have been allowed (not blocked) by the autoplay policy if block autoplay was enabled.
+    expires: "68"
+    kind: uint
+    notification_emails:
+      - cpearce@mozilla.com
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+      - content
+
 # The following section contains content process base counters.
 dom.contentprocess:
   troubled_due_to_memory:
