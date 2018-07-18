@@ -1132,13 +1132,19 @@ EditorBase::GetDocumentModified(bool* outDocModified)
 }
 
 NS_IMETHODIMP
-EditorBase::GetDocumentCharacterSet(nsACString& characterSet)
+EditorBase::GetDocumentCharacterSet(nsACString& aCharset)
+{
+  return GetDocumentCharsetInternal(aCharset);
+}
+
+nsresult
+EditorBase::GetDocumentCharsetInternal(nsACString& aCharset) const
 {
   nsCOMPtr<nsIDocument> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_UNEXPECTED;
   }
-  document->GetDocumentCharacterSet()->Name(characterSet);
+  document->GetDocumentCharacterSet()->Name(aCharset);
   return NS_OK;
 }
 
