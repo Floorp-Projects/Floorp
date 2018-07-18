@@ -2259,7 +2259,6 @@ class LazyScript : public gc::TenuredCell
     }
 
     void initScript(JSScript* script);
-    void resetScript();
 
     JSScript* maybeScript() {
         return script_;

@@ -4228,13 +4228,6 @@ LazyScript::initScript(JSScript* script)
 }
 
 void
-LazyScript::resetScript()
-{
-    MOZ_ASSERT(script_.unbarrieredGet());
-    script_.set(nullptr);
-}
-
-void
 LazyScript::setEnclosingScope(Scope* enclosingScope)
 {
     // This method may be called to update the enclosing scope. See comment
