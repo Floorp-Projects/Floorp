@@ -2221,8 +2221,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
     { /* Scope for AutoNoJSAPI. */
       AutoNoJSAPI nojsapi;
 
-      mTextEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
-                                  aValue);
+      DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(flags, aValue);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get value");
     }
     // Only when the result doesn't include line breaks caused by hard-wrap,
     // mCacheValue should cache the value.
