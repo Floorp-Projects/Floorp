@@ -614,11 +614,10 @@ id_and_secret_keyfile('Leanplum SDK')
 
 simple_keyfile('Pocket API')
 
-# We support setting up the appropriate options for Stylo's build-time
-# bindings generation via setting LLVM_CONFIG or by providing explicit
-# configure options.  The Windows installer of LLVM/Clang doesn't provide
-# llvm-config, so we need both methods to support all of our tier-1
-# platforms.
+# We support setting up the appropriate options for bindgen via setting
+# LLVM_CONFIG or by providing explicit configure options.  The Windows
+# installer of LLVM/Clang doesn't provide llvm-config, so we need both
+# methods to support all of our tier-1 platforms.
 @depends(host)
 @imports('which')
 @imports('os')
@@ -668,9 +667,9 @@ llvm_config = check_prog('LLVM_CONFIG', llvm_config_paths,
 
 with only_when('--enable-compile-environment'):
     option('--with-libclang-path', nargs=1,
-           help='Absolute path to a directory containing Clang/LLVM libraries for Stylo (version 3.9.x or above)')
+           help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
     option('--with-clang-path', nargs=1,
-           help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x or above)')
+           help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
 
     def invoke_llvm_config(llvm_config, *options):
         '''Invoke llvm_config with the given options and return the first line of
@@ -684,10 +683,10 @@ with only_when('--enable-compile-environment'):
         min_version = Version('3.9.0')
         if version < min_version:
             die(dedent('''\
-            llvm installation {} is incompatible with Stylo bindgen.
+            llvm installation {} is incompatible with bindgen.
 
-            To compile Stylo, please install version {} or greater of
-            Clang + LLVM and ensure that the 'llvm-config' from that
+            Please install version {} or greater of Clang + LLVM
+            and ensure that the 'llvm-config' from that
             installation is first on your path.
 
             You can verify this by typing 'llvm-config --version'.
@@ -727,8 +726,8 @@ with only_when('--enable-compile-environment'):
             # We must have LLVM_CONFIG in this case.
             if not llvm_config:
                 die(dedent('''\
-                Could not find LLVM/Clang installation for compiling stylo build-time
-                bindgen.  Please specify the 'LLVM_CONFIG' environment variable
+                Could not find LLVM/Clang installation for compiling bindgen.
+                Please specify the 'LLVM_CONFIG' environment variable
                 (recommended), pass the '--with-libclang-path' and '--with-clang-path'
                 options to configure, or put 'llvm-config' in your PATH.  Altering your
                 PATH may expose 'clang' as well, potentially altering your compiler,
