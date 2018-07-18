@@ -26,6 +26,7 @@ import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
@@ -515,8 +516,15 @@ public class Updater {
         }
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.fromFile(updateFile), "application/vnd.android.package-archive");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (AppConstants.Versions.preN) {
+            intent.setDataAndType(Uri.fromFile(updateFile), "application/vnd.android.package-archive");
+        } else {
+            Uri apkUri = FileProvider.getUriForFile(context,
+                    AppConstants.MOZ_FILE_PROVIDER_AUTHORITY, updateFile);
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
 
