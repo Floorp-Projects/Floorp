@@ -27,6 +27,7 @@
 #include "OggWriter.h"
 #include "OpusTrackEncoder.h"
 #include "TimeUnits.h"
+#include "Tracing.h"
 
 #ifdef MOZ_WEBM_ENCODER
 #include "VP8TrackEncoder.h"
@@ -89,6 +90,7 @@ public:
                            StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override
   {
+    TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -137,6 +139,7 @@ public:
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override
   {
+    TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -249,6 +252,7 @@ public:
                            StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override
   {
+    TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -291,6 +295,7 @@ public:
 
   void SetCurrentFrames(const VideoSegment& aMedia) override
   {
+    TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 

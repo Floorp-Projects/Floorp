@@ -496,8 +496,8 @@
 
   <separator flex="1"/>
 
-  <hbox align="start" id="autoplayMediaBox" hidden="true">
-    <checkbox id="autoplayMediaPolicy"
+  <hbox align="start" id="autoplayMediaCheckboxWrapper" hidden="true">
+    <checkbox id="autoplayMediaCheckbox"
               data-l10n-id="permissions-block-autoplay-media"
               flex="1" />
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
@@ -568,6 +568,37 @@
              data-l10n-id="permissions-a11y-privacy-link"/>
     </hbox>
   </vbox>
+
+  <hbox align="center" id="autoplayMediaComboboxWrapper" hidden="true">
+    <hbox align="center" flex="1">
+      <label id="autoplayMediaPolicy"
+             control="autoplayMediaPolicyMenu"
+             data-l10n-id="permissions-block-autoplay-media-menu"/>
+      <menulist id="autoplayMediaPolicyMenu"
+                sizetopopup="always"
+                preference="media.autoplay.default">
+        <menupopup>
+          <!-- Defined in dom/media/nsIAutoplay.idl -->
+          <menuitem data-l10n-id="autoplay-option-allow" value="0"/>
+          <menuitem data-l10n-id="autoplay-option-ask" value="2"/>
+          <menuitem data-l10n-id="autoplay-option-block" value="1"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+
+    <hbox pack="end">
+      <button id="autoplayMediaPolicyComboboxButton"
+              class="accessory-button"
+              data-l10n-id="permissions-block-autoplay-media-exceptions"
+              search-l10n-ids="permissions-address,
+                               permissions-button-cancel.label,
+                               permissions-button-ok.label,
+                               permissions-exceptions-autoplay-media-window.title,
+                               permissions-exceptions-autoplay-media-desc
+                               " />
+    </hbox>
+  </hbox>
+
 </groupbox>
 
 <!-- Firefox Data Collection and Use -->

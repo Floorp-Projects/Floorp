@@ -47,9 +47,6 @@ for the Unicode Character Database, for Version 11.0.0 of the Unicode Standard.
 #ifndef NS_UNICODE_SCRIPT_CODES
 #define NS_UNICODE_SCRIPT_CODES
 
-#pragma pack(1)
-
-
 struct nsCharProps2 {
   // Currently only 4 bits are defined here, so 4 more could be added without
   // affecting the storage requirements for this struct. Or we could pack two
@@ -57,8 +54,6 @@ struct nsCharProps2 {
   unsigned char mVertOrient:2;
   unsigned char mIdType:2;
 };
-
-#pragma pack()
 
 namespace mozilla {
 namespace unicode {

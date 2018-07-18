@@ -21,6 +21,7 @@
 #include "mozilla/XREAppData.h"
 
 #include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 #include "prtime.h"
 
 using namespace mozilla;
@@ -81,7 +82,7 @@ ProfileResetCleanup(nsIToolkitProfile* aOldProfile)
   if (!sbs) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> sb;
-  rv = sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
+  Unused << sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
   if (!sb) return NS_ERROR_FAILURE;
 
   NS_ConvertUTF8toUTF16 appName(gAppData->name);
@@ -92,6 +93,7 @@ ProfileResetCleanup(nsIToolkitProfile* aOldProfile)
   static const char* kResetBackupDirectory = "resetBackupDirectory";
   rv = sb->FormatStringFromName(kResetBackupDirectory, params, 2,
                                 resetBackupDirectoryName);
+  if (NS_FAILED(rv)) return rv;
 
   // Get info to copy the old root profile dir to the desktop as a backup.
   nsCOMPtr<nsIFile> backupDest, containerDest, profileDest;

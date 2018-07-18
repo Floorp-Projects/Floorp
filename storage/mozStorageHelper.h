@@ -154,7 +154,7 @@ public:
 
     // TODO (bug 1062823): from Sqlite 3.7.11 on, rollback won't ever return
     // a busy error, so this handling can be removed.
-    nsresult rv = NS_OK;
+    nsresult rv;
     do {
       rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ROLLBACK"));
       if (rv == NS_ERROR_STORAGE_BUSY)

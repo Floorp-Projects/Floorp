@@ -474,7 +474,8 @@
            emailLink-title="&emailPageCmd.label;"
            sendToDevice-title="&pageAction.sendTabToDevice.label;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;"
-           shareURL-title="&pageAction.shareUrl.label;">
+           shareURL-title="&pageAction.shareUrl.label;"
+           shareMore-label="&pageAction.shareMore.label;">
       <panelmultiview id="pageActionPanelMultiView"
                       mainViewId="pageActionPanelMainView"
                       viewCacheId="appMenu-viewCache">

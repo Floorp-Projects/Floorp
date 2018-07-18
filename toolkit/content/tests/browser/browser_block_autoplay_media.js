@@ -84,7 +84,7 @@ add_task(async function block_autoplay_media() {
   // a new document being loaded into the tab; the new document should have
   // to satisfy the autoplay requirements on its own.
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.enabled", false],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.PROMPT],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.autoplay.ask-permission", true],
   ]});

@@ -159,5 +159,13 @@ KeyedStackCapturer::Clear()
   mStacks.Clear();
 }
 
+size_t
+KeyedStackCapturer::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t n = 0;
+  n += mStackInfos.SizeOfExcludingThis(aMallocSizeOf);
+  n += mStacks.SizeOfExcludingThis();
+  return n;
+}
+
 } // namespace Telemetry
 } // namespace mozilla
