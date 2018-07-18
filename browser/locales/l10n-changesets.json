@@ -102,7 +102,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "89c0c979bcd8"
+        "revision": "0002aecb6fe4"
     }, 
     "be": {
         "platforms": [
@@ -132,7 +132,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "406816b2e4a6"
+        "revision": "d46f5cf9f814"
     }, 
     "bn-BD": {
         "platforms": [
@@ -387,7 +387,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "1a7b927845ca"
+        "revision": "5c114bea584b"
     }, 
     "es-CL": {
         "platforms": [
@@ -762,7 +762,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ae6996590594"
+        "revision": "ecc6b575ee22"
     }, 
     "ja": {
         "platforms": [
@@ -962,7 +962,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "4537fd842740"
+        "revision": "1a00cdcc6b4a"
     }, 
     "mr": {
         "platforms": [
@@ -1067,7 +1067,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5ccd54dcd915"
+        "revision": "6945955e10cc"
     }, 
     "oc": {
         "platforms": [
@@ -1082,7 +1082,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "facb00d36cc2"
+        "revision": "3313837288d1"
     }, 
     "or": {
         "platforms": [
@@ -1127,7 +1127,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "f3995a016451"
+        "revision": "f63097b4a752"
     }, 
     "pt-BR": {
         "platforms": [
@@ -1337,7 +1337,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "91718373a56f"
+        "revision": "123fa4501ea0"
     }, 
     "th": {
         "platforms": [
@@ -1457,7 +1457,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "54c4820b589c"
+        "revision": "15aafc8cbf18"
     }, 
     "zh-TW": {
         "platforms": [
