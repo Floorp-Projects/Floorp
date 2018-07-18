@@ -24,11 +24,27 @@ const TEST_URL = `data:text/html;charset=utf-8,
     });
   </script>`;
 
+// Test reveal link with mouse navigation
 add_task(async function() {
+  const checkWithMouse = checkRevealLink.bind(null, clickOnRevealLink);
+  await testRevealLink(checkWithMouse, checkWithMouse);
+});
+
+// Test reveal link with keyboard navigation (Enter and Spacebar keys)
+add_task(async function() {
+  const checkWithEnter = checkRevealLink.bind(null,
+    keydownOnRevealLink.bind(null, "KEY_Enter"));
+  const checkWithSpacebar = checkRevealLink.bind(null,
+    keydownOnRevealLink.bind(null, " "));
+
+  await testRevealLink(checkWithEnter, checkWithSpacebar);
+});
+
+async function testRevealLink(revealFnFirst, revealFnSecond) {
   await enableWebComponents();
 
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   info("Find and expand the test-component shadow DOM host.");
   const hostFront = await getNodeFront("test-component", inspector);
@@ -46,16 +62,16 @@ add_task(async function() {
   const slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 2, "Expecting 2 slotted children");
 
-  await checkRevealLink(inspector, slotChildContainers[0].node);
+  await revealFnFirst(inspector, slotChildContainers[0].node);
   is(inspector.selection.nodeFront.id, "el1", "The right node was selected");
   is(hostContainer.getChildContainers()[1].node, inspector.selection.nodeFront);
 
-  await checkRevealLink(inspector, slotChildContainers[1].node);
+  await revealFnSecond(inspector, slotChildContainers[1].node);
   is(inspector.selection.nodeFront.id, "el2", "The right node was selected");
   is(hostContainer.getChildContainers()[2].node, inspector.selection.nodeFront);
-});
+}
 
-async function checkRevealLink(inspector, node) {
+async function checkRevealLink(actionFn, inspector, node) {
   const slottedContainer = inspector.markup.getContainer(node, true);
   info("Select the slotted container for the element");
   await selectNode(node, inspector, "no-reason", true);
@@ -63,8 +79,11 @@ async function checkRevealLink(inspector, node) {
   ok(inspector.markup.getSelectedContainer().isSlotted(),
     "The selected container is slotted");
 
+  const link = slottedContainer.elt.querySelector(".reveal-link");
+  is(link.getAttribute("role"), "link", "Reveal link has the role=link attribute");
+
   info("Click on the reveal link and wait for the new node to be selected");
-  await clickOnRevealLink(inspector, slottedContainer);
+  await actionFn(inspector, slottedContainer);
   const selectedFront = inspector.selection.nodeFront;
   is(selectedFront, node, "The same node front is still selected");
   ok(!inspector.selection.isSlotted(), "The selection is not the slotted version");
