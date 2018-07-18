@@ -341,6 +341,129 @@ UnionMaybeRects(const Maybe<Rect>& a, const Maybe<Rect>& b)
   }
 }
 
+struct RectCornerRadii {
+  Size radii[eCornerCount];
+
+  RectCornerRadii() {}
+
+  explicit RectCornerRadii(Float radius) {
+    NS_FOR_CSS_FULL_CORNERS(i) {
+      radii[i].SizeTo(radius, radius);
+    }
+  }
+
+  explicit RectCornerRadii(Float radiusX, Float radiusY) {
+    NS_FOR_CSS_FULL_CORNERS(i) {
+      radii[i].SizeTo(radiusX, radiusY);
+    }
+  }
+
+  RectCornerRadii(Float tl, Float tr, Float br, Float bl) {
+    radii[eCornerTopLeft].SizeTo(tl, tl);
+    radii[eCornerTopRight].SizeTo(tr, tr);
+    radii[eCornerBottomRight].SizeTo(br, br);
+    radii[eCornerBottomLeft].SizeTo(bl, bl);
+  }
+
+  RectCornerRadii(const Size& tl, const Size& tr,
+                  const Size& br, const Size& bl) {
+    radii[eCornerTopLeft] = tl;
+    radii[eCornerTopRight] = tr;
+    radii[eCornerBottomRight] = br;
+    radii[eCornerBottomLeft] = bl;
+  }
+
+  const Size& operator[](size_t aCorner) const {
+    return radii[aCorner];
+  }
+
+  Size& operator[](size_t aCorner) {
+    return radii[aCorner];
+  }
+
+  bool operator==(const RectCornerRadii& aOther) const {
+    return TopLeft() == aOther.TopLeft() &&
+           TopRight() == aOther.TopRight() &&
+           BottomRight() == aOther.BottomRight() &&
+           BottomLeft() == aOther.BottomLeft();
+  }
+
+  bool AreRadiiSame() const {
+    return TopLeft() == TopRight() &&
+           TopLeft() == BottomRight() &&
+           TopLeft() == BottomLeft();
+  }
+
+  void Scale(Float aXScale, Float aYScale) {
+    NS_FOR_CSS_FULL_CORNERS(i) {
+      radii[i].Scale(aXScale, aYScale);
+    }
+  }
+
+  const Size TopLeft() const { return radii[eCornerTopLeft]; }
+  Size& TopLeft() { return radii[eCornerTopLeft]; }
+
+  const Size TopRight() const { return radii[eCornerTopRight]; }
+  Size& TopRight() { return radii[eCornerTopRight]; }
+
+  const Size BottomRight() const { return radii[eCornerBottomRight]; }
+  Size& BottomRight() { return radii[eCornerBottomRight]; }
+
+  const Size BottomLeft() const { return radii[eCornerBottomLeft]; }
+  Size& BottomLeft() { return radii[eCornerBottomLeft]; }
+
+  bool IsEmpty() const {
+    return TopLeft().IsEmpty() && TopRight().IsEmpty() &&
+           BottomRight().IsEmpty() && BottomLeft().IsEmpty();
+  }
+};
+
+/* A rounded rectangle abstraction.
+ *
+ * This can represent a rectangle with a different pair of radii on each corner.
+ *
+ * Note: CoreGraphics and Direct2D only support rounded rectangle with the same
+ * radii on all corners. However, supporting CSS's border-radius requires the extra flexibility. */
+struct RoundedRect {
+    typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+
+    RoundedRect(const Rect& aRect, const RectCornerRadii& aCorners)
+      : rect(aRect)
+      , corners(aCorners)
+    {
+    }
+
+    void Deflate(Float aTopWidth, Float aBottomWidth, Float aLeftWidth, Float aRightWidth) {
+        // deflate the internal rect
+        rect.SetRect(rect.X() + aLeftWidth,
+                     rect.Y() + aTopWidth,
+                     std::max(0.f, rect.Width() - aLeftWidth - aRightWidth),
+                     std::max(0.f, rect.Height() - aTopWidth - aBottomWidth));
+
+        corners.radii[mozilla::eCornerTopLeft].width =
+            std::max(0.f, corners.radii[mozilla::eCornerTopLeft].width - aLeftWidth);
+        corners.radii[mozilla::eCornerTopLeft].height =
+            std::max(0.f, corners.radii[mozilla::eCornerTopLeft].height - aTopWidth);
+
+        corners.radii[mozilla::eCornerTopRight].width =
+            std::max(0.f, corners.radii[mozilla::eCornerTopRight].width - aRightWidth);
+        corners.radii[mozilla::eCornerTopRight].height =
+            std::max(0.f, corners.radii[mozilla::eCornerTopRight].height - aTopWidth);
+
+        corners.radii[mozilla::eCornerBottomLeft].width =
+            std::max(0.f, corners.radii[mozilla::eCornerBottomLeft].width - aLeftWidth);
+        corners.radii[mozilla::eCornerBottomLeft].height =
+            std::max(0.f, corners.radii[mozilla::eCornerBottomLeft].height - aBottomWidth);
+
+        corners.radii[mozilla::eCornerBottomRight].width =
+            std::max(0.f, corners.radii[mozilla::eCornerBottomRight].width - aRightWidth);
+        corners.radii[mozilla::eCornerBottomRight].height =
+            std::max(0.f, corners.radii[mozilla::eCornerBottomRight].height - aBottomWidth);
+    }
+    Rect rect;
+    RectCornerRadii corners;
+};
+
 } // namespace gfx
 } // namespace mozilla
 
