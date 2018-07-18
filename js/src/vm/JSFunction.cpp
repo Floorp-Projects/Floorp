@@ -1621,12 +1621,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
             return false;
 
         if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
-            // The frontend may have linked the function and the non-lazy
-            // script together during bytecode compilation. Reset it now on
-            // error.
-            fun->initLazyScript(lazy);
-            if (lazy->hasScript())
-                lazy->resetScript();
+            // The frontend shouldn't fail after linking the function and the
+            // non-lazy script together.
+            MOZ_ASSERT(fun->isInterpretedLazy());
+            MOZ_ASSERT(fun->lazyScript() == lazy);
+            MOZ_ASSERT(!lazy->hasScript());
             return false;
         }
 
