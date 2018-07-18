@@ -618,6 +618,18 @@ nsJSCID::NewID(const char* str)
     return idObj.forget();
 }
 
+NS_IMETHODIMP
+nsJSCID::RefreshCID()
+{
+    char* name = nullptr;
+    nsresult rv = mDetails->GetName(&name);
+    if (NS_SUCCEEDED(rv)) {
+        rv = *name ? Initialize(name) : NS_ERROR_UNEXPECTED;
+    }
+    free(name);
+    return rv;
+}
+
 static Maybe<nsID>
 GetIIDArg(uint32_t argc, JS::HandleValue val, JSContext* cx)
 {
