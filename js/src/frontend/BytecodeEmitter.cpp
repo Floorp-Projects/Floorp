@@ -5648,14 +5648,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
         SharedContext* outersc = sc;
         if (fun->isInterpretedLazy()) {
-            // We need to update the static scope chain regardless of whether
-            // the LazyScript has already been initialized, due to the case
-            // where we previously successfully compiled an inner function's
-            // lazy script but failed to compile the outer script after the
-            // fact. If we attempt to compile the outer script again, the
-            // static scope chain will be newly allocated and will mismatch
-            // the previously compiled LazyScript's.
-            fun->lazyScript()->setEnclosingScope(innermostScope());
+            funbox->setEnclosingScopeForInnerLazyFunction(innermostScope());
             if (emittingRunOnceLambda)
                 fun->lazyScript()->setTreatAsRunOnce();
         } else {
@@ -9129,6 +9122,8 @@ CGObjectList::finish(ObjectArray* array)
         --cursor;
         MOZ_ASSERT(!*cursor);
         MOZ_ASSERT(objbox->object->isTenured());
+        if (objbox->isFunctionBox())
+            objbox->asFunctionBox()->finish();
         *cursor = objbox->object;
     } while ((objbox = objbox->emitLink) != nullptr);
     MOZ_ASSERT(cursor == array->vector);

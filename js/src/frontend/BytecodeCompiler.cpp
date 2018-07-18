@@ -773,8 +773,10 @@ bool
 frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length)
 {
     MOZ_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
-    // We can't be running this script unless we've run its parent.
-    MOZ_ASSERT(!lazy->isEnclosingScriptLazy());
+    // We can only compile functions whose parents have previously been
+    // compiled, because compilation requires full information about the
+    // function's immediately enclosing scope.
+    MOZ_ASSERT(lazy->enclosingScriptHasEverBeenCompiled());
 
     AutoAssertReportedException assertException(cx);
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());

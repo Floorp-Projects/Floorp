@@ -939,8 +939,10 @@ LazyScript::traceChildren(JSTracer* trc)
     if (sourceObject_)
         TraceEdge(trc, &sourceObject_, "sourceObject");
 
-    if (enclosingScope_)
-        TraceEdge(trc, &enclosingScope_, "enclosingScope");
+    if (enclosingLazyScriptOrScope_) {
+        TraceGenericPointerRoot(trc, reinterpret_cast<Cell**>(enclosingLazyScriptOrScope_.unsafeUnbarrieredForTracing()),
+                                "enclosingScope or enclosingLazyScript");
+    }
 
     // We rely on the fact that atoms are always tenured.
     JSAtom** closedOverBindings = this->closedOverBindings();
@@ -965,8 +967,10 @@ js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
     if (thing->sourceObject_)
         traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
 
-    if (thing->enclosingScope_)
-        traverseEdge(thing, static_cast<Scope*>(thing->enclosingScope_));
+    if (thing->enclosingLazyScriptOrScope_) {
+        TraceManuallyBarrieredGenericPointerEdge(this, reinterpret_cast<Cell**>(thing->enclosingLazyScriptOrScope_.unsafeUnbarrieredForTracing()),
+                                                 "enclosingScope or enclosingLazyScript");
+    }
 
     // We rely on the fact that atoms are always tenured.
     JSAtom** closedOverBindings = thing->closedOverBindings();
