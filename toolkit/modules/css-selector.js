@@ -6,7 +6,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["findAllCssSelectors", "findCssSelector"];
+var EXPORTED_SYMBOLS = [
+  "findAllCssSelectors",
+  "findCssSelector",
+  "getCssPath",
+  "getXPath"
+];
 
 /**
  * Traverse getBindingParent until arriving upon the bound element
@@ -200,3 +205,116 @@ const findAllCssSelectors = function(node) {
 
   return selectors;
 };
+
+/**
+ * Get the full CSS path for a given element.
+ * @returns a string that can be used as a CSS selector for the element. It might not
+ * match the element uniquely. It does however, represent the full path from the root
+ * node to the element.
+ */
+function getCssPath(ele) {
+  ele = getRootBindingParent(ele);
+  const document = ele.ownerDocument;
+  if (!document || !document.contains(ele)) {
+    // getCssPath received element not inside document.
+    return "";
+  }
+
+  const nodeGlobal = ele.ownerGlobal.Node;
+
+  const getElementSelector = element => {
+    if (!element.localName) {
+      return "";
+    }
+
+    let label = element.nodeName == element.nodeName.toUpperCase()
+                ? element.localName.toLowerCase()
+                : element.localName;
+
+    if (element.id) {
+      label += "#" + element.id;
+    }
+
+    if (element.classList) {
+      for (const cl of element.classList) {
+        label += "." + cl;
+      }
+    }
+
+    return label;
+  };
+
+  const paths = [];
+
+  while (ele) {
+    if (!ele || ele.nodeType !== nodeGlobal.ELEMENT_NODE) {
+      break;
+    }
+
+    paths.splice(0, 0, getElementSelector(ele));
+    ele = ele.parentNode;
+  }
+
+  return paths.length ? paths.join(" ") : "";
+}
+
+/**
+ * Get the xpath for a given element.
+ * @param {DomNode} ele
+ * @returns a string that can be used as an XPath to find the element uniquely.
+ */
+function getXPath(ele) {
+  ele = getRootBindingParent(ele);
+  const document = ele.ownerDocument;
+  if (!document || !document.contains(ele)) {
+    // getXPath received element not inside document.
+    return "";
+  }
+
+  // Create a short XPath for elements with IDs.
+  if (ele.id) {
+    return `//*[@id="${ele.id}"]`;
+  }
+
+  // Otherwise walk the DOM up and create a part for each ancestor.
+  const parts = [];
+
+  const nodeGlobal = ele.ownerGlobal.Node;
+  // Use nodeName (instead of localName) so namespace prefix is included (if any).
+  while (ele && ele.nodeType === nodeGlobal.ELEMENT_NODE) {
+    let nbOfPreviousSiblings = 0;
+    let hasNextSiblings = false;
+
+    // Count how many previous same-name siblings the element has.
+    let sibling = ele.previousSibling;
+    while (sibling) {
+      // Ignore document type declaration.
+      if (sibling.nodeType !== nodeGlobal.DOCUMENT_TYPE_NODE &&
+          sibling.nodeName == ele.nodeName) {
+        nbOfPreviousSiblings++;
+      }
+
+      sibling = sibling.previousSibling;
+    }
+
+    // Check if the element has at least 1 next same-name sibling.
+    sibling = ele.nextSibling;
+    while (sibling) {
+      if (sibling.nodeName == ele.nodeName) {
+        hasNextSiblings = true;
+        break;
+      }
+      sibling = sibling.nextSibling;
+    }
+
+    const prefix = ele.prefix ? ele.prefix + ":" : "";
+    const nth = nbOfPreviousSiblings || hasNextSiblings
+                ? `[${nbOfPreviousSiblings + 1}]` : "";
+
+    parts.push(prefix + ele.localName + nth);
+
+    ele = ele.parentNode;
+  }
+
+  return parts.length ? "/" + parts.reverse().join("/") : "";
+}
