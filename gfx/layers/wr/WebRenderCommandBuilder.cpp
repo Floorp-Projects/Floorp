@@ -1165,7 +1165,7 @@ WebRenderCommandBuilder::EmptyTransaction()
     RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
     WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
     if (canvas) {
-      canvas->UpdateCompositableClient();
+      canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
 }

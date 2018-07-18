@@ -800,13 +800,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     txn.SetDisplayList(clearColor, wrEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
                        dlDesc, dlData);
-    // The display list that we're sending to WR might contain references to
-    // other pipelines that we just added to the async image manager in the
-    // ProcessWebRenderParentCommands call above. If we send the display list
-    // alone then WR will not yet have the content for those other pipelines
-    // and so it will emit errors; the ApplyAsyncImages call below ensure that
-    // we provide the pipeline content to WR as part of the same transaction.
-    mAsyncImageManager->ApplyAsyncImages(txn);
 
     mApi->SendTransaction(txn);
 
@@ -939,7 +932,8 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         const OpAddPipelineIdForCompositable& op = cmd.get_OpAddPipelineIdForCompositable();
         AddPipelineIdForCompositable(op.pipelineId(),
                                      op.handle(),
-                                     op.isAsync());
+                                     op.isAsync(),
+                                     aTxn);
         break;
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
@@ -965,6 +959,12 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
                                                      op.scaleToSize(),
                                                      op.filter(),
                                                      op.mixBlendMode());
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn);
+        break;
+      }
+      case WebRenderParentCommand::TOpUpdatedAsyncImagePipeline: {
+        const OpUpdatedAsyncImagePipeline& op = cmd.get_OpUpdatedAsyncImagePipeline();
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn);
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -1099,7 +1099,8 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 void
 WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                                     const CompositableHandle& aHandle,
-                                                    const bool& aAsync)
+                                                    const bool& aAsync,
+                                                    wr::TransactionBuilder& aTxn)
 {
   if (mDestroyed) {
     return;
@@ -1136,6 +1137,13 @@ WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipel
   mAsyncCompositables.emplace(wr::AsUint64(aPipelineId), wrHost);
   mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
+  // If this is being called from WebRenderBridgeParent::RecvSetDisplayList,
+  // then aTxn might contain a display list that references pipelines that
+  // we just added to the async image manager.
+  // If we send the display list alone then WR will not yet have the content for
+  // the pipelines and so it will emit errors; the SetEmptyDisplayList call
+  // below ensure that we provide its content to WR as part of the same transaction.
+  mAsyncImageManager->SetEmptyDisplayList(aPipelineId, aTxn);
   return;
 }
 
@@ -1521,7 +1529,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     // building. Those other async pipelines can go in the other transaction that
     // we create below.
     wr::TransactionBuilder txn;
-    mAsyncImageManager->ApplyAsyncImages(txn);
+    mAsyncImageManager->ApplyAsyncImagesOfImageBridge(txn);
     mApi->SendTransaction(txn);
   }
 
