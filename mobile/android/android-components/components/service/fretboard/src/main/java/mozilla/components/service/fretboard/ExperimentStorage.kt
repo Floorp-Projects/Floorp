@@ -14,12 +14,12 @@ interface ExperimentStorage {
      *
      * @param experiments list of experiments to store
      */
-    fun save(experiments: List<Experiment>)
+    fun save(snapshot: ExperimentsSnapshot)
 
     /**
      * Reads experiments from disk
      *
      * @return experiments from disk
      */
-    fun retrieve(): List<Experiment>
+    fun retrieve(): ExperimentsSnapshot
 }

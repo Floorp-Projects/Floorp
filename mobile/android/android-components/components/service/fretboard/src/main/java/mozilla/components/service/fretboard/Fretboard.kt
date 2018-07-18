@@ -17,7 +17,7 @@ class Fretboard(
     private val storage: ExperimentStorage,
     regionProvider: RegionProvider? = null
 ) {
-    private var experiments: List<Experiment> = listOf()
+    private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
     private val evaluator = ExperimentEvaluator(regionProvider)
 
@@ -26,7 +26,7 @@ class Fretboard(
      */
     @Synchronized
     fun loadExperiments() {
-        experiments = storage.retrieve()
+        experimentsResult = storage.retrieve()
         experimentsLoaded = true
     }
 
@@ -40,8 +40,8 @@ class Fretboard(
             loadExperiments()
         }
         try {
-            val serverExperiments = source.getExperiments(experiments)
-            experiments = serverExperiments
+            val serverExperiments = source.getExperiments(experimentsResult)
+            experimentsResult = serverExperiments
             storage.save(serverExperiments)
         } catch (e: ExperimentDownloadException) {
             // Keep using the local experiments
@@ -58,7 +58,7 @@ class Fretboard(
      * @return true if the user is part of the specified experiment, false otherwise
      */
     fun isInExperiment(context: Context, descriptor: ExperimentDescriptor): Boolean {
-        return evaluator.evaluate(context, descriptor, experiments) != null
+        return evaluator.evaluate(context, descriptor, experimentsResult.experiments) != null
     }
 
     /**
@@ -69,7 +69,7 @@ class Fretboard(
      * @param block block of code to be executed if the user is part of the experiment
      */
     fun withExperiment(context: Context, descriptor: ExperimentDescriptor, block: (Experiment) -> Unit) {
-        evaluator.evaluate(context, descriptor, experiments)?.let { block(it) }
+        evaluator.evaluate(context, descriptor, experimentsResult.experiments)?.let { block(it) }
     }
 
     /**
@@ -80,7 +80,7 @@ class Fretboard(
      * @return metadata associated with the experiment
      */
     fun getExperiment(descriptor: ExperimentDescriptor): Experiment? {
-        return evaluator.getExperiment(descriptor, experiments)
+        return evaluator.getExperiment(descriptor, experimentsResult.experiments)
     }
 
     /**

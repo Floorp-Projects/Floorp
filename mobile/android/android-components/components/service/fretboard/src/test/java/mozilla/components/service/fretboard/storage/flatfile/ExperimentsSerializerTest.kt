@@ -5,9 +5,11 @@
 package mozilla.components.service.fretboard.storage.flatfile
 
 import mozilla.components.service.fretboard.Experiment
+import mozilla.components.service.fretboard.ExperimentsSnapshot
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -49,7 +51,8 @@ val experimentsJson = """
                                           "id":"experiment-2-id",
                                           "last_modified":1523549895749
                                       }
-                                  ]
+                                  ],
+                                  "last_modified": 1523549895749
                               }
                               """
 
@@ -57,7 +60,8 @@ val experimentsJson = """
 class ExperimentsSerializerTest {
     @Test
     fun testFromJsonValid() {
-        val experiments = ExperimentsSerializer().fromJson(experimentsJson)
+        val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
+        val experiments = experimentsResult.experiments
         assertEquals(2, experiments.size)
         assertEquals("first", experiments[0].name)
         assertEquals("eng|es|deu|fra", experiments[0].match!!.language)
@@ -79,6 +83,7 @@ class ExperimentsSerializerTest {
         assertEquals("SecondDescription", experiments[1].description)
         assertEquals("experiment-2-id", experiments[1].id)
         assertEquals(1523549895749, experiments[1].lastModified)
+        assertEquals(1523549895749, experimentsResult.lastModified)
     }
 
     @Test(expected = JSONException::class)
@@ -89,7 +94,9 @@ class ExperimentsSerializerTest {
     @Test
     fun testFromJsonEmptyArray() {
         val experimentsJson = """ {"experiments":[]} """
-        assertEquals(0, ExperimentsSerializer().fromJson(experimentsJson).size)
+        val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
+        assertEquals(0, experimentsResult.experiments.size)
+        assertNull(experimentsResult.lastModified)
     }
 
     @Test
@@ -108,8 +115,9 @@ class ExperimentsSerializerTest {
                 Experiment.Bucket(10, 5),
                 1523549895749)
         )
-        val json = JSONObject(ExperimentsSerializer().toJson(experiments))
-        assertEquals(1, json.length())
+        val json = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, 1523549895749)))
+        assertEquals(2, json.length())
+        assertEquals(1523549895749, json.getLong("last_modified"))
         val experimentsArray = json.getJSONArray("experiments")
         assertEquals(2, experimentsArray.length())
         val firstExperiment = experimentsArray[0] as JSONObject
@@ -146,7 +154,7 @@ class ExperimentsSerializerTest {
     @Test
     fun testToJsonEmptyList() {
         val experiments = listOf<Experiment>()
-        val experimentsJson = JSONObject(ExperimentsSerializer().toJson(experiments))
+        val experimentsJson = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, null)))
         assertEquals(1, experimentsJson.length())
         val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
         assertEquals(0, experimentsJsonArray.length())

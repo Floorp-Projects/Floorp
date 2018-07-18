@@ -14,9 +14,9 @@ interface ExperimentSource {
      * parsing the response into experiments
      *
      * @param client Http client to use, provided by Fretboard
-     * @param experiments list of already downloaded experiments
+     * @param snapshot list of already downloaded experiments
      * (in order to process a diff response, for example)
      * @return modified list of experiments
      */
-    fun getExperiments(experiments: List<Experiment>): List<Experiment>
+    fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot
 }
