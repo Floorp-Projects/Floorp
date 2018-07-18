@@ -2615,21 +2615,21 @@ TokenKindToString(TokenKind tt)
 }
 #endif
 
-template class frontend::TokenStreamCharsBase<Utf8Unit>;
-template class frontend::TokenStreamCharsBase<char16_t>;
+template class TokenStreamCharsBase<Utf8Unit>;
+template class TokenStreamCharsBase<char16_t>;
 
-template class frontend::TokenStreamChars<char16_t, frontend::TokenStreamAnyCharsAccess>;
-template class frontend::TokenStreamSpecific<char16_t, frontend::TokenStreamAnyCharsAccess>;
-
-template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
-template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
+template class TokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
+template class TokenStreamSpecific<char16_t, TokenStreamAnyCharsAccess>;
 
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
+TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
+TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
+
+template class
+TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
+template class
+TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
 } // namespace frontend
 
