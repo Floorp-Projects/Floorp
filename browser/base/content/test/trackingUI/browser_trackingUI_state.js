@@ -70,6 +70,7 @@ function testBenignPageWithException() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
   ok(TrackingProtection.content.hasAttribute("hasException"), "content has exception attribute");
+  ok(TrackingProtection.icon.hasAttribute("hasException"), "icon has exception attribute");
   ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
   ok(!TrackingProtection.icon.hasAttribute("tooltiptext"), "icon: no tooltip");
 
@@ -96,6 +97,8 @@ function testTrackingPage(window) {
       'icon: state="blocked-tracking-content"');
   is(TrackingProtection.icon.getAttribute("tooltiptext"),
      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
+  ok(!TrackingProtection.content.hasAttribute("hasException"), "content has no exception attribute");
+  ok(!TrackingProtection.icon.hasAttribute("hasException"), "icon has no exception attribute");
 
   ok(!hidden("#tracking-protection-icon"), "icon is visible");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
@@ -119,6 +122,10 @@ function testTrackingPage(window) {
 
 function testTrackingPageUnblocked() {
   info("Tracking content must be white-listed and not blocked");
+  is(TrackingProtection.content.hasAttribute("hasException"), TrackingProtection.enabled,
+    "content has exception attribute if TP is on");
+  is(TrackingProtection.icon.hasAttribute("hasException"), TrackingProtection.enabled,
+    "icon has exception attribute if TP is on");
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "loaded-tracking-content",
       'content: state="loaded-tracking-content"');
