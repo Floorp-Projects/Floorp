@@ -1503,16 +1503,17 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     }
 
     /**
-     * Given a just-consumed non-ASCII code unit (and maybe point) |lead|,
-     * consume a full code point or LineTerminatorSequence (normalizing it to
-     * '\n') and store it in |*codePoint|.  Return true on success, otherwise
-     * return false and leave |*codePoint| undefined on failure.
+     * Given a just-consumed non-ASCII code unit |lead| (which may also be a
+     * full code point, for UTF-16), consume a full code point or
+     * LineTerminatorSequence (normalizing it to '\n') and store it in
+     * |*codePoint|.  Return true on success, otherwise return false and leave
+     * |*codePoint| undefined on failure.
      *
      * If a LineTerminatorSequence was consumed, also update line/column info.
      *
      * This may change the current |sourceUnits| offset.
      */
-    MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* cp);
+    MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* codePoint);
 
     /**
      * Unget a full code point (ASCII or not) without altering line/column
