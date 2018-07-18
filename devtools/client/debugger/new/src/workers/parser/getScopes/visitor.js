@@ -48,6 +48,7 @@ function buildScopeList(ast, sourceId) {
     sourceId,
     freeVariables: new Map(),
     freeVariableStack: [],
+    inType: null,
     scope: lexical,
     scopeStack: [],
     declarationBindingIds: new Set()
@@ -182,6 +183,8 @@ function parseDeclarator(declaratorId, targetScope, type, locationType, declarat
     parseDeclarator(declaratorId.left, targetScope, type, locationType, declaration, state);
   } else if (isNode(declaratorId, "RestElement")) {
     parseDeclarator(declaratorId.argument, targetScope, type, locationType, declaration, state);
+  } else if (t.isTSParameterProperty(declaratorId)) {
+    parseDeclarator(declaratorId.parameter, targetScope, type, locationType, declaration, state);
   }
 }
 
@@ -230,6 +233,10 @@ const scopeCollectionVisitor = {
   enter(node, ancestors, state) {
     state.scopeStack.push(state.scope);
     const parentNode = ancestors.length === 0 ? null : ancestors[ancestors.length - 1].node;
+
+    if (state.inType) {
+      return;
+    }
 
     if (t.isProgram(node)) {
       const scope = pushTempScope(state, "module", "Module", {
@@ -404,6 +411,10 @@ const scopeCollectionVisitor = {
       });
     } else if (t.isImportDeclaration(node) && (!node.importKind || node.importKind === "value")) {
       node.specifiers.forEach(spec => {
+        if (spec.importKind && spec.importKind !== "value") {
+          return;
+        }
+
         if (t.isImportNamespaceSpecifier(spec)) {
           state.declarationBindingIds.add(spec.local);
           state.scope.bindings[spec.local.name] = {
@@ -451,9 +462,30 @@ const scopeCollectionVisitor = {
           }
         }]
       };
+    } else if (t.isTSModuleDeclaration(node)) {
+      state.declarationBindingIds.add(node.id);
+      state.scope.bindings[node.id.name] = {
+        type: "const",
+        refs: [{
+          type: "ts-namespace-decl",
+          start: fromBabelLocation(node.id.loc.start, state.sourceId),
+          end: fromBabelLocation(node.id.loc.end, state.sourceId),
+          declaration: {
+            start: fromBabelLocation(node.loc.start, state.sourceId),
+            end: fromBabelLocation(node.loc.end, state.sourceId)
+          }
+        }]
+      };
+    } else if (t.isTSModuleBlock(node)) {
+      pushTempScope(state, "block", "TypeScript Namespace", {
+        start: fromBabelLocation(node.loc.start, state.sourceId),
+        end: fromBabelLocation(node.loc.end, state.sourceId)
+      });
     } else if (t.isIdentifier(node) && t.isReferenced(node, parentNode) && // Babel doesn't cover this in 'isReferenced' yet, but it should
     // eventually.
     !t.isTSEnumMember(parentNode, {
+      id: node
+    }) && !t.isTSModuleDeclaration(parentNode, {
       id: node
     }) && // isReferenced above fails to see `var { foo } = ...` as a non-reference
     // because the direct parent is not enough to know that the pattern is
@@ -521,6 +553,16 @@ const scopeCollectionVisitor = {
         end: fromBabelLocation(node.loc.end, state.sourceId)
       });
     }
+
+    if ( // In general Flow expressions are deleted, so they can't contain
+    // runtime bindings, but typecasts are the one exception there.
+    t.isFlow(node) && !t.isTypeCastExpression(node) || // In general TS items are deleted, but TS has a few wrapper node
+    // types that can contain general JS expressions.
+    node.type.startsWith("TS") && !t.isTSTypeAssertion(node) && !t.isTSAsExpression(node) && !t.isTSNonNullExpression(node) && !t.isTSModuleDeclaration(node) && !t.isTSModuleBlock(node) && !t.isTSParameterProperty(node) && !t.isTSExportAssignment(node)) {
+      // Flag this node as a root "type" node. All items inside of this
+      // will be skipped entirely.
+      state.inType = node;
+    }
   },
 
   exit(node, ancestors, state) {
@@ -563,6 +605,10 @@ const scopeCollectionVisitor = {
 
         refs.push(...value);
       }
+    }
+
+    if (state.inType === node) {
+      state.inType = null;
     }
   }
 
