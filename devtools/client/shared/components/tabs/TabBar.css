@@ -18,9 +18,9 @@ div[hidetabs=true] .tabs .tabs-navigation {
   border-inline-start-width: 0;
 }
 
-.tabs .tabs-navigation .tabs-menu-item:focus {
-  outline: var(--theme-focus-outline);
-  outline-offset: -2px;
+/* Remove the outline focusring from tabs-menu-item. */
+.tabs .tabs-navigation .tabs-menu-item > a:-moz-focusring {
+  outline: none;
 }
 
 .tabs .tabs-menu-item.is-active {
