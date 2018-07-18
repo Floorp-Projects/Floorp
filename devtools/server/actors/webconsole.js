@@ -27,6 +27,7 @@ loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsol
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
+loader.lazyRequireGetter(this, "WebConsoleCommands", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "addWebConsoleCommands", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "formatCommand", "devtools/server/actors/webconsole/commands", true);
 loader.lazyRequireGetter(this, "isCommand", "devtools/server/actors/webconsole/commands", true);
@@ -1134,9 +1135,14 @@ WebConsoleActor.prototype =
           ));
     }
 
+    // Make sure we return an array with unique items, since `matches` can hold twice
+    // the same function name if it was defined in the content page and match an helper
+    // function (e.g. $, keys, …).
+    matches = [...new Set(matches)].sort();
+
     return {
       from: this.actorID,
-      matches: matches.sort(),
+      matches,
       matchProp: result.matchProp,
     };
   },
@@ -1418,39 +1424,35 @@ WebConsoleActor.prototype =
       }
     }
 
-    // Check if the Debugger.Frame or Debugger.Object for the global include
-    // $ or $$. We will not overwrite these functions with the Web Console
-    // commands.
-    let found$ = false, found$$ = false, disableScreenshot = false;
+    // Check if the Debugger.Frame or Debugger.Object for the global include any of the
+    // helper function we set. We will not overwrite these functions with the Web Console
+    // commands. The exception being "print" which should exist everywhere as
+    // `window.print`, and that we don't want to trigger from the console.
+    const availableHelpers = [...WebConsoleCommands._originalCommands.keys()]
+      .filter(h => h !== "print");
+
+    let helpersToDisable = [];
+    const helperCache = {};
+
     // do not override command functions if we are using the command key `:`
     // before the command string
     if (!isCmd) {
-      // if we do not have the command key as a prefix, screenshot is disabled by default
-      disableScreenshot = true;
       if (frame) {
         const env = frame.environment;
         if (env) {
-          found$ = !!env.find("$");
-          found$$ = !!env.find("$$");
+          helpersToDisable = availableHelpers.filter(name => !!env.find(name));
         }
       } else {
-        found$ = !!dbgWindow.getOwnPropertyDescriptor("$");
-        found$$ = !!dbgWindow.getOwnPropertyDescriptor("$$");
+        helpersToDisable = availableHelpers.filter(name =>
+          !!dbgWindow.getOwnPropertyDescriptor(name));
       }
+      // if we do not have the command key as a prefix, screenshot is disabled by default
+      helpersToDisable.push("screenshot");
     }
 
-    let $ = null, $$ = null, screenshot = null;
-    if (found$) {
-      $ = bindings.$;
-      delete bindings.$;
-    }
-    if (found$$) {
-      $$ = bindings.$$;
-      delete bindings.$$;
-    }
-    if (disableScreenshot) {
-      screenshot = bindings.screenshot;
-      delete bindings.screenshot;
+    for (const helper of helpersToDisable) {
+      helperCache[helper] = bindings[helper];
+      delete bindings[helper];
     }
 
     // Ready to evaluate the string.
@@ -1547,14 +1549,8 @@ WebConsoleActor.prototype =
     delete helpers.helperResult;
     delete helpers.selectedNode;
 
-    if ($) {
-      bindings.$ = $;
-    }
-    if ($$) {
-      bindings.$$ = $$;
-    }
-    if (screenshot) {
-      bindings.screenshot = screenshot;
+    for (const [helperName, helper] of Object.entries(helperCache)) {
+      bindings[helperName] = helper;
     }
 
     if (bindings._self) {
