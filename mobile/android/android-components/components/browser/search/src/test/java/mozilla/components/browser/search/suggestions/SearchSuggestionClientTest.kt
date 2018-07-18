@@ -6,13 +6,12 @@ package mozilla.components.browser.search.suggestions
 
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.search.SearchEngineParser
-import org.json.JSONException
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionClientTest {
@@ -28,7 +27,7 @@ class SearchSuggestionClientTest {
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient.create(searchEngine, GOOGLE_MOCK_RESPONSE) ?: return
+        val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK_RESPONSE)
 
         runBlocking {
             val results = client.getSuggestions("firefox")
@@ -44,7 +43,7 @@ class SearchSuggestionClientTest {
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/qwant.xml")
 
-        val client = SearchSuggestionClient.create(searchEngine, QWANT_MOCK_RESPONSE) ?: return
+        val client = SearchSuggestionClient(searchEngine, QWANT_MOCK_RESPONSE)
 
         runBlocking {
             val results = client.getSuggestions("firefox")
@@ -54,26 +53,38 @@ class SearchSuggestionClientTest {
         }
     }
 
-    @Test(expected = JSONException::class)
-    fun `Check that a bad response will throw an exception`() {
+    @Test(expected = SearchSuggestionClient.ResponseParserException::class)
+    fun `Check that a bad response will throw a parser exception`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
                 "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient.create(searchEngine, SERVER_ERROR_RESPONSE) ?: return
+        val client = SearchSuggestionClient(searchEngine, SERVER_ERROR_RESPONSE)
 
         runBlocking {
             client.getSuggestions("firefox")
         }
     }
 
-    @Test
-    fun `Check that a search engine without a suggestURI cant create a SearchSuggestionClient`() {
+    @Test(expected = SearchSuggestionClient.FetchException::class)
+    fun `Check that an exception in the suggestionFetcher will re-throw an IOException`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "searchplugins/drae.xml")
+                "google", "searchplugins/google-nocodes.xml")
 
-        val client = SearchSuggestionClient.create(searchEngine, { "no-op" })
-        assertNull(client)
+        val client = SearchSuggestionClient(searchEngine, { throw IOException() })
+
+        runBlocking {
+            client.getSuggestions("firefox")
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `Check that a search engine without a suggestURI will throw an exception`() {
+        val searchEngine = SearchEngineParser().load(
+                RuntimeEnvironment.application.assets,
+                "drae", "searchplugins/drae.xml")
+
+        val client = SearchSuggestionClient(searchEngine, { "no-op" })
     }
 }

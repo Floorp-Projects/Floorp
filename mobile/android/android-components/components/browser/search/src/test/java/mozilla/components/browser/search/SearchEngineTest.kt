@@ -6,7 +6,9 @@ package mozilla.components.browser.search
 
 import android.graphics.Bitmap
 import android.net.Uri
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock

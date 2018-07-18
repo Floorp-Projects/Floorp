@@ -5,6 +5,8 @@
 package mozilla.components.browser.search.suggestions
 
 import mozilla.components.browser.search.SearchEngine
+import org.json.JSONException
+import java.io.IOException
 
 /**
  * Async function responsible for taking a URL and returning the results
@@ -14,15 +16,20 @@ typealias SearchSuggestionFetcher = suspend (url: String) -> String?
 /**
  *  Provides an interface to get search suggestions from a given SearchEngine.
  */
-class SearchSuggestionClient private constructor(
+class SearchSuggestionClient(
     private val searchEngine: SearchEngine,
     private val fetcher: SearchSuggestionFetcher
 ) {
-    companion object {
-        fun create(searchEngine: SearchEngine, fetcher: SearchSuggestionFetcher): SearchSuggestionClient? {
-            if (!searchEngine.canProvideSearchSuggestions) { return null }
 
-            return SearchSuggestionClient(searchEngine, fetcher)
+    /**
+     * Exception types for errors caught while getting a list of suggestions
+     */
+    class FetchException : Exception("There was a problem fetching suggestions")
+    class ResponseParserException : Exception("There was a problem parsing the suggestion response")
+
+    init {
+        if (!searchEngine.canProvideSearchSuggestions) {
+            throw IllegalArgumentException("SearchEngine does not support search suggestions!")
         }
     }
 
@@ -30,9 +37,20 @@ class SearchSuggestionClient private constructor(
      * Gets search suggestions for a given query
      */
     suspend fun getSuggestions(query: String): List<String>? {
-        val suggestionsURL = searchEngine.buildSuggestionsURL(query) ?: return null
+        val suggestionsURL = searchEngine.buildSuggestionsURL(query)
+
         val parser = selectResponseParser(searchEngine)
 
-        return fetcher(suggestionsURL)?.let { parser(it) }
+        val suggestionResults = try {
+            suggestionsURL?.let { fetcher(it) }
+        } catch (_: IOException) {
+            throw FetchException()
+        }
+
+        return try {
+            suggestionResults?.let(parser)
+        } catch (_: JSONException) {
+            throw ResponseParserException()
+        }
     }
 }
