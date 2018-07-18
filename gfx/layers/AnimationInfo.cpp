@@ -153,17 +153,6 @@ AnimationInfo::ApplyPendingUpdatesForThisTransaction()
 }
 
 bool
-AnimationInfo::HasOpacityAnimation() const
-{
-  for (uint32_t i = 0; i < mAnimations.Length(); i++) {
-    if (mAnimations[i].property() == eCSSProperty_opacity) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool
 AnimationInfo::HasTransformAnimation() const
 {
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {

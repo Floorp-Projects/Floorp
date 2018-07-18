@@ -62,7 +62,6 @@ public:
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
   AnimationArray& GetAnimations() { return mAnimations; }
   bool ApplyPendingUpdatesForThisTransaction();
-  bool HasOpacityAnimation() const;
   bool HasTransformAnimation() const;
 
   // In case of continuation, |aFrame| must be the first or the last
