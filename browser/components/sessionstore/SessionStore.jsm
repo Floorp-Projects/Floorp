@@ -2386,7 +2386,10 @@ var SessionStoreInternal = {
     // Note that we cannot simply replace the contents of the cache
     // as |aState| can be an incomplete state that will be completed
     // by |restoreTabs|.
-    let tabState = JSON.parse(aState);
+    let tabState = aState;
+    if (typeof tabState == "string") {
+      tabState = JSON.parse(aState);
+    }
     if (!tabState) {
       throw Components.Exception("Invalid state string: not JSON", Cr.NS_ERROR_INVALID_ARG);
     }
