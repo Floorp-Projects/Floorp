@@ -283,6 +283,8 @@ protected: // Called by helper classes.
 protected: // Shouldn't be used by friend classes
   virtual ~TextEditor();
 
+  int32_t WrapWidth() const { return mWrapColumn; }
+
   /**
    * Make the given selection span the entire document.
    */
