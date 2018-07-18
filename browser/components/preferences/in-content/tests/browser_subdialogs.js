@@ -78,7 +78,9 @@ async function close_subdialog_and_test_generic_end_state(browser, closingFn, cl
                             frame.contentWindow.arguments[0].acceptCount;
 
     info("waiting for about:blank load");
-    await ContentTaskUtils.waitForEvent(frame, "load");
+    await ContentTaskUtils.waitForEvent(frame, "load", false, () => {
+      return frame.contentWindow.location.href == "about:blank";
+    });
 
     Assert.notEqual(win.getComputedStyle(subdialog._overlay).visibility, "visible",
       "overlay is not visible");
