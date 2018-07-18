@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function getCountryCodePref() {
+function getRegionPref() {
   try {
-    return Services.prefs.getCharPref("browser.search.countryCode");
+    return Services.prefs.getCharPref("browser.search.region");
   } catch (_) {
     return undefined;
   }
@@ -12,7 +12,7 @@ function getCountryCodePref() {
 // Force a sync init and ensure the right thing happens (ie, that no xhr
 // request is made )
 add_task(async function test_simple() {
-  deepEqual(getCountryCodePref(), undefined, "no countryCode pref");
+  deepEqual(getRegionPref(), undefined, "no region pref");
 
   // Still set a geoip pref so we can (indirectly) check it wasn't used.
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code": "AU"}');
@@ -28,7 +28,7 @@ add_task(async function test_simple() {
     do_timeout(500, resolve);
   });
 
-  deepEqual(getCountryCodePref(), undefined, "didn't do the geoip xhr");
+  deepEqual(getRegionPref(), undefined, "didn't do the geoip xhr");
   // and no telemetry evidence of geoip.
   for (let hid of [
     "SEARCH_SERVICE_COUNTRY_FETCH_RESULT",

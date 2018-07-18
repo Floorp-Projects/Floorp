@@ -8,8 +8,8 @@ function run_test() {
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.search.init(() => {
     try {
-      Services.prefs.getCharPref("browser.search.countryCode");
-      ok(false, "not expecting countryCode to be set");
+      Services.prefs.getCharPref("browser.search.region");
+      ok(false, "not expecting region to be set");
     } catch (ex) {}
     // should have an error recorded.
     checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.ERROR);

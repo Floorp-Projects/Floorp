@@ -11,7 +11,6 @@ user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
 user_pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "");
 // Tell the search service we are running in the US.  This also has the desired
 // side-effect of preventing our geoip lookup.
-user_pref("browser.search.countryCode", "US");
 user_pref("browser.search.region", "US");
 // This will prevent HTTP requests for region defaults.
 user_pref("browser.search.geoSpecificDefaults", false);
