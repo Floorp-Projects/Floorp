@@ -1786,15 +1786,24 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 
 NS_IMETHODIMP
 TextEditor::OutputToString(const nsAString& aFormatType,
-                           uint32_t aFlags,
+                           uint32_t aDocumentEncoderFlags,
                            nsAString& aOutputString)
+{
+  return ComputeValueInternal(aFormatType, aDocumentEncoderFlags,
+                              aOutputString);
+}
+
+nsresult
+TextEditor::ComputeValueInternal(const nsAString& aFormatType,
+                                 uint32_t aDocumentEncoderFlags,
+                                 nsAString& aOutputString) const
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   EditSubActionInfo subActionInfo(EditSubAction::eComputeTextToOutput);
   subActionInfo.outString = &aOutputString;
-  subActionInfo.flags = aFlags;
+  subActionInfo.flags = aDocumentEncoderFlags;
   subActionInfo.outputFormat = &aFormatType;
   Selection* selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
@@ -1818,7 +1827,7 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder =
-    GetAndInitDocEncoder(aFormatType, aFlags, charset);
+    GetAndInitDocEncoder(aFormatType, aDocumentEncoderFlags, charset);
   if (NS_WARN_IF(!encoder)) {
     return NS_ERROR_FAILURE;
   }
@@ -1959,8 +1968,7 @@ TextEditor::SharedOutputString(uint32_t aFlags,
     aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   }
   // If the selection isn't collapsed, we'll use the whole document.
-
-  return OutputToString(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
+  return ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
 }
 
 NS_IMETHODIMP

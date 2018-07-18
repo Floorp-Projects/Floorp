@@ -190,6 +190,20 @@ public:
    */
   nsresult OnDrop(dom::DragEvent* aDropEvent);
 
+  /**
+   * ComputeTextValue() computes plaintext value of this editor.  This may be
+   * too expensive if it's in hot path.
+   *
+   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
+   * @param aCharset                Encoding of the document.
+   */
+  nsresult ComputeTextValue(uint32_t aDocumentEncoderFlags,
+                            nsAString& aOutputString) const
+  {
+    return ComputeValueInternal(NS_LITERAL_STRING("text/plain"),
+                                aDocumentEncoderFlags, aOutputString);
+  }
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -340,6 +354,18 @@ protected: // Shouldn't be used by friend classes
   GetAndInitDocEncoder(const nsAString& aFormatType,
                        uint32_t aDocumentEncoderFlags,
                        const nsACString& aCharset) const;
+
+  /**
+   * ComputeValueInternal() computes string value of this editor for given
+   * format.  This may be too expensive if it's in hot path.
+   *
+   * @param aFormatType             MIME type like "text/plain".
+   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
+   * @param aCharset                Encoding of the document.
+   */
+  nsresult ComputeValueInternal(const nsAString& aFormatType,
+                                uint32_t aDocumentEncoderFlags,
+                                nsAString& aOutputString) const;
 
   /**
    * Factored methods for handling insertion of data from transferables
