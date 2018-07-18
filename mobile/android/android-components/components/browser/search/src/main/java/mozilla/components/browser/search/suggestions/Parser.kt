@@ -63,15 +63,15 @@ private fun buildQwantParser(): ResponseParser {
 /**
  * The available Parsers
  */
-val defaultResponseParser = buildJSONArrayParser(1)
-val azerdictResponseParser = buildJSONObjectParser("suggestions")
-val daumResponseParser = buildJSONObjectParser("items")
-val qwantResponseParser = buildQwantParser()
+internal val defaultResponseParser = buildJSONArrayParser(1)
+internal val azerdictResponseParser = buildJSONObjectParser("suggestions")
+internal val daumResponseParser = buildJSONObjectParser("items")
+internal val qwantResponseParser = buildQwantParser()
 
 /**
  * Selects a Parser based on a SearchEngine
  */
-fun selectResponseParser(searchEngine: SearchEngine): ResponseParser = when (searchEngine.name) {
+internal fun selectResponseParser(searchEngine: SearchEngine): ResponseParser = when (searchEngine.name) {
     "Azerdict" -> azerdictResponseParser
     "다음지도" -> daumResponseParser
     "Qwant" -> qwantResponseParser
