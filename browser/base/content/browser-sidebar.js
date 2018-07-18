@@ -75,22 +75,22 @@ var SidebarUI = {
     // remembered for after a restart / reopening a browser window.
     let enumerator = Services.wm.getEnumerator("navigator:browser");
     if (!enumerator.hasMoreElements()) {
-      document.persist("sidebar-box", "sidebarcommand");
-
       let xulStore = Services.xulStore;
+      xulStore.persist(this._box, "sidebarcommand");
+
       if (this._box.hasAttribute("positionend")) {
-        document.persist("sidebar-box", "positionend");
+        xulStore.persist(this._box, "positionend");
       } else {
         xulStore.removeValue(document.documentURI, "sidebar-box", "positionend");
       }
       if (this._box.hasAttribute("checked")) {
-        document.persist("sidebar-box", "checked");
+        xulStore.persist(this._box, "checked");
       } else {
         xulStore.removeValue(document.documentURI, "sidebar-box", "checked");
       }
 
-      document.persist("sidebar-box", "width");
-      document.persist("sidebar-title", "value");
+      xulStore.persist(this._box, "width");
+      xulStore.persist(this._title, "value");
     }
   },
 
