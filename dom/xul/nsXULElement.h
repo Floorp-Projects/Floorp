@@ -366,7 +366,6 @@ public:
                                 nsIContent* aBindingParent,
                                 bool aCompileEventHandlers) override;
     virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
-    virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
     virtual void DestroyContent() override;
 
 #ifdef DEBUG
@@ -643,9 +642,6 @@ protected:
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
-
-    // Helper routine that crawls a parent chain looking for a tree element.
-    NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);
 
     nsresult AddPopupListener(nsAtom* aName);
 

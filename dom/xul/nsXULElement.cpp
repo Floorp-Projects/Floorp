@@ -42,7 +42,6 @@
 #include "nsPIBoxObject.h"
 #include "XULDocument.h"
 #include "nsXULPopupListener.h"
-#include "ListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -447,7 +446,6 @@ nsXULElement::GetEventListenerManagerForAttr(nsAtom* aAttrName, bool* aDefer)
 static bool IsNonList(mozilla::dom::NodeInfo* aNodeInfo)
 {
   return !aNodeInfo->Equals(nsGkAtoms::tree) &&
-         !aNodeInfo->Equals(nsGkAtoms::listbox) &&
          !aNodeInfo->Equals(nsGkAtoms::richlistbox);
 }
 
@@ -792,98 +790,6 @@ nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
     }
 
     nsStyledElement::UnbindFromTree(aDeep, aNullParent);
-}
-
-void
-nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
-{
-    // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
-    // the possibility exists that some of the items in the removed subtree
-    // are selected (and therefore need to be deselected). We need to account for this.
-    nsCOMPtr<nsIDOMXULMultiSelectControlElement> controlElement;
-    nsCOMPtr<nsIListBoxObject> listBox;
-    bool fireSelectionHandler = false;
-
-    // -1 = do nothing, -2 = null out current item
-    // anything else = index to re-set as current
-    int32_t newCurrentIndex = -1;
-
-    if (aKid->NodeInfo()->Equals(nsGkAtoms::listitem, kNameSpaceID_XUL)) {
-      // This is the nasty case. We have (potentially) a slew of selected items
-      // and cells going away.
-      // First, retrieve the tree.
-      // Check first whether this element IS the tree
-      controlElement = do_QueryObject(this);
-
-      // If it's not, look at our parent
-      if (!controlElement)
-        GetParentTree(getter_AddRefs(controlElement));
-      nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
-      RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
-
-      if (xulElement) {
-        // Iterate over all of the items and find out if they are contained inside
-        // the removed subtree.
-        int32_t length;
-        controlElement->GetSelectedCount(&length);
-        for (int32_t i = 0; i < length; i++) {
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-          controlElement->MultiGetSelectedItem(i, getter_AddRefs(item));
-          nsCOMPtr<nsINode> node = do_QueryInterface(item);
-          if (node == aKid &&
-              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(item))) {
-            length--;
-            i--;
-            fireSelectionHandler = true;
-          }
-        }
-
-        nsCOMPtr<nsIDOMXULSelectControlItemElement> curItem;
-        controlElement->GetCurrentItem(getter_AddRefs(curItem));
-        nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
-        if (curNode && nsContentUtils::ContentIsDescendantOf(curNode, aKid)) {
-            // Current item going away
-            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
-            listBox = do_QueryInterface(box);
-            if (listBox) {
-              listBox->GetIndexOfItem(aKid->AsElement(), &newCurrentIndex);
-            }
-
-            // If any of this fails, we'll just set the current item to null
-            if (newCurrentIndex == -1)
-              newCurrentIndex = -2;
-        }
-      }
-    }
-
-    nsStyledElement::RemoveChildNode(aKid, aNotify);
-
-    if (newCurrentIndex == -2) {
-        controlElement->SetCurrentItem(nullptr);
-    } else if (newCurrentIndex > -1) {
-        // Make sure the index is still valid
-        int32_t treeRows;
-        listBox->GetRowCount(&treeRows);
-        if (treeRows > 0) {
-            newCurrentIndex = std::min((treeRows - 1), newCurrentIndex);
-            RefPtr<Element> newCurrentItem;
-            listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
-            nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
-            if (xulCurItem)
-                controlElement->SetCurrentItem(xulCurItem);
-        } else {
-            controlElement->SetCurrentItem(nullptr);
-        }
-    }
-
-    nsIDocument* doc;
-    if (fireSelectionHandler && (doc = GetComposedDoc())) {
-      nsContentUtils::DispatchTrustedEvent(doc,
-                                           static_cast<nsIContent*>(this),
-                                           NS_LITERAL_STRING("select"),
-                                           CanBubble::eNo,
-                                           Cancelable::eYes);
-    }
 }
 
 void
@@ -1316,24 +1222,6 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?
     return OwnerDoc()->GetBoxObjectFor(this, rv);
-}
-
-NS_IMETHODIMP
-nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
-{
-    for (nsIContent* current = GetParent(); current;
-         current = current->GetParent()) {
-        if (current->NodeInfo()->Equals(nsGkAtoms::listbox,
-                                        kNameSpaceID_XUL)) {
-            CallQueryInterface(current, aTreeElement);
-            // XXX returning NS_OK because that's what the code used to do;
-            // is that the right thing, though?
-
-            return NS_OK;
-        }
-    }
-
-    return NS_OK;
 }
 
 void
