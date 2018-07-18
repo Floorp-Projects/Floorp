@@ -413,6 +413,9 @@ public:
         IDX_ISINSTANCE              ,
         IDX_INFINITY                ,
         IDX_NAN                     ,
+        IDX_CLASS_ID                ,
+        IDX_INTERFACE_ID            ,
+        IDX_INITIALIZER             ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
