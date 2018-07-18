@@ -1264,6 +1264,12 @@ class JSScript : public js::gc::TenuredCell
             return nullptr;
         return scriptData_->code();
     }
+    bool isUncompleted() const {
+        // code() becomes non-null only if this script is complete.
+        // See the comment in JSScript::fullyInitFromEmitter.
+        return !code();
+    }
+
     size_t length() const {
         MOZ_ASSERT(scriptData_);
         return scriptData_->codeLength();
@@ -2143,8 +2149,82 @@ class LazyScript : public gc::TenuredCell
     // Original function with which the lazy script is associated.
     GCPtrFunction function_;
 
-    // Scope in which the script is nested.
-    GCPtrScope enclosingScope_;
+    // This field holds one of:
+    //   * LazyScript in which the script is nested.  This case happens if the
+    //     enclosing script is lazily parsed and have never been compiled.
+    //
+    //     This is used by the debugger to delazify the enclosing scripts
+    //     recursively.  The all ancestor LazyScripts in this linked-list are
+    //     kept alive as long as this LazyScript is alive, which doesn't result
+    //     in keeping them unnecessarily alive outside of the debugger for the
+    //     following reasons:
+    //
+    //       * Outside of the debugger, a LazyScript is visible to user (which
+    //         means the LazyScript can be pointed from somewhere else than the
+    //         enclosing script) only if the enclosing script is compiled and
+    //         executed.  While compiling the enclosing script, this field is
+    //         changed to point the enclosing scope.  So the enclosing
+    //         LazyScript is no more in the list.
+    //       * Before the enclosing script gets compiled, this LazyScript is
+    //         kept alive only if the outermost LazyScript in the list is kept
+    //         alive.
+    //       * Once this field is changed to point the enclosing scope, this
+    //         field will never point the enclosing LazyScript again, since
+    //         relazification is not performed on non-leaf scripts.
+    //
+    //   * Scope in which the script is nested.  This case happens if the
+    //     enclosing script has ever been compiled.
+    //
+    //   * nullptr for incomplete (initial or failure) state
+    //
+    // This field should be accessed via accessors:
+    //   * enclosingScope
+    //   * setEnclosingScope (cannot be called twice)
+    //   * enclosingLazyScript
+    //   * setEnclosingLazyScript (cannot be called twice)
+    // after checking:
+    //   * hasEnclosingLazyScript
+    //   * hasEnclosingScope
+    //
+    // The transition of fields are following:
+    //
+    //  o                               o
+    //  | when function is lazily       | when decoded from XDR,
+    //  | parsed inside a function      | and enclosing script is lazy
+    //  | which is lazily parsed        | (CreateForXDR without enclosingScope)
+    //  | (Create)                      |
+    //  v                               v
+    // +---------+                     +---------+
+    // | nullptr |                     | nullptr |
+    // +---------+                     +---------+
+    //  |                               |
+    //  | when enclosing function is    | when enclosing script is decoded
+    //  | lazily parsed and this        | and this script's function is put
+    //  | script's function is put      | into innerFunctions()
+    //  | into innerFunctions()         | (setEnclosingLazyScript)
+    //  | (setEnclosingLazyScript)      |
+    //  |                               |
+    //  |                               |     o
+    //  |                               |     | when function is lazily
+    //  |                               |     | parsed inside a function
+    //  |                               |     | which is eagerly parsed
+    //  |                               |     | (Create)
+    //  v                               |     v
+    // +----------------------+         |    +---------+
+    // | enclosing LazyScript |<--------+    | nullptr |
+    // +----------------------+              +---------+
+    //  |                                     |
+    //  v                                     |
+    //  +<------------------------------------+
+    //  |
+    //  | when the enclosing script     o
+    //  | is successfully compiled      | when decoded from XDR,
+    //  | (setEnclosingScope)           | and enclosing script is not lazy
+    //  v                               | (CreateForXDR with enclosingScope)
+    // +-----------------+              |
+    // | enclosing Scope |<-------------+
+    // +-----------------+
+    GCPtr<TenuredCell*> enclosingLazyScriptOrScope_;
 
     // ScriptSourceObject. We leave this set to nullptr until we generate
     // bytecode for our immediate parent. This is never a CCW; we don't clone
@@ -2245,11 +2325,11 @@ class LazyScript : public gc::TenuredCell
     //
     // The sourceObject and enclosingScope arguments may be null if the
     // enclosing function is also lazy.
-    static LazyScript* Create(JSContext* cx, HandleFunction fun,
-                              HandleScript script, HandleScope enclosingScope,
-                              HandleScriptSourceObject sourceObject,
-                              uint64_t packedData, uint32_t begin, uint32_t end,
-                              uint32_t toStringStart, uint32_t lineno, uint32_t column);
+    static LazyScript* CreateForXDR(JSContext* cx, HandleFunction fun,
+                                    HandleScript script, HandleScope enclosingScope,
+                                    HandleScriptSourceObject sourceObject,
+                                    uint64_t packedData, uint32_t begin, uint32_t end,
+                                    uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
     void initRuntimeFields(uint64_t packedFields);
 
@@ -2259,7 +2339,6 @@ class LazyScript : public gc::TenuredCell
     }
 
     void initScript(JSScript* script);
-    void resetScript();
 
     JSScript* maybeScript() {
         return script_;
@@ -2271,8 +2350,29 @@ class LazyScript : public gc::TenuredCell
         return bool(script_);
     }
 
+    bool hasEnclosingScope() const {
+        return enclosingLazyScriptOrScope_ &&
+               enclosingLazyScriptOrScope_->is<Scope>();
+    }
+    bool hasEnclosingLazyScript() const {
+        return enclosingLazyScriptOrScope_ &&
+               enclosingLazyScriptOrScope_->is<LazyScript>();
+    }
+
+    LazyScript* enclosingLazyScript() const {
+        MOZ_ASSERT(hasEnclosingLazyScript());
+        return enclosingLazyScriptOrScope_->as<LazyScript>();
+    }
+    void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
+
     Scope* enclosingScope() const {
-        return enclosingScope_;
+        MOZ_ASSERT(hasEnclosingScope());
+        return enclosingLazyScriptOrScope_->as<Scope>();
+    }
+    void setEnclosingScope(Scope* enclosingScope);
+
+    bool hasNonSyntacticScope() const {
+        return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
     }
 
     ScriptSourceObject& sourceObject() const;
@@ -2283,8 +2383,6 @@ class LazyScript : public gc::TenuredCell
     bool mutedErrors() const {
         return scriptSource()->mutedErrors();
     }
-
-    void setEnclosingScope(Scope* enclosingScope);
 
     uint32_t numClosedOverBindings() const {
         return p_.numClosedOverBindings;
@@ -2440,13 +2538,14 @@ class LazyScript : public gc::TenuredCell
         toStringEnd_ = toStringEnd;
     }
 
-    // Returns true if the enclosing script failed to compile.
-    // See the comment in the definition for more details.
-    bool hasUncompletedEnclosingScript() const;
-
-    // Returns true if the enclosing script is also lazy.
-    bool isEnclosingScriptLazy() const {
-        return !enclosingScope_;
+    // Returns true if the enclosing script has ever been compiled.
+    // Once the enclosing script is compiled, the scope chain is created.
+    // This LazyScript is delazify-able as long as it has the enclosing scope,
+    // even if the enclosing JSScript is GCed.
+    // The enclosing JSScript can be GCed later if the enclosing scope is not
+    // FunctionScope or ModuleScope.
+    bool enclosingScriptHasEverBeenCompiled() const {
+        return hasEnclosingScope();
     }
 
     friend class GCMarker;

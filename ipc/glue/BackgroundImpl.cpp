@@ -1508,7 +1508,7 @@ ChildImpl::GetOrCreateForCurrentThread()
                                     base::GetCurrentProcId(),
                                     &parent, &child);
   if (NS_FAILED(rv)) {
-    MOZ_CRASH("Failed to create top level actor!");
+    NS_WARNING("Failed to create top level actor!");
     return nullptr;
   }
 
@@ -1524,7 +1524,7 @@ ChildImpl::GetOrCreateForCurrentThread()
 
   if (NS_IsMainThread()) {
     if (!content->SendInitBackground(std::move(parent))) {
-      MOZ_CRASH("Failed to create top level actor!");
+      NS_WARNING("Failed to create top level actor!");
       return nullptr;
     }
   } else {

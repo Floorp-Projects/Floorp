@@ -882,6 +882,7 @@ impl<'le> GeckoElement<'le> {
                 .expect("AnimationValue not found in ElementTransitions");
 
             let property = end_value.id();
+            debug_assert!(!property.is_logical());
             map.insert(property, end_value.clone_arc());
         }
         map
@@ -896,6 +897,7 @@ impl<'le> GeckoElement<'le> {
         existing_transitions: &FnvHashMap<LonghandId, Arc<AnimationValue>>,
     ) -> bool {
         use values::animated::{Animate, Procedure};
+        debug_assert!(!longhand_id.is_logical());
 
         // If there is an existing transition, update only if the end value
         // differs.
@@ -1587,25 +1589,24 @@ impl<'le> TElement for GeckoElement<'le> {
 
     fn might_need_transitions_update(
         &self,
-        old_values: Option<&ComputedValues>,
-        new_values: &ComputedValues,
+        old_style: Option<&ComputedValues>,
+        new_style: &ComputedValues,
     ) -> bool {
-        use properties::longhands::display::computed_value::T as Display;
-
-        let old_values = match old_values {
+        let old_style = match old_style {
             Some(v) => v,
             None => return false,
         };
 
-        let new_box_style = new_values.get_box();
-        let transition_not_running = !self.has_css_transitions() &&
-            new_box_style.transition_property_count() == 1 &&
-            new_box_style.transition_combined_duration_at(0) <= 0.0f32;
-        let new_display_style = new_box_style.clone_display();
-        let old_display_style = old_values.get_box().clone_display();
+        let new_box_style = new_style.get_box();
+        if !self.has_css_transitions() && !new_box_style.specifies_transitions() {
+            return false;
+        }
 
-        new_box_style.transition_property_count() > 0 && !transition_not_running &&
-            (new_display_style != Display::None && old_display_style != Display::None)
+        if new_box_style.clone_display().is_none() || old_style.clone_display().is_none() {
+            return false;
+        }
+
+        return true;
     }
 
     // Detect if there are any changes that require us to update transitions.
@@ -1657,6 +1658,8 @@ impl<'le> TElement for GeckoElement<'le> {
             let transition_property: TransitionProperty = property.into();
 
             let mut property_check_helper = |property: LonghandId| -> bool {
+                let property =
+                    property.to_physical(after_change_style.writing_mode);
                 transitions_to_keep.insert(property);
                 self.needs_transitions_update_per_property(
                     property,

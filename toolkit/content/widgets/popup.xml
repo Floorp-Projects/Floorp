@@ -11,15 +11,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="popup-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/popup.css"/>
-    </resources>
-  </binding>
-
-  <binding id="popup"
-           extends="chrome://global/content/bindings/popup.xml#popup-base">
-
+  <binding id="popup">
     <content>
       <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
                           smoothscroll="false">
@@ -55,8 +47,7 @@
     </handlers>
   </binding>
 
-  <binding id="panel"
-           extends="chrome://global/content/bindings/popup.xml#popup-base">
+  <binding id="panel">
     <implementation>
       <field name="_prevFocus">0</field>
     </implementation>
@@ -139,6 +130,11 @@
   </binding>
 
   <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
+    <resources>
+      <!-- Fixes an issue with the "test_arrowpanel.xul" animation on Mac, see bug 1470880. -->
+      <stylesheet src="data:text/css,"/>
+    </resources>
+
     <content flip="both" side="top" position="bottomcenter topleft" consumeoutsideclicks="false">
       <xul:vbox anonid="container" class="panel-arrowcontainer" flex="1"
                xbl:inherits="side,panelopen">
@@ -267,8 +263,7 @@
     </handlers>
   </binding>
 
-  <binding id="tooltip"
-           extends="chrome://global/content/bindings/popup.xml#popup-base">
+  <binding id="tooltip">
     <content>
       <children>
         <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>

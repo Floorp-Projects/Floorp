@@ -30,6 +30,7 @@ toolkit.jar:
   skin/classic/global/splitter.css
   skin/classic/global/toolbar.css
   skin/classic/global/toolbarbutton.css
+  skin/classic/global/tooltip.css
 * skin/classic/global/tree.css
 * skin/classic/global/alerts/alert.css                     (alerts/alert.css)
   skin/classic/global/arrow/arrow-lft.gif                  (arrow/arrow-lft.gif)

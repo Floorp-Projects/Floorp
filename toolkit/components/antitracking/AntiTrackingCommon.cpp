@@ -25,28 +25,21 @@ using mozilla::dom::ContentChild;
 namespace {
 
 bool
-GetParentPrincipalAndTrackingOrigin(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
-                                    nsIPrincipal** aParentPrincipal,
+GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow,
+                                    nsIPrincipal** aTopLevelStoragePrincipal,
                                     nsACString& aTrackingOrigin)
 {
-#ifdef DEBUG
-  MOZ_ASSERT(nsContentUtils::IsThirdPartyWindowOrChannel(a3rdPartyTrackingWindow,
-                                                         nullptr, nullptr));
   MOZ_ASSERT(nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow));
-#endif
-
-  nsGlobalWindowInner* innerWindow =
-    nsGlobalWindowInner::Cast(a3rdPartyTrackingWindow);
 
   // Now we need the principal and the origin of the parent window.
-  nsCOMPtr<nsIPrincipal> parentPrincipal =
-    innerWindow->GetTopLevelStorageAreaPrincipal();
-  if (NS_WARN_IF(!parentPrincipal)) {
+  nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
+    a3rdPartyTrackingWindow->GetTopLevelStorageAreaPrincipal();
+  if (NS_WARN_IF(!topLevelStoragePrincipal)) {
     return false;
   }
 
   // Let's take the principal and the origin of the tracker.
-  nsIPrincipal* trackingPrincipal = innerWindow->GetPrincipal();
+  nsIPrincipal* trackingPrincipal = a3rdPartyTrackingWindow->GetPrincipal();
   if (NS_WARN_IF(!trackingPrincipal)) {
     return false;
   }
@@ -56,7 +49,7 @@ GetParentPrincipalAndTrackingOrigin(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
     return false;
   }
 
-  parentPrincipal.forget(aParentPrincipal);
+  topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
   return true;
 };
 
@@ -80,26 +73,43 @@ CreatePermissionKey(const nsCString& aTrackingOrigin,
 
 /* static */ void
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
-                                                         nsPIDOMWindowInner* a3rdPartyTrackingWindow)
+                                                         nsPIDOMWindowInner* aParentWindow)
 {
-  MOZ_ASSERT(a3rdPartyTrackingWindow);
+  MOZ_ASSERT(aParentWindow);
 
   if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> parentPrincipal;
+  nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
   nsAutoCString trackingOrigin;
-  if (!GetParentPrincipalAndTrackingOrigin(a3rdPartyTrackingWindow,
-                                           getter_AddRefs(parentPrincipal),
-                                           trackingOrigin)) {
+
+  nsGlobalWindowInner* parentWindow = nsGlobalWindowInner::Cast(aParentWindow);
+  nsGlobalWindowOuter* outerParentWindow =
+    nsGlobalWindowOuter::Cast(parentWindow->GetOuterWindow());
+  if (NS_WARN_IF(!outerParentWindow)) {
+    return;
+  }
+
+  // We are a first party resource.
+  if (outerParentWindow->IsTopLevelWindow()) {
+    CopyUTF16toUTF8(aOrigin, trackingOrigin);
+    topLevelStoragePrincipal = parentWindow->GetPrincipal();
+    if (NS_WARN_IF(!topLevelStoragePrincipal)) {
+      return;
+    }
+
+  // We are a 3rd party source.
+  } else if (!GetParentPrincipalAndTrackingOrigin(parentWindow,
+                                                  getter_AddRefs(topLevelStoragePrincipal),
+                                                  trackingOrigin)) {
     return;
   }
 
   NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
 
   if (XRE_IsParentProcess()) {
-    SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(parentPrincipal,
+    SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(topLevelStoragePrincipal,
                                                                trackingOrigin,
                                                                grantedOrigin);
     return;
@@ -110,7 +120,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
 
   // This is not really secure, because here we have the content process sending
   // the request of storing a permission.
-  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(parentPrincipal),
+  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(topLevelStoragePrincipal),
                                                             trackingOrigin,
                                                             grantedOrigin);
 }
@@ -165,7 +175,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* a3rd
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
   nsAutoCString trackingOrigin;
-  if (!GetParentPrincipalAndTrackingOrigin(a3rdPartyTrackingWindow,
+  if (!GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner::Cast(a3rdPartyTrackingWindow),
                                            getter_AddRefs(parentPrincipal),
                                            trackingOrigin)) {
     return false;
@@ -202,13 +212,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aChannel->GetIsTrackingResource());
 
-#ifdef DEBUG
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
-  bool is3rdPartyContext = false;
-  thirdPartyUtil->IsThirdPartyChannel(aChannel, aURI, &is3rdPartyContext);
-  MOZ_ASSERT(is3rdPartyContext);
-#endif
-
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo) {
     return true;
@@ -216,7 +219,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   nsIPrincipal* parentPrincipal = loadInfo->TopLevelStorageAreaPrincipal();
   if (!parentPrincipal) {
-    parentPrincipal = loadInfo->LoadingPrincipal();
+    parentPrincipal = loadInfo->TriggeringPrincipal();
     if (NS_WARN_IF(!parentPrincipal)) {
       // Why we are here?!?
       return true;
