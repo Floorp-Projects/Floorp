@@ -8899,6 +8899,18 @@ StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,
   }
 
   if (aWindow) {
+    nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(aWindow);
+    nsGlobalWindowOuter* outerWindow =
+      nsGlobalWindowOuter::Cast(innerWindow->GetOuterWindow());
+    if (NS_WARN_IF(!outerWindow)) {
+      return false;
+    }
+
+    // We are a first party resource.
+    if (outerWindow->IsTopLevelWindow()) {
+      return false;
+    }
+
     nsIURI* documentURI = aURI ? aURI : aWindow->GetDocumentURI();
     if (documentURI &&
         AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(aWindow,
