@@ -386,9 +386,7 @@ HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset)
   if (aOffset == 0) {
     RefPtr<TextEditor> textEditor = GetEditor();
     if (textEditor) {
-      bool isEmpty = false;
-      textEditor->GetDocumentIsEmpty(&isEmpty);
-      if (isEmpty) {
+      if (textEditor->IsEmpty()) {
         return DOMPoint(textEditor->GetRoot(), 0);
       }
     }
