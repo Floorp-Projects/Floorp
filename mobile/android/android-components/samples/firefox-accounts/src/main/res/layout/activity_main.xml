@@ -39,12 +39,19 @@
             android:text="@string/log_out" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/txtView"
-        android:layout_below="@+id/buttonList"
+    <CheckBox
+        android:id="@+id/checkboxKeys"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonList"
+        android:text="@string/wants_keys" />
+
+    <TextView
+        android:id="@+id/txtView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkboxKeys"
         android:layout_gravity="center"
-        android:text="@string/log_out"/>
+        android:text="@string/log_out" />
 
 </RelativeLayout>

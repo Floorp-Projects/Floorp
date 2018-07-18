@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.customtabs.CustomTabsIntent
 import android.view.View
 import android.content.Intent
+import android.widget.CheckBox
 import android.widget.TextView
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
@@ -22,6 +23,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     private var account: FirefoxAccount? = null
     private var scopes: Array<String> = arrayOf("profile")
+    private var wantsKeys: Boolean = false
 
     companion object {
         const val CLIENT_ID = "12cc4070a481bc73"
@@ -53,17 +55,21 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
-            account?.beginOAuthFlow(scopes, false)?.whenComplete { openTab(it) }
+            account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openTab(it) }
         }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
-            account?.beginOAuthFlow(scopes, false)?.whenComplete { openWebView(it) }
+            account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openWebView(it) }
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
             getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit().putString(FXA_STATE_KEY, "").apply()
             val txtView: TextView = findViewById(R.id.txtView)
             txtView.text = getString(R.string.logged_out)
+        }
+
+        findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
+            wantsKeys = isChecked
         }
     }
 
