@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
@@ -49,6 +50,7 @@ using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::IsTrailingUnit;
 using mozilla::MakeScopeExit;
+using mozilla::MakeSpan;
 using mozilla::Maybe;
 using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
@@ -1912,7 +1914,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
             return true;
         }
 
-        atom = atomizeSourceChars(anyCharsAccess().cx, chars, length);
+        atom = atomizeSourceChars(anyCharsAccess().cx, MakeSpan(chars, length));
     }
     if (!atom)
         return false;
