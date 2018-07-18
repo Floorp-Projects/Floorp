@@ -83,8 +83,7 @@ XULStore.prototype = {
   log(message) {
     if (!debugMode)
       return;
-    dump("XULStore: " + message + "\n");
-    Services.console.logStringMessage("XULStore: " + message);
+    console.log("XULStore: " + message);
   },
 
   readFile() {
@@ -128,6 +127,30 @@ XULStore.prototype = {
   },
 
   /* ---------- interface implementation ---------- */
+
+  persist(node, attr) {
+    if (!node.id) {
+      throw new Error("Node without ID passed into persist()");
+    }
+
+    const uri = node.ownerDocument.documentURI;
+    const value = node.getAttribute(attr);
+
+    if (node.localName == "window") {
+      this.log("Persisting attributes to windows is handled by nsXULWindow.");
+      return;
+    }
+
+    // See Bug 1476680 - we could drop the `hasValue` check so that
+    // any time there's an empty attribute it gets removed from the
+    // store. Since this is copying behavior from document.persist,
+    // callers would need to be updated with that change.
+    if (!value && this.hasValue(uri, node.id, attr)) {
+      this.removeValue(uri, node.id, attr);
+    } else {
+      this.setValue(uri, node.id, attr, value);
+    }
+  },
 
   setValue(docURI, id, attr, value) {
     this.log("Saving " + attr + "=" + value + " for id=" + id + ", doc=" + docURI);
