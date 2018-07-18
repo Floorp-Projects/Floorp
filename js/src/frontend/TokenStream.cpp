@@ -443,15 +443,12 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
 
 template<>
 MOZ_MUST_USE bool
-TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
-                                                                         const char16_t* end)
+TokenStreamCharsBase<char16_t>::fillCharBufferFromSourceNormalizingAsciiLineBreaks(const char16_t* cur,
+                                                                                   const char16_t* end)
 {
     MOZ_ASSERT(this->charBuffer.length() == 0);
 
     while (cur < end) {
-        // Template literals normalize only '\r' and "\r\n" to '\n'.  The
-        // Unicode separators need no special handling here.
-        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
         char16_t ch = *cur++;
         if (ch == '\r') {
             ch = '\n';
@@ -881,37 +878,51 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::currentLineAndColumn(uint32_t* line,
 
 template<>
 bool
-TokenStreamCharsBase<Utf8Unit>::addLineOfContext(JSContext* cx, ErrorMetadata* err,
-                                                 uint32_t offset)
+TokenStreamCharsBase<Utf8Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
 {
-    // The specialization below is almost usable if changed to be a definition
-    // for any CharT, but it demands certain UTF-8-specific functionality that
-    // has't been defined yet.  Use a placeholder definition until such
-    // functionality is in place.
+    // The specialization below is 100% usable if tweaked to be a definition
+    // for any CharT, but it demands SourceUnits::findWindow{Start,End} and
+    // TokenStreamCharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks
+    // for UTF-8 that haven't been defined yet.  Use a placeholder definition
+    // til those are place.
     return true;
 }
 
 template<>
 bool
-TokenStreamCharsBase<char16_t>::addLineOfContext(JSContext* cx, ErrorMetadata* err,
-                                                 uint32_t offset)
+TokenStreamCharsBase<char16_t>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
 {
+    using CharT = char16_t;
     size_t windowStart = sourceUnits.findWindowStart(offset);
     size_t windowEnd = sourceUnits.findWindowEnd(offset);
 
     size_t windowLength = windowEnd - windowStart;
     MOZ_ASSERT(windowLength <= SourceUnits::WindowRadius * 2);
 
-    // Create the windowed string, not including the potential line
-    // terminator.
-    StringBuffer windowBuf(cx);
-    if (!windowBuf.append(sourceUnits.codeUnitPtrAt(windowStart), windowLength) ||
-        !windowBuf.append('\0'))
-    {
-        return false;
+    // Don't add a useless "line" of context when the window ends up empty
+    // because of an invalid encoding at the start of a line.
+    if (windowLength == 0) {
+        MOZ_ASSERT(err->lineOfContext == nullptr,
+                   "ErrorMetadata::lineOfContext must be null so we don't "
+                   "have to set the lineLength/tokenOffset fields");
+        return true;
     }
 
-    err->lineOfContext.reset(windowBuf.stealChars());
+    // We might have hit an error while processing some source code feature
+    // that's accumulating text into |this->charBuffer| -- e.g. we could be
+    // halfway into a regular expression literal, then encounter invalid UTF-8.
+    // Thus we must clear |this->charBuffer| of prior work.
+    this->charBuffer.clear();
+
+    const CharT* start = sourceUnits.codeUnitPtrAt(windowStart);
+    if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(start, start + windowLength))
+        return false;
+
+    // The windowed string is null-terminated.
+    if (!this->charBuffer.append('\0'))
+        return false;
+
+    err->lineOfContext.reset(this->charBuffer.extractOrCopyRawBuffer());
     if (!err->lineOfContext)
         return false;
 

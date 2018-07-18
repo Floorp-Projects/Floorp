@@ -1314,12 +1314,12 @@ class TokenStreamCharsBase
     template<typename T> inline void consumeKnownCodeUnit(T) = delete;
 
     /**
-     * Accumulate the provided range of already-validated (i.e. valid UTF-8, or
-     * anything if CharT is char16_t because JS permits lone and mispaired
-     * surrogates) raw template literal text (i.e. containing no escapes or
-     * substitutions) into |charBuffer|.
+     * Accumulate the provided range of already-validated text (valid UTF-8, or
+     * anything if CharT is char16_t because JS allows lone surrogates) into
+     * |charBuffer|.  Normalize '\r', '\n', and "\r\n" into '\n'.
      */
-    MOZ_MUST_USE bool fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
+    MOZ_MUST_USE bool
+    fillCharBufferFromSourceNormalizingAsciiLineBreaks(const CharT* cur, const CharT* end);
 
     /**
      * Add a null-terminated line of context to error information, for the line
@@ -1334,7 +1334,7 @@ class TokenStreamCharsBase
      * This function is quite internal, and you probably should be calling one
      * of its existing callers instead.
      */
-    MOZ_MUST_USE bool addLineOfContext(JSContext* cx, ErrorMetadata* err, uint32_t offset);
+    MOZ_MUST_USE bool addLineOfContext(ErrorMetadata* err, uint32_t offset);
 
   protected:
     /** Code units in the source code being tokenized. */
@@ -1474,7 +1474,6 @@ class GeneralTokenStreamChars
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<CharT>;
 
   private:
-    using CharsBase::addLineOfContext;
     // Deliberately don't |using CharsBase::sourceUnits| because of bug 1472569.  :-(
 
   private:
@@ -1504,8 +1503,9 @@ class GeneralTokenStreamChars
     uint32_t matchExtendedUnicodeEscape(uint32_t* codePoint);
 
   protected:
+    using CharsBase::addLineOfContext;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
-    using CharsBase::fillCharBufferWithTemplateStringContents;
+    using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
 
     using typename CharsBase::SourceUnits;
 
@@ -1608,16 +1608,14 @@ class GeneralTokenStreamChars
      * more readable.
      */
     MOZ_MUST_USE bool internalComputeLineOfContext(ErrorMetadata* err, uint32_t offset) {
-        TokenStreamAnyChars& anyChars = anyCharsAccess();
-
         // We only have line-start information for the current line.  If the error
         // is on a different line, we can't easily provide context.  (This means
         // any error in a multi-line token, e.g. an unterminated multiline string
         // literal, won't have context.)
-        if (err->lineNumber != anyChars.lineno)
+        if (err->lineNumber != anyCharsAccess().lineno)
             return true;
 
-        return addLineOfContext(anyChars.cx, err, offset);
+        return addLineOfContext(err, offset);
     }
 
   public:
@@ -1636,7 +1634,10 @@ class GeneralTokenStreamChars
             end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
         }
 
-        if (!fillCharBufferWithTemplateStringContents(cur, end))
+        // Template literals normalize only '\r' and "\r\n" to '\n'; Unicode
+        // separators don't need special handling.
+        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
+        if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(cur, end))
             return nullptr;
 
         return drainCharBufferIntoAtom(anyChars.cx);
@@ -1881,7 +1882,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using SpecializedChars::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
-    using CharsBase::fillCharBufferWithTemplateStringContents;
+    using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
     using SpecializedChars::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
     using SpecializedChars::getFullAsciiCodePoint;
