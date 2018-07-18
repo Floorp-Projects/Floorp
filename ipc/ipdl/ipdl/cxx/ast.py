@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import copy, sys
+import copy
+
 
 class Visitor:
     def defaultVisit(self, node):
-        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
-            node.__class__.__name__)
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitWhitespace(self, ws):
         pass
@@ -219,16 +220,19 @@ class Visitor:
         if sr.expr is not None:
             sr.expr.accept(self)
 
-##------------------------------
+# ------------------------------
+
+
 class Node:
     def __init__(self):
         pass
 
     def accept(self, visitor):
-        visit = getattr(visitor, 'visit'+ self.__class__.__name__, None)
+        visit = getattr(visitor, 'visit' + self.__class__.__name__, None)
         if visit is None:
             return getattr(visitor, 'defaultVisit')(self)
         return visit(self)
+
 
 class Whitespace(Node):
     # yes, this is silly.  but we need to stick comments in the
@@ -237,14 +241,17 @@ class Whitespace(Node):
         Node.__init__(self)
         self.ws = ws
         self.indent = indent
+
+
 Whitespace.NL = Whitespace('\n')
+
 
 class File(Node):
     def __init__(self, filename):
         Node.__init__(self)
         self.name = filename
         # array of stuff in the file --- stmts and preprocessor thingies
-        self.stuff = [ ]
+        self.stuff = []
 
     def addthing(self, thing):
         assert thing is not None
@@ -252,7 +259,8 @@ class File(Node):
         self.stuff.append(thing)
 
     def addthings(self, things):
-        for t in things:  self.addthing(t)
+        for t in things:
+            self.addthing(t)
 
     # "look like" a Block so code doesn't have to care whether they're
     # in global scope or not
@@ -262,19 +270,23 @@ class File(Node):
         self.stuff.append(stmt)
 
     def addstmts(self, stmts):
-        for s in stmts:  self.addstmt(s)
+        for s in stmts:
+            self.addstmt(s)
+
 
 class CppDirective(Node):
     '''represents |#[directive] [rest]|, where |rest| is any string'''
+
     def __init__(self, directive, rest=None):
         Node.__init__(self)
         self.directive = directive
         self.rest = rest
 
+
 class Block(Node):
     def __init__(self):
         Node.__init__(self)
-        self.stmts = [ ]
+        self.stmts = []
 
     def addstmt(self, stmt):
         assert stmt is not None
@@ -282,16 +294,20 @@ class Block(Node):
         self.stmts.append(stmt)
 
     def addstmts(self, stmts):
-        for s in stmts:  self.addstmt(s)
+        for s in stmts:
+            self.addstmt(s)
 
-##------------------------------
+# ------------------------------
 # type and decl thingies
+
+
 class Namespace(Block):
     def __init__(self, name):
         assert isinstance(name, str)
 
         Block.__init__(self)
         self.name = name
+
 
 class Type(Node):
     def __init__(self, name, const=0,
@@ -331,6 +347,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
         self.inner = inner
         # XXX could get serious here with recursive types, but shouldn't
         # need that for this codegen
+
     def __deepcopy__(self, memo):
         return Type(self.name,
                     const=self.const,
@@ -339,6 +356,8 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
                     ref=self.ref,
                     T=copy.deepcopy(self.T, memo),
                     inner=copy.deepcopy(self.inner, memo))
+
+
 Type.BOOL = Type('bool')
 Type.INT = Type('int')
 Type.INT32 = Type('int32_t')
@@ -351,38 +370,41 @@ Type.VOID = Type('void')
 Type.VOIDPTR = Type('void', ptr=1)
 Type.AUTO = Type('auto')
 
+
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):
         '''the type |basetype DECLNAME[nmemb]|.  |nmemb| is an Expr'''
         self.basetype = basetype
         self.nmemb = nmemb
-    def __deepcopy__(self, memo):
-        return TypeArray(deepcopy(self.basetype, memo), nmemb)
+
 
 class TypeEnum(Node):
     def __init__(self, name=None):
         '''name can be None'''
         Node.__init__(self)
         self.name = name
-        self.idnums = [ ]    # pairs of ('Foo', [num]) or ('Foo', None)
+        self.idnums = []    # pairs of ('Foo', [num]) or ('Foo', None)
 
     def addId(self, id, num=None):
         self.idnums.append((id, num))
+
 
 class TypeUnion(Node):
     def __init__(self, name=None):
         Node.__init__(self)
         self.name = name
-        self.components = [ ]           # [ Decl ]
+        self.components = []           # [ Decl ]
 
     def addComponent(self, type, name):
         self.components.append(Decl(type, name))
 
+
 class TypeFunction(Node):
-    def __init__(self, params=[ ], ret=Type('void')):
+    def __init__(self, params=[], ret=Type('void')):
         '''Anonymous function type std::function<>'''
         self.params = params
         self.ret = ret
+
 
 class Typedef(Node):
     def __init__(self, fromtype, totypename, templateargs=[]):
@@ -395,16 +417,20 @@ class Typedef(Node):
 
     def __cmp__(self, o):
         return cmp(self.totypename, o.totypename)
+
     def __eq__(self, o):
         return (self.__class__ == o.__class__
                 and 0 == cmp(self, o))
+
     def __hash__(self):
         return hash(self.totypename)
+
 
 class Using(Node):
     def __init__(self, type):
         Node.__init__(self)
         self.type = type
+
 
 class ForwardDecl(Node):
     def __init__(self, pqname, cls=0, struct=0):
@@ -414,8 +440,10 @@ class ForwardDecl(Node):
         self.cls = cls
         self.struct = struct
 
+
 class Decl(Node):
     '''represents |Foo bar|, e.g. in a function signature'''
+
     def __init__(self, type, name):
         assert type is not None
         assert not isinstance(type, str)
@@ -424,21 +452,26 @@ class Decl(Node):
         Node.__init__(self)
         self.type = type
         self.name = name
+
     def __deepcopy__(self, memo):
         return Decl(copy.deepcopy(self.type, memo), self.name)
+
 
 class Param(Decl):
     def __init__(self, type, name, default=None):
         Decl.__init__(self, type, name)
         self.default = default
+
     def __deepcopy__(self, memo):
         return Param(copy.deepcopy(self.type, memo), self.name,
                      copy.deepcopy(self.default, memo))
 
-##------------------------------
+# ------------------------------
 # class stuff
+
+
 class Class(Block):
-    def __init__(self, name, inherits=[ ],
+    def __init__(self, name, inherits=[],
                  interface=0, abstract=0, final=0,
                  specializes=None, struct=0):
         assert not (interface and abstract)
@@ -455,6 +488,7 @@ class Class(Block):
         self.specializes = specializes  # Type or None
         self.struct = struct            # bool
 
+
 class Inherit(Node):
     def __init__(self, type, viz='public'):
         assert isinstance(viz, str)
@@ -462,12 +496,15 @@ class Inherit(Node):
         self.type = type
         self.viz = viz
 
+
 class FriendClassDecl(Node):
     def __init__(self, friend):
         Node.__init__(self)
         self.friend = friend
 
 # Python2 polyfill for Python3's Enum() functional API.
+
+
 def make_enum(name, members_str):
     members_list = members_str.split()
     members_dict = {}
@@ -477,16 +514,19 @@ def make_enum(name, members_str):
         member_value += 1
     return type(name, (), members_dict)
 
+
 MethodSpec = make_enum('MethodSpec', 'NONE VIRTUAL PURE OVERRIDE STATIC')
 
+
 class MethodDecl(Node):
-    def __init__(self, name, params=[ ], ret=Type('void'),
+    def __init__(self, name, params=[], ret=Type('void'),
                  methodspec=MethodSpec.NONE, const=0, warn_unused=0,
                  force_inline=0, typeop=None, T=None, cls=None):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
         assert not isinstance(ret, list)
-        for decl in params:  assert not isinstance(decl, str)
+        for decl in params:
+            assert not isinstance(decl, str)
         assert not isinstance(T, int)
 
         if typeop is not None:
@@ -500,7 +540,7 @@ class MethodDecl(Node):
         self.methodspec = methodspec    # enum
         self.const = const              # bool
         self.warn_unused = warn_unused  # bool
-        self.force_inline = (force_inline or T) # bool
+        self.force_inline = (force_inline or T)  # bool
         self.typeop = typeop            # Type or None
         self.T = T                      # Type or None
         self.cls = cls                  # Class or None
@@ -518,13 +558,15 @@ class MethodDecl(Node):
             typeop=copy.deepcopy(self.typeop, memo),
             T=copy.deepcopy(self.T, memo))
 
+
 class MethodDefn(Block):
     def __init__(self, decl):
         Block.__init__(self)
         self.decl = decl
 
+
 class FunctionDecl(MethodDecl):
-    def __init__(self, name, params=[ ], ret=Type('void'),
+    def __init__(self, name, params=[], ret=Type('void'),
                  methodspec=MethodSpec.NONE, warn_unused=0,
                  force_inline=0, T=None):
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.STATIC
@@ -532,12 +574,14 @@ class FunctionDecl(MethodDecl):
                             methodspec=methodspec, warn_unused=warn_unused,
                             force_inline=force_inline, T=T)
 
+
 class FunctionDefn(MethodDefn):
     def __init__(self, decl):
         MethodDefn.__init__(self, decl)
 
+
 class ConstructorDecl(MethodDecl):
-    def __init__(self, name, params=[ ], explicit=0, force_inline=0):
+    def __init__(self, name, params=[], explicit=0, force_inline=0):
         MethodDecl.__init__(self, name, params=params, ret=None,
                             force_inline=force_inline)
         self.explicit = explicit
@@ -547,16 +591,18 @@ class ConstructorDecl(MethodDecl):
                                copy.deepcopy(self.params, memo),
                                self.explicit)
 
+
 class ConstructorDefn(MethodDefn):
-    def __init__(self, decl, memberinits=[ ]):
+    def __init__(self, decl, memberinits=[]):
         MethodDefn.__init__(self, decl)
         self.memberinits = memberinits
+
 
 class DestructorDecl(MethodDecl):
     def __init__(self, name, methodspec=MethodSpec.NONE, force_inline=0):
         # C++ allows pure or override destructors, but ipdl cgen does not.
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.VIRTUAL
-        MethodDecl.__init__(self, name, params=[ ], ret=None,
+        MethodDecl.__init__(self, name, params=[], ret=None,
                             methodspec=methodspec, force_inline=force_inline)
 
     def __deepcopy__(self, memo):
@@ -564,18 +610,24 @@ class DestructorDecl(MethodDecl):
                               methodspec=self.methodspec,
                               force_inline=self.force_inline)
 
+
 class DestructorDefn(MethodDefn):
     def __init__(self, decl):  MethodDefn.__init__(self, decl)
 
-##------------------------------
+# ------------------------------
 # expressions
+
+
 class ExprVar(Node):
     def __init__(self, name):
         assert isinstance(name, str)
-        
+
         Node.__init__(self)
         self.name = name
+
+
 ExprVar.THIS = ExprVar('this')
+
 
 class ExprLiteral(Node):
     def __init__(self, value, type):
@@ -585,21 +637,24 @@ class ExprLiteral(Node):
         self.type = type
 
     @staticmethod
-    def Int(i):  return ExprLiteral(i, 'd')
+    def Int(i): return ExprLiteral(i, 'd')
 
     @staticmethod
-    def String(s):  return ExprLiteral('"'+ s +'"', 's')
+    def String(s): return ExprLiteral('"' + s + '"', 's')
 
     @staticmethod
-    def WString(s):  return ExprLiteral('L"'+ s +'"', 's')
+    def WString(s): return ExprLiteral('L"' + s + '"', 's')
 
     def __str__(self):
-        return ('%'+ self.type)% (self.value)
+        return ('%' + self.type) % (self.value)
+
+
 ExprLiteral.ZERO = ExprLiteral.Int(0)
 ExprLiteral.ONE = ExprLiteral.Int(1)
 ExprLiteral.NULL = ExprVar('nullptr')
 ExprLiteral.TRUE = ExprVar('true')
 ExprLiteral.FALSE = ExprVar('false')
+
 
 class ExprPrefixUnop(Node):
     def __init__(self, expr, op):
@@ -607,22 +662,26 @@ class ExprPrefixUnop(Node):
         self.expr = expr
         self.op = op
 
+
 class ExprNot(ExprPrefixUnop):
     def __init__(self, expr):
         ExprPrefixUnop.__init__(self, expr, '!')
+
 
 class ExprAddrOf(ExprPrefixUnop):
     def __init__(self, expr):
         ExprPrefixUnop.__init__(self, expr, '&')
 
+
 class ExprDeref(ExprPrefixUnop):
     def __init__(self, expr):
         ExprPrefixUnop.__init__(self, expr, '*')
 
+
 class ExprCast(Node):
     def __init__(self, expr, type,
                  dynamic=0, static=0, reinterpret=0, const=0, C=0):
-        assert 1 == reduce(lambda a, x: a+x, [ dynamic, static, reinterpret, const, C ])
+        assert 1 == reduce(lambda a, x: a+x, [dynamic, static, reinterpret, const, C])
 
         Node.__init__(self)
         self.expr = expr
@@ -633,12 +692,14 @@ class ExprCast(Node):
         self.const = const
         self.C = C
 
+
 class ExprBinary(Node):
     def __init__(self, left, op, right):
         Node.__init__(self)
         self.left = left
         self.op = op
         self.right = right
+
 
 class ExprConditional(Node):
     def __init__(self, cond, ife, elsee):
@@ -647,18 +708,20 @@ class ExprConditional(Node):
         self.ife = ife
         self.elsee = elsee
 
+
 class ExprIndex(Node):
     def __init__(self, arr, idx):
         Node.__init__(self)
         self.arr = arr
         self.idx = idx
 
+
 class ExprSelect(Node):
     def __init__(self, obj, op, field):
         assert obj and op and field
         assert not isinstance(obj, str)
         assert isinstance(op, str)
-        
+
         Node.__init__(self)
         self.obj = obj
         self.op = op
@@ -667,6 +730,7 @@ class ExprSelect(Node):
         else:
             self.field = field
 
+
 class ExprAssn(Node):
     def __init__(self, lhs, rhs, op='='):
         Node.__init__(self)
@@ -674,23 +738,27 @@ class ExprAssn(Node):
         self.op = op
         self.rhs = rhs
 
+
 class ExprCall(Node):
-    def __init__(self, func, args=[ ]):
+    def __init__(self, func, args=[]):
         assert hasattr(func, 'accept')
         assert isinstance(args, list)
-        for arg in args:  assert arg and not isinstance(arg, str)
+        for arg in args:
+            assert arg and not isinstance(arg, str)
 
         Node.__init__(self)
         self.func = func
         self.args = args
 
+
 class ExprMove(ExprCall):
     def __init__(self, arg):
         ExprCall.__init__(self, ExprVar("std::move"), args=[arg])
 
+
 class ExprNew(Node):
     # XXX taking some poetic license ...
-    def __init__(self, ctype, args=[ ], newargs=None):
+    def __init__(self, ctype, args=[], newargs=None):
         assert not (ctype.const or ctype.ref)
 
         Node.__init__(self)
@@ -698,21 +766,25 @@ class ExprNew(Node):
         self.args = args
         self.newargs = newargs
 
+
 class ExprDelete(Node):
     def __init__(self, obj):
         Node.__init__(self)
         self.obj = obj
 
+
 class ExprMemberInit(ExprCall):
-    def __init__(self, member, args=[ ]):
+    def __init__(self, member, args=[]):
         ExprCall.__init__(self, member, args)
+
 
 class ExprSizeof(ExprCall):
     def __init__(self, t):
-        ExprCall.__init__(self, ExprVar('sizeof'), [ t ])
+        ExprCall.__init__(self, ExprVar('sizeof'), [t])
+
 
 class ExprLambda(Block):
-    def __init__(self, captures=[ ], params=[ ], ret=None):
+    def __init__(self, captures=[], params=[], ret=None):
         Block.__init__(self)
         assert isinstance(captures, list)
         assert isinstance(params, list)
@@ -720,41 +792,50 @@ class ExprLambda(Block):
         self.params = params
         self.ret = ret
 
-##------------------------------
+# ------------------------------
 # statements etc.
+
+
 class StmtBlock(Block):
-    def __init__(self, stmts=[ ]):
+    def __init__(self, stmts=[]):
         Block.__init__(self)
         self.addstmts(stmts)
+
 
 class StmtDecl(Node):
     def __init__(self, decl, init=None, initargs=None):
         assert not (init and initargs)
-        assert not isinstance(init, str) # easy to confuse with Decl
+        assert not isinstance(init, str)  # easy to confuse with Decl
         assert not isinstance(init, list)
         assert not isinstance(decl, tuple)
-        
+
         Node.__init__(self)
         self.decl = decl
         self.init = init
         self.initargs = initargs
 
+
 class Label(Node):
     def __init__(self, name):
         Node.__init__(self)
         self.name = name
+
+
 Label.PUBLIC = Label('public')
 Label.PROTECTED = Label('protected')
 Label.PRIVATE = Label('private')
+
 
 class CaseLabel(Node):
     def __init__(self, name):
         Node.__init__(self)
         self.name = name
 
+
 class DefaultLabel(Node):
     def __init__(self):
         Node.__init__(self)
+
 
 class StmtIf(Node):
     def __init__(self, cond):
@@ -768,14 +849,17 @@ class StmtIf(Node):
 
     def addifstmts(self, stmts):
         self.ifb.addstmts(stmts)
-        
+
     def addelsestmt(self, stmt):
-        if self.elseb is None: self.elseb = Block()
+        if self.elseb is None:
+            self.elseb = Block()
         self.elseb.addstmt(stmt)
 
     def addelsestmts(self, stmts):
-        if self.elseb is None: self.elseb = Block()
+        if self.elseb is None:
+            self.elseb = Block()
         self.elseb.addstmts(stmts)
+
 
 class StmtFor(Block):
     def __init__(self, init=None, cond=None, update=None):
@@ -783,6 +867,7 @@ class StmtFor(Block):
         self.init = init
         self.cond = cond
         self.update = update
+
 
 class StmtRangedFor(Block):
     def __init__(self, var, iteree):
@@ -792,6 +877,7 @@ class StmtRangedFor(Block):
         Block.__init__(self)
         self.var = var
         self.iteree = iteree
+
 
 class StmtSwitch(Block):
     def __init__(self, expr):
@@ -816,21 +902,25 @@ class StmtSwitch(Block):
         self.addstmt(case)
         self.nr_cases += 1
 
+
 class StmtBreak(Node):
     def __init__(self):
         Node.__init__(self)
 
+
 class StmtExpr(Node):
     def __init__(self, expr):
         assert expr is not None
-        
+
         Node.__init__(self)
         self.expr = expr
+
 
 class StmtReturn(Node):
     def __init__(self, expr=None):
         Node.__init__(self)
         self.expr = expr
+
 
 StmtReturn.TRUE = StmtReturn(ExprLiteral.TRUE)
 StmtReturn.FALSE = StmtReturn(ExprLiteral.FALSE)

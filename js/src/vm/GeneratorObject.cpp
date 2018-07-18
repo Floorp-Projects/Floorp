@@ -99,6 +99,24 @@ GeneratorObject::finalSuspend(HandleObject obj)
     genObj->setClosed();
 }
 
+GeneratorObject*
+js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
+{
+    MOZ_ASSERT(frame.isFunctionFrame() &&
+               (frame.callee()->isGenerator() || frame.callee()->isAsync()));
+
+    // The ".generator" binding is always present and always "aliased".
+    CallObject& callObj = frame.callObj();
+    Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
+    Value genValue = callObj.getSlot(shape->slot());
+
+    // If the `generator; setaliasedvar ".generator"; initialyield` bytecode
+    // sequence has not run yet, genValue is undefined.
+    return genValue.isObject()
+           ? &genValue.toObject().as<GeneratorObject>()
+           : nullptr;
+}
+
 void
 js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame)
 {
@@ -252,37 +270,6 @@ GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global)
     global->setReservedSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
     global->setReservedSlot(GENERATOR_FUNCTION, ObjectValue(*genFunction));
     global->setReservedSlot(GENERATOR_FUNCTION_PROTO, ObjectValue(*genFunctionProto));
-    return true;
-}
-
-MOZ_MUST_USE bool
-js::CheckGeneratorResumptionValue(JSContext* cx, HandleValue v)
-{
-    // yield/return value should be an Object.
-    if (!v.isObject())
-        return false;
-
-    JSObject* obj = &v.toObject();
-
-    // It should have `done` data property with boolean value.
-    Value doneVal;
-    if (!GetPropertyPure(cx, obj, NameToId(cx->names().done), &doneVal))
-        return false;
-    if (!doneVal.isBoolean())
-        return false;
-
-    // It should have `value` data property, but the type doesn't matter
-    JSObject* ignored;
-    PropertyResult prop;
-    if (!LookupPropertyPure(cx, obj, NameToId(cx->names().value), &ignored, &prop))
-        return false;
-    if (!prop)
-        return false;
-    if (!prop.isNativeProperty())
-        return false;
-    if (!prop.shape()->hasDefaultGetter())
-        return false;
-
     return true;
 }
 

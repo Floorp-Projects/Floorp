@@ -1967,61 +1967,11 @@ nsConvertCANamesToStrings(const UniquePLArenaPool& arena, char** caNameStrings,
     }
 
     SECItem* dername;
-    SECStatus rv;
-    int headerlen;
-    uint32_t contentlen;
-    SECItem newitem;
     int n;
     char* namestring;
 
     for (n = 0; n < caNames->nnames; n++) {
-        newitem.data = nullptr;
         dername = &caNames->names[n];
-
-        rv = DER_Lengths(dername, &headerlen, &contentlen);
-
-        if (rv != SECSuccess) {
-            goto loser;
-        }
-
-        if (headerlen + contentlen != dername->len) {
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT,
-                                 NS_LITERAL_STRING("compat"), 1);
-            // This must be from an enterprise 2.x server, which sent
-            // incorrectly formatted der without the outer wrapper of type and
-            // length. Fix it up by adding the top level header.
-            if (dername->len <= 127) {
-                newitem.data = (unsigned char*) malloc(dername->len + 2);
-                if (!newitem.data) {
-                    goto loser;
-                }
-                newitem.data[0] = (unsigned char) 0x30;
-                newitem.data[1] = (unsigned char) dername->len;
-                (void) memcpy(&newitem.data[2], dername->data, dername->len);
-            } else if (dername->len <= 255) {
-                newitem.data = (unsigned char*) malloc(dername->len + 3);
-                if (!newitem.data) {
-                    goto loser;
-                }
-                newitem.data[0] = (unsigned char) 0x30;
-                newitem.data[1] = (unsigned char) 0x81;
-                newitem.data[2] = (unsigned char) dername->len;
-                (void) memcpy(&newitem.data[3], dername->data, dername->len);
-            } else {
-                // greater than 256, better be less than 64k
-                newitem.data = (unsigned char*) malloc(dername->len + 4);
-                if (!newitem.data) {
-                    goto loser;
-                }
-                newitem.data[0] = (unsigned char) 0x30;
-                newitem.data[1] = (unsigned char) 0x82;
-                newitem.data[2] = (unsigned char) ((dername->len >> 8) & 0xff);
-                newitem.data[3] = (unsigned char) (dername->len & 0xff);
-                memcpy(&newitem.data[4], dername->data, dername->len);
-            }
-            dername = &newitem;
-        }
-
         namestring = CERT_DerNameToAscii(dername);
         if (!namestring) {
             // XXX - keep going until we fail to convert the name
@@ -2030,21 +1980,12 @@ nsConvertCANamesToStrings(const UniquePLArenaPool& arena, char** caNameStrings,
             caNameStrings[n] = PORT_ArenaStrdup(arena.get(), namestring);
             PR_Free(namestring); // CERT_DerNameToAscii() uses PR_Malloc().
             if (!caNameStrings[n]) {
-                goto loser;
+                return SECFailure;
             }
-        }
-
-        if (newitem.data) {
-            free(newitem.data);
         }
     }
 
     return SECSuccess;
-loser:
-    if (newitem.data) {
-        free(newitem.data);
-    }
-    return SECFailure;
 }
 
 // Possible behaviors for choosing a cert for client auth.

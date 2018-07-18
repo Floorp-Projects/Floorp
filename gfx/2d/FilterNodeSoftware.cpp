@@ -514,6 +514,9 @@ FilterNodeSoftware::Create(FilterType aType)
     case FilterType::UNPREMULTIPLY:
       filter = new FilterNodeUnpremultiplySoftware();
       break;
+    case FilterType::OPACITY:
+      filter = new FilterNodeOpacitySoftware();
+      break;
     case FilterType::POINT_DIFFUSE:
       filter = new FilterNodeLightingSoftware<PointLightSoftware, DiffuseLightingSoftware>("FilterNodeLightingSoftware<PointLight, DiffuseLighting>");
       break;
@@ -1428,6 +1431,44 @@ Unpremultiply(DataSourceSurface* aSurface)
 
   FilterProcessing::DoUnpremultiplicationCalculation(
     size, targetData, targetStride, inputData, inputStride);
+
+  return target.forget();
+}
+
+static already_AddRefed<DataSourceSurface>
+Opacity(DataSourceSurface* aSurface, Float aValue)
+{
+  if (aValue == 1.0f) {
+    RefPtr<DataSourceSurface> surface(aSurface);
+    return surface.forget();
+  }
+
+  IntSize size = aSurface->GetSize();
+  RefPtr<DataSourceSurface> target =
+    Factory::CreateDataSourceSurface(size, aSurface->GetFormat());
+  if (MOZ2D_WARN_IF(!target)) {
+    return nullptr;
+  }
+
+  DataSourceSurface::ScopedMap inputMap(aSurface, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap targetMap(target, DataSourceSurface::WRITE);
+  if (MOZ2D_WARN_IF(!inputMap.IsMapped() || !targetMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* inputData = inputMap.GetData();
+  int32_t inputStride = inputMap.GetStride();
+  uint8_t* targetData = targetMap.GetData();
+  int32_t targetStride = targetMap.GetStride();
+
+  if (aSurface->GetFormat() == SurfaceFormat::A8) {
+    FilterProcessing::DoOpacityCalculationA8(
+      size, targetData, targetStride, inputData, inputStride, aValue);
+  } else {
+    MOZ_ASSERT(aSurface->GetFormat() == SurfaceFormat::B8G8R8A8);
+    FilterProcessing::DoOpacityCalculation(
+      size, targetData, targetStride, inputData, inputStride, aValue);
+  }
 
   return target.forget();
 }
@@ -3210,6 +3251,44 @@ IntRect
 FilterNodeUnpremultiplySoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   return GetInputRectInRect(IN_UNPREMULTIPLY_IN, aRect);
+}
+
+void
+FilterNodeOpacitySoftware::SetAttribute(uint32_t aIndex,
+                                        Float aValue)
+{
+  MOZ_ASSERT(aIndex == ATT_OPACITY_VALUE);
+  mValue = aValue;
+  Invalidate();
+}
+
+int32_t
+FilterNodeOpacitySoftware::InputIndex(uint32_t aInputEnumIndex)
+{
+  switch (aInputEnumIndex) {
+  case IN_OPACITY_IN: return 0;
+  default: return -1;
+  }
+}
+
+already_AddRefed<DataSourceSurface>
+FilterNodeOpacitySoftware::Render(const IntRect& aRect)
+{
+  RefPtr<DataSourceSurface> input =
+    GetInputDataSourceSurface(IN_OPACITY_IN, aRect);
+  return input ? Opacity(input, mValue) : nullptr;
+}
+
+void
+FilterNodeOpacitySoftware::RequestFromInputsForRect(const IntRect &aRect)
+{
+  RequestInputRect(IN_OPACITY_IN, aRect);
+}
+
+IntRect
+FilterNodeOpacitySoftware::GetOutputRectInRect(const IntRect& aRect)
+{
+  return GetInputRectInRect(IN_OPACITY_IN, aRect);
 }
 
 bool

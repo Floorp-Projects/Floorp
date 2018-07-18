@@ -13,7 +13,9 @@
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsScriptSecurityManager.h"
-#include "NullPrincipal.h"
+#include "mozilla/NullPrincipal.h"
+
+using namespace mozilla;
 
 static const uint32_t kURIMaxLength = 64;
 

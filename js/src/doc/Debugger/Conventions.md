@@ -101,19 +101,10 @@ resumption value has one of the following forms:
 :   The debuggee should continue execution normally.
 
 <code>{ return: <i>value</i> }</code>
-:   Return <i>value</i> immediately as the current value of the function.
-    <i>Value</i> must be a debuggee value. (Most handler functions support
-    this, except those whose descriptions say otherwise.) If the function
-    was called as a constructor (that is, via a `new` expression), then
-    <i>value</i> serves as the value returned by the function's body, not
-    that produced by the `new` expression: if the value is not an object,
-    the `new` expression returns the frame's `this` value. Similarly, if
-    the function is the constructor for a subclass, then a non-object
-    value may result in a TypeError.
-    If the frame is a generator function, then <i>value</i> must conform to the
-    iterator protocol: it must be a non-proxy object of the form
-    <code>{ done: <i>boolean</i>, value: <i>v</i> }</code>, where
-    both `done` and `value` are ordinary properties.
+:   Force the top frame of the debuggee to return <i>value</i> immediately,
+    as if by executing a `return` statement. <i>Value</i> must be a debuggee
+    value. (Most handler functions support this, except those whose
+    descriptions say otherwise.) See the list of special cases below.
 
 <code>{ throw: <i>value</i> }</code>
 :   Throw <i>value</i> as an exception from the current bytecode
@@ -123,11 +114,55 @@ resumption value has one of the following forms:
 :   Terminate the debuggee, as if it had been cancelled by the "slow script"
     dialog box.
 
-If a function that would normally return a resumption value to indicate
-how the debuggee should continue instead throws an exception, we never
-propagate such an exception to the debuggee; instead, we call the
-associated `Debugger` instance's `uncaughtExceptionHook` property, as
-described below.
+In some places, the JS language treats `return` statements specially or
+doesn't allow them at all. So there are a few special cases.
+
+*   An arrow function without curly braces can't contain a return
+    statement, but <code>{return: <i>value</i>}</code> works anyway,
+    returning the specified value.
+
+    Likewise, if the top frame of the debuggee is not in a function at
+    all—that is, it's running toplevel code in a `script` tag, or `eval`
+    code—then <i>value</i> is returned even though `return` statements
+    aren't legal in that kind of code. (In the case of a `script` tag,
+    the browser discards the return value.)
+
+*   If the debuggee is in a function that was called as a constructor (that
+    is, via a `new` expression), then <i>value</i> serves as the value
+    returned by the function's body, not that produced by the `new`
+    expression: if the value is not an object, the `new` expression returns
+    the frame's `this` value.
+
+    Similarly, if the function is the constructor for a subclass, then a
+    non-object value may result in a `TypeError`.
+
+*   Returning from a generator simulates a `return`, not a `yield`;
+    there is no way to force a debuggee generator to `yield`.
+
+    The way generators execute is rather odd. When a generator-function
+    is first called, it is put onto the stack and runs just a few
+    bytecode instructions (or more, if the generator-function has any
+    default argument values to compute), then performs the "initial
+    suspend".  At that point, a new generator object is created and
+    returned to the caller. Thereafter, the caller may cause execution
+    of the generator to resume at any time, by calling `genObj.next()`,
+    and the generator may pause itself again using `yield`.
+
+    JS generators normally can't return before the "initial
+    suspend"—there’s no place to put a `return` statement—but
+    <code>{return: <i>value</i>}</code> there works anyway, replacing
+    the generator object that the initial suspend would normally create
+    and return.
+
+    Returning from a generator that's been resumed via `genobj.next()`
+    (or one of the other methods) closes the generator, and the
+    `genobj.next()` or other method returns a new object of the form
+    <code>{ done: true, value: <i>value</i> }</code>.
+
+If a debugger hook function throws an exception, rather than returning a
+resumption value, we never propagate such an exception to the debuggee;
+instead, we call the associated `Debugger` instance's
+`uncaughtExceptionHook` property, as described below.
 
 
 ## Timestamps

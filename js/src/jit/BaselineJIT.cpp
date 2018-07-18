@@ -924,8 +924,6 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
     if (!hasDebugInstrumentation())
         return;
 
-    SrcNoteLineScanner scanner(script->notes(), script->lineno());
-
     AutoWritableJitCode awjc(method());
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
@@ -942,11 +940,8 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
             if (b & 0x80)
                 nativeOffset += reader.readUnsigned();
 
-            scanner.advanceTo(script->pcToOffset(curPC));
-
             if (!pc || pc == curPC) {
-                bool enabled = (script->stepModeEnabled() && scanner.isLineHeader()) ||
-                    script->hasBreakpointsAt(curPC);
+                bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(curPC);
 
                 // Patch the trap.
                 CodeLocationLabel label(method(), CodeOffset(nativeOffset));

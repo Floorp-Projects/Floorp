@@ -155,7 +155,7 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
             "Mixed element cannot be state checked!");
 
   // selected/selectable
-  if (state & STATE_SELECTED) {
+  if ((state & STATE_SELECTED) && !(aAbsentState & STATE_SELECTABLE)) {
     isState(state & STATE_SELECTABLE, STATE_SELECTABLE, false,
             "Selected element must be selectable!");
   }

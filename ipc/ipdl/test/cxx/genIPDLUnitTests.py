@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import string, sys
+import string
+import sys
+
 
 def usage():
     print >>sys.stderr, """
@@ -13,13 +15,15 @@ def usage():
   EXTRA_PROTOCOLS are top-level protocols for subprocesses that can be
                   spawned in tests but are not unit tests in and of
                   themselves
-"""% (sys.argv[0])
+""" % (sys.argv[0])
     sys.exit(1)
+
 
 def main(argv):
     template = argv[1]
 
-    if argv[2] != '-t': usage()
+    if argv[2] != '-t':
+        usage()
     i = 3
     unittests = []
     while argv[i] != '-e':
@@ -29,31 +33,29 @@ def main(argv):
     extras = argv[(i+1):]
 
     includes = '\n'.join([
-        '#include "%s.h"'% (t) for t in unittests ])
-
+        '#include "%s.h"' % (t) for t in unittests])
 
     enum_values = '\n'.join([
-        '    %s,'% (t) for t in unittests+extras ])
+        '    %s,' % (t) for t in unittests+extras])
     last_enum = unittests[-1]
-
 
     string_to_enums = '\n'.join([
         '''    else if (!strcmp(aString, "%s"))
-        return %s;'''% (t, t) for t in unittests+extras ])
+        return %s;''' % (t, t) for t in unittests+extras])
 
     enum_to_strings = '\n'.join([
         '''    case %s:
-        return "%s";'''%(t, t) for t in unittests+extras ])
+        return "%s";''' % (t, t) for t in unittests+extras])
 
     parent_delete_cases = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
            delete reinterpret_cast<%sParent*>(gParentActor);
            return;
        }
-'''% (t, t) for t in unittests ])
+''' % (t, t) for t in unittests])
 
     parent_enabled_cases_proc = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
         if (!%sParent::RunTestInProcesses()) {
             passed("N/A to proc");
             DeferredParentShutdown();
@@ -61,20 +63,20 @@ def main(argv):
         }
         break;
        }
-''' % (t, t) for t in unittests ])
+''' % (t, t) for t in unittests])
 
     parent_main_cases_proc = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
         %sParent** parent =
         reinterpret_cast<%sParent**>(&gParentActor);
         *parent = new %sParent();
         (*parent)->Open(transport, child);
         return (*parent)->Main();
         }
-'''% (t, t, t, t) for t in unittests ])
+''' % (t, t, t, t) for t in unittests])
 
     parent_enabled_cases_thread = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
         if (!%sParent::RunTestInThreads()) {
             passed("N/A to threads");
             DeferredParentShutdown();
@@ -82,10 +84,10 @@ def main(argv):
         }
         break;
        }
-''' % (t, t) for t in unittests ])
+''' % (t, t) for t in unittests])
 
     parent_main_cases_thread = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
         %sParent** parent =
         reinterpret_cast<%sParent**>(&gParentActor);
         *parent = new %sParent();
@@ -101,25 +103,24 @@ def main(argv):
         (*parent)->Open(childChannel, childMessageLoop, parentSide);
         return (*parent)->Main();
         }
-'''% (t, t, t, t, t, t, t) for t in unittests ])
+''' % (t, t, t, t, t, t, t) for t in unittests])
 
     child_delete_cases = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
            delete reinterpret_cast<%sChild*>(gChildActor);
            return;
        }
-'''% (t, t) for t in unittests+extras ])
-
+''' % (t, t) for t in unittests+extras])
 
     child_init_cases = '\n'.join([
-'''    case %s: {
+        '''    case %s: {
         %sChild** child =
             reinterpret_cast<%sChild**>(&gChildActor);
         *child = new %sChild();
         (*child)->Open(transport, parentPid, worker);
         return;
     }
-'''% (t, t, t, t) for t in unittests+extras ])
+''' % (t, t, t, t) for t in unittests+extras])
 
     templatefile = open(template, 'r')
     sys.stdout.write(
@@ -136,6 +137,7 @@ def main(argv):
             CHILD_DELETE_CASES=child_delete_cases,
             CHILD_INIT_CASES=child_init_cases))
     templatefile.close()
+
 
 if __name__ == '__main__':
     main(sys.argv)

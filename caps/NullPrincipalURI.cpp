@@ -15,6 +15,8 @@
 #include "nsCRT.h"
 #include "nsIUUIDGenerator.h"
 
+using namespace mozilla;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// NullPrincipalURI
 
@@ -406,13 +408,13 @@ NullPrincipalURI::Deserialize(const mozilla::ipc::URIParams& aParams)
 //// nsISizeOf
 
 size_t
-NullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+NullPrincipalURI::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t
-NullPrincipalURI::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+NullPrincipalURI::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-
 NOT_NESTED = 1
 INSIDE_SYNC_NESTED = 2
 INSIDE_CPOW_NESTED = 3
@@ -12,10 +10,11 @@ NORMAL_PRIORITY = 1
 INPUT_PRIORITY = 2
 HIGH_PRIORITY = 3
 
+
 class Visitor:
     def defaultVisit(self, node):
-        raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
-            node.__class__.__name__)
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitTranslationUnit(self, tu):
         for cxxInc in tu.cxxIncludes:
@@ -30,7 +29,6 @@ class Visitor:
             using.accept(self)
         if tu.protocol:
             tu.protocol.accept(self)
-
 
     def visitCxxInclude(self, inc):
         pass
@@ -88,27 +86,33 @@ class Visitor:
     def visitDecl(self, d):
         pass
 
+
 class Loc:
     def __init__(self, filename='<??>', lineno=0):
         assert filename
         self.filename = filename
         self.lineno = lineno
+
     def __repr__(self):
-        return '%r:%r'% (self.filename, self.lineno)
+        return '%r:%r' % (self.filename, self.lineno)
+
     def __str__(self):
-        return '%s:%s'% (self.filename, self.lineno)
+        return '%s:%s' % (self.filename, self.lineno)
+
 
 Loc.NONE = Loc(filename='<??>', lineno=0)
 
+
 class _struct:
     pass
+
 
 class Node:
     def __init__(self, loc=Loc.NONE):
         self.loc = loc
 
     def accept(self, visitor):
-        visit = getattr(visitor, 'visit'+ self.__class__.__name__, None)
+        visit = getattr(visitor, 'visit' + self.__class__.__name__, None)
         if visit is None:
             return getattr(visitor, 'defaultVisit')(self)
         return visit(self)
@@ -122,39 +126,46 @@ class NamespacedNode(Node):
     def __init__(self, loc=Loc.NONE, name=None):
         Node.__init__(self, loc)
         self.name = name
-        self.namespaces = [ ]
+        self.namespaces = []
 
     def addOuterNamespace(self, namespace):
         self.namespaces.insert(0, namespace)
 
     def qname(self):
         return QualifiedId(self.loc, self.name,
-                           [ ns.name for ns in self.namespaces ])
+                           [ns.name for ns in self.namespaces])
+
 
 class TranslationUnit(NamespacedNode):
     def __init__(self, type, name):
         NamespacedNode.__init__(self, name=name)
         self.filetype = type
         self.filename = None
-        self.cxxIncludes = [ ]
-        self.includes = [ ]
-        self.builtinUsing = [ ]
-        self.using = [ ]
-        self.structsAndUnions = [ ]
+        self.cxxIncludes = []
+        self.includes = []
+        self.builtinUsing = []
+        self.using = []
+        self.structsAndUnions = []
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
+
     def addInclude(self, inc): self.includes.append(inc)
+
     def addStructDecl(self, struct): self.structsAndUnions.append(struct)
+
     def addUnionDecl(self, union): self.structsAndUnions.append(union)
+
     def addUsingStmt(self, using): self.using.append(using)
 
     def setProtocol(self, protocol): self.protocol = protocol
+
 
 class CxxInclude(Node):
     def __init__(self, loc, cxxFile):
         Node.__init__(self, loc)
         self.file = cxxFile
+
 
 class Include(Node):
     def __init__(self, loc, type, name):
@@ -164,43 +175,61 @@ class Include(Node):
             suffix += 'h'
         self.file = "%s.%s" % (name, suffix)
 
+
 class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec, cxxHeader=None, kind=None, refcounted=False):
         Node.__init__(self, loc)
         assert not isinstance(cxxTypeSpec, str)
-        assert cxxHeader is None or isinstance(cxxHeader, str);
+        assert cxxHeader is None or isinstance(cxxHeader, str)
         assert kind is None or kind == 'class' or kind == 'struct'
         self.type = cxxTypeSpec
         self.header = cxxHeader
         self.kind = kind
         self.refcounted = refcounted
+
     def canBeForwardDeclared(self):
         return self.isClass() or self.isStruct()
+
     def isClass(self):
         return self.kind == 'class'
+
     def isStruct(self):
         return self.kind == 'struct'
+
     def isRefcounted(self):
         return self.refcounted
 
 # "singletons"
+
+
 class PrettyPrinted:
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
+
     @classmethod
-    def __str__(cls):  return cls.pretty
+    def __str__(cls): return cls.pretty
+
 
 class ASYNC(PrettyPrinted):
     pretty = 'async'
+
+
 class INTR(PrettyPrinted):
     pretty = 'intr'
+
+
 class SYNC(PrettyPrinted):
     pretty = 'sync'
 
+
 class INOUT(PrettyPrinted):
     pretty = 'inout'
+
+
 class IN(PrettyPrinted):
     pretty = 'in'
+
+
 class OUT(PrettyPrinted):
     pretty = 'out'
 
@@ -210,14 +239,16 @@ class Namespace(Node):
         Node.__init__(self, loc)
         self.name = namespace
 
+
 class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
         self.nested = NOT_NESTED
-        self.managers = [ ]
-        self.managesStmts = [ ]
-        self.messageDecls = [ ]
+        self.managers = []
+        self.managesStmts = []
+        self.messageDecls = []
+
 
 class StructField(Node):
     def __init__(self, loc, type, name):
@@ -225,25 +256,30 @@ class StructField(Node):
         self.typespec = type
         self.name = name
 
+
 class StructDecl(NamespacedNode):
     def __init__(self, loc, name, fields):
         NamespacedNode.__init__(self, loc, name)
         self.fields = fields
+
 
 class UnionDecl(NamespacedNode):
     def __init__(self, loc, name, components):
         NamespacedNode.__init__(self, loc, name)
         self.components = components
 
+
 class Manager(Node):
     def __init__(self, loc, managerName):
         Node.__init__(self, loc)
         self.name = managerName
 
+
 class ManagesStmt(Node):
     def __init__(self, loc, managedName):
         Node.__init__(self, loc)
         self.name = managedName
+
 
 class MessageDecl(Node):
     def __init__(self, loc):
@@ -253,8 +289,8 @@ class MessageDecl(Node):
         self.nested = NOT_NESTED
         self.prio = NORMAL_PRIORITY
         self.direction = None
-        self.inParams = [ ]
-        self.outParams = [ ]
+        self.inParams = []
+        self.outParams = []
         self.compress = ''
         self.verify = ''
 
@@ -271,7 +307,8 @@ class MessageDecl(Node):
             elif modifier == 'verify':
                 self.verify = modifier
             elif modifier != '':
-                raise Exception, "Unexpected message modifier `%s'"% modifier
+                raise Exception("Unexpected message modifier `%s'" % modifier)
+
 
 class Param(Node):
     def __init__(self, loc, typespec, name):
@@ -279,21 +316,25 @@ class Param(Node):
         self.name = name
         self.typespec = typespec
 
+
 class TypeSpec(Node):
     def __init__(self, loc, spec):
         Node.__init__(self, loc)
         self.spec = spec                # QualifiedId
         self.array = 0                  # bool
         self.nullable = 0               # bool
+
     def basename(self):
         return self.spec.baseid
 
-    def __str__(self):  return str(self.spec)
+    def __str__(self): return str(self.spec)
+
 
 class QualifiedId:              # FIXME inherit from node?
-    def __init__(self, loc, baseid, quals=[ ]):
+    def __init__(self, loc, baseid, quals=[]):
         assert isinstance(baseid, str)
-        for qual in quals: assert isinstance(qual, str)
+        for qual in quals:
+            assert isinstance(qual, str)
 
         self.loc = loc
         self.baseid = baseid
@@ -306,9 +347,11 @@ class QualifiedId:              # FIXME inherit from node?
     def __str__(self):
         if 0 == len(self.quals):
             return self.baseid
-        return '::'.join(self.quals) +'::'+ self.baseid
+        return '::'.join(self.quals) + '::' + self.baseid
 
 # added by type checking passes
+
+
 class Decl(Node):
     def __init__(self, loc):
         Node.__init__(self, loc)

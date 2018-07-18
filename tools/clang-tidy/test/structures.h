@@ -37,18 +37,23 @@ class basic_string {
 public:
   typedef basic_string<T> _Type;
   basic_string() {}
-   basic_string(const T *p);
+  basic_string(const T *p);
+  basic_string(const T *p, size_t count);
+  basic_string(size_t count, char ch);
   ~basic_string() {}
   size_t size() const;
   bool empty() const;
   size_t find (const char* s, size_t pos = 0) const;
   const T *c_str() const;
   _Type& assign(const T *s);
+  basic_string<T> &operator=(T ch);
   basic_string<T> *operator+=(const basic_string<T> &) {}
   friend basic_string<T> operator+(const basic_string<T> &, const basic_string<T> &) {}
 };
 typedef basic_string<char> string;
 typedef basic_string<wchar_t> wstring;
+
+string to_string(int value);
 
 template <typename T>
 struct default_delete {};
@@ -87,3 +92,11 @@ int abort() { return 0; }
 #define assert(x)                                                              \
   if (!(x))                                                                    \
   (void)abort()
+
+std::size_t strlen(const char *s);
+char *strncat(char *s1, const char *s2, std::size_t n);
+
+void free(void *ptr);
+void *malloc(std::size_t size);
+
+void *memset(void *b, int c, std::size_t len);

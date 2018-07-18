@@ -1,0 +1,1 @@
+"[[\"warning\", \"Null pointer argument in call to string length function\", \"clang-analyzer-unix.cstring.NullArg\"]]"
