@@ -276,10 +276,11 @@
           label="labeled element"/>
 
   <!-- nsIDOMXULSelectControlItemElement -->
-  <listbox>
-    <listitem id="li_nsIDOMXULSelectControlItemElement"
-              label="select control item"/>
-  </listbox>
+  <richlistbox>
+    <richlistitem id="li_nsIDOMXULSelectControlItemElement">
+      <label value="select control item"/>
+    </richlistitem>
+  </richlistbox>
 
   <!-- not nsIDOMXULSelectControlElement -->
   <box id="box_not_nsIDOMXULSelectControlElement" role="group" label="box"/>
@@ -359,11 +360,12 @@
 
   <!-- bug 441991; create name from other menuitem label listitem's own label -->
   <hbox>
-    <listbox>
-    <listitem id="li_labelledby"
-              label="The moment the event starts"
-              aria-labelledby="menuitem-DISPLAY li_labelledby"/>
-    </listbox>
+    <richlistbox>
+      <richlistitem id="li_labelledby"
+                    aria-labelledby="menuitem-DISPLAY li_labelledby">
+        <label value="The moment the event starts"/>
+      </richlistitem>
+    </richlistbox>
     <menulist>
       <menupopup>
         <menuitem id="menuitem-DISPLAY"

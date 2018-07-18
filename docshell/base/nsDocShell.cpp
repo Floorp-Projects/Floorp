@@ -199,8 +199,8 @@
 #include "nsXULAppAPI.h"
 
 #include "GeckoProfiler.h"
+#include "mozilla/NullPrincipal.h"
 #include "Navigator.h"
-#include "NullPrincipal.h"
 #include "prenv.h"
 #include "URIUtils.h"
 

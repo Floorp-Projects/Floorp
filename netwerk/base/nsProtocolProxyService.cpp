@@ -839,7 +839,7 @@ nsProtocolProxyService::~nsProtocolProxyService()
 nsresult
 nsProtocolProxyService::Init()
 {
-    NS_NewNamedThread("SysProxySetting", getter_AddRefs(mProxySettingThread));
+    mProxySettingTarget = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
 
     // failure to access prefs is non-fatal
     nsCOMPtr<nsIPrefBranch> prefBranch =
@@ -933,10 +933,10 @@ nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
         return req->Run();
     }
 
-    if (NS_WARN_IF(!mProxySettingThread)) {
+    if (NS_WARN_IF(!mProxySettingTarget)) {
         return NS_ERROR_NOT_INITIALIZED;
     }
-    return mProxySettingThread->Dispatch(req, nsIEventTarget::DISPATCH_NORMAL);
+    return mProxySettingTarget->Dispatch(req, nsIEventTarget::DISPATCH_NORMAL);
 }
 
 nsresult
@@ -974,9 +974,8 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
             mPACMan = nullptr;
         }
 
-        if (mProxySettingThread) {
-            mProxySettingThread->Shutdown();
-            mProxySettingThread = nullptr;
+        if (mProxySettingTarget) {
+            mProxySettingTarget = nullptr;
         }
 
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

@@ -7,12 +7,15 @@
 const {
   CLEAR_FLEXBOX,
   UPDATE_FLEXBOX,
+  UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
 } = require("../actions/index");
 
 const INITIAL_FLEXBOX = {
   // The actor ID of the flex container.
   actorID: null,
+  // The color of the flexbox highlighter overlay.
+  color: "",
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: false,
   // The NodeFront of the flex container.
@@ -27,6 +30,12 @@ const reducers = {
 
   [UPDATE_FLEXBOX](_, { flexbox }) {
     return flexbox;
+  },
+
+  [UPDATE_FLEXBOX_COLOR](flexbox, { color }) {
+    return Object.assign({}, flexbox, {
+      color,
+    });
   },
 
   [UPDATE_FLEXBOX_HIGHLIGHTED](flexbox, { highlighted }) {

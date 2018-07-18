@@ -6,10 +6,12 @@
 import sys
 from ipdl.ast import Visitor, ASYNC
 
+
 class SyncMessageChecker(Visitor):
     syncMsgList = []
     seenProtocols = []
     seenSyncMessages = []
+
     def __init__(self, syncMsgList):
         SyncMessageChecker.syncMsgList = syncMsgList
         self.errors = []
@@ -44,6 +46,7 @@ class SyncMessageChecker(Visitor):
     def getFixedSyncMessages():
         return set(SyncMessageChecker.syncMsgList) - set(SyncMessageChecker.seenSyncMessages)
 
+
 def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
     checker = SyncMessageChecker(syncMsgList)
     tu.accept(checker)
@@ -52,6 +55,7 @@ def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
             print >>errout, error
         return False
     return True
+
 
 def checkFixedSyncMessages(config, errout=sys.stderr):
     fixed = SyncMessageChecker.getFixedSyncMessages()

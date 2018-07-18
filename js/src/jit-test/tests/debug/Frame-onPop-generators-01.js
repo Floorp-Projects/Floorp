@@ -1,5 +1,5 @@
-// Returning {throw:} from an onPop handler when yielding works and
-// does closes the generator-iterator.
+// Returning {throw:} from an onPop handler when yielding works.
+// It closes the generator-iterator.
 
 load(libdir + "asserts.js");
 

@@ -16,3 +16,4 @@
 == contain-paint-ignored-cases-ruby-stacking-and-clipping-001.html contain-paint-ignored-cases-ruby-stacking-and-clipping-001-ref.html
 == contain-paint-stacking-context-001a.html contain-paint-stacking-context-001-ref.html
 == contain-paint-stacking-context-001b.html contain-paint-stacking-context-001-ref.html
+== contain-size-multicol-001.html contain-size-multicol-001-ref.html

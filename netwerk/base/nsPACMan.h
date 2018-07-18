@@ -176,7 +176,7 @@ public:
 
   // PAC thread operations only
   void ProcessPendingQ();
-  void CancelPendingQ(nsresult);
+  void CancelPendingQ(nsresult, bool aShutdown);
 
   void SetWPADOverDHCPEnabled(bool aValue) { mWPADOverDHCPEnabled = aValue; }
 
@@ -232,12 +232,21 @@ private:
 
   // PAC thread operations only
   void PostProcessPendingQ();
-  void PostCancelPendingQ(nsresult);
+  void PostCancelPendingQ(nsresult, bool aShutdown = false);
   bool ProcessPending();
   nsresult GetPACFromDHCP(nsACString &aSpec);
   nsresult ConfigureWPAD(nsACString &aSpec);
 
 private:
+  /**
+   * Dispatches a runnable to the PAC processing thread. Handles lazy
+   * instantiation of the thread.
+   *
+   * @param aEvent The event to disptach.
+   * @param aSync Whether or not this should be synchronous dispatch.
+   */
+  nsresult DispatchToPAC(already_AddRefed<nsIRunnable> aEvent, bool aSync = false);
+
   ProxyAutoConfig mPAC;
   nsCOMPtr<nsIThread>           mPACThread;
   nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;

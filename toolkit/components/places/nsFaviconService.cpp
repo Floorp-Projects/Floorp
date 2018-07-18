@@ -26,11 +26,11 @@
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "nsILoadInfo.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
-#include "NullPrincipal.h"
 #include "imgICache.h"
 
 #define UNASSOCIATED_FAVICONS_LENGTH 32

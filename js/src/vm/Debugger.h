@@ -568,6 +568,28 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     void removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
                               WeakGlobalObjectSet::Enum* debugEnum);
 
+    enum class CallUncaughtExceptionHook {
+        No,
+        Yes
+    };
+
+    /*
+     * Apply the resumption information in (resumeMode, vp) to `frame` in
+     * anticipation of returning to the debuggee.
+     *
+     * This is the usual path for returning from the debugger to the debuggee
+     * when we have a resumption value to apply. This does final checks on the
+     * result value and exits the debugger's realm by calling `ar.reset()`.
+     * Some hooks don't call this because they don't allow the debugger to
+     * control resumption; those just call `ar.reset()` and return.
+     */
+    ResumeMode leaveDebugger(mozilla::Maybe<AutoRealm>& ar,
+                             AbstractFramePtr frame,
+                             const mozilla::Maybe<HandleValue>& maybeThisv,
+                             CallUncaughtExceptionHook callHook,
+                             ResumeMode resumeMode,
+                             MutableHandleValue vp);
+
     /*
      * Report and clear the pending exception on ar.context, if any, and return
      * ResumeMode::Terminate.
@@ -584,9 +606,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * If there is no uncaughtExceptionHook, or if it fails, report and clear
      * the pending exception on ar.context and return ResumeMode::Terminate.
      *
-     * This always calls ar.leave(); ar is a parameter because this method must
-     * do some things in the debugger realm and some things in the debuggee
-     * realm.
+     * This always calls `ar.reset()`; ar is a parameter because this method
+     * must do some things in the debugger realm and some things in the
+     * debuggee realm.
      */
     ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar);
     ResumeMode handleUncaughtException(mozilla::Maybe<AutoRealm>& ar,
@@ -607,7 +629,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *
      * Precondition: ar is entered. We are in the debugger compartment.
      *
-     * Postcondition: This called ar.leave(). See handleUncaughtException.
+     * Postcondition: This called ar.reset(). See handleUncaughtException.
      *
      * If `success` is false, the hook failed. If an exception is pending in
      * ar.context(), return handleUncaughtException(ar, vp, callhook).
@@ -637,16 +659,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                           AbstractFramePtr frame, jsbytecode* pc,
                                           bool success, ResumeMode resumeMode,
                                           MutableHandleValue vp);
-
-    ResumeMode processParsedHandlerResultHelper(mozilla::Maybe<AutoRealm>& ar,
-                                                AbstractFramePtr frame,
-                                                const mozilla::Maybe<HandleValue>& maybeThisv,
-                                                bool success, ResumeMode resumeMode,
-                                                MutableHandleValue vp);
-
-    bool processResumptionValue(mozilla::Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
-                                ResumeMode& resumeMode, MutableHandleValue vp);
 
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
@@ -1082,7 +1094,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * if the operation in the debuggee realm succeeded, false on error or
      * exception.
      *
-     * Postcondition: we are in the debugger realm, having called ar.leave()
+     * Postcondition: we are in the debugger realm, having called `ar.reset()`
      * even if an error occurred.
      *
      * On success, a completion value is in vp and ar.context does not have a

@@ -44,7 +44,6 @@
 #include "nsIXULWindow.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsISHistory.h"
-#include "NullPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsGlobalWindow.h"
 #include "nsHTMLDocument.h"
@@ -76,6 +75,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ChromeMessageSender.h"
@@ -102,7 +102,7 @@
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
-#include "ContentPrincipal.h"
+#include "mozilla/ContentPrincipal.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PPluginWidgetParent.h"
