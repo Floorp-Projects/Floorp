@@ -118,7 +118,7 @@ var supported_properties = {
     "border-top-color": [ test_color_transition,
                           test_currentcolor_transition ],
     "border-top-width": [ test_length_transition,
-                           test_length_clamped ],
+                          test_length_clamped ],
     "bottom": [ test_length_transition, test_percent_transition,
                 test_length_percent_calc_transition,
                 test_length_unclamped, test_percent_unclamped ],
@@ -331,6 +331,21 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
     test_currentcolor_transition,
     test_auto_color_transition,
   ];
+}
+
+// Logical properties.
+for (const logical_side of ["inline-start", "inline-end", "block-start", "block-end"]) {
+  supported_properties["border-" + logical_side + "-color"] = supported_properties["border-top-color"];
+  supported_properties["border-" + logical_side + "-width"] = supported_properties["border-top-width"];
+  supported_properties["margin-" + logical_side] = supported_properties["margin-top"];
+  supported_properties["padding-" + logical_side] = supported_properties["padding-top"];
+  supported_properties["inset-" + logical_side] = supported_properties["top"];
+}
+
+for (const logical_size of ["inline", "block"]) {
+  supported_properties[logical_size + "-size"] = supported_properties["width"];
+  supported_properties["min-" + logical_size + "-size"] = supported_properties["min-width"];
+  supported_properties["max-" + logical_size + "-size"] = supported_properties["max-width"];
 }
 
 var div = document.getElementById("display");
