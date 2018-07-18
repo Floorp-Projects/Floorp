@@ -38,7 +38,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
     UNIFIED_SOURCES += [
         'android/AndroidSensor.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
     # AndroidHal.cpp cannot be built in unified mode because it relies on HalImpl.h.
     SOURCES += [
@@ -49,7 +48,6 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         UNIFIED_SOURCES += [
@@ -63,7 +61,6 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
-        'windows/WindowsProcessPriority.cpp',
         'windows/WindowsSensor.cpp',
     ]
     # WindowsBattery.cpp cannot be built in unified mode because it relies on HalImpl.h.
@@ -75,14 +72,12 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'cocoa/CocoaBattery.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
     UNIFIED_SOURCES += [
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         UNIFIED_SOURCES += [
@@ -98,12 +93,12 @@ else:
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
 
 # Fallbacks for backends no longer implemented.
 UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
+    'fallback/FallbackProcessPriority.cpp',
 ]
 
 # Fallbacks for backends implemented on Android only.
