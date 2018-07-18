@@ -633,7 +633,6 @@ WEBIDL_FILES = [
     'L10nUtils.webidl',
     'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
-    'ListBoxObject.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',
     'MediaCapabilities.webidl',
