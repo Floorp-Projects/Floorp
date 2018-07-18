@@ -19,7 +19,11 @@ using namespace JS;
 /***************************************************************************/
 // nsJSID
 
-NS_IMPL_CLASSINFO(nsJSID, nullptr, 0, NS_JS_ID_CID)
+#define NULL_CID                                                              \
+{ 0x00000000, 0x0000, 0x0000,                                                 \
+  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
+
+NS_IMPL_CLASSINFO(nsJSID, nullptr, 0, NULL_CID)
 NS_IMPL_ISUPPORTS_CI(nsJSID, nsIJSID)
 
 const char nsJSID::gNoString[] = "";
@@ -255,10 +259,6 @@ static nsresult GetSharedScriptableHelperForJSIID(nsIXPCScriptable** helper)
 }
 
 /******************************************************/
-
-#define NULL_CID                                                              \
-{ 0x00000000, 0x0000, 0x0000,                                                 \
-  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
 NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID, 0, NULL_CID)

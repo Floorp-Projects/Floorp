@@ -2150,8 +2150,6 @@ extern void xpc_DestroyJSxIDClassObjects();
 class nsJSID final : public nsIJSID
 {
 public:
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
-
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSID
 
