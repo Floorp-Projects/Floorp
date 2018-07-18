@@ -5,27 +5,9 @@
 package mozilla.components.browser.search.suggestions
 
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.support.ktx.kotlin.asSequence
 import org.json.JSONArray
 import org.json.JSONObject
-
-/*
- * Convenience method to convert a JSONArray into a sequence.
- */
-private fun JSONArray.asSequence(): Sequence<Any> {
-    return object : Sequence<Any> {
-
-        override fun iterator() = object : Iterator<Any> {
-            val it = (0 until this@asSequence.length()).iterator()
-
-            override fun next(): Any {
-                val i = it.next()
-                return this@asSequence.get(i)
-            }
-
-            override fun hasNext() = it.hasNext()
-        }
-    }
-}
 
 /**
  * The Parser is a function that takes a JSON Response and maps
