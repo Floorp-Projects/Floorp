@@ -8,9 +8,9 @@ dictionary BasicCardRequest {
         sequence<BasicCardType> supportedTypes;
       };
 
-          enum BasicCardType { "credit", "debit", "prepaid" };
+enum BasicCardType { "credit", "debit", "prepaid" };
 
-        dictionary BasicCardResponse {
+dictionary BasicCardResponse {
           required DOMString cardNumber;
           DOMString cardholderName;
           DOMString cardSecurityCode;
