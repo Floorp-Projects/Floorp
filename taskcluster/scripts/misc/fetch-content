@@ -177,15 +177,13 @@ def fetch_and_extract(url, dest_dir, sha256=None, size=None):
         dest_path.unlink()
 
 
-def fetch_urls(urls, dest):
+def fetch_urls(downloads):
     """Fetch URLs pairs to a pathlib.Path."""
-    dest.mkdir(parents=True, exist_ok=True)
-
     with concurrent.futures.ThreadPoolExecutor(CONCURRENCY) as e:
         fs = []
 
-        for url in urls:
-            fs.append(e.submit(fetch_and_extract, url, dest))
+        for download in downloads:
+            fs.append(e.submit(fetch_and_extract, *download))
 
         for f in fs:
             f.result()
@@ -222,16 +220,22 @@ def command_static_url(args):
 
 
 def command_task_artifacts(args):
-    urls = []
-
+    downloads = []
     for word in args.artifacts:
-        # Format is name@task
+        # Format is name[>dest]@task
         artifact, task_id = word.split('@', 1)
+        extdir = pathlib.Path(args.dest)
 
-        urls.append(ARTIFACT_URL.format(task=task_id,
-                                        artifact=artifact))
+        if '>' in artifact:
+            artifact, subdir = artifact.rsplit('>', 1)
+            extdir = extdir.joinpath(subdir)
 
-    fetch_urls(urls, pathlib.Path(args.dest))
+        extdir.mkdir(parents=True, exist_ok=True)
+        url = ARTIFACT_URL.format(task=task_id,
+                                  artifact=artifact)
+        downloads.append((url, extdir))
+
+    fetch_urls(downloads)
 
 
 def main():
@@ -255,11 +259,17 @@ def main():
     artifacts = subparsers.add_parser('task-artifacts',
                                       help='Fetch task artifacts')
     artifacts.set_defaults(func=command_task_artifacts)
-    artifacts.add_argument('-d', '--dest', help='Destination directory')
+    artifacts.add_argument('-d', '--dest', default=os.environ.get('MOZ_FETCHES_DIR'),
+                           help='Destination directory which will contain all '
+                                'artifacts (defaults to $MOZ_FETCHES_DIR)')
     artifacts.add_argument('artifacts', nargs='+',
                            help='Artifacts to fetch. Of form path@task_id')
 
     args = parser.parse_args()
+
+    if not args.dest:
+        parser.error('no destination directory specified, either pass in --dest '
+                     'or set $MOZ_FETCHES_DIR')
 
     return args.func(args)
 
