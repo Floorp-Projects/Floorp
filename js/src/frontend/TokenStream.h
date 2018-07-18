@@ -1487,9 +1487,6 @@ class GeneralTokenStreamChars
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<CharT>;
 
   private:
-    // Deliberately don't |using CharsBase::sourceUnits| because of bug 1472569.  :-(
-
-  private:
     Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
 
     /**
@@ -1519,6 +1516,10 @@ class GeneralTokenStreamChars
     using CharsBase::addLineOfContext;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
     using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
+    using TokenStreamCharsShared::isAsciiCodePoint;
+    using CharsBase::matchLineTerminator;
+    // Deliberately don't |using CharsBase::sourceUnits| because of bug 1472569.  :-(
+    using CharsBase::toCharT;
 
     using typename CharsBase::SourceUnits;
 
@@ -1603,6 +1604,40 @@ class GeneralTokenStreamChars
         MOZ_ASSERT_IF(c == EOF, anyCharsAccess().flags.isEOF);
 
         CharsBase::ungetCodeUnit(c);
+    }
+
+    /**
+     * Given a just-consumed ASCII code unit/point |lead|, consume a full code
+     * point or LineTerminatorSequence (normalizing it to '\n') and store it in
+     * |*codePoint|.  Return true on success, otherwise return false and leave
+     * |*codePoint| undefined on failure.
+     *
+     * If a LineTerminatorSequence was consumed, also update line/column info.
+     *
+     * This may change the current |sourceUnits| offset.
+     */
+    MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
+        MOZ_ASSERT(isAsciiCodePoint(lead),
+                   "non-ASCII code units must be handled separately");
+        MOZ_ASSERT(toCharT(lead) == this->sourceUnits.previousCodeUnit(),
+                   "getFullAsciiCodePoint called incorrectly");
+
+        if (MOZ_UNLIKELY(lead == '\r')) {
+            matchLineTerminator('\n');
+        } else if (MOZ_LIKELY(lead != '\n')) {
+            *codePoint = lead;
+            return true;
+        }
+
+        *codePoint = '\n';
+        bool ok = updateLineInfoForEOL();
+        if (!ok) {
+#ifdef DEBUG
+            *codePoint = EOF; // sentinel value to hopefully cause errors
+#endif
+            MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
+        }
+        return ok;
     }
 
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
@@ -1707,41 +1742,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      * on failure.
      */
     MOZ_MUST_USE bool getCodePoint(int32_t* cp);
-
-    /**
-     * Given a just-consumed ASCII code unit/point |lead|, consume a full code
-     * point or LineTerminatorSequence (normalizing it to '\n') and store it in
-     * |*codePoint|.  Return true on success, otherwise return false and leave
-     * |*codePoint| undefined on failure.
-     *
-     * If a LineTerminatorSequence was consumed, also update line/column info.
-     *
-     * This may change the current |sourceUnits| offset.
-     */
-    MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
-        MOZ_ASSERT(isAsciiCodePoint(lead),
-                   "non-ASCII code units must be handled separately");
-        // NOTE: |this->|-qualify to avoid a gcc bug: see bug 1472569.
-        MOZ_ASSERT(lead == this->sourceUnits.previousCodeUnit(),
-                   "getFullAsciiCodePoint called incorrectly");
-
-        if (MOZ_UNLIKELY(lead == '\r')) {
-            matchLineTerminator('\n');
-        } else if (MOZ_LIKELY(lead != '\n')) {
-            *codePoint = lead;
-            return true;
-        }
-
-        *codePoint = '\n';
-        bool ok = updateLineInfoForEOL();
-        if (!ok) {
-#ifdef DEBUG
-            *codePoint = EOF; // sentinel value to hopefully cause errors
-#endif
-            MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
-        }
-        return ok;
-    }
 
     /**
      * Given a just-consumed non-ASCII code unit |lead| (which may also be a
@@ -1898,7 +1898,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
     using SpecializedChars::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
-    using SpecializedChars::getFullAsciiCodePoint;
+    using GeneralCharsBase::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePointDontNormalize;
     using GeneralCharsBase::internalComputeLineOfContext;
