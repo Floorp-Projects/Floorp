@@ -1190,12 +1190,9 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         return ThrowAndFail(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx, _retval);
     }
 
-    // Do the security check if necessary
-
-    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, nsJSID::GetCID()))) {
-        // the security manager vetoed. It should have set an exception.
-        *_retval = false;
-        return NS_OK;
+    // Prevent non-chrome code from creating ID objects.
+    if (!nsContentUtils::IsCallerChrome()) {
+        return ThrowAndFail(NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED, cx, _retval);
     }
 
     // convert the first argument into a string and see if it looks like an id
