@@ -327,10 +327,19 @@ protected: // Shouldn't be used by friend classes
 
   virtual nsresult InitRules();
 
-  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
-                                         const nsAString& aFormatType,
-                                         uint32_t aFlags,
-                                         const nsACString& aCharset);
+  /**
+   * GetAndInitDocEncoder() returns a document encoder instance for aFormatType
+   * after initializing it.  The result may be cached for saving recreation
+   * cost.
+   *
+   * @param aFormatType             MIME type like "text/plain".
+   * @param aDocumentEncoderFlags   Flags of nsIDocumentEncoder.
+   * @param aCharset                Encoding of the document.
+   */
+  already_AddRefed<nsIDocumentEncoder>
+  GetAndInitDocEncoder(const nsAString& aFormatType,
+                       uint32_t aDocumentEncoderFlags,
+                       const nsACString& aCharset) const;
 
   /**
    * Factored methods for handling insertion of data from transferables
@@ -393,8 +402,8 @@ protected: // Shouldn't be used by friend classes
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
 
 protected:
-  nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
-  nsString mCachedDocumentEncoderType;
+  mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
+  mutable nsString mCachedDocumentEncoderType;
   int32_t mWrapColumn;
   int32_t mMaxTextLength;
   int32_t mInitTriggerCounter;
