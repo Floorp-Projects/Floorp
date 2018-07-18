@@ -21,11 +21,9 @@ function run_test() {
   // Here we have malformed JSON
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code"');
   Services.search.init(() => {
-    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
     // fetch the engines - this should not persist any prefs.
     Services.search.getEngines();
-    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
     // should have recorded SUCCESS_WITHOUT_DATA
     checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
