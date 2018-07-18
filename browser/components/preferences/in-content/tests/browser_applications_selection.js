@@ -30,10 +30,7 @@ add_task(async function selectInternalOptionForFeed() {
   container.selectItem(feedItem);
   Assert.ok(feedItem.selected, "Should be able to select our item.");
 
-  // Wait for the menu.
-  let list = await TestUtils.waitForCondition(() =>
-    win.document.getAnonymousElementByAttribute(feedItem, "class", "actionsMenu"));
-  info("Got list after item was selected");
+  let list = feedItem.querySelector(".actionsMenu");
 
   // Find the "Add Live bookmarks option".
   let chooseItems = list.getElementsByAttribute("action", Ci.nsIHandlerInfo.handleInternally);
@@ -45,9 +42,6 @@ add_task(async function selectInternalOptionForFeed() {
   chooseItems[0].dispatchEvent(cmdEvent);
 
   // Check that we display the correct result.
-  list = await TestUtils.waitForCondition(() =>
-    win.document.getAnonymousElementByAttribute(feedItem, "class", "actionsMenu"));
-  info("Got list after item was selected");
   Assert.ok(list.selectedItem, "Should have a selected item.");
   Assert.equal(list.selectedItem.getAttribute("action"),
                Ci.nsIHandlerInfo.handleInternally,
@@ -62,17 +56,10 @@ add_task(async function reselectInternalOptionForFeed() {
 
   container.selectItem(anotherItem);
 
-  // Wait for the menu so that we don't hit race conditions.
-  await TestUtils.waitForCondition(() =>
-    win.document.getAnonymousElementByAttribute(anotherItem, "class", "actionsMenu"));
-  info("Got list after item was selected");
-
   // Now select the feed item again, and check what it is displaying.
   container.selectItem(feedItem);
 
-  let list = await TestUtils.waitForCondition(() =>
-    win.document.getAnonymousElementByAttribute(feedItem, "class", "actionsMenu"));
-  info("Got list after item was selected");
+  let list = feedItem.querySelector(".actionsMenu");
 
   Assert.ok(list.selectedItem,
             "Should have a selected item");
@@ -117,6 +104,10 @@ add_task(async function sortingCheck() {
 
   actionColumn.click();
   assertSortByAction("descending");
+
+  // Restore the default sort order
+  typeColumn.click();
+  assertSortByType("ascending");
 
   function assertSortByAction(order) {
   Assert.equal(actionColumn.getAttribute("sortDirection"),

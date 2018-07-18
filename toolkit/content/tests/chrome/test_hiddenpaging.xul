@@ -42,25 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317422
     <richlistitem id="richlistbox_item14"><label value="Item 14"/></richlistitem>
     <richlistitem id="richlistbox_item15" hidden="true"><label value="Item 15"/></richlistitem>
   </richlistbox>
-  
-  <listbox id="listbox" seltype="multiple" rows="5">
-    <listitem id="listbox_item1" label="Item 1"/>
-    <listitem id="listbox_item2" label="Item 2"/>
-    <listitem id="listbox_item3" label="Item 3" hidden="true"/>
-    <listitem id="listbox_item4" label="Item 4"/>
-    <listitem id="listbox_item5" label="Item 5" hidden="true"/>
-    <listitem id="listbox_item6" label="Item 6"/>
-    <listitem id="listbox_item7" label="Item 7"/>
-    <listitem id="listbox_item8" label="Item 8"/>
-    <listitem id="listbox_item9" label="Item 9"/>
-    <listitem id="listbox_item10" label="Item 10"/>
-    <listitem id="listbox_item11" label="Item 11"/>
-    <listitem id="listbox_item12" label="Item 12"/>
-    <listitem id="listbox_item13" label="Item 13"/>
-    <listitem id="listbox_item14" label="Item 14"/>
-    <listitem id="listbox_item15" label="Item 15" hidden="true"/>
-  </listbox>
-  
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
@@ -93,68 +75,8 @@ function testRichlistbox()
   is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Third page up should not have scrolled at all");
 }
 
-function testListbox()
-{
-  var id = "listbox";
-  var listbox = document.getElementById(id);
-
-  if (!window.matchMedia("(-moz-overlay-scrollbars)").matches) {
-   // Check that a scrollbar is visible by comparing the width of the listitem
-   // with the width of the listbox. This is a simple way to do this without
-   // checking the anonymous content.
-   ok(listbox.firstChild.getBoundingClientRect().width < listbox.getBoundingClientRect().width - 10,
-      id + ": Scrollbar visible");
- }
-
-  var rowHeight = listbox.firstChild.getBoundingClientRect().height;
-
-  listbox.focus();
-  listbox.selectedIndex = 0;
-  sendKey("PAGE_DOWN");
-  is(listbox.selectedItem.id, id + "_item8", id + ": Page down should go to the item one visible page away");
-  is(listbox.getIndexOfFirstVisibleRow(), 7, id + ": Page down should have scrolled down a visible page");
-  sendKey("PAGE_DOWN");
-  is(listbox.selectedItem.id, id + "_item13", id + ": Second page down should go to the item two visible pages away");
-  is(listbox.getIndexOfFirstVisibleRow(), 9, id + ": Second page down should not scroll beyond the end");
-  sendKey("PAGE_DOWN");
-  is(listbox.selectedItem.id, id + "_item14", id + ": Third page down should go to the last visible item");
-  is(listbox.getIndexOfFirstVisibleRow(), 9, id + ": Third page down should not have scrolled at all");
-  sendKey("PAGE_UP");
-  is(listbox.selectedItem.id, id + "_item9", id + ": Page up should go to the item one visible page away");
-  // the listScrollbox seems to go haywire when scrolling up with hidden listitems
-  todo_is(listbox.getIndexOfFirstVisibleRow(), 3, id + ": Page up should scroll up a visible page");
-  sendKey("PAGE_UP");
-  is(listbox.selectedItem.id, id + "_item2", id + ": Second page up should go to the item two visible pages away");
-  is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Second page up should not scroll beyond the start");
-  sendKey("PAGE_UP");
-  is(listbox.selectedItem.id, id + "_item1", id + ": Third page up should return to the first visible item");
-  is(listbox.getIndexOfFirstVisibleRow(), 0, id + ": Third page up should not have scrolled at all");
-
-  var scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
-  is(scrollHeight, rowHeight * 15, id + ": scrollHeight when rows set");
-
-  listbox.minHeight = 50;
-  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
-  is(scrollHeight, rowHeight * 15, id + ": scrollHeight when rows and minimium height set");
-
-  listbox.removeAttribute("rows");
-
-  var availHeight = document.getAnonymousNodes(listbox)[1].lastChild.getBoundingClientRect().height;
-  // The listbox layout adds this extra height in GetPrefSize. Not sure what it's for though.
-  var e = (rowHeight * 15 - availHeight) % rowHeight;
-  var extraHeight = (e == 0) ? 0 : rowHeight - e;
-
-  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
-  is(scrollHeight, rowHeight * 15 + extraHeight, id + ": scrollHeight when minimium height set");
-
-  listbox.removeAttribute("minheight");
-  scrollHeight = document.getAnonymousNodes(listbox)[1].lastChild.scrollHeight;
-  is(scrollHeight, rowHeight * 15 + extraHeight, id + ": scrollHeight");
-}
-
 window.onload = function runTests() {
   testRichlistbox();
-  testListbox();
   SimpleTest.finish();
 };
   ]]></script>

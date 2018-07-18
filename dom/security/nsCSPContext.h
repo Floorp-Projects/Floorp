@@ -107,8 +107,17 @@ class nsCSPContext : public nsIContentSecurityPolicy
       mozilla::dom::Element* aTriggeringElement,
       const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
 
+    enum BlockedContentSource
+    {
+      eUnknown,
+      eInline,
+      eEval,
+      eSelf,
+    };
+
     nsresult AsyncReportViolation(mozilla::dom::Element* aTriggeringElement,
-                                  nsISupports* aBlockedContentSource,
+                                  nsIURI* aBlockedURI,
+                                  BlockedContentSource aBlockedContentSource,
                                   nsIURI* aOriginalURI,
                                   const nsAString& aViolatedDirective,
                                   uint32_t aViolatedPolicyIndex,
