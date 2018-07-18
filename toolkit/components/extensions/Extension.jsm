@@ -147,6 +147,7 @@ const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
+const IDB_MIGRATED_PREF_BRANCH = "extensions.webextensions.ExtensionStorageIDB.migrated";
 
 const COMMENT_REGEXP = new RegExp(String.raw`
     ^
@@ -250,6 +251,9 @@ var UninstallObserver = {
         userContextId: WEBEXT_STORAGE_USER_CONTEXT_ID,
       });
       Services.qms.clearStoragesForPrincipal(storagePrincipal);
+
+      // Clear the preference set for the extensions migrated to the IDBBackend.
+      Services.prefs.clearUserPref(`${IDB_MIGRATED_PREF_BRANCH}.${addon.id}`);
 
       // Clear localStorage created by the extension
       let storage = Services.domStorageManager.getStorage(null, principal);

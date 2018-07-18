@@ -2361,8 +2361,10 @@ impl Renderer {
         });
 
         let current_time = precise_time_ns();
-        let ns = current_time - self.last_time;
-        self.profile_counters.frame_time.set(ns);
+        if framebuffer_size.is_some() {
+            let ns = current_time - self.last_time;
+            self.profile_counters.frame_time.set(ns);
+        }
 
         if self.max_recorded_profiles > 0 {
             while self.cpu_profiles.len() >= self.max_recorded_profiles {
@@ -2432,7 +2434,9 @@ impl Renderer {
             }
             self.device.end_frame();
         });
-        self.last_time = current_time;
+        if framebuffer_size.is_some() {
+            self.last_time = current_time;
+        }
 
         if self.renderer_errors.is_empty() {
             Ok(stats)

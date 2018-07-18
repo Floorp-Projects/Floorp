@@ -6,13 +6,12 @@ use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF};
 use api::{DeviceIntRect, DeviceIntSize, DevicePoint, LayoutPoint, LayoutRect};
 use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize};
 use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip_scroll_node::ClipScrollNode;
-use clip_scroll_tree::ClipScrollNodeIndex;
+use clip_scroll_tree::SpatialNodeIndex;
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PrimitiveRunContext};
 use gpu_cache::{GpuCacheHandle};
 use gpu_types::UvRectKind;
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
-use prim_store::{PrimitiveMetadata, ScrollNodeAndClipChain};
+use prim_store::{PrimitiveMetadata, ScrollNodeAndClipChain, Transform};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use scene::{FilterOpHelpers, SceneProperties};
@@ -150,7 +149,7 @@ pub struct PicturePrimitive {
     // The original reference frame ID for this picture.
     // It is only different if this is part of a 3D
     // rendering context.
-    pub reference_frame_index: ClipScrollNodeIndex,
+    pub reference_frame_index: SpatialNodeIndex,
     pub real_local_rect: LayoutRect,
     // An optional cache handle for storing extra data
     // in the GPU cache, depending on the type of
@@ -183,7 +182,7 @@ impl PicturePrimitive {
         composite_mode: Option<PictureCompositeMode>,
         is_in_3d_context: bool,
         pipeline_id: PipelineId,
-        reference_frame_index: ClipScrollNodeIndex,
+        reference_frame_index: SpatialNodeIndex,
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
     ) -> Self {
@@ -323,7 +322,7 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.scroll_node,
+                    &prim_run_context.transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
                 );
@@ -442,7 +441,7 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.scroll_node,
+                    &prim_run_context.transform,
                     &device_rect,
                     frame_context.device_pixel_scale,
                 );
@@ -511,7 +510,7 @@ impl PicturePrimitive {
             Some(PictureCompositeMode::MixBlend(..)) => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.scroll_node,
+                    &prim_run_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
@@ -546,7 +545,7 @@ impl PicturePrimitive {
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.scroll_node,
+                    &prim_run_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
@@ -566,7 +565,7 @@ impl PicturePrimitive {
             Some(PictureCompositeMode::Blit) | None => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &prim_metadata.local_rect,
-                    &prim_run_context.scroll_node,
+                    &prim_run_context.transform,
                     &prim_screen_rect.clipped,
                     frame_context.device_pixel_scale,
                 );
@@ -590,18 +589,16 @@ impl PicturePrimitive {
 // Calculate a single screen-space UV for a picture.
 fn calculate_screen_uv(
     local_pos: &LayoutPoint,
-    clip_scroll_node: &ClipScrollNode,
+    transform: &Transform,
     rendered_rect: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> DevicePoint {
-    let world_pos = clip_scroll_node
-        .world_content_transform
-        .transform_point2d(local_pos);
+    let world_pos = transform.m.transform_point2d(local_pos);
 
     let mut device_pos = world_pos * device_pixel_scale;
 
     // Apply snapping for axis-aligned scroll nodes, as per prim_shared.glsl.
-    if clip_scroll_node.transform_kind == TransformedRectKind::AxisAligned {
+    if transform.transform_kind == TransformedRectKind::AxisAligned {
         device_pos.x = (device_pos.x + 0.5).floor();
         device_pos.y = (device_pos.y + 0.5).floor();
     }
@@ -616,7 +613,7 @@ fn calculate_screen_uv(
 // vertex positions of a picture.
 fn calculate_uv_rect_kind(
     local_rect: &LayoutRect,
-    clip_scroll_node: &ClipScrollNode,
+    transform: &Transform,
     rendered_rect: &DeviceIntRect,
     device_pixel_scale: DevicePixelScale,
 ) -> UvRectKind {
@@ -624,28 +621,28 @@ fn calculate_uv_rect_kind(
 
     let top_left = calculate_screen_uv(
         &local_rect.origin,
-        clip_scroll_node,
+        transform,
         &rendered_rect,
         device_pixel_scale,
     );
 
     let top_right = calculate_screen_uv(
         &local_rect.top_right(),
-        clip_scroll_node,
+        transform,
         &rendered_rect,
         device_pixel_scale,
     );
 
     let bottom_left = calculate_screen_uv(
         &local_rect.bottom_left(),
-        clip_scroll_node,
+        transform,
         &rendered_rect,
         device_pixel_scale,
     );
 
     let bottom_right = calculate_screen_uv(
         &local_rect.bottom_right(),
-        clip_scroll_node,
+        transform,
         &rendered_rect,
         device_pixel_scale,
     );

@@ -17,6 +17,7 @@ use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFIndex, CFOptionFlags, CFTypeID, CFTypeRef, TCFType};
 use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
+use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef, UniChar};
 use core_foundation::url::{CFURL, CFURLRef};
 use core_graphics::base::CGFloat;
@@ -98,7 +99,7 @@ pub fn new_from_CGFont(cgfont: &CGFont, pt_size: f64) -> CTFont {
 
 pub fn new_from_CGFont_with_variations(cgfont: &CGFont,
                                        pt_size: f64,
-                                       variations: &CFDictionary)
+                                       variations: &CFDictionary<CFString, CFNumber>)
                                        -> CTFont {
     unsafe {
         let font_desc = font_descriptor::new_from_variations(variations);
@@ -285,12 +286,11 @@ impl CTFont {
     pub fn get_bounding_rects_for_glyphs(&self, orientation: CTFontOrientation, glyphs: &[CGGlyph])
                                          -> CGRect {
         unsafe {
-            let result = CTFontGetBoundingRectsForGlyphs(self.as_concrete_TypeRef(),
-                                                         orientation,
-                                                         glyphs.as_ptr(),
-                                                         ptr::null_mut(),
-                                                         glyphs.len() as CFIndex);
-            result
+            CTFontGetBoundingRectsForGlyphs(self.as_concrete_TypeRef(),
+                                            orientation,
+                                            glyphs.as_ptr(),
+                                            ptr::null_mut(),
+                                            glyphs.len() as CFIndex)
         }
     }
 

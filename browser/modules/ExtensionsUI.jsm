@@ -409,7 +409,7 @@ var ExtensionsUI = {
       };
 
       let icon = addon.isWebExtension ?
-                 addon.iconURL || DEFAULT_EXTENSION_ICON :
+                 AddonManager.getPreferredIconURL(addon, 32, window) || DEFAULT_EXTENSION_ICON :
                  "chrome://browser/skin/addons/addon-install-installed.svg";
       let options = {
         hideClose: true,

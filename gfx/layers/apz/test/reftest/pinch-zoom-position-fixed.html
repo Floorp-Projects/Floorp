@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.5">
+  <style>
+    body {
+      margin: 0;
+      height: 2000px;
+      overflow: hidden;
+    }
+    div {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 500px;
+      background: repeating-linear-gradient(90deg, transparent, transparent 20px, black 20px, black 40px);
+    }
+  </style>
+</head>
+<body onload="scrollTo(0, 500); document.documentElement.classList.remove('reftest-wait');">
+  <!-- Test that fixed position elements are attached to the layout viewport
+       instead of the visual viewport.
+
+       The reference page has an absolute-positioned element in place of a
+       fixed-position element, both positioned at the bottom of the page.
+
+       After zooming in, the top edge of the visual viewport will coincide with
+       the top edge of the layout viewport, but their bottom edges will
+       diverge.
+
+       Since absolute elements are attached to the initial containing block,
+       which coincides with the layout viewport on page load, the rendering of
+       the fixed element will only match if it is being attached to the layout
+       viewport. -->
+  <div></div>
+</body>
+</html>
+

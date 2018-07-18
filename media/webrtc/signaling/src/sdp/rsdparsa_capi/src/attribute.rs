@@ -14,6 +14,7 @@ use network::RustIpAddr;
 pub enum RustSdpAttributeType {
     BundleOnly,
     Candidate,
+    DtlsMessage,
     EndOfCandidates,
     Extmap,
     Fingerprint,
@@ -57,6 +58,7 @@ impl<'a> From<&'a SdpAttribute> for RustSdpAttributeType {
         match *other {
             SdpAttribute::BundleOnly{..} => RustSdpAttributeType::BundleOnly,
             SdpAttribute::Candidate{..} => RustSdpAttributeType::Candidate,
+            SdpAttribute::DtlsMessage{..} => RustSdpAttributeType::DtlsMessage,
             SdpAttribute::EndOfCandidates{..} => RustSdpAttributeType::EndOfCandidates,
             SdpAttribute::Extmap{..} => RustSdpAttributeType::Extmap,
             SdpAttribute::Fingerprint{..} => RustSdpAttributeType::Fingerprint,
@@ -140,6 +142,46 @@ pub unsafe fn has_attribute(attributes: *const Vec<SdpAttribute>, attribute_type
 
 fn get_attribute(attributes: &[SdpAttribute], attribute_type: RustSdpAttributeType) -> Option<&SdpAttribute> {
     argsearch(attributes, attribute_type).map(|i| &attributes[i])
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub enum RustSdpAttributeDtlsMessageType {
+    Client,
+    Server,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeDtlsMessage {
+    pub role: uint8_t,
+    pub value: StringView,
+}
+
+impl<'a> From<&'a SdpAttributeDtlsMessage > for RustSdpAttributeDtlsMessage {
+    fn from(other: &SdpAttributeDtlsMessage ) -> Self {
+        match other {
+            &SdpAttributeDtlsMessage::Client(ref x) => RustSdpAttributeDtlsMessage {
+                role: RustSdpAttributeDtlsMessageType::Client as uint8_t,
+                value: StringView::from(x.as_str()),
+            },
+            &SdpAttributeDtlsMessage::Server(ref x) => RustSdpAttributeDtlsMessage {
+                role: RustSdpAttributeDtlsMessageType::Server as uint8_t,
+                value: StringView::from(x.as_str())
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_dtls_message(attributes: *const Vec<SdpAttribute>,
+                                              ret: *mut RustSdpAttributeDtlsMessage) -> nsresult {
+    let attr = get_attribute((*attributes).as_slice(), RustSdpAttributeType::DtlsMessage);
+    if let Some(&SdpAttribute::DtlsMessage(ref dtls_message)) = attr {
+        *ret = RustSdpAttributeDtlsMessage::from(dtls_message);
+        return NS_OK;
+    }
+    NS_ERROR_INVALID_ARG
 }
 
 #[no_mangle]

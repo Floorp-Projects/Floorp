@@ -1258,8 +1258,8 @@ class JSTerm extends Component {
       return;
     }
 
-    const items = matches.reverse().map(match => ({ preLabel: lastPart, label: match }));
     const popup = this.autocompletePopup;
+    const items = matches.map(match => ({ preLabel: lastPart, label: match }));
     popup.setItems(items);
 
     const completionType = this.lastCompletion.completionType;

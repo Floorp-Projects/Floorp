@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -13,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
+import android.support.v4.app.JobIntentService;
 import android.util.Log;
 
 import org.mozilla.geckoview.BuildConfig;
@@ -304,7 +306,8 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
                 final Intent intent = new Intent(action);
                 intent.putExtra("jobId", crashReporterJobId);
                 intent.putExtra("minidumpPath", dumpFile);
-                CrashReporterService.enqueueWork(context, intent);
+                JobIntentService.enqueueWork(
+                        context, new ComponentName(pkg, component), crashReporterJobId, intent);
                 return true;
             }
 
