@@ -564,6 +564,9 @@ class JSFunction : public js::NativeObject
     // The state of a JSFunction whose script errored out during bytecode
     // compilation. Such JSFunctions are only reachable via GC iteration and
     // not from script.
+    // If u.scripted.s.script_ is non-null, the pointed JSScript is guaranteed
+    // to be complete (see the comment above JSScript::initFromFunctionBox
+    // callsite in JSScript::fullyInitFromEmitter).
     bool hasUncompletedScript() const {
         MOZ_ASSERT(hasScript());
         return !u.scripted.s.script_;
