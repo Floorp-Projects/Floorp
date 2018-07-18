@@ -12482,10 +12482,27 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  // No 3rd party or no tracking resource.
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
-                                                   nullptr) ||
-      !nsContentUtils::IsTrackingResourceWindow(openerInner)) {
+  // Let's take the principal from the opener.
+  nsIDocument* openerDocument = openerInner->GetExtantDoc();
+  if (NS_WARN_IF(!openerDocument)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> openerURI = openerDocument->GetDocumentURI();
+  if (NS_WARN_IF(!openerURI)) {
+    return;
+  }
+
+  // No tracking resource.
+  if (!nsContentUtils::IsTrackingResourceWindow(inner)) {
+    return;
+  }
+
+  // If the opener is not a 3rd party and if this window is not a 3rd party, we
+  // should not continue.
+  if (!nsContentUtils::IsThirdPartyWindowOrChannel(inner, nullptr, openerURI) &&
+      !nsContentUtils::IsThirdPartyWindowOrChannel(openerInner, nullptr,
+                                                   nullptr)) {
     return;
   }
 

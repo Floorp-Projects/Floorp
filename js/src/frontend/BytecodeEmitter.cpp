@@ -2809,6 +2809,9 @@ BytecodeEmitter::emitScript(ParseNode* body)
     if (!emitterScope.leave(this))
         return false;
 
+    if (!NameFunctions(cx, body))
+        return false;
+
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
         return false;
 
@@ -2818,8 +2821,11 @@ BytecodeEmitter::emitScript(ParseNode* body)
 }
 
 bool
-BytecodeEmitter::emitFunctionScript(ParseNode* body)
+BytecodeEmitter::emitFunctionScript(ParseNode* fn, TopLevelFunction isTopLevel)
 {
+    MOZ_ASSERT(fn->isKind(ParseNodeKind::Function));
+    ParseNode* body = fn->pn_body;
+    MOZ_ASSERT(body->isKind(ParseNodeKind::ParamsBody));
     FunctionBox* funbox = sc->asFunctionBox();
     AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, parser->errorReporter(), funbox);
 
@@ -2871,6 +2877,11 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         if (!namedLambdaEmitterScope->leave(this))
             return false;
         namedLambdaEmitterScope.reset();
+    }
+
+    if (isTopLevel == TopLevelFunction::Yes) {
+        if (!NameFunctions(cx, fn))
+            return false;
     }
 
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
@@ -5637,14 +5648,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
         SharedContext* outersc = sc;
         if (fun->isInterpretedLazy()) {
-            // We need to update the static scope chain regardless of whether
-            // the LazyScript has already been initialized, due to the case
-            // where we previously successfully compiled an inner function's
-            // lazy script but failed to compile the outer script after the
-            // fact. If we attempt to compile the outer script again, the
-            // static scope chain will be newly allocated and will mismatch
-            // the previously compiled LazyScript's.
-            fun->lazyScript()->setEnclosingScope(innermostScope());
+            funbox->setEnclosingScopeForInnerLazyFunction(innermostScope());
             if (emittingRunOnceLambda)
                 fun->lazyScript()->setTreatAsRunOnce();
         } else {
@@ -5671,7 +5675,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                 return false;
 
             /* We measured the max scope depth when we parsed the function. */
-            if (!bce2.emitFunctionScript(pn->pn_body))
+            if (!bce2.emitFunctionScript(pn, TopLevelFunction::No))
                 return false;
 
             if (funbox->isLikelyConstructorWrapper())
@@ -9118,6 +9122,8 @@ CGObjectList::finish(ObjectArray* array)
         --cursor;
         MOZ_ASSERT(!*cursor);
         MOZ_ASSERT(objbox->object->isTenured());
+        if (objbox->isFunctionBox())
+            objbox->asFunctionBox()->finish();
         *cursor = objbox->object;
     } while ((objbox = objbox->emitLink) != nullptr);
     MOZ_ASSERT(cursor == array->vector);

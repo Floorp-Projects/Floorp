@@ -111,26 +111,6 @@ panel[type="arrow"][side="right"] {
 }
 %endif
 
-/* ::::: tooltip ::::: */
-
-tooltip {
-  -moz-appearance: tooltip;
-  margin-top: 21px;
-  border: 1px solid InfoText;
-  padding: 2px 3px;
-  max-width: 40em;
-  background-color: InfoBackground;
-  color: InfoText;
-  font: message-box;
-}
-
-tooltip[titletip="true"] {
- /* See bug 32157 comment 128
-  * margin: -2px 0px 0px -3px;
-  */
-  max-width: none;
-}
-
 /* rules for popups associated with menulists */
 
 menulist > menupopup {
