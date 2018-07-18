@@ -693,7 +693,12 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (regex #"\.fontvault/")
       (home-subpath "/FontExplorer X/Font Library")))
 
-  (if (string=? sandbox-level-1 "TRUE") (begin
+  ; level 1: global read access permitted, no global write access
+  (if (string=? sandbox-level-1 "TRUE") (allow file-read*))
+
+  ; level 2: read access via file dialog exceptions, no global write access
+  (if (or (string=? sandbox-level-2 "TRUE")
+          (string=? sandbox-level-1 "TRUE")) (begin
     ; Open file dialogs
     (allow mach-lookup
 	; needed for the dialog sidebar
