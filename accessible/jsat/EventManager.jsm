@@ -163,25 +163,13 @@ this.EventManager.prototype = {
       }
       case Events.STATE_CHANGE:
       {
-        let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
-        let state = Utils.getState(event);
+        const event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
+        const state = Utils.getState(event);
         if (state.contains(States.CHECKED)) {
-          if (aEvent.accessible.role === Roles.SWITCH) {
-            this.present(
-              Presentation.
-                actionInvoked(aEvent.accessible,
-                              event.isEnabled ? "on" : "off"));
-          } else {
-            this.present(
-              Presentation.
-                actionInvoked(aEvent.accessible,
-                              event.isEnabled ? "check" : "uncheck"));
-          }
+          this.present(Presentation.checked(aEvent.accessible));
         } else if (state.contains(States.SELECTED)) {
-          this.present(
-            Presentation.
-              actionInvoked(aEvent.accessible,
-                            event.isEnabled ? "select" : "unselect"));
+          this.present(Presentation.selected(aEvent.accessible,
+                                             event.isEnabled ? "select" : "unselect"));
         }
         break;
       }

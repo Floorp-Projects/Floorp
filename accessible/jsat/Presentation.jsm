@@ -98,25 +98,38 @@ class AndroidPresentor {
   }
 
   /**
-   * An object's action has been invoked.
-   * @param {nsIAccessible} aObject the object that has been invoked.
-   * @param {string} aActionName the name of the action.
+   * An object's check action has been invoked.
+   * Note: Checkable objects use TalkBack's text derived from the event state, so we don't
+   * populate the text here.
+   * @param {nsIAccessible} aAccessible the object that has been invoked.
    */
-  actionInvoked(aObject, aActionName) {
-    let state = Utils.getState(aObject);
-
-    // Checkable objects use TalkBack's text derived from the event state,
-    // so we don't populate the text here.
-    let text = null;
-    if (!state.contains(States.CHECKABLE)) {
-      text = Utils.localize(UtteranceGenerator.genForAction(aObject,
-        aActionName));
-    }
-
+  checked(aAccessible) {
     return [{
       eventType: AndroidEvents.VIEW_CLICKED,
-      text,
-      checked: state.contains(States.CHECKED)
+      checked: Utils.getState(aAccessible).contains(States.CHECKED)
+    }];
+  }
+
+  /**
+   * An object's select action has been invoked.
+   * @param {nsIAccessible} aAccessible the object that has been invoked.
+   */
+  selected(aAccessible, aActionName) {
+    return [{
+      eventType: AndroidEvents.VIEW_CLICKED,
+      selected: Utils.getState(aAccessible).contains(States.SELECTED)
+    }];
+  }
+
+  /**
+   * An object's action has been invoked.
+   * @param {nsIAccessible} aAccessible the object that has been invoked.
+   * @param {string} aActionName the name of the action.
+   */
+  actionInvoked(aAccessible, aActionName) {
+    return [{
+      eventType: AndroidEvents.VIEW_CLICKED,
+      text: Utils.localize(UtteranceGenerator.genForAction(aAccessible, aActionName))
     }];
   }
 
@@ -292,6 +305,7 @@ class AndroidPresentor {
       checkable: state.contains(States.CHECKABLE),
       checked: state.contains(States.CHECKED),
       editable: state.contains(States.EDITABLE),
+      selected: state.contains(States.SELECTED)
     };
 
     if (EDIT_TEXT_ROLES.has(aContext.accessible.role)) {
