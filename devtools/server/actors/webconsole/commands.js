@@ -236,4 +236,3 @@ function getTypedValue(value) {
 
 exports.formatCommand = formatCommand;
 exports.isCommand = isCommand;
-exports.validCommands = validCommands;
