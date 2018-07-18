@@ -219,8 +219,9 @@ this.ContentControl.prototype = {
         }
       }
 
-      // Action invoked will be presented on checkable state change.
-      if (!Utils.getState(aAccessible).contains(States.CHECKABLE)) {
+      // Action invoked will be presented on checked/selected state change.
+      if (!Utils.getState(aAccessible).contains(States.CHECKABLE) &&
+          !Utils.getState(aAccessible).contains(States.SELECTABLE)) {
         this._contentScope.get().sendAsyncMessage("AccessFu:Present",
           Presentation.actionInvoked(aAccessible, "click"));
       }
