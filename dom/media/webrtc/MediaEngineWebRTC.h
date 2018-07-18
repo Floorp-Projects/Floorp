@@ -7,6 +7,7 @@
 
 #include "AudioPacketizer.h"
 #include "AudioSegment.h"
+#include "AudioDeviceInfo.h"
 #include "CamerasChild.h"
 #include "cubeb/cubeb.h"
 #include "CubebUtils.h"
