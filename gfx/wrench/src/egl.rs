@@ -15,6 +15,7 @@ use glutin::PixelFormatRequirements;
 use glutin::ReleaseBehavior;
 use glutin::Robustness;
 use glutin::Api;
+use glutin::dpi::PhysicalSize;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_int;
@@ -206,7 +207,7 @@ impl GlContext for Context {
     }
 
     #[inline]
-    fn resize(&self, _: u32, _: u32) {}
+    fn resize(&self, _: PhysicalSize) {}
 }
 
 unsafe impl Send for Context {}
