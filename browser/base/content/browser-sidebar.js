@@ -77,7 +77,7 @@ var SidebarUI = {
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
 
-      let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+      let xulStore = Services.xulStore;
       if (this._box.hasAttribute("positionend")) {
         document.persist("sidebar-box", "positionend");
       } else {

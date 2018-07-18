@@ -424,7 +424,7 @@ DistributionCustomizer.prototype = {
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     if (this._newProfile) {
-      let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+      let xulStore = Services.xulStore;
 
       try {
         var showPersonalToolbar = Services.prefs.getBoolPref("browser.showPersonalToolbar");
