@@ -126,7 +126,7 @@ public:
                 ErrorResult& aRv);
 
   static MozQueryInterface*
-  GenerateQI(const GlobalObject& global, const Sequence<OwningStringOrIID>& interfaces,
+  GenerateQI(const GlobalObject& global, const Sequence<JS::Value>& interfaces,
              ErrorResult& aRv);
 
   static void WaiveXrays(GlobalObject& aGlobal,
