@@ -429,6 +429,12 @@ extern "C" {
         active_displays: *mut CGDirectDisplayID,
         display_count: *mut libc::uint32_t,
     ) -> CGError;
+    pub fn CGGetDisplaysWithRect(
+        rect: CGRect,
+        max_displays: libc::uint32_t,
+        displays: *mut CGDirectDisplayID,
+        matching_display_count: *mut libc::uint32_t,
+    ) -> CGError;
     pub fn CGDisplayModelNumber(display: CGDirectDisplayID) -> libc::uint32_t;
     pub fn CGDisplayPixelsHigh(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayPixelsWide(display: CGDirectDisplayID) -> libc::size_t;
