@@ -791,44 +791,6 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePointDontNormalize(Ut
 
 template<class AnyCharsAccess>
 bool
-TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
-{
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    if (MOZ_UNLIKELY(this->sourceUnits.atEnd())) {
-        anyChars.flags.isEOF = true;
-        *cp = EOF;
-        return true;
-    }
-
-    int32_t c = this->sourceUnits.getCodeUnit();
-
-    do {
-        // Normalize the char16_t if it was a newline.
-        if (MOZ_UNLIKELY(c == '\n'))
-            break;
-
-        if (MOZ_UNLIKELY(c == '\r')) {
-            matchLineTerminator('\n');
-            break;
-        }
-
-        if (MOZ_UNLIKELY(c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR))
-            break;
-
-        *cp = c;
-        return true;
-    } while (false);
-
-    if (!updateLineInfoForEOL())
-        return false;
-
-    *cp = '\n';
-    return true;
-}
-
-template<class AnyCharsAccess>
-bool
 TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, int32_t* codePoint)
 {
     MOZ_ASSERT(lead != EOF);
@@ -879,6 +841,24 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
     *codePoint = unicode::UTF16Decode(lead, this->sourceUnits.getCodeUnit());
     MOZ_ASSERT(!IsLineTerminator(AssertedCast<char32_t>(*codePoint)));
     return true;
+}
+
+template<typename CharT, class AnyCharsAccess>
+bool
+TokenStreamSpecific<CharT, AnyCharsAccess>::getCodePoint(int32_t* cp)
+{
+    int32_t unit = getCodeUnit();
+    if (unit == EOF) {
+        MOZ_ASSERT(anyCharsAccess().flags.isEOF,
+                   "flags.isEOF should have been set by getCodeUnit()");
+        *cp = EOF;
+        return true;
+    }
+
+    if (isAsciiCodePoint(unit))
+        return getFullAsciiCodePoint(unit, cp);
+
+    return getNonAsciiCodePoint(unit, cp);
 }
 
 template<class AnyCharsAccess>
