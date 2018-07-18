@@ -188,6 +188,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -1484,6 +1485,26 @@ class TokenStreamCharsShared
     CharBuffer& getCharBuffer() { return charBuffer; }
 };
 
+inline mozilla::Span<const char>
+ToCharSpan(mozilla::Span<const mozilla::Utf8Unit> codeUnits)
+{
+    static_assert(alignof(char) == alignof(mozilla::Utf8Unit),
+                  "must have equal alignment to reinterpret_cast<>");
+    static_assert(sizeof(char) == sizeof(mozilla::Utf8Unit),
+                  "must have equal size to reinterpret_cast<>");
+
+    // This cast is safe for two reasons.
+    //
+    // First, per C++11 [basic.lval]p10 it is permitted to access any object's
+    // memory through |char|.
+    //
+    // Second, Utf8Unit *contains* a |char|.  Examining that memory as |char|
+    // is simply, per C++11 [basic.lval]p10, to access the memory according to
+    // the dynamic type of the object: essentially trivially safe.
+    return mozilla::MakeSpan(reinterpret_cast<const char*>(codeUnits.data()),
+                             codeUnits.size());
+}
+
 template<typename CharT>
 class TokenStreamCharsBase
   : public TokenStreamCharsShared
@@ -1505,7 +1526,7 @@ class TokenStreamCharsBase
     }
 
     static MOZ_ALWAYS_INLINE JSAtom*
-    atomizeSourceChars(JSContext* cx, const CharT* chars, size_t length);
+    atomizeSourceChars(JSContext* cx, mozilla::Span<const CharT> units);
 
     using SourceUnits = frontend::SourceUnits<CharT>;
 
@@ -1598,10 +1619,19 @@ TokenStreamCharsBase<CharT>::consumeKnownCodeUnit(int32_t unit)
 
 template<>
 /* static */ MOZ_ALWAYS_INLINE JSAtom*
-TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t* chars,
-                                                   size_t length)
+TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx,
+                                                   mozilla::Span<const char16_t> units)
 {
-    return AtomizeChars(cx, chars, length);
+    return AtomizeChars(cx, units.data(), units.size());
+}
+
+template<>
+/* static */ MOZ_ALWAYS_INLINE JSAtom*
+TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(JSContext* cx,
+                                                            mozilla::Span<const mozilla::Utf8Unit> units)
+{
+    auto chars = ToCharSpan(units);
+    return AtomizeUTF8Chars(cx, chars.data(), chars.size());
 }
 
 template<typename CharT>
