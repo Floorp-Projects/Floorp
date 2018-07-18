@@ -14,7 +14,7 @@
 
 let manager = new MediaTestManager;
 
-gTestPrefs.push(["media.autoplay.enabled", false],
+gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
                 ["media.autoplay.enabled.user-gestures-needed", true]);
 
 window.info = function(msg, token) {
@@ -71,7 +71,7 @@ function createTestArray()
 /**
  * Main test function for different autoplay cases without user interaction.
  *
- * When the pref "media.autoplay.enabled" is false and the pref
+ * When the pref "media.autoplay.default" is 1 and the pref
  * "media.autoplay.enabled.user-gestures-needed" is true, we only allow
  * audible media to autoplay after the website has been activated by specific
  * user gestures. However, inaudible media won't be restricted.

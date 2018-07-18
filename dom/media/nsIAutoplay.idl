@@ -1,0 +1,17 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(048a24f6-c4d6-47bc-bea2-f6038d1db80a)]
+interface nsIAutoplay : nsISupports
+{
+  /*
+   * Possible values for the "media.autoplay.default" preference.
+   */
+  const uint32_t ALLOWED = 0;
+  const uint32_t BLOCKED = 1;
+  const uint32_t PROMPT  = 2;
+};

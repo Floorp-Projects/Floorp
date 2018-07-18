@@ -17,6 +17,7 @@
 #include "nsIFilePicker.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "Tracing.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsISupportsUtils.h"
@@ -330,6 +331,8 @@ MediaEngineDefaultVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandl
                                     StreamTime aDesiredTime,
                                     const PrincipalHandle& aPrincipalHandle)
 {
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i",
+                               aStream.get(), aTrackID);
   // AppendFrame takes ownership of `segment`
   VideoSegment segment;
 
@@ -542,6 +545,8 @@ MediaEngineDefaultAudioSource::Pull(const RefPtr<const AllocationHandle>& aHandl
                                     StreamTime aDesiredTime,
                                     const PrincipalHandle& aPrincipalHandle)
 {
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i",
+                               aStream.get(), aTrackID);
   AudioSegment segment;
   // avoid accumulating rounding errors
   TrackTicks desired = aStream->TimeToTicksRoundUp(aStream->GraphRate(), aDesiredTime);

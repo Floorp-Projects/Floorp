@@ -57,6 +57,7 @@
 #endif
 
 #ifdef XP_WIN
+#include <windows.h>
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #endif
@@ -2522,6 +2523,22 @@ gfxPlatform::WebRenderEnvvarEnabled()
   return (env && *env == '1');
 }
 
+/* This is a pretty conservative check for having a battery.
+ * For now we'd rather err on the side of thinking we do. */
+static bool HasBattery()
+{
+#ifdef XP_WIN
+  SYSTEM_POWER_STATUS status;
+  const BYTE NO_SYSTEM_BATTERY = 128;
+  if (GetSystemPowerStatus(&status)) {
+    if (status.BatteryFlag == NO_SYSTEM_BATTERY) {
+      return false;
+    }
+  }
+#endif
+  return true;
+}
+
 void
 gfxPlatform::InitWebRenderConfig()
 {
@@ -2572,7 +2589,7 @@ gfxPlatform::InitWebRenderConfig()
     int32_t status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
                                                discardFailureId, &status))) {
-      if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
+      if (status == nsIGfxInfo::FEATURE_STATUS_OK && !HasBattery()) {
         featureWebRender.UserEnable("Qualified enabled by pref ");
       } else {
         featureWebRender.ForceDisable(FeatureStatus::Blocked,

@@ -87,6 +87,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIAutoplay.h"
 #include "nsICachingChannel.h"
 #include "nsICategoryManager.h"
 #include "nsIClassOfService.h"
@@ -1998,7 +1999,7 @@ HTMLMediaElement::Load()
        HasSourceChildren(this),
        EventStateManager::IsHandlingUserInput(),
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
-       AutoplayPolicy::IsAllowedToPlay(*this) == Authorization::Allowed,
+       AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED,
        OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
        OwnerDoc() ? OwnerDoc()->HasBeenUserGestureActivated() : 0,
@@ -2520,7 +2521,7 @@ HTMLMediaElement::UpdatePreloadAction()
   PreloadAction nextAction = PRELOAD_UNDEFINED;
   // If autoplay is set, or we're playing, we should always preload data,
   // as we'll need it to play.
-  if ((AutoplayPolicy::IsAllowedToPlay(*this) == Authorization::Allowed &&
+  if ((AutoplayPolicy::IsAllowedToPlay(*this) == nsIAutoplay::ALLOWED &&
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
       !mPaused) {
     nextAction = HTMLMediaElement::PRELOAD_ENOUGH;
@@ -3053,7 +3054,7 @@ HTMLMediaElement::PauseIfShouldNotBePlaying()
   if (GetPaused()) {
     return;
   }
-  if (AutoplayPolicy::IsAllowedToPlay(*this) != Authorization::Allowed) {
+  if (AutoplayPolicy::IsAllowedToPlay(*this) != nsIAutoplay::ALLOWED) {
     ErrorResult rv;
     Pause(rv);
   }
@@ -4064,13 +4065,13 @@ HTMLMediaElement::Play(ErrorResult& aRv)
 
   const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
-    case Authorization::Allowed: {
+    case nsIAutoplay::ALLOWED: {
       mPendingPlayPromises.AppendElement(promise);
       PlayInternal(handlingUserInput);
       UpdateCustomPolicyAfterPlayed();
       break;
     }
-    case Authorization::Blocked: {
+    case nsIAutoplay::BLOCKED: {
       LOG(LogLevel::Debug, ("%p play not blocked.", this));
       promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
       if (StaticPrefs::MediaBlockEventEnabled()) {
@@ -4078,7 +4079,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
       }
       break;
     }
-    case Authorization::Prompt: {
+    case nsIAutoplay::PROMPT: {
       // Prompt the user for permission to play.
       mPendingPlayPromises.AppendElement(promise);
       EnsureAutoplayRequested(handlingUserInput);
@@ -6127,7 +6128,7 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     if (!mPaused) {
       if (mDecoder && !mPausedForInactiveDocumentOrChannel) {
         MOZ_ASSERT(AutoplayPolicy::IsAllowedToPlay(*this) ==
-                   Authorization::Allowed);
+                   nsIAutoplay::ALLOWED);
         mDecoder->Play();
       }
       NotifyAboutPlaying();
@@ -6239,12 +6240,12 @@ HTMLMediaElement::CheckAutoplayDataReady()
   }
 
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
-    case Authorization::Blocked:
+    case nsIAutoplay::BLOCKED:
       return;
-    case Authorization::Prompt:
+    case nsIAutoplay::PROMPT:
       EnsureAutoplayRequested(false);
       return;
-    case Authorization::Allowed:
+    case nsIAutoplay::ALLOWED:
       break;
   }
 

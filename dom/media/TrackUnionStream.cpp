@@ -68,7 +68,7 @@ TrackUnionStream::TrackUnionStream()
   }
   void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   {
-    TRACE();
+    TRACE_AUDIO_CALLBACK_COMMENT("TrackUnionStream %p", this);
     if (IsFinishedOnGraphThread()) {
       return;
     }
@@ -290,6 +290,11 @@ TrackUnionStream::TrackUnionStream()
                      bool* aOutputTrackFinished)
   {
     TrackMapEntry* map = &mTrackMap[aMapIndex];
+    TRACE_AUDIO_CALLBACK_COMMENT("Input stream %p track %i -> TrackUnionStream %p track %i",
+                                 map->mInputPort->GetSource(),
+                                 map->mInputTrackID,
+                                 this,
+                                 map->mOutputTrackID);
     StreamTracks::Track* outputTrack = mTracks.FindTrack(map->mOutputTrackID);
     MOZ_ASSERT(outputTrack && !outputTrack->IsEnded(), "Can't copy to ended track");
 

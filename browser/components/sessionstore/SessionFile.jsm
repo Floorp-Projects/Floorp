@@ -367,7 +367,6 @@ var SessionFileInternal = {
       this._initializationStarted = false;
       // Reset the counter and report to telemetry.
       this._workerHealth.failures = 0;
-      Telemetry.scalarAdd("browser.session.restore.worker_restart_count", 1);
     }
   },
 

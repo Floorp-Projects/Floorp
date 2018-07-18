@@ -81,6 +81,7 @@ if CONFIG['MOZ_WEBRTC']:
 
 XPIDL_SOURCES += [
     'nsIAudioDeviceInfo.idl',
+    'nsIAutoplay.idl',
     'nsIDOMNavigatorUserMedia.idl',
     'nsIMediaManager.idl',
 ]

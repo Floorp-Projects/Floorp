@@ -788,6 +788,8 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
                                         StreamTime aDesiredTime,
                                         const PrincipalHandle& aPrincipalHandle)
 {
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i",
+                               aStream.get(), aTrackID);
   StreamTime delta;
 
   {

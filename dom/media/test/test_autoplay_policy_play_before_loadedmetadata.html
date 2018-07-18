@@ -19,7 +19,7 @@
         // Tests that videos which have no audio track will play if play()
         // is called before the video has reached readyState >= HAVE_METADATA.
 
-        gTestPrefs.push(["media.autoplay.enabled", false],
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
           ["media.autoplay.enabled.user-gestures-needed", true]);
 
         SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {

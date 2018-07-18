@@ -345,8 +345,6 @@ __END
 
 our $totalData = 0;
 
-print HEADER "#pragma pack(1)\n\n";
-
 sub sprintCharProps2_short
 {
   my $usv = shift;
@@ -363,8 +361,6 @@ struct nsCharProps2 {
 };
 |;
 &genTables("CharProp2", $type, "nsCharProps2", 9, 7, \&sprintCharProps2_short, 16, 1, 1);
-
-print HEADER "#pragma pack()\n\n";
 
 sub sprintHanVariants
 {

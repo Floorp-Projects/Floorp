@@ -26,7 +26,7 @@ async function openExceptionsDialog() {
   exceptionsDialog = await dialogOpened;
 }
 
-add_task(async function ensureCheckboxHidden() {
+add_task(async function ensureMenuHidden() {
 
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref(AUTOPLAY_ENABLED_KEY);
@@ -47,12 +47,14 @@ add_task(async function enableBlockingAutoplay() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
-    let autoplayCheckBox = doc.getElementById("autoplayMediaCheckbox");
-    autoplayCheckBox.click();
+    let autoplayMenu = doc.getElementById("autoplayMediaPolicyMenu");
+    autoplayMenu.click();
+    let askMenuItem = autoplayMenu.childNodes[0].childNodes[1];
+    askMenuItem.click();
   });
 
   Assert.equal(Services.prefs.getIntPref(AUTOPLAY_ENABLED_KEY),
-               Ci.nsIAutoplay.BLOCKED,
+               Ci.nsIAutoplay.PROMPT,
                "Ensure we have set autoplay to false");
 });
 

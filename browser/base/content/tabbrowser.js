@@ -2642,6 +2642,13 @@ window._gBrowser = {
     }
 
     var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
+    let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    // We have to sample the tab width now, since _beginRemoveTab might
+    // end up modifying the DOM in such a way that aTab gets a new
+    // frame created for it (for example, by updating the visually selected
+    // state).
+    let tabWidth = windowUtils.getBoundsWithoutFlushing(aTab).width;
 
     if (!this._beginRemoveTab(aTab, null, null, true, skipPermitUnload)) {
       TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
@@ -2650,7 +2657,7 @@ window._gBrowser = {
     }
 
     if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse)
-      this.tabContainer._lockTabSizing(aTab);
+      this.tabContainer._lockTabSizing(aTab, tabWidth);
     else
       this.tabContainer._unlockTabSizing();
 

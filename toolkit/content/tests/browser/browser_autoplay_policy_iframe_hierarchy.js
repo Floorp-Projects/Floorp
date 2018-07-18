@@ -24,7 +24,7 @@ const PAGE_A1_A2_B3 = "https://example.com/browser/toolkit/content/tests/browser
 
 function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.enabled", false],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true]
   ]});
 }
