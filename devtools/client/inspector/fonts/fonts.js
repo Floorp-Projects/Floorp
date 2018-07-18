@@ -660,11 +660,13 @@ class FontInspector {
       // This method may be called after the connection to the page style actor is closed.
       // For example, during teardown of automated tests. Here, we catch any failure that
       // may occur because of that. We're not interested in handling the error.
-      try {
-        textProperty.setValue(value);
-      } catch (e) {
-        // Silent error.
-      }
+      textProperty.setValue(value).catch(error => {
+        if (!this.document) {
+          return;
+        }
+
+        throw error;
+      });
     }
 
     this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
@@ -1072,7 +1074,7 @@ class FontInspector {
     // Prevent reacting to changes we caused.
     this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
     // Live preview font property changes on the page.
-    textProperty.rule.previewPropertyValue(textProperty, value, "");
+    textProperty.rule.previewPropertyValue(textProperty, value, "").catch(console.error);
 
     // Sync Rule view with changes reflected on the page (debounced).
     this.syncChanges(name, value);

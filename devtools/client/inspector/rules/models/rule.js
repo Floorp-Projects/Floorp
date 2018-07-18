@@ -330,17 +330,18 @@ Rule.prototype = {
    *        The property's value (not including priority).
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
+   * @return {Promise}
    */
   setPropertyValue: function(property, value, priority) {
     if (value === property.value && priority === property.priority) {
-      return;
+      return Promise.resolve();
     }
 
     property.value = value;
     property.priority = priority;
 
     const index = this.textProps.indexOf(property);
-    this.applyProperties((modifications) => {
+    return this.applyProperties((modifications) => {
       modifications.setProperty(index, property.name, value, priority);
     });
   },
@@ -355,12 +356,13 @@ Rule.prototype = {
    *        The value to be used for the preview
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
+   **@return {Promise}
    */
   previewPropertyValue: function(property, value, priority) {
     const modifications = this.domRule.startModifyingProperties(this.cssProperties);
     modifications.setProperty(this.textProps.indexOf(property),
                               property.name, value, priority);
-    modifications.apply().then(() => {
+    return modifications.apply().then(() => {
       // Ensure dispatching a ruleview-changed event
       // also for previews
       this.elementStyle._changed();
