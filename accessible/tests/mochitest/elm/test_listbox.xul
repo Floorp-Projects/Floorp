@@ -63,10 +63,10 @@
 
   <vbox flex="1">
     <label control="listbox1" value="listbox: "/>
-    <listbox id="listbox1">
-      <listitem label="item1" id="item1"/>
-      <listitem label="item2" id="item2"/>
-    </listbox>
+    <richlistbox id="listbox1">
+      <richlistitem id="item1"><label value="item1"/></richlistitem>
+      <richlistitem id="item1"><label value="item2"/></richlistitem>
+    </richlistbox>
   </vbox>
   </hbox>
 

@@ -20,7 +20,6 @@
 #include "nsIURI.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
-#include "NullPrincipal.h"
 #include "ExpandedPrincipal.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
@@ -62,6 +61,7 @@
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/NullPrincipal.h"
 
 using namespace mozilla;
 using namespace JS;

@@ -599,6 +599,8 @@ class TestInfoCommand(MachCommandBase):
                      help='Retrieve and display ActiveData test result summary.')
     @CommandArgument('--show-durations', action='store_true',
                      help='Retrieve and display ActiveData test duration summary.')
+    @CommandArgument('--show-tasks', action='store_true',
+                     help='Retrieve and display ActiveData test task names.')
     @CommandArgument('--show-bugs', action='store_true',
                      help='Retrieve and display related Bugzilla bugs.')
     @CommandArgument('--verbose', action='store_true',
@@ -614,17 +616,20 @@ class TestInfoCommand(MachCommandBase):
         self.show_info = params['show_info']
         self.show_results = params['show_results']
         self.show_durations = params['show_durations']
+        self.show_tasks = params['show_tasks']
         self.show_bugs = params['show_bugs']
         self.verbose = params['verbose']
 
         if (not self.show_info and
             not self.show_results and
             not self.show_durations and
+            not self.show_tasks and
                 not self.show_bugs):
             # by default, show everything
             self.show_info = True
             self.show_results = True
             self.show_durations = True
+            self.show_tasks = True
             self.show_bugs = True
 
         here = os.path.abspath(os.path.dirname(__file__))
@@ -650,12 +655,13 @@ class TestInfoCommand(MachCommandBase):
             if len(self.test_name) < 6:
                 print("'%s' is too short for a test name!" % self.test_name)
                 continue
-            if self.show_info:
-                self.set_test_name()
+            self.set_test_name()
             if self.show_results:
                 self.report_test_results()
             if self.show_durations:
                 self.report_test_durations()
+            if self.show_tasks:
+                self.report_test_tasks()
             if self.show_bugs:
                 self.report_bugs()
 
@@ -747,7 +753,7 @@ class TestInfoCommand(MachCommandBase):
             if self.short_name == self.test_name:
                 self.short_name = None
 
-        if not (self.show_results or self.show_durations):
+        if not (self.show_results or self.show_durations or self.show_tasks):
             # no need to determine ActiveData name if not querying
             return
 
@@ -798,7 +804,7 @@ class TestInfoCommand(MachCommandBase):
     def get_platform(self, record):
         platform = record['build']['platform']
         type = record['build']['type']
-        if 'run' in record and 'e10s' in record['run']['type']:
+        if 'run' in record and 'type' in record['run'] and 'e10s' in record['run']['type']:
             e10s = "-e10s"
         else:
             e10s = ""
@@ -910,6 +916,45 @@ class TestInfoCommand(MachCommandBase):
                     record['max'], record['count']))
         else:
             print("No test durations found.")
+
+    def report_test_tasks(self):
+        # Report test tasks summary from ActiveData
+        query = {
+            "from": "unittest",
+            "format": "list",
+            "limit": 1000,
+            "select": ["build.platform", "build.type", "run.type", "run.name"],
+            "where": {"and": [
+                {"eq": {"result.test": self.activedata_test_name}},
+                {"in": {"build.branch": self.branches.split(',')}},
+                {"gt": {"run.timestamp": {"date": self.start}}},
+                {"lt": {"run.timestamp": {"date": self.end}}}
+            ]}
+        }
+        data = self.submit(query)
+        print("\nTest tasks for %s on %s between %s and %s" %
+              (self.activedata_test_name, self.branches, self.start, self.end))
+        if data and len(data) > 0:
+            data.sort(key=self.get_platform)
+            consolidated = {}
+            for record in data:
+                platform = self.get_platform(record)
+                if platform not in consolidated:
+                    consolidated[platform] = {}
+                if record['run']['name'] in consolidated[platform]:
+                    consolidated[platform][record['run']['name']] += 1
+                else:
+                    consolidated[platform][record['run']['name']] = 1
+            for key in sorted(consolidated.keys()):
+                tasks = ""
+                for task in consolidated[key].keys():
+                    if tasks:
+                        tasks += "\n%-40s " % ""
+                    tasks += task
+                    tasks += " in %d runs" % consolidated[key][task]
+                print("%-40s %s" % (key, tasks))
+        else:
+            print("No test tasks found.")
 
     def report_bugs(self):
         # Report open bugs matching test name

@@ -936,6 +936,33 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode, &value);
 
+    // If we are yielding or awaiting, the generator is currently in the
+    // "suspended" state.  Letting script observe this state, with the
+    // generator on stack and yet also reenterable, would be bad, so mark
+    // it running while we fire events.
+    int32_t yieldAwaitIndex = 0;
+    Rooted<GeneratorObject*> genObj(cx);
+    if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync())) {
+        genObj = GetGeneratorObjectForFrame(cx, frame);
+        if (genObj) {
+            if (!genObj->isBeforeInitialYield() && !genObj->isClosed() && genObj->isSuspended()) {
+                yieldAwaitIndex =
+                    genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
+                genObj->setRunning();
+            } else {
+                // We're returning or throwing, not yielding or awaiting. The
+                // generator is already closed, if it was ever exposed at all.
+                genObj = nullptr;
+            }
+        }
+    }
+    auto restoreGenSuspended = MakeScopeExit([&] {
+        if (genObj) {
+            genObj->setFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT,
+                                 Int32Value(yieldAwaitIndex));
+        }
+    });
+
     // This path can be hit via unwinding the stack due to over-recursion or
     // OOM. In those cases, don't fire the frames' onPop handlers, because
     // invoking JS will only trigger the same condition. See
@@ -969,8 +996,8 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 nextResumeMode = dbg->processParsedHandlerResult(ar, frame, pc, success,
                                                                  nextResumeMode, &nextValue);
 
-                // At this point, we are back in the debuggee compartment, and any error has
-                // been wrapped up as a completion value.
+                // At this point, we are back in the debuggee compartment, and
+                // any error has been wrapped up as a completion value.
                 MOZ_ASSERT(cx->compartment() == debuggeeGlobal->compartment());
                 MOZ_ASSERT(!cx->isExceptionPending());
 
@@ -1338,6 +1365,136 @@ Debugger::unwrapPropertyDescriptor(JSContext* cx, HandleObject obj,
     return true;
 }
 
+
+/*** Debuggee resumption values and debugger error handling **************************************/
+
+static bool
+GetResumptionProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, ResumeMode namedMode,
+                      ResumeMode& resumeMode, MutableHandleValue vp, int* hits)
+{
+    bool found;
+    if (!HasProperty(cx, obj, name, &found))
+        return false;
+    if (found) {
+        ++*hits;
+        resumeMode = namedMode;
+        if (!GetProperty(cx, obj, obj, name, vp))
+            return false;
+    }
+    return true;
+}
+
+static bool
+ParseResumptionValue(JSContext* cx, HandleValue rval, ResumeMode& resumeMode, MutableHandleValue vp)
+{
+    if (rval.isUndefined()) {
+        resumeMode = ResumeMode::Continue;
+        vp.setUndefined();
+        return true;
+    }
+    if (rval.isNull()) {
+        resumeMode = ResumeMode::Terminate;
+        vp.setUndefined();
+        return true;
+    }
+
+    int hits = 0;
+    if (rval.isObject()) {
+        RootedObject obj(cx, &rval.toObject());
+        if (!GetResumptionProperty(cx, obj, cx->names().return_, ResumeMode::Return, resumeMode, vp, &hits))
+            return false;
+        if (!GetResumptionProperty(cx, obj, cx->names().throw_, ResumeMode::Throw, resumeMode, vp, &hits))
+            return false;
+    }
+
+    if (hits != 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
+        return false;
+    }
+    return true;
+}
+
+static bool
+GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                     MutableHandleValue thisv, Maybe<HandleValue>& maybeThisv)
+{
+    if (frame.debuggerNeedsCheckPrimitiveReturn()) {
+        {
+            AutoRealm ar(cx, frame.environmentChain());
+            if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, thisv))
+                return false;
+        }
+
+        if (!cx->compartment()->wrap(cx, thisv))
+            return false;
+
+        MOZ_ASSERT_IF(thisv.isMagic(), thisv.isMagic(JS_UNINITIALIZED_LEXICAL));
+        maybeThisv.emplace(HandleValue(thisv));
+    }
+
+    return true;
+}
+
+static bool
+CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleValue>& maybeThisv,
+                     ResumeMode resumeMode, MutableHandleValue vp)
+{
+    if (maybeThisv.isSome()) {
+        const HandleValue& thisv = maybeThisv.ref();
+        if (resumeMode == ResumeMode::Return && vp.isPrimitive()) {
+            if (vp.isUndefined()) {
+                if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL))
+                    return ThrowUninitializedThis(cx, frame);
+
+                vp.set(thisv);
+            } else {
+                ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, vp, nullptr);
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+static void
+AdjustGeneratorResumptionValue(JSContext* cx, AbstractFramePtr frame,
+                               ResumeMode& resumeMode, MutableHandleValue vp)
+{
+    if (resumeMode == ResumeMode::Return &&
+        frame &&
+        frame.isFunctionFrame() &&
+        frame.callee()->isGenerator())
+    {
+        // Treat `{return: <value>}` like a `return` statement. For generators,
+        // that means doing the work below. It's only what the debuggee would
+        // do for an ordinary `return` statement--using a few bytecode
+        // instructions--and it's simpler to do the work manually than to count
+        // on that bytecode sequence existing in the debuggee, somehow jump to
+        // it, and then avoid re-entering the debugger from it.
+        Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+        if (genObj && !genObj->isBeforeInitialYield()) {
+            // 1.  `return <value>` creates and returns a new object,
+            //     `{value: <value>, done: true}`.
+            JSObject *pair = CreateIterResultObject(cx, vp, true);
+            if (!pair) {
+                // Out of memory in debuggee code. Arrange for this to propagate.
+                MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
+                cx->clearPendingException();
+                resumeMode = ResumeMode::Throw;
+                return;
+            }
+            vp.setObject(*pair);
+
+            // 2.  The generator must be closed.
+            GeneratorObject::finalSuspend(genObj);
+        } else {
+            // We're before the initial yield. Carry on with the forced return.
+            // The debuggee will see a call to a generator returning the
+            // non-generator value *vp.
+        }
+    }
+}
+
 ResumeMode
 Debugger::reportUncaughtException(Maybe<AutoRealm>& ar)
 {
@@ -1395,9 +1552,14 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoRealm>& ar, MutableHandleValue
             if (js::Call(cx, fval, object, exc, &rv)) {
                 if (vp) {
                     ResumeMode resumeMode = ResumeMode::Continue;
-                    if (processResumptionValue(ar, frame, thisVForCheck, rv, resumeMode, *vp))
-                        return resumeMode;
+                    if (!ParseResumptionValue(cx, rv, resumeMode, *vp))
+                        return reportUncaughtException(ar);
+                    return leaveDebugger(ar, frame, thisVForCheck, CallUncaughtExceptionHook::No,
+                                         resumeMode, *vp);
                 } else {
+                    // Caller is something like onGarbageCollectionHook that
+                    // doesn't allow Debugger to control debuggee resumption.
+                    // The return value from uncaughtExceptionHook is ignored.
                     return ResumeMode::Continue;
                 }
             }
@@ -1422,6 +1584,79 @@ Debugger::handleUncaughtException(Maybe<AutoRealm>& ar)
 {
     return handleUncaughtExceptionHelper(ar, nullptr, mozilla::Nothing(), NullFramePtr());
 }
+
+ResumeMode
+Debugger::leaveDebugger(Maybe<AutoRealm>& ar,
+                        AbstractFramePtr frame,
+                        const Maybe<HandleValue>& maybeThisv,
+                        CallUncaughtExceptionHook callHook,
+                        ResumeMode resumeMode,
+                        MutableHandleValue vp)
+{
+    JSContext* cx = ar->context();
+    if (!unwrapDebuggeeValue(cx, vp) ||
+        !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
+    {
+        if (callHook == CallUncaughtExceptionHook::Yes)
+            return handleUncaughtException(ar, vp, maybeThisv, frame);
+        return reportUncaughtException(ar);
+    }
+
+    ar.reset();
+    if (!cx->compartment()->wrap(cx, vp)) {
+        resumeMode = ResumeMode::Terminate;
+        vp.setUndefined();
+    }
+    AdjustGeneratorResumptionValue(cx, frame, resumeMode, vp);
+
+    return resumeMode;
+}
+
+ResumeMode
+Debugger::processParsedHandlerResult(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
+                                     jsbytecode* pc, bool success, ResumeMode resumeMode,
+                                     MutableHandleValue vp)
+{
+    JSContext* cx = ar->context();
+
+    RootedValue thisv(cx);
+    Maybe<HandleValue> maybeThisv;
+    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
+        ar.reset();
+        return ResumeMode::Terminate;
+    }
+
+    if (!success)
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
+
+    return leaveDebugger(ar, frame, maybeThisv, CallUncaughtExceptionHook::Yes, resumeMode, vp);
+}
+
+ResumeMode
+Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success, const Value& rv,
+                               AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
+{
+    JSContext* cx = ar->context();
+
+    RootedValue thisv(cx);
+    Maybe<HandleValue> maybeThisv;
+    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
+        ar.reset();
+        return ResumeMode::Terminate;
+    }
+
+    if (!success)
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
+
+    RootedValue rootRv(cx, rv);
+    ResumeMode resumeMode = ResumeMode::Continue;
+    if (!ParseResumptionValue(cx, rootRv, resumeMode, vp))
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
+    return leaveDebugger(ar, frame, maybeThisv, CallUncaughtExceptionHook::Yes, resumeMode, vp);
+}
+
+
+/*** Debuggee completion values ******************************************************************/
 
 /* static */ void
 Debugger::resultToCompletion(JSContext* cx, bool ok, const Value& rv,
@@ -1499,200 +1734,8 @@ Debugger::receiveCompletionValue(Maybe<AutoRealm>& ar, bool ok,
            newCompletionValue(cx, resumeMode, value, vp);
 }
 
-static bool
-GetResumptionProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, ResumeMode namedMode,
-                      ResumeMode& resumeMode, MutableHandleValue vp, int* hits)
-{
-    bool found;
-    if (!HasProperty(cx, obj, name, &found))
-        return false;
-    if (found) {
-        ++*hits;
-        resumeMode = namedMode;
-        if (!GetProperty(cx, obj, obj, name, vp))
-            return false;
-    }
-    return true;
-}
-
-static bool
-ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, ResumeMode& resumeMode,
-                             MutableHandleValue vp)
-{
-    int hits = 0;
-    if (rv.isObject()) {
-        RootedObject obj(cx, &rv.toObject());
-        if (!GetResumptionProperty(cx, obj, cx->names().return_, ResumeMode::Return, resumeMode, vp, &hits))
-            return false;
-        if (!GetResumptionProperty(cx, obj, cx->names().throw_, ResumeMode::Throw, resumeMode, vp, &hits))
-            return false;
-    }
-
-    if (hits != 1) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
-        return false;
-    }
-    return true;
-}
-
-static bool
-ParseResumptionValue(JSContext* cx, HandleValue rval, ResumeMode& resumeMode, MutableHandleValue vp)
-{
-    if (rval.isUndefined()) {
-        resumeMode = ResumeMode::Continue;
-        vp.setUndefined();
-        return true;
-    }
-    if (rval.isNull()) {
-        resumeMode = ResumeMode::Terminate;
-        vp.setUndefined();
-        return true;
-    }
-    return ParseResumptionValueAsObject(cx, rval, resumeMode, vp);
-}
-
-static bool
-CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleValue>& maybeThisv,
-                     ResumeMode resumeMode, MutableHandleValue vp)
-{
-    if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame()) {
-        // Don't let a { return: ... } resumption value make a generator
-        // function violate the iterator protocol. The return value from
-        // such a frame must have the form { done: <bool>, value: <anything> }.
-        RootedFunction callee(cx, frame.callee());
-        if (callee->isGenerator()) {
-            if (!CheckGeneratorResumptionValue(cx, vp)) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_YIELD);
-                return false;
-            }
-        }
-    }
-
-    if (maybeThisv.isSome()) {
-        const HandleValue& thisv = maybeThisv.ref();
-        if (resumeMode == ResumeMode::Return && vp.isPrimitive()) {
-            if (vp.isUndefined()) {
-                if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL))
-                    return ThrowUninitializedThis(cx, frame);
-
-                vp.set(thisv);
-            } else {
-                ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, vp, nullptr);
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-static bool
-GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
-                     MutableHandleValue thisv, Maybe<HandleValue>& maybeThisv)
-{
-    if (frame.debuggerNeedsCheckPrimitiveReturn()) {
-        {
-            AutoRealm ar(cx, frame.environmentChain());
-            if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, thisv))
-                return false;
-        }
-
-        if (!cx->compartment()->wrap(cx, thisv))
-            return false;
-
-        MOZ_ASSERT_IF(thisv.isMagic(), thisv.isMagic(JS_UNINITIALIZED_LEXICAL));
-        maybeThisv.emplace(HandleValue(thisv));
-    }
-
-    return true;
-}
-
-bool
-Debugger::processResumptionValue(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                 const Maybe<HandleValue>& maybeThisv, HandleValue rval,
-                                 ResumeMode& resumeMode, MutableHandleValue vp)
-{
-    JSContext* cx = ar->context();
-
-    if (!ParseResumptionValue(cx, rval, resumeMode, vp) ||
-        !unwrapDebuggeeValue(cx, vp) ||
-        !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
-    {
-        return false;
-    }
-
-    ar.reset();
-    if (!cx->compartment()->wrap(cx, vp)) {
-        resumeMode = ResumeMode::Terminate;
-        vp.setUndefined();
-    }
-
-    return true;
-}
-
-ResumeMode
-Debugger::processParsedHandlerResultHelper(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                           const Maybe<HandleValue>& maybeThisv, bool success,
-                                           ResumeMode resumeMode, MutableHandleValue vp)
-{
-    if (!success)
-        return handleUncaughtException(ar, vp, maybeThisv, frame);
-
-    JSContext* cx = ar->context();
-
-    if (!unwrapDebuggeeValue(cx, vp) ||
-        !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
-    {
-        return handleUncaughtException(ar, vp, maybeThisv, frame);
-    }
-
-    ar.reset();
-    if (!cx->compartment()->wrap(cx, vp)) {
-        resumeMode = ResumeMode::Terminate;
-        vp.setUndefined();
-    }
-
-    return resumeMode;
-}
-
-ResumeMode
-Debugger::processParsedHandlerResult(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
-                                     jsbytecode* pc, bool success, ResumeMode resumeMode,
-                                     MutableHandleValue vp)
-{
-    JSContext* cx = ar->context();
-
-    RootedValue thisv(cx);
-    Maybe<HandleValue> maybeThisv;
-    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
-        ar.reset();
-        return ResumeMode::Terminate;
-    }
-
-    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
-}
-
-ResumeMode
-Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success, const Value& rv,
-                               AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
-{
-    JSContext* cx = ar->context();
-
-    RootedValue thisv(cx);
-    Maybe<HandleValue> maybeThisv;
-    if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
-        ar.reset();
-        return ResumeMode::Terminate;
-    }
-
-    if (!success)
-        return handleUncaughtException(ar, vp, maybeThisv, frame);
-
-    RootedValue rootRv(cx, rv);
-    ResumeMode resumeMode = ResumeMode::Continue;
-    success = ParseResumptionValue(cx, rootRv, resumeMode, vp);
-
-    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
-}
+
+/*** Firing debugger hooks ***********************************************************************/
 
 static bool
 CallMethodIfPresent(JSContext* cx, HandleObject obj, const char* name, size_t argc, Value* argv,
@@ -5558,100 +5601,6 @@ EnsureScriptOffsetIsValid(JSContext* cx, JSScript* script, size_t offset)
 
 namespace {
 
-class BytecodeRangeWithPosition : private BytecodeRange
-{
-  public:
-    using BytecodeRange::empty;
-    using BytecodeRange::frontPC;
-    using BytecodeRange::frontOpcode;
-    using BytecodeRange::frontOffset;
-
-    BytecodeRangeWithPosition(JSContext* cx, JSScript* script)
-      : BytecodeRange(cx, script), lineno(script->lineno()), column(0),
-        sn(script->notes()), snpc(script->code()), isEntryPoint(false),
-        wasArtifactEntryPoint(false)
-    {
-        if (!SN_IS_TERMINATOR(sn))
-            snpc += SN_DELTA(sn);
-        updatePosition();
-        while (frontPC() != script->main())
-            popFront();
-
-        if (frontOpcode() != JSOP_JUMPTARGET)
-            isEntryPoint = true;
-        else
-            wasArtifactEntryPoint =  true;
-    }
-
-    void popFront() {
-        BytecodeRange::popFront();
-        if (empty())
-            isEntryPoint = false;
-        else
-            updatePosition();
-
-        // The following conditions are handling artifacts introduced by the
-        // bytecode emitter, such that we do not add breakpoints on empty
-        // statements of the source code of the user.
-        if (wasArtifactEntryPoint) {
-            wasArtifactEntryPoint = false;
-            isEntryPoint = true;
-        }
-
-        if (isEntryPoint && frontOpcode() == JSOP_JUMPTARGET) {
-            wasArtifactEntryPoint = isEntryPoint;
-            isEntryPoint = false;
-        }
-    }
-
-    size_t frontLineNumber() const { return lineno; }
-    size_t frontColumnNumber() const { return column; }
-
-    // Entry points are restricted to bytecode offsets that have an
-    // explicit mention in the line table.  This restriction avoids a
-    // number of failing cases caused by some instructions not having
-    // sensible (to the user) line numbers, and it is one way to
-    // implement the idea that the bytecode emitter should tell the
-    // debugger exactly which offsets represent "interesting" (to the
-    // user) places to stop.
-    bool frontIsEntryPoint() const { return isEntryPoint; }
-
-  private:
-    void updatePosition() {
-        // Determine the current line number by reading all source notes up to
-        // and including the current offset.
-        jsbytecode *lastLinePC = nullptr;
-        while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
-            SrcNoteType type = SN_TYPE(sn);
-            if (type == SRC_COLSPAN) {
-                ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
-                MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
-                column += colspan;
-                lastLinePC = snpc;
-            } else if (type == SRC_SETLINE) {
-                lineno = size_t(GetSrcNoteOffset(sn, 0));
-                column = 0;
-                lastLinePC = snpc;
-            } else if (type == SRC_NEWLINE) {
-                lineno++;
-                column = 0;
-                lastLinePC = snpc;
-            }
-
-            sn = SN_NEXT(sn);
-            snpc += SN_DELTA(sn);
-        }
-        isEntryPoint = lastLinePC == frontPC();
-    }
-
-    size_t lineno;
-    size_t column;
-    jssrcnote* sn;
-    jsbytecode* snpc;
-    bool isEntryPoint;
-    bool wasArtifactEntryPoint;
-};
-
 /*
  * FlowGraphSummary::populate(cx, script) computes a summary of script's
  * control flow graph used by DebuggerScript_{getAllOffsets,getLineOffsets}.
@@ -8317,8 +8266,7 @@ DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame
         if (!getobj)
             return nullptr;
         id = INT_TO_JSID(i);
-        if (!getobj ||
-            !NativeDefineAccessorProperty(cx, obj, id, getobj, nullptr,
+        if (!NativeDefineAccessorProperty(cx, obj, id, getobj, nullptr,
                                           JSPROP_ENUMERATE | JSPROP_GETTER))
         {
             return nullptr;

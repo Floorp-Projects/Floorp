@@ -12,7 +12,8 @@ http://dev.chromium.org/developers/how-tos/get-the-code for details about
 doing this efficiently.
 """
 
-import sys, os
+import sys
+import os
 from subprocess import check_call
 from shutil import rmtree
 
@@ -31,16 +32,16 @@ check_call(['gclient', 'sync', '--force', '--revision=src@%s' % rev], cwd=chromi
 chromiumsrc = os.path.join(topsrcdir, 'ipc/chromium/src')
 os.path.exists(chromiumsrc) and rmtree(chromiumsrc)
 
+
 def doexport(svnpath):
     localpath = os.path.join(chromiumsrc, svnpath)
     os.makedirs(os.path.dirname(localpath))
-    check_call(['svn', 'export', '-r', 'BASE', os.path.join(chromiumtree, 'src', svnpath), localpath])
+    check_call(['svn', 'export', '-r', 'BASE', os.path.join(chromiumtree, 'src', svnpath),
+                localpath])
+
 
 doexport('base')
 doexport('chrome/common')
 doexport('build/build_config.h')
 doexport('testing/gtest/include')
 doexport('third_party/libevent')
-
-
-

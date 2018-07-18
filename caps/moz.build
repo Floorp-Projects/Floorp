@@ -24,17 +24,17 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'caps'
 
 EXPORTS += [
-    'ContentPrincipal.h',
     'nsJSPrincipals.h',
     'nsScriptSecurityManager.h',
-    'NullPrincipal.h',
-    'NullPrincipalURI.h',
-    'SystemPrincipal.h',
 ]
 
 EXPORTS.mozilla = [
     'BasePrincipal.h',
+    'ContentPrincipal.h',
+    'NullPrincipal.h',
+    'NullPrincipalURI.h',
     'OriginAttributes.h',
+    'SystemPrincipal.h',
 ]
 
 SOURCES += [

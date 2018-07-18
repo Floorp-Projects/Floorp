@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsMimeTypes.h"
 #include "nsIURL.h"
 #include "nsXULAppAPI.h"
@@ -13,7 +14,6 @@
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
-#include "NullPrincipal.h"
 
 NS_IMPL_ISUPPORTS(nsIconChannel,
                   nsIRequest,

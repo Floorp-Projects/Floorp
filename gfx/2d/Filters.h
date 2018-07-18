@@ -476,6 +476,16 @@ enum UnpremultiplyInputs
   IN_UNPREMULTIPLY_IN = 0
 };
 
+enum OpacityAtts
+{
+  ATT_OPACITY_VALUE = 0
+};
+
+enum OpacityInputs
+{
+  IN_OPACITY_IN = 0
+};
+
 class FilterNode : public external::AtomicRefCounted<FilterNode>
 {
 public:

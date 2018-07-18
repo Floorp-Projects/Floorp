@@ -163,7 +163,6 @@ DER_GeneralizedTimeToTime
 DER_GeneralizedTimeToTime_Util
 DER_GetInteger
 DER_GetInteger_Util
-DER_Lengths
 DER_SetUInteger
 DER_UTCTimeToTime_Util
 DSAU_DecodeDerSigToLen

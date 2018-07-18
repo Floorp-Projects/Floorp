@@ -8,6 +8,7 @@
 
 #include "prprf.h"
 #include "mozilla/Logging.h"
+#include "mozilla/NullPrincipal.h"
 #include "prtime.h"
 
 #include "nsIOService.h"
@@ -42,7 +43,6 @@
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
 #include "nsILoadInfo.h"
-#include "NullPrincipal.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIFTPChannelParentInternal.h"
 

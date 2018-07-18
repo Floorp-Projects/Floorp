@@ -16,15 +16,16 @@
 #include "nspr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 #include "nsIScriptError.h"
 #include "js/Wrapper.h"
-#include "NullPrincipal.h"
 
 extern mozilla::LazyLogModule MCD;
 using mozilla::AutoSafeJSContext;
+using mozilla::NullPrincipal;
 using mozilla::dom::AutoJSAPI;
 
 //*****************************************************************************

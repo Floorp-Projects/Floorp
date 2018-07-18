@@ -31,7 +31,7 @@
 #include "GeckoProfiler.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsDataHashtable.h"
-#include "NullPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 
 // nsPluginStreamListenerPeer
 

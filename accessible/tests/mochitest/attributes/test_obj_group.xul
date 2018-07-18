@@ -146,12 +146,12 @@
 
   <vbox flex="1">
 
-  <listbox>
-    <listitem label="listitem1" id="listitem1"/>
-    <listitem label="listitem2" id="listitem2" type="checkbox"/>
-    <listitem label="listitem3" id="listitem3" type="checkbox"/>
-    <listitem label="listitem4" id="listitem4"/>
-  </listbox>
+  <richlistbox>
+    <richlistitem id="listitem1"/>
+    <richlistitem id="listitem2"><label value="listitem2"/></richlistitem>
+    <richlistitem id="listitem3"/>
+    <richlistitem id="listitem4"><label value="listitem4"/></richlistitem>
+  </richlistbox>
 
   <menubar>
     <menu label="item1" id="menu_item1">

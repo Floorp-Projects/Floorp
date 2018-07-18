@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"
+#include "mozilla/NullPrincipal.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAtom.h"
@@ -30,7 +31,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsDocument.h"
 #include "nsWindowSizes.h"
-#include "NullPrincipal.h"
 
 using namespace mozilla;
 using mozilla::dom::NodeInfo;

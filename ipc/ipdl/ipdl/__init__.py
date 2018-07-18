@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified',
-            'checkSyncMessage', 'checkFixedSyncMessages' ]
+__all__ = ['gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified',
+           'checkSyncMessage', 'checkFixedSyncMessages']
 
-import os, sys
+import os
+import sys
 from cStringIO import StringIO
 
 from ipdl.cgen import IPDLCodeGen
@@ -17,7 +18,7 @@ from ipdl.checker import checkSyncMessage, checkFixedSyncMessages
 from ipdl.cxx.cgen import CxxCodeGen
 
 
-def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
+def parse(specstring, filename='/stdin', includedirs=[], errout=sys.stderr):
     '''Return an IPDL AST if parsing was successful.  Print errors to |errout|
     if it is not.'''
     # The file type and name are later enforced by the type checker.
@@ -35,6 +36,7 @@ def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
         print >>errout, p
         return None
 
+
 def typecheck(ast, errout=sys.stderr):
     '''Return True iff |ast| is well typed.  Print errors to |errout| if
     it is not.'''
@@ -51,11 +53,12 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir, segmentcapacitydict):
                 outheadersdir,
                 *([ns.name for ns in ast.namespaces] + [hdr.name]))
         ]
-    def resolveCpp(cpp):
-        return [ cpp, os.path.join(outcppdir, cpp.name) ]
 
-    for ast, filename in ([ resolveHeader(hdr) for hdr in headers ]
-                          + [ resolveCpp(cpp) for cpp in cpps ]):
+    def resolveCpp(cpp):
+        return [cpp, os.path.join(outcppdir, cpp.name)]
+
+    for ast, filename in ([resolveHeader(hdr) for hdr in headers]
+                          + [resolveCpp(cpp) for cpp in cpps]):
         tempfile = StringIO()
         CxxCodeGen(tempfile).cgen(ast)
         writeifmodified(tempfile.getvalue(), filename)
@@ -67,6 +70,7 @@ def genipdl(ast, outdir):
 
 def genmsgenum(ast):
     return msgenums(ast.protocol, pretty=True)
+
 
 def writeifmodified(contents, file):
     dir = os.path.dirname(file)

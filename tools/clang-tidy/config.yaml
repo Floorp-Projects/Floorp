@@ -11,6 +11,8 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
+  - name: bugprone-suspicious-memset-usage
+    publish: !!bool yes
   - name: clang-analyzer-cplusplus.NewDelete
     publish: !!bool yes
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
@@ -34,6 +36,12 @@ clang_checkers:
     publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.vfork
     publish: !!bool yes
+  - name: clang-analyzer-unix.Malloc
+    publish: !!bool yes
+  - name: clang-analyzer-unix.cstring.BadSizeArg
+    publish: !!bool yes
+  - name: clang-analyzer-unix.cstring.NullArg
+    publish: !!bool yes
   - name: misc-argument-comment
     publish: !!bool yes
   - name: misc-assert-side-effect
@@ -45,6 +53,10 @@ clang_checkers:
     # - name: bugprone-forward-declaration-namespace
     publish: !!bool yes
   - name: misc-macro-repeated-side-effects
+    publish: !!bool yes
+  - name: misc-string-constructor
+    publish: !!bool yes
+  - name: misc-string-integer-assignment
     publish: !!bool yes
   - name: misc-suspicious-missing-comma
     publish: !!bool yes

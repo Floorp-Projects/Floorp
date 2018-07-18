@@ -59,6 +59,11 @@ extern unsigned int _gdb_sleep_duration;
 #define MUTEX TestMutex
 #define TESTNAME(name) storage_##name
 
+// Bug 1473531: the test storage_DeadlockDetectorTest.storage_Sanity5DeathTest times out on macosx ccov builds
+#if defined(XP_MACOSX) && defined(MOZ_CODE_COVERAGE)
+#define DISABLE_STORAGE_SANITY5_DEATH_TEST
+#endif
+
 // We need to use a namespace to avoid duplicate definitions of some functions
 // within TestDeadlockDetector.cpp.
 namespace storage {

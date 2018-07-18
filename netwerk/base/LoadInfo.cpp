@@ -12,6 +12,7 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
 #include "nsIContentSecurityPolicy.h"
@@ -25,7 +26,6 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
 #include "nsMixedContentBlocker.h"
-#include "NullPrincipal.h"
 #include "nsRedirectHistoryEntry.h"
 #include "LoadInfo.h"
 

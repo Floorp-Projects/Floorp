@@ -31,7 +31,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
-#include "NullPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/ScriptSettings.h"

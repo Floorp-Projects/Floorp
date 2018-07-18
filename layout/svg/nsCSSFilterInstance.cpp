@@ -91,7 +91,7 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       result = SetAttributesForInvert(descr);
       break;
     case NS_STYLE_FILTER_OPACITY:
-      descr = CreatePrimitiveDescription(PrimitiveType::ComponentTransfer,
+      descr = CreatePrimitiveDescription(PrimitiveType::Opacity,
                                          aPrimitiveDescrs,
                                          aInputIsTainted);
       result = SetAttributesForOpacity(descr);
@@ -291,24 +291,7 @@ nsCSSFilterInstance::SetAttributesForOpacity(FilterPrimitiveDescription& aDescr)
   const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
   float value = ClampFactor(styleValue.GetFactorOrPercentValue());
 
-  // Set identity transfer functions for RGB.
-  AttributeMap identityAttrs;
-  identityAttrs.Set(eComponentTransferFunctionType,
-                    (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
-  aDescr.Attributes().Set(eComponentTransferFunctionR, identityAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionG, identityAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionB, identityAttrs);
-
-  // Set transfer function for A.
-  AttributeMap opacityAttrs;
-  float opacityTableValues[2];
-  opacityTableValues[0] = 0;
-  opacityTableValues[1] = value;
-  opacityAttrs.Set(eComponentTransferFunctionType,
-                  (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_TABLE);
-  opacityAttrs.Set(eComponentTransferFunctionTableValues, opacityTableValues, 2);
-  aDescr.Attributes().Set(eComponentTransferFunctionA, opacityAttrs);
-
+  aDescr.Attributes().Set(eOpacityOpacity, value);
   return NS_OK;
 }
 

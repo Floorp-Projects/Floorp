@@ -236,6 +236,34 @@ FilterProcessing::DoUnpremultiplicationCalculation(const IntSize& aSize,
   }
 }
 
+void
+FilterProcessing::DoOpacityCalculation(const IntSize& aSize,
+  uint8_t* aTargetData, int32_t aTargetStride,
+  uint8_t* aSourceData, int32_t aSourceStride,
+  Float aValue)
+{
+  if (Factory::HasSSE2()) {
+#ifdef USE_SSE2
+    DoOpacityCalculation_SSE2(
+      aSize, aTargetData, aTargetStride, aSourceData, aSourceStride, aValue);
+#endif
+  }
+  else {
+    DoOpacityCalculation_Scalar(
+      aSize, aTargetData, aTargetStride, aSourceData, aSourceStride, aValue);
+  }
+}
+
+void
+FilterProcessing::DoOpacityCalculationA8(const IntSize& aSize,
+  uint8_t* aTargetData, int32_t aTargetStride,
+  uint8_t* aSourceData, int32_t aSourceStride,
+  Float aValue)
+{
+  DoOpacityCalculationA8_Scalar(
+    aSize, aTargetData, aTargetStride, aSourceData, aSourceStride, aValue);
+}
+
 already_AddRefed<DataSourceSurface>
 FilterProcessing::RenderTurbulence(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,
                                    int32_t aSeed, int aNumOctaves, TurbulenceType aType, bool aStitch, const Rect &aTileRect)

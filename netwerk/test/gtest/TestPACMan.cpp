@@ -201,7 +201,7 @@ class TestPACMan : public ::testing::Test {
       RefPtr<ProcessPendingEventsAction> action =
           new ProcessPendingEventsAction();
 
-      mPACMan->mPACThread->Dispatch(action, nsIEventTarget::DISPATCH_SYNC);
+      mPACMan->DispatchToPAC(action.forget(), /*aSync =*/ true);
     }
 };
 

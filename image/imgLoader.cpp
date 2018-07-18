@@ -9,11 +9,11 @@
 
 #include "ImageLogging.h"
 #include "imgLoader.h"
-#include "NullPrincipal.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
