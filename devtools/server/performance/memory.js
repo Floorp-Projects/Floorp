@@ -418,8 +418,14 @@ Memory.prototype = {
    * Accesses the docshell to return the current process time.
    */
   _getCurrentTime: function() {
-    return (this.parent.isRootActor ? this.parent.docShell :
-                                      this.parent.originalDocShell).now();
+    const docShell = this.parent.isRootActor ? this.parent.docShell :
+                     this.parent.originalDocShell;
+    if (docShell) {
+      return docShell.now();
+    }
+    // When used from the ContentProcessTargetActor, parent has no docShell,
+    // so fallback to Cu.now
+    return Cu.now();
   },
 };
 
