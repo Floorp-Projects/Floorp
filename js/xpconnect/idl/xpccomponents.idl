@@ -101,18 +101,6 @@ interface nsIXPCComponents_Constructor : nsISupports
 };
 
 /**
-* interface of object returned by Components.Constructor
-* (additional interesting stuff only reflected into JavaScript)
-*/
-[scriptable, builtinclass, uuid(c814ca20-e0dc-11d3-8f5f-0010a4e73d9a)]
-interface nsIXPCConstructor : nsISupports
-{
-    readonly attribute nsIJSCID classID;
-    readonly attribute nsIJSIID interfaceID;
-    readonly attribute string   initializer;
-};
-
-/**
 * interface of object returned by Components.utils.Sandbox.
 */
 [scriptable, builtinclass, uuid(4f8ae0dc-d266-4a32-875b-6a9de71a8ce9)]
