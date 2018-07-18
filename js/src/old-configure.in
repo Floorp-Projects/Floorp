@@ -799,6 +799,8 @@ case "$target" in
             # warning insists on complaining about the latter case, which
             # is annoying, and rather noisy.
             CXXFLAGS="$CXXFLAGS -Wno-used-but-marked-unused"
+            # We don't worry about backward-compat with C++98.
+            CXXFLAGS="$CXXFLAGS -Wno-c++98-compat -Wno-c++98-compat-pedantic"
         fi
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
