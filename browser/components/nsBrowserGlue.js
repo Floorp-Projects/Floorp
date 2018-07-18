@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
   if (!Services.prefs.getBoolPref("browser.startup.blankWindow", false))
     return;
 
-  let store = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+  let store = Services.xulStore;
   let getValue = attr =>
     store.getValue("chrome://browser/content/browser.xul", "main-window", attr);
   let width = getValue("width");
@@ -1791,7 +1791,7 @@ BrowserGlue.prototype = {
   _maybeToggleBookmarkToolbarVisibility() {
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     const NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE = 3;
-    let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+    let xulStore = Services.xulStore;
 
     if (!xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")) {
       // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
@@ -1838,7 +1838,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion >= UI_VERSION)
       return;
 
-    let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+    let xulStore = Services.xulStore;
 
     if (currentUIVersion < 36) {
       xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
