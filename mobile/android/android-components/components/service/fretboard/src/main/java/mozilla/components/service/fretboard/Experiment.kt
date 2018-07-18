@@ -37,7 +37,12 @@ data class Experiment(
     /**
      * Experiment associated metadata
      */
-    val payload: ExperimentPayload? = null
+    val payload: ExperimentPayload? = null,
+    /**
+     * Last time the experiment schema was modified
+     * (as a UNIX timestamp)
+     */
+    val schema: Long? = null
 ) {
     data class Matcher(
         /**

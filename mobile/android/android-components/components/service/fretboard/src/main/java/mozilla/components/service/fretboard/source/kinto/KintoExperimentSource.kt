@@ -24,16 +24,24 @@ class KintoExperimentSource(
     private val baseUrl: String,
     private val bucketName: String,
     private val collectionName: String,
-    private val client: HttpClient = HttpURLConnectionHttpClient()
+    private val validateSignature: Boolean = false,
+    client: HttpClient = HttpURLConnectionHttpClient()
 ) : ExperimentSource {
+    private val kintoClient = KintoClient(client, baseUrl, bucketName, collectionName)
+    private val signatureVerifier = SignatureVerifier(client, kintoClient)
+
     override fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
-        val experimentsDiff = getExperimentsDiff(client, snapshot)
-        return mergeExperimentsFromDiff(experimentsDiff, snapshot)
+        val experimentsDiff = getExperimentsDiff(snapshot)
+        val updatedSnapshot = mergeExperimentsFromDiff(experimentsDiff, snapshot)
+        if (validateSignature &&
+            !signatureVerifier.validSignature(updatedSnapshot.experiments, updatedSnapshot.lastModified)) {
+            throw ExperimentDownloadException("Signature verification failed")
+        }
+        return updatedSnapshot
     }
 
-    private fun getExperimentsDiff(client: HttpClient, snapshot: ExperimentsSnapshot): String {
+    private fun getExperimentsDiff(snapshot: ExperimentsSnapshot): String {
         val lastModified = snapshot.lastModified
-        val kintoClient = KintoClient(client, baseUrl, bucketName, collectionName)
         return if (lastModified != null) {
             kintoClient.diff(lastModified)
         } else {

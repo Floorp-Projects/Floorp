@@ -27,7 +27,7 @@ class KintoExperimentSourceTest {
 
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records")))
             .thenReturn("""{"data":[]}""")
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val result = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(0, result.experiments.size)
         assertNull(result.lastModified)
@@ -48,7 +48,7 @@ class KintoExperimentSourceTest {
             1523549895713
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(expectedExperiment, kintoExperiments.experiments[0])
@@ -77,7 +77,7 @@ class KintoExperimentSourceTest {
             1523549890000
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549890000))
         assertEquals(2, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])
@@ -108,7 +108,7 @@ class KintoExperimentSourceTest {
             Experiment.Bucket(10, 5),
             1523549890000)
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment, secondExperiment), 1523549890000))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(1523549899999, kintoExperiments.lastModified)
@@ -139,7 +139,7 @@ class KintoExperimentSourceTest {
             1523549800000
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549800000))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(kintoExperiment, kintoExperiments.experiments[0])
@@ -160,7 +160,7 @@ class KintoExperimentSourceTest {
             1523549895713
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549895713))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])

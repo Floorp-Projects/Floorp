@@ -43,5 +43,15 @@ internal class KintoClient(
         return httpClient.get(URL("${recordsUrl()}?_since=$lastModified"), headers)
     }
 
-    private fun recordsUrl() = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
+    /**
+     * Gets the collection associated metadata
+     *
+     * @return collection metadata
+     */
+    fun getMetadata(): String {
+        return httpClient.get(URL(collectionUrl()))
+    }
+
+    private fun recordsUrl() = "${collectionUrl()}/records"
+    private fun collectionUrl() = "$baseUrl/buckets/$bucketName/collections/$collectionName"
 }

@@ -5,6 +5,7 @@
 package mozilla.components.service.fretboard
 
 import mozilla.components.support.ktx.android.org.json.putIfNotNull
+import mozilla.components.support.ktx.android.org.json.sortKeys
 import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetInt
 import mozilla.components.support.ktx.android.org.json.tryGetLong
@@ -25,7 +26,7 @@ class JSONExperimentParser {
     fun fromJson(jsonObject: JSONObject): Experiment {
         val bucketsObject: JSONObject? = jsonObject.optJSONObject(BUCKETS_KEY)
         val matchObject: JSONObject? = jsonObject.optJSONObject(MATCH_KEY)
-        val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY).toList()
+        val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY)?.toList()
         val matcher = if (matchObject != null) {
             Experiment.Matcher(
                 matchObject.tryGetString(LANG_KEY),
@@ -48,7 +49,8 @@ class JSONExperimentParser {
             matcher,
             bucket,
             jsonObject.tryGetLong(LAST_MODIFIED_KEY),
-            payload)
+            payload,
+            jsonObject.tryGetLong(SCHEMA_KEY))
     }
 
     /**
@@ -70,6 +72,7 @@ class JSONExperimentParser {
         jsonObject.putIfNotNull(LAST_MODIFIED_KEY, experiment.lastModified)
         jsonObject.put(MATCH_KEY, matchObject)
         jsonObject.putIfNotNull(NAME_KEY, experiment.name)
+        jsonObject.putIfNotNull(SCHEMA_KEY, experiment.schema)
         jsonObject.putIfNotNull(PAYLOAD_KEY, payloadToJson(experiment.payload))
         return jsonObject
     }
@@ -114,7 +117,7 @@ class JSONExperimentParser {
                 else -> jsonObject.put(key, value)
             }
         }
-        return jsonObject
+        return jsonObject.sortKeys()
     }
 
     companion object {
@@ -134,6 +137,7 @@ class JSONExperimentParser {
         private const val NAME_KEY = "name"
         private const val DESCRIPTION_KEY = "description"
         private const val LAST_MODIFIED_KEY = "last_modified"
-        private const val PAYLOAD_KEY = "payload"
+        private const val SCHEMA_KEY = "schema"
+        private const val PAYLOAD_KEY = "values"
     }
 }
