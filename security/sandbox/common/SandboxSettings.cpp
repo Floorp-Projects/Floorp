@@ -42,7 +42,7 @@ bool IsContentSandboxEnabled() {
 #if defined(XP_MACOSX)
 int ClampFlashSandboxLevel(const int aLevel) {
   const int minLevel = 0;
-  const int maxLevel = 2;
+  const int maxLevel = 3;
 
   if (aLevel < minLevel) {
     return minLevel;
