@@ -1034,9 +1034,6 @@ class ChildAPIManager {
 
   close() {
     this.messageManager.sendAsyncMessage("API:CloseProxyContext", {childId: this.id});
-    this.messageManager.removeMessageListener("API:CallResult", this);
-    MessageChannel.removeListener(this.messageManager, "API:RunListener", this);
-
     if (this.updatePermissions) {
       this.context.extension.off("add-permissions", this.updatePermissions);
       this.context.extension.off("remove-permissions", this.updatePermissions);
