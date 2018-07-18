@@ -413,12 +413,6 @@ const gCSSProperties = {
       { type: 'discrete', options: [ [ 'auto', '1px' ] ] }
     ]
   },
-  'contain': {
-    // https://drafts.csswg.org/css-containment/#propdef-contain
-    types: [
-      { type: 'discrete', options: [ [ 'strict', 'none' ] ] }
-    ]
-  },
   'content': {
     // https://drafts.csswg.org/css-content-3/#propdef-content
     types: [
@@ -1334,12 +1328,6 @@ const gCSSProperties = {
     types: [
     ]
   },
-  'text-orientation': {
-    // https://drafts.csswg.org/css-writing-modes-3/#propdef-text-orientation
-    types: [
-      { type: 'discrete', options: [ [ 'upright', 'sideways' ] ] }
-    ]
-  },
   'text-overflow': {
     // https://drafts.csswg.org/css-ui/#propdef-text-overflow
     types: [
@@ -1418,12 +1406,6 @@ const gCSSProperties = {
     // https://drafts.csswg.org/css-transforms-2/#individual-transforms
     types: [ 'scaleList' ]
   },
-  'unicode-bidi': {
-    // https://drafts.csswg.org/css-writing-modes-3/#propdef-unicode-bidi
-    types: [
-      { type: 'discrete', options: [ [ 'embed', 'bidi-override' ] ] },
-    ]
-  },
   'vector-effect': {
     // https://svgwg.org/svg2-draft/coords.html#VectorEffectProperty
     types: [
@@ -1459,12 +1441,6 @@ const gCSSProperties = {
   'word-spacing': {
     // https://drafts.csswg.org/css-text-3/#propdef-word-spacing
     types: [ 'lengthPercentageOrCalc' ]
-  },
-  'will-change': {
-    // http://dev.w3.org/csswg/css-will-change/#propdef-will-change
-    types: [
-      { type: 'discrete', options: [ [ 'scroll-position', 'contents' ] ] }
-    ]
   },
   'z-index': {
     // https://drafts.csswg.org/css-position/#propdef-z-index
