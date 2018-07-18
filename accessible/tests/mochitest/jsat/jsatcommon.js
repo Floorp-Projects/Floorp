@@ -368,6 +368,13 @@ class AccessFuContentTestRunner {
       `Got ${JSON.stringify(aEvent.text)}, expected ${JSON.stringify(aExpected)}.`);
   }
 
+  eventInfoMatches(aEvent, aExpected) {
+    for (let key in aExpected) {
+      is(aEvent[key], aExpected[key], `Event info matches for ${key}. ` +
+         `Got ${aEvent[key]}, expected ${aExpected[key]}.`);
+    }
+  }
+
   androidScrollForward() {
     this.sendMessage({
       name: "AccessFu:AndroidScroll",

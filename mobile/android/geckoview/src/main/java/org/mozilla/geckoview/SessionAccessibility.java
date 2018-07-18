@@ -379,6 +379,7 @@ public class SessionAccessibility {
         node.setPassword(message.getBoolean("password"));
         node.setFocusable(message.getBoolean("focusable"));
         node.setFocused(message.getBoolean("focused"));
+        node.setSelected(message.getBoolean("selected"));
 
         node.setClassName(message.getString("className", "android.view.View"));
 
@@ -434,6 +435,9 @@ public class SessionAccessibility {
     private void updateState(final AccessibilityNodeInfo node, final GeckoBundle message) {
         if (message.containsKey("checked")) {
             node.setChecked(message.getBoolean("checked"));
+        }
+        if (message.containsKey("selected")) {
+            node.setSelected(message.getBoolean("selected"));
         }
     }
 
