@@ -194,8 +194,8 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_ROW = 28;
 
   /**
-   * Represents a cell within a table. It is used for html:td,
-   * xul:tree cell and xul:listcell. Also, see ROLE_TABLE.
+   * Represents a cell within a table. It is used for html:td and xul:tree cell.
+   * Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_CELL = 29;
 

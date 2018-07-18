@@ -228,9 +228,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
-#include "nsPIListBoxObject.h"
-#include "nsListBoxBodyFrame.h"
-#include "nsListItemFrame.h"
 #include "nsXULLabelFrame.h"
 
 //------------------------------------------------------------------
@@ -335,33 +332,6 @@ static int32_t FFWC_doSibling=0;
 static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
-
-#ifdef MOZ_XUL
-
-static bool
-IsXULListBox(nsIContent* aContainer)
-{
-  return aContainer->IsXULElement(nsGkAtoms::listbox);
-}
-
-static
-nsListBoxBodyFrame*
-MaybeGetListBoxBodyFrame(nsIContent* aChild)
-{
-  if (aChild->IsXULElement(nsGkAtoms::listitem) && aChild->GetParent() &&
-      IsXULListBox(aChild->GetParent())) {
-    RefPtr<nsXULElement> xulElement =
-      nsXULElement::FromNode(aChild->GetParent());
-    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
-    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
-    if (listBoxObject) {
-      return listBoxObject->GetListBoxBody(false);
-    }
-  }
-
-  return nullptr;
-}
-#endif // MOZ_XUL
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
@@ -4345,9 +4315,6 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
     SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
     SIMPLE_XUL_CREATE(progressmeter, NS_NewProgressMeterFrame),
     SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
-    SIMPLE_TAG_CHAIN(listboxbody,
-                     nsCSSFrameConstructor::FindXULListBoxBodyData),
-    SIMPLE_TAG_CHAIN(listitem, nsCSSFrameConstructor::FindXULListItemData),
 #endif /* MOZ_XUL */
     SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
     SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
@@ -4436,35 +4403,6 @@ nsCSSFrameConstructor::FindXULMenubarData(Element* aElement,
   return &sMenubarData;
 }
 #endif /* XP_MACOSX */
-
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULListBoxBodyData(Element* aElement,
-                                              ComputedStyle* aComputedStyle)
-{
-  if (aComputedStyle->StyleDisplay()->mDisplay !=
-        StyleDisplay::MozGridGroup) {
-    return nullptr;
-  }
-
-  static const FrameConstructionData sListBoxBodyData =
-    SCROLLABLE_XUL_FCDATA(NS_NewListBoxBodyFrame);
-  return &sListBoxBodyData;
-}
-
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULListItemData(Element* aElement,
-                                           ComputedStyle* aComputedStyle)
-{
-  if (aComputedStyle->StyleDisplay()->mDisplay != StyleDisplay::MozGridLine) {
-    return nullptr;
-  }
-
-  static const FrameConstructionData sListItemData =
-    SCROLLABLE_XUL_FCDATA(NS_NewListItemFrame);
-  return &sListItemData;
-}
 
 #endif /* MOZ_XUL */
 
@@ -5517,13 +5455,9 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   if (aContent->GetPrimaryFrame() &&
       aContent->GetPrimaryFrame()->GetContent() == aContent &&
       !aState.mCreatingExtraFrames) {
-    // This condition is known to be reachable for listitems, assert fatally
-    // elsewhere.
-    MOZ_ASSERT(MaybeGetListBoxBodyFrame(aContent),
+    MOZ_ASSERT(false,
                "asked to create frame construction item for a node that "
                "already has a frame");
-    NS_ERROR("asked to create frame construction item for a node that already "
-             "has a frame");
     return false;
   }
 
@@ -6906,8 +6840,7 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aStartChild,
   for (nsIContent* child = aStartChild;
        child != aEndChild;
        child = child->GetNextSibling()) {
-    // listboxes suck.
-    MOZ_ASSERT(MaybeGetListBoxBodyFrame(child) || !child->GetPrimaryFrame());
+    MOZ_ASSERT(!child->GetPrimaryFrame());
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(child, child->GetNextSibling(),
@@ -7357,44 +7290,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 #endif
 }
 
-#ifdef MOZ_XUL
-
-enum content_operation
-{
-    CONTENT_INSERTED,
-    CONTENT_REMOVED
-};
-
-// Helper function to lookup the listbox body frame and send a notification
-// for insertion or removal of content
-static bool
-NotifyListBoxBody(nsPresContext*    aPresContext,
-                  nsIContent*        aChild,
-                  // Only used for the removed notification
-                  nsIContent*        aOldNextSibling,
-                  nsIFrame*          aChildFrame,
-                  content_operation  aOperation)
-{
-  nsListBoxBodyFrame* listBoxBodyFrame = MaybeGetListBoxBodyFrame(aChild);
-  if (listBoxBodyFrame) {
-    if (aOperation == CONTENT_REMOVED) {
-      // Except if we have an aChildFrame and its parent is not the right
-      // thing, then we don't do this.  Pseudo frames are so much fun....
-      if (!aChildFrame || aChildFrame->GetParent() == listBoxBodyFrame) {
-        listBoxBodyFrame->OnContentRemoved(aPresContext, aChild->GetParent(),
-                                           aChildFrame, aOldNextSibling);
-        return true;
-      }
-    } else {
-      listBoxBodyFrame->OnContentInserted(aChild);
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif // MOZ_XUL
-
 void
 nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
                                        nsILayoutHistoryState* aFrameState,
@@ -7472,25 +7367,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
                "range insert shouldn't be lazy");
   NS_ASSERTION(isSingleInsert || aEndChild,
                "range should not include all nodes after aStartChild");
-
-#ifdef MOZ_XUL
-  if (aStartChild->GetParent() && IsXULListBox(aStartChild->GetParent())) {
-    if (isSingleInsert) {
-      // The insert case in NotifyListBoxBody doesn't use "old next sibling".
-      if (NotifyListBoxBody(mPresShell->GetPresContext(),
-                            aStartChild, nullptr, nullptr, CONTENT_INSERTED)) {
-        return;
-      }
-    } else {
-      // We don't handle a range insert to a listbox parent, issue single
-      // ContertInserted calls for each node inserted.
-      LAYOUT_PHASE_TEMP_EXIT();
-      IssueSingleInsertNofications(aStartChild, aEndChild, InsertionKind::Sync);
-      LAYOUT_PHASE_TEMP_REENTER();
-      return;
-    }
-  }
-#endif // MOZ_XUL
 
   // If we have a null parent, then this must be the document element being
   // inserted, or some other child of the document in the DOM (might be a PI,
@@ -7959,13 +7835,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // Remove it once that's fixed.
     childFrame = nullptr;
   }
-
-#ifdef MOZ_XUL
-  if (NotifyListBoxBody(presContext, aChild, aOldNextSibling,
-                        childFrame, CONTENT_REMOVED)) {
-    return false;
-  }
-#endif // MOZ_XUL
 
   // If we're removing the root, then make sure to remove things starting at
   // the viewport's child instead of the primary frame (which might even be
@@ -11136,75 +11005,6 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
 }
 
 //----------------------------------------------------------------------
-
-// listbox Widget Routines
-
-void
-nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
-                                            nsIFrame*              aPrevFrame,
-                                            nsIContent*            aChild,
-                                            nsIFrame**             aNewFrame,
-                                            bool                   aIsAppend)
-{
-#ifdef MOZ_XUL
-  // Construct a new frame
-  if (aParentFrame) {
-    nsFrameItems            frameItems;
-    nsFrameConstructorState state(mPresShell,
-                                  GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
-                                  GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
-                                  GetFloatContainingBlock(aParentFrame),
-                                  do_AddRef(mTempFrameTreeState));
-
-    if (aChild->IsElement() && !aChild->AsElement()->HasServoData()) {
-      mPresShell->StyleSet()->StyleNewSubtree(aChild->AsElement());
-    }
-
-    RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aChild);
-
-    // Pre-check for display "none" - only if we find that, do we create
-    // any frame at all
-    const nsStyleDisplay* display = computedStyle->StyleDisplay();
-
-    if (StyleDisplay::None == display->mDisplay) {
-      *aNewFrame = nullptr;
-      return;
-    }
-
-    AutoFrameConstructionItemList items(this);
-    AddFrameConstructionItemsInternal(state, aChild, aParentFrame,
-                                      true, computedStyle,
-                                      ITEM_ALLOW_XBL_BASE, nullptr, items);
-    ConstructFramesFromItemList(state, items, aParentFrame,
-                                /* aParentIsWrapperAnonBox = */ false,
-                                frameItems);
-
-    nsIFrame* newFrame = frameItems.FirstChild();
-    *aNewFrame = newFrame;
-
-    if (newFrame) {
-      // Notify the parent frame
-      if (aIsAppend)
-        ((nsListBoxBodyFrame*)aParentFrame)->ListBoxAppendFrames(frameItems);
-      else
-        ((nsListBoxBodyFrame*)aParentFrame)->ListBoxInsertFrames(aPrevFrame, frameItems);
-    }
-
-#ifdef ACCESSIBILITY
-    if (newFrame) {
-      nsAccessibilityService* accService = nsIPresShell::AccService();
-      if (accService) {
-        accService->ContentRangeInserted(mPresShell,
-                                         aChild,
-                                         aChild->GetNextSibling());
-      }
-    }
-#endif
-  }
-#endif
-}
-
-//----------------------------------------
 
 void
 nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,

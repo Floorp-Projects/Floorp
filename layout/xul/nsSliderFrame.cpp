@@ -54,6 +54,7 @@ using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
 using mozilla::layers::ScrollDirection;
 using mozilla::layers::ScrollbarData;
+using mozilla::dom::Event;
 
 bool nsSliderFrame::gMiddlePref = false;
 int32_t nsSliderFrame::gSnapMultiplier;
