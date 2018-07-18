@@ -6,7 +6,7 @@ package mozilla.components.browser.search
 
 import android.graphics.Bitmap
 import android.net.Uri
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -99,4 +99,26 @@ class SearchEngineTest {
     private fun mockResultUriList(): List<Uri> = listOf(
             Uri.parse("http://${UUID.randomUUID()}).mozilla.org/q?={searchTerms}")
     )
+
+    @Test
+    fun `can show that it can provide search suggestions`() {
+        val searchUri = Uri.parse("https://mozilla.org/search/?q={searchTerms}")
+        val suggestionsUri = Uri.parse("https://mozilla.org/search/suggestions?q={searchTerms}")
+
+        val searchEngineWithSuggestions = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(searchUri),
+                suggestionsUri)
+
+        val searchEngineWithoutSuggestions = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(searchUri))
+
+        assertTrue(searchEngineWithSuggestions.canProvideSearchSuggestions)
+        assertFalse(searchEngineWithoutSuggestions.canProvideSearchSuggestions)
+    }
 }

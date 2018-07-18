@@ -19,7 +19,7 @@ class SearchEngine internal constructor(
     private val resultsUris: List<Uri>,
     private val suggestUri: Uri? = null
 ) {
-    internal val canProvideSearchSuggestions: Boolean = suggestUri != null
+    val canProvideSearchSuggestions: Boolean = suggestUri != null
 
     init {
         if (resultsUris.isEmpty()) {
