@@ -862,6 +862,17 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return lastFilter.forget();
     }
 
+    case PrimitiveType::Opacity:
+    {
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::OPACITY);
+      if (!filter) {
+        return nullptr;
+      }
+      filter->SetAttribute(ATT_OPACITY_VALUE, atts.GetFloat(eOpacityOpacity));
+      filter->SetInput(IN_OPACITY_IN, aSources[0]);
+      return filter.forget();
+    }
+
     case PrimitiveType::ConvolveMatrix:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CONVOLVE_MATRIX);
@@ -1394,6 +1405,7 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
     case PrimitiveType::Blend:
     case PrimitiveType::Composite:
     case PrimitiveType::Merge:
+    case PrimitiveType::Opacity:
       return UnionOfRegions(aInputChangeRegions);
 
     case PrimitiveType::ColorMatrix:
@@ -1614,6 +1626,14 @@ FilterSupport::PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& a
       return aInputExtents[0];
     }
 
+    case PrimitiveType::Opacity:
+    {
+      if (atts.GetFloat(eOpacityOpacity) == 0.0f) {
+        return IntRect();
+      }
+      return ResultChangeRegionForPrimitive(aDescription, aInputExtents);
+    }
+
     case PrimitiveType::Turbulence:
     case PrimitiveType::Image:
     case PrimitiveType::DiffuseLighting:
@@ -1692,6 +1712,7 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
     case PrimitiveType::ColorMatrix:
     case PrimitiveType::ComponentTransfer:
     case PrimitiveType::ToAlpha:
+    case PrimitiveType::Opacity:
       return aResultNeededRegion;
 
     case PrimitiveType::Morphology:

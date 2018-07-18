@@ -19,6 +19,8 @@
 #include "nsISystemProxySettings.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 
 //-----------------------------------------------------------------------------
 
@@ -266,12 +268,14 @@ public:
     , mSetupPAC(false)
     , mExtraHeapSize(0)
     , mConfigureWPAD(false)
+    , mShutdown(false)
   { }
 
-  void CancelQueue (nsresult status)
+  void CancelQueue (nsresult status, bool aShutdown)
   {
     mCancel = true;
     mCancelStatus = status;
+    mShutdown = aShutdown;
   }
 
   void SetupPAC (const char *text,
@@ -294,7 +298,7 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
     if (mCancel) {
-      mPACMan->CancelPendingQ(mCancelStatus);
+      mPACMan->CancelPendingQ(mCancelStatus, mShutdown);
       mCancel = false;
       return NS_OK;
     }
@@ -338,6 +342,7 @@ private:
   nsCString            mSetupPACData;
   nsCString            mSetupPACURI;
   bool                 mConfigureWPAD;
+  bool                 mShutdown;
 };
 
 //-----------------------------------------------------------------------------
@@ -446,14 +451,41 @@ nsPACMan::Shutdown()
   if (mShutdown) {
     return;
   }
-  mShutdown = true;
+
   CancelExistingLoad();
 
-  MOZ_ASSERT(mPACThread, "mPAC requires mPACThread to shutdown");
-  PostCancelPendingQ(NS_ERROR_ABORT);
+  if (mPACThread) {
+    PostCancelPendingQ(NS_ERROR_ABORT, /*aShutdown =*/ true);
 
-  RefPtr<WaitForThreadShutdown> runnable = new WaitForThreadShutdown(this);
-  Dispatch(runnable.forget());
+    // Shutdown is initiated from an observer. We don't want to block the
+    // observer service on thread shutdown so we post a shutdown runnable that
+    // will run after we return instead.
+    RefPtr<WaitForThreadShutdown> runnable = new WaitForThreadShutdown(this);
+    Dispatch(runnable.forget());
+  }
+
+  mShutdown = true;
+}
+
+nsresult
+nsPACMan::DispatchToPAC(already_AddRefed<nsIRunnable> aEvent, bool aSync)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+
+  nsCOMPtr<nsIRunnable> e(aEvent);
+
+  if (mShutdown) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Lazily create the PAC thread. This method is main-thread only so we don't
+  // have to worry about threading issues here.
+  if (!mPACThread) {
+    MOZ_TRY(NS_NewNamedThread("ProxyResolution", getter_AddRefs(mPACThread)));
+  }
+
+  return mPACThread->Dispatch(e.forget(), aSync ? nsIEventTarget::DISPATCH_SYNC :
+                                                  nsIEventTarget::DISPATCH_NORMAL);
 }
 
 nsresult
@@ -482,7 +514,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri,
     return NS_OK;
   }
 
-  return mPACThread->Dispatch(query, nsIEventTarget::DISPATCH_NORMAL);
+  return DispatchToPAC(query.forget());
 }
 
 nsresult
@@ -610,9 +642,7 @@ nsPACMan::StartLoading()
     RefPtr<ExecutePACThreadAction> wpadConfigurer =
       new ExecutePACThreadAction(this);
     wpadConfigurer->ConfigureWPAD();
-    if (mPACThread) {
-      mPACThread->Dispatch(wpadConfigurer, nsIEventTarget::DISPATCH_NORMAL);
-    }
+    DispatchToPAC(wpadConfigurer.forget());
   } else {
     ContinueLoadingAfterPACUriKnown();
   }
@@ -716,23 +746,21 @@ nsPACMan::PostProcessPendingQ()
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   RefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
-  if (mPACThread)
-    mPACThread->Dispatch(pending, nsIEventTarget::DISPATCH_NORMAL);
+  DispatchToPAC(pending.forget());
 }
 
 void
-nsPACMan::PostCancelPendingQ(nsresult status)
+nsPACMan::PostCancelPendingQ(nsresult status, bool aShutdown)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   RefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
-  pending->CancelQueue(status);
-  if (mPACThread)
-    mPACThread->Dispatch(pending, nsIEventTarget::DISPATCH_NORMAL);
+  pending->CancelQueue(status, aShutdown);
+  DispatchToPAC(pending.forget());
 }
 
 void
-nsPACMan::CancelPendingQ(nsresult status)
+nsPACMan::CancelPendingQ(nsresult status, bool aShutdown)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   RefPtr<PendingPACQuery> query;
@@ -742,7 +770,7 @@ nsPACMan::CancelPendingQ(nsresult status)
     query->Complete(status, EmptyCString());
   }
 
-  if (mShutdown)
+  if (aShutdown)
     mPAC.Shutdown();
 }
 
@@ -869,8 +897,7 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
     RefPtr<ExecutePACThreadAction> pending =
       new ExecutePACThreadAction(this);
     pending->SetupPAC(text, dataLen, pacURI, GetExtraJSContextHeapSize());
-    if (mPACThread)
-      mPACThread->Dispatch(pending, nsIEventTarget::DISPATCH_NORMAL);
+    DispatchToPAC(pending.forget());
 
     LOG(("OnStreamComplete: process the PAC contents\n"));
 
@@ -946,11 +973,7 @@ nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
 {
   mSystemProxySettings = systemProxySettings;
   mDHCPClient = do_GetService(NS_DHCPCLIENT_CONTRACTID);
-
-  nsresult rv =
-    NS_NewNamedThread("ProxyResolution", getter_AddRefs(mPACThread));
-
-  return rv;
+  return NS_OK;
 }
 
 } // namespace net

@@ -99,10 +99,10 @@ using mozilla::dom::AudioChannelAgent;
 #include "mozilla/HTMLEditor.h"
 
 #include "nsScriptSecurityManager.h"
-#include "ContentPrincipal.h"
 #include "ExpandedPrincipal.h"
-#include "SystemPrincipal.h"
-#include "NullPrincipal.h"
+#include "mozilla/ContentPrincipal.h"
+#include "mozilla/NullPrincipal.h"
+#include "mozilla/SystemPrincipal.h"
 #include "nsNetCID.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "nsHapticFeedback.h"

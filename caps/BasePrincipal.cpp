@@ -12,14 +12,14 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIStandardURL.h"
 
-#include "ContentPrincipal.h"
 #include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsIURIWithPrincipal.h"
-#include "NullPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/ContentPrincipal.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/ToJSValue.h"

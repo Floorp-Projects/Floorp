@@ -227,6 +227,46 @@ FilterProcessing::DoUnpremultiplicationCalculation_Scalar(
   }
 }
 
+void
+FilterProcessing::DoOpacityCalculation_Scalar(const IntSize& aSize,
+                                              uint8_t* aTargetData, int32_t aTargetStride,
+                                              uint8_t* aSourceData, int32_t aSourceStride,
+                                              Float aValue)
+{
+  uint8_t alpha = uint8_t(roundf(255.f * aValue));
+  for (int32_t y = 0; y < aSize.height; y++) {
+    for (int32_t x = 0; x < aSize.width; x++) {
+      int32_t inputIndex = y * aSourceStride + 4 * x;
+      int32_t targetIndex = y * aTargetStride + 4 * x;
+      aTargetData[targetIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_R] =
+        (aSourceData[inputIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_R] * alpha) >> 8;
+      aTargetData[targetIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_G] =
+        (aSourceData[inputIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_G] * alpha) >> 8;
+      aTargetData[targetIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_B] =
+        (aSourceData[inputIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_B] * alpha) >> 8;
+      aTargetData[targetIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_A] =
+        (aSourceData[inputIndex + B8G8R8A8_COMPONENT_BYTEOFFSET_A] * alpha) >> 8;
+    }
+  }
+}
+
+void
+FilterProcessing::DoOpacityCalculationA8_Scalar(const IntSize& aSize,
+                                                uint8_t* aTargetData, int32_t aTargetStride,
+                                                uint8_t* aSourceData, int32_t aSourceStride,
+                                                Float aValue)
+{
+  uint8_t alpha = uint8_t(255.f * aValue);
+  for (int32_t y = 0; y < aSize.height; y++) {
+    for (int32_t x = 0; x < aSize.width; x++) {
+      int32_t inputIndex = y * aSourceStride;
+      int32_t targetIndex = y * aTargetStride;
+      aTargetData[targetIndex] =
+        FastDivideBy255<uint8_t>(aSourceData[inputIndex] * alpha);
+    }
+  }
+}
+
 already_AddRefed<DataSourceSurface>
 FilterProcessing::RenderTurbulence_Scalar(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,
                                           int32_t aSeed, int aNumOctaves, TurbulenceType aType, bool aStitch, const Rect &aTileRect)

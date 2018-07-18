@@ -95,10 +95,10 @@
         <treechildren id="treechildren"/>
       </tree>
 
-      <listbox id="listbox">
-        <listitem id="listitem1">item1</listitem>
-        <listitem id="listitem2">item2</listitem>
-      </listbox>
+      <richlistbox id="listbox">
+        <richlistitem id="listitem1"><label value="item1"/></richlistitem>
+        <richlistitem id="listitem2"><label value="item2"/></richlistitem>
+      </richlistbox>
 
       <vbox id="eventdump"/>
     </vbox>
