@@ -36,12 +36,3 @@ interface nsIJSCID : nsIJSID
     [implicit_jscontext,optional_argc] jsval getService([optional] in jsval iid);
 };
 
-/* this goes into the C++ header verbatim. */
-%{ C++
-/********************************************************/
-// {F24A14F0-4FA1-11d3-9894-006008962422}
-#define NS_JS_ID_CID  \
-{ 0xf24a14f0, 0x4fa1, 0x11d3, \
-    { 0x98, 0x94, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-%}
-
