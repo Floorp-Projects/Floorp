@@ -70,6 +70,7 @@
 #include "Principal.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
+#include "WorkerError.h"
 #include "WorkerLoadInfo.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
@@ -2676,10 +2677,10 @@ WorkerThreadPrimaryRunnable::Run()
   // Note: GetOrCreateForCurrentThread() must be called prior to
   //       mWorkerPrivate->SetThread() in order to avoid accidentally consuming
   //       worker messages here.
+  bool ipcReady = true;
   if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
-    // XXX need to fire an error at parent.
-    // Failed in creating BackgroundChild: probably in shutdown. Continue to run
-    // without BackgroundChild created.
+    // Let's report the error only after SetThread().
+    ipcReady = false;
   }
 
   class MOZ_STACK_CLASS SetThreadHelper final
@@ -2718,6 +2719,11 @@ WorkerThreadPrimaryRunnable::Run()
 
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  if (!ipcReady) {
+    WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(mWorkerPrivate);
+    return NS_ERROR_FAILURE;
+  }
+
   {
     nsCycleCollector_startup();
 
@@ -2730,8 +2736,7 @@ WorkerThreadPrimaryRunnable::Run()
     JSContext* cx = context->Context();
 
     if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
-      // XXX need to fire an error at parent.
-      NS_ERROR("Failed to create context!");
+      WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(mWorkerPrivate);
       return NS_ERROR_FAILURE;
     }
 
