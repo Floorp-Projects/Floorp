@@ -120,7 +120,9 @@ public class WebViewProvider {
 
         @Override
         public void onPause() {
-
+            if (geckoSession != null) {
+                geckoSession.setActive(false);
+            }
         }
 
         @Override
@@ -145,6 +147,9 @@ public class WebViewProvider {
 
         @Override
         public void onResume() {
+            if (geckoSession != null) {
+                geckoSession.setActive(true);
+            }
             if (TelemetryWrapper.dayPassedSinceLastUpload(getContext())) {
                 sendTelemetrySnapshots();
             }
