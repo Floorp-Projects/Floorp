@@ -11,8 +11,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 add_task(async function() {
   // Enable net messages in the console for this test.
   await pushPref("devtools.browserconsole.filter.net", true);
-  // These are required for testing the text input in the browser console:
-  await pushPref("devtools.browserconsole.html", true);
+  // This is required for testing the text input in the browser console:
   await pushPref("devtools.chrome.enabled", true);
 
   await addTab(TEST_URI);
