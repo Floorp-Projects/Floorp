@@ -80,7 +80,7 @@ size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 size_t
-GetHistogramSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 // These functions are only meant to be used for GeckoView persistence.
 // They are responsible for updating in-memory probes with the data persisted
