@@ -1712,11 +1712,10 @@ TextEditor::CanDelete(bool* aCanDelete)
   return NS_OK;
 }
 
-// Used by OutputToString
 already_AddRefed<nsIDocumentEncoder>
 TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
-                                 uint32_t aFlags,
-                                 const nsACString& aCharset)
+                                 uint32_t aDocumentEncoderFlags,
+                                 const nsACString& aCharset) const
 {
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
   if (!mCachedDocumentEncoder ||
@@ -1739,7 +1738,8 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsresult rv =
     docEncoder->NativeInit(
                   doc, aFormatType,
-                  aFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
+                  aDocumentEncoderFlags |
+                    nsIDocumentEncoder::RequiresReinitAfterOutput);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1756,7 +1756,7 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   // Set the selection, if appropriate.
   // We do this either if the OutputSelectionOnly flag is set,
   // in which case we use our existing selection ...
-  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly) {
+  if (aDocumentEncoderFlags & nsIDocumentEncoder::OutputSelectionOnly) {
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
       return nullptr;
@@ -1783,7 +1783,6 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 
   return docEncoder.forget();
 }
-
 
 NS_IMETHODIMP
 TextEditor::OutputToString(const nsAString& aFormatType,
