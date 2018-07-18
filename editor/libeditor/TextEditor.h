@@ -98,7 +98,20 @@ public:
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
 
-  nsresult DocumentIsEmpty(bool* aIsEmpty);
+  /**
+   * IsEmpty() checks whether the editor is empty.  If editor has only bogus
+   * node, returns true.  If editor's root element has non-empty text nodes or
+   * other nodes like <br>, returns false.
+   */
+  nsresult IsEmpty(bool* aIsEmpty) const;
+  bool IsEmpty() const
+  {
+    bool isEmpty = false;
+    nsresult rv = IsEmpty(&isEmpty);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Checking whether the editor is empty failed");
+    return NS_SUCCEEDED(rv) && isEmpty;
+  }
 
   virtual nsresult HandleKeyPressEvent(
                      WidgetKeyboardEvent* aKeyboardEvent) override;
