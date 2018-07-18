@@ -4,10 +4,11 @@
 // See: https://wicg.github.io/web-share/
 
 partial interface Navigator {
-    [SecureContext] Promise<void> share(optional ShareData data);
+  [SecureContext] Promise<void> share(optional ShareData data);
 };
+
 dictionary ShareData {
-    USVString title;
-    USVString text;
-    USVString url;
+  USVString title;
+  USVString text;
+  USVString url;
 };

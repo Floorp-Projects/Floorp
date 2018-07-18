@@ -61,7 +61,6 @@ interface FileReader: EventTarget {
   const unsigned short LOADING = 1;
   const unsigned short DONE = 2;
 
-
   readonly attribute unsigned short readyState;
 
   // File or Blob data
