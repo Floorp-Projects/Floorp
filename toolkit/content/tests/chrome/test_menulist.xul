@@ -18,8 +18,8 @@
   <button label="Two"/>
   <button label="Three"/>
 </vbox>
-<listbox id="scroller-in-listbox" style="overflow: auto" height="60">
-  <listitem allowevents="true">
+<richlistbox id="scroller-in-listbox" style="overflow: auto" height="60">
+  <richlistitem allowevents="true">
     <menulist id="menulist-in-listbox" onpopupshown="test_menulist_open(this, this.parentNode.parentNode)"
               onpopuphidden="SimpleTest.executeSoon(checkScrollAndFinish)">
       <menupopup id="menulist-in-listbox-popup">
@@ -27,13 +27,13 @@
         <menuitem label="Two" value="two"/>
       </menupopup>
     </menulist>
-  </listitem>
-  <listitem label="Two"/>
-  <listitem label="Three"/>
-  <listitem label="Four"/>
-  <listitem label="Five"/>
-  <listitem label="Six"/>
-</listbox>
+  </richlistitem>
+  <richlistitem><label value="Two"/></richlistitem>
+  <richlistitem><label value="Three"/></richlistitem>
+  <richlistitem><label value="Four"/></richlistitem>
+  <richlistitem><label value="Five"/></richlistitem>
+  <richlistitem><label value="Six"/></richlistitem>
+</richlistbox>
 
 <hbox>
   <menulist id="menulist-size">

@@ -10,6 +10,8 @@
 #include "mozilla/Types.h" // for decltype
 #include "mozilla/layers/SharedSurfacesChild.h"
 
+#include "base/process_util.h"
+
 #ifdef DEBUG
 /**
  * If defined, this makes SourceSurfaceSharedData::Finalize memory protect the

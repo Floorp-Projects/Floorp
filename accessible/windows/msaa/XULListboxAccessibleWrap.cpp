@@ -28,21 +28,3 @@ XULListboxAccessibleWrap::Shutdown()
   ia2AccessibleTable::mTable = nullptr;
   XULListboxAccessible::Shutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// XULListCellAccessibleWrap
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS_INHERITED0(XULListCellAccessibleWrap,
-                             XULListCellAccessible)
-
-IMPL_IUNKNOWN_INHERITED1(XULListCellAccessibleWrap,
-                         HyperTextAccessibleWrap,
-                         ia2AccessibleTableCell)
-
-void
-XULListCellAccessibleWrap::Shutdown()
-{
-  ia2AccessibleTableCell::mTableCell = nullptr;
-  XULListCellAccessible::Shutdown();
-}

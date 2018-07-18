@@ -161,9 +161,9 @@ SimpleTest.waitForFocus(runTest);
 ]]>
 </script>
 
-<listbox id="l1" class="plain" height="20"/>
-<listbox id="l2" class="plain" height="20"/>
-<listbox id="l3" class="plain" height="20"/>
+<richlistbox id="l1" class="plain" height="20"/>
+<richlistbox id="l2" class="plain" height="20"/>
+<richlistbox id="l3" class="plain" height="20"/>
 <button id="b1" label="Button"/>
 <button id="b2" label="Button"/>
 <button id="b3" label="Button"/>

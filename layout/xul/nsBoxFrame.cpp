@@ -1264,12 +1264,6 @@ nsBoxFrame::RegUnregAccessKey(bool aDoReg)
     esm->UnregisterAccessKey(mContent->AsElement(), key);
 }
 
-bool
-nsBoxFrame::SupportsOrdinalsInChildren()
-{
-  return true;
-}
-
 void
 nsBoxFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 {
@@ -1293,8 +1287,7 @@ IsBoxOrdinalLEQ(nsIFrame* aFrame1,
 void
 nsBoxFrame::CheckBoxOrder()
 {
-  if (SupportsOrdinalsInChildren() &&
-      !nsIFrame::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
+  if (!nsIFrame::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
     nsIFrame::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
   }
 }
@@ -1318,9 +1311,6 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect
 nsresult
 nsBoxFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild)
 {
-  if (!SupportsOrdinalsInChildren())
-    return NS_OK;
-
   uint32_t ord = aChild->GetXULOrdinal();
 
   nsIFrame* child = mFrames.FirstChild();

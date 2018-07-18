@@ -1342,7 +1342,6 @@ fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
 == 486052-2f.html 486052-2-ref.html
 == 486052-2g.html 486052-2-ref.html
 == 486065-1.html 486065-1-ref.html
-== 486848-1.xul 486848-1-ref.xul
 == 487539-1.html about:blank
 == 488390-1.html 488390-1-ref.html
 == 488649-1.html 488649-1-ref.html
@@ -1385,7 +1384,6 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-3.html 495385-3-r
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-4.html 495385-4-ref.html # Bug 1392106
 == 496032-1.html 496032-1-ref.html
 == 496840-1.html 496840-1-ref.html
-fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1-ref.xul
 == 501037.html 501037-ref.html
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html

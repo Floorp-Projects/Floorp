@@ -208,6 +208,14 @@ LifoAlloc::newChunkWithCapacity(size_t n)
     bool protect = false;
 #ifdef LIFO_CHUNK_PROTECT
     protect = protect_;
+    // In a few cases where we keep adding memory protection, we might OOM while
+    // doing a mprotect / VirtualProtect due to the consumption of space in the
+    // page table reserved by the system. This error appears as an OOM on Linux,
+    // as an Invalid parameters on Windows and as a crash on OS/X. This code caps
+    // the amount of memory protected in order to limit occurences of this issue.
+    const size_t MaxPeakSize = 32 * 1024 * 1024;
+    if (protect && MaxPeakSize <= this->peakSize_)
+        protect = false;
 #endif
 
     // Create a new BumpChunk, and allocate space for it.

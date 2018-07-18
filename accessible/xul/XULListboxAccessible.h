@@ -19,7 +19,7 @@ namespace a11y {
 
 /**
  * XULColumAccessible are accessible for list and tree columns elements
- * (xul:treecols and xul:listcols).
+ * (xul:treecols and xul:listheader).
  */
 class XULColumAccessible : public AccessibleWrap
 {
@@ -33,7 +33,7 @@ public:
 
 /**
  * XULColumnItemAccessible are accessibles for list and tree column elements
- * (xul:listcol and xul:treecol).
+ * (xul:treecol).
  */
 class XULColumnItemAccessible : public LeafAccessible
 {
@@ -138,35 +138,6 @@ protected:
 
 private:
   bool mIsCheckbox;
-};
-
-/**
- * Class represents xul:listcell.
- */
-class XULListCellAccessible : public HyperTextAccessibleWrap,
-                              public TableCellAccessible
-{
-public:
-  XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
-
-  // nsISupports
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(XULListCellAccessible,
-                                       HyperTextAccessibleWrap)
-
-  // Accessible
-  virtual TableCellAccessible* AsTableCell() override { return this; }
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
-  virtual a11y::role NativeRole() const override;
-
-  // TableCellAccessible
-  virtual TableAccessible* Table() const override;
-  virtual uint32_t ColIdx() const override;
-  virtual uint32_t RowIdx() const override;
-  virtual void ColHeaderCells(nsTArray<Accessible*>* aHeaderCells) override;
-  virtual bool Selected() override;
-
-protected:
-  virtual ~XULListCellAccessible() {}
 };
 
 } // namespace a11y

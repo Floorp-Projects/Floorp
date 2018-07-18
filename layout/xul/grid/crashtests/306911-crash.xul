@@ -1,4 +1,0 @@
-<?xml version="1.0"?><?xml-stylesheet href="chrome://global/skin/" type="text/css"?><window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><listbox id="thelist" flex="1">  <listitem label="Item1" value="item1">
-     <listitem label="Item2" value="item2"/>
-  </listitem></listbox>
-</window>

@@ -12,6 +12,7 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
+#include "mozilla/layers/BufferEdgePad.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/SyncObject.h"
@@ -99,6 +100,39 @@ CapturedTiledPaintState::Clear::ClearBuffer()
   }
 
   mTarget->SetTransform(oldTransform);
+}
+
+void
+CapturedTiledPaintState::EdgePad::EdgePadBuffer()
+{
+  PadDrawTargetOutFromRegion(mTarget, mValidRegion);
+}
+
+void
+CapturedTiledPaintState::PrePaint()
+{
+  for (auto& copy : mCopies) {
+    copy.CopyBuffer();
+  }
+
+  for (auto& clear : mClears) {
+    clear.ClearBuffer();
+  }
+}
+
+void
+CapturedTiledPaintState::Paint()
+{
+  mTarget->DrawCapturedDT(mCapture, Matrix());
+  mTarget->Flush();
+}
+
+void
+CapturedTiledPaintState::PostPaint()
+{
+  if (mEdgePad) {
+    mEdgePad->EdgePadBuffer();
+  }
 }
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
@@ -419,20 +453,9 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
   MOZ_ASSERT(IsOnPaintWorkerThread());
   MOZ_ASSERT(aState);
 
-  for (auto& copy : aState->mCopies) {
-    copy.CopyBuffer();
-  }
-
-  for (auto& clear : aState->mClears) {
-    clear.ClearBuffer();
-  }
-
-  DrawTarget* target = aState->mTarget;
-  DrawTargetCapture* capture = aState->mCapture;
-
-  // Draw all the things into the actual dest target.
-  target->DrawCapturedDT(capture, Matrix());
-  target->Flush();
+  aState->PrePaint();
+  aState->Paint();
+  aState->PostPaint();
 
   if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
     // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,

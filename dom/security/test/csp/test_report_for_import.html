@@ -57,7 +57,7 @@ function checkResults(reportStr) {
        "http://mochi.test:8888/tests/dom/security/test/csp/file_report_for_import_server.sjs?report",
        "Incorrect original-policy");
     is(cspReport["blocked-uri"],
-       "http://example.com",
+       "http://example.com/tests/dom/security/test/csp/file_report_for_import_server.sjs?stylesheet",
        "Incorrect blocked-uri");
 
     // we do not always set the following fields
