@@ -83,6 +83,16 @@ enum class RustSdpSetup {
   kRustPassive
 };
 
+enum class RustSdpAttributeDtlsMessageType : uint8_t {
+  kClient,
+  kServer,
+};
+
+struct RustSdpAttributeDtlsMessage {
+  RustSdpAttributeDtlsMessageType role;
+  StringView value;
+};
+
 struct RustSdpAttributeSsrc {
   uint32_t id;
   StringView attribute;
@@ -312,6 +322,9 @@ nsresult sdp_get_iceufrag(const RustAttributeList* aList, StringView* ret);
 nsresult sdp_get_icepwd(const RustAttributeList* aList, StringView* ret);
 nsresult sdp_get_identity(const RustAttributeList* aList, StringView* ret);
 nsresult sdp_get_iceoptions(const RustAttributeList* aList, StringVec** ret);
+
+nsresult sdp_get_dtls_message(const RustAttributeList* aList,
+                              RustSdpAttributeDtlsMessage* ret);
 
 size_t sdp_get_fingerprint_count(const RustAttributeList* aList);
 void sdp_get_fingerprints(const RustAttributeList* aList, size_t listSize,

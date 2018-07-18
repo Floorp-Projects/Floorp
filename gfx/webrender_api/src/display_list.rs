@@ -31,7 +31,12 @@ use {YuvData, YuvImageDisplayItem};
 pub const MAX_TEXT_RUN_LENGTH: usize = 2040;
 
 // We start at 2, because the root reference is always 0 and the root scroll node is always 1.
-const FIRST_CLIP_ID: usize = 2;
+// TODO(mrobinson): It would be a good idea to eliminate the root scroll frame which is only
+// used by Servo.
+const FIRST_SPATIAL_NODE_INDEX: usize = 2;
+
+// There are no default clips, so we start at the 0 index for clips.
+const FIRST_CLIP_NODE_INDEX: usize = 0;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -79,8 +84,10 @@ pub struct BuiltDisplayListDescriptor {
     builder_finish_time: u64,
     /// The third IPC time stamp: just before sending
     send_start_time: u64,
-    /// The amount of clips ids assigned while building this display list.
-    total_clip_ids: usize,
+    /// The amount of clipping nodes created while building this display list.
+    total_clip_nodes: usize,
+    /// The amount of spatial nodes created while building this display list.
+    total_spatial_nodes: usize,
 }
 
 pub struct BuiltDisplayListIter<'a> {
@@ -146,8 +153,12 @@ impl BuiltDisplayList {
         )
     }
 
-    pub fn total_clip_ids(&self) -> usize {
-        self.descriptor.total_clip_ids
+    pub fn total_clip_nodes(&self) -> usize {
+        self.descriptor.total_clip_nodes
+    }
+
+    pub fn total_spatial_nodes(&self) -> usize {
+        self.descriptor.total_spatial_nodes
     }
 
     pub fn iter(&self) -> BuiltDisplayListIter {
@@ -517,12 +528,13 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
 
         let mut data = Vec::new();
         let mut temp = Vec::new();
-        let mut total_clip_ids = FIRST_CLIP_ID;
+        let mut total_clip_nodes = FIRST_CLIP_NODE_INDEX;
+        let mut total_spatial_nodes = FIRST_SPATIAL_NODE_INDEX;
         for complete in list {
             let item = DisplayItem {
                 item: match complete.item {
                     Clip(specific_item, complex_clips) => {
-                        total_clip_ids += 1;
+                        total_clip_nodes += 1;
                         DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                         SpecificDisplayItem::Clip(specific_item)
                     },
@@ -531,12 +543,13 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         SpecificDisplayItem::ClipChain(specific_item)
                     }
                     ScrollFrame(specific_item, complex_clips) => {
-                        total_clip_ids += 2;
+                        total_spatial_nodes += 1;
+                        total_clip_nodes += 1;
                         DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                         SpecificDisplayItem::ScrollFrame(specific_item)
                     },
                     StickyFrame(specific_item) => {
-                        total_clip_ids += 1;
+                        total_spatial_nodes += 1;
                         SpecificDisplayItem::StickyFrame(specific_item)
                     }
                     Rectangle(specific_item) => SpecificDisplayItem::Rectangle(specific_item),
@@ -554,7 +567,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     RadialGradient(specific_item) =>
                         SpecificDisplayItem::RadialGradient(specific_item),
                     Iframe(specific_item) => {
-                        total_clip_ids += 1;
+                        total_clip_nodes += 1;
                         SpecificDisplayItem::Iframe(specific_item)
                     }
                     PushStackingContext(specific_item, filters) => {
@@ -563,7 +576,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     },
                     PopStackingContext => SpecificDisplayItem::PopStackingContext,
                     PushReferenceFrame(specific_item) => {
-                        total_clip_ids += 1;
+                        total_spatial_nodes += 1;
                         SpecificDisplayItem::PushReferenceFrame(specific_item)
                     }
                     PopReferenceFrame => SpecificDisplayItem::PopReferenceFrame,
@@ -588,7 +601,8 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 builder_start_time: 0,
                 builder_finish_time: 1,
                 send_start_time: 0,
-                total_clip_ids,
+                total_clip_nodes,
+                total_spatial_nodes,
             },
         })
     }
@@ -813,7 +827,8 @@ impl<'a, 'b> Read for UnsafeReader<'a, 'b> {
 pub struct SaveState {
     dl_len: usize,
     clip_stack_len: usize,
-    next_clip_id: usize,
+    next_clip_index: usize,
+    next_spatial_index: usize,
     next_clip_chain_id: u64,
 }
 
@@ -822,7 +837,8 @@ pub struct DisplayListBuilder {
     pub data: Vec<u8>,
     pub pipeline_id: PipelineId,
     clip_stack: Vec<ClipAndScrollInfo>,
-    next_clip_id: usize,
+    next_clip_index: usize,
+    next_spatial_index: usize,
     next_clip_chain_id: u64,
     builder_start_time: u64,
 
@@ -850,7 +866,8 @@ impl DisplayListBuilder {
             clip_stack: vec![
                 ClipAndScrollInfo::simple(ClipId::root_scroll_node(pipeline_id)),
             ],
-            next_clip_id: FIRST_CLIP_ID,
+            next_clip_index: FIRST_CLIP_NODE_INDEX,
+            next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
             builder_start_time: start_time,
             content_size,
@@ -876,7 +893,8 @@ impl DisplayListBuilder {
         self.save_state = Some(SaveState {
             clip_stack_len: self.clip_stack.len(),
             dl_len: self.data.len(),
-            next_clip_id: self.next_clip_id,
+            next_clip_index: self.next_clip_index,
+            next_spatial_index: self.next_spatial_index,
             next_clip_chain_id: self.next_clip_chain_id,
         });
     }
@@ -887,7 +905,8 @@ impl DisplayListBuilder {
 
         self.clip_stack.truncate(state.clip_stack_len);
         self.data.truncate(state.dl_len);
-        self.next_clip_id = state.next_clip_id;
+        self.next_clip_index = state.next_clip_index;
+        self.next_spatial_index = state.next_spatial_index;
         self.next_clip_chain_id = state.next_clip_chain_id;
     }
 
@@ -896,18 +915,36 @@ impl DisplayListBuilder {
         self.save_state.take().expect("No save to clear in DisplayListBuilder");
     }
 
-    pub fn print_display_list(&mut self) {
+    /// Print the display items in the list to stderr. If the start parameter
+    /// is specified, only display items starting at that index (inclusive) will
+    /// be printed. If the end parameter is specified, only display items before
+    /// that index (exclusive) will be printed. Calling this function with
+    /// end <= start is allowed but is just a waste of CPU cycles.
+    /// This function returns the total number of items in the display list, which
+    /// allows the caller to subsequently invoke this function to only dump the
+    /// newly-added items.
+    pub fn print_display_list(
+        &mut self,
+        indent: usize,
+        start: Option<usize>,
+        end: Option<usize>,
+    ) -> usize {
         let mut temp = BuiltDisplayList::default();
         mem::swap(&mut temp.data, &mut self.data);
 
+        let mut index: usize = 0;
         {
             let mut iter = BuiltDisplayListIter::new(&temp);
             while let Some(item) = iter.next_raw() {
-                println!("{:?}", item.display_item());
+                if index >= start.unwrap_or(0) && end.map_or(true, |e| index < e) {
+                    eprintln!("{}{:?}", "  ".repeat(indent), item.display_item());
+                }
+                index += 1;
             }
         }
 
         self.data = temp.data;
+        index
     }
 
     fn push_item(&mut self, item: SpecificDisplayItem, info: &LayoutPrimitiveInfo) {
@@ -1288,7 +1325,7 @@ impl DisplayListBuilder {
         transform: Option<PropertyBinding<LayoutTransform>>,
         perspective: Option<LayoutTransform>,
     ) -> ClipId {
-        let id = self.generate_clip_id();
+        let id = self.generate_spatial_index();
         let item = SpecificDisplayItem::PushReferenceFrame(PushReferenceFrameDisplayListItem {
             reference_frame: ReferenceFrame {
                 transform,
@@ -1338,9 +1375,14 @@ impl DisplayListBuilder {
         self.push_iter(stops);
     }
 
-    fn generate_clip_id(&mut self) -> ClipId {
-        self.next_clip_id += 1;
-        ClipId::Clip(self.next_clip_id - 1, self.pipeline_id)
+    fn generate_clip_index(&mut self) -> ClipId {
+        self.next_clip_index += 1;
+        ClipId::Clip(self.next_clip_index - 1, self.pipeline_id)
+    }
+
+    fn generate_spatial_index(&mut self) -> ClipId {
+        self.next_spatial_index += 1;
+        ClipId::Spatial(self.next_spatial_index - 1, self.pipeline_id)
     }
 
     fn generate_clip_chain_id(&mut self) -> ClipChainId {
@@ -1386,8 +1428,8 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
     {
-        let clip_id = self.generate_clip_id();
-        let scroll_frame_id = self.generate_clip_id();
+        let clip_id = self.generate_clip_index();
+        let scroll_frame_id = self.generate_spatial_index();
         let item = SpecificDisplayItem::ScrollFrame(ScrollFrameDisplayItem {
             clip_id,
             scroll_frame_id,
@@ -1451,7 +1493,7 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
     {
-        let id = self.generate_clip_id();
+        let id = self.generate_clip_index();
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {
             id,
             image_mask,
@@ -1474,7 +1516,7 @@ impl DisplayListBuilder {
         previously_applied_offset: LayoutVector2D,
 
     ) -> ClipId {
-        let id = self.generate_clip_id();
+        let id = self.generate_spatial_index();
         let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
             id,
             margins,
@@ -1512,7 +1554,7 @@ impl DisplayListBuilder {
         ignore_missing_pipeline: bool
     ) {
         let item = SpecificDisplayItem::Iframe(IframeDisplayItem {
-            clip_id: self.generate_clip_id(),
+            clip_id: self.generate_clip_index(),
             pipeline_id,
             ignore_missing_pipeline,
         });
@@ -1541,7 +1583,8 @@ impl DisplayListBuilder {
                     builder_start_time: self.builder_start_time,
                     builder_finish_time: end_time,
                     send_start_time: 0,
-                    total_clip_ids: self.next_clip_id,
+                    total_clip_nodes: self.next_clip_index,
+                    total_spatial_nodes: self.next_spatial_index,
                 },
                 data: self.data,
             },

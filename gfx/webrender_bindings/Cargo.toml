@@ -26,7 +26,7 @@ features = ["capture", "serialize_program"]
 dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.5"
-core-graphics = "0.13"
+core-foundation = "0.6"
+core-graphics = "0.14"
 foreign-types = "0.3.0"
 

@@ -48,18 +48,17 @@ async function performTests() {
   ok(popup.isOpen, "popup is open");
 
   const expectedPopupItems = [
-    "item3",
-    "item2",
-    "item1",
     "item0",
+    "item1",
+    "item2",
+    "item3",
   ];
   is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");
-  is(popup.selectedIndex, expectedPopupItems.length - 1,
-    "First index from bottom is selected");
+  is(popup.selectedIndex, 0, "First index from top is selected");
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  is(popup.selectedIndex, 0, "index 0 is selected");
+  is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
   const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");

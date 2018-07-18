@@ -182,6 +182,8 @@ add_task(async function test_storage_local_idb_backend_destroyed_context_promise
 });
 
 add_task(async function test_storage_local_should_not_cache_idb_open_rejections() {
+  const EXTENSION_ID = "@an-already-migrated-extension";
+
   async function test_storage_local_on_idb_disk_full_rejection() {
     let extension = ExtensionTestUtils.loadExtension({
       async background() {
@@ -231,6 +233,11 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
       },
       manifest: {
         permissions: ["storage"],
+        applications: {
+          gecko: {
+            id: EXTENSION_ID,
+          },
+        },
       },
     });
 
@@ -259,7 +266,12 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
     await extension.unload();
   }
 
-  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
-                      test_storage_local_on_idb_disk_full_rejection);
+  return runWithPrefs([
+    [ExtensionStorageIDB.BACKEND_ENABLED_PREF, true],
+    // Set the migrated preference for the test extension to prevent the extension
+    // from falling back to the JSONFile storage because of an QuotaExceededError
+    // raised while migrating to the IndexedDB backend.
+    [`${ExtensionStorageIDB.IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`, true],
+  ], test_storage_local_on_idb_disk_full_rejection);
 });
 
