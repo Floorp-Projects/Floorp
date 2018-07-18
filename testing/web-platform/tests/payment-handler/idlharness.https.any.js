@@ -6,7 +6,12 @@
 // https://w3c.github.io/payment-handler/
 
 promise_test(async () => {
-  const srcs = ['payment-handler', 'ServiceWorker', 'dedicated-workers', 'dom'];
+  const srcs = [
+    'payment-handler',
+    'service-workers',
+    'dedicated-workers',
+    'dom'
+  ];
   const [idl, sw, dw, dom] = await Promise.all(
       srcs.map(i => fetch(`/interfaces/${i}.idl`).then(r => r.text())));
 

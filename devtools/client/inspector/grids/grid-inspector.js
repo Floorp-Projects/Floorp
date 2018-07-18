@@ -19,7 +19,6 @@ const {
 } = require("./actions/highlighter-settings");
 
 loader.lazyRequireGetter(this, "compareFragmentsGeometry", "devtools/client/inspector/grids/utils/utils", true);
-loader.lazyRequireGetter(this, "SwatchColorPickerTooltip", "devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip");
 loader.lazyRequireGetter(this, "parseURL", "devtools/client/shared/source-utils", true);
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
@@ -57,7 +56,6 @@ class GridInspector {
     this.telemetry = inspector.telemetry;
     this.walker = this.inspector.walker;
 
-    this.getSwatchColorPickerTooltip = this.getSwatchColorPickerTooltip.bind(this);
     this.updateGridPanel = this.updateGridPanel.bind(this);
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
@@ -83,21 +81,9 @@ class GridInspector {
     return this._highlighters;
   }
 
-  get swatchColorPickerTooltip() {
-    if (!this._swatchColorPickerTooltip) {
-      this._swatchColorPickerTooltip = new SwatchColorPickerTooltip(
-        this.inspector.toolbox.doc,
-        this.inspector,
-        { supportsCssColor4ColorFunction: () => false }
-      );
-    }
-
-    return this._swatchColorPickerTooltip;
-  }
-
   /**
-   * Initializes the grid inspector by fetching the LayoutFront from the walker, loading
-   * the highlighter settings and initalizing the SwatchColorPicker instance.
+   * Initializes the grid inspector by fetching the LayoutFront from the walker and
+   * loading the highlighter settings.
    */
   async init() {
     if (!this.inspector) {
@@ -138,13 +124,6 @@ class GridInspector {
 
     this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
 
-    // The color picker may not be ready as `init` function is async,
-    // and we do not wait for its completion before calling destroy in tests
-    if (this._swatchColorPickerTooltip) {
-      this._swatchColorPickerTooltip.destroy();
-      this._swatchColorPickerTooltip = null;
-    }
-
     this._highlighters = null;
     this.document = null;
     this.inspector = null;
@@ -155,7 +134,6 @@ class GridInspector {
 
   getComponentProps() {
     return {
-      getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
       onSetGridOverlayColor: this.onSetGridOverlayColor,
       onShowGridOutlineHighlight: this.onShowGridOutlineHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
@@ -213,13 +191,6 @@ class GridInspector {
     }
 
     return null;
-  }
-
-  /**
-   * Retrieve the shared SwatchColorPicker instance.
-   */
-  getSwatchColorPickerTooltip() {
-    return this.swatchColorPickerTooltip;
   }
 
   /**

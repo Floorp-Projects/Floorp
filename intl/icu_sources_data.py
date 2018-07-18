@@ -84,11 +84,11 @@ def try_run(name, command, cwd=None, **kwargs):
     try:
         with tempfile.NamedTemporaryFile(prefix=name, delete=False) as f:
             subprocess.check_call(command, cwd=cwd, stdout=f,
-                                stderr=subprocess.STDOUT, **kwargs)
+                                  stderr=subprocess.STDOUT, **kwargs)
     except subprocess.CalledProcessError:
         print('''Error running "{}" in directory {}
     See output in {}'''.format(' '.join(command), cwd, f.name),
-            file=sys.stderr)
+              file=sys.stderr)
         return False
     else:
         os.unlink(f.name)
@@ -151,7 +151,7 @@ def update_data_file(topsrcdir):
     shutil.copy(new_data_file, tree_data_path)
     try:
         shutil.rmtree(objdir)
-    except:
+    except Exception:
         print('Warning: failed to remove %s' % objdir, file=sys.stderr)
     return True
 

@@ -982,6 +982,38 @@ DoUnpremultiplicationCalculation_SIMD(const IntSize& aSize,
   }
 }
 
+template<typename u16x8_t, typename u8x16_t>
+static void
+DoOpacityCalculation_SIMD(const IntSize& aSize,
+                          uint8_t* aTargetData, int32_t aTargetStride,
+                          uint8_t* aSourceData, int32_t aSourceStride,
+                          Float aOpacity)
+{
+  uint8_t alphaValue = uint8_t(roundf(255.f * aOpacity));
+  u16x8_t alphaValues = simd::FromU16<u16x8_t>(alphaValue, alphaValue, alphaValue, alphaValue,
+                                               alphaValue, alphaValue, alphaValue, alphaValue);
+  for (int32_t y = 0; y < aSize.height; y++) {
+    for (int32_t x = 0; x < aSize.width; x += 4) {
+      int32_t inputIndex = y * aSourceStride + 4 * x;
+      int32_t targetIndex = y * aTargetStride + 4 * x;
+
+      u8x16_t p1234 = simd::Load8<u8x16_t>(&aSourceData[inputIndex]);
+      u16x8_t p12 = simd::UnpackLo8x8ToU16x8(p1234);
+      u16x8_t p34 = simd::UnpackHi8x8ToU16x8(p1234);
+
+      // Multiply all components with alpha.
+      p12 = simd::Mul16(p12, alphaValues);
+      p34 = simd::Mul16(p34, alphaValues);
+
+      // Divide by 255 and pack.
+      u8x16_t result = simd::PackAndSaturate16To8(simd::ShiftRight16<8>(p12),
+        simd::ShiftRight16<8>(p34));
+
+      simd::Store8(&aTargetData[targetIndex], result);
+    }
+  }
+}
+
 template<typename f32x4_t, typename i32x4_t, typename u8x16_t>
 static already_AddRefed<DataSourceSurface>
 RenderTurbulence_SIMD(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,

@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ContentPrincipal.h"
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
@@ -44,7 +45,6 @@
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "mozilla/AbstractThread.h"
-#include "ContentPrincipal.h"
 #include "ExpandedPrincipal.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;

@@ -30,16 +30,6 @@
       // Test focus events.
       gQueue = new eventQueue();
 
-      gQueue.push(new synthFocus("listbox", new focusChecker("lb_item1")));
-      gQueue.push(new synthDownKey("lb_item1", new focusChecker("lb_item2")));
-      gQueue.push(new synthTab("lb_item2", new focusChecker("mslb_item1")));
-      gQueue.push(new synthDownKey("mslb_item1", new focusChecker("mslb_item2"), { shiftKey: true }));
-      gQueue.push(new synthTab("mslb_item2", new focusChecker("emptylistbox")));
-      gQueue.push(new synthFocus("mcolumnlistbox", new focusChecker("mclb_item1")));
-      gQueue.push(new synthDownKey("mclb_item1", new focusChecker("mclb_item2")));
-      gQueue.push(new synthFocus("headerlistbox", new focusChecker("hlb_item1")));
-      gQueue.push(new synthDownKey("hlb_item1", new focusChecker("hlb_item2")));
-
       gQueue.push(new synthFocus("richlistbox", new focusChecker("rlb_item1")));
       gQueue.push(new synthDownKey("rlb_item1", new focusChecker("rlb_item2")));
       gQueue.push(new synthFocus("multiselrichlistbox", new focusChecker("msrlb_item1")));
@@ -70,9 +60,8 @@ if (!MAC) {
 
       // no focus events for unfocused list controls when current item is
       // changed.
-      gQueue.push(new synthFocus("emptylistbox"));
+      gQueue.push(new synthFocus("emptyrichlistbox"));
 
-      gQueue.push(new changeCurrentItem("listbox", "lb_item1"));
       gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
 if (!MAC) {
       gQueue.push(new changeCurrentItem("menulist", WIN ? "ml_marmalade" : "ml_tangerine"));
@@ -110,48 +99,6 @@ if (!MAC) {
     </body>
 
     <vbox flex="1">
-      <listbox id="listbox" rows="3">
-        <listitem id="lb_item1" label="item1"/>
-        <listitem id="lb_item2" label="item1"/>
-      </listbox>
-      <listbox id="multisellistbox" rows="3" seltype="multiple">
-        <listitem id="mslb_item1" label="item1"/>
-        <listitem id="mslb_item2" label="item1"/>
-      </listbox>
-      <listbox id="emptylistbox" rows="3"/>
-      <listbox id="mcolumnlistbox" rows="3">
-        <listcols>
-          <listcol/>
-          <listcol/>
-        </listcols>
-        <listitem id="mclb_item1">
-          <listcell label="George"/>
-          <listcell label="House Painter"/>
-        </listitem>
-        <listitem id="mclb_item2">
-          <listcell label="Mary Ellen"/>
-          <listcell label="Candle Maker"/>
-        </listitem>
-      </listbox>
-      <listbox id="headerlistbox" rows="3">
-        <listhead>
-          <listheader label="Name"/>
-          <listheader label="Occupation"/>
-        </listhead>
-        <listcols>
-          <listcol/>
-          <listcol flex="1"/>
-        </listcols>
-        <listitem id="hlb_item1">
-          <listcell label="George"/>
-          <listcell label="House Painter"/>
-        </listitem>
-        <listitem id="hlb_item2">
-          <listcell label="Mary Ellen"/>
-          <listcell label="Candle Maker"/>
-        </listitem>
-      </listbox>
-
       <richlistbox id="richlistbox">
         <richlistitem id="rlb_item1">
           <description>A XUL Description!</description>

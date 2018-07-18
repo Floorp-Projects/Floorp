@@ -10,13 +10,13 @@
 #include "js/Class.h"
 
 #include "nsJSPrincipals.h"
-#include "NullPrincipal.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 
 #include "xpcprivate.h"
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/NullPrincipal.h"
 
 namespace mozilla {
 namespace dom {

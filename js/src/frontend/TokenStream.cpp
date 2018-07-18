@@ -2342,7 +2342,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
               case 'v': unit = '\v'; break;
 
               case '\r':
-                this->sourceUnits.matchCodeUnit('\n');
+                if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
+                    this->sourceUnits.matchCodeUnit('\n');
                 MOZ_FALLTHROUGH;
               case '\n': {
                 // LineContinuation represents no code points.  We're manually

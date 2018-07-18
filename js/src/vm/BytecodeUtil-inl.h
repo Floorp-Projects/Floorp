@@ -9,6 +9,7 @@
 
 #include "vm/BytecodeUtil.h"
 
+#include "frontend/SourceNotes.h"
 #include "vm/JSScript.h"
 
 namespace js {
@@ -109,6 +110,100 @@ class BytecodeRange {
     RootedScript script;
     jsbytecode* pc;
     jsbytecode* end;
+};
+
+class BytecodeRangeWithPosition : private BytecodeRange
+{
+  public:
+    using BytecodeRange::empty;
+    using BytecodeRange::frontPC;
+    using BytecodeRange::frontOpcode;
+    using BytecodeRange::frontOffset;
+
+    BytecodeRangeWithPosition(JSContext* cx, JSScript* script)
+      : BytecodeRange(cx, script), lineno(script->lineno()), column(0),
+        sn(script->notes()), snpc(script->code()), isEntryPoint(false),
+        wasArtifactEntryPoint(false)
+    {
+        if (!SN_IS_TERMINATOR(sn))
+            snpc += SN_DELTA(sn);
+        updatePosition();
+        while (frontPC() != script->main())
+            popFront();
+
+        if (frontOpcode() != JSOP_JUMPTARGET)
+            isEntryPoint = true;
+        else
+            wasArtifactEntryPoint =  true;
+    }
+
+    void popFront() {
+        BytecodeRange::popFront();
+        if (empty())
+            isEntryPoint = false;
+        else
+            updatePosition();
+
+        // The following conditions are handling artifacts introduced by the
+        // bytecode emitter, such that we do not add breakpoints on empty
+        // statements of the source code of the user.
+        if (wasArtifactEntryPoint) {
+            wasArtifactEntryPoint = false;
+            isEntryPoint = true;
+        }
+
+        if (isEntryPoint && frontOpcode() == JSOP_JUMPTARGET) {
+            wasArtifactEntryPoint = isEntryPoint;
+            isEntryPoint = false;
+        }
+    }
+
+    size_t frontLineNumber() const { return lineno; }
+    size_t frontColumnNumber() const { return column; }
+
+    // Entry points are restricted to bytecode offsets that have an
+    // explicit mention in the line table.  This restriction avoids a
+    // number of failing cases caused by some instructions not having
+    // sensible (to the user) line numbers, and it is one way to
+    // implement the idea that the bytecode emitter should tell the
+    // debugger exactly which offsets represent "interesting" (to the
+    // user) places to stop.
+    bool frontIsEntryPoint() const { return isEntryPoint; }
+
+  private:
+    void updatePosition() {
+        // Determine the current line number by reading all source notes up to
+        // and including the current offset.
+        jsbytecode *lastLinePC = nullptr;
+        while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
+            SrcNoteType type = SN_TYPE(sn);
+            if (type == SRC_COLSPAN) {
+                ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
+                MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
+                column += colspan;
+                lastLinePC = snpc;
+            } else if (type == SRC_SETLINE) {
+                lineno = size_t(GetSrcNoteOffset(sn, 0));
+                column = 0;
+                lastLinePC = snpc;
+            } else if (type == SRC_NEWLINE) {
+                lineno++;
+                column = 0;
+                lastLinePC = snpc;
+            }
+
+            sn = SN_NEXT(sn);
+            snpc += SN_DELTA(sn);
+        }
+        isEntryPoint = lastLinePC == frontPC();
+    }
+
+    size_t lineno;
+    size_t column;
+    jssrcnote* sn;
+    jsbytecode* snpc;
+    bool isEntryPoint;
+    bool wasArtifactEntryPoint;
 };
 
 } // namespace js

@@ -17,7 +17,7 @@ while True:
     line = f.readline()
     if not line:
         break
-    if not 'CJK COMPATIBILITY IDEOGRAPH-' in line:
+    if 'CJK COMPATIBILITY IDEOGRAPH-' not in line:
         continue
 
     m = r.search(line)
@@ -25,7 +25,7 @@ while True:
     vs = int(m.group(2), 16)
     compat = int(m.group(3), 16)
 
-    if not vs in vsdict:
+    if vs not in vsdict:
         vsdict[vs] = {}
     vsdict[vs][unified] = compat
 
