@@ -177,7 +177,7 @@ struct JSContext : public JS::RootingContext,
      */
     template <typename T>
     T* pod_callocCanGC(size_t numElems, arena_id_t arena = js::MallocArena) {
-        T* p = pod_calloc<T>(numElems, arena);
+        T* p = maybe_pod_calloc<T>(numElems, arena);
         if (MOZ_LIKELY(!!p))
             return p;
         size_t bytes;
