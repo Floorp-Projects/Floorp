@@ -1141,17 +1141,7 @@ VARCACHE_PREF(
 PREF("preferences.allow.omt-write", bool, true)
 
 //---------------------------------------------------------------------------
-// View source prefs
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  "view_source.editor.external",
-   view_source_editor_external,
-  bool, false
-)
-
-//---------------------------------------------------------------------------
-// Anti-Tracking prefs
+// Privacy prefs
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -1171,6 +1161,16 @@ VARCACHE_PREF(
   "privacy.restrict3rdpartystorage.expiration",
    privacy_restrict3rdpartystorage_expiration,
   uint32_t, 2592000 // 30 days (in seconds)
+)
+
+//---------------------------------------------------------------------------
+// View source prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "view_source.editor.external",
+   view_source_editor_external,
+  bool, false
 )
 
 //---------------------------------------------------------------------------
