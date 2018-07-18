@@ -240,6 +240,80 @@ private:
   }
 };
 
+class ReportGenericErrorRunnable final : public WorkerRunnable
+{
+public:
+  static void
+  CreateAndDispatch(WorkerPrivate* aWorkerPrivate)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    RefPtr<ReportGenericErrorRunnable> runnable =
+      new ReportGenericErrorRunnable(aWorkerPrivate);
+    runnable->Dispatch();
+  }
+
+private:
+  explicit ReportGenericErrorRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    // Dispatch may fail if the worker was canceled, no need to report that as
+    // an error, so don't call base class PostDispatch.
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    if (aWorkerPrivate->IsFrozen() ||
+        aWorkerPrivate->IsParentWindowPaused()) {
+      MOZ_ASSERT(!IsDebuggerRunnable());
+      aWorkerPrivate->QueueRunnable(this);
+      return true;
+    }
+
+    if (aWorkerPrivate->IsSharedWorker()) {
+      aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, nullptr,
+                                                    /* isErrorEvent */ false);
+      return true;
+    }
+
+    if (aWorkerPrivate->IsServiceWorker()) {
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      if (swm) {
+        swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
+                         aWorkerPrivate->ServiceWorkerScope(),
+                         aWorkerPrivate->ScriptURL(),
+                         EmptyString(), EmptyString(), EmptyString(),
+                         0, 0, JSREPORT_ERROR, JSEXN_ERR);
+      }
+      return true;
+    }
+
+    if (!aWorkerPrivate->IsAcceptingEvents()) {
+      return true;
+    }
+
+    RefPtr<mozilla::dom::EventTarget> parentEventTarget =
+      aWorkerPrivate->ParentEventTargetRef();
+    RefPtr<Event> event =
+      Event::Constructor(parentEventTarget, NS_LITERAL_STRING("error"),
+                         EventInit());
+    event->SetTrusted(true);
+
+    parentEventTarget->DispatchEvent(*event);
+    return true;
+  }
+};
+
 } // anonymous
 
 void
@@ -472,6 +546,12 @@ WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
 
   fprintf(stderr, kErrorString, msg.get(), filename.get(), aReport.mLineNumber);
   fflush(stderr);
+}
+
+/* static */ void
+WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(WorkerPrivate* aWorkerPrivate)
+{
+  ReportGenericErrorRunnable::CreateAndDispatch(aWorkerPrivate);
 }
 
 } // dom namespace

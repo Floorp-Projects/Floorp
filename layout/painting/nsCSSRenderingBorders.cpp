@@ -23,7 +23,6 @@
 #include "nsDisplayList.h"
 #include "GeckoProfiler.h"
 #include "nsExpirationTracker.h"
-#include "RoundedRect.h"
 #include "nsIScriptError.h"
 #include "nsClassHashtable.h"
 #include "nsPresContext.h"
@@ -3128,8 +3127,7 @@ nsCSSBorderRenderer::DrawBorders()
       !mNoBorderRadius)
   {
     // Relatively simple case.
-    gfxRect outerRect = ThebesRect(mOuterRect);
-    RoundedRect borderInnerRect(outerRect, mBorderRadii);
+    RoundedRect borderInnerRect(mOuterRect, mBorderRadii);
     borderInnerRect.Deflate(mBorderWidths[eSideTop],
                             mBorderWidths[eSideBottom],
                             mBorderWidths[eSideLeft],
@@ -3146,7 +3144,7 @@ nsCSSBorderRenderer::DrawBorders()
     // a new cubic approximation.
     RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
     AppendRoundedRectToPath(builder, mOuterRect, mBorderRadii, true);
-    AppendRoundedRectToPath(builder, ToRect(borderInnerRect.rect), borderInnerRect.corners, false);
+    AppendRoundedRectToPath(builder, borderInnerRect.rect, borderInnerRect.corners, false);
     RefPtr<Path> path = builder->Finish();
     mDrawTarget->Fill(path, color);
     return;

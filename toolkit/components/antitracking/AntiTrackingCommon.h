@@ -44,11 +44,24 @@ public:
   IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* a3rdPartyTrackingChannel,
                                       nsIURI* aURI);
 
-  // Grant the permission for aOrigin to have access to the first party storage
-  // when loaded in that particular 3rd party context.
+  // Grant the permission for aOrigin to have access to the first party storage.
+  // This method can handle 2 different scenarios:
+  // - aParentWindow is a 3rd party context, it opens an aOrigin window and the
+  //   user interacts with it. We want to grant the permission at the
+  //   combination: top-level + aParentWindow + aOrigin.
+  //   Ex: example.net loads an iframe tracker.com, which opens a popup
+  //   tracker.prg and the user interacts with it. tracker.org is allowed if
+  //   loaded by tracker.com when loaded by example.net.
+  // - aParentWindow is a first party context and a 3rd party resource (probably
+  //   becuase of a script) opens a popup and the user interacts with it. We
+  //   want to grant the permission for the 3rd party context to have access to
+  //   the first party stoage when loaded in aParentWindow.
+  //   Ex: example.net import tracker.com/script.js which does opens a popup and
+  //   the user interacts with it. tracker.com is allowed when loaded by
+  //   example.net.
   static void
   AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
-                                       nsPIDOMWindowInner* a3rdPartyTrackingWindow);
+                                       nsPIDOMWindowInner* aParentWindow);
 
   // For IPC only.
   static void

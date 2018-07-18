@@ -223,12 +223,6 @@ class Longhand(object):
             and animation_value_type != "discrete"
         self.is_animatable_with_computed_value = animation_value_type == "ComputedValue" \
             or animation_value_type == "discrete"
-        if self.logical:
-            # Logical properties will be animatable (i.e. the animation type is
-            # discrete). For now, it is still non-animatable.
-            self.animatable = False
-            self.transitionable = False
-            self.animation_value_type = None
 
         # See compute_damage for the various values this can take
         self.servo_restyle_damage = servo_restyle_damage
@@ -236,6 +230,21 @@ class Longhand(object):
     @staticmethod
     def type():
         return "longhand"
+
+    # For a given logical property return all the physical
+    # property names corresponding to it.
+    def all_physical_mapped_properties(self):
+        assert self.logical
+        logical_side = None
+        for s in LOGICAL_SIDES + LOGICAL_SIZES:
+            if s in self.name:
+                assert not logical_side
+                logical_side = s
+        assert logical_side
+        physical = PHYSICAL_SIDES if logical_side in LOGICAL_SIDES else PHYSICAL_SIZES
+        return [self.name.replace(logical_side, physical_side).replace("inset-", "") \
+            for physical_side in physical]
+
 
     def experimental(self, product):
         if product == "gecko":

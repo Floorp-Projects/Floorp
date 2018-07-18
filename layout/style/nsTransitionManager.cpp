@@ -544,15 +544,18 @@ nsTransitionManager::DoUpdateTransitions(
           for (nsCSSPropertyID p = nsCSSPropertyID(0);
                p < eCSSProperty_COUNT_no_shorthands;
                p = nsCSSPropertyID(p + 1)) {
+            p = nsCSSProps::Physicalize(p, aNewStyle);
             allTransitionProperties.AddProperty(p);
           }
         } else if (nsCSSProps::IsShorthand(property)) {
           CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
               subprop, property, CSSEnabledState::eForAllContent) {
-            allTransitionProperties.AddProperty(*subprop);
+            auto p = nsCSSProps::Physicalize(*subprop, aNewStyle);
+            allTransitionProperties.AddProperty(p);
           }
         } else {
-          allTransitionProperties.AddProperty(property);
+          allTransitionProperties.AddProperty(
+            nsCSSProps::Physicalize(property, aNewStyle));
         }
       }
     }
@@ -656,13 +659,15 @@ nsTransitionManager::ConsiderInitiatingTransition(
   nsCSSPropertyIDSet& aPropertiesChecked)
 {
   // IsShorthand itself will assert if aProperty is not a property.
-  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
-             "property out of range");
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "property out of range");
   NS_ASSERTION(!aElementTransitions ||
                aElementTransitions->mElement == aElement, "Element mismatch");
 
-  // A later item in transition-property already specified a transition for this
-  // property, so we ignore this one.
+  aProperty = nsCSSProps::Physicalize(aProperty, aNewStyle);
+
+  // A later item in transition-property already specified a transition for
+  // this property, so we ignore this one.
+  //
   // See http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html .
   if (aPropertiesChecked.HasProperty(aProperty)) {
     return false;

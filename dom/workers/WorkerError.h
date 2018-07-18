@@ -71,6 +71,8 @@ public:
   static void
   LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
 
+  static void
+  CreateAndDispatchGenericErrorRunnableToParent(WorkerPrivate* aWorkerPrivate);
 };
 
 } // dom namespace

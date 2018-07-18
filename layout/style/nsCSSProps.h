@@ -29,6 +29,15 @@
 // and, in the future, custom media query names).
 #define CSS_CUSTOM_NAME_PREFIX_LENGTH 2
 
+namespace mozilla {
+class ComputedStyle;
+}
+
+extern "C" {
+  nsCSSPropertyID Servo_ResolveLogicalProperty(nsCSSPropertyID,
+                                               const mozilla::ComputedStyle*);
+}
+
 struct nsCSSKTableEntry
 {
   // nsCSSKTableEntry objects can be initialized either with an int16_t value
@@ -86,7 +95,8 @@ public:
   // "--".  This assumes that the CSS Variables pref has been enabled.
   static bool IsCustomPropertyName(const nsAString& aProperty);
 
-  static inline bool IsShorthand(nsCSSPropertyID aProperty) {
+  static bool IsShorthand(nsCSSPropertyID aProperty)
+  {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
@@ -139,22 +149,31 @@ private:
   static const Flags kFlagsTable[eCSSProperty_COUNT];
 
 public:
-  static inline bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags)
+  static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
+  static nsCSSPropertyID Physicalize(nsCSSPropertyID aProperty,
+                                     const mozilla::ComputedStyle& aStyle)
+  {
+    if (PropHasFlags(aProperty, Flags::IsLogical)) {
+      return Servo_ResolveLogicalProperty(aProperty, &aStyle);
+    }
+    return aProperty;
+  }
+
 private:
   // A table for shorthand properties.  The appropriate index is the
   // property ID minus eCSSProperty_COUNT_no_shorthands.
-  static const nsCSSPropertyID *const
+  static const nsCSSPropertyID* const
     kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands];
 
 public:
-  static inline
-  const nsCSSPropertyID * SubpropertyEntryFor(nsCSSPropertyID aProperty) {
+  static const nsCSSPropertyID* SubpropertyEntryFor(nsCSSPropertyID aProperty)
+  {
     MOZ_ASSERT(eCSSProperty_COUNT_no_shorthands <= aProperty &&
                aProperty < eCSSProperty_COUNT,
                "out of range");

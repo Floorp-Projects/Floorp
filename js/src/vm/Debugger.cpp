@@ -4573,10 +4573,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * condition occurred.
      */
     void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
-        // We check for presence of script->code() because it is possible that
-        // the script was created and thus exposed to GC, but *not* fully
-        // initialized from fullyInit{FromEmitter,Trivial} due to errors.
-        if (oom || script->selfHosted() || !script->code())
+        // We check for presence of script->isUncompleted() because it is
+        // possible that the script was created and thus exposed to GC, but
+        // *not* fully initialized from fullyInit{FromEmitter,Trivial} due to
+        // errors.
+        if (oom || script->selfHosted() || script->isUncompleted())
             return;
         Realm* realm = script->realm();
         if (!realms.has(realm))

@@ -297,6 +297,16 @@ class FunctionBox : public ObjectBox, public SharedContext
     // The parser handles tracing the fields below via the ObjectBox linked
     // list.
 
+    // This field is used for two purposes:
+    //   * If this FunctionBox refers to the function being compiled, this field
+    //     holds its enclosing scope, used for compilation.
+    //   * If this FunctionBox refers to a lazy child of the function being
+    //     compiled, this field holds the child's immediately enclosing scope.
+    //     Once compilation succeeds, we will store it in the child's
+    //     LazyScript.  (Debugger may become confused if LazyScripts refer to
+    //     partially initialized enclosing scopes, so we must avoid storing the
+    //     scope in the LazyScript until compilation has completed
+    //     successfully.)
     Scope* enclosingScope_;
 
     // Names from the named lambda scope, if a named lambda.
@@ -418,14 +428,34 @@ class FunctionBox : public ObjectBox, public SharedContext
     void initStandaloneFunction(Scope* enclosingScope);
     void initWithEnclosingParseContext(ParseContext* enclosing, FunctionSyntaxKind kind);
 
+    inline bool isLazyFunctionWithoutEnclosingScope() const {
+        return function()->isInterpretedLazy() &&
+               !function()->lazyScript()->hasEnclosingScope();
+    }
+    void setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope);
+    void finish();
+
     JSFunction* function() const { return &object->as<JSFunction>(); }
 
     Scope* compilationEnclosingScope() const override {
         // This method is used to distinguish the outermost SharedContext. If
         // a FunctionBox is the outermost SharedContext, it must be a lazy
         // function.
-        MOZ_ASSERT_IF(function()->isInterpretedLazy(),
+
+        // If the function is lazy and it has enclosing scope, the function is
+        // being delazified.  In that case the enclosingScope_ field is copied
+        // from the lazy function at the beginning of delazification and should
+        // keep pointing the same scope.
+        MOZ_ASSERT_IF(function()->isInterpretedLazy() &&
+                      function()->lazyScript()->hasEnclosingScope(),
                       enclosingScope_ == function()->lazyScript()->enclosingScope());
+
+        // If this FunctionBox is a lazy child of the function we're actually
+        // compiling, then it is not the outermost SharedContext, so this
+        // method should return nullptr."
+        if (isLazyFunctionWithoutEnclosingScope())
+            return nullptr;
+
         return enclosingScope_;
     }
 
