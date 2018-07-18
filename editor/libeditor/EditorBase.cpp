@@ -713,7 +713,7 @@ EditorBase::GetSelection(Selection** aSelection)
 
 nsresult
 EditorBase::GetSelection(SelectionType aSelectionType,
-                         Selection** aSelection)
+                         Selection** aSelection) const
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;

@@ -291,10 +291,10 @@ public:
   }
 
   nsresult GetSelection(SelectionType aSelectionType,
-                        Selection** aSelection);
+                        Selection** aSelection) const;
 
   Selection* GetSelection(SelectionType aSelectionType =
-                                          SelectionType::eNormal)
+                                          SelectionType::eNormal) const
   {
     nsISelectionController* sc = GetSelectionController();
     if (!sc) {
