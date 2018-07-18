@@ -24,17 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317422
     <richlistitem id="richlistbox_item6"><label value="Item 6"/></richlistitem>
     <richlistitem id="richlistbox_item7" hidden="true"><label value="Item 7"/></richlistitem>
   </richlistbox>
-  
-  <listbox id="listbox" seltype="multiple">
-    <listitem id="listbox_item1" label="Item 1"/>
-    <listitem id="listbox_item2" label="Item 2"/>
-    <listitem id="listbox_item3" label="Item 3" hidden="true"/>
-    <listitem id="listbox_item4" label="Item 4"/>
-    <listitem id="listbox_item5" label="Item 5" collapsed="true"/>
-    <listitem id="listbox_item6" label="Item 6"/>
-    <listitem id="listbox_item7" label="Item 7" hidden="true"/>
-  </listbox>
-  
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
@@ -82,7 +72,6 @@ function testListbox(id)
 
 window.onload = function runTests() {
   testListbox("richlistbox");
-  testListbox("listbox");
   SimpleTest.finish();
 };
   ]]></script>

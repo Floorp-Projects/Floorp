@@ -154,12 +154,6 @@ public:
                              const nsDisplayListSet& aOut);
 
   /**
-   * This defaults to true, but some box frames (nsListBoxBodyFrame for
-   * example) don't support ordinals in their children.
-   */
-  virtual bool SupportsOrdinalsInChildren();
-
-  /**
    * Return our wrapper block, if any.
    */
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;

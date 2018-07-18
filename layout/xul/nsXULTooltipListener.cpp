@@ -24,6 +24,7 @@
 #include "nsIPopupContainer.h"
 #include "nsIBoxObject.h"
 #include "nsTreeColumns.h"
+#include "nsContentUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
