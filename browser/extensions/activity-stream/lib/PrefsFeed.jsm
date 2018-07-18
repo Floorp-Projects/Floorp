@@ -103,6 +103,9 @@ this.PrefsFeed = class PrefsFeed {
     values.isPrivateBrowsingEnabled = PrivateBrowsingUtils.enabled;
     values.platform = AppConstants.platform;
 
+    // Get the firefox accounts url to send firstrun metrics to.
+    values.fxa_endpoint = Services.prefs.getStringPref("identity.fxaccounts.remote.root", "https://accounts.firefox.com");
+
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
 
