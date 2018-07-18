@@ -1031,7 +1031,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
 <!ENTITY pageAction.shareUrl.label "Share">
-<!ENTITY pageAction.shareMore.label "More…">
 
 <!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
 

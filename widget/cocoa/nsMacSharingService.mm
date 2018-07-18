@@ -22,16 +22,6 @@ NSArray *filteredProviderNames = @[
 NSString* const remindersServiceName =
   @"com.apple.reminders.RemindersShareExtension";
 
-// These are some undocumented constants also used by Safari
-// to let us open the preferences window
-NSString* const extensionPrefPanePath =
-  @"/System/Library/PreferencePanes/Extensions.prefPane";
-const UInt32 openSharingSubpaneDescriptorType = 'ptru';
-NSString* const openSharingSubpaneActionKey = @"action";
-NSString* const openSharingSubpaneActionValue = @"revealExtensionPoint";
-NSString* const openSharingSubpaneProtocolKey = @"protocol";
-NSString* const openSharingSubpaneProtocolValue = @"com.apple.share-services";
-
 // Expose the id so we can pass reference through to JS and back
 @interface NSSharingService (ExposeName)
 - (id)name;
@@ -133,40 +123,6 @@ nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl,
   }
 
   aResult.setObject(*array);
-
-  return NS_OK;
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-nsMacSharingService::OpenSharingPreferences()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  NSURL* prefPaneURL =
-    [NSURL fileURLWithPath:extensionPrefPanePath isDirectory:YES];
-  NSDictionary* args = @{
-    openSharingSubpaneActionKey: openSharingSubpaneActionValue,
-    openSharingSubpaneProtocolKey: openSharingSubpaneProtocolValue
-  };
-  NSData* data =
-    [NSPropertyListSerialization
-     dataWithPropertyList:args
-     format:NSPropertyListXMLFormat_v1_0
-     options:0
-     error:nil];
-  NSAppleEventDescriptor* descriptor =
-    [[NSAppleEventDescriptor alloc]
-     initWithDescriptorType:openSharingSubpaneDescriptorType
-     data:data];
-
-  [[NSWorkspace sharedWorkspace] openURLs:@[ prefPaneURL ]
-   withAppBundleIdentifier:nil
-   options:NSWorkspaceLaunchAsync
-   additionalEventParamDescriptor:descriptor
-   launchIdentifiers:NULL];
-
-  [descriptor release];
 
   return NS_OK;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
