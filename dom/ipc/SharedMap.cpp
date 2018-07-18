@@ -178,25 +178,16 @@ SharedMap::GetKeyAtIndex(uint32_t aIndex) const
   return NS_ConvertUTF8toUTF16(EntryArray()[aIndex]->Name());
 }
 
-JS::Value
-SharedMap::GetValueAtIndex(uint32_t aIndex) const
+bool
+SharedMap::GetValueAtIndex(JSContext* aCx, uint32_t aIndex,
+                           JS::MutableHandle<JS::Value> aResult) const
 {
-  JSObject* wrapper = GetWrapper();
-  MOZ_ASSERT(wrapper,
-             "Should never see GetValueAtIndex on a SharedMap without a live "
-             "wrapper");
-  if (!wrapper) {
-    return JS::NullValue();
+  ErrorResult rv;
+  EntryArray()[aIndex]->Read(aCx, aResult, rv);
+  if (rv.MaybeSetPendingException(aCx)) {
+    return false;
   }
-
-  AutoJSContext cx;
-
-  JSAutoRealm ar(cx, wrapper);
-
-  JS::RootedValue val(cx);
-  EntryArray()[aIndex]->Read(cx, &val, IgnoreErrors());
-
-  return val;
+  return true;
 }
 
 void
