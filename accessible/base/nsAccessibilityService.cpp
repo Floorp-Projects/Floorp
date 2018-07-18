@@ -219,11 +219,20 @@ New_HTMLListitem(Element* aElement, Accessible* aContext)
   return nullptr;
 }
 
+template<typename AccClass>
 static Accessible*
-New_HTMLDefinition(Element* aElement, Accessible* aContext)
+New_HTMLDtOrDd(Element* aElement, Accessible* aContext)
 {
-  if (aContext->IsList())
-    return new HyperTextAccessibleWrap(aElement, aContext->Document());
+  nsIContent* parent = aContext->GetContent();
+  if (parent->IsHTMLElement(nsGkAtoms::div)) {
+    // It is conforming in HTML to use a div to group dt/dd elements.
+    parent = parent->GetParent();
+  }
+
+  if (parent && parent->IsHTMLElement(nsGkAtoms::dl)) {
+    return new AccClass(aElement, aContext->Document());
+  }
+
   return nullptr;
 }
 
