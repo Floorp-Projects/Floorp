@@ -52,6 +52,7 @@
               "additional_backgrounds": {
                 "type": "array",
                 "items": { "$ref": "ImageDataOrExtensionURL" },
+                "maxItems": 15,
                 "optional": true
               },
               "headerURL": {
@@ -550,6 +551,7 @@
                     "right bottom", "right center", "right top"
                   ]
                 },
+                "maxItems": 15,
                 "optional": true
               },
               "additional_backgrounds_tiling": {
@@ -558,6 +560,7 @@
                   "type": "string",
                   "enum": ["no-repeat", "repeat", "repeat-x", "repeat-y"]
                 },
+                "maxItems": 15,
                 "optional": true
               }
             },
