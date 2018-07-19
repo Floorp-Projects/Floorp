@@ -1,0 +1,14 @@
+Index: compiler-rt/lib/profile/GCDAProfiling.c
+===================================================================
+diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/GCDAProfiling.c
+--- a/compiler-rt/lib/profile/GCDAProfiling.c	(revisione 336380)
++++ b/compiler-rt/lib/profile/GCDAProfiling.c	(copia locale)
+@@ -555,7 +555,7 @@
+   fn_list_insert(&flush_fn_list, fn);
+ }
+ 
+-void __gcov_flush() {
++void __llvm_gcov_flush() {
+   struct fn_node* curr = flush_fn_list.head;
+ 
+   while (curr) {
