@@ -12430,6 +12430,10 @@ nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
   MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
           ("Document %p has been interacted by user.", this));
   mUserHasInteracted = aUserHasInteracted;
+
+  if (aUserHasInteracted) {
+    MaybeAllowStorageForOpener();
+  }
 }
 
 void
@@ -12443,7 +12447,6 @@ nsIDocument::NotifyUserGestureActivation()
             LogLevel::Debug,
             ("Document %p has been activated by user.", this));
     doc->mUserGestureActivated = true;
-    doc->MaybeAllowStorageForOpener();
     doc = doc->GetSameTypeParentDocument();
   }
 }
@@ -12470,7 +12473,7 @@ nsIDocument::MaybeAllowStorageForOpener()
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> outerOpener = outer->GetOpener();
-  if (NS_WARN_IF(!outerOpener)) {
+  if (!outerOpener) {
     return;
   }
 

@@ -294,13 +294,17 @@ interface nsIContentSecurityPolicy : nsISerializable
    *
    * Calls to this may trigger violation reports when queried, so
    * this value should not be cached.
+   *
+   * aOriginalURIIfRedirect must be passed only if this loading is the result
+   * of a redirect. In this case, aOriginalURIIfRedirect must be the original
+   * URL.
    */
   short shouldLoad(in nsContentPolicyType aContentType,
                    in nsIURI          aContentLocation,
                    in nsIURI          aRequestOrigin,
                    in nsISupports     aContext,
                    in ACString        aMimeTypeGuess,
-                   in nsISupports     aExtra);
+                   in nsIURI          aOriginalURIIfRedirect);
 
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.
