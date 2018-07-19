@@ -520,6 +520,8 @@ private:
   DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.blob-images",             WebRenderBlobImages, bool, true);
   DECL_GFX_PREF(Live, "gfx.webrender.blob.invalidation",       WebRenderBlobInvalidation, bool, false);
+  DECL_GFX_PREF(Live, "gfx.webrender.dl.dump-parent",          WebRenderDLDumpParent, bool, false);
+  DECL_GFX_PREF(Live, "gfx.webrender.dl.dump-content",         WebRenderDLDumpContent, bool, false);
   DECL_GFX_PREF(Once, "gfx.webrender.enabled",                 WebRenderEnabledDoNotUseDirectly, bool, false);
   DECL_GFX_PREF(Once, "gfx.webrender.force-disabled",          WebRenderForceDisabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.highlight-painted-layers",WebRenderHighlightPaintedLayers, bool, false);
