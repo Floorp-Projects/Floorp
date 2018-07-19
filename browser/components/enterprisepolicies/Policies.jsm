@@ -710,7 +710,7 @@ var Policies = {
             for (let newEngine of param.Add) {
               let newEngineParameters = {
                 template:    newEngine.URLTemplate,
-                iconURL:     newEngine.IconURL,
+                iconURL:     newEngine.IconURL ? newEngine.IconURL.href : null,
                 alias:       newEngine.Alias,
                 description: newEngine.Description,
                 method:      newEngine.Method,
