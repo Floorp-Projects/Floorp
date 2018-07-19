@@ -12517,8 +12517,9 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
-                                                           openerInner);
+  // We don't care when the asynchronous work finishes here.
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+                                                                     openerInner);
 }
 
 bool
