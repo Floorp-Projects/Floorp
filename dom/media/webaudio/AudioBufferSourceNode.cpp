@@ -669,9 +669,6 @@ AudioBufferSourceNode::DestroyMediaStream()
     mStream->RemoveMainThreadListener(this);
   }
   AudioNode::DestroyMediaStream();
-  if (hadStream && Context()) {
-    Context()->UnregisterAudioBufferSourceNode(this);
-  }
 }
 
 size_t
