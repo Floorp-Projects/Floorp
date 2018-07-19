@@ -153,6 +153,7 @@ add_task(async function groupByHost() {
     { uri: "https://mozilla.org/" },
     { uri: "https://mozilla.org/" },
     { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/" },
   ]);
 
   let httpFrec = frecencyForUrl("http://example.com/");
@@ -172,8 +173,11 @@ add_task(async function groupByHost() {
   let count = rows[0].getResultByIndex(0);
   let sum = rows[0].getResultByIndex(1);
   let squares = rows[0].getResultByIndex(2);
+  let stddevMultiplier =
+    Services.prefs.getFloatPref("browser.urlbar.autoFill.stddevMultiplier", 0.0);
   let threshold =
-    (sum / count) + Math.sqrt((squares - ((sum * sum) / count)) / count);
+    (sum / count) +
+    (stddevMultiplier * Math.sqrt((squares - ((sum * sum) / count)) / count));
 
   // Make sure the frecencies of the three origins are as expected in relation
   // to the threshold.
@@ -202,6 +206,87 @@ add_task(async function groupByHost() {
       },
     ],
   });
+
+  await cleanup();
+});
+
+// This is the same as the previous (groupByHost), but it changes the standard
+// deviation multiplier by setting the corresponding pref.  This makes sure that
+// the pref is respected.
+add_task(async function groupByHostNonDefaultStddevMultiplier() {
+  let stddevMultiplier = 1.5;
+  Services.prefs.setCharPref("browser.urlbar.autoFill.stddevMultiplier",
+                             Number(stddevMultiplier).toFixed(1));
+
+  await PlacesTestUtils.addVisits([
+    { uri: "http://example.com/" },
+    { uri: "http://example.com/" },
+
+    { uri: "https://example.com/" },
+    { uri: "https://example.com/" },
+    { uri: "https://example.com/" },
+
+    { uri: "https://foo.com/" },
+    { uri: "https://foo.com/" },
+    { uri: "https://foo.com/" },
+
+    { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/" },
+    { uri: "https://mozilla.org/" },
+  ]);
+
+  let httpFrec = frecencyForUrl("http://example.com/");
+  let httpsFrec = frecencyForUrl("https://example.com/");
+  let otherFrec = frecencyForUrl("https://mozilla.org/");
+  Assert.ok(httpFrec < httpsFrec, "Sanity check");
+  Assert.ok(httpsFrec < otherFrec, "Sanity check");
+
+  // Compute the autofill threshold.
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.execute(`
+    SELECT
+      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_count"), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum"), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum_of_squares"), 0)
+  `);
+  let count = rows[0].getResultByIndex(0);
+  let sum = rows[0].getResultByIndex(1);
+  let squares = rows[0].getResultByIndex(2);
+  let threshold =
+    (sum / count) +
+    (stddevMultiplier * Math.sqrt((squares - ((sum * sum) / count)) / count));
+
+  // Make sure the frecencies of the three origins are as expected in relation
+  // to the threshold.
+  Assert.ok(httpFrec < threshold, "http origin should be < threshold");
+  Assert.ok(httpsFrec < threshold, "https origin should be < threshold");
+  Assert.ok(threshold <= otherFrec, "Other origin should cross threshold");
+
+  Assert.ok(threshold <= httpFrec + httpsFrec,
+            "http and https origin added together should cross threshold");
+
+  // The https origin should be autofilled.
+  await check_autocomplete({
+    search: "ex",
+    autofilled: "example.com/",
+    completed: "https://example.com/",
+    matches: [
+      {
+        value: "example.com/",
+        comment: "https://example.com",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "http://example.com/",
+        comment: "test visit for http://example.com/",
+        style: ["favicon"],
+      },
+    ],
+  });
+
+  Services.prefs.clearUserPref("browser.urlbar.autoFill.stddevMultiplier");
 
   await cleanup();
 });
