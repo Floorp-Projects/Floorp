@@ -4304,16 +4304,6 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
   return updated;
 }
 
-template<class T> void
-Element::GetCustomInterface(nsGetterAddRefs<T> aResult)
-{
-  nsCOMPtr<nsISupports> iface =
-    CustomElementRegistry::CallGetCustomInterface(this, NS_GET_TEMPLATE_IID(T));
-  if (iface) {
-    CallQueryInterface(iface, static_cast<T**>(aResult));
-  }
-}
-
 void
 Element::ClearServoData(nsIDocument* aDoc) {
   MOZ_ASSERT(aDoc);
