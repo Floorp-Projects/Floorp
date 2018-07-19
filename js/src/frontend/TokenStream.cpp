@@ -1250,23 +1250,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::currentLineAndColumn(uint32_t* line,
     anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
-template<>
+template<typename CharT>
 bool
-TokenStreamCharsBase<Utf8Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
+TokenStreamCharsBase<CharT>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
 {
-    // The specialization below is 100% usable if tweaked to be a definition
-    // for any CharT, but it demands SourceUnits::findWindow{Start,End} and
-    // TokenStreamCharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks
-    // for UTF-8 that haven't been defined yet.  Use a placeholder definition
-    // til those are place.
-    return true;
-}
-
-template<>
-bool
-TokenStreamCharsBase<char16_t>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
-{
-    using CharT = char16_t;
     size_t windowStart = sourceUnits.findWindowStart(offset);
     size_t windowEnd = sourceUnits.findWindowEnd(offset);
 
