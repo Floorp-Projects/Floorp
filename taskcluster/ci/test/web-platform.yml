@@ -38,6 +38,7 @@ web-platform-tests:
             default: built-projects
     tier:
         by-test-platform:
+            linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
@@ -92,6 +93,7 @@ web-platform-tests-reftests:
             default: built-projects
     tier:
         by-test-platform:
+            linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
@@ -136,6 +138,7 @@ web-platform-tests-wdspec:
             default: built-projects
     tier:
         by-test-platform:
+            linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
 

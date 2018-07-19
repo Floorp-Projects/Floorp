@@ -367,8 +367,7 @@ ReadModuleInformation(HangStack& stack)
     }
 
     if (moduleReferenced) {
-      nsDependentCString cstr(info.GetBreakpadId().c_str());
-      HangModule module(info.GetDebugName(), cstr);
+      HangModule module(info.GetDebugName(), info.GetBreakpadId());
       stack.modules().AppendElement(module);
     }
   }
