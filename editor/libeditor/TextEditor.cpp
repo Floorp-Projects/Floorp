@@ -1939,13 +1939,6 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
 }
 
 NS_IMETHODIMP
-TextEditor::PasteAsCitedQuotation(const nsAString& aCitation,
-                                  int32_t aSelectionType)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    const nsAString& aCitation,
                                    bool aInsertHTML,
