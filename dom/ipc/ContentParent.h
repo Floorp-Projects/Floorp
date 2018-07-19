@@ -1227,8 +1227,7 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
                                               const nsCString& aTrackingOrigin,
-                                              const nsCString& aGrantedOrigin,
-                                              FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) override;
+                                              const nsCString& aGrantedOrigin) override;
 
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
