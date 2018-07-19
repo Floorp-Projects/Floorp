@@ -783,6 +783,17 @@ protected: // Shouldn't be used by friend classes
 
   nsresult LoadHTML(const nsAString& aInputString);
 
+  /**
+   * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
+   * <head> element with given source code.  This is undoable.
+   *
+   * @param aSourceToInsert     HTML source fragment to replace the children
+   *                            of <head> element.
+   */
+  nsresult
+  ReplaceHeadContentsWithSourceWithTransaction(
+    const nsAString& aSourceToInsert);
+
   nsresult GetCSSBackgroundColorState(bool* aMixed, nsAString& aOutColor,
                                       bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
