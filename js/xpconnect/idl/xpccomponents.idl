@@ -25,15 +25,6 @@ interface nsIStackFrame;
 webidl Element;
 
 /**
-* interface of Components.interfacesByID
-* (interesting stuff only reflected into JavaScript)
-*/
-[scriptable, builtinclass, uuid(f235ef76-9919-478b-aa0f-282d994ddf76)]
-interface nsIXPCComponents_InterfacesByID : nsISupports
-{
-};
-
-/**
 * interface of Components.interfaces
 * (interesting stuff only reflected into JavaScript)
 */
@@ -48,15 +39,6 @@ interface nsIXPCComponents_Interfaces : nsISupports
 */
 [scriptable, builtinclass, uuid(978ff520-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents_Classes : nsISupports
-{
-};
-
-/**
-* interface of Components.classesByID
-* (interesting stuff only reflected into JavaScript)
-*/
-[scriptable, builtinclass, uuid(336a9590-4d19-11d3-9893-006008962422)]
-interface nsIXPCComponents_ClassesByID : nsISupports
 {
 };
 
@@ -754,7 +736,6 @@ interface nsIXPCComponents_Utils : nsISupports
 interface nsIXPCComponentsBase : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
-    readonly attribute nsIXPCComponents_InterfacesByID  interfacesByID;
     readonly attribute nsIXPCComponents_Results         results;
 
     boolean isSuccessCode(in nsresult result);
@@ -765,7 +746,6 @@ interface nsIXPCComponentsBase : nsISupports
 interface nsIXPCComponents : nsIXPCComponentsBase
 {
     readonly attribute nsIXPCComponents_Classes         classes;
-    readonly attribute nsIXPCComponents_ClassesByID     classesByID;
     // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                    stack;
     readonly attribute nsIComponentManager              manager;
