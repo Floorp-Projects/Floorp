@@ -450,8 +450,15 @@ private:
       return;
     }
 
+    DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
+    // This is a coarse-grained check to ensure that the image size is
+    // reasonable. It we aren't big enough to contain headers, we have a problem!
+    if (imageSize < sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS)) {
+      return;
+    }
+
     mImageLimit =
-      RVAToPtrUnchecked<void*>(mPeHeader->OptionalHeader.SizeOfImage - 1UL);
+      RVAToPtrUnchecked<void*>(imageSize - 1UL);
   }
 
   template <typename T>
@@ -512,8 +519,7 @@ private:
   GetFixedFileInfo(VS_VERSIONINFO_HEADER* aVerInfo)
   {
     WORD length = aVerInfo->wLength;
-    WORD offset = sizeof(VS_VERSIONINFO_HEADER);
-    if (!offset) {
+    if (length < sizeof(VS_VERSIONINFO_HEADER)) {
       return nullptr;
     }
 
@@ -524,12 +530,19 @@ private:
       return nullptr;
     }
 
+    if (aVerInfo->wValueLength != sizeof(VS_FIXEDFILEINFO)) {
+      // Fixed file info does not exist
+      return nullptr;
+    }
+
+    WORD offset = sizeof(VS_VERSIONINFO_HEADER);
+
     uintptr_t base = reinterpret_cast<uintptr_t>(aVerInfo);
     // Align up to 4-byte boundary
 #pragma warning(suppress: 4146)
     offset += (-(base + offset) & 3);
 
-    if (offset > length) {
+    if (offset >= length) {
       return nullptr;
     }
 
