@@ -23,6 +23,7 @@
     {
       "matches": ["*://*/Speedometer/index.html*",
                   "*://*/StyleBench/*",
+                  "*://*/webaudio/*",
                   "*://*/MotionMark/*"],
       "js": ["benchmark-relay.js"]
     }
