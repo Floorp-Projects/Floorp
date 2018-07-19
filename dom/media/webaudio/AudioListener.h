@@ -38,32 +38,6 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  double DopplerFactor() const
-  {
-    return mDopplerFactor;
-  }
-  void SetDopplerFactor(double aDopplerFactor)
-  {
-    if (WebAudioUtils::FuzzyEqual(mDopplerFactor, aDopplerFactor)) {
-      return;
-    }
-    mDopplerFactor = aDopplerFactor;
-    SendDoubleParameterToStream(PannerNode::LISTENER_DOPPLER_FACTOR, mDopplerFactor);
-  }
-
-  double SpeedOfSound() const
-  {
-    return mSpeedOfSound;
-  }
-  void SetSpeedOfSound(double aSpeedOfSound)
-  {
-    if (WebAudioUtils::FuzzyEqual(mSpeedOfSound, aSpeedOfSound)) {
-      return;
-    }
-    mSpeedOfSound = aSpeedOfSound;
-    SendDoubleParameterToStream(PannerNode::LISTENER_SPEED_OF_SOUND, mSpeedOfSound);
-  }
-
   void SetPosition(double aX, double aY, double aZ)
   {
     if (WebAudioUtils::FuzzyEqual(mPosition.x, aX) &&
@@ -85,25 +59,6 @@ public:
   void SetOrientation(double aX, double aY, double aZ,
                       double aXUp, double aYUp, double aZUp);
 
-  const ThreeDPoint& Velocity() const
-  {
-    return mVelocity;
-  }
-
-  void SetVelocity(double aX, double aY, double aZ)
-  {
-    if (WebAudioUtils::FuzzyEqual(mVelocity.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mVelocity.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mVelocity.z, aZ)) {
-      return;
-    }
-    mVelocity.x = aX;
-    mVelocity.y = aY;
-    mVelocity.z = aZ;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
-    UpdatePannersVelocity();
-  }
-
   void RegisterPannerNode(PannerNode* aPannerNode);
   void UnregisterPannerNode(PannerNode* aPannerNode);
 
@@ -112,17 +67,12 @@ private:
 
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
-  void UpdatePannersVelocity();
-
 private:
   friend class PannerNode;
   RefPtr<AudioContext> mContext;
   ThreeDPoint mPosition;
   ThreeDPoint mFrontVector;
   ThreeDPoint mRightVector;
-  ThreeDPoint mVelocity;
-  double mDopplerFactor;
-  double mSpeedOfSound;
   nsTArray<WeakPtr<PannerNode> > mPanners;
 };
 
