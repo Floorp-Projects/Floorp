@@ -1399,13 +1399,12 @@ GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   JS::Rooted<JSObject*> obj(aCx);
 
   gfx::FeatureStatus gpuProcess = gfxConfig::GetValue(Feature::GPU_PROCESS);
-  InitFeatureObject(aCx, aObj, "gpuProcess", FEATURE_GPU_PROCESS, Some(gpuProcess), &obj);
+  InitFeatureObject(aCx, aObj, "gpuProcess", gpuProcess, &obj);
 
   // Only include AL if the platform attempted to use it.
   gfx::FeatureStatus advancedLayers = gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
   if (advancedLayers != FeatureStatus::Unused) {
-    InitFeatureObject(aCx, aObj, "advancedLayers", FEATURE_ADVANCED_LAYERS,
-                      Some(advancedLayers), &obj);
+    InitFeatureObject(aCx, aObj, "advancedLayers", advancedLayers, &obj);
 
     if (gfxConfig::UseFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING)) {
       JS::Rooted<JS::Value> trueVal(aCx, JS::BooleanValue(true));
@@ -1418,8 +1417,7 @@ bool
 GfxInfoBase::InitFeatureObject(JSContext* aCx,
                                JS::Handle<JSObject*> aContainer,
                                const char* aName,
-                               int32_t aFeature,
-                               const Maybe<mozilla::gfx::FeatureStatus>& aFeatureStatus,
+                               mozilla::gfx::FeatureStatus& aFeatureStatus,
                                JS::MutableHandle<JSObject*> aOutObj)
 {
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
@@ -1427,20 +1425,12 @@ GfxInfoBase::InitFeatureObject(JSContext* aCx,
     return false;
   }
 
-  nsCString failureId = NS_LITERAL_CSTRING("OK");
-  int32_t unused;
-  if (!NS_SUCCEEDED(GetFeatureStatus(aFeature, failureId, &unused))) {
-    return false;
-  }
-
   // Set "status".
-  if (aFeatureStatus) {
-    const char* status = FeatureStatusToString(aFeatureStatus.value());
+  const char* status = FeatureStatusToString(aFeatureStatus);
 
-    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status));
-    JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
-    JS_SetProperty(aCx, obj, "status", val);
-  }
+  JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status));
+  JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
+  JS_SetProperty(aCx, obj, "status", val);
 
   // Add the feature object to the container.
   {
