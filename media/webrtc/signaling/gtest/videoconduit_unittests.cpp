@@ -781,6 +781,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare)
   codecConfig.mSimulcastEncodings.push_back(encoding2);
   codecConfig.mSimulcastEncodings.push_back(encoding3);
   ec = mVideoConduit->ConfigureCodecMode(webrtc::VideoCodecMode::kScreensharing);
+  ASSERT_EQ(ec, kMediaConduitNoError);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
