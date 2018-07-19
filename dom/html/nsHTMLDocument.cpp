@@ -3421,5 +3421,7 @@ nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
 void
 nsHTMLDocument::UserInteractionForTesting()
 {
-  NotifyUserGestureActivation();
+  if (!UserHasInteracted()) {
+    SetUserHasInteracted(true);
+  }
 }

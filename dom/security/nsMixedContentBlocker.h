@@ -65,7 +65,6 @@ public:
                              nsIURI* aRequestingLocation,
                              nsISupports* aRequestingContext,
                              const nsACString& aMimeGuess,
-                             nsISupports* aExtra,
                              nsIPrincipal* aRequestPrincipal,
                              int16_t* aDecision);
   static void AccumulateMixedContentHSTS(nsIURI* aURI,
