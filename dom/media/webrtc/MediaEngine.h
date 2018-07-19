@@ -23,11 +23,6 @@ class Blob;
 class AllocationHandle;
 class MediaEngineSource;
 
-enum MediaSinkEnum {
-  Speaker,
-  Other,
-};
-
 enum {
   kVideoTrack = 1,
   kAudioTrack = 2,
@@ -51,8 +46,7 @@ public:
    */
   virtual void EnumerateDevices(uint64_t aWindowId,
                                 dom::MediaSourceEnum,
-                                MediaSinkEnum,
-                                nsTArray<RefPtr<MediaDevice>>*) = 0;
+                                nsTArray<RefPtr<MediaEngineSource>>*) = 0;
 
   virtual void ReleaseResourcesForWindow(uint64_t aWindowId) = 0;
   virtual void Shutdown() = 0;

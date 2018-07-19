@@ -263,9 +263,9 @@ var WebrtcUI = {
 
     for (let device of aDevices) {
       device = device.QueryInterface(Ci.nsIMediaDevice);
-      if (device.type == "audioinput") {
+      if (device.type == "audio") {
         microphone = true;
-      } else if (device.type == "videoinput") {
+      } else if (device.type == "video") {
         camera = true;
       }
     }
@@ -300,11 +300,11 @@ var WebrtcUI = {
     for (let device of aDevices) {
       device = device.QueryInterface(Ci.nsIMediaDevice);
       switch (device.type) {
-      case "audioinput":
+      case "audio":
         if (aAudioRequested)
           audioDevices.push(device);
         break;
-      case "videoinput":
+      case "video":
         if (aVideoRequested)
           videoDevices.push(device);
         break;
