@@ -191,7 +191,7 @@ public:
 
   nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
-  // Get the base element, <tree> or <select>
+  // Get the base element, <tree>
   mozilla::dom::Element* GetBaseElement();
 
   bool GetVerticalOverflow() const { return mVerticalOverflow; }
@@ -420,9 +420,6 @@ protected:
                            int32_t* aRow,
                            int16_t* aOrient,
                            int16_t* aScrollLines);
-
-  // Mark ourselves dirty if we're a select widget
-  void MarkDirtyIfSelect();
 
   void InvalidateDropFeedback(int32_t aRow, int16_t aOrientation) {
     InvalidateRow(aRow);

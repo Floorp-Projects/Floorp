@@ -153,7 +153,7 @@ CSP_LogMessage(const nsAString& aMessage,
   // E.g. 'aSourceLine' might be: 'onclick attribute on DIV element'.
   // In such cases we append 'aSourceLine' directly to the error message.
   if (!aSourceLine.IsEmpty()) {
-    cspMsg.AppendLiteral(" Source: ");
+    cspMsg.AppendLiteral(u" Source: ");
     cspMsg.Append(aSourceLine);
     cspMsg.AppendLiteral(u".");
   }
