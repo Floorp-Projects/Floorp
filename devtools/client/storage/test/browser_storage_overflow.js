@@ -2,31 +2,11 @@
 // inspector table.
 "use strict";
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
-
 const ITEMS_PER_PAGE = 50;
 
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-overflow.html");
 
-  info("Run the tests with DevTools docked to the BOTTOM");
-  await runTests();
-
-  info("Close Toolbox");
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
-
-  info("Open storage panel again, and dock DevTools to the RIGHT");
-  const {toolbox} = await openStoragePanel();
-  await toolbox.switchHost(Toolbox.HostType.RIGHT);
-
-  info("Run the tests with devtools docked to the RIGHT");
-  await runTests();
-
-  await finishTests();
-});
-
-async function runTests() {
   gUI.tree.expandAll();
   await selectTreeItem(["localStorage", "http://test1.example.org"]);
   checkCellLength(ITEMS_PER_PAGE);
@@ -45,7 +25,9 @@ async function runTests() {
 
   // Check that the columns are sorted in a human readable way (descending).
   checkCellValues("DEC");
-}
+
+  await finishTests();
+});
 
 function checkCellLength(len) {
   const cells = gPanelWindow.document
