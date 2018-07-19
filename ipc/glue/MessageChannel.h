@@ -633,6 +633,7 @@ private:
     ChannelState mChannelState;
     RefPtr<RefCountedMonitor> mMonitor;
     Side mSide;
+    bool mIsCrossProcess;
     MessageLink* mLink;
     MessageLoop* mWorkerLoop;           // thread where work is done
     RefPtr<CancelableRunnable> mChannelErrorTask;  // NotifyMaybeChannelError runnable
