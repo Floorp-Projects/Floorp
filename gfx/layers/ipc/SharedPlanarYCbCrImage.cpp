@@ -115,11 +115,8 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
   uint32_t crOffset = aData.mCrChannel - base;
 
   auto fwd = mCompositable->GetForwarder();
-  bool supportsTextureDirectMapping = fwd->SupportsTextureDirectMapping() &&
-    std::max(mSize.width, mSize.height) <= fwd->GetMaxTextureSize();
   bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(
-    gfx::SurfaceFormat::YUV, fwd->GetCompositorBackendType(),
-    supportsTextureDirectMapping);
+    gfx::SurfaceFormat::YUV, fwd->GetCompositorBackendType());
 
   static_cast<BufferTextureData*>(mTextureClient->GetInternalData())
     ->SetDesciptor(YCbCrDescriptor(aData.mYSize,

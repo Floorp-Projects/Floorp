@@ -94,10 +94,6 @@ enum TextureAllocationFlags {
   // The texture is going to be updated using UpdateFromSurface and needs to support
   // that call.
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
-
-  // In practice, this means we support the APPLE_client_storage extension, meaning
-  // the buffer will not be internally copied by the graphics driver.
-  ALLOC_ALLOW_DIRECT_MAPPING = 1 << 8,
 };
 
 /**
