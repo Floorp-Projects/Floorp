@@ -77,6 +77,8 @@ namespace InspectorUtils {
   void clearPseudoClassLocks(Element element);
   [Throws] void parseStyleSheet(CSSStyleSheet sheet, DOMString input);
   void scrollElementIntoView(Element element);
+  boolean isCustomElementName([TreatNullAs=EmptyString] DOMString name,
+                              DOMString? namespaceURI);
 };
 
 dictionary PropertyNamesOptions {
