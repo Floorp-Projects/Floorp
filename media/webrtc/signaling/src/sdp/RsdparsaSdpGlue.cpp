@@ -73,4 +73,32 @@ std::vector<uint16_t> convertU16Vec(U16Vec* vec)
   return ret;
 }
 
+std::vector<uint32_t> convertU32Vec(U32Vec* vec)
+{
+  std::vector<std::uint32_t> ret;
+
+  size_t len = u32_vec_len(vec);
+  for (size_t i = 0; i < len; i++) {
+    uint32_t num;
+    u32_vec_get(vec, i, &num);
+    ret.push_back(num);
+  }
+
+  return ret;
+}
+
+std::vector<float> convertF32Vec(F32Vec* vec)
+{
+  std::vector<float> ret;
+
+  size_t len = f32_vec_len(vec);
+  for (size_t i = 0; i < len; i++) {
+    float flt;
+    f32_vec_get(vec, i, &flt);
+    ret.push_back(flt);
+  }
+
+  return ret;
+}
+
 }

@@ -20,6 +20,7 @@ struct StringVec;
 struct U8Vec;
 struct U32Vec;
 struct U16Vec;
+struct F32Vec;
 struct RustHeapString;
 
 enum class RustSdpAddrType {
@@ -129,6 +130,45 @@ struct RustSdpAttributeRid {
   U16Vec* formats;
   RustSdpAttributeRidParameters params;
   StringVec* depends;
+};
+
+struct RustSdpAttributeImageAttrXYRange {
+  uint32_t min;
+  uint32_t max;
+  uint32_t step;
+  U32Vec* discrete_values;
+};
+
+struct RustSdpAttributeImageAttrSRange {
+  float min;
+  float max;
+  F32Vec* discrete_values;
+};
+
+struct RustSdpAttributeImageAttrPRange {
+  float min;
+  float max;
+};
+
+struct RustSdpAttributeImageAttrSet {
+  RustSdpAttributeImageAttrXYRange x;
+  RustSdpAttributeImageAttrXYRange y;
+  bool has_sar;
+  RustSdpAttributeImageAttrSRange sar;
+  bool has_par;
+  RustSdpAttributeImageAttrPRange par;
+  float q;
+};
+
+struct RustSdpAttributeImageAttrSetVec;
+struct RustSdpAttributeImageAttrSetList {
+  RustSdpAttributeImageAttrSetVec* sets;
+};
+
+struct RustSdpAttributeImageAttr {
+  uint32_t payloadType;
+  RustSdpAttributeImageAttrSetList send;
+  RustSdpAttributeImageAttrSetList recv;
 };
 
 struct RustSdpAttributeFmtpParameters {
@@ -254,6 +294,9 @@ size_t string_vec_len(const StringVec* vec);
 nsresult string_vec_get_view(const StringVec* vec, size_t index,
                              StringView* str);
 
+size_t f32_vec_len(const F32Vec* vec);
+nsresult f32_vec_get(const F32Vec* vec, size_t index, float* ret);
+
 size_t u32_vec_len(const U32Vec* vec);
 nsresult u32_vec_get(const U32Vec* vec, size_t index, uint32_t* ret);
 
@@ -375,7 +418,11 @@ void sdp_get_rtcpfbs(const RustAttributeList* aList, size_t listSize,
 
 size_t sdp_get_imageattr_count(const RustAttributeList* aList);
 void sdp_get_imageattrs(const RustAttributeList* aList, size_t listSize,
-                        StringView* ret);
+                        RustSdpAttributeImageAttr* ret);
+
+size_t sdp_imageattr_get_set_count(const RustSdpAttributeImageAttrSetVec* sets);
+void sdp_imageattr_get_sets(const RustSdpAttributeImageAttrSetVec* sets,
+                            size_t listSize, RustSdpAttributeImageAttrSet* ret);
 
 size_t sdp_get_sctpmap_count(const RustAttributeList* aList);
 void sdp_get_sctpmaps(const RustAttributeList* aList, size_t listSize,

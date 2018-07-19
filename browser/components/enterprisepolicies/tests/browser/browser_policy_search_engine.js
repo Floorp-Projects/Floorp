@@ -194,6 +194,8 @@ add_task(async function test_AddSearchProvider() {
 });
 
 add_task(async function test_install_and_remove() {
+  let iconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+
   is(Services.search.getEngineByName("Foo"), null,
      "Engine \"Foo\" should not be present when test starts");
 
@@ -203,7 +205,8 @@ add_task(async function test_install_and_remove() {
         "Add": [
           {
             "Name": "Foo",
-            "URLTemplate": "http://example.com/?q={searchTerms}"
+            "URLTemplate": "http://example.com/?q={searchTerms}",
+            "IconURL": iconURL
           }
         ]
       }
@@ -211,8 +214,13 @@ add_task(async function test_install_and_remove() {
   });
 
   // If this passes, it means that the new search engine was properly installed
-  isnot(Services.search.getEngineByName("Foo"), null,
+
+  let engine = Services.search.getEngineByName("Foo");
+  isnot(engine, null,
      "Specified search engine should be installed");
+
+  is(engine.wrappedJSObject.iconURI.spec, iconURL,
+     "Icon should be present");
 
   await setupPolicyEngineWithJson({
   "policies": {

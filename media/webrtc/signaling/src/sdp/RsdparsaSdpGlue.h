@@ -26,6 +26,8 @@ std::vector<std::string> convertStringVec(StringVec* vec);
 sdp::AddrType convertAddressType(RustSdpAddrType addr);
 std::vector<uint8_t> convertU8Vec(U8Vec* vec);
 std::vector<uint16_t> convertU16Vec(U16Vec* vec);
+std::vector<uint32_t> convertU32Vec(U32Vec* vec);
+std::vector<float> convertF32Vec(F32Vec* vec);
 
 }
 

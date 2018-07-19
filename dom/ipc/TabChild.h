@@ -849,6 +849,11 @@ private:
   LayoutDeviceIntPoint mChromeOffset;
   TabId mUniqueId;
 
+  // Whether or not this tab has siblings (other tabs in the same window).
+  // This is one factor used when choosing to allow or deny a non-system
+  // script's attempt to resize the window.
+  bool mHasSiblings;
+
   // Holds the compositor options for the compositor rendering this tab,
   // once we find out which compositor that is.
   Maybe<mozilla::layers::CompositorOptions> mCompositorOptions;

@@ -49,6 +49,15 @@ OS_LIBS += [
 
 RCINCLUDE = 'AccessibleHandler.rc'
 
+# Suppress warnings from the MIDL generated code.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CFLAGS += [
+        '-Wno-extern-initializer',
+        '-Wno-incompatible-pointer-types',
+        '-Wno-missing-braces',
+        '-Wno-unused-const-variable',
+    ]
+
 # Since we are defining our own COM entry points (DllRegisterServer et al),
 # but we still want to be able to delegate some work to the generated code,
 # we add the prefix "Proxy" to all of the generated counterparts.
