@@ -105,20 +105,6 @@ public:
     SendThreeDPointParameterToStream(ORIENTATION, ConvertAudioParamTo3DP(mOrientationX, mOrientationY, mOrientationZ));
   }
 
-  void SetVelocity(double aX, double aY, double aZ)
-  {
-    if (WebAudioUtils::FuzzyEqual(mVelocity.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mVelocity.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mVelocity.z, aZ)) {
-      return;
-    }
-    mVelocity.x = aX;
-    mVelocity.y = aY;
-    mVelocity.z = aZ;
-    SendThreeDPointParameterToStream(VELOCITY, mVelocity);
-    SendDopplerToSourcesIfNeeded();
-  }
-
   double RefDistance() const
   {
     return mRefDistance;
@@ -227,12 +213,6 @@ public:
     return mOrientationZ;
   }
 
-
-  float ComputeDopplerShift();
-  void SendDopplerToSourcesIfNeeded();
-  void FindConnectedSources();
-  void FindConnectedSources(AudioNode* aNode, nsTArray<AudioBufferSourceNode*>& aSources, std::set<AudioNode*>& aSeenNodes);
-
   const char* NodeType() const override
   {
     return "PannerNode";
@@ -251,9 +231,6 @@ private:
     LISTENER_POSITION,
     LISTENER_FRONT_VECTOR, // unit length
     LISTENER_RIGHT_VECTOR, // unit length, orthogonal to LISTENER_FRONT_VECTOR
-    LISTENER_VELOCITY,
-    LISTENER_DOPPLER_FACTOR,
-    LISTENER_SPEED_OF_SOUND,
     PANNING_MODEL,
     DISTANCE_MODEL,
     POSITION,
@@ -264,7 +241,6 @@ private:
     ORIENTATIONX,
     ORIENTATIONY,
     ORIENTATIONZ,
-    VELOCITY,
     REF_DISTANCE,
     MAX_DISTANCE,
     ROLLOFF_FACTOR,
@@ -286,7 +262,6 @@ private:
   RefPtr<AudioParam> mOrientationX;
   RefPtr<AudioParam> mOrientationY;
   RefPtr<AudioParam> mOrientationZ;
-  ThreeDPoint mVelocity;
 
   double mRefDistance;
   double mMaxDistance;
@@ -294,10 +269,6 @@ private:
   double mConeInnerAngle;
   double mConeOuterAngle;
   double mConeOuterGain;
-
-  // An array of all the AudioBufferSourceNode connected directly or indirectly
-  // to this AudioPannerNode.
-  nsTArray<AudioBufferSourceNode*> mSources;
 };
 
 } // namespace dom

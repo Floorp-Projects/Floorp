@@ -309,9 +309,7 @@ public:
   // unregistering would not be safe.
   void UnregisterActiveNode(AudioNode* aNode);
 
-  void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
   void UnregisterPannerNode(PannerNode* aNode);
-  void UpdatePannerSource();
 
   uint32_t MaxChannelCount() const;
 
@@ -371,9 +369,6 @@ private:
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
   // Raw (non-owning) references to all AudioNodes for this AudioContext.
   nsTHashtable<nsPtrHashKey<AudioNode> > mAllNodes;
-  // Hashsets containing all the PannerNodes, to compute the doppler shift.
-  // These are weak pointers.
-  nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
   // Cache to avoid recomputing basic waveforms all the time.
   RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
