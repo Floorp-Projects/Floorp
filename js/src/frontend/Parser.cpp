@@ -1858,7 +1858,7 @@ NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& al
         cursor = FreshlyInitializeBindings(cursor, lets);
 
         bindings->constStart = cursor - start;
-        FreshlyInitializeBindings(cursor, consts);
+        cursor = FreshlyInitializeBindings(cursor, consts);
 
         bindings->length = numBindings;
     }
@@ -1928,7 +1928,7 @@ NewModuleScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& al
         cursor = FreshlyInitializeBindings(cursor, lets);
 
         bindings->constStart = cursor - start;
-        FreshlyInitializeBindings(cursor, consts);
+        cursor = FreshlyInitializeBindings(cursor, consts);
 
         bindings->length = numBindings;
     }
@@ -1968,7 +1968,7 @@ NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& allo
         BindingName* start = bindings->trailingNames.start();
         BindingName* cursor = start;
 
-        FreshlyInitializeBindings(cursor, vars);
+        cursor = FreshlyInitializeBindings(cursor, vars);
 
         bindings->length = numBindings;
     }
@@ -2067,7 +2067,7 @@ NewFunctionScopeData(JSContext* context, ParseContext::Scope& scope, bool hasPar
         cursor = FreshlyInitializeBindings(cursor, formals);
 
         bindings->varStart = cursor - start;
-        FreshlyInitializeBindings(cursor, vars);
+        cursor = FreshlyInitializeBindings(cursor, vars);
 
         bindings->length = numBindings;
     }
@@ -2108,7 +2108,7 @@ NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc
         BindingName* start = bindings->trailingNames.start();
         BindingName* cursor = start;
 
-        FreshlyInitializeBindings(cursor, vars);
+        cursor = FreshlyInitializeBindings(cursor, vars);
 
         bindings->length = numBindings;
     }
@@ -2165,7 +2165,7 @@ NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& a
         cursor = FreshlyInitializeBindings(cursor, lets);
 
         bindings->constStart = cursor - start;
-        FreshlyInitializeBindings(cursor, consts);
+        cursor = FreshlyInitializeBindings(cursor, consts);
 
         bindings->length = numBindings;
     }
