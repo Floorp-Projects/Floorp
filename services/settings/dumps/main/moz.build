@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 FINAL_TARGET_FILES.defaults.settings.main += [
-    'tippytop.json',
+    'example.json',
 ]
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
