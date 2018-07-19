@@ -2155,6 +2155,12 @@ const Class WasmGlobalObject::class_ =
 WasmGlobalObject::trace(JSTracer* trc, JSObject* obj)
 {
     WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
+    if (global->isNewborn()) {
+        // This can happen while we're allocating the object, in which case
+        // every single slot of the object is not defined yet. In particular,
+        // there's nothing to trace yet.
+        return;
+    }
     switch (global->type().code()) {
       case ValType::AnyRef:
         if (global->cell()->ptr)
@@ -2229,6 +2235,8 @@ WasmGlobalObject::create(JSContext* cx, HandleVal hval, bool isMutable)
     obj->initReservedSlot(TYPE_SLOT, Int32Value(int32_t(val.type().bitsUnsafe())));
     obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
     obj->initReservedSlot(CELL_SLOT, PrivateValue(cell));
+
+    MOZ_ASSERT(!obj->isNewborn());
 
     return obj;
 }
