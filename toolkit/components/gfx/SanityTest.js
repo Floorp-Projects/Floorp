@@ -45,14 +45,6 @@ const REASON_DEVICE_CHANGED = 2;
 const REASON_DRIVER_CHANGED = 3;
 const REASON_AL_CONFIG_CHANGED = 4;
 
-// GRAPHICS_SANITY_TEST_OS_SNAPSHOT histogram enumeration values
-const SNAPSHOT_VIDEO_OK = 0;
-const SNAPSHOT_VIDEO_FAIL = 1;
-const SNAPSHOT_ERROR = 2;
-const SNAPSHOT_TIMEOUT = 3;
-const SNAPSHOT_LAYERS_OK = 4;
-const SNAPSHOT_LAYERS_FAIL = 5;
-
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
   var data = ctx.getImageData(x, y, 1, 1);
 
