@@ -191,22 +191,7 @@ nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
   int32_t desiredRows;
   if (MOZ_UNLIKELY(!baseElement)) {
     desiredRows = 0;
-  }
-  else if (baseElement->IsHTMLElement(nsGkAtoms::select)) {
-    min.width = CalcMaxRowWidth();
-    nsAutoString size;
-    baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::size, size);
-    if (!size.IsEmpty()) {
-      nsresult err;
-      desiredRows = size.ToInteger(&err);
-      mHasFixedRowCount = true;
-      mPageLength = desiredRows;
-    }
-    else {
-      desiredRows = 1;
-    }
   } else {
-    // tree
     nsAutoString rows;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     if (!rows.IsEmpty()) {
@@ -1738,22 +1723,6 @@ nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsTreeColumn* aCol, bool *_retval)
   return NS_OK;
 }
 
-void
-nsTreeBodyFrame::MarkDirtyIfSelect()
-{
-  nsIContent* baseElement = GetBaseElement();
-
-  if (baseElement && baseElement->IsHTMLElement(nsGkAtoms::select)) {
-    // If we are an intrinsically sized select widget, we may need to
-    // resize, if the widest item was removed or a new item was added.
-    // XXX optimize this more
-
-    mStringWidth = -1;
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                                  NS_FRAME_IS_DIRTY);
-  }
-}
-
 nsresult
 nsTreeBodyFrame::CreateTimer(const LookAndFeel::IntID aID,
                              nsTimerCallbackFunc aFunc, int32_t aType,
@@ -1812,9 +1781,7 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
 
   if (mTopRowIndex == 0) {
     // Just update the scrollbar and return.
-    if (FullScrollbarsUpdate(false)) {
-      MarkDirtyIfSelect();
-    }
+    FullScrollbarsUpdate(false);
     return NS_OK;
   }
 
@@ -1841,9 +1808,7 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
     }
   }
 
-  if (FullScrollbarsUpdate(needsInvalidation)) {
-    MarkDirtyIfSelect();
-  }
+  FullScrollbarsUpdate(needsInvalidation);
   return NS_OK;
 }
 
@@ -4250,13 +4215,8 @@ nsTreeBodyFrame::GetBaseElement()
   nsIFrame* parent = GetParent();
   while (parent) {
     nsIContent* content = parent->GetContent();
-    if (content) {
-      dom::NodeInfo* ni = content->NodeInfo();
-
-      if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
-          (ni->Equals(nsGkAtoms::select) &&
-           content->IsHTMLElement()))
-        return content->AsElement();
+    if (content && content->IsXULElement(nsGkAtoms::tree)) {
+      return content->AsElement();
     }
 
     parent = parent->GetParent();

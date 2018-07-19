@@ -2560,12 +2560,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
 bool
 nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
 {
-  if (aContent->IsXULElement()) {
-    if (!aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {
-      return false;
-    }
-  }
-  else if (!aOnPopup || !aContent->IsHTMLElement(nsGkAtoms::option)) {
+  if (!aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {
     return false;
   }
 
