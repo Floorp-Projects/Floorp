@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsDataHashtable.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
@@ -140,7 +141,9 @@ class nsCSPContext : public nsIContentSecurityPolicy
 
     static uint32_t ScriptSampleMaxLength()
     {
-      return std::max(sScriptSampleMaxLength, 0);
+      return std::max(
+        mozilla::StaticPrefs::security_csp_reporting_script_sample_max_length(),
+        0);
     }
 
   private:
@@ -164,10 +167,6 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                uint32_t aViolatedPolicyIndex,
                                uint32_t aLineNumber,
                                uint32_t aColumnNumber);
-
-    static int32_t sScriptSampleMaxLength;
-
-    static bool sViolationEventsEnabled;
 
     nsString                                   mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging
