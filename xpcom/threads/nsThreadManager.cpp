@@ -441,7 +441,13 @@ nsThreadManager::GetCurrentThread()
 bool
 nsThreadManager::IsNSThread() const
 {
-  return mInitialized && !!PR_GetThreadPrivate(mCurThreadIndex);
+  if (!mInitialized) {
+    return false;
+  }
+  if (auto* thread = (nsThread*)PR_GetThreadPrivate(mCurThreadIndex)) {
+    return thread->mShutdownRequired;
+  }
+  return false;
 }
 
 NS_IMETHODIMP
