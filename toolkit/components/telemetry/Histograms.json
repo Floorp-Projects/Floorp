@@ -207,7 +207,7 @@
   },
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
     "bug_numbers": [1238040],
     "expires_in_version": "70",
     "kind": "exponential",
@@ -217,7 +217,7 @@
   },
   "CHECKERBOARD_PEAK": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
     "bug_numbers": [1238040],
     "expires_in_version": "70",
     "kind": "exponential",
@@ -227,7 +227,7 @@
   },
   "CHECKERBOARD_POTENTIAL_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
     "bug_numbers": [1238040],
     "expires_in_version": "70",
     "kind": "exponential",
@@ -237,7 +237,7 @@
   },
   "CHECKERBOARD_SEVERITY": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
     "bug_numbers": [1238040],
     "expires_in_version": "70",
     "kind": "exponential",
@@ -247,6 +247,7 @@
   },
   "COMPOSITE_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "description": "Composite times in milliseconds",
     "kind": "exponential",
@@ -255,6 +256,7 @@
   },
   "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "description": "Time from vsync to finishing a composite in milliseconds.",
     "kind": "exponential",
@@ -274,7 +276,7 @@
   },
   "CONTENT_RESPONSE_DURATION" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
     "bug_numbers": [1261373],
     "expires_in_version": "70",
     "description": "Main thread response times for APZ notifications about input events (ms)",
@@ -454,9 +456,11 @@
   },
   "DEVICE_RESET_REASON": {
     "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
+    "bug_numbers": [1135408],
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FETCH_IS_MAINTHREAD": {
@@ -467,9 +471,11 @@
   },
   "FORCED_DEVICE_RESET_REASON": {
     "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
+    "bug_numbers": [1235407],
     "releaseChannelCollection": "opt-out",
     "description": "GPU Forced Device Reset Reason (OpenSharedHandle)"
   },
@@ -839,7 +845,7 @@
   },
   "GPU_PROCESS_LAUNCH_TIME_MS_2" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "66",
     "bug_numbers": [1297790, 1317796],
     "kind": "exponential",
@@ -849,7 +855,7 @@
   },
   "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "66",
     "bug_numbers": [1324095],
     "kind": "exponential",
@@ -1336,7 +1342,7 @@
   },
   "CANVAS_WEBGL_ACCL_FAILURE_ID": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -1345,7 +1351,7 @@
   },
   "CANVAS_WEBGL_FAILURE_ID": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -1354,7 +1360,7 @@
   },
   "CANVAS_WEBGL_SUCCESS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "WebGL1 creation success",
@@ -1368,7 +1374,7 @@
   },
   "CANVAS_WEBGL2_SUCCESS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "WebGL2 creation success",
@@ -3375,6 +3381,7 @@
   },
   "REFRESH_DRIVER_TICK" : {
     "record_in_processes": ["main", "content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent ticking the refresh driver in milliseconds",
     "kind": "exponential",
@@ -3383,6 +3390,7 @@
   },
   "PAINT_BUILD_DISPLAYLIST_TIME" : {
     "record_in_processes": ["main", "content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
     "expires_in_version": "never",
     "description": "Time spent in building displaylists in milliseconds",
     "kind": "exponential",
@@ -3391,7 +3399,7 @@
   },
   "PAINT_BUILD_LAYERS_TIME" : {
     "record_in_processes": ["content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","mwoodrow@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
     "bug_numbers": [1473908],
     "expires_in_version": "never",
     "description": "Time spent in building layers in milliseconds",
@@ -3401,6 +3409,7 @@
   },
   "PAINT_RASTERIZE_TIME" : {
     "record_in_processes": ["main", "content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "description": "Time spent rasterizing each frame in milliseconds",
     "kind": "exponential",
@@ -5762,7 +5771,7 @@
   },
   "FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -5772,7 +5781,7 @@
   },
   "FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -5782,7 +5791,7 @@
   },
   "FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -11909,7 +11918,7 @@
   "GRAPHICS_SANITY_TEST": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "kind": "enumerated",
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
@@ -11970,7 +11979,7 @@
   },
   "GRAPHICS_DRIVER_STARTUP_TEST": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -12223,7 +12232,7 @@
   },
   "D3D11_SYNC_HANDLE_FAILURE": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bschouten@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com","ashughes@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "bschouten@mozilla.com"],
     "expires_in_version": "66",
     "releaseChannelCollection": "opt-out",
     "kind": "count",
@@ -12231,14 +12240,15 @@
   },
   "GFX_CONTENT_FAILED_TO_ACQUIRE_DEVICE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
     "description": "Failed to create a gfx content device. 0=content d3d11, 1=image d3d11, 2=d2d1."
   },
   "GFX_CRASH": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -12391,7 +12401,7 @@
   },
   "PLUGIN_DRAWING_MODEL": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "bug_numbers": [1229961],
@@ -12445,7 +12455,7 @@
   },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "bug_numbers": [1259695],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -12620,18 +12630,18 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
   },
-    "D3D11_COMPOSITING_FAILURE_ID": {
+  "D3D11_COMPOSITING_FAILURE_ID": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
     "description": "D3D11 compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
     "bug_numbers": [1002846]
   },
-    "OPENGL_COMPOSITING_FAILURE_ID": {
+  "OPENGL_COMPOSITING_FAILURE_ID": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -12821,7 +12831,7 @@
   },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
     "bug_numbers": [1309442],
     "expires_in_version": "66",
     "kind": "exponential",
@@ -12831,7 +12841,7 @@
   },
   "CONTENT_FRAME_TIME": {
     "record_in_processes": ["main", "gpu"],
-    "alert_emails": ["rhunt@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "bug_numbers": [1470528],
     "expires_in_version": "66",
     "kind": "exponential",
@@ -12841,7 +12851,7 @@
   },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
     "bug_numbers": [1309442],
     "expires_in_version": "66",
     "keyed": true,
@@ -12853,7 +12863,7 @@
   },
   "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
     "bug_numbers": [1430897],
     "expires_in_version": "66",
     "keyed": true,
@@ -12887,7 +12897,7 @@
   },
   "TABCHILD_PAINT_TIME": {
     "record_in_processes": ["content"],
-    "alert_emails": ["mconley@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mconley@mozilla.com"],
     "bug_numbers": [1313686],
     "expires_in_version": "65",
     "kind": "exponential",
@@ -13677,7 +13687,7 @@
   },
   "GFX_OMTP_PAINT_WAIT_TIME": {
     "record_in_processes": ["content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","rhunt@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
     "expires_in_version": "66",
     "kind": "exponential",
     "high": 200,
