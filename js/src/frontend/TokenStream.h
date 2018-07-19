@@ -1555,6 +1555,16 @@ class GeneralTokenStreamChars
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
 
+    /**
+     * Compute a line of context for an otherwise-filled-in |err| at the given
+     * offset in this token stream.
+     *
+     * This function is very-internal: almost certainly you should use one of
+     * its callers instead.  It basically exists only to make those callers
+     * more readable.
+     */
+    MOZ_MUST_USE bool internalComputeLineOfContext(ErrorMetadata* err, uint32_t offset);
+
   public:
     JSAtom* getRawTemplateStringAtom() {
         TokenStreamAnyChars& anyChars = anyCharsAccess();
@@ -1822,6 +1832,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using SpecializedChars::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePointDontNormalize;
+    using GeneralCharsBase::internalComputeLineOfContext;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchCodeUnit;
     using CharsBase::matchLineTerminator;
@@ -1901,12 +1912,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     // Warn at the current offset.
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
-
-  private:
-    // Compute a line of context for an otherwise-filled-in |err| at the given
-    // offset in this token stream.  (This function basically exists to make
-    // |computeErrorMetadata| more readable and shouldn't be called elsewhere.)
-    MOZ_MUST_USE bool computeLineOfContext(ErrorMetadata* err, uint32_t offset);
 
   public:
     // Compute error metadata for an error at the given offset.
