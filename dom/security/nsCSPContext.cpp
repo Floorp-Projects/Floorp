@@ -161,7 +161,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsIURI*             aRequestOrigin,
                          nsISupports*        aRequestContext,
                          const nsACString&   aMimeTypeGuess,
-                         nsISupports*        aExtra,
+                         nsIURI*             aOriginalURIIfRedirect,
                          int16_t*            outDecision)
 {
   if (CSPCONTEXTLOGENABLED()) {
@@ -226,17 +226,11 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     }
   }
 
-  // aExtra holds the original URI of the channel if the
-  // channel got redirected (until we fix Bug 1332422).
-  nsCOMPtr<nsIURI> originalURI = do_QueryInterface(aExtra);
-  bool wasRedirected = originalURI;
-
   bool permitted = permitsInternal(dir,
                                    nullptr, // aTriggeringElement
                                    aContentLocation,
-                                   originalURI,
+                                   aOriginalURIIfRedirect,
                                    nonce,
-                                   wasRedirected,
                                    isPreload,
                                    false,     // allow fallback to default-src
                                    true,      // send violation reports
@@ -264,9 +258,8 @@ bool
 nsCSPContext::permitsInternal(CSPDirective aDir,
                               Element* aTriggeringElement,
                               nsIURI* aContentLocation,
-                              nsIURI* aOriginalURI,
+                              nsIURI* aOriginalURIIfRedirect,
                               const nsAString& aNonce,
-                              bool aWasRedirected,
                               bool aIsPreload,
                               bool aSpecific,
                               bool aSendViolationReports,
@@ -280,7 +273,7 @@ nsCSPContext::permitsInternal(CSPDirective aDir,
     if (!mPolicies[p]->permits(aDir,
                                aContentLocation,
                                aNonce,
-                               aWasRedirected,
+                               !!aOriginalURIIfRedirect,
                                aSpecific,
                                aParserCreated,
                                violatedDirective)) {
@@ -299,7 +292,7 @@ nsCSPContext::permitsInternal(CSPDirective aDir,
                              (aSendContentLocationInViolationReports ?
                               aContentLocation : nullptr),
                              BlockedContentSource::eUnknown, /* a BlockedContentSource */
-                             aOriginalURI,  /* in case of redirect originalURI is not null */
+                             aOriginalURIIfRedirect,  /* in case of redirect originalURI is not null */
                              violatedDirective,
                              p,             /* policy index        */
                              EmptyString(), /* no observer subject */
@@ -1568,7 +1561,6 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
                                    ancestorsArray[a],
                                    nullptr, // no redirect here.
                                    EmptyString(), // no nonce
-                                   false,   // no redirect here.
                                    false,   // not a preload.
                                    true,    // specific, do not use default-src
                                    true,    // send violation reports
@@ -1598,7 +1590,6 @@ nsCSPContext::Permits(Element* aTriggeringElement,
                                 aURI,
                                 nullptr,  // no original (pre-redirect) URI
                                 EmptyString(),  // no nonce
-                                false,    // not redirected.
                                 false,    // not a preload.
                                 aSpecific,
                                 true,     // send violation reports
