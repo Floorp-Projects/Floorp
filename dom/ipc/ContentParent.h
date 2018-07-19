@@ -736,6 +736,7 @@ private:
                      nsresult& aResult,
                      nsCOMPtr<nsITabParent>& aNewTabParent,
                      bool* aWindowIsNew,
+                     int32_t& aOpenLocation,
                      nsIPrincipal* aTriggeringPrincipal,
                      uint32_t aReferrerPolicy,
                      bool aLoadUri);

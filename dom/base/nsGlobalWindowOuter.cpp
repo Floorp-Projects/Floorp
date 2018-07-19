@@ -4516,7 +4516,7 @@ nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType)
         if (child &&
             NS_SUCCEEDED(child->GetHasSiblings(&hasSiblings)) &&
             hasSiblings) {
-          child->SendGetTabCount(&itemCount);
+          return false;
         }
       }
     } else {
