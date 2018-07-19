@@ -46,7 +46,6 @@ class TextureClientPool final : public TextureClientAllocator
 
 public:
   TextureClientPool(LayersBackend aBackend,
-                    bool aSupportsTextureDirectMapping,
                     int32_t aMaxTextureSize,
                     gfx::SurfaceFormat aFormat,
                     gfx::IntSize aSize,
@@ -171,8 +170,6 @@ private:
   // we won't accept returns of TextureClients anymore, and the refcounting
   // should take care of their destruction.
   bool mDestroyed;
-
-  bool mSupportsTextureDirectMapping;
 };
 
 } // namespace layers

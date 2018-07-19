@@ -32,9 +32,6 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/SyncObject.h"
-#ifdef XP_DARWIN
-#include "mozilla/layers/TextureSync.h"
-#endif
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -806,38 +803,6 @@ ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
     return;
   }
   Unused << mShadowManager->SendSetLayerObserverEpoch(aLayerObserverEpoch);
-}
-
-void
-ShadowLayerForwarder::UpdateTextureLocks()
-{
-#ifdef XP_DARWIN
-  if (!IPCOpen()) {
-    return;
-  }
-
-  auto compositorBridge = GetCompositorBridgeChild();
-  if (compositorBridge) {
-    auto pid = compositorBridge->OtherPid();
-    TextureSync::UpdateTextureLocks(pid);
-  }
-#endif
-}
-
-void
-ShadowLayerForwarder::SyncTextures(const nsTArray<uint64_t>& aSerials)
-{
-#ifdef XP_DARWIN
-  if (!IPCOpen()) {
-    return;
-  }
-
-  auto compositorBridge = GetCompositorBridgeChild();
-  if (compositorBridge) {
-    auto pid = compositorBridge->OtherPid();
-    TextureSync::WaitForTextures(pid, aSerials);
-  }
-#endif
 }
 
 void

@@ -274,7 +274,6 @@ if CONFIG['MOZ_X11']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
         'opengl/GLManager.h',
-        'TextureSync.h',
     ]
     EXPORTS += [
         'MacIOSurfaceHelpers.h',
@@ -282,7 +281,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     UNIFIED_SOURCES += [
         'opengl/GLManager.cpp',
-        'TextureSync.cpp',
     ]
     SOURCES += [
         'ipc/ShadowLayerUtilsMac.cpp',

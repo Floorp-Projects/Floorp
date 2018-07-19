@@ -183,16 +183,6 @@ public:
 
   int NumCompositableRefs() const { return mCompositableCount; }
 
-  // Some texture sources could wrap the cpu buffer to gpu directly. Then,
-  // we could get better performance of texture uploading.
-  virtual bool IsDirectMap() { return false; }
-  // The direct-map cpu buffer should be alive when gpu uses it. And it
-  // should not be updated while gpu reads it. This Sync() function
-  // implements this synchronized behavior by allowing us to check if
-  // the GPU is done with the texture, and block on it if aBlocking is
-  // true.
-  virtual bool Sync(bool aBlocking) { return true; }
-
 protected:
 
   RefPtr<TextureSource> mNextSibling;
@@ -672,14 +662,10 @@ public:
    */
   virtual MacIOSurface* GetMacIOSurface() { return nullptr; }
 
-  virtual bool IsDirectMap() { return false; }
-
 protected:
-  virtual void ReadUnlock();
+  void ReadUnlock();
 
   void RecycleTexture(TextureFlags aFlags);
-
-  virtual void MaybeNotifyUnlocked() {}
 
   virtual void UpdatedInternal(const nsIntRegion *Region) {}
 
@@ -782,11 +768,6 @@ public:
                                 wr::ImageRendering aFilter,
                                 const Range<wr::ImageKey>& aImageKeys) override;
 
-  virtual void ReadUnlock() override;
-  virtual bool IsDirectMap() override { return mFirstSource && mFirstSource->IsDirectMap(); };
-
-  bool CanUnlock() { return !mFirstSource || mFirstSource->Sync(false); }
-
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
   bool UploadIfNeeded();
@@ -794,8 +775,6 @@ protected:
   bool EnsureWrappingTextureSource();
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
-  virtual void MaybeNotifyUnlocked() override;
-
 
   BufferDescriptor mDescriptor;
   RefPtr<Compositor> mCompositor;

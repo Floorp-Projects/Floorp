@@ -6,10 +6,6 @@
 
 #include "mozilla/layers/TextureSourceProvider.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/layers/PTextureParent.h"
-#ifdef XP_DARWIN
-#include "mozilla/layers/TextureSync.h"
-#endif
 
 namespace mozilla {
 namespace layers {
@@ -22,30 +18,9 @@ TextureSourceProvider::~TextureSourceProvider()
 void
 TextureSourceProvider::ReadUnlockTextures()
 {
-#ifdef XP_DARWIN
-  nsClassHashtable<nsUint32HashKey, nsTArray<uint64_t>> texturesIdsToUnlockByPid;
-  for (auto& texture : mUnlockAfterComposition) {
-    auto bufferTexture = texture->AsBufferTextureHost();
-    if (bufferTexture && bufferTexture->IsDirectMap()) {
-      texture->ReadUnlock();
-      auto actor = texture->GetIPDLActor();
-      if (actor) {
-        base::ProcessId pid = actor->OtherPid();
-        nsTArray<uint64_t>* textureIds = texturesIdsToUnlockByPid.LookupOrAdd(pid);
-        textureIds->AppendElement(TextureHost::GetTextureSerial(actor));
-      }
-    } else {
-      texture->ReadUnlock();
-    }
-  }
-  for (auto it = texturesIdsToUnlockByPid.ConstIter(); !it.Done(); it.Next()) {
-    TextureSync::SetTexturesUnlocked(it.Key(), *it.UserData());
-  }
-#else
   for (auto& texture : mUnlockAfterComposition) {
     texture->ReadUnlock();
   }
-#endif
   mUnlockAfterComposition.Clear();
 }
 
