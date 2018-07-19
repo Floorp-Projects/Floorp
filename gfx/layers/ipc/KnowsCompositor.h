@@ -102,11 +102,6 @@ public:
     return mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
-  bool SupportsTextureDirectMapping() const
-  {
-    return mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
-  }
-
   bool SupportsD3D11() const
   {
     return GetCompositorBackendType() == layers::LayersBackend::LAYERS_D3D11 ||

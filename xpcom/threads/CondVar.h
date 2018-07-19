@@ -17,17 +17,17 @@
 
 namespace mozilla {
 
+
 /**
- * Similarly to OffTheBooksMutex, OffTheBooksCondvar is identical to CondVar,
- * except that OffTheBooksCondVar doesn't include leak checking.  Sometimes
- * you want to intentionally "leak" a CondVar until shutdown; in these cases,
- * OffTheBooksCondVar is for you.
+ * CondVar
+ * Vanilla condition variable.  Please don't use this unless you have a
+ * compelling reason --- Monitor provides a simpler API.
  */
-class OffTheBooksCondVar : BlockingResourceBase
+class CondVar : BlockingResourceBase
 {
 public:
   /**
-   * OffTheBooksCondVar
+   * CondVar
    *
    * The CALLER owns |aLock|.
    *
@@ -37,18 +37,20 @@ public:
    *          If success, a valid Monitor* which must be destroyed
    *          by Monitor::DestroyMonitor()
    **/
-  OffTheBooksCondVar(OffTheBooksMutex& aLock, const char* aName)
+  CondVar(Mutex& aLock, const char* aName)
     : BlockingResourceBase(aName, eCondVar)
     , mLock(&aLock)
   {
+    MOZ_COUNT_CTOR(CondVar);
   }
 
   /**
-   * ~OffTheBooksCondVar
-   * Clean up after this OffTheBooksCondVar, but NOT its associated Mutex.
+   * ~CondVar
+   * Clean up after this CondVar, but NOT its associated Mutex.
    **/
-  ~OffTheBooksCondVar()
+  ~CondVar()
   {
+    MOZ_COUNT_DTOR(CondVar);
   }
 
   /**
@@ -123,37 +125,12 @@ public:
 #endif  // ifdef DEBUG
 
 private:
-  OffTheBooksCondVar();
-  OffTheBooksCondVar(const OffTheBooksCondVar&) = delete;
-  OffTheBooksCondVar& operator=(const OffTheBooksCondVar&) = delete;
-
-  OffTheBooksMutex* mLock;
-  detail::ConditionVariableImpl mImpl;
-};
-
-/**
- * CondVar
- * Vanilla condition variable.  Please don't use this unless you have a
- * compelling reason --- Monitor provides a simpler API.
- */
-class CondVar : public OffTheBooksCondVar
-{
-public:
-  CondVar(OffTheBooksMutex& aLock, const char* aName)
-    : OffTheBooksCondVar(aLock, aName)
-  {
-    MOZ_COUNT_CTOR(CondVar);
-  }
-
-  ~CondVar()
-  {
-    MOZ_COUNT_DTOR(CondVar);
-  }
-
-private:
   CondVar();
-  CondVar(const CondVar&);
-  CondVar& operator=(const CondVar&);
+  CondVar(const CondVar&) = delete;
+  CondVar& operator=(const CondVar&) = delete;
+
+  Mutex* mLock;
+  detail::ConditionVariableImpl mImpl;
 };
 
 } // namespace mozilla

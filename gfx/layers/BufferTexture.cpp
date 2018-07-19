@@ -105,13 +105,8 @@ static bool UsingX11Compositor()
 }
 
 bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend,
-                                  bool aSupportsTextureDirectMapping)
+                                  LayersBackend aLayersBackend)
 {
-  if (aSupportsTextureDirectMapping) {
-    return false;
-  }
-
   return aLayersBackend != LayersBackend::LAYERS_BASIC
       || UsingX11Compositor()
       || aFormat == gfx::SurfaceFormat::UNKNOWN;
@@ -173,8 +168,7 @@ BufferTextureData::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
   }
 
   bool hasIntermediateBuffer = aAllocator ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                                                         aAllocator->GetCompositorBackendType(),
-                                                                         aAllocator->SupportsTextureDirectMapping())
+                                                                         aAllocator->GetCompositorBackendType())
                                           : true;
 
   // Initialize the metadata with something, even if it will have to be rewritten
@@ -216,8 +210,7 @@ BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
   bool hasIntermediateBuffer =
     aAllocator
       ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                     aAllocator->GetCompositorBackendType(),
-                                     aAllocator->SupportsTextureDirectMapping())
+                                     aAllocator->GetCompositorBackendType())
       : true;
 
   YCbCrDescriptor descriptor = YCbCrDescriptor(aYSize, aYStride,
@@ -532,9 +525,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat,
-                                                            aLayersBackend,
-                                                            aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
+  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
 
   GfxMemoryImageReporter::DidAlloc(buf);
 
@@ -610,9 +601,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat,
-                                                            aLayersBackend,
-                                                            aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
+  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
 
   BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
 
