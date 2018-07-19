@@ -8,7 +8,7 @@
 #define mozilla_dom_CSSMozDocumentRule_h
 
 #include "mozilla/css/GroupRule.h"
-#include "mozilla/css/URLMatchingFunction.h"
+#include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla {
@@ -29,7 +29,7 @@ public:
                     nsIURI* aDocURI,
                     const nsACString& aDocURISpec,
                     const nsACString& aPattern,
-                    css::URLMatchingFunction aUrlMatchingFunction);
+                    css::DocumentMatchingFunction);
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;

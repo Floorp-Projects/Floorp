@@ -25,20 +25,20 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
                           nsIURI* aDocURI,
                           const nsACString& aDocURISpec,
                           const nsACString& aPattern,
-                          URLMatchingFunction aUrlMatchingFunction)
+                          DocumentMatchingFunction aMatchingFunction)
 {
-  switch (aUrlMatchingFunction) {
-    case URLMatchingFunction::eURL: {
+  switch (aMatchingFunction) {
+    case DocumentMatchingFunction::URL: {
       if (aDocURISpec == aPattern) {
         return true;
       }
     } break;
-    case URLMatchingFunction::eURLPrefix: {
+    case DocumentMatchingFunction::URLPrefix: {
       if (StringBeginsWith(aDocURISpec, aPattern)) {
         return true;
       }
     } break;
-    case URLMatchingFunction::eDomain: {
+    case DocumentMatchingFunction::Domain: {
       nsAutoCString host;
       if (aDocURI) {
         aDocURI->GetHost(host);
@@ -55,7 +55,7 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
         }
       }
     } break;
-    case URLMatchingFunction::eRegExp: {
+    case DocumentMatchingFunction::RegExp: {
       NS_ConvertUTF8toUTF16 spec(aDocURISpec);
       NS_ConvertUTF8toUTF16 regex(aPattern);
       if (nsContentUtils::IsPatternMatching(spec, regex, aDoc)) {
