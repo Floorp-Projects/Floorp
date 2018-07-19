@@ -57,22 +57,7 @@ public:
                                     nsAString& aResult);
 
   static void
-  AppendEscapedCSSFontFamilyList(const mozilla::FontFamilyList& aFamilyList,
-                                 nsAString& aResult);
-  static void
-  AppendEscapedCSSFontFamilyList(mozilla::SharedFontList* aFontlist,
-                                 nsAString& aResult)
-  {
-    AppendEscapedCSSFontFamilyList(aFontlist->mNames, aResult);
-  }
-
-  static void
   AppendFontSlantStyle(const mozilla::FontSlantStyle&, nsAString& aResult);
-
-private:
-  static void
-  AppendEscapedCSSFontFamilyList(const nsTArray<mozilla::FontFamilyName>& aNames,
-                                 nsAString& aResult);
 
 public:
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
@@ -85,22 +70,6 @@ public:
   static void AppendAngleValue(const nsStyleCoord& aValue, nsAString& aResult);
 
   static void AppendPaintOrderValue(uint8_t aValue, nsAString& aResult);
-
-  static void AppendFontTagAsString(uint32_t aTag, nsAString& aResult);
-
-  static void AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
-                                        nsAString& aResult);
-
-  static void AppendFontFeatureSettings(const nsCSSValue& src,
-                                        nsAString& aResult);
-
-  static void AppendFontVariationSettings(const nsTArray<gfxFontVariation>& aVariations,
-                                          nsAString& aResult);
-
-  static void AppendFontVariationSettings(const nsCSSValue& src,
-                                          nsAString& aResult);
-
-  static void AppendUnicodeRange(const nsCSSValue& aValue, nsAString& aResult);
 
   static void AppendCSSNumber(float aNumber, nsAString& aResult)
   {
@@ -118,20 +87,6 @@ public:
   static void AppendCubicBezierKeywordTimingFunction(
       nsTimingFunction::Type aType,
       nsAString& aResult);
-
-  // convert bitmask value to keyword name for a functional alternate
-  static void GetFunctionalAlternatesName(int32_t aFeature,
-                                          nsAString& aFeatureName);
-
-  // Append functional font-variant-alternates values to string
-  static void
-  SerializeFunctionalAlternates(const nsTArray<gfxAlternateValue>& aAlternates,
-                                nsAString& aResult);
-
-  // List of functional font-variant-alternates values to feature/value pairs
-  static void
-  ComputeFunctionalAlternates(const nsCSSValueList* aList,
-                              nsTArray<gfxAlternateValue>& aAlternateValues);
 
   /*
    * Convert an author-provided floating point number to an integer (0
