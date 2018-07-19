@@ -1217,6 +1217,7 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
                                          : axisTracker.IsCrossAxisReversed();
 
   uint8_t alignment;
+  uint8_t alignmentFlags = 0;
   if (isMainAxis) {
     alignment = SimplifyAlignOrJustifyContentForOneItem(
                   containerStylePos->mJustifyContent,
@@ -1234,8 +1235,8 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
       // Single-line, or multi-line but the (one) line stretches to fill
       // container. Respect align-self.
       alignment = aChildRI.mStylePosition->UsedAlignSelf(Style());
-      // XXX strip off <overflow-position> bits until we implement it
-      // (bug 1311892)
+      // Extract and strip align flag bits
+      alignmentFlags = alignment & NS_STYLE_ALIGN_FLAG_BITS;
       alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
       if (alignment == NS_STYLE_ALIGN_NORMAL) {
@@ -1269,7 +1270,7 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     alignment = NS_STYLE_ALIGN_END;
   }
 
-  return alignment;
+  return (alignment | alignmentFlags);
 }
 
 UniquePtr<FlexItem>
