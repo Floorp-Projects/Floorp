@@ -78,11 +78,12 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 testThat(selectedContent, {}, hasShowActionRequest(
                         FLAG_IS_EDITABLE, arrayOf(ACTION_COLLAPSE_TO_START, ACTION_COLLAPSE_TO_END,
                                                   ACTION_COPY, ACTION_CUT, ACTION_DELETE,
-                                                  ACTION_PASTE, ACTION_SELECT_ALL)))
+                                                  ACTION_HIDE, ACTION_PASTE, ACTION_SELECT_ALL)))
             }
         } else {
             testThat(selectedContent, {}, hasShowActionRequest(
-                    0, arrayOf(ACTION_COPY, ACTION_SELECT_ALL, ACTION_UNSELECT)))
+                    0, arrayOf(ACTION_COPY, ACTION_HIDE, ACTION_SELECT_ALL,
+                                           ACTION_UNSELECT)))
         }
     }
 
@@ -90,16 +91,19 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         withClipboard ("text") {
             testThat(collapsedContent, {}, hasShowActionRequest(
                     FLAG_IS_EDITABLE or FLAG_IS_COLLAPSED,
-                    arrayOf(ACTION_PASTE, ACTION_SELECT_ALL)))
+                    arrayOf(ACTION_HIDE, ACTION_PASTE, ACTION_SELECT_ALL)))
         }
     }
 
     @Test fun request_noClipboard() = assumingEditable(true) {
         withClipboard("") {
             testThat(collapsedContent, {}, hasShowActionRequest(
-                    FLAG_IS_EDITABLE or FLAG_IS_COLLAPSED, arrayOf(ACTION_SELECT_ALL)))
+                    FLAG_IS_EDITABLE or FLAG_IS_COLLAPSED,
+                    arrayOf(ACTION_HIDE, ACTION_SELECT_ALL)))
         }
     }
+
+    @Test fun hide() = testThat(selectedContent, withResponse(ACTION_HIDE), clearsSelection())
 
     @Test fun cut() = assumingEditable(true) {
         withClipboard("") {
