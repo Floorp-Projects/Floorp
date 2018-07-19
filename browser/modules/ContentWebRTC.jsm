@@ -171,7 +171,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
   for (let device of aDevices) {
     device = device.QueryInterface(Ci.nsIMediaDevice);
     switch (device.type) {
-      case "audioinput":
+      case "audio":
         // Check that if we got a microphone, we have not requested an audio
         // capture, and if we have requested an audio capture, we are not
         // getting a microphone instead.
@@ -181,7 +181,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
           devices.push(device);
         }
         break;
-      case "videoinput":
+      case "video":
         // Verify that if we got a camera, we haven't requested a screen share,
         // or that if we requested a screen share we aren't getting a camera.
         if (video && (device.mediaSource == "camera") != sharingScreen) {
