@@ -45,6 +45,8 @@ public:
   void ClearCachedResources() override;
   void Destroy() override;
 
+  void UpdateCompositableClientForEmptyTransaction();
+
   Maybe<wr::PipelineId> GetPipelineId() { return mPipelineId; }
 protected:
   Maybe<wr::PipelineId> mPipelineId;

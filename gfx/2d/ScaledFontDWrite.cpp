@@ -475,7 +475,13 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
   }
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics = wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
+
+  wr::FontInstancePlatformOptions platformOptions;
+  platformOptions.gamma = uint16_t(std::round(mGamma * 100.0f));
+  platformOptions.contrast = uint16_t(std::round(std::min(mContrast, 1.0f) * 100.0f));
+
   *aOutOptions = Some(options);
+  *aOutPlatformOptions = Some(platformOptions);
   return true;
 }
 

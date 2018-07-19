@@ -95,5 +95,18 @@ WebRenderCanvasRendererAsync::Destroy()
   }
 }
 
+void
+WebRenderCanvasRendererAsync::UpdateCompositableClientForEmptyTransaction()
+{
+  UpdateCompositableClient();
+  if (mPipelineId.isSome()) {
+    // Notify an update of async image pipeline during empty transaction.
+    // During non empty transaction, WebRenderBridgeParent receives OpUpdateAsyncImagePipeline message,
+    // but during empty transaction, the message is not sent to WebRenderBridgeParent.
+    // Then OpUpdatedAsyncImagePipeline is used to notify the update.
+    mManager->WrBridge()->AddWebRenderParentCommand(OpUpdatedAsyncImagePipeline(mPipelineId.ref()));
+  }
+}
+
 } // namespace layers
 } // namespace mozilla
