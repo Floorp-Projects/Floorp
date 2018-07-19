@@ -91,6 +91,8 @@ class Output(object):
                     subtests, vals = self.parseSpeedometerOutput(test)
                 elif 'motionmark' in test.measurements:
                     subtests, vals = self.parseMotionmarkOutput(test)
+                elif 'sunspider' in test.measurements:
+                    subtests, vals = self.parseSunspiderOutput(test)
                 elif 'webaudio' in test.measurements:
                     subtests, vals = self.parseWebaudioOutput(test)
                 suite['subtests'] = subtests
@@ -249,6 +251,49 @@ class Output(object):
             vals.append([_subtests[name]['value'], name])
 
         return subtests, vals
+
+    def parseSunspiderOutput(self, test):
+        _subtests = {}
+        data = test.measurements['sunspider']
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+
+        # TODO: DRY object literal
+        total_subtest = {
+            'unit': test.unit,
+            'alertThreshold': float(test.alert_threshold),
+            'lowerIsBetter': test.lower_is_better,
+            'replicates': [],
+            'name': 'benchmark_score',
+            'value': 0
+        }
+        subtests = [total_subtest]
+        vals = []
+
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = average = self._average(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            total_subtest['value'] += average
+
+            vals.append([_subtests[name]['value'], name])
+        vals.append([total_subtest['value'], total_subtest['name']])
+
+        return subtests, vals
+
+    @classmethod
+    def _average(cls, iterable):
+        return sum(iterable)/float(len(iterable))
 
     def output(self):
         """output to file and perfherder data json """
