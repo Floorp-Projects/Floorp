@@ -692,7 +692,6 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
                                              requestingLocation,
                                              aLoadingContext,
                                              EmptyCString(), //mime guess
-                                             nullptr,
                                              aTriggeringPrincipal,
                                              &decision);
       if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
