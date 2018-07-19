@@ -28,6 +28,27 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
                           DocumentMatchingFunction aMatchingFunction)
 {
   switch (aMatchingFunction) {
+    case DocumentMatchingFunction::MediaDocument: {
+      auto kind = aDoc->MediaDocumentKind();
+      if (aPattern.EqualsLiteral("all")) {
+        return kind != nsIDocument::MediaDocumentKind::NotMedia;
+      }
+      MOZ_ASSERT(aPattern.EqualsLiteral("plugin") ||
+                 aPattern.EqualsLiteral("image") ||
+                 aPattern.EqualsLiteral("video"));
+      switch (kind) {
+        case nsIDocument::MediaDocumentKind::NotMedia:
+          return false;
+        case nsIDocument::MediaDocumentKind::Plugin:
+          return aPattern.EqualsLiteral("plugin");
+        case nsIDocument::MediaDocumentKind::Image:
+          return aPattern.EqualsLiteral("image");
+        case nsIDocument::MediaDocumentKind::Video:
+          return aPattern.EqualsLiteral("video");
+      }
+      MOZ_ASSERT_UNREACHABLE("Unknown media document kind");
+      return false;
+    }
     case DocumentMatchingFunction::URL:
       return aDocURISpec == aPattern;
     case DocumentMatchingFunction::URLPrefix:
