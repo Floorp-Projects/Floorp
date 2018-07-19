@@ -3083,7 +3083,8 @@ public:
     eConnected,
     eDisconnected,
     eAdopted,
-    eAttributeChanged
+    eAttributeChanged,
+    eGetCustomInterface
   };
 
   nsIDocument* GetTopLevelContentDocument();
