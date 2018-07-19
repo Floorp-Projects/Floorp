@@ -2809,6 +2809,20 @@ public:
   virtual DocumentTheme GetDocumentLWTheme() { return Doc_Theme_None; }
   virtual DocumentTheme ThreadSafeGetDocumentLWTheme() const { return Doc_Theme_None; }
 
+  // Whether we're a media document or not.
+  enum class MediaDocumentKind
+  {
+    NotMedia,
+    Video,
+    Image,
+    Plugin,
+  };
+
+  virtual enum MediaDocumentKind MediaDocumentKind() const
+  {
+    return MediaDocumentKind::NotMedia;
+  }
+
   /**
    * Returns the document state.
    * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
