@@ -63,11 +63,24 @@ outputMapperLog(const char* aBuf)
 }
 #endif
 
-// Get the breakpad Id for the binary file pointed by bin_name
-static std::string getId(const char *bin_name)
+static nsCString
+IDtoUUIDString(const google_breakpad::wasteful_vector<uint8_t>& aIdentifier)
 {
   using namespace google_breakpad;
-  using namespace std;
+
+  nsCString uuid;
+  const std::string str = FileID::ConvertIdentifierToUUIDString(aIdentifier);
+  uuid.Append(str.c_str(), str.size());
+  // This is '0', not '\0', since it represents the breakpad id age.
+  uuid.Append('0');
+  return uuid;
+}
+
+// Get the breakpad Id for the binary file pointed by bin_name
+static nsCString
+getId(const char *bin_name)
+{
+  using namespace google_breakpad;
 
   PageAllocator allocator;
   auto_wasteful_vector<uint8_t, sizeof(MDGUID)> identifier(&allocator);
@@ -79,7 +92,7 @@ static std::string getId(const char *bin_name)
     size_t size = 0;
     if (mapper.Map(&image, &size, bin_name) && image && size) {
       if (FileID::ElfFileIdentifierFromMappedFile(image, identifier)) {
-        return FileID::ConvertIdentifierToUUIDString(identifier) + "0";
+        return IDtoUUIDString(identifier);
       }
     }
   }
@@ -87,10 +100,10 @@ static std::string getId(const char *bin_name)
 
   FileID file_id(bin_name);
   if (file_id.ElfFileIdentifier(identifier)) {
-    return FileID::ConvertIdentifierToUUIDString(identifier) + "0";
+    return IDtoUUIDString(identifier);
   }
 
-  return "";
+  return EmptyCString();
 }
 
 static SharedLibrary
@@ -110,7 +123,7 @@ SharedLibraryAtPath(const char* path, unsigned long libStart,
 
   return SharedLibrary(libStart, libEnd, offset, getId(path),
                        nameStr, pathStr, nameStr, pathStr,
-                       "", "");
+                       EmptyCString(), "");
 }
 
 static int

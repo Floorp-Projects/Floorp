@@ -129,14 +129,17 @@ void addSharedLibrary(const platform_mach_header* header, const char *path, Shar
       (reinterpret_cast<const char *>(cmd) + cmd->cmdsize);
   }
 
-  std::stringstream uuid;
-  uuid << std::hex << std::uppercase;
+  nsAutoCString uuid;
   if (uuid_bytes != nullptr) {
-    for (int i = 0; i < 16; ++i) {
-      uuid << ((uuid_bytes[i] & 0xf0) >> 4);
-      uuid << (uuid_bytes[i] & 0xf);
-    }
-    uuid << '0';
+    uuid.AppendPrintf("%02X" "%02X" "%02X" "%02X"
+                      "%02X" "%02X" "%02X" "%02X"
+                      "%02X" "%02X" "%02X" "%02X"
+                      "%02X" "%02X" "%02X" "%02X"
+                      "0" /* breakpad id age */,
+                      uuid_bytes[0], uuid_bytes[1], uuid_bytes[2], uuid_bytes[3],
+                      uuid_bytes[4], uuid_bytes[5], uuid_bytes[6], uuid_bytes[7],
+                      uuid_bytes[8], uuid_bytes[9], uuid_bytes[10], uuid_bytes[11],
+                      uuid_bytes[12], uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
   }
 
   nsAutoString pathStr;
@@ -151,9 +154,9 @@ void addSharedLibrary(const platform_mach_header* header, const char *path, Shar
   const NXArchInfo* archInfo =
     NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
 
-  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
+  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid,
                                       nameStr, pathStr, nameStr, pathStr,
-                                      "",
+                                      EmptyCString(),
                                       archInfo ? archInfo->name : ""));
 }
 

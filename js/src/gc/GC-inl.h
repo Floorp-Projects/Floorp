@@ -229,8 +229,10 @@ class ZoneCellIter<TenuredCell> {
         if (IsBackgroundFinalized(kind) && zone->arenas.needBackgroundFinalizeWait(kind))
             rt->gc.waitBackgroundSweepEnd();
         arenaIter.init(zone, kind);
-        if (!arenaIter.done())
+        if (!arenaIter.done()) {
             cellIter.init(arenaIter.get(), CellIterMayNeedBarrier);
+            settle();
+        }
     }
 
   public:
@@ -264,15 +266,18 @@ class ZoneCellIter<TenuredCell> {
         return cellIter.getCell();
     }
 
-    void next() {
-        MOZ_ASSERT(!done());
-        cellIter.next();
-        if (cellIter.done()) {
-            MOZ_ASSERT(!arenaIter.done());
+    void settle() {
+        while (cellIter.done() && !arenaIter.done()) {
             arenaIter.next();
             if (!arenaIter.done())
                 cellIter.reset(arenaIter.get());
         }
+    }
+
+    void next() {
+        MOZ_ASSERT(!done());
+        cellIter.next();
+        settle();
     }
 };
 

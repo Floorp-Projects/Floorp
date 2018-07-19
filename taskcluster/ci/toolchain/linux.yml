@@ -70,6 +70,27 @@ linux64-clang-6:
     toolchains:
         - linux64-gcc-4.9
 
+linux64-clang-7:
+    description: "Clang 7 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(clang7)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
+    worker:
+        max-run-time: 7200
+    run:
+        using: toolchain-script
+        script: build-clang-7-linux.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-7-pre-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
 linux64-clang-6-macosx-cross:
     description: "Clang 6 toolchain build with MacOS Compiler RT libs"
     treeherder:
@@ -459,7 +480,7 @@ linux64-rust-nightly:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', 'nightly-2018-06-20',
+            '--channel', 'nightly-2018-07-18',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
