@@ -63,6 +63,23 @@ NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(BlobGroupDataProperty,
                                     nsTArray<BlobItemData*>,
                                     DestroyBlobGroupDataProperty);
 
+static void
+SetBlobImageVisibleArea(wr::IpcResourceUpdateQueue& aResources,
+                        wr::ImageKey aImageKey,
+                        const LayoutDeviceRect& aImageRect,
+                        const LayoutDeviceRect& aPaintRect)
+{
+  LayoutDeviceRect visibleRect = aImageRect.Intersect(aPaintRect);
+  // Send the visible rect in normalized coordinates.
+  Rect visibleArea = Rect((visibleRect.x - aImageRect.x) / aImageRect.width,
+                          (visibleRect.y - aImageRect.y) / aImageRect.height,
+                          visibleRect.width / aImageRect.width,
+                          visibleRect.height / aImageRect.height);
+
+  aResources.SetImageVisibleArea(aImageKey, visibleArea);
+}
+
+
 // These are currently manually allocated and ownership is help by the mDisplayItems
 // hash table in DIGroup
 struct BlobItemData
@@ -219,7 +236,8 @@ struct Grouper
                           WebRenderDrawEventRecorder* aRecorder);
 
   // Builds groups of display items split based on 'layer activity'
-  void ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
+  void ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
+                       WebRenderCommandBuilder* aCommandBuilder,
                        wr::DisplayListBuilder& aBuilder,
                        wr::IpcResourceUpdateQueue& aResources,
                        DIGroup* aGroup, nsDisplayList* aList,
@@ -319,6 +337,7 @@ struct DIGroup
   nsPoint mLastAnimatedGeometryRootOrigin;
   IntRect mInvalidRect;
   nsRect mGroupBounds;
+  LayoutDeviceRect mPaintRect;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   FrameMetrics::ViewID mScrollId;
@@ -549,6 +568,7 @@ struct DIGroup
   }
 
   void EndGroup(WebRenderLayerManager* aWrManager,
+                nsDisplayListBuilder* aDisplayListBuilder,
                 wr::DisplayListBuilder& aBuilder,
                 wr::IpcResourceUpdateQueue& aResources,
                 Grouper* aGrouper,
@@ -584,6 +604,7 @@ struct DIGroup
       GP("Not repainting group because it's empty\n");
       GP("End EndGroup\n");
       if (mKey) {
+        SetBlobImageVisibleArea(aResources, mKey.value(), bounds, mPaintRect);
         PushImage(aBuilder, bounds);
       }
       return;
@@ -652,6 +673,7 @@ struct DIGroup
       }
     }
     mInvalidRect.SetEmpty();
+    SetBlobImageVisibleArea(aResources, mKey.value(), mPaintRect, bounds);
     PushImage(aBuilder, bounds);
     GP("End EndGroup\n\n");
   }
@@ -666,6 +688,10 @@ struct DIGroup
     // Emit a dispatch-to-content hit test region covering this area
     auto hitInfo = CompositorHitTestInfo::eVisibleToHitTest |
                    CompositorHitTestInfo::eDispatchToContent;
+
+    // XXX - clipping the item against the paint rect breaks some content.
+    // cf. Bug 1455422.
+    //wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mPaintRect));
 
     aBuilder.SetHitTestInfo(mScrollId, hitInfo);
     aBuilder.PushImage(dest, dest, !backfaceHidden,
@@ -923,7 +949,8 @@ GetBlobItemDataForGroup(nsDisplayItem* aItem, DIGroup* aGroup)
 // This does a pass over the display lists and will join the display items
 // into groups as well as paint them
 void
-Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
+Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
+                         WebRenderCommandBuilder* aCommandBuilder,
                          wr::DisplayListBuilder& aBuilder,
                          wr::IpcResourceUpdateQueue& aResources,
                          DIGroup* aGroup, nsDisplayList* aList,
@@ -936,7 +963,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
   while (item) {
     nsDisplayList* children = item->GetChildren();
     if (IsItemProbablyActive(item, mDisplayListBuilder)) {
-      currentGroup->EndGroup(aCommandBuilder->mManager, aBuilder, aResources, this, startOfCurrentGroup, item);
+      currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder, aBuilder, aResources, this, startOfCurrentGroup, item);
       mClipManager.BeginItem(item, aSc);
       sIndent++;
       // Note: this call to CreateWebRenderCommands can recurse back into
@@ -976,6 +1003,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
       groupData->mFollowingGroup.mLayerBounds = currentGroup->mLayerBounds;
       groupData->mFollowingGroup.mScale = currentGroup->mScale;
       groupData->mFollowingGroup.mResidualOffset = currentGroup->mResidualOffset;
+      groupData->mFollowingGroup.mPaintRect = currentGroup->mPaintRect;
 
       currentGroup = &groupData->mFollowingGroup;
 
@@ -1011,7 +1039,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
     item = item->GetAbove();
   }
 
-  currentGroup->EndGroup(aCommandBuilder->mManager, aBuilder, aResources, this, startOfCurrentGroup, nullptr);
+  currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder, aBuilder, aResources, this, startOfCurrentGroup, nullptr);
 }
 
 // This does a pass over the display lists and will join the display items
@@ -1135,6 +1163,10 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
+  group.mPaintRect = LayoutDeviceRect::FromAppUnits(
+    aWrappingItem->GetPaintRect(),
+    appUnitsPerDevPixel
+  );
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mLayerBounds = LayerIntRect::FromUnknownRect(ScaleToOutsidePixelsOffset(group.mGroupBounds,
                                                                                 scale.width,
@@ -1146,7 +1178,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   group.mScale = scale;
   group.mScrollId = scrollId;
   group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
-  g.ConstructGroups(this, aBuilder, aResources, &group, aList, aSc);
+  g.ConstructGroups(aDisplayListBuilder, this, aBuilder, aResources, &group, aList, aSc);
   mClipManager.EndList(aSc);
 }
 
