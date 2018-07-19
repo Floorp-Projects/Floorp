@@ -2688,7 +2688,10 @@ function URLBarSetURI(aURI) {
   var value = gBrowser.userTypedValue;
   var valid = false;
 
-  if (value == null) {
+  // Explicitly check for nulled out value. We don't want to reset the URL
+  // bar if the user has deleted the URL and we'd just put the same URL
+  // back. See bug 304198.
+  if (value === null) {
     let uri = aURI || gBrowser.currentURI;
     // Strip off "wyciwyg://" and passwords for the location bar
     try {

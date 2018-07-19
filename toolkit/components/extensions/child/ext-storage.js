@@ -182,15 +182,25 @@ this.storage = class extends ExtensionAPI {
     const local = {};
     for (let method of ["get", "set", "remove", "clear"]) {
       local[method] = async function(...args) {
-        if (!promiseStorageLocalBackend) {
-          promiseStorageLocalBackend = getStorageLocalBackend();
+        try {
+          if (!promiseStorageLocalBackend) {
+            promiseStorageLocalBackend = getStorageLocalBackend();
+          }
+          const backend = await promiseStorageLocalBackend.catch(err => {
+            // Clear the cached promise if it has been rejected.
+            promiseStorageLocalBackend = null;
+            throw err;
+          });
+
+          // Let the outer try to catch rejections returned by the backend methods.
+          const result = await backend[method](...args);
+          return result;
+        } catch (err) {
+          // Ensure that the error we throw is converted into an ExtensionError
+          // (e.g. DataCloneError instances raised from the internal IndexedDB
+          // operation have to be converted to be accessible to the extension code).
+          throw new ExtensionUtils.ExtensionError(String(err));
         }
-        const backend = await promiseStorageLocalBackend.catch(err => {
-          // Clear the cached promise if it has been rejected.
-          promiseStorageLocalBackend = null;
-          throw err;
-        });
-        return backend[method](...args);
       };
     }
 

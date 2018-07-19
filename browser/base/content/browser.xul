@@ -242,7 +242,9 @@
       </html:div>
       <box id="editBookmarkPanelImage"/>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
-      <vbox id="editBookmarkPanelBottomContent" flex="1">
+      <vbox id="editBookmarkPanelBottomContent"
+            flex="1"
+            style="min-width: &editBookmark.panel.width;;">
         <checkbox id="editBookmarkPanel_showForNewBookmarks"
                   label="&editBookmark.showForNewBookmarks.label;"
                   accesskey="&editBookmark.showForNewBookmarks.accesskey;"

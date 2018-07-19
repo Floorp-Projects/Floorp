@@ -43,10 +43,6 @@
   -moz-appearance: -moz-mac-disclosure-button-closed;
 }
 
-#editBookmarkPanelContent {
-  min-width: 23em;
-}
-
 #editBMPanel_folderTree {
   margin: 6px 4px 0 4px;
 }
