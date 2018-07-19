@@ -15,7 +15,6 @@ import re
 import sys
 import copy
 import shutil
-import tempfile
 import glob
 import imp
 
@@ -889,28 +888,18 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(per_test_args)
 
+                    final_env = copy.copy(env)
+
                     if self.per_test_coverage:
-                        gcov_dir, jsvm_dir = self.set_coverage_env(env)
-                        # Per-test reset/dump is only supported on Linux for the time being.
-                        if not is_baseline_test and \
-                           self._is_linux():
-                            env['GCOV_RESULTS_DIR'] = tempfile.mkdtemp()
+                        self.set_coverage_env(final_env)
 
                     return_code = self.run_command(final_cmd, cwd=dirs['abs_work_dir'],
                                                    output_timeout=cmd_timeout,
                                                    output_parser=parser,
-                                                   env=env)
+                                                   env=final_env)
 
                     if self.per_test_coverage:
-                        self.add_per_test_coverage_report(
-                            env['GCOV_RESULTS_DIR'] if 'GCOV_RESULTS_DIR' in env else gcov_dir,
-                            jsvm_dir,
-                            suite,
-                            per_test_args[-1]
-                        )
-                        if 'GCOV_RESULTS_DIR' in env:
-                            shutil.rmtree(gcov_dir)
-                            del env['GCOV_RESULTS_DIR']
+                        self.add_per_test_coverage_report(final_env, suite, per_test_args[-1])
 
                     # mochitest, reftest, and xpcshell suites do not return
                     # appropriate return codes. Therefore, we must parse the output
