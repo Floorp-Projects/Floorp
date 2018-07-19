@@ -32,6 +32,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPLUGINDOCUMENT
 
+  enum MediaDocumentKind MediaDocumentKind() const override
+  {
+    return MediaDocumentKind::Plugin;
+  }
+
   nsresult StartDocumentLoad(const char*         aCommand,
                              nsIChannel*         aChannel,
                              nsILoadGroup*       aLoadGroup,
