@@ -434,8 +434,11 @@
 
 .tooltip-container[type="doorhanger"] .menuitem > .command > .label {
   flex: 1;
-  padding-inline-start: 16px;
   font: menu;
+}
+
+.tooltip-container[type="doorhanger"] .checkbox-container .menuitem > .command > .label {
+  padding-inline-start: 16px;
 }
 
 .tooltip-container[type="doorhanger"] .menuitem > .command.iconic > .label::before {
@@ -447,6 +450,8 @@
   vertical-align: top;
   -moz-context-properties: fill;
   fill: currentColor;
+  background-image: var(--menuitem-icon-image);
+  background-size: contain;
   /*
    * The icons in the sidebar menu have opacity: 0.8 here, but those in the
    * hamburger menu don't. For now we match the hamburger menu styling,

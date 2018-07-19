@@ -10,7 +10,7 @@
 // This component provides keyboard navigation amongst any focusable
 // children.
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { Children, PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div } = dom;
@@ -107,6 +107,17 @@ class MenuList extends PureComponent {
 
     if (this.props.id) {
       attr.id = this.props.id;
+    }
+
+    // Add padding for checkbox image if necessary.
+    let hasCheckbox = false;
+    Children.forEach(this.props.children, child => {
+      if (typeof child.props.checked !== "undefined") {
+        hasCheckbox = true;
+      }
+    });
+    if (hasCheckbox) {
+      attr.className = "checkbox-container";
     }
 
     return div(attr, this.props.children);
