@@ -116,12 +116,11 @@ ExtractAlpha_SIMD(const IntSize& size, uint8_t* sourceData, int32_t sourceStride
       int32_t sourceIndex = y * sourceStride + 4 * x;
       int32_t targetIndex = y * alphaStride + x;
 
-      u8x16_t bgrabgrabgrabgra1 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra2 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra3 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra4 = simd::FromZero8<u8x16_t>();
 
-      bgrabgrabgrabgra1 = simd::Load8<u8x16_t>(&sourceData[sourceIndex]);
+      u8x16_t bgrabgrabgrabgra1 = simd::Load8<u8x16_t>(&sourceData[sourceIndex]);
       if (4 * (x + 4) < sourceStride) {
         bgrabgrabgrabgra2 = simd::Load8<u8x16_t>(&sourceData[sourceIndex + 4 * 4]);
       }
@@ -801,12 +800,11 @@ SeparateColorChannels_SIMD(const IntSize &size, uint8_t* sourceData, int32_t sou
       int32_t sourceIndex = y * sourceStride + 4 * x;
       int32_t targetIndex = y * channelStride + x;
 
-      u8x16_t bgrabgrabgrabgra1 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra2 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra3 = simd::FromZero8<u8x16_t>();
       u8x16_t bgrabgrabgrabgra4 = simd::FromZero8<u8x16_t>();
 
-      bgrabgrabgrabgra1 = simd::Load8<u8x16_t>(&sourceData[sourceIndex]);
+      u8x16_t bgrabgrabgrabgra1 = simd::Load8<u8x16_t>(&sourceData[sourceIndex]);
       if (4 * (x + 4) < sourceStride) {
         bgrabgrabgrabgra2 = simd::Load8<u8x16_t>(&sourceData[sourceIndex + 4 * 4]);
       }

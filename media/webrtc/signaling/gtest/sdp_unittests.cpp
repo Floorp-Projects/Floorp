@@ -3750,7 +3750,6 @@ const std::string kMalformedImageattr =
 
 TEST_P(NewSdpTest, CheckMalformedImageattr)
 {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432930
   if (::testing::get<0>(GetParam())) {
     // Don't do a parse/serialize before running this test
     return;

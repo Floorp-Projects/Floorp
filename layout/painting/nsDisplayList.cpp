@@ -3145,8 +3145,8 @@ nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   bool aUseClipBounds) {
+                                   nsRegion* aVisibleRegion)
+{
   if (mForceNotVisible && !GetSameCoordinateSystemChildren()) {
     // mForceNotVisible wants to ensure that this display item doesn't render
     // anything itself. If this item has contents, then we obviously want to
@@ -3155,13 +3155,8 @@ nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
       "invisible items without children should have empty vis rect");
     SetPaintRect(nsRect());
   } else {
-    nsRect bounds;
-    if (aUseClipBounds) {
-      bounds = GetClippedBounds(aBuilder);
-    } else {
-      bool snap;
-      bounds = GetBounds(aBuilder, &snap);
-    }
+    bool snap;
+    nsRect bounds = GetBounds(aBuilder, &snap);
 
     nsRegion itemVisible;
     itemVisible.And(*aVisibleRegion, bounds);
@@ -7642,6 +7637,7 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
 {
+  mShouldFlatten = false;
   mHasBounds = false;
   mStoredList.SetClipChain(nullptr, true);
   mStoredList.SetBuildingRect(mChildrenBuildingRect);
@@ -7693,6 +7689,18 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder);
   UpdateBoundsFor3D(aBuilder);
+}
+
+bool
+nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
+{
+  if (gfxVars::UseWebRender() || !gfxPrefs::LayoutFlattenTransform()) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mShouldFlatten);
+  mShouldFlatten = GetTransform().Is2D();
+  return mShouldFlatten;
 }
 
 /* Returns the delta specified by the transform-origin property.
@@ -8185,7 +8193,7 @@ nsDisplayTransform::GetInverseTransform() const
 }
 
 Matrix4x4
-nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin)
+nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin) const
 {
   if (!mFrame->HasPerspective() || mTransformGetter || mIsTransformSeparator) {
     if (!mTransformGetter && !mIsTransformSeparator && aOutOrigin) {
@@ -8345,15 +8353,21 @@ nsDisplayTransform::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData
   return true;
 }
 
+bool
+nsDisplayTransform::ShouldSkipTransform(nsDisplayListBuilder* aBuilder) const
+{
+  return (aBuilder->RootReferenceFrame() == mFrame) &&
+    (aBuilder->IsForGenerateGlyphMask() ||
+     aBuilder->IsForPaintingSelectionBG());
+}
+
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
                                                        LayerManager *aManager,
                                                        const ContainerLayerParameters& aContainerParameters)
 {
   // While generating a glyph mask, the transform vector of the root frame had
   // been applied into the target context, so stop applying it again here.
-  const bool shouldSkipTransform =
-    (aBuilder->RootReferenceFrame() == mFrame) &&
-    (aBuilder->IsForGenerateGlyphMask() || aBuilder->IsForPaintingSelectionBG());
+  const bool shouldSkipTransform = ShouldSkipTransform(aBuilder);
 
   /* For frames without transform, it would not be removed for
    * backface hidden here.  But, it would be removed by the init

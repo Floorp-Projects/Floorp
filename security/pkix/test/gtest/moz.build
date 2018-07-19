@@ -45,11 +45,11 @@ if CONFIG['CC_TYPE'] == 'gcc':
 # These warnings are disabled in order to minimize the amount of boilerplate
 # required to implement tests, and/or because they originate in the GTest
 # framework in a way we cannot otherwise work around.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
   CXXFLAGS += [
     '-Wno-old-style-cast',
   ]
-  if CONFIG['CC_TYPE'] == 'clang':
+  if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
       '-Wno-exit-time-destructors',
       '-Wno-global-constructors',
@@ -57,7 +57,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
       '-Wno-used-but-marked-unused',
       '-Wno-zero-as-null-pointer-constant',
     ]
-elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+elif CONFIG['CC_TYPE'] == 'msvc':
   CXXFLAGS += [
     '-wd4350', # behavior change: 'std::_Wrap_alloc<std::allocator<_Ty>>::...
     '-wd4275', # non dll-interface class used as base for dll-interface class

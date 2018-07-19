@@ -47,7 +47,7 @@ def nodejs_suitability(require, node, version):
             raise FatalCheckError(msg)
         else:
             log.warning(msg)
-            log.warning('(This will become a fatal error in the near future.)')
+            log.warning('(This will become an error in the near future.)')
             return
 
     if not version:
@@ -56,7 +56,7 @@ def nodejs_suitability(require, node, version):
             raise FatalCheckError(msg)
         else:
             log.warning(msg)
-            log.warning('(This will become a fatal error in the near future.)')
+            log.warning('(This will become an error in the near future.)')
             return
 
     if version < MIN_NODE_VERSION:

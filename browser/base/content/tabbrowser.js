@@ -1666,6 +1666,10 @@ window._gBrowser = {
       this.getCachedFindBar(tab).browser = aBrowser;
     }
 
+    tab.linkedBrowser
+       .messageManager
+       .sendAsyncMessage("Browser:HasSiblings", this.tabs.length > 1);
+
     evt = document.createEvent("Events");
     evt.initEvent("TabRemotenessChange", true, false);
     tab.dispatchEvent(evt);
@@ -2041,6 +2045,17 @@ window._gBrowser = {
     // for non-remote browsers after we have called browser.loadURI().
     if (remoteType == E10SUtils.NOT_REMOTE) {
       this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
+    }
+
+    // If we transitioned from one browser to two browsers, we need to set
+    // hasSiblings=false on both the existing browser and the new browser.
+    if (this.tabs.length == 2) {
+      window.messageManager
+            .broadcastAsyncMessage("Browser:HasSiblings", true);
+    } else {
+      aTab.linkedBrowser
+          .messageManager
+          .sendAsyncMessage("Browser:HasSiblings", this.tabs.length > 1);
     }
 
     var evt = new CustomEvent("TabBrowserInserted", { bubbles: true, detail: { insertedOnTabCreation: aInsertedOnTabCreation } });
@@ -2814,6 +2829,13 @@ window._gBrowser = {
     var evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: aAdoptedByTab } });
     aTab.dispatchEvent(evt);
     Services.telemetry.recordEvent("savant", "tab", "close", null, { subcategory: "frame" });
+
+    if (this.tabs.length == 2) {
+      // We're closing one of our two open tabs, inform the other tab that its
+      // sibling is going away.
+      window.messageManager
+            .broadcastAsyncMessage("Browser:HasSiblings", false);
+    }
 
     if (aTab.linkedPanel) {
       if (!aAdoptedByTab && !gMultiProcessBrowser) {

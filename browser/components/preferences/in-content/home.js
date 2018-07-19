@@ -275,6 +275,9 @@ var gHomePane = {
         }
         break;
       case this.HOME_MODE_CUSTOM:
+        if (startupPref.value === gMainPane.STARTUP_PREF_BLANK) {
+          Services.prefs.clearUserPref(startupPref.id);
+        }
         this._renderCustomSettings({shouldShow: true});
         break;
     }
@@ -348,10 +351,8 @@ var gHomePane = {
   },
 
   restoreDefaultHomePage() {
-    const homePref = Preferences.get("browser.startup.homepage");
-    const newtabPref = Preferences.get(this.NEWTAB_ENABLED_PREF);
-    homePref.value = homePref.defaultValue;
-    newtabPref.value = newtabPref.defaultValue;
+    Services.prefs.clearUserPref("browser.startup.homepage");
+    Services.prefs.clearUserPref(this.NEWTAB_ENABLED_PREF);
   },
 
   onCustomHomePageInput(event) {
@@ -384,9 +385,7 @@ var gHomePane = {
     const homePref = Preferences.get("browser.startup.homepage");
     const newtabPref = Preferences.get(this.NEWTAB_ENABLED_PREF);
 
-    return homeContentChanged ||
-      (homePref.value !== homePref.defaultValue) ||
-      newtabPref.hasUserValue;
+    return homeContentChanged || homePref.hasUserValue || newtabPref.hasUserValue;
   },
 
   /**
@@ -404,7 +403,7 @@ var gHomePane = {
    */
   restoreDefaultPrefsForHome() {
     this.restoreDefaultHomePage();
-    this.homePanePrefs.forEach(pref => pref.value = pref.defaultValue);
+    this.homePanePrefs.forEach(pref => Services.prefs.clearUserPref(pref.id));
   },
 
   init() {

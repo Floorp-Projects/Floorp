@@ -714,9 +714,8 @@ nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver *aCallback)
     )
   );
 
-  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
-  nsCOMPtr<nsIEventTarget> target = do_GetInterface(conn);
-  MOZ_ASSERT(target);
+  nsCOMPtr<nsIEventTarget> target(do_GetInterface(mDB->MainConn()));
+  NS_ENSURE_STATE(target);
   nsresult rv = target->Dispatch(NS_NewRunnableFunction(
     "nsNavHistory::RecalculateOriginFrecencyStats",
     [self, callback] {

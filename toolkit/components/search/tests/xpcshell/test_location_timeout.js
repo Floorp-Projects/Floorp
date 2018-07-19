@@ -38,7 +38,6 @@ function run_test() {
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.prefs.setIntPref("browser.search.geoip.timeout", 50);
   Services.search.init(() => {
-    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
     // should be no result recorded at all.
     checkCountryResultTelemetry(null);
@@ -61,7 +60,6 @@ function run_test() {
 
       // and should have the result of the response that finally came in, and
       // everything dependent should also be updated.
-      equal(Services.prefs.getCharPref("browser.search.countryCode"), "AU");
       equal(Services.prefs.getCharPref("browser.search.region"), "AU");
 
       do_test_finished();

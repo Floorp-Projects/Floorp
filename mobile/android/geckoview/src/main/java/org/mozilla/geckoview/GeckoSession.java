@@ -2042,7 +2042,8 @@ public class GeckoSession extends LayerSession
          */
         final int FLAG_IS_PASSWORD = 4;
 
-        @StringDef({ACTION_CUT,
+        @StringDef({ACTION_HIDE,
+                    ACTION_CUT,
                     ACTION_COPY,
                     ACTION_DELETE,
                     ACTION_PASTE,
@@ -2052,6 +2053,10 @@ public class GeckoSession extends LayerSession
                     ACTION_COLLAPSE_TO_END})
         /* package */ @interface Action {}
 
+        /**
+         * Hide selection actions and cause {@link #onHideAction} to be called.
+         */
+        final String ACTION_HIDE = "org.mozilla.geckoview.HIDE";
         /**
          * Copy onto the clipboard then delete the selected content. Selection
          * must be editable.
@@ -2151,7 +2156,7 @@ public class GeckoSession extends LayerSession
          * @param session The GeckoSession that initiated the callback.
          * @param selection Current selection attributes.
          * @param actions Array of built-in actions available; possible values
-         * come from the {@link #ACTION_CUT ACTION_*} constants.
+         * come from the {@link #ACTION_HIDE ACTION_*} constants.
          * @param response Callback object for performing built-in actions. For example,
          * {@code response.respond(actions[0])} performs the first action. May be used
          * multiple times to perform multiple actions at once.
@@ -2170,9 +2175,8 @@ public class GeckoSession extends LayerSession
          */
         final int HIDE_REASON_NO_SELECTION = 0;
         /**
-         * Actions are no longer available due to the user moving the selection becoming
-         * out of view. Previous actions are still available after a callback with this
-         * reason.
+         * Actions are no longer available due to the user moving the selection out of view.
+         * Previous actions are still available after a callback with this reason.
          */
         final int HIDE_REASON_INVISIBLE_SELECTION = 1;
         /**

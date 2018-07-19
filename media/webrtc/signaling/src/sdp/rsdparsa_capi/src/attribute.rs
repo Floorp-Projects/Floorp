@@ -1,5 +1,6 @@
 use std::slice;
-use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t, uint64_t};
+use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t, uint64_t, c_float};
+use std::ptr;
 
 use rsdparsa::SdpSession;
 use rsdparsa::attribute_type::*;
@@ -743,6 +744,193 @@ pub unsafe extern "C" fn sdp_get_rtcpfbs(attributes: *const Vec<SdpAttribute>, r
     rtcpfbs.clone_from_slice(attrs.as_slice());
 }
 
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttrXYRange {
+    // range
+    pub min: uint32_t,
+    pub max: uint32_t,
+    pub step: uint32_t,
+
+    // discrete values
+    pub discrete_values: *const Vec<u32>,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttrXYRange > for RustSdpAttributeImageAttrXYRange {
+    fn from(other: &SdpAttributeImageAttrXYRange) -> Self {
+        match other {
+            &SdpAttributeImageAttrXYRange::Range(min, max, step) => {
+                RustSdpAttributeImageAttrXYRange {
+                    min,
+                    max,
+                    step: step.unwrap_or(1),
+                    discrete_values: ptr::null(),
+                }
+            },
+            &SdpAttributeImageAttrXYRange::DiscreteValues(ref discrete_values) => {
+                RustSdpAttributeImageAttrXYRange {
+                    min: 0,
+                    max: 1,
+                    step: 1,
+                    discrete_values,
+                }
+            }
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttrSRange {
+    // range
+    pub min: c_float,
+    pub max: c_float,
+
+    // discrete values
+    pub discrete_values: *const Vec<c_float>,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttrSRange> for RustSdpAttributeImageAttrSRange {
+    fn from(other: &SdpAttributeImageAttrSRange) -> Self {
+        match other {
+            &SdpAttributeImageAttrSRange::Range(min, max) => {
+                RustSdpAttributeImageAttrSRange {
+                    min,
+                    max,
+                    discrete_values: ptr::null(),
+                }
+            },
+            &SdpAttributeImageAttrSRange::DiscreteValues(ref discrete_values) => {
+                RustSdpAttributeImageAttrSRange {
+                    min: 0.0,
+                    max: 1.0,
+                    discrete_values,
+                }
+            },
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttrPRange {
+    pub min: c_float,
+    pub max: c_float,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttrPRange > for RustSdpAttributeImageAttrPRange {
+    fn from(other: &SdpAttributeImageAttrPRange) -> Self {
+        RustSdpAttributeImageAttrPRange {
+            min: other.min,
+            max: other.max
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttrSet {
+    pub x: RustSdpAttributeImageAttrXYRange,
+    pub y: RustSdpAttributeImageAttrXYRange,
+
+    pub has_sar: bool,
+    pub sar: RustSdpAttributeImageAttrSRange,
+
+    pub has_par: bool,
+    pub par: RustSdpAttributeImageAttrPRange,
+
+    pub q: c_float,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttrSet > for RustSdpAttributeImageAttrSet {
+    fn from(other: &SdpAttributeImageAttrSet) -> Self {
+        RustSdpAttributeImageAttrSet {
+            x: RustSdpAttributeImageAttrXYRange::from(&other.x),
+            y: RustSdpAttributeImageAttrXYRange::from(&other.y),
+
+            has_sar: other.sar.is_some(),
+            sar: match other.sar {
+                Some(ref x) => RustSdpAttributeImageAttrSRange::from(x),
+                // This is just any valid value accepted by rust,
+                // it might as well by uninitilized
+                None => RustSdpAttributeImageAttrSRange::from(
+                            &SdpAttributeImageAttrSRange::DiscreteValues(vec![]))
+            },
+
+            has_par: other.par.is_some(),
+            par: match other.par {
+                Some(ref x) => RustSdpAttributeImageAttrPRange::from(x),
+                // This is just any valid value accepted by rust,
+                // it might as well by uninitilized
+                None => RustSdpAttributeImageAttrPRange {
+                    min: 0.0,
+                    max: 1.0,
+                }
+            },
+
+            q: other.q.unwrap_or(0.5),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttrSetList {
+    pub sets: *const Vec<SdpAttributeImageAttrSet>
+}
+
+impl<'a> From<&'a SdpAttributeImageAttrSetList > for RustSdpAttributeImageAttrSetList {
+    fn from(other: &SdpAttributeImageAttrSetList) -> Self {
+        match other {
+            &SdpAttributeImageAttrSetList::Wildcard =>
+                RustSdpAttributeImageAttrSetList{
+                    sets: ptr::null(),
+            },
+            &SdpAttributeImageAttrSetList::Sets(ref sets) =>
+                RustSdpAttributeImageAttrSetList {
+                    sets: sets,
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_imageattr_get_set_count(sets: *const Vec<SdpAttributeImageAttrSet>)
+                                                     -> size_t {
+    (*sets).len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_imageattr_get_sets(sets: *const Vec<SdpAttributeImageAttrSet>,
+                                               ret_size: size_t,
+                                               ret: *mut RustSdpAttributeImageAttrSet) {
+    let rust_sets: Vec<_> = (*sets).iter().map(RustSdpAttributeImageAttrSet::from).collect();
+    let sets = slice::from_raw_parts_mut(ret, ret_size);
+    sets.clone_from_slice(rust_sets.as_slice());
+}
+
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttr {
+    pub pt: u32,
+    pub send: RustSdpAttributeImageAttrSetList,
+    pub recv: RustSdpAttributeImageAttrSetList,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttr> for RustSdpAttributeImageAttr {
+    fn from(other: &SdpAttributeImageAttr) -> Self {
+        RustSdpAttributeImageAttr {
+            pt: match other.pt {
+                SdpAttributePayloadType::Wildcard => u32::max_value(),
+                SdpAttributePayloadType::PayloadType(x) => x as u32,
+            },
+            send: RustSdpAttributeImageAttrSetList::from(&other.send),
+            recv: RustSdpAttributeImageAttrSetList::from(&other.recv),
+        }
+    }
+}
+
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_imageattr_count(attributes: *const Vec<SdpAttribute>) -> size_t {
@@ -750,13 +938,13 @@ pub unsafe extern "C" fn sdp_get_imageattr_count(attributes: *const Vec<SdpAttri
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_imageattrs(attributes: *const Vec<SdpAttribute>, ret_size: size_t, ret_groups: *mut StringView) {
-    let attrs: Vec<_> = (*attributes).iter().filter_map(|x| if let SdpAttribute::ImageAttr(ref string) = *x {
-        Some(StringView::from(string.as_str()))
+pub unsafe extern "C" fn sdp_get_imageattrs(attributes: *const Vec<SdpAttribute>, ret_size: size_t, ret_attrs: *mut RustSdpAttributeImageAttr) {
+    let attrs: Vec<_> = (*attributes).iter().filter_map(|x| if let SdpAttribute::ImageAttr(ref data) = *x {
+        Some(RustSdpAttributeImageAttr::from(data))
     } else {
         None
     }).collect();
-    let imageattrs = slice::from_raw_parts_mut(ret_groups, ret_size);
+    let imageattrs = slice::from_raw_parts_mut(ret_attrs, ret_size);
     imageattrs.copy_from_slice(attrs.as_slice());
 }
 

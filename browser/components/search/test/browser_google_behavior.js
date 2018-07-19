@@ -21,9 +21,9 @@ let searchEngineDetails = [{
   name: "Google",
 }];
 
-let countryCode = Services.prefs.getCharPref("browser.search.countryCode");
+let region = Services.prefs.getCharPref("browser.search.region");
 let code = "";
-switch (countryCode) {
+switch (region) {
   case "US":
     code = "firefox-b-1";
     break;

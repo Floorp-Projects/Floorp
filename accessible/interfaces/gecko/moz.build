@@ -20,10 +20,11 @@ GENERATED_FILES += [
 
 FINAL_LIBRARY = 'xul'
 
-# The Windows MIDL code generator creates things like:
-#
-#   #endif !_MIDL_USE_GUIDDEF_
-#
-# which clang-cl complains about.  MSVC doesn't, so turn this warning off.
+# Suppress warnings from the MIDL generated code.
 if CONFIG['CC_TYPE'] == 'clang-cl':
-    CFLAGS += ['-Wno-extra-tokens']
+    CFLAGS += [
+        '-Wno-extern-initializer',
+        '-Wno-incompatible-pointer-types',
+        '-Wno-missing-braces',
+        '-Wno-unused-const-variable',
+    ]

@@ -624,8 +624,6 @@ protected:
                                                     const int32_t& aX, const int32_t& aY,
                                                     const int32_t& aCx, const int32_t& aCy) override;
 
-  virtual mozilla::ipc::IPCResult RecvGetTabCount(uint32_t* aValue) override;
-
   virtual mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(const nsCString& aFirstPartyURI) override;
 
   ContentCacheInParent mContentCache;
