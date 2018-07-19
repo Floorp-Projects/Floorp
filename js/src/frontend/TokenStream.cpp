@@ -991,6 +991,55 @@ SourceUnits<char16_t>::findWindowEnd(size_t offset) const
     return offset + HalfWindowSize();
 }
 
+template<>
+size_t
+SourceUnits<Utf8Unit>::findWindowEnd(size_t offset) const
+{
+    const Utf8Unit* const initial = codeUnitPtrAt(offset);
+    const Utf8Unit* p = initial;
+
+    auto HalfWindowSize = [&initial, &p]() { return PointerRangeSize(initial, p); };
+
+    while (true) {
+        MOZ_ASSERT(p <= limit_);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p >= limit_ || HalfWindowSize() >= WindowRadius)
+            break;
+
+        // A non-encoding error might be followed by an encoding error within
+        // |maxEnd|, so we must validate as we go to not include invalid UTF-8
+        // in the computed window.  What joy!
+
+        Utf8Unit lead = *p;
+        if (mozilla::IsAscii(lead)) {
+            if (IsSingleUnitLineTerminator(lead))
+                break;
+
+            p++;
+            continue;
+        }
+
+        PeekedCodePoint<Utf8Unit> peeked = PeekCodePoint(p, limit_);
+        if (peeked.isNone())
+            break; // encoding error
+
+        char32_t c = peeked.codePoint();
+        if (MOZ_UNLIKELY(c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR))
+            break;
+
+        MOZ_ASSERT(!IsLineTerminator(c));
+
+        uint8_t len = peeked.lengthInUnits();
+        if (HalfWindowSize() + len > WindowRadius)
+            break;
+
+        p += len;
+    }
+
+    MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+    return offset + HalfWindowSize();
+}
+
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
