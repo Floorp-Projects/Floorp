@@ -254,6 +254,7 @@ class UrlInputFragment :
                 // Only show keyboard if we are not displaying the first run tour on top.
                 showKeyboard()
 
+                @Suppress("MaxLineLength")
                 toolbarBackgroundView.background = ContextCompat.getDrawable(context!!, R.drawable.animated_background_url)
             }
         }
