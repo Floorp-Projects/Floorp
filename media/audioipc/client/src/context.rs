@@ -20,6 +20,7 @@ use std::os::raw::c_void;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::net;
 use std::sync::mpsc;
+use std::thread;
 use stream;
 use tokio_core::reactor::{Handle, Remote};
 use tokio_uds::UnixStream;
@@ -99,8 +100,24 @@ impl ContextOps for ClientContext {
 
         let (tx_rpc, rx_rpc) = mpsc::channel();
 
+        let params = CPUPOOL_INIT_PARAMS.with(|p| {
+            p.replace(None).unwrap()
+        });
+
+        let thread_create_callback = params.thread_create_callback;
+
+        let register_thread = move || {
+            if let Some(func) = thread_create_callback {
+                let thr = thread::current();
+                let name = CString::new(thr.name().unwrap()).unwrap();
+                func(name.as_ptr());
+            }
+        };
+
         let core = t!(core::spawn_thread("AudioIPC Client RPC", move || {
             let handle = core::handle();
+
+            register_thread();
 
             open_server_stream()
                 .ok()
@@ -116,14 +133,12 @@ impl ContextOps for ClientContext {
 
         let rpc = t!(rx_rpc.recv());
 
-        let cpupool = CPUPOOL_INIT_PARAMS.with(|p| {
-            let params = p.replace(None).unwrap();
-            futures_cpupool::Builder::new()
+        let cpupool = futures_cpupool::Builder::new()
                 .name_prefix("AudioIPC")
+                .after_start(register_thread)
                 .pool_size(params.pool_size)
                 .stack_size(params.stack_size)
-                .create()
-        });
+                .create();
 
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,
