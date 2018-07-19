@@ -14,6 +14,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
+#include "xpcprivate.h"
 #include "nsGlobalWindow.h"
 
 namespace mozilla {
@@ -91,6 +92,9 @@ CustomElementCallback::Call()
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
         mArgs.name, mArgs.oldValue, mArgs.newValue, mArgs.namespaceURI);
+      break;
+    case nsIDocument::eGetCustomInterface:
+      NS_NOTREACHED("Don't call GetCustomInterface through callback");
       break;
   }
 }
@@ -475,6 +479,10 @@ CustomElementRegistry::CreateCustomElementCallback(
         func = aDefinition->mCallbacks->mAttributeChangedCallback.Value();
       }
       break;
+
+    case nsIDocument::eGetCustomInterface:
+      NS_NOTREACHED("Don't call GetCustomInterface through callback");
+      break;
   }
 
   // If there is no such callback, stop.
@@ -831,7 +839,8 @@ CustomElementRegistry::Define(JSContext* aCx,
      * 10.3. Let lifecycleCallbacks be a map with the four keys
      *       "connectedCallback", "disconnectedCallback", "adoptedCallback", and
      *       "attributeChangedCallback", each of which belongs to an entry whose
-     *       value is null.
+     *       value is null. The 'getCustomInterface' callback is also included
+     *       for chrome usage.
      * 10.4. For each of the four keys callbackName in lifecycleCallbacks:
      *       1. Let callbackValue be Get(prototype, callbackName). Rethrow any
      *          exceptions.
@@ -1161,6 +1170,51 @@ CustomElementRegistry::Upgrade(Element* aElement,
   aElement->SetCustomElementDefinition(aDefinition);
 }
 
+already_AddRefed<nsISupports>
+CustomElementRegistry::CallGetCustomInterface(Element* aElement,
+                                              const nsIID& aIID)
+{
+  MOZ_ASSERT(aElement);
+
+  if (nsContentUtils::IsChromeDoc(aElement->OwnerDoc())) {
+    CustomElementDefinition* definition = aElement->GetCustomElementDefinition();
+    if (definition && definition->mCallbacks &&
+        definition->mCallbacks->mGetCustomInterfaceCallback.WasPassed() &&
+        definition->mLocalName == aElement->NodeInfo()->NameAtom()) {
+
+      LifecycleGetCustomInterfaceCallback* func =
+        definition->mCallbacks->mGetCustomInterfaceCallback.Value();
+      JS::Rooted<JSObject*> customInterface(RootingCx());
+
+      nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aIID);
+      func->Call(aElement, iid, &customInterface);
+      if (customInterface) {
+        RefPtr<nsXPCWrappedJS> wrappedJS;
+        nsresult rv =
+          nsXPCWrappedJS::GetNewOrUsed(customInterface,
+                                       NS_GET_IID(nsISupports),
+                                       getter_AddRefs(wrappedJS)); 
+        if (NS_SUCCEEDED(rv) && wrappedJS) {
+          // Check if the returned object implements the desired interface. 
+          nsCOMPtr<nsISupports> retval;
+          if (NS_SUCCEEDED(wrappedJS->QueryInterface(aIID,
+                                                     getter_AddRefs(retval)))) {        
+            return retval.forget();
+          }
+        }
+      }
+    }
+  }
+
+  // Otherwise, check if the element supports the interface directly, and just use that.
+  nsCOMPtr<nsISupports> supports;
+  if (NS_SUCCEEDED(aElement->QueryInterface(aIID, getter_AddRefs(supports)))) {
+    return supports.forget();
+  }
+
+  return nullptr;
+}
+
 //-----------------------------------------------------
 // CustomElementReactionsStack
 
@@ -1370,6 +1424,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
   if (callbacks->mAdoptedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mAdoptedCallback");
     cb.NoteXPCOMChild(callbacks->mAdoptedCallback.Value());
+  }
+
+  if (callbacks->mGetCustomInterfaceCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mGetCustomInterfaceCallback");
+    cb.NoteXPCOMChild(callbacks->mGetCustomInterfaceCallback.Value());
   }
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mConstructor");
