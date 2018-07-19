@@ -205,7 +205,8 @@ def run_tests(config, test_paths, product, **kwargs):
 
                 test_count = 0
                 unexpected_count = 0
-                logger.suite_start(test_loader.test_ids, name='web-platform-test', run_info=run_info)
+                logger.suite_start(test_loader.test_ids, name='web-platform-test', run_info=run_info,
+                                   extra={"run_by_dir": kwargs["run_by_dir"]})
                 for test_type in kwargs["test_types"]:
                     logger.info("Running %s tests" % test_type)
 
@@ -315,6 +316,7 @@ def check_stability(**kwargs):
                                      repeat_restart=kwargs['verify_repeat_restart'],
                                      output_results=kwargs['verify_output_results'],
                                      **kwargs)
+
 
 def start(**kwargs):
     if kwargs["list_test_groups"]:
