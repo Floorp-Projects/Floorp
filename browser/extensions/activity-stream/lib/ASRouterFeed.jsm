@@ -47,8 +47,12 @@ class ASRouterFeed {
   onAction(action) {
     switch (action.type) {
       case at.INIT:
-      case at.PREF_CHANGED:
         this.enableOrDisableBasedOnPref();
+        break;
+      case at.PREF_CHANGED:
+        if (["asrouterOnboardingCohort", "asrouterExperimentEnabled"].includes(action.data.name)) {
+          this.enableOrDisableBasedOnPref();
+        }
         break;
       case at.UNINIT:
         this.disable();
