@@ -21,9 +21,6 @@ AudioListener::AudioListener(AudioContext* aContext)
   , mPosition()
   , mFrontVector(0., 0., -1.)
   , mRightVector(1., 0., 0.)
-  , mVelocity()
-  , mDopplerFactor(1.)
-  , mSpeedOfSound(343.3) // meters/second
 {
   MOZ_ASSERT(aContext);
 }
@@ -77,10 +74,6 @@ AudioListener::RegisterPannerNode(PannerNode* aPannerNode)
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_FRONT_VECTOR, mFrontVector);
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_RIGHT_VECTOR, mRightVector);
-  aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
-  aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_DOPPLER_FACTOR, mDopplerFactor);
-  aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_SPEED_OF_SOUND, mSpeedOfSound);
-  UpdatePannersVelocity();
 }
 
 void AudioListener::UnregisterPannerNode(PannerNode* aPannerNode)
@@ -104,15 +97,6 @@ AudioListener::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoi
   for (uint32_t i = 0; i < mPanners.Length(); ++i) {
     if (mPanners[i]) {
       mPanners[i]->SendThreeDPointParameterToStream(aIndex, aValue);
-    }
-  }
-}
-
-void AudioListener::UpdatePannersVelocity()
-{
-  for (uint32_t i = 0; i < mPanners.Length(); ++i) {
-    if (mPanners[i]) {
-      mPanners[i]->SendDopplerToSourcesIfNeeded();
     }
   }
 }

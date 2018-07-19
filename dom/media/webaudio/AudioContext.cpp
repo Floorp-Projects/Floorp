@@ -93,7 +93,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
   }
   // mDecodeJobs owns the WebAudioDecodeJob objects whose lifetime is managed explicitly.
   // mAllNodes is an array of weak pointers, ignore it here.
-  // mPannerNodes is an array of weak pointers, ignore it here.
   // mBasicWaveFormCache cannot participate in cycles, ignore it here.
 
   // Remove weak reference on the global window as the context is not usable
@@ -114,7 +113,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext,
   }
   // mDecodeJobs owns the WebAudioDecodeJob objects whose lifetime is managed explicitly.
   // mAllNodes is an array of weak pointers, ignore it here.
-  // mPannerNodes is an array of weak pointers, ignore it here.
   // mBasicWaveFormCache cannot participate in cycles, ignore it here.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -656,25 +654,10 @@ AudioContext::UnregisterActiveNode(AudioNode* aNode)
 }
 
 void
-AudioContext::UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode)
-{
-  UpdatePannerSource();
-}
-
-void
 AudioContext::UnregisterPannerNode(PannerNode* aNode)
 {
-  mPannerNodes.RemoveEntry(aNode);
   if (mListener) {
     mListener->UnregisterPannerNode(aNode);
-  }
-}
-
-void
-AudioContext::UpdatePannerSource()
-{
-  for (auto iter = mPannerNodes.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->FindConnectedSources();
   }
 }
 
@@ -1202,7 +1185,6 @@ AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     amount += mDecodeJobs[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
   amount += mActiveNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mPannerNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 
