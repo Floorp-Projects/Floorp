@@ -1,4 +1,4 @@
-if CONFIG['CC_TYPE'] == 'clang':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
   CXXFLAGS += [
     '-Weverything',
 
@@ -10,7 +10,7 @@ if CONFIG['CC_TYPE'] == 'clang':
     '-Wno-reserved-id-macro', # NSPR and NSS use reserved IDs in their include guards.
     '-Wno-weak-vtables', # We rely on the linker to merge the duplicate vtables.
   ]
-elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+elif CONFIG['CC_TYPE'] == 'msvc':
   CXXFLAGS += [
     '-sdl', # Enable additional security checks based on Microsoft's SDL.
 
