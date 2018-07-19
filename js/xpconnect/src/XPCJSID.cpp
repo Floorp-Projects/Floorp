@@ -830,17 +830,6 @@ IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
 }
 
 bool
-ClassID2JSValue(JSContext* aCx, const nsCID& aId, JS::MutableHandleValue aVal)
-{
-    char idstr[NSID_LENGTH];
-    aId.ToProvidedString(idstr);
-
-    nsCOMPtr<nsIJSCID> jsid = nsJSCID::NewID(idstr);
-    return jsid && NS_SUCCEEDED(
-        nsContentUtils::WrapNative(aCx, jsid, &NS_GET_IID(nsIJSCID), aVal));
-}
-
-bool
 ContractID2JSValue(JSContext* aCx, const nsACString& aContract,
                    JS::MutableHandleValue aVal)
 {

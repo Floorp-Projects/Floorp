@@ -759,17 +759,6 @@ bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
                      JS::MutableHandleValue aVal);
 
 /**
- * Reflect a ClassID into JS
- *
- * This object will expose 'getService' and 'createInstance' methods in addition
- * to the other methods avaliable on nsID objects.
- *
- * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
- */
-bool ClassID2JSValue(JSContext* aCx, const nsCID& aId,
-                     JS::MutableHandleValue aVal);
-
-/**
  * Reflect a ContractID into JS
  *
  * This object will expose 'getService' and 'createInstance' methods in addition
