@@ -13,6 +13,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsPrintfCString.h"
+#include "nsReadableUtils.h"
 
 #define CV_SIGNATURE 0x53445352 // 'SDSR'
 
@@ -79,34 +81,34 @@ static bool IsDashOrBraces(char c)
   return c == '-' || c == '{' || c == '}';
 }
 
-std::string GetVersion(WCHAR* dllPath)
+static nsCString
+GetVersion(WCHAR* dllPath)
 {
   DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {
-    return "";
+    return EmptyCString();
   }
 
   mozilla::UniquePtr<unsigned char[]> infoData = mozilla::MakeUnique<unsigned char[]>(infoSize);
   if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return "";
+    return EmptyCString();
   }
 
   VS_FIXEDFILEINFO* vInfo;
   UINT vInfoLen;
   if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return "";
+    return EmptyCString();
   }
   if (!vInfo) {
-    return "";
+    return EmptyCString();
   }
 
-  std::ostringstream stream;
-  stream << (vInfo->dwFileVersionMS >> 16)    << "."
-         << (vInfo->dwFileVersionMS & 0xFFFF) << "."
-         << (vInfo->dwFileVersionLS >> 16)    << "."
-         << (vInfo->dwFileVersionLS & 0xFFFF);
-
-  return stream.str();
+  nsPrintfCString version("%d.%d.%d.%d",
+                          vInfo->dwFileVersionMS >> 16,
+                          vInfo->dwFileVersionMS & 0xFFFF,
+                          vInfo->dwFileVersionLS >> 16,
+                          vInfo->dwFileVersionLS & 0xFFFF);
+  return version;
 }
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
@@ -133,12 +135,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   }
 
   for (unsigned int i = 0; i < modulesNum; i++) {
-    nsID pdbSig;
-    uint32_t pdbAge;
     nsAutoString pdbPathStr;
     nsAutoString pdbNameStr;
     char *pdbName = NULL;
-    std::string breakpadId;
     WCHAR modulePath[MAX_PATH + 1];
 
     if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath, sizeof(modulePath) / sizeof(WCHAR))) {
@@ -150,6 +149,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       continue;
     }
 
+    nsCString breakpadId;
     // Load the module again to make sure that its handle will remain
     // valid as we attempt to read the PDB information from it.  We load the
     // DLL as a datafile so that if the module actually gets unloaded between
@@ -163,18 +163,22 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // proceed to actually access those pages.
     HMODULE handleLock = LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
     MEMORY_BASIC_INFORMATION vmemInfo = { 0 };
+    nsID pdbSig;
+    uint32_t pdbAge;
     if (handleLock &&
       sizeof(vmemInfo) == VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
       vmemInfo.State == MEM_COMMIT &&
       GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
-      std::ostringstream stream;
-      stream << pdbSig.ToString() << std::hex << pdbAge;
-      breakpadId = stream.str();
-      std::string::iterator end =
-        std::remove_if(breakpadId.begin(), breakpadId.end(), IsDashOrBraces);
-      breakpadId.erase(end, breakpadId.end());
-      std::transform(breakpadId.begin(), breakpadId.end(),
-        breakpadId.begin(), toupper);
+      MOZ_ASSERT(breakpadId.IsEmpty());
+      breakpadId.AppendPrintf("%08X" // m0
+                              "%04X%04X" // m1,m2
+                              "%02X%02X%02X%02X%02X%02X%02X%02X" // m3
+                              "%X", // pdbAge
+                              pdbSig.m0,
+                              pdbSig.m1, pdbSig.m2,
+                              pdbSig.m3[0], pdbSig.m3[1], pdbSig.m3[2], pdbSig.m3[3],
+                              pdbSig.m3[4], pdbSig.m3[5], pdbSig.m3[6], pdbSig.m3[7],
+                              pdbAge);
 
       pdbPathStr = NS_ConvertUTF8toUTF16(pdbName);
       pdbNameStr = pdbPathStr;
