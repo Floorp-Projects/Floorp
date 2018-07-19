@@ -4,6 +4,8 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
+  "resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TabCrashHandler",
   "resource:///modules/ContentCrashHandlers.jsm");
 
@@ -205,19 +207,8 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   }, {once: true});
 }
 
-function promiseWindowWillBeClosed(win) {
-  return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observe(subject, topic) {
-      if (subject == win) {
-        Services.obs.removeObserver(observe, topic);
-        executeSoon(resolve);
-      }
-    }, "domwindowclosed");
-  });
-}
-
 function promiseWindowClosed(win) {
-  let promise = promiseWindowWillBeClosed(win);
+  let promise = BrowserTestUtils.domWindowClosed(win);
   win.close();
   return promise;
 }
