@@ -22,7 +22,6 @@ namespace layers {
 
 AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
  : mInitialised(false)
- , mSentDL(false)
  , mIsChanged(false)
  , mUseExternalImage(false)
  , mFilter(wr::ImageRendering::Auto)
@@ -269,7 +268,7 @@ AsyncImagePipelineManager::UpdateWithoutExternalImage(wr::TransactionBuilder& aR
 }
 
 void
-AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
+AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aTxn)
 {
   if (mDestroyed || mAsyncImagePipelines.Count() == 0) {
     return;
@@ -282,92 +281,130 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
   for (auto iter = mAsyncImagePipelines.Iter(); !iter.Done(); iter.Next()) {
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     AsyncImagePipeline* pipeline = iter.Data();
-
-    nsTArray<wr::ImageKey> keys;
-    auto op = UpdateImageKeys(aTxn, pipeline, keys);
-
-    bool updateDisplayList = pipeline->mInitialised &&
-                             (pipeline->mIsChanged || op == Some(TextureHost::ADD_IMAGE)) &&
-                             !!pipeline->mCurrentTexture;
-
-    if (!pipeline->mSentDL) {
-      // If we haven't sent a display list yet, do it anyway, even if it's just
-      // an empty DL with a stacking context and no actual image. Otherwise WR
-      // will assert about missing the pipeline
-      updateDisplayList = true;
-    }
-
-    // We will schedule generating a frame after the scene
-    // build is done or resource update is done, so we don't need to do it here.
-
-    if (!updateDisplayList) {
-      // We don't need to update the display list, either because we can't or because
-      // the previous one is still up to date.
-      // We may, however, have updated some resources.
-      aTxn.UpdateEpoch(pipelineId, epoch);
-      if (pipeline->mCurrentTexture) {
-        HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
-      }
+    // If aync image pipeline does not use ImageBridge, do not need to apply.
+    if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
     }
+    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, aTxn);
+  }
+}
 
-    pipeline->mSentDL = true;
-    pipeline->mIsChanged = false;
+void
+AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
+                                                      const wr::PipelineId& aPipelineId,
+                                                      AsyncImagePipeline* aPipeline,
+                                                      wr::TransactionBuilder& aTxn)
+{
+  nsTArray<wr::ImageKey> keys;
+  auto op = UpdateImageKeys(aTxn, aPipeline, keys);
 
-    wr::LayoutSize contentSize { pipeline->mScBounds.Width(), pipeline->mScBounds.Height() };
-    wr::DisplayListBuilder builder(pipelineId, contentSize);
+  bool updateDisplayList = aPipeline->mInitialised &&
+                           (aPipeline->mIsChanged || op == Some(TextureHost::ADD_IMAGE)) &&
+                           !!aPipeline->mCurrentTexture;
 
-    float opacity = 1.0f;
-    Maybe<wr::WrClipId> referenceFrameId = builder.PushStackingContext(
-        wr::ToLayoutRect(pipeline->mScBounds),
-        nullptr,
-        nullptr,
-        &opacity,
-        pipeline->mScTransform.IsIdentity() ? nullptr : &pipeline->mScTransform,
-        wr::TransformStyle::Flat,
-        nullptr,
-        pipeline->mMixBlendMode,
-        nsTArray<wr::WrFilterOp>(),
-        true,
-        // This is fine to do unconditionally because we only push images here.
-        wr::GlyphRasterSpace::Screen());
+  // We will schedule generating a frame after the scene
+  // build is done or resource update is done, so we don't need to do it here.
 
-    if (pipeline->mCurrentTexture && !keys.IsEmpty()) {
-      LayoutDeviceRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
-      if (pipeline->mScaleToSize.isSome()) {
-        rect = LayoutDeviceRect(0, 0, pipeline->mScaleToSize.value().width, pipeline->mScaleToSize.value().height);
-      }
+  if (!updateDisplayList) {
+    // We don't need to update the display list, either because we can't or because
+    // the previous one is still up to date.
+    // We may, however, have updated some resources.
+    aTxn.UpdateEpoch(aPipelineId, aEpoch);
+    if (aPipeline->mCurrentTexture) {
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture->AsWebRenderTextureHost());
+    }
+    return;
+  }
 
-      if (pipeline->mUseExternalImage) {
-        MOZ_ASSERT(pipeline->mCurrentTexture->AsWebRenderTextureHost());
-        Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
-        pipeline->mCurrentTexture->PushDisplayItems(builder,
-                                                    wr::ToLayoutRect(rect),
-                                                    wr::ToLayoutRect(rect),
-                                                    pipeline->mFilter,
-                                                    range_keys);
-        HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
-      } else {
-        MOZ_ASSERT(keys.Length() == 1);
-        builder.PushImage(wr::ToLayoutRect(rect),
-                          wr::ToLayoutRect(rect),
-                          true,
-                          pipeline->mFilter,
-                          keys[0]);
-      }
+  aPipeline->mIsChanged = false;
+
+  wr::LayoutSize contentSize { aPipeline->mScBounds.Width(), aPipeline->mScBounds.Height() };
+  wr::DisplayListBuilder builder(aPipelineId, contentSize);
+
+  float opacity = 1.0f;
+  Maybe<wr::WrClipId> referenceFrameId = builder.PushStackingContext(
+    wr::ToLayoutRect(aPipeline->mScBounds),
+    nullptr,
+    nullptr,
+    &opacity,
+    aPipeline->mScTransform.IsIdentity() ? nullptr : &aPipeline->mScTransform,
+    wr::TransformStyle::Flat,
+    nullptr,
+    aPipeline->mMixBlendMode,
+    nsTArray<wr::WrFilterOp>(),
+    true,
+    // This is fine to do unconditionally because we only push images here.
+    wr::GlyphRasterSpace::Screen());
+
+  if (aPipeline->mCurrentTexture && !keys.IsEmpty()) {
+    LayoutDeviceRect rect(0, 0, aPipeline->mCurrentTexture->GetSize().width, aPipeline->mCurrentTexture->GetSize().height);
+    if (aPipeline->mScaleToSize.isSome()) {
+      rect = LayoutDeviceRect(0, 0, aPipeline->mScaleToSize.value().width, aPipeline->mScaleToSize.value().height);
     }
 
-    builder.PopStackingContext(referenceFrameId.isSome());
-
-    wr::BuiltDisplayList dl;
-    wr::LayoutSize builderContentSize;
-    builder.Finalize(builderContentSize, dl);
-    aTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
-                        epoch,
-                        LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
-                        pipelineId, builderContentSize,
-                        dl.dl_desc, dl.dl);
+    if (aPipeline->mUseExternalImage) {
+      MOZ_ASSERT(aPipeline->mCurrentTexture->AsWebRenderTextureHost());
+      Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
+      aPipeline->mCurrentTexture->PushDisplayItems(builder,
+                                                  wr::ToLayoutRect(rect),
+                                                  wr::ToLayoutRect(rect),
+                                                  aPipeline->mFilter,
+                                                  range_keys);
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture->AsWebRenderTextureHost());
+    } else {
+      MOZ_ASSERT(keys.Length() == 1);
+      builder.PushImage(wr::ToLayoutRect(rect),
+                        wr::ToLayoutRect(rect),
+                        true,
+                        aPipeline->mFilter,
+                        keys[0]);
+    }
   }
+
+  builder.PopStackingContext(referenceFrameId.isSome());
+
+  wr::BuiltDisplayList dl;
+  wr::LayoutSize builderContentSize;
+  builder.Finalize(builderContentSize, dl);
+  aTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
+                      aEpoch,
+                      LayerSize(aPipeline->mScBounds.Width(), aPipeline->mScBounds.Height()),
+                      aPipelineId, builderContentSize,
+                      dl.dl_desc, dl.dl);
+}
+
+void
+AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn)
+{
+  AsyncImagePipeline* pipeline = mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
+  if (!pipeline) {
+    return;
+  }
+
+  wr::Epoch epoch = GetNextImageEpoch();
+  ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, aTxn);
+}
+
+void
+AsyncImagePipelineManager::SetEmptyDisplayList(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn)
+{
+  AsyncImagePipeline* pipeline = mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
+  if (!pipeline) {
+    return;
+  }
+
+  wr::Epoch epoch = GetNextImageEpoch();
+  wr::LayoutSize contentSize { pipeline->mScBounds.Width(), pipeline->mScBounds.Height() };
+  wr::DisplayListBuilder builder(aPipelineId, contentSize);
+
+  wr::BuiltDisplayList dl;
+  wr::LayoutSize builderContentSize;
+  builder.Finalize(builderContentSize, dl);
+  aTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
+                      epoch,
+                      LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
+                      aPipelineId, builderContentSize,
+                      dl.dl_desc, dl.dl);
 }
 
 void
