@@ -1863,12 +1863,6 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 }
 
 NS_IMETHODIMP
-HTMLEditor::StripCites()
-{
-  return TextEditor::StripCites();
-}
-
-NS_IMETHODIMP
 HTMLEditor::Rewrap(bool aRespectNewlines)
 {
   return TextEditor::Rewrap(aRespectNewlines);
