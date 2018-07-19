@@ -47,3 +47,4 @@ marionette.jar:
   content/test_nested_iframe.xul (chrome/test_nested_iframe.xul)
   content/test.xul (chrome/test.xul)
 #endif
+  content/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
