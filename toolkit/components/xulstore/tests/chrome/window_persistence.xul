@@ -24,30 +24,32 @@ function opened()
 function runTest()
 {
   var firstRun = window.arguments[0];
+  var button1 = document.getElementById("button1");
+  var button2 = document.getElementById("button2");
   if (firstRun) {
-    document.getElementById("button1").setAttribute("value", "Pressed");
-    document.getElementById("button2").removeAttribute("value");
+    button1.setAttribute("value", "Pressed");
+    button2.removeAttribute("value");
 
-    document.getElementById("button2").setAttribute("foo", "bar");
-    document.persist("button2", "foo");
-    is(XULStore.getValue(URI, "button2", "foo"), "bar", "attribute persisted")
-    document.getElementById("button2").removeAttribute("foo");
-    document.persist("button2", "foo");
-    is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed")
+    button2.setAttribute("foo", "bar");
+    XULStore.persist(button2, "foo");
+    is(XULStore.getValue(URI, "button2", "foo"), "bar", "attribute persisted");
+    button2.removeAttribute("foo");
+    XULStore.persist(button2, "foo");
+    is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed");
 
     window.close();
     window.opener.windowOpened();
   }
   else {
-    is(document.getElementById("button1").getAttribute("value"), "Pressed",
+    is(button1.getAttribute("value"), "Pressed",
        "Attribute set");
-    is(document.getElementById("button2").hasAttribute("value"), true,
+    is(button2.hasAttribute("value"), true,
        "Attribute cleared");
-    is(document.getElementById("button2").getAttribute("value"), "",
+    is(button2.getAttribute("value"), "",
        "Attribute cleared");
-    is(document.getElementById("button2").hasAttribute("foo"), false,
+    is(button2.hasAttribute("foo"), false,
        "Attribute cleared");
-    is(document.getElementById("button2").getAttribute("foo"), "",
+    is(button2.getAttribute("foo"), "",
        "Attribute cleared");
 
     window.close();

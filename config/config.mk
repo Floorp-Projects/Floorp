@@ -229,7 +229,7 @@ ifeq (Darwin,$(OS_TARGET))
 # from the first linked binaries would be overwritten by those of the
 # last linked binary. So we use a subdirectory containing the name of the
 # linked binary.
-LDFLAGS += -Wl,-object_path_lto,$@.lto.o/
+LDFLAGS += -Wl,-object_path_lto,$(@F).lto.o/
 endif
 endif
 

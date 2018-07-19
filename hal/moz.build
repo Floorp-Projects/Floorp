@@ -38,6 +38,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
     UNIFIED_SOURCES += [
         'android/AndroidSensor.cpp',
+        'fallback/FallbackProcessPriority.cpp',
     ]
     # AndroidHal.cpp cannot be built in unified mode because it relies on HalImpl.h.
     SOURCES += [
@@ -45,6 +46,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
 elif CONFIG['OS_TARGET'] == 'Linux':
     UNIFIED_SOURCES += [
+        'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
@@ -61,6 +63,7 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
+        'windows/WindowsProcessPriority.cpp',
         'windows/WindowsSensor.cpp',
     ]
     # WindowsBattery.cpp cannot be built in unified mode because it relies on HalImpl.h.
@@ -70,11 +73,13 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'cocoa/CocoaBattery.cpp',
+        'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
     UNIFIED_SOURCES += [
+        'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
@@ -90,6 +95,7 @@ elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
 else:
     UNIFIED_SOURCES += [
         'fallback/FallbackBattery.cpp',
+        'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
@@ -98,7 +104,6 @@ else:
 # Fallbacks for backends no longer implemented.
 UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
-    'fallback/FallbackProcessPriority.cpp',
 ]
 
 # Fallbacks for backends implemented on Android only.
