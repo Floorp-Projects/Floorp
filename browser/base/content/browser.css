@@ -369,25 +369,23 @@ toolbarpaletteitem {
     list-style-image: var(--webextension-toolbar-image, inherit);
   }
 
-  .webextension-browser-action:-moz-lwtheme-brighttext {
+  toolbar[brighttext] .webextension-browser-action {
     list-style-image: var(--webextension-toolbar-image-light, inherit);
   }
 
-  .webextension-browser-action:-moz-lwtheme-darktext {
+  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
     list-style-image: var(--webextension-toolbar-image-dark, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action {
+  .webextension-browser-action[cui-areatype="menu-panel"] {
     list-style-image: var(--webextension-menupanel-image, inherit);
   }
 
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
+  :root[lwt-popup-brighttext] .webextension-browser-action[cui-areatype="menu-panel"] {
     list-style-image: var(--webextension-menupanel-image-light, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme-darktext,
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
+  :root:not([lwt-popup-brighttext]) .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme {
     list-style-image: var(--webextension-menupanel-image-dark, inherit);
   }
 
@@ -401,25 +399,23 @@ toolbarpaletteitem {
     list-style-image: var(--webextension-toolbar-image-2x, inherit);
   }
 
-  .webextension-browser-action:-moz-lwtheme-brighttext {
+  toolbar[brighttext] .webextension-browser-action {
     list-style-image: var(--webextension-toolbar-image-2x-light, inherit);
   }
 
-  .webextension-browser-action:-moz-lwtheme-darktext {
+  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
     list-style-image: var(--webextension-toolbar-image-2x-dark, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action {
+  .webextension-browser-action[cui-areatype="menu-panel"] {
     list-style-image: var(--webextension-menupanel-image-2x, inherit);
   }
 
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
+  :root[lwt-popup-brighttext] .webextension-browser-action[cui-areatype="menu-panel"] {
     list-style-image: var(--webextension-menupanel-image-2x-light, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme-darktext,
-  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
+  :root:not([lwt-popup-brighttext]) .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme {
     list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
   }
 

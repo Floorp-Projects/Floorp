@@ -2,9 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// PNG image data for a simple red dot.
-const BACKGROUND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
-
 const LIGHT_THEME_COLORS = {
   "accentcolor": "#FFF",
   "textcolor": "#000",
@@ -15,6 +12,11 @@ const DARK_THEME_COLORS = {
   "textcolor": "#FFF",
 };
 
+const TOOLBAR_MAPPING = {
+  "navbar": "nav-bar",
+  "tabstrip": "TabsToolbar",
+};
+
 async function testBrowserAction(extension, expectedIcon) {
   let browserActionWidget = getBrowserActionWidget(extension);
   await promiseAnimationFrame();
@@ -23,11 +25,18 @@ async function testBrowserAction(extension, expectedIcon) {
 }
 
 async function testStaticTheme(options) {
-  let {themeType, themeIcons, withDefaultIcon} = options;
+  let {
+    themeData,
+    themeIcons,
+    withDefaultIcon,
+    expectedIcon,
+    defaultArea = "navbar",
+  } = options;
 
   let manifest = {
     "browser_action": {
       "theme_icons": themeIcons,
+      "default_area": defaultArea,
     },
   };
 
@@ -40,31 +49,32 @@ async function testStaticTheme(options) {
   await extension.startup();
 
   // Confirm that the browser action has the correct default icon before a theme is loaded.
-  let expectedDefaultIcon = withDefaultIcon ? "default.png" : "dark.png";
+  let toolbarId = TOOLBAR_MAPPING[defaultArea];
+  let expectedDefaultIcon;
+  // Some platforms have dark toolbars by default, take it in account when picking the default icon.
+  if (toolbarId && document.getElementById(toolbarId).hasAttribute("brighttext")) {
+    expectedDefaultIcon = "light.png";
+  } else {
+    expectedDefaultIcon = withDefaultIcon ? "default.png" : "dark.png";
+  }
   await testBrowserAction(extension, expectedDefaultIcon);
 
   let theme = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
-        "images": {
-          "headerURL": "background.png",
-        },
-        "colors": themeType === "light" ? LIGHT_THEME_COLORS : DARK_THEME_COLORS,
+        "colors": themeData,
       },
-    },
-    files: {
-      "background.png": BACKGROUND,
     },
   });
 
   await theme.startup();
 
   // Confirm that the correct icon is used when the theme is loaded.
-  if (themeType == "light") {
-    // The dark icon should be used if the theme is light.
+  if (expectedIcon == "dark") {
+    // The dark icon should be used if the area is light.
     await testBrowserAction(extension, "dark.png");
   } else {
-    // The light icon should be used if the theme is dark.
+    // The light icon should be used if the area is dark.
     await testBrowserAction(extension, "light.png");
   }
 
@@ -78,7 +88,8 @@ async function testStaticTheme(options) {
 
 add_task(async function browseraction_theme_icons_light_theme() {
   await testStaticTheme({
-    themeType: "light",
+    themeData: LIGHT_THEME_COLORS,
+    expectedIcon: "dark",
     themeIcons: [{
       "light": "light.png",
       "dark": "dark.png",
@@ -87,7 +98,8 @@ add_task(async function browseraction_theme_icons_light_theme() {
     withDefaultIcon: true,
   });
   await testStaticTheme({
-    themeType: "light",
+    themeData: LIGHT_THEME_COLORS,
+    expectedIcon: "dark",
     themeIcons: [{
       "light": "light.png",
       "dark": "dark.png",
@@ -103,7 +115,8 @@ add_task(async function browseraction_theme_icons_light_theme() {
 
 add_task(async function browseraction_theme_icons_dark_theme() {
   await testStaticTheme({
-    themeType: "dark",
+    themeData: DARK_THEME_COLORS,
+    expectedIcon: "light",
     themeIcons: [{
       "light": "light.png",
       "dark": "dark.png",
@@ -112,7 +125,8 @@ add_task(async function browseraction_theme_icons_dark_theme() {
     withDefaultIcon: true,
   });
   await testStaticTheme({
-    themeType: "dark",
+    themeData: DARK_THEME_COLORS,
+    expectedIcon: "light",
     themeIcons: [{
       "light": "light.png",
       "dark": "dark.png",
@@ -126,21 +140,127 @@ add_task(async function browseraction_theme_icons_dark_theme() {
   });
 });
 
+add_task(async function browseraction_theme_icons_different_toolbars() {
+  let themeData = {
+    "accentcolor": "#000",
+    "textcolor": "#fff",
+    "toolbar": "#fff",
+    "toolbar_text": "#000",
+  };
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "dark",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 19,
+    }],
+    withDefaultIcon: true,
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "dark",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 16,
+    }, {
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 32,
+    }],
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "light",
+    defaultArea: "tabstrip",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 19,
+    }],
+    withDefaultIcon: true,
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "light",
+    defaultArea: "tabstrip",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 16,
+    }, {
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 32,
+    }],
+  });
+});
+
+add_task(async function browseraction_theme_icons_overflow_panel() {
+  let themeData = {
+    "popup": "#000",
+    "popup_text": "#fff",
+  };
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "dark",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 19,
+    }],
+    withDefaultIcon: true,
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "dark",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 16,
+    }, {
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 32,
+    }],
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "light",
+    defaultArea: "menupanel",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 19,
+    }],
+    withDefaultIcon: true,
+  });
+  await testStaticTheme({
+    themeData,
+    expectedIcon: "light",
+    defaultArea: "menupanel",
+    themeIcons: [{
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 16,
+    }, {
+      "light": "light.png",
+      "dark": "dark.png",
+      "size": 32,
+    }],
+  });
+});
+
 add_task(async function browseraction_theme_icons_dynamic_theme() {
   let themeExtension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["theme"],
     },
-    files: {
-      "background.png": BACKGROUND,
-    },
     background() {
       browser.test.onMessage.addListener((msg, colors) => {
         if (msg === "update-theme") {
           browser.theme.update({
-            "images": {
-              "headerURL": "background.png",
-            },
             "colors": colors,
           });
           browser.test.sendMessage("theme-updated");
