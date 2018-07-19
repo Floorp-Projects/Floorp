@@ -7,10 +7,10 @@
   </head>
   <body>
     <script type="text/javascript">
-      navigator.registerProtocolHandler("testprotocol",
+      navigator.registerProtocolHandler("web+testprotocol",
           "https://example.com/foobar?uri=%s",
           "Test Protocol");
     </script>
-    <a id="link" href="testprotocol:test">testprotocol link</a>
+    <a id="link" href="web+testprotocol:test">testprotocol link</a>
   </body>
 </html>

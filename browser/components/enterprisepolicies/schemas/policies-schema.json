@@ -2,6 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+    "AppUpdateURL": {
+      "description": "Sets custom app update server URL.",
+      "machine_only": true,
+      "type": "URL"
+    },
+
     "Authentication": {
       "description": "Sites that support integrated authentication. See https://developer.mozilla.org/en-US/docs/Mozilla/Integrated_authentication",
 
