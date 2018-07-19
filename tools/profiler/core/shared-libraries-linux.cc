@@ -110,7 +110,7 @@ SharedLibraryAtPath(const char* path, unsigned long libStart,
 
   return SharedLibrary(libStart, libEnd, offset, getId(path),
                        nameStr, pathStr, nameStr, pathStr,
-                       "", "");
+                       EmptyCString(), "");
 }
 
 static int

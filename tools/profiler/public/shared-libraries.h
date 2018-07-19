@@ -31,7 +31,7 @@ public:
                 const nsString& aModulePath,
                 const nsString& aDebugName,
                 const nsString& aDebugPath,
-                const std::string& aVersion,
+                const nsCString& aVersion,
                 const char* aArch)
     : mStart(aStart)
     , mEnd(aEnd)
@@ -105,7 +105,7 @@ public:
   }
   const nsString &GetDebugName() const { return mDebugName; }
   const nsString &GetDebugPath() const { return mDebugPath; }
-  const std::string &GetVersion() const { return mVersion; }
+  const nsCString &GetVersion() const { return mVersion; }
   const std::string &GetArch() const { return mArch; }
 
 private:
@@ -119,7 +119,7 @@ private:
   nsString mModulePath;
   nsString mDebugName;
   nsString mDebugPath;
-  std::string mVersion;
+  nsCString mVersion;
   std::string mArch;
 };
 
