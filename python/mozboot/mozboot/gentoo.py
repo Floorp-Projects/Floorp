@@ -5,10 +5,10 @@
 from __future__ import absolute_import
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import StyloInstall
+from mozboot.linux_common import NodeInstall, StyloInstall
 
 
-class GentooBootstrapper(StyloInstall, BaseBootstrapper):
+class GentooBootstrapper(NodeInstall, StyloInstall, BaseBootstrapper):
     def __init__(self, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
