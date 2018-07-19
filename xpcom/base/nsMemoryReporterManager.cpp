@@ -1475,8 +1475,10 @@ public:
       // special cases don't cover. And if there are, we want to know about it.
       // So assert that total size of the memory region we're reporting actually
       // matches the allocated size of the thread stack.
+#ifndef ANDROID
       MOZ_ASSERT(mappings[idx].Size() == thread->StackSize(),
                  "Mapping region size doesn't match stack allocation size");
+#endif
 #else
       auto memInfo = MemoryInfo::Get(thread->StackBase(), thread->StackSize());
       size_t privateSize = memInfo.Committed();
