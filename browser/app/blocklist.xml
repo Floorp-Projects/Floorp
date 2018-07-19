@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1530716488758" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1531762863373" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2271,6 +2271,10 @@
     <emItem blockID="5afea853-d029-43f3-a387-64ce9980742a" id="/^(contactus@unzipper.com|{72dcff4e-48ce-41d8-a807-823adadbe0c9}|{dc7d2ecc-9cc3-40d7-93ed-ef6f3219bd6f}|{994db3d3-ccfe-449a-81e4-f95e2da76843}|{25aef460-43d5-4bd0-aa3d-0a46a41400e6}|{178e750c-ae27-4868-a229-04951dac57f7})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ae8ae617-590d-430b-86d4-16364372b67f" id="^((@mixclouddownloader)|(all-down@james\.burrow)|(d\.lehr@chello\.at)|(easy-video-downloader@addonsmash)|(easy-youtube-mp3@james\.burrow)|(gid@addonsmash)|(gmail_panel@addon_clone)|(guid-reused-by-pk-907175)|(idm@addonsmash)|(image-picka@addonsmash)|(instant-idm@addon\.host)|(jdm@awesome\.addons)|(open-in-idm@addonsmash)|(open-in-idm@james\.burrow)|(open-in-vlc@awesome\.addons)|(saveimage@addonsmash)|(thundercross@addonsmash)|(vk-download@addon\.host)|(vk-music-downloader@addonsmash)|(whatsapp_popup@addons\.clone)|(ytb-down@james\.burrow)|(ytb-mp3-downloader@james\.burrow)|(\{0df8d631-7d88-401e-ba7e-af1425dded8a\})|(\{3c74e141-1993-4c04-b755-a66dd491bb47\})|(\{5cdd95c7-5d92-40c5-8e2a-8c52c90191d9\})|(\{40efedc0-8e48-404a-a779-f4016b25c0e6\})|(\{53d605ce-599b-4352-8a06-5e594b3d1822\})|(\{3697c1e8-27d7-4c63-a27e-ac16191a1545\})|(\{170503FA-3349-4F17-BC86-001888A5C8E2\})|(\{649558df-9461-4824-ad18-f2d4d4845ac8\})|(\{27875553-afd5-4365-86dc-019bcd60594c\})|(\{27875553-afd5-4365-86dc-019bcd60594c\})|(\{6e7624fa-7f70-4417-93db-1ec29c023275\})|(\{b1aea1f1-6bed-41ef-9679-1dfbd7b2554f\})|(\{b9acc029-d62b-4d23-b921-8e7aea34266a\})|(\{b9b59e13-4ac5-4eff-8dbe-c345b7619b3c\})|(\{b0186d2d-3126-4537-9186-a6f198547901\})|(\{b3e8fde8-6d97-4ac3-95e0-57b797f4c56b\})|(\{e6a9a96e-4a08-4719-b9bd-0e91c35aaabc\})|(\{e69a36e6-ee12-4fe6-87ca-66b77fc0ffbf\})|(\{ee3601f1-78ab-48bf-89ae-0cfe4aed1f2e\})|(\{f4ce48b3-ad14-4900-86cb-4604474c5b08\})|(\{f5c1262d-b1e8-44a4-b820-a834f0f6d605\}))$">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>
