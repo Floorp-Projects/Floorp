@@ -183,6 +183,23 @@ interface nsIHttpChannelInternal : nsISupports
                                 in nsIHttpUpgradeListener aListener);
 
     /**
+     * Enable only CONNECT to a proxy. Fails if no HTTPUpgrade listener
+     * has been defined. An ALPN header is set using the upgrade protocol.
+     *
+     * Load flags are set with INHIBIT_CACHING, LOAD_ANONYMOUS,
+     * LOAD_BYPASS_CACHE, and LOAD_BYPASS_SERVICE_WORKER.
+     *
+     * Proxy resolve flags are set with RESOLVE_PREFER_HTTPS_PROXY and
+     * RESOLVE_ALWAYS_TUNNEL.
+     */
+    [must_use] void setConnectOnly();
+
+    /**
+     * True iff the channel is CONNECT only.
+     */
+    [must_use] readonly attribute boolean onlyConnect;
+
+    /**
      * Enable/Disable Spdy negotiation on per channel basis.
      * The network.http.spdy.enabled preference is still a pre-requisite
      * for starting spdy.

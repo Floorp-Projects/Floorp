@@ -7772,10 +7772,16 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             return NS_OK;
         }
 
-        if (mUpgradeProtocolCallback && stickyConn &&
+        bool upgradeWebsocket = mUpgradeProtocolCallback && stickyConn &&
             mResponseHead &&
             ((mResponseHead->Status() == 101 && mResponseHead->Version() == HttpVersion::v1_1) ||
-             (mResponseHead->Status() == 200 && mResponseHead->Version() == HttpVersion::v2_0))) {
+             (mResponseHead->Status() == 200 && mResponseHead->Version() == HttpVersion::v2_0));
+
+        bool upgradeConnect = mUpgradeProtocolCallback && stickyConn &&
+            (mCaps & NS_HTTP_CONNECT_ONLY) && mResponseHead &&
+            mResponseHead->Status() == 200;
+
+        if (upgradeWebsocket || upgradeConnect) {
             nsresult rv =
                 gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
                                                          mUpgradeProtocolCallback);

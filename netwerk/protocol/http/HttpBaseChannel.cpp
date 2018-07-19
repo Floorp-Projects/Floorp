@@ -37,6 +37,7 @@
 #include "nsIMutableArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
+#include "nsIProtocolProxyService.h"
 #include "nsProxyRelease.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -2747,6 +2748,33 @@ HttpBaseChannel::HTTPUpgrade(const nsACString &aProtocolName,
     mUpgradeProtocol = aProtocolName;
     mUpgradeProtocolCallback = aListener;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetOnlyConnect(bool* aOnlyConnect)
+{
+  NS_ENSURE_ARG_POINTER(aOnlyConnect);
+
+  *aOnlyConnect = mCaps & NS_HTTP_CONNECT_ONLY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetConnectOnly()
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+
+  if (!mUpgradeProtocolCallback) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCaps |= NS_HTTP_CONNECT_ONLY;
+  mProxyResolveFlags = nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+                       nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL;
+  return SetLoadFlags(nsIRequest::INHIBIT_CACHING |
+                      nsIChannel::LOAD_ANONYMOUS |
+                      nsIRequest::LOAD_BYPASS_CACHE |
+                      nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 }
 
 NS_IMETHODIMP
