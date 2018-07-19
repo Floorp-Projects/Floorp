@@ -54,8 +54,10 @@ async function testHistory() {
 
   state2 = hud2.ui.consoleOutput.getStore().getState();
   is(JSON.stringify(getHistoryEntries(state2)),
-     '["0","1","2","3","4","5","6","7","8","9",""]',
-     "An empty entry has been added in the second tab due to history perusal");
+    '["0","1","2","3","4","5","6","7","8","9"]',
+    "An empty entry has been added in the second tab due to history perusal");
+  is(state2.history.originalUserValue, "",
+     "An empty value has been stored as the current input value");
 
   // Third tab: Should have the same history as first tab, but if we run a
   // command, then the history of the first and second shouldn't be affected
@@ -78,8 +80,10 @@ async function testHistory() {
 
   state2 = hud2.ui.consoleOutput.getStore().getState();
   is(JSON.stringify(getHistoryEntries(state2)),
-     '["0","1","2","3","4","5","6","7","8","9",""]',
-     "Second tab history hasn't changed due to command in third tab");
+    '["0","1","2","3","4","5","6","7","8","9"]',
+    "Second tab history hasn't changed due to command in third tab");
+  is(state2.history.originalUserValue, "",
+     "Current input value hasn't changed due to command in third tab");
 
   state3 = hud3.ui.consoleOutput.getStore().getState();
   is(JSON.stringify(getHistoryEntries(state3)),
