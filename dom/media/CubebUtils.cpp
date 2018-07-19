@@ -59,6 +59,7 @@ struct AudioIpcInitParams {
   int mServerConnection;
   size_t mPoolSize;
   size_t mStackSize;
+  void (*mThreadCreateCallback)(const char*);
 };
 
 // These functions are provided by audioipc-server crate
@@ -430,6 +431,9 @@ cubeb* GetCubebContextUnlocked()
     initParams.mPoolSize = sAudioIPCPoolSize;
     initParams.mStackSize = sAudioIPCStackSize;
     initParams.mServerConnection = sIPCConnection->ClonePlatformHandle().release();
+    initParams.mThreadCreateCallback = [](const char* aName) {
+      PROFILER_REGISTER_THREAD(aName);
+    };
 
     MOZ_LOG(gCubebLog, LogLevel::Debug, ("%s: %d", PREF_AUDIOIPC_POOL_SIZE, (int) initParams.mPoolSize));
     MOZ_LOG(gCubebLog, LogLevel::Debug, ("%s: %d", PREF_AUDIOIPC_STACK_SIZE, (int) initParams.mStackSize));
