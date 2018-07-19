@@ -92,19 +92,37 @@ public:
       return;
     }
 
-    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart || ticks >= mStop) {
+    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart ||
+        ticks >= mStop ||
+        mStop <= mStart) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else {
       aOutput->AllocateChannels(1);
       float* output = aOutput->ChannelFloatsForWrite(0);
+      uint32_t writeOffset = 0;
+
+      if (ticks < mStart) {
+        MOZ_ASSERT(mStart - ticks <= WEBAUDIO_BLOCK_SIZE);
+        uint32_t count = mStart - ticks;
+        std::fill_n(output, count, 0.0f);
+        writeOffset += count;
+      }
+
+      MOZ_ASSERT(ticks + writeOffset >= mStart);
+      MOZ_ASSERT(mStop - ticks >= writeOffset);
+      uint32_t count =
+        std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE, mStop - ticks) - writeOffset;
 
       if (mOffset.HasSimpleValue()) {
-        for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-          output[i] = mOffset.GetValueAtTime(aFrom, 0);
-        }
+        float value = mOffset.GetValueAtTime(ticks);
+        std::fill_n(output + writeOffset, count, value);
       } else {
-        mOffset.GetValuesAtTime(ticks, output, WEBAUDIO_BLOCK_SIZE);
+        mOffset.GetValuesAtTime(ticks + writeOffset, output + writeOffset, count);
       }
+
+      writeOffset += count;
+
+      std::fill_n(output + writeOffset, WEBAUDIO_BLOCK_SIZE - writeOffset, 0.0f);
     }
 
     if (ticks + WEBAUDIO_BLOCK_SIZE >= mStop) {
