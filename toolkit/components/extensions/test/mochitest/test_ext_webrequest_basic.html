@@ -302,15 +302,12 @@ add_task(async function test_webRequest_tabId_browser() {
   async function background(url) {
     let tabId;
     browser.test.onMessage.addListener(async (msg, expected) => {
-      if (msg == "create") {
-        let tab = await browser.tabs.create({url});
-        tabId = tab.id;
-        return;
-      }
       await browser.tabs.remove(tabId);
       browser.test.sendMessage("done");
     });
-    browser.test.sendMessage("origin", browser.runtime.getURL("/"));
+
+    let tab = await browser.tabs.create({url});
+    tabId = tab.id;
   }
 
   let pageUrl = `${SimpleTest.getTestFileURL("file_sample.html")}?nocache=${Math.random()}`;
@@ -337,15 +334,13 @@ add_task(async function test_webRequest_tabId_browser() {
     };
   }
 
-  await tabExt.startup();
-  let origin = await tabExt.awaitMessage("origin");
-
-  // expecting origin == extension baseUrl
-  extension.sendMessage("set-expected", {expect, origin});
+  // expecting origin == undefined
+  extension.sendMessage("set-expected", {expect});
   await extension.awaitMessage("continue");
 
-  // open a tab from an extension principal
-  tabExt.sendMessage("create");
+  // open a tab from a system principal
+  await tabExt.startup();
+
   await extension.awaitMessage("done");
   tabExt.sendMessage("done");
   await tabExt.awaitMessage("done");
