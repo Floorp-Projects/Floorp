@@ -282,7 +282,7 @@ public:
   void Save();
   void Restore();
   void ClearSave();
-  void Dump();
+  usize Dump(usize aIndent, const Maybe<usize>& aStart, const Maybe<usize>& aEnd);
 
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);

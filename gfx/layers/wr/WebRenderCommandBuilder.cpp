@@ -1190,10 +1190,15 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   MOZ_ASSERT(mLayerScrollData.empty());
   mLastCanvasDatas.Clear();
   mLastAsr = nullptr;
+  mBuilderDumpIndex = 0;
+  MOZ_ASSERT(mDumpIndent == 0);
   mClipManager.BeginBuild(mManager, aBuilder);
 
   {
     StackingContextHelper pageRootSc(sc, aBuilder, aFilters);
+    if (ShouldDumpDisplayList()) {
+      mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
+    }
     CreateWebRenderCommandsFromDisplayList(aDisplayList, nullptr, aDisplayListBuilder,
                                            pageRootSc, aBuilder, aResourceUpdates);
   }
@@ -1222,6 +1227,13 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   RemoveUnusedAndResetWebRenderUserData();
 }
 
+bool
+WebRenderCommandBuilder::ShouldDumpDisplayList()
+{
+  return (XRE_IsParentProcess() && gfxPrefs::WebRenderDLDumpParent()) ||
+         (XRE_IsContentProcess() && gfxPrefs::WebRenderDLDumpContent());
+}
+
 void
 WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                                                 nsDisplayItem* aWrappingItem,
@@ -1237,6 +1249,14 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     return;
   }
 
+  bool dumpEnabled = ShouldDumpDisplayList();
+  if (dumpEnabled) {
+    // If we're inside a nested display list, print the WR DL items from the
+    // wrapper item before we start processing the nested items.
+    mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
+  }
+
+  mDumpIndent++;
   mClipManager.BeginList(aSc);
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
@@ -1309,6 +1329,12 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
         mDoGrouping = false;
       }*/
 
+      if (dumpEnabled) {
+        std::stringstream ss;
+        nsFrame::PrintDisplayItem(aDisplayListBuilder, item, ss, static_cast<uint32_t>(mDumpIndent));
+        printf_stderr("%s", ss.str().c_str());
+      }
+
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
       item->SetPaintRect(item->GetBuildingRect());
@@ -1317,6 +1343,10 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
                                       aDisplayListBuilder);
       if (!createdWRCommands) {
         PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
+      }
+
+      if (dumpEnabled) {
+        mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
       }
     }
 
@@ -1380,6 +1410,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     }
   }
 
+  mDumpIndent--;
   mClipManager.EndList(aSc);
 }
 
