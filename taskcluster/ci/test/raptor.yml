@@ -36,7 +36,7 @@ raptor-firefox-tp6:
             - --test=raptor-tp6
 
 raptor-firefox-speedometer:
-    description: "Raptor Firefox speedometer"
+    description: "Raptor Firefox Speedometer"
     try-name: raptor-firefox-speedometer
     treeherder-symbol: Rap(sp)
     run-on-projects: ['try', 'mozilla-central']
@@ -54,6 +54,16 @@ raptor-firefox-stylebench:
     mozharness:
         extra-options:
             - --test=raptor-stylebench
+
+raptor-firefox-sunspider:
+    description: "Raptor Firefox SunSpider"
+    try-name: raptor-firefox-sunspider
+    treeherder-symbol: Rap(ss)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-sunspider
 
 raptor-firefox-motionmark-htmlsuite:
     description: "Raptor Firefox MotionMark HtmlSuite"
@@ -100,7 +110,7 @@ raptor-chrome-tp6:
             - --app=chrome
 
 raptor-chrome-speedometer:
-    description: "Raptor Chrome speedometer"
+    description: "Raptor Chrome Speedometer"
     try-name: raptor-chrome-speedometer
     treeherder-symbol: Rap-C(sp)
     run-on-projects: ['try', 'mozilla-central']
@@ -119,6 +129,17 @@ raptor-chrome-stylebench:
     mozharness:
         extra-options:
             - --test=raptor-stylebench
+            - --app=chrome
+
+raptor-chrome-sunspider:
+    description: "Raptor Chrome SunSpider"
+    try-name: raptor-chrome-sunspider
+    treeherder-symbol: Rap-C(ss)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-sunspider
             - --app=chrome
 
 raptor-chrome-motionmark-htmlsuite:
