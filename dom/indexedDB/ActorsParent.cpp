@@ -3944,6 +3944,9 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aArguments
   UniqueFreePtr<uint8_t> newIdv;
   uint32_t newIdvLength;
   rv = MakeCompressedIndexDataValues(oldIdv, newIdv, &newIdvLength);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   std::pair<uint8_t*, int> data(newIdv.release(), newIdvLength);
 
