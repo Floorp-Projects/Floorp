@@ -52,7 +52,15 @@
   <string name="preference_autocomplete_title_remove">ਕਸਟਮ URL ਹਟਾਓ</string>
   <string name="preference_autocomplete_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
   <string name="preference_autocomplete_add_title">ਜੋੜਨ ਲਈ URL</string>
+  <string name="preference_autocomplete_add_hint">URL ਪੇਸਟ ਕਰੋ ਜਾਂ ਦਾਖਲ ਕਰੋ</string>
+  <string name="preference_autocomplete_add_example2">ਉਦਾਹਰਨ: mozilla.org</string>
+  <string name="preference_autocomplete_add_example">ਉਦਾਹਰਨ: example.com</string>
+  <string name="preference_autocomplete_add_confirmation">ਨਵਾਂ ਕਸਟਮ URL ਜੋੜਿਆ ਗਿਆ।</string>
+  <string name="preference_autocomplete_menu_remove">ਹਟਾਓ</string>
+  <string name="preference_autocomplete_action_remove_content_description">ਹਟਾਓ</string>
+  <string name="preference_autocomplete_add_error">ਤੁਹਾਡੇ ਦੁਆਰਾ ਦਾਖਲ ਕੀਤੇ ਗਏ URL ਨੂੰ ਡਬਲ-ਚੈਕ ਕਰੋ।</string>
   <string name="preference_language">ਭਾਸ਼ਾ</string>
   <string name="preference_language_systemdefault">ਸਿਸਟਮ ਮੂਲ</string>
   <string name="preference_category_privacy">ਪਰਦੇਦਾਰੀ</string>
+  <string name="preference_privacy_block_ads">ਬਲਾਕ ਵਿਗਿਆਪਨ ਟਰੈਕਰਜ</string>
 </resources>
