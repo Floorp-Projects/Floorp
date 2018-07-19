@@ -1,6 +1,7 @@
 use webrender::api::*;
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8};
 use rayon::ThreadPool;
+use rayon::prelude::*;
 
 use std::collections::hash_map::HashMap;
 use std::collections::hash_map;
@@ -9,7 +10,6 @@ use std::collections::Bound::Included;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
-use std::sync::mpsc::{channel, Sender, Receiver};
 use std::sync::Arc;
 use std;
 
@@ -27,16 +27,9 @@ macro_rules! dlog {
     //($($t:tt)*) => { println!($($t)*) }
 }
 
-pub struct Moz2dImageRenderer {
-    blob_commands: HashMap<ImageKey, (Arc<BlobImageData>, Option<TileSize>)>,
-
-    // The images rendered in the current frame (not kept here between frames)
-    rendered_images: HashMap<BlobImageRequest, Option<BlobImageResult>>,
-
-    tx: Sender<(BlobImageRequest, BlobImageResult)>,
-    rx: Receiver<(BlobImageRequest, BlobImageResult)>,
-
+pub struct Moz2dBlobImageHandler {
     workers: Arc<ThreadPool>,
+    blob_commands: HashMap<ImageKey, (Arc<BlobImageData>, Option<TileSize>)>,
 }
 
 fn option_to_nullable<T>(option: &Option<T>) -> *const T {
@@ -340,7 +333,71 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
     result
 }
 
-impl BlobImageRenderer for Moz2dImageRenderer {
+
+struct Moz2dBlobRasterizer {
+    workers: Arc<ThreadPool>,
+    blob_commands: HashMap<ImageKey, (Arc<BlobImageData>, Option<TileSize>)>,
+}
+
+impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
+
+    fn rasterize(&mut self, requests: &[BlobImageParams]) -> Vec<(BlobImageRequest, BlobImageResult)> {
+        struct Job {
+            request: BlobImageRequest,
+            descriptor: BlobImageDescriptor,
+            commands: Arc<BlobImageData>,
+            dirty_rect: Option<DeviceUintRect>,
+            tile_size: Option<TileSize>,
+        }
+
+        let requests: Vec<Job> = requests.into_iter().map(|params| {
+            let commands = &self.blob_commands[&params.request.key];
+            let blob = Arc::clone(&commands.0);
+            Job {
+                request: params.request,
+                descriptor: params.descriptor,
+                commands: blob,
+                dirty_rect: params.dirty_rect,
+                tile_size: commands.1,
+            }
+        }).collect();
+
+        self.workers.install(||{
+            requests.into_par_iter().map(|item| {
+                let descriptor = item.descriptor;
+                let buf_size = (descriptor.size.width
+                    * descriptor.size.height
+                    * descriptor.format.bytes_per_pixel()) as usize;
+
+                let mut output = vec![0u8; buf_size];
+
+                let result = unsafe {
+                    if wr_moz2d_render_cb(
+                        ByteSlice::new(&item.commands[..]),
+                        descriptor.size.width,
+                        descriptor.size.height,
+                        descriptor.format,
+                        option_to_nullable(&item.tile_size),
+                        option_to_nullable(&item.request.tile),
+                        option_to_nullable(&item.dirty_rect),
+                        MutByteSlice::new(output.as_mut_slice()),
+                    ) {
+                        Ok(RasterizedBlobImage {
+                            size: descriptor.size,
+                            data: Arc::new(output),
+                        })
+                    } else {
+                        panic!("Moz2D replay problem");
+                    }
+                };
+
+                (item.request, result)
+            }).collect()
+        })
+    }
+}
+
+impl BlobImageHandler for Moz2dBlobImageHandler {
     fn add(&mut self, key: ImageKey, data: Arc<BlobImageData>, tiling: Option<TileSize>) {
         {
             let index = BlobReader::new(&data);
@@ -364,26 +421,56 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         self.blob_commands.remove(&key);
     }
 
-    fn request(&mut self,
-               resources: &BlobImageResources,
-               request: BlobImageRequest,
-               descriptor: &BlobImageDescriptor,
-               dirty_rect: Option<DeviceUintRect>) {
-        debug_assert!(!self.rendered_images.contains_key(&request), "{:?}", request);
-        // TODO: implement tiling.
+    fn create_blob_rasterizer(&mut self) -> Box<AsyncBlobImageRasterizer> {
+        Box::new(Moz2dBlobRasterizer {
+            workers: Arc::clone(&self.workers),
+            blob_commands: self.blob_commands.clone(),
+        })
+    }
 
-        // Add None in the map of rendered images. This makes it possible to differentiate
-        // between commands that aren't finished yet (entry in the map is equal to None) and
-        // keys that have never been requested (entry not in the map), which would cause deadlocks
-        // if we were to block upon receving their result in resolve!
-        self.rendered_images.insert(request, None);
+    fn delete_font(&mut self, font: FontKey) {
+        unsafe { DeleteFontData(font); }
+    }
 
-        let tx = self.tx.clone();
-        let descriptor = descriptor.clone();
-        let blob = &self.blob_commands[&request.key];
-        let tile_size = blob.1;
-        let commands = Arc::clone(&blob.0);
+    fn delete_font_instance(&mut self, _key: FontInstanceKey) {
+    }
 
+    fn clear_namespace(&mut self, namespace: IdNamespace) {
+        unsafe { ClearBlobImageResources(namespace); }
+    }
+
+    fn prepare_resources(
+        &mut self,
+        resources: &BlobImageResources,
+        requests: &[BlobImageParams]
+    ) {
+        for params in requests {
+            let commands = &self.blob_commands[&params.request.key];
+            let blob = Arc::clone(&commands.0);
+            self.prepare_request(&blob, resources);
+        }
+    }
+}
+
+use bindings::{WrFontKey, WrIdNamespace};
+
+#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
+extern "C" {
+    fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
+    fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
+    fn DeleteFontData(key: WrFontKey);
+    fn ClearBlobImageResources(namespace: WrIdNamespace);
+}
+
+impl Moz2dBlobImageHandler {
+    pub fn new(workers: Arc<ThreadPool>) -> Self {
+        Moz2dBlobImageHandler {
+            blob_commands: HashMap::new(),
+            workers: workers,
+        }
+    }
+
+    fn prepare_request(&self, blob: &[u8], resources: &BlobImageResources) {
         #[cfg(target_os = "windows")]
         fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
             let system_fc = dwrote::FontCollection::system();
@@ -420,103 +507,11 @@ impl BlobImageRenderer for Moz2dImageRenderer {
             }
         }
         {
-            let mut index = BlobReader::new(&commands);
+            let mut index = BlobReader::new(blob);
             while index.reader.pos < index.reader.buf.len() {
                 let e  = index.read_entry();
-                process_fonts(BufReader::new(&commands[e.end..e.extra_end]), resources);
+                process_fonts(BufReader::new(&blob[e.end..e.extra_end]), resources);
             }
-        }
-
-        self.workers.spawn(move || {
-            let buf_size = (descriptor.size.width
-                * descriptor.size.height
-                * descriptor.format.bytes_per_pixel()) as usize;
-            let mut output = vec![0u8; buf_size];
-
-            let result = unsafe {
-                if wr_moz2d_render_cb(
-                    ByteSlice::new(&commands[..]),
-                    descriptor.size.width,
-                    descriptor.size.height,
-                    descriptor.format,
-                    option_to_nullable(&tile_size),
-                    option_to_nullable(&request.tile),
-                    option_to_nullable(&dirty_rect),
-                    MutByteSlice::new(output.as_mut_slice())
-                ) {
-
-                    Ok(RasterizedBlobImage {
-                        size: descriptor.size,
-                        data: output,
-                    })
-                } else {
-                    panic!("Moz2D replay problem");
-                }
-            };
-
-            tx.send((request, result)).unwrap();
-        });
-    }
-
-    fn resolve(&mut self, request: BlobImageRequest) -> BlobImageResult {
-
-        match self.rendered_images.entry(request) {
-            hash_map::Entry::Vacant(_) => {
-                return Err(BlobImageError::InvalidKey);
-            }
-            hash_map::Entry::Occupied(entry) => {
-                // None means we haven't yet received the result.
-                if entry.get().is_some() {
-                    let result = entry.remove();
-                    return result.unwrap();
-                }
-            }
-        }
-
-        // We haven't received it yet, pull from the channel until we receive it.
-        while let Ok((req, result)) = self.rx.recv() {
-            if req == request {
-                // There it is!
-                self.rendered_images.remove(&request);
-                return result
-            }
-            self.rendered_images.insert(req, Some(result));
-        }
-
-        // If we break out of the loop above it means the channel closed unexpectedly.
-        Err(BlobImageError::Other("Channel closed".into()))
-    }
-    fn delete_font(&mut self, font: FontKey) {
-        unsafe { DeleteFontData(font); }
-    }
-
-    fn delete_font_instance(&mut self, _key: FontInstanceKey) {
-    }
-
-    fn clear_namespace(&mut self, namespace: IdNamespace) {
-        unsafe { ClearBlobImageResources(namespace); }
-    }
-}
-
-use bindings::{WrFontKey, WrIdNamespace};
-
-#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
-extern "C" {
-    fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
-    fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
-    fn DeleteFontData(key: WrFontKey);
-    fn ClearBlobImageResources(namespace: WrIdNamespace);
-}
-
-impl Moz2dImageRenderer {
-    pub fn new(workers: Arc<ThreadPool>) -> Self {
-        let (tx, rx) = channel();
-        Moz2dImageRenderer {
-            blob_commands: HashMap::new(),
-            rendered_images: HashMap::new(),
-            workers: workers,
-            tx: tx,
-            rx: rx,
         }
     }
 }

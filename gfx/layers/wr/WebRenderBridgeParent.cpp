@@ -337,6 +337,16 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes, wr::ToDeviceUintRect(op.dirtyRect()));
         break;
       }
+      case OpUpdateResource::TOpSetImageVisibleArea: {
+        const auto& op = cmd.get_OpSetImageVisibleArea();
+        wr::NormalizedRect area;
+        area.origin.x = op.area().x;
+        area.origin.y = op.area().y;
+        area.size.width = op.area().width;
+        area.size.height = op.area().height;
+        aUpdates.SetImageVisibleArea(op.key(), area);
+        break;
+      }
       case OpUpdateResource::TOpAddExternalImage: {
         const auto& op = cmd.get_OpAddExternalImage();
         if (!AddExternalImage(op.externalImageId(), op.key(), aUpdates)) {
