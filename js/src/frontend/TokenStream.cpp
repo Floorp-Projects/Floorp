@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
@@ -20,6 +21,7 @@
 #include <algorithm>
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <utility>
@@ -41,10 +43,12 @@
 
 using mozilla::ArrayLength;
 using mozilla::AssertedCast;
+using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
+using mozilla::Maybe;
 using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
 
@@ -457,6 +461,41 @@ TokenStreamCharsBase<char16_t>::fillCharBufferFromSourceNormalizingAsciiLineBrea
         }
 
         if (!this->charBuffer.append(ch))
+            return false;
+    }
+
+    MOZ_ASSERT(cur == end);
+    return true;
+}
+
+template<>
+MOZ_MUST_USE bool
+TokenStreamCharsBase<Utf8Unit>::fillCharBufferFromSourceNormalizingAsciiLineBreaks(const Utf8Unit* cur,
+                                                                                   const Utf8Unit* end)
+{
+    MOZ_ASSERT(this->charBuffer.length() == 0);
+
+    while (cur < end) {
+        Utf8Unit unit = *cur++;
+        if (MOZ_LIKELY(IsAscii(unit))) {
+            char16_t ch = unit.toUint8();
+            if (ch == '\r') {
+                ch = '\n';
+                if (cur < end && *cur == Utf8Unit('\n'))
+                    cur++;
+            }
+
+            if (!this->charBuffer.append(ch))
+                return false;
+
+            continue;
+        }
+
+        Maybe<char32_t> ch = DecodeOneUtf8CodePoint(unit, &cur, end);
+        MOZ_ASSERT(ch.isSome(),
+                   "provided source text should already have been validated");
+
+        if (!appendCodePointToCharBuffer(ch.value()))
             return false;
     }
 
