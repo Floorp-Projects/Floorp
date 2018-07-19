@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface IID;
-
 callback LifecycleConnectedCallback = void();
 callback LifecycleDisconnectedCallback = void();
 callback LifecycleAdoptedCallback = void(Document? oldDocument,
@@ -20,12 +18,10 @@ callback LifecycleAttributeChangedCallback = void(DOMString attrName,
                                                   DOMString? oldValue,
                                                   DOMString? newValue,
                                                   DOMString? namespaceURI);
-callback LifecycleGetCustomInterfaceCallback = object?(IID iid);
 
 dictionary LifecycleCallbacks {
   LifecycleConnectedCallback connectedCallback;
   LifecycleDisconnectedCallback disconnectedCallback;
   LifecycleAdoptedCallback adoptedCallback;
   LifecycleAttributeChangedCallback attributeChangedCallback;
-  [ChromeOnly] LifecycleGetCustomInterfaceCallback getCustomInterfaceCallback;
 };
