@@ -377,17 +377,19 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                 cmd = self._query_cmd(test_types)
                 cmd.extend(per_test_args)
 
+                final_env = copy.copy(env)
+
                 if self.per_test_coverage:
-                    gcov_dir, jsvm_dir = self.set_coverage_env(env)
+                    self.set_coverage_env(final_env, is_baseline_test)
 
                 return_code = self.run_command(cmd,
                                                cwd=dirs['abs_work_dir'],
                                                output_timeout=1000,
                                                output_parser=parser,
-                                               env=env)
+                                               env=final_env)
 
                 if self.per_test_coverage:
-                    self.add_per_test_coverage_report(gcov_dir, jsvm_dir, suite, per_test_args[-1])
+                    self.add_per_test_coverage_report(final_env, suite, per_test_args[-1])
 
                 tbpl_status, log_level, summary = parser.evaluate_parser(return_code,
                                                                          previous_summary=summary)
