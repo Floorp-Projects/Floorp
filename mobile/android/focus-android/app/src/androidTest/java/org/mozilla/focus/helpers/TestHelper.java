@@ -157,17 +157,9 @@ public final class TestHelper {
             .resourceId(getAppName() + ":id/addtohomescreen_dialog_add")
             .enabled(true));
 
-    private static String getAddAutoButtonText() {
-        if (!AppConstants.isGeckoBuild()) {
-            return "OK"; // Focus (one exception: also on klarGeckoArmDebug w/ 6p, API 26 only)
-        } else {
-            return "ADD AUTOMATICALLY"; // Klar
-        }
-    }
-    private static String addAutoButtonText = getAddAutoButtonText();
-
     public static UiObject AddautoBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .text(addAutoButtonText)
+            .className("android.widget.Button")
+            .instance(1)
             .enabled(true));
     public static UiObject shortcutTitle = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/edit_title")
