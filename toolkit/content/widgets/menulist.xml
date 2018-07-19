@@ -14,7 +14,7 @@
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
-        <xul:image class="menulist-icon" xbl:inherits="src=image,src"/>
+        <xul:image class="menulist-icon" xbl:inherits="src=image"/>
         <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey,highlightable" crop="right" flex="1"/>
         <xul:label class="menulist-highlightable-label" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right" flex="1"/>
       </xul:hbox>
