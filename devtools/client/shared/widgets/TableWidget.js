@@ -1005,9 +1005,11 @@ TableWidget.prototype = {
    * Emits the "scroll-end" event when the whole table is scrolled
    */
   afterScroll: function() {
-    const maxScrollTop = this.tbody.scrollHeight - this.tbody.clientHeight;
+    const scrollHeight = this.tbody.getBoundingClientRect().height -
+        this.tbody.querySelector(".table-widget-column-header").clientHeight;
+
     // Emit scroll-end event when 9/10 of the table is scrolled
-    if (this.tbody.scrollTop >= 0.9 * maxScrollTop) {
+    if (this.tbody.scrollTop >= 0.9 * scrollHeight) {
       this.emit("scroll-end");
     }
   }
