@@ -378,7 +378,6 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
                            requestingLocation,
                            requestingContext,
                            aMimeGuess,
-                           nullptr, // aExtra,
                            requestPrincipal,
                            aDecision);
   return rv;
@@ -428,7 +427,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                                   nsIURI* aRequestingLocation,
                                   nsISupports* aRequestingContext,
                                   const nsACString& aMimeGuess,
-                                  nsISupports* aExtra,
                                   nsIPrincipal* aRequestPrincipal,
                                   int16_t* aDecision)
 {
