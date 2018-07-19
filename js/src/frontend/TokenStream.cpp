@@ -808,17 +808,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeErrorMetadata(ErrorMetadata* 
         return true;
 
     // Add a line of context from this TokenStream to help with debugging.
-    return computeLineOfContext(err, offset);
+    return internalComputeLineOfContext(err, offset);
 }
 
 template<typename CharT, class AnyCharsAccess>
 bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* err,
-                                                                 uint32_t offset)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::internalComputeLineOfContext(ErrorMetadata* err,
+                                                                             uint32_t offset)
 {
-    // This function presumes |err| is filled in *except* for line-of-context
-    // fields.  It exists to make |TokenStreamSpecific::computeErrorMetadata|,
-    // above, more readable.
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
     // We only have line-start information for the current line.  If the error
@@ -842,8 +839,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* 
     if (windowStart < this->sourceUnits.startOffset())
         windowStart = this->sourceUnits.startOffset();
 
-    // The window must end within the current line, no later than
-    // windowRadius after offset.
+    // The window must end no further than |windowRadius| after |offset| within
+    // the current line.
     size_t windowEnd = this->sourceUnits.findEOLMax(offset, windowRadius);
     size_t windowLength = windowEnd - windowStart;
     MOZ_ASSERT(windowLength <= windowRadius * 2);
@@ -851,7 +848,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* 
     // Create the windowed string, not including the potential line
     // terminator.
     StringBuffer windowBuf(anyChars.cx);
-    if (!windowBuf.append(codeUnitPtrAt(windowStart), windowLength) ||
+    if (!windowBuf.append(this->sourceUnits.codeUnitPtrAt(windowStart), windowLength) ||
         !windowBuf.append('\0'))
     {
         return false;
