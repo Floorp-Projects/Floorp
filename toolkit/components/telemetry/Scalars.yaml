@@ -1511,9 +1511,10 @@ gfx.advanced.layers:
       a failure can be traced back to a specific Direct3D API call.
     keyed: true
     kind: uint
-    expires: "61"
+    expires: "70"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
+      - rhunt@mozilla.com
     record_in_processes:
       - 'main'
 
