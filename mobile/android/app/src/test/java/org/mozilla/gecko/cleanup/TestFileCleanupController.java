@@ -6,66 +6,50 @@
 
 package org.mozilla.gecko.cleanup;
 
+import android.app.job.JobScheduler;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 /**
  * Tests functionality of the {@link FileCleanupController}.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(manifest = Config.NONE, sdk = 26)
 public class TestFileCleanupController {
 
     @Test
     public void testStartIfReadyEmptySharedPrefsRunsCleanup() {
-        final Context context = mock(Context.class);
-        FileCleanupController.startIfReady(context, getSharedPreferences(), "");
-        verify(context).startService(any(Intent.class));
+        final Context appContext = getAppContext();
+        final JobScheduler scheduler = getJobScheduler();
+
+        FileCleanupController.startIfReady(appContext, getSharedPreferences(), "");
+        assertTrue("File cleanup is not started", scheduler.getAllPendingJobs().size() == 1);
     }
 
     @Test
     public void testStartIfReadyLastRunNowDoesNotRun() {
+        final Context appContext = getAppContext();
+        final JobScheduler scheduler = getJobScheduler();
         final SharedPreferences sharedPrefs = getSharedPreferences();
         sharedPrefs.edit()
                 .putLong(FileCleanupController.PREF_LAST_CLEANUP_MILLIS, System.currentTimeMillis())
                 .commit(); // synchronous to finish before test runs.
 
-        final Context context = mock(Context.class);
-        FileCleanupController.startIfReady(context, sharedPrefs, "");
+        FileCleanupController.startIfReady(appContext, sharedPrefs, "");
 
-        verify(context, never()).startService((any(Intent.class)));
-    }
-
-    /**
-     * Depends on {@link #testStartIfReadyEmptySharedPrefsRunsCleanup()} success –
-     * i.e. we expect the cleanup to run with empty prefs.
-     */
-    @Test
-    public void testStartIfReadyDoesNotRunTwiceInSuccession() {
-        final Context context = mock(Context.class);
-        final SharedPreferences sharedPrefs = getSharedPreferences();
-
-        FileCleanupController.startIfReady(context, sharedPrefs, "");
-        verify(context).startService(any(Intent.class));
-
-        // Note: the Controller relies on SharedPrefs.apply, but
-        // robolectric made this a synchronous call. Yay!
-        FileCleanupController.startIfReady(context, sharedPrefs, "");
-        verify(context, atMost(1)).startService(any(Intent.class));
+        assertTrue("There is a job scheduled", scheduler.getAllPendingJobs().size() == 0);
     }
 
     @Test
@@ -87,6 +71,15 @@ public class TestFileCleanupController {
     }
 
     private SharedPreferences getSharedPreferences() {
-        return RuntimeEnvironment.application.getSharedPreferences("TestFileCleanupController", 0);
+        return getAppContext().getSharedPreferences("TestFileCleanupController", 0);
+    }
+
+    private Context getAppContext() {
+        return RuntimeEnvironment.application;
+    }
+
+    private JobScheduler getJobScheduler() {
+        return Objects.requireNonNull((JobScheduler)
+                getAppContext().getSystemService(Context.JOB_SCHEDULER_SERVICE));
     }
 }

@@ -3441,10 +3441,10 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
       case MediaPipeline::DirectionType::TRANSMIT: {
         nsString localId = NS_LITERAL_STRING("outbound_rtp_") + idstr;
         nsString remoteId;
-        nsString ssrc;
+        Maybe<uint32_t> ssrc;
         std::vector<unsigned int> ssrcvals = mp.Conduit()->GetLocalSSRCs();
         if (!ssrcvals.empty()) {
-          ssrc.AppendInt(ssrcvals[0]);
+          ssrc = Some(ssrcvals[0]);
         }
         {
           // First, fill in remote stat with rtcp receiver data, if present.
@@ -3466,9 +3466,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             s.mTimestamp.Construct(timestamp);
             s.mId.Construct(remoteId);
             s.mType.Construct(RTCStatsType::Inbound_rtp);
-            if (ssrc.Length()) {
-              s.mSsrc.Construct(ssrc);
-            }
+            ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
             s.mMediaType.Construct(mediaType);
             s.mJitter.Construct(double(jitterMs)/1000);
             s.mRemoteId.Construct(localId);
@@ -3489,9 +3487,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           s.mTimestamp.Construct(query->now);
           s.mId.Construct(localId);
           s.mType.Construct(RTCStatsType::Outbound_rtp);
-          if (ssrc.Length()) {
-            s.mSsrc.Construct(ssrc);
-          }
+          ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
           s.mMediaType.Construct(mediaType);
           s.mRemoteId.Construct(remoteId);
           s.mIsRemote = false;
@@ -3539,10 +3535,10 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
       case MediaPipeline::DirectionType::RECEIVE: {
         nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
         nsString remoteId;
-        nsString ssrc;
+        Maybe<uint32_t> ssrc;
         unsigned int ssrcval;
         if (mp.Conduit()->GetRemoteSSRC(&ssrcval)) {
-          ssrc.AppendInt(ssrcval);
+          ssrc = Some(ssrcval);
         }
         {
           // First, fill in remote stat with rtcp sender data, if present.
@@ -3556,9 +3552,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             s.mTimestamp.Construct(timestamp);
             s.mId.Construct(remoteId);
             s.mType.Construct(RTCStatsType::Outbound_rtp);
-            if (ssrc.Length()) {
-              s.mSsrc.Construct(ssrc);
-            }
+            ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
             s.mMediaType.Construct(mediaType);
             s.mRemoteId.Construct(localId);
             s.mIsRemote = true;
@@ -3573,9 +3567,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         s.mTimestamp.Construct(query->now);
         s.mId.Construct(localId);
         s.mType.Construct(RTCStatsType::Inbound_rtp);
-        if (ssrc.Length()) {
-          s.mSsrc.Construct(ssrc);
-        }
+        ssrc.apply([&s](uint32_t aSsrc){s.mSsrc.Construct(aSsrc);});
         s.mMediaType.Construct(mediaType);
         unsigned int jitterMs, packetsLost;
         if (mp.Conduit()->GetRTPStats(&jitterMs, &packetsLost)) {

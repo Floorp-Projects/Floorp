@@ -5652,7 +5652,7 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
 
   toolbar.setAttribute(hidingAttribute, !isVisible);
   if (persist) {
-    document.persist(toolbar.id, hidingAttribute);
+    Services.xulStore.persist(toolbar, hidingAttribute);
   }
 
   let eventParams = {

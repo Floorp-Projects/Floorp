@@ -44,6 +44,7 @@ from ..frontend.data import (
     Program,
     SimpleProgram,
     HostLibrary,
+    HostRustLibrary,
     HostProgram,
     HostSimpleProgram,
     RustLibrary,
@@ -484,13 +485,19 @@ class TupBackend(CommonBackend):
         else:
             outputs = [mozpath.relpath(prog.output_path.full_path,
                                        backend_file.objdir)]
-        host_libs = []
-        for lib in prog.linked_libraries:
-            if isinstance(lib, HostLibrary):
-                host_libs.append(lib)
-        host_libs = self._lib_paths(backend_file.objdir, host_libs)
-
+        host_libs = self._lib_paths(backend_file.objdir,
+                                    (lib for lib in prog.linked_libraries
+                                     if isinstance(lib, HostLibrary)))
         inputs = objs + host_libs
+
+        rust_linked = self._lib_paths(backend_file.objdir,
+                                      (lib for lib in prog.linked_libraries
+                                       if isinstance(lib, HostRustLibrary)))
+        extra_inputs = []
+        if rust_linked:
+            extra_inputs += [self._rust_libs]
+            host_libs += rust_linked
+
         use_cxx = any(f.endswith(('.cc', '.cpp')) for f in prog.source_files())
         cc_or_cxx = 'HOST_CXX' if use_cxx else 'HOST_CC'
         cmd = (
@@ -504,6 +511,7 @@ class TupBackend(CommonBackend):
         backend_file.rule(
             cmd=cmd,
             inputs=inputs,
+            extra_inputs=extra_inputs,
             outputs=outputs,
             display='LINK %o'
         )

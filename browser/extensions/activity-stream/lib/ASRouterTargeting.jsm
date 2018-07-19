@@ -5,6 +5,8 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.import("resource://gre/modules/Console.jsm");
+ChromeUtils.defineModuleGetter(this, "ShellService",
+  "resource:///modules/ShellService.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
 const ONBOARDING_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouterOnboardingCohort";
@@ -51,6 +53,37 @@ const TargetingGetters = {
         return {addons: info, isFullData: fullData};
       });
   },
+
+  get searchEngines() {
+    return new Promise(resolve => {
+      // Note: calling init ensures this code is only executed after Search has been initialized
+      Services.search.init(rv => {
+        if (Components.isSuccessCode(rv)) {
+          let engines = Services.search.getVisibleEngines();
+          resolve({
+            current: Services.search.defaultEngine.identifier,
+            installed: engines
+              .map(engine => engine.identifier)
+              .filter(engine => engine)
+          });
+        } else {
+          resolve({installed: [], current: ""});
+        }
+      });
+    });
+  },
+
+  get isDefaultBrowser() {
+    try {
+      return ShellService.isDefaultBrowser();
+    } catch (e) {}
+    return null;
+  },
+
+  get devToolsOpenedCount() {
+    return Services.prefs.getIntPref("devtools.selfxss.count");
+  },
+
   // Temporary targeting function for the purposes of running the simplified onboarding experience
   get isInExperimentCohort() {
     return Services.prefs.getIntPref(ONBOARDING_EXPERIMENT_PREF, 0);

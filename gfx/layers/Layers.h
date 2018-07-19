@@ -1379,7 +1379,6 @@ public:
   uint64_t GetAnimationGeneration() { return mAnimationInfo.GetAnimationGeneration(); }
 
   bool HasTransformAnimation() const;
-  bool HasOpacityAnimation() const;
 
   RawServoAnimationValue* GetBaseAnimationStyle() const
   {

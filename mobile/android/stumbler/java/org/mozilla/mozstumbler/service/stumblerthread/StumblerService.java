@@ -152,7 +152,7 @@ public class StumblerService extends PersistentIntentService
 
             startForeground(R.id.stumblerNotification, notification);
         }
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     // Called from the main thread

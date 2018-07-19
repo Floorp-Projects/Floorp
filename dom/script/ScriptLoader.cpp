@@ -1263,6 +1263,14 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
   NS_ASSERTION(!aElement->IsMalformed(), "Executing malformed script");
 
+  nsAutoCString url;
+  nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
+  if (scriptURI) {
+    scriptURI->GetAsciiSpec(url);
+  }
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "ScriptLoader::ProcessScriptElement", JS, url);
+
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
 
   nsAutoString type;

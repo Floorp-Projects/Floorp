@@ -298,6 +298,7 @@ public:
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
+  virtual NativeIMEContext GetNativeIMEContext() override;
   TextEventDispatcher* GetTextEventDispatcher() final;
   virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;

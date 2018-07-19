@@ -6,7 +6,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["findAllCssSelectors", "findCssSelector"];
+var EXPORTED_SYMBOLS = [
+  "findAllCssSelectors",
+  "findCssSelector",
+  "getCssPath",
+  "getXPath"
+];
 
 /**
  * Traverse getBindingParent until arriving upon the bound element
@@ -22,13 +27,6 @@ var EXPORTED_SYMBOLS = ["findAllCssSelectors", "findCssSelector"];
 function getRootBindingParent(node) {
   let doc = node.ownerDocument;
   if (!doc) {
-    return node;
-  }
-
-  if (getShadowRoot(node)) {
-    // If the node is under a shadow root, the shadow host is the "binding
-    // parent" but we can create a CSS selector between the shadow root and the
-    // node, so return immediately.
     return node;
   }
 
@@ -72,33 +70,42 @@ function positionInNodeList(element, nodeList) {
 }
 
 /**
- * Retrieve the document or shadow-root containing the provided node. This will
- * be the topmost element from which the node can be retrieved using
- * querySelectorAll and consequently where to start creating a css selector.
+ * For a provided node, find the appropriate container/node couple so that
+ * container.contains(node) and a CSS selector can be created from the
+ * container to the node.
  */
-function getDocumentOrShadowRoot(node) {
+function findNodeAndContainer(node) {
   const shadowRoot = getShadowRoot(node);
   if (shadowRoot) {
-    // If the node is under a shadow root, return the corresponding
-    // document-fragment.
-    return shadowRoot;
+    // If the node is under a shadow root, the shadowRoot contains the node and
+    // we can find the node via shadowRoot.querySelector(path).
+    return {
+      containingDocOrShadow: shadowRoot,
+      node
+    };
   }
 
-  // Otherwise return the ownerDocument.
-  return node.ownerDocument;
+  // Otherwise, get the root binding parent to get a non anonymous element that
+  // will be accessible from the ownerDocument.
+  const bindingParent = getRootBindingParent(node);
+  return {
+    containingDocOrShadow: bindingParent.ownerDocument,
+    node: bindingParent
+  };
 }
 
 /**
  * Find a unique CSS selector for a given element
- * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
- * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ * @returns a string such that:
+ *   - ele.containingDocOrShadow.querySelector(reply) === ele
+ *   - ele.containingDocOrShadow.querySelectorAll(reply).length === 1
  */
 const findCssSelector = function(ele) {
-  ele = getRootBindingParent(ele);
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
 
-  let containingDocOrShadow = getDocumentOrShadowRoot(ele);
   if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
-    // findCssSelector received element not inside document.
+    // findCssSelector received element not inside container.
     return "";
   }
 
@@ -198,3 +205,116 @@ const findAllCssSelectors = function(node) {
 
   return selectors;
 };
+
+/**
+ * Get the full CSS path for a given element.
+ * @returns a string that can be used as a CSS selector for the element. It might not
+ * match the element uniquely. It does however, represent the full path from the root
+ * node to the element.
+ */
+function getCssPath(ele) {
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
+  if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
+    // getCssPath received element not inside container.
+    return "";
+  }
+
+  const nodeGlobal = ele.ownerGlobal.Node;
+
+  const getElementSelector = element => {
+    if (!element.localName) {
+      return "";
+    }
+
+    let label = element.nodeName == element.nodeName.toUpperCase()
+                ? element.localName.toLowerCase()
+                : element.localName;
+
+    if (element.id) {
+      label += "#" + element.id;
+    }
+
+    if (element.classList) {
+      for (const cl of element.classList) {
+        label += "." + cl;
+      }
+    }
+
+    return label;
+  };
+
+  const paths = [];
+
+  while (ele) {
+    if (!ele || ele.nodeType !== nodeGlobal.ELEMENT_NODE) {
+      break;
+    }
+
+    paths.splice(0, 0, getElementSelector(ele));
+    ele = ele.parentNode;
+  }
+
+  return paths.length ? paths.join(" ") : "";
+}
+
+/**
+ * Get the xpath for a given element.
+ * @param {DomNode} ele
+ * @returns a string that can be used as an XPath to find the element uniquely.
+ */
+function getXPath(ele) {
+  const { node, containingDocOrShadow } = findNodeAndContainer(ele);
+  ele = node;
+  if (!containingDocOrShadow || !containingDocOrShadow.contains(ele)) {
+    // getXPath received element not inside container.
+    return "";
+  }
+
+  // Create a short XPath for elements with IDs.
+  if (ele.id) {
+    return `//*[@id="${ele.id}"]`;
+  }
+
+  // Otherwise walk the DOM up and create a part for each ancestor.
+  const parts = [];
+
+  const nodeGlobal = ele.ownerGlobal.Node;
+  // Use nodeName (instead of localName) so namespace prefix is included (if any).
+  while (ele && ele.nodeType === nodeGlobal.ELEMENT_NODE) {
+    let nbOfPreviousSiblings = 0;
+    let hasNextSiblings = false;
+
+    // Count how many previous same-name siblings the element has.
+    let sibling = ele.previousSibling;
+    while (sibling) {
+      // Ignore document type declaration.
+      if (sibling.nodeType !== nodeGlobal.DOCUMENT_TYPE_NODE &&
+          sibling.nodeName == ele.nodeName) {
+        nbOfPreviousSiblings++;
+      }
+
+      sibling = sibling.previousSibling;
+    }
+
+    // Check if the element has at least 1 next same-name sibling.
+    sibling = ele.nextSibling;
+    while (sibling) {
+      if (sibling.nodeName == ele.nodeName) {
+        hasNextSiblings = true;
+        break;
+      }
+      sibling = sibling.nextSibling;
+    }
+
+    const prefix = ele.prefix ? ele.prefix + ":" : "";
+    const nth = nbOfPreviousSiblings || hasNextSiblings
+                ? `[${nbOfPreviousSiblings + 1}]` : "";
+
+    parts.push(prefix + ele.localName + nth);
+
+    ele = ele.parentNode;
+  }
+
+  return parts.length ? "/" + parts.reverse().join("/") : "";
+}

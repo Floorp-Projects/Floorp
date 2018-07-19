@@ -654,12 +654,6 @@ Layer::IsScrollbarContainer() const
 }
 
 bool
-Layer::HasOpacityAnimation() const
-{
-  return mAnimationInfo.HasOpacityAnimation();
-}
-
-bool
 Layer::HasTransformAnimation() const
 {
   return mAnimationInfo.HasTransformAnimation();

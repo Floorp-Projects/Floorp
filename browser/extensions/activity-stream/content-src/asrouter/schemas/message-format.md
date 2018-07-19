@@ -50,11 +50,14 @@ For a more in-depth explanation of JEXL syntax you can read the [Normady project
 Currently we expose the following targeting attributes that can be used by messages:
 
 Name | Type | Example value | Description
----  | ---  | ---           | ---      
+---  | ---  | ---           | ---
+`addonsInfo` | `Object` | [example below](#addonsinfo-example) | Information about the addons the user has installed
+`devToolsOpenedCount` | `Integer` | Number of usages of the web console or scratchpad
+`hasFxAccount` | `Boolean` | `true` | Does the user have a firefox account
+`isDefaultBrowser` | `Boolean` or `null` | Is Firefox the user's default browser? If we could not determine the default browser, this value is `null`
 `profileAgeCreated` | Number | `1522843725924` | Profile creation timestamp
 `profileAgeReset` | `Number` or `undefined` | `1522843725924` | When (if) the profile was reset
-`hasFxAccount` | `Boolean` | `true` | Does the user have a firefox account
-`addonsInfo` | `Object` | [example below](#addonsinfo-example) | Information about the addons the user has installed
+`searchEngines` | `Object` | [example below](#searchengines-example) | Information about the current and available search engines
 
 #### addonsInfo Example
 
@@ -73,6 +76,17 @@ Name | Type | Example value | Description
     }
   },
   "isFullData": true
+}
+```
+
+#### searchEngines Example
+
+```javascript
+{
+  "searchEngines": {
+    "current": "google",
+    "installed": ["google", "amazondotcom", "duckduckgo"]
+  }
 }
 ```
 

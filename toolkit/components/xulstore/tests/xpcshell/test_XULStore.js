@@ -4,6 +4,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 var XULStore = null;
@@ -59,7 +60,7 @@ function checkArrays(a, b) {
 
 add_task(async function setup() {
   // Set a value that a future test depends on manually
-  XULStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+  XULStore = Services.xulStore;
   XULStore.setValue(browserURI, "main-window", "width", "994");
 });
 

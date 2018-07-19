@@ -1074,7 +1074,7 @@ CustomizeMode.prototype = {
         toolbar.setAttribute("currentset", set);
       }
       // Persist the currentset attribute directly on hardcoded toolbars.
-      document.persist(toolbar.id, "currentset");
+      Services.xulStore.persist(toolbar, "currentset");
     }
   },
 
