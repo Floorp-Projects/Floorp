@@ -2901,7 +2901,7 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 }
 
 static bool
-IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
+IsOrHasAncestorWithDisplayNone(Element* aElement)
 {
   return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
 }
@@ -2910,18 +2910,65 @@ void
 nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
                                    mozilla::ErrorResult& aError)
 {
-  if (!GetPrimaryFrame(FlushType::Layout)) {
-    nsIPresShell* presShell = nsContentUtils::GetPresShellForContent(this);
-    // NOTE(emilio): We need to check the presshell is initialized in order to
-    // ensure the document is styled.
-    if (!presShell || !presShell->DidInitialize() ||
-        IsOrHasAncestorWithDisplayNone(this, presShell)) {
-      GetTextContentInternal(aValue, aError);
-      return;
+  // innerText depends on layout. For example, white space processing is
+  // something that happens during reflow and which must be reflected by
+  // innerText.  So for:
+  //
+  //   <div style="white-space:normal"> A     B C </div>
+  //
+  // innerText should give "A B C".
+  //
+  // The approach taken here to avoid the expense of reflow is to flush style
+  // and then see whether it's necessary to flush layout afterwards. Flushing
+  // layout can be skipped if we can detect that the element or its descendants
+  // are not dirty.
+
+  // Obtain the composed doc to handle elements in Shadow DOM.
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(FlushType::Style);
+  }
+
+  // Elements with `display: content` will not have a frame. To handle Shadow
+  // DOM, walk the flattened tree looking for parent frame.
+  nsIFrame* frame = GetPrimaryFrame();
+  if (IsDisplayContents()) {
+    for (Element* parent = GetFlattenedTreeParentElement();
+         parent;
+         parent = parent->GetFlattenedTreeParentElement())
+    {
+      frame = parent->GetPrimaryFrame();
+      if (frame) {
+        break;
+      }
     }
   }
 
-  nsRange::GetInnerTextNoFlush(aValue, aError, this);
+  // Check for dirty reflow roots in the subtree from targetFrame; this requires
+  // a reflow flush.
+  bool dirty = frame && frame->PresShell()->FrameIsAncestorOfDirtyRoot(frame);
+
+  // The way we do that is by checking whether the element has either of the two
+  // dirty bits (NS_FRAME_IS_DIRTY or NS_FRAME_HAS_DIRTY_DESCENDANTS) or if any
+  // ancestor has NS_FRAME_IS_DIRTY.  We need to check for NS_FRAME_IS_DIRTY on
+  // ancestors since that is something that implies NS_FRAME_IS_DIRTY on all
+  // descendants.
+  dirty |= frame && frame->HasAnyStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  while (!dirty && frame) {
+    dirty |= frame->HasAnyStateBits(NS_FRAME_IS_DIRTY);
+    frame = frame->GetInFlowParent();
+  }
+
+  // Flush layout if we determined a reflow is required.
+  if (dirty && doc) {
+    doc->FlushPendingNotifications(FlushType::Layout);
+  }
+
+  if (IsOrHasAncestorWithDisplayNone(this)) {
+    GetTextContentInternal(aValue, aError);
+  } else {
+    nsRange::GetInnerTextNoFlush(aValue, aError, this);
+  }
 }
 
 void
