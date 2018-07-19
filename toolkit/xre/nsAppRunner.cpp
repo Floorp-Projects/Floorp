@@ -5155,7 +5155,7 @@ enum {
   // kE10sDisabledForAddons = 7, removed in bug 1406212
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
-  // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
+  kE10sDisabledForOperatingSystem = 10,
 };
 
 const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
@@ -5185,6 +5185,12 @@ BrowserTabsRemoteAutostart()
   } else {
     status = kE10sDisabledByUser;
   }
+
+#if defined(__FreeBSD__)
+  // sendmsg() packet loss gotten worse, see bug 1475970
+  gBrowserTabsRemoteAutostart = false;
+  status = kE10sDisabledForOperatingSystem;
+#endif
 
   // Uber override pref for manual testing purposes
   if (Preferences::GetBool(kForceEnableE10sPref, false)) {
