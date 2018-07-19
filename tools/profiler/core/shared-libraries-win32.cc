@@ -13,6 +13,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsPrintfCString.h"
+#include "nsReadableUtils.h"
 
 #define CV_SIGNATURE 0x53445352 // 'SDSR'
 
@@ -79,34 +81,34 @@ static bool IsDashOrBraces(char c)
   return c == '-' || c == '{' || c == '}';
 }
 
-std::string GetVersion(WCHAR* dllPath)
+static nsCString
+GetVersion(WCHAR* dllPath)
 {
   DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {
-    return "";
+    return EmptyCString();
   }
 
   mozilla::UniquePtr<unsigned char[]> infoData = mozilla::MakeUnique<unsigned char[]>(infoSize);
   if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return "";
+    return EmptyCString();
   }
 
   VS_FIXEDFILEINFO* vInfo;
   UINT vInfoLen;
   if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return "";
+    return EmptyCString();
   }
   if (!vInfo) {
-    return "";
+    return EmptyCString();
   }
 
-  std::ostringstream stream;
-  stream << (vInfo->dwFileVersionMS >> 16)    << "."
-         << (vInfo->dwFileVersionMS & 0xFFFF) << "."
-         << (vInfo->dwFileVersionLS >> 16)    << "."
-         << (vInfo->dwFileVersionLS & 0xFFFF);
-
-  return stream.str();
+  nsPrintfCString version("%d.%d.%d.%d",
+                          vInfo->dwFileVersionMS >> 16,
+                          vInfo->dwFileVersionMS & 0xFFFF,
+                          vInfo->dwFileVersionLS >> 16,
+                          vInfo->dwFileVersionLS & 0xFFFF);
+  return version;
 }
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
