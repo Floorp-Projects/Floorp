@@ -1999,33 +1999,6 @@ TextEditor::Rewrap(bool aRespectNewlines)
 }
 
 NS_IMETHODIMP
-TextEditor::StripCites()
-{
-  nsAutoString current;
-  bool isCollapsed;
-  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted,
-                                   &isCollapsed, current);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString stripped;
-  rv = InternetCiter::StripCites(current, stripped);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (isCollapsed) {
-    rv = SelectAllInternal();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = InsertTextAsAction(stripped);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TextEditor::GetEmbeddedObjects(nsIArray** aNodeList)
 {
   if (NS_WARN_IF(!aNodeList)) {
