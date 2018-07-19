@@ -16770,11 +16770,15 @@ class CGIterableMethodGenerator(CGGeneric):
                 JS::AutoValueArray<3> callArgs(cx);
                 callArgs[2].setObject(*obj);
                 JS::Rooted<JS::Value> ignoredReturnVal(cx);
+                auto GetKeyAtIndex = &${selfType}::GetKeyAtIndex;
+                auto GetValueAtIndex = &${selfType}::GetValueAtIndex;
                 for (size_t i = 0; i < self->GetIterableLength(); ++i) {
-                  if (!ToJSValue(cx, self->GetValueAtIndex(i), callArgs[0])) {
+                  if (!CallIterableGetter(cx, GetValueAtIndex, self, i,
+                                          callArgs[0])) {
                     return false;
                   }
-                  if (!ToJSValue(cx, self->GetKeyAtIndex(i), callArgs[1])) {
+                  if (!CallIterableGetter(cx, GetKeyAtIndex, self, i,
+                                          callArgs[1])) {
                     return false;
                   }
                   if (!JS::Call(cx, arg1, arg0, JS::HandleValueArray(callArgs),
@@ -16783,7 +16787,8 @@ class CGIterableMethodGenerator(CGGeneric):
                   }
                 }
                 """,
-                ifaceName=descriptor.interface.identifier.name))
+                ifaceName=descriptor.interface.identifier.name,
+                selfType=descriptor.nativeType))
             return
         CGGeneric.__init__(self, fill(
             """

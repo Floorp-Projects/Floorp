@@ -89,12 +89,17 @@ struct OpUpdateAsyncImagePipeline {
   MixBlendMode mixBlendMode;
 };
 
+struct OpUpdatedAsyncImagePipeline {
+  PipelineId pipelineId;
+};
+
 union WebRenderParentCommand {
   OpAddPipelineIdForCompositable;
   OpRemovePipelineIdForCompositable;
   OpRemoveExternalImageId;
   OpReleaseTextureOfImage;
   OpUpdateAsyncImagePipeline;
+  OpUpdatedAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
 };
