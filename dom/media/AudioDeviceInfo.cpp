@@ -7,31 +7,7 @@
 
 NS_IMPL_ISUPPORTS(AudioDeviceInfo, nsIAudioDeviceInfo)
 
-using namespace mozilla;
-using namespace mozilla::CubebUtils;
-
-AudioDeviceInfo::AudioDeviceInfo(cubeb_device_info* aInfo)
-:AudioDeviceInfo(aInfo->devid,
-                 NS_ConvertUTF8toUTF16(aInfo->friendly_name),
-                 NS_ConvertUTF8toUTF16(aInfo->group_id),
-                 NS_ConvertUTF8toUTF16(aInfo->vendor_name),
-                 aInfo->type,
-                 aInfo->state,
-                 aInfo->preferred,
-                 aInfo->format,
-                 aInfo->default_format,
-                 aInfo->max_channels,
-                 aInfo->default_rate,
-                 aInfo->max_rate,
-                 aInfo->min_rate,
-                 aInfo->latency_lo,
-                 aInfo->latency_hi)
-{
-}
-
-
-AudioDeviceInfo::AudioDeviceInfo(AudioDeviceID aID,
-                                 const nsAString& aName,
+AudioDeviceInfo::AudioDeviceInfo(const nsAString& aName,
                                  const nsAString& aGroupId,
                                  const nsAString& aVendor,
                                  uint16_t aType,
@@ -44,9 +20,8 @@ AudioDeviceInfo::AudioDeviceInfo(AudioDeviceID aID,
                                  uint32_t aMaxRate,
                                  uint32_t aMinRate,
                                  uint32_t aMaxLatency,
-                                 uint32_t aMinLatency)
-  : mDeviceId(aID)
-  , mName(aName)
+				 uint32_t aMinLatency)
+  : mName(aName)
   , mGroupId(aGroupId)
   , mVendor(aVendor)
   , mType(aType)
@@ -77,32 +52,6 @@ AudioDeviceInfo::AudioDeviceInfo(AudioDeviceID aID,
              mDefaultFormat == FMT_S16BE ||
              mDefaultFormat == FMT_F32LE ||
              mDefaultFormat == FMT_F32BE, "Wrong default format");
-}
-
-Maybe<AudioDeviceID>
-AudioDeviceInfo::GetDeviceID()
-{
-  if (mDeviceId) {
-    return Some(mDeviceId);
-  }
-  return Nothing();
-}
-
-const nsString& AudioDeviceInfo::FriendlyName()
-{
-  return mName;
-}
-uint32_t AudioDeviceInfo::MaxChannels()
-{
-  return mMaxChannels;
-}
-uint32_t AudioDeviceInfo::Type()
-{
-  return mType;
-}
-uint32_t AudioDeviceInfo::State()
-{
-  return mState;
 }
 
 /* readonly attribute DOMString name; */

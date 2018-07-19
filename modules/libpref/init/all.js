@@ -602,10 +602,6 @@ pref("media.cubeb.sandbox", false);
 
 pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
 
-// setSinkId expected to be unconditionally enabled in 63. Till then the
-// implementation will remain hidden behind this pref (Bug 1152401, Bug 934425).
-pref("media.setsinkid.enabled", false);
-
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
 
