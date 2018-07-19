@@ -4877,6 +4877,8 @@ nsGlobalWindowInner::DispatchSyncPopState()
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be safe to run script here.");
 
+  nsresult rv = NS_OK;
+
   // Bail if the window is frozen.
   if (IsFrozen()) {
     return NS_OK;
@@ -4886,11 +4888,12 @@ nsGlobalWindowInner::DispatchSyncPopState()
   // going to send along with the popstate event.  The object is serialized
   // using structured clone.
   nsCOMPtr<nsIVariant> stateObj;
-  nsresult rv = mDoc->GetStateObject(getter_AddRefs(stateObj));
+  rv = mDoc->GetStateObject(getter_AddRefs(stateObj));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool result = true;
   AutoJSAPI jsapi;
-  bool result = jsapi.Init(this);
+  result = jsapi.Init(this);
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
   JSContext* cx = jsapi.cx();
@@ -6692,7 +6695,7 @@ nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       options.setFileAndLine(filename, lineNo);
       options.setNoScriptRval(true);
       JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
-      nsresult rv;
+      nsresult rv = NS_OK;
       {
         nsJSUtils::ExecutionContext exec(aes.cx(), global);
         rv = exec.CompileAndExec(options, script);
