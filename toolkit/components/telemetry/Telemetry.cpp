@@ -794,8 +794,8 @@ public:
       // Module Breakpad identifier.
       JS::RootedValue id(cx);
 
-      if (!info.GetBreakpadId().empty()) {
-        JS::RootedString str_id(cx, JS_NewStringCopyZ(cx, info.GetBreakpadId().c_str()));
+      if (!info.GetBreakpadId().IsEmpty()) {
+        JS::RootedString str_id(cx, JS_NewStringCopyZ(cx, info.GetBreakpadId().get()));
         if (!str_id) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
           return NS_OK;
@@ -990,7 +990,7 @@ ReadStack(PathCharPtr aFileName, Telemetry::ProcessedStack &aStack)
 
     Telemetry::ProcessedStack::Module module = {
       NS_ConvertUTF8toUTF16(moduleName.c_str()),
-      breakpadId
+      nsCString(breakpadId.c_str(), breakpadId.size()),
     };
     stack.AddModule(module);
   }
