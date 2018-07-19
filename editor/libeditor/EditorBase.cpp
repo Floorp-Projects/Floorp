@@ -1000,13 +1000,7 @@ EditorBase::SetShouldTxnSetSelection(bool aShould)
 NS_IMETHODIMP
 EditorBase::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 {
-  *aDocumentIsEmpty = true;
-
-  dom::Element* root = GetRoot();
-  NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
-
-  *aDocumentIsEmpty = !root->HasChildren();
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // XXX: The rule system should tell us which node to select all on (ie, the
