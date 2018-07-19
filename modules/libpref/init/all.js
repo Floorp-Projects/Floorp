@@ -2518,19 +2518,9 @@ pref("security.directory",              "");
 pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
-pref("security.csp.enable", true);
-pref("security.csp.experimentalEnabled", false);
-pref("security.csp.enableStrictDynamic", true);
-
 #if defined(DEBUG) && !defined(ANDROID)
 // about:welcome has been added until Bug 1448359 is fixed at which time home, newtab, and welcome will all be removed.
 pref("csp.content_privileged_about_uris_without_csp", "blank,home,newtab,printpreview,srcdoc,welcome");
-#endif
-
-#ifdef NIGHTLY_BUILD
-pref("security.csp.enable_violation_events", true);
-#else
-pref("security.csp.enable_violation_events", false);
 #endif
 
 // Default Content Security Policy to apply to signed contents.
