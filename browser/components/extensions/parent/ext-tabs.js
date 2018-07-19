@@ -14,8 +14,6 @@ ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStore",
                                "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-                               "resource://gre/modules/sessionstore/Utils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
@@ -569,18 +567,9 @@ this.tabs = class extends ExtensionAPI {
               }
             }
 
-            // Only set disallowInheritPrincipal on non-discardable urls as it
-            // will override creating a lazy browser.  Setting triggeringPrincipal
-            // will ensure other cases are handled, but setting it may prevent
-            // creating about and data urls.
-            let discardable = url && !url.startsWith("about:");
-            if (!discardable) {
-              // Make sure things like about:blank and data: URIs never inherit,
-              // and instead always get a NullPrincipal.
-              options.disallowInheritPrincipal = true;
-            } else {
-              options.triggeringPrincipal = context.principal;
-            }
+            // Make sure things like about:blank and data: URIs never inherit,
+            // and instead always get a NullPrincipal.
+            options.disallowInheritPrincipal = true;
 
             tabListener.initTabReady();
             let currentTab = window.gBrowser.selectedTab;
@@ -593,47 +582,26 @@ this.tabs = class extends ExtensionAPI {
               }
             }
 
-            // Simple properties
-            const properties = ["index", "pinned", "title"];
-            for (let prop of properties) {
-              if (createProperties[prop] != null) {
-                options[prop] = createProperties[prop];
-              }
+            if (createProperties.index != null) {
+              options.index = createProperties.index;
             }
 
-            let active = createProperties.active !== null ?
-                         createProperties.active : !createProperties.discarded;
-            if (createProperties.discarded) {
-              if (active) {
-                return Promise.reject({message: `Active tabs cannot be created and discarded.`});
-              }
-              if (createProperties.pinned) {
-                return Promise.reject({message: `Pinned tabs cannot be created and discarded.`});
-              }
-              if (!discardable) {
-                return Promise.reject({message: `Cannot create a discarded new tab or "about" urls.`});
-              }
-              options.createLazyBrowser = true;
-            } else if (createProperties.title) {
-              return Promise.reject({message: `Title may only be set for discarded tabs.`});
+            if (createProperties.pinned != null) {
+              options.pinned = createProperties.pinned;
             }
 
             let nativeTab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
-            if (createProperties.discarded) {
-              SessionStore.setTabState(nativeTab, {
-                entries: [{
-                  url: url,
-                  title: options.title,
-                  triggeringPrincipal_base64: Utils.serializePrincipal(context.principal),
-                }],
-              });
-            }
 
+            let active = true;
+            if (createProperties.active !== null) {
+              active = createProperties.active;
+            }
             if (active) {
               window.gBrowser.selectedTab = nativeTab;
-              if (!url) {
-                window.focusAndSelectUrlBar();
-              }
+            }
+
+            if (active && !url) {
+              window.focusAndSelectUrlBar();
             }
 
             if (createProperties.url &&
