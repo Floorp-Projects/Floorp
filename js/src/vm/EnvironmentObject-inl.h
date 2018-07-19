@@ -17,8 +17,11 @@ namespace js {
 inline LexicalEnvironmentObject&
 NearestEnclosingExtensibleLexicalEnvironment(JSObject* env)
 {
-    while (!IsExtensibleLexicalEnvironment(env))
+    MOZ_ASSERT(env);
+    while (!IsExtensibleLexicalEnvironment(env)) {
         env = env->enclosingEnvironment();
+        MOZ_ASSERT(env);
+    }
     return env->as<LexicalEnvironmentObject>();
 }
 
