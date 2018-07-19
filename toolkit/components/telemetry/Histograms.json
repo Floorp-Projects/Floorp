@@ -12044,12 +12044,12 @@
   },
   "GRAPHICS_SANITY_TEST_REASON": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com"],
-    "expires_in_version": "43",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
+    "expires_in_version": "70",
     "kind": "enumerated",
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
-    "description": "Reports why a graphics sanity test was run. 0=First Run, 1=App Updated, 2=Device Change, 3=Driver Change."
+    "description": "Reports why a graphics sanity test was run. 0=First Run, 1=App Updated, 2=Device Change, 3=Driver Change, 4=Advanced Layers Config Change."
   },
   "TRANSLATION_OPPORTUNITIES": {
     "record_in_processes": ["main", "content"],
