@@ -260,6 +260,13 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
+    def ensure_node_packages(self, state_dir, checkout_root):
+        '''
+        Install any necessary packages needed to supply NodeJS'''
+        raise NotImplementedError(
+            '%s does not yet implement ensure_node_packages()'
+            % __name__)
+
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
         mach_binary = os.path.abspath(mach_binary)
