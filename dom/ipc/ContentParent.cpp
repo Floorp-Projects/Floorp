@@ -5780,12 +5780,10 @@ ContentParent::RecvBHRThreadHang(const HangDetails& aDetails)
 mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
                                                            const nsCString& aTrackingOrigin,
-                                                           const nsCString& aGrantedOrigin,
-                                                           FirstPartyStorageAccessGrantedForOriginResolver&& aResolver)
+                                                           const nsCString& aGrantedOrigin)
 {
   AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(aParentPrincipal,
                                                                                  aTrackingOrigin,
-                                                                                 aGrantedOrigin,
-                                                                                 std::move(aResolver));
+                                                                                 aGrantedOrigin);
   return IPC_OK();
 }
