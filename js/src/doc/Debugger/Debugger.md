@@ -117,6 +117,14 @@ compartment.
 :   New code, represented by the [`Debugger.Script`][script] instance
     <i>script</i>, has been loaded in the scope of the debuggees.
 
+    Since each function has its own [`Debugger.Script`][script], separate from
+    the top-level code or function that encloses it, loading JavaScript code
+    typically introduces not just a single script, but a tree of scripts
+    representing the top-level code and any functions it includes. The
+    `onNewScript` hook reports only the root script of such a tree. If
+    necessary, the handler function can use the scripts' `getChildScripts`
+    method to walk the tree and obtain all the newly introduced scripts.
+
     This method's return value is ignored.
 
 <code>onNewPromise(<i>promise</i>)</code>
