@@ -29,8 +29,7 @@ from .protocol import (AssertsProtocolPart,
                        SelectorProtocolPart,
                        ClickProtocolPart,
                        SendKeysProtocolPart,
-                       TestDriverProtocolPart,
-                       CoverageProtocolPart)
+                       TestDriverProtocolPart)
 from ..testrunner import Stop
 from ..webdriver_server import GeckoDriverServer
 
@@ -372,53 +371,6 @@ class MarionetteTestDriverProtocolPart(TestDriverProtocolPart):
         self.parent.base.execute_script("window.postMessage(%s, '*')" % json.dumps(obj))
 
 
-class MarionetteCoverageProtocolPart(CoverageProtocolPart):
-    def setup(self):
-        self.marionette = self.parent.marionette
-        script = """
-            ChromeUtils.import("chrome://marionette/content/PerTestCoverageUtils.jsm");
-            return PerTestCoverageUtils.enabled;
-            """
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            self.is_enabled = self.marionette.execute_script(script)
-
-    def reset(self):
-        script = """
-            var callback = arguments[arguments.length - 1];
-
-            ChromeUtils.import("chrome://marionette/content/PerTestCoverageUtils.jsm");
-            PerTestCoverageUtils.beforeTest().then(callback, callback);
-            """
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            try:
-                error = self.marionette.execute_async_script(script)
-                if error is not None:
-                    raise Exception('Failure while resetting counters: %s' % json.dumps(error))
-            except (errors.MarionetteException, socket.error):
-                # This usually happens if the process crashed
-                pass
-
-    def dump(self):
-        if len(self.marionette.window_handles):
-            handle = self.marionette.window_handles[0]
-            self.marionette.switch_to_window(handle)
-
-        script = """
-            var callback = arguments[arguments.length - 1];
-
-            ChromeUtils.import("chrome://marionette/content/PerTestCoverageUtils.jsm");
-            PerTestCoverageUtils.afterTest().then(callback, callback);
-            """
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            try:
-                error = self.marionette.execute_async_script(script)
-                if error is not None:
-                    raise Exception('Failure while dumping counters: %s' % json.dumps(error))
-            except (errors.MarionetteException, socket.error):
-                # This usually happens if the process crashed
-                pass
-
-
 class MarionetteProtocol(Protocol):
     implements = [MarionetteBaseProtocolPart,
                   MarionetteTestharnessProtocolPart,
@@ -428,8 +380,7 @@ class MarionetteProtocol(Protocol):
                   MarionetteClickProtocolPart,
                   MarionetteSendKeysProtocolPart,
                   MarionetteTestDriverProtocolPart,
-                  MarionetteAssertsProtocolPart,
-                  MarionetteCoverageProtocolPart]
+                  MarionetteAssertsProtocolPart]
 
     def __init__(self, executor, browser, capabilities=None, timeout_multiplier=1, e10s=True):
         do_delayed_imports()
@@ -648,9 +599,6 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         else:
             timeout_ms = "null"
 
-        if self.protocol.coverage.is_enabled:
-            self.protocol.coverage.reset()
-
         format_map = {"abs_url": url,
                       "url": strip_server(url),
                       "window_id": self.window_id,
@@ -673,10 +621,6 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
             done, rv = handler(result)
             if done:
                 break
-
-        if self.protocol.coverage.is_enabled:
-            self.protocol.coverage.dump()
-
         return rv
 
 
@@ -745,13 +689,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                 self.protocol.base.set_window(self.protocol.marionette.window_handles[-1])
                 self.has_window = True
 
-        if self.protocol.coverage.is_enabled:
-            self.protocol.coverage.reset()
-
         result = self.implementation.run_test(test)
-
-        if self.protocol.coverage.is_enabled:
-            self.protocol.coverage.dump()
 
         if self.debug:
             assertion_count = self.protocol.asserts.get()
