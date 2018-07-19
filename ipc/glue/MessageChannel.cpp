@@ -13,16 +13,19 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Move.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "nsAppRunner.h"
 #include "mozilla/UniquePtr.h"
+#include "nsAppRunner.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
+#include "nsDataHashtable.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
-#include "nsContentUtils.h"
+#include "nsPrintfCString.h"
 #include <math.h>
 
 #ifdef MOZ_TASK_TRACER
@@ -502,6 +505,103 @@ public:
 
 NS_IMPL_ISUPPORTS(PendingResponseReporter, nsIMemoryReporter)
 
+class ChannelCountReporter final : public nsIMemoryReporter
+{
+    ~ChannelCountReporter() = default;
+
+    struct ChannelCounts {
+        size_t mNow;
+        size_t mMax;
+
+        ChannelCounts() : mNow(0), mMax(0) { }
+
+        void Inc() {
+            ++mNow;
+            if (mMax < mNow) {
+                mMax = mNow;
+            }
+        }
+
+        void Dec() {
+            MOZ_ASSERT(mNow > 0);
+            --mNow;
+        }
+    };
+
+    using CountTable = nsDataHashtable<nsDepCharHashKey, ChannelCounts>;
+
+    static StaticMutex sChannelCountMutex;
+    static CountTable* sChannelCounts;
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                   bool aAnonymize) override
+    {
+        StaticMutexAutoLock countLock(sChannelCountMutex);
+        if (!sChannelCounts) {
+            return NS_OK;
+        }
+        for (auto iter = sChannelCounts->Iter(); !iter.Done(); iter.Next()) {
+            nsPrintfCString pathNow("ipc-channels/%s", iter.Key());
+            nsPrintfCString pathMax("ipc-channels-peak/%s", iter.Key());
+            nsPrintfCString descNow("Number of IPC channels for"
+                                    " top-level actor type %s", iter.Key());
+            nsPrintfCString descMax("Peak number of IPC channels for"
+                                    " top-level actor type %s", iter.Key());
+
+            aHandleReport->Callback(EmptyCString(), pathNow, KIND_OTHER,
+                                    UNITS_COUNT, iter.Data().mNow, descNow,
+                                    aData);
+            aHandleReport->Callback(EmptyCString(), pathMax, KIND_OTHER,
+                                    UNITS_COUNT, iter.Data().mMax, descMax,
+                                    aData);
+        }
+        return NS_OK;
+    }
+
+    static void
+    Increment(const char* aName)
+    {
+        StaticMutexAutoLock countLock(sChannelCountMutex);
+        if (!sChannelCounts) {
+            sChannelCounts = new CountTable;
+        }
+        sChannelCounts->GetOrInsert(aName).Inc();
+    }
+
+    static void
+    Decrement(const char* aName)
+    {
+        StaticMutexAutoLock countLock(sChannelCountMutex);
+        MOZ_ASSERT(sChannelCounts);
+        sChannelCounts->GetOrInsert(aName).Dec();
+    }
+};
+
+StaticMutex ChannelCountReporter::sChannelCountMutex;
+ChannelCountReporter::CountTable* ChannelCountReporter::sChannelCounts;
+
+NS_IMPL_ISUPPORTS(ChannelCountReporter, nsIMemoryReporter)
+
+// In child processes, the first MessageChannel is created before
+// XPCOM is initialized enough to construct the memory reporter
+// manager.  This retries every time a MessageChannel is constructed,
+// which is good enough in practice.
+template<class Reporter>
+static void TryRegisterStrongMemoryReporter()
+{
+    static Atomic<bool> registered;
+    if (registered.compareExchange(false, true)) {
+        RefPtr<Reporter> reporter = new Reporter();
+        if (NS_FAILED(RegisterStrongMemoryReporter(reporter))) {
+            registered = false;
+        }
+    }
+}
+
 Atomic<size_t> MessageChannel::gUnresolvedResponses;
 
 MessageChannel::MessageChannel(const char* aName,
@@ -510,6 +610,7 @@ MessageChannel::MessageChannel(const char* aName,
     mListener(aListener),
     mChannelState(ChannelClosed),
     mSide(UnknownSide),
+    mIsCrossProcess(false),
     mLink(nullptr),
     mWorkerLoop(nullptr),
     mChannelErrorTask(nullptr),
@@ -553,10 +654,8 @@ MessageChannel::MessageChannel(const char* aName,
     MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
 
-    static Atomic<bool> registered;
-    if (registered.compareExchange(false, true)) {
-        RegisterStrongMemoryReporter(new PendingResponseReporter());
-    }
+    TryRegisterStrongMemoryReporter<PendingResponseReporter>();
+    TryRegisterStrongMemoryReporter<ChannelCountReporter>();
 }
 
 MessageChannel::~MessageChannel()
@@ -749,6 +848,9 @@ MessageChannel::Clear()
     mPendingResponses.clear();
 
     mWorkerLoop = nullptr;
+    if (mLink != nullptr && mIsCrossProcess) {
+        ChannelCountReporter::Decrement(mName);
+    }
     delete mLink;
     mLink = nullptr;
 
@@ -787,6 +889,8 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
     ProcessLink *link = new ProcessLink(this);
     link->Open(aTransport, aIOLoop, aSide); // :TODO: n.b.: sets mChild
     mLink = link;
+    mIsCrossProcess = true;
+    ChannelCountReporter::Increment(mName);
     return true;
 }
 
