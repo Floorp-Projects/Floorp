@@ -3454,6 +3454,8 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (id)accessibilityAttributeValue:(NSString *)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   id retval = [super accessibilityAttributeValue:attribute];
 
   // The following works around a problem with Text-to-Speech on OS X 10.7.
@@ -3497,6 +3499,8 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
 
   return retval;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
