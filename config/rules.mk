@@ -657,7 +657,7 @@ endif
 $(LIBRARY): $(OBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(RM) $(REAL_LIBRARY)
-	$(AR) $(AR_FLAGS) $(OBJS) $($@_$(OBJS_VAR_SUFFIX))
+	$(AR) $(AR_FLAGS) $($@_$(OBJS_VAR_SUFFIX))
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.
