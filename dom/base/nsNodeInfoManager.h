@@ -23,8 +23,6 @@ class nsAtom;
 class nsIDocument;
 class nsIPrincipal;
 class nsWindowSizes;
-struct PLHashEntry;
-struct PLHashTable;
 template<class T> struct already_AddRefed;
 
 #define RECENTLY_USED_NODEINFOS_SIZE 31
