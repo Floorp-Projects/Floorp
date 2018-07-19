@@ -221,7 +221,8 @@ private:
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
-                                    const bool& aAsync);
+                                    const bool& aAsync,
+                                    wr::TransactionBuilder& aTxn);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                        wr::TransactionBuilder& aTxn);
 

@@ -333,24 +333,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-// When the pref is true, CSSStyleDeclaration.setProperty always appends
-// new declarations (and discards old ones if they exist), otherwise, it
-// will update in-place when given property exists in the block, and
-// avoid updating at all when the existing property declaration is
-// identical to the new one.
-// See bug 1415330, bug 1460295, and bug 1461285 for some background.
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
-VARCACHE_PREF(
-  "layout.css.property-append-only",
-   layout_css_property_append_only,
-   bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 // Should the :visited selector ever match (otherwise :link matches instead)?
 VARCACHE_PREF(
   "layout.css.visited_links_enabled",

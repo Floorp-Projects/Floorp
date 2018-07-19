@@ -151,8 +151,45 @@ const Utils = {
     return uri;
   },
 
+  // This list should be kept up-to-date with the spec:
+  // https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
+  _safeProtocols: new Set([
+    "bitcoin",
+    "geo",
+    "im",
+    "irc",
+    "ircs",
+    "magnet",
+    "mailto",
+    "mms",
+    "news",
+    "nntp",
+    "openpgp4fpr",
+    "sip",
+    "sms",
+    "smsto",
+    "ssh",
+    "tel",
+    "urn",
+    "webcal",
+    "wtai",
+    "xmpp",
+  ]),
+
   // NB: Throws if aProtocol is not allowed.
   checkProtocolHandlerAllowed(aProtocol, aURIString, aWindowOrNull) {
+    if (aProtocol.startsWith("web+")) {
+      if (!/[a-z]+/.test(aProtocol.substring(4 /* web+ */))) {
+        throw this.getSecurityError(
+          `Permission denied to add a protocol handler for ${aProtocol}`,
+          aWindowOrNull);
+      }
+    } else if (!this._safeProtocols.has(aProtocol)) {
+      throw this.getSecurityError(
+        `Permission denied to add a protocol handler for ${aProtocol}`,
+        aWindowOrNull);
+    }
+
     // First, check to make sure this isn't already handled internally (we don't
     // want to let them take over, say "chrome").
     let handler = Services.io.getProtocolHandler(aProtocol);
@@ -364,6 +401,7 @@ WebContentConverterRegistrar.prototype = {
    * See nsIWebContentHandlerRegistrar
    */
   registerProtocolHandler(aProtocol, aURIString, aTitle, aBrowserOrWindow) {
+    aProtocol = (aProtocol || "").toLowerCase();
     LOG("registerProtocolHandler(" + aProtocol + "," + aURIString + "," + aTitle + ")");
     let haveWindow = (aBrowserOrWindow instanceof Ci.nsIDOMWindow);
     let uri;
@@ -998,6 +1036,7 @@ WebContentConverterRegistrarContent.prototype = {
   },
 
   registerProtocolHandler(aProtocol, aURIString, aTitle, aBrowserOrWindow) {
+    aProtocol = (aProtocol || "").toLowerCase();
     // aBrowserOrWindow must be a window.
     let messageManager = aBrowserOrWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                          .getInterface(Ci.nsIWebNavigation)

@@ -88,7 +88,10 @@ public:
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
-  void ApplyAsyncImages(wr::TransactionBuilder& aTxn);
+  void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aTxn);
+  void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
+
+  void SetEmptyDisplayList(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
 
   void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
   {
@@ -164,7 +167,6 @@ private:
     }
 
     bool mInitialised;
-    bool mSentDL;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
@@ -177,6 +179,10 @@ private:
     nsTArray<wr::ImageKey> mKeys;
   };
 
+  void ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
+                                  const wr::PipelineId& aPipelineId,
+                                  AsyncImagePipeline* aPipeline,
+                                  wr::TransactionBuilder& aTxn);
   Maybe<TextureHost::ResourceUpdateOp>
   UpdateImageKeys(wr::TransactionBuilder& aResourceUpdates,
                   AsyncImagePipeline* aPipeline,
