@@ -839,7 +839,6 @@ SelectAllCommand::IsCommandEnabled(const char* aCommandName,
   // You can always select all, unless the selection is editable,
   // and the editable region is empty!
   *aIsEnabled = true;
-  bool docIsEmpty;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   if (!editor) {
@@ -849,11 +848,12 @@ SelectAllCommand::IsCommandEnabled(const char* aCommandName,
   // You can select all if there is an editor which is non-empty
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  rv = textEditor->GetDocumentIsEmpty(&docIsEmpty);
+  bool isEmpty = false;
+  rv = textEditor->IsEmpty(&isEmpty);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  *aIsEnabled = !docIsEmpty;
+  *aIsEnabled = !isEmpty;
   return NS_OK;
 }
 

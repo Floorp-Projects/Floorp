@@ -2543,7 +2543,7 @@ nsTextEditorState::HasNonEmptyValue()
   if (mTextEditor && mBoundFrame && mEditorInitialized &&
       !mIsCommittingComposition) {
     bool empty;
-    nsresult rv = mTextEditor->DocumentIsEmpty(&empty);
+    nsresult rv = mTextEditor->IsEmpty(&empty);
     if (NS_SUCCEEDED(rv)) {
       return !empty;
     }

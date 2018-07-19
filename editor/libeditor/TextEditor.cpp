@@ -1317,20 +1317,23 @@ TextEditor::GetInputEventTargetContent()
 }
 
 nsresult
-TextEditor::DocumentIsEmpty(bool* aIsEmpty)
+TextEditor::IsEmpty(bool* aIsEmpty) const
 {
-  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!mRules)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aIsEmpty = true;
 
   if (mRules->HasBogusNode()) {
-    *aIsEmpty = true;
     return NS_OK;
   }
 
-  // Even if there is no bogus node, we should be detected as empty document
+  // Even if there is no bogus node, we should be detected as empty editor
   // if all the children are text nodes and these have no content.
   Element* rootElement = GetRoot();
   if (!rootElement) {
-    *aIsEmpty = true;
+    // XXX Why don't we return an error in such case??
     return NS_OK;
   }
 
@@ -1343,38 +1346,47 @@ TextEditor::DocumentIsEmpty(bool* aIsEmpty)
     }
   }
 
-  *aIsEmpty = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TextEditor::GetDocumentIsEmpty(bool* aDocumentIsEmpty)
 {
-  return DocumentIsEmpty(aDocumentIsEmpty);
+  nsresult rv = IsEmpty(aDocumentIsEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 TextEditor::GetTextLength(int32_t* aCount)
 {
-  NS_ASSERTION(aCount, "null pointer");
+  MOZ_ASSERT(aCount);
 
   // initialize out params
   *aCount = 0;
 
   // special-case for empty document, to account for the bogus node
-  bool docEmpty;
-  nsresult rv = GetDocumentIsEmpty(&docEmpty);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (docEmpty) {
+  bool isEmpty = false;
+  nsresult rv = IsEmpty(&isEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (isEmpty) {
     return NS_OK;
   }
 
-  dom::Element *rootElement = GetRoot();
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIContentIterator> iter =
     do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   uint32_t totalLength = 0;
   iter->Init(rootElement);

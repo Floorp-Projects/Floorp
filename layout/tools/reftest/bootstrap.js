@@ -4,7 +4,6 @@
 
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function processTerminated() {
