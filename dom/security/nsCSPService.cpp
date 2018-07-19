@@ -184,13 +184,12 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
 
     if (preloadCsp) {
       // obtain the enforcement decision
-      // (don't pass aExtra, we use that slot for redirects)
       rv = preloadCsp->ShouldLoad(contentType,
                                   aContentLocation,
                                   requestOrigin,
                                   requestContext,
                                   aMimeTypeGuess,
-                                  nullptr, // aExtra
+                                  nullptr, // no redirect, aOriginal URL is null.
                                   aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -209,13 +208,12 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
 
   if (csp) {
     // obtain the enforcement decision
-    // (don't pass aExtra, we use that slot for redirects)
     rv = csp->ShouldLoad(contentType,
                          aContentLocation,
                          requestOrigin,
                          requestContext,
                          aMimeTypeGuess,
-                         nullptr,
+                         nullptr, // no redirect, aOriginal URL is null.
                          aDecision);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -320,13 +318,13 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     loadInfo->LoadingPrincipal()->GetPreloadCsp(getter_AddRefs(preloadCsp));
 
     if (preloadCsp) {
-      // Pass  originalURI as aExtra to indicate the redirect
+      // Pass  originalURI to indicate the redirect
       preloadCsp->ShouldLoad(policyType,     // load type per nsIContentPolicy (uint32_t)
                              newUri,         // nsIURI
                              nullptr,        // nsIURI
                              requestContext, // nsISupports
                              EmptyCString(), // ACString - MIME guess
-                             originalUri,    // aExtra
+                             originalUri,    // Original nsIURI
                              &aDecision);
 
       // if the preload policy already denied the load, then there
@@ -344,13 +342,13 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   loadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(csp));
 
   if (csp) {
-    // Pass  originalURI as aExtra to indicate the redirect
+    // Pass  originalURI to indicate the redirect
     csp->ShouldLoad(policyType,     // load type per nsIContentPolicy (uint32_t)
                     newUri,         // nsIURI
                     nullptr,        // nsIURI
                     requestContext, // nsISupports
                     EmptyCString(), // ACString - MIME guess
-                    originalUri,    // aExtra
+                    originalUri,    // Original nsIURI
                     &aDecision);
   }
 
