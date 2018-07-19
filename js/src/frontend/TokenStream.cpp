@@ -47,6 +47,7 @@ using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
+using mozilla::IsTrailingUnit;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::PointerRangeSize;
@@ -932,6 +933,69 @@ SourceUnits<char16_t>::findWindowStart(size_t offset) const
         }
 
         p--;
+    }
+
+    MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+    return offset - HalfWindowSize();
+}
+
+template<>
+size_t
+SourceUnits<Utf8Unit>::findWindowStart(size_t offset) const
+{
+    // |offset| must be the location of the error or somewhere before it, so we
+    // know preceding data is valid UTF-8.
+
+    const Utf8Unit* const earliestPossibleStart = codeUnitPtrAt(startOffset_);
+
+    const Utf8Unit* const initial = codeUnitPtrAt(offset);
+    const Utf8Unit* p = initial;
+
+    auto HalfWindowSize = [&p, &initial]() { return PointerRangeSize(p, initial); };
+
+    while (true) {
+        MOZ_ASSERT(earliestPossibleStart <= p);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p <= earliestPossibleStart || HalfWindowSize() >= WindowRadius)
+            break;
+
+        // Peek backward for a line break, and only decrement if there is none.
+        uint8_t prev = p[-1].toUint8();
+
+        // First check for the ASCII LineTerminators.
+        if (prev == '\r' || prev == '\n')
+            break;
+
+        // Now check for the non-ASCII LineTerminators U+2028 LINE SEPARATOR
+        // (0xE2 0x80 0xA8) and U+2029 PARAGRAPH (0xE2 0x80 0xA9).  If there
+        // aren't three code units available, some comparison here will fail
+        // before we'd underflow.
+        if (MOZ_UNLIKELY((prev == 0xA8 || prev == 0xA9) &&
+                         p[-2].toUint8() == 0x80 &&
+                         p[-3].toUint8() == 0xE2))
+        {
+            break;
+        }
+
+        // Rewind over the non-LineTerminator.  This can't underflow
+        // |earliestPossibleStart| because it begins a code point.
+        while (IsTrailingUnit(*--p))
+            continue;
+
+        MOZ_ASSERT(earliestPossibleStart <= p);
+
+        // But if we underflowed |WindowRadius|, adjust forward and stop.
+        if (HalfWindowSize() > WindowRadius) {
+            static_assert(WindowRadius > 3,
+                          "skipping over non-lead code units below must not "
+                          "advance past |offset|");
+
+            while (IsTrailingUnit(*++p))
+                continue;
+
+            MOZ_ASSERT(HalfWindowSize() < WindowRadius);
+            break;
+        }
     }
 
     MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
