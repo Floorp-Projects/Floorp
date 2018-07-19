@@ -122,11 +122,17 @@ const TEST_GLOBAL = {
       addObserver() {},
       prefHasUserValue() {},
       removeObserver() {},
+      getPrefType() {},
+      clearUserPref() {},
       getStringPref() {},
       getIntPref() {},
       getBoolPref() {},
       setBoolPref() {},
+      setIntPref() {},
       getBranch() {},
+      PREF_BOOL: "boolean",
+      PREF_INT: "integer",
+      PREF_STRING: "string",
       getDefaultBranch() {
         return {
           setBoolPref() {},

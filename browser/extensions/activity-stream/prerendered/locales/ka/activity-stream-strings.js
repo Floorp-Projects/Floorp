@@ -2,7 +2,7 @@
 window.gActivityStreamStrings = {
   "newtab_page_title": "ახალი ჩანართი",
   "header_top_sites": "რჩეული საიტები",
-  "header_highlights": "მნიშვნელოვანი საიტები",
+  "header_highlights": "მნიშვნელოვანი",
   "header_recommended_by": "{provider}-ის შემოთავაზებული",
   "context_menu_button_sr": "კონტექსტური მენიუს გახსნა {title}",
   "section_context_menu_button_sr": "გვერდის ნაწილების პარამეტრები",

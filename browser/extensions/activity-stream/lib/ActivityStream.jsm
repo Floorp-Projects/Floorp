@@ -40,7 +40,6 @@ const DEFAULT_SITES = new Map([
   ["FR", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/"]
 ]);
 const GEO_PREF = "browser.search.region";
-const REASON_ADDON_UNINSTALL = 6;
 const SPOCS_GEOS = ["US"];
 
 // Determine if spocs should be shown for a geo/locale
@@ -288,6 +287,7 @@ this.ActivityStream = class ActivityStream {
 
   init() {
     try {
+      this._migratePrefs();
       this._updateDynamicPrefs();
       this._defaultPrefs.init();
 
@@ -309,6 +309,61 @@ this.ActivityStream = class ActivityStream {
     }
   }
 
+  /**
+   * Check if an old pref has a custom value to migrate. Clears the pref so that
+   * it's the default after migrating (to avoid future need to migrate).
+   *
+   * @param oldPrefName {string} Pref to check and migrate
+   * @param cbIfNotDefault {function} Callback that gets the current pref value
+   */
+  _migratePref(oldPrefName, cbIfNotDefault) {
+    // Nothing to do if the user doesn't have a custom value
+    if (!Services.prefs.prefHasUserValue(oldPrefName)) {
+      return;
+    }
+
+    // Figure out what kind of pref getter to use
+    let prefGetter;
+    switch (Services.prefs.getPrefType(oldPrefName)) {
+      case Services.prefs.PREF_BOOL:
+        prefGetter = "getBoolPref";
+        break;
+      case Services.prefs.PREF_INT:
+        prefGetter = "getIntPref";
+        break;
+      case Services.prefs.PREF_STRING:
+        prefGetter = "getStringPref";
+        break;
+    }
+
+    // Give the callback the current value then clear the pref
+    cbIfNotDefault(Services.prefs[prefGetter](oldPrefName));
+    Services.prefs.clearUserPref(oldPrefName);
+  }
+
+  _migratePrefs() {
+    // Do a one time migration of Tiles about:newtab prefs that have been modified
+    this._migratePref("browser.newtabpage.rows", rows => {
+      // Just disable top sites if rows are not desired
+      if (rows <= 0) {
+        Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
+      } else {
+        Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", rows);
+      }
+    });
+
+    this._migratePref("browser.newtabpage.activity-stream.showTopSites", value => {
+      if (value === false) {
+        Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
+      }
+    });
+
+    // Old activity stream topSitesCount pref showed 6 per row
+    this._migratePref("browser.newtabpage.activity-stream.topSitesCount", count => {
+      Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", Math.ceil(count / 6));
+    });
+  }
+
   uninit() {
     if (this.geo === "") {
       Services.prefs.removeObserver(GEO_PREF, this);
@@ -316,15 +371,6 @@ this.ActivityStream = class ActivityStream {
 
     this.store.uninit();
     this.initialized = false;
-  }
-
-  uninstall(reason) {
-    if (reason === REASON_ADDON_UNINSTALL) {
-      // This resets all prefs in the config to their default values,
-      // so we DON'T want to do this on an upgrade/downgrade, only on a
-      // real uninstall
-      this._defaultPrefs.reset();
-    }
   }
 
   _updateDynamicPrefs() {

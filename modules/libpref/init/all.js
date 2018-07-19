@@ -3071,11 +3071,7 @@ pref("layout.idle_period.time_limit", 1);
 pref("layout.css.webkit-appearance.enabled", false);
 
 // Is support for the core interfaces of Web Animations API enabled?
-#ifdef RELEASE_OR_BETA
-pref("dom.animations-api.core.enabled", false);
-#else
 pref("dom.animations-api.core.enabled", true);
-#endif
 
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
