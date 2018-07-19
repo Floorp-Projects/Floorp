@@ -145,8 +145,10 @@ AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
   // Mix the value of the AudioParam itself with that of the AudioNode inputs.
   BaseClass::GetValuesAtTime(aTime, aBuffer, aSize);
   if (mStream) {
+    uint32_t blockOffset = aTime % WEBAUDIO_BLOCK_SIZE;
+    MOZ_ASSERT(blockOffset + aSize <= WEBAUDIO_BLOCK_SIZE);
     for (size_t i = 0; i < aSize; ++i) {
-      aBuffer[i] += AudioNodeInputValue(i);
+      aBuffer[i] += AudioNodeInputValue(blockOffset + i);
     }
   }
 }
