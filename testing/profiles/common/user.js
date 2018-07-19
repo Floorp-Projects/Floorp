@@ -41,3 +41,8 @@ user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_com
 user_pref("xpinstall.signatures.required", false);
 // Prevent Remote Settings to issue non local connections.
 user_pref("services.settings.server", "http://localhost/remote-settings-dummy/v1");
+// Ensure autoplay is enabled for all platforms.
+user_pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
+user_pref("media.autoplay.enabled.user-gestures-needed", true);
+user_pref("media.autoplay.ask-permission", false);
+user_pref("media.autoplay.block-webaudio", false);
