@@ -19,6 +19,7 @@ enum class DocumentMatchingFunction {
   URLPrefix,
   Domain,
   RegExp,
+  MediaDocument,
 };
 
 } // namespace css
