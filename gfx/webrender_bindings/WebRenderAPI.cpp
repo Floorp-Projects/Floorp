@@ -661,6 +661,11 @@ TransactionBuilder::UpdateExternalImageWithDirtyRect(ImageKey aKey,
                                                             aDirtyRect);
 }
 
+void TransactionBuilder::SetImageVisibleArea(ImageKey aKey, const wr::NormalizedRect& aArea)
+{
+  wr_resource_updates_set_image_visible_area(mTxn, aKey, &aArea);
+}
+
 void
 TransactionBuilder::DeleteImage(ImageKey aKey)
 {

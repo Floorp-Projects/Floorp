@@ -15,7 +15,7 @@ use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use webrender::{AsyncPropertySampler, PipelineInfo, SceneBuilderHooks};
 use webrender::{UploadMethod, VertexUsageHint};
 use thread_profiler::register_thread_with_profiler;
-use moz2d_renderer::Moz2dImageRenderer;
+use moz2d_renderer::Moz2dBlobImageHandler;
 use program_cache::{WrProgramCache, remove_disk_cache};
 use app_units::Au;
 use rayon;
@@ -930,7 +930,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         enable_aa: true,
         enable_subpixel_aa: true,
         recorder: recorder,
-        blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
+        blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(workers.clone()))),
         workers: Some(workers.clone()),
         thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         enable_render_on_scroll: false,
@@ -1278,6 +1278,15 @@ pub extern "C" fn wr_resource_updates_update_image(
         ImageData::new(bytes.flush_into_vec()),
         None
     );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_set_image_visible_area(
+    txn: &mut Transaction,
+    key: WrImageKey,
+    area: &NormalizedRect,
+) {
+    txn.set_image_visible_area(key, *area);
 }
 
 #[no_mangle]
