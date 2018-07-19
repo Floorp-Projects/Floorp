@@ -36,7 +36,7 @@ public:
     // The file name, /foo/bar/libxul.so for example.
     // It can contain unicode characters.
     nsString mName;
-    std::string mBreakpadId;
+    nsCString mBreakpadId;
 
     bool operator==(const Module& other) const;
   };

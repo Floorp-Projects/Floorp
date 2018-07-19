@@ -59,6 +59,14 @@ class StatusHandler(object):
             else:
                 self.expected_statuses["PASS"] += 1
 
+        if action == "lsan_leak":
+            if not data.get("allowed_match"):
+                self.unexpected_statuses["FAIL"] += 1
+
+        if action == "lsan_summary":
+            if not data.get("allowed", False):
+                self.unexpected_statuses["FAIL"] += 1
+
     def summarize(self):
         return RunSummary(
             dict(self.unexpected_statuses),
