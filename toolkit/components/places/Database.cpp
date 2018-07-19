@@ -2656,7 +2656,9 @@ Database::MigrateV52OriginFrecencies()
     new MigrateV52OriginFrecenciesRunnable(mMainConn));
   nsCOMPtr<nsIEventTarget> target(do_GetInterface(mMainConn));
   MOZ_ASSERT(target);
-  Unused << target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  if (target) {
+    Unused << target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  }
 }
 
 nsresult
