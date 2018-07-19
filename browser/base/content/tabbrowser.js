@@ -4726,10 +4726,13 @@ class TabProgressListener {
       // loss of urlbar contents for invalid URI errors (see bug 867957).
       // Another reason to clear the userTypedValue is if this was an anchor
       // navigation initiated by the user.
+      // Finally, we do insert the URL if this is a same-document navigation
+      // and the user cleared the URL manually.
       if (this.mBrowser.didStartLoadSinceLastUserTyping() ||
           ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
             aLocation.spec != "about:blank") ||
-          (isSameDocument && this.mBrowser.inLoadURI)) {
+          (isSameDocument && this.mBrowser.inLoadURI) ||
+          (isSameDocument && !this.mBrowser.userTypedValue)) {
         this.mBrowser.userTypedValue = null;
       }
 
