@@ -20,6 +20,7 @@
 #include "Layers.h"
 #include "LayerUserData.h"
 #include "nsDisplayItemTypes.h"
+#include "MatrixStack.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
@@ -49,7 +50,9 @@ enum class DisplayItemEntryType {
   ITEM,
   PUSH_OPACITY,
   PUSH_OPACITY_WITH_BG,
-  POP_OPACITY
+  POP_OPACITY,
+  PUSH_TRANSFORM,
+  POP_TRANSFORM
 };
 
 /**
@@ -116,6 +119,8 @@ public:
     }
     return mRefCnt;
   }
+
+  RefPtr<TransformClipNode> mTransform;
 
 private:
   DisplayItemData(LayerManagerData* aParent,
@@ -222,7 +227,8 @@ struct AssignedDisplayItem
                       DisplayItemData* aData,
                       const nsRect& aContentRect,
                       DisplayItemEntryType aType,
-                      const bool aHasOpacity);
+                      const bool aHasOpacity,
+                      const RefPtr<TransformClipNode>& aTransform);
   ~AssignedDisplayItem();
 
   nsDisplayItem* mItem;
@@ -236,11 +242,13 @@ struct AssignedDisplayItem
    * used for the inactive transaction.
    */
   RefPtr<layers::LayerManager> mInactiveLayerManager;
-
+  RefPtr<TransformClipNode> mTransform;
   DisplayItemEntryType mType;
+
   bool mReused;
   bool mMerged;
   bool mHasOpacity;
+  bool mHasTransform;
   bool mHasPaintRect;
 };
 

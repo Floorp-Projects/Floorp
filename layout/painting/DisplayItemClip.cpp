@@ -91,7 +91,7 @@ DisplayItemClip::IntersectWith(const DisplayItemClip& aOther)
 
 void
 DisplayItemClip::ApplyTo(gfxContext* aContext,
-                         int32_t A2D)
+                         int32_t A2D) const
 {
   ApplyRectTo(aContext, A2D);
   ApplyRoundedRectClipsTo(aContext, A2D, 0, mRoundedClipRects.Length());

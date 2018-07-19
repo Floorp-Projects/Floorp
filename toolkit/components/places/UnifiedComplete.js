@@ -27,12 +27,15 @@ const INSERTMETHOD = {
   MERGE: 2 // Always merge previous and current results
 };
 
-// Prefs are defined as [pref name, default value].
+// Prefs are defined as [pref name, default value] or [pref name, [default
+// value, nsIPrefBranch getter method name]].  In the former case, the getter
+// method name is inferred from the typeof the default value.
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
 const PREF_URLBAR_DEFAULTS = new Map([
   ["autocomplete.enabled", true],
   ["autoFill", true],
   ["autoFill.searchEngines", false],
+  ["autoFill.stddevMultiplier", [0.0, "getFloatPref"]],
   ["restyleSearches", false],
   ["delay", 50],
   ["matchBehavior", MATCH_BOUNDARY_ANYWHERE],
@@ -258,10 +261,10 @@ const QUERYINDEX_ORIGIN_URL = 2;
 const QUERYINDEX_ORIGIN_FRECENCY = 3;
 
 // `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
-// the frecency mean plus one standard deviation.  This is inlined directly in
-// the SQL (as opposed to being a custom Sqlite function for example) in order
-// to be as efficient as possible.  The MAX() is to make sure that places with
-// <= 0 frecency are never autofilled.
+// the mean of all moz_origins.frecency values + stddevMultiplier * one standard
+// deviation.  This is inlined directly in the SQL (as opposed to being a custom
+// Sqlite function for example) in order to be as efficient as possible.  The
+// MAX() is to make sure that places with <= 0 frecency are never autofilled.
 const SQL_AUTOFILL_WITH = `
   WITH
   frecency_stats(count, sum, squares) AS (
@@ -275,7 +278,7 @@ const SQL_AUTOFILL_WITH = `
       CASE count
       WHEN 0 THEN 0.0
       WHEN 1 THEN sum
-      ELSE (sum / count) + sqrt((squares - ((sum * sum) / count)) / count)
+      ELSE (sum / count) + (:stddevMultiplier * sqrt((squares - ((sum * sum) / count)) / count))
       END
     ) FROM frecency_stats
   )
@@ -567,7 +570,16 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     }
     if (def === undefined)
       throw new Error("Trying to access an unknown pref " + pref);
-    return prefs[`get${prefTypes.get(typeof def)}Pref`](pref, def);
+    let getterName;
+    if (!Array.isArray(def)) {
+      getterName = `get${prefTypes.get(typeof def)}Pref`;
+    } else {
+      if (def.length != 2) {
+        throw new Error("Malformed pref def: " + pref);
+      }
+      [def, getterName] = def;
+    }
+    return prefs[getterName](pref, def);
   }
 
   function getPrefValue(pref) {
@@ -2419,6 +2431,7 @@ Search.prototype = {
     let opts = {
       query_type: QUERYTYPE_AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
+      stddevMultiplier: Prefs.get("autoFill.stddevMultiplier"),
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2473,6 +2486,7 @@ Search.prototype = {
       query_type: QUERYTYPE_AUTOFILL_URL,
       revHost,
       strippedURL,
+      stddevMultiplier: Prefs.get("autoFill.stddevMultiplier"),
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&

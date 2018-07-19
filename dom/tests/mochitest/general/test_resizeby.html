@@ -29,8 +29,9 @@
       let linkclick = () => {
         clicky.removeEventListener('click', linkclick);
         let popup = window.open("about:blank", "_blank", "width=500,height=500");
-        is(popup.innerHeight, 500);
-        is(popup.innerWidth, 500);
+        is(popup.innerHeight, 500, "starting width is 500");
+        is(popup.innerWidth, 500, "starting height in 500");
+
         popup.resizeBy(50, 0);
 
         // We resized synchronously. If this happened, we sometimes won't fire
@@ -52,8 +53,8 @@
     synthesizeMouseAtCenter(clicky, {}, window);
 
     let popup = await popupPromise;
-    is(popup.innerHeight, 500);
-    is(popup.innerWidth, 550);
+    is(popup.innerHeight, 500, "ending height is 500");
+    is(popup.innerWidth, 550, "ending width is 550");
     popup.close();
   });
 </script>

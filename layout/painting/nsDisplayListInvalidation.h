@@ -13,6 +13,7 @@
 #include "nsRect.h"
 #include "nsColor.h"
 #include "gfxRect.h"
+#include "mozilla/gfx/MatrixFwd.h"
 
 class nsDisplayBackgroundImage;
 class nsCharClipDisplayItem;
@@ -364,6 +365,30 @@ public:
   {}
 
   float mOpacity;
+};
+
+class nsDisplayTransformGeometry : public nsDisplayItemGeometry
+{
+public:
+  nsDisplayTransformGeometry(nsDisplayItem* aItem,
+                             nsDisplayListBuilder* aBuilder,
+                             const mozilla::gfx::Matrix4x4Flagged& aTransform,
+                             int32_t aAppUnitsPerDevPixel)
+    : nsDisplayItemGeometry(aItem, aBuilder)
+    , mTransform(aTransform)
+    , mAppUnitsPerDevPixel(aAppUnitsPerDevPixel)
+  {}
+
+  void MoveBy(const nsPoint& aOffset) override
+  {
+    nsDisplayItemGeometry::MoveBy(aOffset);
+    mTransform.PostTranslate(
+      NSAppUnitsToFloatPixels(aOffset.x, mAppUnitsPerDevPixel),
+      NSAppUnitsToFloatPixels(aOffset.y, mAppUnitsPerDevPixel), 0.0f);
+  }
+
+  mozilla::gfx::Matrix4x4Flagged mTransform;
+  int32_t mAppUnitsPerDevPixel;
 };
 
 #endif /*NSDISPLAYLISTINVALIDATION_H_*/

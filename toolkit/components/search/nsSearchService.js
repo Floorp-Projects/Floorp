@@ -395,16 +395,16 @@ function isUSTimezone() {
   return UTCOffset >= 150 && UTCOffset <= 600;
 }
 
-// A method that tries to determine our country-code via an XHR geoip lookup.
-var ensureKnownCountryCode = async function(ss) {
-  // If we have a country-code already stored in our prefs we trust it.
-  let countryCode = Services.prefs.getCharPref("browser.search.countryCode", "");
+// A method that tries to determine our region via an XHR geoip lookup.
+var ensureKnownRegion = async function(ss) {
+  // If we have a region already stored in our prefs we trust it.
+  let region = Services.prefs.getCharPref("browser.search.region", "");
 
-  if (!countryCode) {
-    // We don't have it cached, so fetch it. fetchCountryCode() will call
-    // storeCountryCode if it gets a result (even if that happens after the
+  if (!region) {
+    // We don't have it cached, so fetch it. fetchRegion() will call
+    // storeRegion if it gets a result (even if that happens after the
     // promise resolves) and fetchRegionDefault.
-    await fetchCountryCode(ss);
+    await fetchRegion(ss);
   } else {
     // if nothing to do, return early.
     if (!geoSpecificDefaultsEnabled())
@@ -448,27 +448,16 @@ var ensureKnownCountryCode = async function(ss) {
   Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT").add(gInitialized);
 };
 
-// Some notes on countryCode and region prefs:
-// * A "countryCode" pref is set via a geoip lookup.  It always reflects the
-//   result of that geoip request.
-// * A "region" pref, once set, is the region actually used for search.  In
-//   most cases it will be identical to the countryCode pref.
-
 // Store the result of the geoip request as well as any other values and
 // telemetry which depend on it.
-function storeCountryCode(cc) {
-  // Set the country-code itself.
-  Services.prefs.setCharPref("browser.search.countryCode", cc);
-  // And set the region pref if we don't already have a value.
-  if (!Services.prefs.prefHasUserValue("browser.search.region")) {
-    Services.prefs.setCharPref("browser.search.region", cc);
-  }
+function storeRegion(region) {
+  Services.prefs.setCharPref("browser.search.region", region);
   // and telemetry...
   let isTimezoneUS = isUSTimezone();
-  if (cc == "US" && !isTimezoneUS) {
+  if (region == "US" && !isTimezoneUS) {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE").add(1);
   }
-  if (cc != "US" && isTimezoneUS) {
+  if (region != "US" && isTimezoneUS) {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
   }
   // telemetry to compare our geoip response with platform-specific country data.
@@ -490,19 +479,19 @@ function storeCountryCode(cc) {
         break;
     }
     if (probeUSMismatched && probeNonUSMismatched) {
-      if (cc == "US" || platformCC == "US") {
+      if (region == "US" || platformCC == "US") {
         // one of the 2 said US, so record if they are the same.
-        Services.telemetry.getHistogramById(probeUSMismatched).add(cc != platformCC);
+        Services.telemetry.getHistogramById(probeUSMismatched).add(region != platformCC);
       } else {
-        // different country - record if they are the same
-        Services.telemetry.getHistogramById(probeNonUSMismatched).add(cc != platformCC);
+        // non-US - record if they are the same
+        Services.telemetry.getHistogramById(probeNonUSMismatched).add(region != platformCC);
       }
     }
   }
 }
 
-// Get the country we are in via a XHR geoip request.
-function fetchCountryCode(ss) {
+// Get the region we are in via a XHR geoip request.
+function fetchRegion(ss) {
   // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
   const TELEMETRY_RESULT_ENUM = {
     SUCCESS: 0,
@@ -514,7 +503,7 @@ function fetchCountryCode(ss) {
     // generic catch-all that doesn't fit into other categories.
   };
   let endpoint = Services.urlFormatter.formatURLPref("browser.search.geoip.url");
-  LOG("_fetchCountryCode starting with endpoint " + endpoint);
+  LOG("_fetchRegion starting with endpoint " + endpoint);
   // As an escape hatch, no endpoint means no geoip.
   if (!endpoint) {
     return Promise.resolve();
@@ -533,7 +522,7 @@ function fetchCountryCode(ss) {
     let timeoutMS = Services.prefs.getIntPref("browser.search.geoip.timeout");
     let geoipTimeoutPossible = true;
     let timerId = setTimeout(() => {
-      LOG("_fetchCountryCode: timeout fetching country information");
+      LOG("_fetchRegion: timeout fetching region information");
       if (geoipTimeoutPossible)
         Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(1);
       timerId = null;
@@ -541,10 +530,10 @@ function fetchCountryCode(ss) {
     }, timeoutMS);
 
     let resolveAndReportSuccess = (result, reason) => {
-      // Even if we timed out, we want to save the country code and everything
+      // Even if we timed out, we want to save the region and everything
       // related so next startup sees the value and doesn't retry this dance.
       if (result) {
-        storeCountryCode(result);
+        storeRegion(result);
       }
       Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT").add(reason);
 
@@ -582,18 +571,18 @@ function fetchCountryCode(ss) {
     request.timeout = 100000; // 100 seconds as the last-chance fallback
     request.onload = function(event) {
       let took = Date.now() - startTime;
-      let cc = event.target.response && event.target.response.country_code;
-      LOG("_fetchCountryCode got success response in " + took + "ms: " + cc);
+      let region = event.target.response && event.target.response.country_code;
+      LOG("_fetchRegion got success response in " + took + "ms: " + region);
       Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS").add(took);
-      let reason = cc ? TELEMETRY_RESULT_ENUM.SUCCESS : TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA;
-      resolveAndReportSuccess(cc, reason);
+      let reason = region ? TELEMETRY_RESULT_ENUM.SUCCESS : TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA;
+      resolveAndReportSuccess(region, reason);
     };
     request.ontimeout = function(event) {
-      LOG("_fetchCountryCode: XHR finally timed-out fetching country information");
+      LOG("_fetchRegion: XHR finally timed-out fetching region information");
       resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
     };
     request.onerror = function(event) {
-      LOG("_fetchCountryCode: failed to retrieve country information");
+      LOG("_fetchRegion: failed to retrieve region information");
       resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.ERROR);
     };
     request.open("POST", endpoint, true);
@@ -2640,17 +2629,17 @@ SearchService.prototype = {
 
     // See if we have a cache file so we don't have to parse a bunch of XML.
     // Not using checkForSyncCompletion here because we want to ensure we
-    // fetch the country code and geo specific defaults asynchronously even
+    // fetch the region and geo specific defaults asynchronously even
     // if a sync init has been forced.
     let cache = await this._asyncReadCacheFile();
 
     try {
-      await checkForSyncCompletion(ensureKnownCountryCode(this));
+      await checkForSyncCompletion(ensureKnownRegion(this));
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
         throw ex;
       }
-      LOG("_asyncInit: failure determining country code: " + ex);
+      LOG("_asyncInit: failure determining region: " + ex);
     }
     try {
       await checkForSyncCompletion(this._asyncLoadEngines(cache));
@@ -2962,8 +2951,8 @@ SearchService.prototype = {
 
         let cache = await this._asyncReadCacheFile();
 
-        await ensureKnownCountryCode(this);
-        // Due to the HTTP requests done by ensureKnownCountryCode, it's possible that
+        await ensureKnownRegion(this);
+        // Due to the HTTP requests done by ensureKnownRegion, it's possible that
         // at this point a synchronous init has been forced by other code.
         if (!gInitialized)
           await this._asyncLoadEngines(cache);
@@ -3402,7 +3391,7 @@ SearchService.prototype = {
       searchSettings = json;
     }
 
-    // Check if we have a useable country specific list of visible default engines.
+    // Check if we have a useable region specific list of visible default engines.
     // This will only be set if we got the list from the Mozilla search server;
     // it will not be set for distributions.
     let engineNames;
@@ -3423,7 +3412,7 @@ SearchService.prototype = {
       engineNames = visibleDefaultEngines.split(",");
       for (let engineName of engineNames) {
         // If all engineName values are part of jarNames,
-        // then we can use the country specific list, otherwise ignore it.
+        // then we can use the region specific list, otherwise ignore it.
         // The visibleDefaultEngines string containing the name of an engine we
         // don't ship indicates the server is misconfigured to answer requests
         // from the specific Firefox version we are running, so ignoring the

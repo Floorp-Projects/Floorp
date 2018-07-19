@@ -224,8 +224,10 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         if (mResponse != null) {
             if (isActionAvailable(ACTION_COLLAPSE_TO_END)) {
                 mResponse.respond(ACTION_COLLAPSE_TO_END);
-            } else {
+            } else if (isActionAvailable(ACTION_UNSELECT)) {
                 mResponse.respond(ACTION_UNSELECT);
+            } else {
+                mResponse.respond(ACTION_HIDE);
             }
         }
     }

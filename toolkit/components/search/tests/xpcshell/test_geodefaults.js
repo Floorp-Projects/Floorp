@@ -85,9 +85,9 @@ add_task(async function no_request_if_prefed_off() {
 add_task(async function should_get_geo_defaults_only_once() {
   // (Re)initializing the search service should trigger a request,
   // and set the default engine based on it.
-  // Due to the previous initialization, we expect the countryCode to already be set.
-  Assert.ok(Services.prefs.prefHasUserValue("browser.search.countryCode"));
-  Assert.equal(Services.prefs.getCharPref("browser.search.countryCode"), "FR");
+  // Due to the previous initialization, we expect the region to already be set.
+  Assert.ok(Services.prefs.prefHasUserValue("browser.search.region"));
+  Assert.equal(Services.prefs.getCharPref("browser.search.region"), "FR");
   await asyncReInit();
   checkRequest();
   Assert.equal(Services.search.currentEngine.name, kTestEngineName);
@@ -108,8 +108,8 @@ add_task(async function should_get_geo_defaults_only_once() {
   Assert.equal(Services.search.currentEngine.name, kTestEngineName);
 });
 
-add_task(async function should_request_when_countryCode_not_set() {
-  Services.prefs.clearUserPref("browser.search.countryCode");
+add_task(async function should_request_when_region_not_set() {
+  Services.prefs.clearUserPref("browser.search.region");
   await asyncReInit();
   checkRequest();
   await promiseAfterCache();

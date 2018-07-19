@@ -233,9 +233,6 @@ pref("devtools.accessibility.enabled", false);
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
 
-// Experimental UI for the browser console that doesn't use a XUL wrapper doc
-pref("devtools.browserconsole.html", false);
-
 // Web console filters
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);

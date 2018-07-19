@@ -271,7 +271,7 @@ nsDeviceContext::IsPrinterContext()
 void
 nsDeviceContext::SetDPI(double* aScale)
 {
-    float dpi = -1.0f;
+    float dpi;
 
     // Use the printing DC to determine DPI values, if we have one.
     if (mDeviceContextSpec) {
@@ -546,11 +546,9 @@ nsDeviceContext::EndDocument(void)
     MOZ_ASSERT(mIsCurrentlyPrintingDoc,
                "Mismatched BeginDocument/EndDocument calls");
 
-    nsresult rv = NS_OK;
-
     mIsCurrentlyPrintingDoc = false;
 
-    rv = mPrintTarget->EndPrinting();
+    nsresult rv = mPrintTarget->EndPrinting();
     if (NS_SUCCEEDED(rv)) {
         mPrintTarget->Finish();
     }
