@@ -153,7 +153,7 @@ void addSharedLibrary(const platform_mach_header* header, const char *path, Shar
 
   info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
                                       nameStr, pathStr, nameStr, pathStr,
-                                      "",
+                                      EmptyCString(),
                                       archInfo ? archInfo->name : ""));
 }
 

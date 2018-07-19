@@ -813,8 +813,8 @@ public:
       // Module version.
       JS::RootedValue version(cx);
 
-      if (!info.GetVersion().empty()) {
-        JS::RootedString v(cx, JS_NewStringCopyZ(cx, info.GetVersion().c_str()));
+      if (!info.GetVersion().IsEmpty()) {
+        JS::RootedString v(cx, JS_NewStringCopyZ(cx, info.GetVersion().BeginReading()));
         if (!v) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
           return NS_OK;
