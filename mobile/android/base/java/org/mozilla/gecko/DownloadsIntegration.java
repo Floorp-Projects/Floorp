@@ -33,6 +33,7 @@ import android.util.Log;
 public class DownloadsIntegration implements BundleEventListener
 {
     private static final String LOGTAG = "GeckoDownloadsIntegration";
+    private static final String URI_FILE_PREFIX = "file://";
 
     private static final List<String> UNKNOWN_MIME_TYPES;
     static {
@@ -72,7 +73,10 @@ public class DownloadsIntegration implements BundleEventListener
         }
 
         public static Download fromCursor(final Cursor c) {
-            final String path = c.getString(c.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_FILENAME));
+            String path = c.getString(c.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI));
+            if (path.contains(URI_FILE_PREFIX)) {
+                path = path.replace(URI_FILE_PREFIX, "");
+            }
             final long id = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_ID));
             return new Download(path, id);
         }
