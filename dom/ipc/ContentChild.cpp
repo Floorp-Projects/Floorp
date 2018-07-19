@@ -3343,7 +3343,7 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
             variant->SetAsAString(data);
           } else if (item.data().type() == IPCDataTransferData::TShmem) {
             Shmem data = item.data().get_Shmem();
-            variant->SetAsACString(nsDependentCString(data.get<char>(), data.Size<char>()));
+            variant->SetAsACString(nsDependentCSubstring(data.get<char>(), data.Size<char>()));
             Unused << DeallocShmem(data);
           } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
             RefPtr<BlobImpl> blobImpl =
