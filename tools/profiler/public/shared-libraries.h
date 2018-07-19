@@ -26,7 +26,7 @@ public:
   SharedLibrary(uintptr_t aStart,
                 uintptr_t aEnd,
                 uintptr_t aOffset,
-                const std::string& aBreakpadId,
+                const nsCString& aBreakpadId,
                 const nsString& aModuleName,
                 const nsString& aModulePath,
                 const nsString& aDebugName,
@@ -93,7 +93,7 @@ public:
   uintptr_t GetStart() const { return mStart; }
   uintptr_t GetEnd() const { return mEnd; }
   uintptr_t GetOffset() const { return mOffset; }
-  const std::string &GetBreakpadId() const { return mBreakpadId; }
+  const nsCString &GetBreakpadId() const { return mBreakpadId; }
   const nsString &GetModuleName() const { return mModuleName; }
   const nsString &GetModulePath() const { return mModulePath; }
   const std::string GetNativeDebugPath() const {
@@ -114,7 +114,7 @@ private:
   uintptr_t mStart;
   uintptr_t mEnd;
   uintptr_t mOffset;
-  std::string mBreakpadId;
+  nsCString mBreakpadId;
   nsString mModuleName;
   nsString mModulePath;
   nsString mDebugName;
