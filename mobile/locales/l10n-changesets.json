@@ -111,7 +111,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "c001b588f29b"
+        "revision": "f9b4457800ce"
     }, 
     "en-GB": {
         "platforms": [
@@ -291,7 +291,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "2a7400a987ad"
+        "revision": "6bbf762f33bd"
     }, 
     "kab": {
         "platforms": [
@@ -411,13 +411,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "f3995a016451"
+        "revision": "043259e4ace4"
     }, 
     "pt-BR": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "18db49b9c435"
+        "revision": "6405086a5b00"
     }, 
     "pt-PT": {
         "platforms": [
