@@ -2563,6 +2563,28 @@ gfxPlatform::InitWebRenderConfig()
     return;
   }
 
+  FeatureState& featureWebRenderQualified = gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);
+  featureWebRenderQualified.EnableByDefault();
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCString failureId;
+  int32_t status;
+  if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
+                                             failureId, &status))) {
+    if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+      featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                         "No qualified hardware",
+                                         failureId);
+    } else if (HasBattery()) {
+      featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                         "Has battery",
+                                         NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
+    }
+  } else {
+    featureWebRenderQualified.Disable(FeatureStatus::Blocked,
+                                       "gfxInfo is broken",
+                                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_NO_GFX_INFO"));
+  }
+
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
   featureWebRender.DisableByDefault(
@@ -2584,18 +2606,12 @@ gfxPlatform::InitWebRenderConfig()
 
   // gfx.webrender.all.qualified works on all channels
   } else if (gfxPrefs::WebRenderAllQualified()) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    nsCString discardFailureId;
-    int32_t status;
-    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
-                                               discardFailureId, &status))) {
-      if (status == nsIGfxInfo::FEATURE_STATUS_OK && !HasBattery()) {
-        featureWebRender.UserEnable("Qualified enabled by pref ");
-      } else {
-        featureWebRender.ForceDisable(FeatureStatus::Blocked,
-                                      "Qualified enable blocked",
-                                      discardFailureId);
-      }
+    if (featureWebRenderQualified.IsEnabled()) {
+      featureWebRender.UserEnable("Qualified enabled by pref ");
+    } else {
+      featureWebRender.ForceDisable(FeatureStatus::Blocked,
+                                    "Qualified enable blocked",
+                                    failureId);
     }
   }
 
