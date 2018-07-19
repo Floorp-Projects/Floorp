@@ -859,8 +859,8 @@
   },
   "GPU_PROCESS_CRASH_FALLBACKS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "cpearce@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "70",
     "bug_numbers": [1338011],
     "kind": "enumerated",
     "releaseChannelCollection": "opt-out",
