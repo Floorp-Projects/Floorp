@@ -4279,8 +4279,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // If we see .purgecaches, that means someone did a make.
   // Re-register components to catch potential changes.
   nsCOMPtr<nsIFile> flagFile;
+  rv = NS_ERROR_FILE_NOT_FOUND;
   if (mAppData->directory) {
-    Unused << mAppData->directory->Clone(getter_AddRefs(flagFile));
+    rv = mAppData->directory->Clone(getter_AddRefs(flagFile));
   }
   if (flagFile) {
     flagFile->AppendNative(FILE_INVALIDATE_CACHES);
@@ -4384,6 +4385,7 @@ void AddSandboxAnnotations()
 nsresult
 XREMain::XRE_mainRun()
 {
+  nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCOM, "Scoped xpcom not initialized.");
 
 #if defined(XP_WIN)
@@ -4413,7 +4415,7 @@ XREMain::XRE_mainRun()
   }
 #endif
 
-  nsresult rv = mScopedXPCOM->SetWindowCreator(mNativeApp);
+  rv = mScopedXPCOM->SetWindowCreator(mNativeApp);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   // tell the crash reporter to also send the release channel
@@ -4785,7 +4787,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XREMain::XRE_main", OTHER);
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   gArgc = argc;
   gArgv = argv;
@@ -5001,6 +5003,8 @@ XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 nsresult
 XRE_InitCommandLine(int aArgc, char* aArgv[])
 {
+  nsresult rv = NS_OK;
+
 #if defined(OS_WIN)
   CommandLine::Init(aArgc, aArgv);
 #else
@@ -5010,7 +5014,7 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 
   // get the canonical version of the binary's path
   nsCOMPtr<nsIFile> binFile;
-  nsresult rv = XRE_GetBinaryPath(getter_AddRefs(binFile));
+  rv = XRE_GetBinaryPath(getter_AddRefs(binFile));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 

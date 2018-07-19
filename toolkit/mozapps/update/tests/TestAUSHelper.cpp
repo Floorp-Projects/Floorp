@@ -122,6 +122,7 @@ CheckMsg(const NS_tchar *path, const char *expected)
   char *rb = mbuf;
   size_t c = fread(rb, sizeof(char), 50, inFP);
   r -= c;
+  rb += c;
   if (c == 0 && r) {
     free(mbuf);
     fclose(inFP);
