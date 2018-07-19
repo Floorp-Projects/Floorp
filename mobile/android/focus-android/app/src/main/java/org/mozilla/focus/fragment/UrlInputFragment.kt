@@ -10,6 +10,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Typeface
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.StyleSpan
@@ -249,8 +250,11 @@ class UrlInputFragment :
 
         context?.let {
             if (!Settings.getInstance(it).shouldShowFirstrun()) {
+
                 // Only show keyboard if we are not displaying the first run tour on top.
                 showKeyboard()
+
+                toolbarBackgroundView.background = ContextCompat.getDrawable(context!!, R.drawable.animated_background_url)
             }
         }
     }
