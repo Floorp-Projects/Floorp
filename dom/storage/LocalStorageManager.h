@@ -45,8 +45,8 @@ public:
   already_AddRefed<StorageUsage>
   GetOriginUsage(const nsACString& aOriginNoSuffix);
 
-  static nsCString CreateOrigin(const nsACString& aOriginSuffix,
-                                const nsACString& aOriginNoSuffix);
+  static nsAutoCString CreateOrigin(const nsACString& aOriginSuffix,
+                                    const nsACString& aOriginNoSuffix);
 
 private:
   ~LocalStorageManager();
