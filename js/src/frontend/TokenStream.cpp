@@ -572,6 +572,193 @@ SourceUnits<char16_t>::assertNextCodePoint(const PeekedCodePoint<char16_t>& peek
 #endif // DEBUG
 
 template<class AnyCharsAccess>
+MOZ_COLD void
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(uint8_t relevantUnits,
+                                                                  unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+
+    do {
+        size_t offset = this->sourceUnits.offset();
+
+        ErrorMetadata err;
+
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+        if (bool hasLineOfContext = anyChars.fillExcludingContext(&err, offset)) {
+            if (!internalComputeLineOfContext(&err, offset))
+                break;
+
+            // As this is an encoding error, the computed window-end must be
+            // identical to the location of the error -- any further on and the
+            // window would contain invalid Unicode.
+            MOZ_ASSERT_IF(err.lineOfContext != nullptr,
+                          err.lineLength == err.tokenOffset);
+        }
+
+        auto notes = MakeUnique<JSErrorNotes>();
+        if (!notes) {
+            ReportOutOfMemory(anyChars.cx);
+            break;
+        }
+
+        // The largest encoding of a UTF-8 code point is 4 units.  (Encoding an
+        // obsolete 5- or 6-byte code point will complain only about a bad lead
+        // code unit.)
+        constexpr size_t MaxWidth = sizeof("0xHH 0xHH 0xHH 0xHH");
+
+        MOZ_ASSERT(relevantUnits > 0);
+
+        char badUnitsStr[MaxWidth];
+        char* ptr = badUnitsStr;
+        while (relevantUnits > 0) {
+            byteToString(this->sourceUnits.getCodeUnit().toUint8(), ptr);
+            ptr[4] = ' ';
+
+            ptr += 5;
+            relevantUnits--;
+        }
+
+        ptr[-1] = '\0';
+
+        uint32_t line, column;
+        anyChars.srcCoords.lineNumAndColumnIndex(offset, &line, &column);
+
+        if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), line, column,
+                                 GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS, badUnitsStr))
+        {
+            break;
+        }
+
+        ReportCompileError(anyChars.cx, std::move(err), std::move(notes), JSREPORT_ERROR,
+                           errorNumber, args);
+    } while (false);
+
+    va_end(args);
+}
+
+template<class AnyCharsAccess>
+MOZ_COLD void
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::badLeadUnit(Utf8Unit lead)
+{
+    uint8_t leadValue = lead.toUint8();
+
+    char leadByteStr[5];
+    byteToTerminatedString(leadValue, leadByteStr);
+
+    internalEncodingError(1, JSMSG_BAD_LEADING_UTF8_UNIT, leadByteStr);
+}
+
+template<class AnyCharsAccess>
+MOZ_COLD void
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::notEnoughUnits(Utf8Unit lead,
+                                                           uint8_t remaining, uint8_t required)
+{
+    uint8_t leadValue = lead.toUint8();
+
+    MOZ_ASSERT(required == 2 || required == 3 || required == 4);
+    MOZ_ASSERT(remaining < 4);
+    MOZ_ASSERT(remaining < required);
+
+    char leadByteStr[5];
+    byteToTerminatedString(leadValue, leadByteStr);
+
+    // |toHexChar| produces the desired decimal numbers for values < 4.
+    const char expectedStr[] = { toHexChar(required - 1), '\0' };
+    const char actualStr[] = { toHexChar(remaining - 1), '\0' };
+
+    internalEncodingError(remaining, JSMSG_NOT_ENOUGH_CODE_UNITS,
+                          leadByteStr, expectedStr, actualStr, remaining == 2 ? " was" : "s were");
+}
+
+template<class AnyCharsAccess>
+MOZ_COLD void
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::badTrailingUnit(Utf8Unit badUnit,
+                                                            uint8_t unitsObserved)
+{
+    char badByteStr[5];
+    byteToTerminatedString(badUnit.toUint8(), badByteStr);
+
+    internalEncodingError(unitsObserved, JSMSG_BAD_TRAILING_UTF8_UNIT, badByteStr);
+}
+
+template<class AnyCharsAccess>
+MOZ_COLD void
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::badStructurallyValidCodePoint(uint32_t codePoint,
+                                                                          uint8_t codePointLength,
+                                                                          const char* reason)
+{
+    // Construct a string like "0x203D" (including null terminator) to include
+    // in the error message.  Write the string end-to-start from end to start
+    // of an adequately sized |char| array, shifting least significant nibbles
+    // off the number and writing the corresponding hex digits until done, then
+    // prefixing with "0x".  |codePointStr| points at the incrementally
+    // computed string, within |codePointCharsArray|'s bounds.
+
+    // 0x1F'FFFF is the maximum value that can fit in 3+6+6+6 unconstrained
+    // bits in a four-byte UTF-8 code unit sequence.
+    constexpr size_t MaxHexSize = sizeof("0x1F" "FFFF"); // including '\0'
+    char codePointCharsArray[MaxHexSize];
+
+    char* codePointStr = codePointCharsArray + ArrayLength(codePointCharsArray);
+    *--codePointStr = '\0';
+
+    uint32_t copy = codePoint;
+    while (copy) {
+        MOZ_ASSERT(codePointCharsArray < codePointStr);
+        *--codePointStr = toHexChar(copy & 0xF);
+        copy >>= 4;
+    }
+
+    MOZ_ASSERT(codePointCharsArray + 2 <= codePointStr);
+    *--codePointStr = 'x';
+    *--codePointStr = '0';
+
+    internalEncodingError(codePointLength, JSMSG_FORBIDDEN_UTF8_CODE_POINT, codePointStr, reason);
+}
+
+template<class AnyCharsAccess>
+MOZ_MUST_USE bool
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePointDontNormalize(Utf8Unit lead,
+                                                                              char32_t* codePoint)
+{
+    auto onBadLeadUnit = [this, &lead]() {
+        this->badLeadUnit(lead);
+    };
+
+    auto onNotEnoughUnits = [this, &lead](uint8_t remaining, uint8_t required) {
+        this->notEnoughUnits(lead, remaining, required);
+    };
+
+    auto onBadTrailingUnit = [this, &lead](uint8_t unitsObserved) {
+        this->badTrailingUnit(lead, unitsObserved);
+    };
+
+    auto onBadCodePoint = [this](char32_t badCodePoint, uint8_t unitsObserved) {
+        this->badCodePoint(badCodePoint, unitsObserved);
+    };
+
+    auto onNotShortestForm = [this](char32_t badCodePoint, uint8_t unitsObserved) {
+        this->notShortestForm(badCodePoint, unitsObserved);
+    };
+
+    // If a valid code point is decoded, this function call consumes its code
+    // units.  If not, it ungets the lead code unit and invokes the right error
+    // handler, so on failure we must immediately return false.
+    SourceUnitsIterator iter(this->sourceUnits);
+    Maybe<char32_t> maybeCodePoint =
+        DecodeOneUtf8CodePointInline(lead, &iter, SourceUnitsEnd(),
+                                     onBadLeadUnit, onNotEnoughUnits, onBadTrailingUnit,
+                                     onBadCodePoint, onNotShortestForm);
+    if (maybeCodePoint.isNothing())
+        return false;
+
+    *codePoint = maybeCodePoint.value();
+    return true;
+}
+
+template<class AnyCharsAccess>
 bool
 TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
 {

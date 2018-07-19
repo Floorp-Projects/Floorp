@@ -1163,6 +1163,10 @@ class SourceUnits
         return base_ + (offset - startOffset_);
     }
 
+    const CharT* current() const {
+        return ptr;
+    }
+
     const CharT* limit() const {
         return limit_;
     }
@@ -1649,12 +1653,101 @@ class SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>
   protected:
     // These APIs are only usable by UTF-8-specific code.
 
+    using typename CharsBase::SourceUnits;
+
+    /**
+     * A mutable iterator-wrapper around |SourceUnits| that translates
+     * operators to calls to |SourceUnits::getCodeUnit()| and similar.
+     *
+     * This class is expected to be used in concert with |SourceUnitsEnd|.
+     */
+    class SourceUnitsIterator
+    {
+        SourceUnits& sourceUnits_;
+#ifdef DEBUG
+        // In iterator copies created by the post-increment operator, a pointer
+        // at the next source text code unit when the post-increment operator
+        // was called, cleared when the iterator is dereferenced.
+        mutable mozilla::Maybe<const mozilla::Utf8Unit*> currentBeforePostIncrement_;
+#endif
+
+      public:
+        explicit SourceUnitsIterator(SourceUnits& sourceUnits)
+          : sourceUnits_(sourceUnits)
+        {}
+
+        mozilla::Utf8Unit operator*() const {
+            // operator* is expected to get the *next* value from an iterator
+            // not pointing at the end of the underlying range.  However, the
+            // sole use of this is in the context of an expression of the form
+            // |*iter++|, that performed the |sourceUnits_.getCodeUnit()| in
+            // the |operator++(int)| below -- so dereferencing acts on a
+            // |sourceUnits_| already advanced.  Therefore the correct unit to
+            // return is the previous one.
+            MOZ_ASSERT(currentBeforePostIncrement_.value() + 1 == sourceUnits_.current());
+#ifdef DEBUG
+            currentBeforePostIncrement_.reset();
+#endif
+            return sourceUnits_.previousCodeUnit();
+        }
+
+        SourceUnitsIterator operator++(int) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+
+            SourceUnitsIterator copy = *this;
+#ifdef DEBUG
+            copy.currentBeforePostIncrement_.emplace(sourceUnits_.current());
+#endif
+
+            sourceUnits_.getCodeUnit();
+            return copy;
+        }
+
+        void operator-=(size_t n) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            sourceUnits_.unskipCodeUnits(n);
+        }
+
+        mozilla::Utf8Unit operator[](ptrdiff_t index) {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            MOZ_ASSERT(index == -1,
+                       "must only be called to verify the value of the "
+                       "previous code unit");
+            return sourceUnits_.previousCodeUnit();
+        }
+
+        size_t remaining() const {
+            MOZ_ASSERT(currentBeforePostIncrement_.isNothing(),
+                       "the only valid operation on a post-incremented "
+                       "iterator is dereferencing a single time");
+            return sourceUnits_.remaining();
+        }
+    };
+
+    /** A sentinel representing the end of |SourceUnits| data. */
+    class SourceUnitsEnd {};
+
+    friend inline size_t operator-(const SourceUnitsEnd& aEnd, const SourceUnitsIterator& aIter);
+
   protected:
     // These APIs are in both SpecializedTokenStreamCharsBase specializations
     // and so are usable in subclasses no matter what CharT is.
 
     using CharsBase::CharsBase;
 };
+
+inline size_t
+operator-(const SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>::SourceUnitsEnd& aEnd,
+          const SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>::SourceUnitsIterator& aIter)
+{
+    return aIter.remaining();
+}
 
 /** A small class encapsulating computation of the start-offset of a Token. */
 class TokenStart
@@ -1963,11 +2056,122 @@ class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
     using GeneralCharsBase = GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
     using Self = TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
 
+    using typename SpecializedCharsBase::SourceUnitsEnd;
+    using typename SpecializedCharsBase::SourceUnitsIterator;
+
   protected:
+    using GeneralCharsBase::anyCharsAccess;
+    using GeneralCharsBase::internalComputeLineOfContext;
+    using TokenStreamCharsShared::isAsciiCodePoint;
     // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
+
+  private:
+    static char toHexChar(uint8_t nibble) {
+        MOZ_ASSERT(nibble < 16);
+        return "0123456789ABCDEF"[nibble];
+    }
+
+    static void byteToString(uint8_t n, char* str) {
+        str[0] = '0';
+        str[1] = 'x';
+        str[2] = toHexChar(n >> 4);
+        str[3] = toHexChar(n & 0xF);
+    }
+
+    static void byteToTerminatedString(uint8_t n, char* str) {
+        byteToString(n, str);
+        str[4] = '\0';
+    }
+
+    /**
+     * Report a UTF-8 encoding-related error for a code point starting AT THE
+     * CURRENT OFFSET.
+     *
+     * |relevantUnits| indicates how many code units from the current offset
+     * are potentially relevant to the reported error, such that they may be
+     * included in the error message.  For example, if at the current offset we
+     * have
+     *
+     *   0b1111'1111 ...
+     *
+     * a code unit never allowed in UTF-8, then |relevantUnits| might be 1
+     * because only that unit is relevant.  Or if we have
+     *
+     *   0b1111'0111 0b1011'0101 0b0000'0000 ...
+     *
+     * where the first two code units are a valid prefix to a four-unit code
+     * point but the third unit *isn't* a valid trailing code unit, then
+     * |relevantUnits| might be 3.
+     */
+    MOZ_COLD void internalEncodingError(uint8_t relevantUnits, unsigned errorNumber, ...);
+
+    // Don't use |internalEncodingError|!  Use one of the elaborated functions
+    // that calls it, below -- all of which should be used to indicate an error
+    // in a code point starting AT THE CURRENT OFFSET as with
+    // |internalEncodingError|.
+
+    /** Report an error for an invalid lead code unit |lead|. */
+    MOZ_COLD void badLeadUnit(mozilla::Utf8Unit lead);
+
+    /**
+     * Report an error when there aren't enough code units remaining to
+     * constitute a full code point after |lead|: only |remaining| code units
+     * were available for a code point starting with |lead|, when at least
+     * |required| code units were required.
+     */
+    MOZ_COLD void notEnoughUnits(mozilla::Utf8Unit lead, uint8_t remaining, uint8_t required);
+
+    /**
+     * Report an error for a bad trailing UTF-8 code unit, where the bad
+     * trailing unit was the last of |unitsObserved| units examined from the
+     * current offset.
+     */
+    MOZ_COLD void badTrailingUnit(mozilla::Utf8Unit badUnit, uint8_t unitsObserved);
+
+    // Helper used for both |badCodePoint| and |notShortestForm| for code units
+    // that have all the requisite high bits set/unset in a manner that *could*
+    // encode a valid code point, but the remaining bits encoding its actual
+    // value do not define a permitted value.
+    MOZ_COLD void badStructurallyValidCodePoint(uint32_t codePoint, uint8_t codePointLength,
+                                                const char* reason);
+
+    /**
+     * Report an error for UTF-8 that encodes a UTF-16 surrogate or a number
+     * outside the Unicode range.
+     */
+    MOZ_COLD void badCodePoint(uint32_t codePoint, uint8_t codePointLength) {
+        MOZ_ASSERT(unicode::IsSurrogate(codePoint) || codePoint > unicode::NonBMPMax);
+
+        badStructurallyValidCodePoint(codePoint, codePointLength,
+                                      unicode::IsSurrogate(codePoint)
+                                      ? "it's a UTF-16 surrogate"
+                                      : "the maximum code point is U+10FFFF");
+    }
+
+    /**
+     * Report an error for UTF-8 that encodes a code point not in its shortest
+     * form.
+     */
+    MOZ_COLD void notShortestForm(uint32_t codePoint, uint8_t codePointLength) {
+        MOZ_ASSERT(!unicode::IsSurrogate(codePoint));
+        MOZ_ASSERT(codePoint <= unicode::NonBMPMax);
+
+        badStructurallyValidCodePoint(codePoint, codePointLength,
+                                      "it wasn't encoded in shortest possible form");
+    }
 
   protected:
     using GeneralCharsBase::GeneralCharsBase;
+
+    /**
+     * Given the non-ASCII |lead| code unit just consumed, consume the rest of
+     * a non-ASCII code point.  The code point is not normalized: on success
+     * |*codePoint| may be U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR.
+     *
+     * Report an error if an invalid code point is encountered.
+     */
+    MOZ_MUST_USE bool
+    getNonAsciiCodePointDontNormalize(mozilla::Utf8Unit lead, char32_t* codePoint);
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
