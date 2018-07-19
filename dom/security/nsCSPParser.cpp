@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSPParser.h"
@@ -61,8 +62,6 @@ static const char* const kStyle    = "style";
 static const char* const kScript   = "script";
 
 /* ===== nsCSPParser ==================== */
-bool nsCSPParser::sCSPExperimentalEnabled = false;
-bool nsCSPParser::sStrictDynamicEnabled = false;
 
 nsCSPParser::nsCSPParser(policyTokens& aTokens,
                          nsIURI* aSelfURI,
@@ -84,12 +83,6 @@ nsCSPParser::nsCSPParser(policyTokens& aTokens,
  , mCSPContext(aCSPContext)
  , mDeliveredViaMetaTag(aDeliveredViaMetaTag)
 {
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    Preferences::AddBoolVarCache(&sCSPExperimentalEnabled, "security.csp.experimentalEnabled");
-    Preferences::AddBoolVarCache(&sStrictDynamicEnabled, "security.csp.enableStrictDynamic");
-  }
   CSPPARSERLOG(("nsCSPParser::nsCSPParser"));
 }
 
@@ -488,7 +481,7 @@ nsCSPParser::keywordSource()
 
   if (CSP_IsKeyword(mCurToken, CSP_STRICT_DYNAMIC)) {
     // make sure strict dynamic is enabled
-    if (!sStrictDynamicEnabled) {
+    if (!StaticPrefs::security_csp_enableStrictDynamic()) {
       return nullptr;
     }
     if (!CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE)) {
@@ -968,7 +961,7 @@ nsCSPParser::directiveName()
 
   // Check if it is a valid directive
   if (!CSP_IsValidDirective(mCurToken) ||
-       (!sCSPExperimentalEnabled &&
+       (!StaticPrefs::security_csp_experimentalEnabled() &&
          CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::REQUIRE_SRI_FOR))) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "couldNotProcessUnknownDirective",

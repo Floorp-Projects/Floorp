@@ -1259,7 +1259,7 @@ private:
       nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
-      if (CSPService::sCSPEnabled) {
+      if (StaticPrefs::security_csp_enable()) {
         if (!csp) {
           rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
                                                       tCspROHeaderValue);
