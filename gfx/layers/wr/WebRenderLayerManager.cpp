@@ -615,7 +615,10 @@ WebRenderLayerManager::FlushRendering()
   }
   MOZ_ASSERT(mWidget);
 
-  if (mWidget->SynchronouslyRepaintOnResize() || gfxPrefs::LayersForceSynchronousResize()) {
+  // When DirectComposition and compositor window are used, we do not need to do sync FlushRendering.
+  if (WrBridge()->GetCompositorUseDComp()) {
+    cBridge->SendFlushRenderingAsync();
+  } else if (mWidget->SynchronouslyRepaintOnResize() || gfxPrefs::LayersForceSynchronousResize()) {
     cBridge->SendFlushRendering();
   } else {
     cBridge->SendFlushRenderingAsync();

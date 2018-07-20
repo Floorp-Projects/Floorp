@@ -42,6 +42,8 @@ public:
 
   bool UseANGLE() const override { return true; }
 
+  bool UseDComp() const override { return !!mCompositionDevice; }
+
   LayoutDeviceIntSize GetBufferSize() override;
 
 protected:

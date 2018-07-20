@@ -31,6 +31,7 @@ public:
               layers::CompositorBridgeParent* aBridge,
               uint32_t* aMaxTextureSize,
               bool* aUseANGLE,
+              bool* aUseDComp,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
               LayoutDeviceIntSize aSize,
@@ -38,6 +39,7 @@ public:
     : mDocHandle(aDocHandle)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
+    , mUseDComp(aUseDComp)
     , mBridge(aBridge)
     , mCompositorWidget(std::move(aWidget))
     , mTask(aTask)
@@ -63,6 +65,7 @@ public:
     }
 
     *mUseANGLE = compositor->UseANGLE();
+    *mUseDComp = compositor->UseDComp();
 
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, compositor->gl(),
@@ -102,6 +105,7 @@ private:
   wr::DocumentHandle** mDocHandle;
   uint32_t* mMaxTextureSize;
   bool* mUseANGLE;
+  bool* mUseDComp;
   layers::CompositorBridgeParent* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
@@ -271,13 +275,14 @@ WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
   wr::DocumentHandle* docHandle = nullptr;
   uint32_t maxTextureSize = 0;
   bool useANGLE = false;
+  bool useDComp = false;
   layers::SyncHandle syncHandle = 0;
 
   // Dispatch a synchronous task because the DocumentHandle object needs to be created
   // on the render thread. If need be we could delay waiting on this task until
   // the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
-  auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize, &useANGLE,
+  auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize, &useANGLE, &useDComp,
                                        std::move(aWidget), &task, aSize,
                                        &syncHandle);
   RenderThread::Get()->RunEvent(aWindowId, std::move(event));
@@ -288,7 +293,7 @@ WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
     return nullptr;
   }
 
-  return RefPtr<WebRenderAPI>(new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE, syncHandle)).forget();
+  return RefPtr<WebRenderAPI>(new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE, useDComp, syncHandle)).forget();
 }
 
 already_AddRefed<WebRenderAPI>
@@ -297,7 +302,7 @@ WebRenderAPI::Clone()
   wr::DocumentHandle* docHandle = nullptr;
   wr_api_clone(mDocHandle, &docHandle);
 
-  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mSyncHandle);
+  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mUseDComp, mSyncHandle);
   renderApi->mRootApi = this; // Hold root api
   renderApi->mRootDocumentApi = this;
   return renderApi.forget();
@@ -316,6 +321,7 @@ WebRenderAPI::CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex)
   RefPtr<WebRenderAPI> api(new WebRenderAPI(newDoc, mId,
                                             mMaxTextureSize,
                                             mUseANGLE,
+                                            mUseDComp,
                                             mSyncHandle));
   api->mRootApi = this;
   return api.forget();
