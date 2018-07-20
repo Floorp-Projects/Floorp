@@ -7,6 +7,7 @@
 
 #include "AudioPacketizer.h"
 #include "AudioSegment.h"
+#include "AudioDeviceInfo.h"
 #include "CamerasChild.h"
 #include "cubeb/cubeb.h"
 #include "CubebUtils.h"
@@ -635,15 +636,18 @@ public:
 
   void EnumerateDevices(uint64_t aWindowId,
                         dom::MediaSourceEnum,
-                        nsTArray<RefPtr<MediaEngineSource>>*) override;
+                        MediaSinkEnum,
+                        nsTArray<RefPtr<MediaDevice>>*) override;
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 private:
   ~MediaEngineWebRTC() = default;
   void EnumerateVideoDevices(uint64_t aWindowId,
                              dom::MediaSourceEnum,
-                             nsTArray<RefPtr<MediaEngineSource>>*);
+                             nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(uint64_t aWindowId,
-                                  nsTArray<RefPtr<MediaEngineSource>>*);
+                                  nsTArray<RefPtr<MediaDevice>>*);
+  void EnumerateSpeakerDevices(uint64_t aWindowId,
+                               nsTArray<RefPtr<MediaDevice> >*);
 
   nsCOMPtr<nsIThread> mThread;
 

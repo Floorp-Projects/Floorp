@@ -567,6 +567,9 @@ pref("media.recorder.video.frame_drops", true);
 // ALLOWED=0, BLOCKED=1, PROMPT=2, defined in dom/media/Autoplay.idl
 pref("media.autoplay.default", 0);
 
+// By default, don't block WebAudio from playing automatically.
+pref("media.autoplay.block-webaudio", false);
+
 // If "media.autoplay.default" is not ALLOWED, and this pref is true,
 // then audible media would only be allowed to autoplay after website has
 // been activated by specific user gestures, but non-audible
@@ -601,6 +604,10 @@ pref("media.cubeb.sandbox", false);
 #endif
 
 pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
+
+// setSinkId expected to be unconditionally enabled in 63. Till then the
+// implementation will remain hidden behind this pref (Bug 1152401, Bug 934425).
+pref("media.setsinkid.enabled", false);
 
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
@@ -889,6 +896,8 @@ pref("gfx.webrender.debug.compact-profiler", false);
 pref("gfx.webrender.debug.echo-driver-messages", false);
 pref("gfx.webrender.debug.new-frame-indicator", false);
 pref("gfx.webrender.debug.new-scene-indicator", false);
+pref("gfx.webrender.dl.dump-parent", false);
+pref("gfx.webrender.dl.dump-content", false);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);

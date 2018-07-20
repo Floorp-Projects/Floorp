@@ -574,6 +574,19 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
+#ifdef NIGHTLY_BUILD
+// Switch block autoplay logic to v2.
+pref("media.autoplay.enabled.user-gestures-needed", true);
+// UI/prompting for permission isn't implemented for Fennec, so disable.
+pref("media.autoplay.ask-permission", false);
+// Set Fennec to block autoplay by default.
+pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 2=Prompt
+#else
+pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
+pref("media.autoplay.enabled.user-gestures-needed", false);
+pref("media.autoplay.ask-permission", false);
+#endif
+
 // Enable WebSpeech speech synthesis
 pref("media.webspeech.synth.enabled", true);
 

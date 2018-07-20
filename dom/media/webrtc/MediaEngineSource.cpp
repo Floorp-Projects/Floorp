@@ -30,6 +30,7 @@ MediaEngineSource::IsVideo(MediaSourceEnum aSource)
       return true;
     case MediaSourceEnum::Microphone:
     case MediaSourceEnum::AudioCapture:
+    case MediaSourceEnum::Other:
       return false;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown type");

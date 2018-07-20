@@ -102,7 +102,7 @@ SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
 {
   MOZ_ASSERT(sMonitor && sPools);
   ReentrantMonitorAutoEnter mon(*sMonitor);
-  SharedThreadPool* pool = nullptr;
+  RefPtr<SharedThreadPool> pool;
   nsresult rv;
 
   if (auto entry = sPools->LookupForAdd(aName)) {
@@ -135,12 +135,10 @@ SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
       return nullptr;
     }
 
-    entry.OrInsert([pool] () { return pool; });
+    entry.OrInsert([pool] () { return pool.get(); });
   }
 
-  MOZ_ASSERT(pool);
-  RefPtr<SharedThreadPool> instance(pool);
-  return instance.forget();
+  return pool.forget();
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::AddRef(void)

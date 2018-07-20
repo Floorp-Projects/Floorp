@@ -1064,20 +1064,24 @@ pref("security.sandbox.gmp.win32k-disable", false);
 pref("security.sandbox.content.level", 3);
 #endif
 
-// Enable the Mac Flash sandbox on Nightly and Beta, not Release
-#if defined(EARLY_BETA_OR_EARLIER) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-// Controls whether and how the Mac NPAPI Flash plugin process is sandboxed.
-// On Mac these levels are:
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+// Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
+// sandboxed. On Mac these levels are:
 // 0 - "no sandbox"
-// 1 - "write access to some Flash-specific directories and global
-//      read access triggered by file dialog activity"
-// 2 - "no global read access, read and write access to some
-//      Flash-specific directories"
-pref("dom.ipc.plugins.sandbox-level.flash", 1);
+// 1 - "global read access, limited write access for Flash functionality"
+// 2 - "read access triggered by file dialog activity, limited read/write"
+//     "access for Flash functionality"
+// 3 - "limited read/write access for Flash functionality"
+pref("dom.ipc.plugins.sandbox-level.flash", 2);
+// Controls the level used on older OS X versions. Is overriden when the
+// "dom.ipc.plugins.sandbox-level.flash" is set to 0.
+pref("dom.ipc.plugins.sandbox-level.flash.legacy", 1);
+// The max OS minor version where we use the above legacy sandbox level.
+pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
 // Controls the sandbox level used by plugins other than Flash. On Mac,
 // no other plugins are supported and this pref is only used for test
 // plugins used in automated tests.
-pref("dom.ipc.plugins.sandbox-level.default", 1);
+pref("dom.ipc.plugins.sandbox-level.default", 2);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
@@ -1445,7 +1449,19 @@ pref("media.gmp-widevinecdm.visible", true);
 pref("media.gmp-widevinecdm.enabled", true);
 #endif
 
+#ifdef NIGHTLY_BUILD
+// Switch block autoplay logic to v2, and enable UI.
+pref("media.autoplay.enabled.user-gestures-needed", true);
+// Allow asking for permission to autoplay to appear in UI.
+pref("media.autoplay.ask-permission", true);
+// Set Firefox to block autoplay, asking for permission by default.
+pref("media.autoplay.default", 2); // 0=Allowed, 1=Blocked, 2=Prompt
+#else
+pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked, 2=Prompt
+pref("media.autoplay.enabled.user-gestures-needed", false);
 pref("media.autoplay.ask-permission", false);
+#endif
+
 
 // Play with different values of the decay time and get telemetry,
 // 0 means to randomize (and persist) the experiment value in users' profiles,

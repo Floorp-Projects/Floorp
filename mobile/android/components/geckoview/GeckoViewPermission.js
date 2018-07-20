@@ -117,9 +117,9 @@ GeckoViewPermission.prototype = {
         };
       });
 
-      if (constraints.video && !sources.some(source => source.type === "video")) {
+      if (constraints.video && !sources.some(source => source.type === "videoinput")) {
         throw "no video source";
-      } else if (constraints.audio && !sources.some(source => source.type === "audio")) {
+      } else if (constraints.audio && !sources.some(source => source.type === "audioinput")) {
         throw "no audio source";
       }
 
@@ -128,8 +128,8 @@ GeckoViewPermission.prototype = {
       return dispatcher.sendRequestForResult({
         type: "GeckoView:MediaPermission",
         uri: uri.displaySpec,
-        video: constraints.video ? sources.filter(source => source.type === "video") : null,
-        audio: constraints.audio ? sources.filter(source => source.type === "audio") : null,
+        video: constraints.video ? sources.filter(source => source.type === "videoinput") : null,
+        audio: constraints.audio ? sources.filter(source => source.type === "audioinput") : null,
       }).then(response => {
         if (!response) {
           // Rejected.

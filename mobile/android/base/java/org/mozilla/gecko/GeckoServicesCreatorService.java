@@ -9,27 +9,35 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import org.mozilla.gecko.util.ThreadUtils;
+
 public class GeckoServicesCreatorService extends GeckoService {
     private static final String LOGTAG = "GeckoSrvCreatorService";
 
     @Override
-    protected void onHandleWork(@NonNull Intent intent) {
+    protected void onHandleWork(@NonNull final Intent intent) {
         if (!isStartingIntentValid(intent, INTENT_ACTION_CREATE_SERVICES)) {
             return;
         }
 
-        if (!initGecko(intent)) {
-            return;
-        }
+        // Gecko initialization must be done on main thread
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!initGecko(intent)) {
+                    return;
+                }
 
-        final String category = intent.getStringExtra(INTENT_SERVICE_CATEGORY);
-        final String data = intent.getStringExtra(INTENT_SERVICE_DATA);
+                final String category = intent.getStringExtra(INTENT_SERVICE_CATEGORY);
+                final String data = intent.getStringExtra(INTENT_SERVICE_DATA);
 
-        if (category == null) {
-            return;
-        }
+                if (category == null) {
+                    return;
+                }
 
-        GeckoThread.createServices(category, data);
+                GeckoThread.createServices(category, data);
+            }
+        });
     }
 
     public static void enqueueWork(@NonNull final Context context, @NonNull final Intent workIntent) {

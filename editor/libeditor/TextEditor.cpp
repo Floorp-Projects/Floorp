@@ -1404,9 +1404,10 @@ TextEditor::GetTextLength(int32_t* aCount)
 NS_IMETHODIMP
 TextEditor::GetWrapWidth(int32_t* aWrapColumn)
 {
-  NS_ENSURE_TRUE( aWrapColumn, NS_ERROR_NULL_POINTER);
-
-  *aWrapColumn = mWrapColumn;
+  if (NS_WARN_IF(!aWrapColumn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aWrapColumn = WrapWidth();
   return NS_OK;
 }
 
@@ -1711,11 +1712,10 @@ TextEditor::CanDelete(bool* aCanDelete)
   return NS_OK;
 }
 
-// Used by OutputToString
 already_AddRefed<nsIDocumentEncoder>
 TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
-                                 uint32_t aFlags,
-                                 const nsACString& aCharset)
+                                 uint32_t aDocumentEncoderFlags,
+                                 const nsACString& aCharset) const
 {
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
   if (!mCachedDocumentEncoder ||
@@ -1738,7 +1738,8 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsresult rv =
     docEncoder->NativeInit(
                   doc, aFormatType,
-                  aFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
+                  aDocumentEncoderFlags |
+                    nsIDocumentEncoder::RequiresReinitAfterOutput);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1747,16 +1748,15 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     docEncoder->SetCharset(aCharset);
   }
 
-  int32_t wc;
-  (void) GetWrapWidth(&wc);
-  if (wc >= 0) {
-    (void) docEncoder->SetWrapColumn(wc);
+  int32_t wrapWidth = WrapWidth();
+  if (wrapWidth >= 0) {
+    Unused << docEncoder->SetWrapColumn(wrapWidth);
   }
 
   // Set the selection, if appropriate.
   // We do this either if the OutputSelectionOnly flag is set,
   // in which case we use our existing selection ...
-  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly) {
+  if (aDocumentEncoderFlags & nsIDocumentEncoder::OutputSelectionOnly) {
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
       return nullptr;
@@ -1784,18 +1784,26 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   return docEncoder.forget();
 }
 
-
 NS_IMETHODIMP
 TextEditor::OutputToString(const nsAString& aFormatType,
-                           uint32_t aFlags,
+                           uint32_t aDocumentEncoderFlags,
                            nsAString& aOutputString)
+{
+  return ComputeValueInternal(aFormatType, aDocumentEncoderFlags,
+                              aOutputString);
+}
+
+nsresult
+TextEditor::ComputeValueInternal(const nsAString& aFormatType,
+                                 uint32_t aDocumentEncoderFlags,
+                                 nsAString& aOutputString) const
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   EditSubActionInfo subActionInfo(EditSubAction::eComputeTextToOutput);
   subActionInfo.outString = &aOutputString;
-  subActionInfo.flags = aFlags;
+  subActionInfo.flags = aDocumentEncoderFlags;
   subActionInfo.outputFormat = &aFormatType;
   Selection* selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
@@ -1812,14 +1820,14 @@ TextEditor::OutputToString(const nsAString& aFormatType,
     return rv;
   }
 
-  nsAutoCString charsetStr;
-  rv = GetDocumentCharacterSet(charsetStr);
-  if (NS_FAILED(rv) || charsetStr.IsEmpty()) {
-    charsetStr.AssignLiteral("windows-1252");
+  nsAutoCString charset;
+  rv = GetDocumentCharsetInternal(charset);
+  if (NS_FAILED(rv) || charset.IsEmpty()) {
+    charset.AssignLiteral("windows-1252");
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder =
-    GetAndInitDocEncoder(aFormatType, aFlags, charsetStr);
+    GetAndInitDocEncoder(aFormatType, aDocumentEncoderFlags, charset);
   if (NS_WARN_IF(!encoder)) {
     return NS_ERROR_FAILURE;
   }
@@ -1960,34 +1968,34 @@ TextEditor::SharedOutputString(uint32_t aFlags,
     aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   }
   // If the selection isn't collapsed, we'll use the whole document.
-
-  return OutputToString(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
+  return ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
 }
 
 NS_IMETHODIMP
 TextEditor::Rewrap(bool aRespectNewlines)
 {
-  int32_t wrapCol;
-  nsresult rv = GetWrapWidth(&wrapCol);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
   // Rewrap makes no sense if there's no wrap column; default to 72.
-  if (wrapCol <= 0) {
-    wrapCol = 72;
+  int32_t wrapWidth = WrapWidth();
+  if (wrapWidth <= 0) {
+    wrapWidth = 72;
   }
 
   nsAutoString current;
   bool isCollapsed;
-  rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted
-                          | nsIDocumentEncoder::OutputLFLineBreak,
-                          &isCollapsed, current);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
+                                   nsIDocumentEncoder::OutputLFLineBreak,
+                                   &isCollapsed, current);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsString wrapped;
   uint32_t firstLineOffset = 0;   // XXX need to reset this if there is a selection
-  rv = InternetCiter::Rewrap(current, wrapCol, firstLineOffset,
+  rv = InternetCiter::Rewrap(current, wrapWidth, firstLineOffset,
                              aRespectNewlines, wrapped);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (isCollapsed) {
     DebugOnly<nsresult> rv = SelectAllInternal();

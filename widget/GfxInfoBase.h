@@ -121,8 +121,7 @@ protected:
     JSContext* aCx,
     JS::Handle<JSObject*> aContainer,
     const char* aName,
-    int32_t aFeature,
-    const Maybe<mozilla::gfx::FeatureStatus>& aKnownStatus,
+    mozilla::gfx::FeatureStatus& aKnownStatus,
     JS::MutableHandle<JSObject*> aOutObj);
 
   NS_IMETHOD ControlGPUProcessForXPCShell(bool aEnable, bool *_retval) override;
