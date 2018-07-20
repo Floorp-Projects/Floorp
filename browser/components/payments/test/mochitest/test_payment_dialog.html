@@ -36,7 +36,7 @@ import PaymentDialog from "../../res/containers/payment-dialog.js";
 
 let el1;
 
-let completionStates = [
+let completeStatuses = [
     ["processing", "Processing"],
     ["success", "Done"],
     ["fail", "Fail"],
@@ -70,9 +70,10 @@ add_task(async function setup_once() {
 });
 
 async function setup() {
+  let {request} = el1.requestStore.getState();
   await el1.requestStore.setState({
     changesPrevented: false,
-    completionState: "initial",
+    request: Object.assign({}, request, {completeStatus: "initial"}),
     orderDetailsShowing: false,
   });
 
@@ -144,34 +145,35 @@ add_task(async function test_changesPrevented() {
   ok(!disabledOverlay.hidden, "Overlay should prevent changes");
 });
 
-add_task(async function test_completionState() {
+add_task(async function test_completeStatus() {
   await setup();
-  let state = el1.requestStore.getState();
-  is(state.completionState, "initial", "completionState is initially initial");
+  let {request} = el1.requestStore.getState();
+  is(request.completeStatus, "initial", "completeStatus is initially initial");
   let payButton = document.getElementById("pay");
   is(payButton.textContent, "Pay", "Check default label");
   ok(!payButton.disabled, "Button is enabled");
-  for (let [completionState, label] of completionStates) {
-    await el1.requestStore.setState({completionState});
+  for (let [completeStatus, label] of completeStatuses) {
+    request.completeStatus = completeStatus;
+    await el1.requestStore.setState({request});
     await asyncElementRendered();
     is(payButton.textContent, label, "Check payButton label");
     ok(!payButton.disabled, "Button is still enabled");
   }
 });
 
-add_task(async function test_completionStateChangesPrevented() {
+add_task(async function test_completeStatusChangesPrevented() {
   await setup();
   let state = el1.requestStore.getState();
-  is(state.completionState, "initial", "completionState is initially initial");
+  is(state.request.completeStatus, "initial", "completeStatus is initially initial");
   is(state.changesPrevented, false, "changesPrevented is initially false");
   let payButton = document.getElementById("pay");
   is(payButton.textContent, "Pay", "Check default label");
   ok(!payButton.disabled, "Button is enabled");
 
-  for (let [completionState, label] of completionStates) {
+  for (let [status, label] of completeStatuses) {
     await el1.requestStore.setState({
       changesPrevented: true,
-      completionState,
+      request: Object.assign(state.request, { completeStatus: status }),
     });
     await asyncElementRendered();
     is(payButton.textContent, label, "Check payButton label");

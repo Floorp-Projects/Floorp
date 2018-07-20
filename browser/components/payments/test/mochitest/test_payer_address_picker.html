@@ -132,9 +132,10 @@ add_task(async function setup_once() {
   displayEl.appendChild(elDialog);
   elPicker = elDialog.querySelector("address-picker.payer-related");
 
-  initialState = Object.assign({}, elDialog.requestStore.getState(), {
+  let {request} = elDialog.requestStore.getState();
+  initialState = Object.assign({}, {
     changesPrevented: false,
-    completionState: "initial",
+    request: Object.assign({}, request, { completeStatus: "initial" }),
     orderDetailsShowing: false,
   });
 });
