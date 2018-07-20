@@ -105,6 +105,7 @@
 #include <math.h>
 #include "cairo/cairo-features.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
 
@@ -1861,7 +1862,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   // Keep the current process around until the restarted process has created
   // its message queue, to avoid the launched process's windows being forced
   // into the background.
-  ::WaitForInputIdle(hProcess, kWaitForInputIdleTimeoutMS);
+  mozilla::WaitForInputIdle(hProcess);
   ::CloseHandle(hProcess);
 
 #else
