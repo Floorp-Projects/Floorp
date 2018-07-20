@@ -168,7 +168,7 @@ public:
   AsyncOpen2(nsIStreamListener *aListener) override;
 
   NS_IMETHOD
-  LogBlockedCORSRequest(const nsAString & aMessage, const nsACString& aCategory) override;
+  LogBlockedCORSRequest(const nsAString & aMessage) override;
 
   NS_IMETHOD
   SetupFallbackChannel(const char * aFallbackKey) override;

@@ -52,7 +52,10 @@ function checkResults(reportStr) {
     is(cspReport["violated-directive"],
        "style-src",
        "Incorrect violated-directive");
-    is(cspReport["original-policy"], POLICY, "Incorrect original-policy");
+    is(cspReport["original-policy"],
+       "style-src http://mochi.test:8888; report-uri " +
+       "http://mochi.test:8888/tests/dom/security/test/csp/file_report_for_import_server.sjs?report",
+       "Incorrect original-policy");
     is(cspReport["blocked-uri"],
        "http://example.com/tests/dom/security/test/csp/file_report_for_import_server.sjs?stylesheet",
        "Incorrect blocked-uri");
