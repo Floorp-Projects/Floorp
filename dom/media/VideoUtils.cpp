@@ -256,7 +256,7 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
     }
   }
 
-  return already_AddRefed<SharedThreadPool>(pool.forget());
+  return pool.forget();
 }
 
 bool
