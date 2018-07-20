@@ -27,9 +27,6 @@ using namespace std;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PannerNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PannerNode, AudioNode)
-  if (tmp->Context()) {
-    tmp->Context()->UnregisterPannerNode(tmp);
-  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mPositionX, mPositionY, mPositionZ, mOrientationX, mOrientationY, mOrientationZ)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PannerNode, AudioNode)
@@ -45,10 +42,14 @@ NS_IMPL_RELEASE_INHERITED(PannerNode, AudioNode)
 class PannerNodeEngine final : public AudioNodeEngine
 {
 public:
-  explicit PannerNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+  explicit PannerNodeEngine(AudioNode* aNode,
+                            AudioDestinationNode* aDestination,
+                            const AudioListenerEngine* aListenerEngine)
     : AudioNodeEngine(aNode)
     , mDestination(aDestination->Stream())
-    // Please keep these default values consistent with PannerNode::PannerNode below.
+    , mListenerEngine(aListenerEngine)
+    // Please keep these default values consistent with PannerNode::PannerNode
+    // below.
     , mPanningModelFunction(&PannerNodeEngine::EqualPowerPanningFunction)
     , mDistanceModelFunction(&PannerNodeEngine::InverseGainFunction)
     , mPositionX(0.)
@@ -57,17 +58,12 @@ public:
     , mOrientationX(1.)
     , mOrientationY(0.)
     , mOrientationZ(0.)
-    , mVelocity()
     , mRefDistance(1.)
     , mMaxDistance(10000.)
     , mRolloffFactor(1.)
     , mConeInnerAngle(360.)
     , mConeOuterAngle(360.)
     , mConeOuterGain(0.)
-    // These will be initialized when a PannerNode is created, so just initialize them
-    // to some dummy values here.
-    , mListenerDopplerFactor(0.)
-    , mListenerSpeedOfSound(0.)
     , mLeftOverData(INT_MIN)
   {
   }
@@ -152,10 +148,6 @@ public:
   void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) override
   {
     switch (aIndex) {
-    case PannerNode::LISTENER_POSITION: mListenerPosition = aParam; break;
-    case PannerNode::LISTENER_FRONT_VECTOR: mListenerFrontVector = aParam; break;
-    case PannerNode::LISTENER_RIGHT_VECTOR: mListenerRightVector = aParam; break;
-    case PannerNode::LISTENER_VELOCITY: mListenerVelocity = aParam; break;
     case PannerNode::POSITION:
       mPositionX.SetValue(aParam.x);
       mPositionY.SetValue(aParam.y);
@@ -166,7 +158,6 @@ public:
       mOrientationY.SetValue(aParam.y);
       mOrientationZ.SetValue(aParam.z);
       break;
-    case PannerNode::VELOCITY: mVelocity = aParam; break;
     default:
       NS_ERROR("Bad PannerNodeEngine ThreeDPointParameter");
     }
@@ -174,8 +165,6 @@ public:
   void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     switch (aIndex) {
-    case PannerNode::LISTENER_DOPPLER_FACTOR: mListenerDopplerFactor = aParam; break;
-    case PannerNode::LISTENER_SPEED_OF_SOUND: mListenerSpeedOfSound = aParam; break;
     case PannerNode::REF_DISTANCE: mRefDistance = aParam; break;
     case PannerNode::MAX_DISTANCE: mMaxDistance = aParam; break;
     case PannerNode::ROLLOFF_FACTOR: mRolloffFactor = aParam; break;
@@ -267,6 +256,9 @@ public:
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
+  // This is set in the ctor, and guaranteed to live longer than this engine:
+  // its lifetime is the same as the AudioContext itself.
+  const AudioListenerEngine* mListenerEngine;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
   PanningModelFunction mPanningModelFunction;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
@@ -277,19 +269,12 @@ public:
   AudioParamTimeline mOrientationX;
   AudioParamTimeline mOrientationY;
   AudioParamTimeline mOrientationZ;
-  ThreeDPoint mVelocity;
   double mRefDistance;
   double mMaxDistance;
   double mRolloffFactor;
   double mConeInnerAngle;
   double mConeOuterAngle;
   double mConeOuterGain;
-  ThreeDPoint mListenerPosition;
-  ThreeDPoint mListenerFrontVector;
-  ThreeDPoint mListenerRightVector;
-  ThreeDPoint mListenerVelocity;
-  double mListenerDopplerFactor;
-  double mListenerSpeedOfSound;
   int mLeftOverData;
 };
 
@@ -307,7 +292,6 @@ PannerNode::PannerNode(AudioContext* aContext)
   , mOrientationX(new AudioParam(this, PannerNode::ORIENTATIONX, this->NodeType(), 1.0f))
   , mOrientationY(new AudioParam(this, PannerNode::ORIENTATIONY, this->NodeType(), 0.f))
   , mOrientationZ(new AudioParam(this, PannerNode::ORIENTATIONZ, this->NodeType(), 0.f))
-  , mVelocity()
   , mRefDistance(1.)
   , mMaxDistance(10000.)
   , mRolloffFactor(1.)
@@ -315,19 +299,12 @@ PannerNode::PannerNode(AudioContext* aContext)
   , mConeOuterAngle(360.)
   , mConeOuterGain(0.)
 {
-  mStream = AudioNodeStream::Create(aContext,
-                                    new PannerNodeEngine(this, aContext->Destination()),
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
-  // We should register once we have set up our stream and engine.
-  Context()->Listener()->RegisterPannerNode(this);
-}
-
-PannerNode::~PannerNode()
-{
-  if (Context()) {
-    Context()->UnregisterPannerNode(this);
-  }
+  mStream = AudioNodeStream::Create(
+    aContext,
+    new PannerNodeEngine(
+      this, aContext->Destination(), aContext->Listener()->Engine()),
+    AudioNodeStream::NO_STREAM_FLAGS,
+    aContext->Graph());
 }
 
 /* static */ already_AddRefed<PannerNode>
@@ -377,9 +354,7 @@ void PannerNode::SetPanningModel(PanningModelType aPanningModel)
 size_t
 PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
-  amount += mSources.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  return amount;
+  return AudioNode::SizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t
@@ -392,14 +367,6 @@ JSObject*
 PannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return PannerNode_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void PannerNode::DestroyMediaStream()
-{
-  if (Context()) {
-    Context()->UnregisterPannerNode(this);
-  }
-  AudioNode::DestroyMediaStream();
 }
 
 // Those three functions are described in the spec.
@@ -479,10 +446,8 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 
     // For a stereo source, when both the listener and the panner are in
     // the same spot, and no cone gain is specified, this node is noop.
-    if (inputChannels == 2 &&
-        mListenerPosition ==  position &&
-        mConeInnerAngle == 360 &&
-        mConeOuterAngle == 360) {
+    if (inputChannels == 2 && mListenerEngine->Position() == position &&
+        mConeInnerAngle == 360 && mConeOuterAngle == 360) {
       *aOutput = aInput;
       return;
     }
@@ -641,7 +606,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 void
 PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position, float& aAzimuth, float& aElevation)
 {
-  ThreeDPoint sourceListener = position - mListenerPosition;
+  ThreeDPoint sourceListener = position - mListenerEngine->Position();
   if (sourceListener.IsZero()) {
     aAzimuth = 0.0;
     aElevation = 0.0;
@@ -651,8 +616,8 @@ PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position, float&
   sourceListener.Normalize();
 
   // Project the source-listener vector on the x-z plane.
-  const ThreeDPoint& listenerFront = mListenerFrontVector;
-  const ThreeDPoint& listenerRight = mListenerRightVector;
+  const ThreeDPoint& listenerFront = mListenerEngine->FrontVector();
+  const ThreeDPoint& listenerRight = mListenerEngine->RightVector();
   ThreeDPoint up = listenerRight.CrossProduct(listenerFront);
 
   double upProjection = sourceListener.DotProduct(up);
@@ -701,7 +666,7 @@ PannerNodeEngine::ComputeConeGain(const ThreeDPoint& position,
   }
 
   // Normalized source-listener vector
-  ThreeDPoint sourceToListener = mListenerPosition - position;
+  ThreeDPoint sourceToListener = mListenerEngine->Position() - position;
   sourceToListener.Normalize();
 
   // Angle between the source orientation vector and the source-listener vector
@@ -733,98 +698,10 @@ PannerNodeEngine::ComputeConeGain(const ThreeDPoint& position,
 double
 PannerNodeEngine::ComputeDistanceGain(const ThreeDPoint& position)
 {
-  ThreeDPoint distanceVec = position - mListenerPosition;
+  ThreeDPoint distanceVec = position - mListenerEngine->Position();
   float distance = sqrt(distanceVec.DotProduct(distanceVec));
   return std::max(0.0f, (this->*mDistanceModelFunction)(distance));
 }
-
-float
-PannerNode::ComputeDopplerShift()
-{
-  double dopplerShift = 1.0; // Initialize to default value
-
-  AudioListener* listener = Context()->Listener();
-
-  if (listener->DopplerFactor() > 0) {
-    // Don't bother if both source and listener have no velocity.
-    if (!mVelocity.IsZero() || !listener->Velocity().IsZero()) {
-      // Calculate the source to listener vector.
-      ThreeDPoint sourceToListener = ConvertAudioParamTo3DP(mPositionX, mPositionY, mPositionZ) - listener->Velocity();
-
-      double sourceListenerMagnitude = sourceToListener.Magnitude();
-
-      double listenerProjection = sourceToListener.DotProduct(listener->Velocity()) / sourceListenerMagnitude;
-      double sourceProjection = sourceToListener.DotProduct(mVelocity) / sourceListenerMagnitude;
-
-      listenerProjection = -listenerProjection;
-      sourceProjection = -sourceProjection;
-
-      double scaledSpeedOfSound = listener->SpeedOfSound() / listener->DopplerFactor();
-      listenerProjection = min(listenerProjection, scaledSpeedOfSound);
-      sourceProjection = min(sourceProjection, scaledSpeedOfSound);
-
-      dopplerShift = ((listener->SpeedOfSound() - listener->DopplerFactor() * listenerProjection) / (listener->SpeedOfSound() - listener->DopplerFactor() * sourceProjection));
-
-      WebAudioUtils::FixNaN(dopplerShift); // Avoid illegal values
-
-      // Limit the pitch shifting to 4 octaves up and 3 octaves down.
-      dopplerShift = min(dopplerShift, 16.);
-      dopplerShift = max(dopplerShift, 0.125);
-    }
-  }
-
-  return dopplerShift;
-}
-
-void
-PannerNode::FindConnectedSources()
-{
-  mSources.Clear();
-  std::set<AudioNode*> cycleSet;
-  FindConnectedSources(this, mSources, cycleSet);
-}
-
-void
-PannerNode::FindConnectedSources(AudioNode* aNode,
-                                 nsTArray<AudioBufferSourceNode*>& aSources,
-                                 std::set<AudioNode*>& aNodesSeen)
-{
-  if (!aNode) {
-    return;
-  }
-
-  const nsTArray<InputNode>& inputNodes = aNode->InputNodes();
-
-  for(unsigned i = 0; i < inputNodes.Length(); i++) {
-    // Return if we find a node that we have seen already.
-    if (aNodesSeen.find(inputNodes[i].mInputNode) != aNodesSeen.end()) {
-      return;
-    }
-    aNodesSeen.insert(inputNodes[i].mInputNode);
-    // Recurse
-    FindConnectedSources(inputNodes[i].mInputNode, aSources, aNodesSeen);
-
-    // Check if this node is an AudioBufferSourceNode that still have a stream,
-    // which means it has not finished playing.
-    AudioBufferSourceNode* node = inputNodes[i].mInputNode->AsAudioBufferSourceNode();
-    if (node && node->GetStream()) {
-      aSources.AppendElement(node);
-    }
-  }
-}
-
-void
-PannerNode::SendDopplerToSourcesIfNeeded()
-{
-  // Don't bother sending the doppler shift if both the source and the listener
-  // are not moving, because the doppler shift is going to be 1.0.
-  if (!(Context()->Listener()->Velocity().IsZero() && mVelocity.IsZero())) {
-    for(uint32_t i = 0; i < mSources.Length(); i++) {
-      mSources[i]->SendDopplerShiftToStream(ComputeDopplerShift());
-    }
-  }
-}
-
 
 } // namespace dom
 } // namespace mozilla

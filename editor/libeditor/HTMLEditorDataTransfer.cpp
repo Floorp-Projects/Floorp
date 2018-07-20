@@ -1554,9 +1554,6 @@ HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable)
   return false;
 }
 
-/**
- * HTML PasteAsQuotation: Paste in a blockquote type=cite.
- */
 NS_IMETHODIMP
 HTMLEditor::PasteAsQuotation(int32_t aSelectionType)
 {
@@ -1564,27 +1561,22 @@ HTMLEditor::PasteAsQuotation(int32_t aSelectionType)
     return PasteAsPlaintextQuotation(aSelectionType);
   }
 
-  nsAutoString citation;
-  return PasteAsCitedQuotation(citation, aSelectionType);
-}
+  // If it's not in plain text edit mode, paste text into new
+  // <blockquote type="cite"> element after removing selection.
 
-NS_IMETHODIMP
-HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
-                                  int32_t aSelectionType)
-{
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertQuotation,
                                       nsIEditor::eNext);
 
-  // get selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // give rules a chance to handle or cancel
+  // Adjust Selection and clear cached style before inserting <blockquote>.
   EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
-  // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
@@ -1592,23 +1584,32 @@ HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
     return rv;
   }
   if (cancel || handled) {
-    return NS_OK; // rules canceled the operation
+    return NS_OK;
   }
 
+  // Then, remove Selection and create <blockquote type="cite"> now.
+  // XXX Why don't we insert the <blockquote> into the DOM tree after
+  //     pasting the content in clipboard into it?
   nsCOMPtr<Element> newNode =
     DeleteSelectionAndCreateElement(*nsGkAtoms::blockquote);
-  NS_ENSURE_TRUE(newNode, NS_ERROR_NULL_POINTER);
-
-  // Try to set type=cite.  Ignore it if this fails.
+  if (NS_WARN_IF(!newNode)) {
+    return NS_ERROR_FAILURE;
+  }
   newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                    NS_LITERAL_STRING("cite"), true);
 
-  // Set the selection to the underneath the node we just inserted:
+  // Collapse Selection in the new <blockquote> element.
   rv = selection->Collapse(newNode, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // XXX Why don't we call HTMLEditRules::DidDoAction() after Paste()?
-  return Paste(aSelectionType);
+  rv = Paste(aSelectionType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 /**
@@ -1859,12 +1860,6 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 
   // XXX Why don't we call HTMLEditRules::DidDoAction() here?
   return rv;
-}
-
-NS_IMETHODIMP
-HTMLEditor::StripCites()
-{
-  return TextEditor::StripCites();
 }
 
 NS_IMETHODIMP

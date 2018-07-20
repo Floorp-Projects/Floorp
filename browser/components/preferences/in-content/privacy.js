@@ -18,9 +18,6 @@ ChromeUtils.defineModuleGetter(this, "LoginHelper",
 ChromeUtils.defineModuleGetter(this, "SiteDataManager",
   "resource:///modules/SiteDataManager.jsm");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "trackingprotectionUiEnabled",
-                                      "privacy.trackingprotection.ui.enabled");
-
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
@@ -148,39 +145,14 @@ var gPrivacyPane = {
   _shouldPromptForRestart: true,
 
   /**
-   * Show the Tracking Protection UI depending on the
-   * privacy.trackingprotection.ui.enabled pref, and linkify its Learn More link
+   * Initialize the tracking protection prefs and linkify its Learn More link.
    */
   _initTrackingProtection() {
-    if (!trackingprotectionUiEnabled) {
-      return;
-    }
-
     let link = document.getElementById("trackingProtectionLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
 
     this.trackingProtectionReadPrefs();
-
-    document.getElementById("trackingProtectionExceptions").hidden = false;
-    document.getElementById("trackingProtectionBox").hidden = false;
-    document.getElementById("trackingProtectionPBMBox").hidden = true;
-  },
-
-  /**
-   * Linkify the Learn More link of the Private Browsing Mode Tracking
-   * Protection UI.
-   */
-  _initTrackingProtectionPBM() {
-    if (trackingprotectionUiEnabled) {
-      return;
-    }
-
-    let link = document.getElementById("trackingProtectionLearnMore");
-    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection-pbm";
-    link.setAttribute("href", url);
-
-    this._updateTrackingProtectionUI();
   },
 
   /**
@@ -192,18 +164,12 @@ var gPrivacyPane = {
 
     function setInputsDisabledState(isControlled) {
       let disabled = isLocked || isControlled;
-      if (trackingprotectionUiEnabled) {
-        document.querySelectorAll("#trackingProtectionRadioGroup > radio")
-          .forEach((element) => {
-            element.disabled = disabled;
-          });
-        document.querySelector("#trackingProtectionDesc > label")
-          .disabled = disabled;
-      } else {
-        document.getElementById("trackingProtectionPBM").disabled = disabled;
-        document.getElementById("trackingProtectionPBMLabel")
-          .disabled = disabled;
-      }
+      document.querySelectorAll("#trackingProtectionRadioGroup > radio")
+        .forEach((element) => {
+          element.disabled = disabled;
+        });
+      document.querySelector("#trackingProtectionDesc > label")
+        .disabled = disabled;
     }
 
     if (isLocked) {
@@ -264,7 +230,6 @@ var gPrivacyPane = {
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
     this._initTrackingProtection();
-    this._initTrackingProtectionPBM();
     this._initTrackingProtectionExtensionControl();
     this._initAutocomplete();
 

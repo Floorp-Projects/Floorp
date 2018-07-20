@@ -62,13 +62,8 @@ var StarUI = {
       case "popuphidden": {
         clearTimeout(this._autoCloseTimer);
         if (aEvent.originalTarget == this.panel) {
-          let selectedFolderGuid;
-
-          if (!this._element("editBookmarkPanelContent").hidden) {
-            // Get the folder first, before we uninit the overlay.
-            selectedFolderGuid = gEditItemOverlay.selectedFolderGuid;
-            this.quitEditMode();
-          }
+          let selectedFolderGuid = gEditItemOverlay.selectedFolderGuid;
+          gEditItemOverlay.uninitPanel(true);
 
           this._anchorElement.removeAttribute("open");
           this._anchorElement = null;
@@ -205,9 +200,6 @@ var StarUI = {
     this._element("editBookmarkPanel_showForNewBookmarks").checked =
       this.showForNewBookmarks;
 
-    this._element("editBookmarkPanelBottomButtons").hidden = false;
-    this._element("editBookmarkPanelContent").hidden = false;
-
     this._itemGuids = [];
     await PlacesUtils.bookmarks.fetch({url: aUrl},
       bookmark => this._itemGuids.push(bookmark.guid));
@@ -271,23 +263,6 @@ var StarUI = {
     let canvas = PageThumbs.createCanvas(window);
     PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas);
     document.mozSetImageElement("editBookmarkPanelImageCanvas", canvas);
-  },
-
-  panelShown:
-  function SU_panelShown(aEvent) {
-    if (aEvent.target == this.panel) {
-      if (this._element("editBookmarkPanelContent").hidden) {
-        // Note this isn't actually used anymore, we should remove this
-        // once we decide not to bring back the page bookmarked notification
-        this.panel.focus();
-      }
-    }
-  },
-
-  quitEditMode: function SU_quitEditMode() {
-    this._element("editBookmarkPanelContent").hidden = true;
-    this._element("editBookmarkPanelBottomButtons").hidden = true;
-    gEditItemOverlay.uninitPanel(true);
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {

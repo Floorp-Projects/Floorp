@@ -803,11 +803,6 @@ tracking-mode-never =
     .label = Never
     .accesskey = N
 
-# This string is displayed if privacy.trackingprotection.ui.enabled is set to false.
-# This currently happens on the release and beta channel.
-tracking-pbm-label = Use Tracking Protection in Private Browsing to block known trackers
-    .accesskey = v
-
 tracking-exceptions =
     .label = Exceptions…
     .accesskey = x

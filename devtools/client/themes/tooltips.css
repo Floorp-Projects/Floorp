@@ -272,7 +272,7 @@
 }
 
 .tooltip-container[type="doorhanger"] > .tooltip-panel {
-  padding: 4px 0;
+  padding: 2px 0;
   color: var(--theme-arrowpanel-color);
   margin: 4px;
   max-width: 320px;
@@ -354,13 +354,21 @@
 }
 
 .tooltip-container[type="doorhanger"].tooltip-top > .tooltip-panel {
-  /* Drop the margin between the doorhanger and the arrow. */
+  /*
+   * Drop the margin between the doorhanger and the arrow and add extra
+   * padding.
+   */
   margin-bottom: 0;
+  padding-bottom: 6px;
 }
 
 .tooltip-container[type="doorhanger"].tooltip-bottom > .tooltip-panel {
-  /* Drop the margin between the doorhanger and the arrow. */
+  /*
+   * Drop the margin between the doorhanger and the arrow and add extra
+   * padding.
+   */
   margin-top: 0;
+  padding-top: 6px;
 }
 
 .tooltip-container[type="doorhanger"].tooltip-top > .tooltip-arrow {
@@ -395,6 +403,11 @@
   margin: 0;
   padding: 4px 12px;
   outline: none;
+  /*
+   * It doesn't really make sense, since if this is just about making the items
+   * easier to click we should be using min-width instead.
+   */
+  margin-inline-end: 15px;
 }
 
 .tooltip-container[type="doorhanger"] .menuitem > button.command:-moz-any([role="menuitem"],[role="menuitemcheckbox"]) {
@@ -434,8 +447,11 @@
 
 .tooltip-container[type="doorhanger"] .menuitem > .command > .label {
   flex: 1;
-  padding-inline-start: 16px;
   font: menu;
+}
+
+.tooltip-container[type="doorhanger"] .checkbox-container .menuitem > .command > .label {
+  padding-inline-start: 16px;
 }
 
 .tooltip-container[type="doorhanger"] .menuitem > .command.iconic > .label::before {
@@ -447,6 +463,8 @@
   vertical-align: top;
   -moz-context-properties: fill;
   fill: currentColor;
+  background-image: var(--menuitem-icon-image);
+  background-size: contain;
   /*
    * The icons in the sidebar menu have opacity: 0.8 here, but those in the
    * hamburger menu don't. For now we match the hamburger menu styling,

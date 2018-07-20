@@ -29,7 +29,7 @@ job-defaults:
       os: linux
       docker-image:
          in-tree: "update-verify"
-      max-run-time: 7200
+      max-run-time: 3600
       retry-exit-status:
          - 255
       env:
