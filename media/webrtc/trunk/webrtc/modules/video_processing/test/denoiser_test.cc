@@ -12,11 +12,11 @@
 
 #include <memory>
 
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/modules/video_processing/video_denoiser.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/frame_utils.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "modules/video_processing/video_denoiser.h"
+#include "test/gtest.h"
+#include "test/frame_utils.h"
+#include "test/testsupport/fileutils.h"
 
 namespace webrtc {
 
@@ -141,14 +141,14 @@ TEST(VideoDenoiserTest, Denoiser) {
   VideoDenoiser denoiser_sse_neon(true);
 
   for (;;) {
-    rtc::scoped_refptr<VideoFrameBuffer> video_frame_buffer(
+    rtc::scoped_refptr<I420BufferInterface> video_frame_buffer(
         test::ReadI420Buffer(kWidth, kHeight, source_file));
     if (!video_frame_buffer)
       break;
 
-    rtc::scoped_refptr<VideoFrameBuffer> denoised_frame_c(
+    rtc::scoped_refptr<I420BufferInterface> denoised_frame_c(
         denoiser_c.DenoiseFrame(video_frame_buffer, false));
-    rtc::scoped_refptr<VideoFrameBuffer> denoised_frame_sse_neon(
+    rtc::scoped_refptr<I420BufferInterface> denoised_frame_sse_neon(
         denoiser_sse_neon.DenoiseFrame(video_frame_buffer, false));
 
     // Denoising results should be the same for C and SSE/NEON denoiser.

@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/audio_vector.h"
+#include "modules/audio_coding/neteq/audio_vector.h"
 
 #include <assert.h>
 
 #include <algorithm>
 #include <memory>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/typedefs.h"
+#include "rtc_base/checks.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -282,14 +282,6 @@ size_t AudioVector::Size() const {
 // Returns true if this AudioVector is empty.
 bool AudioVector::Empty() const {
   return begin_index_ == end_index_;
-}
-
-const int16_t& AudioVector::operator[](size_t index) const {
-  return array_[(begin_index_ + index) % capacity_];
-}
-
-int16_t& AudioVector::operator[](size_t index) {
-  return array_[(begin_index_ + index) % capacity_];
 }
 
 void AudioVector::Reserve(size_t n) {

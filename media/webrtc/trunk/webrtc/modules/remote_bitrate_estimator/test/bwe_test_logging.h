@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_
-#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_
+#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_
+#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_
 
 // To enable BWE logging, run this command from trunk/ :
 // build/gyp_chromium --depth=. webrtc/modules/modules.gyp
@@ -46,8 +46,8 @@
 // Log *contexts* are names concatenated with '_' between them, with the name
 // of the logged/plotted string/value last. Plot *time* is inherited down the
 // tree. A branch is enabled by default but can be *disabled* to reduce output.
-// The difference between the LOG and PLOT macros is that PLOT prefixes the line
-// so it can be easily filtered, plus it outputs the current time.
+// The difference between the RTC_LOG and PLOT macros is that PLOT prefixes the
+// line so it can be easily filtered, plus it outputs the current time.
 
 #if !(BWE_TEST_LOGGING_COMPILE_TIME_ENABLE)
 
@@ -128,8 +128,9 @@
 #include <stack>
 #include <string>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/common_types.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/criticalsection.h"
 
 #define BWE_TEST_LOGGING_GLOBAL_CONTEXT(name) \
     do { \
@@ -254,9 +255,6 @@
   } while (0)
 
 namespace webrtc {
-
-class CriticalSectionWrapper;
-
 namespace testing {
 namespace bwe {
 
@@ -340,7 +338,7 @@ class Logging {
   void PopState();
 
   static Logging g_Logging;
-  std::unique_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::CriticalSection crit_sect_;
   ThreadMap thread_map_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Logging);
@@ -350,4 +348,4 @@ class Logging {
 }  // namespace webrtc
 
 #endif  // BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
-#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_
+#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_LOGGING_H_

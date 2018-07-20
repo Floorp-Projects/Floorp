@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_API_TEST_MOCK_RTPRECEIVER_H_
-#define WEBRTC_API_TEST_MOCK_RTPRECEIVER_H_
+#ifndef API_TEST_MOCK_RTPRECEIVER_H_
+#define API_TEST_MOCK_RTPRECEIVER_H_
 
 #include <string>
+#include <vector>
 
-#include "webrtc/api/rtpreceiverinterface.h"
-#include "webrtc/test/gmock.h"
+#include "api/rtpreceiverinterface.h"
+#include "test/gmock.h"
 
 namespace webrtc {
 
@@ -27,8 +28,9 @@ class MockRtpReceiver : public rtc::RefCountedObject<RtpReceiverInterface> {
   MOCK_CONST_METHOD0(GetParameters, RtpParameters());
   MOCK_METHOD1(SetParameters, bool(const RtpParameters&));
   MOCK_METHOD1(SetObserver, void(RtpReceiverObserverInterface*));
+  MOCK_CONST_METHOD0(GetSources, std::vector<RtpSource>());
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_API_TEST_MOCK_RTPRECEIVER_H_
+#endif  // API_TEST_MOCK_RTPRECEIVER_H_

@@ -8,20 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_
-#define WEBRTC_MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_
+#ifndef MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_
+#define MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_
 
 #include <stdio.h>
 
 #include <memory>
 #include <string>
-#include <string.h>
 #include <unordered_map>
 
-#include "webrtc/base/array_view.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/common_audio/wav_file.h"
-#include "webrtc/system_wrappers/include/trace.h"
+#include "api/array_view.h"
+#include "common_audio/wav_file.h"
+#include "rtc_base/constructormagic.h"
 
 // Check to verify that the define is properly set.
 #if !defined(WEBRTC_APM_DEBUG_DUMP) || \
@@ -35,7 +33,7 @@ namespace webrtc {
 // Functor used to use as a custom deleter in the map of file pointers to raw
 // files.
 struct RawFileCloseFunctor {
-  void operator()(FILE* f) const { if (f) fclose(f); }
+  void operator()(FILE* f) const { fclose(f); }
 };
 #endif
 
@@ -54,20 +52,42 @@ class ApmDataDumper {
   void InitiateNewSetOfRecordings() {
 #if WEBRTC_APM_DEBUG_DUMP == 1
     ++recording_set_index_;
-    debug_written_ = 0;
 #endif
   }
 
   // Methods for performing dumping of data of various types into
   // various formats.
-  void DumpRaw(const char* name, int v_length, const float* v) {
+  void DumpRaw(const char* name, double v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (webrtc::Trace::aec_debug()) {
-      FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
-    }
+    FILE* file = GetRawFile(name);
+    fwrite(&v, sizeof(v), 1, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const double* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(v, sizeof(v[0]), v_length, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, rtc::ArrayView<const double> v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    DumpRaw(name, v.size(), v.data());
+#endif
+  }
+
+  void DumpRaw(const char* name, float v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(&v, sizeof(v), 1, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const float* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(v, sizeof(v[0]), v_length, file);
 #endif
   }
 
@@ -77,16 +97,18 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, int v_length, const bool* v) {
+  void DumpRaw(const char* name, bool v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (webrtc::Trace::aec_debug()) {
-      FILE* file = GetRawFile(name);
-      if (file) {
-        for (int k = 0; k < v_length; ++k) {
-          int16_t value = static_cast<int16_t>(v[k]);
-          fwrite(&value, sizeof(value), 1, file);
-        }
-      }
+    DumpRaw(name, static_cast<int16_t>(v));
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const bool* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    for (size_t k = 0; k < v_length; ++k) {
+      int16_t value = static_cast<int16_t>(v[k]);
+      fwrite(&value, sizeof(value), 1, file);
     }
 #endif
   }
@@ -97,14 +119,17 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, int v_length, const int16_t* v) {
+  void DumpRaw(const char* name, int16_t v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (webrtc::Trace::aec_debug()) {
-      FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
-    }
+    FILE* file = GetRawFile(name);
+    fwrite(&v, sizeof(v), 1, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const int16_t* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(v, sizeof(v[0]), v_length, file);
 #endif
   }
 
@@ -114,14 +139,31 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, int v_length, const int32_t* v) {
+  void DumpRaw(const char* name, int32_t v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (webrtc::Trace::aec_debug()) {
-      FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
-    }
+    FILE* file = GetRawFile(name);
+    fwrite(&v, sizeof(v), 1, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const int32_t* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(v, sizeof(v[0]), v_length, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(&v, sizeof(v), 1, file);
+#endif
+  }
+
+  void DumpRaw(const char* name, size_t v_length, const size_t* v) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    FILE* file = GetRawFile(name);
+    fwrite(v, sizeof(v[0]), v_length, file);
 #endif
   }
 
@@ -132,21 +174,13 @@ class ApmDataDumper {
   }
 
   void DumpWav(const char* name,
-               int v_length,
+               size_t v_length,
                const float* v,
                int sample_rate_hz,
                int num_channels) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (webrtc::Trace::aec_debug()) {
-      WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels);
-      file->WriteSamples(v, v_length);
-      // Cheat and use aec_near as a stand-in for "size of the largest file"
-      // in the dump.  We're looking to limit the total time, and that's a
-      // reasonable stand-in.
-      if (strcmp(name, "aec_near") == 0) {
-        updateDebugWritten(v_length * sizeof(float));
-      }
-    }
+    WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels);
+    file->WriteSamples(v, v_length);
 #endif
   }
 
@@ -169,21 +203,10 @@ class ApmDataDumper {
 
   FILE* GetRawFile(const char* name);
   WavWriter* GetWavFile(const char* name, int sample_rate_hz, int num_channels);
-
-  uint32_t debug_written_;
-
-  void updateDebugWritten(uint32_t amount) {
-    debug_written_ += amount;
-    // Limit largest files to a specific (rough) size, to avoid filling up disk.
-    if (debug_written_ >= webrtc::Trace::aec_debug_size()) {
-      webrtc::Trace::set_aec_debug(false);
-    }
-  }
-
 #endif
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(ApmDataDumper);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_
+#endif  // MODULES_AUDIO_PROCESSING_LOGGING_APM_DATA_DUMPER_H_

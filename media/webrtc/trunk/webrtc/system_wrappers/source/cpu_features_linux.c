@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <features.h>
+#ifndef __GLIBC_PREREQ
+#define __GLIBC_PREREQ(a, b) 0
+#endif
 #if __GLIBC_PREREQ(2, 16)
 #include <sys/auxv.h>
 #else
@@ -19,7 +22,7 @@
 #include <errno.h>
 #include <link.h>
 #endif
-#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
+#include "system_wrappers/include/cpu_features_wrapper.h"
 
 #if defined(WEBRTC_ARCH_ARM_FAMILY)
 #include <asm/hwcap.h>

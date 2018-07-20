@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_
+#ifndef MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_
+#define MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_
 
 #include <memory>
 
@@ -17,13 +17,12 @@
 #include <magnification.h>
 #include <wincodec.h>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
-#include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
-#include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
-#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
-#include "webrtc/modules/desktop_capture/win/scoped_thread_desktop.h"
-#include "webrtc/system_wrappers/include/atomic32.h"
+#include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/screen_capture_frame_queue.h"
+#include "modules/desktop_capture/screen_capturer_helper.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
+#include "modules/desktop_capture/win/scoped_thread_desktop.h"
+#include "rtc_base/constructormagic.h"
 
 namespace webrtc {
 
@@ -40,16 +39,11 @@ class DesktopRect;
 // be used if that functionality is necessary.
 class ScreenCapturerWinMagnifier : public DesktopCapturer {
  public:
-  // |fallback_capturer| will be used to capture the screen if a non-primary
-  // screen is being captured, or the OS does not support Magnification API, or
-  // the magnifier capturer fails (e.g. in Windows8 Metro mode).
-  explicit ScreenCapturerWinMagnifier(
-      std::unique_ptr<DesktopCapturer> fallback_capturer);
+  ScreenCapturerWinMagnifier();
   ~ScreenCapturerWinMagnifier() override;
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
-  void Stop() override;
   void SetSharedMemoryFactory(
       std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
   void CaptureFrame() override;
@@ -104,13 +98,6 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
   // Makes sure the current frame exists and matches |size|.
   void CreateCurrentFrameIfNecessary(const DesktopSize& size);
 
-  // Start the fallback capturer and select the screen.
-  void StartFallbackCapturer();
-
-  static Atomic32 tls_index_;
-
-  std::unique_ptr<DesktopCapturer> fallback_capturer_;
-  bool fallback_capturer_started_ = false;
   Callback* callback_ = nullptr;
   std::unique_ptr<SharedMemoryFactory> shared_memory_factory_;
   ScreenId current_screen_id_ = kFullDesktopScreenId;
@@ -149,4 +136,4 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_
+#endif  // MODULES_DESKTOP_CAPTURE_WIN_SCREEN_CAPTURER_WIN_MAGNIFIER_H_

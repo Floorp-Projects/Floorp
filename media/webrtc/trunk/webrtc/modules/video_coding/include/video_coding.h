@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
-#define WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
+#ifndef MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
+#define MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
 
 #if defined(WEBRTC_WIN)
 // This is a workaround on Windows due to the fact that some Windows
@@ -21,11 +21,11 @@
 #include <windows.h>
 #endif
 
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/modules/include/module.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/modules/video_coding/include/video_coding_defines.h"
-#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "api/video/video_frame.h"
+#include "modules/include/module.h"
+#include "modules/include/module_common_types.h"
+#include "modules/video_coding/include/video_coding_defines.h"
+#include "system_wrappers/include/event_wrapper.h"
 
 namespace webrtc {
 
@@ -71,32 +71,8 @@ class VideoCodingModule : public Module {
  public:
   enum SenderNackMode { kNackNone, kNackAll, kNackSelective };
 
-  enum ReceiverRobustness { kNone, kHardNack, kSoftNack, kReferenceSelection };
-
+  // DEPRECATED.
   static VideoCodingModule* Create(Clock* clock, EventFactory* event_factory);
-
-  static VideoCodingModule* Create(
-      Clock* clock,
-      VCMQMSettingsCallback* qm_settings_callback,
-      NackSender* nack_sender,
-      KeyFrameRequestSender* keyframe_request_sender,
-      EncodedImageCallback* pre_decode_image_callback);
-
-  static VideoCodingModule* Create(
-      Clock* clock,
-      EventFactory* event_factory,
-      NackSender* nack_sender,
-      KeyFrameRequestSender* keyframe_request_sender);
-
-  // Get supported codec settings using codec type
-  //
-  // Input:
-  //      - codecType      : The codec type to get settings for
-  //      - codec          : Memory where the codec settings will be stored
-  //
-  // Return value     : VCM_OK,              on success
-  //                    VCM_PARAMETER_ERROR  if codec not supported
-  static void Codec(VideoCodecType codecType, VideoCodec* codec);
 
   /*
   *   Sender
@@ -311,18 +287,6 @@ class VideoCodingModule : public Module {
   virtual int32_t RegisterReceiveStatisticsCallback(
       VCMReceiveStatisticsCallback* receiveStats) = 0;
 
-  // Register a decoder timing callback which will be called to deliver
-  // information about the timing of the decoder in the receiving side of the
-  // VCM, for instance the current and maximum frame decode latency.
-  //
-  // Input:
-  //      - decoderTiming  : The callback object to register.
-  //
-  // Return value      : VCM_OK, on success.
-  //                     < 0,    on error.
-  virtual int32_t RegisterDecoderTimingCallback(
-      VCMDecoderTimingCallback* decoderTiming) = 0;
-
   // Register a frame type request callback. This callback will be called when
   // the
   // module needs to request specific frame types from the send side.
@@ -350,19 +314,6 @@ class VideoCodingModule : public Module {
   //                    <0,         on error.
   virtual int32_t RegisterPacketRequestCallback(
       VCMPacketRequestCallback* callback) = 0;
- 
-  // Register a receive state change callback. This callback will be called when the
-  // module state has changed
-  //
-  // Input:
-  //      - callback      : The callback object to be used by the module when
-  //                        the receiver decode state changes.
-  //                        De-register with a NULL pointer.
-  //
-  // Return value      : VCM_OK, on success.
-  //                     < 0,         on error.
-  virtual int32_t RegisterReceiveStateCallback(
-      VCMReceiveStateCallback* callback) = 0;
 
   // Waits for the next frame in the jitter buffer to become complete
   // (waits no longer than maxWaitTimeMs), then passes it to the decoder for
@@ -372,22 +323,6 @@ class VideoCodingModule : public Module {
   // Return value      : VCM_OK, on success.
   //                     < 0,    on error.
   virtual int32_t Decode(uint16_t maxWaitTimeMs = 200) = 0;
-
-  // API to get the codec which is currently used for decoding by the module.
-  //
-  // Input:
-  //      - currentReceiveCodec      : Settings for the codec to be registered.
-  //
-  // Return value      : VCM_OK, on success.
-  //                     < 0,    on error.
-  virtual int32_t ReceiveCodec(VideoCodec* currentReceiveCodec) const = 0;
-
-  // API to get the codec type currently used for decoding by the module.
-  //
-  // Return value      : codecy type,            on success.
-  //                     kVideoCodecUnknown, on error or if no receive codec is
-  //                     registered
-  virtual VideoCodecType ReceiveCodec() const = 0;
 
   // Insert a parsed packet into the receiver side of the module. Will be placed
   // in the
@@ -435,19 +370,13 @@ class VideoCodingModule : public Module {
   //                     < 0,               on error.
   virtual int32_t Delay() const = 0;
 
-  // Returns the number of packets discarded by the jitter buffer due to being
-  // too late. This can include duplicated packets which arrived after the
-  // frame was sent to the decoder. Therefore packets which were prematurely
-  // NACKed will be counted.
-  virtual uint32_t DiscardedPackets() const = 0;
-
   // Robustness APIs
 
+  // DEPRECATED.
   // Set the receiver robustness mode. The mode decides how the receiver
-  // responds to losses in the stream. The type of counter-measure (soft or
-  // hard NACK, dual decoder, RPS, etc.) is selected through the
-  // robustnessMode parameter. The errorMode parameter decides if it is
-  // allowed to display frames corrupted by losses. Note that not all
+  // responds to losses in the stream. The type of counter-measure is selected
+  // through the robustnessMode parameter. The errorMode parameter decides if it
+  // is allowed to display frames corrupted by losses. Note that not all
   // combinations of the two parameters are feasible. An error will be
   // returned for invalid combinations.
   // Input:
@@ -456,6 +385,7 @@ class VideoCodingModule : public Module {
   //
   // Return value      : VCM_OK, on success;
   //                     < 0, on error.
+  enum ReceiverRobustness { kNone, kHardNack };
   virtual int SetReceiverRobustnessMode(ReceiverRobustness robustnessMode,
                                         VCMDecodeErrorMode errorMode) = 0;
 
@@ -479,18 +409,13 @@ class VideoCodingModule : public Module {
   // Setting a desired delay to the VCM receiver. Video rendering will be
   // delayed by at least desired_delay_ms.
   virtual int SetMinReceiverDelay(int desired_delay_ms) = 0;
- 
-  // Set current load state of the CPU
-  virtual void SetCPULoadState(CPULoadState state) = 0;
 
   virtual void RegisterPostEncodeImageCallback(
       EncodedImageCallback* post_encode_callback) = 0;
   // Releases pending decode calls, permitting faster thread shutdown.
   virtual void TriggerDecoderShutdown() = 0;
-  // resets underlying objects
-  virtual void Reset() = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_
+#endif  // MODULES_VIDEO_CODING_INCLUDE_VIDEO_CODING_H_

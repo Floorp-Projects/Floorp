@@ -8,14 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/constants.h"
+#include "test/constants.h"
 
 namespace webrtc {
 namespace test {
 
+const int kAudioLevelExtensionId = 5;
 const int kTOffsetExtensionId = 6;
 const int kAbsSendTimeExtensionId = 7;
 const int kTransportSequenceNumberExtensionId = 8;
 const int kVideoRotationExtensionId = 9;
+const int kVideoContentTypeExtensionId = 10;
+const int kVideoTimingExtensionId = 11;
+
 }  // namespace test
 }  // namespace webrtc

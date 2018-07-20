@@ -19,17 +19,17 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
-#include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
-#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
-#include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/screen_capture_frame_queue.h"
+#include "modules/desktop_capture/screen_capturer_helper.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
+#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/timeutils.h"
 
 namespace webrtc {
 namespace {
@@ -52,7 +52,6 @@ class ScreenCapturerLinux : public DesktopCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* delegate) override;
-  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -139,14 +138,14 @@ bool ScreenCapturerLinux::Init(const DesktopCaptureOptions& options) {
 
   root_window_ = RootWindow(display(), DefaultScreen(display()));
   if (root_window_ == BadValue) {
-    LOG(LS_ERROR) << "Unable to get the root window";
+    RTC_LOG(LS_ERROR) << "Unable to get the root window";
     DeinitXlib();
     return false;
   }
 
   gc_ = XCreateGC(display(), root_window_, 0, NULL);
   if (gc_ == NULL) {
-    LOG(LS_ERROR) << "Unable to get graphics context";
+    RTC_LOG(LS_ERROR) << "Unable to get graphics context";
     DeinitXlib();
     return false;
   }
@@ -159,14 +158,14 @@ bool ScreenCapturerLinux::Init(const DesktopCaptureOptions& options) {
                            &xfixes_error_base_)) {
     has_xfixes_ = true;
   } else {
-    LOG(LS_INFO) << "X server does not support XFixes.";
+    RTC_LOG(LS_INFO) << "X server does not support XFixes.";
   }
 
   // Register for changes to the dimensions of the root window.
   XSelectInput(display(), root_window_, StructureNotifyMask);
 
   if (!x_server_pixel_buffer_.Init(display(), DefaultRootWindow(display()))) {
-    LOG(LS_ERROR) << "Failed to initialize pixel buffer.";
+    RTC_LOG(LS_ERROR) << "Failed to initialize pixel buffer.";
     return false;
   }
 
@@ -186,7 +185,7 @@ void ScreenCapturerLinux::InitXDamage() {
   // Check for XDamage extension.
   if (!XDamageQueryExtension(display(), &damage_event_base_,
                              &damage_error_base_)) {
-    LOG(LS_INFO) << "X server does not support XDamage.";
+    RTC_LOG(LS_INFO) << "X server does not support XDamage.";
     return;
   }
 
@@ -199,7 +198,7 @@ void ScreenCapturerLinux::InitXDamage() {
   damage_handle_ = XDamageCreate(display(), root_window_,
                                  XDamageReportNonEmpty);
   if (!damage_handle_) {
-    LOG(LS_ERROR) << "Unable to initialize XDamage.";
+    RTC_LOG(LS_ERROR) << "Unable to initialize XDamage.";
     return;
   }
 
@@ -207,7 +206,7 @@ void ScreenCapturerLinux::InitXDamage() {
   damage_region_ = XFixesCreateRegion(display(), 0, 0);
   if (!damage_region_) {
     XDamageDestroy(display(), damage_handle_);
-    LOG(LS_ERROR) << "Unable to create XFixes region.";
+    RTC_LOG(LS_ERROR) << "Unable to create XFixes region.";
     return;
   }
 
@@ -215,7 +214,7 @@ void ScreenCapturerLinux::InitXDamage() {
       damage_event_base_ + XDamageNotify, this);
 
   use_damage_ = true;
-  LOG(LS_INFO) << "Using XDamage extension.";
+  RTC_LOG(LS_INFO) << "Using XDamage extension.";
 }
 
 void ScreenCapturerLinux::Start(Callback* callback) {
@@ -223,10 +222,6 @@ void ScreenCapturerLinux::Start(Callback* callback) {
   RTC_DCHECK(callback);
 
   callback_ = callback;
-}
-
-void ScreenCapturerLinux::Stop() {
-  callback_ = NULL;
 }
 
 void ScreenCapturerLinux::CaptureFrame() {
@@ -345,7 +340,8 @@ std::unique_ptr<DesktopFrame> ScreenCapturerLinux::CaptureScreen() {
     // Doing full-screen polling, or this is the first capture after a
     // screen-resolution change.  In either case, need a full-screen capture.
     DesktopRect screen_rect = DesktopRect::MakeSize(frame->size());
-    x_server_pixel_buffer_.CaptureRect(screen_rect, frame.get());
+    if (!x_server_pixel_buffer_.CaptureRect(screen_rect, frame.get()))
+      return nullptr;
     updated_region->SetRect(screen_rect);
   }
 
@@ -358,8 +354,8 @@ void ScreenCapturerLinux::ScreenConfigurationChanged() {
 
   helper_.ClearInvalidRegion();
   if (!x_server_pixel_buffer_.Init(display(), DefaultRootWindow(display()))) {
-    LOG(LS_ERROR) << "Failed to initialize pixel buffer after screen "
-        "configuration change.";
+    RTC_LOG(LS_ERROR) << "Failed to initialize pixel buffer after screen "
+                         "configuration change.";
   }
 }
 
@@ -417,7 +413,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     return nullptr;
   }
 
-  return std::unique_ptr<DesktopCapturer>(capturer.release());
+  return std::move(capturer);
 }
 
 }  // namespace webrtc

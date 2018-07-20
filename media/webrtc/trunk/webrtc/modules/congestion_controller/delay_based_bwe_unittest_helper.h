@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_
-#define WEBRTC_MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_
+#ifndef MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_
+#define MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_
 
 #include <list>
 #include <map>
@@ -17,11 +17,12 @@
 #include <utility>
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/congestion_controller/delay_based_bwe.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/test/gtest.h"
+#include "modules/congestion_controller/acknowledged_bitrate_estimator.h"
+#include "modules/congestion_controller/delay_based_bwe.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "rtc_base/constructormagic.h"
+#include "system_wrappers/include/clock.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -54,7 +55,8 @@ class RtpStream {
   // Generates a new frame for this stream. If called too soon after the
   // previous frame, no frame will be generated. The frame is split into
   // packets.
-  int64_t GenerateFrame(int64_t time_now_us, std::vector<PacketInfo>* packets);
+  int64_t GenerateFrame(int64_t time_now_us,
+                        std::vector<PacketFeedback>* packets);
 
   // The send-side time when the next frame can be generated.
   int64_t next_rtp_time() const;
@@ -94,7 +96,8 @@ class StreamGenerator {
 
   // TODO(holmer): Break out the channel simulation part from this class to make
   // it possible to simulate different types of channels.
-  int64_t GenerateFrame(std::vector<PacketInfo>* packets, int64_t time_now_us);
+  int64_t GenerateFrame(std::vector<PacketFeedback>* packets,
+                        int64_t time_now_us);
 
  private:
   // Capacity of the simulated channel in bits per second.
@@ -125,7 +128,7 @@ class DelayBasedBweTest : public ::testing::Test {
                         int64_t send_time_ms,
                         uint16_t sequence_number,
                         size_t payload_size,
-                        int probe_cluster_id);
+                        const PacedPacketInfo& pacing_info);
 
   // Generates a frame of packets belonging to a stream at a given bitrate and
   // with a given ssrc. The stream is pushed through a very simple simulated
@@ -162,6 +165,7 @@ class DelayBasedBweTest : public ::testing::Test {
 
   SimulatedClock clock_;  // Time at the receiver.
   test::TestBitrateObserver bitrate_observer_;
+  std::unique_ptr<AcknowledgedBitrateEstimator> acknowledged_bitrate_estimator_;
   std::unique_ptr<DelayBasedBwe> bitrate_estimator_;
   std::unique_ptr<test::StreamGenerator> stream_generator_;
   int64_t arrival_time_offset_ms_;
@@ -171,4 +175,4 @@ class DelayBasedBweTest : public ::testing::Test {
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_
+#endif  // MODULES_CONGESTION_CONTROLLER_DELAY_BASED_BWE_UNITTEST_HELPER_H_

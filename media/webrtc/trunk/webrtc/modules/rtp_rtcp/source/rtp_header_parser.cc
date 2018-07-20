@@ -7,11 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "modules/rtp_rtcp/include/rtp_header_parser.h"
 
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_utility.h"
+#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 
@@ -22,8 +22,7 @@ class RtpHeaderParserImpl : public RtpHeaderParser {
 
   bool Parse(const uint8_t* packet,
              size_t length,
-             RTPHeader* header,
-             bool secured) const override;
+             RTPHeader* header) const override;
 
   bool RegisterRtpHeaderExtension(RTPExtensionType type, uint8_t id) override;
 
@@ -31,7 +30,8 @@ class RtpHeaderParserImpl : public RtpHeaderParser {
 
  private:
   rtc::CriticalSection critical_section_;
-  RtpHeaderExtensionMap rtp_header_extension_map_ GUARDED_BY(critical_section_);
+  RtpHeaderExtensionMap rtp_header_extension_map_
+      RTC_GUARDED_BY(critical_section_);
 };
 
 RtpHeaderParser* RtpHeaderParser::Create() {
@@ -47,8 +47,7 @@ bool RtpHeaderParser::IsRtcp(const uint8_t* packet, size_t length) {
 
 bool RtpHeaderParserImpl::Parse(const uint8_t* packet,
                                 size_t length,
-                                RTPHeader* header,
-                                bool secured) const {
+                                RTPHeader* header) const {
   RtpUtility::RtpHeaderParser rtp_parser(packet, length);
   memset(header, 0, sizeof(*header));
 
@@ -58,7 +57,7 @@ bool RtpHeaderParserImpl::Parse(const uint8_t* packet,
     map = rtp_header_extension_map_;
   }
 
-  const bool valid_rtpheader = rtp_parser.Parse(header, &map, secured);
+  const bool valid_rtpheader = rtp_parser.Parse(header, &map);
   if (!valid_rtpheader) {
     return false;
   }

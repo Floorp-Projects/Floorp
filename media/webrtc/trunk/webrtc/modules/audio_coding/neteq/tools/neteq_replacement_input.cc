@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/tools/neteq_replacement_input.h"
+#include "modules/audio_coding/neteq/tools/neteq_replacement_input.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/neteq/tools/fake_decode_from_file.h"
+#include "modules/audio_coding/neteq/tools/fake_decode_from_file.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace test {
@@ -34,7 +34,7 @@ NetEqReplacementInput::NetEqReplacementInput(
 rtc::Optional<int64_t> NetEqReplacementInput::NextPacketTime() const {
   return packet_
              ? rtc::Optional<int64_t>(static_cast<int64_t>(packet_->time_ms))
-             : rtc::Optional<int64_t>();
+             : rtc::nullopt;
 }
 
 rtc::Optional<int64_t> NetEqReplacementInput::NextOutputEventTime() const {
@@ -70,12 +70,12 @@ void NetEqReplacementInput::ReplacePacket() {
 
   RTC_DCHECK(packet_);
 
-  RTC_CHECK_EQ(forbidden_types_.count(packet_->header.header.payloadType), 0)
-      << "Payload type " << static_cast<int>(packet_->header.header.payloadType)
+  RTC_CHECK_EQ(forbidden_types_.count(packet_->header.payloadType), 0)
+      << "Payload type " << static_cast<int>(packet_->header.payloadType)
       << " is forbidden.";
 
   // Check if this packet is comfort noise.
-  if (comfort_noise_types_.count(packet_->header.header.payloadType) != 0) {
+  if (comfort_noise_types_.count(packet_->header.payloadType) != 0) {
     // If CNG, simply insert a zero-energy one-byte payload.
     uint8_t cng_payload[1] = {127};  // Max attenuation of CNG.
     packet_->payload.SetData(cng_payload);
@@ -85,18 +85,23 @@ void NetEqReplacementInput::ReplacePacket() {
   rtc::Optional<RTPHeader> next_hdr = source_->NextHeader();
   RTC_DCHECK(next_hdr);
   uint8_t payload[12];
+  RTC_DCHECK_LE(last_frame_size_timestamps_, 120 * 48);
   uint32_t input_frame_size_timestamps = last_frame_size_timestamps_;
-  if (next_hdr->sequenceNumber == packet_->header.header.sequenceNumber + 1) {
-    // Packets are in order.
-    input_frame_size_timestamps =
-        next_hdr->timestamp - packet_->header.header.timestamp;
+  const uint32_t timestamp_diff =
+      next_hdr->timestamp - packet_->header.timestamp;
+  if (next_hdr->sequenceNumber == packet_->header.sequenceNumber + 1 &&
+      timestamp_diff <= 120 * 48) {
+    // Packets are in order and the timestamp diff is less than 5760 samples.
+    // Accept the timestamp diff as a valid frame size.
+    input_frame_size_timestamps = timestamp_diff;
     last_frame_size_timestamps_ = input_frame_size_timestamps;
   }
-  FakeDecodeFromFile::PrepareEncoded(packet_->header.header.timestamp,
+  RTC_DCHECK_LE(input_frame_size_timestamps, 120 * 48);
+  FakeDecodeFromFile::PrepareEncoded(packet_->header.timestamp,
                                      input_frame_size_timestamps,
                                      packet_->payload.size(), payload);
   packet_->payload.SetData(payload);
-  packet_->header.header.payloadType = replacement_payload_type_;
+  packet_->header.payloadType = replacement_payload_type_;
   return;
 }
 

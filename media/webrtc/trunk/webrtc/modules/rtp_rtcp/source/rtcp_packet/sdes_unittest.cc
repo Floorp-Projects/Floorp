@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sdes.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/sdes.h"
 
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/rtcp_packet_parser.h"
+#include "test/gtest.h"
+#include "test/rtcp_packet_parser.h"
 
 using webrtc::rtcp::Sdes;
 
@@ -96,11 +96,11 @@ TEST(RtcpPacketSdesTest, CreateAndParseCnameItemWithEmptyString) {
 
 TEST(RtcpPacketSdesTest, ParseSkipsNonCNameField) {
   const uint8_t kName[] = "abc";
-  const std::string kCname = "de";
+  const uint8_t kCname[] = "de";
   const uint8_t kValidPacket[] = {0x81,  202, 0x00, 0x04,
                                   0x12, 0x34, 0x56, 0x78,
                                   kNameTag,  3, kName[0],  kName[1], kName[2],
-                                  kCnameTag, 2, (uint8_t)kCname[0], (uint8_t)kCname[1],
+                                  kCnameTag, 2, kCname[0], kCname[1],
                                   kTerminatorTag, kPadding, kPadding};
   // Sanity checks packet was assembled correctly.
   ASSERT_EQ(0u, sizeof(kValidPacket) % 4);
@@ -111,20 +111,20 @@ TEST(RtcpPacketSdesTest, ParseSkipsNonCNameField) {
 
   EXPECT_EQ(1u, parsed.chunks().size());
   EXPECT_EQ(kSenderSsrc, parsed.chunks()[0].ssrc);
-  EXPECT_EQ(kCname, parsed.chunks()[0].cname);
+  EXPECT_EQ("de", parsed.chunks()[0].cname);
 }
 
 TEST(RtcpPacketSdesTest, ParseSkipsChunksWithoutCName) {
   const uint8_t kName[] = "ab";
   const uint8_t kEmail[] = "de";
-  const std::string kCname = "def";
+  const uint8_t kCname[] = "def";
   const uint8_t kPacket[] = {0x82,  202, 0x00, 0x07,
       0x12, 0x34, 0x56, 0x78,  // 1st chunk.
       kNameTag,  3, kName[0],  kName[1], kName[2],
       kEmailTag, 2, kEmail[0], kEmail[1],
       kTerminatorTag, kPadding, kPadding,
       0x23, 0x45, 0x67, 0x89,  // 2nd chunk.
-      kCnameTag, 3, (uint8_t)kCname[0], (uint8_t)kCname[1], (uint8_t)kCname[2],
+      kCnameTag, 3, kCname[0], kCname[1], kCname[2],
       kTerminatorTag, kPadding, kPadding};
   // Sanity checks packet was assembled correctly.
   ASSERT_EQ(0u, sizeof(kPacket) % 4);
@@ -134,7 +134,7 @@ TEST(RtcpPacketSdesTest, ParseSkipsChunksWithoutCName) {
   EXPECT_TRUE(test::ParseSinglePacket(kPacket, &parsed));
   ASSERT_EQ(1u, parsed.chunks().size());
   EXPECT_EQ(0x23456789u, parsed.chunks()[0].ssrc);
-  EXPECT_EQ(kCname, parsed.chunks()[0].cname);
+  EXPECT_EQ("def", parsed.chunks()[0].cname);
 }
 
 TEST(RtcpPacketSdesTest, ParseFailsWithoutChunkItemTerminator) {

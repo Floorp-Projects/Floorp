@@ -10,17 +10,18 @@
 
 #include <memory>
 
-#include "webrtc/modules/desktop_capture/mouse_cursor_monitor.h"
+#include "modules/desktop_capture/mouse_cursor_monitor.h"
 
 #include <X11/extensions/Xfixes.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/mouse_cursor.h"
-#include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/mouse_cursor.h"
+#include "modules/desktop_capture/x11/x_error_trap.h"
+#include "rtc_base/logging.h"
 
 namespace {
 
@@ -31,7 +32,6 @@ namespace {
 // searches up the list of the windows to find the root child that corresponds
 // to |window|.
 Window GetTopLevelWindow(Display* display, Window window) {
-  webrtc::XErrorTrap error_trap(display);
   while (true) {
     // If the window is in WithdrawnState then look at all of its children.
     ::Window root, parent;
@@ -39,8 +39,8 @@ Window GetTopLevelWindow(Display* display, Window window) {
     unsigned int num_children;
     if (!XQueryTree(display, window, &root, &parent, &children,
                     &num_children)) {
-      LOG(LS_ERROR) << "Failed to query for child windows although window"
-                    << "does not have a valid WM_STATE.";
+      RTC_LOG(LS_ERROR) << "Failed to query for child windows although window"
+                        << "does not have a valid WM_STATE.";
       return None;
     }
     if (children)
@@ -62,11 +62,10 @@ namespace webrtc {
 class MouseCursorMonitorX11 : public MouseCursorMonitor,
                               public SharedXDisplay::XEventHandler {
  public:
-  MouseCursorMonitorX11(const DesktopCaptureOptions& options, Window window, Window inner_window);
+  MouseCursorMonitorX11(const DesktopCaptureOptions& options, Window window);
   ~MouseCursorMonitorX11() override;
 
-  void Start(Callback* callback, Mode mode) override;
-  void Stop() override;
+  void Init(Callback* callback, Mode mode) override;
   void Capture() override;
 
  private:
@@ -82,7 +81,6 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   Callback* callback_;
   Mode mode_;
   Window window_;
-  Window inner_window_;
 
   bool have_xfixes_;
   int xfixes_event_base_;
@@ -93,12 +91,11 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
 
 MouseCursorMonitorX11::MouseCursorMonitorX11(
     const DesktopCaptureOptions& options,
-    Window window, Window inner_window)
+    Window window)
     : x_display_(options.x_display()),
       callback_(NULL),
       mode_(SHAPE_AND_POSITION),
       window_(window),
-      inner_window_(inner_window),
       have_xfixes_(false),
       xfixes_event_base_(-1),
       xfixes_error_base_(-1) {
@@ -127,11 +124,14 @@ MouseCursorMonitorX11::MouseCursorMonitorX11(
 }
 
 MouseCursorMonitorX11::~MouseCursorMonitorX11() {
-  Stop();
+  if (have_xfixes_) {
+    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
+                                   this);
+  }
 }
 
-void MouseCursorMonitorX11::Start(Callback* callback, Mode mode) {
-  // Start can be called only if not started
+void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
+  // Init can be called only once per instance of MouseCursorMonitor.
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
 
@@ -143,21 +143,12 @@ void MouseCursorMonitorX11::Start(Callback* callback, Mode mode) {
 
   if (have_xfixes_) {
     // Register for changes to the cursor shape.
-    XErrorTrap error_trap(display());
     XFixesSelectCursorInput(display(), window_, XFixesDisplayCursorNotifyMask);
     x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
 
     CaptureCursor();
   } else {
-    LOG(LS_INFO) << "X server does not support XFixes.";
-  }
-}
-
-void MouseCursorMonitorX11::Stop() {
-  callback_ = NULL;
-  if (have_xfixes_) {
-    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
-                                   this);
+    RTC_LOG(LS_INFO) << "X server does not support XFixes.";
   }
 }
 
@@ -182,7 +173,7 @@ void MouseCursorMonitorX11::Capture() {
     unsigned int mask;
 
     XErrorTrap error_trap(display());
-    Bool result = XQueryPointer(display(), inner_window_, &root_window, &child_window,
+    Bool result = XQueryPointer(display(), window_, &root_window, &child_window,
                                 &root_x, &root_y, &win_x, &win_y, &mask);
     CursorState state;
     if (!result || error_trap.GetLastErrorAndDisable() != 0) {
@@ -195,8 +186,26 @@ void MouseCursorMonitorX11::Capture() {
           (window_ == root_window || child_window != None) ? INSIDE : OUTSIDE;
     }
 
-    callback_->OnMouseCursorPosition(state,
-                                     webrtc::DesktopVector(win_x, win_y));
+    // As the comments to GetTopLevelWindow() above indicate, in window capture,
+    // the cursor position capture happens in |window_|, while the frame catpure
+    // happens in |child_window|. These two windows are not alwyas same, as
+    // window manager may add some decorations to the |window_|. So translate
+    // the coordinate in |window_| to the coordinate space of |child_window|.
+    if (window_ != root_window && state == INSIDE) {
+      int translated_x, translated_y;
+      Window unused;
+      if (XTranslateCoordinates(display(), window_, child_window, win_x, win_y,
+                                &translated_x, &translated_y, &unused)) {
+        win_x = translated_x;
+        win_y = translated_y;
+      }
+    }
+
+    // TODO(zijiehe): Remove this overload.
+    callback_->OnMouseCursorPosition(state, DesktopVector(win_x, win_y));
+    // X11 always starts the coordinate from (0, 0), so we do not need to
+    // translate here.
+    callback_->OnMouseCursorPosition(DesktopVector(root_x, root_y));
   }
 }
 
@@ -248,10 +257,10 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForWindow(
     const DesktopCaptureOptions& options, WindowId window) {
   if (!options.x_display())
     return NULL;
-  WindowId outer_window = GetTopLevelWindow(options.x_display()->display(), window);
-  if (outer_window == None)
+  window = GetTopLevelWindow(options.x_display()->display(), window);
+  if (window == None)
     return NULL;
-  return new MouseCursorMonitorX11(options, outer_window, window);
+  return new MouseCursorMonitorX11(options, window);
 }
 
 MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
@@ -259,8 +268,14 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
     ScreenId screen) {
   if (!options.x_display())
     return NULL;
-  WindowId window = DefaultRootWindow(options.x_display()->display());
-  return new MouseCursorMonitorX11(options, window, window);
+  return new MouseCursorMonitorX11(
+      options, DefaultRootWindow(options.x_display()->display()));
+}
+
+std::unique_ptr<MouseCursorMonitor> MouseCursorMonitor::Create(
+    const DesktopCaptureOptions& options) {
+  return std::unique_ptr<MouseCursorMonitor>(
+      CreateForScreen(options, kFullDesktopScreenId));
 }
 
 }  // namespace webrtc

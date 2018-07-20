@@ -8,13 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/intelligibility/intelligibility_utils.h"
+#include "modules/audio_processing/intelligibility/intelligibility_utils.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
 #include <limits>
+
+#include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
 
@@ -28,9 +30,9 @@ const float kMaxFactor = 100.f;
 // Return |current| changed towards |target|, with the relative change being at
 // most |limit|.
 float UpdateFactor(float target, float current, float limit) {
-  float gain = target / (current + std::numeric_limits<float>::epsilon());
-  gain = std::min(std::max(gain, 1.f - limit), 1.f + limit);
-  return std::min(std::max(current * gain, kMinFactor), kMaxFactor);;
+  const float gain = target / (current + std::numeric_limits<float>::epsilon());
+  const float clamped_gain = rtc::SafeClamp(gain, 1 - limit, 1 + limit);
+  return rtc::SafeClamp(current * clamped_gain, kMinFactor, kMaxFactor);
 }
 
 }  // namespace

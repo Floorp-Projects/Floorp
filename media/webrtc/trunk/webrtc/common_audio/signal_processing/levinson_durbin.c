@@ -15,12 +15,14 @@
  *
  */
 
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "rtc_base/sanitizer.h"
 
 #define SPL_LEVINSON_MAXORDER 20
 
-int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
-                                 size_t order)
+int16_t RTC_NO_SANITIZE("signed-integer-overflow")  // bugs.webrtc.org/5486
+WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
+                         size_t order)
 {
     size_t i, j;
     // Auto-correlation coefficients in high precision
@@ -44,6 +46,8 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
     for (i = 0; i <= order; ++i)
     {
         temp1W32 = R[i] * (1 << norm);
+        // UBSan: 12 * 268435456 cannot be represented in type 'int'
+
         // Put R in hi and low format
         R_hi[i] = (int16_t)(temp1W32 >> 16);
         R_low[i] = (int16_t)((temp1W32 - ((int32_t)R_hi[i] * 65536)) >> 1);
@@ -75,7 +79,7 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
 
     // Alpha = R[0] * (1-K^2)
 
-    temp1W32 = ((K_hi * K_low >> 14) + K_hi * K_hi) << 1;  // = k^2 in Q31
+    temp1W32 = ((K_hi * K_low >> 14) + K_hi * K_hi) * 2;  // = k^2 in Q31
 
     temp1W32 = WEBRTC_SPL_ABS_W32(temp1W32); // Guard against <0
     temp1W32 = (int32_t)0x7fffffffL - temp1W32; // temp1W32 = (1 - K[0]*K[0]) in Q31

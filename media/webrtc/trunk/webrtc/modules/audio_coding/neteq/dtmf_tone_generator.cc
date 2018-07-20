@@ -28,70 +28,62 @@
 // 852 Hz      7        8        9       14
 // 941 Hz     10        0       11       15
 
-#include "webrtc/modules/audio_coding/neteq/dtmf_tone_generator.h"
+#include "modules/audio_coding/neteq/dtmf_tone_generator.h"
 
-#include "webrtc/base/arraysize.h"
-#include "webrtc/base/checks.h"
+#include "rtc_base/arraysize.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
 // The filter coefficient a = 2*cos(2*pi*f/fs) for the low frequency tone, for
-// sample rates fs = {8000, 16000, 32000, 44100, 48000} Hz, and events 0 through 15.
+// sample rates fs = {8000, 16000, 32000, 48000} Hz, and events 0 through 15.
 // Values are in Q14.
-const int DtmfToneGenerator::kCoeff1[NumDtmfSampleRates][16] = {
+const int DtmfToneGenerator::kCoeff1[4][16] = {
     { 24219, 27980, 27980, 27980, 26956, 26956, 26956, 25701, 25701, 25701,
       24219, 24219, 27980, 26956, 25701, 24219 },
     { 30556, 31548, 31548, 31548, 31281, 31281, 31281, 30951, 30951, 30951,
       30556, 30556, 31548, 31281, 30951, 30556 },
     { 32210, 32462, 32462, 32462, 32394, 32394, 32394, 32311, 32311, 32311,
       32210, 32210, 32462, 32394, 32311, 32210 },
-    { 32474, 32607, 32607, 32607, 32571, 32571, 32571, 32527, 32527, 32527,
-      32474, 32474, 32607, 32571, 32527, 32474 },
     { 32520, 32632, 32632, 32632, 32602, 32602, 32602, 32564, 32564, 32564,
       32520, 32520, 32632, 32602, 32564, 32520 } };
 
 // The filter coefficient a = 2*cos(2*pi*f/fs) for the high frequency tone, for
-// sample rates fs = {8000, 16000, 32000, 44100, 48000} Hz, and events 0 through 15.
+// sample rates fs = {8000, 16000, 32000, 48000} Hz, and events 0 through 15.
 // Values are in Q14.
-const int DtmfToneGenerator::kCoeff2[NumDtmfSampleRates][16] = {
+const int DtmfToneGenerator::kCoeff2[4][16] = {
     { 16325, 19073, 16325, 13085, 19073, 16325, 13085, 19073, 16325, 13085,
       19073, 13085, 9315, 9315, 9315, 9315},
     { 28361, 29144, 28361, 27409, 29144, 28361, 27409, 29144, 28361, 27409,
       29144, 27409, 26258, 26258, 26258, 26258},
     { 31647, 31849, 31647, 31400, 31849, 31647, 31400, 31849, 31647, 31400,
       31849, 31400, 31098, 31098, 31098, 31098},
-    { 32176, 32283, 32176, 32045, 32283, 32176, 32045, 32283, 32176, 32045,
-      32283, 32045, 31885, 31885, 31885, 31885},
     { 32268, 32359, 32268, 32157, 32359, 32268, 32157, 32359, 32268, 32157,
       32359, 32157, 32022, 32022, 32022, 32022} };
 
 // The initialization value x[-2] = sin(2*pi*f/fs) for the low frequency tone,
-// for sample rates fs = {8000, 16000, 32000, 44100, 48000} Hz, and events 0-15.
+// for sample rates fs = {8000, 16000, 32000, 48000} Hz, and events 0-15.
 // Values are in Q14.
-const int DtmfToneGenerator::kInitValue1[NumDtmfSampleRates][16] = {
+const int DtmfToneGenerator::kInitValue1[4][16] = {
     { 11036, 8528, 8528, 8528, 9315, 9315, 9315, 10163, 10163, 10163, 11036,
       11036, 8528, 9315, 10163, 11036},
     { 5918, 4429, 4429, 4429, 4879, 4879, 4879, 5380, 5380, 5380, 5918, 5918,
       4429, 4879, 5380, 5918},
     { 3010, 2235, 2235, 2235, 2468, 2468, 2468, 2728, 2728, 2728, 3010, 3010,
       2235, 2468, 2728, 3010},
-    { 2190, 1624, 1624, 1624, 1794, 1794, 1794, 1984, 1984, 1984, 2190, 2190,
-      1624, 1794, 1984, 2190},
     { 2013, 1493, 1493, 1493, 1649, 1649, 1649, 1823, 1823, 1823, 2013, 2013,
       1493, 1649, 1823, 2013 } };
 
 // The initialization value x[-2] = sin(2*pi*f/fs) for the high frequency tone,
-// for sample rates fs = {8000, 16000, 32000, 44100, 48000} Hz, and events 0-15.
+// for sample rates fs = {8000, 16000, 32000, 48000} Hz, and events 0-15.
 // Values are in Q14.
-const int DtmfToneGenerator::kInitValue2[NumDtmfSampleRates][16] = {
+const int DtmfToneGenerator::kInitValue2[4][16] = {
     { 14206, 13323, 14206, 15021, 13323, 14206, 15021, 13323, 14206, 15021,
       13323, 15021, 15708, 15708, 15708, 15708},
     { 8207, 7490, 8207, 8979, 7490, 8207, 8979, 7490, 8207, 8979, 7490, 8979,
       9801, 9801, 9801, 9801},
     { 4249, 3853, 4249, 4685, 3853, 4249, 4685, 3853, 4249, 4685, 3853, 4685,
       5164, 5164, 5164, 5164},
-    { 3100, 2808, 3100, 3422, 3778, 2808, 3100, 3422, 3778, 2808, 3100, 3422,
-      3778, 3778, 3778, 3778},
     { 2851, 2582, 2851, 3148, 2582, 2851, 3148, 2582, 2851, 3148, 2582, 3148,
       3476, 3476, 3476, 3476} };
 
@@ -126,10 +118,8 @@ int DtmfToneGenerator::Init(int fs, int event, int attenuation) {
     fs_index = 1;
   } else if (fs == 32000) {
     fs_index = 2;
-  } else if (fs == 44100) {
-    fs_index = 3;
   } else if (fs == 48000) {
-    fs_index = 4;
+    fs_index = 3;
   } else {
     RTC_NOTREACHED();
     fs_index = 1;  // Default to 8000 Hz.

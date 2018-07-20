@@ -7,26 +7,32 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_TEST_RTP_RTCP_OBSERVER_H_
-#define WEBRTC_TEST_RTP_RTCP_OBSERVER_H_
+#ifndef TEST_RTP_RTCP_OBSERVER_H_
+#define TEST_RTP_RTCP_OBSERVER_H_
 
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/event.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
-#include "webrtc/test/constants.h"
-#include "webrtc/test/direct_transport.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/typedefs.h"
-#include "webrtc/video_send_stream.h"
+#include "modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/event.h"
+#include "system_wrappers/include/field_trial.h"
+#include "test/constants.h"
+#include "test/direct_transport.h"
+#include "test/gtest.h"
+#include "typedefs.h"  // NOLINT(build/include)
+#include "call/video_send_stream.h"
+
+namespace {
+const int kShortTimeoutMs = 500;
+}
 
 namespace webrtc {
 namespace test {
 
 class PacketTransport;
+class SingleThreadedTaskQueueForTesting;
 
 class RtpRtcpObserver {
  public:
@@ -37,7 +43,13 @@ class RtpRtcpObserver {
 
   virtual ~RtpRtcpObserver() {}
 
-  virtual bool Wait() { return observation_complete_.Wait(timeout_ms_); }
+  virtual bool Wait() {
+    if (field_trial::IsEnabled("WebRTC-QuickPerfTest")) {
+      observation_complete_.Wait(kShortTimeoutMs);
+      return true;
+    }
+    return observation_complete_.Wait(timeout_ms_);
+  }
 
   virtual Action OnSendRtp(const uint8_t* packet, size_t length) {
     return SEND_PACKET;
@@ -56,6 +68,7 @@ class RtpRtcpObserver {
   }
 
  protected:
+  RtpRtcpObserver() : RtpRtcpObserver(0) {}
   explicit RtpRtcpObserver(int event_timeout_ms)
       : observation_complete_(false, false),
         parser_(RtpHeaderParser::Create()),
@@ -79,11 +92,24 @@ class PacketTransport : public test::DirectTransport {
  public:
   enum TransportType { kReceiver, kSender };
 
-  PacketTransport(Call* send_call,
+  PacketTransport(SingleThreadedTaskQueueForTesting* task_queue,
+                  Call* send_call,
                   RtpRtcpObserver* observer,
                   TransportType transport_type,
+                  const std::map<uint8_t, MediaType>& payload_type_map,
                   const FakeNetworkPipe::Config& configuration)
-      : test::DirectTransport(configuration, send_call),
+      : test::DirectTransport(task_queue,
+                              configuration,
+                              send_call,
+                              payload_type_map),
+        observer_(observer),
+        transport_type_(transport_type) {}
+
+  PacketTransport(SingleThreadedTaskQueueForTesting* task_queue,
+                  Call* send_call, RtpRtcpObserver* observer,
+                  TransportType transport_type,
+                  std::unique_ptr<FakeNetworkPipe> nw_pipe)
+      : test::DirectTransport(task_queue, std::move(nw_pipe), send_call),
         observer_(observer),
         transport_type_(transport_type) {}
 
@@ -136,4 +162,4 @@ class PacketTransport : public test::DirectTransport {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // WEBRTC_TEST_RTP_RTCP_OBSERVER_H_
+#endif  // TEST_RTP_RTCP_OBSERVER_H_
