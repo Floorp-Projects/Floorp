@@ -1484,11 +1484,41 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
     va_end(args);
 }
 
+void
+BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset, unsigned errorNumber, ...)
+{
+    MOZ_ASSERT_IF(!maybeOffset, this->scriptStartOffsetSet);
+    uint32_t offset = maybeOffset ? *maybeOffset : this->scriptStartOffset;
+
+    va_list args;
+    va_start(args, errorNumber);
+
+    parser->errorReporter().errorAtVA(offset, errorNumber, &args);
+
+    va_end(args);
+}
+
 bool
 BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 {
     MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
     uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
+
+    va_list args;
+    va_start(args, errorNumber);
+
+    bool result = parser->errorReporter().reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
+
+    va_end(args);
+    return result;
+}
+
+bool
+BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
+                                    unsigned errorNumber, ...)
+{
+    MOZ_ASSERT_IF(!maybeOffset, this->scriptStartOffsetSet);
+    uint32_t offset = maybeOffset ? *maybeOffset : this->scriptStartOffset;
 
     va_list args;
     va_start(args, errorNumber);
