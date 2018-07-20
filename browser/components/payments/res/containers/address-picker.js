@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import AddressOption from "../components/address-option.js";
-import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
-import RichSelect from "../components/rich-select.js";
+import RichPicker from "./rich-picker.js";
 import paymentRequest from "../paymentRequest.js";
 
 /**
@@ -13,38 +12,19 @@ import paymentRequest from "../paymentRequest.js";
  * <address-option> listening to savedAddresses & tempAddresses.
  */
 
-export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class AddressPicker extends RichPicker {
   static get observedAttributes() {
-    return ["address-fields"];
+    return RichPicker.observedAttributes.concat(["address-fields"]);
   }
 
   constructor() {
     super();
-    this.dropdown = new RichSelect();
-    this.dropdown.addEventListener("change", this);
     this.dropdown.setAttribute("option-type", "address-option");
-    this.addLink = document.createElement("a");
-    this.addLink.className = "add-link";
-    this.addLink.href = "javascript:void(0)";
-    this.addLink.textContent = this.dataset.addLinkLabel;
-    this.addLink.addEventListener("click", this);
-    this.editLink = document.createElement("a");
-    this.editLink.className = "edit-link";
-    this.editLink.href = "javascript:void(0)";
-    this.editLink.textContent = this.dataset.editLinkLabel;
-    this.editLink.addEventListener("click", this);
-  }
-
-  connectedCallback() {
-    this.appendChild(this.dropdown);
-    this.appendChild(this.addLink);
-    this.append(" ");
-    this.appendChild(this.editLink);
-    super.connectedCallback();
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
+    super.attributeChangedCallback(name, oldValue, newValue);
+    if (name == "address-fields" && oldValue !== newValue) {
       this.render(this.requestStore.getState());
     }
   }

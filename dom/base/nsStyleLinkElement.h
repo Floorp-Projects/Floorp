@@ -48,7 +48,7 @@ public:
   void InitStyleLinkElement(bool aDontLoadStyle) override;
 
   mozilla::Result<Update, nsresult>
-    UpdateStyleSheet(nsICSSLoaderObserver*, ForceUpdate) override;
+    UpdateStyleSheet(nsICSSLoaderObserver*) override;
 
   void SetEnableUpdates(bool aEnableUpdates) override;
   void GetCharset(nsAString& aCharset) override;

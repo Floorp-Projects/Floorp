@@ -691,8 +691,6 @@ MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, Register outpu
     bool isUnsigned = flags & TRUNC_UNSIGNED;
     bool isSaturating = flags & TRUNC_SATURATING;
 
-    AutoHandleWasmTruncateToIntErrors traps(*this, off);
-
     if (isSaturating) {
         if (isUnsigned) {
             // Negative overflow and NaN both are converted to 0, and the only other case
@@ -722,6 +720,8 @@ MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, Register outpu
         return;
     }
 
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
+
     // Eagerly take care of NaNs.
     branchDouble(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
 
@@ -748,8 +748,6 @@ MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, Register outpu
 {
     bool isUnsigned = flags & TRUNC_UNSIGNED;
     bool isSaturating = flags & TRUNC_SATURATING;
-
-    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     if (isSaturating) {
         if (isUnsigned) {
@@ -780,6 +778,8 @@ MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, Register outpu
         return;
     }
 
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
+
     // Eagerly take care of NaNs.
     branchFloat(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
 
@@ -804,8 +804,6 @@ MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 out
 {
     bool isUnsigned = flags & TRUNC_UNSIGNED;
     bool isSaturating = flags & TRUNC_SATURATING;
-
-    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     if (isSaturating) {
         if (isUnsigned) {
@@ -835,6 +833,8 @@ MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 out
         jump(rejoin);
         return;
     }
+
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchDouble(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);
@@ -865,8 +865,6 @@ MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 out
     bool isUnsigned = flags & TRUNC_UNSIGNED;
     bool isSaturating = flags & TRUNC_SATURATING;
 
-    AutoHandleWasmTruncateToIntErrors traps(*this, off);
-
     if (isSaturating) {
         if (isUnsigned) {
             // Negative overflow and NaN both are converted to 0, and the only other case
@@ -895,6 +893,8 @@ MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 out
         jump(rejoin);
         return;
     }
+
+    AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
     // Eagerly take care of NaNs.
     branchFloat(Assembler::DoubleUnordered, input, input, &traps.inputIsNaN);

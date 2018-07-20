@@ -35,10 +35,10 @@ add_task(async function test_request_shipping_present() {
         ok(content.isVisible(shippingOptionPicker),
            "shipping-option-picker should be visible");
         const addressSelector = "address-picker[selected-state-key='selectedShippingAddress']";
-        let shippingAddress = content.document.querySelector(addressSelector);
-        ok(content.isVisible(shippingAddress),
+        let shippingAddressPicker = content.document.querySelector(addressSelector);
+        ok(content.isVisible(shippingAddressPicker),
            "shipping address picker should be visible");
-        let shippingOption = content.document.querySelector("#shipping-type-label");
+        let shippingOption = shippingAddressPicker.querySelector("label");
         is(shippingOption.textContent, aShippingString,
            "Label should be match shipping type: " + aShippingKey);
       }, [shippingKey, shippingString]);

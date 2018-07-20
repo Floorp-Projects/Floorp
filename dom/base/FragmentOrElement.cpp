@@ -344,12 +344,9 @@ nsIContent::GetLang() const
 already_AddRefed<nsIURI>
 nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 {
-  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
-    nsIContent* bindingParent = GetBindingParent();
-    MOZ_ASSERT(bindingParent);
-    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+  if (SVGUseElement* use = GetContainingSVGUseShadowHost()) {
     // XXX Ignore xml:base as we are removing it.
-    if (URLExtraData* data = useElement->GetContentURLData()) {
+    if (URLExtraData* data = use->GetContentURLData()) {
       return do_AddRef(data->BaseURI());
     }
   }
@@ -419,11 +416,8 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 nsIURI*
 nsIContent::GetBaseURIForStyleAttr() const
 {
-  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
-    nsIContent* bindingParent = GetBindingParent();
-    MOZ_ASSERT(bindingParent);
-    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
-    if (URLExtraData* data = useElement->GetContentURLData()) {
+  if (SVGUseElement* use = GetContainingSVGUseShadowHost()) {
+    if (URLExtraData* data = use->GetContentURLData()) {
       return data->BaseURI();
     }
   }
@@ -435,11 +429,8 @@ nsIContent::GetBaseURIForStyleAttr() const
 already_AddRefed<URLExtraData>
 nsIContent::GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal) const
 {
-  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
-    nsIContent* bindingParent = GetBindingParent();
-    MOZ_ASSERT(bindingParent);
-    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
-    if (URLExtraData* data = useElement->GetContentURLData()) {
+  if (SVGUseElement* use = GetContainingSVGUseShadowHost()) {
+    if (URLExtraData* data = use->GetContentURLData()) {
       return do_AddRef(data);
     }
   }

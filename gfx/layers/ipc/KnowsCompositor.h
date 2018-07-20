@@ -113,6 +113,11 @@ public:
     return mTextureFactoryIdentifier.mCompositorUseANGLE;
   }
 
+  bool GetCompositorUseDComp() const
+  {
+    return mTextureFactoryIdentifier.mCompositorUseDComp;
+  }
+
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
   {
     return mTextureFactoryIdentifier;
