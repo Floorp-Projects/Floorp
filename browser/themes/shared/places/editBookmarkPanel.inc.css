@@ -59,7 +59,7 @@ html|img#editBookmarkPanelFavicon[src] {
   flex: 1;
   -moz-appearance: none;
   margin: 0;
-  padding: .8em;
+  padding: .8em 0;
   color: inherit;
   background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
