@@ -28,7 +28,7 @@ class CompileRuntime
     static CompileRuntime* get(JSRuntime* rt);
 
 #ifdef JS_GC_ZEAL
-    const void* addressOfGCZealModeBits();
+    const uint32_t* addressOfGCZealModeBits();
 #endif
 
     const JitRuntime* jitRuntime();
@@ -75,10 +75,10 @@ class CompileZone
     const void* addressOfIonBailAfter();
 #endif
 
-    const void* addressOfNeedsIncrementalBarrier();
-    const void* addressOfFreeList(gc::AllocKind allocKind);
-    const void* addressOfNurseryPosition();
-    const void* addressOfStringNurseryPosition();
+    const uint32_t* addressOfNeedsIncrementalBarrier();
+    gc::FreeSpan** addressOfFreeList(gc::AllocKind allocKind);
+    void* addressOfNurseryPosition();
+    void* addressOfStringNurseryPosition();
     const void* addressOfNurseryCurrentEnd();
     const void* addressOfStringNurseryCurrentEnd();
 
@@ -103,7 +103,8 @@ class CompileRealm
         return realm();
     }
 
-    const void* addressOfRandomNumberGenerator();
+    const mozilla::non_crypto::XorShift128PlusRNG*
+    addressOfRandomNumberGenerator();
 
     const JitRealm* jitRealm();
 

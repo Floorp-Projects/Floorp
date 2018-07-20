@@ -440,6 +440,32 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
     sourceUnits(chars, length, startOffset)
 {}
 
+template<>
+MOZ_MUST_USE bool
+TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
+                                                                         const char16_t* end)
+{
+    MOZ_ASSERT(this->charBuffer.length() == 0);
+
+    while (cur < end) {
+        // Template literals normalize only '\r' and "\r\n" to '\n'.  The
+        // Unicode separators need no special handling here.
+        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
+        char16_t ch = *cur++;
+        if (ch == '\r') {
+            ch = '\n';
+            if (cur < end && *cur == '\n')
+                cur++;
+        }
+
+        if (!this->charBuffer.append(ch))
+            return false;
+    }
+
+    MOZ_ASSERT(cur == end);
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 TokenStreamSpecific<CharT, AnyCharsAccess>::TokenStreamSpecific(JSContext* cx,
                                                                 const ReadOnlyCompileOptions& options,
@@ -487,9 +513,6 @@ TokenStreamAnyChars::undoInternalUpdateLineInfoForEOL()
     lineno--;
 }
 
-// This gets a full code point, starting from an already-consumed leading code
-// unit, normalizing EOL sequences to '\n', also updating line/column info as
-// needed.
 template<class AnyCharsAccess>
 bool
 TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
@@ -510,10 +533,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
             break;
 
         if (MOZ_UNLIKELY(c == '\r')) {
-            // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-            if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-                this->sourceUnits.matchCodeUnit('\n');
-
+            matchLineTerminator('\n');
             break;
         }
 
@@ -599,21 +619,6 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
 
     while (numUnits-- > 0)
         ungetCodeUnit(units[numUnits]);
-}
-
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::ungetLineTerminator()
-{
-    this->sourceUnits.ungetCodeUnit();
-
-    char16_t last = this->sourceUnits.peekCodeUnit();
-    MOZ_ASSERT(SourceUnits::isRawEOLChar(last));
-
-    if (last == '\n')
-        this->sourceUnits.ungetOptionalCRBeforeLF();
-
-    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
 }
 
 template<typename CharT>
@@ -1329,20 +1334,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
             if (unit != '\\' || !matchUnicodeEscapeIdent(&codePoint))
                 break;
         } else {
-            int32_t cp;
-            if (!getNonAsciiCodePoint(unit, &cp))
+            // |restoreNextRawCharAddress| undoes all gets, and this function
+            // doesn't update line/column info.
+            char32_t cp;
+            if (!getNonAsciiCodePointDontNormalize(unit, &cp))
                 return false;
 
-            codePoint = AssertedCast<uint32_t>(cp);
-
-            if (!unicode::IsIdentifierPart(codePoint)) {
-                if (MOZ_UNLIKELY(codePoint == '\n')) {
-                    // |restoreNextRawCharAddress| will undo all gets, but we
-                    // have to revert a line/column update manually.
-                    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
-                }
+            codePoint = cp;
+            if (!unicode::IsIdentifierPart(codePoint))
                 break;
-            }
         }
 
         if (!appendCodePointToCharBuffer(codePoint))
@@ -1511,16 +1511,16 @@ static const uint8_t firstCharKinds[] = {
 static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
               "Elements of firstCharKinds[] are too small");
 
-template<typename CharT, class AnyCharsAccess>
 void
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::consumeRestOfSingleLineComment()
+SpecializedTokenStreamCharsBase<char16_t>::infallibleConsumeRestOfSingleLineComment()
 {
-    int32_t c;
-    do {
-        c = getCodeUnit();
-    } while (c != EOF && !SourceUnits::isRawEOLChar(c));
+    while (MOZ_LIKELY(!this->sourceUnits.atEnd())) {
+        char16_t unit = this->sourceUnits.peekCodeUnit();
+        if (SourceUnits::isRawEOLChar(unit))
+            return;
 
-    ungetCodeUnit(c);
+        this->sourceUnits.consumeKnownCodeUnit(unit);
+    }
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -1628,13 +1628,16 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
 
     auto ProcessNonAsciiCodePoint = [this](int32_t lead) {
         MOZ_ASSERT(lead != EOF);
+        MOZ_ASSERT(!this->isAsciiCodePoint(lead));
 
-        int32_t codePoint;
-        if (!this->getNonAsciiCodePoint(lead, &codePoint))
+        char32_t codePoint;
+        if (!this->getNonAsciiCodePointDontNormalize(lead, &codePoint))
             return false;
 
-        if (codePoint == '\n') {
-            this->ungetLineTerminator();
+        if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
+                         codePoint == unicode::PARA_SEPARATOR))
+        {
+            this->sourceUnits.ungetLineOrParagraphSeparator();
             this->reportError(JSMSG_UNTERMINATED_REGEXP);
             return false;
         }
@@ -1655,45 +1658,53 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
             return badToken();
         }
 
-        if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-            if (unit == '\\')  {
-                if (!this->charBuffer.append(unit))
-                    return badToken();
+        if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
+            if (!ProcessNonAsciiCodePoint(unit))
+                return badToken();
 
-                unit = getCodeUnit();
-                if (unit == EOF) {
-                    ReportUnterminatedRegExp(unit);
-                    return badToken();
-                }
+            continue;
+        }
 
-                // Fallthrough only handles ASCII code points, so
-                // deal with non-ASCII and skip everything else.
-                if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
-                    if (!ProcessNonAsciiCodePoint(unit))
-                        return badToken();
+        if (unit == '\\')  {
+            if (!this->charBuffer.append(unit))
+                return badToken();
 
-                    continue;
-                }
-            } else if (unit == '[') {
-                inCharClass = true;
-            } else if (unit == ']') {
-                inCharClass = false;
-            } else if (unit == '/' && !inCharClass) {
-                // For IE compat, allow unescaped / in char classes.
-                break;
-            }
-
-            if (unit == '\r' || unit == '\n') {
+            unit = getCodeUnit();
+            if (unit == EOF) {
                 ReportUnterminatedRegExp(unit);
                 return badToken();
             }
 
-            if (!this->charBuffer.append(unit))
-                return badToken();
-        } else {
-            if (!ProcessNonAsciiCodePoint(unit))
-                return badToken();
+            // Fallthrough only handles ASCII code points, so
+            // deal with non-ASCII and skip everything else.
+            if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
+                if (!ProcessNonAsciiCodePoint(unit))
+                    return badToken();
+
+                continue;
+            }
+        } else if (unit == '[') {
+            inCharClass = true;
+        } else if (unit == ']') {
+            inCharClass = false;
+        } else if (unit == '/' && !inCharClass) {
+            // For IE compat, allow unescaped / in char classes.
+            break;
         }
+
+        if (unit == '\r' || unit == '\n') {
+            ReportUnterminatedRegExp(unit);
+            return badToken();
+        }
+
+        // We're accumulating regular expression *source* text here: source
+        // text matching a line break will appear as U+005C REVERSE SOLIDUS
+        // U+006E LATIN SMALL LETTER N, and |unit| here would be the latter
+        // code point.
+        MOZ_ASSERT(!SourceUnits::isRawEOLChar(unit));
+
+        if (!this->charBuffer.append(unit))
+            return badToken();
     } while (true);
 
     int32_t unit;
@@ -1855,9 +1866,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // Skip over EOL chars, updating line state along the way.
         //
         if (c1kind == EOL) {
-            // If it's a \r\n sequence, consume it as a single EOL.
-            if (unit == '\r' && !this->sourceUnits.atEnd())
-                this->sourceUnits.matchCodeUnit('\n');
+            if (unit == '\r')
+                matchLineTerminator('\n');
 
             if (!updateLineInfoForEOL())
                 return badToken();
@@ -2097,7 +2107,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (matchCodeUnit('!')) {
                     if (matchCodeUnit('-')) {
                         if (matchCodeUnit('-')) {
-                            consumeRestOfSingleLineComment();
+                            if (!consumeRestOfSingleLineComment())
+                                return false;
+
                             continue;
                         }
                         ungetCodeUnit('-');
@@ -2142,7 +2154,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     ungetCodeUnit(unit);
                 }
 
-                consumeRestOfSingleLineComment();
+                if (!consumeRestOfSingleLineComment())
+                    return false;
+
                 continue;
             }
 
@@ -2199,7 +2213,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     !anyCharsAccess().flags.isDirtyLine)
                 {
                     if (matchCodeUnit('>')) {
-                        consumeRestOfSingleLineComment();
+                        if (!consumeRestOfSingleLineComment())
+                            return false;
+
                         continue;
                     }
                 }
@@ -2342,8 +2358,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
               case 'v': unit = '\v'; break;
 
               case '\r':
-                if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
-                    this->sourceUnits.matchCodeUnit('\n');
+                matchLineTerminator('\n');
                 MOZ_FALLTHROUGH;
               case '\n': {
                 // LineContinuation represents no code points.  We're manually
@@ -2549,10 +2564,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
             if (unit == '\r') {
                 unit = '\n';
-
-                // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-                if (!this->sourceUnits.atEnd())
-                    this->sourceUnits.matchCodeUnit('\n');
+                matchLineTerminator('\n');
             }
 
             if (!updateLineInfoForEOL())
@@ -2615,21 +2627,21 @@ TokenKindToString(TokenKind tt)
 }
 #endif
 
-template class frontend::TokenStreamCharsBase<Utf8Unit>;
-template class frontend::TokenStreamCharsBase<char16_t>;
+template class TokenStreamCharsBase<Utf8Unit>;
+template class TokenStreamCharsBase<char16_t>;
 
-template class frontend::TokenStreamChars<char16_t, frontend::TokenStreamAnyCharsAccess>;
-template class frontend::TokenStreamSpecific<char16_t, frontend::TokenStreamAnyCharsAccess>;
-
-template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
-template class
-frontend::TokenStreamChars<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
+template class TokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
+template class TokenStreamSpecific<char16_t, TokenStreamAnyCharsAccess>;
 
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::FullParseHandler, char16_t>>>;
+TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
 template class
-frontend::TokenStreamSpecific<char16_t, frontend::ParserAnyCharsAccess<frontend::GeneralParser<frontend::SyntaxParseHandler, char16_t>>>;
+TokenStreamChars<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
+
+template class
+TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
+template class
+TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
 } // namespace frontend
 

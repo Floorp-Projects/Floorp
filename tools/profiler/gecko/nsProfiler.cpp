@@ -613,8 +613,8 @@ nsProfiler::StartGathering(double aSinceTime)
   for (auto profile : profiles) {
     profile->Then(GetMainThreadSerialEventTarget(), __func__,
       [self](const mozilla::ipc::Shmem& aResult) {
-        const nsDependentCString profileString(aResult.get<char>(),
-                                               aResult.Size<char>());
+        const nsDependentCSubstring profileString(aResult.get<char>(),
+                                                  aResult.Size<char>() - 1);
         self->GatheredOOPProfile(profileString);
       },
       [self](ipc::ResponseRejectReason aReason) {
