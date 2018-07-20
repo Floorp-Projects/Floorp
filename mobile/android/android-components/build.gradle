@@ -26,7 +26,7 @@ buildscript {
 
     // Synchronized library configuration for all modules
     ext.library = [
-        version: '0.15'
+        version: '0.16'
     ]
 
     // Synchronized versions numbers of GeckoView (Nightly) artifacts.
