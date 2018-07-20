@@ -7862,10 +7862,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
 
 if (IsCSSPropertyPrefEnabled("layout.css.webkit-appearance.enabled")) {
   gCSSProperties["-webkit-appearance"] = {
-    domProp: "WebkitAppearance",
+    domProp: "webkitAppearance",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "-moz-appearance",
+    subproperties: [ "-moz-appearance" ],
   };
 }
 
