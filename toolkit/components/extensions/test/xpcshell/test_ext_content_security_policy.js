@@ -42,13 +42,9 @@ async function testPolicy(customCSP = null) {
   }
 
 
-  function filterSelf(sources) {
-    return sources.map(src => src == "'self'" ? baseURL : src);
-  }
-
   function checkSource(name, policy, expected) {
     equal(JSON.stringify(policy[name].sort()),
-          JSON.stringify(filterSelf(expected[name]).sort()),
+          JSON.stringify(expected[name].sort()),
           `Expected value for ${name}`);
   }
 
