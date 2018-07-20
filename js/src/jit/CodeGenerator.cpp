@@ -4049,8 +4049,9 @@ CodeGenerator::maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal, OutOf
     if (gen->realm->maybeGlobal() != obj)
         return;
 
-    auto addr = AbsoluteAddress(gen->realm->addressOfGlobalWriteBarriered());
-    masm.branch32(Assembler::NotEqual, addr, Imm32(0), ool->rejoin());
+    const uint32_t* addr = gen->realm->addressOfGlobalWriteBarriered();
+    masm.branch32(Assembler::NotEqual, AbsoluteAddress(addr), Imm32(0),
+        ool->rejoin());
 }
 
 template <class LPostBarrierType, MIRType nurseryType>
@@ -13286,7 +13287,8 @@ CodeGenerator::visitRandom(LRandom* ins)
     Register64 s1Reg(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
 #endif
 
-    const void* rng = gen->realm->addressOfRandomNumberGenerator();
+    const XorShift128PlusRNG* rng =
+        gen->realm->addressOfRandomNumberGenerator();
     masm.movePtr(ImmPtr(rng), tempReg);
 
     static_assert(sizeof(XorShift128PlusRNG) == 2 * sizeof(uint64_t),

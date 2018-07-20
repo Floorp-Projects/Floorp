@@ -26,7 +26,6 @@ public:
   NS_DECL_NSICHANNELEVENTSINK
 
   CSPService();
-  static bool sCSPEnabled;
 
 protected:
   virtual ~CSPService();

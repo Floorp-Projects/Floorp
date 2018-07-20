@@ -2843,7 +2843,7 @@ nsIDocument::InitCSP(nsIChannel* aChannel)
 {
   MOZ_ASSERT(!mScriptGlobalObject,
              "CSP must be initialized before mScriptGlobalObject is set!");
-  if (!CSPService::sCSPEnabled) {
+  if (!StaticPrefs::security_csp_enable()) {
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
            ("CSP is disabled, skipping CSP init for document %p", this));
     return NS_OK;
@@ -12517,8 +12517,9 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
-                                                           openerInner);
+  // We don't care when the asynchronous work finishes here.
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+                                                                     openerInner);
 }
 
 bool

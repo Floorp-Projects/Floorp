@@ -29,32 +29,30 @@ interface nsIThreadManager : nsISupports
 {
   /**
    * Default number of bytes reserved for a thread's stack, if no stack size
-   * is specified in newThread(). 0 means use platform default.
-   */
-  const unsigned long DEFAULT_STACK_SIZE = 0;
-
-%{C++
-  /* DEFAULT_STACK_SIZE can be a little overzealous for many platforms.  On
-   * Linux and OS X, for instance, the default thread stack size is whatever
-   * getrlimit(RLIMIT_STACK) returns, which is often set at 8MB.  The
-   * default on Windows is 1MB, which is a little more reasonable.  But
-   * for thread pools, each individual thread often doesn't need that much
-   * stack space.
+   * is specified in newThread().
    *
-   * We therefore have a separate setting for a reasonable stack size for
-   * a thread pool worker thread.
+   * Defaults can be a little overzealous for many platforms.
+   *
+   * On Linux and OS X, for instance, the default thread stack size is whatever
+   * getrlimit(RLIMIT_STACK) returns, which is often set at 8MB. Or, on Linux,
+   * if the stack size is unlimited, we fall back to 2MB. This causes particular
+   * problems on Linux, which allocates 2MB huge VM pages, and will often
+   * immediately allocate them for any stacks which are 2MB or larger.
+   *
+   * The default on Windows is 1MB, which is a little more reasonable. But the
+   * vast majority of our threads don't need anywhere near that much space.
+   *
+   * ASan and TSan builds, however, often need a bit more, so give them a the
+   * platform default.
    */
+%{C++
 #if defined(MOZ_ASAN) || defined(MOZ_TSAN)
-  // Use the system default in ASAN builds, because the default is assumed
-  // to be larger than the size we want to use and is hopefully sufficient
-  // for ASAN.
-  static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
-#elif defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)
-  static const uint32_t kThreadPoolStackSize = (256 * 1024);
+  static constexpr uint32_t DEFAULT_STACK_SIZE = 0;
 #else
-  // All other platforms use their system default.
-  static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
+  static constexpr uint32_t DEFAULT_STACK_SIZE = 256 * 1024;
 #endif
+
+  static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
 %}
 
   /**
@@ -63,7 +61,8 @@ interface nsIThreadManager : nsISupports
    * @param creationFlags
    *   Reserved for future use.  Pass 0.
    * @param stackSize
-   *   Number of bytes to reserve for the thread's stack.
+   *   Number of bytes to reserve for the thread's stack. 0 means use platform
+   *   default.
    *
    * @returns
    *   The newly created nsIThread object.
@@ -77,7 +76,8 @@ interface nsIThreadManager : nsISupports
    *   The name of the thread. Passing an empty name is equivalent to
    *   calling newThread(0, stackSize), i.e. the thread will not be named.
    * @param stackSize
-   *   Number of bytes to reserve for the thread's stack.
+   *   Number of bytes to reserve for the thread's stack. 0 means use platform
+   *   default.
    *
    * @returns
    *   The newly created nsIThread object.

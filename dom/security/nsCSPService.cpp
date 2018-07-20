@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
@@ -16,21 +18,16 @@
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsAsyncRedirectVerifyHelper.h"
-#include "mozilla/Preferences.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
 
 using namespace mozilla;
 
-/* Keeps track of whether or not CSP is enabled */
-bool CSPService::sCSPEnabled = true;
-
 static LazyLogModule gCspPRLog("CSP");
 
 CSPService::CSPService()
 {
-  Preferences::AddBoolVarCache(&sCSPEnabled, "security.csp.enable");
 }
 
 CSPService::~CSPService()
@@ -152,7 +149,8 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
   // Please note, the correct way to opt-out of CSP using a custom
   // protocolHandler is to set one of the nsIProtocolHandler flags
   // that are whitelistet in subjectToCSP()
-  if (!sCSPEnabled || !subjectToCSP(aContentLocation, contentType)) {
+  if (!StaticPrefs::security_csp_enable() ||
+      !subjectToCSP(aContentLocation, contentType)) {
     return NS_OK;
   }
 
@@ -282,7 +280,8 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   // protocolHandler is to set one of the nsIProtocolHandler flags
   // that are whitelistet in subjectToCSP()
   nsContentPolicyType policyType = loadInfo->InternalContentPolicyType();
-  if (!sCSPEnabled || !subjectToCSP(newUri, policyType)) {
+  if (!StaticPrefs::security_csp_enable() ||
+      !subjectToCSP(newUri, policyType)) {
     return NS_OK;
   }
 

@@ -1135,7 +1135,7 @@ nsHtml5TreeOpExecutor::SetSpeculationReferrerPolicy(
 void
 nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP)
 {
-  if (!CSPService::sCSPEnabled) {
+  if (!StaticPrefs::security_csp_enable()) {
     return;
   }
 

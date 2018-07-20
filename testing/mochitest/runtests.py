@@ -131,6 +131,8 @@ class MochitestFormatter(TbplFormatter):
 
     def __call__(self, data):
         output = super(MochitestFormatter, self).__call__(data)
+        if not output:
+            return None
         log_level = data.get('level', 'info').upper()
 
         if 'js_source' in data or log_level == 'ERROR':

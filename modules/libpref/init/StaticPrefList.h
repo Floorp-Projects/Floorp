@@ -1141,17 +1141,7 @@ VARCACHE_PREF(
 PREF("preferences.allow.omt-write", bool, true)
 
 //---------------------------------------------------------------------------
-// View source prefs
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  "view_source.editor.external",
-   view_source_editor_external,
-  bool, false
-)
-
-//---------------------------------------------------------------------------
-// Anti-Tracking prefs
+// Privacy prefs
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -1171,6 +1161,56 @@ VARCACHE_PREF(
   "privacy.restrict3rdpartystorage.expiration",
    privacy_restrict3rdpartystorage_expiration,
   uint32_t, 2592000 // 30 days (in seconds)
+)
+
+//---------------------------------------------------------------------------
+// Security prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "security.csp.enable",
+   security_csp_enable,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "security.csp.experimentalEnabled",
+   security_csp_experimentalEnabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "security.csp.enableStrictDynamic",
+   security_csp_enableStrictDynamic,
+  bool, true
+)
+
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "security.csp.enable_violation_events",
+   security_csp_enable_violation_events,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "security.csp.reporting.script-sample.max-length",
+   security_csp_reporting_script_sample_max_length,
+  int32_t, 40
+)
+
+//---------------------------------------------------------------------------
+// View source prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "view_source.editor.external",
+   view_source_editor_external,
+  bool, false
 )
 
 //---------------------------------------------------------------------------
