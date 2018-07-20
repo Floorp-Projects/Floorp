@@ -68,11 +68,6 @@
   grid-column-end: 4;
 }
 
-.toolbox-tabs-wrapper .tools-chevron-menu {
-  border-top-width: 0;
-  border-bottom-width: 0;
-}
-
 .toolbox-tabs {
   position: absolute;
   top: 0;
@@ -251,7 +246,8 @@
 /* Command buttons */
 
 .command-button,
-#toolbox-controls > button {
+#toolbox-controls > button,
+.toolbox-tabs-wrapper .tools-chevron-menu {
   /* !important is needed to override .devtools-button rules in common.css */
   padding: 0 !important;
   margin: 0 !important;
