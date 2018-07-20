@@ -134,51 +134,6 @@ define(function(require, exports, module) {
       return defaultProps;
     }
 
-    constructor(props) {
-      super(props);
-
-      this.state = {
-        expandedNodes: props.expandedNodes,
-        columns: ensureDefaultColumn(props.columns),
-        selected: props.selected,
-        lastSelectedIndex: 0
-      };
-
-      this.toggle = this.toggle.bind(this);
-      this.isExpanded = this.isExpanded.bind(this);
-      this.onKeyDown = this.onKeyDown.bind(this);
-      this.onClickRow = this.onClickRow.bind(this);
-      this.getSelectedRow = this.getSelectedRow.bind(this);
-      this.selectRow = this.selectRow.bind(this);
-      this.isSelected = this.isSelected.bind(this);
-      this.onFilter = this.onFilter.bind(this);
-      this.onSort = this.onSort.bind(this);
-      this.getMembers = this.getMembers.bind(this);
-      this.renderRows = this.renderRows.bind(this);
-    }
-
-    componentWillReceiveProps(nextProps) {
-      const { expandedNodes, selected } = nextProps;
-      const state = {
-        expandedNodes,
-        lastSelectedIndex: this.getSelectedRowIndex()
-      };
-
-      if (selected) {
-        state.selected = selected;
-      }
-
-      this.setState(Object.assign({}, this.state, state));
-    }
-
-    componentDidUpdate() {
-      const selected = this.getSelectedRow();
-      if (!selected && this.rows.length > 0) {
-        this.selectRow(this.rows[
-          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)]);
-      }
-    }
-
     static subPath(path, subKey) {
       return path + "/" + String(subKey).replace(/[\\/]/g, "\\$&");
     }
@@ -224,6 +179,51 @@ define(function(require, exports, module) {
         }
       }
       return expandedNodes;
+    }
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        expandedNodes: props.expandedNodes,
+        columns: ensureDefaultColumn(props.columns),
+        selected: props.selected,
+        lastSelectedIndex: 0
+      };
+
+      this.toggle = this.toggle.bind(this);
+      this.isExpanded = this.isExpanded.bind(this);
+      this.onKeyDown = this.onKeyDown.bind(this);
+      this.onClickRow = this.onClickRow.bind(this);
+      this.getSelectedRow = this.getSelectedRow.bind(this);
+      this.selectRow = this.selectRow.bind(this);
+      this.isSelected = this.isSelected.bind(this);
+      this.onFilter = this.onFilter.bind(this);
+      this.onSort = this.onSort.bind(this);
+      this.getMembers = this.getMembers.bind(this);
+      this.renderRows = this.renderRows.bind(this);
+    }
+
+    componentWillReceiveProps(nextProps) {
+      const { expandedNodes, selected } = nextProps;
+      const state = {
+        expandedNodes,
+        lastSelectedIndex: this.getSelectedRowIndex()
+      };
+
+      if (selected) {
+        state.selected = selected;
+      }
+
+      this.setState(Object.assign({}, this.state, state));
+    }
+
+    componentDidUpdate() {
+      const selected = this.getSelectedRow();
+      if (!selected && this.rows.length > 0) {
+        this.selectRow(this.rows[
+          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)]);
+      }
     }
 
     // Node expand/collapse
