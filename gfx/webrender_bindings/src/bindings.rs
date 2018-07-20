@@ -2354,10 +2354,15 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dump_display_list(state: &mut WrState) {
+pub extern "C" fn wr_dump_display_list(state: &mut WrState,
+                                       indent: usize,
+                                       start: *const usize,
+                                       end: *const usize) -> usize {
+    let start = unsafe { start.as_ref().cloned() };
+    let end = unsafe { end.as_ref().cloned() };
     state.frame_builder
          .dl_builder
-         .print_display_list(0, None, None);
+         .print_display_list(indent, start, end)
 }
 
 #[no_mangle]

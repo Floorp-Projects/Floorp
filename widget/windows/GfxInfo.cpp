@@ -1574,8 +1574,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   JS::Rooted<JSObject*> obj(aCx);
 
   gfx::FeatureStatus d3d11 = gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
-  if (!InitFeatureObject(aCx, aObj, "d3d11", FEATURE_DIRECT3D_11_ANGLE,
-                         Some(d3d11), &obj)) {
+  if (!InitFeatureObject(aCx, aObj, "d3d11", d3d11, &obj)) {
     return;
   }
   if (d3d11 == gfx::FeatureStatus::Available) {
@@ -1603,8 +1602,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   }
 
   gfx::FeatureStatus d2d = gfxConfig::GetValue(Feature::DIRECT2D);
-  if (!InitFeatureObject(aCx, aObj, "d2d", nsIGfxInfo::FEATURE_DIRECT2D,
-                         Some(d2d), &obj)) {
+  if (!InitFeatureObject(aCx, aObj, "d2d", d2d, &obj)) {
     return;
   }
   {

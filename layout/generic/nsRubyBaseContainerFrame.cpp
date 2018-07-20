@@ -784,7 +784,8 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
     MOZ_ASSERT(newFloatCB, "Must have a float containing block");
     if (oldFloatCB != newFloatCB) {
       for (nsIFrame* frame : aColumn) {
-        newFloatCB->ReparentFloats(frame, oldFloatCB, false);
+        newFloatCB->ReparentFloats(frame, oldFloatCB, false,
+                                   ReparentingDirection::Backwards);
       }
     }
   }

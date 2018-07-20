@@ -190,7 +190,6 @@ user_pref("lightweightThemes.selectedThemeID", "");
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
-user_pref("media.autoplay.enabled", true);
 user_pref("media.cache_size", 1000);
 user_pref("media.dormant-on-pause-timeout-ms", 0); // Enter dormant immediately without waiting for timeout.
 // Set the number of shmems the PChromiumCDM protocol pre-allocates to 0,

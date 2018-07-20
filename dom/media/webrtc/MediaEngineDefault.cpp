@@ -559,7 +559,8 @@ MediaEngineDefaultAudioSource::Pull(const RefPtr<const AllocationHandle>& aHandl
 void
 MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
                                      dom::MediaSourceEnum aMediaSource,
-                                     nsTArray<RefPtr<MediaEngineSource>>* aSources)
+                                     MediaSinkEnum aMediaSink,
+                                     nsTArray<RefPtr<MediaDevice>>* aDevices)
 {
   AssertIsOnOwningThread();
 
@@ -575,7 +576,10 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
         devicesForThisWindow = mVSources.LookupOrAdd(aWindowId);
       auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
       devicesForThisWindow->AppendElement(newSource);
-      aSources->AppendElement(newSource);
+      aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                                newSource,
+                                newSource->GetName(),
+                                NS_ConvertUTF8toUTF16(newSource->GetUUID())));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -583,21 +587,31 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
         devicesForThisWindow = mASources.LookupOrAdd(aWindowId);
       for (const RefPtr<MediaEngineDefaultAudioSource>& source : *devicesForThisWindow) {
         if (source->IsAvailable()) {
-          aSources->AppendElement(source);
+          aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                                    source,
+                                    source->GetName(),
+                                    NS_ConvertUTF8toUTF16(source->GetUUID())));
         }
       }
 
-      if (aSources->IsEmpty()) {
+      if (aDevices->IsEmpty()) {
         // All streams are currently busy, just make a new one.
         auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
         devicesForThisWindow->AppendElement(newSource);
-        aSources->AppendElement(newSource);
+        aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+                                  newSource,
+                                  newSource->GetName(),
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID())));
       }
       return;
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported source type");
       return;
+  }
+
+  if (aMediaSink == MediaSinkEnum::Speaker) {
+    NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
   }
 }
 

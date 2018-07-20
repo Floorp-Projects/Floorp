@@ -291,10 +291,10 @@ public:
   }
 
   nsresult GetSelection(SelectionType aSelectionType,
-                        Selection** aSelection);
+                        Selection** aSelection) const;
 
   Selection* GetSelection(SelectionType aSelectionType =
-                                          SelectionType::eNormal)
+                                          SelectionType::eNormal) const
   {
     nsISelectionController* sc = GetSelectionController();
     if (!sc) {
@@ -1649,6 +1649,11 @@ protected: // Shouldn't be used by friend classes
    * for someone to derive from the EditorBase later? I don't believe so.
    */
   virtual ~EditorBase();
+
+  /**
+   * GetDocumentCharsetInternal() returns charset of the document.
+   */
+  nsresult GetDocumentCharsetInternal(nsACString& aCharset) const;
 
   /**
    * SelectAllInternal() should be used instead of SelectAll() in editor

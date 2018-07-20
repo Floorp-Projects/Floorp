@@ -1,0 +1,44 @@
+<html>
+<head>
+<script src=webaudio-bench.js></script>
+<script src=benchmarks.js></script>
+<meta charset="utf-8">
+<style>
+  html {
+    font-family: helvetica, arial;
+  }
+  #in-progress {
+    display: none;
+  }
+  table {
+    margin: 1em;
+    border-collapse: collapse;
+  }
+  thead {
+    background-color: #aaaaaa;
+  }
+  tr:nth-child(even) {
+    background-color: #eeeeee;
+  }
+  td {
+    border: 1px solid black;
+    text-align: center;
+  }
+  #run-all {
+    display: none;
+  }
+</style>
+</head>
+<body>
+<progress id=loading></progress>
+<div class=controls>
+  <button id=run-all>Run all</button>
+  <div id=in-progress>
+    <progress> </progress>
+    Benchmark in progress...
+  </div>
+</div>
+<div id=results>
+</div>
+</body>
+</html>

@@ -29,6 +29,11 @@ class ByteBuf;
 
 namespace wr {
 
+// Using uintptr_t in C++ code for "size" types seems weird, so let's use a
+// better-sounding typedef. The name comes from the fact that we generally
+// have to deal with uintptr_t because that's what rust's usize maps to.
+typedef uintptr_t usize;
+
 typedef wr::WrWindowId WindowId;
 typedef wr::WrPipelineId PipelineId;
 typedef wr::WrImageKey ImageKey;
