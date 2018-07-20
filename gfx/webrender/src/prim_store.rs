@@ -2653,9 +2653,8 @@ impl PrimitiveStore {
             let scroll_node = &frame_context
                 .clip_scroll_tree
                 .spatial_nodes[run.clip_and_scroll.spatial_node_index.0];
-            let clip_chain = frame_context
-                .clip_scroll_tree
-                .get_clip_chain(run.clip_and_scroll.clip_chain_index);
+            let clip_chain = &frame_context
+                .clip_chains[run.clip_and_scroll.clip_chain_index.0];
 
             // Mark whether this picture contains any complex coordinate
             // systems, due to either the scroll node or the clip-chain.
@@ -2756,20 +2755,27 @@ impl PrimitiveStore {
                     };
 
                     if let Some(ref matrix) = parent_relative_transform {
-                        let bounds = matrix.transform_rect(&clipped_rect);
-                        result.local_rect_in_actual_parent_space =
-                            result.local_rect_in_actual_parent_space.union(&bounds);
+                        match matrix.transform_rect(&clipped_rect) {
+                            Some(bounds) => {
+                                result.local_rect_in_actual_parent_space =
+                                    result.local_rect_in_actual_parent_space.union(&bounds);
+                            }
+                            None => {
+                                warn!("parent relative transform can't transform the primitive rect for {:?}", prim_index);
+                            }
+                        }
+
                     }
                     if let Some(ref matrix) = original_relative_transform {
-                        let bounds = matrix.transform_rect(&clipped_rect);
-                        result.local_rect_in_original_parent_space =
-                            result.local_rect_in_original_parent_space.union(&bounds);
-                    }
-
-                    if let Some(ref matrix) = parent_relative_transform {
-                        let bounds = matrix.transform_rect(&prim_local_rect);
-                        result.local_rect_in_actual_parent_space =
-                            result.local_rect_in_actual_parent_space.union(&bounds);
+                        match matrix.transform_rect(&clipped_rect) {
+                            Some(bounds) => {
+                                result.local_rect_in_original_parent_space =
+                                    result.local_rect_in_original_parent_space.union(&bounds);
+                            }
+                            None => {
+                                warn!("original relative transform can't transform the primitive rect for {:?}", prim_index);
+                            }
+                        }
                     }
                 }
             }

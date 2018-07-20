@@ -72,6 +72,7 @@ pub struct FrameBuildingContext<'a> {
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub screen_rect: DeviceIntRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
+    pub clip_chains: &'a [ClipChain],
     pub transforms: &'a TransformPalette,
     pub max_local_clip: LayoutRect,
 }
@@ -218,6 +219,7 @@ impl FrameBuilder {
             pipelines,
             screen_rect: self.screen_rect.to_i32(),
             clip_scroll_tree,
+            clip_chains: &clip_scroll_tree.clip_chains,
             transforms: transform_palette,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
@@ -397,7 +399,6 @@ impl FrameBuilder {
                 device_pixel_scale,
                 prim_store: &self.prim_store,
                 resource_cache,
-                clip_scroll_tree,
                 use_dual_source_blending,
                 transforms: &transform_palette,
             };

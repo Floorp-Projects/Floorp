@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// A very basic BlobImageRenderer that can only render a checkerboard pattern.
+// A very basic BlobImageRasterizer that can only render a checkerboard pattern.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -65,7 +65,6 @@ fn render_blob(
             .expect("empty rects should be culled by webrender");
     }
 
-
     for y in dirty_rect.min_y() .. dirty_rect.max_y() {
         for x in dirty_rect.min_x() .. dirty_rect.max_x() {
             // Apply the tile's offset. This is important: all drawing commands should be
@@ -103,28 +102,26 @@ fn render_blob(
     }
 
     Ok(RasterizedBlobImage {
-        data: texels,
+        data: Arc::new(texels),
         size: descriptor.size,
     })
 }
 
+/// See rawtest.rs. We use this to test that blob images are requested the right
+/// amount of times.
 pub struct BlobCallbacks {
-    pub request: Box<Fn(&BlobImageRequest) + Send + 'static>,
-    pub resolve: Box<Fn() + Send + 'static>,
+    pub request: Box<Fn(&[BlobImageParams]) + Send + 'static>,
 }
 
 impl BlobCallbacks {
     pub fn new() -> Self {
-        BlobCallbacks { request: Box::new(|_|()), resolve: Box::new(|| (())) }
+        BlobCallbacks { request: Box::new(|_|()) }
     }
 }
 
 pub struct CheckerboardRenderer {
     image_cmds: HashMap<ImageKey, (ColorU, Option<TileSize>)>,
     callbacks: Arc<Mutex<BlobCallbacks>>,
-
-    // The images rendered in the current frame (not kept here between frames).
-    rendered_images: HashMap<BlobImageRequest, BlobImageResult>,
 }
 
 impl CheckerboardRenderer {
@@ -132,12 +129,11 @@ impl CheckerboardRenderer {
         CheckerboardRenderer {
             callbacks,
             image_cmds: HashMap::new(),
-            rendered_images: HashMap::new(),
         }
     }
 }
 
-impl BlobImageRenderer for CheckerboardRenderer {
+impl BlobImageHandler for CheckerboardRenderer {
     fn add(&mut self, key: ImageKey, cmds: Arc<BlobImageData>, tile_size: Option<TileSize>) {
         self.image_cmds
             .insert(key, (deserialize_blob(&cmds[..]).unwrap(), tile_size));
@@ -153,37 +149,59 @@ impl BlobImageRenderer for CheckerboardRenderer {
         self.image_cmds.remove(&key);
     }
 
-    fn request(
-        &mut self,
-        _resources: &BlobImageResources,
-        request: BlobImageRequest,
-        descriptor: &BlobImageDescriptor,
-        dirty_rect: Option<DeviceUintRect>,
-    ) {
-        (self.callbacks.lock().unwrap().request)(&request);
-        assert!(!self.rendered_images.contains_key(&request));
-        // This method is where we kick off our rendering jobs.
-        // It should avoid doing work on the calling thread as much as possible.
-        // In this example we will use the thread pool to render individual tiles.
-
-        // Gather the input data to send to a worker thread.
-        let &(color, tile_size) = self.image_cmds.get(&request.key).unwrap();
-
-        let tile = request.tile.map(|tile| (tile_size.unwrap(), tile));
-
-        let result = render_blob(color, descriptor, tile, dirty_rect);
-
-        self.rendered_images.insert(request, result);
-    }
-
-    fn resolve(&mut self, request: BlobImageRequest) -> BlobImageResult {
-        (self.callbacks.lock().unwrap().resolve)();
-        self.rendered_images.remove(&request).unwrap()
-    }
-
     fn delete_font(&mut self, _key: FontKey) {}
 
     fn delete_font_instance(&mut self, _key: FontInstanceKey) {}
 
     fn clear_namespace(&mut self, _namespace: IdNamespace) {}
+
+    fn prepare_resources(
+        &mut self,
+        _services: &BlobImageResources,
+        requests: &[BlobImageParams],
+    ) {
+        if !requests.is_empty() {
+            (self.callbacks.lock().unwrap().request)(&requests);
+        }
+    }
+
+    fn create_blob_rasterizer(&mut self) -> Box<AsyncBlobImageRasterizer> {
+        Box::new(Rasterizer { image_cmds: self.image_cmds.clone() })
+    }
+}
+
+struct Command {
+    request: BlobImageRequest,
+    color: ColorU,
+    descriptor: BlobImageDescriptor,
+    tile: Option<(TileSize, TileOffset)>,
+    dirty_rect: Option<DeviceUintRect>
+}
+
+struct Rasterizer {
+    image_cmds: HashMap<ImageKey, (ColorU, Option<TileSize>)>,
+}
+
+impl AsyncBlobImageRasterizer for Rasterizer {
+    fn rasterize(&mut self, requests: &[BlobImageParams]) -> Vec<(BlobImageRequest, BlobImageResult)> {
+        let requests: Vec<Command> = requests.into_iter().map(
+            |item| {
+                let (color, tile_size) = self.image_cmds[&item.request.key];
+
+                let tile = item.request.tile.map(|tile| (tile_size.unwrap(), tile));
+
+                Command {
+                    request: item.request,
+                    color,
+                    tile,
+                    descriptor: item.descriptor,
+                    dirty_rect: item.dirty_rect,
+                }
+            }
+        ).collect();
+
+        requests.iter().map(|cmd| {
+            (cmd.request, render_blob(cmd.color, &cmd.descriptor, cmd.tile, cmd.dirty_rect))
+        }).collect()
+    }
 }

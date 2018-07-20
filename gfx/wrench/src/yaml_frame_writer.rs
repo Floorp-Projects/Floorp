@@ -590,6 +590,7 @@ impl YamlFrameWriter {
                     );
                 }
                 ResourceUpdate::DeleteFontInstance(_) => {}
+                ResourceUpdate::SetImageVisibleArea(..) => {}
             }
         }
     }

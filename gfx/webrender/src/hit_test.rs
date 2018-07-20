@@ -210,8 +210,11 @@ impl HitTester {
 
         let node = &self.clip_nodes[node_index.0];
         let transform = self.spatial_nodes[node.spatial_node.0].world_viewport_transform;
-        let transformed_point = match transform.inverse() {
-            Some(inverted) => inverted.transform_point2d(&point),
+        let transformed_point = match transform
+            .inverse()
+            .and_then(|inverted| inverted.transform_point2d(&point))
+        {
+            Some(point) => point,
             None => {
                 test.node_cache.insert(node_index, ClippedIn::NotClippedIn);
                 return false;
@@ -236,8 +239,11 @@ impl HitTester {
             let spatial_node_index = clip_and_scroll.spatial_node_index;
             let scroll_node = &self.spatial_nodes[spatial_node_index.0];
             let transform = scroll_node.world_content_transform;
-            let point_in_layer = match transform.inverse() {
-                Some(inverted) => inverted.transform_point2d(&point),
+            let point_in_layer = match transform
+                .inverse()
+                .and_then(|inverted| inverted.transform_point2d(&point))
+            {
+                Some(point) => point,
                 None => continue,
             };
 
@@ -277,8 +283,11 @@ impl HitTester {
 
             let transform = scroll_node.world_content_transform;
             let mut facing_backwards: Option<bool> = None;  // will be computed on first use
-            let point_in_layer = match transform.inverse() {
-                Some(inverted) => inverted.transform_point2d(&point),
+            let point_in_layer = match transform
+                .inverse()
+                .and_then(|inverted| inverted.transform_point2d(&point))
+            {
+                Some(point) => point,
                 None => continue,
             };
 
@@ -308,8 +317,11 @@ impl HitTester {
                 // in a situation with an uninvertible transformation so we should just skip this
                 // result.
                 let root_node = &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0];
-                let point_in_viewport = match root_node.world_viewport_transform.inverse() {
-                    Some(inverted) => inverted.transform_point2d(&point),
+                let point_in_viewport = match root_node.world_viewport_transform
+                    .inverse()
+                    .and_then(|inverted| inverted.transform_point2d(&point))
+                {
+                    Some(point) => point,
                     None => continue,
                 };
 
@@ -411,8 +423,15 @@ impl HitTest {
         }
 
         let point =  &LayoutPoint::new(self.point.x, self.point.y);
-        self.pipeline_id.map(|id|
-            hit_tester.get_pipeline_root(id).world_viewport_transform.transform_point2d(point)
-        ).unwrap_or_else(|| WorldPoint::new(self.point.x, self.point.y))
+        self.pipeline_id
+            .and_then(|id|
+                hit_tester
+                    .get_pipeline_root(id)
+                    .world_viewport_transform
+                    .transform_point2d(point)
+            )
+            .unwrap_or_else(|| {
+                WorldPoint::new(self.point.x, self.point.y)
+            })
     }
 }

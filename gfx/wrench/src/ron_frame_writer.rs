@@ -141,6 +141,7 @@ impl RonFrameWriter {
                 ResourceUpdate::DeleteFont(_) => {}
                 ResourceUpdate::AddFontInstance(_) => {}
                 ResourceUpdate::DeleteFontInstance(_) => {}
+                ResourceUpdate::SetImageVisibleArea(..) => {}
             }
         }
     }

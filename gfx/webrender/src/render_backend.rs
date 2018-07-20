@@ -8,7 +8,7 @@ use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{ScrollLocation, ScrollNodeState, TransactionMsg};
+use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, ImageKey};
 use api::channel::{MsgReceiver, Payload};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
@@ -226,10 +226,11 @@ impl Document {
     fn forward_transaction_to_scene_builder(
         &mut self,
         transaction_msg: TransactionMsg,
+        blobs_to_rasterize: &[ImageKey],
         document_ops: &DocumentOps,
         document_id: DocumentId,
         scene_id: u64,
-        resource_cache: &ResourceCache,
+        resource_cache: &mut ResourceCache,
         scene_tx: &Sender<SceneBuilderRequest>,
     ) {
         // Do as much of the error handling as possible here before dispatching to
@@ -252,8 +253,14 @@ impl Document {
             None
         };
 
+        let (blob_rasterizer, blob_requests) = resource_cache.create_blob_scene_builder_requests(
+            blobs_to_rasterize
+        );
+
         scene_tx.send(SceneBuilderRequest::Transaction {
             scene: scene_request,
+            blob_requests,
+            blob_rasterizer,
             resource_updates: transaction_msg.resource_updates,
             frame_ops: transaction_msg.frame_ops,
             render: transaction_msg.generate_frame,
@@ -718,6 +725,8 @@ impl RenderBackend {
                         frame_ops,
                         render,
                         result_tx,
+                        rasterized_blobs,
+                        blob_rasterizer,
                     } => {
                         let mut ops = DocumentOps::nop();
                         if let Some(doc) = self.documents.get_mut(&document_id) {
@@ -755,10 +764,16 @@ impl RenderBackend {
                             use_scene_builder_thread: false,
                         };
 
+                        self.resource_cache.add_rasterized_blob_images(rasterized_blobs);
+                        if let Some(rasterizer) = blob_rasterizer {
+                            self.resource_cache.set_blob_rasterizer(rasterizer);
+                        }
+
                         if !transaction_msg.is_empty() || ops.render {
                             self.update_document(
                                 document_id,
                                 transaction_msg,
+                                &[],
                                 &mut frame_counter,
                                 &mut profile_counters,
                                 ops,
@@ -825,9 +840,15 @@ impl RenderBackend {
             ApiMsg::FlushSceneBuilder(tx) => {
                 self.scene_tx.send(SceneBuilderRequest::Flush(tx)).unwrap();
             }
-            ApiMsg::UpdateResources(updates) => {
-                self.resource_cache
-                    .update_resources(updates, &mut profile_counters.resources);
+            ApiMsg::UpdateResources(mut updates) => {
+                self.resource_cache.pre_scene_building_update(
+                    &mut updates,
+                    &mut profile_counters.resources
+                );
+                self.resource_cache.post_scene_building_update(
+                    updates,
+                    &mut profile_counters.resources
+                );
             }
             ApiMsg::GetGlyphDimensions(instance_key, glyph_indices, tx) => {
                 let mut glyph_dimensions = Vec::with_capacity(glyph_indices.len());
@@ -956,10 +977,18 @@ impl RenderBackend {
             ApiMsg::ShutDown => {
                 return false;
             }
-            ApiMsg::UpdateDocument(document_id, doc_msgs) => {
+            ApiMsg::UpdateDocument(document_id, mut doc_msgs) => {
+                let blob_requests = get_blob_image_updates(&doc_msgs.resource_updates);
+
+                self.resource_cache.pre_scene_building_update(
+                    &mut doc_msgs.resource_updates,
+                    &mut profile_counters.resources,
+                );
+
                 self.update_document(
                     document_id,
                     doc_msgs,
+                    &blob_requests,
                     frame_counter,
                     profile_counters,
                     DocumentOps::nop(),
@@ -975,12 +1004,17 @@ impl RenderBackend {
         &mut self,
         document_id: DocumentId,
         mut transaction_msg: TransactionMsg,
+        blob_requests: &[ImageKey],
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
         initial_op: DocumentOps,
         has_built_scene: bool,
     ) {
         let mut op = initial_op;
+
+        if !blob_requests.is_empty() {
+            transaction_msg.use_scene_builder_thread = true;
+        }
 
         for scene_msg in transaction_msg.scene_ops.drain(..) {
             let _timer = profile_counters.total_time.timer();
@@ -1000,17 +1034,18 @@ impl RenderBackend {
 
             doc.forward_transaction_to_scene_builder(
                 transaction_msg,
+                blob_requests,
                 &op,
                 document_id,
                 scene_id,
-                &self.resource_cache,
+                &mut self.resource_cache,
                 &self.scene_tx,
             );
 
             return;
         }
 
-        self.resource_cache.update_resources(
+        self.resource_cache.post_scene_building_update(
             transaction_msg.resource_updates,
             &mut profile_counters.resources,
         );
@@ -1207,6 +1242,28 @@ impl RenderBackend {
         serde_json::to_string(&debug_root).unwrap()
     }
 }
+
+fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<ImageKey> {
+    let mut requests = Vec::new();
+    for update in updates {
+        match *update {
+            ResourceUpdate::AddImage(ref img) => {
+                if img.data.is_blob() {
+                    requests.push(img.key);
+                }
+            }
+            ResourceUpdate::UpdateImage(ref img) => {
+                if img.data.is_blob() {
+                    requests.push(img.key);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    requests
+}
+
 
 #[cfg(feature = "debugger")]
 trait ToDebugString {
