@@ -35,9 +35,7 @@ Supported clients
 
 [Selenium] users must update to version 3.11 or later to
 use geckodriver.  Other clients that follow the [W3C WebDriver
-specification] are also supported.
-
-[W3C WebDriver specification]: https://w3c.github.io/webdriver/
+specification][WebDriver] are also supported.
 
 
 Supported Firefoxen
@@ -403,9 +401,9 @@ of IPC processes through a preference and enables more verbose logging.
 Usage
 =====
 
-Usage steps are [documented on
-MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
-but how you invoke geckodriver largely depends on your use case.
+geckodriver is an implementation of WebDriver, and WebDriver can
+be used for widely different purposes.  How you invoke geckodriver
+largely depends on your use case.
 
 
 Selenium
