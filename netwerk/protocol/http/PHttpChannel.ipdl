@@ -152,7 +152,7 @@ child:
   // When CORS blocks the request in the parent process, it doesn't have the
   // correct window ID, so send the message to the child for logging to the web
   // console.
-  async LogBlockedCORSRequest(nsString message);
+  async LogBlockedCORSRequest(nsString message, nsCString category);
 
   async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 

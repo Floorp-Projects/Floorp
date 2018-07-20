@@ -76,7 +76,8 @@ public:
   // browser console if no valid inner window ID is found.
   static void LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                     bool aPrivateBrowsing,
-                                    const nsAString& aMessage);
+                                    const nsAString& aMessage,
+                                    const nsACString& aCategory);
 private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache
   friend class mozilla::net::HttpChannelParent;
