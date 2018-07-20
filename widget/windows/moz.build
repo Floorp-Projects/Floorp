@@ -18,6 +18,10 @@ EXPORTS += [
     'WinUtils.h',
 ]
 
+EXPORTS.mozilla += [
+    'WinHeaderOnlyUtils.h',
+]
+
 EXPORTS.mozilla.widget += [
     'AudioSession.h',
     'CompositorWidgetChild.h',

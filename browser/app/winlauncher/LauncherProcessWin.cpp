@@ -16,6 +16,7 @@
 #include "mozilla/SafeMode.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
 
 #include <windows.h>
@@ -219,10 +220,13 @@ LauncherMain(int argc, wchar_t* argv[])
     return 1;
   }
 
+  const DWORD timeout = ::IsDebuggerPresent() ? INFINITE :
+                        kWaitForInputIdleTimeoutMS;
+
   // Keep the current process around until the callback process has created
   // its message queue, to avoid the launched process's windows being forced
   // into the background.
-  ::WaitForInputIdle(process.get(), kWaitForInputIdleTimeoutMS);
+  mozilla::WaitForInputIdle(process.get(), timeout);
 
   return 0;
 }
