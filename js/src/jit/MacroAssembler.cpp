@@ -818,9 +818,10 @@ MacroAssembler::checkAllocatorState(Label* fail)
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gc zeal or tracing are active.
-    branch32(Assembler::NotEqual,
-             AbsoluteAddress(GetJitContext()->runtime->addressOfGCZealModeBits()), Imm32(0),
-             fail);
+    const uint32_t *ptrZealModeBits =
+        GetJitContext()->runtime->addressOfGCZealModeBits();
+    branch32(Assembler::NotEqual, AbsoluteAddress(ptrZealModeBits), Imm32(0),
+        fail);
 #endif
 
     // Don't execute the inline path if the realm has an object metadata callback,
@@ -863,10 +864,13 @@ MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocK
     int thingSize = int(gc::Arena::thingSize(allocKind));
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
-    loadPtr(AbsoluteAddress(zone->addressOfNurseryPosition()), result);
+    void *ptrNurseryPosition = zone->addressOfNurseryPosition();
+    loadPtr(AbsoluteAddress(ptrNurseryPosition), result);
     computeEffectiveAddress(Address(result, totalSize), temp);
-    branchPtr(Assembler::Below, AbsoluteAddress(zone->addressOfNurseryCurrentEnd()), temp, fail);
-    storePtr(temp, AbsoluteAddress(zone->addressOfNurseryPosition()));
+    const void *ptrNurseryCurrentEnd = zone->addressOfNurseryCurrentEnd();
+    branchPtr(Assembler::Below, AbsoluteAddress(ptrNurseryCurrentEnd), temp,
+        fail);
+    storePtr(temp, AbsoluteAddress(ptrNurseryPosition));
 
     if (nDynamicSlots) {
         computeEffectiveAddress(Address(result, thingSize), temp);
@@ -886,14 +890,15 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
 
     // Load the first and last offsets of |zone|'s free list for |allocKind|.
     // If there is no room remaining in the span, fall back to get the next one.
-    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    gc::FreeSpan **ptrFreeList = zone->addressOfFreeList(allocKind);
+    loadPtr(AbsoluteAddress(ptrFreeList), temp);
     load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfFirst()), result);
     load16ZeroExtend(Address(temp, js::gc::FreeSpan::offsetOfLast()), temp);
     branch32(Assembler::AboveOrEqual, result, temp, &fallback);
 
     // Bump the offset for the next allocation.
     add32(Imm32(thingSize), result);
-    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    loadPtr(AbsoluteAddress(ptrFreeList), temp);
     store16(result, Address(temp, js::gc::FreeSpan::offsetOfFirst()));
     sub32(Imm32(thingSize), result);
     addPtr(temp, result); // Turn the offset into a pointer.
@@ -904,7 +909,7 @@ MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind a
     // interpreter will call the GC allocator to set up a new arena to allocate
     // from, after which we can resume allocating in the jit.
     branchTest32(Assembler::Zero, result, result, fail);
-    loadPtr(AbsoluteAddress(zone->addressOfFreeList(allocKind)), temp);
+    loadPtr(AbsoluteAddress(ptrFreeList), temp);
     addPtr(temp, result); // Turn the offset into a pointer.
     Push(result);
     // Update the free list to point to the next span (which may be empty).
