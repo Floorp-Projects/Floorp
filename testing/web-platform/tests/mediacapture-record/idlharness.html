@@ -14,7 +14,7 @@
   <canvas id='canvas' width=10 height=10/>
   <script>
     promise_test(async () => {
-      const srcs = ['mediacapture-record', 'mediacapture-main', 'html', 'dom'];
+      const srcs = ['mediacapture-record', 'mediacapture-streams', 'html', 'dom'];
       const [idl, main, html, dom] = await Promise.all(
           srcs.map(i => fetch(`/interfaces/${i}.idl`).then(r => r.text())));
 

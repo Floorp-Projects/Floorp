@@ -1285,6 +1285,10 @@ class NativeObject : public ShapedObject
             setDenseElement(index, val);
     }
 
+  private:
+    inline void addDenseElementType(JSContext* cx, uint32_t index, const Value& val);
+
+  public:
     inline void setDenseElementWithType(JSContext* cx, uint32_t index,
                                         const Value& val);
     inline void initDenseElementWithType(JSContext* cx, uint32_t index,

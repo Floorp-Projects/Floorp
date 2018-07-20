@@ -4256,6 +4256,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // notified on,
     mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
 
+    mDocument->UpdateSVGUseElementShadowTrees();
+
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
     if (!mIsDestroying) {

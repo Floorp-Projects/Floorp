@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import BasicCardOption from "../components/basic-card-option.js";
-import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
-import RichSelect from "../components/rich-select.js";
+import RichPicker from "./rich-picker.js";
 import paymentRequest from "../paymentRequest.js";
 
 /**
@@ -13,38 +12,21 @@ import paymentRequest from "../paymentRequest.js";
  * <basic-card-option> listening to savedBasicCards.
  */
 
-export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class PaymentMethodPicker extends RichPicker {
   constructor() {
     super();
-    this.dropdown = new RichSelect();
-    this.dropdown.addEventListener("change", this);
     this.dropdown.setAttribute("option-type", "basic-card-option");
-    this.spacerText = document.createTextNode(" ");
     this.securityCodeInput = document.createElement("input");
     this.securityCodeInput.autocomplete = "off";
+    this.securityCodeInput.placeholder = "CVV"; /* XXX Bug 1473772 */
     this.securityCodeInput.size = 3;
     this.securityCodeInput.classList.add("security-code");
     this.securityCodeInput.addEventListener("change", this);
-    this.addLink = document.createElement("a");
-    this.addLink.className = "add-link";
-    this.addLink.href = "javascript:void(0)";
-    this.addLink.textContent = this.dataset.addLinkLabel;
-    this.addLink.addEventListener("click", this);
-    this.editLink = document.createElement("a");
-    this.editLink.className = "edit-link";
-    this.editLink.href = "javascript:void(0)";
-    this.editLink.textContent = this.dataset.editLinkLabel;
-    this.editLink.addEventListener("click", this);
   }
 
   connectedCallback() {
-    this.appendChild(this.dropdown);
-    this.appendChild(this.spacerText);
-    this.appendChild(this.securityCodeInput);
-    this.appendChild(this.addLink);
-    this.append(" ");
-    this.appendChild(this.editLink);
     super.connectedCallback();
+    this.dropdown.after(this.securityCodeInput);
   }
 
   render(state) {

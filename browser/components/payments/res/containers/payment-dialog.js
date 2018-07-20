@@ -45,7 +45,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._mainContainer = contents.getElementById("main-container");
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
 
-    this._shippingTypeLabel = contents.querySelector("#shipping-type-label");
     this._shippingAddressPicker = contents.querySelector("address-picker.shipping-related");
     this._shippingRelatedEls = contents.querySelectorAll(".shipping-related");
     this._payerRelatedEls = contents.querySelectorAll(".payer-related");
@@ -252,6 +251,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       this.dataset[shippingType + "AddressTitleAdd"];
     this._shippingAddressPicker.dataset.editAddressTitle =
       this.dataset[shippingType + "AddressTitleEdit"];
+    let addressPickerLabel = this._shippingAddressPicker.dataset[shippingType + "AddressLabel"];
+    this._shippingAddressPicker.setAttribute("label", addressPickerLabel);
 
     let totalItem = paymentRequest.getTotalItem(state);
     let totalAmountEl = this.querySelector("#total > currency-amount");
@@ -293,9 +294,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     }
     this._payerAddressPicker.dataset.addAddressTitle = this.dataset.payerTitleAdd;
     this._payerAddressPicker.dataset.editAddressTitle = this.dataset.payerTitleEdit;
-
-    this._shippingTypeLabel.querySelector("label").textContent =
-      this._shippingTypeLabel.dataset[shippingType + "AddressLabel"];
 
     this._renderPayButton(state);
 

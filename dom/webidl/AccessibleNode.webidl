@@ -17,4 +17,21 @@ interface AccessibleNode {
   boolean has(DOMString... attributes);
   [Throws]
   any get(DOMString attribute);
+
+  // Accessible properties
+  attribute boolean? modal;
+  attribute boolean? multiline;
+  attribute boolean? multiselectable;
+  attribute boolean? readOnly;
+  attribute boolean? required;
+
+  // Accessible states
+  attribute boolean? disabled;
+  attribute boolean? expanded;
+  attribute boolean? hidden;
+  attribute boolean? selected;
+
+  // Live regions
+  attribute boolean? atomic;
+  attribute boolean? busy;
 };

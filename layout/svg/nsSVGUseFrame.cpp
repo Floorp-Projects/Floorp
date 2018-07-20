@@ -25,13 +25,6 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)
 
 //----------------------------------------------------------------------
-// nsQueryFrame methods
-
-NS_QUERYFRAME_HEAD(nsSVGUseFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGGFrame)
-
-//----------------------------------------------------------------------
 // nsIFrame methods:
 
 void
@@ -49,11 +42,11 @@ nsSVGUseFrame::Init(nsIContent*       aContent,
 }
 
 nsresult
-nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                nsAtom*        aAttribute,
-                                int32_t         aModType)
+nsSVGUseFrame::AttributeChanged(int32_t aNameSpaceID,
+                                nsAtom* aAttribute,
+                                int32_t aModType)
 {
-  SVGUseElement *useElement = static_cast<SVGUseElement*>(GetContent());
+  auto* useElement = static_cast<SVGUseElement*>(GetContent());
 
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
@@ -71,10 +64,14 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
         mHasValidDimensions = !mHasValidDimensions;
         invalidate = true;
       }
+
+      // FIXME(emilio): This shouldn't really belong to nsSVGUseFrame, but
+      // SVGUseElement.
       if (useElement->OurWidthAndHeightAreUsed()) {
         invalidate = true;
         useElement->SyncWidthOrHeight(aAttribute);
       }
+
       if (invalidate) {
         nsLayoutUtils::PostRestyleEvent(
           useElement, nsRestyleHint(0),
@@ -99,14 +96,6 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 
   return nsSVGGFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
-
-void
-nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
-  aPostDestroyData.AddAnonymousContent(mContentClone.forget());
-  nsSVGGFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
-}
-
 
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
@@ -159,32 +148,4 @@ nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
   // an anonymous child <svg>, and its nsSVGInnerSVGFrame will do that.
 
   nsSVGGFrame::NotifySVGChanged(aFlags);
-}
-
-//----------------------------------------------------------------------
-// nsIAnonymousContentCreator methods:
-
-nsresult
-nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
-{
-  // FIXME(emilio): This should not be done at frame construction time, but
-  // using Shadow DOM or something like that instead, to support properly
-  // display: contents in <svg:use>.
-  auto use = static_cast<SVGUseElement*>(GetContent());
-  mContentClone = use->CreateAnonymousContent();
-  nsLayoutUtils::PostRestyleEvent(
-    use, nsRestyleHint(0), nsChangeHint_InvalidateRenderingObservers);
-  if (!mContentClone)
-    return NS_ERROR_FAILURE;
-  aElements.AppendElement(mContentClone);
-  return NS_OK;
-}
-
-void
-nsSVGUseFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter)
-{
-  if (mContentClone) {
-    aElements.AppendElement(mContentClone);
-  }
 }

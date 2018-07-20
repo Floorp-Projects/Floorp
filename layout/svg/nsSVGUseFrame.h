@@ -8,12 +8,10 @@
 #define __NS_SVGUSEFRAME_H__
 
 // Keep in (case-insensitive) order:
-#include "nsIAnonymousContentCreator.h"
 #include "nsSVGGFrame.h"
 
 class nsSVGUseFrame final
   : public nsSVGGFrame
-  , public nsIAnonymousContentCreator
 {
   friend nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell,
                                      ComputedStyle* aStyle);
@@ -26,7 +24,6 @@ protected:
   }
 
 public:
-  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)
 
   // nsIFrame interface:
@@ -37,8 +34,6 @@ public:
   nsresult AttributeChanged(int32_t aNameSpaceID,
                             nsAtom* aAttribute,
                             int32_t aModType) override;
-
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override
@@ -51,16 +46,8 @@ public:
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
 
-  // nsIAnonymousContentCreator
-  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                uint32_t aFilter) override;
-
-  nsIContent* GetContentClone() { return mContentClone.get(); }
-
 private:
   bool mHasValidDimensions;
-  nsCOMPtr<nsIContent> mContentClone;
 };
 
 #endif // __NS_SVGUSEFRAME_H__
