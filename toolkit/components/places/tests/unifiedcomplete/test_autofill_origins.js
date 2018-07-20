@@ -81,6 +81,45 @@ add_task(async function portPartial() {
   await cleanup();
 });
 
+// "EXaM" should match http://example.com/ and the case of the search string
+// should be preserved in the autofilled value.
+add_task(async function preserveCase() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://example.com/",
+  }]);
+  await check_autocomplete({
+    search: "EXaM",
+    autofilled: "EXaMple.com/",
+    completed: "http://example.com/",
+    matches: [{
+      value: "example.com/",
+      comment: "example.com",
+      style: ["autofill", "heuristic"],
+    }],
+  });
+  await cleanup();
+});
+
+// "EXaM" should match http://example.com:8888/, the port should be completed,
+// and the case of the search string should be preserved in the autofilled
+// value.
+add_task(async function preserveCasePort() {
+  await PlacesTestUtils.addVisits([{
+    uri: "http://example.com:8888/",
+  }]);
+  await check_autocomplete({
+    search: "EXaM",
+    autofilled: "EXaMple.com:8888/",
+    completed: "http://example.com:8888/",
+    matches: [{
+      value: "example.com:8888/",
+      comment: "example.com:8888",
+      style: ["autofill", "heuristic"],
+    }],
+  });
+  await cleanup();
+});
+
 // "example.com:89" should *not* match http://example.com:8888/.
 add_task(async function portNoMatch1() {
   await PlacesTestUtils.addVisits([{
