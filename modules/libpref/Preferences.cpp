@@ -2895,6 +2895,8 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     nsDependentCString name(pref->Name());
     if (StringBeginsWith(name, branchName) || name.Equals(branchNameNoDot)) {
       iter.Remove();
+      // The saved callback pref may be invalid now.
+      gCallbackPref = nullptr;
     }
   }
 
