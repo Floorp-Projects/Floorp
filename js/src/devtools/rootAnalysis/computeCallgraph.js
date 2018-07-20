@@ -44,7 +44,7 @@ function printOnce(line)
 // Note that sixgill will only store certain attributes (annotation-names), so
 // this won't be *all* the attributes in the source, just the ones that sixgill
 // watches for.
-function getAnnotations(body)
+function getAllAttributes(body)
 {
     var all_annotations = {};
     for (var v of (body.DefineVariable || [])) {
@@ -62,12 +62,12 @@ function getAnnotations(body)
 }
 
 // Get just the annotations understood by the hazard analysis.
-function getTags(functionName, body) {
+function getAnnotations(functionName, body) {
     var tags = new Set();
-    var annotations = getAnnotations(body);
-    if (functionName in annotations) {
-        for (var [ annName, annValue ] of annotations[functionName]) {
-            if (annName == 'Tag')
+    var attributes = getAllAttributes(body);
+    if (functionName in attributes) {
+        for (var [ annName, annValue ] of attributes[functionName]) {
+            if (annName == 'annotate')
                 tags.add(annValue);
         }
     }
@@ -81,7 +81,8 @@ function processBody(functionName, body)
     if (!('PEdge' in body))
         return;
 
-    for (var tag of getTags(functionName, body).values())
+
+    for (var tag of getAnnotations(functionName, body).values())
         print("T " + memo(functionName) + " " + tag);
 
     // Set of all callees that have been output so far, in order to suppress

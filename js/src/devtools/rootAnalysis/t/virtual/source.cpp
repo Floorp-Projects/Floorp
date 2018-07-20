@@ -1,4 +1,4 @@
-#define ANNOTATE(property) __attribute__((tag(property)))
+#define ANNOTATE(property) __attribute__((annotate(property)))
 
 extern void GC() ANNOTATE("GC Call");
 
@@ -16,10 +16,28 @@ typedef void (*func_t)();
 
 class Base {
   public:
-    int dummy;
+    int ANNOTATE("field annotation") dummy;
     virtual void someGC() = 0;
     func_t functionField;
+
+    // For now, this is just to verify that the plugin doesn't crash. The
+    // analysis code does not yet look at this annotation or output it anywhere
+    // (though it *is* being recorded.)
+    static float testAnnotations() ANNOTATE("static func");
+
+    // Similar, though sixgill currently completely ignores parameter annotations.
+    static double testParamAnnotations(Cell& ANNOTATE("param annotation") ANNOTATE("second param annot") cell) ANNOTATE("static func") ANNOTATE("second func");
 };
+
+float Base::testAnnotations()
+{
+    asm("");
+}
+
+double Base::testParamAnnotations(Cell& cell)
+{
+    asm("");
+}
 
 class Super : public Base {
   public:
