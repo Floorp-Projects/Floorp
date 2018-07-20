@@ -65,7 +65,7 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
       }
     }
 #ifdef MOZ_AV1
-    if (StaticPrefs::MediaAv1Enabled() && IsAV1CodecString(codec)) {
+    if (AOMDecoder::IsSupportedCodec(codec)) {
       tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
           NS_LITERAL_CSTRING("video/av1"), aType));

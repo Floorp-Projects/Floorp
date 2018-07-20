@@ -37,6 +37,9 @@ public:
   // by our demuxers to identify AV1 streams.
   static bool IsAV1(const nsACString& aMimeType);
 
+  // Return true if aCodecType is a supported codec description.
+  static bool IsSupportedCodec(const nsAString& aCodecType);
+
   // Return true if a sample is a keyframe.
   static bool IsKeyframe(Span<const uint8_t> aBuffer);
 
