@@ -412,7 +412,7 @@ Selenium
 --------
 
 If you are using geckodriver through [Selenium], you must ensure that
-you have version 3.5 and greater.  Because geckodriver implements the
+you have version 3.11 or greater.  Because geckodriver implements the
 [W3C WebDriver standard][WebDriver] and not the same Selenium wire
 protocol older drivers are using, you may experience incompatibilities
 and migration problems when making the switch from FirefoxDriver to
