@@ -30,7 +30,7 @@ const TEST_HTTP = "http://example.org/";
  *        do not match. If not present, it uses the default message defined
  *        in the function parameters.
  */
-async function checkBrowserRemoteType(
+function checkBrowserRemoteType(
   browser,
   expectedRemoteType,
   message = `Ensures that tab runs in the ${expectedRemoteType} content process.`
@@ -63,7 +63,7 @@ add_task(async function activity_stream_in_privileged_content_process() {
   Services.ppmm.releaseCachedProcesses();
 
   await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(browser1) {
-    await checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGED_REMOTE_TYPE);
+    checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGED_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
     let privilegedPid = browser1.frameLoader.tabParent.osPid;
@@ -97,7 +97,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
   Services.ppmm.releaseCachedProcesses();
 
   await BrowserTestUtils.withNewTab(TEST_HTTP, async function(browser) {
-    await checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
+    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     for (let [url, remoteType] of [
       [ABOUT_NEWTAB, E10SUtils.PRIVILEGED_REMOTE_TYPE],
@@ -123,7 +123,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
     ]) {
       BrowserTestUtils.loadURI(browser, url);
       await BrowserTestUtils.browserLoaded(browser, false, url);
-      await checkBrowserRemoteType(browser, remoteType);
+      checkBrowserRemoteType(browser, remoteType);
     }
   });
 
@@ -139,7 +139,7 @@ add_task(async function process_switching_through_navigation_features() {
   Services.ppmm.releaseCachedProcesses();
 
   await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(browser) {
-    await checkBrowserRemoteType(browser, E10SUtils.PRIVILEGED_REMOTE_TYPE);
+    checkBrowserRemoteType(browser, E10SUtils.PRIVILEGED_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
     let privilegedPid = browser.frameLoader.tabParent.osPid;
@@ -166,7 +166,7 @@ add_task(async function process_switching_through_navigation_features() {
     // Load http webpage
     BrowserTestUtils.loadURI(browser, TEST_HTTP);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
-    await checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
+    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     // Check that using the history back feature switches back to privileged content process.
     let promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, ABOUT_NEWTAB);
@@ -185,7 +185,7 @@ add_task(async function process_switching_through_navigation_features() {
     // We will need to ensure that the process flip has fully completed so that
     // the navigation history data will be available when we do browser.gotoIndex(0);
     await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
-    await checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE,
+    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE,
       "Check that tab runs in the web content process after using history goForward.");
 
     // Check that goto history index does not break the affinity.
@@ -197,7 +197,7 @@ add_task(async function process_switching_through_navigation_features() {
 
     BrowserTestUtils.loadURI(browser, TEST_HTTP);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
-    await checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
+    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     // Check that location change causes a change in process type as well.
     await ContentTask.spawn(browser, ABOUT_NEWTAB, uri => {
