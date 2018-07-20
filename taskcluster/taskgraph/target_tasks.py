@@ -59,6 +59,7 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
             'win32-pgo', 'win64-pgo',
             # ASAN is central-only
             'linux64-asan-reporter-nightly',
+            'win64-asan-reporter-nightly',
             ):
         return False
     if str(platform).startswith('android') and 'nightly' in str(platform):
@@ -533,7 +534,7 @@ def target_tasks_nightly_asan(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of asan. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filter = make_nightly_filter({'linux64-asan-reporter-nightly'})
+    filter = make_nightly_filter({'linux64-asan-reporter-nightly', 'win64-asan-reporter-nightly'})
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 

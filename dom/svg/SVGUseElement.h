@@ -44,8 +44,16 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  // interfaces:
+  NS_IMPL_FROMNODE_WITH_TAG(SVGUseElement, kNameSpaceID_SVG, use)
 
+  nsresult BindToTree(nsIDocument* aDocument,
+                      nsIContent* aParent,
+                      nsIContent* aBindingParent,
+                      bool aCompileEventHandlers) override;
+  void UnbindFromTree(bool aDeep = true,
+                      bool aNullParent = true) override;
+
+  // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGUseElement, SVGUseElementBase)
 
@@ -55,9 +63,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
-
-  // for nsSVGUseFrame's nsIAnonymousContentCreator implementation.
-  already_AddRefed<nsIContent> CreateAnonymousContent();
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(
@@ -80,6 +85,10 @@ public:
   nsIURI* GetSourceDocURI();
   URLExtraData* GetContentURLData() const { return mContentURLData; }
 
+  // Updates the internal shadow tree to be an up-to-date clone of the
+  // referenced element.
+  void UpdateShadowTree();
+
 protected:
   /**
    * Helper that provides a reference to the element with the ID that is
@@ -92,15 +101,18 @@ protected:
     explicit ElementTracker(SVGUseElement* aOwningUseElement)
       : mOwningUseElement(aOwningUseElement)
     {}
-  protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
+
+  private:
+
+    void ElementChanged(Element* aFrom, Element* aTo) override
+    {
       IDTracker::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mOwningUseElement);
       }
       mOwningUseElement->TriggerReclone();
     }
-  private:
+
     SVGUseElement* mOwningUseElement;
   };
 
@@ -129,7 +141,7 @@ protected:
   static StringInfo sStringInfo[2];
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
-  ElementTracker       mReferencedElementTracker;
+  ElementTracker mReferencedElementTracker;
   RefPtr<URLExtraData> mContentURLData; // URL data for its anonymous content
 };
 

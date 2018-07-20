@@ -42,7 +42,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AccessibleNode)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AccessibleNode)
 
-AccessibleNode::AccessibleNode(nsINode* aNode) : mDOMNode(aNode)
+AccessibleNode::AccessibleNode(nsINode* aNode) :
+    mBooleanProperties(0),
+    mDOMNode(aNode)
 {
   nsAccessibilityService* accService = GetOrCreateAccService();
   if (!accService) {

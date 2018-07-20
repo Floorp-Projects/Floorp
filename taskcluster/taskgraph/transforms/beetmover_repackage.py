@@ -75,6 +75,12 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
                     "host/bin/mar",
                     "host/bin/mbsdiff",
                 ]),
+    r'^win64-asan-reporter-nightly$':
+        filter(lambda a: a not in ('target.crashreporter-symbols.zip', 'target.jsshell.zip'),
+               _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+                    "host/bin/mar.exe",
+                    "host/bin/mbsdiff.exe",
+                ]),
     r'^win(32|64)(|-devedition)-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
             'host/bin/mar.exe',
@@ -90,7 +96,7 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
 UPSTREAM_ARTIFACT_SIGNED_PATHS = {
     r'^linux(|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
         ['target.tar.bz2', 'target.tar.bz2.asc'],
-    r'^win(32|64)(|-devedition)-nightly(|-l10n)$': ['target.zip'],
+    r'^win(32|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$': ['target.zip'],
 }
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -107,7 +113,8 @@ UPSTREAM_ARTIFACT_REPACKAGE_PATHS = {
 UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = {
     r'^(linux(|64)|macosx64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
         ['target.complete.mar'],
-    r'^win64(|-devedition)-nightly(|-l10n)$': ['target.complete.mar', 'target.installer.exe'],
+    r'^win64(|-devedition|-asan-reporter)-nightly(|-l10n)$':
+        ['target.complete.mar', 'target.installer.exe'],
     r'^win32(|-devedition)-nightly(|-l10n)$': [
         'target.complete.mar',
         'target.installer.exe',

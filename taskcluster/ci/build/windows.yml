@@ -651,6 +651,40 @@ win64-asan/opt:
         - win64-rust-size
         - win64-sccache
 
+win64-asan-reporter-nightly/opt:
+    description: "Win64 Opt ASAN Reporter Nightly"
+    attributes:
+        nightly: true
+    index:
+        product: firefox
+        job-name: win64-asan-reporter-opt
+        type: nightly
+    treeherder:
+        platform: win64-asan-reporter/opt
+        symbol: BoR
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: "asan-reporter"
+    run:
+        using: mozharness
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/asan_reporter_opt.py
+            - taskcluster_nightly.py
+    run-on-projects: ['mozilla-central']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-sccache
+
 win32-devedition-nightly/opt:
     description: "Win32 Dev Edition Nightly"
     index:

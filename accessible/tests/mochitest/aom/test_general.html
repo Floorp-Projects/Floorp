@@ -41,6 +41,16 @@
     });
   }
 
+  function testBoolProp(anode, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    anode[prop] = true;
+    is(anode[prop], true, `anode.${prop} was assigned true`);
+    anode[prop] = false;
+    is(anode[prop], false, `anode.${prop} was assigned false`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
+
   // Check that the WebIDL is as expected.
   function checkImplementation(ifrDoc) {
     let anode = ifrDoc.accessibleNode;
@@ -99,6 +109,13 @@
     for (let i = 0; i < attrs.length; i++) {
       ok(attrs.includes(anode.attributes[i]),
          `${anode.attributes[i]} attribute is expected and found`);
+    }
+
+    const boolProps = ["atomic", "busy", "disabled", "expanded", "hidden", "modal",
+                       "multiline", "multiselectable", "readOnly", "required", "selected"];
+
+    for (const boolProp of boolProps) {
+      testBoolProp(anode, boolProp);
     }
 
     // Check if an AccessibleNode is properly cached.

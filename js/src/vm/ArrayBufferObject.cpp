@@ -1281,7 +1281,7 @@ ArrayBufferObject*
 ArrayBufferObject::createEmpty(JSContext* cx)
 {
     AutoSetNewObjectMetadata metadata(cx);
-    ArrayBufferObject* obj = NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr);
+    ArrayBufferObject* obj = NewBuiltinClassInstance<ArrayBufferObject>(cx);
     if (!obj)
         return nullptr;
 
@@ -1298,7 +1298,7 @@ ArrayBufferObject::createFromNewRawBuffer(JSContext* cx, WasmArrayRawBuffer* buf
                                           uint32_t initialSize)
 {
     AutoSetNewObjectMetadata metadata(cx);
-    ArrayBufferObject* obj = NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr);
+    ArrayBufferObject* obj = NewBuiltinClassInstance<ArrayBufferObject>(cx);
     if (!obj) {
         WasmArrayRawBuffer::Release(buffer->dataPointer());
         return nullptr;

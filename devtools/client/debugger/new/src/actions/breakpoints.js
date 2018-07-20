@@ -16,6 +16,7 @@ exports.removeBreakpoints = removeBreakpoints;
 exports.remapBreakpoints = remapBreakpoints;
 exports.setBreakpointCondition = setBreakpointCondition;
 exports.toggleBreakpoint = toggleBreakpoint;
+exports.toggleBreakpointsAtLine = toggleBreakpointsAtLine;
 exports.addOrToggleDisabledBreakpoint = addOrToggleDisabledBreakpoint;
 exports.toggleDisabledBreakpoint = toggleDisabledBreakpoint;
 
@@ -435,6 +436,40 @@ function toggleBreakpoint(line, column) {
       line: line,
       column: column
     }));
+  };
+}
+
+function toggleBreakpointsAtLine(line, column) {
+  return ({
+    dispatch,
+    getState,
+    client,
+    sourceMaps
+  }) => {
+    const state = getState();
+    const selectedSource = (0, _selectors.getSelectedSource)(state);
+
+    if (!line || !selectedSource) {
+      return;
+    }
+
+    const bps = (0, _selectors.getBreakpointsAtLine)(state, line);
+    const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource.id);
+
+    if (isEmptyLine) {
+      return;
+    }
+
+    if (bps.size === 0) {
+      return dispatch(addBreakpoint({
+        sourceId: selectedSource.id,
+        sourceUrl: selectedSource.url,
+        line,
+        column
+      }));
+    }
+
+    return Promise.all(bps.map(bp => dispatch(removeBreakpoint(bp.location))));
   };
 }
 

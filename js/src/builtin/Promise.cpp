@@ -130,6 +130,67 @@ enum PromiseAllDataHolderSlots {
     PromiseAllDataHolderSlots,
 };
 
+struct PromiseCapability {
+    JSObject* promise = nullptr;
+    JSObject* resolve = nullptr;
+    JSObject* reject = nullptr;
+
+    PromiseCapability() = default;
+
+    static void trace(PromiseCapability* self, JSTracer* trc) { self->trace(trc); }
+    void trace(JSTracer* trc);
+};
+
+void
+PromiseCapability::trace(JSTracer* trc)
+{
+    if (promise)
+        TraceRoot(trc, &promise, "PromiseCapability::promise");
+    if (resolve)
+        TraceRoot(trc, &resolve, "PromiseCapability::resolve");
+    if (reject)
+        TraceRoot(trc, &reject, "PromiseCapability::reject");
+}
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<PromiseCapability, Wrapper>
+{
+    const PromiseCapability& capability() const { return static_cast<const Wrapper*>(this)->get(); }
+
+  public:
+    HandleObject promise() const {
+        return HandleObject::fromMarkedLocation(&capability().promise);
+    }
+    HandleObject resolve() const {
+        return HandleObject::fromMarkedLocation(&capability().resolve);
+    }
+    HandleObject reject() const {
+        return HandleObject::fromMarkedLocation(&capability().reject);
+    }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<PromiseCapability, Wrapper>
+    : public WrappedPtrOperations<PromiseCapability, Wrapper>
+{
+    PromiseCapability& capability() { return static_cast<Wrapper*>(this)->get(); }
+
+  public:
+    MutableHandleObject promise() {
+        return MutableHandleObject::fromMarkedLocation(&capability().promise);
+    }
+    MutableHandleObject resolve() {
+        return MutableHandleObject::fromMarkedLocation(&capability().resolve);
+    }
+    MutableHandleObject reject() {
+        return MutableHandleObject::fromMarkedLocation(&capability().reject);
+    }
+};
+
+} // namespace js
+
 class PromiseAllDataHolder : public NativeObject
 {
   public:
@@ -165,7 +226,7 @@ static PromiseAllDataHolder*
 NewPromiseAllDataHolder(JSContext* cx, HandleObject resultPromise, HandleValue valuesArray,
                         HandleObject resolve)
 {
-    Rooted<PromiseAllDataHolder*> dataHolder(cx, NewObjectWithClassProto<PromiseAllDataHolder>(cx));
+    PromiseAllDataHolder* dataHolder = NewBuiltinClassInstance<PromiseAllDataHolder>(cx);
     if (!dataHolder)
         return nullptr;
 
@@ -206,7 +267,7 @@ class PromiseDebugInfo : public NativeObject
   public:
     static const Class class_;
     static PromiseDebugInfo* create(JSContext* cx, Handle<PromiseObject*> promise) {
-        Rooted<PromiseDebugInfo*> debugInfo(cx, NewObjectWithClassProto<PromiseDebugInfo>(cx));
+        Rooted<PromiseDebugInfo*> debugInfo(cx, NewBuiltinClassInstance<PromiseDebugInfo>(cx));
         if (!debugInfo)
             return nullptr;
 
@@ -369,7 +430,7 @@ static MOZ_MUST_USE bool RunResolutionFunction(JSContext *cx, HandleObject resol
 // be tedious, so the check in step 1 and the entirety of step 2 aren't
 // included.
 static bool
-AbruptRejectPromise(JSContext *cx, CallArgs& args, HandleObject promiseObj, HandleObject reject)
+AbruptRejectPromise(JSContext* cx, CallArgs& args, HandleObject promiseObj, HandleObject reject)
 {
     // Step 1.a.
     RootedValue reason(cx);
@@ -382,6 +443,12 @@ AbruptRejectPromise(JSContext *cx, CallArgs& args, HandleObject promiseObj, Hand
     // Step 1.b.
     args.rval().setObject(*promiseObj);
     return true;
+}
+
+static bool
+AbruptRejectPromise(JSContext* cx, CallArgs& args, Handle<PromiseCapability> capability)
+{
+    return AbruptRejectPromise(cx, args, capability.promise(), capability.reject());
 }
 
 enum ReactionRecordSlots {
@@ -402,8 +469,14 @@ enum ReactionRecordSlots {
     // the |PromiseHandler| enum, or null. If the value is null, either the
     // REACTION_FLAG_DEBUGGER_DUMMY or the
     // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
+    //
+    // After setting the target state for a PromiseReaction, the slot of the
+    // no longer used handler gets reused to store the argument of the active
+    // handler.
     ReactionRecordSlot_OnFulfilled,
+    ReactionRecordSlot_OnRejectedArg = ReactionRecordSlot_OnFulfilled,
     ReactionRecordSlot_OnRejected,
+    ReactionRecordSlot_OnFulfilledArg = ReactionRecordSlot_OnRejected,
 
     // The functions to resolve or reject the promise. Matches the
     // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
@@ -421,9 +494,6 @@ enum ReactionRecordSlots {
     // Bitmask of the REACTION_FLAG values.
     ReactionRecordSlot_Flags,
 
-    // Argument when calling the function stored in OnFulfilled or OnRejected.
-    ReactionRecordSlot_HandlerArg,
-
     // Additional slot to store extra data for specific reaction record types.
     //
     // - When the REACTION_FLAG_ASYNC_GENERATOR flag is set, this slot store
@@ -439,19 +509,33 @@ enum ReactionRecordSlots {
 // ES2016, 25.4.1.2.
 class PromiseReactionRecord : public NativeObject
 {
-  static constexpr size_t REACTION_FLAG_RESOLVED = 0x1;
-  static constexpr size_t REACTION_FLAG_FULFILLED = 0x2;
-  static constexpr size_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
-  static constexpr size_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
-  static constexpr size_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
-  static constexpr size_t REACTION_FLAG_DEBUGGER_DUMMY = 0x20;
+    static constexpr uint32_t REACTION_FLAG_RESOLVED = 0x1;
+    static constexpr uint32_t REACTION_FLAG_FULFILLED = 0x2;
+    static constexpr uint32_t REACTION_FLAG_DEFAULT_RESOLVING_HANDLER = 0x4;
+    static constexpr uint32_t REACTION_FLAG_ASYNC_FUNCTION = 0x8;
+    static constexpr uint32_t REACTION_FLAG_ASYNC_GENERATOR = 0x10;
+    static constexpr uint32_t REACTION_FLAG_DEBUGGER_DUMMY = 0x20;
 
-  void setFlagOnInitialState(size_t flag) {
-      int32_t flags = this->flags();
-      MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
-      flags |= flag;
-      setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
-  }
+    void setFlagOnInitialState(uint32_t flag) {
+        int32_t flags = this->flags();
+        MOZ_ASSERT(flags == 0, "Can't modify with non-default flags");
+        flags |= flag;
+        setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+    }
+
+    uint32_t handlerSlot() {
+        MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
+        return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilled
+               : ReactionRecordSlot_OnRejected;
+    }
+
+    uint32_t handlerArgSlot() {
+        MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
+        return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilledArg
+               : ReactionRecordSlot_OnRejectedArg;
+    }
 
   public:
     static const Class class_;
@@ -466,14 +550,17 @@ class PromiseReactionRecord : public NativeObject
                ? JS::PromiseState::Fulfilled
                : JS::PromiseState::Rejected;
     }
-    void setTargetState(JS::PromiseState state) {
-        int32_t flags = this->flags();
-        MOZ_ASSERT(!(flags & REACTION_FLAG_RESOLVED));
+    void setTargetStateAndHandlerArg(JS::PromiseState state, const Value& arg) {
+        MOZ_ASSERT(targetState() == JS::PromiseState::Pending);
         MOZ_ASSERT(state != JS::PromiseState::Pending, "Can't revert a reaction to pending.");
+
+        int32_t flags = this->flags();
         flags |= REACTION_FLAG_RESOLVED;
         if (state == JS::PromiseState::Fulfilled)
             flags |= REACTION_FLAG_FULFILLED;
+
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+        setFixedSlot(handlerArgSlot(), arg);
     }
     void setIsDefaultResolvingHandler(PromiseObject* promiseToResolve) {
         setFlagOnInitialState(REACTION_FLAG_DEFAULT_RESOLVING_HANDLER);
@@ -517,21 +604,16 @@ class PromiseReactionRecord : public NativeObject
     }
     Value handler() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-        uint32_t slot = targetState() == JS::PromiseState::Fulfilled
-                        ? ReactionRecordSlot_OnFulfilled
-                        : ReactionRecordSlot_OnRejected;
-        return getFixedSlot(slot);
+        return getFixedSlot(handlerSlot());
     }
     Value handlerArg() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-        return getFixedSlot(ReactionRecordSlot_HandlerArg);
+        return getFixedSlot(handlerArgSlot());
     }
-    void setHandlerArg(Value& arg) {
-        MOZ_ASSERT(targetState() == JS::PromiseState::Pending);
-        setFixedSlot(ReactionRecordSlot_HandlerArg, arg);
-    }
-    JSObject* incumbentGlobalObject() {
-        return getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject).toObjectOrNull();
+    JSObject* getAndClearIncumbentGlobalObject() {
+        JSObject* obj = getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject).toObjectOrNull();
+        setFixedSlot(ReactionRecordSlot_IncumbentGlobalObject, UndefinedValue());
+        return obj;
     }
 };
 
@@ -601,8 +683,13 @@ IsSettledMaybeWrappedPromise(JSObject* promise)
     return promise->as<PromiseObject>().state() != JS::PromiseState::Pending;
 }
 
-static MOZ_MUST_USE bool RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj,
-                                                   HandleValue reason);
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue reason);
+
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectPromiseInternal(JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason);
 
 // ES2016, 25.4.1.3.1.
 static bool
@@ -610,11 +697,11 @@ RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedFunction reject(cx, &args.callee().as<JSFunction>());
-    RootedValue reasonVal(cx, args.get(0));
+    JSFunction* reject = &args.callee().as<JSFunction>();
+    HandleValue reasonVal = args.get(0);
 
     // Steps 1-2.
-    RootedValue promiseVal(cx, reject->getExtendedSlot(RejectFunctionSlot_Promise));
+    const Value& promiseVal = reject->getExtendedSlot(RejectFunctionSlot_Promise);
 
     // Steps 3-4.
     // If the Promise isn't available anymore, it has been resolved and the
@@ -624,12 +711,14 @@ RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
+    // Store the promise value in |promise| before ClearResolutionFunctionSlots
+    // removes the reference.
+    RootedObject promise(cx, &promiseVal.toObject());
+
     // Step 5.
     // Here, we only remove the Promise reference from the resolution
     // functions. Actually marking it as fulfilled/rejected happens later.
     ClearResolutionFunctionSlots(reject);
-
-    RootedObject promise(cx, &promiseVal.toObject());
 
     // In some cases the Promise reference on the resolution function won't
     // have been removed during resolution, so we need to check that here,
@@ -666,6 +755,7 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue
 static MOZ_MUST_USE bool
 ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resolutionVal)
 {
+    assertSameCompartment(cx, promise, resolutionVal);
     MOZ_ASSERT(!IsSettledMaybeWrappedPromise(promise));
 
     // Step 7 (reordered).
@@ -715,20 +805,16 @@ ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resoluti
     if (!IsCallable(thenVal))
         return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
 
-    // If the resolution object is a built-in Promise object, possibly from a
-    // different realm in the same compartment, and the `then` property is the
-    // original Promise.prototype.then function from the current realm, we
-    // skip storing/calling it.
-    // And additionally require that |promise| itself is also a built-in
-    // Promise object from the same compartment, so the fast path doesn't need
-    // to cope with wrappers.
+    // If the resolution object is a built-in Promise object and the
+    // `then` property is the original Promise.prototype.then function
+    // from the current realm, we skip storing/calling it.
+    // Additionally we require that |promise| itself is also a built-in
+    // Promise object, so the fast path doesn't need to cope with wrappers.
     bool isBuiltinThen = false;
     if (resolution->is<PromiseObject>() &&
-        resolution->as<PromiseObject>().compartment() == cx->compartment() &&
-        IsNativeFunction(thenVal, Promise_then) &&
-        thenVal.toObject().as<JSFunction>().realm() == cx->realm() &&
         promise->is<PromiseObject>() &&
-        promise->as<PromiseObject>().compartment() == cx->compartment())
+        IsNativeFunction(thenVal, Promise_then) &&
+        thenVal.toObject().as<JSFunction>().realm() == cx->realm())
     {
         isBuiltinThen = true;
     }
@@ -753,8 +839,8 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedFunction resolve(cx, &args.callee().as<JSFunction>());
-    RootedValue resolutionVal(cx, args.get(0));
+    JSFunction* resolve = &args.callee().as<JSFunction>();
+    HandleValue resolutionVal = args.get(0);
 
     // Steps 3-4 (reordered).
     // We use the reference to the reject function as a signal for whether
@@ -817,14 +903,15 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
         MOZ_RELEASE_ASSERT(reactionObj->is<PromiseReactionRecord>());
         reaction = &reactionObj->as<PromiseReactionRecord>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(reactionObj))) {
+        JSObject* unwrappedReactionObj = UncheckedUnwrap(reactionObj);
+        if (JS_IsDeadWrapper(unwrappedReactionObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        reaction = &UncheckedUnwrap(reactionObj)->as<PromiseReactionRecord>();
+        reaction = &unwrappedReactionObj->as<PromiseReactionRecord>();
         MOZ_RELEASE_ASSERT(reaction->is<PromiseReactionRecord>());
         ar.emplace(cx, reaction);
-        if (!reaction->compartment()->wrap(cx, &handlerArg))
+        if (!cx->compartment()->wrap(cx, &handlerArg))
             return false;
     }
 
@@ -832,11 +919,9 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     MOZ_ASSERT(reaction->targetState() == JS::PromiseState::Pending);
 
     assertSameCompartment(cx, handlerArg);
-    reaction->setHandlerArg(handlerArg.get());
+    reaction->setTargetStateAndHandlerArg(targetState, handlerArg);
 
     RootedValue reactionVal(cx, ObjectValue(*reaction));
-
-    reaction->setTargetState(targetState);
     RootedValue handler(cx, reaction->handler());
 
     // If we have a handler callback, we enter that handler's compartment so
@@ -846,13 +931,11 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // from said global.
     mozilla::Maybe<AutoRealm> ar2;
     if (handler.isObject()) {
-        RootedObject handlerObj(cx, &handler.toObject());
-
         // The unwrapping has to be unchecked because we specifically want to
         // be able to use handlers with wrappers that would only allow calls.
         // E.g., it's ok to have a handler from a chrome compartment in a
         // reaction to a content compartment's Promise instance.
-        handlerObj = UncheckedUnwrap(handlerObj);
+        JSObject* handlerObj = UncheckedUnwrap(&handler.toObject());
         MOZ_ASSERT(handlerObj);
         ar2.emplace(cx, handlerObj);
 
@@ -894,8 +977,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // much better than having to store the original global as a private value
     // because we couldn't wrap it to store it as a normal JS value.
     RootedObject global(cx);
-    RootedObject objectFromIncumbentGlobal(cx, reaction->incumbentGlobalObject());
-    if (objectFromIncumbentGlobal) {
+    if (JSObject* objectFromIncumbentGlobal = reaction->getAndClearIncumbentGlobalObject()) {
         objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
         MOZ_ASSERT(objectFromIncumbentGlobal);
         global = &objectFromIncumbentGlobal->nonCCWGlobal();
@@ -955,6 +1037,13 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
     return true;
 }
 
+// ES2016, 25.4.1.7.
+static MOZ_MUST_USE bool
+RejectPromiseInternal(JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason)
+{
+    return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected);
+}
+
 // ES2016, 25.4.1.4.
 static MOZ_MUST_USE bool
 FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue value_)
@@ -966,13 +1055,14 @@ FulfillMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue v
     if (!IsProxy(promiseObj)) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(promiseObj))) {
+        JSObject* unwrappedPromiseObj = UncheckedUnwrap(promiseObj);
+        if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
+        promise = &unwrappedPromiseObj->as<PromiseObject>();
         ar.emplace(cx, promise);
-        if (!promise->compartment()->wrap(cx, &value))
+        if (!cx->compartment()->wrap(cx, &value))
             return false;
     }
 
@@ -1030,8 +1120,7 @@ CreatePromiseWithDefaultResolutionFunctions(JSContext* cx, MutableHandleObject r
 
 // ES2016, 25.4.1.5.
 static MOZ_MUST_USE bool
-NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
-                     MutableHandleObject resolve, MutableHandleObject reject,
+NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandle<PromiseCapability> capability,
                      bool canOmitResolutionFunctions)
 {
     RootedValue cVal(cx, ObjectValue(*C));
@@ -1056,12 +1145,17 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // of the GetCapabilitiesExecutor function, and directly allocate the
     // result promise instead of invoking the Promise constructor.
     if (IsNativeFunction(cVal, PromiseConstructor)) {
-        if (canOmitResolutionFunctions)
-            promise.set(CreatePromiseObjectWithoutResolutionFunctions(cx));
-        else
-            promise.set(CreatePromiseWithDefaultResolutionFunctions(cx, resolve, reject));
+        PromiseObject* promise;
+        if (canOmitResolutionFunctions) {
+            promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
+        } else {
+            promise = CreatePromiseWithDefaultResolutionFunctions(cx, capability.resolve(),
+                                                                  capability.reject());
+        }
         if (!promise)
             return false;
+
+        capability.promise().set(promise);
         return true;
     }
 
@@ -1079,11 +1173,11 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // Step 6.
     FixedConstructArgs<1> cargs(cx);
     cargs[0].setObject(*executor);
-    if (!Construct(cx, cVal, cargs, cVal, promise))
+    if (!Construct(cx, cVal, cargs, cVal, capability.promise()))
         return false;
 
     // Step 7.
-    RootedValue resolveVal(cx, executor->getExtendedSlot(GetCapabilitiesExecutorSlots_Resolve));
+    const Value& resolveVal = executor->getExtendedSlot(GetCapabilitiesExecutorSlots_Resolve);
     if (!IsCallable(resolveVal)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE);
@@ -1091,7 +1185,7 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     }
 
     // Step 8.
-    RootedValue rejectVal(cx, executor->getExtendedSlot(GetCapabilitiesExecutorSlots_Reject));
+    const Value& rejectVal = executor->getExtendedSlot(GetCapabilitiesExecutorSlots_Reject);
     if (!IsCallable(rejectVal)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE);
@@ -1099,8 +1193,8 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     }
 
     // Step 9 (well, the equivalent for all of promiseCapabilities' fields.)
-    resolve.set(&resolveVal.toObject());
-    reject.set(&rejectVal.toObject());
+    capability.resolve().set(&resolveVal.toObject());
+    capability.reject().set(&rejectVal.toObject());
 
     // Step 10.
     return true;
@@ -1111,7 +1205,7 @@ static bool
 GetCapabilitiesExecutor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction F(cx, &args.callee().as<JSFunction>());
+    JSFunction* F = &args.callee().as<JSFunction>();
 
     // Steps 1-2 (implicit).
 
@@ -1146,11 +1240,12 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
     if (!IsProxy(promiseObj)) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
-        if (JS_IsDeadWrapper(UncheckedUnwrap(promiseObj))) {
+        JSObject* unwrappedPromiseObj = UncheckedUnwrap(promiseObj);
+        if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        promise = &UncheckedUnwrap(promiseObj)->as<PromiseObject>();
+        promise = &unwrappedPromiseObj->as<PromiseObject>();
         ar.emplace(cx, promise);
 
         // The rejection reason might've been created in a compartment with higher
@@ -1160,12 +1255,12 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
         // avoid that situation, we synthesize a generic error that doesn't
         // expose any privileged information but can safely be used in the
         // rejection handler.
-        if (!promise->compartment()->wrap(cx, &reason))
+        if (!cx->compartment()->wrap(cx, &reason))
             return false;
         if (reason.isObject() && !CheckedUnwrap(&reason.toObject())) {
             // Report the existing reason, so we don't just drop it on the
             // floor.
-            RootedObject realReason(cx, UncheckedUnwrap(&reason.toObject()));
+            JSObject* realReason = UncheckedUnwrap(&reason.toObject());
             RootedValue realReasonVal(cx, ObjectValue(*realReason));
             Rooted<GlobalObject*> realGlobal(cx, &realReason->nonCCWGlobal());
             ReportErrorToGlobal(cx, realGlobal, realReasonVal);
@@ -1190,7 +1285,6 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
     MOZ_ASSERT(state == JS::PromiseState::Fulfilled || state == JS::PromiseState::Rejected);
 
     RootedObject reactions(cx, &reactionsVal.toObject());
-    RootedObject reaction(cx);
 
     if (reactions->is<PromiseReactionRecord>() ||
         IsWrapper(reactions) ||
@@ -1199,13 +1293,13 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
         return EnqueuePromiseReactionJob(cx, reactions, valueOrReason, state);
     }
 
-    RootedNativeObject reactionsList(cx, &reactions->as<NativeObject>());
-    size_t reactionsCount = reactionsList->getDenseInitializedLength();
+    HandleNativeObject reactionsList = reactions.as<NativeObject>();
+    uint32_t reactionsCount = reactionsList->getDenseInitializedLength();
     MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
 
-    RootedValue reactionVal(cx);
-    for (size_t i = 0; i < reactionsCount; i++) {
-        reactionVal = reactionsList->getDenseElement(i);
+    RootedObject reaction(cx);
+    for (uint32_t i = 0; i < reactionsCount; i++) {
+        const Value& reactionVal = reactionsList->getDenseElement(i);
         MOZ_RELEASE_ASSERT(reactionVal.isObject());
         reaction = &reactionVal.toObject();
         if (!EnqueuePromiseReactionJob(cx, reaction, valueOrReason, state))
@@ -1241,7 +1335,7 @@ DefaultResolvingPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*>
         if (reaction->targetState() == JS::PromiseState::Fulfilled)
             ok = ResolvePromiseInternal(cx, promiseToResolve, argument);
         else
-            ok = RejectMaybeWrappedPromise(cx, promiseToResolve, argument);
+            ok = RejectPromiseInternal(cx, promiseToResolve, argument);
 
         if (!ok) {
             resolutionMode = RejectMode;
@@ -1251,9 +1345,9 @@ DefaultResolvingPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*>
     }
 
     // Steps 7-9.
-    size_t hookSlot = resolutionMode == RejectMode
-                      ? ReactionRecordSlot_Reject
-                      : ReactionRecordSlot_Resolve;
+    uint32_t hookSlot = resolutionMode == RejectMode
+                        ? ReactionRecordSlot_Reject
+                        : ReactionRecordSlot_Resolve;
     RootedObject callee(cx, reaction->getFixedSlot(hookSlot).toObjectOrNull());
     RootedObject promiseObj(cx, reaction->promise());
     if (!RunResolutionFunction(cx, callee, handlerResult, resolutionMode, promiseObj))
@@ -1382,7 +1476,7 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 1-2.
-    Rooted<PromiseReactionRecord*> reaction(cx, &reactionObj->as<PromiseReactionRecord>());
+    Handle<PromiseReactionRecord*> reaction = reactionObj.as<PromiseReactionRecord>();
     if (reaction->isDefaultResolvingHandler())
         return DefaultResolvingPromiseReactionJob(cx, reaction, args.rval());
     if (reaction->isAsyncFunction())
@@ -1417,7 +1511,7 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
 
             bool done = handlerNum == PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone;
             // Async Iteration proposal 11.1.3.2.5 step 1.
-            RootedObject resultObj(cx, CreateIterResultObject(cx, argument, done));
+            JSObject* resultObj = CreateIterResultObject(cx, argument, done);
             if (!resultObj)
                 return false;
 
@@ -1428,9 +1522,7 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
         MOZ_ASSERT(IsCallable(handlerVal));
 
         // Step 6.
-        FixedInvokeArgs<1> args2(cx);
-        args2[0].set(argument);
-        if (!Call(cx, handlerVal, UndefinedHandleValue, args2, &handlerResult)) {
+        if (!Call(cx, handlerVal, UndefinedHandleValue, argument, &handlerResult)) {
             resolutionMode = RejectMode;
             if (!MaybeGetAndClearException(cx, &handlerResult))
                 return false;
@@ -1438,9 +1530,9 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 7-9.
-    size_t hookSlot = resolutionMode == RejectMode
-                      ? ReactionRecordSlot_Reject
-                      : ReactionRecordSlot_Resolve;
+    uint32_t hookSlot = resolutionMode == RejectMode
+                        ? ReactionRecordSlot_Reject
+                        : ReactionRecordSlot_Resolve;
     RootedObject callee(cx, reaction->getFixedSlot(hookSlot).toObjectOrNull());
     RootedObject promiseObj(cx, reaction->promise());
     if (!RunResolutionFunction(cx, callee, handlerResult, resolutionMode, promiseObj))
@@ -1499,11 +1591,8 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     if (!MaybeGetAndClearException(cx, &rval))
         return false;
 
-    FixedInvokeArgs<1> rejectArgs(cx);
-    rejectArgs[0].set(rval);
-
     RootedValue rejectVal(cx, ObjectValue(*rejectFn));
-    return Call(cx, rejectVal, UndefinedHandleValue, rejectArgs, &rval);
+    return Call(cx, rejectVal, UndefinedHandleValue, rval, &rval);
 }
 
 static MOZ_MUST_USE bool
@@ -1558,7 +1647,7 @@ PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc, Value* vp)
     if (promise->as<PromiseObject>().state() != JS::PromiseState::Pending)
         return true;
 
-    return RejectMaybeWrappedPromise(cx, promise, exception);
+    return RejectPromiseInternal(cx, promise.as<PromiseObject>(), exception);
 }
 
 /**
@@ -1584,6 +1673,14 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     RootedObject then(cx, CheckedUnwrap(&thenVal.toObject()));
     AutoRealm ar(cx, then);
 
+    // Wrap the `promiseToResolve` and `thenable` arguments.
+    if (!cx->compartment()->wrap(cx, &promiseToResolve))
+        return false;
+
+    MOZ_ASSERT(thenable.isObject());
+    if (!cx->compartment()->wrap(cx, &thenable))
+        return false;
+
     HandlePropertyName funName = cx->names().empty;
     RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
                                              gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -1597,28 +1694,20 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     // work.
     // The layout is described in the ThenableJobDataIndices enum.
     RootedArrayObject data(cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataLength));
-    if (!data ||
-        data->ensureDenseElements(cx, 0, ThenableJobDataLength) != DenseElementResult::Success)
-    {
+    if (!data)
         return false;
-    }
 
-    // Wrap and set the `promiseToResolve` argument.
-    if (!cx->compartment()->wrap(cx, &promiseToResolve))
-        return false;
-    data->setDenseElement(ThenableJobDataIndex_Promise, promiseToResolve);
-    // At this point the promise is guaranteed to be wrapped into the job's
-    // compartment.
-    RootedObject promise(cx, &promiseToResolve.toObject());
-
-    // Wrap and set the `thenable` argument.
-    MOZ_ASSERT(thenable.isObject());
-    if (!cx->compartment()->wrap(cx, &thenable))
-        return false;
-    data->setDenseElement(ThenableJobDataIndex_Thenable, thenable);
+    // Set the `promiseToResolve` and `thenable` arguments.
+    data->setDenseInitializedLength(ThenableJobDataLength);
+    data->initDenseElement(ThenableJobDataIndex_Promise, promiseToResolve);
+    data->initDenseElement(ThenableJobDataIndex_Thenable, thenable);
 
     // Store the data array on the reaction job.
     job->setExtendedSlot(ThenableJobSlot_JobData, ObjectValue(*data));
+
+    // At this point the promise is guaranteed to be wrapped into the job's
+    // compartment.
+    RootedObject promise(cx, &promiseToResolve.toObject());
 
     RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
     return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
@@ -1659,10 +1748,6 @@ AddDummyPromiseReactionForDebugger(JSContext* cx, Handle<PromiseObject*> promise
 static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction);
-
-static MOZ_MUST_USE bool
-BlockOnPromise(JSContext* cx, HandleValue promise, HandleObject blockedPromise,
-               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined);
 
 static JSFunction*
 GetResolveFunctionFromReject(JSFunction* reject)
@@ -1792,7 +1877,7 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 2.
-    RootedValue executorVal(cx, args.get(0));
+    HandleValue executorVal = args.get(0);
     if (!IsCallable(executorVal))
         return ReportIsNotFunction(cx, executorVal);
     RootedObject executor(cx, &executorVal.toObject());
@@ -1839,7 +1924,7 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
         {
             AutoRealm ar(cx, newTarget);
             Handle<GlobalObject*> global = cx->global();
-            RootedObject promiseCtor(cx, GlobalObject::getOrCreatePromiseConstructor(cx, global));
+            JSFunction* promiseCtor = GlobalObject::getOrCreatePromiseConstructor(cx, global);
             if (!promiseCtor)
                 return false;
 
@@ -1888,8 +1973,10 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     if (needsWrapping) {
         MOZ_ASSERT(proto);
         usedProto = CheckedUnwrap(proto);
-        if (!usedProto)
+        if (!usedProto) {
+            ReportAccessDenied(cx);
             return nullptr;
+        }
     }
 
 
@@ -1929,7 +2016,6 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     bool success;
     {
         FixedInvokeArgs<2> args(cx);
-
         args[0].setObject(*resolveFn);
         args[1].setObject(*rejectFn);
 
@@ -1943,12 +2029,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         if (!MaybeGetAndClearException(cx, &exceptionVal))
             return nullptr;
 
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].set(exceptionVal);
-
         RootedValue calleeOrRval(cx, ObjectValue(*rejectFn));
-        if (!Call(cx, calleeOrRval, UndefinedHandleValue, args, &calleeOrRval))
+        if (!Call(cx, calleeOrRval, UndefinedHandleValue, exceptionVal, &calleeOrRval))
             return nullptr;
     }
 
@@ -1967,20 +2049,29 @@ PromiseObject::createSkippingExecutor(JSContext* cx)
     return CreatePromiseObjectWithoutResolutionFunctions(cx);
 }
 
-static MOZ_MUST_USE bool PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator,
-                                           HandleObject C, HandleObject promiseObj,
-                                           HandleObject resolve, HandleObject reject,
-                                           bool* done);
+class MOZ_STACK_CLASS PromiseForOfIterator : public JS::ForOfIterator {
+  public:
+    using JS::ForOfIterator::ForOfIterator;
+
+    bool isOptimizedDenseArrayIteration() {
+        MOZ_ASSERT(valueIsIterable());
+        return index != NOT_ARRAY && IsPackedArray(iterator);
+    }
+};
+
+static MOZ_MUST_USE bool
+PerformPromiseAll(JSContext *cx, PromiseForOfIterator& iterator, HandleObject C,
+                  Handle<PromiseCapability> resultCapability, bool* done);
 
 // ES2016, 25.4.4.1.
 static bool
 Promise_static_all(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue iterable(cx, args.get(0));
+    HandleValue iterable = args.get(0);
 
     // Step 2 (reordered).
-    RootedValue CVal(cx, args.thisv());
+    HandleValue CVal = args.thisv();
     if (!CVal.isObject()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
                                   "Receiver of Promise.all call");
@@ -1991,28 +2082,26 @@ Promise_static_all(JSContext* cx, unsigned argc, Value* vp)
     RootedObject C(cx, &CVal.toObject());
 
     // Step 3.
-    RootedObject resultPromise(cx);
-    RootedObject resolve(cx);
-    RootedObject reject(cx);
-    if (!NewPromiseCapability(cx, C, &resultPromise, &resolve, &reject, false))
+    Rooted<PromiseCapability> promiseCapability(cx);
+    if (!NewPromiseCapability(cx, C, &promiseCapability, false))
         return false;
 
     // Steps 4-5.
-    JS::ForOfIterator iter(cx);
+    PromiseForOfIterator iter(cx);
     if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable))
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
 
     if (!iter.valueIsIterable()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE,
                                   "Argument of Promise.all");
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
     }
 
     // Step 6 (implicit).
 
     // Step 7.
     bool done;
-    bool result = PerformPromiseAll(cx, iter, C, resultPromise, resolve, reject, &done);
+    bool result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
 
     // Step 8.
     if (!result) {
@@ -2021,24 +2110,22 @@ Promise_static_all(JSContext* cx, unsigned argc, Value* vp)
             iter.closeThrow();
 
         // Step 8.b.
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
     }
 
     // Step 9.
-    args.rval().setObject(*resultPromise);
+    args.rval().setObject(*promiseCapability.promise());
     return true;
 }
 
-static MOZ_MUST_USE bool PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
-                                            HandleValue onFulfilled_, HandleValue onRejected_,
-                                            HandleObject resultPromise,
-                                            HandleObject resolve, HandleObject reject);
+static MOZ_MUST_USE bool
+PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled_,
+                   HandleValue onRejected_, Handle<PromiseCapability> resultCapability);
 
 static MOZ_MUST_USE bool
 PerformPromiseThenWithoutSettleHandlers(JSContext* cx, Handle<PromiseObject*> promise,
                                         Handle<PromiseObject*> promiseToResolve,
-                                        HandleObject resultPromise, HandleObject resolve,
-                                        HandleObject reject);
+                                        Handle<PromiseCapability> resultCapability);
 
 static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp);
 
@@ -2062,10 +2149,8 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
     // Step 2 (omitted).
 
     // Step 3.
-    RootedObject resultPromise(cx);
-    RootedObject resolve(cx);
-    RootedObject reject(cx);
-    if (!NewPromiseCapability(cx, C, &resultPromise, &resolve, &reject, false))
+    Rooted<PromiseCapability> resultCapability(cx);
+    if (!NewPromiseCapability(cx, C, &resultCapability, false))
         return nullptr;
 
     // Steps 4-6 (omitted).
@@ -2080,8 +2165,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
         RootedNativeObject valuesArray(cx, NewDenseFullyAllocatedArray(cx, promiseCount));
         if (!valuesArray)
             return nullptr;
-        if (valuesArray->ensureDenseElements(cx, 0, promiseCount) != DenseElementResult::Success)
-            return nullptr;
+        valuesArray->ensureDenseInitializedLength(cx, 0, promiseCount);
 
         // Sub-step 4.
         // Create our data holder that holds all the things shared across
@@ -2089,12 +2173,15 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
         // remainingElementsCount (as an integer reserved slot), the array of
         // values, and the resolve function from our PromiseCapability.
         RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
-        Rooted<PromiseAllDataHolder*> dataHolder(cx, NewPromiseAllDataHolder(cx, resultPromise,
-                                                                             valuesArrayVal,
-                                                                             resolve));
+        Rooted<PromiseAllDataHolder*> dataHolder(cx);
+        dataHolder = NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
+                                             resultCapability.resolve());
         if (!dataHolder)
             return nullptr;
-        RootedValue dataHolderVal(cx, ObjectValue(*dataHolder));
+
+        // Call PerformPromiseThen with resolve and reject set to nullptr.
+        Rooted<PromiseCapability> resultCapabilityWithoutResolving(cx);
+        resultCapabilityWithoutResolving.promise().set(resultCapability.promise());
 
         // Sub-step 5 (inline in loop-header below).
 
@@ -2119,7 +2206,8 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
                 return nullptr;
 
             // Steps k-o.
-            resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data, dataHolderVal);
+            resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
+                                         ObjectValue(*dataHolder));
             resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_ElementIndex,
                                          Int32Value(index));
 
@@ -2128,7 +2216,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
 
             // Step q, very roughly.
             RootedValue resolveFunVal(cx, ObjectValue(*resolveFunc));
-            RootedValue rejectFunVal(cx, ObjectValue(*reject));
+            RootedValue rejectFunVal(cx, ObjectValue(*resultCapability.reject()));
             Rooted<PromiseObject*> nextPromise(cx);
 
             // GetWaitForAllPromise is used internally only and must not
@@ -2140,7 +2228,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
             nextPromise = &UncheckedUnwrap(nextPromiseObj)->as<PromiseObject>();
 
             if (!PerformPromiseThen(cx, nextPromise, resolveFunVal, rejectFunVal,
-                                    resultPromise, nullptr, nullptr))
+                                    resultCapabilityWithoutResolving))
             {
                 return nullptr;
             }
@@ -2155,7 +2243,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
         // Sub-step d.iii-iv.
         if (remainingCount == 0) {
             RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
-            if (!ResolvePromiseInternal(cx, resultPromise, valuesArrayVal))
+            if (!ResolvePromiseInternal(cx, resultCapability.promise(), valuesArrayVal))
                 return nullptr;
         }
     }
@@ -2163,7 +2251,7 @@ js::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
     // Step 8 (omitted).
 
     // Step 9.
-    return resultPromise;
+    return resultCapability.promise();
 }
 
 static MOZ_MUST_USE bool
@@ -2182,15 +2270,13 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     assertSameCompartment(cx, promiseObj);
     if (resolutionFun) {
         RootedValue calleeOrRval(cx, ObjectValue(*resolutionFun));
-        FixedInvokeArgs<1> resolveArgs(cx);
-        resolveArgs[0].set(result);
-        return Call(cx, calleeOrRval, UndefinedHandleValue, resolveArgs, &calleeOrRval);
+        return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
     }
 
     if (!promiseObj)
         return true;
 
-    Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
+    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
@@ -2200,26 +2286,284 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
     if (mode == ResolveMode)
         return ResolvePromiseInternal(cx, promise, result);
 
-    return RejectMaybeWrappedPromise(cx, promiseObj, result);
+    return RejectPromiseInternal(cx, promise, result);
+}
+
+static MOZ_MUST_USE JSObject*
+CommonStaticResolveRejectImpl(JSContext* cx, HandleValue thisVal, HandleValue argVal,
+                              ResolutionMode mode);
+
+static bool
+IsPromiseSpecies(JSContext* cx, JSFunction* species);
+
+// ES2019 draft rev dd269df67d37409a6f2099a842b8f5c75ee6fc24
+// 25.6.4.1.1 Runtime Semantics: PerformPromiseAll, step 6.
+// 25.6.4.3.1 Runtime Semantics: PerformPromiseRace, step 3.
+template <typename T>
+static MOZ_MUST_USE bool
+CommonPerformPromiseAllRace(JSContext *cx, PromiseForOfIterator& iterator, HandleObject C,
+                            Handle<PromiseCapability> resultCapability, bool* done,
+                            bool resolveReturnsUndefined, T getResolveFun)
+{
+    RootedObject promiseCtor(cx, GlobalObject::getOrCreatePromiseConstructor(cx, cx->global()));
+    if (!promiseCtor)
+        return false;
+
+    // Optimized dense array iteration ensures no side-effects take place
+    // during the iteration.
+    bool iterationMayHaveSideEffects = !iterator.isOptimizedDenseArrayIteration();
+
+    // Try to optimize when the Promise object is in its default state, seeded
+    // with |C == promiseCtor| because we can only perform this optimization
+    // for the builtin Promise constructor.
+    bool isDefaultPromiseState = C == promiseCtor;
+    bool validatePromiseState = true;
+
+    PromiseLookup& promiseLookup = cx->realm()->promiseLookup;
+
+    RootedValue CVal(cx, ObjectValue(*C));
+    HandleObject resultPromise = resultCapability.promise();
+    RootedValue resolveFunVal(cx);
+    RootedValue rejectFunVal(cx, ObjectValue(*resultCapability.reject()));
+
+    // We're reusing rooted variables in the loop below, so we don't need to
+    // declare a gazillion different rooted variables here. Rooted variables
+    // which are reused include "Or" in their name.
+    RootedValue nextValueOrNextPromise(cx);
+    RootedObject nextPromiseObj(cx);
+    RootedValue resolveOrThen(cx);
+    RootedObject thenSpeciesOrBlockedPromise(cx);
+    Rooted<PromiseCapability> thenCapability(cx);
+
+    while (true) {
+        // Steps a-c, e-g.
+        RootedValue& nextValue = nextValueOrNextPromise;
+        if (!iterator.next(&nextValue, done)) {
+            // Steps b, f.
+            *done = true;
+
+            // Steps c, g.
+            return false;
+        }
+
+        // Step d.
+        if (*done)
+            return true;
+
+        // Set to false when we can skip the [[Get]] for "then" and instead
+        // use the built-in Promise.prototype.then function.
+        bool getThen = true;
+
+        if (isDefaultPromiseState && validatePromiseState)
+            isDefaultPromiseState = promiseLookup.isDefaultPromiseState(cx);
+
+        RootedValue& nextPromise = nextValueOrNextPromise;
+        if (isDefaultPromiseState) {
+            PromiseObject* nextValuePromise = nullptr;
+            if (nextValue.isObject() && nextValue.toObject().is<PromiseObject>())
+                nextValuePromise = &nextValue.toObject().as<PromiseObject>();
+
+            if (nextValuePromise &&
+                promiseLookup.isDefaultInstanceWhenPromiseStateIsSane(cx, nextValuePromise))
+            {
+                // The below steps don't produce any side-effects, so we can
+                // skip the Promise state revalidation in the next iteration
+                // when the iterator itself also doesn't produce any
+                // side-effects.
+                validatePromiseState = iterationMayHaveSideEffects;
+
+                // 25.6.4.1.1, step 6.i.
+                // 25.6.4.3.1, step 3.h.
+                // Promise.resolve is a no-op for the default case.
+                MOZ_ASSERT(&nextPromise.toObject() == nextValuePromise);
+
+                // `nextPromise` uses the built-in `then` function.
+                getThen = false;
+            } else {
+                // Need to revalidate the Promise state in the next iteration,
+                // because CommonStaticResolveRejectImpl may have modified it.
+                validatePromiseState = true;
+
+                // 25.6.4.1.1, step 6.i.
+                // 25.6.4.3.1, step 3.h.
+                // Inline the call to Promise.resolve.
+                JSObject* res = CommonStaticResolveRejectImpl(cx, CVal, nextValue, ResolveMode);
+                if (!res)
+                    return false;
+
+                nextPromise.setObject(*res);
+            }
+        } else {
+            // 25.6.4.1.1, step 6.i.
+            // 25.6.4.3.1, step 3.h.
+            // Sadly, because someone could have overridden
+            // "resolve" on the canonical Promise constructor.
+            RootedValue& staticResolve = resolveOrThen;
+            if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve))
+                return false;
+
+            if (!Call(cx, staticResolve, CVal, nextValue, &nextPromise))
+                return false;
+        }
+
+        // Get the resolve function for this iteration.
+        // 25.6.4.1.1, steps 6.j-q.
+        JSObject* resolveFun = getResolveFun();
+        if (!resolveFun)
+            return false;
+        resolveFunVal.setObject(*resolveFun);
+
+        // Call |nextPromise.then| with the provided hooks and add
+        // |resultPromise| to the list of dependent promises.
+        //
+        // If |nextPromise.then| is the original |Promise.prototype.then|
+        // function and the call to |nextPromise.then| would use the original
+        // |Promise| constructor to create the resulting promise, we skip the
+        // call to |nextPromise.then| and thus creating a new promise that
+        // would not be observable by content.
+
+        // 25.6.4.1.1, step 6.r.
+        // 25.6.4.3.1, step 3.i.
+        nextPromiseObj = ToObject(cx, nextPromise);
+        if (!nextPromiseObj)
+            return false;
+
+        RootedValue& thenVal = resolveOrThen;
+        bool isBuiltinThen;
+        if (getThen) {
+            // We don't use the Promise lookup cache here, because this code
+            // is only called when we had a lookup cache miss, so it's likely
+            // we'd get another cache miss when trying to use the cache here.
+            if (!GetProperty(cx, nextPromiseObj, nextPromise, cx->names().then, &thenVal))
+                return false;
+
+            // |nextPromise| is an unwrapped Promise, and |then| is the
+            // original |Promise.prototype.then|, inline it here.
+            isBuiltinThen = nextPromiseObj->is<PromiseObject>() &&
+                            IsNativeFunction(thenVal, Promise_then);
+        } else {
+            isBuiltinThen = true;
+        }
+
+        // By default, the blocked promise is added as an extra entry to the
+        // rejected promises list.
+        bool addToDependent = true;
+
+        if (isBuiltinThen) {
+            MOZ_ASSERT(nextPromise.isObject());
+            MOZ_ASSERT(&nextPromise.toObject() == nextPromiseObj);
+
+            // 25.6.5.4, step 3.
+            RootedObject& thenSpecies = thenSpeciesOrBlockedPromise;
+            if (getThen) {
+                thenSpecies = SpeciesConstructor(cx, nextPromiseObj, JSProto_Promise,
+                                                 IsPromiseSpecies);
+                if (!thenSpecies)
+                    return false;
+            } else {
+                thenSpecies = promiseCtor;
+            }
+
+            // The fast path here and the one in NewPromiseCapability may not
+            // set the resolve and reject handlers, so we need to clear the
+            // fields in case they were set in the previous iteration.
+            thenCapability.resolve().set(nullptr);
+            thenCapability.reject().set(nullptr);
+
+            // Skip the creation of a built-in Promise object if:
+            // 1. `thenSpecies` is the built-in Promise constructor.
+            // 2. `resolveFun` doesn't return an object, which ensures no
+            //    side-effects take place in ResolvePromiseInternal.
+            // 3. The result promise is a built-in Promise object.
+            // 4. The result promise doesn't use the default resolving
+            //    functions, which in turn means RunResolutionFunction when
+            //    called from PromiseRectionJob won't try to resolve the
+            //    promise.
+            if (thenSpecies == promiseCtor &&
+                resolveReturnsUndefined &&
+                resultPromise->is<PromiseObject>() &&
+                !PromiseHasAnyFlag(resultPromise->as<PromiseObject>(),
+                                   PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
+            {
+                thenCapability.promise().set(resultPromise);
+                addToDependent = false;
+            } else {
+                // 25.6.5.4, step 4.
+                if (!NewPromiseCapability(cx, thenSpecies, &thenCapability, true))
+                    return false;
+            }
+
+            // 25.6.5.4, step 5.
+            Handle<PromiseObject*> promise = nextPromiseObj.as<PromiseObject>();
+            if (!PerformPromiseThen(cx, promise, resolveFunVal, rejectFunVal, thenCapability))
+                return false;
+        } else {
+            // Optimization failed, do the normal call.
+            RootedValue& ignored = thenVal;
+            if (!Call(cx, thenVal, nextPromise, resolveFunVal, rejectFunVal, &ignored))
+                return false;
+
+            // In case the value to depend on isn't an object at all, there's
+            // nothing more to do here: we can only add reactions to Promise
+            // objects (potentially after unwrapping them), and non-object
+            // values can't be Promise objects. This can happen if Promise.all
+            // is called on an object with a `resolve` method that returns
+            // primitives.
+            if (!nextPromise.isObject())
+                addToDependent = false;
+        }
+
+        // Adds |resultPromise| to the list of dependent promises.
+        if (addToDependent) {
+            // The object created by the |promise.then| call or the inlined
+            // version of it above is visible to content (either because
+            // |promise.then| was overridden by content and could leak it,
+            // or because a constructor other than the original value of
+            // |Promise| was used to create it). To have both that object and
+            // |resultPromise| show up as dependent promises in the debugger,
+            // add a dummy reaction to the list of reject reactions that
+            // contains |resultPromise|, but otherwise does nothing.
+            RootedObject& blockedPromise = thenSpeciesOrBlockedPromise;
+            blockedPromise = resultPromise;
+
+            mozilla::Maybe<AutoRealm> ar;
+            if (IsProxy(nextPromiseObj)) {
+                nextPromiseObj = CheckedUnwrap(nextPromiseObj);
+                if (!nextPromiseObj) {
+                    ReportAccessDenied(cx);
+                    return false;
+                }
+                if (JS_IsDeadWrapper(nextPromiseObj)) {
+                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+                    return false;
+                }
+                ar.emplace(cx, nextPromiseObj);
+                if (!cx->compartment()->wrap(cx, &blockedPromise))
+                    return false;
+            }
+
+            // If either the object to depend on or the object that gets
+            // blocked isn't a, maybe-wrapped, Promise instance, we ignore it.
+            // All this does is lose some small amount of debug information in
+            // scenarios that are highly unlikely to occur in useful code.
+            if (nextPromiseObj->is<PromiseObject>() && resultPromise->is<PromiseObject>()) {
+                Handle<PromiseObject*> promise = nextPromiseObj.as<PromiseObject>();
+                if (!AddDummyPromiseReactionForDebugger(cx, promise, blockedPromise))
+                    return false;
+            }
+        }
+    }
 }
 
 // ES2016, 25.4.4.1.1.
 static MOZ_MUST_USE bool
-PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
-                  HandleObject promiseObj, HandleObject resolve, HandleObject reject,
-                  bool* done)
+PerformPromiseAll(JSContext *cx, PromiseForOfIterator& iterator, HandleObject C,
+                  Handle<PromiseCapability> resultCapability, bool* done)
 {
     *done = false;
 
-    RootedObject unwrappedPromiseObj(cx);
-    if (IsWrapper(promiseObj)) {
-        unwrappedPromiseObj = CheckedUnwrap(promiseObj);
-        MOZ_ASSERT(unwrappedPromiseObj);
-    }
-
     // Step 1.
     MOZ_ASSERT(C->isConstructor());
-    RootedValue CVal(cx, ObjectValue(*C));
 
     // Step 2 (omitted).
 
@@ -2243,116 +2587,94 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     // those are happening over Xrays anyway, which means they get the
     // canonical "then" function and content can't see our
     // PromiseAllResolveElement.
-    RootedObject valuesArray(cx);
-    if (unwrappedPromiseObj) {
-        JSAutoRealm ar(cx, unwrappedPromiseObj);
-        valuesArray = NewDenseFullyAllocatedArray(cx, 0);
-    } else {
-        valuesArray = NewDenseFullyAllocatedArray(cx, 0);
-    }
-    if (!valuesArray)
-        return false;
+    RootedArrayObject valuesArray(cx);
+    RootedValue valuesArrayVal(cx);
+    if (IsWrapper(resultCapability.promise())) {
+        JSObject* unwrappedPromiseObj = CheckedUnwrap(resultCapability.promise());
+        MOZ_ASSERT(unwrappedPromiseObj);
 
-    RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
-    if (!cx->compartment()->wrap(cx, &valuesArrayVal))
-        return false;
+        {
+            AutoRealm ar(cx, unwrappedPromiseObj);
+            valuesArray = NewDenseEmptyArray(cx);
+            if (!valuesArray)
+                return false;
+        }
+
+        valuesArrayVal.setObject(*valuesArray);
+        if (!cx->compartment()->wrap(cx, &valuesArrayVal))
+            return false;
+    } else {
+        valuesArray = NewDenseEmptyArray(cx);
+        if (!valuesArray)
+            return false;
+
+        valuesArrayVal.setObject(*valuesArray);
+    }
 
     // Step 4.
     // Create our data holder that holds all the things shared across
     // every step of the iterator.  In particular, this holds the
     // remainingElementsCount (as an integer reserved slot), the array of
     // values, and the resolve function from our PromiseCapability.
-    Rooted<PromiseAllDataHolder*> dataHolder(cx, NewPromiseAllDataHolder(cx, promiseObj,
-                                                                         valuesArrayVal, resolve));
+    Rooted<PromiseAllDataHolder*> dataHolder(cx);
+    dataHolder = NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
+                                         resultCapability.resolve());
     if (!dataHolder)
         return false;
-    RootedValue dataHolderVal(cx, ObjectValue(*dataHolder));
 
     // Step 5.
     uint32_t index = 0;
 
-    // Step 6.
-    RootedValue nextValue(cx);
-    RootedId indexId(cx);
-    RootedValue rejectFunVal(cx, ObjectValue(*reject));
-
-    while (true) {
-        // Steps a-c, e-g.
-        if (!iterator.next(&nextValue, done)) {
-            // Steps b, f.
-            *done = true;
-
-            // Steps c, g.
-            return false;
-        }
-
-        // Step d.
-        if (*done) {
-            // Step d.i (implicit).
-
-            // Step d.ii.
-            int32_t remainingCount = dataHolder->decreaseRemainingCount();
-
-            // Steps d.iii-iv.
-            if (remainingCount == 0) {
-                return RunResolutionFunction(cx, resolve, valuesArrayVal, ResolveMode,
-                                             promiseObj);
-            }
-
-            // We're all set for now!
-            return true;
-        }
-
-        // Step h.
-        { // Scope for the JSAutoRealm we need to work with valuesArray.  We
+    auto getResolve = [cx, &valuesArray, &dataHolder, &index]() -> JSObject* {
+        // Step 6.h.
+        { // Scope for the AutoRealm we need to work with valuesArray.  We
             // mostly do this for performance; we could go ahead and do the define via
             // a cross-compartment proxy instead...
-            JSAutoRealm ar(cx, valuesArray);
-            indexId = INT_TO_JSID(index);
-            if (!DefineDataProperty(cx, valuesArray, indexId, UndefinedHandleValue))
-                return false;
+            AutoRealm ar(cx, valuesArray);
+
+            if (!NewbornArrayPush(cx, valuesArray, UndefinedValue()))
+                return nullptr;
         }
 
-        // Step i.
-        // Sadly, because someone could have overridden
-        // "resolve" on the canonical Promise constructor.
-        RootedValue nextPromise(cx);
-        RootedValue staticResolve(cx);
-        if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve))
-            return false;
-
-        FixedInvokeArgs<1> resolveArgs(cx);
-        resolveArgs[0].set(nextValue);
-        if (!Call(cx, staticResolve, CVal, resolveArgs, &nextPromise))
-            return false;
-
-        // Step j.
-        RootedFunction resolveFunc(cx, NewNativeFunction(cx, PromiseAllResolveElementFunction,
-                                                         1, nullptr,
-                                                         gc::AllocKind::FUNCTION_EXTENDED,
-                                                         GenericObject));
+        // Steps 6.j-k.
+        JSFunction* resolveFunc = NewNativeFunction(cx, PromiseAllResolveElementFunction, 1,
+                                                    nullptr,gc::AllocKind::FUNCTION_EXTENDED,
+                                                    GenericObject);
         if (!resolveFunc)
-            return false;
+            return nullptr;
 
-        // Steps k,m,n.
-        resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data, dataHolderVal);
+        // Steps 6.l, 6.n-p.
+        resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
+                                     ObjectValue(*dataHolder));
 
-        // Step l.
+        // Step 6.m.
         resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_ElementIndex,
                                      Int32Value(index));
 
-        // Steps o-p.
+        // Step 6.q.
         dataHolder->increaseRemainingCount();
 
-        // Step q.
-        RootedValue resolveFunVal(cx, ObjectValue(*resolveFunc));
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal, true))
-            return false;
-
-        // Step r.
+        // Step 6.s.
         index++;
         MOZ_ASSERT(index > 0);
+
+        return resolveFunc;
+    };
+
+    // Step 6.
+    if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability, done, true, getResolve))
+        return false;
+
+    // Step 6.d.ii.
+    int32_t remainingCount = dataHolder->decreaseRemainingCount();
+
+    // Steps 6.d.iii-iv.
+    if (remainingCount == 0) {
+        return RunResolutionFunction(cx, resultCapability.resolve(), valuesArrayVal, ResolveMode,
+                                     resultCapability.promise());
     }
+
+    return true;
 }
 
 // ES2016, 25.4.4.1.2.
@@ -2361,11 +2683,11 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedFunction resolve(cx, &args.callee().as<JSFunction>());
+    JSFunction* resolve = &args.callee().as<JSFunction>();
     RootedValue xVal(cx, args.get(0));
 
     // Step 1.
-    RootedValue dataVal(cx, resolve->getExtendedSlot(PromiseAllResolveElementFunctionSlot_Data));
+    const Value& dataVal = resolve->getExtendedSlot(PromiseAllResolveElementFunctionSlot_Data);
 
     // Step 2.
     // We use the existence of the data holder as a signal for whether the
@@ -2388,28 +2710,27 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
     // Step 5.
     RootedValue valuesVal(cx, data->valuesArray());
     RootedObject valuesObj(cx, &valuesVal.toObject());
-    bool valuesListIsWrapped = false;
-    if (IsWrapper(valuesObj)) {
-        valuesListIsWrapped = true;
+    if (IsProxy(valuesObj)) {
         // See comment for PerformPromiseAll, step 3 for why we unwrap here.
         valuesObj = UncheckedUnwrap(valuesObj);
+
+        if (JS_IsDeadWrapper(valuesObj)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            return false;
+        }
+
+        AutoRealm ar(cx, valuesObj);
+        if (!cx->compartment()->wrap(cx, &xVal))
+            return false;
     }
-    if (JS_IsDeadWrapper(valuesObj)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-        return false;
-    }
-    RootedNativeObject values(cx, &valuesObj->as<NativeObject>());
+    HandleNativeObject values = valuesObj.as<NativeObject>();
 
     // Step 6 (moved under step 10).
     // Step 7 (moved to step 9).
 
     // Step 8.
     // The index is guaranteed to be initialized to `undefined`.
-    if (valuesListIsWrapped) {
-        AutoRealm ar(cx, values);
-        if (!cx->compartment()->wrap(cx, &xVal))
-            return false;
-    }
+    MOZ_ASSERT(values->getDenseElement(index).isUndefined());
     values->setDenseElement(index, xVal);
 
     // Steps 7,9.
@@ -2432,20 +2753,19 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static MOZ_MUST_USE bool PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator,
-                                            HandleObject C, HandleObject promiseObj,
-                                            HandleObject resolve, HandleObject reject,
-                                            bool* done);
+static MOZ_MUST_USE bool
+PerformPromiseRace(JSContext *cx, PromiseForOfIterator& iterator, HandleObject C,
+                   Handle<PromiseCapability> resultCapability, bool* done);
 
 // ES2016, 25.4.4.3.
 static bool
 Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue iterable(cx, args.get(0));
+    HandleValue iterable = args.get(0);
 
     // Step 2 (reordered).
-    RootedValue CVal(cx, args.thisv());
+    HandleValue CVal = args.thisv();
     if (!CVal.isObject()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
                                   "Receiver of Promise.race call");
@@ -2456,28 +2776,26 @@ Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
     RootedObject C(cx, &CVal.toObject());
 
     // Step 3.
-    RootedObject resultPromise(cx);
-    RootedObject resolve(cx);
-    RootedObject reject(cx);
-    if (!NewPromiseCapability(cx, C, &resultPromise, &resolve, &reject, false))
+    Rooted<PromiseCapability> promiseCapability(cx);
+    if (!NewPromiseCapability(cx, C, &promiseCapability, false))
         return false;
 
     // Steps 4-5.
-    JS::ForOfIterator iter(cx);
+    PromiseForOfIterator iter(cx);
     if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable))
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
 
     if (!iter.valueIsIterable()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE,
                                   "Argument of Promise.race");
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
     }
 
     // Step 6 (implicit).
 
     // Step 7.
     bool done;
-    bool result = PerformPromiseRace(cx, iter, C, resultPromise, resolve, reject, &done);
+    bool result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
 
     // Step 8.
     if (!result) {
@@ -2486,73 +2804,39 @@ Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
             iter.closeThrow();
 
         // Step 8.b.
-        return AbruptRejectPromise(cx, args, resultPromise, reject);
+        return AbruptRejectPromise(cx, args, promiseCapability);
     }
 
     // Step 9.
-    args.rval().setObject(*resultPromise);
+    args.rval().setObject(*promiseCapability.promise());
     return true;
 }
 
 // ES2016, 25.4.4.3.1.
 static MOZ_MUST_USE bool
-PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
-                   HandleObject promiseObj, HandleObject resolve, HandleObject reject,
-                   bool* done)
+PerformPromiseRace(JSContext *cx, PromiseForOfIterator& iterator, HandleObject C,
+                   Handle<PromiseCapability> resultCapability, bool* done)
 {
     *done = false;
+
+    // Step 1.
     MOZ_ASSERT(C->isConstructor());
-    RootedValue CVal(cx, ObjectValue(*C));
+
+    // Step 2 (omitted).
 
     // BlockOnPromise fast path requires the passed onFulfilled function
     // doesn't return an object value, because otherwise the skipped promise
     // creation is detectable due to missing property lookups.
-    bool isDefaultResolveFn = IsNativeFunction(resolve, ResolvePromiseFunction);
+    bool isDefaultResolveFn = IsNativeFunction(resultCapability.resolve(),
+                                               ResolvePromiseFunction);
 
-    RootedValue nextValue(cx);
-    RootedValue resolveFunVal(cx, ObjectValue(*resolve));
-    RootedValue rejectFunVal(cx, ObjectValue(*reject));
+    auto getResolve = [&resultCapability]() -> JSObject* {
+        return resultCapability.resolve();
+    };
 
-    while (true) {
-        // Steps a-c, e-g.
-        if (!iterator.next(&nextValue, done)) {
-            // Steps b, f.
-            *done = true;
-
-            // Steps c, g.
-            return false;
-        }
-
-        // Step d.
-        if (*done) {
-            // Step d.i (implicit).
-
-            // Step d.ii.
-            return true;
-        }
-
-        // Step h.
-        // Sadly, because someone could have overridden
-        // "resolve" on the canonical Promise constructor.
-        RootedValue nextPromise(cx);
-        RootedValue staticResolve(cx);
-        if (!GetProperty(cx, C, CVal, cx->names().resolve, &staticResolve))
-            return false;
-
-        FixedInvokeArgs<1> resolveArgs(cx);
-        resolveArgs[0].set(nextValue);
-        if (!Call(cx, staticResolve, CVal, resolveArgs, &nextPromise))
-            return false;
-
-        // Step i.
-        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal,
-                            isDefaultResolveFn))
-        {
-            return false;
-        }
-    }
-
-    MOZ_ASSERT_UNREACHABLE("Shouldn't reach the end of PerformPromiseRace");
+    // Step 3.
+    return CommonPerformPromiseAllRace(cx, iterator, C, resultCapability, done,
+                                       isDefaultResolveFn, getResolve);
 }
 
 
@@ -2585,7 +2869,7 @@ CommonStaticResolveRejectImpl(JSContext* cx, HandleValue thisVal, HandleValue ar
             // outcome, so instead of unwrapping and then performing the
             // GetProperty, just check here and then operate on the original
             // object again.
-            RootedObject unwrappedObject(cx, CheckedUnwrap(xObj));
+            JSObject* unwrappedObject = CheckedUnwrap(xObj);
             if (unwrappedObject && unwrappedObject->is<PromiseObject>())
                 isPromise = true;
         }
@@ -2599,21 +2883,19 @@ CommonStaticResolveRejectImpl(JSContext* cx, HandleValue thisVal, HandleValue ar
     }
 
     // Step 4 of Resolve, 3 of Reject.
-    RootedObject promise(cx);
-    RootedObject resolveFun(cx);
-    RootedObject rejectFun(cx);
-    if (!NewPromiseCapability(cx, C, &promise, &resolveFun, &rejectFun, true))
+    Rooted<PromiseCapability> capability(cx);
+    if (!NewPromiseCapability(cx, C, &capability, true))
         return nullptr;
 
     // Step 5 of Resolve, 4 of Reject.
-    if (!RunResolutionFunction(cx, mode == ResolveMode ? resolveFun : rejectFun, argVal, mode,
-                               promise))
+    if (!RunResolutionFunction(cx, mode == ResolveMode ? capability.resolve() : capability.reject(),
+                               argVal, mode, capability.promise()))
     {
         return nullptr;
     }
 
     // Step 6 of Resolve, 4 of Reject.
-    return promise;
+    return capability.promise();
 }
 
 MOZ_MUST_USE JSObject*
@@ -2630,8 +2912,8 @@ static bool
 Promise_reject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue thisVal(cx, args.thisv());
-    RootedValue argVal(cx, args.get(0));
+    HandleValue thisVal = args.thisv();
+    HandleValue argVal = args.get(0);
     JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, RejectMode);
     if (!result)
         return false;
@@ -2645,7 +2927,7 @@ Promise_reject(JSContext* cx, unsigned argc, Value* vp)
 /* static */ JSObject*
 PromiseObject::unforgeableReject(JSContext* cx, HandleValue value)
 {
-    RootedObject promiseCtor(cx, JS::GetPromiseConstructor(cx));
+    JSObject* promiseCtor = JS::GetPromiseConstructor(cx);
     if (!promiseCtor)
         return nullptr;
     RootedValue cVal(cx, ObjectValue(*promiseCtor));
@@ -2659,8 +2941,8 @@ static bool
 Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue thisVal(cx, args.thisv());
-    RootedValue argVal(cx, args.get(0));
+    HandleValue thisVal = args.thisv();
+    HandleValue argVal = args.get(0);
     JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, ResolveMode);
     if (!result)
         return false;
@@ -2674,7 +2956,7 @@ Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp)
 /* static */ JSObject*
 PromiseObject::unforgeableResolve(JSContext* cx, HandleValue value)
 {
-    RootedObject promiseCtor(cx, JS::GetPromiseConstructor(cx));
+    JSObject* promiseCtor = JS::GetPromiseConstructor(cx);
     if (!promiseCtor)
         return nullptr;
     RootedValue cVal(cx, ObjectValue(*promiseCtor));
@@ -2701,18 +2983,22 @@ enum class IncumbentGlobalObject {
 };
 
 static PromiseReactionRecord*
-NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfilled,
-                  HandleValue onRejected, HandleObject resolve, HandleObject reject,
+NewReactionRecord(JSContext* cx, Handle<PromiseCapability> resultCapability,
+                  HandleValue onFulfilled, HandleValue onRejected,
                   IncumbentGlobalObject incumbentGlobalObjectOption)
 {
     // Either of the following conditions must be met:
-    //   * resultPromise is a PromiseObject
-    //   * resolve and reject are callable
+    //   * resultCapability.promise is a PromiseObject
+    //   * resultCapability.resolve and resultCapability.resolve are callable
     // except for Async Generator, there resultPromise can be nullptr.
-    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), resolve);
-    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(resolve));
-    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), reject);
-    MOZ_ASSERT_IF(resultPromise && !resultPromise->is<PromiseObject>(), IsCallable(reject));
+#ifdef DEBUG
+    if (resultCapability.promise() && !resultCapability.promise()->is<PromiseObject>()) {
+        MOZ_ASSERT(resultCapability.resolve());
+        MOZ_ASSERT(IsCallable(resultCapability.resolve()));
+        MOZ_ASSERT(resultCapability.reject());
+        MOZ_ASSERT(IsCallable(resultCapability.reject()));
+    }
+#endif
 
     // Ensure the onFulfilled handler has the expected type.
     MOZ_ASSERT(onFulfilled.isInt32() || onFulfilled.isObjectOrNull());
@@ -2735,23 +3021,26 @@ NewReactionRecord(JSContext* cx, HandleObject resultPromise, HandleValue onFulfi
             return nullptr;
     }
 
-    Rooted<PromiseReactionRecord*> reaction(cx, NewObjectWithClassProto<PromiseReactionRecord>(cx));
+    PromiseReactionRecord* reaction = NewBuiltinClassInstance<PromiseReactionRecord>(cx);
     if (!reaction)
         return nullptr;
 
-    assertSameCompartment(cx, resultPromise);
+    assertSameCompartment(cx, resultCapability.promise());
     assertSameCompartment(cx, onFulfilled);
     assertSameCompartment(cx, onRejected);
-    assertSameCompartment(cx, resolve);
-    assertSameCompartment(cx, reject);
+    assertSameCompartment(cx, resultCapability.resolve());
+    assertSameCompartment(cx, resultCapability.reject());
     assertSameCompartment(cx, incumbentGlobalObject);
 
-    reaction->setFixedSlot(ReactionRecordSlot_Promise, ObjectOrNullValue(resultPromise));
+    reaction->setFixedSlot(ReactionRecordSlot_Promise,
+                           ObjectOrNullValue(resultCapability.promise()));
     reaction->setFixedSlot(ReactionRecordSlot_Flags, Int32Value(0));
     reaction->setFixedSlot(ReactionRecordSlot_OnFulfilled, onFulfilled);
     reaction->setFixedSlot(ReactionRecordSlot_OnRejected, onRejected);
-    reaction->setFixedSlot(ReactionRecordSlot_Resolve, ObjectOrNullValue(resolve));
-    reaction->setFixedSlot(ReactionRecordSlot_Reject, ObjectOrNullValue(reject));
+    reaction->setFixedSlot(ReactionRecordSlot_Resolve,
+                           ObjectOrNullValue(resultCapability.resolve()));
+    reaction->setFixedSlot(ReactionRecordSlot_Reject,
+                           ObjectOrNullValue(resultCapability.reject()));
     reaction->setFixedSlot(ReactionRecordSlot_IncumbentGlobalObject,
                            ObjectOrNullValue(incumbentGlobalObject));
 
@@ -2767,8 +3056,7 @@ IsPromiseSpecies(JSContext* cx, JSFunction* species)
 static bool
 PromiseThenNewPromiseCapability(JSContext* cx, HandleObject promiseObj,
                                 CreateDependentPromise createDependent,
-                                MutableHandleObject resultPromise,
-                                MutableHandleObject resolve, MutableHandleObject reject)
+                                MutableHandle<PromiseCapability> resultCapability)
 {
     if (createDependent != CreateDependentPromise::Never) {
         // Step 3.
@@ -2780,7 +3068,7 @@ PromiseThenNewPromiseCapability(JSContext* cx, HandleObject promiseObj,
             !IsNativeFunction(C, PromiseConstructor))
         {
             // Step 4.
-            if (!NewPromiseCapability(cx, C, resultPromise, resolve, reject, true))
+            if (!NewPromiseCapability(cx, C, resultCapability, true))
                 return false;
         }
     }
@@ -2801,20 +3089,15 @@ js::OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
     }
 
     // Steps 3-4.
-    RootedObject resultPromise(cx);
-    RootedObject resolve(cx);
-    RootedObject reject(cx);
-    if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent, &resultPromise,
-                                         &resolve, &reject))
-    {
+    Rooted<PromiseCapability> resultCapability(cx);
+    if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent, &resultCapability))
         return false;
-    }
 
     // Step 5.
-    if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultPromise, resolve, reject))
+    if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultCapability))
         return false;
 
-    dependent.set(resultPromise);
+    dependent.set(resultCapability.promise());
     return true;
 }
 
@@ -2825,18 +3108,54 @@ OriginalPromiseThenWithoutSettleHandlers(JSContext* cx, Handle<PromiseObject*> p
     assertSameCompartment(cx, promise);
 
     // Steps 3-4.
-    RootedObject resultPromise(cx);
-    RootedObject resolve(cx);
-    RootedObject reject(cx);
+    Rooted<PromiseCapability> resultCapability(cx);
     if (!PromiseThenNewPromiseCapability(cx, promise, CreateDependentPromise::SkipIfCtorUnobservable,
-                                         &resultPromise, &resolve, &reject))
+                                         &resultCapability))
     {
         return false;
     }
 
     // Step 5.
-    return PerformPromiseThenWithoutSettleHandlers(cx, promise, promiseToResolve, resultPromise,
-                                                   resolve, reject);
+    return PerformPromiseThenWithoutSettleHandlers(cx, promise, promiseToResolve, resultCapability);
+}
+
+static bool
+CanCallOriginalPromiseThenBuiltin(JSContext* cx, HandleValue promise)
+{
+    return promise.isObject() &&
+           promise.toObject().is<PromiseObject>() &&
+           cx->realm()->promiseLookup.isDefaultInstance(cx, &promise.toObject().as<PromiseObject>());
+}
+
+// ES2016, 25.4.5.3., steps 3-5.
+static bool
+OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled,
+                           HandleValue onRejected, MutableHandleValue rval, bool rvalUsed)
+{
+    assertSameCompartment(cx, promiseVal, onFulfilled, onRejected);
+    MOZ_ASSERT(CanCallOriginalPromiseThenBuiltin(cx, promiseVal));
+
+    Rooted<PromiseObject*> promise(cx, &promiseVal.toObject().as<PromiseObject>());
+
+    // Steps 3-4.
+    Rooted<PromiseCapability> resultCapability(cx);
+    if (rvalUsed) {
+        PromiseObject* resultPromise = CreatePromiseObjectWithoutResolutionFunctions(cx);
+        if (!resultPromise)
+            return false;
+
+        resultCapability.promise().set(resultPromise);
+    }
+
+    // Step 5.
+    if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultCapability))
+        return false;
+
+    if (rvalUsed)
+        rval.setObject(*resultCapability.promise());
+    else
+        rval.setUndefined();
+    return true;
 }
 
 static MOZ_MUST_USE bool PerformPromiseThenWithReaction(JSContext* cx,
@@ -2876,7 +3195,7 @@ js::AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise)
     if (!MaybeGetAndClearException(cx, &exc))
         return false;
 
-    if (!RejectMaybeWrappedPromise(cx, resultPromise, exc))
+    if (!RejectPromiseInternal(cx, resultPromise, exc))
         return false;
 
     // Step 3.g.
@@ -2915,9 +3234,10 @@ InternalAwait(JSContext* cx, HandleValue value, HandleObject resultPromise,
         return false;
 
     // Step 7-8.
-    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultPromise,
+    Rooted<PromiseCapability> resultCapability(cx);
+    resultCapability.promise().set(resultPromise);
+    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultCapability,
                                                                   onFulfilled, onRejected,
-                                                                  nullptr, nullptr,
                                                                   IncumbentGlobalObject::Yes));
     if (!reaction)
         return false;
@@ -2967,10 +3287,10 @@ bool
 js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind completionKind)
 {
     // Step 1.
-    RootedValue thisVal(cx, args.thisv());
+    HandleValue thisVal = args.thisv();
 
     // Step 2.
-    RootedObject resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
     if (!resultPromise)
         return false;
 
@@ -2987,7 +3307,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
             return false;
 
         // Step 3.b.
-        if (!RejectMaybeWrappedPromise(cx, resultPromise, badGeneratorError))
+        if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError))
             return false;
 
         // Step 3.c.
@@ -3001,7 +3321,6 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     // Step 4.
     RootedObject iter(cx, asyncIter->iterator());
 
-    RootedValue resultVal(cx);
     RootedValue func(cx);
     if (completionKind == CompletionKind::Normal) {
         // 11.1.3.2.1 steps 5-6 (partially).
@@ -3014,7 +3333,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
         // Step 7.
         if (func.isNullOrUndefined()) {
             // Step 7.a.
-            RootedObject resultObj(cx, CreateIterResultObject(cx, args.get(0), true));
+            JSObject* resultObj = CreateIterResultObject(cx, args.get(0), true);
             if (!resultObj)
                 return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
@@ -3037,7 +3356,7 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
         // Step 7.
         if (func.isNullOrUndefined()) {
             // Step 7.a.
-            if (!RejectMaybeWrappedPromise(cx, resultPromise, args.get(0)))
+            if (!RejectPromiseInternal(cx, resultPromise, args.get(0)))
                 return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
             // Step 7.b.
@@ -3049,9 +3368,8 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     // 11.1.3.2.1 steps 5-6 (partially).
     // 11.1.3.2.2, 11.1.3.2.3 steps 8-9.
     RootedValue iterVal(cx, ObjectValue(*iter));
-    FixedInvokeArgs<1> args2(cx);
-    args2[0].set(args.get(0));
-    if (!js::Call(cx, func, iterVal, args2, &resultVal))
+    RootedValue resultVal(cx);
+    if (!Call(cx, func, iterVal, args.get(0), &resultVal))
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
     // 11.1.3.2.1 steps 5-6 (partially).
@@ -3155,18 +3473,18 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
             MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
 
             // Step 4.
-            Rooted<AsyncGeneratorRequest*> request(
-                cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+            AsyncGeneratorRequest* request =
+                AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj);
             if (!request)
                 return false;
 
             // Step 5.
-            RootedObject resultPromise(cx, request->promise());
+            Rooted<PromiseObject*> resultPromise(cx, request->promise());
 
             asyncGenObj->cacheRequest(request);
 
             // Step 6.
-            if (!RejectMaybeWrappedPromise(cx, resultPromise, exception))
+            if (!RejectPromiseInternal(cx, resultPromise, exception))
                 return false;
 
             // Steps 7-8.
@@ -3182,18 +3500,18 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
             MOZ_ASSERT(!asyncGenObj->isQueueEmpty());
 
             // Step 4.
-            Rooted<AsyncGeneratorRequest*> request(
-                cx, AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj));
+            AsyncGeneratorRequest* request =
+                AsyncGeneratorObject::dequeueRequest(cx, asyncGenObj);
             if (!request)
                 return false;
 
             // Step 5.
-            RootedObject resultPromise(cx, request->promise());
+            Rooted<PromiseObject*> resultPromise(cx, request->promise());
 
             asyncGenObj->cacheRequest(request);
 
             // Step 6.
-            RootedObject resultObj(cx, CreateIterResultObject(cx, value, done));
+            JSObject* resultObj = CreateIterResultObject(cx, value, done);
             if (!resultObj)
                 return false;
 
@@ -3321,7 +3639,7 @@ js::AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal,
     // Step 1 (implicit).
 
     // Step 2.
-    RootedObject resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
     if (!resultPromise)
         return false;
 
@@ -3333,7 +3651,7 @@ js::AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal,
             return false;
 
         // Step 3.b.
-        if (!RejectMaybeWrappedPromise(cx, resultPromise, badGeneratorError))
+        if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError))
             return false;
 
         // Step 3.c.
@@ -3372,21 +3690,25 @@ Promise_catch_impl(JSContext* cx, unsigned argc, Value* vp, bool rvalUsed)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Step 1.
-    RootedValue thenVal(cx);
-    if (!GetProperty(cx, args.thisv(), cx->names().then, &thenVal))
-        return false;
+    HandleValue thisVal = args.thisv();
+    HandleValue onFulfilled = UndefinedHandleValue;
+    HandleValue onRejected = args.get(0);
 
-    if (IsNativeFunction(thenVal, &Promise_then)) {
-        return Promise_then_impl(cx, args.thisv(), UndefinedHandleValue, args.get(0),
-                                 args.rval(), rvalUsed);
+    // Fast path when the default Promise state is intact.
+    if (CanCallOriginalPromiseThenBuiltin(cx, thisVal)) {
+        return OriginalPromiseThenBuiltin(cx, thisVal, onFulfilled, onRejected, args.rval(),
+                                          rvalUsed);
     }
 
-    FixedInvokeArgs<2> iargs(cx);
-    iargs[0].setUndefined();
-    iargs[1].set(args.get(0));
+    // Step 1.
+    RootedValue thenVal(cx);
+    if (!GetProperty(cx, thisVal, cx->names().then, &thenVal))
+        return false;
 
-    return Call(cx, thenVal, args.thisv(), iargs, args.rval());
+    if (IsNativeFunction(thenVal, &Promise_then))
+        return Promise_then_impl(cx, thisVal, onFulfilled, onRejected, args.rval(), rvalUsed);
+
+    return Call(cx, thenVal, thisVal, UndefinedHandleValue, onRejected, args.rval());
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -3442,14 +3764,18 @@ Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled
                                   "Receiver of Promise.prototype.then call");
         return false;
     }
+
+    // Fast path when the default Promise state is intact.
+    if (CanCallOriginalPromiseThenBuiltin(cx, promiseVal))
+        return OriginalPromiseThenBuiltin(cx, promiseVal, onFulfilled, onRejected, rval, rvalUsed);
+
     RootedObject promiseObj(cx, &promiseVal.toObject());
     Rooted<PromiseObject*> promise(cx);
 
-    bool isPromise = promiseObj->is<PromiseObject>();
-    if (isPromise) {
+    if (promiseObj->is<PromiseObject>()) {
         promise = &promiseObj->as<PromiseObject>();
     } else {
-        RootedObject unwrappedPromiseObj(cx, CheckedUnwrap(promiseObj));
+        JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
         if (!unwrappedPromiseObj) {
             ReportAccessDenied(cx);
             return false;
@@ -3500,8 +3826,7 @@ Promise_then(JSContext* cx, unsigned argc, Value* vp)
 // ES2016, 25.4.5.3.1.
 static MOZ_MUST_USE bool
 PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled_,
-                   HandleValue onRejected_, HandleObject resultPromise,
-                   HandleObject resolve, HandleObject reject)
+                   HandleValue onRejected_, Handle<PromiseCapability> resultCapability)
 {
     // Step 1 (implicit).
     // Step 2 (implicit).
@@ -3517,9 +3842,8 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
         onRejected = Int32Value(PromiseHandlerThrower);
 
     // Step 7.
-    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultPromise,
+    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultCapability,
                                                                   onFulfilled, onRejected,
-                                                                  resolve, reject,
                                                                   IncumbentGlobalObject::Yes));
     if (!reaction)
         return false;
@@ -3530,8 +3854,7 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
 static MOZ_MUST_USE bool
 PerformPromiseThenWithoutSettleHandlers(JSContext* cx, Handle<PromiseObject*> promise,
                                         Handle<PromiseObject*> promiseToResolve,
-                                        HandleObject resultPromise, HandleObject resolve,
-                                        HandleObject reject)
+                                        Handle<PromiseCapability> resultCapability)
 {
     // Step 1 (implicit).
     // Step 2 (implicit).
@@ -3543,9 +3866,8 @@ PerformPromiseThenWithoutSettleHandlers(JSContext* cx, Handle<PromiseObject*> pr
     HandleValue onRejected = NullHandleValue;
 
     // Step 7.
-    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultPromise,
+    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, resultCapability,
                                                                   onFulfilled, onRejected,
-                                                                  resolve, reject,
                                                                   IncumbentGlobalObject::Yes));
     if (!reaction)
         return false;
@@ -3599,134 +3921,6 @@ PerformPromiseThenWithReaction(JSContext* cx, Handle<PromiseObject*> promise,
     return true;
 }
 
-/**
- * Calls |promise.then| with the provided hooks and adds |blockedPromise| to
- * its list of dependent promises. Used by |Promise.all| and |Promise.race|.
- *
- * If |promise.then| is the original |Promise.prototype.then| function and
- * the call to |promise.then| would use the original |Promise| constructor to
- * create the resulting promise, this function skips the call to |promise.then|
- * and thus creating a new promise that would not be observable by content.
- */
-static MOZ_MUST_USE bool
-BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromise_,
-               HandleValue onFulfilled, HandleValue onRejected, bool onFulfilledReturnsUndefined)
-{
-    RootedObject promiseObj(cx, ToObject(cx, promiseVal));
-    if (!promiseObj)
-        return false;
-
-    RootedValue thenVal(cx);
-    if (!GetProperty(cx, promiseObj, promiseVal, cx->names().then, &thenVal))
-        return false;
-
-    if (promiseObj->is<PromiseObject>() && IsNativeFunction(thenVal, Promise_then)) {
-        // |promise| is an unwrapped Promise, and |then| is the original
-        // |Promise.prototype.then|, inline it here.
-        // 25.4.5.3., step 3.
-        RootedObject PromiseCtor(cx,
-                                 GlobalObject::getOrCreatePromiseConstructor(cx, cx->global()));
-        if (!PromiseCtor)
-            return false;
-
-        RootedObject C(cx, SpeciesConstructor(cx, promiseObj, JSProto_Promise, IsPromiseSpecies));
-        if (!C)
-            return false;
-
-        RootedObject resultPromise(cx);
-        RootedObject resolveFun(cx);
-        RootedObject rejectFun(cx);
-
-        // By default, the blocked promise is added as an extra entry to the
-        // rejected promises list.
-        bool addToDependent = true;
-
-        // Skip the creation of a built-in Promise object if:
-        // 1. `C` is the built-in Promise constructor.
-        // 2. The `onFulfilled` handler doesn't return an object, which
-        //    ensures no side-effects take place in ResolvePromiseInternal.
-        // 3. The blocked promise is a built-in Promise object.
-        // 4. The blocked promise doesn't use the default resolving functions,
-        //    which in turn means RunResolutionFunction when called from
-        //    PromiseRectionJob won't try to resolve the promise.
-        if (C == PromiseCtor &&
-            onFulfilledReturnsUndefined &&
-            blockedPromise_->is<PromiseObject>() &&
-            !PromiseHasAnyFlag(blockedPromise_->as<PromiseObject>(),
-                               PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
-        {
-            resultPromise.set(blockedPromise_);
-            addToDependent = false;
-        } else {
-            // 25.4.5.3., step 4.
-            if (!NewPromiseCapability(cx, C, &resultPromise, &resolveFun, &rejectFun, true))
-                return false;
-        }
-
-        // 25.4.5.3., step 5.
-        Rooted<PromiseObject*> promise(cx, &promiseObj->as<PromiseObject>());
-        if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected, resultPromise,
-                                resolveFun, rejectFun))
-        {
-            return false;
-        }
-
-        if (!addToDependent)
-            return true;
-    } else {
-        // Optimization failed, do the normal call.
-        RootedValue rval(cx);
-        if (!Call(cx, thenVal, promiseVal, onFulfilled, onRejected, &rval))
-            return false;
-    }
-
-    // In case the value to depend on isn't an object at all, there's nothing
-    // more to do here: we can only add reactions to Promise objects
-    // (potentially after unwrapping them), and non-object values can't be
-    // Promise objects. This can happen if Promise.all is called on an object
-    // with a `resolve` method that returns primitives.
-    if (!promiseVal.isObject())
-        return true;
-
-    // The object created by the |promise.then| call or the inlined version
-    // of it above is visible to content (either because |promise.then| was
-    // overridden by content and could leak it, or because a constructor
-    // other than the original value of |Promise| was used to create it).
-    // To have both that object and |blockedPromise| show up as dependent
-    // promises in the debugger, add a dummy reaction to the list of reject
-    // reactions that contains |blockedPromise|, but otherwise does nothing.
-    RootedObject unwrappedPromiseObj(cx, promiseObj);
-    RootedObject blockedPromise(cx, blockedPromise_);
-
-    mozilla::Maybe<AutoRealm> ar;
-    if (IsProxy(promiseObj)) {
-        unwrappedPromiseObj = CheckedUnwrap(promiseObj);
-        if (!unwrappedPromiseObj) {
-            ReportAccessDenied(cx);
-            return false;
-        }
-        if (JS_IsDeadWrapper(unwrappedPromiseObj)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-            return false;
-        }
-        ar.emplace(cx, unwrappedPromiseObj);
-        if (!cx->compartment()->wrap(cx, &blockedPromise))
-            return false;
-    }
-
-    // If either the object to depend on or the object that gets blocked isn't
-    // a, maybe-wrapped, Promise instance, we ignore it. All this does is lose
-    // some small amount of debug information in scenarios that are highly
-    // unlikely to occur in useful code.
-    if (!unwrappedPromiseObj->is<PromiseObject>())
-        return true;
-    if (!blockedPromise_->is<PromiseObject>())
-        return true;
-
-    Rooted<PromiseObject*> promise(cx, &unwrappedPromiseObj->as<PromiseObject>());
-    return AddDummyPromiseReactionForDebugger(cx, promise, blockedPromise);
-}
-
 static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction)
@@ -3748,7 +3942,6 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
 
     // 25.4.5.3.1 steps 7.a,b.
     RootedValue reactionsVal(cx, promise->reactions());
-    RootedNativeObject reactions(cx);
 
     if (reactionsVal.isUndefined()) {
         // If no reactions existed so far, just store the reaction record directly.
@@ -3773,23 +3966,25 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
     if (reactionsObj->is<PromiseReactionRecord>()) {
         // If a single reaction existed so far, create a list and store the
         // old and the new reaction in it.
-        reactions = NewDenseFullyAllocatedArray(cx, 2);
+        ArrayObject* reactions = NewDenseFullyAllocatedArray(cx, 2);
         if (!reactions)
             return false;
-        if (reactions->ensureDenseElements(cx, 0, 2) != DenseElementResult::Success)
-            return false;
 
-        reactions->setDenseElement(0, reactionsVal);
-        reactions->setDenseElement(1, reactionVal);
+        reactions->setDenseInitializedLength(2);
+        reactions->initDenseElement(0, reactionsVal);
+        reactions->initDenseElement(1, reactionVal);
 
         promise->setFixedSlot(PromiseSlot_ReactionsOrResult, ObjectValue(*reactions));
     } else {
         // Otherwise, just store the new reaction.
         MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
-        reactions = &reactionsObj->as<NativeObject>();
+        HandleNativeObject reactions = reactionsObj.as<NativeObject>();
         uint32_t len = reactions->getDenseInitializedLength();
-        if (reactions->ensureDenseElements(cx, 0, len + 1) != DenseElementResult::Success)
+        DenseElementResult result = reactions->ensureDenseElements(cx, len, 1);
+        if (result != DenseElementResult::Success) {
+            MOZ_ASSERT(result == DenseElementResult::Failure);
             return false;
+        }
         reactions->setDenseElement(len, reactionVal);
     }
 
@@ -3803,9 +3998,12 @@ AddDummyPromiseReactionForDebugger(JSContext* cx, Handle<PromiseObject*> promise
     if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, dependentPromise,
+    // Leave resolve and reject as null.
+    Rooted<PromiseCapability> capability(cx);
+    capability.promise().set(dependentPromise);
+
+    Rooted<PromiseReactionRecord*> reaction(cx, NewReactionRecord(cx, capability,
                                                                   NullHandleValue, NullHandleValue,
-                                                                  nullptr, nullptr,
                                                                   IncumbentGlobalObject::No));
     if (!reaction)
         return false;
@@ -3869,10 +4067,10 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     uint32_t len = reactions->getDenseInitializedLength();
     MOZ_ASSERT(len >= 2);
 
-    size_t valuesIndex = 0;
-    Rooted<PromiseReactionRecord*> reaction(cx);
-    for (size_t i = 0; i < len; i++) {
-        reaction = &reactions->getDenseElement(i).toObject().as<PromiseReactionRecord>();
+    uint32_t valuesIndex = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        const Value& element = reactions->getDenseElement(i);
+        PromiseReactionRecord* reaction = &element.toObject().as<PromiseReactionRecord>();
 
         // Not all reactions have a Promise on them.
         RootedObject promiseObj(cx, reaction->promise());
@@ -3897,7 +4095,7 @@ PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValu
     if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS))
         return ResolvePromiseInternal(cx, promise, resolutionValue);
 
-    RootedObject resolveFun(cx, GetResolveFunctionFromPromise(promise));
+    JSFunction* resolveFun = GetResolveFunctionFromPromise(promise);
     if (!resolveFun)
         return true;
 
@@ -3909,11 +4107,8 @@ PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValu
     if (!cx->compartment()->wrap(cx, &funVal))
         return false;
 
-    FixedInvokeArgs<1> args(cx);
-    args[0].set(resolutionValue);
-
     RootedValue dummy(cx);
-    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
+    return Call(cx, funVal, UndefinedHandleValue, resolutionValue, &dummy);
 }
 
 /* static */ bool
@@ -3929,11 +4124,8 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
     RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
     MOZ_ASSERT(IsCallable(funVal));
 
-    FixedInvokeArgs<1> args(cx);
-    args[0].set(rejectionValue);
-
     RootedValue dummy(cx);
-    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
+    return Call(cx, funVal, UndefinedHandleValue, rejectionValue, &dummy);
 }
 
 /* static */ void
@@ -3945,6 +4137,239 @@ PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
         cx->runtime()->addUnhandledRejectedPromise(cx, promise);
 
     Debugger::onPromiseSettled(cx, promise);
+}
+
+JSFunction*
+js::PromiseLookup::getPromiseConstructor(JSContext* cx)
+{
+    const Value& val = cx->global()->getConstructor(JSProto_Promise);
+    return val.isObject() ? &val.toObject().as<JSFunction>() : nullptr;
+}
+
+NativeObject*
+js::PromiseLookup::getPromisePrototype(JSContext* cx)
+{
+    const Value& val = cx->global()->getPrototype(JSProto_Promise);
+    return val.isObject() ? &val.toObject().as<NativeObject>() : nullptr;
+}
+
+bool
+js::PromiseLookup::isDataPropertyNative(JSContext* cx, NativeObject* obj, uint32_t slot,
+                                        JSNative native)
+{
+    JSFunction* fun;
+    if (!IsFunctionObject(obj->getSlot(slot), &fun))
+        return false;
+    return fun->maybeNative() == native && fun->realm() == cx->realm();
+}
+
+bool
+js::PromiseLookup::isAccessorPropertyNative(JSContext* cx, Shape* shape, JSNative native)
+{
+    JSObject* getter = shape->getterObject();
+    return getter && IsNativeFunction(getter, native) &&
+           getter->as<JSFunction>().realm() == cx->realm();
+}
+
+void
+js::PromiseLookup::initialize(JSContext* cx)
+{
+    MOZ_ASSERT(state_ == State::Uninitialized);
+
+    // Get the canonical Promise.prototype.
+    NativeObject* promiseProto = getPromisePrototype(cx);
+
+    // Check condition 1:
+    // Leave the cache uninitialized if the Promise class itself is not yet
+    // initialized.
+    if (!promiseProto)
+        return;
+
+    // Get the canonical Promise constructor.
+    JSFunction* promiseCtor = getPromiseConstructor(cx);
+    MOZ_ASSERT(promiseCtor,
+               "The Promise constructor is initialized iff Promise.prototype is initialized");
+
+    // Shortcut returns below means Promise[@@species] will never be
+    // optimizable, set to disabled now, and clear it later when we succeed.
+    state_ = State::Disabled;
+
+    // Check condition 2:
+    // Look up Promise.prototype.constructor and ensure it's a data property.
+    Shape* ctorShape = promiseProto->lookup(cx, cx->names().constructor);
+    if (!ctorShape || !ctorShape->isDataProperty())
+        return;
+
+    // Get the referred value, and ensure it holds the canonical Promise
+    // constructor.
+    JSFunction* ctorFun;
+    if (!IsFunctionObject(promiseProto->getSlot(ctorShape->slot()), &ctorFun))
+        return;
+    if (ctorFun != promiseCtor)
+        return;
+
+    // Check condition 3:
+    // Look up Promise.prototype.then and ensure it's a data property.
+    Shape* thenShape = promiseProto->lookup(cx, cx->names().then);
+    if (!thenShape || !thenShape->isDataProperty())
+        return;
+
+    // Get the referred value, and ensure it holds the canonical "then"
+    // function.
+    if (!isDataPropertyNative(cx, promiseProto, thenShape->slot(), Promise_then))
+        return;
+
+    // Check condition 4:
+    // Look up the '@@species' value on Promise.
+    Shape* speciesShape = promiseCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    if (!speciesShape || !speciesShape->hasGetterObject())
+        return;
+
+    // Get the referred value, ensure it holds the canonical Promise[@@species]
+    // function.
+    if (!isAccessorPropertyNative(cx, speciesShape, Promise_static_species))
+        return;
+
+    // Check condition 5:
+    // Look up Promise.resolve and ensure it's a data property.
+    Shape* resolveShape = promiseCtor->lookup(cx, cx->names().resolve);
+    if (!resolveShape || !resolveShape->isDataProperty())
+        return;
+
+    // Get the referred value, and ensure it holds the canonical "resolve"
+    // function.
+    if (!isDataPropertyNative(cx, promiseCtor, resolveShape->slot(), Promise_static_resolve))
+        return;
+
+    // Store raw pointers below. This is okay to do here, because all objects
+    // are in the tenured heap.
+    MOZ_ASSERT(!IsInsideNursery(promiseCtor->lastProperty()));
+    MOZ_ASSERT(!IsInsideNursery(speciesShape));
+    MOZ_ASSERT(!IsInsideNursery(promiseProto->lastProperty()));
+
+    state_ = State::Initialized;
+    promiseConstructorShape_ = promiseCtor->lastProperty();
+#ifdef DEBUG
+    promiseSpeciesShape_ = speciesShape;
+#endif
+    promiseProtoShape_ = promiseProto->lastProperty();
+    promiseResolveSlot_ = resolveShape->slot();
+    promiseProtoConstructorSlot_ = ctorShape->slot();
+    promiseProtoThenSlot_ = thenShape->slot();
+}
+
+void
+js::PromiseLookup::reset()
+{
+    JS_POISON(this, 0xBB, sizeof(this), MemCheckKind::MakeUndefined);
+    state_ = State::Uninitialized;
+}
+
+bool
+js::PromiseLookup::isPromiseStateStillSane(JSContext* cx)
+{
+    MOZ_ASSERT(state_ == State::Initialized);
+
+    NativeObject* promiseProto = getPromisePrototype(cx);
+    MOZ_ASSERT(promiseProto);
+
+    NativeObject* promiseCtor = getPromiseConstructor(cx);
+    MOZ_ASSERT(promiseCtor);
+
+    // Ensure that Promise.prototype still has the expected shape.
+    if (promiseProto->lastProperty() != promiseProtoShape_)
+        return false;
+
+    // Ensure that Promise still has the expected shape.
+    if (promiseCtor->lastProperty() != promiseConstructorShape_)
+        return false;
+
+    // Ensure that Promise.prototype.constructor is the canonical constructor.
+    if (promiseProto->getSlot(promiseProtoConstructorSlot_) != ObjectValue(*promiseCtor))
+        return false;
+
+    // Ensure that Promise.prototype.then is the canonical "then" function.
+    if (!isDataPropertyNative(cx, promiseProto, promiseProtoThenSlot_, Promise_then))
+        return false;
+
+    // Ensure the species getter contains the canonical @@species function.
+    // Note: This is currently guaranteed to be always true, because modifying
+    // the getter property implies a new shape is generated. If this ever
+    // changes, convert this assertion into an if-statement.
+#ifdef DEBUG
+    MOZ_ASSERT(isAccessorPropertyNative(cx, promiseSpeciesShape_, Promise_static_species));
+#endif
+
+    // Ensure that Promise.resolve is the canonical "resolve" function.
+    if (!isDataPropertyNative(cx, promiseCtor, promiseResolveSlot_, Promise_static_resolve))
+        return false;
+
+    return true;
+}
+
+bool
+js::PromiseLookup::ensureInitialized(JSContext* cx, Reinitialize reinitialize)
+{
+    if (state_ == State::Uninitialized) {
+        // If the cache is not initialized, initialize it.
+        initialize(cx);
+    } else if (state_ == State::Initialized) {
+        if (reinitialize == Reinitialize::Allowed) {
+            if (!isPromiseStateStillSane(cx)) {
+                // If the promise state is no longer sane, reinitialize.
+                reset();
+                initialize(cx);
+            }
+        } else {
+            // When we're not allowed to reinitialize, the promise state must
+            // still be sane if the cache is already initialized.
+            MOZ_ASSERT(isPromiseStateStillSane(cx));
+        }
+    }
+
+    // If the cache is disabled or still uninitialized, don't bother trying to
+    // optimize.
+    if (state_ != State::Initialized)
+        return false;
+
+    // By the time we get here, we should have a sane promise state.
+    MOZ_ASSERT(isPromiseStateStillSane(cx));
+
+    return true;
+}
+
+bool
+js::PromiseLookup::isDefaultPromiseState(JSContext* cx)
+{
+    // Promise and Promise.prototype are in their default states iff the
+    // lookup cache was successfully initialized.
+    return ensureInitialized(cx, Reinitialize::Allowed);
+}
+
+bool
+js::PromiseLookup::hasDefaultProtoAndNoShadowedProperties(JSContext* cx, PromiseObject* promise)
+{
+    // Ensure |promise|'s prototype is the actual Promise.prototype.
+    if (promise->staticPrototype() != getPromisePrototype(cx))
+        return false;
+
+    // Ensure |promise| doesn't define any own properties. This serves as a
+    // quick check to make sure |promise| doesn't define an own "constructor"
+    // or "then" property which may shadow Promise.prototype.constructor or
+    // Promise.prototype.then.
+    return promise->lastProperty()->isEmptyShape();
+}
+
+bool
+js::PromiseLookup::isDefaultInstance(JSContext* cx, PromiseObject* promise,
+                                     Reinitialize reinitialize)
+{
+    // Promise and Promise.prototype must be in their default states.
+    if (!ensureInitialized(cx, reinitialize))
+        return false;
+
+    // The object uses the default properties from Promise.prototype.
+    return hasDefaultProtoAndNoShadowedProperties(cx, promise);
 }
 
 OffThreadPromiseTask::OffThreadPromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
