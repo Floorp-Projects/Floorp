@@ -55,6 +55,8 @@ addLoadEvent(function() {
   near(panner.orientationY.value, 1, "setOrientation sets AudioParam properly");
   near(panner.orientationZ.value, 0, "setOrientation sets AudioParam properly");
 
+  panner.setVelocity(1, 1, 1);
+
   source.start(0);
   SimpleTest.executeSoon(function() {
     source.stop(0);
