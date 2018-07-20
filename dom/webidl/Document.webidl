@@ -383,11 +383,6 @@ partial interface Document {
   [ChromeOnly]
   attribute boolean styleSheetChangeEventsEnabled;
 
-  [ChromeOnly, Throws]
-  void obsoleteSheet(URI sheetURI);
-  [ChromeOnly, Throws]
-  void obsoleteSheet(DOMString sheetURI);
-
   [ChromeOnly] readonly attribute nsIDocShell? docShell;
 
   [ChromeOnly] readonly attribute DOMString contentLanguage;
