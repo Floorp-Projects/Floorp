@@ -159,6 +159,10 @@ protected:
                          nsIFrame* aFrame,
                          nsReflowStatus& aStatus);
 
+  // Returns whether there's any frame that PullOneFrame would pull from
+  // aNextInFlow or any of aNextInFlow's next-in-flows.
+  static bool HasFramesToPull(nsInlineFrame* aNextInFlow);
+
   virtual nsIFrame* PullOneFrame(nsPresContext*, InlineReflowInput&);
 
   virtual void PushFrames(nsPresContext* aPresContext,

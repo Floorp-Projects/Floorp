@@ -697,6 +697,24 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #endif
 }
 
+// Returns whether there's any remaining frame to pull.
+/* static */ bool
+nsInlineFrame::HasFramesToPull(nsInlineFrame* aNextInFlow)
+{
+  while (aNextInFlow) {
+    if (!aNextInFlow->mFrames.IsEmpty()) {
+      return true;
+    }
+    if (const nsFrameList* overflow = aNextInFlow->GetOverflowFrames()) {
+      if (!overflow->IsEmpty()) {
+        return true;
+      }
+    }
+    aNextInFlow = static_cast<nsInlineFrame*>(aNextInFlow->GetNextInFlow());
+  }
+  return false;
+}
+
 void
 nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
                                  const ReflowInput& aReflowInput,
@@ -738,17 +756,11 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     if (nextFrame) {
       aStatus.SetIncomplete();
       PushFrames(aPresContext, nextFrame, aFrame, irs);
-    }
-    else {
+    } else {
       // We must return an incomplete status if there are more child
       // frames remaining in a next-in-flow that follows this frame.
-      nsInlineFrame* nextInFlow = static_cast<nsInlineFrame*>(GetNextInFlow());
-      while (nextInFlow) {
-        if (nextInFlow->mFrames.NotEmpty()) {
-          aStatus.SetIncomplete();
-          break;
-        }
-        nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
+      if (HasFramesToPull(static_cast<nsInlineFrame*>(GetNextInFlow()))) {
+        aStatus.SetIncomplete();
       }
     }
     return;
@@ -767,6 +779,11 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& irs)
 {
   nsIFrame* frame = nullptr;
   nsInlineFrame* nextInFlow = irs.mNextInFlow;
+
+#ifdef DEBUG
+  bool willPull = HasFramesToPull(nextInFlow);
+#endif
+
   while (nextInFlow) {
     frame = nextInFlow->mFrames.FirstChild();
     if (!frame) {
@@ -813,6 +830,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& irs)
     irs.mNextInFlow = nextInFlow;
   }
 
+  MOZ_ASSERT(!!frame == willPull);
   return frame;
 }
 
