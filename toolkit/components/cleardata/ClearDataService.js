@@ -86,6 +86,13 @@ const CookieCleaner = {
 };
 
 const NetworkCacheCleaner = {
+  deleteByPrincipal(aPrincipal) {
+    return new Promise(aResolve => {
+      Services.cache2.asyncClearOrigin(aPrincipal);
+      aResolve();
+    });
+  },
+
   deleteAll() {
     return new Promise(aResolve => {
       Services.cache2.clear();
