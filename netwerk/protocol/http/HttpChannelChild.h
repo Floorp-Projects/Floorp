@@ -363,45 +363,45 @@ private:
   // parent channel, nor dequeued from the ChannelEventQueue.
   Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
 
-  bool mIsFromCache;
-  bool mCacheEntryAvailable;
-  bool mAltDataCacheEntryAvailable;
+  uint8_t mIsFromCache : 1;
+  uint8_t mCacheEntryAvailable : 1;
+  uint8_t mAltDataCacheEntryAvailable : 1;
 
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
-  bool mSendResumeAt;
+  uint8_t mSendResumeAt : 1;
 
-  bool mKeptAlive; // IPC kept open, but only for security info
+  uint8_t mKeptAlive : 1; // IPC kept open, but only for security info
 
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
-  bool mSuspendSent;
+  uint8_t mSuspendSent : 1;
 
   // Set if a response was synthesized, indicating that any forthcoming redirects
   // should be intercepted.
-  bool mSynthesizedResponse;
+  uint8_t mSynthesizedResponse : 1;
 
   // Set if a synthesized response should cause us to explictly allows intercepting
   // an expected forthcoming redirect.
-  bool mShouldInterceptSubsequentRedirect;
+  uint8_t mShouldInterceptSubsequentRedirect : 1;
   // Set if a redirection is being initiated to facilitate providing a synthesized
   // response to a channel using a different principal than the current one.
-  bool mRedirectingForSubsequentSynthesizedResponse;
+  uint8_t mRedirectingForSubsequentSynthesizedResponse : 1;
 
   // Set if a manual redirect mode channel needs to be intercepted in the
   // parent.
-  bool mPostRedirectChannelShouldIntercept;
+  uint8_t mPostRedirectChannelShouldIntercept : 1;
   // Set if a manual redirect mode channel needs to be upgraded to a secure URI
   // when it's being considered for interception.  Can only be true if
   // mPostRedirectChannelShouldIntercept is true.
-  bool mPostRedirectChannelShouldUpgrade;
+  uint8_t mPostRedirectChannelShouldUpgrade : 1;
 
   // Set if the corresponding parent channel should force an interception to occur
   // before the network transaction is initiated.
-  bool mShouldParentIntercept;
+  uint8_t mShouldParentIntercept : 1;
 
   // Set if the corresponding parent channel should suspend after a response
   // is synthesized.
-  bool mSuspendParentAfterSynthesizeResponse;
+  uint8_t mSuspendParentAfterSynthesizeResponse : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
