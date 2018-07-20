@@ -1,3 +1,24 @@
+# 0.15 (2018-07-20)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180704100138 (2018.07.04, 1c235a552c32ba6c97e6030c497c49f72c7d48a8)
+    * Beta: 62.0b5 (801112336847960bbb9a018695cf09ea437dc137)
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **service-firefox-accounts**, **sample-firefox-accounts**: Added authentication flow using WebView. Introduced functionality to persist and restore FxA state in shared preferences to keep users signed in between applications restarts. Increased test coverage for library.
+* **service-fretboard**: New component for segmenting users in order to run A/B tests and rollout features gradually.
+* **browser-session**: Refactored session observer to provide session object and changed values to simplify observer implementations. Add source (origin) information to Session.
+* **browser-search**: Introduced new functionality to retrieve search suggestions.
+* **engine-system**, **engine-gecko**, **browser-session**: Exposed downloads in engine components and made them consumable from browser session.
+* **engine-gecko**: Added optimization to ignore initial loads of about:blank.
+
+* Various bugfixes and refactorings (see commits below for details)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.14...v0.15), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/13?closed=1)
+
 # 0.14 (2018-07-13)
 
 * Compiled against:
