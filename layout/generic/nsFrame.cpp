@@ -10975,6 +10975,7 @@ nsIFrame::IsStackingContext(EffectSet* aEffectSet,
   return HasOpacity(aEffectSet) ||
          IsTransformed(aStyleDisplay) ||
          aStyleDisplay->IsContainPaint() ||
+         aStyleDisplay->IsContainLayout() ||
          // strictly speaking, 'perspective' doesn't require visual atomicity,
          // but the spec says it acts like the rest of these
          ChildrenHavePerspective(aStyleDisplay) ||
