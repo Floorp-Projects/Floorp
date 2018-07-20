@@ -255,16 +255,13 @@ IsTypeofKind(ParseNodeKind kind)
  * StatementList list   pn_head: list of pn_count statements
  * If       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null.
  * Switch   binary      pn_left: discriminant
- *                          pn_right: list of Case nodes, with at most one
- *                            default node, or if there are let bindings
- *                            in the top level of the switch body's cases, a
- *                            LexicalScope node that contains the list of
- *                            Case nodes.
+ *                      pn_right: LexicalScope node that contains the list
+ *                        of Case nodes, with at most one
+ *                        default node.
  * Case     binary      pn_left: case-expression if CaseClause, or
  *                            null if DefaultClause
  *                          pn_right: StatementList node for this case's
  *                            statements
- *                          pn_u.binary.offset: scratch space for the emitter
  * While    binary      pn_left: cond, pn_right: body
  * DoWhile  binary      pn_left: body, pn_right: cond
  * For      binary      pn_left: either ForIn (for-in statement),
@@ -558,7 +555,6 @@ class ParseNode
             union {
                 unsigned iflags;        /* JSITER_* flags for ParseNodeKind::For node */
                 bool isStatic;          /* only for ParseNodeKind::ClassMethod */
-                uint32_t offset;        /* for the emitter's use on ParseNodeKind::Case nodes */
             };
         } binary;
         struct {                        /* one kid if unary */
@@ -1021,10 +1017,6 @@ class CaseClause : public BinaryNode
 
     // The next CaseClause in the same switch statement.
     CaseClause* next() const { return pn_next ? &pn_next->as<CaseClause>() : nullptr; }
-
-    // Scratch space used by the emitter.
-    uint32_t offset() const { return pn_u.binary.offset; }
-    void setOffset(uint32_t u) { pn_u.binary.offset = u; }
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Case);

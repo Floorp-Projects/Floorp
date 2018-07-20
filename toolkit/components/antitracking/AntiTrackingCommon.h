@@ -8,6 +8,8 @@
 #define mozilla_antitrackingservice_h
 
 #include "nsString.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
 
 class nsIHttpChannel;
 class nsIPrincipal;
@@ -19,6 +21,13 @@ namespace mozilla {
 class AntiTrackingCommon final
 {
 public:
+  // Normally we would include PContentParent.h here and use the
+  // ipc::FirstPartyStorageAccessGrantedForOriginResolver type which maps to
+  // the same underlying type, but that results in Windows compilation errors,
+  // so we use the underlying type to avoid the #include here.
+  typedef std::function<void(const bool&)>
+    FirstPartyStorageAccessGrantedForOriginResolver;
+
   // This method returns true if the URI has first party storage access when
   // loaded inside the passed 3rd party context tracking resource window.
   // If the window is first party context, please use
@@ -59,7 +68,8 @@ public:
   //   Ex: example.net import tracker.com/script.js which does opens a popup and
   //   the user interacts with it. tracker.com is allowed when loaded by
   //   example.net.
-  static void
+  typedef MozPromise<bool, bool, false> StorageAccessGrantPromise;
+  static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
   AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
                                        nsPIDOMWindowInner* aParentWindow);
 
@@ -67,7 +77,8 @@ public:
   static void
   SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aPrincipal,
                                                              const nsCString& aParentOrigin,
-                                                             const nsCString& aGrantedOrigin);
+                                                             const nsCString& aGrantedOrigin,
+                                                             FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
 };
 

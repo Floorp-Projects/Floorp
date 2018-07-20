@@ -46,4 +46,5 @@ marionette.jar:
   content/test_dialog.xul (chrome/test_dialog.xul)
   content/test_nested_iframe.xul (chrome/test_nested_iframe.xul)
   content/test.xul (chrome/test.xul)
+  content/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
 #endif
