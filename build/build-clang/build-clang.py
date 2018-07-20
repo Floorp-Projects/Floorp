@@ -289,7 +289,8 @@ def get_tool(config, key):
 #       run-clang-tidy.py
 def prune_final_dir_for_clang_tidy(final_dir):
     # Make sure we only have what we expect.
-    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools")
+    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools",
+            "x86_64-unknown-linux-gnu")
     for f in glob.glob("%s/*" % final_dir):
         if os.path.basename(f) not in dirs:
             raise Exception("Found unknown file %s in the final directory" % f)
