@@ -7,7 +7,7 @@
 // contains the fonts used to render the content of the selected element.
 // Check that it's collapsed by default, but can be expanded.
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);
