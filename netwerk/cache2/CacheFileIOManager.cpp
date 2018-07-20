@@ -21,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "nsICacheStorageVisitor.h"
 #include "nsISizeOf.h"
+#include "mozilla/net/MozURL.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -3134,7 +3135,9 @@ CacheFileIOManager::EvictAllInternal()
 
 // static
 nsresult
-CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo, bool aPinned)
+CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo,
+                                   bool aPinned,
+                                   const nsAString& aOrigin)
 {
   LOG(("CacheFileIOManager::EvictByContext() [loadContextInfo=%p]",
        aLoadContextInfo));
@@ -3147,12 +3150,13 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo, bool aP
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool>(
+  ev = NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool, nsString>(
     "net::CacheFileIOManager::EvictByContextInternal",
     ioMan,
     &CacheFileIOManager::EvictByContextInternal,
     aLoadContextInfo,
-    aPinned);
+    aPinned,
+    aOrigin);
 
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3163,7 +3167,9 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo, bool aP
 }
 
 nsresult
-CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo, bool aPinned)
+CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo,
+                                           bool aPinned,
+                                           const nsAString& aOrigin)
 {
   LOG(("CacheFileIOManager::EvictByContextInternal() [loadContextInfo=%p, pinned=%d]",
       aLoadContextInfo, aPinned));
@@ -3206,6 +3212,8 @@ CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo,
     }
   }
 
+  NS_ConvertUTF16toUTF8 origin(aOrigin);
+
   // Doom all active handles that matches the load context
   nsTArray<RefPtr<CacheFileHandle> > handles;
   mHandles.GetActiveHandles(&handles);
@@ -3213,18 +3221,30 @@ CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo,
   for (uint32_t i = 0; i < handles.Length(); ++i) {
     CacheFileHandle* handle = handles[i];
 
-    if (aLoadContextInfo) {
-      bool equals;
-      rv = CacheFileUtils::KeyMatchesLoadContextInfo(handle->Key(),
-                                                     aLoadContextInfo,
-                                                     &equals);
+    nsAutoCString uriSpec;
+    RefPtr<nsILoadContextInfo> info =
+      CacheFileUtils::ParseKey(handle->Key(), nullptr, &uriSpec);
+    if (!info) {
+      LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot parse key in "
+           "handle! [handle=%p, key=%s]", handle, handle->Key().get()));
+      MOZ_CRASH("Unexpected error!");
+    }
+
+    if (aLoadContextInfo && !info->Equals(aLoadContextInfo)) {
+      continue;
+    }
+
+    if (!origin.IsEmpty()) {
+      RefPtr<MozURL> url;
+      rv = MozURL::Init(getter_AddRefs(url), uriSpec);
       if (NS_FAILED(rv)) {
-        LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot parse key in "
-             "handle! [handle=%p, key=%s]", handle, handle->Key().get()));
-        MOZ_CRASH("Unexpected error!");
+        continue;
       }
 
-      if (!equals) {
+      nsAutoCString urlOrigin;
+      url->Origin(urlOrigin);
+
+      if (!urlOrigin.Equals(origin)) {
         continue;
       }
     }
@@ -3250,7 +3270,7 @@ CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo,
     mContextEvictor->Init(mCacheDirectory);
   }
 
-  mContextEvictor->AddContext(aLoadContextInfo, aPinned);
+  mContextEvictor->AddContext(aLoadContextInfo, aPinned, aOrigin);
 
   return NS_OK;
 }

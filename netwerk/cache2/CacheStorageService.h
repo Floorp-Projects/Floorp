@@ -30,6 +30,9 @@ class nsIThread;
 class nsIEventTarget;
 
 namespace mozilla {
+
+class OriginAttributes;
+
 namespace net {
 
 class CacheStorageService;
@@ -310,6 +313,10 @@ private:
                            bool aPin,
                            bool aReplace,
                            CacheEntryHandle** aResult);
+
+  nsresult ClearOriginInternal(const nsAString& aOrigin,
+                               const mozilla::OriginAttributes& aOriginAttributes,
+                               bool aAnonymous);
 
   static CacheStorageService* sSelf;
 
