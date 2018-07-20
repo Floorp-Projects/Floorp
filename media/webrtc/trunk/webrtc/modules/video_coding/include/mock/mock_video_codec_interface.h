@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
-#define WEBRTC_MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#ifndef MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#define MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
 
 #include <string>
 #include <vector>
 
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
-#include "webrtc/test/gmock.h"
-#include "webrtc/typedefs.h"
+#include "modules/video_coding/include/video_codec_interface.h"
+#include "test/gmock.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -57,6 +57,10 @@ class MockDecodedImageCallback : public DecodedImageCallback {
   MOCK_METHOD2(Decoded,
                int32_t(VideoFrame& decodedImage,  // NOLINT
                        int64_t decode_time_ms));
+  MOCK_METHOD3(Decoded,
+               void(VideoFrame& decodedImage,  // NOLINT
+                    rtc::Optional<int32_t> decode_time_ms,
+                    rtc::Optional<uint8_t> qp));
   MOCK_METHOD1(ReceivedDecodedReferenceFrame,
                int32_t(const uint64_t pictureId));
   MOCK_METHOD1(ReceivedDecodedFrame, int32_t(const uint64_t pictureId));
@@ -80,4 +84,4 @@ class MockVideoDecoder : public VideoDecoder {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_
+#endif  // MODULES_VIDEO_CODING_INCLUDE_MOCK_MOCK_VIDEO_CODEC_INTERFACE_H_

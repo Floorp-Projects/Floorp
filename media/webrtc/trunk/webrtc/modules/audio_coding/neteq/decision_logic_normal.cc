@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/decision_logic_normal.h"
+#include "modules/audio_coding/neteq/decision_logic_normal.h"
 
 #include <assert.h>
 
 #include <algorithm>
 
-#include "webrtc/modules/audio_coding/neteq/buffer_level_filter.h"
-#include "webrtc/modules/audio_coding/neteq/decoder_database.h"
-#include "webrtc/modules/audio_coding/neteq/delay_manager.h"
-#include "webrtc/modules/audio_coding/neteq/expand.h"
-#include "webrtc/modules/audio_coding/neteq/packet_buffer.h"
-#include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
-#include "webrtc/modules/include/module_common_types.h"
+#include "modules/audio_coding/neteq/buffer_level_filter.h"
+#include "modules/audio_coding/neteq/decoder_database.h"
+#include "modules/audio_coding/neteq/delay_manager.h"
+#include "modules/audio_coding/neteq/expand.h"
+#include "modules/audio_coding/neteq/packet_buffer.h"
+#include "modules/audio_coding/neteq/sync_buffer.h"
+#include "modules/include/module_common_types.h"
 
 namespace webrtc {
 
@@ -97,14 +97,17 @@ Operations DecisionLogicNormal::CngOperation(Modes prev_mode,
       available_timestamp);
   int32_t optimal_level_samp = static_cast<int32_t>(
       (delay_manager_->TargetLevel() * packet_length_samples_) >> 8);
-  int32_t excess_waiting_time_samp = -timestamp_diff - optimal_level_samp;
+  const int64_t excess_waiting_time_samp =
+      -static_cast<int64_t>(timestamp_diff) - optimal_level_samp;
 
   if (excess_waiting_time_samp > optimal_level_samp / 2) {
     // The waiting time for this packet will be longer than 1.5
     // times the wanted buffer delay. Apply fast-forward to cut the
     // waiting time down to the optimal.
-    noise_fast_forward_ += excess_waiting_time_samp;
-    timestamp_diff += excess_waiting_time_samp;
+    noise_fast_forward_ = rtc::dchecked_cast<size_t>(noise_fast_forward_ +
+                                                     excess_waiting_time_samp);
+    timestamp_diff =
+        rtc::saturated_cast<int32_t>(timestamp_diff + excess_waiting_time_samp);
   }
 
   if (timestamp_diff < 0 && prev_mode == kModeRfc3389Cng) {
@@ -186,10 +189,9 @@ Operations DecisionLogicNormal::FuturePacketAvailable(
   // If previous was comfort noise, then no merge is needed.
   if (prev_mode == kModeRfc3389Cng ||
       prev_mode == kModeCodecInternalCng) {
-    // Keep the same delay as before the CNG (or maximum 70 ms in buffer as
-    // safety precaution), but make sure that the number of samples in buffer
-    // is no higher than 4 times the optimal level. (Note that TargetLevel()
-    // is in Q8.)
+    // Keep the same delay as before the CNG, but make sure that the number of
+    // samples in buffer is no higher than 4 times the optimal level. (Note that
+    // TargetLevel() is in Q8.)
     if (static_cast<uint32_t>(generated_noise_samples + target_timestamp) >=
             available_timestamp ||
         cur_size_samples >

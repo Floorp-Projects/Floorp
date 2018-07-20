@@ -8,472 +8,422 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+#include "logging/rtc_event_log/rtc_event_log.h"
 
+#include <atomic>
+#include <deque>
+#include <functional>
 #include <limits>
+#include <memory>
+#include <utility>
 #include <vector>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/event.h"
-#include "webrtc/base/swap_queue.h"
-#include "webrtc/base/thread_checker.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/call/call.h"
-#include "webrtc/logging/rtc_event_log/rtc_event_log_helper_thread.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/app.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/psfb.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sdes.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sender_report.h"
-#include "webrtc/system_wrappers/include/file_wrapper.h"
-#include "webrtc/system_wrappers/include/logging.h"
-
-#ifdef ENABLE_RTC_EVENT_LOG
-// Files generated at build-time by the protobuf compiler.
-#ifdef WEBRTC_ANDROID_PLATFORM_BUILD
-#include "external/webrtc/webrtc/logging/rtc_event_log/rtc_event_log.pb.h"
-#else
-#include "webrtc/logging/rtc_event_log/rtc_event_log.pb.h"
-#endif
-#endif
+#include "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.h"
+#include "logging/rtc_event_log/events/rtc_event_logging_started.h"
+#include "logging/rtc_event_log/events/rtc_event_logging_stopped.h"
+#include "logging/rtc_event_log/output/rtc_event_log_output_file.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/event.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/numerics/safe_minmax.h"
+#include "rtc_base/ptr_util.h"
+#include "rtc_base/sequenced_task_checker.h"
+#include "rtc_base/task_queue.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 
 #ifdef ENABLE_RTC_EVENT_LOG
 
-class RtcEventLogImpl final : public RtcEventLog {
- public:
-  RtcEventLogImpl();
-  ~RtcEventLogImpl() override;
+namespace {
+constexpr size_t kMaxEventsInHistory = 10000;
+// The config-history is supposed to be unbounded, but needs to have some bound
+// to prevent an attack via unreasonable memory use.
+constexpr size_t kMaxEventsInConfigHistory = 1000;
 
-  bool StartLogging(const std::string& file_name,
-                    int64_t max_size_bytes) override;
-  bool StartLogging(rtc::PlatformFile platform_file,
-                    int64_t max_size_bytes) override;
-  void StopLogging() override;
-  void LogVideoReceiveStreamConfig(
-      const VideoReceiveStream::Config& config) override;
-  void LogVideoSendStreamConfig(const VideoSendStream::Config& config) override;
-  void LogAudioReceiveStreamConfig(
-      const AudioReceiveStream::Config& config) override;
-  void LogAudioSendStreamConfig(const AudioSendStream::Config& config) override;
-  void LogRtpHeader(PacketDirection direction,
-                    MediaType media_type,
-                    const uint8_t* header,
-                    size_t packet_length) override;
-  void LogRtcpPacket(PacketDirection direction,
-                     MediaType media_type,
-                     const uint8_t* packet,
-                     size_t length) override;
-  void LogAudioPlayout(uint32_t ssrc) override;
-  void LogBwePacketLossEvent(int32_t bitrate,
-                             uint8_t fraction_loss,
-                             int32_t total_packets) override;
+// Observe a limit on the number of concurrent logs, so as not to run into
+// OS-imposed limits on open files and/or threads/task-queues.
+// TODO(eladalon): Known issue - there's a race over |rtc_event_log_count|.
+std::atomic<int> rtc_event_log_count(0);
+
+// TODO(eladalon): This class exists because C++11 doesn't allow transferring a
+// unique_ptr to a lambda (a copy constructor is required). We should get
+// rid of this when we move to C++14.
+template <typename T>
+class ResourceOwningTask final : public rtc::QueuedTask {
+ public:
+  ResourceOwningTask(std::unique_ptr<T> resource,
+                     std::function<void(std::unique_ptr<T>)> handler)
+      : resource_(std::move(resource)), handler_(handler) {}
+
+  bool Run() override {
+    handler_(std::move(resource_));
+    return true;
+  }
 
  private:
-  void StoreEvent(std::unique_ptr<rtclog::Event>* event);
+  std::unique_ptr<T> resource_;
+  std::function<void(std::unique_ptr<T>)> handler_;
+};
 
-  // Message queue for passing control messages to the logging thread.
-  SwapQueue<RtcEventLogHelperThread::ControlMessage> message_queue_;
+std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
+    RtcEventLog::EncodingType type) {
+  switch (type) {
+    case RtcEventLog::EncodingType::Legacy:
+      return rtc::MakeUnique<RtcEventLogEncoderLegacy>();
+    default:
+      RTC_LOG(LS_ERROR) << "Unknown RtcEventLog encoder type (" << int(type)
+                        << ")";
+      RTC_NOTREACHED();
+      return std::unique_ptr<RtcEventLogEncoder>(nullptr);
+  }
+}
 
-  // Message queue for passing events to the logging thread.
-  SwapQueue<std::unique_ptr<rtclog::Event> > event_queue_;
+class RtcEventLogImpl final : public RtcEventLog {
+ public:
+  explicit RtcEventLogImpl(std::unique_ptr<RtcEventLogEncoder> event_encoder);
+  ~RtcEventLogImpl() override;
 
-  RtcEventLogHelperThread helper_thread_;
-  rtc::ThreadChecker thread_checker_;
+  // TODO(eladalon): We should change these name to reflect that what we're
+  // actually starting/stopping is the output of the log, not the log itself.
+  bool StartLogging(std::unique_ptr<RtcEventLogOutput> output,
+                    int64_t output_period_ms) override;
+  void StopLogging() override;
+
+  void Log(std::unique_ptr<RtcEvent> event) override;
+
+ private:
+  // Appends an event to the output protobuf string, returning true on success.
+  // Fails and returns false in case the limit on output size prevents the
+  // event from being added; in this case, the output string is left unchanged.
+  // The event is encoded before being appended.
+  // We could have avoided this, because the output repeats the check, but this
+  // way, we minimize the number of lock acquisitions, task switches, etc.,
+  // that might be associated with each call to RtcEventLogOutput::Write().
+  bool AppendEventToString(const RtcEvent& event,
+                           std::string* output_string) RTC_WARN_UNUSED_RESULT;
+
+  void LogToMemory(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(&task_queue_);
+
+  void LogEventsFromMemoryToOutput() RTC_RUN_ON(&task_queue_);
+  void LogToOutput(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(&task_queue_);
+  void StopOutput() RTC_RUN_ON(&task_queue_);
+
+  void WriteToOutput(const std::string& output_string) RTC_RUN_ON(&task_queue_);
+
+  void StopLoggingInternal() RTC_RUN_ON(&task_queue_);
+
+  void ScheduleOutput() RTC_RUN_ON(&task_queue_);
+
+  // Make sure that the event log is "managed" - created/destroyed, as well
+  // as started/stopped - from the same thread/task-queue.
+  rtc::SequencedTaskChecker owner_sequence_checker_;
+
+  // History containing all past configuration events.
+  std::deque<std::unique_ptr<RtcEvent>> config_history_
+      RTC_ACCESS_ON(task_queue_);
+
+  // History containing the most recent (non-configuration) events (~10s).
+  std::deque<std::unique_ptr<RtcEvent>> history_ RTC_ACCESS_ON(task_queue_);
+
+  size_t max_size_bytes_ RTC_ACCESS_ON(task_queue_);
+  size_t written_bytes_ RTC_ACCESS_ON(task_queue_);
+
+  std::unique_ptr<RtcEventLogEncoder> event_encoder_ RTC_ACCESS_ON(task_queue_);
+  std::unique_ptr<RtcEventLogOutput> event_output_ RTC_ACCESS_ON(task_queue_);
+
+  size_t num_config_events_written_ RTC_ACCESS_ON(task_queue_);
+  int64_t output_period_ms_ RTC_ACCESS_ON(task_queue_);
+  int64_t last_output_ms_ RTC_ACCESS_ON(task_queue_);
+  bool output_scheduled_ RTC_ACCESS_ON(task_queue_);
+
+  // Since we are posting tasks bound to |this|,  it is critical that the event
+  // log and it's members outlive the |task_queue_|. Keep the "task_queue_|
+  // last to ensure it destructs first, or else tasks living on the queue might
+  // access other members after they've been torn down.
+  rtc::TaskQueue task_queue_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtcEventLogImpl);
 };
 
-namespace {
-// The functions in this namespace convert enums from the runtime format
-// that the rest of the WebRtc project can use, to the corresponding
-// serialized enum which is defined by the protobuf.
-
-rtclog::VideoReceiveConfig_RtcpMode ConvertRtcpMode(RtcpMode rtcp_mode) {
-  switch (rtcp_mode) {
-    case RtcpMode::kCompound:
-      return rtclog::VideoReceiveConfig::RTCP_COMPOUND;
-    case RtcpMode::kReducedSize:
-      return rtclog::VideoReceiveConfig::RTCP_REDUCEDSIZE;
-    case RtcpMode::kOff:
-      RTC_NOTREACHED();
-      return rtclog::VideoReceiveConfig::RTCP_COMPOUND;
-  }
-  RTC_NOTREACHED();
-  return rtclog::VideoReceiveConfig::RTCP_COMPOUND;
-}
-
-rtclog::MediaType ConvertMediaType(MediaType media_type) {
-  switch (media_type) {
-    case MediaType::ANY:
-      return rtclog::MediaType::ANY;
-    case MediaType::AUDIO:
-      return rtclog::MediaType::AUDIO;
-    case MediaType::VIDEO:
-      return rtclog::MediaType::VIDEO;
-    case MediaType::DATA:
-      return rtclog::MediaType::DATA;
-  }
-  RTC_NOTREACHED();
-  return rtclog::ANY;
-}
-
-// The RTP and RTCP buffers reserve space for twice the expected number of
-// sent packets because they also contain received packets.
-static const int kEventsPerSecond = 1000;
-static const int kControlMessagesPerSecond = 10;
-}  // namespace
-
-// RtcEventLogImpl member functions.
-RtcEventLogImpl::RtcEventLogImpl()
-    // Allocate buffers for roughly one second of history.
-    : message_queue_(kControlMessagesPerSecond),
-      event_queue_(kEventsPerSecond),
-      helper_thread_(&message_queue_, &event_queue_),
-      thread_checker_() {
-  thread_checker_.DetachFromThread();
-}
+RtcEventLogImpl::RtcEventLogImpl(
+    std::unique_ptr<RtcEventLogEncoder> event_encoder)
+    : max_size_bytes_(std::numeric_limits<decltype(max_size_bytes_)>::max()),
+      written_bytes_(0),
+      event_encoder_(std::move(event_encoder)),
+      num_config_events_written_(0),
+      output_period_ms_(kImmediateOutput),
+      last_output_ms_(rtc::TimeMillis()),
+      output_scheduled_(false),
+      task_queue_("rtc_event_log") {}
 
 RtcEventLogImpl::~RtcEventLogImpl() {
-  // The RtcEventLogHelperThread destructor closes the file
-  // and waits for the thread to terminate.
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
+
+  // If we're logging to the output, this will stop that. Blocking function.
+  StopLogging();
+
+  int count = std::atomic_fetch_sub(&rtc_event_log_count, 1) - 1;
+  RTC_DCHECK_GE(count, 0);
 }
 
-bool RtcEventLogImpl::StartLogging(const std::string& file_name,
-                                   int64_t max_size_bytes) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RtcEventLogHelperThread::ControlMessage message;
-  message.message_type = RtcEventLogHelperThread::ControlMessage::START_FILE;
-  message.max_size_bytes = max_size_bytes <= 0
-                               ? std::numeric_limits<int64_t>::max()
-                               : max_size_bytes;
-  message.start_time = rtc::TimeMicros();
-  message.stop_time = std::numeric_limits<int64_t>::max();
-  message.file.reset(FileWrapper::Create());
-  if (!message.file->OpenFile(file_name.c_str(), false)) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
-    return false;
-  }
-  if (!message_queue_.Insert(&message)) {
-    LOG(LS_ERROR) << "Message queue full. Can't start logging.";
-    return false;
-  }
-  helper_thread_.SignalNewEvent();
-  LOG(LS_INFO) << "Starting WebRTC event log.";
-  return true;
-}
+bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
+                                   int64_t output_period_ms) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
 
-bool RtcEventLogImpl::StartLogging(rtc::PlatformFile platform_file,
-                                   int64_t max_size_bytes) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RtcEventLogHelperThread::ControlMessage message;
-  message.message_type = RtcEventLogHelperThread::ControlMessage::START_FILE;
-  message.max_size_bytes = max_size_bytes <= 0
-                               ? std::numeric_limits<int64_t>::max()
-                               : max_size_bytes;
-  message.start_time = rtc::TimeMicros();
-  message.stop_time = std::numeric_limits<int64_t>::max();
-  message.file.reset(FileWrapper::Create());
-  FILE* file_handle = rtc::FdopenPlatformFileForWriting(platform_file);
-  if (!file_handle) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
-    // Even though we failed to open a FILE*, the platform_file is still open
-    // and needs to be closed.
-    if (!rtc::ClosePlatformFile(platform_file)) {
-      LOG(LS_ERROR) << "Can't close file.";
-    }
+  RTC_DCHECK(output_period_ms == kImmediateOutput || output_period_ms > 0);
+
+  if (!output->IsActive()) {
+    // TODO(eladalon): We may want to remove the IsActive method. Otherwise
+    // we probably want to be consistent and terminate any existing output.
     return false;
   }
-  if (!message.file->OpenFromFileHandle(file_handle)) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
-    return false;
-  }
-  if (!message_queue_.Insert(&message)) {
-    LOG(LS_ERROR) << "Message queue full. Can't start logging.";
-    return false;
-  }
-  helper_thread_.SignalNewEvent();
-  LOG(LS_INFO) << "Starting WebRTC event log.";
+
+  RTC_LOG(LS_INFO) << "Starting WebRTC event log.";
+
+  // |start_event| captured by value. This is done here because we want the
+  // timestamp to reflect when StartLogging() was called; not the queueing
+  // delay of the TaskQueue.
+  // This is a bit inefficient - especially since we copy again to get it
+  // to comply with LogToOutput()'s signature - but it's a small problem.
+  RtcEventLoggingStarted start_event;
+
+  // Binding to |this| is safe because |this| outlives the |task_queue_|.
+  auto start = [this, start_event](std::unique_ptr<RtcEventLogOutput> output) {
+    RTC_DCHECK_RUN_ON(&task_queue_);
+    RTC_DCHECK(output->IsActive());
+    event_output_ = std::move(output);
+    num_config_events_written_ = 0;
+    LogToOutput(rtc::MakeUnique<RtcEventLoggingStarted>(start_event));
+    LogEventsFromMemoryToOutput();
+  };
+
+  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<RtcEventLogOutput>>(
+      std::move(output), start));
+
   return true;
 }
 
 void RtcEventLogImpl::StopLogging() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RtcEventLogHelperThread::ControlMessage message;
-  message.message_type = RtcEventLogHelperThread::ControlMessage::STOP_FILE;
-  message.stop_time = rtc::TimeMicros();
-  while (!message_queue_.Insert(&message)) {
-    // TODO(terelius): We would like to have a blocking Insert function in the
-    // SwapQueue, but for the time being we will just clear any previous
-    // messages.
-    // Since StopLogging waits for the thread, it is essential that we don't
-    // clear any STOP_FILE messages. To ensure that there is only one call at a
-    // time, we require that all calls to StopLogging are made on the same
-    // thread.
-    LOG(LS_ERROR) << "Message queue full. Clearing queue to stop logging.";
-    message_queue_.Clear();
-  }
-  LOG(LS_INFO) << "Stopping WebRTC event log.";
-  helper_thread_.WaitForFileFinished();
-}
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
 
-void RtcEventLogImpl::LogVideoReceiveStreamConfig(
-    const VideoReceiveStream::Config& config) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::VIDEO_RECEIVER_CONFIG_EVENT);
+  RTC_LOG(LS_INFO) << "Stopping WebRTC event log.";
 
-  rtclog::VideoReceiveConfig* receiver_config =
-      event->mutable_video_receiver_config();
-  receiver_config->set_remote_ssrc(config.rtp.remote_ssrc);
-  receiver_config->set_local_ssrc(config.rtp.local_ssrc);
+  rtc::Event output_stopped(true, false);
 
-  receiver_config->set_rtcp_mode(ConvertRtcpMode(config.rtp.rtcp_mode));
-  receiver_config->set_remb(config.rtp.remb);
-
-  for (const auto& kv : config.rtp.rtx) {
-    rtclog::RtxMap* rtx = receiver_config->add_rtx_map();
-    rtx->set_payload_type(kv.first);
-    rtx->mutable_config()->set_rtx_ssrc(kv.second.ssrc);
-    rtx->mutable_config()->set_rtx_payload_type(kv.second.payload_type);
-  }
-
-  for (const auto& e : config.rtp.extensions) {
-    rtclog::RtpHeaderExtension* extension =
-        receiver_config->add_header_extensions();
-    extension->set_name(e.uri);
-    extension->set_id(e.id);
-  }
-
-  for (const auto& d : config.decoders) {
-    rtclog::DecoderConfig* decoder = receiver_config->add_decoders();
-    decoder->set_name(d.payload_name);
-    decoder->set_payload_type(d.payload_type);
-  }
-  StoreEvent(&event);
-}
-
-void RtcEventLogImpl::LogVideoSendStreamConfig(
-    const VideoSendStream::Config& config) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::VIDEO_SENDER_CONFIG_EVENT);
-
-  rtclog::VideoSendConfig* sender_config = event->mutable_video_sender_config();
-
-  for (const auto& ssrc : config.rtp.ssrcs) {
-    sender_config->add_ssrcs(ssrc);
-  }
-
-  for (const auto& e : config.rtp.extensions) {
-    rtclog::RtpHeaderExtension* extension =
-        sender_config->add_header_extensions();
-    extension->set_name(e.uri);
-    extension->set_id(e.id);
-  }
-
-  for (const auto& rtx_ssrc : config.rtp.rtx.ssrcs) {
-    sender_config->add_rtx_ssrcs(rtx_ssrc);
-  }
-  sender_config->set_rtx_payload_type(config.rtp.rtx.payload_type);
-
-  rtclog::EncoderConfig* encoder = sender_config->mutable_encoder();
-  encoder->set_name(config.encoder_settings.payload_name);
-  encoder->set_payload_type(config.encoder_settings.payload_type);
-  StoreEvent(&event);
-}
-
-void RtcEventLogImpl::LogAudioReceiveStreamConfig(
-    const AudioReceiveStream::Config& config) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::AUDIO_RECEIVER_CONFIG_EVENT);
-
-  rtclog::AudioReceiveConfig* receiver_config =
-      event->mutable_audio_receiver_config();
-  receiver_config->set_remote_ssrc(config.rtp.remote_ssrc);
-  receiver_config->set_local_ssrc(config.rtp.local_ssrc);
-
-  for (const auto& e : config.rtp.extensions) {
-    rtclog::RtpHeaderExtension* extension =
-        receiver_config->add_header_extensions();
-    extension->set_name(e.uri);
-    extension->set_id(e.id);
-  }
-  StoreEvent(&event);
-}
-
-void RtcEventLogImpl::LogAudioSendStreamConfig(
-    const AudioSendStream::Config& config) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::AUDIO_SENDER_CONFIG_EVENT);
-
-  rtclog::AudioSendConfig* sender_config = event->mutable_audio_sender_config();
-
-  sender_config->set_ssrc(config.rtp.ssrc);
-
-  for (const auto& e : config.rtp.extensions) {
-    rtclog::RtpHeaderExtension* extension =
-        sender_config->add_header_extensions();
-    extension->set_name(e.uri);
-    extension->set_id(e.id);
-  }
-
-  StoreEvent(&event);
-}
-
-void RtcEventLogImpl::LogRtpHeader(PacketDirection direction,
-                                   MediaType media_type,
-                                   const uint8_t* header,
-                                   size_t packet_length) {
-  // Read header length (in bytes) from packet data.
-  if (packet_length < 12u) {
-    return;  // Don't read outside the packet.
-  }
-  const bool x = (header[0] & 0x10) != 0;
-  const uint8_t cc = header[0] & 0x0f;
-  size_t header_length = 12u + cc * 4u;
-
-  if (x) {
-    if (packet_length < 12u + cc * 4u + 4u) {
-      return;  // Don't read outside the packet.
+  // Binding to |this| is safe because |this| outlives the |task_queue_|.
+  task_queue_.PostTask([this, &output_stopped]() {
+    RTC_DCHECK_RUN_ON(&task_queue_);
+    if (event_output_) {
+      RTC_DCHECK(event_output_->IsActive());
+      LogEventsFromMemoryToOutput();
     }
-    size_t x_len = ByteReader<uint16_t>::ReadBigEndian(header + 14 + cc * 4);
-    header_length += (x_len + 1) * 4;
-  }
+    StopLoggingInternal();
+    output_stopped.Set();
+  });
 
-  std::unique_ptr<rtclog::Event> rtp_event(new rtclog::Event());
-  rtp_event->set_timestamp_us(rtc::TimeMicros());
-  rtp_event->set_type(rtclog::Event::RTP_EVENT);
-  rtp_event->mutable_rtp_packet()->set_incoming(direction == kIncomingPacket);
-  rtp_event->mutable_rtp_packet()->set_type(ConvertMediaType(media_type));
-  rtp_event->mutable_rtp_packet()->set_packet_length(packet_length);
-  rtp_event->mutable_rtp_packet()->set_header(header, header_length);
-  StoreEvent(&rtp_event);
+  output_stopped.Wait(rtc::Event::kForever);
+
+  RTC_LOG(LS_INFO) << "WebRTC event log successfully stopped.";
 }
 
-void RtcEventLogImpl::LogRtcpPacket(PacketDirection direction,
-                                    MediaType media_type,
-                                    const uint8_t* packet,
-                                    size_t length) {
-  std::unique_ptr<rtclog::Event> rtcp_event(new rtclog::Event());
-  rtcp_event->set_timestamp_us(rtc::TimeMicros());
-  rtcp_event->set_type(rtclog::Event::RTCP_EVENT);
-  rtcp_event->mutable_rtcp_packet()->set_incoming(direction == kIncomingPacket);
-  rtcp_event->mutable_rtcp_packet()->set_type(ConvertMediaType(media_type));
+void RtcEventLogImpl::Log(std::unique_ptr<RtcEvent> event) {
+  RTC_DCHECK(event);
 
-  rtcp::CommonHeader header;
-  const uint8_t* block_begin = packet;
-  const uint8_t* packet_end = packet + length;
-  RTC_DCHECK(length <= IP_PACKET_SIZE);
-  uint8_t buffer[IP_PACKET_SIZE];
-  uint32_t buffer_length = 0;
-  while (block_begin < packet_end) {
-    if (!header.Parse(block_begin, packet_end - block_begin)) {
-      break;  // Incorrect message header.
+  // Binding to |this| is safe because |this| outlives the |task_queue_|.
+  auto event_handler = [this](std::unique_ptr<RtcEvent> unencoded_event) {
+    RTC_DCHECK_RUN_ON(&task_queue_);
+    LogToMemory(std::move(unencoded_event));
+    if (event_output_)
+      ScheduleOutput();
+  };
+
+  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<RtcEvent>>(
+      std::move(event), event_handler));
+}
+
+void RtcEventLogImpl::ScheduleOutput() {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
+  if (history_.size() >= kMaxEventsInHistory) {
+    // We have to emergency drain the buffer. We can't wait for the scheduled
+    // output task because there might be other event incoming before that.
+    LogEventsFromMemoryToOutput();
+    return;
+  }
+
+  if (output_period_ms_ == kImmediateOutput) {
+    // We are already on the |task_queue_| so there is no reason to post a task
+    // if we want to output immediately.
+    LogEventsFromMemoryToOutput();
+    return;
+  }
+
+  if (!output_scheduled_) {
+    output_scheduled_ = true;
+    // Binding to |this| is safe because |this| outlives the |task_queue_|.
+    auto output_task = [this]() {
+      RTC_DCHECK_RUN_ON(&task_queue_);
+      if (event_output_) {
+        RTC_DCHECK(event_output_->IsActive());
+        LogEventsFromMemoryToOutput();
+      }
+      output_scheduled_ = false;
+    };
+    int64_t now_ms = rtc::TimeMillis();
+    int64_t time_since_output_ms = now_ms - last_output_ms_;
+    uint32_t delay = rtc::SafeClamp(output_period_ms_ - time_since_output_ms, 0,
+                                    output_period_ms_);
+    task_queue_.PostDelayedTask(output_task, delay);
+  }
+}
+
+bool RtcEventLogImpl::AppendEventToString(const RtcEvent& event,
+                                          std::string* output_string) {
+  RTC_DCHECK_RUN_ON(&task_queue_);
+
+  std::string encoded_event = event_encoder_->Encode(event);
+
+  bool appended;
+  size_t potential_new_size =
+      written_bytes_ + output_string->size() + encoded_event.length();
+  if (potential_new_size <= max_size_bytes_) {
+    // TODO(eladalon): This is inefficient; fix this in a separate CL.
+    *output_string += encoded_event;
+    appended = true;
+  } else {
+    appended = false;
+  }
+
+  return appended;
+}
+
+void RtcEventLogImpl::LogToMemory(std::unique_ptr<RtcEvent> event) {
+  std::deque<std::unique_ptr<RtcEvent>>& container =
+      event->IsConfigEvent() ? config_history_ : history_;
+  const size_t container_max_size =
+      event->IsConfigEvent() ? kMaxEventsInConfigHistory : kMaxEventsInHistory;
+
+  if (container.size() >= container_max_size) {
+    RTC_DCHECK(!event_output_);  // Shouldn't lose events if we have an output.
+    container.pop_front();
+  }
+  container.push_back(std::move(event));
+}
+
+void RtcEventLogImpl::LogEventsFromMemoryToOutput() {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
+  last_output_ms_ = rtc::TimeMillis();
+
+  std::string output_string;
+
+  // Serialize all stream configurations that haven't already been written to
+  // this output. |num_config_events_written_| is used to track which configs we
+  // have already written. (Note that the config may have been written to
+  // previous outputs; configs are not discarded.)
+  bool appended = true;
+  while (num_config_events_written_ < config_history_.size()) {
+    appended = AppendEventToString(*config_history_[num_config_events_written_],
+                                   &output_string);
+    if (!appended)
+      break;
+    ++num_config_events_written_;
+  }
+
+  // Serialize the events in the event queue.
+  while (appended && !history_.empty()) {
+    appended = AppendEventToString(*history_.front(), &output_string);
+    if (appended) {
+      // Known issue - if writing to the output fails, these events will have
+      // been lost. If we try to open a new output, these events will be missing
+      // from it.
+      history_.pop_front();
     }
-    const uint8_t* next_block = header.NextPacket();
-    uint32_t block_size = next_block - block_begin;
-    switch (header.type()) {
-      case rtcp::SenderReport::kPacketType:
-      case rtcp::ReceiverReport::kPacketType:
-      case rtcp::Bye::kPacketType:
-      case rtcp::ExtendedJitterReport::kPacketType:
-      case rtcp::Rtpfb::kPacketType:
-      case rtcp::Psfb::kPacketType:
-      case rtcp::ExtendedReports::kPacketType:
-        // We log sender reports, receiver reports, bye messages
-        // inter-arrival jitter, third-party loss reports, payload-specific
-        // feedback and extended reports.
-        memcpy(buffer + buffer_length, block_begin, block_size);
-        buffer_length += block_size;
-        break;
-      case rtcp::Sdes::kPacketType:
-      case rtcp::App::kPacketType:
-      default:
-        // We don't log sender descriptions, application defined messages
-        // or message blocks of unknown type.
-        break;
+  }
+
+  WriteToOutput(output_string);
+
+  if (!appended) {
+    // Successful partial write to the output. Some events could not be written;
+    // the output should be closed, to avoid gaps.
+    StopOutput();
+  }
+}
+
+void RtcEventLogImpl::LogToOutput(std::unique_ptr<RtcEvent> event) {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
+
+  std::string output_string;
+
+  bool appended = AppendEventToString(*event, &output_string);
+
+  if (event->IsConfigEvent()) {
+    // Config events need to be kept in memory too, so that they may be
+    // rewritten into future outputs, too.
+    config_history_.push_back(std::move(event));
+  }
+
+  if (!appended) {
+    if (!event->IsConfigEvent()) {
+      // This event will not fit into the output; push it into |history_|
+      // instead, so that it might be logged into the next output (if any).
+      history_.push_back(std::move(event));
     }
-
-    block_begin += block_size;
+    StopOutput();
+    return;
   }
-  rtcp_event->mutable_rtcp_packet()->set_packet_data(buffer, buffer_length);
-  StoreEvent(&rtcp_event);
+
+  WriteToOutput(output_string);
 }
 
-void RtcEventLogImpl::LogAudioPlayout(uint32_t ssrc) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::AUDIO_PLAYOUT_EVENT);
-  auto playout_event = event->mutable_audio_playout_event();
-  playout_event->set_local_ssrc(ssrc);
-  StoreEvent(&event);
+void RtcEventLogImpl::StopOutput() {
+  max_size_bytes_ = std::numeric_limits<decltype(max_size_bytes_)>::max();
+  written_bytes_ = 0;
+  event_output_.reset();
 }
 
-void RtcEventLogImpl::LogBwePacketLossEvent(int32_t bitrate,
-                                            uint8_t fraction_loss,
-                                            int32_t total_packets) {
-  std::unique_ptr<rtclog::Event> event(new rtclog::Event());
-  event->set_timestamp_us(rtc::TimeMicros());
-  event->set_type(rtclog::Event::BWE_PACKET_LOSS_EVENT);
-  auto bwe_event = event->mutable_bwe_packet_loss_event();
-  bwe_event->set_bitrate(bitrate);
-  bwe_event->set_fraction_loss(fraction_loss);
-  bwe_event->set_total_packets(total_packets);
-  StoreEvent(&event);
-}
-
-void RtcEventLogImpl::StoreEvent(std::unique_ptr<rtclog::Event>* event) {
-  if (!event_queue_.Insert(event)) {
-    LOG(LS_ERROR) << "WebRTC event log queue full. Dropping event.";
+void RtcEventLogImpl::StopLoggingInternal() {
+  if (event_output_) {
+    RTC_DCHECK(event_output_->IsActive());
+    event_output_->Write(
+        event_encoder_->Encode(*rtc::MakeUnique<RtcEventLoggingStopped>()));
   }
-  helper_thread_.SignalNewEvent();
+  StopOutput();
 }
 
-bool RtcEventLog::ParseRtcEventLog(const std::string& file_name,
-                                   rtclog::EventStream* result) {
-  char tmp_buffer[1024];
-  int bytes_read = 0;
-  std::unique_ptr<FileWrapper> dump_file(FileWrapper::Create());
-  if (!dump_file->OpenFile(file_name.c_str(), true)) {
-    return false;
+void RtcEventLogImpl::WriteToOutput(const std::string& output_string) {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
+  if (!event_output_->Write(output_string)) {
+    RTC_LOG(LS_ERROR) << "Failed to write RTC event to output.";
+    // The first failure closes the output.
+    RTC_DCHECK(!event_output_->IsActive());
+    StopOutput();  // Clean-up.
+    return;
   }
-  std::string dump_buffer;
-  while ((bytes_read = dump_file->Read(tmp_buffer, sizeof(tmp_buffer))) > 0) {
-    dump_buffer.append(tmp_buffer, bytes_read);
-  }
-  dump_file->CloseFile();
-  return result->ParseFromString(dump_buffer);
+  written_bytes_ += output_string.size();
 }
+
+}  // namespace
 
 #endif  // ENABLE_RTC_EVENT_LOG
 
-bool RtcEventLogNullImpl::StartLogging(rtc::PlatformFile platform_file,
-                                       int64_t max_size_bytes) {
-  // The platform_file is open and needs to be closed.
-  if (!rtc::ClosePlatformFile(platform_file)) {
-    LOG(LS_ERROR) << "Can't close file.";
-  }
-  return false;
-}
-
 // RtcEventLog member functions.
-std::unique_ptr<RtcEventLog> RtcEventLog::Create() {
+std::unique_ptr<RtcEventLog> RtcEventLog::Create(EncodingType encoding_type) {
 #ifdef ENABLE_RTC_EVENT_LOG
-  return std::unique_ptr<RtcEventLog>(new RtcEventLogImpl());
+  // TODO(eladalon): Known issue - there's a race over |rtc_event_log_count|.
+  constexpr int kMaxLogCount = 5;
+  int count = 1 + std::atomic_fetch_add(&rtc_event_log_count, 1);
+  if (count > kMaxLogCount) {
+    RTC_LOG(LS_WARNING) << "Denied creation of additional WebRTC event logs. "
+                        << count - 1 << " logs open already.";
+    std::atomic_fetch_sub(&rtc_event_log_count, 1);
+    return CreateNull();
+  }
+  auto encoder = CreateEncoder(encoding_type);
+  return rtc::MakeUnique<RtcEventLogImpl>(std::move(encoder));
 #else
-  return std::unique_ptr<RtcEventLog>(new RtcEventLogNullImpl());
+  return CreateNull();
 #endif  // ENABLE_RTC_EVENT_LOG
 }
 

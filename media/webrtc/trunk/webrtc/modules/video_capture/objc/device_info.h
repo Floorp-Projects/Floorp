@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
-#define WEBRTC_MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
+#ifndef MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
+#define MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
 
-#include "webrtc/modules/video_capture/device_info_impl.h"
+#include "modules/video_capture/device_info_impl.h"
 
 #include <map>
 #include <string>
@@ -32,8 +32,7 @@ class DeviceInfoIos : public DeviceInfoImpl {
                         char* deviceUniqueIdUTF8,
                         uint32_t deviceUniqueIdUTF8Length,
                         char* productUniqueIdUTF8 = 0,
-                        uint32_t productUniqueIdUTF8Length = 0,
-                        pid_t* pid = 0) override;
+                        uint32_t productUniqueIdUTF8Length = 0) override;
 
   int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) override;
 
@@ -59,4 +58,4 @@ class DeviceInfoIos : public DeviceInfoImpl {
 }  // namespace videocapturemodule
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
+#endif  // MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_

@@ -9,18 +9,19 @@
  *
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_
+#ifndef MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_
+#define MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_
 
 #include <memory>
 
-#include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
+#include "modules/video_coding/codecs/h264/include/h264.h"
 
 extern "C" {
 #include "third_party/ffmpeg/libavcodec/avcodec.h"
 }  // extern "C"
 
-#include "webrtc/common_video/include/i420_buffer_pool.h"
+#include "common_video/h264/h264_bitstream_parser.h"
+#include "common_video/include/i420_buffer_pool.h"
 
 namespace webrtc {
 
@@ -77,8 +78,10 @@ class H264DecoderImpl : public H264Decoder {
 
   bool has_reported_init_;
   bool has_reported_error_;
+
+  webrtc::H264BitstreamParser h264_bitstream_parser_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_
+#endif  // MODULES_VIDEO_CODING_CODECS_H264_H264_DECODER_IMPL_H_

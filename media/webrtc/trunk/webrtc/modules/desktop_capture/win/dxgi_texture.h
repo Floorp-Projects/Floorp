@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_
+#ifndef MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_
+#define MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_
 
+#include <D3D11.h>
 #include <DXGI1_2.h>
 
 #include <memory>
 
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/desktop_geometry.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
 
@@ -27,14 +28,14 @@ class DxgiTexture {
  public:
   // Creates a DxgiTexture instance, which represents the |desktop_size| area of
   // entire screen -- usually a monitor on the system.
-  explicit DxgiTexture(const DesktopSize& desktop_size);
+  DxgiTexture();
 
   virtual ~DxgiTexture();
 
   // Copies selected regions of a frame represented by frame_info and resource.
   // Returns false if anything wrong.
-  virtual bool CopyFrom(const DXGI_OUTDUPL_FRAME_INFO& frame_info,
-                        IDXGIResource* resource) = 0;
+  bool CopyFrom(const DXGI_OUTDUPL_FRAME_INFO& frame_info,
+                IDXGIResource* resource);
 
   const DesktopSize& desktop_size() const { return desktop_size_; }
 
@@ -54,15 +55,19 @@ class DxgiTexture {
   const DesktopFrame& AsDesktopFrame();
 
  protected:
-  DXGI_MAPPED_RECT rect_ = {0};
+  DXGI_MAPPED_RECT* rect();
 
- private:
+  virtual bool CopyFromTexture(const DXGI_OUTDUPL_FRAME_INFO& frame_info,
+                               ID3D11Texture2D* texture) = 0;
+
   virtual bool DoRelease() = 0;
 
-  const DesktopSize desktop_size_;
+ private:
+  DXGI_MAPPED_RECT rect_ = {0};
+  DesktopSize desktop_size_;
   std::unique_ptr<DesktopFrame> frame_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_
+#endif  // MODULES_DESKTOP_CAPTURE_WIN_DXGI_TEXTURE_H_

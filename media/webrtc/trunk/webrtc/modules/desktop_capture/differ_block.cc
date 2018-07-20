@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/differ_block.h"
+#include "modules/desktop_capture/differ_block.h"
 
 #include <string.h>
 
-#include "webrtc/typedefs.h"
-#include "webrtc/modules/desktop_capture/differ_vector_sse2.h"
-#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
+#include "typedefs.h"  // NOLINT(build/include)
+#include "modules/desktop_capture/differ_vector_sse2.h"
+#include "system_wrappers/include/cpu_features_wrapper.h"
 
 namespace webrtc {
 
@@ -30,7 +30,7 @@ bool VectorDifference(const uint8_t* image1, const uint8_t* image2) {
   static bool (*diff_proc)(const uint8_t*, const uint8_t*) = nullptr;
 
   if (!diff_proc) {
-#if !defined(WEBRTC_ARCH_X86_FAMILY)
+#if defined(WEBRTC_ARCH_ARM_FAMILY) || defined(WEBRTC_ARCH_MIPS_FAMILY)
     // For ARM and MIPS processors, always use C version.
     // TODO(hclam): Implement a NEON version.
     diff_proc = &VectorDifference_C;
