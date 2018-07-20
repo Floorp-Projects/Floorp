@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_
-#define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_
+#ifndef AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_
+#define AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_
 
 #if (_MSC_VER >= 1400)  // only include for VS 2005 and higher
 
-#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "modules/audio_device/audio_device_generic.h"
 
 #include <wmcodecdsp.h>      // CLSID_CWMAudioAEC
                              // (must be before audioclient.h)
@@ -24,8 +24,8 @@
 #include <endpointvolume.h>
 #include <mediaobj.h>        // IMediaObject
 
-#include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/scoped_ref_ptr.h"
 
 // Use Multimedia Class Scheduler Service (MMCSS) to boost the thread priority
 #pragma comment( lib, "avrt.lib" )
@@ -82,7 +82,7 @@ class ScopedCOMInitializer {
 class AudioDeviceWindowsCore : public AudioDeviceGeneric
 {
 public:
-    AudioDeviceWindowsCore(const int32_t id);
+    AudioDeviceWindowsCore();
     ~AudioDeviceWindowsCore();
 
     static bool CoreAudioIsSupported();
@@ -133,10 +133,6 @@ public:
     virtual int32_t SetAGC(bool enable);
     virtual bool AGC() const;
 
-    // Volume control based on the Windows Wave API (Windows only)
-    virtual int32_t SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight);
-    virtual int32_t WaveOutVolume(uint16_t& volumeLeft, uint16_t& volumeRight) const;
-
     // Audio mixer initialization
     virtual int32_t InitSpeaker();
     virtual bool SpeakerIsInitialized() const;
@@ -149,7 +145,6 @@ public:
     virtual int32_t SpeakerVolume(uint32_t& volume) const;
     virtual int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;
     virtual int32_t MinSpeakerVolume(uint32_t& minVolume) const;
-    virtual int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;
 
     // Microphone volume controls
     virtual int32_t MicrophoneVolumeIsAvailable(bool& available);
@@ -157,7 +152,6 @@ public:
     virtual int32_t MicrophoneVolume(uint32_t& volume) const;
     virtual int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;
     virtual int32_t MinMicrophoneVolume(uint32_t& minVolume) const;
-    virtual int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const;
 
     // Speaker mute control
     virtual int32_t SpeakerMuteIsAvailable(bool& available);
@@ -169,11 +163,6 @@ public:
     virtual int32_t SetMicrophoneMute(bool enable);
     virtual int32_t MicrophoneMute(bool& enabled) const;
 
-    // Microphone boost control
-    virtual int32_t MicrophoneBoostIsAvailable(bool& available);
-    virtual int32_t SetMicrophoneBoost(bool enable);
-    virtual int32_t MicrophoneBoost(bool& enabled) const;
-
     // Stereo support
     virtual int32_t StereoPlayoutIsAvailable(bool& available);
     virtual int32_t SetStereoPlayout(bool enable);
@@ -183,25 +172,9 @@ public:
     virtual int32_t StereoRecording(bool& enabled) const;
 
     // Delay information and control
-    virtual int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type, uint16_t sizeMS);
-    virtual int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type, uint16_t& sizeMS) const;
     virtual int32_t PlayoutDelay(uint16_t& delayMS) const;
-    virtual int32_t RecordingDelay(uint16_t& delayMS) const;
-
-    // CPU load
-    virtual int32_t CPULoad(uint16_t& load) const;
 
     virtual int32_t EnableBuiltInAEC(bool enable);
-
-public:
-    virtual bool PlayoutWarning() const;
-    virtual bool PlayoutError() const;
-    virtual bool RecordingWarning() const;
-    virtual bool RecordingError() const;
-    virtual void ClearPlayoutWarning();
-    virtual void ClearPlayoutError();
-    virtual void ClearRecordingWarning();
-    virtual void ClearRecordingError();
 
 public:
     virtual void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
@@ -237,10 +210,6 @@ private:    // thread functions
     void _Lock() { _critSect.Enter(); };
     void _UnLock() { _critSect.Leave(); };
 
-private:
-    int32_t Id() {return _id;}
-
-private:
     int SetDMOProperties();
 
     int SetBoolProperty(IPropertyStore* ptrPS,
@@ -272,21 +241,17 @@ private:
 
     int32_t InitRecordingDMO();
 
-private:
     ScopedCOMInitializer                    _comInit;
     AudioDeviceBuffer*                      _ptrAudioBuffer;
-    CriticalSectionWrapper&                 _critSect;
-    CriticalSectionWrapper&                 _volumeMutex;
-    int32_t                           _id;
+    rtc::CriticalSection                    _critSect;
+    rtc::CriticalSection                    _volumeMutex;
 
-private:  // MMDevice
     IMMDeviceEnumerator*                    _ptrEnumerator;
     IMMDeviceCollection*                    _ptrRenderCollection;
     IMMDeviceCollection*                    _ptrCaptureCollection;
     IMMDevice*                              _ptrDeviceOut;
     IMMDevice*                              _ptrDeviceIn;
 
-private:  // WASAPI
     IAudioClient*                           _ptrClientOut;
     IAudioClient*                           _ptrClientIn;
     IAudioRenderClient*                     _ptrRenderClient;
@@ -323,7 +288,6 @@ private:  // WASAPI
     uint32_t                          _playChannels;
     uint32_t                          _sndCardPlayDelay;
     UINT64                                  _writtenSamples;
-    LONGLONG                                _playAcc;
 
     UINT                                    _recAudioFrameSize;
     uint32_t                          _recSampleRate;
@@ -332,12 +296,11 @@ private:  // WASAPI
     UINT64                                  _readSamples;
     uint32_t                          _sndCardRecDelay;
 
-    uint16_t                          _recChannelsPrioList[2];
+    uint16_t                          _recChannelsPrioList[3];
     uint16_t                          _playChannelsPrioList[2];
 
     LARGE_INTEGER                           _perfCounterFreq;
     double                                  _perfCounterFactor;
-    float                                   _avgCPULoad;
 
 private:
     bool                                    _initialized;
@@ -357,14 +320,7 @@ private:
 
     bool                                    _AGC;
 
-    uint16_t                          _playWarning;
-    uint16_t                          _playError;
-    uint16_t                          _recWarning;
-    uint16_t                          _recError;
-
-    AudioDeviceModule::BufferType           _playBufType;
     uint16_t                          _playBufDelay;
-    uint16_t                          _playBufDelayFixed;
 
     uint16_t                          _newMicLevel;
 
@@ -375,4 +331,4 @@ private:
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_
+#endif  // AUDIO_DEVICE_AUDIO_DEVICE_CORE_WIN_H_

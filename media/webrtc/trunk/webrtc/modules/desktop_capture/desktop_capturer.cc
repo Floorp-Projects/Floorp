@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_capturer.h"
 
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_capturer_differ_wrapper.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 
 namespace webrtc {
 
@@ -34,11 +34,15 @@ bool DesktopCapturer::FocusOnSelectedSource() {
   return false;
 }
 
+bool DesktopCapturer::IsOccluded(const DesktopVector& pos) {
+  return false;
+}
+
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
     const DesktopCaptureOptions& options) {
   std::unique_ptr<DesktopCapturer> capturer = CreateRawWindowCapturer(options);
-  if (options.detect_updated_region()) {
+  if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
 
@@ -49,20 +53,10 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
     const DesktopCaptureOptions& options) {
   std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
-  if (options.detect_updated_region()) {
+  if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
 
-  return capturer;
-}
-
-// static
-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateAppCapturer(
-    const DesktopCaptureOptions& options) {
-  std::unique_ptr<DesktopCapturer> capturer = CreateRawAppCapturer(options);
-  if (options.detect_updated_region()) {
-    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-  }
   return capturer;
 }
 

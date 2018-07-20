@@ -10,8 +10,8 @@
 
 #include <utility>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_processing/test/test_utils.h"
+#include "modules/audio_processing/test/test_utils.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -24,11 +24,7 @@ RawFile::~RawFile() {
 
 void RawFile::WriteSamples(const int16_t* samples, size_t num_samples) {
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-  //convert to big-endian
-  int16_t* s = (int16_t*)samples;
-  for(size_t idx = 0; idx < num_samples; idx++) {
-    s[idx] = (samples[idx]<<8) | (samples[idx]>>8);
-  }
+#error "Need to convert samples to little-endian when writing to PCM file"
 #endif
   fwrite(samples, sizeof(*samples), num_samples, file_handle_);
 }

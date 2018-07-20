@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/base/refcount.h"
-#include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/modules/video_capture/windows/video_capture_ds.h"
-#include "webrtc/modules/video_capture/windows/video_capture_mf.h"
+#include "modules/video_capture/windows/video_capture_ds.h"
+#include "modules/video_capture/windows/video_capture_mf.h"
+#include "rtc_base/refcount.h"
+#include "rtc_base/refcountedobject.h"
+#include "rtc_base/scoped_ref_ptr.h"
 
 namespace webrtc {
 namespace videocapturemodule {
@@ -22,7 +23,8 @@ VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
   return DeviceInfoDS::Create();
 }
 
-rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(const char* device_id) {
+rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
+    const char* device_id) {
   if (device_id == nullptr)
     return nullptr;
 

@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_
+#define MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "webrtc/modules/audio_coding/neteq/include/neteq.h"
-#include "webrtc/modules/audio_coding/neteq/tools/audio_sink.h"
-#include "webrtc/modules/audio_coding/neteq/tools/neteq_input.h"
+#include "modules/audio_coding/neteq/include/neteq.h"
+#include "modules/audio_coding/neteq/tools/audio_sink.h"
+#include "modules/audio_coding/neteq/tools/neteq_input.h"
 
 namespace webrtc {
 namespace test {
@@ -26,15 +26,30 @@ namespace test {
 class NetEqTestErrorCallback {
  public:
   virtual ~NetEqTestErrorCallback() = default;
-  virtual void OnInsertPacketError(int error_code,
-                                   const NetEqInput::PacketData& packet) {}
-  virtual void OnGetAudioError(int error_code) {}
+  virtual void OnInsertPacketError(const NetEqInput::PacketData& packet) {}
+  virtual void OnGetAudioError() {}
 };
 
 class DefaultNetEqTestErrorCallback : public NetEqTestErrorCallback {
-  void OnInsertPacketError(int error_code,
-                           const NetEqInput::PacketData& packet) override;
-  void OnGetAudioError(int error_code) override;
+  void OnInsertPacketError(const NetEqInput::PacketData& packet) override;
+  void OnGetAudioError() override;
+};
+
+class NetEqPostInsertPacket {
+ public:
+  virtual ~NetEqPostInsertPacket() = default;
+  virtual void AfterInsertPacket(const NetEqInput::PacketData& packet,
+                                 NetEq* neteq) = 0;
+};
+
+class NetEqGetAudioCallback {
+ public:
+  virtual ~NetEqGetAudioCallback() = default;
+  virtual void BeforeGetAudio(NetEq* neteq) = 0;
+  virtual void AfterGetAudio(int64_t time_now_ms,
+                             const AudioFrame& audio_frame,
+                             bool muted,
+                             NetEq* neteq) = 0;
 };
 
 // Class that provides an input--output test for NetEq. The input (both packets
@@ -52,6 +67,12 @@ class NetEqTest {
 
   using ExtDecoderMap = std::map<int, ExternalDecoderInfo>;
 
+  struct Callbacks {
+    NetEqTestErrorCallback* error_callback = nullptr;
+    NetEqPostInsertPacket* post_insert_packet = nullptr;
+    NetEqGetAudioCallback* get_audio_callback = nullptr;
+  };
+
   // Sets up the test with given configuration, codec mappings, input, ouput,
   // and callback objects for error reporting.
   NetEqTest(const NetEq::Config& config,
@@ -59,7 +80,7 @@ class NetEqTest {
             const ExtDecoderMap& ext_codecs,
             std::unique_ptr<NetEqInput> input,
             std::unique_ptr<AudioSink> output,
-            NetEqTestErrorCallback* error_callback);
+            Callbacks callbacks);
 
   ~NetEqTest() = default;
 
@@ -76,10 +97,10 @@ class NetEqTest {
   std::unique_ptr<NetEq> neteq_;
   std::unique_ptr<NetEqInput> input_;
   std::unique_ptr<AudioSink> output_;
-  NetEqTestErrorCallback* error_callback_ = nullptr;
+  Callbacks callbacks_;
   int sample_rate_hz_;
 };
 
 }  // namespace test
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_TEST_H_

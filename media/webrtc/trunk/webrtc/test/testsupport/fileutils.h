@@ -10,10 +10,13 @@
 
 #include <stdio.h>
 
-#ifndef WEBRTC_TEST_TESTSUPPORT_FILEUTILS_H_
-#define WEBRTC_TEST_TESTSUPPORT_FILEUTILS_H_
+#ifndef TEST_TESTSUPPORT_FILEUTILS_H_
+#define TEST_TESTSUPPORT_FILEUTILS_H_
 
 #include <string>
+#include <vector>
+
+#include "api/optional.h"
 
 namespace webrtc {
 namespace test {
@@ -58,24 +61,40 @@ std::string TempFilename(const std::string &dir, const std::string &prefix);
 //           If a directory path is prepended to the filename, a subdirectory
 //           hierarchy reflecting that path is assumed to be present.
 //    extension - File extension, without the dot, i.e. "bmp" or "yuv".
-std::string ResourcePath(std::string name, std::string extension);
+std::string ResourcePath(const std::string& name,
+                         const std::string& extension);
 
 // Gets the current working directory for the executing program.
 // Returns "./" if for some reason it is not possible to find the working
 // directory.
 std::string WorkingDir();
 
+// Reads the content of a directory and, in case of success, returns a vector
+// of strings with one element for each found file or directory. Each element is
+// a path created by prepending |dir| to the file/directory name. "." and ".."
+// are never added in the returned vector.
+rtc::Optional<std::vector<std::string>> ReadDirectory(std::string path);
+
 // Creates a directory if it not already exists.
 // Returns true if successful. Will print an error message to stderr and return
 // false if a file with the same name already exists.
-bool CreateDir(std::string directory_name);
+bool CreateDir(const std::string& directory_name);
+
+// Removes a directory, which must already be empty.
+bool RemoveDir(const std::string& directory_name);
+
+// Removes a file.
+bool RemoveFile(const std::string& file_name);
 
 // Checks if a file exists.
-bool FileExists(std::string& file_name);
+bool FileExists(const std::string& file_name);
+
+// Checks if a directory exists.
+bool DirExists(const std::string& directory_name);
 
 // File size of the supplied file in bytes. Will return 0 if the file is
 // empty or if the file does not exist/is readable.
-size_t GetFileSize(std::string filename);
+size_t GetFileSize(const std::string& filename);
 
 // Sets the executable path, i.e. the path to the executable that is being used
 // when launching it. This is usually the path relative to the working directory
@@ -88,4 +107,4 @@ void SetExecutablePath(const std::string& path_to_executable);
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // WEBRTC_TEST_TESTSUPPORT_FILEUTILS_H_
+#endif  // TEST_TESTSUPPORT_FILEUTILS_H_

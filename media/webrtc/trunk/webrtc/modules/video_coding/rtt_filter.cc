@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/rtt_filter.h"
+#include "modules/video_coding/rtt_filter.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "webrtc/modules/video_coding/internal_defines.h"
+#include "modules/video_coding/internal_defines.h"
 
 namespace webrtc {
 
@@ -49,8 +49,8 @@ void VCMRttFilter::Reset() {
   _filtFactCount = 1;
   _jumpCount = 0;
   _driftCount = 0;
-  memset(_jumpBuf, 0, sizeof(_jumpBuf));
-  memset(_driftBuf, 0, sizeof(_driftBuf));
+  memset(_jumpBuf, 0, kMaxDriftJumpCount);
+  memset(_driftBuf, 0, kMaxDriftJumpCount);
 }
 
 void VCMRttFilter::Update(int64_t rttMs) {

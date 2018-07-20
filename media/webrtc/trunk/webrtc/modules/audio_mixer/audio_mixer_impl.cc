@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_mixer/audio_mixer_impl.h"
+#include "modules/audio_mixer/audio_mixer_impl.h"
 
 #include <algorithm>
 #include <functional>
 #include <iterator>
 #include <utility>
 
-#include "webrtc/audio/utility/audio_frame_operations.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/modules/audio_mixer/audio_frame_manipulator.h"
-#include "webrtc/modules/audio_mixer/default_output_rate_calculator.h"
+#include "modules/audio_mixer/audio_frame_manipulator.h"
+#include "modules/audio_mixer/default_output_rate_calculator.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/refcountedobject.h"
 
 namespace webrtc {
 namespace {
@@ -79,45 +79,6 @@ void RampAndUpdateGain(
   }
 }
 
-// Mix the AudioFrames stored in audioFrameList into mixed_audio.
-int32_t MixFromList(AudioFrame* mixed_audio,
-                    const AudioFrameList& audio_frame_list,
-                    bool use_limiter) {
-  if (audio_frame_list.empty()) {
-    return 0;
-  }
-
-  if (audio_frame_list.size() == 1) {
-    mixed_audio->timestamp_ = audio_frame_list.front()->timestamp_;
-    mixed_audio->elapsed_time_ms_ = audio_frame_list.front()->elapsed_time_ms_;
-  } else {
-    // TODO(wu): Issue 3390.
-    // Audio frame timestamp is only supported in one channel case.
-    mixed_audio->timestamp_ = 0;
-    mixed_audio->elapsed_time_ms_ = -1;
-  }
-
-  for (const auto& frame : audio_frame_list) {
-    RTC_DCHECK_EQ(mixed_audio->sample_rate_hz_, frame->sample_rate_hz_);
-    RTC_DCHECK_EQ(
-        frame->samples_per_channel_,
-        static_cast<size_t>((mixed_audio->sample_rate_hz_ *
-                             webrtc::AudioMixerImpl::kFrameDurationInMs) /
-                            1000));
-
-    // Mix |f.frame| into |mixed_audio|, with saturation protection.
-    // These effect is applied to |f.frame| itself prior to mixing.
-    if (use_limiter) {
-      // This is to avoid saturation in the mixing. It is only
-      // meaningful if the limiter will be used.
-      AudioFrameOperations::ApplyHalfGain(frame);
-    }
-    RTC_DCHECK_EQ(frame->num_channels_, mixed_audio->num_channels_);
-    AudioFrameOperations::Add(*frame, mixed_audio);
-  }
-  return 0;
-}
-
 AudioMixerImpl::SourceStatusList::const_iterator FindSourceInList(
     AudioMixerImpl::Source const* audio_source,
     AudioMixerImpl::SourceStatusList const* audio_source_list) {
@@ -139,68 +100,31 @@ AudioMixerImpl::SourceStatusList::iterator FindSourceInList(
       });
 }
 
-std::unique_ptr<AudioProcessing> CreateLimiter() {
-  Config config;
-  config.Set<ExperimentalAgc>(new ExperimentalAgc(false));
-  std::unique_ptr<AudioProcessing> limiter(AudioProcessing::Create(config));
-  if (!limiter.get()) {
-    return nullptr;
-  }
-
-  if (limiter->gain_control()->set_mode(GainControl::kFixedDigital) !=
-      limiter->kNoError) {
-    return nullptr;
-  }
-
-  // We smoothly limit the mixed frame to -7 dbFS. -6 would correspond to the
-  // divide-by-2 but -7 is used instead to give a bit of headroom since the
-  // AGC is not a hard limiter.
-  if (limiter->gain_control()->set_target_level_dbfs(7) != limiter->kNoError) {
-    return nullptr;
-  }
-
-  if (limiter->gain_control()->set_compression_gain_db(0) !=
-      limiter->kNoError) {
-    return nullptr;
-  }
-
-  if (limiter->gain_control()->enable_limiter(true) != limiter->kNoError) {
-    return nullptr;
-  }
-
-  if (limiter->gain_control()->Enable(true) != limiter->kNoError) {
-    return nullptr;
-  }
-  return limiter;
-}
-
 }  // namespace
 
 AudioMixerImpl::AudioMixerImpl(
-    std::unique_ptr<AudioProcessing> limiter,
-    std::unique_ptr<OutputRateCalculator> output_rate_calculator)
+    std::unique_ptr<OutputRateCalculator> output_rate_calculator,
+    bool use_limiter)
     : output_rate_calculator_(std::move(output_rate_calculator)),
       output_frequency_(0),
       sample_size_(0),
       audio_source_list_(),
-      use_limiter_(true),
-      time_stamp_(0),
-      limiter_(std::move(limiter)) {}
+      frame_combiner_(use_limiter) {}
 
 AudioMixerImpl::~AudioMixerImpl() {}
 
 rtc::scoped_refptr<AudioMixerImpl> AudioMixerImpl::Create() {
-  return CreateWithOutputRateCalculator(
-      std::unique_ptr<DefaultOutputRateCalculator>(
-          new DefaultOutputRateCalculator()));
+  return Create(std::unique_ptr<DefaultOutputRateCalculator>(
+                    new DefaultOutputRateCalculator()),
+                true);
 }
 
-rtc::scoped_refptr<AudioMixerImpl>
-AudioMixerImpl::CreateWithOutputRateCalculator(
-    std::unique_ptr<OutputRateCalculator> output_rate_calculator) {
+rtc::scoped_refptr<AudioMixerImpl> AudioMixerImpl::Create(
+    std::unique_ptr<OutputRateCalculator> output_rate_calculator,
+    bool use_limiter) {
   return rtc::scoped_refptr<AudioMixerImpl>(
       new rtc::RefCountedObject<AudioMixerImpl>(
-          CreateLimiter(), std::move(output_rate_calculator)));
+          std::move(output_rate_calculator), use_limiter));
 }
 
 void AudioMixerImpl::Mix(size_t number_of_channels,
@@ -210,34 +134,12 @@ void AudioMixerImpl::Mix(size_t number_of_channels,
 
   CalculateOutputFrequency();
 
-  AudioFrameList mix_list;
   {
     rtc::CritScope lock(&crit_);
-    mix_list = GetAudioFromSources();
-
-    for (const auto& frame : mix_list) {
-      RemixFrame(number_of_channels, frame);
-    }
-
-    audio_frame_for_mixing->UpdateFrame(
-        -1, time_stamp_, NULL, 0, OutputFrequency(), AudioFrame::kNormalSpeech,
-        AudioFrame::kVadPassive, number_of_channels);
-
-    time_stamp_ += static_cast<uint32_t>(sample_size_);
-
-    use_limiter_ = mix_list.size() > 1;
-
-    // We only use the limiter if we're actually mixing multiple streams.
-    MixFromList(audio_frame_for_mixing, mix_list, use_limiter_);
-  }
-
-  if (audio_frame_for_mixing->samples_per_channel_ == 0) {
-    // Nothing was mixed, set the audio samples to silence.
-    audio_frame_for_mixing->samples_per_channel_ = sample_size_;
-    AudioFrameOperations::Mute(audio_frame_for_mixing);
-  } else {
-    // Only call the limiter if we have something to mix.
-    LimitMixedAudio(audio_frame_for_mixing);
+    const size_t number_of_streams = audio_source_list_.size();
+    frame_combiner_.Combine(GetAudioFromSources(), number_of_channels,
+                            OutputFrequency(), number_of_streams,
+                            audio_frame_for_mixing);
   }
 
   return;
@@ -295,7 +197,7 @@ AudioFrameList AudioMixerImpl::GetAudioFromSources() {
             OutputFrequency(), &source_and_status->audio_frame);
 
     if (audio_frame_info == Source::AudioFrameInfo::kError) {
-      LOG_F(LS_WARNING) << "failed to GetAudioFrameWithInfo() from source";
+      RTC_LOG_F(LS_WARNING) << "failed to GetAudioFrameWithInfo() from source";
       continue;
     }
     audio_source_mixing_data_list.emplace_back(
@@ -331,36 +233,6 @@ AudioFrameList AudioMixerImpl::GetAudioFromSources() {
   return result;
 }
 
-
-bool AudioMixerImpl::LimitMixedAudio(AudioFrame* mixed_audio) const {
-  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
-  if (!use_limiter_) {
-    return true;
-  }
-
-  // Smoothly limit the mixed frame.
-  const int error = limiter_->ProcessStream(mixed_audio);
-
-  // And now we can safely restore the level. This procedure results in
-  // some loss of resolution, deemed acceptable.
-  //
-  // It's possible to apply the gain in the AGC (with a target level of 0 dbFS
-  // and compression gain of 6 dB). However, in the transition frame when this
-  // is enabled (moving from one to two audio sources) it has the potential to
-  // create discontinuities in the mixed frame.
-  //
-  // Instead we double the frame (with addition since left-shifting a
-  // negative value is undefined).
-  AudioFrameOperations::Add(*mixed_audio, mixed_audio);
-
-  if (error != limiter_->kNoError) {
-    LOG_F(LS_ERROR) << "Error from AudioProcessing: " << error;
-    RTC_NOTREACHED();
-    return false;
-  }
-  return true;
-}
-
 bool AudioMixerImpl::GetAudioSourceMixabilityStatusForTest(
     AudioMixerImpl::Source* audio_source) const {
   RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
@@ -371,7 +243,7 @@ bool AudioMixerImpl::GetAudioSourceMixabilityStatusForTest(
     return (*iter)->is_mixed;
   }
 
-  LOG(LS_ERROR) << "Audio source unknown";
+  RTC_LOG(LS_ERROR) << "Audio source unknown";
   return false;
 }
 }  // namespace webrtc

@@ -8,19 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_
-#define WEBRTC_MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_
+#ifndef MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_
+#define MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_
 
 #include <vector>
 
-#include "webrtc/base/array_view.h"
-#include "webrtc/modules/audio_processing/echo_detector/circular_buffer.h"
-#include "webrtc/modules/audio_processing/echo_detector/mean_variance_estimator.h"
-#include "webrtc/modules/audio_processing/echo_detector/moving_max.h"
-#include "webrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.h"
+#include "api/array_view.h"
+#include "modules/audio_processing/echo_detector/circular_buffer.h"
+#include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
+#include "modules/audio_processing/echo_detector/moving_max.h"
+#include "modules/audio_processing/echo_detector/normalized_covariance_estimator.h"
 
 namespace webrtc {
 
+class ApmDataDumper;
 class AudioBuffer;
 class EchoDetector;
 
@@ -52,6 +53,8 @@ class ResidualEchoDetector {
   }
 
  private:
+  static int instance_count_;
+  std::unique_ptr<ApmDataDumper> data_dumper_;
   // Keep track if the |Process| function has been previously called.
   bool first_process_call_ = true;
   // Buffer for storing the power of incoming farend buffers. This is needed for
@@ -82,8 +85,10 @@ class ResidualEchoDetector {
   // Reliability of the current likelihood.
   float reliability_ = 0.f;
   MovingMax recent_likelihood_max_;
+
+  int log_counter_ = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_
+#endif  // MODULES_AUDIO_PROCESSING_RESIDUAL_ECHO_DETECTOR_H_

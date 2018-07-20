@@ -7,10 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_TEST_DRIFTING_CLOCK_H_
-#define WEBRTC_TEST_DRIFTING_CLOCK_H_
+#ifndef TEST_DRIFTING_CLOCK_H_
+#define TEST_DRIFTING_CLOCK_H_
 
-#include "webrtc/system_wrappers/include/clock.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace test {
@@ -29,7 +29,7 @@ class DriftingClock : public Clock {
 
   int64_t TimeInMilliseconds() const override;
   int64_t TimeInMicroseconds() const override;
-  void CurrentNtp(uint32_t& seconds, uint32_t& fractions) const override;
+  NtpTime CurrentNtpTime() const override;
   int64_t CurrentNtpInMilliseconds() const override;
 
  private:
@@ -42,4 +42,4 @@ class DriftingClock : public Clock {
 }  // namespace test
 }  // namespace webrtc
 
-#endif  // WEBRTC_TEST_DRIFTING_CLOCK_H_
+#endif  // TEST_DRIFTING_CLOCK_H_

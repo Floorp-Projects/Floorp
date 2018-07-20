@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_capture/windows/device_info_mf.h"
+#include "modules/video_capture/windows/device_info_mf.h"
 
 namespace webrtc {
 namespace videocapturemodule {
 
-DeviceInfoMF::DeviceInfoMF() : DeviceInfoImpl() {
+DeviceInfoMF::DeviceInfoMF() {
 }
 
 DeviceInfoMF::~DeviceInfoMF() {

@@ -10,16 +10,14 @@
 
 package org.webrtc.voiceengine;
 
-import android.util.Log;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Process;
-
 import java.lang.Thread;
 import java.util.Arrays;
 import java.util.List;
+import org.webrtc.Logging;
 
 public final class WebRtcAudioUtils {
   private static final String TAG = "WebRtcAudioUtils";
@@ -28,20 +26,24 @@ public final class WebRtcAudioUtils {
   // the low latency output mode in combination with OpenSL ES.
   // The device name is given by Build.MODEL.
   private static final String[] BLACKLISTED_OPEN_SL_ES_MODELS = new String[] {
-      // This list is currently empty ;-)
+      // It is recommended to maintain a list of blacklisted models outside
+      // this package and instead call
+      // WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true)
+      // from the client for devices where OpenSL ES shall be disabled.
   };
 
   // List of devices where it has been verified that the built-in effect
   // bad and where it makes sense to avoid using it and instead rely on the
   // native WebRTC version instead. The device name is given by Build.MODEL.
   private static final String[] BLACKLISTED_AEC_MODELS = new String[] {
-      "D6503", // Sony Xperia Z2 D6503
-      "ONE A2005", // OnePlus 2
-      "MotoG3", // Moto G (3rd Generation)
+      // It is recommended to maintain a list of blacklisted models outside
+      // this package and instead call setWebRtcBasedAcousticEchoCanceler(true)
+      // from the client for devices where the built-in AEC shall be disabled.
   };
   private static final String[] BLACKLISTED_NS_MODELS = new String[] {
-      "Nexus 10", "Nexus 9",
-      "ONE A2005", // OnePlus 2
+    // It is recommended to maintain a list of blacklisted models outside
+    // this package and instead call setWebRtcBasedNoiseSuppressor(true)
+    // from the client for devices where the built-in NS shall be disabled.
   };
 
   // Use 16kHz as the default sample rate. A higher sample rate might prevent
@@ -58,30 +60,46 @@ public final class WebRtcAudioUtils {
 
   // Call these methods if any hardware based effect shall be replaced by a
   // software based version provided by the WebRTC stack instead.
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized void setWebRtcBasedAcousticEchoCanceler(boolean enable) {
     useWebRtcBasedAcousticEchoCanceler = enable;
   }
+
+    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized void setWebRtcBasedNoiseSuppressor(boolean enable) {
     useWebRtcBasedNoiseSuppressor = enable;
   }
+
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized void setWebRtcBasedAutomaticGainControl(boolean enable) {
     // TODO(henrika): deprecated; remove when no longer used by any client.
-    Log.w(TAG, "setWebRtcBasedAutomaticGainControl() is deprecated");
+    Logging.w(TAG, "setWebRtcBasedAutomaticGainControl() is deprecated");
   }
 
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized boolean useWebRtcBasedAcousticEchoCanceler() {
     if (useWebRtcBasedAcousticEchoCanceler) {
-      Log.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
+      Logging.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
     }
     return useWebRtcBasedAcousticEchoCanceler;
   }
+
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized boolean useWebRtcBasedNoiseSuppressor() {
     if (useWebRtcBasedNoiseSuppressor) {
-      Log.w(TAG, "Overriding default behavior; now using WebRTC NS!");
+      Logging.w(TAG, "Overriding default behavior; now using WebRTC NS!");
     }
     return useWebRtcBasedNoiseSuppressor;
   }
+
   // TODO(henrika): deprecated; remove when no longer used by any client.
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized boolean useWebRtcBasedAutomaticGainControl() {
     // Always return true here to avoid trying to use any built-in AGC.
     return true;
@@ -108,15 +126,21 @@ public final class WebRtcAudioUtils {
   // Call this method if the default handling of querying the native sample
   // rate shall be overridden. Can be useful on some devices where the
   // available Android APIs are known to return invalid results.
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized void setDefaultSampleRateHz(int sampleRateHz) {
     isDefaultSampleRateOverridden = true;
     defaultSampleRateHz = sampleRateHz;
   }
 
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized boolean isDefaultSampleRateOverridden() {
     return isDefaultSampleRateOverridden;
   }
 
+  // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+  @SuppressWarnings("NoSynchronizedMethodCheck")
   public static synchronized int getDefaultSampleRateHz() {
     return defaultSampleRateHz;
   }
@@ -127,16 +151,6 @@ public final class WebRtcAudioUtils {
 
   public static List<String> getBlackListedModelsForNsUsage() {
     return Arrays.asList(WebRtcAudioUtils.BLACKLISTED_NS_MODELS);
-  }
-
-  public static boolean runningOnGingerBreadOrHigher() {
-    // November 2010: Android 2.3, API Level 9.
-    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD;
-  }
-
-  public static boolean runningOnJellyBeanOrHigher() {
-    // June 2012: Android 4.1. API Level 16.
-    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
   }
 
   public static boolean runningOnJellyBeanMR1OrHigher() {
@@ -160,11 +174,8 @@ public final class WebRtcAudioUtils {
   }
 
   public static boolean runningOnNougatOrHigher() {
-    /* Mozilla: This requires API Level 24, but we build for 23
     // API Level 24.
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
-    */
-    return false;
   }
 
   // Helper method for building a string of thread information.
@@ -186,7 +197,7 @@ public final class WebRtcAudioUtils {
 
   // Information about the current build, taken from system properties.
   public static void logDeviceInfo(String tag) {
-    Log.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
+    Logging.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
             + "Release: " + Build.VERSION.RELEASE + ", "
             + "Brand: " + Build.BRAND + ", "
             + "Device: " + Build.DEVICE + ", "
@@ -195,11 +206,5 @@ public final class WebRtcAudioUtils {
             + "Manufacturer: " + Build.MANUFACTURER + ", "
             + "Model: " + Build.MODEL + ", "
             + "Product: " + Build.PRODUCT);
-  }
-
-  // Checks if the process has as specified permission or not.
-  public static boolean hasPermission(Context context, String permission) {
-    return context.checkPermission(permission, Process.myPid(), Process.myUid())
-        == PackageManager.PERMISSION_GRANTED;
   }
 }

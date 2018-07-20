@@ -12,15 +12,9 @@
 
 #include <memory>
 
-#include "webrtc/modules/utility/include/jvm_android.h"
+#include "modules/utility/include/jvm_android.h"
 
-#include "webrtc/base/checks.h"
-
-namespace mozilla {
-namespace jni {
-jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
-}
-}
+#include "rtc_base/checks.h"
 
 #define TAG "JVM"
 #define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
@@ -48,11 +42,14 @@ struct {
 void LoadClasses(JNIEnv* jni) {
   ALOGD("LoadClasses");
   for (auto& c : loaded_classes) {
+    jclass localRef = FindClass(jni, c.name);
     ALOGD("name: %s", c.name);
-    jclass clsRef = mozilla::jni::GetClassRef(jni, c.name);
-    RTC_CHECK(clsRef) << c.name;
-    c.clazz = static_cast<jclass>(jni->NewGlobalRef(clsRef));
-    jni->DeleteLocalRef(clsRef);
+    CHECK_EXCEPTION(jni) << "Error during FindClass: " << c.name;
+    RTC_CHECK(localRef) << c.name;
+    jclass globalRef = reinterpret_cast<jclass>(jni->NewGlobalRef(localRef));
+    CHECK_EXCEPTION(jni) << "Error during NewGlobalRef: " << c.name;
+    RTC_CHECK(globalRef) << c.name;
+    c.clazz = globalRef;
   }
 }
 
@@ -220,12 +217,21 @@ std::string JNIEnvironment::JavaToStdString(const jstring& j_string) {
 }
 
 // static
-void JVM::Initialize(JavaVM* jvm, jobject context) {
+void JVM::Initialize(JavaVM* jvm) {
   ALOGD("JVM::Initialize%s", GetThreadInfo().c_str());
-  if (g_jvm) {
-    return;
-  }
-  g_jvm = new JVM(jvm, context);
+  RTC_CHECK(!g_jvm);
+  g_jvm = new JVM(jvm);
+}
+
+void JVM::Initialize(JavaVM* jvm, jobject context) {
+  Initialize(jvm);
+
+  // Pass in the context to the new ContextUtils class.
+  JNIEnv* jni = g_jvm->jni();
+  jclass context_utils = FindClass(jni, "org/webrtc/ContextUtils");
+  jmethodID initialize_method = jni->GetStaticMethodID(
+      context_utils, "initialize", "(Landroid/content/Context;)V");
+  jni->CallStaticVoidMethod(context_utils, initialize_method, context);
 }
 
 // static
@@ -242,11 +248,9 @@ JVM* JVM::GetInstance() {
   return g_jvm;
 }
 
-JVM::JVM(JavaVM* jvm, jobject context)
-    : jvm_(jvm) {
+JVM::JVM(JavaVM* jvm) : jvm_(jvm) {
   ALOGD("JVM::JVM%s", GetThreadInfo().c_str());
   RTC_CHECK(jni()) << "AttachCurrentThread() must be called on this thread.";
-  context_ = NewGlobalRef(jni(), context);
   LoadClasses(jni());
 }
 
@@ -254,7 +258,6 @@ JVM::~JVM() {
   ALOGD("JVM::~JVM%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   FreeClassReferences(jni());
-  DeleteGlobalRef(jni(), context_);
 }
 
 std::unique_ptr<JNIEnvironment> JVM::environment() {

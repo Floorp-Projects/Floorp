@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_
-#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_
+#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_
+#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_
 
 #include <assert.h>
 #include <math.h>
@@ -24,17 +24,17 @@
 #include <utility>
 #include <vector>
 
-#include "webrtc/base/common.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/random.h"
-#include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/modules/pacing/paced_sender.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-#include "webrtc/modules/remote_bitrate_estimator/test/packet.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "modules/bitrate_controller/include/bitrate_controller.h"
+#include "modules/include/module_common_types.h"
+#include "modules/pacing/paced_sender.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
+#include "modules/remote_bitrate_estimator/test/packet.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/random.h"
+#include "system_wrappers/include/clock.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -251,7 +251,7 @@ class RateCounterFilter : public PacketProcessor {
   Stats<double> packets_per_second_stats_;
   Stats<double> kbps_stats_;
   int64_t start_plotting_time_ms_;
-  int flow_id_;
+  int flow_id_ = 0;
   std::string name_;
   // Algorithm name if single flow, Total link utilization if all flows.
   std::string algorithm_name_;
@@ -470,4 +470,4 @@ class PeriodicKeyFrameSource : public AdaptiveVideoSource {
 }  // namespace testing
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_
+#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_BWE_TEST_FRAMEWORK_H_

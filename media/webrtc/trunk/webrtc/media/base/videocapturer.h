@@ -10,8 +10,8 @@
 
 // Declaration of abstract class VideoCapturer
 
-#ifndef WEBRTC_MEDIA_BASE_VIDEOCAPTURER_H_
-#define WEBRTC_MEDIA_BASE_VIDEOCAPTURER_H_
+#ifndef MEDIA_BASE_VIDEOCAPTURER_H_
+#define MEDIA_BASE_VIDEOCAPTURER_H_
 
 #include <stdint.h>
 
@@ -20,21 +20,15 @@
 #include <string>
 #include <vector>
 
-// TODO(nisse): Transition hack, some downstream applications expect that
-// including this file declares I420Buffer and NativeHandleBuffer. Delete after
-// users of these classes are fixed to include the right headers.
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/media/base/videosourceinterface.h"
-#include "webrtc/base/sigslot.h"
-#include "webrtc/base/thread_checker.h"
-#include "webrtc/base/timestampaligner.h"
-#include "webrtc/media/base/videoadapter.h"
-#include "webrtc/media/base/videobroadcaster.h"
-#include "webrtc/media/base/videocommon.h"
+#include "media/base/videoadapter.h"
+#include "media/base/videobroadcaster.h"
+#include "media/base/videocommon.h"
+#include "media/base/videosourceinterface.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/sigslot.h"
+#include "rtc_base/thread_checker.h"
+#include "rtc_base/timestampaligner.h"
 
 namespace webrtc {
 class VideoFrame;
@@ -277,9 +271,9 @@ class VideoCapturer : public sigslot::has_slots<>,
 
   rtc::CriticalSection frame_stats_crit_;
   // The captured frame size before potential adapation.
-  bool input_size_valid_ GUARDED_BY(frame_stats_crit_) = false;
-  int input_width_ GUARDED_BY(frame_stats_crit_);
-  int input_height_ GUARDED_BY(frame_stats_crit_);
+  bool input_size_valid_ RTC_GUARDED_BY(frame_stats_crit_) = false;
+  int input_width_ RTC_GUARDED_BY(frame_stats_crit_);
+  int input_height_ RTC_GUARDED_BY(frame_stats_crit_);
 
   // Whether capturer should apply rotation to the frame before
   // passing it on to the registered sinks.
@@ -292,4 +286,4 @@ class VideoCapturer : public sigslot::has_slots<>,
 
 }  // namespace cricket
 
-#endif  // WEBRTC_MEDIA_BASE_VIDEOCAPTURER_H_
+#endif  // MEDIA_BASE_VIDEOCAPTURER_H_

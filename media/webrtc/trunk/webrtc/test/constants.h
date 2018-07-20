@@ -11,9 +11,12 @@
 namespace webrtc {
 namespace test {
 
+extern const int kAudioLevelExtensionId;
 extern const int kTOffsetExtensionId;
 extern const int kAbsSendTimeExtensionId;
 extern const int kTransportSequenceNumberExtensionId;
 extern const int kVideoRotationExtensionId;
+extern const int kVideoContentTypeExtensionId;
+extern const int kVideoTimingExtensionId;
 }  // namespace test
 }  // namespace webrtc
