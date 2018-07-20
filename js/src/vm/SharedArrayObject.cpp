@@ -361,7 +361,7 @@ SharedArrayBufferObject::createFromNewRawBuffer(JSContext* cx, SharedArrayRawBuf
     MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
     AutoSetNewObjectMetadata metadata(cx);
-    SharedArrayBufferObject* obj = NewObjectWithClassProto<SharedArrayBufferObject>(cx, nullptr);
+    SharedArrayBufferObject* obj = NewBuiltinClassInstance<SharedArrayBufferObject>(cx);
     if (!obj) {
         buffer->dropReference();
         return nullptr;
