@@ -220,8 +220,8 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
 }
 
 #confirmation-hint {
-  --arrowpanel-background: #058b00;
-  --arrowpanel-border-color: #046b00;
+  --arrowpanel-background: #0060df;
+  --arrowpanel-border-color: #0060df;
   --arrowpanel-color: #fff;
 }
 
