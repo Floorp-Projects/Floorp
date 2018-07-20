@@ -204,18 +204,22 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
   _renderPayButton(state) {
     this._payButton.disabled = state.changesPrevented;
-    switch (state.completionState) {
+    let completeStatus = state.request.completeStatus;
+    switch (completeStatus) {
       case "initial":
       case "processing":
       case "success":
       case "fail":
       case "unknown":
         break;
+      case "":
+        completeStatus = "initial";
+        break;
       default:
-        throw new Error("Invalid completionState");
+        throw new Error(`Invalid completeStatus: ${completeStatus}`);
     }
 
-    this._payButton.textContent = this._payButton.dataset[state.completionState + "Label"];
+    this._payButton.textContent = this._payButton.dataset[completeStatus + "Label"];
   }
 
   stateChangeCallback(state) {
@@ -301,17 +305,13 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       page.hidden = state.page.id != page.id;
     }
 
-    let {
-      changesPrevented,
-      completionState,
-    } = state;
-    if (changesPrevented) {
+    if (state.changesPrevented) {
       this.setAttribute("changes-prevented", "");
     } else {
       this.removeAttribute("changes-prevented");
     }
-    this.setAttribute("completion-state", completionState);
-    this._disabledOverlay.hidden = !changesPrevented;
+    this.setAttribute("complete-status", request.completeStatus);
+    this._disabledOverlay.hidden = !state.changesPrevented;
   }
 }
 

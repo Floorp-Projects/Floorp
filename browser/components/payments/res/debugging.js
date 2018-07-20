@@ -407,33 +407,38 @@ let buttonActions = {
   },
 
   setStateDefault() {
-    requestStore.setState({
-      completionState: "initial",
+    let request = Object.assign({}, requestStore.getState().request, {
+      completeStatus: "initial",
     });
+    requestStore.setState({ request });
   },
 
   setStateProcessing() {
-    requestStore.setState({
-      completionState: "processing",
+    let request = Object.assign({}, requestStore.getState().request, {
+      completeStatus: "processing",
     });
+    requestStore.setState({ request });
   },
 
   setStateSuccess() {
-    requestStore.setState({
-      completionState: "success",
+    let request = Object.assign({}, requestStore.getState().request, {
+      completeStatus: "success",
     });
+    requestStore.setState({ request });
   },
 
   setStateFail() {
-    requestStore.setState({
-      completionState: "fail",
+    let request = Object.assign({}, requestStore.getState().request, {
+      completeStatus: "fail",
     });
+    requestStore.setState({ request });
   },
 
   setStateUnknown() {
-    requestStore.setState({
-      completionState: "unknown",
+    let request = Object.assign({}, requestStore.getState().request, {
+      completeStatus: "unknown",
     });
+    requestStore.setState({ request });
   },
 };
 
