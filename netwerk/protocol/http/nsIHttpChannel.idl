@@ -508,6 +508,9 @@ interface nsIHttpChannel : nsIChannel
      *
      * @param aMessage
      *        The message to print in the console.
+     *
+     * @param aCategory
+     *        The category under which the message should be displayed.
      */
-    void logBlockedCORSRequest(in AString aMessage);
+    void logBlockedCORSRequest(in AString aMessage, in ACString aCategory);
 };

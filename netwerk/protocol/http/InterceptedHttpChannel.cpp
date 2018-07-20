@@ -593,7 +593,8 @@ InterceptedHttpChannel::AsyncOpen2(nsIStreamListener* aListener)
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage)
+InterceptedHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
+                                              const nsACString& aCategory)
 {
   // Synthetic responses should not trigger CORS blocking.
   return NS_ERROR_NOT_IMPLEMENTED;
