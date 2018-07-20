@@ -78,8 +78,8 @@
 
 #UITourTooltipButtons {
   -moz-box-pack: end;
-  background-color: hsla(210,4%,10%,.07);
-  border-top: 1px solid hsla(210,4%,10%,.14);
+  background-color: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
   margin: 10px -16px -16px;
   padding: 16px;
 }
@@ -129,18 +129,14 @@
 }
 
 #UITourTooltipButtons > label,
-#UITourTooltipButtons > button.button-link {
+#UITourTooltipButtons > button.button-link:not(:hover) {
   -moz-appearance: none;
   background: transparent;
   border: none;
   box-shadow: none;
-  color: rgba(0,0,0,0.35);
+  color: var(--panel-disabled-color);
   padding-left: 10px;
   padding-right: 10px;
-}
-
-#UITourTooltipButtons > button.button-link:hover {
-  color: black;
 }
 
 /* The primary button gets the same color as the customize button. */
