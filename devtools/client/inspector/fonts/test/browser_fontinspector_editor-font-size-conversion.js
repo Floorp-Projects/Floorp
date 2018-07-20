@@ -5,67 +5,67 @@
 
 "use strict";
 
-// Test that changes to font-size units converts the value to the destination unit.
-// Check that converted values are applied to the inline style of the selected element.
+// Unit test for math behind conversion of units for font-size. A reference element is
+// needed for converting to and from relative units (rem, em, %). A controlled viewport
+// is needed (iframe) for converting to and from viewport units (vh, vw, vmax, vmin).
 
-const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector_iframe.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);
-  const { inspector, view, tab, testActor } = await openFontInspectorForURL(TEST_URI);
+  const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
   const property = "font-size";
-  const selector = "div";
+  const selector = ".viewport-size";
   const UNITS = {
-    "px": "36px",
-    "%": "100%",
-    "em": "1em",
+    "px": 50,
+    "vw": 10,
+    "vh": 20,
+    "vmin": 20,
+    "vmax": 10,
+    "em": 1.389,
+    "rem": 3.125,
+    "%": 138.889,
+    "pt": 37.5,
+    "pc": 3.125,
+    "mm": 13.229,
+    "cm": 1.323,
+    "in": 0.521,
   };
 
-  await selectNode(selector, inspector);
+  const node = await getNodeFrontInFrame(selector, "#frame", inspector);
+  await selectNode(node, inspector);
 
   info("Check that font editor shows font-size value in original units");
-  let fontSize = getPropertyValue(viewDoc, property);
-  is(fontSize.unit, "em", "Original unit for font size is em");
-  is(fontSize.value + fontSize.unit, "1em", "Original font size is 1em");
+  const fontSize = getPropertyValue(viewDoc, property);
+  is(fontSize.unit, "vw", "Original unit for font size is vw");
+  is(fontSize.value + fontSize.unit, "10vw", "Original font size is 10vw");
 
+  // Starting value and unit for conversion.
   let prevValue = fontSize.value;
   let prevUnit = fontSize.unit;
 
   for (const unit in UNITS) {
     const value = UNITS[unit];
-    const onEditorUpdated = inspector.once("fonteditor-updated");
 
     info(`Convert font-size from ${prevValue}${prevUnit} to ${unit}`);
-    await view.onPropertyChange(property, prevValue, prevUnit, unit);
-    info("Waiting for font editor to re-render");
-    await onEditorUpdated;
-    info(`Waiting for font-size unit dropdown to re-render with selected value: ${unit}`);
-    await waitFor(() => {
-      const sel = `#font-editor .font-value-slider[name=${property}] ~ .font-unit-select`;
-      return viewDoc.querySelector(sel).value === unit;
-    });
-    info("Waiting for testactor reflow");
-    await testActor.reflow();
-
-    info(`Check that font editor font-size value is converted to ${unit}`);
-    fontSize = getPropertyValue(viewDoc, property);
-    is(fontSize.unit, unit, `Font size unit is converted to ${unit}`);
-    is(fontSize.value + fontSize.unit, value, `Font size in font editor is ${value}`);
-
-    info(`Check that inline style font-size value is converted to ${unit}`);
-    const inlineStyleValue = await getInlineStyleValue(tab, selector, property);
-    is(inlineStyleValue, value, `Font size on inline style is ${value}`);
+    const convertedValue = await view.convertUnits(prevValue, prevUnit, unit);
+    is(convertedValue, value, `Converting to ${unit} returns transformed value.`);
 
     // Store current unit and value to use in conversion on the next iteration.
-    prevUnit = fontSize.unit;
-    prevValue = fontSize.value;
+    prevUnit = unit;
+    prevValue = value;
   }
-});
 
-async function getInlineStyleValue(tab, selector, property) {
-  return ContentTask.spawn(tab.linkedBrowser, { selector, property }, function(args) {
-    const el = content.document.querySelector(args.selector);
-    return el && el.style[args.property];
-  });
-}
+  info(`Check that conversion from fake unit returns 1-to-1 mapping.`);
+  const valueFromFakeUnit = await view.convertUnits(1, "fake", "px");
+  is(valueFromFakeUnit, 1, `Converting from fake unit returns same value.`);
+
+  info(`Check that conversion to fake unit returns 1-to-1 mapping`);
+  const valueToFakeUnit = await view.convertUnits(1, "px", "fake");
+  is(valueToFakeUnit, 1, `Converting to fake unit returns same value.`);
+
+  info(`Check that conversion between fake units returns 1-to-1 mapping.`);
+  const valueBetweenFakeUnit = await view.convertUnits(1, "bogus", "fake");
+  is(valueBetweenFakeUnit, 1, `Converting between fake units returns same value.`);
+});
