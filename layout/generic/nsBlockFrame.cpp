@@ -606,25 +606,79 @@ nsBlockFrame::IsFloatContainingBlock() const
 }
 
 static void
-ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
-              nsContainerFrame* aNewParent)
+ReparentFrameInternal(nsIFrame* aFrame, nsContainerFrame* aOldParent,
+                      nsContainerFrame* aNewParent, bool aMarkDirty)
 {
   NS_ASSERTION(aOldParent == aFrame->GetParent(),
                "Parent not consistent with expectations");
 
   aFrame->SetParent(aNewParent);
+  if (aMarkDirty) {
+    aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+  }
 
   // When pushing and pulling frames we need to check for whether any
   // views need to be reparented
   nsContainerFrame::ReparentFrameView(aFrame, aOldParent, aNewParent);
 }
 
+static bool
+ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                         nsContainerFrame* aOldParent,
+#endif
+                         nsIFrame* aNewParent,
+                         ReparentingDirection aDirection)
+{
+#ifdef DEBUG
+  MOZ_ASSERT(aOldParent->FirstInFlow() == aNewParent->FirstInFlow(),
+             "Reparenting should be between continuations of the same frame");
+  if (aDirection != ReparentingDirection::Variable &&
+      aOldParent->FirstInFlow() == aNewParent->FirstInFlow()) {
+    auto IndexInFlow =
+      [](const nsIFrame* f) {
+        int i = 0; while ((f = f->GetPrevInFlow())) { ++i; } return i;
+      };
+    MOZ_ASSERT((IndexInFlow(aOldParent) < IndexInFlow(aNewParent)) ==
+               (aDirection == ReparentingDirection::Forwards),
+               "Parents not in expected order");
+  }
+#endif
+  // Frames going forward must have already been reflowed, or at least marked
+  // dirty. Otherwise frames going backwards (or direction is unknown) may not
+  // be marked dirty yet.
+  return (aDirection != ReparentingDirection::Forwards) &&
+         (aNewParent->GetStateBits() & NS_FRAME_IS_DIRTY);
+}
+
+// Because a frame with NS_FRAME_IS_DIRTY marks all of its children dirty at
+// the start of its reflow, when we move a frame from a later frame backwards to
+// an earlier frame, and the earlier frame has NS_FRAME_IS_DIRTY (though that
+// should corresponded with the later frame having NS_FRAME_IS_DIRTY), we need
+// to add NS_FRAME_IS_DIRTY to the reparented frame.
+static void
+ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
+              nsContainerFrame* aNewParent, ReparentingDirection aDirection)
+{
+  const bool markDirty = ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                                                         aOldParent,
+#endif
+                                                         aNewParent, aDirection);
+  ReparentFrameInternal(aFrame, aOldParent, aNewParent, markDirty);
+}
+
 static void
 ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
-               nsContainerFrame* aNewParent)
+               nsContainerFrame* aNewParent, ReparentingDirection aDirection)
 {
+  const bool markDirty = ShouldMarkReparentedFramesDirty(
+#ifdef DEBUG
+                                                         aOldParent,
+#endif
+                                                         aNewParent, aDirection);
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    ReparentFrame(e.get(), aOldParent, aNewParent);
+    ReparentFrameInternal(e.get(), aOldParent, aNewParent, markDirty);
   }
 }
 
@@ -2123,14 +2177,16 @@ static bool LineHasClear(nsLineBox* aLine) {
  */
 void
 nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
-                             bool aReparentSiblings) {
+                             bool aReparentSiblings,
+                             ReparentingDirection aDirection)
+{
   nsFrameList list;
   aOldParent->CollectFloats(aFirstFrame, list, aReparentSiblings);
   if (list.NotEmpty()) {
     for (nsIFrame* f : list) {
       MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
                  "CollectFloats should've removed that bit");
-      ReparentFrame(f, aOldParent, this);
+      ReparentFrame(f, aOldParent, this, aDirection);
     }
     mFloats.AppendFrames(nullptr, list);
   }
@@ -2627,7 +2683,8 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
       if (pulledLine == nextInFlow->GetLineCursor()) {
         nextInFlow->ClearLineCursor();
       }
-      ReparentFrames(pulledFrames, nextInFlow, this);
+      ReparentFrames(pulledFrames, nextInFlow, this,
+                     ReparentingDirection::Backwards);
 
       NS_ASSERTION(pulledFrames.LastChild() == pulledLine->LastChild(),
                    "Unexpected last frame");
@@ -2643,7 +2700,8 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
       aState.mPrevChild = mFrames.LastChild();
 
       // Reparent floats whose placeholders are in the line.
-      ReparentFloats(pulledLine->mFirstChild, nextInFlow, true);
+      ReparentFloats(pulledLine->mFirstChild, nextInFlow, true,
+                     ReparentingDirection::Backwards);
 
       DumpLine(aState, pulledLine, deltaBCoord, 0);
 #ifdef DEBUG
@@ -2922,12 +2980,13 @@ nsBlockFrame::PullFrameFrom(nsLineBox*           aLine,
 
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
-    ReparentFrame(frame, aFromContainer, this);
+    ReparentFrame(frame, aFromContainer, this, ReparentingDirection::Backwards);
     mFrames.AppendFrame(nullptr, frame);
 
     // The frame might have (or contain) floats that need to be brought
     // over too. (pass 'false' since there are no siblings to check)
-    ReparentFloats(frame, aFromContainer, false);
+    ReparentFloats(frame, aFromContainer, false,
+                   ReparentingDirection::Backwards);
   } else {
     MOZ_ASSERT(aLine == aFromLine.prev());
   }
@@ -3671,8 +3730,10 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
               if (NS_FAILED(rv)) {
                 return;
               }
-              if (parent != this)
-                ReparentFrame(nextFrame, parent, this);
+              if (parent != this) {
+                ReparentFrame(nextFrame, parent, this,
+                              ReparentingDirection::Variable);
+              }
               mFrames.InsertFrame(nullptr, frame, nextFrame);
               madeContinuation = true; // needs to be added to mLines
               nextFrame->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
@@ -4331,7 +4392,7 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
     DebugOnly<nsresult> rv = oldParent->StealFrame(nextInFlow);
     NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failed");
     if (oldParent != this) {
-      ReparentFrame(nextInFlow, oldParent, this);
+      ReparentFrame(nextInFlow, oldParent, this, ReparentingDirection::Backwards);
     }
     if (!aFloatStatus.IsOverflowIncomplete()) {
       nextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
@@ -4850,7 +4911,8 @@ nsBlockFrame::DrainOverflowLines()
     FrameLines* overflowLines = prevBlock->RemoveOverflowLines();
     if (overflowLines) {
       // Make all the frames on the overflow line list mine.
-      ReparentFrames(overflowLines->mFrames, prevBlock, this);
+      ReparentFrames(overflowLines->mFrames, prevBlock, this,
+                     ReparentingDirection::Forwards);
 
       // Make the overflow out-of-flow frames mine too.
       nsAutoOOFFrameList oofs(prevBlock);
@@ -4864,7 +4926,8 @@ nsBlockFrame::DrainOverflowLines()
             nif->RemoveStateBits(NS_FRAME_IS_PUSHED_FLOAT);
           }
         }
-        ReparentFrames(oofs.mList, prevBlock, this);
+        ReparentFrames(oofs.mList, prevBlock, this,
+                       ReparentingDirection::Forwards);
         mFloats.InsertFrames(nullptr, nullptr, oofs.mList);
       }
 

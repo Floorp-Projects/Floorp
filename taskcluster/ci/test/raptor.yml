@@ -75,6 +75,16 @@ raptor-firefox-motionmark-animometer:
         extra-options:
             - --test=raptor-motionmark-animometer
 
+raptor-firefox-webaudio:
+    description: "Raptor Firefox WebAudio benchmark"
+    try-name: raptor-firefox-webaudio
+    treeherder-symbol: Rap(wa)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-webaudio
+
 raptor-chrome-tp6:
     description: "Raptor Chrome tp6"
     try-name: raptor-chrome-tp6
@@ -131,4 +141,15 @@ raptor-chrome-motionmark-animometer:
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
+            - --app=chrome
+
+raptor-chrome-webaudio:
+    description: "Raptor Chrome WebAudio benchmark"
+    try-name: raptor-chrome-webaudio
+    treeherder-symbol: Rap-C(wa)
+    run-on-projects: ['try', 'mozilla-central']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-webaudio
             - --app=chrome

@@ -421,7 +421,8 @@ nsRubyFrame::PullOneSegment(const nsLineLayout* aLineLayout,
   if (nsBlockFrame* newFloatCB =
       nsLayoutUtils::GetAsBlock(aLineLayout->LineContainerFrame())) {
     if (oldFloatCB && oldFloatCB != newFloatCB) {
-      newFloatCB->ReparentFloats(baseFrame, oldFloatCB, true);
+      newFloatCB->ReparentFloats(baseFrame, oldFloatCB, true,
+                                 ReparentingDirection::Backwards);
     }
   }
 

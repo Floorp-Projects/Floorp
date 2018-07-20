@@ -113,25 +113,21 @@ public:
     }
     nsTArray<RefPtr<MediaDeviceInfo>> infos;
     for (auto& device : devices) {
-      nsString type;
-      device->GetType(type);
-      bool isVideo = type.EqualsLiteral("video");
-      bool isAudio = type.EqualsLiteral("audio");
-      if (isVideo || isAudio) {
-        MediaDeviceKind kind = isVideo ?
-            MediaDeviceKind::Videoinput : MediaDeviceKind::Audioinput;
-        nsString id;
-        nsString name;
-        device->GetId(id);
-        // Include name only if page currently has a gUM stream active or
-        // persistent permissions (audio or video) have been granted
-        if (MediaManager::Get()->IsActivelyCapturingOrHasAPermission(mWindowId) ||
-            Preferences::GetBool("media.navigator.permission.disabled", false)) {
-          device->GetName(name);
-        }
-        RefPtr<MediaDeviceInfo> info = new MediaDeviceInfo(id, kind, name);
-        infos.AppendElement(info);
+      MediaDeviceKind kind = static_cast<MediaDevice*>(device.get())->mKind;
+      MOZ_ASSERT(kind == dom::MediaDeviceKind::Audioinput
+                  || kind == dom::MediaDeviceKind::Videoinput
+                  || kind == dom::MediaDeviceKind::Audiooutput);
+      nsString id;
+      nsString name;
+      device->GetId(id);
+      // Include name only if page currently has a gUM stream active or
+      // persistent permissions (audio or video) have been granted
+      if (MediaManager::Get()->IsActivelyCapturingOrHasAPermission(mWindowId) ||
+          Preferences::GetBool("media.navigator.permission.disabled", false)) {
+        device->GetName(name);
       }
+      RefPtr<MediaDeviceInfo> info = new MediaDeviceInfo(id, kind, name);
+      infos.AppendElement(info);
     }
     mPromise->MaybeResolve(infos);
     return NS_OK;

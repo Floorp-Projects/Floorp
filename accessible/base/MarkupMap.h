@@ -31,7 +31,7 @@ MARKUPMAP(blockquote,
           roles::BLOCKQUOTE)
 
 MARKUPMAP(dd,
-          New_HTMLDefinition,
+          New_HTMLDtOrDd<HyperTextAccessibleWrap>,
           roles::DEFINITION)
 
 MARKUPMAP(details,
@@ -47,7 +47,7 @@ MARKUPMAP(dl,
           roles::DEFINITION_LIST)
 
 MARKUPMAP(dt,
-          New_HTMLListitem,
+          New_HTMLDtOrDd<HTMLLIAccessible>,
           roles::TERM)
 
 MARKUPMAP(figcaption,

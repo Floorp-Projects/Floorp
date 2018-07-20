@@ -260,6 +260,17 @@ nsFrame::PrintDisplayList(nsDisplayListBuilder* aBuilder,
   PrintDisplayListTo(aBuilder, aList, aStream, 0, aDumpHtml);
 }
 
+void
+nsFrame::PrintDisplayItem(nsDisplayListBuilder* aBuilder,
+                          nsDisplayItem* aItem,
+                          std::stringstream& aStream,
+                          uint32_t aIndent,
+                          bool aDumpSublist,
+                          bool aDumpHtml)
+{
+  PrintDisplayItemTo(aBuilder, aItem, aStream, aIndent, aDumpSublist, aDumpHtml);
+}
+
 /**
  * The two functions below are intended to be called from a debugger.
  */

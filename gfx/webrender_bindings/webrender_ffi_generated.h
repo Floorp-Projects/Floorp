@@ -1420,7 +1420,10 @@ void wr_dp_save(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
-void wr_dump_display_list(WrState *aState)
+uintptr_t wr_dump_display_list(WrState *aState,
+                               uintptr_t aIndent,
+                               const uintptr_t *aStart,
+                               const uintptr_t *aEnd)
 WR_FUNC;
 
 extern bool wr_moz2d_render_cb(ByteSlice aBlob,

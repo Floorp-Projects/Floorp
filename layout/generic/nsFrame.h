@@ -751,6 +751,12 @@ public:
                                const nsDisplayList& aList,
                                std::stringstream& aStream,
                                bool aDumpHtml = false);
+  static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
+                               nsDisplayItem* aItem,
+                               std::stringstream& aStream,
+                               uint32_t aIndent = 0,
+                               bool aDumpSublist = false,
+                               bool aDumpHtml = false);
   static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aList,
                                   std::stringstream& aStream,

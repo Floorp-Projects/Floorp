@@ -756,7 +756,13 @@ DisplayListBuilder::~DisplayListBuilder()
 void DisplayListBuilder::Save() { wr_dp_save(mWrState); }
 void DisplayListBuilder::Restore() { wr_dp_restore(mWrState); }
 void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
-void DisplayListBuilder::Dump() { wr_dump_display_list(mWrState); }
+
+usize DisplayListBuilder::Dump(usize aIndent,
+                               const Maybe<usize>& aStart,
+                               const Maybe<usize>& aEnd)
+{
+  return wr_dump_display_list(mWrState, aIndent, aStart.ptrOr(nullptr), aEnd.ptrOr(nullptr));
+}
 
 void
 DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,

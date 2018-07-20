@@ -238,21 +238,18 @@ pub unsafe extern "C" fn sdp_get_maxptime(attributes: *const Vec<SdpAttribute>, 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeFingerprint {
-    hash_algorithm: StringView,
-    fingerprint: StringView
+    hash_algorithm: uint16_t,
+    fingerprint: *const Vec<u8>
 }
 
 impl<'a> From<&'a SdpAttributeFingerprint> for RustSdpAttributeFingerprint {
     fn from(other: &SdpAttributeFingerprint) -> Self {
         RustSdpAttributeFingerprint {
-            hash_algorithm: StringView::from(other.hash_algorithm.as_str()),
-            fingerprint: StringView::from(other.fingerprint.as_str())
+            hash_algorithm: other.hash_algorithm as uint16_t,
+            fingerprint: &other.fingerprint,
         }
     }
 }
-
-
-
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_fingerprint_count(attributes: *const Vec<SdpAttribute>) -> size_t {

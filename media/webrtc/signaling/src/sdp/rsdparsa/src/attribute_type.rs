@@ -282,12 +282,21 @@ pub struct SdpAttributeFmtp {
     pub parameters: SdpAttributeFmtpParameters,
 }
 
+#[derive(Clone, Copy)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
+pub enum SdpAttributeFingerprintHashType {
+    Sha1,
+    Sha224,
+    Sha256,
+    Sha384,
+    Sha512,
+}
+
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeFingerprint {
-    // TODO turn the supported hash algorithms into an enum?
-    pub hash_algorithm: String,
-    pub fingerprint: String,
+    pub hash_algorithm: SdpAttributeFingerprintHashType,
+    pub fingerprint: Vec<u8>
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1006,9 +1015,56 @@ fn parse_fingerprint(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalEr
         return Err(SdpParserInternalError::Generic("Fingerprint needs to have two tokens"
                                                        .to_string()));
     }
+
+    let fingerprint_token = tokens[1].to_string();
+    let parse_tokens = |expected_len| -> Result<Vec<u8>, SdpParserInternalError>{
+        let bytes = fingerprint_token.split(":")
+                                     .map(|byte_token| {
+                                         if byte_token.len() != 2 {
+                                             return Err(SdpParserInternalError::Generic(
+                                                 "fingerpint's byte tokens must have 2 hexdigits"
+                                                 .to_string()
+                                             ))
+                                         }
+                                         Ok(u8::from_str_radix(byte_token, 16)?)
+                                     })
+                                     .collect::<Result<Vec<u8>,_>>()?;
+
+        if bytes.len() != expected_len {
+            return Err(SdpParserInternalError::Generic(
+                format!("fingerprint has {} bytes but should have {} bytes",
+                        bytes.len(), expected_len)
+            ))
+        }
+
+        Ok(bytes)
+    };
+
+
+    let hash_algorithm = match tokens[0] {
+        "sha-1" => SdpAttributeFingerprintHashType::Sha1,
+        "sha-224" => SdpAttributeFingerprintHashType::Sha224,
+        "sha-256" => SdpAttributeFingerprintHashType::Sha256,
+        "sha-384" => SdpAttributeFingerprintHashType::Sha384,
+        "sha-512" => SdpAttributeFingerprintHashType::Sha512,
+        unknown => {
+            return Err(SdpParserInternalError::Unsupported(
+                format!("fingerprint contains an unsupported hash algorithm '{}'", unknown)
+            ))
+        }
+    };
+
+    let fingerprint = match hash_algorithm {
+        SdpAttributeFingerprintHashType::Sha1 => parse_tokens(20)?,
+        SdpAttributeFingerprintHashType::Sha224 => parse_tokens(28)?,
+        SdpAttributeFingerprintHashType::Sha256 => parse_tokens(32)?,
+        SdpAttributeFingerprintHashType::Sha384 => parse_tokens(48)?,
+        SdpAttributeFingerprintHashType::Sha512 => parse_tokens(64)?,
+    };
+
     Ok(SdpAttribute::Fingerprint(SdpAttributeFingerprint {
-                                     hash_algorithm: tokens[0].to_string(),
-                                     fingerprint: tokens[1].to_string(),
+                                     hash_algorithm,
+                                     fingerprint,
                                  }))
 }
 
@@ -2136,7 +2192,30 @@ fn test_parse_attribute_extmap() {
 
 #[test]
 fn test_parse_attribute_fingerprint() {
-    assert!(parse_attribute("fingerprint:sha-256 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:BF:2F:E3:91:CB:57:A9:9D:4A:A2:0B:40").is_ok())
+    assert!(parse_attribute("fingerprint:sha-1 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_ok());
+    assert!(parse_attribute("fingerprint:sha-224 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:\
+                                                 27:97:EB:0B:23:73:AC:BC").is_ok());
+    assert!(parse_attribute("fingerprint:sha-256 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:\
+                                                 27:97:EB:0B:23:73:AC:BC:CD:34:D1:62").is_ok());
+    assert!(parse_attribute("fingerprint:sha-384 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:\
+                                                 27:97:EB:0B:23:73:AC:BC:CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:\
+                                                 27:97:EB:0B:23:73:AC:BC").is_ok());
+    assert!(parse_attribute("fingerprint:sha-512 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC:\
+                                                 97:EB:0B:23:73:AC:BC:CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:\
+                                                 EB:0B:23:73:AC:BC:27:97:EB:0B:23:73:AC:BC:27:97:EB:0B:23:73:\
+                                                 BC:EB:0B:23").is_ok());
+
+    assert!(parse_attribute("fingerprint:sha-1 CX:34:D1:62:16:95:7B:B7:EB:74:E1:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CDA:34:D1:62:16:95:7B:B7:EB:74:E1:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD:34:D1:62:16:95:7B:B7:EB:74:E1:39:27:97:EB:0B:23:73:AC:").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD:34:D1:62:16:95:7B:B7:EB:74:E1:39:27:97:EB:0B:23:73:AC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CX:34:D1:62:16:95:7B:B7:EB:74:E1:39:27:97:EB:0B:23:73:AC:BC").is_err());
+
+    assert!(parse_attribute("fingerprint:sha-1 0xCD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD:0x34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD::D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD:0000A:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_err());
+    assert!(parse_attribute("fingerprint:sha-1 CD:B:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC").is_err());
 }
 
 #[test]

@@ -18,6 +18,7 @@ function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({"set": [
     ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
+    ["media.autoplay.block-webaudio", true],
     ["media.navigator.permission.fake", true]
   ]});
 }
