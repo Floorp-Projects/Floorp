@@ -76,7 +76,7 @@ class JSTerm extends Component {
       onPaste: PropTypes.func,
       codeMirrorEnabled: PropTypes.bool,
       // Update position in the history after executing an expression (action).
-      updatePlaceHolder: PropTypes.func.isRequired,
+      updateHistoryPosition: PropTypes.func.isRequired,
     };
   }
 
@@ -959,7 +959,7 @@ class JSTerm extends Component {
   historyPeruse(direction) {
     const {
       history,
-      updatePlaceHolder,
+      updateHistoryPosition,
       getValueFromHistory,
     } = this.props;
 
@@ -969,7 +969,7 @@ class JSTerm extends Component {
 
     const newInputValue = getValueFromHistory(direction);
     const expression = this.getInputValue();
-    updatePlaceHolder(direction, expression);
+    updateHistoryPosition(direction, expression);
 
     if (newInputValue != null) {
       this.setInputValue(newInputValue);
@@ -1579,8 +1579,8 @@ function mapDispatchToProps(dispatch) {
   return {
     appendToHistory: (expr) => dispatch(historyActions.appendToHistory(expr)),
     clearHistory: () => dispatch(historyActions.clearHistory()),
-    updatePlaceHolder: (direction, expression) =>
-      dispatch(historyActions.updatePlaceHolder(direction, expression)),
+    updateHistoryPosition: (direction, expression) =>
+      dispatch(historyActions.updateHistoryPosition(direction, expression)),
   };
 }
 

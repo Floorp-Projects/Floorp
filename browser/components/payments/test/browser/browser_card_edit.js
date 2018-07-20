@@ -144,14 +144,7 @@ async function add_link(aOptions = {}) {
         billingAddressSelect.children[billingAddressSelect.selectedIndex];
       let selectedAddressGuid = selectedOption.value;
       let lastAddress = Object.values(addressColn)[Object.keys(addressColn).length - 1];
-      if (testArgs.isPrivate) {
-        // guid property is added in later patch on bug 1463608
-        is(selectedAddressGuid, lastAddress.guid,
-           "The select should have the new address selected");
-      } else {
-        is(selectedAddressGuid, lastAddress.guid,
-           "The select should have the new address selected");
-      }
+      is(selectedAddressGuid, lastAddress.guid, "The select should have the new address selected");
     }, aOptions);
 
     await fillInCardForm(frame, PTU.BasicCards.JaneMasterCard, {
@@ -164,14 +157,25 @@ async function add_link(aOptions = {}) {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let {prefilledGuids} = testArgs;
-      let card = Object.assign({}, PTU.BasicCards.JaneMasterCard);
-
       content.document.querySelector("basic-card-form button:last-of-type").click();
 
-      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
       }, "Check we are back on the sumamry page");
+    });
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "123",
+    });
+
+    await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      let {prefilledGuids} = testArgs;
+      let card = Object.assign({}, PTU.BasicCards.JaneMasterCard);
+      let state = await PTU.DialogContentUtils.getCurrentState(content);
 
       let cardCount = Object.keys(state.savedBasicCards).length +
                          Object.keys(state.tempBasicCards).length;
@@ -192,27 +196,36 @@ async function add_link(aOptions = {}) {
         Object.keys(addressCollection).find(key => key != prefilledGuids.address1GUID);
       let savedCard = savedCardGUID && cardCollection[savedCardGUID];
 
-      card["cc-number"] = "************4444"; // Card should be masked
-
+      // we should never have an un-masked cc-number in the state:
+      ok(Object.values(cardCollection).every(card => card["cc-number"].startsWith("************")),
+         "All cc-numbers in state are masked");
+      card["cc-number"] = "************4444"; // Expect card number to be masked at this point
       for (let [key, val] of Object.entries(card)) {
-        if (key == "cc-number" && testArgs.isPrivate) {
-          // cc-number is not yet masked for private/temporary cards
-          is(savedCard[key], val, "Check " + key);
-        } else {
-          is(savedCard[key], val, "Check " + key);
-        }
+        is(savedCard[key], val, "Check " + key);
       }
-      if (testArgs.isPrivate) {
-        ok(testArgs.isPrivate,
-           "Checking card/address from private window relies on guid property " +
-           "which isnt available yet");
-      } else {
-        is(savedCard.billingAddressGUID, savedAddressGUID,
-           "The saved card should be associated with the billing address");
-      }
+
+      is(savedCard.billingAddressGUID, savedAddressGUID,
+         "The saved card should be associated with the billing address");
     }, aOptions);
 
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+
+    // Add a handler to complete the payment above.
+    info("acknowledging the completion from the merchant page");
+    let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
+
+    // Verify response has the expected properties
+    let expectedDetails = Object.assign({
+      "cc-security-code": "123",
+    }, PTU.BasicCards.JaneMasterCard);
+    let expectedBillingAddress = PTU.Addresses.TimBL2;
+    let cardDetails = result.response.details;
+
+    checkPaymentMethodDetailsMatchesCard(cardDetails, expectedDetails,
+                                         "Check response payment details");
+    checkPaymentAddressMatchesStorageAddress(cardDetails.billingAddress, expectedBillingAddress,
+                                             "Check response billing address");
+
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
 }
@@ -223,7 +236,7 @@ add_task(async function test_add_link() {
     isPrivate: false,
     prefilledGuids,
   });
-}).skip();
+});
 
 add_task(async function test_private_add_link() {
   let prefilledGuids = await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
@@ -386,7 +399,7 @@ add_task(async function test_edit_link() {
       return state.page.id == "payment-summary";
     }, "Switched back to payment-summary");
   }, args);
-}).skip();
+});
 
 add_task(async function test_private_card_adding() {
   await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
@@ -451,4 +464,4 @@ add_task(async function test_private_card_adding() {
     browser: privateWin.gBrowser,
   });
   await BrowserTestUtils.closeWindow(privateWin);
-}).skip();
+});

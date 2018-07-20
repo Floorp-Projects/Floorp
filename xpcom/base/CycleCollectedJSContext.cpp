@@ -505,7 +505,7 @@ public:
 };
 
 bool
-CycleCollectedJSContext::PerformMicroTaskCheckPoint()
+CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce)
 {
   if (mPendingMicroTaskRunnables.empty() && mDebuggerMicroTaskQueue.empty()) {
     AfterProcessMicrotasks();
@@ -514,7 +514,7 @@ CycleCollectedJSContext::PerformMicroTaskCheckPoint()
   }
 
   uint32_t currentDepth = RecursionDepth();
-  if (mMicroTaskRecursionDepth >= currentDepth) {
+  if (mMicroTaskRecursionDepth >= currentDepth && !aForce) {
     // We are already executing microtasks for the current recursion depth.
     return false;
   }
@@ -532,7 +532,7 @@ CycleCollectedJSContext::PerformMicroTaskCheckPoint()
   }
 
   mozilla::AutoRestore<uint32_t> restore(mMicroTaskRecursionDepth);
-  MOZ_ASSERT(currentDepth > 0);
+  MOZ_ASSERT(aForce ? currentDepth == 0 : currentDepth > 0);
   mMicroTaskRecursionDepth = currentDepth;
 
   bool didProcess = false;

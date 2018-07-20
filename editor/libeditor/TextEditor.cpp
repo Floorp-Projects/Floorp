@@ -1939,13 +1939,6 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
 }
 
 NS_IMETHODIMP
-TextEditor::PasteAsCitedQuotation(const nsAString& aCitation,
-                                  int32_t aSelectionType)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    const nsAString& aCitation,
                                    bool aInsertHTML,
@@ -2003,33 +1996,6 @@ TextEditor::Rewrap(bool aRespectNewlines)
   }
 
   return InsertTextWithQuotations(wrapped);
-}
-
-NS_IMETHODIMP
-TextEditor::StripCites()
-{
-  nsAutoString current;
-  bool isCollapsed;
-  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted,
-                                   &isCollapsed, current);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString stripped;
-  rv = InternetCiter::StripCites(current, stripped);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (isCollapsed) {
-    rv = SelectAllInternal();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = InsertTextAsAction(stripped);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP

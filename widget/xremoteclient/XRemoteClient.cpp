@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 #include "XRemoteClient.h"
 #include "RemoteUtils.h"
 #include "plstr.h"
@@ -41,7 +42,7 @@
 #else
 #define TO_LITTLE_ENDIAN32(x) (x)
 #endif
-    
+
 #ifndef MAX_PATH
 #ifdef PATH_MAX
 #define MAX_PATH PATH_MAX
@@ -51,6 +52,7 @@
 #endif
 
 using mozilla::LogLevel;
+using mozilla::Unused;
 
 static mozilla::LazyLogModule sRemoteLm("XRemoteClient");
 
@@ -118,7 +120,7 @@ XRemoteClient::Init()
   mMozUserAtom     = XAtoms[i++];
   mMozProfileAtom  = XAtoms[i++];
   mMozProgramAtom  = XAtoms[i++];
-  mMozCommandLineAtom = XAtoms[i++];
+  mMozCommandLineAtom = XAtoms[i];
 
   mInitialized = true;
 
@@ -150,9 +152,9 @@ HandleBadWindow(Display *display, XErrorEvent *event)
     sGotBadWindow = true;
     return 0; // ignored
   }
-  
+
     return (*sOldHandler)(display, event);
-  
+
 }
 
 nsresult
@@ -252,11 +254,11 @@ XRemoteClient::CheckChildren(Window aWindow)
   unsigned long nitems, after;
   unsigned char *data;
   Window retval = None;
-  
+
   if (!XQueryTree(mDisplay, aWindow, &root, &parent, &children,
 		  &nchildren))
     return None;
-  
+
   // scan the list first before recursing into the list of windows
   // which can get quite deep.
   for (i=0; !retval && (i < nchildren); i++) {
@@ -290,7 +292,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
   nsresult rv = NS_OK;
 
   if (!mLockData) {
-    
+
     char pidstr[32];
     char sysinfobuf[SYS_INFO_BUFFER_LENGTH];
     SprintfLiteral(pidstr, "pid%d@", getpid());
@@ -300,7 +302,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
     if (status != PR_SUCCESS) {
       return NS_ERROR_FAILURE;
     }
-    
+
     // allocate enough space for the string plus the terminating
     // char
     mLockData = (char *)malloc(strlen(pidstr) + strlen(sysinfobuf) + 1);
@@ -353,7 +355,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
       /* We tried to grab the lock this time, and failed because someone
 	 else is holding it already.  So, wait for a PropertyDelete event
 	 to come in, and try again. */
-      MOZ_LOG(sRemoteLm, LogLevel::Debug, 
+      MOZ_LOG(sRemoteLm, LogLevel::Debug,
 	     ("window 0x%x is locked by %s; waiting...\n",
 	      (unsigned int) aWindow, data));
       waited = True;
@@ -472,12 +474,12 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     // pass in a program name and this window doesn't support that
     // protocol, we don't include it in our list.
     if (aProgram && strcmp(aProgram, "any")) {
-        status = XGetWindowProperty(mDisplay, w, mMozProgramAtom,
-                                    0, (65536 / sizeof(long)),
-                                    False, XA_STRING,
-                                    &type, &format, &nitems, &bytesafter,
-                                    &data_return);
-        
+        Unused << XGetWindowProperty(mDisplay, w, mMozProgramAtom,
+                                     0, (65536 / sizeof(long)),
+                                     False, XA_STRING,
+                                     &type, &format, &nitems, &bytesafter,
+                                     &data_return);
+
         // If the return name is not the same as what someone passed in,
         // we don't want this window.
         if (data_return) {
@@ -507,11 +509,11 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     }
 
     if (username) {
-        status = XGetWindowProperty(mDisplay, w, mMozUserAtom,
-                                    0, (65536 / sizeof(long)),
-                                    False, XA_STRING,
-                                    &type, &format, &nitems, &bytesafter,
-                                    &data_return);
+        Unused << XGetWindowProperty(mDisplay, w, mMozUserAtom,
+                                     0, (65536 / sizeof(long)),
+                                     False, XA_STRING,
+                                     &type, &format, &nitems, &bytesafter,
+                                     &data_return);
 
         // if there's a username compare it with what we have
         if (data_return) {
@@ -529,11 +531,11 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     // there is, then we need to make sure it matches what someone
     // passed in.
     if (aProfile) {
-        status = XGetWindowProperty(mDisplay, w, mMozProfileAtom,
-                                    0, (65536 / sizeof(long)),
-                                    False, XA_STRING,
-                                    &type, &format, &nitems, &bytesafter,
-                                    &data_return);
+        Unused << XGetWindowProperty(mDisplay, w, mMozProfileAtom,
+                                     0, (65536 / sizeof(long)),
+                                     False, XA_STRING,
+                                     &type, &format, &nitems, &bytesafter,
+                                     &data_return);
 
         // If there's a profile compare it with what we have
         if (data_return) {
@@ -620,7 +622,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
 
   if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandLineAtom))
     return NS_ERROR_FAILURE;
-  
+
   return NS_OK;
 }
 
@@ -733,7 +735,7 @@ XRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
               MOZILLA_COMMANDLINE_PROP ".)\n",
               (unsigned int) aWindow));
     }
-    
+
   }
 
   return accepted;

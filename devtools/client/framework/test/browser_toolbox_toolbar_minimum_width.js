@@ -23,7 +23,7 @@ add_task(async function(pickerEnable, commandsEnable) {
   const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.RIGHT);
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
 
-  const menuPopup = await openChevronMenu(toolbox);
+  await openChevronMenu(toolbox);
 
   // Check that all of tools is overflowed.
   toolbox.panelDefinitions.forEach(({id}) => {
@@ -33,8 +33,5 @@ add_task(async function(pickerEnable, commandsEnable) {
     ok(!tab, id + " tab does not exist");
   });
 
-  info("Closing the chevron popup menu");
-  const onPopupHidden = once(menuPopup, "popuphidden");
-  menuPopup.hidePopup();
-  await onPopupHidden;
+  await closeChevronMenu(toolbox);
 });
