@@ -87,7 +87,6 @@
 #include "nsIClassOfService.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStreamListenerWrapper.h"
-#include "xpcjsid.h"
 #include "nsITimedChannel.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsZipArchive.h"
