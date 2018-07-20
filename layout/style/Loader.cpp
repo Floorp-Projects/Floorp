@@ -853,26 +853,6 @@ Loader::IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel)
 }
 
 nsresult
-Loader::ObsoleteSheet(nsIURI* aURI)
-{
-  if (!mSheets) {
-    return NS_OK;
-  }
-  if (!aURI) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  for (auto iter = mSheets->mCompleteSheets.Iter(); !iter.Done(); iter.Next()) {
-    nsIURI* sheetURI = iter.Key()->GetURI();
-    bool areEqual;
-    nsresult rv = sheetURI->Equals(aURI, &areEqual);
-    if (NS_SUCCEEDED(rv) && areEqual) {
-      iter.Remove();
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
 Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                            nsIPrincipal* aTriggeringPrincipal,
                            nsIURI* aTargetURI,

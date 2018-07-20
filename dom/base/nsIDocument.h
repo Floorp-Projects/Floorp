@@ -3324,10 +3324,6 @@ public:
     return mStyleSheetChangeEventsEnabled;
   }
 
-  void ObsoleteSheet(nsIURI *aSheetURI, mozilla::ErrorResult& rv);
-
-  void ObsoleteSheet(const nsAString& aSheetURI, mozilla::ErrorResult& rv);
-
   already_AddRefed<mozilla::dom::Promise> BlockParsing(mozilla::dom::Promise& aPromise,
                                                        const mozilla::dom::BlockParsingOptions& aOptions,
                                                        mozilla::ErrorResult& aRv);
