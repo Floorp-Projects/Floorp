@@ -5,6 +5,7 @@
 package mozilla.components.support.ktx.kotlin
 
 import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertTrue
 import org.json.JSONArray
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,5 +23,30 @@ class JSONArrayTest {
                         .sum()
 
         assertEquals(6, sum)
+    }
+
+    @Test
+    fun testToListNull() {
+        val jsonArray: JSONArray? = null
+        val list = jsonArray.toList<Any>()
+        assertEquals(0, list.size)
+    }
+
+    @Test
+    fun testToListEmpty() {
+        val jsonArray = JSONArray()
+        val list = jsonArray.toList<Any>()
+        assertEquals(0, list.size)
+    }
+
+    @Test
+    fun testToListNotEmpty() {
+        val jsonArray = JSONArray()
+        jsonArray.put("value")
+        jsonArray.put("another-value")
+        val list = jsonArray.toList<String>()
+        assertEquals(2, list.size)
+        assertTrue(list.contains("value"))
+        assertTrue(list.contains("another-value"))
     }
 }

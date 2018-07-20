@@ -24,3 +24,16 @@ fun JSONArray.asSequence(): Sequence<Any> {
         }
     }
 }
+
+/**
+ * Convenience method to convert a JSONArray into a List
+ *
+ * @return list with the JSONArray values, or an empty list if the JSONArray was null
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T> JSONArray?.toList(): List<T> {
+    if (this != null) {
+        return asSequence().map { it as T }.toList()
+    }
+    return listOf()
+}

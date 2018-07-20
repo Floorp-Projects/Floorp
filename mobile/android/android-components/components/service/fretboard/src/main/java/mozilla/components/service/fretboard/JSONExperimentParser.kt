@@ -4,6 +4,12 @@
 
 package mozilla.components.service.fretboard
 
+import mozilla.components.support.ktx.kotlin.putIfNotNull
+import mozilla.components.support.ktx.kotlin.toJsonArray
+import mozilla.components.support.ktx.kotlin.toList
+import mozilla.components.support.ktx.kotlin.tryGetInt
+import mozilla.components.support.ktx.kotlin.tryGetLong
+import mozilla.components.support.ktx.kotlin.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -20,7 +26,7 @@ class JSONExperimentParser {
     fun fromJson(jsonObject: JSONObject): Experiment {
         val bucketsObject: JSONObject? = jsonObject.optJSONObject(BUCKETS_KEY)
         val matchObject: JSONObject? = jsonObject.optJSONObject(MATCH_KEY)
-        val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY)?.toList()
+        val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY).toList()
         val matcher = if (matchObject != null) {
             Experiment.Matcher(
                 matchObject.tryGetString(LANG_KEY),
