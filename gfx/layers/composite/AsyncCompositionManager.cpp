@@ -977,6 +977,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
             if (!wrapper.GetApzc()) {
               continue;
             }
+
+            // Apply any additional async scrolling for testing purposes (used
+            // for reftest-async-scroll and reftest-async-zoom).
+            auto _ = sampler->ApplyAsyncTestAttributes(wrapper);
+
             const FrameMetrics& metrics = wrapper.Metrics();
             MOZ_ASSERT(metrics.IsScrollable());
 
