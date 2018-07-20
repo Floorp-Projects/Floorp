@@ -176,6 +176,7 @@ struct TextureFactoryIdentifier
   GeckoProcessType mParentProcessType;
   int32_t mMaxTextureSize;
   bool mCompositorUseANGLE;
+  bool mCompositorUseDComp;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
@@ -186,6 +187,7 @@ struct TextureFactoryIdentifier
                                     GeckoProcessType aParentProcessType = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
                                     bool aCompositorUseANGLE = false,
+                                    bool aCompositorUseDComp = false,
                                     bool aSupportsTextureBlitting = false,
                                     bool aSupportsPartialUploads = false,
                                     bool aSupportsComponentAlpha = true,
@@ -194,6 +196,7 @@ struct TextureFactoryIdentifier
     , mParentProcessType(aParentProcessType)
     , mMaxTextureSize(aMaxTextureSize)
     , mCompositorUseANGLE(aCompositorUseANGLE)
+    , mCompositorUseDComp(aCompositorUseDComp)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
     , mSupportsComponentAlpha(aSupportsComponentAlpha)
@@ -207,6 +210,7 @@ struct TextureFactoryIdentifier
       mParentProcessType == aOther.mParentProcessType &&
       mMaxTextureSize == aOther.mMaxTextureSize &&
       mCompositorUseANGLE == aOther.mCompositorUseANGLE &&
+      mCompositorUseDComp == aOther.mCompositorUseDComp &&
       mSupportsTextureBlitting == aOther.mSupportsTextureBlitting &&
       mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
       mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&

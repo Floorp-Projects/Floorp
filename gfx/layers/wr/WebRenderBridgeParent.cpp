@@ -1860,6 +1860,7 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
                                   XRE_GetProcessType(),
                                   mApi->GetMaxTextureSize(),
                                   mApi->GetUseANGLE(),
+                                  mApi->GetUseDComp(),
                                   false,
                                   false,
                                   false,
