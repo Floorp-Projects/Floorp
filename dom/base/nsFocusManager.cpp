@@ -2590,8 +2590,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
                                              false, // aVisual
                                              false, // aLockInScrollView
                                              true,  // aFollowOOFs
-                                             false, // aSkipPopupChecks
-                                             false  // aSkipShadow
+                                             false // aSkipPopupChecks
                                              );
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3323,8 +3322,7 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
                                              false, // aVisual
                                              false, // aLockInScrollView
                                              true, // aFollowOOFs
-                                             true,  // aSkipPopupChecks
-                                             false // aSkipShadow
+                                             true  // aSkipPopupChecks
                                              );
           if (NS_SUCCEEDED(rv)) {
             nsIFrame* frame =
@@ -3571,8 +3569,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        false, // aVisual
                                        false, // aLockInScrollView
                                        true,  // aFollowOOFs
-                                       aForDocumentNavigation,  // aSkipPopupChecks
-                                       false);
+                                       aForDocumentNavigation  // aSkipPopupChecks
+                                       );
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (iterStartContent == aRootContent) {
