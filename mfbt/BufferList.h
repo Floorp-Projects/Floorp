@@ -151,7 +151,7 @@ class BufferList : private AllocPolicy
   {
     if (mOwning) {
       for (Segment& segment : mSegments) {
-        this->free_(segment.mData);
+        this->free_(segment.mData, segment.mCapacity);
       }
     }
     mSegments.clear();
@@ -367,7 +367,7 @@ class BufferList : private AllocPolicy
     MOZ_ASSERT(mOwning);
 
     if (!mSegments.append(Segment(aData, aSize, aCapacity))) {
-      this->free_(aData);
+      this->free_(aData, aCapacity);
       return nullptr;
     }
     mSize += aSize;
@@ -394,7 +394,7 @@ private:
       return nullptr;
     }
     if (!mSegments.append(Segment(data, aSize, aCapacity))) {
-      this->free_(data);
+      this->free_(data, aCapacity);
       return nullptr;
     }
     mSize += aSize;

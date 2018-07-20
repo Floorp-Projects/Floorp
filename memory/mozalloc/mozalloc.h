@@ -244,7 +244,8 @@ public:
         return static_cast<T*>(moz_xrealloc(aPtr, aNewSize * sizeof(T)));
     }
 
-    void free_(void* aPtr)
+    template <typename T>
+    void free_(T* aPtr, size_t aNumElems = 0)
     {
         free_impl(aPtr);
     }
