@@ -399,16 +399,16 @@ class ExperimentEvaluatorTest {
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        var evaluator = ExperimentEvaluator(object : RegionProvider {
-            override fun getRegion(): String {
+        var evaluator = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getRegion(context: Context): String? {
                 return "USA"
             }
         })
 
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
-        evaluator = ExperimentEvaluator(object : RegionProvider {
-            override fun getRegion(): String {
+        evaluator = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getRegion(context: Context): String? {
                 return "ESP"
             }
         })

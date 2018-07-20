@@ -25,7 +25,8 @@ data class Experiment(
         val version: String? = null,
         val manufacturer: String? = null,
         val device: String? = null,
-        val country: String? = null
+        val country: String? = null,
+        val releaseChannel: String? = null
     )
 
     data class Bucket(

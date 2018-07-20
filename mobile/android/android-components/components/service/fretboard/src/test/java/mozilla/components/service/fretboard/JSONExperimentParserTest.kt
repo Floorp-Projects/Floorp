@@ -17,7 +17,14 @@ class JSONExperimentParserTest {
         val experiment = Experiment("sample-id",
             "sample-name",
             "sample-description",
-            Experiment.Matcher("es|en", "sample-appId", listOf("US")),
+            Experiment.Matcher("es|en",
+                "sample-appId",
+                listOf("US"),
+                "1.0",
+                "manufacturer",
+                "device",
+                "country",
+                "release_channel"),
             Experiment.Bucket(20, 0),
             1526991669)
         val jsonObject = JSONExperimentParser().toJson(experiment)
@@ -31,6 +38,11 @@ class JSONExperimentParserTest {
         assertEquals("US", regions.get(0))
         assertEquals("sample-appId", match.getString("appId"))
         assertEquals("es|en", match.getString("lang"))
+        assertEquals("1.0", match.getString("version"))
+        assertEquals("manufacturer", match.getString("manufacturer"))
+        assertEquals("device", match.getString("device"))
+        assertEquals("country", match.getString("country"))
+        assertEquals("release_channel", match.getString("release_channel"))
         assertEquals("sample-description", jsonObject.getString("description"))
         assertEquals("sample-id", jsonObject.getString("id"))
         assertEquals(1526991669, jsonObject.getLong("last_modified"))

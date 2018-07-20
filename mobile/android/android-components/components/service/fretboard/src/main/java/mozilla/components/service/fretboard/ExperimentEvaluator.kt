@@ -5,12 +5,10 @@
 package mozilla.components.service.fretboard
 
 import android.content.Context
-import android.os.Build
 import android.text.TextUtils
-import java.util.Locale
 import java.util.zip.CRC32
 
-internal class ExperimentEvaluator(private val regionProvider: RegionProvider? = null) {
+internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = ValuesProvider()) {
     fun evaluate(
         context: Context,
         experimentDescriptor: ExperimentDescriptor,
@@ -30,19 +28,23 @@ internal class ExperimentEvaluator(private val regionProvider: RegionProvider? =
 
     private fun matches(context: Context, experiment: Experiment): Boolean {
         if (experiment.match != null) {
-            val region = regionProvider?.getRegion()
+            val region = valuesProvider.getRegion(context)
             val matchesRegion = !(region != null &&
                                         experiment.match.regions != null &&
                                         experiment.match.regions.isNotEmpty() &&
                                         experiment.match.regions.none { it == region })
-            val appVersion = context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            val releaseChannel = valuesProvider.getReleaseChannel(context)
+            val matchesReleaseChannel = releaseChannel == null ||
+                                                experiment.match.releaseChannel == null ||
+                                                releaseChannel == experiment.match.releaseChannel
             return matchesRegion &&
-                matchesExperiment(experiment.match.appId, context.packageName) &&
-                matchesExperiment(experiment.match.language, Locale.getDefault().isO3Language) &&
-                matchesExperiment(experiment.match.country, Locale.getDefault().isO3Country) &&
-                matchesExperiment(experiment.match.version, appVersion) &&
-                matchesExperiment(experiment.match.manufacturer, Build.MANUFACTURER) &&
-                matchesExperiment(experiment.match.device, Build.DEVICE)
+                matchesReleaseChannel &&
+                matchesExperiment(experiment.match.appId, valuesProvider.getAppId(context)) &&
+                matchesExperiment(experiment.match.language, valuesProvider.getLanguage(context)) &&
+                matchesExperiment(experiment.match.country, valuesProvider.getCountry(context)) &&
+                matchesExperiment(experiment.match.version, valuesProvider.getVersion(context)) &&
+                matchesExperiment(experiment.match.manufacturer, valuesProvider.getManufacturer(context)) &&
+                matchesExperiment(experiment.match.device, valuesProvider.getDevice(context))
         }
         return true
     }

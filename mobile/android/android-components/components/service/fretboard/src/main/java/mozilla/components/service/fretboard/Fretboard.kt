@@ -15,11 +15,11 @@ import android.content.Context
 class Fretboard(
     private val source: ExperimentSource,
     private val storage: ExperimentStorage,
-    regionProvider: RegionProvider? = null
+    valuesProvider: ValuesProvider = ValuesProvider()
 ) {
     private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
-    private val evaluator = ExperimentEvaluator(regionProvider)
+    private val evaluator = ExperimentEvaluator(valuesProvider)
 
     /**
      * Loads experiments from local storage

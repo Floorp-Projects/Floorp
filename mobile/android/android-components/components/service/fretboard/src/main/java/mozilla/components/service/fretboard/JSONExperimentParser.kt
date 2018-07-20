@@ -29,7 +29,8 @@ class JSONExperimentParser {
                 matchObject.tryGetString(VERSION_KEY),
                 matchObject.tryGetString(MANUFACTURER_KEY),
                 matchObject.tryGetString(DEVICE_KEY),
-                matchObject.tryGetString(COUNTRY_KEY))
+                matchObject.tryGetString(COUNTRY_KEY),
+                matchObject.tryGetString(RELEASE_CHANNEL_KEY))
         } else null
         val bucket = if (bucketsObject != null) {
             Experiment.Bucket(bucketsObject.tryGetInt(MAX_KEY), bucketsObject.tryGetInt(MIN_KEY))
@@ -53,21 +54,31 @@ class JSONExperimentParser {
      */
     fun toJson(experiment: Experiment): JSONObject {
         val jsonObject = JSONObject()
-        jsonObject.putIfNotNull(NAME_KEY, experiment.name)
-        val matchObject = JSONObject()
-        matchObject.putIfNotNull(LANG_KEY, experiment.match?.language)
-        matchObject.putIfNotNull(APP_ID_KEY, experiment.match?.appId)
-        matchObject.putIfNotNull(REGIONS_KEY, experiment.match?.regions?.toJsonArray())
-        jsonObject.put(MATCH_KEY, matchObject)
+        val matchObject = matchersToJson(experiment)
         val bucketsObject = JSONObject()
-        bucketsObject.putIfNotNull(MAX_KEY, experiment.bucket?.max)
-        bucketsObject.putIfNotNull(MIN_KEY, experiment.bucket?.min)
+        bucketsObject.putIfNotNull(MAX_KEY, experiment.bucket?.max?.toString())
+        bucketsObject.putIfNotNull(MIN_KEY, experiment.bucket?.min?.toString())
         jsonObject.put(BUCKETS_KEY, bucketsObject)
         jsonObject.putIfNotNull(DESCRIPTION_KEY, experiment.description)
         jsonObject.put(ID_KEY, experiment.id)
         jsonObject.putIfNotNull(LAST_MODIFIED_KEY, experiment.lastModified)
+        jsonObject.put(MATCH_KEY, matchObject)
+        jsonObject.putIfNotNull(NAME_KEY, experiment.name)
         jsonObject.putIfNotNull(PAYLOAD_KEY, payloadToJson(experiment.payload))
         return jsonObject
+    }
+
+    private fun matchersToJson(experiment: Experiment): JSONObject {
+        val matchObject = JSONObject()
+        matchObject.putIfNotNull(APP_ID_KEY, experiment.match?.appId)
+        matchObject.putIfNotNull(COUNTRY_KEY, experiment.match?.country)
+        matchObject.putIfNotNull(DEVICE_KEY, experiment.match?.device)
+        matchObject.putIfNotNull(LANG_KEY, experiment.match?.language)
+        matchObject.putIfNotNull(MANUFACTURER_KEY, experiment.match?.manufacturer)
+        matchObject.putIfNotNull(REGIONS_KEY, experiment.match?.regions?.toJsonArray())
+        matchObject.putIfNotNull(RELEASE_CHANNEL_KEY, experiment.match?.releaseChannel)
+        matchObject.putIfNotNull(VERSION_KEY, experiment.match?.version)
+        return matchObject
     }
 
     private fun jsonToPayload(jsonObject: JSONObject): ExperimentPayload {
@@ -100,48 +111,6 @@ class JSONExperimentParser {
         return jsonObject
     }
 
-    private fun <T> List<T>.toJsonArray(): JSONArray {
-        return fold(JSONArray()) { jsonArray, element -> jsonArray.put(element) }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> JSONArray?.toList(): List<T> {
-        if (this != null) {
-            val result = ArrayList<T>()
-            for (i in 0 until length())
-                result.add(get(i) as T)
-            return result
-        }
-        return listOf()
-    }
-
-    private fun JSONObject.tryGetString(key: String): String? {
-        if (!isNull(key)) {
-            return getString(key)
-        }
-        return null
-    }
-
-    private fun JSONObject.tryGetInt(key: String): Int? {
-        if (!isNull(key)) {
-            return getInt(key)
-        }
-        return null
-    }
-
-    private fun JSONObject.tryGetLong(key: String): Long? {
-        if (!isNull(key)) {
-            return getLong(key)
-        }
-        return null
-    }
-
-    private fun JSONObject.putIfNotNull(key: String, value: Any?) {
-        if (value != null) {
-            put(key, value)
-        }
-    }
-
     companion object {
         private const val BUCKETS_KEY = "buckets"
         private const val MATCH_KEY = "match"
@@ -152,6 +121,7 @@ class JSONExperimentParser {
         private const val MANUFACTURER_KEY = "manufacturer"
         private const val DEVICE_KEY = "device"
         private const val COUNTRY_KEY = "country"
+        private const val RELEASE_CHANNEL_KEY = "release_channel"
         private const val MAX_KEY = "max"
         private const val MIN_KEY = "min"
         private const val ID_KEY = "id"
