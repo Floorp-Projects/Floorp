@@ -16,3 +16,16 @@ h1 {
 fieldset > label {
   white-space: nowrap;
 }
+
+.group {
+  margin: 0.5em 0;
+}
+
+label.block {
+  display: block;
+  margin: 0.3em 0;
+}
+
+button.wide {
+  width: 100%;
+}
