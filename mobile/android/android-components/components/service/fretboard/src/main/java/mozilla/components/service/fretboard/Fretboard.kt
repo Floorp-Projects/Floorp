@@ -22,6 +22,12 @@ class Fretboard(
     private val evaluator = ExperimentEvaluator(valuesProvider)
 
     /**
+     * Provides the list of experiments (active or not)
+     */
+    val experiments: List<Experiment>
+        get() = experimentsResult.experiments.toList()
+
+    /**
      * Loads experiments from local storage
      */
     @Synchronized
