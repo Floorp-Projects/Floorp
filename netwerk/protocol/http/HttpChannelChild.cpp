@@ -3974,22 +3974,20 @@ HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 mozilla::ipc::IPCResult
-HttpChannelChild::RecvLogBlockedCORSRequest(const nsString& aMessage,
-                                            const nsCString& aCategory)
+HttpChannelChild::RecvLogBlockedCORSRequest(const nsString& aMessage)
 {
-  Unused << LogBlockedCORSRequest(aMessage, aCategory);
+  Unused << LogBlockedCORSRequest(aMessage);
   return IPC_OK();
 }
 
 NS_IMETHODIMP
-HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage,
-                                        const nsACString& aCategory)
+HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
 {
   if (mLoadInfo) {
     uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
     bool privateBrowsing = !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
     nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
-                                               aMessage, aCategory);
+                                               aMessage);
   }
   return NS_OK;
 }

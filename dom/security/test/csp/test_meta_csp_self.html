@@ -44,7 +44,7 @@ function receiveMessage(event) {
 
   var policy = policies[0];
   var val = policy['img-src'];
-  is(val.toString(), "'self'", "'self' should translate into data");
+  is(val.toString(), "data://", "'self' should translate into data");
   SimpleTest.finish();
 }
 
