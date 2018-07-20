@@ -31,7 +31,7 @@ add_task(async function closeLastTabInWindow() {
   let newWin = await promiseOpenAndLoadWindow({}, true);
   let firstTab = newWin.gBrowser.selectedTab;
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
-  let windowClosedPromise = promiseWindowWillBeClosed(newWin);
+  let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   // close tab:
   document.getAnonymousElementByAttribute(firstTab, "anonid", "close-button").click();
@@ -46,7 +46,7 @@ add_task(async function closeWindowWithMultipleTabsIncludingOneBeforeUnload() {
   let firstTab = newWin.gBrowser.selectedTab;
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
   await promiseTabLoadEvent(newWin.gBrowser.addTab(), "http://example.com/");
-  let windowClosedPromise = promiseWindowWillBeClosed(newWin);
+  let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   newWin.BrowserTryToCloseWindow();
   await windowClosedPromise;
@@ -59,7 +59,7 @@ add_task(async function closeWindoWithSingleTabTwice() {
   let newWin = await promiseOpenAndLoadWindow({}, true);
   let firstTab = newWin.gBrowser.selectedTab;
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
-  let windowClosedPromise = promiseWindowWillBeClosed(newWin);
+  let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   wantToClose = false;
   let firstDialogShownPromise = new Promise((resolve, reject) => { resolveDialogPromise = resolve; });

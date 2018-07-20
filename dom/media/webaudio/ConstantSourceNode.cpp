@@ -210,7 +210,7 @@ void
 ConstantSourceNode::Start(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_RANGE_ERR);
     return;
   }
 
@@ -234,7 +234,7 @@ void
 ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_RANGE_ERR);
     return;
   }
 

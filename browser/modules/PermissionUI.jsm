@@ -809,7 +809,7 @@ AutoplayPermissionPrompt.prototype = {
   },
 
   get anchorID() {
-    return "autoplay-media-icon";
+    return "autoplay-media-notification-icon";
   },
 
   get message() {

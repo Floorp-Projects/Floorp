@@ -232,7 +232,6 @@
            ignorekeys="true"
            hidden="true"
            tabspecific="true"
-           onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
       <box class="panel-header">
         <label id="editBookmarkPanelTitle"/>

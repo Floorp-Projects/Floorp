@@ -68,11 +68,6 @@
   grid-column-end: 4;
 }
 
-.toolbox-tabs-wrapper .tools-chevron-menu {
-  border-top-width: 0;
-  border-bottom-width: 0;
-}
-
 .toolbox-tabs {
   position: absolute;
   top: 0;
@@ -227,31 +222,32 @@
 }
 
 #toolbox-meatball-menu-dock-bottom > .label::before {
-  background-image: var(--dock-bottom-image);
+  --menuitem-icon-image: var(--dock-bottom-image);
 }
 #toolbox-meatball-menu-dock-left > .label::before {
-  background-image: var(--dock-side-left-image);
+  --menuitem-icon-image: var(--dock-side-left-image);
 }
 #toolbox-meatball-menu-dock-right > .label::before {
-  background-image: var(--dock-side-right-image);
+  --menuitem-icon-image: var(--dock-side-right-image);
 }
 #toolbox-meatball-menu-dock-window > .label::before {
-  background-image: var(--dock-undock-image);
+  --menuitem-icon-image: var(--dock-undock-image);
 }
 #toolbox-meatball-menu-splitconsole > .label::before {
-  background-image: var(--command-console-image);
+  --menuitem-icon-image: var(--command-console-image);
 }
 #toolbox-meatball-menu-noautohide > .label::before {
-  background-image: var(--command-noautohide-image);
+  --menuitem-icon-image: var(--command-noautohide-image);
 }
 #toolbox-meatball-menu-settings > .label::before {
-  background-image: var(--settings-image);
+  --menuitem-icon-image: var(--settings-image);
 }
 
 /* Command buttons */
 
 .command-button,
-#toolbox-controls > button {
+#toolbox-controls > button,
+.toolbox-tabs-wrapper .tools-chevron-menu {
   /* !important is needed to override .devtools-button rules in common.css */
   padding: 0 !important;
   margin: 0 !important;

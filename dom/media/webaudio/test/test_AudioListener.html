@@ -13,18 +13,11 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var context = new AudioContext();
   ok("listener" in context, "AudioContext.listener should exist");
-  ok(Math.abs(context.listener.dopplerFactor - 1.0) < 1e-4, "Correct default doppler factor");
-  ok(Math.abs(context.listener.speedOfSound - 343.3) < 1e-4, "Correct default speed of sound value");
-  context.listener.dopplerFactor = 0.5;
-  ok(Math.abs(context.listener.dopplerFactor - 0.5) < 1e-4, "The doppler factor value can be changed");
-  context.listener.speedOfSound = 400;
-  ok(Math.abs(context.listener.speedOfSound - 400) < 1e-4, "The speed of sound can be changed");
   // The values set by the following cannot be read from script, but the
   // implementation is simple enough, so we just make sure that nothing throws.
   with (context.listener) {
     setPosition(1.0, 1.0, 1.0);
     setOrientation(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-    setVelocity(0.5, 1.0, 1.5);
   }
   SimpleTest.finish();
 });
