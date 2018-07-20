@@ -44,6 +44,8 @@ public:
 
   virtual bool UseANGLE() const { return false; }
 
+  virtual bool UseDComp() const { return false; }
+
   virtual LayoutDeviceIntSize GetBufferSize() = 0;
 
   widget::CompositorWidget* GetWidget() const { return mWidget; }

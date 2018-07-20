@@ -596,6 +596,7 @@ Realm::purge()
     objectGroups_.purge();
     objects_.iteratorCache.clearAndShrink();
     arraySpeciesLookup.purge();
+    promiseLookup.purge();
 }
 
 void

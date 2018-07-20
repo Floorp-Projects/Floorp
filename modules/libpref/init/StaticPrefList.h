@@ -864,7 +864,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.av1.enabled",
    MediaAv1Enabled,
-  RelaxedAtomicBool, true
+  RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
@@ -1185,17 +1185,11 @@ VARCACHE_PREF(
   bool, true
 )
 
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "security.csp.enable_violation_events",
    security_csp_enable_violation_events,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   "security.csp.reporting.script-sample.max-length",

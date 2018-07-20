@@ -72,7 +72,10 @@ SVGAnimationElement::GetTargetElementContent()
              "if we don't have an xlink:href or href attribute");
 
   // No "href" or "xlink:href" attribute --> I should target my parent.
-  return GetFlattenedTreeParentElement();
+  //
+  // Note that we want to use GetParentElement instead of the flattened tree to
+  // allow <use><animate>, for example.
+  return GetParentElement();
 }
 
 bool
@@ -168,18 +171,9 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
                                                     aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // XXXdholbert is GetCtx (as a check for SVG parent) still needed here?
-  if (!GetCtx()) {
-    // No use proceeding. We don't have an SVG parent (yet) so we won't be able
-    // to register ourselves etc. Maybe next time we'll have more luck.
-    // (This sort of situation will arise a lot when trees are being constructed
-    // piece by piece via script)
-    return NS_OK;
-  }
-
   // Add myself to the animation controller's master set of animation elements.
-  if (aDocument) {
-    nsSMILAnimationController *controller = aDocument->GetAnimationController();
+  if (nsIDocument* doc = GetComposedDoc()) {
+    nsSMILAnimationController* controller = doc->GetAnimationController();
     if (controller) {
       controller->RegisterAnimationElement(this);
     }
@@ -208,7 +202,7 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
 void
 SVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsSMILAnimationController *controller = OwnerDoc()->GetAnimationController();
+  nsSMILAnimationController* controller = OwnerDoc()->GetAnimationController();
   if (controller) {
     controller->UnregisterAnimationElement(this);
   }
@@ -314,7 +308,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       AnimationTargetChanged();
     } // else: we unset xlink:href, but we still have href attribute, so keep
       // mHrefTarget linking to href.
-  } else if (IsInUncomposedDoc() &&
+  } else if (IsInComposedDoc() &&
              !(aNamespaceID == kNameSpaceID_XLink &&
                HasAttr(kNameSpaceID_None, nsGkAtoms::href))) {
     // Note: "href" takes priority over xlink:href. So if "xlink:href" is being

@@ -4702,7 +4702,7 @@ jit::NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj)
     RootedObject wrapper(cx);
     {
         AutoRealm ar(cx, obj);
-        wrapper = NewObjectWithClassProto(cx, &shapeContainerClass, nullptr);
+        wrapper = NewBuiltinClassInstance(cx, &shapeContainerClass);
         if (!obj)
             return nullptr;
         wrapper->as<NativeObject>().setSlot(SHAPE_CONTAINER_SLOT, PrivateGCThingValue(obj->lastProperty()));

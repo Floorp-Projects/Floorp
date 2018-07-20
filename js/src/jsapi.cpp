@@ -1915,7 +1915,7 @@ JS_NewObject(JSContext* cx, const JSClass* jsclasp)
     MOZ_ASSERT(clasp != &JSFunction::class_);
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    return NewObjectWithClassProto(cx, clasp, nullptr);
+    return NewBuiltinClassInstance(cx, clasp);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -3092,7 +3092,7 @@ JS_DefineObject(JSContext* cx, HandleObject obj, const char* name, const JSClass
     if (!clasp)
         clasp = &PlainObject::class_;    /* default class is Object */
 
-    RootedObject nobj(cx, NewObjectWithClassProto(cx, clasp, nullptr));
+    RootedObject nobj(cx, NewBuiltinClassInstance(cx, clasp));
     if (!nobj)
         return nullptr;
 

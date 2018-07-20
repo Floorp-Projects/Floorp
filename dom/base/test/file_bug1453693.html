@@ -220,6 +220,40 @@
         // Back to beginning, outside of Shadow DOM.
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
+
+        host.remove();
+      }
+
+      function testTabbingThroughDisplayContentsHost() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
+
+        var host = document.createElement("div");
+        host.id = "host";
+        host.setAttribute("style", "display: contents; border: 1px solid black;");
+        document.body.appendChild(host);
+
+        var sr0 = host.attachShadow({mode: "open"});
+        sr0.innerHTML = "<input id='shadowInput1'><input id='shadowInput2'>";
+        var shadowInput1 = sr0.getElementById("shadowInput1");
+        shadowInput1.onfocus = focusLogger;
+        var shadowInput2 = sr0.getElementById("shadowInput2");
+        shadowInput2.onfocus = focusLogger;
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowInput2, "Should have focused input element. (2)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (3)");
+
+        // Back to beginning, outside of Shadow DOM.
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (2)");
       }
 
       function runTest() {
@@ -227,6 +261,7 @@
         testTabbingThroughShadowDOMWithTabIndexes();
         testTabbingThroughSimpleShadowDOM();
         testTabbingThroughNestedShadowDOM();
+        testTabbingThroughDisplayContentsHost();
 
         opener.didRunTests();
         window.close();

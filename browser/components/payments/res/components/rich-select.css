@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 rich-select {
-  display: inline-block;
+  border: 1px solid #0C0C0D33;
+  display: block;
+  margin: 14px 0;
   position: relative;
 }
 

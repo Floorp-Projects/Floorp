@@ -46,4 +46,12 @@ add_task(async function() {
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   is(getBreakpoints(getState()).size, 0, "No breakpoints exist");
   assertEditorBreakpoint(dbg, 4, false);
+
+  // Ensure that clicking the gutter removes all breakpoints on a given line
+  await addBreakpoint(dbg, source, 4, 0);
+  await addBreakpoint(dbg, source, 4, 1);
+  await addBreakpoint(dbg, source, 4, 2);
+  clickGutter(dbg, 4);
+  await waitForState(dbg, state => dbg.selectors.getBreakpoints(state).size == 0);
+  assertEditorBreakpoint(dbg, 4, false);
 });

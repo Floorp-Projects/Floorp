@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.rich-picker {
+  display: grid;
+  grid-template-columns: 5fr auto auto;
+  grid-template-areas:
+    "label    edit     add"
+    "dropdown dropdown dropdown";
+}
+
+.rich-picker > label {
+  color: #0c0c0d;
+  font-weight: 700;
+  grid-area: label;
+}
+
+.rich-picker > .add-link,
+.rich-picker > .edit-link {
+  padding: 0 8px;
+}
+
+.rich-picker > .add-link {
+  grid-area: add;
+}
+
+.rich-picker > .edit-link {
+  grid-area: edit;
+  border-right: 1px solid #0C0C0D33;
+}
+
+.rich-picker > rich-select {
+  grid-area: dropdown;
+}
+
+/* Payment Method Picker */
+payment-method-picker.rich-picker {
+  grid-template-columns: 20fr 1fr auto auto;
+  grid-template-areas:
+    "label    spacer edit add"
+    "dropdown cvv    cvv  cvv";
+}
+
+payment-method-picker > input {
+  border: 1px solid #0C0C0D33;
+  border-left: none;
+  grid-area: cvv;
+  margin: 14px 0; /* Has to be same as rich-select */
+  padding: 8px;
+}
