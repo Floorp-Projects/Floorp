@@ -803,8 +803,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                         EmptyString(), // aScriptSample
                         0, // aLineNumber
                         0, // aColumnNumber
-                        nsIScriptError::errorFlag,
-                        NS_LITERAL_CSTRING("blockAllMixedContent"),
+                        nsIScriptError::errorFlag, "CSP",
                         document->InnerWindowID(),
                         !!document->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId);
     *aDecision = REJECT_REQUEST;

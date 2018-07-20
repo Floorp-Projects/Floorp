@@ -426,10 +426,10 @@ nsHttpChannel::AddSecurityMessage(const nsAString& aMessageTag,
 }
 
 NS_IMETHODIMP
-nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage, const nsACString& aCategory)
+nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage)
 {
     if (mWarningReporter) {
-        return mWarningReporter->LogBlockedCORSRequest(aMessage, aCategory);
+        return mWarningReporter->LogBlockedCORSRequest(aMessage);
     }
     return NS_ERROR_UNEXPECTED;
 }

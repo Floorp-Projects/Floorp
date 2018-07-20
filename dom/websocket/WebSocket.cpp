@@ -1724,8 +1724,7 @@ WebSocketImpl::Init(JSContext* aCx,
                         EmptyString(), // aScriptSample
                         0, // aLineNumber
                         0, // aColumnNumber
-                        nsIScriptError::warningFlag,
-                        NS_LITERAL_CSTRING("upgradeInsecureRequest"),
+                        nsIScriptError::warningFlag, "CSP",
                         mInnerWindowID,
                         mPrivateBrowsing);
   }

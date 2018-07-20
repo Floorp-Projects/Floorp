@@ -50,7 +50,7 @@ public:
   virtual MOZ_MUST_USE nsresult
   ReportSecurityMessage(const nsAString& aMessageTag,
                         const nsAString& aMessageCategory) = 0;
-  virtual nsresult LogBlockedCORSRequest(const nsAString& aMessage, const nsACString& aCategory) = 0;
+  virtual nsresult LogBlockedCORSRequest(const nsAString& aMessage) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -190,7 +190,7 @@ public:
     MOZ_MUST_USE nsresult
     AddSecurityMessage(const nsAString& aMessageTag,
                        const nsAString& aMessageCategory) override;
-    NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage, const nsACString& aCategory) override;
+    NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage) override;
 
     void SetWarningReporter(HttpChannelSecurityWarningReporter *aReporter);
     HttpChannelSecurityWarningReporter* GetWarningReporter();

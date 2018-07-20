@@ -86,11 +86,10 @@ LogBlockedRequest(nsIRequest* aRequest,
   }
 
   nsAutoString msg(blockedMessage.get());
-  nsDependentCString category(aProperty);
 
   if (XRE_IsParentProcess()) {
     if (aCreatingChannel) {
-      rv = aCreatingChannel->LogBlockedCORSRequest(msg, category);
+      rv = aCreatingChannel->LogBlockedCORSRequest(msg);
       if (NS_SUCCEEDED(rv)) {
         return;
       }
@@ -106,11 +105,10 @@ LogBlockedRequest(nsIRequest* aRequest,
     privateBrowsing = nsContentUtils::IsInPrivateBrowsing(loadGroup);
   }
 
-  // we are passing aProperty as the category so we can link to the
-  // appropriate MDN docs depending on the specific error.
+  // log message ourselves
   uint64_t innerWindowID = nsContentUtils::GetInnerWindowID(aRequest);
   nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
-                                             msg, category);
+                                             msg);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1580,8 +1578,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
 void
 nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                            bool aPrivateBrowsing,
-                                           const nsAString& aMessage,
-                                           const nsACString& aCategory)
+                                           const nsAString& aMessage)
 {
   nsresult rv = NS_OK;
 
@@ -1608,18 +1605,17 @@ nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                               0,             // lineNumber
                                               0,             // columnNumber
                                               nsIScriptError::warningFlag,
-                                              aCategory,
+                                              "CORS",
                                               aInnerWindowID);
   }
   else {
-    nsCString category = PromiseFlatCString(aCategory);
     rv = scriptError->Init(aMessage,
                            EmptyString(), // sourceName
                            EmptyString(), // sourceLine
                            0,             // lineNumber
                            0,             // columnNumber
                            nsIScriptError::warningFlag,
-                           category.get(),
+                           "CORS",
                            aPrivateBrowsing);
   }
   if (NS_FAILED(rv)) {

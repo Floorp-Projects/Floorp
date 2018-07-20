@@ -1134,12 +1134,11 @@ nsViewSourceChannel::SetAltDataForChild(bool aIsForChild)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                           const nsACString& aCategory)
+nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage)
 {
   if (!mHttpChannel) {
     NS_WARNING("nsViewSourceChannel::LogBlockedCORSRequest mHttpChannel is null");
     return NS_ERROR_UNEXPECTED;
   }
-  return mHttpChannel->LogBlockedCORSRequest(aMessage, aCategory);
+  return mHttpChannel->LogBlockedCORSRequest(aMessage);
 }

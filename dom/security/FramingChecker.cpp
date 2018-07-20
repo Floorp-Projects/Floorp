@@ -196,8 +196,7 @@ ShouldIgnoreFrameOptions(nsIChannel* aChannel, nsIPrincipal* aPrincipal)
                       0,             // no linenumber
                       0,             // no columnnumber
                       nsIScriptError::warningFlag,
-                      NS_LITERAL_CSTRING("IgnoringSrcBecauseOfDirective"),
-                      innerWindowID,
+                      "CSP", innerWindowID,
                       privateWindow);
 
   return true;
