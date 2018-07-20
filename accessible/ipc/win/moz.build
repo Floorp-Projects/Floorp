@@ -52,9 +52,19 @@ if CONFIG['ACCESSIBILITY']:
         '/accessible/xpcom',
     ]
 
+    # Suppress warnings from the MIDL generated code.
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        CFLAGS += [
+            '-Wno-extern-initializer',
+            '-Wno-incompatible-pointer-types',
+            '-Wno-missing-braces',
+            '-Wno-unused-const-variable',
+        ]
+
+        CXXFLAGS += [
+            '-Wno-missing-braces',
+        ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
