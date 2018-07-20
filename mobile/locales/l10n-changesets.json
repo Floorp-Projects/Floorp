@@ -27,7 +27,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "2d30f8a49472"
+        "revision": "d168324c55a4"
     }, 
     "be": {
         "platforms": [
@@ -387,7 +387,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "5ccd54dcd915"
+        "revision": "55fa160a7db7"
     }, 
     "oc": {
         "platforms": [
@@ -555,12 +555,12 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "be3710e4ba44"
+        "revision": "9473195d2de5"
     }, 
     "zh-TW": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "686ea515cca1"
+        "revision": "470e048f1c81"
     }
 }
