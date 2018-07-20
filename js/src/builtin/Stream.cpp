@@ -349,7 +349,7 @@ class ByteStreamChunk : public NativeObject
     static ByteStreamChunk* create(JSContext* cx, HandleObject buffer, uint32_t byteOffset,
                                    uint32_t byteLength)
    {
-        Rooted<ByteStreamChunk*> chunk(cx, NewObjectWithClassProto<ByteStreamChunk>(cx));
+        Rooted<ByteStreamChunk*> chunk(cx, NewBuiltinClassInstance<ByteStreamChunk>(cx));
         if (!chunk)
             return nullptr;
 
@@ -398,7 +398,7 @@ class PullIntoDescriptor : public NativeObject
                                       uint32_t bytesFilled, uint32_t elementSize,
                                       HandleObject ctor, uint32_t readerType)
    {
-        Rooted<PullIntoDescriptor*> descriptor(cx, NewObjectWithClassProto<PullIntoDescriptor>(cx));
+        Rooted<PullIntoDescriptor*> descriptor(cx, NewBuiltinClassInstance<PullIntoDescriptor>(cx));
         if (!descriptor)
             return nullptr;
 
@@ -435,7 +435,7 @@ class QueueEntry : public NativeObject
 
     static QueueEntry* create(JSContext* cx, HandleValue value, double size)
    {
-        Rooted<QueueEntry*> entry(cx, NewObjectWithClassProto<QueueEntry>(cx));
+        Rooted<QueueEntry*> entry(cx, NewBuiltinClassInstance<QueueEntry>(cx));
         if (!entry)
             return nullptr;
 
@@ -547,7 +547,7 @@ class TeeState : public NativeObject
     }
 
     static TeeState* create(JSContext* cx, Handle<ReadableStream*> stream) {
-        Rooted<TeeState*> state(cx, NewObjectWithClassProto<TeeState>(cx));
+        Rooted<TeeState*> state(cx, NewBuiltinClassInstance<TeeState>(cx));
         if (!state)
             return nullptr;
 
