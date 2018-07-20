@@ -558,14 +558,6 @@ async function checkDeleteAndSelection(inspector, key,
 }
 
 /**
- * Temporarily flip all the preferences needed to enable web components.
- */
-async function enableWebComponents() {
-  await pushPref("dom.webcomponents.shadowdom.enabled", true);
-  await pushPref("dom.webcomponents.customelements.enabled", true);
-}
-
-/**
  * Assert whether the provided container is slotted.
  */
 function assertContainerSlotted(container) {
