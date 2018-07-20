@@ -594,9 +594,7 @@ mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
                                             nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                            nsTArray<SystemFontListEntry>&& aFontList,
-                                            const FileDescriptor& aSharedDataMapFile,
-                                            const uint32_t& aSharedDataMapSize)
+                                            nsTArray<SystemFontListEntry>&& aFontList)
 {
   if (!sShutdownCanary) {
     return IPC_OK();
@@ -607,9 +605,6 @@ ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
-
-  mSharedData = new SharedMap(ProcessGlobal::Get(), aSharedDataMapFile,
-                              aSharedDataMapSize);
 
   return IPC_OK();
 }
@@ -2591,15 +2586,18 @@ ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
                                    nsTArray<IPCBlob>&& aBlobs,
                                    nsTArray<nsCString>&& aChangedKeys)
 {
-  if (mSharedData) {
-    nsTArray<RefPtr<BlobImpl>> blobImpls(aBlobs.Length());
-    for (auto& ipcBlob : aBlobs) {
-      blobImpls.AppendElement(IPCBlobUtils::Deserialize(ipcBlob));
-    }
+  nsTArray<RefPtr<BlobImpl>> blobImpls(aBlobs.Length());
+  for (auto& ipcBlob : aBlobs) {
+    blobImpls.AppendElement(IPCBlobUtils::Deserialize(ipcBlob));
+  }
 
+  if (mSharedData) {
     mSharedData->Update(aMapFile, aMapSize,
                         std::move(blobImpls),
                         std::move(aChangedKeys));
+  } else {
+    mSharedData = new SharedMap(ProcessGlobal::Get(), aMapFile,
+                                aMapSize, std::move(blobImpls));
   }
 
   return IPC_OK();
