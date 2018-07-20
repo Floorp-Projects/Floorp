@@ -342,6 +342,13 @@ AOMDecoder::IsAV1(const nsACString& aMimeType)
 
 /* static */
 bool
+AOMDecoder::IsSupportedCodec(const nsAString& aCodecType)
+{
+  return aCodecType.EqualsLiteral("av1");
+}
+
+/* static */
+bool
 AOMDecoder::IsKeyframe(Span<const uint8_t> aBuffer) {
   aom_codec_stream_info_t info;
   PodZero(&info);
