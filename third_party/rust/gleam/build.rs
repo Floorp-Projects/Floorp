@@ -13,13 +13,14 @@ fn main() {
 
     // OpenGL 3.3 bindings
     let gl_extensions = [
+        "GL_APPLE_client_storage",
+        "GL_APPLE_fence",
+        "GL_APPLE_texture_range",
+        "GL_ARB_blend_func_extended",
+        "GL_ARB_get_program_binary",
         "GL_ARB_texture_rectangle",
         "GL_EXT_debug_marker",
-        "GL_APPLE_client_storage",
-        "GL_APPLE_texture_range",
-        "GL_APPLE_fence",
-        "GL_ARB_get_program_binary",
-        "GL_ARB_blend_func_extended",
+        "GL_EXT_texture_filter_anisotropic",
         "GL_KHR_debug",
     ];
     let gl_reg = Registry::new(Api::Gl, (3, 3), Profile::Core, Fallbacks::All, gl_extensions);
@@ -28,12 +29,14 @@ fn main() {
 
     // GLES 3.0 bindings
     let gles_extensions = [
-        "GL_EXT_texture_format_BGRA8888",
-        "GL_OES_EGL_image",
-        "GL_OES_EGL_image_external",
-        "GL_EXT_disjoint_timer_query",
         "GL_EXT_debug_marker",
+        "GL_EXT_disjoint_timer_query",
+        "GL_EXT_shader_texture_lod",
+        "GL_EXT_texture_filter_anisotropic",
+        "GL_EXT_texture_format_BGRA8888",
         "GL_KHR_debug",
+        "GL_OES_EGL_image_external",
+        "GL_OES_EGL_image",
     ];
     let gles_reg = Registry::new(Api::Gles2, (3, 0), Profile::Core, Fallbacks::All, gles_extensions);
     gles_reg.write_bindings(gl_generator::StructGenerator, &mut file_gles)

@@ -12,7 +12,7 @@
 
 [package]
 name = "plane-split"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Dzmitry Malyshau <kvark@mozilla.com>"]
 description = "Plane splitting"
 documentation = "https://docs.rs/plane-split"
@@ -23,7 +23,7 @@ repository = "https://github.com/servo/plane-split"
 version = "0.1.2"
 
 [dependencies.euclid]
-version = "0.17"
+version = "0.18"
 
 [dependencies.log]
 version = "0.4"
