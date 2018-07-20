@@ -943,7 +943,12 @@ js::CurrentThreadIsParseThread()
 }
 #endif
 
-static const uint32_t kDefaultHelperStackSize = 2048 * 1024;
+// We want our default stack size limit to be approximately 2MB, to be safe, but
+// expect most threads to use much less. On Linux, however, requesting a stack
+// of 2MB or larger risks the kernel allocating an entire 2MB huge page for it
+// on first access, which we do not want. To avoid this possibility, we subtract
+// 2 standard VM page sizes from our default.
+static const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
 static const uint32_t kDefaultHelperStackQuota = 1800 * 1024;
 
 // TSan enforces a minimum stack size that's just slightly larger than our
