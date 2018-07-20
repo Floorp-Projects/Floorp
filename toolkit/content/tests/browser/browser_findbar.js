@@ -2,7 +2,7 @@
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
 const TEST_PAGE_URI = "data:text/html;charset=utf-8,The letter s.";
-// Using 'javascript' schema to bypass E10SUtils.canLoadURIInProcess, because
+// Using 'javascript' schema to bypass E10SUtils.canLoadURIInRemoteType, because
 // it does not allow 'data:' URI to be loaded in the parent process.
 const E10S_PARENT_TEST_PAGE_URI = "javascript:document.write('The letter s.');";
 
