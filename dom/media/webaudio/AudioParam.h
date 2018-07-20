@@ -29,8 +29,8 @@ public:
              uint32_t aIndex,
              const char* aName,
              float aDefaultValue,
-             float aMinValue = -std::numeric_limits<float>::infinity(),
-             float aMaxValue = std::numeric_limits<float>::infinity());
+             float aMinValue = std::numeric_limits<float>::lowest(),
+             float aMaxValue = std::numeric_limits<float>::max());
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);

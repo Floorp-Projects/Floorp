@@ -6,7 +6,6 @@
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["browser.preferences.search", true],
-    ["privacy.trackingprotection.ui.enabled", true]
   ]});
 });
 

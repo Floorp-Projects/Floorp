@@ -534,7 +534,6 @@ add_task(async function test_bookmark_contextmenu() {
         title: "Get bookmark",
         contexts: ["bookmark"],
       });
-      browser.test.sendMessage("bookmark-created");
       browser.contextMenus.onClicked.addListener(async (info) => {
         browser.test.assertEq(newBookmark.id, info.bookmarkId, "Bookmark ID matches");
 
@@ -545,6 +544,7 @@ add_task(async function test_bookmark_contextmenu() {
         await browser.bookmarks.remove(info.bookmarkId);
         browser.test.sendMessage("test-finish");
       });
+      browser.test.sendMessage("bookmark-created");
     },
   });
   await extension.startup();

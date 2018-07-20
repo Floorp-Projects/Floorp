@@ -125,6 +125,9 @@ AddPathsFromFile(SandboxBroker::Policy* aPolicy, nsACString& aPath)
   bool more = true;
   do {
     rv = lineStream->ReadLine(line, &more);
+    if (NS_FAILED(rv)) {
+      break;
+    }
     // Cut off any comments at the end of the line, also catches lines
     // that are entirely a comment
     int32_t hash = line.FindChar('#');

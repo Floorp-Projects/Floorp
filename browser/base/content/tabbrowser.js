@@ -2475,39 +2475,7 @@ window._gBrowser = {
     return t;
   },
 
-  warnAboutClosingTabs(aCloseTabs, aTab, aOptionalMessage) {
-    var tabsToClose;
-    switch (aCloseTabs) {
-      case this.closingTabsEnum.ALL:
-        tabsToClose = this.tabs.length - this._removingTabs.length -
-          gBrowser._numPinnedTabs;
-        break;
-      case this.closingTabsEnum.OTHER:
-        if (!aTab) {
-          throw new Error("Required argument missing: aTab");
-        }
-        if (aTab.multiselected) {
-          tabsToClose = this.visibleTabs.filter(tab => !tab.multiselected && !tab.pinned).length;
-        } else {
-          // If aTab is pinned, it will already be considered
-          // with gBrowser._numPinnedTabs.
-          tabsToClose = this.visibleTabs.length - gBrowser._numPinnedTabs -
-            (aTab.pinned ? 0 : 1);
-        }
-        break;
-      case this.closingTabsEnum.TO_END:
-        if (!aTab) {
-          throw new Error("Required argument missing: aTab");
-        }
-        tabsToClose = this.getTabsToTheEndFrom(aTab).length;
-        break;
-      case this.closingTabsEnum.MULTI_SELECTED:
-        tabsToClose = this.multiSelectedTabsCount;
-        break;
-      default:
-        throw new Error("Invalid argument: " + aCloseTabs);
-    }
-
+  warnAboutClosingTabs(tabsToClose, aCloseTabs, aOptionalMessage) {
     if (tabsToClose <= 1)
       return true;
 
@@ -2569,10 +2537,11 @@ window._gBrowser = {
   },
 
   removeTabsToTheEndFrom(aTab) {
-    if (!this.warnAboutClosingTabs(this.closingTabsEnum.TO_END, aTab))
-      return;
-
     let tabs = this.getTabsToTheEndFrom(aTab);
+    if (!this.warnAboutClosingTabs(tabs.length, this.closingTabsEnum.TO_END)) {
+      return;
+    }
+
     this.removeTabs(tabs);
   },
 
@@ -2581,10 +2550,6 @@ window._gBrowser = {
    * Otherwise all unpinned tabs except aTab are removed.
    */
   removeAllTabsBut(aTab) {
-    if (!this.warnAboutClosingTabs(this.closingTabsEnum.OTHER, aTab)) {
-      return;
-    }
-
     let tabsToRemove = [];
     if (aTab && aTab.multiselected) {
       tabsToRemove = this.visibleTabs.filter(tab => !tab.multiselected && !tab.pinned);
@@ -2592,15 +2557,21 @@ window._gBrowser = {
       tabsToRemove = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
       this.selectedTab = aTab;
     }
+
+    if (!this.warnAboutClosingTabs(tabsToRemove.length, this.closingTabsEnum.OTHER)) {
+      return;
+    }
+
     this.removeTabs(tabsToRemove);
   },
 
   removeMultiSelectedTabs() {
-    if (!this.warnAboutClosingTabs(this.closingTabsEnum.MULTI_SELECTED)) {
+    let selectedTabs = this.selectedTabs;
+    if (!this.warnAboutClosingTabs(selectedTabs.length, this.closingTabsEnum.MULTI_SELECTED)) {
       return;
     }
 
-    this.removeTabs(this.selectedTabs);
+    this.removeTabs(selectedTabs);
   },
 
   removeTabs(tabs) {

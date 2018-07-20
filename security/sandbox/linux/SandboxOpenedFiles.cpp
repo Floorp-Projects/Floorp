@@ -38,7 +38,7 @@ SandboxOpenedFile::SandboxOpenedFile(const char* aPath, bool aDup)
 int
 SandboxOpenedFile::GetDesc() const
 {
-  int fd = -1;
+  int fd;
   if (mDup) {
     fd = mMaybeFd;
     if (fd >= 0) {

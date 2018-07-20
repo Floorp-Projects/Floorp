@@ -467,13 +467,10 @@ async function lookupButtonForToolId(toolId) {
   let button = doc.getElementById("toolbox-tab-" + toolId);
   if (!button) {
     // search from the tools menu.
-    const menuPopup = await openChevronMenu(toolbox);
+    await openChevronMenu(toolbox);
     button = doc.querySelector("#tools-chevron-menupopup-" + toolId);
 
-    info("Closing the tools-chevron-menupopup popup");
-    const onPopupHidden = once(menuPopup, "popuphidden");
-    menuPopup.hidePopup();
-    await onPopupHidden;
+    await closeChevronMenu(toolbox);
   }
   return button;
 }

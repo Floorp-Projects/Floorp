@@ -88,21 +88,14 @@ function check_mp4(v, enabled) {
   check("audio/mp4; codecs=flac", "probably");
 
   // VP9.
-  // Note: canPlayType assumes non-fragmented MP4. Once we support VP9 in
-  // non-fragmented MP4, we need to change this to report supported.
   [ "video/mp4; codecs=vp9",
     "video/mp4; codecs=\"vp9\"",
     "video/mp4; codecs=\"vp9.0\""
   ].forEach((codec) => {
-    // canPlayType should not support VP9 in MP4...
-    check(codec, "");
-    // But VP9 in MP4 is supported in MSE.
+    // canPlayType should support VP9 in MP4...
+    check(codec, "probably");
     ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
   });
-
-  check("video/mp4; codecs=vp9", "");
-  check("video/mp4; codecs=\"vp9\"", "");
-  check("video/mp4; codecs=\"vp9.0\"", "");
 }
 
 function check_mp3(v, enabled) {
