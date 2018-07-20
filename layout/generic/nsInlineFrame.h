@@ -159,9 +159,7 @@ protected:
                          nsIFrame* aFrame,
                          nsReflowStatus& aStatus);
 
-  virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
-                                 InlineReflowInput& rs,
-                                 bool* aIsComplete);
+  virtual nsIFrame* PullOneFrame(nsPresContext*, InlineReflowInput&);
 
   virtual void PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
@@ -215,9 +213,7 @@ protected:
     : nsInlineFrame(aStyle, kClassID)
   {}
 
-  virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
-                                 InlineReflowInput& rs,
-                                 bool* aIsComplete) override;
+  nsIFrame* PullOneFrame(nsPresContext*, InlineReflowInput&) override;
 };
 
 #endif /* nsInlineFrame_h___ */
