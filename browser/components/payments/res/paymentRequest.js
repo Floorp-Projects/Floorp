@@ -170,6 +170,10 @@ var paymentRequest = {
     this.sendMessageToChrome("pay", data);
   },
 
+  closeDialog() {
+    this.sendMessageToChrome("closeDialog");
+  },
+
   changeShippingAddress(data) {
     this.sendMessageToChrome("changeShippingAddress", data);
   },

@@ -10,6 +10,7 @@
 
 const BLANK_PAGE_PATH = "/browser/browser/components/payments/test/browser/blank_page.html";
 const BLANK_PAGE_URL = "https://example.com" + BLANK_PAGE_PATH;
+const RESPONSE_TIMEOUT_PREF = "dom.payments.response.timeout";
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
@@ -316,6 +317,7 @@ add_task(async function setup_head() {
   registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
     cleanupFormAutofillStorage();
+    Services.prefs.clearUserPref(RESPONSE_TIMEOUT_PREF);
   });
 });
 

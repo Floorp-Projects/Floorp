@@ -406,39 +406,13 @@ let buttonActions = {
     });
   },
 
-  setStateDefault() {
-    let request = Object.assign({}, requestStore.getState().request, {
-      completeStatus: "initial",
+  setCompleteStatus(e) {
+    let input = document.querySelector("[name='completionState']:checked");
+    let completeStatus = input.value;
+    let request = requestStore.getState().request;
+    requestStore.setStateFromParent({
+      request: Object.assign({}, request, { completeStatus }),
     });
-    requestStore.setState({ request });
-  },
-
-  setStateProcessing() {
-    let request = Object.assign({}, requestStore.getState().request, {
-      completeStatus: "processing",
-    });
-    requestStore.setState({ request });
-  },
-
-  setStateSuccess() {
-    let request = Object.assign({}, requestStore.getState().request, {
-      completeStatus: "success",
-    });
-    requestStore.setState({ request });
-  },
-
-  setStateFail() {
-    let request = Object.assign({}, requestStore.getState().request, {
-      completeStatus: "fail",
-    });
-    requestStore.setState({ request });
-  },
-
-  setStateUnknown() {
-    let request = Object.assign({}, requestStore.getState().request, {
-      completeStatus: "unknown",
-    });
-    requestStore.setState({ request });
   },
 };
 
