@@ -157,12 +157,9 @@ public:
    *
    * @param aObserver    observer to notify once the stylesheet is loaded.
    *                     This will be passed to the CSSLoader
-   * @param aForceUpdate whether we wand to force the update, flushing the
-   *                     cached version if any.
    */
   virtual mozilla::Result<Update, nsresult>
-    UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                     ForceUpdate = ForceUpdate::No) = 0;
+    UpdateStyleSheet(nsICSSLoaderObserver* aObserver) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the

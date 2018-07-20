@@ -14,7 +14,6 @@ async function testReturnValue(dbg, val) {
   // see the return value.
   await stepIn(dbg);
   await stepIn(dbg);
-  await stepIn(dbg);
 
   is(getLabel(dbg, 1), "return_something", "check for return_something");
 

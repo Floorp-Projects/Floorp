@@ -73,6 +73,7 @@
   <link rel="stylesheet" href="containers/address-form.css"/>
   <link rel="stylesheet" href="containers/basic-card-form.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
+  <link rel="stylesheet" href="containers/rich-picker.css"/>
 
   <script src="unprivileged-fallbacks.js"></script>
 
@@ -96,29 +97,24 @@
       <payment-request-page id="payment-summary">
         <div class="page-body">
           <div id="error-text"></div>
-
-          <div class="shipping-related"
-               id="shipping-type-label"
-               data-shipping-address-label="&shippingAddressLabel;"
-               data-delivery-address-label="&deliveryAddressLabel;"
-               data-persist-checkbox-label="&addressPage.persistCheckbox.label;"
-               data-pickup-address-label="&pickupAddressLabel;"><label></label></div>
           <address-picker class="shipping-related"
                           data-add-link-label="&address.addLink.label;"
                           data-edit-link-label="&address.editLink.label;"
+                          data-shipping-address-label="&shippingAddressLabel;"
+                          data-delivery-address-label="&deliveryAddressLabel;"
+                          data-pickup-address-label="&pickupAddressLabel;"
                           selected-state-key="selectedShippingAddress"></address-picker>
 
-          <div class="shipping-related"><label>&shippingOptionsLabel;</label></div>
-          <shipping-option-picker class="shipping-related"></shipping-option-picker>
+          <shipping-option-picker class="shipping-related"
+                                  label="&shippingOptionsLabel;"></shipping-option-picker>
 
-          <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"
                                  data-add-link-label="&basicCard.addLink.label;"
-                                 data-edit-link-label="&basicCard.editLink.label;">
+                                 data-edit-link-label="&basicCard.editLink.label;"
+                                 label="&paymentMethodsLabel;">
           </payment-method-picker>
-
-          <div class="payer-related"><label>&payerLabel;</label></div>
           <address-picker class="payer-related"
+                          label="&payerLabel;"
                           data-add-link-label="&payer.addLink.label;"
                           data-edit-link-label="&payer.editLink.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>

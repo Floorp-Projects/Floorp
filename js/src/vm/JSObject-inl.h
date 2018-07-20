@@ -689,8 +689,7 @@ NewObjectWithClassProto(JSContext* cx, const Class* clasp, HandleObject proto,
 
 template<class T>
 inline T*
-NewObjectWithClassProto(JSContext* cx, HandleObject proto = nullptr,
-                        NewObjectKind newKind = GenericObject)
+NewObjectWithClassProto(JSContext* cx, HandleObject proto, NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
     return obj ? &obj->as<T>() : nullptr;

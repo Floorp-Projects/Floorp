@@ -1748,7 +1748,8 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
                         EmptyString(), // aScriptSample
                         0, // aLineNumber
                         0, // aColumnNumber
-                        nsIScriptError::warningFlag, "CSP",
+                        nsIScriptError::warningFlag,
+                        NS_LITERAL_CSTRING("upgradeInsecureRequest"),
                         document->InnerWindowID(),
                         !!document->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId);
   }

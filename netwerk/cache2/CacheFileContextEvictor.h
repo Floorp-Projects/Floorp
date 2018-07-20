@@ -21,6 +21,7 @@ struct CacheFileContextEvictorEntry
 {
   nsCOMPtr<nsILoadContextInfo> mInfo;
   bool                         mPinned;
+  nsString                     mOrigin; // it can be empty
   PRTime                       mTimeStamp; // in milliseconds
   RefPtr<CacheIndexIterator> mIterator;
 };
@@ -41,8 +42,9 @@ public:
 
   // Returns number of contexts that are being evicted.
   uint32_t ContextsCount();
-  // Start evicting given context.
-  nsresult AddContext(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
+  // Start evicting given context and an origin, if not empty.
+  nsresult AddContext(nsILoadContextInfo *aLoadContextInfo, bool aPinned,
+                      const nsAString& aOrigin);
   // CacheFileIOManager calls this method when CacheIndex's state changes. We
   // check whether the index is up to date and start or stop evicting according
   // to index's state.
@@ -60,15 +62,17 @@ private:
   // done for every context added to the evictor to be able to recover eviction
   // after a shutdown or crash. When the context file is found after startup, we
   // restore mTimeStamp from the last modified time of the file.
-  nsresult PersistEvictionInfoToDisk(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
+  nsresult PersistEvictionInfoToDisk(nsILoadContextInfo *aLoadContextInfo,
+                                     bool aPinned, const nsAString& aOrigin);
   // Once we are done with eviction for the given context, the eviction info is
   // removed from the disk.
-  nsresult RemoveEvictInfoFromDisk(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
+  nsresult RemoveEvictInfoFromDisk(nsILoadContextInfo *aLoadContextInfo,
+                                   bool aPinned, const nsAString& aOrigin);
   // Tries to load all contexts from the disk. This method is called just once
   // after startup.
   nsresult LoadEvictInfoFromDisk();
   nsresult GetContextFile(nsILoadContextInfo *aLoadContextInfo, bool aPinned,
-                          nsIFile **_retval);
+                          const nsAString& aOrigin, nsIFile **_retval);
 
   void     CreateIterators();
   void     CloseIterators();

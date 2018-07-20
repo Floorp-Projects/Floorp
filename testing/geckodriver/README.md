@@ -19,9 +19,9 @@ The canonical source code repository for geckodriver now lives in
 accept pull requests on GitHub.  Patches should be uploaded to a bug in
 the [Testing :: GeckoDriver] component.
 
-[WebDriver protocol]: http://w3c.github.io/webdriver/webdriver-spec.html#protocol
-[Firefox remote protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette
-[change log]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
+[WebDriver protocol]: http://w3c.github.io/webdriver/#protocol
+[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
+[change log]: https://github.com/mozilla/geckodriver/releases
 [Releases]: https://github.com/mozilla/geckodriver/releases
 [supported platforms]: #supported-firefoxen
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/
@@ -33,12 +33,9 @@ the [Testing :: GeckoDriver] component.
 Supported clients
 =================
 
-[Selenium] users must update to [version 3.11] or later to
+[Selenium] users must update to version 3.11 or later to
 use geckodriver.  Other clients that follow the [W3C WebDriver
-specification] are also supported.
-
-[version 3.11]: https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.11.0
-[W3C WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
+specification][WebDriver] are also supported.
 
 
 Supported Firefoxen
@@ -73,7 +70,7 @@ WebDriver capabilities
 
 geckodriver supports a number of [capabilities]:
 
-[capabilities]: https://w3c.github.io/webdriver/webdriver-spec.html#capabilities
+[capabilities]: https://w3c.github.io/webdriver/#capabilities
 
 <table>
  <thead>
@@ -209,8 +206,8 @@ geckodriver has a few capabilities that are specific to Firefox.
 `moz:firefoxOptions`
 --------------------
 
-A dictionary used to define options which control how Firefox gets started
-and run. It may contain any of the following fields:
+A dictionary used to define options which control how Firefox gets
+started and run. It may contain any of the following fields:
 
 <table>
  <thead>
@@ -288,44 +285,45 @@ and run. It may contain any of the following fields:
 `moz:useNonSpecCompliantPointerOrigin`
 --------------------------------------
 
-A boolean value to indicate how the pointer origin for an action command
-will be calculated.
+A boolean value to indicate how the pointer origin for an action
+command will be calculated.
 
-With Firefox 59 the calculation will be based on the requirements by the
-[WebDriver] specification. This means that the pointer origin is no longer
-computed based on the top and left position of the referenced element, but
-on the in-view center point.
+With Firefox 59 the calculation will be based on the requirements by
+the [WebDriver] specification. This means that the pointer origin
+is no longer computed based on the top and left position of the
+referenced element, but on the in-view center point.
 
-To temporarily disable the WebDriver conformant behavior use `false` as value
-for this capability.
+To temporarily disable the WebDriver conformant behavior use `false`
+as value for this capability.
 
-Please note that this capability exists only temporarily, and that it will be
-removed once all Selenium bindings can handle the new behavior.
+Please note that this capability exists only temporarily, and that
+it will be removed once all Selenium bindings can handle the new behavior.
 
 
 `moz:webdriverClick`
 --------------------
 
-A boolean value to indicate which kind of interactability checks to run
-when performing a click or sending keys to an elements. For Firefoxen prior to
-version 58.0 some legacy code as imported from an older version of
-[FirefoxDriver] was in use.
+A boolean value to indicate which kind of interactability checks
+to run when performing a click or sending keys to an elements. For
+Firefoxen prior to version 58.0 some legacy code as imported from
+an older version of FirefoxDriver was in use.
 
-With Firefox 58 the interactability checks as required by the [WebDriver]
-specification are enabled by default. This means geckodriver will additionally
-check if an element is obscured by another when clicking, and if an element is
-focusable for sending keys.
+With Firefox 58 the interactability checks as required by the
+[WebDriver] specification are enabled by default. This means
+geckodriver will additionally check if an element is obscured by
+another when clicking, and if an element is focusable for sending keys.
 
-Because of this change in behaviour, we are aware that some extra errors could
-be returned. In most cases the test in question might have to be updated
-so it's conform with the new checks. But if the problem is located in
-geckodriver, then please raise an issue in the [issue tracker].
+Because of this change in behaviour, we are aware that some extra
+errors could be returned. In most cases the test in question might
+have to be updated so it's conform with the new checks. But if the
+problem is located in geckodriver, then please raise an issue in the
+[issue tracker].
 
-To temporarily disable the WebDriver conformant checks use `false` as value
-for this capability.
+To temporarily disable the WebDriver conformant checks use `false`
+as value for this capability.
 
-Please note that this capability exists only temporarily, and that it will be
-removed once the interactability checks have been stabilized.
+Please note that this capability exists only temporarily, and that
+it will be removed once the interactability checks have been stabilized.
 
 
 `log` object
@@ -379,8 +377,8 @@ Capabilities example
 
 The following example selects a specific Firefox binary to run with
 a prepared profile from the filesystem in headless mode (available on
-certain systems and recent Firefoxen).  It also increases the number of
-IPC processes through a preference and enables more verbose logging.
+certain systems and recent Firefoxen).  It also increases the number
+of IPC processes through a preference and enables more verbose logging.
 
 	{
 		"capabilities": {
@@ -403,16 +401,16 @@ IPC processes through a preference and enables more verbose logging.
 Usage
 =====
 
-Usage steps are [documented on
-MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
-but how you invoke geckodriver largely depends on your use case.
+geckodriver is an implementation of WebDriver, and WebDriver can
+be used for widely different purposes.  How you invoke geckodriver
+largely depends on your use case.
 
 
 Selenium
 --------
 
 If you are using geckodriver through [Selenium], you must ensure that
-you have version 3.5 and greater.  Because geckodriver implements the
+you have version 3.11 or greater.  Because geckodriver implements the
 [W3C WebDriver standard][WebDriver] and not the same Selenium wire
 protocol older drivers are using, you may experience incompatibilities
 and migration problems when making the switch from FirefoxDriver to
@@ -508,9 +506,9 @@ And to run:
 [PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
 [Java VM system property]: http://docs.oracle.com/javase/tutorial/essential/environment/sysprop.html
 [java(1)]: http://www.manpagez.com/man/1/java/
-[WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[WebDriver]: https://w3c.github.io/webdriver/
 [curl(1)]: http://www.manpagez.com/man/1/curl/
-[wdclient]: https://github.com/w3c/wpt-tools/tree/master/webdriver
+[wdclient]: https://github.com/web-platform-tests/wpt/tree/master/tools/webdriver
 
 
 Flags
@@ -539,7 +537,7 @@ Firefox on macOS.  It will then look for _/Applications/Firefox.app_.
 On Windows systems, geckodriver looks for the system Firefox by scanning
 the Windows registry.
 
-[creating a new session]: https://w3c.github.io/webdriver/webdriver-spec.html#new-session
+[creating a new session]: https://w3c.github.io/webdriver/#new-session
 [whereis(1)]: http://www.manpagez.com/man/1/whereis/
 
 
@@ -634,10 +632,9 @@ the built executable with `./mach geckodriver -- --other --flags`.
 [commands]: https://docs.rs/webdriver/newest/webdriver/command/
 [responses]: https://docs.rs/webdriver/newest/webdriver/response/
 [errors]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html
-[Marionette protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/doc/marionette/Protocol.html
+[Marionette protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
 [WebDriver]: https://w3c.github.io/webdriver/
-[FirefoxDriver]: https://github.com/SeleniumHQ/selenium/wiki/FirefoxDriver
-[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/doc/marionette/
+[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
 
