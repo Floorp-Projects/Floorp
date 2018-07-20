@@ -200,6 +200,7 @@ module.exports = {
     "react/prop-types": "error",
     "react/sort-comp": ["error", {
       order: [
+        "static-methods",
         "lifecycle",
         "everything-else",
         "render"
