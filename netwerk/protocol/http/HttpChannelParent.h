@@ -305,28 +305,28 @@ private:
   // OnStatus is always called before OnProgress.
   // Set true in OnStatus if next OnProgress can be ignored
   // since the information can be recontructed from ODA.
-  bool mIgnoreProgress              : 1;
+  uint8_t mIgnoreProgress              : 1;
 
-  bool mSentRedirect1BeginFailed    : 1;
-  bool mReceivedRedirect2Verify     : 1;
+  uint8_t mSentRedirect1BeginFailed    : 1;
+  uint8_t mReceivedRedirect2Verify     : 1;
 
   // Indicates that diversion has been requested, but we could not start it
   // yet because the channel is still being opened with a synthesized response.
-  bool mPendingDiversion;
+  uint8_t mPendingDiversion            : 1;
   // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
   // must be set when RecvDivertOnData/~DivertOnStop/~DivertComplete are
   // received from the child channel.
-  bool mDivertingFromChild;
+  uint8_t mDivertingFromChild          : 1;
 
   // Set if OnStart|StopRequest was called during a diversion from the child.
-  bool mDivertedOnStartRequest;
+  uint8_t mDivertedOnStartRequest      : 1;
 
-  bool mSuspendedForDiversion;
+  uint8_t mSuspendedForDiversion       : 1;
 
   // Set if this channel should be suspended after synthesizing a response.
-  bool mSuspendAfterSynthesizeResponse;
+  uint8_t mSuspendAfterSynthesizeResponse : 1;
   // Set if this channel will synthesize its response.
-  bool mWillSynthesizeResponse;
+  uint8_t mWillSynthesizeResponse         : 1;
 
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should
