@@ -1,6 +1,6 @@
-function check_webm(v, enabled) {
+async function check_webm(v, enabled) {
   function check(type, expected) {
-    is(v.canPlayType(type), enabled ? expected : "", type);
+    is(v.canPlayType(type), enabled ? expected : "", type + "='" + expected + "'");
   }
 
   // WebM types
@@ -26,4 +26,21 @@ function check_webm(v, enabled) {
   check("video/webm; codecs=xyz", "");
   check("video/webm; codecs=xyz,vorbis", "");
   check("video/webm; codecs=vorbis,xyz", "");
+
+  function getPref(name) {
+    var pref = false;
+    try {
+      pref = SpecialPowers.getBoolPref(name);
+    } catch(ex) { }
+    return pref;
+  }
+
+  const haveAv1 = getPref("media.av1.enabled");
+  check("video/webm; codecs=\"av1\"", haveAv1 ? "probably" : "");
+
+  await SpecialPowers.pushPrefEnv({"set": [["media.av1.enabled", true]]});
+  check("video/webm; codecs=\"av1\"", "probably");
+
+  await SpecialPowers.pushPrefEnv({"set": [["media.av1.enabled", false]]});
+  check("video/webm; codecs=\"av1\"", "");
 }

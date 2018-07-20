@@ -103,6 +103,9 @@ function check_mp4(v, enabled) {
   check("video/mp4; codecs=vp9", "");
   check("video/mp4; codecs=\"vp9\"", "");
   check("video/mp4; codecs=\"vp9.0\"", "");
+
+  // AV1 (disabled until bug 1417050 is fixed)
+  check("video/mp4; codecs=\"av1\"", "");
 }
 
 function check_mp3(v, enabled) {
