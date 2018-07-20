@@ -3455,6 +3455,24 @@ nsFocusManager::GetNextTabbableContentInAncestorScopes(
   return nullptr;
 }
 
+static nsIContent*
+GetTopLevelHost(nsIContent* aContent)
+{
+  nsIContent* topLevelhost = nullptr;
+  while (aContent) {
+    if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
+      aContent = slot;
+    } else if (ShadowRoot* shadowRoot = aContent->GetContainingShadow()) {
+      aContent = shadowRoot->Host();
+      topLevelhost = aContent;
+    } else {
+      aContent = aContent->GetParent();
+    }
+  }
+
+  return topLevelhost;
+}
+
 nsresult
 nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        nsIContent* aRootContent,
@@ -3471,6 +3489,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
   nsCOMPtr<nsIContent> startContent = aStartContent;
   if (!startContent)
     return NS_OK;
+
+  nsIContent* currentTopLevelHost = GetTopLevelHost(aStartContent);
 
   LOGCONTENTNAVIGATION("GetNextTabbable: %s", aStartContent);
   LOGFOCUSNAVIGATION(("  tabindex: %d", aCurrentTabIndex));
@@ -3552,8 +3572,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        false, // aLockInScrollView
                                        true,  // aFollowOOFs
                                        aForDocumentNavigation,  // aSkipPopupChecks
-                                       nsDocument::IsShadowDOMEnabled(aRootContent) // aSkipShadow
-                                       );
+                                       false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (iterStartContent == aRootContent) {
@@ -3577,7 +3596,29 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
     // Walk frames to find something tabbable matching mCurrentTabIndex
     nsIFrame* frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
     while (frame) {
+      // Try to find the topmost Shadow DOM host, since we want to
+      // skip Shadow DOM in frame traversal.
       nsIContent* currentContent = frame->GetContent();
+      nsIContent* oldTopLevelHost = currentTopLevelHost;
+      nsIContent* topLevel = GetTopLevelHost(currentContent);
+      currentTopLevelHost = topLevel;
+      if (topLevel) {
+        if (topLevel == oldTopLevelHost) {
+          // We're within Shadow DOM, continue.
+          do {
+            if (aForward) {
+              frameTraversal->Next();
+            } else {
+              frameTraversal->Prev();
+            }
+            frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+            // For the usage of GetPrevContinuation, see the comment
+            // at the end of while (frame) loop.
+          } while (frame && frame->GetPrevContinuation());
+          continue;
+        }
+        currentContent = topLevel;
+      }
 
       // For document navigation, check if this element is an open panel. Since
       // panels aren't focusable (tabIndex would be -1), we'll just assume that
