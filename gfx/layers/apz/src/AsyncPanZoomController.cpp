@@ -3799,8 +3799,7 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncTransformConsumer aMode
     return mLastContentPaintMetrics.GetScrollOffset() * mLastContentPaintMetrics.GetZoom();
   }
 
-  return (GetEffectiveScrollOffset(aMode) + mTestAsyncScrollOffset)
-      * GetEffectiveZoom(aMode) * mTestAsyncZoom.scale;
+  return GetEffectiveScrollOffset(aMode) * GetEffectiveZoom(aMode);
 }
 
 CSSPoint
@@ -3811,7 +3810,7 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncTransformCon
     return mLastContentPaintMetrics.GetScrollOffset();
   }
 
-  return GetEffectiveScrollOffset(aMode) + mTestAsyncScrollOffset;
+  return GetEffectiveScrollOffset(aMode);
 }
 
 AsyncTransform
@@ -3828,8 +3827,7 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) c
     lastPaintScrollOffset = mLastContentPaintMetrics.GetScrollOffset();
   }
 
-  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode) +
-    mTestAsyncScrollOffset;
+  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode);
 
   // If checkerboarding has been disallowed, clamp the scroll position to stay
   // within rendered content.
@@ -3850,15 +3848,19 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) c
   }
 
   CSSToParentLayerScale2D effectiveZoom = GetEffectiveZoom(aMode);
-
-  ParentLayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
-                               * effectiveZoom * mTestAsyncZoom.scale;
-
+  ParentLayerPoint translation =
+    (currentScrollOffset - lastPaintScrollOffset) * effectiveZoom;
   LayerToParentLayerScale compositedAsyncZoom =
-      (effectiveZoom / Metrics().LayersPixelsPerCSSPixel()).ToScaleFactor();
-  return AsyncTransform(
-    LayerToParentLayerScale(compositedAsyncZoom.scale * mTestAsyncZoom.scale),
-    -translation);
+    (effectiveZoom / Metrics().LayersPixelsPerCSSPixel()).ToScaleFactor();
+
+  return AsyncTransform(compositedAsyncZoom, -translation);
+}
+
+AsyncTransformComponentMatrix
+AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const
+{
+  return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode))
+       * GetOverscrollTransform(aMode);
 }
 
 CSSRect
@@ -3902,11 +3904,29 @@ AsyncPanZoomController::SampleCompositedAsyncTransform()
   return false;
 }
 
-AsyncTransformComponentMatrix
-AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const
-{
-  return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode))
-       * GetOverscrollTransform(aMode);
+bool
+AsyncPanZoomController::ApplyAsyncTestAttributes() {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  if (mTestAsyncScrollOffset == CSSPoint() &&
+      mTestAsyncZoom == LayerToParentLayerScale()) {
+    return false;
+  }
+  Metrics().ZoomBy(mTestAsyncZoom.scale);
+  ScrollBy(mTestAsyncScrollOffset);
+  SampleCompositedAsyncTransform();
+  return true;
+}
+
+bool
+AsyncPanZoomController::UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  if (mTestAsyncScrollOffset == CSSPoint() &&
+      mTestAsyncZoom == LayerToParentLayerScale()) {
+    return false;
+  }
+  Metrics() = aPrevFrameMetrics;
+  SampleCompositedAsyncTransform();
+  return true;
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {

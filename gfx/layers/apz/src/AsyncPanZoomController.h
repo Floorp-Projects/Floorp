@@ -1086,6 +1086,28 @@ private:
   CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
   CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
 
+private:
+  friend class AutoApplyAsyncTestAttributes;
+
+  /**
+   * Applies |mTestAsyncScrollOffset| and |mTestAsyncZoom| to this
+   * AsyncPanZoomController. Calls |SampleCompositedAsyncTransform| to ensure
+   * that the GetCurrentAsync* functions consider the test offset and zoom in
+   * their computations.
+   *
+   * Returns false if neither test value is set, and true otherwise.
+   */
+  bool ApplyAsyncTestAttributes();
+
+  /**
+   * Sets this AsyncPanZoomController's FrameMetrics to |aPrevFrameMetrics| and
+   * calls |SampleCompositedAsyncTransform| to unapply any test values applied
+   * by |ApplyAsyncTestAttributes|.
+   *
+   * Returns false if neither test value is set, and true otherwise.
+   */
+  bool UnapplyAsyncTestAttributes(const FrameMetrics& aPrevFrameMetrics);
+
   /* ===================================================================
    * The functions and members in this section are used to manage
    * the state that tracks what this APZC is doing with the input events.
