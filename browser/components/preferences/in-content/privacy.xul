@@ -293,7 +293,7 @@
       <spacer flex="1"/>
     </hbox>
     <hbox>
-      <vbox id="trackingProtectionBox" flex="1" hidden="true">
+      <vbox id="trackingProtectionBox" flex="1">
         <vbox>
           <hbox id="trackingProtectionExtensionContentLabel" align="center" hidden="true">
             <description control="disableTrackingProtectionExtension" flex="1"/>
@@ -314,19 +314,6 @@
           </vbox>
         </vbox>
       </vbox>
-      <vbox id="trackingProtectionPBMBox" flex="1">
-        <hbox id="trackingProtectionPBMExtensionContentLabel" align="center" hidden="true">
-          <description control="disableTrackingProtectionExtension" flex="1"/>
-        </hbox>
-        <hbox align="start">
-          <checkbox id="trackingProtectionPBM"
-                    preference="privacy.trackingprotection.pbmode.enabled"/>
-          <label id="trackingProtectionPBMLabel"
-                 flex="1"
-                 control="trackingProtectionPBM"
-                 data-l10n-id="tracking-pbm-label"/>
-        </hbox>
-      </vbox>
       <vbox id="trackingProtectionAdvancedSettings">
         <hbox id="trackingProtectionExtensionContentButton" hidden="true">
           <button id="disableTrackingProtectionExtension"
@@ -339,7 +326,6 @@
           <button id="trackingProtectionExceptions"
                   class="accessory-button"
                   flex="1"
-                  hidden="true"
                   data-l10n-id="tracking-exceptions"
                   preference="pref.privacy.disable_button.tracking_protection_exceptions"
                   search-l10n-ids="

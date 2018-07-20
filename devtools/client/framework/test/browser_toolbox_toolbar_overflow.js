@@ -45,7 +45,7 @@ add_task(async function() {
   ok(chevronMenuButton, "The chevron menu button is displayed");
 
   info("Open the tools-chevron-menupopup and verify that the inspector button is checked");
-  const menuPopup = await openChevronMenu(toolbox);
+  await openChevronMenu(toolbox);
 
   const inspectorButton = toolbox.doc.querySelector("#tools-chevron-menupopup-inspector");
   ok(!inspectorButton, "The chevron menu doesn't have the inspector button.");
@@ -60,11 +60,6 @@ add_task(async function() {
   const onSelected = toolbox.once("storage-selected");
   storageButton.click();
   await onSelected;
-
-  info("Closing the tools-chevron-menupopup popup");
-  const onPopupHidden = once(menuPopup, "popuphidden");
-  menuPopup.hidePopup();
-  await onPopupHidden;
 
   info("Restore the original window size");
   onResize = once(hostWindow, "resize");

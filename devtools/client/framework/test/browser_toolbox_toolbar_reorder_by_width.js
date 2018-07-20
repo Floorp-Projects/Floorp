@@ -66,16 +66,13 @@ add_task(async function() {
   await onRegistered;
 
   info("Open the tools menu button.");
-  let popup = await openChevronMenu(toolbox);
+  await openChevronMenu(toolbox);
 
   info("The registered new tool tab should be in the tools menu.");
   let testToolsButton = toolbox.doc.querySelector("#tools-chevron-menupopup-test-tools");
   ok(testToolsButton, "The tools menu has a registered new tool button.");
 
-  info("Closing the tools-chevron-menupopup popup");
-  let onPopupHidden = once(popup, "popuphidden");
-  popup.hidePopup();
-  await onPopupHidden;
+  await closeChevronMenu(toolbox);
 
   info("Unregistering test-tools");
   const onUnregistered = toolbox.once("tool-unregistered");
@@ -83,14 +80,11 @@ add_task(async function() {
   await onUnregistered;
 
   info("Open the tools menu button.");
-  popup = await openChevronMenu(toolbox);
+  await openChevronMenu(toolbox);
 
   info("An unregistered new tool tab should not be in the tools menu.");
   testToolsButton = toolbox.doc.querySelector("#tools-chevron-menupopup-test-tools");
   ok(!testToolsButton, "The tools menu doesn't have a unregistered new tool button.");
 
-  info("Closing the tools-chevron-menupopup popup");
-  onPopupHidden = once(popup, "popuphidden");
-  popup.hidePopup();
-  await onPopupHidden;
+  await closeChevronMenu(toolbox);
 });

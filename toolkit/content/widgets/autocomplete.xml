@@ -173,10 +173,10 @@
         <body><![CDATA[
           if (aReason == Ci.nsIAutoCompleteInput
                            .TEXTVALUE_REASON_COMPLETEDEFAULT) {
-            this._disableTrim = true;
+            this._textValueSetByCompleteDefault = true;
           }
           this.textValue = aValue;
-          this._disableTrim = false;
+          this._textValueSetByCompleteDefault = false;
         ]]></body>
       </method>
 
@@ -191,8 +191,10 @@
           return this.value;
         ]]></getter>
         <setter><![CDATA[
-          if (typeof this.onBeforeTextValueSet == "function")
+          if (typeof this.onBeforeTextValueSet == "function" &&
+              !this._textValueSetByCompleteDefault) {
             val = this.onBeforeTextValueSet(val);
+          }
 
           this.value = val;
 
@@ -283,7 +285,7 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <field name="valueIsTyped">false</field>
-      <field name="_disableTrim">false</field>
+      <field name="_textValueSetByCompleteDefault">false</field>
       <property name="value">
         <getter><![CDATA[
           if (typeof this.onBeforeValueGet == "function") {
@@ -299,7 +301,8 @@
           if (typeof this.onBeforeValueSet == "function")
             val = this.onBeforeValueSet(val);
 
-          if (typeof this.trimValue == "function" && !this._disableTrim)
+          if (typeof this.trimValue == "function" &&
+              !this._textValueSetByCompleteDefault)
             val = this.trimValue(val);
 
           this.valueIsTyped = false;

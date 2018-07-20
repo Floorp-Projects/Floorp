@@ -20,7 +20,11 @@ from mach.decorators import (
     SettingsProvider,
 )
 
-from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
+from mozbuild.base import (
+    BuildEnvironmentNotFoundException,
+    MachCommandBase,
+    MachCommandConditions as conditions,
+)
 from moztest.resolve import TEST_SUITES
 from argparse import ArgumentParser
 
@@ -336,7 +340,11 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
 
 def has_js_binary(binary):
     def has_binary(cls):
-        name = binary + cls.substs['BIN_SUFFIX']
+        try:
+            name = binary + cls.substs['BIN_SUFFIX']
+        except BuildEnvironmentNotFoundException:
+            return False
+
         path = os.path.join(cls.topobjdir, 'dist', 'bin', name)
 
         has_binary.__doc__ = """

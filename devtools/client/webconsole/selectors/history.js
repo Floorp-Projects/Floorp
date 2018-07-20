@@ -30,15 +30,18 @@ function getHistoryValue(state, direction) {
 }
 
 function getNextHistoryValue(state) {
-  if (state.history.placeHolder < (state.history.entries.length - 1)) {
-    return state.history.entries[state.history.placeHolder + 1];
+  if (state.history.position < (state.history.entries.length - 1)) {
+    return state.history.entries[state.history.position + 1];
   }
-  return null;
+
+  // The user didn't pick up anything from the history and returned
+  // back to the previous value (if any) that was in the input box.
+  return state.history.originalUserValue;
 }
 
 function getPreviousHistoryValue(state) {
-  if (state.history.placeHolder > 0) {
-    return state.history.entries[state.history.placeHolder - 1];
+  if (state.history.position > 0) {
+    return state.history.entries[state.history.position - 1];
   }
   return null;
 }

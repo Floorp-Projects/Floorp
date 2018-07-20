@@ -225,7 +225,7 @@ public:
     mMicroTaskLevel = aLevel;
   }
 
-  bool PerformMicroTaskCheckPoint();
+  bool PerformMicroTaskCheckPoint(bool aForce = false);
 
   void PerformDebuggerMicroTaskCheckpoint();
 

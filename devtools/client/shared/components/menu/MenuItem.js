@@ -24,6 +24,11 @@ const MenuItem = props => {
     attr.className += " " + props.className;
   }
 
+  if (props.icon) {
+    attr.className += " iconic";
+    attr.style = { "--menuitem-icon-image": "url(" + props.icon + ")" };
+  }
+
   if (props.onClick) {
     attr.onClick = props.onClick;
   }
@@ -72,6 +77,15 @@ MenuItem.propTypes = {
 
   // An optional callback to be invoked when the item is selected.
   onClick: PropTypes.func,
+
+  // URL of the icon to associate with the MenuItem. (Optional)
+  //
+  //   e.g. chrome://devtools/skim/image/foo.svg
+  //
+  // This may also be set in CSS using the --menuitem-icon-image variable.
+  // Note that in this case, the variable should specify the CSS <image> to use,
+  // not simply the URL (e.g. "url(chrome://devtools/skim/image/foo.svg)").
+  icon: PropTypes.string,
 };
 
 module.exports = MenuItem;

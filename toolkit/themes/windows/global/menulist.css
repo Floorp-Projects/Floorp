@@ -21,21 +21,13 @@ menulist {
 .menulist-label-box {
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 1px;
   border: 1px solid transparent;
   background-color: transparent;
   color: inherit;
 }
 
-.menulist-icon[src] {
-  margin: 0px 2px 0px 2px;
-}
-
 .menulist-label {
-  margin-top: 0 !important;
-  margin-inline-end: 0 !important;
-  margin-bottom: 0 !important;
-  margin-inline-start: 1px !important;
+  margin: 0 3px !important;
 }
 
 /* ..... focused state ..... */
@@ -79,20 +71,15 @@ html|*.menulist-editable-input {
     color: inherit !important;
   }
 
+  .menulist-icon,
   .menulist-label {
     margin-top: -1px !important;
     margin-bottom: -1px !important;
-    margin-inline-start: 0 !important;
   }
 
   menulist:not([editable="true"]) > .menulist-dropmarker {
     margin-top: -2px;
     margin-inline-start: 3px;
     margin-inline-end: -3px;
-  }
-
-  .menulist-icon {
-    margin-top: -1px;
-    margin-bottom: -1px;
   }
 }

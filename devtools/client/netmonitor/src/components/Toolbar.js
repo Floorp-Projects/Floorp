@@ -9,7 +9,6 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
-
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
@@ -18,6 +17,7 @@ const {
   getTypeFilteredRequests,
 } = require("../selectors/index");
 const { autocompleteProvider } = require("../utils/filter-autocomplete-provider");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const { L10N } = require("../utils/l10n");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
@@ -51,6 +51,9 @@ const ENABLE_PERSISTENT_LOGS_LABEL =
   L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label");
 const DISABLE_CACHE_TOOLTIP = L10N.getStr("netmonitor.toolbar.disableCache.tooltip");
 const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label");
+const NO_THROTTLING_LABEL = new LocalizationHelper(
+  "devtools/client/locales/network-throttling.properties"
+  ).getStr("responsive.noThrottling");
 
 // Menu
 loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
@@ -58,7 +61,7 @@ loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/h
 
 // Throttling
 const Types = require("devtools/client/shared/components/throttling/types");
-const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
+const throttlingProfiles = require("devtools/client/shared/components/throttling/profiles");
 const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
 
 /**
@@ -284,14 +287,49 @@ class Toolbar extends Component {
   renderThrottlingSelector() {
     const {
       networkThrottling,
+    } = this.props;
+
+    const selectedProfile = networkThrottling.enabled ?
+      networkThrottling.profile : NO_THROTTLING_LABEL;
+    return button({
+      id: "global-network-throttling-selector",
+      title: selectedProfile,
+      className: "devtools-button devtools-drop-down-button",
+      onClick: evt => {
+        this.showThrottlingSelector(evt.target);
+      },
+    },
+    dom.span({className: "title"},
+      selectedProfile)
+    );
+  }
+
+  showThrottlingSelector(menuButton) {
+    const {
+      networkThrottling,
       onChangeNetworkThrottling,
     } = this.props;
 
-    return NetworkThrottlingSelector({
-      className: "devtools-button",
-      networkThrottling,
-      onChangeNetworkThrottling,
+    const menuItems = throttlingProfiles.map(profile => {
+      return {
+        label: profile.id,
+        type: "checkbox",
+        checked: networkThrottling.enabled &&
+          (profile.id == networkThrottling.profile),
+        click: () => onChangeNetworkThrottling(true, profile.id),
+      };
     });
+
+    menuItems.unshift("-");
+
+    menuItems.unshift({
+      label: NO_THROTTLING_LABEL,
+      type: "checkbox",
+      checked: !networkThrottling.enabled,
+      click: () => onChangeNetworkThrottling(false, ""),
+    });
+
+    showMenu(menuItems, { button: menuButton });
   }
 
   /**
@@ -301,11 +339,14 @@ class Toolbar extends Component {
     return button({
       id: "devtools-har-button",
       title: TOOLBAR_HAR_BUTTON,
-      className: "devtools-button devtools-har-button",
+      className: "devtools-button devtools-har-button devtools-drop-down-button",
       onClick: evt => {
         this.showHarMenu(evt.target);
       },
-    });
+    },
+    dom.span({className: "title"},
+      "HAR")
+    );
   }
 
   showHarMenu(menuButton) {

@@ -10,7 +10,7 @@ add_task(async function() {
   win.gBrowser.removeTab(tab);
 
   // Closing a tab will also close its parent chrome window, but async
-  await promiseWindowWillBeClosed(win);
+  await BrowserTestUtils.domWindowClosed(win);
 });
 
 add_task(async function() {

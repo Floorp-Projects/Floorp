@@ -6985,8 +6985,11 @@ function warnAboutClosingWindow() {
   // Popups aren't considered full browser windows; we also ignore private windows.
   let isPBWindow = PrivateBrowsingUtils.isWindowPrivate(window) &&
         !PrivateBrowsingUtils.permanentPrivateBrowsing;
+
+  let closingTabs = gBrowser.tabs.length - gBrowser._removingTabs.length;
+
   if (!isPBWindow && !toolbar.visible)
-    return gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
+    return gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL);
 
   // Figure out if there's at least one other browser window around.
   let otherPBWindowExists = false;
@@ -7018,7 +7021,7 @@ function warnAboutClosingWindow() {
   }
 
   if (nonPopupPresent) {
-    return isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
+    return isPBWindow || gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL);
   }
 
   let os = Services.obs;
@@ -7036,7 +7039,7 @@ function warnAboutClosingWindow() {
   // the session alive. Hence don't prompt users to save tabs, but warn about
   // closing multiple tabs.
   return AppConstants.platform != "macosx"
-         || (isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL));
+         || (isPBWindow || gBrowser.warnAboutClosingTabs(closingTabs, gBrowser.closingTabsEnum.ALL));
 }
 
 var MailIntegration = {
