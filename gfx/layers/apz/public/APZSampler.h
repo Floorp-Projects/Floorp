@@ -11,6 +11,7 @@
 
 #include "base/platform_thread.h" // for PlatformThreadId
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
@@ -89,6 +90,13 @@ public:
 
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
+
+  /**
+   * Return a new AutoApplyAsyncTestAttributes instance. This should be called
+   * whenever we need to apply async attributes for test purposes (namely
+   * reftest-async-scroll-{x,y} and reftest-async-zoom).
+   */
+  UniquePtr<AutoApplyAsyncTestAttributes> ApplyAsyncTestAttributes(const LayerMetricsWrapper& aLayer);
 
   /**
    * This can be used to assert that the current thread is the
