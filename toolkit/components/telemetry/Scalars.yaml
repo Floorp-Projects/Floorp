@@ -1114,13 +1114,14 @@ devtools.onboarding:
       - 1408339
     description: >
       How many users are flagged as existing devtools users.
-    expires: "63"
+    expires: "66"
     kind: boolean
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
       - jdescottes@mozilla.com
     record_in_processes:
       - 'main'
+    release_channel_collection: opt-out
 
 devtools.responsive:
   toolbox_opened_first:
