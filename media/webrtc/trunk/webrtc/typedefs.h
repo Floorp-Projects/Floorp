@@ -11,8 +11,8 @@
 // This file contains platform-specific typedefs and defines.
 // Much of it is derived from Chromium's build/build_config.h.
 
-#ifndef WEBRTC_TYPEDEFS_H_
-#define WEBRTC_TYPEDEFS_H_
+#ifndef TYPEDEFS_H_
+#define TYPEDEFS_H_
 
 // Processor architecture detection.  For more info on what's defined, see:
 //   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
@@ -36,90 +36,14 @@
 #define WEBRTC_ARCH_ARM_FAMILY
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#elif defined(__powerpc64__)
-#define WEBRTC_ARCH_PPC64 1
-#define WEBRTC_ARCH_64_BITS 1
-#ifdef __LITTLE_ENDIAN__
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
+#elif defined(__MIPSEL__)
+#define WEBRTC_ARCH_MIPS_FAMILY
+#if defined(__LP64__)
+#define WEBRTC_ARCH_64_BITS
 #else
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
+#define WEBRTC_ARCH_32_BITS
 #endif
-#elif defined(__ppc__) || defined(__powerpc__)
-#define WEBRTC_ARCH_PPC 1
-#define WEBRTC_ARCH_32_BITS 1
-#ifdef __LITTLE_ENDIAN__
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#else
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#endif
-#elif defined(__sparc__) && defined(__arch64__)
-#define WEBRTC_ARCH_SPARC 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__sparc__)
-#define WEBRTC_ARCH_SPARC 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__mips__)
-#define WEBRTC_ARCH_MIPS 1
-#if defined(_ABI64) && _MIPS_SIM == _ABI64
-#define WEBRTC_ARCH_64_BITS 1
-#else
-#define WEBRTC_ARCH_32_BITS 1
-#endif
-#if defined(__MIPSEB__)
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#else
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#endif
-#elif defined(__hppa__)
-#define WEBRTC_ARCH_HPPA 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__ia64__)
-#define WEBRTC_ARCH_IA64 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__s390x__)
-#define WEBRTC_ARCH_S390X 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__s390__)
-#define WEBRTC_ARCH_S390 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__aarch64__) || defined(_M_ARM64)
-#define WEBRTC_ARCH_AARCH64 1
-#define WEBRTC_ARCH_64_BITS 1
-#if defined(__AARCH64EL__) || defined(_M_ARM64)
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__AARCH64EB__)
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#endif
-#elif defined(__alpha__)
-#define WEBRTC_ARCH_ALPHA 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__avr32__)
-#define WEBRTC_ARCH_AVR32 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
 #elif defined(__pnacl__)
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
@@ -133,8 +57,7 @@
 
 // TODO(zhongwei.yao): WEBRTC_CPU_DETECTION is only used in one place; we should
 // probably just remove it.
-#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(__SSE2__)) || \
-    defined(WEBRTC_DETECT_NEON)
+#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(__SSE2__))
 #define WEBRTC_CPU_DETECTION
 #endif
 
@@ -142,21 +65,24 @@
 
 // Annotate a function indicating the caller must examine the return value.
 // Use like:
-//   int foo() WARN_UNUSED_RESULT;
-// To explicitly ignore a result, see |ignore_result()| in <base/macros.h>.
-// TODO(ajm): Hack to avoid multiple definitions until the base/ of webrtc and
-// libjingle are merged.
-#if !defined(WARN_UNUSED_RESULT)
-#if defined(__GNUC__) || defined(__clang__)
-#define WARN_UNUSED_RESULT __attribute__ ((__warn_unused_result__))
+//   int foo() RTC_WARN_UNUSED_RESULT;
+// To explicitly ignore a result, cast to void.
+// TODO(kwiberg): Remove when we can use [[nodiscard]] from C++17.
+#if defined(__clang__)
+#define RTC_WARN_UNUSED_RESULT __attribute__((__warn_unused_result__))
+#elif defined(__GNUC__)
+// gcc has a __warn_unused_result__ attribute, but you can't quiet it by
+// casting to void, so we don't use it.
+#define RTC_WARN_UNUSED_RESULT
 #else
-#define WARN_UNUSED_RESULT
+#define RTC_WARN_UNUSED_RESULT
 #endif
-#endif  // WARN_UNUSED_RESULT
 
 // Put after a variable that might not be used, to prevent compiler warnings:
 //   int result ATTRIBUTE_UNUSED = DoSomething();
 //   assert(result == 17);
+// Deprecated since it only works with GCC & clang. See RTC_UNUSED below.
+// TODO(terelius): Remove.
 #ifndef ATTRIBUTE_UNUSED
 #if defined(__GNUC__) || defined(__clang__)
 #define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
@@ -175,6 +101,7 @@
 #endif
 #endif
 
+#ifndef NO_RETURN
 // Annotate a function that will not return control flow to the caller.
 #if defined(_MSC_VER)
 #define NO_RETURN __declspec(noreturn)
@@ -183,5 +110,16 @@
 #else
 #define NO_RETURN
 #endif
+#endif
 
-#endif  // WEBRTC_TYPEDEFS_H_
+// Prevent the compiler from warning about an unused variable. For example:
+//   int result = DoSomething();
+//   assert(result == 17);
+//   RTC_UNUSED(result);
+// Note: In most cases it is better to remove the unused variable rather than
+// suppressing the compiler warning.
+#ifndef RTC_UNUSED
+#define RTC_UNUSED(x) static_cast<void>(x)
+#endif  // RTC_UNUSED
+
+#endif  // TYPEDEFS_H_

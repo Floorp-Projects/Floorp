@@ -8,12 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_
+#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_
 
-#include "webrtc/base/basictypes.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
+#include "rtc_base/basictypes.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -30,19 +29,13 @@ class RapidResyncRequest : public Rtpfb {
   // Parse assumes header is already parsed and validated.
   bool Parse(const CommonHeader& header);
 
- protected:
+  size_t BlockLength() const override;
+
   bool Create(uint8_t* packet,
               size_t* index,
               size_t max_length,
               RtcpPacket::PacketReadyCallback* callback) const override;
-
- private:
-  size_t BlockLength() const override {
-    return kHeaderLength + kCommonFeedbackLength;
-  }
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(RapidResyncRequest);
 };
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_RAPID_RESYNC_REQUEST_H_

@@ -21,7 +21,7 @@ import javax.microedition.khronos.egl.EGL10;
  */
 public abstract class EglBase {
   // EGL wrapper for an actual EGLContext.
-  public static class Context {}
+  public interface Context { long getNativeEglContext(); }
 
   // According to the documentation, EGL can be used from multiple threads at the same time if each
   // thread has its own EGLContext, but in practice it deadlocks on some devices when doing this.
@@ -33,9 +33,9 @@ public abstract class EglBase {
   // https://android.googlesource.com/platform/frameworks/base/+/master/opengl/java/android/opengl/EGL14.java
   // This is similar to how GlSurfaceView does:
   // http://grepcode.com/file/repository.grepcode.com/java/ext/com.google.android/android/5.1.1_r1/android/opengl/GLSurfaceView.java#760
-  private static final int EGL_OPENGL_ES2_BIT = 4;
+  public static final int EGL_OPENGL_ES2_BIT = 4;
   // Android-specific extension.
-  private static final int EGL_RECORDABLE_ANDROID = 0x3142;
+  public static final int EGL_RECORDABLE_ANDROID = 0x3142;
 
   // clang-format off
   public static final int[] CONFIG_PLAIN = {
@@ -80,8 +80,11 @@ public abstract class EglBase {
   };
   // clang-format on
 
-  // Create a new context with the specified config attributes, sharing data with sharedContext.
-  // |sharedContext| can be null.
+  /**
+   * Create a new context with the specified config attributes, sharing data with |sharedContext|.
+   * If |sharedContext| is null, a root context is created. This function will try to create an EGL
+   * 1.4 context if possible, and an EGL 1.0 context otherwise.
+   */
   public static EglBase create(Context sharedContext, int[] configAttributes) {
     return (EglBase14.isEGL14Supported()
                && (sharedContext == null || sharedContext instanceof EglBase14.Context))
@@ -89,12 +92,52 @@ public abstract class EglBase {
         : new EglBase10((EglBase10.Context) sharedContext, configAttributes);
   }
 
+  /**
+   * Helper function for creating a plain root context. This function will try to create an EGL 1.4
+   * context if possible, and an EGL 1.0 context otherwise.
+   */
   public static EglBase create() {
-    return create(null, CONFIG_PLAIN);
+    return create(null /* shaderContext */, CONFIG_PLAIN);
   }
 
+  /**
+   * Helper function for creating a plain context, sharing data with |sharedContext|. This function
+   * will try to create an EGL 1.4 context if possible, and an EGL 1.0 context otherwise.
+   */
   public static EglBase create(Context sharedContext) {
     return create(sharedContext, CONFIG_PLAIN);
+  }
+
+  /**
+   * Explicitly create a root EGl 1.0 context with the specified config attributes.
+   */
+  public static EglBase createEgl10(int[] configAttributes) {
+    return new EglBase10(null /* shaderContext */, configAttributes);
+  }
+
+  /**
+   * Explicitly create a root EGl 1.0 context with the specified config attributes
+   * and shared context.
+   */
+  public static EglBase createEgl10(
+      javax.microedition.khronos.egl.EGLContext sharedContext, int[] configAttributes) {
+    return new EglBase10(new EglBase10.Context(sharedContext), configAttributes);
+  }
+
+  /**
+   * Explicitly create a root EGl 1.4 context with the specified config attributes.
+   */
+  public static EglBase createEgl14(int[] configAttributes) {
+    return new EglBase14(null /* shaderContext */, configAttributes);
+  }
+
+  /**
+   * Explicitly create a root EGl 1.4 context with the specified config attributes
+   * and shared context.
+   */
+  public static EglBase createEgl14(
+      android.opengl.EGLContext sharedContext, int[] configAttributes) {
+    return new EglBase14(new EglBase14.Context(sharedContext), configAttributes);
   }
 
   public abstract void createSurface(Surface surface);
@@ -125,4 +168,6 @@ public abstract class EglBase {
   public abstract void detachCurrent();
 
   public abstract void swapBuffers();
+
+  public abstract void swapBuffers(long presentationTimeStampNs);
 }

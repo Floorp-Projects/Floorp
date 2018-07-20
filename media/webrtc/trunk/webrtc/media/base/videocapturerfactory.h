@@ -8,10 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MEDIA_BASE_VIDEOCAPTURERFACTORY_H_
-#define WEBRTC_MEDIA_BASE_VIDEOCAPTURERFACTORY_H_
+#ifndef MEDIA_BASE_VIDEOCAPTURERFACTORY_H_
+#define MEDIA_BASE_VIDEOCAPTURERFACTORY_H_
 
-#include "webrtc/media/base/device.h"
+#include <memory>
+
+#include "media/base/device.h"
 
 namespace cricket {
 
@@ -22,9 +24,9 @@ class VideoDeviceCapturerFactory {
   VideoDeviceCapturerFactory() {}
   virtual ~VideoDeviceCapturerFactory() {}
 
-  virtual VideoCapturer* Create(const Device& device) = 0;
+  virtual std::unique_ptr<VideoCapturer> Create(const Device& device) = 0;
 };
 
 }  // namespace cricket
 
-#endif  // WEBRTC_MEDIA_BASE_VIDEOCAPTURERFACTORY_H_
+#endif  // MEDIA_BASE_VIDEOCAPTURERFACTORY_H_

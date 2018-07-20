@@ -8,118 +8,41 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/acm2/rent_a_codec.h"
+#include "modules/audio_coding/acm2/rent_a_codec.h"
 
 #include <memory>
 #include <utility>
 
-#include "webrtc/base/logging.h"
-#include "webrtc/modules/audio_coding/codecs/cng/audio_encoder_cng.h"
-#include "webrtc/modules/audio_coding/codecs/g711/audio_encoder_pcm.h"
-#ifdef WEBRTC_CODEC_G722
-#include "webrtc/modules/audio_coding/codecs/g722/audio_encoder_g722.h"
-#endif
+#include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
+#include "modules/audio_coding/codecs/g711/audio_encoder_pcm.h"
+#include "rtc_base/logging.h"
+#include "modules/audio_coding/codecs/g722/audio_encoder_g722.h"
 #ifdef WEBRTC_CODEC_ILBC
-#include "webrtc/modules/audio_coding/codecs/ilbc/audio_encoder_ilbc.h"
+#include "modules/audio_coding/codecs/ilbc/audio_encoder_ilbc.h"
 #endif
 #ifdef WEBRTC_CODEC_ISACFX
-#include "webrtc/modules/audio_coding/codecs/isac/fix/include/audio_decoder_isacfix.h"
-#include "webrtc/modules/audio_coding/codecs/isac/fix/include/audio_encoder_isacfix.h"
+#include "modules/audio_coding/codecs/isac/fix/include/audio_decoder_isacfix.h"  // nogncheck
+#include "modules/audio_coding/codecs/isac/fix/include/audio_encoder_isacfix.h"  // nogncheck
 #endif
 #ifdef WEBRTC_CODEC_ISAC
-#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_decoder_isac.h"
-#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"
+#include "modules/audio_coding/codecs/isac/main/include/audio_decoder_isac.h"  // nogncheck
+#include "modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"  // nogncheck
 #endif
 #ifdef WEBRTC_CODEC_OPUS
-#include "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h"
+#include "modules/audio_coding/codecs/opus/audio_encoder_opus.h"
 #endif
-#include "webrtc/modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
+#include "modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
 #ifdef WEBRTC_CODEC_RED
-#include "webrtc/modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
+#include "modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
 #endif
-#include "webrtc/modules/audio_coding/acm2/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
+#include "modules/audio_coding/acm2/acm_codec_database.h"
 
 #if defined(WEBRTC_CODEC_ISACFX) || defined(WEBRTC_CODEC_ISAC)
-#include "webrtc/modules/audio_coding/codecs/isac/locked_bandwidth_info.h"
+#include "modules/audio_coding/codecs/isac/locked_bandwidth_info.h"
 #endif
 
 namespace webrtc {
 namespace acm2 {
-
-rtc::Optional<SdpAudioFormat> RentACodec::NetEqDecoderToSdpAudioFormat(
-    NetEqDecoder nd) {
-  switch (nd) {
-    case NetEqDecoder::kDecoderPCMu:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("pcmu", 8000, 1));
-    case NetEqDecoder::kDecoderPCMa:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("pcma", 8000, 1));
-    case NetEqDecoder::kDecoderPCMu_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("pcmu", 8000, 2));
-    case NetEqDecoder::kDecoderPCMa_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("pcma", 8000, 2));
-    case NetEqDecoder::kDecoderILBC:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("ilbc", 8000, 1));
-    case NetEqDecoder::kDecoderISAC:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("isac", 16000, 1));
-    case NetEqDecoder::kDecoderISACswb:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("isac", 32000, 1));
-    case NetEqDecoder::kDecoderPCM16B:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 8000, 1));
-    case NetEqDecoder::kDecoderPCM16Bwb:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 16000, 1));
-    case NetEqDecoder::kDecoderPCM16Bswb32kHz:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 32000, 1));
-    case NetEqDecoder::kDecoderPCM16Bswb48kHz:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 48000, 1));
-    case NetEqDecoder::kDecoderPCM16B_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 8000, 2));
-    case NetEqDecoder::kDecoderPCM16Bwb_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 16000, 2));
-    case NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 32000, 2));
-    case NetEqDecoder::kDecoderPCM16Bswb48kHz_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 48000, 2));
-    case NetEqDecoder::kDecoderPCM16B_5ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("l16", 8000, 5));
-    case NetEqDecoder::kDecoderG722:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("g722", 8000, 1));
-    case NetEqDecoder::kDecoderG722_2ch:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("g722", 8000, 2));
-    case NetEqDecoder::kDecoderOpus:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("opus", 48000, 2,
-                         std::map<std::string, std::string>{{"stereo", "0"}}));
-    case NetEqDecoder::kDecoderOpus_2ch:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("opus", 48000, 2,
-                         std::map<std::string, std::string>{{"stereo", "1"}}));
-    case NetEqDecoder::kDecoderRED:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("red", 8000, 1));
-    case NetEqDecoder::kDecoderAVT:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("telephone-event", 8000, 1));
-    case NetEqDecoder::kDecoderAVT16kHz:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("telephone-event", 16000, 1));
-    case NetEqDecoder::kDecoderAVT32kHz:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("telephone-event", 32000, 1));
-    case NetEqDecoder::kDecoderAVT48kHz:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("telephone-event", 48000, 1));
-    case NetEqDecoder::kDecoderCNGnb:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 8000, 1));
-    case NetEqDecoder::kDecoderCNGwb:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 16000, 1));
-    case NetEqDecoder::kDecoderCNGswb32kHz:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 32000, 1));
-    case NetEqDecoder::kDecoderCNGswb48kHz:
-      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 48000, 1));
-    default:
-      return rtc::Optional<SdpAudioFormat>();
-  }
-}
 
 rtc::Optional<RentACodec::CodecId> RentACodec::CodecIdByParams(
     const char* payload_name,
@@ -132,7 +55,7 @@ rtc::Optional<RentACodec::CodecId> RentACodec::CodecIdByParams(
 rtc::Optional<CodecInst> RentACodec::CodecInstById(CodecId codec_id) {
   rtc::Optional<int> mi = CodecIndexFromId(codec_id);
   return mi ? rtc::Optional<CodecInst>(Database()[*mi])
-            : rtc::Optional<CodecInst>();
+            : rtc::nullopt;
 }
 
 rtc::Optional<RentACodec::CodecId> RentACodec::CodecIdByInst(
@@ -146,7 +69,7 @@ rtc::Optional<CodecInst> RentACodec::CodecInstByParams(const char* payload_name,
   rtc::Optional<CodecId> codec_id =
       CodecIdByParams(payload_name, sampling_freq_hz, channels);
   if (!codec_id)
-    return rtc::Optional<CodecInst>();
+    return rtc::nullopt;
   rtc::Optional<CodecInst> ci = CodecInstById(*codec_id);
   RTC_DCHECK(ci);
 
@@ -167,7 +90,7 @@ rtc::Optional<bool> RentACodec::IsSupportedNumChannels(CodecId codec_id,
   return i ? rtc::Optional<bool>(
                  ACMCodecDB::codec_settings_[*i].channel_support >=
                  num_channels)
-           : rtc::Optional<bool>();
+           : rtc::nullopt;
 }
 
 rtc::ArrayView<const CodecInst> RentACodec::Database() {
@@ -180,12 +103,11 @@ rtc::Optional<NetEqDecoder> RentACodec::NetEqDecoderFromCodecId(
     size_t num_channels) {
   rtc::Optional<int> i = CodecIndexFromId(codec_id);
   if (!i)
-    return rtc::Optional<NetEqDecoder>();
+    return rtc::nullopt;
   const NetEqDecoder ned = ACMCodecDB::neteq_decoders_[*i];
-  return rtc::Optional<NetEqDecoder>(
-      (ned == NetEqDecoder::kDecoderOpus && num_channels == 2)
-          ? NetEqDecoder::kDecoderOpus_2ch
-          : ned);
+  return (ned == NetEqDecoder::kDecoderOpus && num_channels == 2)
+             ? NetEqDecoder::kDecoderOpus_2ch
+             : ned;
 }
 
 RentACodec::RegistrationResult RentACodec::RegisterCngPayloadType(
@@ -229,16 +151,16 @@ std::unique_ptr<AudioEncoder> CreateEncoder(
 #if defined(WEBRTC_CODEC_ISACFX)
   if (STR_CASE_CMP(speech_inst.plname, "isac") == 0)
     return std::unique_ptr<AudioEncoder>(
-        new AudioEncoderIsacFix(speech_inst, bwinfo));
+        new AudioEncoderIsacFixImpl(speech_inst, bwinfo));
 #endif
 #if defined(WEBRTC_CODEC_ISAC)
   if (STR_CASE_CMP(speech_inst.plname, "isac") == 0)
     return std::unique_ptr<AudioEncoder>(
-        new AudioEncoderIsac(speech_inst, bwinfo));
+        new AudioEncoderIsacFloatImpl(speech_inst, bwinfo));
 #endif
 #ifdef WEBRTC_CODEC_OPUS
   if (STR_CASE_CMP(speech_inst.plname, "opus") == 0)
-    return std::unique_ptr<AudioEncoder>(new AudioEncoderOpus(speech_inst));
+    return std::unique_ptr<AudioEncoder>(new AudioEncoderOpusImpl(speech_inst));
 #endif
   if (STR_CASE_CMP(speech_inst.plname, "pcmu") == 0)
     return std::unique_ptr<AudioEncoder>(new AudioEncoderPcmU(speech_inst));
@@ -248,13 +170,12 @@ std::unique_ptr<AudioEncoder> CreateEncoder(
     return std::unique_ptr<AudioEncoder>(new AudioEncoderPcm16B(speech_inst));
 #ifdef WEBRTC_CODEC_ILBC
   if (STR_CASE_CMP(speech_inst.plname, "ilbc") == 0)
-    return std::unique_ptr<AudioEncoder>(new AudioEncoderIlbc(speech_inst));
+    return std::unique_ptr<AudioEncoder>(new AudioEncoderIlbcImpl(speech_inst));
 #endif
-#ifdef WEBRTC_CODEC_G722
   if (STR_CASE_CMP(speech_inst.plname, "g722") == 0)
-    return std::unique_ptr<AudioEncoder>(new AudioEncoderG722(speech_inst));
-#endif
-  LOG_F(LS_ERROR) << "Could not create encoder of type " << speech_inst.plname;
+    return std::unique_ptr<AudioEncoder>(new AudioEncoderG722Impl(speech_inst));
+  RTC_LOG_F(LS_ERROR) << "Could not create encoder of type "
+                      << speech_inst.plname;
   return std::unique_ptr<AudioEncoder>();
 }
 
@@ -304,10 +225,10 @@ std::unique_ptr<AudioDecoder> CreateIsacDecoder(
     const rtc::scoped_refptr<LockedIsacBandwidthInfo>& bwinfo) {
 #if defined(WEBRTC_CODEC_ISACFX)
   return std::unique_ptr<AudioDecoder>(
-      new AudioDecoderIsacFix(sample_rate_hz, bwinfo));
+      new AudioDecoderIsacFixImpl(sample_rate_hz, bwinfo));
 #elif defined(WEBRTC_CODEC_ISAC)
   return std::unique_ptr<AudioDecoder>(
-      new AudioDecoderIsac(sample_rate_hz, bwinfo));
+      new AudioDecoderIsacFloatImpl(sample_rate_hz, bwinfo));
 #else
   FATAL() << "iSAC is not supported.";
   return std::unique_ptr<AudioDecoder>();
@@ -355,7 +276,7 @@ std::unique_ptr<AudioEncoder> RentACodec::RentEncoderStack(
 
   auto pt = [&param](const std::map<int, int>& m) {
     auto it = m.find(param->speech_encoder->SampleRateHz());
-    return it == m.end() ? rtc::Optional<int>()
+    return it == m.end() ? rtc::nullopt
                          : rtc::Optional<int>(it->second);
   };
   auto cng_pt = pt(param->cng_payload_types);

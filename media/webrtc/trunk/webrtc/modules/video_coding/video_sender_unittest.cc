@@ -11,21 +11,21 @@
 #include <memory>
 #include <vector>
 
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8_common_types.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
-#include "webrtc/modules/video_coding/include/mock/mock_vcm_callbacks.h"
-#include "webrtc/modules/video_coding/include/mock/mock_video_codec_interface.h"
-#include "webrtc/modules/video_coding/include/video_coding.h"
-#include "webrtc/modules/video_coding/test/test_util.h"
-#include "webrtc/modules/video_coding/video_coding_impl.h"
-#include "webrtc/modules/video_coding/utility/default_video_bitrate_allocator.h"
-#include "webrtc/modules/video_coding/utility/simulcast_rate_allocator.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/test/frame_generator.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "api/video/i420_buffer.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp8/include/vp8_common_types.h"
+#include "modules/video_coding/codecs/vp8/simulcast_rate_allocator.h"
+#include "modules/video_coding/codecs/vp8/temporal_layers.h"
+#include "modules/video_coding/include/mock/mock_vcm_callbacks.h"
+#include "modules/video_coding/include/mock/mock_video_codec_interface.h"
+#include "modules/video_coding/include/video_coding.h"
+#include "modules/video_coding/video_coding_impl.h"
+#include "modules/video_coding/utility/default_video_bitrate_allocator.h"
+#include "system_wrappers/include/clock.h"
+#include "test/frame_generator.h"
+#include "test/gtest.h"
+#include "test/testsupport/fileutils.h"
+#include "test/video_codec_settings.h"
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -182,7 +182,7 @@ class TestVideoSender : public ::testing::Test {
   TestVideoSender() : clock_(1000), encoded_frame_callback_(&clock_) {}
 
   void SetUp() override {
-    sender_.reset(new VideoSender(&clock_, &encoded_frame_callback_, nullptr));
+    sender_.reset(new VideoSender(&clock_, &encoded_frame_callback_));
   }
 
   void AddFrame() {
@@ -207,7 +207,7 @@ class TestVideoSenderWithMockEncoder : public TestVideoSender {
   void SetUp() override {
     TestVideoSender::SetUp();
     sender_->RegisterExternalEncoder(&encoder_, kUnusedPayloadType, false);
-    VideoCodingModule::Codec(kVideoCodecVP8, &settings_);
+    webrtc::test::CodecSettings(kVideoCodecVP8, &settings_);
     settings_.numberOfSimulcastStreams = kNumberOfStreams;
     ConfigureStream(kDefaultWidth / 4, kDefaultHeight / 4, 100,
                     &settings_.simulcastStream[0]);
@@ -404,9 +404,9 @@ class TestVideoSenderWithVp8 : public TestVideoSender {
     const char* input_video = "foreman_cif";
     const int width = 352;
     const int height = 288;
-    generator_.reset(FrameGenerator::CreateFromYuvFile(
+    generator_ = FrameGenerator::CreateFromYuvFile(
         std::vector<std::string>(1, test::ResourcePath(input_video, "yuv")),
-        width, height, 1));
+        width, height, 1);
 
     codec_ = MakeVp8VideoCodec(width, height, 3);
     codec_.minBitrate = 10;
@@ -418,7 +418,7 @@ class TestVideoSenderWithVp8 : public TestVideoSender {
         codec_, std::unique_ptr<TemporalLayersFactory>(tl_factory)));
     codec_.VP8()->tl_factory = tl_factory;
 
-    encoder_.reset(VP8Encoder::Create());
+    encoder_ = VP8Encoder::Create();
     sender_->RegisterExternalEncoder(encoder_.get(), codec_.plType, false);
     EXPECT_EQ(0, sender_->RegisterSendCodec(&codec_, 1, 1200));
   }
@@ -427,7 +427,7 @@ class TestVideoSenderWithVp8 : public TestVideoSender {
                                       int height,
                                       int temporal_layers) {
     VideoCodec codec;
-    VideoCodingModule::Codec(kVideoCodecVP8, &codec);
+    webrtc::test::CodecSettings(kVideoCodecVP8, &codec);
     codec.width = width;
     codec.height = height;
     codec.VP8()->numberOfTemporalLayers = temporal_layers;
@@ -488,51 +488,6 @@ TEST_F(TestVideoSenderWithVp8, MAYBE_FixedTemporalLayersStrategy) {
   }
 }
 
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-#define MAYBE_RealTimeTemporalLayersStrategy \
-  DISABLED_RealTimeTemporalLayersStrategy
-#else
-#define MAYBE_RealTimeTemporalLayersStrategy RealTimeTemporalLayersStrategy
-#endif
-TEST_F(TestVideoSenderWithVp8, MAYBE_RealTimeTemporalLayersStrategy) {
-  VideoCodec codec = MakeVp8VideoCodec(352, 288, 3);
-  codec.minBitrate = 10;
-  codec.startBitrate = codec_bitrate_kbps_;
-  codec.maxBitrate = codec_bitrate_kbps_;
-
-  TemporalLayersFactory* tl_factory = new RealTimeTemporalLayersFactory();
-  rate_allocator_.reset(new SimulcastRateAllocator(
-      codec, std::unique_ptr<TemporalLayersFactory>(tl_factory)));
-  codec.VP8()->tl_factory = tl_factory;
-
-  EXPECT_EQ(0, sender_->RegisterSendCodec(&codec, 1, 1200));
-
-  const int low_b = codec_bitrate_kbps_ * 0.4;
-  const int mid_b = codec_bitrate_kbps_ * 0.6;
-  const int high_b = codec_bitrate_kbps_;
-
-  {
-    Vp8StreamInfo expected = {{7.5, 15.0, 30.0}, {low_b, mid_b, high_b}};
-    EXPECT_THAT(SimulateWithFramerate(30.0), MatchesVp8StreamInfo(expected));
-  }
-  {
-    Vp8StreamInfo expected = {{5.0, 10.0, 20.0}, {low_b, mid_b, high_b}};
-    EXPECT_THAT(SimulateWithFramerate(20.0), MatchesVp8StreamInfo(expected));
-  }
-  {
-    Vp8StreamInfo expected = {{7.5, 15.0, 15.0}, {mid_b, high_b, high_b}};
-    EXPECT_THAT(SimulateWithFramerate(15.0), MatchesVp8StreamInfo(expected));
-  }
-  {
-    Vp8StreamInfo expected = {{5.0, 10.0, 10.0}, {mid_b, high_b, high_b}};
-    EXPECT_THAT(SimulateWithFramerate(10.0), MatchesVp8StreamInfo(expected));
-  }
-  {
-    // TODO(andresp): Find out why this fails with framerate = 7.5
-    Vp8StreamInfo expected = {{7.0, 7.0, 7.0}, {high_b, high_b, high_b}};
-    EXPECT_THAT(SimulateWithFramerate(7.0), MatchesVp8StreamInfo(expected));
-  }
-}
 }  // namespace
 }  // namespace vcm
 }  // namespace webrtc

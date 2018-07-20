@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
-#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+#ifndef MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+#define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
 
-#include "webrtc/modules/video_capture/device_info_impl.h"
-#include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "modules/video_capture/device_info_impl.h"
+#include "modules/video_capture/video_capture_impl.h"
 
-#include <dshow.h>
-#include <windows.h>
+#include <Dshow.h>
 
 namespace webrtc
 {
@@ -43,7 +42,6 @@ public:
 
     int32_t Init();
     virtual uint32_t NumberOfDevices();
-    int32_t Refresh() { return 0; }
 
     /*
      * Returns the available capture devices.
@@ -55,8 +53,7 @@ public:
                       char* deviceUniqueIdUTF8,
                       uint32_t deviceUniqueIdUTF8Length,
                       char* productUniqueIdUTF8,
-                      uint32_t productUniqueIdUTF8Length,
-                      pid_t* pid);
+                      uint32_t productUniqueIdUTF8Length);
 
     /*
      * Display OS /capture device specific settings dialog
@@ -93,19 +90,17 @@ protected:
                           char* deviceUniqueIdUTF8,
                           uint32_t deviceUniqueIdUTF8Length,
                           char* productUniqueIdUTF8,
-                          uint32_t productUniqueIdUTF8Length,
-                          pid_t* pid);
+                          uint32_t productUniqueIdUTF8Length);
 
     virtual int32_t
         CreateCapabilityMap(const char* deviceUniqueIdUTF8);
+
 private:
     ICreateDevEnum* _dsDevEnum;
+    IEnumMoniker* _dsMonikerDevEnum;
     bool _CoUninitializeIsRequired;
     std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
-    HWND _hwnd;
-    WNDCLASS _wndClass;
-    HINSTANCE _hInstance;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
-#endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+#endif // MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_

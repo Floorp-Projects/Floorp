@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
-#define WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#ifndef MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#define MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
 
-#include "webrtc/typedefs.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -32,8 +32,7 @@ enum VCMJitterBufferEnum {
   // overshoot bitrate target.
   kMaxPacketsInSession = 1400,      // Allows ~2MB frames.
   kBufferIncStepSizeBytes = 30000,  // >20 packets.
-  kMaxJBFrameSizeBytes            = 4000000, // sanity don't go above 4Mbyte.
-  kBufferSafetyMargin             = 100      // enough for ~50 NALs in a STAP-A
+  kMaxJBFrameSizeBytes = 4000000    // sanity don't go above 4Mbyte.
 };
 
 enum VCMFrameBufferEnum {
@@ -70,4 +69,4 @@ enum VCMNaluCompleteness {
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#endif  // MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_

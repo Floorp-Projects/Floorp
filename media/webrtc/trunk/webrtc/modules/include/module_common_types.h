@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
-#define WEBRTC_MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
+#ifndef MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
+#define MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
 
 #include <assert.h>
 #include <string.h>  // memcpy
@@ -17,15 +17,18 @@
 #include <algorithm>
 #include <limits>
 
-#include "webrtc/api/video/video_rotation.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/deprecation.h"
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8_globals.h"
-#include "webrtc/modules/video_coding/codecs/vp9/include/vp9_globals.h"
-#include "webrtc/modules/video_coding/codecs/h264/include/h264_globals.h"
-#include "webrtc/typedefs.h"
+#include "api/optional.h"
+#include "api/video/video_rotation.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/include/module_common_types_public.h"
+#include "modules/video_coding/codecs/h264/include/h264_globals.h"
+#include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
+#include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/deprecation.h"
+#include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/timeutils.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -58,10 +61,11 @@ struct RTPVideoHeader {
 
   PlayoutDelay playout_delay;
 
-  union {
-    bool is_first_packet_in_frame;
-    RTC_DEPRECATED bool isFirstPacket;  // first packet in frame
-  };
+  VideoContentType content_type;
+
+  VideoSendTiming video_timing;
+
+  bool is_first_packet_in_frame;
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
@@ -87,13 +91,29 @@ class RTPFragmentationHeader {
         fragmentationOffset(NULL),
         fragmentationLength(NULL),
         fragmentationTimeDiff(NULL),
-        fragmentationPlType(NULL) {};
+        fragmentationPlType(NULL) {}
+
+  RTPFragmentationHeader(RTPFragmentationHeader&& other)
+      : RTPFragmentationHeader() {
+    std::swap(*this, other);
+  }
 
   ~RTPFragmentationHeader() {
     delete[] fragmentationOffset;
     delete[] fragmentationLength;
     delete[] fragmentationTimeDiff;
     delete[] fragmentationPlType;
+  }
+
+  void operator=(RTPFragmentationHeader&& other) { std::swap(*this, other); }
+
+  friend void swap(RTPFragmentationHeader& a, RTPFragmentationHeader& b) {
+    using std::swap;
+    swap(a.fragmentationVectorSize, b.fragmentationVectorSize);
+    swap(a.fragmentationOffset, b.fragmentationOffset);
+    swap(a.fragmentationLength, b.fragmentationLength);
+    swap(a.fragmentationTimeDiff, b.fragmentationTimeDiff);
+    swap(a.fragmentationPlType, b.fragmentationPlType);
   }
 
   void CopyFrom(const RTPFragmentationHeader& src) {
@@ -271,17 +291,21 @@ class CallStatsObserver {
  * states.
  *
  * Notes
- * - The total number of samples in |data_| is
- *   samples_per_channel_ * num_channels_
- *
+ * - The total number of samples is samples_per_channel_ * num_channels_
  * - Stereo data is interleaved starting with the left channel.
- *
  */
 class AudioFrame {
  public:
-  // Stereo, 32 kHz, 60 ms (2 * 32 * 60)
+  // Using constexpr here causes linker errors unless the variable also has an
+  // out-of-class definition, which is impractical in this header-only class.
+  // (This makes no sense because it compiles as an enum value, which we most
+  // certainly cannot take the address of, just fine.) C++17 introduces inline
+  // variables which should allow us to switch to constexpr and keep this a
+  // header-only class.
   enum : size_t {
-    kMaxDataSizeSamples = 3840
+    // Stereo, 32 kHz, 60 ms (2 * 32 * 60)
+    kMaxDataSizeSamples = 3840,
+    kMaxDataSizeBytes = kMaxDataSizeSamples * sizeof(int16_t),
   };
 
   enum VADActivity {
@@ -299,26 +323,61 @@ class AudioFrame {
 
   AudioFrame();
 
-  // Resets all members to their default state (except does not modify the
-  // contents of |data_|).
+  // Resets all members to their default state.
   void Reset();
+  // Same as Reset(), but leaves mute state unchanged. Muting a frame requires
+  // the buffer to be zeroed on the next call to mutable_data(). Callers
+  // intending to write to the buffer immediately after Reset() can instead use
+  // ResetWithoutMuting() to skip this wasteful zeroing.
+  void ResetWithoutMuting();
 
-  void UpdateFrame(int id, uint32_t timestamp, const int16_t* data,
+  // TODO(solenberg): Remove once downstream users of AudioFrame have updated.
+  RTC_DEPRECATED
+      void UpdateFrame(int id, uint32_t timestamp, const int16_t* data,
+                       size_t samples_per_channel, int sample_rate_hz,
+                       SpeechType speech_type, VADActivity vad_activity,
+                       size_t num_channels = 1) {
+    RTC_UNUSED(id);
+    UpdateFrame(timestamp, data, samples_per_channel, sample_rate_hz,
+                speech_type, vad_activity, num_channels);
+  }
+
+  void UpdateFrame(uint32_t timestamp, const int16_t* data,
                    size_t samples_per_channel, int sample_rate_hz,
                    SpeechType speech_type, VADActivity vad_activity,
                    size_t num_channels = 1);
 
   void CopyFrom(const AudioFrame& src);
 
+  // Sets a wall-time clock timestamp in milliseconds to be used for profiling
+  // of time between two points in the audio chain.
+  // Example:
+  //   t0: UpdateProfileTimeStamp()
+  //   t1: ElapsedProfileTimeMs() => t1 - t0 [msec]
+  void UpdateProfileTimeStamp();
+  // Returns the time difference between now and when UpdateProfileTimeStamp()
+  // was last called. Returns -1 if UpdateProfileTimeStamp() has not yet been
+  // called.
+  int64_t ElapsedProfileTimeMs() const;
+
+  // data() returns a zeroed static buffer if the frame is muted.
+  // mutable_frame() always returns a non-static buffer; the first call to
+  // mutable_frame() zeros the non-static buffer and marks the frame unmuted.
+  const int16_t* data() const;
+  int16_t* mutable_data();
+
+  // Prefer to mute frames using AudioFrameOperations::Mute.
+  void Mute();
+  // Frame is muted by default.
+  bool muted() const;
+
   // These methods are deprecated. Use the functions in
   // webrtc/audio/utility instead. These methods will exists for a
   // short period of time until webrtc clients have updated. See
   // webrtc:6548 for details.
-  RTC_DEPRECATED void Mute();
   RTC_DEPRECATED AudioFrame& operator>>=(const int rhs);
   RTC_DEPRECATED AudioFrame& operator+=(const AudioFrame& rhs);
 
-  int id_;
   // RTP timestamp of the first sample in the AudioFrame.
   uint32_t timestamp_ = 0;
   // Time since the first frame in milliseconds.
@@ -327,25 +386,45 @@ class AudioFrame {
   // NTP time of the estimated capture time in local timebase in milliseconds.
   // -1 represents an uninitialized value.
   int64_t ntp_time_ms_ = -1;
-  int16_t data_[kMaxDataSizeSamples];
   size_t samples_per_channel_ = 0;
   int sample_rate_hz_ = 0;
   size_t num_channels_ = 0;
   SpeechType speech_type_ = kUndefined;
   VADActivity vad_activity_ = kVadUnknown;
+  // Monotonically increasing timestamp intended for profiling of audio frames.
+  // Typically used for measuring elapsed time between two different points in
+  // the audio path. No lock is used to save resources and we are thread safe
+  // by design. Also, rtc::Optional is not used since it will cause a "complex
+  // class/struct needs an explicit out-of-line destructor" build error.
+  int64_t profile_timestamp_ms_ = 0;
 
  private:
+  // A permamently zeroed out buffer to represent muted frames. This is a
+  // header-only class, so the only way to avoid creating a separate empty
+  // buffer per translation unit is to wrap a static in an inline function.
+  static const int16_t* empty_data() {
+    static const int16_t kEmptyData[kMaxDataSizeSamples] = {0};
+    static_assert(sizeof(kEmptyData) == kMaxDataSizeBytes, "kMaxDataSizeBytes");
+    return kEmptyData;
+  }
+
+  int16_t data_[kMaxDataSizeSamples];
+  bool muted_ = true;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(AudioFrame);
 };
 
-// TODO(henrik.lundin) Can we remove the call to data_()?
-// See https://bugs.chromium.org/p/webrtc/issues/detail?id=5647.
-inline AudioFrame::AudioFrame()
-    : data_() {
+inline AudioFrame::AudioFrame() {
+  // Visual Studio doesn't like this in the class definition.
+  static_assert(sizeof(data_) == kMaxDataSizeBytes, "kMaxDataSizeBytes");
 }
 
 inline void AudioFrame::Reset() {
-  id_ = -1;
+  ResetWithoutMuting();
+  muted_ = true;
+}
+
+inline void AudioFrame::ResetWithoutMuting() {
   // TODO(wu): Zero is a valid value for |timestamp_|. We should initialize
   // to an invalid value, or add a new member to indicate invalidity.
   timestamp_ = 0;
@@ -356,17 +435,16 @@ inline void AudioFrame::Reset() {
   num_channels_ = 0;
   speech_type_ = kUndefined;
   vad_activity_ = kVadUnknown;
+  profile_timestamp_ms_ = 0;
 }
 
-inline void AudioFrame::UpdateFrame(int id,
-                                    uint32_t timestamp,
+inline void AudioFrame::UpdateFrame(uint32_t timestamp,
                                     const int16_t* data,
                                     size_t samples_per_channel,
                                     int sample_rate_hz,
                                     SpeechType speech_type,
                                     VADActivity vad_activity,
                                     size_t num_channels) {
-  id_ = id;
   timestamp_ = timestamp;
   samples_per_channel_ = samples_per_channel;
   sample_rate_hz_ = sample_rate_hz;
@@ -376,20 +454,21 @@ inline void AudioFrame::UpdateFrame(int id,
 
   const size_t length = samples_per_channel * num_channels;
   assert(length <= kMaxDataSizeSamples);
-  if (data != NULL) {
+  if (data != nullptr) {
     memcpy(data_, data, sizeof(int16_t) * length);
+    muted_ = false;
   } else {
-    memset(data_, 0, sizeof(int16_t) * length);
+    muted_ = true;
   }
 }
 
 inline void AudioFrame::CopyFrom(const AudioFrame& src) {
   if (this == &src) return;
 
-  id_ = src.id_;
   timestamp_ = src.timestamp_;
   elapsed_time_ms_ = src.elapsed_time_ms_;
   ntp_time_ms_ = src.ntp_time_ms_;
+  muted_ = src.muted();
   samples_per_channel_ = src.samples_per_channel_;
   sample_rate_hz_ = src.sample_rate_hz_;
   speech_type_ = src.speech_type_;
@@ -398,16 +477,48 @@ inline void AudioFrame::CopyFrom(const AudioFrame& src) {
 
   const size_t length = samples_per_channel_ * num_channels_;
   assert(length <= kMaxDataSizeSamples);
-  memcpy(data_, src.data_, sizeof(int16_t) * length);
+  if (!src.muted()) {
+    memcpy(data_, src.data(), sizeof(int16_t) * length);
+    muted_ = false;
+  }
+}
+
+inline void AudioFrame::UpdateProfileTimeStamp() {
+  profile_timestamp_ms_ = rtc::TimeMillis();
+}
+
+inline int64_t AudioFrame::ElapsedProfileTimeMs() const {
+  if (profile_timestamp_ms_ == 0) {
+    // Profiling has not been activated.
+    return -1;
+  }
+  return rtc::TimeSince(profile_timestamp_ms_);
+}
+
+inline const int16_t* AudioFrame::data() const {
+  return muted_ ? empty_data() : data_;
+}
+
+// TODO(henrik.lundin) Can we skip zeroing the buffer?
+// See https://bugs.chromium.org/p/webrtc/issues/detail?id=5647.
+inline int16_t* AudioFrame::mutable_data() {
+  if (muted_) {
+    memset(data_, 0, kMaxDataSizeBytes);
+    muted_ = false;
+  }
+  return data_;
 }
 
 inline void AudioFrame::Mute() {
-  memset(data_, 0, samples_per_channel_ * num_channels_ * sizeof(int16_t));
+  muted_ = true;
 }
+
+inline bool AudioFrame::muted() const { return muted_; }
 
 inline AudioFrame& AudioFrame::operator>>=(const int rhs) {
   assert((num_channels_ > 0) && (num_channels_ < 3));
   if ((num_channels_ > 2) || (num_channels_ < 1)) return *this;
+  if (muted_) return *this;
 
   for (size_t i = 0; i < samples_per_channel_ * num_channels_; i++) {
     data_[i] = static_cast<int16_t>(data_[i] >> rhs);
@@ -421,7 +532,7 @@ inline AudioFrame& AudioFrame::operator+=(const AudioFrame& rhs) {
   if ((num_channels_ > 2) || (num_channels_ < 1)) return *this;
   if (num_channels_ != rhs.num_channels_) return *this;
 
-  bool noPrevData = false;
+  bool noPrevData = muted_;
   if (samples_per_channel_ != rhs.samples_per_channel_) {
     if (samples_per_channel_ == 0) {
       // special case we have no data to start with
@@ -440,100 +551,47 @@ inline AudioFrame& AudioFrame::operator+=(const AudioFrame& rhs) {
 
   if (speech_type_ != rhs.speech_type_) speech_type_ = kUndefined;
 
-  if (noPrevData) {
-    memcpy(data_, rhs.data_,
-           sizeof(int16_t) * rhs.samples_per_channel_ * num_channels_);
-  } else {
-    // IMPROVEMENT this can be done very fast in assembly
-    for (size_t i = 0; i < samples_per_channel_ * num_channels_; i++) {
-      int32_t wrap_guard =
-          static_cast<int32_t>(data_[i]) + static_cast<int32_t>(rhs.data_[i]);
-      data_[i] = rtc::saturated_cast<int16_t>(wrap_guard);
+  if (!rhs.muted()) {
+    muted_ = false;
+    if (noPrevData) {
+      memcpy(data_, rhs.data(),
+             sizeof(int16_t) * rhs.samples_per_channel_ * num_channels_);
+    } else {
+      // IMPROVEMENT this can be done very fast in assembly
+      for (size_t i = 0; i < samples_per_channel_ * num_channels_; i++) {
+        int32_t wrap_guard =
+            static_cast<int32_t>(data_[i]) + static_cast<int32_t>(rhs.data_[i]);
+        data_[i] = rtc::saturated_cast<int16_t>(wrap_guard);
+      }
     }
   }
+
   return *this;
 }
 
-inline bool IsNewerSequenceNumber(uint16_t sequence_number,
-                                  uint16_t prev_sequence_number) {
-  // Distinguish between elements that are exactly 0x8000 apart.
-  // If s1>s2 and |s1-s2| = 0x8000: IsNewer(s1,s2)=true, IsNewer(s2,s1)=false
-  // rather than having IsNewer(s1,s2) = IsNewer(s2,s1) = false.
-  if (static_cast<uint16_t>(sequence_number - prev_sequence_number) == 0x8000) {
-    return sequence_number > prev_sequence_number;
-  }
-  return sequence_number != prev_sequence_number &&
-         static_cast<uint16_t>(sequence_number - prev_sequence_number) < 0x8000;
-}
+struct PacedPacketInfo {
+  PacedPacketInfo() {}
+  PacedPacketInfo(int probe_cluster_id,
+                  int probe_cluster_min_probes,
+                  int probe_cluster_min_bytes)
+      : probe_cluster_id(probe_cluster_id),
+        probe_cluster_min_probes(probe_cluster_min_probes),
+        probe_cluster_min_bytes(probe_cluster_min_bytes) {}
 
-inline bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
-  // Distinguish between elements that are exactly 0x80000000 apart.
-  // If t1>t2 and |t1-t2| = 0x80000000: IsNewer(t1,t2)=true,
-  // IsNewer(t2,t1)=false
-  // rather than having IsNewer(t1,t2) = IsNewer(t2,t1) = false.
-  if (static_cast<uint32_t>(timestamp - prev_timestamp) == 0x80000000) {
-    return timestamp > prev_timestamp;
-  }
-  return timestamp != prev_timestamp &&
-         static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
-}
- 
-inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
-  return timestamp == prev_timestamp ||
-      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
-}
-
-inline uint16_t LatestSequenceNumber(uint16_t sequence_number1,
-                                     uint16_t sequence_number2) {
-  return IsNewerSequenceNumber(sequence_number1, sequence_number2)
-             ? sequence_number1
-             : sequence_number2;
-}
-
-inline uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2) {
-  return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
-}
-
-// Utility class to unwrap a sequence number to a larger type, for easier
-// handling large ranges. Note that sequence numbers will never be unwrapped
-// to a negative value.
-class SequenceNumberUnwrapper {
- public:
-  SequenceNumberUnwrapper() : last_seq_(-1) {}
-
-  // Get the unwrapped sequence, but don't update the internal state.
-  int64_t UnwrapWithoutUpdate(uint16_t sequence_number) {
-    if (last_seq_ == -1)
-      return sequence_number;
-
-    uint16_t cropped_last = static_cast<uint16_t>(last_seq_);
-    int64_t delta = sequence_number - cropped_last;
-    if (IsNewerSequenceNumber(sequence_number, cropped_last)) {
-      if (delta < 0)
-        delta += (1 << 16);  // Wrap forwards.
-    } else if (delta > 0 && (last_seq_ + delta - (1 << 16)) >= 0) {
-      // If sequence_number is older but delta is positive, this is a backwards
-      // wrap-around. However, don't wrap backwards past 0 (unwrapped).
-      delta -= (1 << 16);
-    }
-
-    return last_seq_ + delta;
+  bool operator==(const PacedPacketInfo& rhs) const {
+    return send_bitrate_bps == rhs.send_bitrate_bps &&
+           probe_cluster_id == rhs.probe_cluster_id &&
+           probe_cluster_min_probes == rhs.probe_cluster_min_probes &&
+           probe_cluster_min_bytes == rhs.probe_cluster_min_bytes;
   }
 
-  // Only update the internal state to the specified last (unwrapped) sequence.
-  void UpdateLast(int64_t last_sequence) { last_seq_ = last_sequence; }
-
-  // Unwrap the sequence number and update the internal state.
-  int64_t Unwrap(uint16_t sequence_number) {
-    int64_t unwrapped = UnwrapWithoutUpdate(sequence_number);
-    UpdateLast(unwrapped);
-    return unwrapped;
-  }
-
- private:
-  int64_t last_seq_;
+  static constexpr int kNotAProbe = -1;
+  int send_bitrate_bps = -1;
+  int probe_cluster_id = kNotAProbe;
+  int probe_cluster_min_probes = -1;
+  int probe_cluster_min_bytes = -1;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
+#endif  // MODULES_INCLUDE_MODULE_COMMON_TYPES_H_

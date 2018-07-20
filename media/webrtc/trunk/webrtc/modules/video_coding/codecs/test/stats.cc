@@ -8,173 +8,214 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/codecs/test/stats.h"
+#include "modules/video_coding/codecs/test/stats.h"
 
-#include <assert.h>
 #include <stdio.h>
 
-#include <algorithm>  // min_element, max_element
+#include <algorithm>
 
-#include "webrtc/base/format_macros.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/format_macros.h"
 
 namespace webrtc {
 namespace test {
 
-FrameStatistic::FrameStatistic()
-    : encoding_successful(false),
-      decoding_successful(false),
-      encode_return_code(0),
-      decode_return_code(0),
-      encode_time_in_us(0),
-      decode_time_in_us(0),
-      frame_number(0),
-      packets_dropped(0),
-      total_packets(0),
-      bit_rate_in_kbps(0),
-      encoded_frame_length_in_bytes(0),
-      frame_type(kVideoFrameDelta) {}
-
-Stats::Stats() {}
-
-Stats::~Stats() {}
+namespace {
 
 bool LessForEncodeTime(const FrameStatistic& s1, const FrameStatistic& s2) {
-  return s1.encode_time_in_us < s2.encode_time_in_us;
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.encode_time_us < s2.encode_time_us;
 }
 
 bool LessForDecodeTime(const FrameStatistic& s1, const FrameStatistic& s2) {
-  return s1.decode_time_in_us < s2.decode_time_in_us;
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.decode_time_us < s2.decode_time_us;
 }
 
 bool LessForEncodedSize(const FrameStatistic& s1, const FrameStatistic& s2) {
-  return s1.encoded_frame_length_in_bytes < s2.encoded_frame_length_in_bytes;
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.encoded_frame_size_bytes < s2.encoded_frame_size_bytes;
 }
 
 bool LessForBitRate(const FrameStatistic& s1, const FrameStatistic& s2) {
-  return s1.bit_rate_in_kbps < s2.bit_rate_in_kbps;
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.bitrate_kbps < s2.bitrate_kbps;
 }
 
-FrameStatistic& Stats::NewFrame(int frame_number) {
-  assert(frame_number >= 0);
-  FrameStatistic stat;
-  stat.frame_number = frame_number;
-  stats_.push_back(stat);
-  return stats_[frame_number];
+bool LessForPsnr(const FrameStatistic& s1, const FrameStatistic& s2) {
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.psnr < s2.psnr;
 }
 
-void Stats::PrintSummary() {
-  printf("Processing summary:\n");
-  if (stats_.size() == 0) {
+bool LessForSsim(const FrameStatistic& s1, const FrameStatistic& s2) {
+  RTC_DCHECK_NE(s1.frame_number, s2.frame_number);
+  return s1.ssim < s2.ssim;
+}
+
+}  // namespace
+
+FrameStatistic* Stats::AddFrame() {
+  // We don't expect more frames than what can be stored in an int.
+  stats_.emplace_back(static_cast<int>(stats_.size()));
+  return &stats_.back();
+}
+
+FrameStatistic* Stats::GetFrame(int frame_number) {
+  RTC_CHECK_GE(frame_number, 0);
+  RTC_CHECK_LT(frame_number, stats_.size());
+  return &stats_[frame_number];
+}
+
+size_t Stats::size() const {
+  return stats_.size();
+}
+
+void Stats::PrintSummary() const {
+  if (stats_.empty()) {
     printf("No frame statistics have been logged yet.\n");
     return;
   }
 
-  // Calculate min, max, average and total encoding time
-  int total_encoding_time_in_us = 0;
-  int total_decoding_time_in_us = 0;
-  size_t total_encoded_frames_lengths = 0;
-  size_t total_encoded_key_frames_lengths = 0;
-  size_t total_encoded_nonkey_frames_lengths = 0;
-  size_t nbr_keyframes = 0;
-  size_t nbr_nonkeyframes = 0;
+  printf("Encode/decode statistics\n==\n");
 
-  for (FrameStatisticsIterator it = stats_.begin(); it != stats_.end(); ++it) {
-    total_encoding_time_in_us += it->encode_time_in_us;
-    total_decoding_time_in_us += it->decode_time_in_us;
-    total_encoded_frames_lengths += it->encoded_frame_length_in_bytes;
-    if (it->frame_type == webrtc::kVideoFrameKey) {
-      total_encoded_key_frames_lengths += it->encoded_frame_length_in_bytes;
-      nbr_keyframes++;
+  // Calculate min, max, average and total encoding time.
+  int total_encoding_time_us = 0;
+  int total_decoding_time_us = 0;
+  size_t total_encoded_frame_size_bytes = 0;
+  size_t total_encoded_key_frame_size_bytes = 0;
+  size_t total_encoded_delta_frame_size_bytes = 0;
+  size_t num_key_frames = 0;
+  size_t num_delta_frames = 0;
+  int num_encode_failures = 0;
+  double total_psnr = 0.0;
+  double total_ssim = 0.0;
+
+  for (const FrameStatistic& stat : stats_) {
+    total_encoding_time_us += stat.encode_time_us;
+    total_decoding_time_us += stat.decode_time_us;
+    total_encoded_frame_size_bytes += stat.encoded_frame_size_bytes;
+    if (stat.frame_type == webrtc::kVideoFrameKey) {
+      total_encoded_key_frame_size_bytes += stat.encoded_frame_size_bytes;
+      ++num_key_frames;
     } else {
-      total_encoded_nonkey_frames_lengths += it->encoded_frame_length_in_bytes;
-      nbr_nonkeyframes++;
+      total_encoded_delta_frame_size_bytes += stat.encoded_frame_size_bytes;
+      ++num_delta_frames;
+    }
+    if (stat.encode_return_code != 0) {
+      ++num_encode_failures;
+    }
+    if (stat.decoding_successful) {
+      total_psnr += stat.psnr;
+      total_ssim += stat.ssim;
     }
   }
 
-  FrameStatisticsIterator frame;
-
-  // ENCODING
+  // Encoding stats.
+  printf("# Encoded frame failures: %d\n", num_encode_failures);
   printf("Encoding time:\n");
-  frame = std::min_element(stats_.begin(), stats_.end(), LessForEncodeTime);
-  printf("  Min     : %7d us (frame %d)\n", frame->encode_time_in_us,
-         frame->frame_number);
-
-  frame = std::max_element(stats_.begin(), stats_.end(), LessForEncodeTime);
-  printf("  Max     : %7d us (frame %d)\n", frame->encode_time_in_us,
-         frame->frame_number);
-
+  auto frame_it =
+      std::min_element(stats_.begin(), stats_.end(), LessForEncodeTime);
+  printf("  Min     : %7d us (frame %d)\n", frame_it->encode_time_us,
+         frame_it->frame_number);
+  frame_it = std::max_element(stats_.begin(), stats_.end(), LessForEncodeTime);
+  printf("  Max     : %7d us (frame %d)\n", frame_it->encode_time_us,
+         frame_it->frame_number);
   printf("  Average : %7d us\n",
-         static_cast<int>(total_encoding_time_in_us / stats_.size()));
+         static_cast<int>(total_encoding_time_us / stats_.size()));
 
-  // DECODING
+  // Decoding stats.
   printf("Decoding time:\n");
-  // only consider frames that were successfully decoded (packet loss may cause
-  // failures)
+  // Only consider successfully decoded frames (packet loss may cause failures).
   std::vector<FrameStatistic> decoded_frames;
-  for (std::vector<FrameStatistic>::iterator it = stats_.begin();
-       it != stats_.end(); ++it) {
-    if (it->decoding_successful) {
-      decoded_frames.push_back(*it);
+  for (const FrameStatistic& stat : stats_) {
+    if (stat.decoding_successful) {
+      decoded_frames.push_back(stat);
     }
   }
-  if (decoded_frames.size() == 0) {
+  if (decoded_frames.empty()) {
     printf("No successfully decoded frames exist in this statistics.\n");
   } else {
-    frame = std::min_element(decoded_frames.begin(), decoded_frames.end(),
-                             LessForDecodeTime);
-    printf("  Min     : %7d us (frame %d)\n", frame->decode_time_in_us,
-           frame->frame_number);
-
-    frame = std::max_element(decoded_frames.begin(), decoded_frames.end(),
-                             LessForDecodeTime);
-    printf("  Max     : %7d us (frame %d)\n", frame->decode_time_in_us,
-           frame->frame_number);
-
+    frame_it = std::min_element(decoded_frames.begin(), decoded_frames.end(),
+                                LessForDecodeTime);
+    printf("  Min     : %7d us (frame %d)\n", frame_it->decode_time_us,
+           frame_it->frame_number);
+    frame_it = std::max_element(decoded_frames.begin(), decoded_frames.end(),
+                                LessForDecodeTime);
+    printf("  Max     : %7d us (frame %d)\n", frame_it->decode_time_us,
+           frame_it->frame_number);
     printf("  Average : %7d us\n",
-           static_cast<int>(total_decoding_time_in_us / decoded_frames.size()));
+           static_cast<int>(total_decoding_time_us / decoded_frames.size()));
     printf("  Failures: %d frames failed to decode.\n",
            static_cast<int>(stats_.size() - decoded_frames.size()));
   }
 
-  // SIZE
+  // Frame size stats.
   printf("Frame sizes:\n");
-  frame = std::min_element(stats_.begin(), stats_.end(), LessForEncodedSize);
+  frame_it = std::min_element(stats_.begin(), stats_.end(), LessForEncodedSize);
   printf("  Min     : %7" PRIuS " bytes (frame %d)\n",
-         frame->encoded_frame_length_in_bytes, frame->frame_number);
-
-  frame = std::max_element(stats_.begin(), stats_.end(), LessForEncodedSize);
+         frame_it->encoded_frame_size_bytes, frame_it->frame_number);
+  frame_it = std::max_element(stats_.begin(), stats_.end(), LessForEncodedSize);
   printf("  Max     : %7" PRIuS " bytes (frame %d)\n",
-         frame->encoded_frame_length_in_bytes, frame->frame_number);
-
+         frame_it->encoded_frame_size_bytes, frame_it->frame_number);
   printf("  Average : %7" PRIuS " bytes\n",
-         total_encoded_frames_lengths / stats_.size());
-  if (nbr_keyframes > 0) {
+         total_encoded_frame_size_bytes / stats_.size());
+  if (num_key_frames > 0) {
     printf("  Average key frame size    : %7" PRIuS " bytes (%" PRIuS
            " keyframes)\n",
-           total_encoded_key_frames_lengths / nbr_keyframes, nbr_keyframes);
+           total_encoded_key_frame_size_bytes / num_key_frames, num_key_frames);
   }
-  if (nbr_nonkeyframes > 0) {
+  if (num_delta_frames > 0) {
     printf("  Average non-key frame size: %7" PRIuS " bytes (%" PRIuS
            " frames)\n",
-           total_encoded_nonkey_frames_lengths / nbr_nonkeyframes,
-           nbr_nonkeyframes);
+           total_encoded_delta_frame_size_bytes / num_delta_frames,
+           num_delta_frames);
   }
 
-  // BIT RATE
-  printf("Bit rates:\n");
-  frame = std::min_element(stats_.begin(), stats_.end(), LessForBitRate);
-  printf("  Min bit rate: %7d kbps (frame %d)\n", frame->bit_rate_in_kbps,
-         frame->frame_number);
+  // Bitrate stats.
+  printf("Bitrates:\n");
+  frame_it = std::min_element(stats_.begin(), stats_.end(), LessForBitRate);
+  printf("  Min bitrate: %7d kbps (frame %d)\n", frame_it->bitrate_kbps,
+         frame_it->frame_number);
+  frame_it = std::max_element(stats_.begin(), stats_.end(), LessForBitRate);
+  printf("  Max bitrate: %7d kbps (frame %d)\n", frame_it->bitrate_kbps,
+         frame_it->frame_number);
 
-  frame = std::max_element(stats_.begin(), stats_.end(), LessForBitRate);
-  printf("  Max bit rate: %7d kbps (frame %d)\n", frame->bit_rate_in_kbps,
-         frame->frame_number);
+  // Quality.
+  printf("Quality:\n");
+  if (decoded_frames.empty()) {
+    printf("No successfully decoded frames exist in this statistics.\n");
+  } else {
+    frame_it = std::min_element(decoded_frames.begin(), decoded_frames.end(),
+                                LessForPsnr);
+    printf("  PSNR min: %f (frame %d)\n", frame_it->psnr,
+           frame_it->frame_number);
+    printf("  PSNR avg: %f\n", total_psnr / decoded_frames.size());
+
+    frame_it = std::min_element(decoded_frames.begin(), decoded_frames.end(),
+                                LessForSsim);
+    printf("  SSIM min: %f (frame %d)\n", frame_it->ssim,
+           frame_it->frame_number);
+    printf("  SSIM avg: %f\n", total_ssim / decoded_frames.size());
+  }
 
   printf("\n");
-  printf("Total encoding time  : %7d ms.\n", total_encoding_time_in_us / 1000);
-  printf("Total decoding time  : %7d ms.\n", total_decoding_time_in_us / 1000);
+  printf("Total encoding time  : %7d ms.\n", total_encoding_time_us / 1000);
+  printf("Total decoding time  : %7d ms.\n", total_decoding_time_us / 1000);
   printf("Total processing time: %7d ms.\n",
-         (total_encoding_time_in_us + total_decoding_time_in_us) / 1000);
+         (total_encoding_time_us + total_decoding_time_us) / 1000);
+
+  // QP stats.
+  int total_qp = 0;
+  int total_qp_count = 0;
+  for (const FrameStatistic& stat : stats_) {
+    if (stat.qp >= 0) {
+      total_qp += stat.qp;
+      ++total_qp_count;
+    }
+  }
+  int avg_qp = (total_qp_count > 0) ? (total_qp / total_qp_count) : -1;
+  printf("Average QP: %d\n", avg_qp);
+  printf("\n");
 }
 
 }  // namespace test

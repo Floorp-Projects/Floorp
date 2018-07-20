@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/common_audio/wav_file.h"
+#include "common_audio/wav_file.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <limits>
 #include <sstream>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/common_audio/include/audio_util.h"
-#include "webrtc/common_audio/wav_header.h"
+#include "common_audio/include/audio_util.h"
+#include "common_audio/wav_header.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -77,6 +77,9 @@ size_t WavReader::num_samples() const {
 }
 
 size_t WavReader::ReadSamples(size_t num_samples, int16_t* samples) {
+#ifndef WEBRTC_ARCH_LITTLE_ENDIAN
+#error "Need to convert samples to big-endian when reading from WAV file"
+#endif
   // There could be metadata after the audio; ensure we don't read it.
   num_samples = std::min(num_samples, num_samples_remaining_);
   const size_t read =
@@ -85,12 +88,6 @@ size_t WavReader::ReadSamples(size_t num_samples, int16_t* samples) {
   RTC_CHECK(read == num_samples || feof(file_handle_));
   RTC_CHECK_LE(read, num_samples_remaining_);
   num_samples_remaining_ -= read;
-#ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-  //convert to big-endian
-  for (size_t idx = 0; idx < num_samples; idx++) {
-    samples[idx] = (samples[idx]<<8) | (samples[idx]>>8);
-  }
-#endif
   return read;
 }
 
@@ -110,7 +107,7 @@ size_t WavReader::ReadSamples(size_t num_samples, float* samples) {
 
 void WavReader::Close() {
   RTC_CHECK_EQ(0, fclose(file_handle_));
-  file_handle_ = NULL;
+  file_handle_ = nullptr;
 }
 
 WavWriter::WavWriter(const std::string& filename, int sample_rate,
@@ -119,15 +116,14 @@ WavWriter::WavWriter(const std::string& filename, int sample_rate,
       num_channels_(num_channels),
       num_samples_(0),
       file_handle_(fopen(filename.c_str(), "wb")) {
-  if (file_handle_) {
-    RTC_CHECK(CheckWavParameters(num_channels_, sample_rate_, kWavFormat,
-                                 kBytesPerSample, num_samples_));
+  RTC_CHECK(file_handle_) << "Could not open wav file for writing.";
+  RTC_CHECK(CheckWavParameters(num_channels_, sample_rate_, kWavFormat,
+                               kBytesPerSample, num_samples_));
 
-    // Write a blank placeholder header, since we need to know the total number
-    // of samples before we can fill in the real data.
-    static const uint8_t blank_header[kWavHeaderSize] = {0};
-    RTC_CHECK_EQ(1, fwrite(blank_header, kWavHeaderSize, 1, file_handle_));
-  }
+  // Write a blank placeholder header, since we need to know the total number
+  // of samples before we can fill in the real data.
+  static const uint8_t blank_header[kWavHeaderSize] = {0};
+  RTC_CHECK_EQ(1, fwrite(blank_header, kWavHeaderSize, 1, file_handle_));
 }
 
 WavWriter::~WavWriter() {
@@ -147,21 +143,11 @@ size_t WavWriter::num_samples() const {
 }
 
 void WavWriter::WriteSamples(const int16_t* samples, size_t num_samples) {
-  if (!file_handle_) {
-    return;
-  }
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-  int16_t * le_samples = new int16_t[num_samples];
-  for(size_t idx = 0; idx < num_samples; idx++) {
-    le_samples[idx] = (samples[idx]<<8) | (samples[idx]>>8);
-  }
-  const size_t written =
-      fwrite(le_samples, sizeof(*le_samples), num_samples, file_handle_);
-  delete []le_samples;
-#else
+#error "Need to convert samples to little-endian when writing to WAV file"
+#endif
   const size_t written =
       fwrite(samples, sizeof(*samples), num_samples, file_handle_);
-#endif
   RTC_CHECK_EQ(num_samples, written);
   num_samples_ += written;
   RTC_CHECK(num_samples_ >= written);  // detect size_t overflow
@@ -178,16 +164,13 @@ void WavWriter::WriteSamples(const float* samples, size_t num_samples) {
 }
 
 void WavWriter::Close() {
-  if (!file_handle_) {
-    return;
-  }
   RTC_CHECK_EQ(0, fseek(file_handle_, 0, SEEK_SET));
   uint8_t header[kWavHeaderSize];
   WriteWavHeader(header, num_channels_, sample_rate_, kWavFormat,
                  kBytesPerSample, num_samples_);
   RTC_CHECK_EQ(1, fwrite(header, kWavHeaderSize, 1, file_handle_));
   RTC_CHECK_EQ(0, fclose(file_handle_));
-  file_handle_ = NULL;
+  file_handle_ = nullptr;
 }
 
 }  // namespace webrtc

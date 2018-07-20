@@ -8,12 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
 
-#include "webrtc/base/checks.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace rtcp {
+
+CompoundPacket::CompoundPacket() = default;
+
+CompoundPacket::~CompoundPacket() = default;
 
 void CompoundPacket::Append(RtcpPacket* packet) {
   RTC_CHECK(packet);

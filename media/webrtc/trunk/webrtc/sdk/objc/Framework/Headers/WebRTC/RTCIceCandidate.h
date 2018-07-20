@@ -32,6 +32,9 @@ RTC_EXPORT
 /** The SDP string for this candidate. */
 @property(nonatomic, readonly) NSString *sdp;
 
+/** The URL of the ICE server which this candidate is gathered from. */
+@property(nonatomic, readonly, nullable) NSString *serverUrl;
+
 - (instancetype)init NS_UNAVAILABLE;
 
 /**

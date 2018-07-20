@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/time_stretch.h"
+#include "modules/audio_coding/neteq/time_stretch.h"
 
 #include <algorithm>  // min, max
 #include <memory>
 
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/modules/audio_coding/neteq/background_noise.h"
-#include "webrtc/modules/audio_coding/neteq/cross_correlation.h"
-#include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "modules/audio_coding/neteq/background_noise.h"
+#include "modules/audio_coding/neteq/cross_correlation.h"
+#include "modules/audio_coding/neteq/dsp_helper.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -182,7 +182,8 @@ bool TimeStretch::SpeechDetection(int32_t vec1_energy, int32_t vec2_energy,
   // (vec1_energy + vec2_energy) / 16 <= peak_index * background_noise_energy.
   // The two sides of the inequality will be denoted |left_side| and
   // |right_side|.
-  int32_t left_side = (vec1_energy + vec2_energy) / 16;
+  int32_t left_side = rtc::saturated_cast<int32_t>(
+      (static_cast<int64_t>(vec1_energy) + vec2_energy) / 16);
   int32_t right_side;
   if (background_noise_.initialized()) {
     right_side = background_noise_.Energy(master_channel_);
@@ -194,7 +195,7 @@ bool TimeStretch::SpeechDetection(int32_t vec1_energy, int32_t vec2_energy,
   right_scale = std::max(0, right_scale);
   left_side = left_side >> right_scale;
   right_side =
-      rtc::checked_cast<int32_t>(peak_index) * (right_side >> right_scale);
+      rtc::dchecked_cast<int32_t>(peak_index) * (right_side >> right_scale);
 
   // Scale |left_side| properly before comparing with |right_side|.
   // (|scaling| is the scale factor before energy calculation, thus the scale
