@@ -6889,12 +6889,13 @@ FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       aContext->Restore();
     }
 
-#ifdef DEBUG
     if (cdi.mType != DisplayItemEntryType::ITEM) {
+#ifdef DEBUG
       UpdateEffectTracking(opacityLevel, transformLevel, cdi.mType);
+#endif
+      // Nothing more to do with effect markers.
       continue;
     }
-#endif
 
     const DisplayItemClip* itemClip = GetItemClip(item, temporaryClip);
     bool itemPaintsOwnClip = false;
