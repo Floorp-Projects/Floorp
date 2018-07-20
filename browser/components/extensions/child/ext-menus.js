@@ -124,8 +124,14 @@ this.menusInternal = class extends ExtensionAPI {
               onClickedProp.setListener(createProperties.id, onclick);
             }
             if (callback) {
-              callback();
+              context.runSafeWithoutClone(callback);
             }
+          }).catch(error => {
+            context.withLastError(error, null, () => {
+              if (callback) {
+                context.runSafeWithoutClone(callback);
+              }
+            });
           });
           return createProperties.id;
         },
