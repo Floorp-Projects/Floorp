@@ -1124,11 +1124,7 @@ EnvironmentCache.prototype = {
   _startWatchingPrefs() {
     this._log.trace("_startWatchingPrefs - " + this._watchedPrefs);
 
-    for (let [pref, options] of this._watchedPrefs) {
-      if (!("requiresRestart" in options) || !options.requiresRestart) {
-        Services.prefs.addObserver(pref, this, true);
-      }
-    }
+    Services.prefs.addObserver("", this, true);
   },
 
   _onPrefChanged(aData) {
@@ -1144,11 +1140,7 @@ EnvironmentCache.prototype = {
   _stopWatchingPrefs() {
     this._log.trace("_stopWatchingPrefs");
 
-    for (let [pref, options] of this._watchedPrefs) {
-      if (!("requiresRestart" in options) || !options.requiresRestart) {
-        Services.prefs.removeObserver(pref, this);
-      }
-    }
+    Services.prefs.removeObserver("", this);
   },
 
   _addObservers() {
@@ -1220,7 +1212,8 @@ EnvironmentCache.prototype = {
         this._updateDefaultBrowser();
         break;
       case PREF_CHANGED_TOPIC:
-        if (this._watchedPrefs.has(aData)) {
+        let options = this._watchedPrefs.get(aData);
+        if (options && !options.requiresRestart) {
           this._onPrefChanged(aData);
         }
         break;
