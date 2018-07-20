@@ -1903,13 +1903,11 @@ nsNSSComponent::InitializeNSS()
     mMitmDetecionEnabled =
       Preferences::GetBool("security.pki.mitm_canary_issuer.enabled", true);
 
-#ifdef XP_WIN
     nsCOMPtr<nsINSSComponent> handle(this);
     NS_DispatchToCurrentThread(NS_NewRunnableFunction("nsNSSComponent::TrustLoaded3rdPartyRoots",
     [handle]() {
       MOZ_ALWAYS_SUCCEEDS(handle->TrustLoaded3rdPartyRoots());
     }));
-#endif // XP_WIN
 
     // TLSServerSocket may be run with the session cache enabled. It is
     // necessary to call this once before that can happen. This specifies a
