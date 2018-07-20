@@ -268,7 +268,8 @@ BackgroundHangManager::BackgroundHangManager()
 
   mHangMonitorThread = PR_CreateThread(
     PR_USER_THREAD, MonitorThread, this,
-    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
+    nsIThreadManager::DEFAULT_STACK_SIZE);
 
   MOZ_ASSERT(mHangMonitorThread, "Failed to create BHR monitor thread");
 
