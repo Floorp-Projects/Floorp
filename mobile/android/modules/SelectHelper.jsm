@@ -24,7 +24,7 @@ var SelectHelper = {
   },
 
   handleEvent: function(event) {
-    this.handleClick(event.target);
+    this.handleClick(event.composedTarget);
   },
 
   handleClick: function(target) {
