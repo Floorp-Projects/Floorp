@@ -324,9 +324,11 @@ class Nursery
     /* Print total profile times on shutdown. */
     void printTotalProfileTimes();
 
-    void* addressOfCurrentEnd() const { return (void*)&currentEnd_; }
-    void* addressOfPosition() const { return (void*)&position_; }
-    void* addressOfCurrentStringEnd() const { return (void*)&currentStringEnd_; }
+    void* addressOfPosition() const { return (void**)&position_; }
+    const void* addressOfCurrentEnd() const { return (void**)&currentEnd_; }
+    const void* addressOfCurrentStringEnd() const {
+        return (void*)&currentStringEnd_;
+    }
 
     void requestMinorGC(JS::gcreason::Reason reason) const;
 

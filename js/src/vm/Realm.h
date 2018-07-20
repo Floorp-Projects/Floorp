@@ -812,7 +812,8 @@ class JS::Realm : public JS::shadow::Realm
     // Initializes randomNumberGenerator if needed.
     mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
 
-    const void* addressOfRandomNumberGenerator() const {
+    const mozilla::non_crypto::XorShift128PlusRNG*
+    addressOfRandomNumberGenerator() const {
         return randomNumberGenerator_.ptr();
     }
 
