@@ -41,7 +41,7 @@ const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest", "URLSearchParams"]);
 
 // A text encoder to UTF8, used whenever we commit the cache to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder",
@@ -1741,6 +1741,12 @@ Engine.prototype = {
     }
     if (aParams.queryCharset) {
       this._queryCharset = aParams.queryCharset;
+    }
+    if (aParams.postData) {
+      let queries = new URLSearchParams(aParams.postData);
+      for (let [name, value] of queries) {
+        this.addParam(name, value);
+      }
     }
 
     this._name = aName;
