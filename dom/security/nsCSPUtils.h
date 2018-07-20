@@ -33,7 +33,7 @@ void CSP_LogLocalizedStr(const char* aName,
                          uint32_t aLineNumber,
                          uint32_t aColumnNumber,
                          uint32_t aFlags,
-                         const char* aCategory,
+                         const nsACString& aCategory,
                          uint64_t aInnerWindowID,
                          bool aFromPrivateWindow);
 
@@ -50,7 +50,7 @@ void CSP_LogMessage(const nsAString& aMessage,
                     uint32_t aLineNumber,
                     uint32_t aColumnNumber,
                     uint32_t aFlags,
-                    const char* aCategory,
+                    const nsACString& aCategory,
                     uint64_t aInnerWindowID,
                     bool aFromPrivateWindow);
 
