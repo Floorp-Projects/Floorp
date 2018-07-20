@@ -36,7 +36,7 @@ PromptFactory.prototype = {
   },
 
   _handleClick: function(aEvent) {
-    let target = aEvent.target;
+    let target = aEvent.composedTarget;
     if (aEvent.defaultPrevented || target.isContentEditable ||
         target.disabled || target.readOnly || !target.willValidate) {
       // target.willValidate is false when any associated fieldset is disabled,
