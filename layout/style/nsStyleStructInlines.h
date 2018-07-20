@@ -171,9 +171,7 @@ nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
 bool
 nsStyleDisplay::IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const
 {
-  // FIXME (bug 1472919): 'contain: layout' should also establish a
-  // containing block for fixed and absolute positioned elements.
-  return IsContainPaint();
+  return IsContainPaint() || IsContainLayout();
 }
 
 bool
