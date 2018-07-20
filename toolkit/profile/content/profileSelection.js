@@ -137,7 +137,7 @@ function onProfilesKey(aEvent) {
 }
 
 function onProfilesDblClick(aEvent) {
-  if (aEvent.target.localName == "listitem")
+  if (aEvent.target.closest("richlistitem"))
     document.documentElement.acceptDialog();
 }
 
