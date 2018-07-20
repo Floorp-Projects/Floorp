@@ -191,8 +191,8 @@ protected:
   // Get event target for processing network events.
   already_AddRefed<nsIEventTarget> GetNeckoTarget() override;
 
-  virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(const nsString& aMessage) override;
-  NS_IMETHOD LogBlockedCORSRequest(const nsAString & aMessage) override;
+  virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(const nsString& aMessage, const nsCString& aCategory) override;
+  NS_IMETHOD LogBlockedCORSRequest(const nsAString & aMessage, const nsACString& aCategory) override;
 
 private:
   // this section is for main-thread-only object
