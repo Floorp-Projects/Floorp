@@ -270,12 +270,37 @@ private:
   RefPtr<HttpBaseChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;
   nsCOMPtr<nsIAssociatedContentSecurity>  mAssociatedContentSecurity;
-  Atomic<bool> mIPCClosed; // PHttpChannel actor has been Closed()
 
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
 
   nsAutoPtr<class nsHttpChannel::OfflineCacheEntryAsForeignMarker> mOfflineForeignMarker;
+  nsCOMPtr<nsILoadContext> mLoadContext;
+  RefPtr<nsHttpHandler>  mHttpHandler;
+
+  RefPtr<HttpChannelParentListener> mParentListener;
+  // The listener we are diverting to or will divert to if mPendingDiversion
+  // is set.
+  nsCOMPtr<nsIStreamListener> mDivertListener;
+
+  RefPtr<ChannelEventQueue> mEventQ;
+
+  RefPtr<HttpBackgroundChannelParent> mBgParent;
+
+  MozPromiseHolder<GenericPromise> mPromise;
+  MozPromiseRequestHolder<GenericPromise> mRequest;
+
+  dom::TabId mNestedFrameId;
+
+  Atomic<bool> mIPCClosed; // PHttpChannel actor has been Closed()
+
+  // Corresponding redirect channel registrar Id. 0 means redirection is not started.
+  uint32_t mRedirectRegistrarId = 0;
+
+  PBOverrideStatus mPBOverride;
+
+  // Set to the canceled status value if the main channel was canceled.
+  nsresult mStatus;
 
   // OnStatus is always called before OnProgress.
   // Set true in OnStatus if next OnProgress can be ignored
@@ -285,17 +310,6 @@ private:
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
 
-  PBOverrideStatus mPBOverride;
-
-  nsCOMPtr<nsILoadContext> mLoadContext;
-  RefPtr<nsHttpHandler>  mHttpHandler;
-
-  RefPtr<HttpChannelParentListener> mParentListener;
-  // The listener we are diverting to or will divert to if mPendingDiversion
-  // is set.
-  nsCOMPtr<nsIStreamListener> mDivertListener;
-  // Set to the canceled status value if the main channel was canceled.
-  nsresult mStatus;
   // Indicates that diversion has been requested, but we could not start it
   // yet because the channel is still being opened with a synthesized response.
   bool mPendingDiversion;
@@ -314,23 +328,11 @@ private:
   // Set if this channel will synthesize its response.
   bool mWillSynthesizeResponse;
 
-  dom::TabId mNestedFrameId;
-
-  RefPtr<ChannelEventQueue> mEventQ;
-
-  RefPtr<HttpBackgroundChannelParent> mBgParent;
-
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should
   // increase 1 to mAsyncOpenBarrier and invoke TryInvokeAsyncOpen after
   // finished. This attribute is main thread only.
   uint8_t mAsyncOpenBarrier = 0;
-
-  // Corresponding redirect channel registrar Id. 0 means redirection is not started.
-  uint32_t mRedirectRegistrarId = 0;
-
-  MozPromiseHolder<GenericPromise> mPromise;
-  MozPromiseRequestHolder<GenericPromise> mRequest;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParent,
