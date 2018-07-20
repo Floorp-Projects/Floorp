@@ -66,6 +66,12 @@ public:
   // Initialize this as a wrapper for the current PRThread.
   nsresult InitCurrentThread();
 
+private:
+  // Initializes the mThreadId and stack base/size members, and adds the thread
+  // to the ThreadList().
+  void InitCommon();
+
+public:
   // The PRThread corresponding to this thread.
   PRThread* GetPRThread()
   {
