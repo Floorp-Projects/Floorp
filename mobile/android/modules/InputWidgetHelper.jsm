@@ -24,7 +24,7 @@ var InputWidgetHelper = {
   },
 
   handleEvent: function(aEvent) {
-    this.handleClick(aEvent.target);
+    this.handleClick(aEvent.composedTarget);
   },
 
   handleClick: function(aTarget) {
