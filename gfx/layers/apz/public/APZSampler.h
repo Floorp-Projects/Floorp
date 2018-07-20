@@ -85,6 +85,7 @@ public:
   CSSRect GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer);
   ParentLayerPoint GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer);
   AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer);
+  AsyncTransform GetCurrentAsyncTransformForFixedAdjustment(const LayerMetricsWrapper& aLayer);
   AsyncTransformComponentMatrix GetOverscrollTransform(const LayerMetricsWrapper& aLayer);
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer);
 

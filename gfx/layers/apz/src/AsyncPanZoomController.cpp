@@ -3814,6 +3814,62 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncTransformCon
 }
 
 AsyncTransform
+AsyncPanZoomController::GetCurrentAsyncViewportTransform(AsyncTransformConsumer aMode) const
+{
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+    return AsyncTransform();
+  }
+
+  CSSRect lastPaintViewport;
+  if (mLastContentPaintMetrics.IsScrollable()) {
+    lastPaintViewport = mLastContentPaintMetrics.GetViewport();
+  }
+
+  CSSRect currentViewport = GetEffectiveLayoutViewport(aMode);
+  CSSPoint currentViewportOffset = currentViewport.TopLeft();
+
+  // If checkerboarding has been disallowed, clamp the scroll position to stay
+  // within rendered content.
+  //
+  // TODO: This calculation is slightly inaccurate and this function will
+  // likely report an inconsistent transformation if apz.allow_checkerboarding
+  // is disabled. The correct calculation requires the following:
+  //
+  //   * Calculating a clamped visual scroll offset, like in
+  //     AsyncPanZoomController::GetCurrentAsyncTransform.
+  //   * Calling FrameMetrics::RecalculateViewportOffset to compute the layout
+  //     viewport offset corresponding to that visual offset and using that as
+  //     the clamped layout viewport offset.
+  //
+  if (!gfxPrefs::APZAllowCheckerboarding() &&
+      !mLastContentPaintMetrics.GetDisplayPort().IsEmpty()) {
+    CSSSize viewportSize = currentViewport.Size();
+    CSSPoint maxViewportOffset = lastPaintViewport.TopLeft() +
+      CSSPoint(mLastContentPaintMetrics.GetDisplayPort().XMost() - viewportSize.width,
+               mLastContentPaintMetrics.GetDisplayPort().YMost() - viewportSize.height);
+    CSSPoint minViewportOffset = lastPaintViewport.TopLeft() +
+      mLastContentPaintMetrics.GetDisplayPort().TopLeft();
+
+    if (minViewportOffset.x < maxViewportOffset.x) {
+      currentViewportOffset.x = clamped(currentViewportOffset.x, minViewportOffset.x, maxViewportOffset.x);
+    }
+    if (minViewportOffset.y < maxViewportOffset.y) {
+      currentViewportOffset.y = clamped(currentViewportOffset.y, minViewportOffset.y, maxViewportOffset.y);
+    }
+  }
+
+  CSSToParentLayerScale2D effectiveZoom = GetEffectiveZoom(aMode);
+  ParentLayerPoint translation =
+    (currentViewportOffset - lastPaintViewport.TopLeft()) * effectiveZoom;
+  LayerToParentLayerScale compositedAsyncZoom =
+    (effectiveZoom / Metrics().LayersPixelsPerCSSPixel()).ToScaleFactor();
+
+  return AsyncTransform(compositedAsyncZoom, -translation);
+}
+
+AsyncTransform
 AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -3856,6 +3912,22 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) c
   return AsyncTransform(compositedAsyncZoom, -translation);
 }
 
+AsyncTransform
+AsyncPanZoomController::GetCurrentAsyncTransformForFixedAdjustment(AsyncTransformConsumer aMode) const
+{
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  // Use the layout viewport to adjust fixed position elements if and only if
+  // it's larger than the visual viewport (assuming we're scrolling the RCD-RSF
+  // with apz.allow_zooming enabled).
+  return (
+      gfxPrefs::APZAllowZooming() &&
+      Metrics().IsRootContent() &&
+      Metrics().GetVisualViewport().Size() <= Metrics().GetViewport().Size()
+  ) ? GetCurrentAsyncViewportTransform(aMode)
+    : GetCurrentAsyncTransform(aMode);
+}
+
 AsyncTransformComponentMatrix
 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const
 {
@@ -3894,7 +3966,8 @@ bool
 AsyncPanZoomController::SampleCompositedAsyncTransform()
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  if (mCompositedScrollOffset != Metrics().GetScrollOffset() ||
+  if (!mCompositedLayoutViewport.IsEqualEdges(Metrics().GetViewport()) ||
+      mCompositedScrollOffset != Metrics().GetScrollOffset() ||
       mCompositedZoom != Metrics().GetZoom()) {
     mCompositedLayoutViewport = Metrics().GetViewport();
     mCompositedScrollOffset = Metrics().GetScrollOffset();
