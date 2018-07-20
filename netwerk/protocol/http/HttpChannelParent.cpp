@@ -2354,10 +2354,12 @@ HttpChannelParent::DoSendSetPriority(int16_t aValue)
 }
 
 nsresult
-HttpChannelParent::LogBlockedCORSRequest(const nsAString& aMessage)
+HttpChannelParent::LogBlockedCORSRequest(const nsAString& aMessage,
+                                         const nsACString& aCategory)
 {
   if (mIPCClosed ||
-      NS_WARN_IF(!SendLogBlockedCORSRequest(nsString(aMessage)))) {
+      NS_WARN_IF(!SendLogBlockedCORSRequest(nsString(aMessage),
+                                            nsCString(aCategory)))) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

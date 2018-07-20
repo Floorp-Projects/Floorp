@@ -27,11 +27,13 @@ SimpleTest.waitForExplicitFinish();
 var tests = {
   font : {
     uri_test : "font_bad",
-    result : null
+    result : null,
+    category: "CORSMissingAllowOrigin",
   },
   xhr : {
     uri_test : "http://invalid",
-    result : null
+    result : null,
+    category: "CORSAllowOriginNotMatchingOrigin"
   },
 }
 
@@ -50,6 +52,7 @@ SpecialPowers.registerConsoleListener(function CORSMsgListener(aMsg) {
 
   for (var testName in tests) {
     var test = tests[testName];
+    var category = test.category;
     if (test.result != null)
       continue;
 
@@ -57,7 +60,8 @@ SpecialPowers.registerConsoleListener(function CORSMsgListener(aMsg) {
     if (testRegexp.test(aMsg.message)) {
       test.result = true;
       ok(true, "Got \"Cross-site request blocked\" warning message for " + testName);
-      ok(aMsg.category == "CORS", "Got warning message with category \"" + aMsg.category + "\", expected \"CORS\"");
+      ok(aMsg.category == category,
+         "Got warning message with category \"" + aMsg.category + "\", expected \"" + category + "\"");
       // Got the message we wanted - make sure it is destined for a valid inner window
       ok(aMsg.windowID != 0, "Valid (non-zero) windowID for the cross-site request blocked message.");
       break;
