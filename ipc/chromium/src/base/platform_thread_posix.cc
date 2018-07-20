@@ -124,8 +124,9 @@ bool CreateThread(size_t stack_size, bool joinable,
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
   }
 
-  if (stack_size > 0)
-    pthread_attr_setstacksize(&attributes, stack_size);
+  if (stack_size == 0)
+    stack_size = nsIThreadManager::DEFAULT_STACK_SIZE;
+  pthread_attr_setstacksize(&attributes, stack_size);
 
   success = !pthread_create(thread_handle, &attributes, ThreadFunc, delegate);
 
