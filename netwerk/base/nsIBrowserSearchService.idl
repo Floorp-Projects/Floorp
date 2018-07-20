@@ -367,11 +367,16 @@ interface nsIBrowserSearchService : nsISupports
    *     suggestURL: http://example.com/?suggest={searchTerms},
    * });
    *
-   * Using this method, you can use a new parameter, suggestURL:
+   * Using this method, you can use new parameters:
    *
    * @param suggestURL [optional]
    *        Optional: The URL to which search suggestion requests
    *        should be sent.
+   *
+   * @param postData [optional]
+   *        Optional: For POST requests, a string of URL parameters
+   *        to send, separated by '&'.  The string will be subjected
+   *        to OpenSearch parameter substitution.
    *
    */
   void addEngineWithDetails(in AString name,
