@@ -189,7 +189,7 @@ impl FontContext {
         bitmaps: bool,
     ) -> dwrote::GlyphRunAnalysis {
         let face = self.get_font_face(font);
-        let glyph = key.index as u16;
+        let glyph = key.index() as u16;
         let advance = 0.0f32;
         let offset = dwrote::GlyphOffset {
             advanceOffset: 0.0,
@@ -284,7 +284,7 @@ impl FontContext {
         }
 
         let face = self.get_font_face(font);
-        face.get_design_glyph_metrics(&[key.index as u16], false)
+        face.get_design_glyph_metrics(&[key.index() as u16], false)
             .first()
             .map(|metrics| {
                 let em_size = size / 16.;

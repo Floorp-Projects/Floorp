@@ -670,17 +670,20 @@ impl AlphaBatchBuilder {
                             // Push into parent plane splitter.
                             debug_assert!(picture.surface.is_some());
 
-                            let real_xf = &ctx.clip_scroll_tree
-                                .spatial_nodes[picture.reference_frame_index.0]
-                                .world_content_transform
-                                .into();
-                            let polygon = make_polygon(
+                            let real_xf = &ctx
+                                .transforms
+                                .get_transform(picture.reference_frame_index);
+                            match make_polygon(
                                 picture.real_local_rect,
-                                real_xf,
+                                &real_xf.m,
                                 prim_index.0,
-                            );
-
-                            splitter.add(polygon);
+                            ) {
+                                Some(polygon) => splitter.add(polygon),
+                                None => {
+                                    // this shouldn't happen, the path will ultimately be
+                                    // turned into `expect` when the splitting code is fixed
+                                }
+                            }
 
                             return;
                         }
@@ -1697,7 +1700,7 @@ fn make_polygon(
     rect: LayoutRect,
     transform: &LayoutToWorldTransform,
     anchor: usize,
-) -> Polygon<f64, WorldPixel> {
+) -> Option<Polygon<f64, WorldPixel>> {
     let mat = TypedTransform3D::row_major(
         transform.m11 as f64,
         transform.m12 as f64,
@@ -1715,7 +1718,7 @@ fn make_polygon(
         transform.m42 as f64,
         transform.m43 as f64,
         transform.m44 as f64);
-    Polygon::from_transformed_rect(rect.cast().unwrap(), mat, anchor)
+    Polygon::from_transformed_rect(rect.cast(), mat, anchor)
 }
 
 /// Batcher managing draw calls into the clip mask (in the RT cache).

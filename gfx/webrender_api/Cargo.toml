@@ -17,7 +17,7 @@ bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.2.1"
 ipc-channel = {version = "0.10.0", optional = true}
-euclid = { version = "0.17", features = ["serde"] }
+euclid = { version = "0.18", features = ["serde"] }
 serde = { version = "=1.0.66", features = ["rc"] }
 serde_derive = { version = "=1.0.66", features = ["deserialize_in_place"] }
 serde_bytes = "0.10"
