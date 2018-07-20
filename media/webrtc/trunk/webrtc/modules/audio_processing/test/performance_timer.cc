@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/test/performance_timer.h"
+#include "modules/audio_processing/test/performance_timer.h"
 
 #include <math.h>
 
 #include <numeric>
 
-#include "webrtc/base/checks.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace test {
@@ -27,7 +27,7 @@ PerformanceTimer::PerformanceTimer(int num_frames_to_process)
 PerformanceTimer::~PerformanceTimer() = default;
 
 void PerformanceTimer::StartTimer() {
-  start_timestamp_us_ = rtc::Optional<int64_t>(clock_->TimeInMicroseconds());
+  start_timestamp_us_ = clock_->TimeInMicroseconds();
 }
 
 void PerformanceTimer::StopTimer() {
@@ -36,23 +36,39 @@ void PerformanceTimer::StopTimer() {
 }
 
 double PerformanceTimer::GetDurationAverage() const {
-  RTC_DCHECK(!timestamps_us_.empty());
-  return static_cast<double>(
-             std::accumulate(timestamps_us_.begin(), timestamps_us_.end(), 0)) /
-         timestamps_us_.size();
+  return GetDurationAverage(0);
 }
 
 double PerformanceTimer::GetDurationStandardDeviation() const {
-  RTC_DCHECK(!timestamps_us_.empty());
-  double average_duration = GetDurationAverage();
+  return GetDurationStandardDeviation(0);
+}
+
+double PerformanceTimer::GetDurationAverage(
+    size_t number_of_warmup_samples) const {
+  RTC_DCHECK_GT(timestamps_us_.size(), number_of_warmup_samples);
+  const size_t number_of_samples =
+      timestamps_us_.size() - number_of_warmup_samples;
+  return static_cast<double>(
+             std::accumulate(timestamps_us_.begin() + number_of_warmup_samples,
+                             timestamps_us_.end(), static_cast<int64_t>(0))) /
+         number_of_samples;
+}
+
+double PerformanceTimer::GetDurationStandardDeviation(
+    size_t number_of_warmup_samples) const {
+  RTC_DCHECK_GT(timestamps_us_.size(), number_of_warmup_samples);
+  const size_t number_of_samples =
+      timestamps_us_.size() - number_of_warmup_samples;
+  RTC_DCHECK_GT(number_of_samples, 0);
+  double average_duration = GetDurationAverage(number_of_warmup_samples);
 
   double variance = std::accumulate(
-      timestamps_us_.begin(), timestamps_us_.end(), 0.0,
-      [average_duration](const double& a, const int64_t& b) {
+      timestamps_us_.begin() + number_of_warmup_samples, timestamps_us_.end(),
+      0.0, [average_duration](const double& a, const int64_t& b) {
         return a + (b - average_duration) * (b - average_duration);
       });
 
-  return sqrt(variance / timestamps_us_.size());
+  return sqrt(variance / number_of_samples);
 }
 
 }  // namespace test

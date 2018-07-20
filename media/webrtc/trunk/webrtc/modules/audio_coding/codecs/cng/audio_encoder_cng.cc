@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/cng/audio_encoder_cng.h"
+#include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
 
 #include <algorithm>
 #include <memory>
@@ -190,11 +190,17 @@ void AudioEncoderCng::OnReceivedUplinkPacketLossFraction(
       uplink_packet_loss_fraction);
 }
 
+void AudioEncoderCng::OnReceivedUplinkRecoverablePacketLossFraction(
+    float uplink_recoverable_packet_loss_fraction) {
+  speech_encoder_->OnReceivedUplinkRecoverablePacketLossFraction(
+      uplink_recoverable_packet_loss_fraction);
+}
+
 void AudioEncoderCng::OnReceivedUplinkBandwidth(
     int target_audio_bitrate_bps,
-    rtc::Optional<int64_t> probing_interval_ms) {
+    rtc::Optional<int64_t> bwe_period_ms) {
   speech_encoder_->OnReceivedUplinkBandwidth(target_audio_bitrate_bps,
-                                             probing_interval_ms);
+                                             bwe_period_ms);
 }
 
 AudioEncoder::EncodedInfo AudioEncoderCng::EncodePassive(

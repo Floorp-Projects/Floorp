@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/h264_sprop_parameter_sets.h"
+#include "modules/video_coding/h264_sprop_parameter_sets.h"
 
 #include <stdint.h>
 
 #include <vector>
 
-#include "webrtc/test/gtest.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 
-class H264SpropParameterSetsTest : public ::testing::Test {
+class H264SpropParameterSetsTest : public testing::Test {
  public:
   H264SpropParameterSets h264_sprop;
 };

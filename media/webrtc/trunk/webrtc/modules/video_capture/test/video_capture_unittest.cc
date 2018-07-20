@@ -14,21 +14,19 @@
 #include <memory>
 #include <sstream>
 
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/utility/include/process_thread.h"
-#include "webrtc/modules/video_capture/video_capture.h"
-#include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/sleep.h"
-#include "webrtc/test/frame_utils.h"
-#include "webrtc/test/gtest.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/utility/include/process_thread.h"
+#include "modules/video_capture/video_capture.h"
+#include "modules/video_capture/video_capture_factory.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/timeutils.h"
+#include "system_wrappers/include/sleep.h"
+#include "test/frame_utils.h"
+#include "test/gtest.h"
 
-using webrtc::CriticalSectionWrapper;
-using webrtc::CriticalSectionScoped;
 using webrtc::SleepMs;
 using webrtc::VideoCaptureCapability;
 using webrtc::VideoCaptureFactory;
@@ -61,8 +59,7 @@ static const int kTestFramerate = 30;
 class TestVideoCaptureCallback
     : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  TestVideoCaptureCallback()
-      : capture_cs_(CriticalSectionWrapper::CreateCriticalSection()),
+  TestVideoCaptureCallback() :
         last_render_time_ms_(0),
         incoming_frames_(0),
         timing_warnings_(0),
@@ -74,10 +71,10 @@ class TestVideoCaptureCallback
   }
 
   void OnFrame(const webrtc::VideoFrame& videoFrame) override {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     int height = videoFrame.height();
     int width = videoFrame.width();
-#if defined(ANDROID) && ANDROID
+#if defined(WEBRTC_ANDROID) && WEBRTC_ANDROID
     // Android camera frames may be rotated depending on test device
     // orientation.
     EXPECT_TRUE(height == capability_.height || height == capability_.width);
@@ -107,38 +104,38 @@ class TestVideoCaptureCallback
   }
 
   void SetExpectedCapability(VideoCaptureCapability capability) {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     capability_= capability;
     incoming_frames_ = 0;
     last_render_time_ms_ = 0;
   }
   int incoming_frames() {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     return incoming_frames_;
   }
 
   int timing_warnings() {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     return timing_warnings_;
   }
   VideoCaptureCapability capability() {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     return capability_;
   }
 
   bool CompareLastFrame(const webrtc::VideoFrame& frame) {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     return webrtc::test::FrameBufsEqual(last_frame_,
                                         frame.video_frame_buffer());
   }
 
   void SetExpectedCaptureRotation(webrtc::VideoRotation rotation) {
-    CriticalSectionScoped cs(capture_cs_.get());
+    rtc::CritScope cs(&capture_cs_);
     rotate_frame_ = rotation;
   }
 
  private:
-  std::unique_ptr<CriticalSectionWrapper> capture_cs_;
+  rtc::CriticalSection capture_cs_;
   VideoCaptureCapability capability_;
   int64_t last_render_time_ms_;
   int incoming_frames_;
@@ -215,7 +212,7 @@ TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
     capability.width = kTestWidth;
     capability.height = kTestHeight;
     capability.maxFPS = kTestFramerate;
-    capability.rawType = webrtc::kVideoUnknown;
+    capability.videoType = webrtc::VideoType::kUnknown;
 #endif
     capture_observer.SetExpectedCapability(capability);
     ASSERT_NO_FATAL_FAILURE(StartCapture(module.get(), capability));
@@ -285,7 +282,7 @@ TEST_F(VideoCaptureTest, MAYBE_Capabilities) {
     EXPECT_EQ(0, module->StopCapture());
   }
 
-#if defined(ANDROID) && ANDROID
+#if defined(WEBRTC_ANDROID) && WEBRTC_ANDROID
   // There's no reason for this to _necessarily_ be true, but in practice all
   // Android devices this test runs on in fact do support multiple capture
   // resolutions and multiple frame-rates per captured resolution, so we assert
@@ -300,7 +297,7 @@ TEST_F(VideoCaptureTest, MAYBE_Capabilities) {
        ++it) {
     EXPECT_GT(it->second.size(), 1U) << it->first;
   }
-#endif  // ANDROID
+#endif  // WEBRTC_ANDROID
 }
 
 // NOTE: flaky, crashes sometimes.
@@ -322,7 +319,7 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
   capability1.width = kTestWidth;
   capability1.height = kTestHeight;
   capability1.maxFPS = kTestFramerate;
-  capability1.rawType = webrtc::kVideoUnknown;
+  capability1.videoType = webrtc::VideoType::kUnknown;
 #endif
   capture_observer1.SetExpectedCapability(capability1);
 
@@ -339,7 +336,7 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
   capability2.width = kTestWidth;
   capability2.height = kTestHeight;
   capability2.maxFPS = kTestFramerate;
-  capability2.rawType = webrtc::kVideoUnknown;
+  capability2.videoType = webrtc::VideoType::kUnknown;
 #endif
   capture_observer2.SetExpectedCapability(capability2);
 
@@ -361,19 +358,18 @@ class VideoCaptureExternalTest : public testing::Test {
     VideoCaptureCapability capability;
     capability.width = kTestWidth;
     capability.height = kTestHeight;
-    capability.rawType = webrtc::kVideoYV12;
+    capability.videoType = webrtc::VideoType::kYV12;
     capability.maxFPS = kTestFramerate;
     capture_callback_.SetExpectedCapability(capability);
 
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Create(
-        kTestWidth, kTestHeight,
-        kTestWidth, ((kTestWidth + 1) / 2), (kTestWidth + 1) / 2);
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+        webrtc::I420Buffer::Create(kTestWidth, kTestHeight);
 
-    memset(buffer->MutableDataY(), 127, kTestWidth * kTestHeight);
+    memset(buffer->MutableDataY(), 127, buffer->height() * buffer->StrideY());
     memset(buffer->MutableDataU(), 127,
-           ((kTestWidth + 1) / 2) * ((kTestHeight + 1) / 2));
+           buffer->ChromaHeight() * buffer->StrideU());
     memset(buffer->MutableDataV(), 127,
-           ((kTestWidth + 1) / 2) * ((kTestHeight + 1) / 2));
+           buffer->ChromaHeight() * buffer->StrideV());
     test_frame_.reset(
         new webrtc::VideoFrame(buffer, 0, 0, webrtc::kVideoRotation_0));
 
@@ -393,9 +389,8 @@ class VideoCaptureExternalTest : public testing::Test {
 
 // Test input of external video frames.
 TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
-  size_t length = webrtc::CalcBufferSize(webrtc::kI420,
-                                         test_frame_->width(),
-                                         test_frame_->height());
+  size_t length = webrtc::CalcBufferSize(
+      webrtc::VideoType::kI420, test_frame_->width(), test_frame_->height());
   std::unique_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
   webrtc::ExtractBuffer(*test_frame_, length, test_buffer.get());
   EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
@@ -403,12 +398,10 @@ TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
   EXPECT_TRUE(capture_callback_.CompareLastFrame(*test_frame_));
 }
 
-// Disabled, see Bug 1368816
-TEST_F(VideoCaptureExternalTest, DISABLED_Rotation) {
+TEST_F(VideoCaptureExternalTest, Rotation) {
   EXPECT_EQ(0, capture_module_->SetCaptureRotation(webrtc::kVideoRotation_0));
-  size_t length = webrtc::CalcBufferSize(webrtc::kI420,
-                                         test_frame_->width(),
-                                         test_frame_->height());
+  size_t length = webrtc::CalcBufferSize(
+      webrtc::VideoType::kI420, test_frame_->width(), test_frame_->height());
   std::unique_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
   webrtc::ExtractBuffer(*test_frame_, length, test_buffer.get());
   EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),

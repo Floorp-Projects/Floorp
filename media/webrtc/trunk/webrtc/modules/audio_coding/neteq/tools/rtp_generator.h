@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
+#define MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/typedefs.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "rtc_base/constructormagic.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 namespace test {
@@ -41,7 +41,7 @@ class RtpGenerator {
   // |payload_length_samples| determines the send time for the next packet.
   virtual uint32_t GetRtpHeader(uint8_t payload_type,
                                 size_t payload_length_samples,
-                                WebRtcRTPHeader* rtp_header);
+                                RTPHeader* rtp_header);
 
   void set_drift_factor(double factor);
 
@@ -70,7 +70,7 @@ class TimestampJumpRtpGenerator : public RtpGenerator {
 
   uint32_t GetRtpHeader(uint8_t payload_type,
                         size_t payload_length_samples,
-                        WebRtcRTPHeader* rtp_header) override;
+                        RTPHeader* rtp_header) override;
 
  private:
   uint32_t jump_from_timestamp_;
@@ -80,4 +80,4 @@ class TimestampJumpRtpGenerator : public RtpGenerator {
 
 }  // namespace test
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_

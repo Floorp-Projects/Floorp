@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_TEST_UTILITY_H_
-#define WEBRTC_MODULES_AUDIO_CODING_TEST_UTILITY_H_
+#ifndef MODULES_AUDIO_CODING_TEST_UTILITY_H_
+#define MODULES_AUDIO_CODING_TEST_UTILITY_H_
 
-#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
-#include "webrtc/test/gtest.h"
+#include "modules/audio_coding/include/audio_coding_module.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 
@@ -83,6 +83,9 @@ class ACMTestTimer {
   unsigned long _hour;
 };
 
+// To avoid clashes with CircularBuffer in APM.
+namespace test {
+
 class CircularBuffer {
  public:
   CircularBuffer(uint32_t len);
@@ -109,6 +112,8 @@ class CircularBuffer {
   double _sumSqr;
 };
 
+}  // namespace test
+
 int16_t ChooseCodec(CodecInst& codecInst);
 
 void PrintCodecs();
@@ -130,4 +135,4 @@ class VADCallback : public ACMVADCallback {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_TEST_UTILITY_H_
+#endif  // MODULES_AUDIO_CODING_TEST_UTILITY_H_

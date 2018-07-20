@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MEDIA_BASE_RTPUTILS_H_
-#define WEBRTC_MEDIA_BASE_RTPUTILS_H_
+#ifndef MEDIA_BASE_RTPUTILS_H_
+#define MEDIA_BASE_RTPUTILS_H_
 
-#include "webrtc/base/byteorder.h"
+#include "rtc_base/byteorder.h"
 
 namespace rtc {
 struct PacketTimeUpdateParams;
@@ -58,6 +58,14 @@ bool IsRtpPacket(const void* data, size_t len);
 // True if |payload type| is 0-127.
 bool IsValidRtpPayloadType(int payload_type);
 
+// True if |size| is appropriate for the indicated packet type.
+bool IsValidRtpRtcpPacketSize(bool rtcp, size_t size);
+
+// TODO(zstein): Consider using an enum instead of a bool to differentiate
+// between RTP and RTCP.
+// Returns "RTCP" or "RTP" according to |rtcp|.
+const char* RtpRtcpStringLiteral(bool rtcp);
+
 // Verifies that a packet has a valid RTP header.
 bool ValidateRtpHeader(const uint8_t* rtp,
                        size_t length,
@@ -79,4 +87,4 @@ bool ApplyPacketOptions(uint8_t* data,
 
 }  // namespace cricket
 
-#endif  // WEBRTC_MEDIA_BASE_RTPUTILS_H_
+#endif  // MEDIA_BASE_RTPUTILS_H_

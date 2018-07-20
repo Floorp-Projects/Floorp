@@ -11,22 +11,19 @@
 // RtpStreamsSynchronizer is responsible for synchronization audio and video for
 // a given voice engine channel and video receive stream.
 
-#ifndef WEBRTC_VIDEO_RTP_STREAMS_SYNCHRONIZER_H_
-#define WEBRTC_VIDEO_RTP_STREAMS_SYNCHRONIZER_H_
+#ifndef VIDEO_RTP_STREAMS_SYNCHRONIZER_H_
+#define VIDEO_RTP_STREAMS_SYNCHRONIZER_H_
 
 #include <memory>
 
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/thread_checker.h"
-#include "webrtc/modules/include/module.h"
-#include "webrtc/video/rtp_stream_receiver.h"
-#include "webrtc/video/stream_synchronization.h"
+#include "modules/include/module.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/thread_checker.h"
+#include "video/stream_synchronization.h"
 
 namespace webrtc {
 
-class Clock;
-class VideoFrame;
-class VoEVideoSync;
+class Syncable;
 
 namespace vcm {
 class VideoReceiver;
@@ -34,11 +31,9 @@ class VideoReceiver;
 
 class RtpStreamsSynchronizer : public Module {
  public:
-  RtpStreamsSynchronizer(vcm::VideoReceiver* vcm,
-                         RtpStreamReceiver* rtp_stream_receiver);
+  explicit RtpStreamsSynchronizer(Syncable* syncable_video);
 
-  void ConfigureSync(int voe_channel_id,
-                     VoEVideoSync* voe_sync_interface);
+  void ConfigureSync(Syncable* syncable_audio);
 
   // Implements Module.
   int64_t TimeUntilNextProcess() override;
@@ -48,29 +43,24 @@ class RtpStreamsSynchronizer : public Module {
   // video |frame|. Returns true on success, false otherwise.
   // The estimated frequency is the frequency used in the RTP to NTP timestamp
   // conversion.
-  bool GetStreamSyncOffsetInMs(const VideoFrame& frame,
+  bool GetStreamSyncOffsetInMs(uint32_t timestamp,
+                               int64_t render_time_ms,
                                int64_t* stream_offset_ms,
                                double* estimated_freq_khz) const;
 
  private:
-  Clock* const clock_;
-  vcm::VideoReceiver* const video_receiver_;
-  RtpReceiver* const video_rtp_receiver_;
-  RtpRtcp* const video_rtp_rtcp_;
+  Syncable* syncable_video_;
 
   rtc::CriticalSection crit_;
-  int voe_channel_id_ GUARDED_BY(crit_);
-  VoEVideoSync* voe_sync_interface_ GUARDED_BY(crit_);
-  RtpReceiver* audio_rtp_receiver_ GUARDED_BY(crit_);
-  RtpRtcp* audio_rtp_rtcp_ GUARDED_BY(crit_);
-  std::unique_ptr<StreamSynchronization> sync_ GUARDED_BY(crit_);
-  StreamSynchronization::Measurements audio_measurement_ GUARDED_BY(crit_);
-  StreamSynchronization::Measurements video_measurement_ GUARDED_BY(crit_);
+  Syncable* syncable_audio_ RTC_GUARDED_BY(crit_);
+  std::unique_ptr<StreamSynchronization> sync_ RTC_GUARDED_BY(crit_);
+  StreamSynchronization::Measurements audio_measurement_ RTC_GUARDED_BY(crit_);
+  StreamSynchronization::Measurements video_measurement_ RTC_GUARDED_BY(crit_);
 
   rtc::ThreadChecker process_thread_checker_;
-  int64_t last_sync_time_ ACCESS_ON(&process_thread_checker_);
+  int64_t last_sync_time_ RTC_ACCESS_ON(&process_thread_checker_);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_RTP_STREAMS_SYNCHRONIZER_H_
+#endif  // VIDEO_RTP_STREAMS_SYNCHRONIZER_H_

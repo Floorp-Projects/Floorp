@@ -10,20 +10,19 @@
 
 #include <memory>
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
-#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
-#include "webrtc/modules/audio_coding/test/utility.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/system_wrappers/include/sleep.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/codecs/pcm16b/pcm16b.h"
+#include "modules/audio_coding/include/audio_coding_module.h"
+#include "modules/audio_coding/test/utility.h"
+#include "modules/include/module_common_types.h"
+#include "test/gtest.h"
+#include "test/testsupport/fileutils.h"
 
 namespace webrtc {
 
 class TargetDelayTest : public ::testing::Test {
  protected:
-  TargetDelayTest() : acm_(AudioCodingModule::Create(0)) {}
+  TargetDelayTest() : acm_(AudioCodingModule::Create()) {}
 
   ~TargetDelayTest() {}
 
@@ -201,7 +200,8 @@ class TargetDelayTest : public ::testing::Test {
   uint8_t payload_[kPayloadLenBytes];
 };
 
-#if defined(WEBRTC_ANDROID)
+// Flaky on iOS: webrtc:7057.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_OutOfRangeInput DISABLED_OutOfRangeInput
 #else
 #define MAYBE_OutOfRangeInput OutOfRangeInput
@@ -210,7 +210,8 @@ TEST_F(TargetDelayTest, MAYBE_OutOfRangeInput) {
   OutOfRangeInput();
 }
 
-#if defined(WEBRTC_ANDROID)
+// Flaky on iOS: webrtc:7057.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_NoTargetDelayBufferSizeChanges \
   DISABLED_NoTargetDelayBufferSizeChanges
 #else
@@ -220,7 +221,8 @@ TEST_F(TargetDelayTest, MAYBE_NoTargetDelayBufferSizeChanges) {
   NoTargetDelayBufferSizeChanges();
 }
 
-#if defined(WEBRTC_ANDROID)
+// Flaky on iOS: webrtc:7057.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_WithTargetDelayBufferNotChanging \
   DISABLED_WithTargetDelayBufferNotChanging
 #else
@@ -230,7 +232,8 @@ TEST_F(TargetDelayTest, MAYBE_WithTargetDelayBufferNotChanging) {
   WithTargetDelayBufferNotChanging();
 }
 
-#if defined(WEBRTC_ANDROID)
+// Flaky on iOS: webrtc:7057.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_RequiredDelayAtCorrectRange DISABLED_RequiredDelayAtCorrectRange
 #else
 #define MAYBE_RequiredDelayAtCorrectRange RequiredDelayAtCorrectRange
@@ -239,7 +242,8 @@ TEST_F(TargetDelayTest, MAYBE_RequiredDelayAtCorrectRange) {
   RequiredDelayAtCorrectRange();
 }
 
-#if defined(WEBRTC_ANDROID)
+// Flaky on iOS: webrtc:7057.
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
 #define MAYBE_TargetDelayBufferMinMax DISABLED_TargetDelayBufferMinMax
 #else
 #define MAYBE_TargetDelayBufferMinMax TargetDelayBufferMinMax
@@ -249,4 +253,3 @@ TEST_F(TargetDelayTest, MAYBE_TargetDelayBufferMinMax) {
 }
 
 }  // namespace webrtc
-

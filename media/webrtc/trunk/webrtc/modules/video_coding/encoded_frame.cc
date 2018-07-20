@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/include/video_coding_defines.h"
-#include "webrtc/modules/video_coding/encoded_frame.h"
-#include "webrtc/modules/video_coding/generic_encoder.h"
-#include "webrtc/modules/video_coding/jitter_buffer_common.h"
+#include "modules/video_coding/include/video_coding_defines.h"
+#include "modules/video_coding/encoded_frame.h"
+#include "modules/video_coding/generic_encoder.h"
+#include "modules/video_coding/jitter_buffer_common.h"
 
 namespace webrtc {
 
@@ -87,6 +87,8 @@ void VCMEncodedFrame::Reset() {
   _codecSpecificInfo.codecType = kVideoCodecUnknown;
   _codec = kVideoCodecUnknown;
   rotation_ = kVideoRotation_0;
+  content_type_ = VideoContentType::UNSPECIFIED;
+  timing_.flags = TimingFrameFlags::kInvalid;
   _rotation_set = false;
 }
 

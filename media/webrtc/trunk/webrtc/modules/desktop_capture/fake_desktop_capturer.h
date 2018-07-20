@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
+#ifndef MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
+#define MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
 
 #include <memory>
 
-#include "webrtc/modules/desktop_capture/desktop_capturer.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
-#include "webrtc/modules/desktop_capture/desktop_frame_generator.h"
-#include "webrtc/modules/desktop_capture/shared_memory.h"
+#include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/desktop_capture/desktop_frame_generator.h"
+#include "modules/desktop_capture/shared_memory.h"
 
 namespace webrtc {
 
@@ -43,9 +43,16 @@ class FakeDesktopCapturer : public DesktopCapturer {
   // does not take the ownership of |generator|.
   void set_frame_generator(DesktopFrameGenerator* generator);
 
+  // Count of DesktopFrame(s) have been returned by this instance. This field
+  // would never be negative.
+  int num_frames_captured() const;
+
+  // Count of CaptureFrame() calls have been made. This field would never be
+  // negative.
+  int num_capture_attempts() const;
+
   // DesktopCapturer interface
   void Start(DesktopCapturer::Callback* callback) override;
-  void Stop() override {};
   void CaptureFrame() override;
   void SetSharedMemoryFactory(
       std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
@@ -56,12 +63,14 @@ class FakeDesktopCapturer : public DesktopCapturer {
   static constexpr DesktopCapturer::SourceId kWindowId = 1378277495;
   static constexpr DesktopCapturer::SourceId kScreenId = 1378277496;
 
-  DesktopCapturer::Callback* callback_;
+  DesktopCapturer::Callback* callback_ = nullptr;
   std::unique_ptr<SharedMemoryFactory> shared_memory_factory_;
-  DesktopCapturer::Result result_;
-  DesktopFrameGenerator* generator_;
+  DesktopCapturer::Result result_ = Result::SUCCESS;
+  DesktopFrameGenerator* generator_ = nullptr;
+  int num_frames_captured_ = 0;
+  int num_capture_attempts_ = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
+#endif  // MODULES_DESKTOP_CAPTURE_FAKE_DESKTOP_CAPTURER_H_
