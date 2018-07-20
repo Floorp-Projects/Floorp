@@ -36,7 +36,11 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl For some reason the llvm-config downloaded from clang.llvm.org for clang3_8
     dnl produces a -isysroot flag for a sysroot which might not ship when passed
     dnl --cxxflags. We use sed to remove this argument so that builds work on OSX
-    LLVM_CXXFLAGS=`$LLVMCONFIG --cxxflags | sed -e 's/-isysroot [[^ ]]*//'`
+    dnl
+    dnl For a similar reason, we remove any -gcc-toolchain arguments, since the
+    dnl directories specified by such arguments might not exist on the current
+    dnl machine.
+    LLVM_CXXFLAGS=`$LLVMCONFIG --cxxflags | sed -e 's/-isysroot [[^ ]]*//' -e 's/-gcc-toolchain [[^ ]]*//'`
 
     LLVM_LDFLAGS=`$LLVMCONFIG --ldflags | tr '\n' ' '`
 

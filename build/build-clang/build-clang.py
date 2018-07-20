@@ -525,9 +525,15 @@ if __name__ == "__main__":
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
-        extra_cflags2 = ["-fPIC"]
+        # When building stage2 and stage3, we want the newly-built clang to pick
+        # up whatever headers were installed from the gcc we used to build stage1,
+        # always, rather than the system headers.  Providing -gcc-toolchain
+        # encourages clang to do that.
+        extra_cflags2 = ["-fPIC",
+                         '-gcc-toolchain', stage1_inst_dir]
         # Silence clang's warnings about arguments not being used in compilation.
-        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++"]
+        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++",
+                           '-gcc-toolchain', stage1_inst_dir]
         extra_asmflags = []
         extra_ldflags = []
 
