@@ -1068,17 +1068,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
               * CompleteAsyncTransform(
                   AdjustForClip(asyncTransformWithoutOverscroll, layer));
 
-            // When applying transformations to the RCD-RSF with zoom-enabled,
-            // avoid re-aligning fixed/sticky layers to make them appear static
-            // relative to the visual viewport.
-            //
-            // This is a partial fix and will require changes to how the async
-            // transform is computed, which will be done in Bug 1465618.
-            if (!metrics.IsRootContent() || !gfxPrefs::APZAllowZooming()) {
-              AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(), oldTransform,
-                                        transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                                        &clipPartsCache);
-            }
+            AlignFixedAndStickyLayers(layer, layer, metrics.GetScrollId(), oldTransform,
+                                      transformWithoutOverscrollOrOmta, fixedLayerMargins,
+                                      &clipPartsCache);
 
             // Combine the local clip with the ancestor scrollframe clip. This is not
             // included in the async transform above, since the ancestor clip should not
