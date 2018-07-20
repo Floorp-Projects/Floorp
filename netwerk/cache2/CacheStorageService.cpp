@@ -24,6 +24,7 @@
 #include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -795,7 +796,117 @@ NS_IMETHODIMP CacheStorageService::Clear()
 
   // Passing null as a load info means to evict all contexts.
   // EvictByContext() respects the entry pinning.  EvictAll() does not.
-  rv = CacheFileIOManager::EvictByContext(nullptr, false);
+  rv = CacheFileIOManager::EvictByContext(nullptr, false, EmptyString());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP CacheStorageService::ClearOrigin(nsIPrincipal* aPrincipal)
+{
+  nsresult rv;
+
+  if (NS_WARN_IF(!aPrincipal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ClearOriginInternal(origin, aPrincipal->OriginAttributesRef(), true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ClearOriginInternal(origin, aPrincipal->OriginAttributesRef(), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+static bool
+RemoveExactEntry(CacheEntryTable* aEntries,
+                 nsACString const& aKey,
+                 CacheEntry* aEntry,
+                 bool aOverwrite)
+{
+  RefPtr<CacheEntry> existingEntry;
+  if (!aEntries->Get(aKey, getter_AddRefs(existingEntry))) {
+    LOG(("RemoveExactEntry [entry=%p already gone]", aEntry));
+    return false; // Already removed...
+  }
+
+  if (!aOverwrite && existingEntry != aEntry) {
+    LOG(("RemoveExactEntry [entry=%p already replaced]", aEntry));
+    return false; // Already replaced...
+  }
+
+  LOG(("RemoveExactEntry [entry=%p removed]", aEntry));
+  aEntries->Remove(aKey);
+  return true;
+}
+
+nsresult
+CacheStorageService::ClearOriginInternal(const nsAString& aOrigin,
+                                         const OriginAttributes& aOriginAttributes,
+                                         bool aAnonymous)
+{
+  nsresult rv;
+
+  RefPtr<LoadContextInfo> info =
+    GetLoadContextInfo(aAnonymous, aOriginAttributes);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::MutexAutoLock lock(mLock);
+
+  if (sGlobalEntryTables) {
+    for (auto iter = sGlobalEntryTables->Iter(); !iter.Done(); iter.Next()) {
+      bool matches = false;
+      rv = CacheFileUtils::KeyMatchesLoadContextInfo(iter.Key(), info,
+                                                     &matches);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!matches) {
+        continue;
+      }
+
+      CacheEntryTable* table = iter.UserData();
+      MOZ_ASSERT(table);
+
+      nsTArray<RefPtr<CacheEntry>> entriesToDelete;
+
+      for (auto entryIter = table->Iter(); !entryIter.Done(); entryIter.Next()) {
+        CacheEntry* entry = entryIter.UserData();
+
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), entry->GetURI());
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsAutoString origin;
+        rv = nsContentUtils::GetUTFOrigin(uri, origin);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (origin != aOrigin) {
+          continue;
+        }
+
+        entriesToDelete.AppendElement(entry);
+      }
+
+      for (RefPtr<CacheEntry>& entry : entriesToDelete) {
+        nsAutoCString entryKey;
+        rv = entry->HashingKey(entryKey);
+        if (NS_FAILED(rv)) {
+          NS_ERROR("aEntry->HashingKey() failed?");
+          return rv;
+        }
+
+        RemoveExactEntry(table, entryKey, entry, false /* don't overwrite */);
+      }
+    }
+  }
+
+  rv = CacheFileIOManager::EvictByContext(info, false /* pinned */, aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -973,28 +1084,6 @@ AddExactEntry(CacheEntryTable* aEntries,
 
   LOG(("AddExactEntry [entry=%p put]", aEntry));
   aEntries->Put(aKey, aEntry);
-  return true;
-}
-
-static bool
-RemoveExactEntry(CacheEntryTable* aEntries,
-                 nsACString const& aKey,
-                 CacheEntry* aEntry,
-                 bool aOverwrite)
-{
-  RefPtr<CacheEntry> existingEntry;
-  if (!aEntries->Get(aKey, getter_AddRefs(existingEntry))) {
-    LOG(("RemoveExactEntry [entry=%p already gone]", aEntry));
-    return false; // Already removed...
-  }
-
-  if (!aOverwrite && existingEntry != aEntry) {
-    LOG(("RemoveExactEntry [entry=%p already replaced]", aEntry));
-    return false; // Already replaced...
-  }
-
-  LOG(("RemoveExactEntry [entry=%p removed]", aEntry));
-  aEntries->Remove(aKey);
   return true;
 }
 
@@ -1844,7 +1933,7 @@ CacheStorageService::DoomStorageEntries(const nsACString& aContextKey,
 
     if (aContext && !aContext->IsPrivate()) {
       LOG(("  dooming disk entries"));
-      CacheFileIOManager::EvictByContext(aContext, aPinned);
+      CacheFileIOManager::EvictByContext(aContext, aPinned, EmptyString());
     }
   } else {
     LOG(("  dooming memory-only storage of %s", aContextKey.BeginReading()));

@@ -410,6 +410,7 @@ class JS::Realm : public JS::shadow::Realm
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
     js::ArraySpeciesLookup arraySpeciesLookup;
+    js::PromiseLookup promiseLookup;
 
     js::PerformanceGroupHolder performanceMonitoring;
 

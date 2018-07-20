@@ -33,6 +33,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
@@ -516,13 +517,11 @@ operator<<(std::ostream& aStream, const nsINode& aNode)
   return aStream << str.get();
 }
 
-bool
-nsINode::IsAnonymousContentInSVGUseSubtree() const
+SVGUseElement*
+nsINode::DoGetContainingSVGUseShadowHost() const
 {
-  MOZ_ASSERT(IsInAnonymousSubtree());
-  nsIContent* parent = AsContent()->GetBindingParent();
-  // Watch out for parentless native-anonymous subtrees.
-  return parent && parent->IsSVGElement(nsGkAtoms::use);
+  MOZ_ASSERT(IsInShadowTree());
+  return SVGUseElement::FromNode(AsContent()->GetContainingShadowHost());
 }
 
 void

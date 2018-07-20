@@ -164,7 +164,7 @@ class Editor extends _react.PureComponent {
         conditionalPanelLine,
         closeConditionalPanel,
         addOrToggleDisabledBreakpoint,
-        toggleBreakpoint,
+        toggleBreakpointsAtLine,
         continueToHere
       } = this.props; // ignore right clicks in the gutter
 
@@ -190,7 +190,7 @@ class Editor extends _react.PureComponent {
         return addOrToggleDisabledBreakpoint(sourceLine);
       }
 
-      return toggleBreakpoint(sourceLine);
+      return toggleBreakpointsAtLine(sourceLine);
     };
 
     this.onGutterContextMenu = event => {
@@ -633,6 +633,7 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, {
   setContextMenu: _actions2.default.setContextMenu,
   continueToHere: _actions2.default.continueToHere,
   toggleBreakpoint: _actions2.default.toggleBreakpoint,
+  toggleBreakpointsAtLine: _actions2.default.toggleBreakpointsAtLine,
   addOrToggleDisabledBreakpoint: _actions2.default.addOrToggleDisabledBreakpoint,
   jumpToMappedLocation: _actions2.default.jumpToMappedLocation,
   traverseResults: _actions2.default.traverseResults

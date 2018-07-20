@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.getBreakpointAtLocation = getBreakpointAtLocation;
+exports.getBreakpointsAtLine = getBreakpointsAtLine;
 
 var _sources = require("../reducers/sources");
 
@@ -70,4 +71,10 @@ function getBreakpointAtLocation(state, location) {
   const selectedSource = (0, _sources.getSelectedSource)(state);
   const breakpoints = getBreakpointsForSource(state, selectedSource);
   return findBreakpointAtLocation(breakpoints, selectedSource, location);
+}
+
+function getBreakpointsAtLine(state, line) {
+  const selectedSource = (0, _sources.getSelectedSource)(state);
+  const breakpoints = getBreakpointsForSource(state, selectedSource);
+  return breakpoints.filter(breakpoint => getLocation(breakpoint, selectedSource).line === line);
 }

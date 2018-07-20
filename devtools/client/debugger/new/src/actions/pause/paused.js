@@ -58,7 +58,7 @@ function paused(pauseInfo) {
     } = pauseInfo;
     const topFrame = frames.length > 0 ? frames[0] : null;
 
-    if (topFrame && why.type == "resumeLimit") {
+    if (topFrame && !why.frameFinished && why.type == "resumeLimit") {
       const mappedFrame = await (0, _mapFrames.updateFrameLocation)(topFrame, sourceMaps);
       const source = await getOriginalSourceForFrame(getState(), mappedFrame); // Ensure that the original file has loaded if there is one.
 

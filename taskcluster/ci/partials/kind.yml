@@ -28,6 +28,7 @@ only-for-build-platforms:
    - linux64-nightly/opt
    - linux64-devedition-nightly/opt
    - linux64-asan-reporter-nightly/opt
+   - win64-asan-reporter-nightly/opt
 
 job-template:
    shipping-phase: promote

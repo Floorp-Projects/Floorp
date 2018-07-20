@@ -16,6 +16,6 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple2", 3);
   await removeBreakpoint(dbg);
 
-  await waitForState(dbg, state => dbg.selectors.getBreakpoints(state).size == 0)
+  await waitForState(dbg, state => dbg.selectors.getBreakpoints(state).size == 0);
   ok("successfully removed the breakpoint")
 });

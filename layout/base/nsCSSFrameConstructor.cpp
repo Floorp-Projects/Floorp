@@ -4136,15 +4136,13 @@ SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
  */
 static void
 ConnectAnonymousTreeDescendants(nsIContent* aParent,
-                                nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent)
+                                const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent)
 {
-  uint32_t count = aContent.Length();
-  for (uint32_t i=0; i < count; i++) {
-    nsIContent* content = aContent[i].mContent;
-    NS_ASSERTION(content, "null anonymous content?");
+  for (const auto& info : aContent) {
+    nsIContent* content = info.mContent;
+    MOZ_ASSERT(content, "null anonymous content?");
 
-    ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
-
+    ConnectAnonymousTreeDescendants(content, info.mChildren);
     aParent->AppendChildTo(content, false);
   }
 }
@@ -4164,21 +4162,13 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     return rv;
   }
 
-  uint32_t count = aContent.Length();
-  for (uint32_t i=0; i < count; i++) {
+  for (const auto& info : aContent) {
     // get our child's content and set its parent to our content
-    nsIContent* content = aContent[i].mContent;
-    NS_ASSERTION(content, "null anonymous content?");
+    nsIContent* content = info.mContent;
+    MOZ_ASSERT(content, "null anonymous content?");
 
-    ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
-
-    if (aParentFrame->IsSVGUseFrame()) {
-      // least-surprise CSS binding until we do the SVG specified
-      // cascading rules for <svg:use> - bug 265894
-      content->SetFlags(NODE_IS_ANONYMOUS_ROOT);
-    } else {
-      content->SetIsNativeAnonymousRoot();
-    }
+    ConnectAnonymousTreeDescendants(content, info.mChildren);
+    content->SetIsNativeAnonymousRoot();
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
 
@@ -9035,6 +9025,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       // that associates it to a CSS pseudo-element, and only the
       // nsIAnonymousContentCreator that created this content knows how to make
       // that happen.
+      //
+      // FIXME(emilio, bug 1465511): This is no longer true, but need to figure
+      // out what editor is doing.
       nsIAnonymousContentCreator* acc = nullptr;
       nsIFrame* ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
       while (!(acc = do_QueryFrame(ancestor))) {
@@ -9042,13 +9035,10 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       }
       NS_ASSERTION(acc, "Where is the nsIAnonymousContentCreator? We may fail "
                         "to recreate its content correctly");
-      // nsSVGUseFrame is special, and we know this is unnecessary for it.
-      if (!ancestor->IsSVGUseFrame()) {
-        NS_ASSERTION(aContent->IsInNativeAnonymousSubtree(),
-                     "Why is NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT set?");
-        return RecreateFramesForContent(ancestor->GetContent(),
-                                        InsertionKind::Async);
-      }
+      NS_ASSERTION(aContent->IsInNativeAnonymousSubtree(),
+                   "Why is NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT set?");
+      return RecreateFramesForContent(ancestor->GetContent(),
+                                      InsertionKind::Async);
     }
 
     nsIFrame* parent = frame->GetParent();

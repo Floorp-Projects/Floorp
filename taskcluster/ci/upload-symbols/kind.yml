@@ -15,6 +15,7 @@ kind-dependencies:
 not-for-build-platforms:
     # Address Sanitizer builds don't have symbols to upload.
     - linux64-asan-reporter-nightly/opt
+    - win64-asan-reporter-nightly/opt
 
 job-template:
     description: Upload Symbols

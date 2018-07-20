@@ -205,16 +205,18 @@ public:
   wr::WrIdNamespace GetNamespace();
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
+  bool GetUseDComp() const { return mUseDComp; }
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
 
   void Capture();
 
 protected:
-  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
+  WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp, layers::SyncHandle aSyncHandle)
     : mDocHandle(aHandle)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
+    , mUseDComp(aUseDComp)
     , mSyncHandle(aSyncHandle)
   {}
 
@@ -226,6 +228,7 @@ protected:
   wr::WindowId mId;
   uint32_t mMaxTextureSize;
   bool mUseANGLE;
+  bool mUseDComp;
   layers::SyncHandle mSyncHandle;
 
   // We maintain alive the root api to know when to shut the render backend down,

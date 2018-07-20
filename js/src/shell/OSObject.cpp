@@ -404,7 +404,7 @@ class FileObject : public NativeObject
     static const js::Class class_;
 
     static FileObject* create(JSContext* cx, RCFile* file) {
-        FileObject* obj = js::NewObjectWithClassProto<FileObject>(cx, nullptr);
+        FileObject* obj = js::NewBuiltinClassInstance<FileObject>(cx);
         if (!obj)
             return nullptr;
 

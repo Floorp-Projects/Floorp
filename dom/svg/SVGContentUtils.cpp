@@ -41,13 +41,13 @@ using namespace mozilla::gfx;
 SVGSVGElement*
 SVGContentUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
 {
-  nsIContent *element = nullptr;
-  nsIContent *ancestor = aSVGElement->GetFlattenedTreeParent();
+  Element* element = nullptr;
+  Element* ancestor = aSVGElement->GetParentElementCrossingShadowRoot();
 
   while (ancestor && ancestor->IsSVGElement() &&
                      !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
     element = ancestor;
-    ancestor = element->GetFlattenedTreeParent();
+    ancestor = element->GetParentElementCrossingShadowRoot();
   }
 
   if (element && element->IsSVGElement(nsGkAtoms::svg)) {
