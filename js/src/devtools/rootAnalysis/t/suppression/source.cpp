@@ -1,4 +1,4 @@
-#define ANNOTATE(property) __attribute__((tag(property)))
+#define ANNOTATE(property) __attribute__((annotate(property)))
 
 struct Cell { int f; } ANNOTATE("GC Thing");
 
