@@ -469,8 +469,14 @@ enum ReactionRecordSlots {
     // the |PromiseHandler| enum, or null. If the value is null, either the
     // REACTION_FLAG_DEBUGGER_DUMMY or the
     // REACTION_FLAG_DEFAULT_RESOLVING_HANDLER flag must be set.
+    //
+    // After setting the target state for a PromiseReaction, the slot of the
+    // no longer used handler gets reused to store the argument of the active
+    // handler.
     ReactionRecordSlot_OnFulfilled,
+    ReactionRecordSlot_OnRejectedArg = ReactionRecordSlot_OnFulfilled,
     ReactionRecordSlot_OnRejected,
+    ReactionRecordSlot_OnFulfilledArg = ReactionRecordSlot_OnRejected,
 
     // The functions to resolve or reject the promise. Matches the
     // [[Capability]].[[Resolve]] and [[Capability]].[[Reject]] fields from
@@ -487,9 +493,6 @@ enum ReactionRecordSlots {
 
     // Bitmask of the REACTION_FLAG values.
     ReactionRecordSlot_Flags,
-
-    // Argument when calling the function stored in OnFulfilled or OnRejected.
-    ReactionRecordSlot_HandlerArg,
 
     // Additional slot to store extra data for specific reaction record types.
     //
@@ -520,6 +523,20 @@ class PromiseReactionRecord : public NativeObject
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
     }
 
+    uint32_t handlerSlot() {
+        MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
+        return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilled
+               : ReactionRecordSlot_OnRejected;
+    }
+
+    uint32_t handlerArgSlot() {
+        MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
+        return targetState() == JS::PromiseState::Fulfilled
+               ? ReactionRecordSlot_OnFulfilledArg
+               : ReactionRecordSlot_OnRejectedArg;
+    }
+
   public:
     static const Class class_;
 
@@ -533,14 +550,17 @@ class PromiseReactionRecord : public NativeObject
                ? JS::PromiseState::Fulfilled
                : JS::PromiseState::Rejected;
     }
-    void setTargetState(JS::PromiseState state) {
-        int32_t flags = this->flags();
-        MOZ_ASSERT(!(flags & REACTION_FLAG_RESOLVED));
+    void setTargetStateAndHandlerArg(JS::PromiseState state, const Value& arg) {
+        MOZ_ASSERT(targetState() == JS::PromiseState::Pending);
         MOZ_ASSERT(state != JS::PromiseState::Pending, "Can't revert a reaction to pending.");
+
+        int32_t flags = this->flags();
         flags |= REACTION_FLAG_RESOLVED;
         if (state == JS::PromiseState::Fulfilled)
             flags |= REACTION_FLAG_FULFILLED;
+
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
+        setFixedSlot(handlerArgSlot(), arg);
     }
     void setIsDefaultResolvingHandler(PromiseObject* promiseToResolve) {
         setFlagOnInitialState(REACTION_FLAG_DEFAULT_RESOLVING_HANDLER);
@@ -584,18 +604,11 @@ class PromiseReactionRecord : public NativeObject
     }
     Value handler() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-        uint32_t slot = targetState() == JS::PromiseState::Fulfilled
-                        ? ReactionRecordSlot_OnFulfilled
-                        : ReactionRecordSlot_OnRejected;
-        return getFixedSlot(slot);
+        return getFixedSlot(handlerSlot());
     }
     Value handlerArg() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
-        return getFixedSlot(ReactionRecordSlot_HandlerArg);
-    }
-    void setHandlerArg(Value& arg) {
-        MOZ_ASSERT(targetState() == JS::PromiseState::Pending);
-        setFixedSlot(ReactionRecordSlot_HandlerArg, arg);
+        return getFixedSlot(handlerArgSlot());
     }
     JSObject* incumbentGlobalObject() {
         return getFixedSlot(ReactionRecordSlot_IncumbentGlobalObject).toObjectOrNull();
@@ -904,11 +917,9 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     MOZ_ASSERT(reaction->targetState() == JS::PromiseState::Pending);
 
     assertSameCompartment(cx, handlerArg);
-    reaction->setHandlerArg(handlerArg.get());
+    reaction->setTargetStateAndHandlerArg(targetState, handlerArg);
 
     RootedValue reactionVal(cx, ObjectValue(*reaction));
-
-    reaction->setTargetState(targetState);
     RootedValue handler(cx, reaction->handler());
 
     // If we have a handler callback, we enter that handler's compartment so
