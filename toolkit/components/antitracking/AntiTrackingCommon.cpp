@@ -7,6 +7,8 @@
 #include "AntiTrackingCommon.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/MessageChannel.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -71,14 +73,14 @@ CreatePermissionKey(const nsCString& aTrackingOrigin,
 
 } // anonymous
 
-/* static */ void
+/* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
                                                          nsPIDOMWindowInner* aParentWindow)
 {
   MOZ_ASSERT(aParentWindow);
 
   if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
-    return;
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
@@ -88,7 +90,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
   nsGlobalWindowOuter* outerParentWindow =
     nsGlobalWindowOuter::Cast(parentWindow->GetOuterWindow());
   if (NS_WARN_IF(!outerParentWindow)) {
-    return;
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   // We are a first party resource.
@@ -96,23 +98,27 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
     CopyUTF16toUTF8(aOrigin, trackingOrigin);
     topLevelStoragePrincipal = parentWindow->GetPrincipal();
     if (NS_WARN_IF(!topLevelStoragePrincipal)) {
-      return;
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
   // We are a 3rd party source.
   } else if (!GetParentPrincipalAndTrackingOrigin(parentWindow,
                                                   getter_AddRefs(topLevelStoragePrincipal),
                                                   trackingOrigin)) {
-    return;
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
 
   if (XRE_IsParentProcess()) {
+    RefPtr<StorageAccessGrantPromise::Private> p = new StorageAccessGrantPromise::Private(__func__);
     SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(topLevelStoragePrincipal,
                                                                trackingOrigin,
-                                                               grantedOrigin);
-    return;
+                                                               grantedOrigin,
+                                                               [p] (bool success) {
+                                                                 p->Resolve(success, __func__);
+                                                               });
+    return p;
   }
 
   ContentChild* cc = ContentChild::GetSingleton();
@@ -120,25 +126,36 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
 
   // This is not really secure, because here we have the content process sending
   // the request of storing a permission.
-  Unused << cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(topLevelStoragePrincipal),
-                                                            trackingOrigin,
-                                                            grantedOrigin);
+  RefPtr<StorageAccessGrantPromise::Private> p = new StorageAccessGrantPromise::Private(__func__);
+  cc->SendFirstPartyStorageAccessGrantedForOrigin(IPC::Principal(topLevelStoragePrincipal),
+                                                  trackingOrigin,
+                                                  grantedOrigin)
+    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+           [p] (bool success) {
+             p->Resolve(success, __func__);
+           }, [p] (ipc::ResponseRejectReason aReason) {
+             p->Reject(false, __func__);
+           });
+  return p;
 }
 
 /* static */ void
 AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aParentPrincipal,
                                                                                const nsCString& aTrackingOrigin,
-                                                                               const nsCString& aGrantedOrigin)
+                                                                               const nsCString& aGrantedOrigin,
+                                                                               FirstPartyStorageAccessGrantedForOriginResolver&& aResolver)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (NS_WARN_IF(!aParentPrincipal)) {
     // The child process is sending something wrong. Let's ignore it.
+    aResolver(false);
     return;
   }
 
   nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
   if (NS_WARN_IF(!pm)) {
+    aResolver(false);
     return;
   }
 
@@ -154,6 +171,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
                                      nsIPermissionManager::ALLOW_ACTION,
                                      nsIPermissionManager::EXPIRE_TIME, when);
   Unused << NS_WARN_IF(NS_FAILED(rv));
+  aResolver(NS_SUCCEEDED(rv));
 }
 
 bool

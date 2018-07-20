@@ -30,7 +30,12 @@ namespace {
 
 // The C stack size. We use the same stack size on all platforms for
 // consistency.
-const uint32_t kWorkerStackSize = 256 * sizeof(size_t) * 1024;
+//
+// Note: Our typical equation of 256 machine words works out to 2MB on 64-bit
+// platforms. Since that works out to the size of a VM huge page, that can
+// sometimes lead to an OS allocating an entire huge page for the stack at once.
+// To avoid this, we subtract the size of 2 pages, to be safe.
+const uint32_t kWorkerStackSize = 256 * sizeof(size_t) * 1024 - 8192;
 
 } // namespace
 

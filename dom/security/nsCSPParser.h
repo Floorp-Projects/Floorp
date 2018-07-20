@@ -33,9 +33,6 @@ class nsCSPParser {
                 nsCSPContext* aCSPContext,
                 bool aDeliveredViaMetaTag);
 
-    static bool sCSPExperimentalEnabled;
-    static bool sStrictDynamicEnabled;
-
     ~nsCSPParser();
 
 

@@ -60,11 +60,11 @@
 // - If the declaration is "inline", then the method definition(s) would be in
 //   the "-inl.h" variant of the same file(s).
 //
-// The script check_macroassembler_style.py (check-masm target of the Makefile)
-// is used to verify that method definitions are matching the annotation added
-// to the method declarations.  If there is any difference, then you either
-// forgot to define the method in one of the macro assembler, or you forgot to
-// update the annotation of the macro assembler declaration.
+// The script check_macroassembler_style.py (which runs on every build) is
+// used to verify that method definitions match the annotation on the method
+// declarations.  If there is any difference, then you either forgot to define
+// the method in one of the macro assembler, or you forgot to update the
+// annotation of the macro assembler declaration.
 //
 // Some convenient short-cuts are used to avoid repeating the same list of
 // architectures on each method declaration, such as PER_ARCH and
@@ -79,7 +79,7 @@
 //   inline uint32_t framePushed() const OOL_IN_HEADER;
 //
 // Such functions should then be defined immediately after MacroAssembler's
-// definition, for example like so:
+// definition, for example:
 //
 //   //{{{ check_macroassembler_style
 //   inline uint32_t
@@ -100,10 +100,10 @@
 //
 // For each architecture, we have a macro named DEFINED_ON_arch.  This macro is
 // empty if this is not the current architecture.  Otherwise it must be either
-// set to "define" or "crash" (only use for the none target so-far).
+// set to "define" or "crash" (only used for the none target so far).
 //
-// The DEFINED_ON macro maps the list of architecture names given as argument to
-// a list of macro names.  For example,
+// The DEFINED_ON macro maps the list of architecture names given as arguments
+// to a list of macro names.  For example,
 //
 //   DEFINED_ON(arm, x86_shared)
 //
@@ -126,7 +126,7 @@
 // architecture if it is listed in the arguments of DEFINED_ON.
 //
 // This result is appended to DEFINED_ON_RESULT_ before expanding the macro,
-// which result is either no annotation, a MOZ_CRASH(), or a "= delete"
+// which results in either no annotation, a MOZ_CRASH(), or a "= delete"
 // annotation on the method declaration.
 
 # define DEFINED_ON_x86
