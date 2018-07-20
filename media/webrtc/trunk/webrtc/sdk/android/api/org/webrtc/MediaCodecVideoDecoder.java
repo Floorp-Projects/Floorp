@@ -18,11 +18,10 @@ import android.media.MediaFormat;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.Surface;
-
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -40,6 +39,14 @@ public class MediaCodecVideoDecoder {
 
   private static final String TAG = "MediaCodecVideoDecoder";
   private static final long MAX_DECODE_TIME_MS = 200;
+
+  // TODO(magjed): Use MediaFormat constants when part of the public API.
+  private static final String FORMAT_KEY_STRIDE = "stride";
+  private static final String FORMAT_KEY_SLICE_HEIGHT = "slice-height";
+  private static final String FORMAT_KEY_CROP_LEFT = "crop-left";
+  private static final String FORMAT_KEY_CROP_RIGHT = "crop-right";
+  private static final String FORMAT_KEY_CROP_TOP = "crop-top";
+  private static final String FORMAT_KEY_CROP_BOTTOM = "crop-bottom";
 
   // Tracks webrtc::VideoCodecType.
   public enum VideoCodecType { VIDEO_CODEC_VP8, VIDEO_CODEC_VP9, VIDEO_CODEC_H264 }
@@ -73,6 +80,9 @@ public class MediaCodecVideoDecoder {
   // List of supported HW H.264 decoders.
   private static final String[] supportedH264HwCodecPrefixes = {
       "OMX.qcom.", "OMX.Intel.", "OMX.Exynos."};
+  // List of supported HW H.264 high profile decoders.
+  private static final String supportedQcomH264HighProfileHwCodecPrefix = "OMX.qcom.";
+  private static final String supportedExynosH264HighProfileHwCodecPrefix = "OMX.Exynos.";
 
   // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
   // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
@@ -94,7 +104,7 @@ public class MediaCodecVideoDecoder {
   private int stride;
   private int sliceHeight;
   private boolean hasDecodedFirstFrame;
-  private final Queue<TimeStamps> decodeStartTimeMs = new LinkedList<TimeStamps>();
+  private final Queue<TimeStamps> decodeStartTimeMs = new ArrayDeque<TimeStamps>();
   private boolean useSurface;
 
   // The below variables are only used when decoding to a Surface.
@@ -102,7 +112,7 @@ public class MediaCodecVideoDecoder {
   private int droppedFrames;
   private Surface surface = null;
   private final Queue<DecodedOutputBuffer> dequeuedSurfaceOutputBuffers =
-      new LinkedList<DecodedOutputBuffer>();
+      new ArrayDeque<DecodedOutputBuffer>();
 
   // MediaCodec error handler - invoked when critical error happens which may prevent
   // further use of media codec API. Now it means that one of media codec instances
@@ -147,6 +157,25 @@ public class MediaCodecVideoDecoder {
   public static boolean isH264HwSupported() {
     return !hwDecoderDisabledTypes.contains(H264_MIME_TYPE)
         && (findDecoder(H264_MIME_TYPE, supportedH264HwCodecPrefixes) != null);
+  }
+
+  public static boolean isH264HighProfileHwSupported() {
+    if (hwDecoderDisabledTypes.contains(H264_MIME_TYPE)) {
+      return false;
+    }
+    // Support H.264 HP decoding on QCOM chips for Android L and above.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+        && findDecoder(H264_MIME_TYPE, new String[] {supportedQcomH264HighProfileHwCodecPrefix})
+            != null) {
+      return true;
+    }
+    // Support H.264 HP decoding on Exynos chips for Android M and above.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+        && findDecoder(H264_MIME_TYPE, new String[] {supportedExynosH264HighProfileHwCodecPrefix})
+            != null) {
+      return true;
+    }
+    return false;
   }
 
   public static void printStackTrace() {
@@ -532,6 +561,7 @@ public class MediaCodecVideoDecoder {
     }
 
     // Dequeues and returns a DecodedTextureBuffer if available, or null otherwise.
+    @SuppressWarnings("WaitNotInLoop")
     public DecodedTextureBuffer dequeueTextureBuffer(int timeoutMs) {
       synchronized (newFrameLock) {
         if (renderedBuffer == null && timeoutMs > 0 && isWaitingForTexture()) {
@@ -588,14 +618,25 @@ public class MediaCodecVideoDecoder {
         case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
           MediaFormat format = mediaCodec.getOutputFormat();
           Logging.d(TAG, "Decoder format changed: " + format.toString());
-          int new_width = format.getInteger(MediaFormat.KEY_WIDTH);
-          int new_height = format.getInteger(MediaFormat.KEY_HEIGHT);
-          if (hasDecodedFirstFrame && (new_width != width || new_height != height)) {
-            throw new RuntimeException("Unexpected size change. Configured " + width + "*" + height
-                + ". New " + new_width + "*" + new_height);
+          final int newWidth;
+          final int newHeight;
+          if (format.containsKey(FORMAT_KEY_CROP_LEFT) && format.containsKey(FORMAT_KEY_CROP_RIGHT)
+              && format.containsKey(FORMAT_KEY_CROP_BOTTOM)
+              && format.containsKey(FORMAT_KEY_CROP_TOP)) {
+            newWidth = 1 + format.getInteger(FORMAT_KEY_CROP_RIGHT)
+                - format.getInteger(FORMAT_KEY_CROP_LEFT);
+            newHeight = 1 + format.getInteger(FORMAT_KEY_CROP_BOTTOM)
+                - format.getInteger(FORMAT_KEY_CROP_TOP);
+          } else {
+            newWidth = format.getInteger(MediaFormat.KEY_WIDTH);
+            newHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
           }
-          width = format.getInteger(MediaFormat.KEY_WIDTH);
-          height = format.getInteger(MediaFormat.KEY_HEIGHT);
+          if (hasDecodedFirstFrame && (newWidth != width || newHeight != height)) {
+            throw new RuntimeException("Unexpected size change. Configured " + width + "*" + height
+                + ". New " + newWidth + "*" + newHeight);
+          }
+          width = newWidth;
+          height = newHeight;
 
           if (!useSurface && format.containsKey(MediaFormat.KEY_COLOR_FORMAT)) {
             colorFormat = format.getInteger(MediaFormat.KEY_COLOR_FORMAT);
@@ -604,11 +645,11 @@ public class MediaCodecVideoDecoder {
               throw new IllegalStateException("Non supported color format: " + colorFormat);
             }
           }
-          if (format.containsKey("stride")) {
-            stride = format.getInteger("stride");
+          if (format.containsKey(FORMAT_KEY_STRIDE)) {
+            stride = format.getInteger(FORMAT_KEY_STRIDE);
           }
-          if (format.containsKey("slice-height")) {
-            sliceHeight = format.getInteger("slice-height");
+          if (format.containsKey(FORMAT_KEY_SLICE_HEIGHT)) {
+            sliceHeight = format.getInteger(FORMAT_KEY_SLICE_HEIGHT);
           }
           Logging.d(TAG, "Frame stride and slice height: " + stride + " x " + sliceHeight);
           stride = Math.max(width, stride);

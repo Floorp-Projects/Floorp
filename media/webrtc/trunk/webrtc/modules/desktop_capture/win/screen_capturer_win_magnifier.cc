@@ -8,23 +8,32 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/win/screen_capturer_win_magnifier.h"
+#include "modules/desktop_capture/win/screen_capturer_win_magnifier.h"
 
 #include <utility>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/desktop_frame_win.h"
-#include "webrtc/modules/desktop_capture/desktop_region.h"
-#include "webrtc/modules/desktop_capture/mouse_cursor.h"
-#include "webrtc/modules/desktop_capture/win/cursor.h"
-#include "webrtc/modules/desktop_capture/win/desktop.h"
-#include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/desktop_frame_win.h"
+#include "modules/desktop_capture/desktop_region.h"
+#include "modules/desktop_capture/mouse_cursor.h"
+#include "modules/desktop_capture/win/cursor.h"
+#include "modules/desktop_capture/win/desktop.h"
+#include "modules/desktop_capture/win/screen_capture_utils.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/timeutils.h"
 
 namespace webrtc {
+
+namespace {
+DWORD GetTlsIndex() {
+  static const DWORD tls_index = TlsAlloc();
+  RTC_DCHECK(tls_index != TLS_OUT_OF_INDEXES);
+  return tls_index;
+}
+
+}  // namespace
 
 // kMagnifierWindowClass has to be "Magnifier" according to the Magnification
 // API. The other strings can be anything.
@@ -33,14 +42,21 @@ static LPCTSTR kHostWindowName = L"MagnifierHost";
 static LPCTSTR kMagnifierWindowClass = L"Magnifier";
 static LPCTSTR kMagnifierWindowName = L"MagnifierWindow";
 
-Atomic32 ScreenCapturerWinMagnifier::tls_index_(TLS_OUT_OF_INDEXES);
-
-ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier(
-    std::unique_ptr<DesktopCapturer> fallback_capturer)
-    : fallback_capturer_(std::move(fallback_capturer)) {}
-
+ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier() = default;
 ScreenCapturerWinMagnifier::~ScreenCapturerWinMagnifier() {
-  Stop();
+  // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
+  // destroyed automatically when host_window_ is destroyed.
+  if (host_window_)
+    DestroyWindow(host_window_);
+
+  if (magnifier_initialized_)
+    mag_uninitialize_func_();
+
+  if (mag_lib_handle_)
+    FreeLibrary(mag_lib_handle_);
+
+  if (desktop_dc_)
+    ReleaseDC(NULL, desktop_dc_);
 }
 
 void ScreenCapturerWinMagnifier::Start(Callback* callback) {
@@ -49,35 +65,7 @@ void ScreenCapturerWinMagnifier::Start(Callback* callback) {
   callback_ = callback;
 
   if (!InitializeMagnifier()) {
-    LOG_F(LS_WARNING) << "Switching to fallback screen capturer becuase "
-                         "magnifier initialization failed.";
-    StartFallbackCapturer();
-  }
-}
-
-void ScreenCapturerWinMagnifier::Stop() {
-  callback_ = NULL;
-
-  // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
-  // destroyed automatically when host_window_ is destroyed.
-  if (host_window_) {
-    DestroyWindow(host_window_);
-    host_window_ = NULL;
-  }
-
-  if (magnifier_initialized_) {
-    mag_uninitialize_func_();
-    magnifier_initialized_ = false;
-  }
-
-  if (mag_lib_handle_) {
-    FreeLibrary(mag_lib_handle_);
-    mag_lib_handle_ = NULL;
-  }
-
-  if (desktop_dc_) {
-    ReleaseDC(NULL, desktop_dc_);
-    desktop_dc_ = NULL;
+    RTC_LOG_F(LS_WARNING) << "Magnifier initialization failed.";
   }
 }
 
@@ -87,16 +75,10 @@ void ScreenCapturerWinMagnifier::SetSharedMemoryFactory(
 }
 
 void ScreenCapturerWinMagnifier::CaptureFrame() {
-  if (!magnifier_initialized_ ||
-      !magnifier_capture_succeeded_ ||
-      GetSystemMetrics(SM_CMONITORS) != 1) {
-    // Do not try to use the magnifier if it failed before and in multi-screen
-    // setup (where the API crashes sometimes).
-    LOG_F(LS_WARNING) << "Switching to the fallback screen capturer because "
-                         "initialization or last capture attempt failed, or "
-                         "execute on multi-screen system.";
-    StartFallbackCapturer();
-    fallback_capturer_->CaptureFrame();
+  RTC_DCHECK(callback_);
+  if (!magnifier_initialized_) {
+    RTC_LOG_F(LS_WARNING) << "Magnifier initialization failed.";
+    callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
 
@@ -122,10 +104,8 @@ void ScreenCapturerWinMagnifier::CaptureFrame() {
   // CaptureImage may fail in some situations, e.g. windows8 metro mode. So
   // defer to the fallback capturer if magnifier capturer did not work.
   if (!CaptureImage(rect)) {
-    LOG_F(LS_WARNING) << "Switching to the fallback screen capturer because "
-                         "last capture attempt failed.";
-    StartFallbackCapturer();
-    fallback_capturer_->CaptureFrame();
+    RTC_LOG_F(LS_WARNING) << "Magnifier capturer failed to capture a frame.";
+    callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
 
@@ -145,17 +125,12 @@ bool ScreenCapturerWinMagnifier::GetSourceList(SourceList* sources) {
 }
 
 bool ScreenCapturerWinMagnifier::SelectSource(SourceId id) {
-  bool valid = IsScreenValid(id, &current_device_key_);
-
-  // Set current_screen_id_ even if the fallback capturer is being used, so we
-  // can switch back to the magnifier when possible.
-  if (valid)
+  if (IsScreenValid(id, &current_device_key_)) {
     current_screen_id_ = id;
+    return true;
+  }
 
-  if (fallback_capturer_started_)
-    fallback_capturer_->SelectSource(id);
-
-  return valid;
+  return false;
 }
 
 void ScreenCapturerWinMagnifier::SetExcludedWindow(WindowId excluded_window) {
@@ -174,9 +149,10 @@ bool ScreenCapturerWinMagnifier::CaptureImage(const DesktopRect& rect) {
   BOOL result = SetWindowPos(magnifier_window_, NULL, rect.left(), rect.top(),
                              rect.width(), rect.height(), 0);
   if (!result) {
-    LOG_F(LS_WARNING) << "Failed to call SetWindowPos: " << GetLastError()
-                      << ". Rect = {" << rect.left() << ", " << rect.top()
-                      << ", " << rect.right() << ", " << rect.bottom() << "}";
+    RTC_LOG_F(LS_WARNING) << "Failed to call SetWindowPos: " << GetLastError()
+                          << ". Rect = {" << rect.left() << ", " << rect.top()
+                          << ", " << rect.right() << ", " << rect.bottom()
+                          << "}";
     return false;
   }
 
@@ -184,16 +160,16 @@ bool ScreenCapturerWinMagnifier::CaptureImage(const DesktopRect& rect) {
 
   RECT native_rect = {rect.left(), rect.top(), rect.right(), rect.bottom()};
 
-  RTC_DCHECK(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
-  TlsSetValue(tls_index_.Value(), this);
+  TlsSetValue(GetTlsIndex(), this);
   // OnCaptured will be called via OnMagImageScalingCallback and fill in the
   // frame before set_window_source_func_ returns.
   result = set_window_source_func_(magnifier_window_, native_rect);
 
   if (!result) {
-    LOG_F(LS_WARNING) << "Failed to call MagSetWindowSource: " << GetLastError()
-                      << ". Rect = {" << rect.left() << ", " << rect.top()
-                      << ", " << rect.right() << ", " << rect.bottom() << "}";
+    RTC_LOG_F(LS_WARNING) << "Failed to call MagSetWindowSource: "
+                          << GetLastError() << ". Rect = {" << rect.left()
+                          << ", " << rect.top() << ", " << rect.right() << ", "
+                          << rect.bottom() << "}";
     return false;
   }
 
@@ -209,11 +185,10 @@ BOOL ScreenCapturerWinMagnifier::OnMagImageScalingCallback(
     RECT unclipped,
     RECT clipped,
     HRGN dirty) {
-  RTC_DCHECK(tls_index_.Value() != static_cast<int32_t>(TLS_OUT_OF_INDEXES));
   ScreenCapturerWinMagnifier* owner =
       reinterpret_cast<ScreenCapturerWinMagnifier*>(
-          TlsGetValue(tls_index_.Value()));
-  TlsSetValue(tls_index_.Value(), nullptr);
+          TlsGetValue(GetTlsIndex()));
+  TlsSetValue(GetTlsIndex(), nullptr);
   owner->OnCaptured(srcdata, srcheader);
 
   return TRUE;
@@ -224,6 +199,15 @@ BOOL ScreenCapturerWinMagnifier::OnMagImageScalingCallback(
 // include and function calls instead of a dynamical loaded library.
 bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
   RTC_DCHECK(!magnifier_initialized_);
+
+  if (GetSystemMetrics(SM_CMONITORS) != 1) {
+    // Do not try to use the magnifier in multi-screen setup (where the API
+    // crashes sometimes).
+    RTC_LOG_F(LS_WARNING) << "Magnifier capturer cannot work on multi-screen "
+                             "system.";
+    return false;
+  }
+
   desktop_dc_ = GetDC(nullptr);
 
   mag_lib_handle_ = LoadLibrary(L"Magnification.dll");
@@ -246,15 +230,15 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
   if (!mag_initialize_func_ || !mag_uninitialize_func_ ||
       !set_window_source_func_ || !set_window_filter_list_func_ ||
       !set_image_scaling_callback_func_) {
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "library functions missing.";
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "library functions missing.";
     return false;
   }
 
   BOOL result = mag_initialize_func_();
   if (!result) {
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "error from MagInitialize " << GetLastError();
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "error from MagInitialize " << GetLastError();
     return false;
   }
 
@@ -265,8 +249,8 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
                               &hInstance);
   if (!result) {
     mag_uninitialize_func_();
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "error from GetModulehandleExA " << GetLastError();
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "error from GetModulehandleExA " << GetLastError();
     return false;
   }
 
@@ -288,8 +272,9 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
                      0, 0, 0, nullptr, nullptr, hInstance, nullptr);
   if (!host_window_) {
     mag_uninitialize_func_();
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "error from creating host window " << GetLastError();
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "error from creating host window "
+                          << GetLastError();
     return false;
   }
 
@@ -299,9 +284,9 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
                                    host_window_, nullptr, hInstance, nullptr);
   if (!magnifier_window_) {
     mag_uninitialize_func_();
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "error from creating magnifier window "
-                      << GetLastError();
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "error from creating magnifier window "
+                          << GetLastError();
     return false;
   }
 
@@ -314,9 +299,9 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
       &ScreenCapturerWinMagnifier::OnMagImageScalingCallback);
   if (!result) {
     mag_uninitialize_func_();
-    LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                      << "error from MagSetImageScalingCallback "
-                      << GetLastError();
+    RTC_LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
+                          << "error from MagSetImageScalingCallback "
+                          << GetLastError();
     return false;
   }
 
@@ -325,19 +310,11 @@ bool ScreenCapturerWinMagnifier::InitializeMagnifier() {
         magnifier_window_, MW_FILTERMODE_EXCLUDE, 1, &excluded_window_);
     if (!result) {
       mag_uninitialize_func_();
-      LOG_F(LS_WARNING) << "Failed to initialize ScreenCapturerWinMagnifier: "
-                        << "error from MagSetWindowFilterList "
-                        << GetLastError();
+      RTC_LOG_F(LS_WARNING)
+          << "Failed to initialize ScreenCapturerWinMagnifier: "
+          << "error from MagSetWindowFilterList " << GetLastError();
       return false;
     }
-  }
-
-  if (tls_index_.Value() == static_cast<int32_t>(TLS_OUT_OF_INDEXES)) {
-    // More than one threads may get here at the same time, but only one will
-    // write to tls_index_ using CompareExchange.
-    DWORD new_tls_index = TlsAlloc();
-    if (!tls_index_.CompareExchange(new_tls_index, TLS_OUT_OF_INDEXES))
-      TlsFree(new_tls_index);
   }
 
   magnifier_initialized_ = true;
@@ -356,13 +333,14 @@ void ScreenCapturerWinMagnifier::OnCaptured(void* data,
       header.height != static_cast<UINT>(current_frame->size().height()) ||
       header.stride != static_cast<UINT>(current_frame->stride()) ||
       captured_bytes_per_pixel != DesktopFrame::kBytesPerPixel) {
-    LOG_F(LS_WARNING) << "Output format does not match the captured format: "
-                      << "width = " << header.width << ", "
-                      << "height = " << header.height << ", "
-                      << "stride = " << header.stride << ", "
-                      << "bpp = " << captured_bytes_per_pixel << ", "
-                      << "pixel format RGBA ? "
-                      << (header.format == GUID_WICPixelFormat32bppRGBA) << ".";
+    RTC_LOG_F(LS_WARNING)
+        << "Output format does not match the captured format: "
+        << "width = " << header.width << ", "
+        << "height = " << header.height << ", "
+        << "stride = " << header.stride << ", "
+        << "bpp = " << captured_bytes_per_pixel << ", "
+        << "pixel format RGBA ? "
+        << (header.format == GUID_WICPixelFormat32bppRGBA) << ".";
     return;
   }
 
@@ -387,16 +365,6 @@ void ScreenCapturerWinMagnifier::CreateCurrentFrameIfNecessary(
                                                shared_memory_factory_.get())
             : std::unique_ptr<DesktopFrame>(new BasicDesktopFrame(size));
     queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
-  }
-}
-
-void ScreenCapturerWinMagnifier::StartFallbackCapturer() {
-  RTC_DCHECK(fallback_capturer_);
-  if (!fallback_capturer_started_) {
-    fallback_capturer_started_ = true;
-
-    fallback_capturer_->Start(callback_);
-    fallback_capturer_->SelectSource(current_screen_id_);
   }
 }
 

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/neteq/tools/fake_decode_from_file.h"
+#include "modules/audio_coding/neteq/tools/fake_decode_from_file.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "modules/rtp_rtcp/source/byte_io.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 namespace test {
@@ -29,7 +29,7 @@ int FakeDecodeFromFile::DecodeInternal(const uint8_t* encoded,
     RTC_DCHECK_GT(last_decoded_length_, 0);
     std::fill_n(decoded, last_decoded_length_, 0);
     *speech_type = kComfortNoise;
-    return last_decoded_length_;
+    return rtc::dchecked_cast<int>(last_decoded_length_);
   }
 
   RTC_CHECK_GE(encoded_len, 12);
@@ -42,8 +42,8 @@ int FakeDecodeFromFile::DecodeInternal(const uint8_t* encoded,
     if (last_decoded_length_ > 0) {
       // Use length of last decoded packet, but since this is the total for all
       // channels, we have to divide by 2 in the stereo case.
-      samples_to_decode = rtc::CheckedDivExact(
-          last_decoded_length_, static_cast<size_t>(stereo_ ? 2uL : 1uL));
+      samples_to_decode = rtc::dchecked_cast<int>(rtc::CheckedDivExact(
+          last_decoded_length_, static_cast<size_t>(stereo_ ? 2uL : 1uL)));
     } else {
       // This is the first packet to decode, and we do not know the length of
       // it. Set it to 10 ms.
@@ -59,8 +59,7 @@ int FakeDecodeFromFile::DecodeInternal(const uint8_t* encoded,
     RTC_CHECK(input_->Seek(jump));
   }
 
-  next_timestamp_from_input_ =
-      rtc::Optional<uint32_t>(timestamp_to_decode + samples_to_decode);
+  next_timestamp_from_input_ = timestamp_to_decode + samples_to_decode;
 
   uint32_t original_payload_size_bytes =
       ByteReader<uint32_t>::ReadLittleEndian(&encoded[8]);
@@ -70,7 +69,7 @@ int FakeDecodeFromFile::DecodeInternal(const uint8_t* encoded,
     std::fill_n(decoded, last_decoded_length_, 0);
     *speech_type = kComfortNoise;
     cng_mode_ = true;
-    return last_decoded_length_;
+    return rtc::dchecked_cast<int>(last_decoded_length_);
   }
 
   cng_mode_ = false;
@@ -83,7 +82,8 @@ int FakeDecodeFromFile::DecodeInternal(const uint8_t* encoded,
   }
 
   *speech_type = kSpeech;
-  return last_decoded_length_ = samples_to_decode;
+  last_decoded_length_ = samples_to_decode;
+  return rtc::dchecked_cast<int>(last_decoded_length_);
 }
 
 void FakeDecodeFromFile::PrepareEncoded(uint32_t timestamp,

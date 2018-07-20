@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../../build/webrtc.gni")
+import("../../webrtc.gni")
 
 # Note this target is missing an implementation for the video capture.
 # Targets must link with either 'video_capture' or
@@ -19,7 +19,6 @@ rtc_static_library("video_capture_module") {
     "video_capture.h",
     "video_capture_config.h",
     "video_capture_defines.h",
-    "video_capture_delay.h",
     "video_capture_factory.cc",
     "video_capture_factory.h",
     "video_capture_impl.cc",
@@ -27,11 +26,12 @@ rtc_static_library("video_capture_module") {
   ]
 
   deps = [
+    "..:module_api",
     "../..:webrtc_common",
-    "../../base:rtc_base_approved",
+    "../../api:video_frame_api_i420",
     "../../common_video",
+    "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
-    "../utility",
   ]
 
   if (!build_with_chromium && is_clang) {
@@ -48,7 +48,7 @@ rtc_static_library("video_capture") {
 
   deps = [
     ":video_capture_module",
-    "../../base:rtc_base_approved",
+    "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
   ]
 
@@ -87,23 +87,57 @@ if (!build_with_chromium) {
     }
   }
 
-  rtc_static_library("video_capture_internal_impl") {
+  if (is_ios || is_mac) {
+    rtc_source_set("video_capture_internal_impl_objc") {
+      visibility = [ ":video_capture_internal_impl" ]
+      configs += [ ":video_capture_internal_impl_warnings_config" ]
+
+      deps = [
+        ":video_capture_module",
+        "../../rtc_base:rtc_base_approved",
+        "../../system_wrappers",
+      ]
+
+      sources = [
+        "objc/device_info.h",
+        "objc/device_info.mm",
+        "objc/device_info_objc.h",
+        "objc/device_info_objc.mm",
+        "objc/rtc_video_capture_objc.h",
+        "objc/rtc_video_capture_objc.mm",
+        "objc/video_capture.h",
+        "objc/video_capture.mm",
+      ]
+
+      all_dependent_configs = [ ":video_capture_internal_impl_config" ]
+
+      if (!build_with_chromium && is_clang) {
+        # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+        suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+      }
+    }
+  }
+
+  rtc_source_set("video_capture_internal_impl") {
     configs += [ ":video_capture_internal_impl_warnings_config" ]
 
     deps = [
       ":video_capture_module",
-      "../../base:rtc_base_approved",
+      "../../rtc_base:rtc_base_approved",
       "../../system_wrappers",
     ]
 
-    if (is_linux || is_bsd) {
+    if (is_linux) {
       sources = [
         "linux/device_info_linux.cc",
         "linux/device_info_linux.h",
         "linux/video_capture_linux.cc",
         "linux/video_capture_linux.h",
       ]
-      deps += [ "../..:webrtc_common" ]
+      deps += [
+        "../..:webrtc_common",
+        "../../media:rtc_media_base",
+      ]
     }
     if (is_win) {
       sources = [
@@ -124,65 +158,10 @@ if (!build_with_chromium) {
 
       libs = [ "Strmiids.lib" ]
 
-      if (!build_with_mozilla) {
-        deps += [ "//third_party/winsdk_samples" ]
-      } else {
-        sources += [
-          "windows/BasePin.cpp",
-          "windows/BaseFilter.cpp",
-          "windows/BaseInputPin.cpp",
-          "windows/MediaType.cpp",
-        ]
-      }
+      deps += [ "//third_party/winsdk_samples" ]
     }
-    if (!build_with_mozilla && (is_ios || is_mac)) {
-      sources = [
-        "objc/device_info.h",
-        "objc/device_info.mm",
-        "objc/device_info_objc.h",
-        "objc/device_info_objc.mm",
-        "objc/rtc_video_capture_objc.h",
-        "objc/rtc_video_capture_objc.mm",
-        "objc/video_capture.h",
-        "objc/video_capture.mm",
-      ]
-
-      cflags = [
-        "-fobjc-arc",  # CLANG_ENABLE_OBJC_ARC = YES.
-
-        # To avoid warnings for deprecated videoMinFrameDuration and
-        # videoMaxFrameDuration properties in iOS 7.0.
-        # See webrtc:3705 for more details.
-        "-Wno-deprecated-declarations",
-      ]
-    }
-
-    if (build_with_mozilla && is_android) {
-      include_dirs = [
-        "/config/external/nspr",
-        "/nsprpub/lib/ds",
-        "/nsprpub/pr/include",
-      ]
-
-      sources = [
-        "android/device_info_android.cc",
-        "android/video_capture_android.cc",
-      ]
-    }
-
-    if (build_with_mozilla && is_mac) {
-      sources = [
-        "mac/avfoundation/video_capture_avfoundation.h",
-        "mac/avfoundation/video_capture_avfoundation.mm",
-        "mac/avfoundation/video_capture_avfoundation_info.h",
-        "mac/avfoundation/video_capture_avfoundation_info.mm",
-        "mac/avfoundation/video_capture_avfoundation_info_objc.h",
-        "mac/avfoundation/video_capture_avfoundation_info_objc.mm",
-        "mac/avfoundation/video_capture_avfoundation_objc.h",
-        "mac/avfoundation/video_capture_avfoundation_objc.mm",
-        "mac/avfoundation/video_capture_avfoundation_utility.h",
-        "mac/video_capture_mac.mm",
-      ]
+    if (is_ios || is_mac) {
+      deps += [ ":video_capture_internal_impl_objc" ]
     }
 
     all_dependent_configs = [ ":video_capture_internal_impl_config" ]
@@ -222,15 +201,16 @@ if (!build_with_chromium) {
       deps = [
         ":video_capture_internal_impl",
         ":video_capture_module",
-        "../../base:rtc_base_approved",
+        "../../api:video_frame_api_i420",
         "../../common_video:common_video",
+        "../../rtc_base:rtc_base_approved",
         "../../system_wrappers:system_wrappers",
         "../../system_wrappers:system_wrappers_default",
         "../../test:video_test_common",
         "../utility",
         "//testing/gtest",
       ]
-      deps += [ "//webrtc/test:test_main" ]
+      deps += [ "../../test:test_main" ]
 
       if (!build_with_chromium && is_clang) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).

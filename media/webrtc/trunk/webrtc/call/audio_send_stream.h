@@ -8,18 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_CALL_AUDIO_SEND_STREAM_H_
-#define WEBRTC_CALL_AUDIO_SEND_STREAM_H_
+#ifndef CALL_AUDIO_SEND_STREAM_H_
+#define CALL_AUDIO_SEND_STREAM_H_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "webrtc/api/call/transport.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/config.h"
-#include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
-#include "webrtc/typedefs.h"
+#include "api/audio_codecs/audio_encoder.h"
+#include "api/audio_codecs/audio_encoder_factory.h"
+#include "api/audio_codecs/audio_format.h"
+#include "api/call/transport.h"
+#include "api/optional.h"
+#include "api/rtpparameters.h"
+#include "call/rtp_config.h"
+#include "modules/audio_processing/include/audio_processing_statistics.h"
+#include "rtc_base/scoped_ref_ptr.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -46,14 +51,14 @@ class AudioSendStream {
     int32_t jitter_ms = -1;
     int64_t rtt_ms = -1;
     int32_t audio_level = -1;
-    float aec_quality_min = -1.0f;
-    int32_t echo_delay_median_ms = -1;
-    int32_t echo_delay_std_ms = -1;
-    int32_t echo_return_loss = -100;
-    int32_t echo_return_loss_enhancement = -100;
-    float residual_echo_likelihood = -1.0f;
-    float residual_echo_likelihood_recent_max = -1.0f;
+    // See description of "totalAudioEnergy" in the WebRTC stats spec:
+    // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy
+    double total_input_energy = 0.0;
+    double total_input_duration = 0.0;
     bool typing_noise_detected = false;
+
+    ANAStats ana_statistics;
+    AudioProcessingStats apm_statistics;
   };
 
   struct Config {
@@ -102,7 +107,8 @@ class AudioSendStream {
     rtc::Optional<std::string> audio_network_adaptor_config;
 
     struct SendCodecSpec {
-      SendCodecSpec();
+      SendCodecSpec(int payload_type, const SdpAudioFormat& format);
+      ~SendCodecSpec();
       std::string ToString() const;
 
       bool operator==(const SendCodecSpec& rhs) const;
@@ -110,18 +116,28 @@ class AudioSendStream {
         return !(*this == rhs);
       }
 
+      int payload_type;
+      SdpAudioFormat format;
       bool nack_enabled = false;
       bool transport_cc_enabled = false;
-      bool enable_codec_fec = false;
-      bool enable_opus_dtx = false;
-      int opus_max_playback_rate = 0;
-      int cng_payload_type = -1;
-      int cng_plfreq = -1;
-      int max_ptime_ms = -1;
-      int min_ptime_ms = -1;
-      webrtc::CodecInst codec_inst;
-    } send_codec_spec;
+      rtc::Optional<int> cng_payload_type;
+      // If unset, use the encoder's default target bitrate.
+      rtc::Optional<int> target_bitrate_bps;
+    };
+
+    rtc::Optional<SendCodecSpec> send_codec_spec;
+    rtc::scoped_refptr<AudioEncoderFactory> encoder_factory;
+
+    // Track ID as specified during track creation.
+    std::string track_id;
   };
+
+  virtual ~AudioSendStream() = default;
+
+  virtual const webrtc::AudioSendStream::Config& GetConfig() const = 0;
+
+  // Reconfigure the stream according to the Configuration.
+  virtual void Reconfigure(const Config& config) = 0;
 
   // Starts stream activity.
   // When a stream is active, it can receive, process and deliver packets.
@@ -137,10 +153,8 @@ class AudioSendStream {
   virtual void SetMuted(bool muted) = 0;
 
   virtual Stats GetStats() const = 0;
-
- protected:
-  virtual ~AudioSendStream() {}
+  virtual Stats GetStats(bool has_remote_tracks) const = 0;
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_CALL_AUDIO_SEND_STREAM_H_
+#endif  // CALL_AUDIO_SEND_STREAM_H_

@@ -11,16 +11,18 @@
 #include <memory>
 #include <vector>
 
-#include "webrtc/modules/video_coding/include/mock/mock_vcm_callbacks.h"
-#include "webrtc/modules/video_coding/include/mock/mock_video_codec_interface.h"
-#include "webrtc/modules/video_coding/include/video_coding.h"
-#include "webrtc/modules/video_coding/test/test_util.h"
-#include "webrtc/modules/video_coding/timing.h"
-#include "webrtc/modules/video_coding/video_coding_impl.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/test/gtest.h"
+#include "modules/video_coding/include/mock/mock_vcm_callbacks.h"
+#include "modules/video_coding/include/mock/mock_video_codec_interface.h"
+#include "modules/video_coding/include/video_coding.h"
+#include "modules/video_coding/test/test_util.h"
+#include "modules/video_coding/timing.h"
+#include "modules/video_coding/video_coding_impl.h"
+#include "system_wrappers/include/clock.h"
+#include "test/gtest.h"
+#include "test/video_codec_settings.h"
 
 using ::testing::_;
+using ::testing::AnyNumber;
 using ::testing::NiceMock;
 
 namespace webrtc {
@@ -42,9 +44,16 @@ class TestVideoReceiver : public ::testing::Test {
     const int kMaxPacketAgeToNack = 450;
     receiver_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack, 0);
 
-    VideoCodingModule::Codec(kVideoCodecVP8, &settings_);
+    webrtc::test::CodecSettings(kVideoCodecVP8, &settings_);
     settings_.plType = kUnusedPayloadType;  // Use the mocked encoder.
     EXPECT_EQ(0, receiver_->RegisterReceiveCodec(&settings_, 1, true));
+
+    // Since we call Decode, we need to provide a valid receive callback.
+    // However, for the purposes of these tests, we ignore the callbacks.
+    EXPECT_CALL(receive_callback_, OnIncomingPayloadType(_)).Times(AnyNumber());
+    EXPECT_CALL(receive_callback_, OnDecoderImplementationName(_))
+        .Times(AnyNumber());
+    receiver_->RegisterReceiveCallback(&receive_callback_);
   }
 
   void InsertAndVerifyPaddingFrame(const uint8_t* payload,
@@ -79,6 +88,7 @@ class TestVideoReceiver : public ::testing::Test {
   NiceMock<MockPacketRequestCallback> packet_request_callback_;
 
   std::unique_ptr<VCMTiming> timing_;
+  MockVCMReceiveCallback receive_callback_;
   std::unique_ptr<VideoReceiver> receiver_;
 };
 

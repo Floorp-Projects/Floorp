@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
+#ifndef MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
+#define MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -19,9 +19,9 @@
 #include <type_traits>
 #include <vector>
 
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
-#include "webrtc/modules/desktop_capture/shared_memory.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/desktop_capture/shared_memory.h"
 
 namespace webrtc {
 
@@ -66,7 +66,6 @@ class DesktopCapturer {
   struct Source {
     // The unique id to represent a Source of current DesktopCapturer.
     SourceId id;
-    pid_t pid;
 
     // Title of the window or screen in UTF-8 encoding, maybe empty. This field
     // should not be used to identify a source.
@@ -78,9 +77,8 @@ class DesktopCapturer {
   virtual ~DesktopCapturer();
 
   // Called at the beginning of a capturing session. |callback| must remain
-  // valid until capturer is destroyed or until Stop() is called
+  // valid until capturer is destroyed.
   virtual void Start(Callback* callback) = 0;
-  virtual void Stop() = 0;
 
   // Sets SharedMemoryFactory that will be used to create buffers for the
   // captured frames. The factory can be invoked on a thread other than the one
@@ -106,6 +104,10 @@ class DesktopCapturer {
 
   // Gets a list of sources current capturer supports. Returns false in case of
   // a failure.
+  // For DesktopCapturer implementations to capture screens, this function
+  // should return monitors.
+  // For DesktopCapturer implementations to capture windows, this function
+  // should only return root windows owned by applications.
   virtual bool GetSourceList(SourceList* sources);
 
   // Selects a source to be captured. Returns false in case of a failure (e.g.
@@ -117,16 +119,19 @@ class DesktopCapturer {
   // implementation does not support this functionality.
   virtual bool FocusOnSelectedSource();
 
+  // Returns true if the |pos| on the selected source is covered by other
+  // elements on the display, and is not visible to the users.
+  // |pos| is in full desktop coordinates, i.e. the top-left monitor always
+  // starts from (0, 0).
+  // The return value if |pos| is out of the scope of the source is undefined.
+  virtual bool IsOccluded(const DesktopVector& pos);
+
   // Creates a DesktopCapturer instance which targets to capture windows.
   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
       const DesktopCaptureOptions& options);
 
   // Creates a DesktopCapturer instance which targets to capture screens.
   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-      const DesktopCaptureOptions& options);
-
-  // Creates a DesktopCapturer instance which targets to capture apps.
-  static std::unique_ptr<DesktopCapturer> CreateAppCapturer(
       const DesktopCaptureOptions& options);
 
  protected:
@@ -142,14 +147,9 @@ class DesktopCapturer {
   // capture screens.
   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
       const DesktopCaptureOptions& options);
-
-  // Creates a platform specific DesktopCapturer instance which targets to
-  // capture apps.
-  static std::unique_ptr<DesktopCapturer> CreateRawAppCapturer(
-      const DesktopCaptureOptions& options);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
+#endif  // MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURER_H_
 

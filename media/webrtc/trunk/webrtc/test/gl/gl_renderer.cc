@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/gl/gl_renderer.h"
+#include "test/gl/gl_renderer.h"
 
 #include <string.h>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace test {
@@ -78,7 +78,7 @@ void GlRenderer::OnFrame(const webrtc::VideoFrame& frame) {
     ResizeVideo(frame.width(), frame.height());
   }
 
-  webrtc::ConvertFromI420(frame, kBGRA, 0, buffer_);
+  webrtc::ConvertFromI420(frame, VideoType::kBGRA, 0, buffer_);
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_);

@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_
-#define WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_
+#ifndef MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_
+#define MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_
 
 #include <map>
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/controller.h"
+#include "modules/audio_coding/audio_network_adaptor/controller.h"
+#include "rtc_base/constructormagic.h"
 
 namespace webrtc {
 
@@ -24,62 +24,68 @@ namespace webrtc {
 class FrameLengthController final : public Controller {
  public:
   struct Config {
+    struct FrameLengthChange {
+      FrameLengthChange(int from_frame_length_ms, int to_frame_length_ms);
+      bool operator<(const FrameLengthChange& rhs) const;
+      int from_frame_length_ms;
+      int to_frame_length_ms;
+    };
     Config(const std::vector<int>& encoder_frame_lengths_ms,
            int initial_frame_length_ms,
+           int min_encoder_bitrate_bps,
            float fl_increasing_packet_loss_fraction,
            float fl_decreasing_packet_loss_fraction,
-           int fl_20ms_to_60ms_bandwidth_bps,
-           int fl_60ms_to_20ms_bandwidth_bps);
+           int fl_increase_overhead_offset,
+           int fl_decrease_overhead_offset,
+           std::map<FrameLengthChange, int> fl_changing_bandwidths_bps);
     Config(const Config& other);
     ~Config();
     std::vector<int> encoder_frame_lengths_ms;
     int initial_frame_length_ms;
+    int min_encoder_bitrate_bps;
     // Uplink packet loss fraction below which frame length can increase.
     float fl_increasing_packet_loss_fraction;
     // Uplink packet loss fraction below which frame length should decrease.
     float fl_decreasing_packet_loss_fraction;
-    // Uplink bandwidth below which frame length can switch from 20ms to 60ms.
-    int fl_20ms_to_60ms_bandwidth_bps;
-    // Uplink bandwidth above which frame length should switch from 60ms to
-    // 20ms.
-    int fl_60ms_to_20ms_bandwidth_bps;
+    // Offset to apply to overhead calculation when increasing frame length.
+    int fl_increase_overhead_offset;
+    // Offset to apply to overhead calculation when decreasing frame length.
+    int fl_decrease_overhead_offset;
+    std::map<FrameLengthChange, int> fl_changing_bandwidths_bps;
   };
 
   explicit FrameLengthController(const Config& config);
 
   ~FrameLengthController() override;
 
-  void MakeDecision(const NetworkMetrics& metrics,
-                    AudioNetworkAdaptor::EncoderRuntimeConfig* config) override;
+  void UpdateNetworkMetrics(const NetworkMetrics& network_metrics) override;
+
+  void MakeDecision(AudioEncoderRuntimeConfig* config) override;
 
  private:
-  friend class FrameLengthControllerForTest;
-
-  struct FrameLengthChange {
-    FrameLengthChange(int from_frame_length_ms, int to_frame_length_ms);
-    ~FrameLengthChange();
-    bool operator<(const FrameLengthChange& rhs) const;
-    int from_frame_length_ms;
-    int to_frame_length_ms;
-  };
-
   bool FrameLengthIncreasingDecision(
-      const NetworkMetrics& metrics,
-      const AudioNetworkAdaptor::EncoderRuntimeConfig& config) const;
+      const AudioEncoderRuntimeConfig& config) const;
 
   bool FrameLengthDecreasingDecision(
-      const NetworkMetrics& metrics,
-      const AudioNetworkAdaptor::EncoderRuntimeConfig& config) const;
+      const AudioEncoderRuntimeConfig& config) const;
 
   const Config config_;
 
   std::vector<int>::const_iterator frame_length_ms_;
 
-  std::map<FrameLengthChange, int> frame_length_change_criteria_;
+  rtc::Optional<int> uplink_bandwidth_bps_;
+
+  rtc::Optional<float> uplink_packet_loss_fraction_;
+
+  rtc::Optional<size_t> overhead_bytes_per_packet_;
+
+  // True if the previous frame length decision was an increase, otherwise
+  // false.
+  bool prev_decision_increase_ = false;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(FrameLengthController);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_
+#endif  // MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_FRAME_LENGTH_CONTROLLER_H_

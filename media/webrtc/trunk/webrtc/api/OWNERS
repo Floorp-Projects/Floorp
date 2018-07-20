@@ -1,0 +1,14 @@
+pthatcher@webrtc.org
+glaznev@webrtc.org
+juberti@webrtc.org
+perkj@webrtc.org
+solenberg@webrtc.org
+tkchin@webrtc.org
+tommi@webrtc.org
+deadbeef@webrtc.org
+kwiberg@webrtc.org
+
+per-file peerconnection*=hbos@webrtc.org
+
+per-file *.gn=phoglund@webrtc.org
+per-file *.gni=phoglund@webrtc.org

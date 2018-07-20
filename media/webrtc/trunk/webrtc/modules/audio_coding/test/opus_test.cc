@@ -8,27 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/test/opus_test.h"
+#include "modules/audio_coding/test/opus_test.h"
 
 #include <assert.h>
 
 #include <string>
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
-#include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
-#include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/test/TestStereo.h"
-#include "webrtc/modules/audio_coding/test/utility.h"
-#include "webrtc/system_wrappers/include/trace.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/typedefs.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/codecs/audio_format_conversion.h"
+#include "modules/audio_coding/codecs/opus/opus_interface.h"
+#include "modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "modules/audio_coding/test/TestStereo.h"
+#include "modules/audio_coding/test/utility.h"
+#include "test/gtest.h"
+#include "test/testsupport/fileutils.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
 OpusTest::OpusTest()
-    : acm_receiver_(AudioCodingModule::Create(0)),
+    : acm_receiver_(AudioCodingModule::Create()),
       channel_a2b_(NULL),
       counter_(0),
       payload_type_(255),
@@ -263,7 +262,7 @@ void OpusTest::Run(TestPackStereo* channel, size_t channels, int bitrate,
 
     // If input audio is sampled at 32 kHz, resampling to 48 kHz is required.
     EXPECT_EQ(480,
-              resampler_.Resample10Msec(audio_frame.data_,
+              resampler_.Resample10Msec(audio_frame.data(),
                                         audio_frame.sample_rate_hz_,
                                         48000,
                                         channels,
@@ -348,7 +347,7 @@ void OpusTest::Run(TestPackStereo* channel, size_t channels, int bitrate,
 
     // Write output speech to file.
     out_file_.Write10MsData(
-        audio_frame.data_,
+        audio_frame.data(),
         audio_frame.samples_per_channel_ * audio_frame.num_channels_);
 
     // Write stand-alone speech to file.

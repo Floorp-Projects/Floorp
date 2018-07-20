@@ -8,37 +8,34 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_VIDEO_SEND_STREAM_H_
-#define WEBRTC_VIDEO_VIDEO_SEND_STREAM_H_
+#ifndef VIDEO_VIDEO_SEND_STREAM_H_
+#define VIDEO_VIDEO_SEND_STREAM_H_
 
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "webrtc/call/bitrate_allocator.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/event.h"
-#include "webrtc/base/task_queue.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/video_coding/protection_bitrate_calculator.h"
-#include "webrtc/video/encoder_rtcp_feedback.h"
-#include "webrtc/video/payload_router.h"
-#include "webrtc/video/send_delay_stats.h"
-#include "webrtc/video/send_statistics_proxy.h"
-#include "webrtc/video/vie_encoder.h"
-#include "webrtc/video_receive_stream.h"
-#include "webrtc/video_send_stream.h"
+#include "call/bitrate_allocator.h"
+#include "call/video_receive_stream.h"
+#include "call/video_send_stream.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/video_coding/protection_bitrate_calculator.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/event.h"
+#include "rtc_base/task_queue.h"
+#include "video/encoder_rtcp_feedback.h"
+#include "video/send_delay_stats.h"
+#include "video/send_statistics_proxy.h"
+#include "video/video_stream_encoder.h"
 
 namespace webrtc {
 
-class BitrateAllocator;
 class CallStats;
-class CongestionController;
+class SendSideCongestionController;
 class IvfFileWriter;
-class PacketRouter;
 class ProcessThread;
 class RtpRtcp;
-class VieRemb;
+class RtpTransportControllerSendInterface;
 class RtcEventLog;
 
 namespace internal {
@@ -47,22 +44,23 @@ class VideoSendStreamImpl;
 
 // VideoSendStream implements webrtc::VideoSendStream.
 // Internally, it delegates all public methods to VideoSendStreamImpl and / or
-// VieEncoder. VideoSendStreamInternal is created and deleted on |worker_queue|.
+// VideoStreamEncoder. VideoSendStreamInternal is created and deleted on
+// |worker_queue|.
 class VideoSendStream : public webrtc::VideoSendStream {
  public:
-  VideoSendStream(int num_cpu_cores,
-                  ProcessThread* module_process_thread,
-                  rtc::TaskQueue* worker_queue,
-                  CallStats* call_stats,
-                  CongestionController* congestion_controller,
-                  PacketRouter* packet_router,
-                  BitrateAllocator* bitrate_allocator,
-                  SendDelayStats* send_delay_stats,
-                  VieRemb* remb,
-                  RtcEventLog* event_log,
-                  VideoSendStream::Config config,
-                  VideoEncoderConfig encoder_config,
-                  const std::map<uint32_t, RtpState>& suspended_ssrcs);
+  VideoSendStream(
+      int num_cpu_cores,
+      ProcessThread* module_process_thread,
+      rtc::TaskQueue* worker_queue,
+      CallStats* call_stats,
+      RtpTransportControllerSendInterface* transport,
+      BitrateAllocator* bitrate_allocator,
+      SendDelayStats* send_delay_stats,
+      RtcEventLog* event_log,
+      VideoSendStream::Config config,
+      VideoEncoderConfig encoder_config,
+      const std::map<uint32_t, RtpState>& suspended_ssrcs,
+      const std::map<uint32_t, RtpPayloadState>& suspended_payload_states);
 
   ~VideoSendStream() override;
 
@@ -76,11 +74,11 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
                  const DegradationPreference& degradation_preference) override;
 
-  CPULoadStateObserver* LoadStateObserver() override;
   void ReconfigureVideoEncoder(VideoEncoderConfig) override;
   Stats GetStats() override;
 
   typedef std::map<uint32_t, RtpState> RtpStateMap;
+  typedef std::map<uint32_t, RtpPayloadState> RtpPayloadStateMap;
 
   // Takes ownership of each file, is responsible for closing them later.
   // Calling this method will close and finalize any current logs.
@@ -91,11 +89,12 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void EnableEncodedFrameRecording(const std::vector<rtc::PlatformFile>& files,
                                    size_t byte_limit) override;
 
-  RtpStateMap StopPermanentlyAndGetRtpStates();
+  void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
+                                      RtpPayloadStateMap* payload_state_map);
 
   void SetTransportOverhead(size_t transport_overhead_per_packet);
 
-private:
+ private:
   class ConstructionTask;
   class DestructAndGetRtpStateTask;
 
@@ -105,11 +104,12 @@ private:
 
   SendStatisticsProxy stats_proxy_;
   const VideoSendStream::Config config_;
+  const VideoEncoderConfig::ContentType content_type_;
   std::unique_ptr<VideoSendStreamImpl> send_stream_;
-  std::unique_ptr<ViEEncoder> vie_encoder_;
+  std::unique_ptr<VideoStreamEncoder> video_stream_encoder_;
 };
 
 }  // namespace internal
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_VIDEO_SEND_STREAM_H_
+#endif  // VIDEO_VIDEO_SEND_STREAM_H_

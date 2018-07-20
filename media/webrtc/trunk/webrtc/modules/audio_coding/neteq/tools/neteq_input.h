@@ -8,17 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_
+#define MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_
 
 #include <algorithm>
 #include <memory>
+#include <string>
 
-#include "webrtc/base/buffer.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/modules/audio_coding/neteq/tools/packet.h"
-#include "webrtc/modules/audio_coding/neteq/tools/packet_source.h"
-#include "webrtc/modules/include/module_common_types.h"
+#include "api/optional.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/neteq/tools/packet.h"
+#include "modules/audio_coding/neteq/tools/packet_source.h"
+#include "rtc_base/buffer.h"
 
 namespace webrtc {
 namespace test {
@@ -27,7 +28,9 @@ namespace test {
 class NetEqInput {
  public:
   struct PacketData {
-    WebRtcRTPHeader header;
+    std::string ToString() const;
+
+    RTPHeader header;
     rtc::Buffer payload;
     double time_ms;
   };
@@ -49,9 +52,9 @@ class NetEqInput {
     const auto b = NextOutputEventTime();
     // Return the minimum of non-empty |a| and |b|, or empty if both are empty.
     if (a) {
-      return b ? rtc::Optional<int64_t>(std::min(*a, *b)) : a;
+      return b ? std::min(*a, *b) : a;
     }
-    return b ? b : rtc::Optional<int64_t>();
+    return b ? b : rtc::nullopt;
   }
 
   // Returns the next packet to be inserted into NetEq. The packet following the
@@ -77,4 +80,4 @@ class NetEqInput {
 
 }  // namespace test
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_TOOLS_NETEQ_INPUT_H_

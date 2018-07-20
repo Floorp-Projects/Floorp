@@ -8,61 +8,48 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/media/engine/webrtcvideocapturer.h"
+#include "media/engine/webrtcvideocapturer.h"
 
-#include "webrtc/base/arraysize.h"
-#include "webrtc/base/bind.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/base/thread.h"
-#include "webrtc/base/timeutils.h"
+#include "rtc_base/arraysize.h"
+#include "rtc_base/bind.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/timeutils.h"
 
-#include "webrtc/base/win32.h"  // Need this to #include the impl files.
-#include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
+#include "modules/video_capture/video_capture_factory.h"
+#include "rtc_base/win32.h"  // Need this to #include the impl files.
+#include "system_wrappers/include/field_trial.h"
 
 namespace cricket {
 
+namespace {
 struct kVideoFourCCEntry {
   uint32_t fourcc;
-  webrtc::RawVideoType webrtc_type;
+  webrtc::VideoType webrtc_type;
 };
 
 // This indicates our format preferences and defines a mapping between
 // webrtc::RawVideoType (from video_capture_defines.h) to our FOURCCs.
-static kVideoFourCCEntry kSupportedFourCCs[] = {
-  { FOURCC_I420, webrtc::kVideoI420 },   // 12 bpp, no conversion.
-  { FOURCC_YV12, webrtc::kVideoYV12 },   // 12 bpp, no conversion.
-  { FOURCC_YUY2, webrtc::kVideoYUY2 },   // 16 bpp, fast conversion.
-  { FOURCC_UYVY, webrtc::kVideoUYVY },   // 16 bpp, fast conversion.
-  { FOURCC_NV12, webrtc::kVideoNV12 },   // 12 bpp, fast conversion.
-  { FOURCC_NV21, webrtc::kVideoNV21 },   // 12 bpp, fast conversion.
-  { FOURCC_MJPG, webrtc::kVideoMJPEG },  // compressed, slow conversion.
-  { FOURCC_ARGB, webrtc::kVideoARGB },   // 32 bpp, slow conversion.
-  { FOURCC_24BG, webrtc::kVideoRGB24 },  // 24 bpp, slow conversion.
+kVideoFourCCEntry kSupportedFourCCs[] = {
+    {FOURCC_I420, webrtc::VideoType::kI420},   // 12 bpp, no conversion.
+    {FOURCC_YV12, webrtc::VideoType::kYV12},   // 12 bpp, no conversion.
+    {FOURCC_YUY2, webrtc::VideoType::kYUY2},   // 16 bpp, fast conversion.
+    {FOURCC_UYVY, webrtc::VideoType::kUYVY},   // 16 bpp, fast conversion.
+    {FOURCC_NV12, webrtc::VideoType::kNV12},   // 12 bpp, fast conversion.
+    {FOURCC_NV21, webrtc::VideoType::kNV21},   // 12 bpp, fast conversion.
+    {FOURCC_MJPG, webrtc::VideoType::kMJPEG},  // compressed, slow conversion.
+    {FOURCC_ARGB, webrtc::VideoType::kARGB},   // 32 bpp, slow conversion.
+    {FOURCC_24BG, webrtc::VideoType::kRGB24},  // 24 bpp, slow conversion.
 };
 
-class WebRtcVcmFactory : public WebRtcVcmFactoryInterface {
- public:
-  virtual rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
-      const char* device) {
-    return webrtc::VideoCaptureFactory::Create(device);
-  }
-  virtual webrtc::VideoCaptureModule::DeviceInfo* CreateDeviceInfo() {
-    return webrtc::VideoCaptureFactory::CreateDeviceInfo();
-  }
-  virtual void DestroyDeviceInfo(webrtc::VideoCaptureModule::DeviceInfo* info) {
-    delete info;
-  }
-};
-
-static bool CapabilityToFormat(const webrtc::VideoCaptureCapability& cap,
-                               VideoFormat* format) {
+bool CapabilityToFormat(const webrtc::VideoCaptureCapability& cap,
+                        VideoFormat* format) {
   uint32_t fourcc = 0;
   for (size_t i = 0; i < arraysize(kSupportedFourCCs); ++i) {
-    if (kSupportedFourCCs[i].webrtc_type == cap.rawType) {
+    if (kSupportedFourCCs[i].webrtc_type == cap.videoType) {
       fourcc = kSupportedFourCCs[i].fourcc;
       break;
     }
@@ -78,28 +65,42 @@ static bool CapabilityToFormat(const webrtc::VideoCaptureCapability& cap,
   return true;
 }
 
-static bool FormatToCapability(const VideoFormat& format,
-                               webrtc::VideoCaptureCapability* cap) {
-  webrtc::RawVideoType webrtc_type = webrtc::kVideoUnknown;
+bool FormatToCapability(const VideoFormat& format,
+                        webrtc::VideoCaptureCapability* cap) {
+  webrtc::VideoType webrtc_type = webrtc::VideoType::kUnknown;
   for (size_t i = 0; i < arraysize(kSupportedFourCCs); ++i) {
     if (kSupportedFourCCs[i].fourcc == format.fourcc) {
       webrtc_type = kSupportedFourCCs[i].webrtc_type;
       break;
     }
   }
-  if (webrtc_type == webrtc::kVideoUnknown) {
+  if (webrtc_type == webrtc::VideoType::kUnknown) {
     return false;
   }
 
   cap->width = format.width;
   cap->height = format.height;
   cap->maxFPS = VideoFormat::IntervalToFps(format.interval);
-  cap->expectedCaptureDelay = 0;
-  cap->rawType = webrtc_type;
-  cap->codecType = webrtc::kVideoCodecUnknown;
+  cap->videoType = webrtc_type;
   cap->interlaced = false;
   return true;
 }
+
+}  // namespace
+
+class WebRtcVcmFactory : public WebRtcVcmFactoryInterface {
+ public:
+  virtual rtc::scoped_refptr<webrtc::VideoCaptureModule> Create(
+      const char* device) {
+    return webrtc::VideoCaptureFactory::Create(device);
+  }
+  virtual webrtc::VideoCaptureModule::DeviceInfo* CreateDeviceInfo() {
+    return webrtc::VideoCaptureFactory::CreateDeviceInfo();
+  }
+  virtual void DestroyDeviceInfo(webrtc::VideoCaptureModule::DeviceInfo* info) {
+    delete info;
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////
 // Implementation of class WebRtcVideoCapturer
@@ -109,22 +110,20 @@ WebRtcVideoCapturer::WebRtcVideoCapturer()
     : factory_(new WebRtcVcmFactory),
       module_(nullptr),
       captured_frames_(0),
-      start_thread_(nullptr),
-      async_invoker_(nullptr) {}
+      start_thread_(nullptr) {}
 
 WebRtcVideoCapturer::WebRtcVideoCapturer(WebRtcVcmFactoryInterface* factory)
     : factory_(factory),
       module_(nullptr),
       captured_frames_(0),
-      start_thread_(nullptr),
-      async_invoker_(nullptr) {}
+      start_thread_(nullptr) {}
 
 WebRtcVideoCapturer::~WebRtcVideoCapturer() {}
 
 bool WebRtcVideoCapturer::Init(const Device& device) {
   RTC_DCHECK(!start_thread_);
   if (module_) {
-    LOG(LS_ERROR) << "The capturer is already initialized";
+    RTC_LOG(LS_ERROR) << "The capturer is already initialized";
     return false;
   }
 
@@ -150,7 +149,7 @@ bool WebRtcVideoCapturer::Init(const Device& device) {
     }
   }
   if (!found) {
-    LOG(LS_WARNING) << "Failed to find capturer for id: " << device.id;
+    RTC_LOG(LS_WARNING) << "Failed to find capturer for id: " << device.id;
     factory_->DestroyDeviceInfo(info);
     return false;
   }
@@ -166,21 +165,21 @@ bool WebRtcVideoCapturer::Init(const Device& device) {
       if (CapabilityToFormat(cap, &format)) {
         supported.push_back(format);
       } else {
-        LOG(LS_WARNING) << "Ignoring unsupported WebRTC capture format "
-                        << cap.rawType;
+        RTC_LOG(LS_WARNING) << "Ignoring unsupported WebRTC capture format "
+                            << static_cast<int>(cap.videoType);
       }
     }
   }
   factory_->DestroyDeviceInfo(info);
 
   if (supported.empty()) {
-    LOG(LS_ERROR) << "Failed to find usable formats for id: " << device.id;
+    RTC_LOG(LS_ERROR) << "Failed to find usable formats for id: " << device.id;
     return false;
   }
 
   module_ = factory_->Create(vcm_id);
   if (!module_) {
-    LOG(LS_ERROR) << "Failed to create capturer for id: " << device.id;
+    RTC_LOG(LS_ERROR) << "Failed to create capturer for id: " << device.id;
     return false;
   }
 
@@ -195,11 +194,11 @@ bool WebRtcVideoCapturer::Init(
     const rtc::scoped_refptr<webrtc::VideoCaptureModule>& module) {
   RTC_DCHECK(!start_thread_);
   if (module_) {
-    LOG(LS_ERROR) << "The capturer is already initialized";
+    RTC_LOG(LS_ERROR) << "The capturer is already initialized";
     return false;
   }
   if (!module) {
-    LOG(LS_ERROR) << "Invalid VCM supplied";
+    RTC_LOG(LS_ERROR) << "Invalid VCM supplied";
     return false;
   }
   // TODO(juberti): Set id and formats.
@@ -220,9 +219,9 @@ bool WebRtcVideoCapturer::GetBestCaptureFormat(const VideoFormat& desired,
     best_format->height = desired.height;
     best_format->fourcc = FOURCC_I420;
     best_format->interval = desired.interval;
-    LOG(LS_INFO) << "Failed to find best capture format,"
-                 << " fall back to the requested format "
-                 << best_format->ToString();
+    RTC_LOG(LS_INFO) << "Failed to find best capture format,"
+                     << " fall back to the requested format "
+                     << best_format->ToString();
   }
   return true;
 }
@@ -232,12 +231,8 @@ void WebRtcVideoCapturer::OnSinkWantsChanged(const rtc::VideoSinkWants& wants) {
   // calls, can't take lock.
   RTC_DCHECK(module_);
 
-  const std::string group_name =
-      webrtc::field_trial::FindFullName("WebRTC-CVO");
-
-  if (group_name == "Disabled") {
+  if (webrtc::field_trial::FindFullName("WebRTC-CVO").find("Disabled") == 0)
     return;
-  }
 
   VideoCapturer::OnSinkWantsChanged(wants);
   bool result = module_->SetApplyRotation(wants.rotation_applied);
@@ -248,43 +243,40 @@ void WebRtcVideoCapturer::OnSinkWantsChanged(const rtc::VideoSinkWants& wants) {
 
 CaptureState WebRtcVideoCapturer::Start(const VideoFormat& capture_format) {
   if (!module_) {
-    LOG(LS_ERROR) << "The capturer has not been initialized";
+    RTC_LOG(LS_ERROR) << "The capturer has not been initialized";
     return CS_FAILED;
   }
   if (start_thread_) {
-    LOG(LS_ERROR) << "The capturer is already running";
+    RTC_LOG(LS_ERROR) << "The capturer is already running";
     RTC_DCHECK(start_thread_->IsCurrent())
         << "Trying to start capturer on different threads";
     return CS_FAILED;
   }
 
   start_thread_ = rtc::Thread::Current();
-  RTC_DCHECK(!async_invoker_);
-  async_invoker_.reset(new rtc::AsyncInvoker());
   captured_frames_ = 0;
 
   SetCaptureFormat(&capture_format);
 
   webrtc::VideoCaptureCapability cap;
   if (!FormatToCapability(capture_format, &cap)) {
-    LOG(LS_ERROR) << "Invalid capture format specified";
+    RTC_LOG(LS_ERROR) << "Invalid capture format specified";
     return CS_FAILED;
   }
 
   int64_t start = rtc::TimeMillis();
   module_->RegisterCaptureDataCallback(this);
   if (module_->StartCapture(cap) != 0) {
-    LOG(LS_ERROR) << "Camera '" << GetId() << "' failed to start";
+    RTC_LOG(LS_ERROR) << "Camera '" << GetId() << "' failed to start";
     module_->DeRegisterCaptureDataCallback();
-    async_invoker_.reset();
     SetCaptureFormat(nullptr);
     start_thread_ = nullptr;
     return CS_FAILED;
   }
 
-  LOG(LS_INFO) << "Camera '" << GetId() << "' started with format "
-               << capture_format.ToString() << ", elapsed time "
-               << rtc::TimeSince(start) << " ms";
+  RTC_LOG(LS_INFO) << "Camera '" << GetId() << "' started with format "
+                   << capture_format.ToString() << ", elapsed time "
+                   << rtc::TimeSince(start) << " ms";
 
   SetCaptureState(CS_RUNNING);
   return CS_STARTING;
@@ -292,12 +284,11 @@ CaptureState WebRtcVideoCapturer::Start(const VideoFormat& capture_format) {
 
 void WebRtcVideoCapturer::Stop() {
   if (!start_thread_) {
-    LOG(LS_ERROR) << "The capturer is already stopped";
+    RTC_LOG(LS_ERROR) << "The capturer is already stopped";
     return;
   }
   RTC_DCHECK(start_thread_);
   RTC_DCHECK(start_thread_->IsCurrent());
-  RTC_DCHECK(async_invoker_);
   if (IsRunning()) {
     // The module is responsible for OnIncomingCapturedFrame being called, if
     // we stop it we will get no further callbacks.
@@ -307,13 +298,9 @@ void WebRtcVideoCapturer::Stop() {
 
   // TODO(juberti): Determine if the VCM exposes any drop stats we can use.
   double drop_ratio = 0.0;
-  LOG(LS_INFO) << "Camera '" << GetId() << "' stopped after capturing "
-               << captured_frames_ << " frames and dropping "
-               << drop_ratio << "%";
-
-  // Clear any pending async invokes (that OnIncomingCapturedFrame may have
-  // caused).
-  async_invoker_.reset();
+  RTC_LOG(LS_INFO) << "Camera '" << GetId() << "' stopped after capturing "
+                   << captured_frames_ << " frames and dropping " << drop_ratio
+                   << "%";
 
   SetCaptureFormat(NULL);
   start_thread_ = nullptr;
@@ -340,14 +327,13 @@ void WebRtcVideoCapturer::OnFrame(
     const webrtc::VideoFrame& sample) {
   // This can only happen between Start() and Stop().
   RTC_DCHECK(start_thread_);
-  RTC_DCHECK(async_invoker_);
 
   ++captured_frames_;
   // Log the size and pixel aspect ratio of the first captured frame.
   if (1 == captured_frames_) {
-    LOG(LS_INFO) << "Captured frame size "
-                 << sample.width() << "x" << sample.height()
-                 << ". Expected format " << GetCaptureFormat()->ToString();
+    RTC_LOG(LS_INFO) << "Captured frame size " << sample.width() << "x"
+                     << sample.height() << ". Expected format "
+                     << GetCaptureFormat()->ToString();
   }
 
   VideoCapturer::OnFrame(sample, sample.width(), sample.height());

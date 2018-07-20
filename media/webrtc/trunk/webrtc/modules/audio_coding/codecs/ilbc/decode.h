@@ -16,8 +16,8 @@
 
 ******************************************************************/
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_H_
-#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_H_
+#ifndef MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_H_
+#define MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_DECODE_H_
 
 #include "defines.h"
 
@@ -33,6 +33,6 @@ int WebRtcIlbcfix_DecodeImpl(
                                            structure */
     int16_t mode               /* (i) 0: bad packet, PLC,
                                       1: normal */
-    ) WARN_UNUSED_RESULT;
+    ) RTC_WARN_UNUSED_RESULT;
 
 #endif

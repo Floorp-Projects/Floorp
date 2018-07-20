@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../../build/webrtc.gni")
+import("../../webrtc.gni")
 
 rtc_static_library("utility") {
   sources = [
@@ -30,15 +30,43 @@ rtc_static_library("utility") {
   }
 
   deps = [
+    "..:module_api",
     "../..:webrtc_common",
     "../../audio/utility:audio_frame_operations",
-    "../../base:rtc_task_queue",
     "../../common_audio",
+    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:rtc_task_queue",
     "../../system_wrappers",
-    "../audio_coding",
-    "../audio_coding:audio_format_conversion",
-    "../audio_coding:builtin_audio_decoder_factory",
-    "../audio_coding:rent_a_codec",
     "../media_file",
   ]
+}
+
+rtc_source_set("mock_process_thread") {
+  testonly = true
+  sources = [
+    "include/mock/mock_process_thread.h",
+  ]
+  deps = [
+    ":utility",
+    "../../rtc_base:rtc_base_approved",
+    "../../test:test_support",
+  ]
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("utility_unittests") {
+    testonly = true
+
+    sources = [
+      "source/process_thread_impl_unittest.cc",
+    ]
+    deps = [
+      ":utility",
+      "..:module_api",
+      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:rtc_task_queue",
+      "../../test:test_support",
+      "//testing/gmock",
+    ]
+  }
 }

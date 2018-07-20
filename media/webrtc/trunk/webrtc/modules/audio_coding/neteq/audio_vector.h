@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
+#define MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
 
 #include <string.h>  // Access to size_t.
 #include <memory>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/typedefs.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/constructormagic.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -110,11 +111,32 @@ class AudioVector {
   virtual bool Empty() const;
 
   // Accesses and modifies an element of AudioVector.
-  const int16_t& operator[](size_t index) const;
-  int16_t& operator[](size_t index);
+  inline const int16_t& operator[](size_t index) const {
+    return array_[WrapIndex(index, begin_index_, capacity_)];
+  }
+
+  inline int16_t& operator[](size_t index) {
+    return array_[WrapIndex(index, begin_index_, capacity_)];
+  }
 
  private:
   static const size_t kDefaultInitialSize = 10;
+
+  // This method is used by the [] operators to calculate an index within the
+  // capacity of the array, but without using the modulo operation (%).
+  static inline size_t WrapIndex(size_t index,
+                                 size_t begin_index,
+                                 size_t capacity) {
+    RTC_DCHECK_LT(index, capacity);
+    RTC_DCHECK_LT(begin_index, capacity);
+    size_t ix = begin_index + index;
+    RTC_DCHECK_GE(ix, index);  // Check for overflow.
+    if (ix >= capacity) {
+      ix -= capacity;
+    }
+    RTC_DCHECK_LT(ix, capacity);
+    return ix;
+  }
 
   void Reserve(size_t n);
 
@@ -143,4 +165,4 @@ class AudioVector {
 };
 
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_AUDIO_VECTOR_H_
