@@ -219,6 +219,7 @@ UNIFIED_SOURCES += [
     'frontend/JumpList.cpp',
     'frontend/NameFunctions.cpp',
     'frontend/ParseNode.cpp',
+    'frontend/SwitchEmitter.cpp',
     'frontend/TDZCheckCache.cpp',
     'frontend/TokenStream.cpp',
     'frontend/TryEmitter.cpp',
