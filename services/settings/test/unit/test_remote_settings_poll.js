@@ -5,8 +5,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
-const RemoteSettingsModule = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const { RemoteSettings } = RemoteSettingsModule;
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const { Kinto } = ChromeUtils.import("resource://services-common/kinto-offline-client.js", {});
 
 const IS_ANDROID = AppConstants.platform == "android";
@@ -502,12 +501,8 @@ add_task(async function test_syncs_clients_with_local_dump() {
     last_modified: 8000,
     host: "localhost",
     bucket: "main",
-    collection: "with-dump"
+    collection: "tippytop"
   }]));
-
-  RemoteSettingsModule.hasLocalDump = async (bucket, collection) => {
-    return bucket == "main" && collection == "with-dump";
-  };
 
   let error;
   try {
@@ -518,9 +513,9 @@ add_task(async function test_syncs_clients_with_local_dump() {
 
   // The `main/some-unknown` should be skipped because it has no dump.
   // The `blocklists/addons` should be skipped because it is not the main bucket.
-  // The `with-dump` has a dump, and should cause a network error because the test
+  // The `tippytop` has a dump, and should cause a network error because the test
   // does not setup the server to receive the requests of `maybeSync()`.
   Assert.ok(/HTTP 404/.test(error.message), "server will return 404 on sync");
-  Assert.equal(error.details.collection, "with-dump");
+  Assert.equal(error.details.collection, "tippytop");
 });
 add_task(clear_state);
