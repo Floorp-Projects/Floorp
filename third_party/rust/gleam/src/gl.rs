@@ -62,37 +62,6 @@ fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type:
     return (width * height * colors * depth) as usize;
 }
 
-// https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.10
-fn get_uniform_iv_vector_length(uniform_type: &GLuint) -> usize {
-    match *uniform_type {
-        ffi::BOOL |
-        ffi::INT |
-        ffi::SAMPLER_2D |
-        ffi::SAMPLER_CUBE => 1,
-        ffi::INT_VEC2 |
-        ffi::BOOL_VEC2 => 2,
-        ffi::INT_VEC3 |
-        ffi::BOOL_VEC3 => 3,
-        ffi::INT_VEC4 |
-        ffi::BOOL_VEC4 => 4,
-        _ => panic!("Invalid location argument"),
-    }
-}
-
-// https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.10
-fn get_uniform_fv_vector_length(uniform_type: &GLuint) -> usize {
-    match *uniform_type {
-        ffi::FLOAT => 1,
-        ffi::FLOAT_VEC2 => 2,
-        ffi::FLOAT_VEC3 => 3,
-        ffi::FLOAT_VEC4 |
-        ffi::FLOAT_MAT2 => 4,
-        ffi::FLOAT_MAT3 => 9,
-        ffi::FLOAT_MAT4 => 16,
-        _ => panic!("Invalid location argument"),
-    }
-}
-
 pub struct DebugMessage {
     pub message: String,
     pub source: GLenum,
@@ -185,8 +154,8 @@ declare_gl_apis! {
     fn active_texture(&self, texture: GLenum);
     fn attach_shader(&self, program: GLuint, shader: GLuint);
     fn bind_attrib_location(&self, program: GLuint, index: GLuint, name: &str);
-    fn get_uniform_iv(&self, program: GLuint, location: GLint) -> Vec<GLint>;
-    fn get_uniform_fv(&self, program: GLuint, location: GLint) -> Vec<GLfloat>;
+    unsafe fn get_uniform_iv(&self, program: GLuint, location: GLint, result: &mut [GLint]);
+    unsafe fn get_uniform_fv(&self, program: GLuint, location: GLint, result: &mut [GLfloat]);
     fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint;
     fn get_uniform_indices(&self,  program: GLuint, names: &[&str]) -> Vec<GLuint>;
     fn bind_buffer_base(&self, target: GLenum, index: GLuint, buffer: GLuint);
