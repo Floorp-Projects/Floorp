@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 #include "logging.h"
 #include "nspr.h"
@@ -646,16 +647,16 @@ NrIceCtx::Initialize(const std::string& ufrag,
     nsCOMPtr<nsIPrefBranch> pref_branch;
     rv = pref_service->GetBranch(nullptr, getter_AddRefs(pref_branch));
     if (NS_SUCCEEDED(rv)) {
-      rv = pref_branch->GetCharPref(
+      Unused << pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.mapping_type",
           mapping_type);
-      rv = pref_branch->GetCharPref(
+      Unused << pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.filtering_type",
           filtering_type);
-      rv = pref_branch->GetBoolPref(
+      Unused << pref_branch->GetBoolPref(
           "media.peerconnection.nat_simulator.block_udp",
           &block_udp);
-      rv = pref_branch->GetBoolPref(
+      Unused << pref_branch->GetBoolPref(
           "media.peerconnection.nat_simulator.block_tcp",
           &block_tcp);
     }
