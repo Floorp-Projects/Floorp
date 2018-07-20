@@ -517,9 +517,7 @@ child:
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
                                     /* used on MacOSX and Linux only: */
-                                    SystemFontListEntry[] systemFontList,
-                                    FileDescriptor sharedDataMapFile,
-                                    uint32_t sharedDataMapSize);
+                                    SystemFontListEntry[] systemFontList);
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
