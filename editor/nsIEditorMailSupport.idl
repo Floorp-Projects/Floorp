@@ -40,15 +40,6 @@ interface nsIEditorMailSupport : nsISupports
    */
    void insertTextWithQuotations(in DOMString aStringToInsert);
 
-  /** Paste a string as quoted text,
-    * whose representation is dependant on the editor type,
-    * replacing the selected text (if any)
-    * @param aCitation    The "mid" URL of the source message
-    * @param aSelectionType Text or html?
-    */
-  void pasteAsCitedQuotation(in AString aCitation,
-                             in long aSelectionType);
-
   /** Insert a string as quoted text
     * (whose representation is dependant on the editor type),
     * replacing the selected text (if any),
@@ -67,12 +58,6 @@ interface nsIEditorMailSupport : nsISupports
    * @param aRespectNewlines  Try to maintain newlines in the original?
    */
   void rewrap(in boolean aRespectNewlines);
-
-  /**
-   * Strip any citations in the selected part of the document.
-   */
-  void stripCites();
-
 
   /**
    * Get a list of IMG and OBJECT tags in the current document.

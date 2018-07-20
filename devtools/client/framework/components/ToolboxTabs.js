@@ -6,11 +6,12 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {findDOMNode} = require("devtools/client/shared/vendor/react-dom");
-const {button, div} = dom;
+const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+const { div } = dom;
 
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
+const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
+const MenuItem = createFactory(require("devtools/client/shared/components/menu/MenuItem"));
+const MenuList = createFactory(require("devtools/client/shared/components/menu/MenuList"));
 const ToolboxTab = createFactory(require("devtools/client/framework/components/ToolboxTab"));
 const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
 
@@ -188,50 +189,48 @@ class ToolboxTabs extends Component {
     }, { timeout: 100 });
   }
 
+  renderToolsChevronMenuList() {
+    const {
+      panelDefinitions,
+      selectTool,
+    } = this.props;
+
+    const items = [];
+    for (const { id, label, icon } of panelDefinitions) {
+      if (this.state.overflowedTabIds.includes(id)) {
+        items.push(MenuItem({
+          id: "tools-chevron-menupopup-" + id,
+          label,
+          type: "checkbox",
+          onClick: () => {
+            selectTool(id, "tab_switch");
+          },
+          icon,
+        }));
+      }
+    }
+
+    return MenuList({ id: "tools-chevron-menupopup" }, items);
+  }
+
   /**
    * Render a button to access overflowed tools, displayed only when the toolbar
    * presents an overflow.
    */
   renderToolsChevronButton() {
     const {
-      panelDefinitions,
-      selectTool,
       toolbox,
-      L10N,
     } = this.props;
 
-    return button({
-      className: "devtools-button tools-chevron-menu",
-      tabIndex: -1,
-      title: L10N.getStr("toolbox.allToolsButton.tooltip"),
-      id: "tools-chevron-menu-button",
-      onClick: ({ target }) => {
-        const menu = new Menu({
-          id: "tools-chevron-menupopup"
-        });
-
-        panelDefinitions.forEach(({id, label}) => {
-          if (this.state.overflowedTabIds.includes(id)) {
-            menu.append(new MenuItem({
-              click: () => {
-                selectTool(id, "tab_switch");
-              },
-              id: "tools-chevron-menupopup-" + id,
-              label,
-              type: "checkbox",
-            }));
-          }
-        });
-
-        const rect = target.getBoundingClientRect();
-        const screenX = target.ownerDocument.defaultView.mozInnerScreenX;
-        const screenY = target.ownerDocument.defaultView.mozInnerScreenY;
-
-        // Display the popup below the button.
-        menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, toolbox);
-        return menu;
+    return MenuButton(
+      {
+        id: "tools-chevron-menu-button",
+        menuId: "tools-chevron-menu-button-panel",
+        className: "devtools-button tools-chevron-menu",
+        doc: toolbox.doc,
       },
-    });
+      this.renderToolsChevronMenuList()
+    );
   }
 
   /**

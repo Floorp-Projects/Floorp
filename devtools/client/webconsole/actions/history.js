@@ -10,7 +10,7 @@ const {
   APPEND_TO_HISTORY,
   CLEAR_HISTORY,
   HISTORY_LOADED,
-  UPDATE_HISTORY_PLACEHOLDER,
+  UPDATE_HISTORY_POSITION,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -49,9 +49,9 @@ function historyLoaded(entries) {
 /**
  * Update place-holder position in the history list.
  */
-function updatePlaceHolder(direction, expression) {
+function updateHistoryPosition(direction, expression) {
   return {
-    type: UPDATE_HISTORY_PLACEHOLDER,
+    type: UPDATE_HISTORY_POSITION,
     direction,
     expression,
   };
@@ -61,5 +61,5 @@ module.exports = {
   appendToHistory,
   clearHistory,
   historyLoaded,
-  updatePlaceHolder,
+  updateHistoryPosition,
 };

@@ -9,7 +9,7 @@ const {
   APPEND_TO_HISTORY,
   CLEAR_HISTORY,
   HISTORY_LOADED,
-  UPDATE_HISTORY_PLACEHOLDER,
+  UPDATE_HISTORY_POSITION,
   HISTORY_BACK,
   HISTORY_FORWARD,
 } = require("devtools/client/webconsole/constants");
@@ -22,15 +22,16 @@ function getInitialState() {
     // Array with history entries
     entries: [],
 
-    // Holds the index of the history entry that the user is currently
-    // viewing. This is reset to this.history.length when APPEND_TO_HISTORY
-    // action is fired.
-    placeHolder: undefined,
+    // Holds position (index) in history entries that the user is
+    // currently viewing. This is reset to this.entries.length when
+    // APPEND_TO_HISTORY action is fired.
+    position: undefined,
 
-    // Holds the number of entries in history. This value is incremented
-    // when APPEND_TO_HISTORY action is fired and used to get previous
-    // value from the command line when the user goes backward.
-    index: 0,
+    // Backups the original user value (if any) that can be set in
+    // the input field. It might be used again if the user doesn't
+    // pick up anything from the history and wants to return all
+    // the way back to see the original input text.
+    originalUserValue: null,
   };
 }
 
@@ -42,8 +43,8 @@ function history(state = getInitialState(), action, prefsState) {
       return clearHistory(state);
     case HISTORY_LOADED:
       return historyLoaded(state, action.entries);
-    case UPDATE_HISTORY_PLACEHOLDER:
-      return updatePlaceHolder(state, action.direction, action.expression);
+    case UPDATE_HISTORY_POSITION:
+      return updateHistoryPosition(state, action.direction, action.expression);
   }
   return state;
 }
@@ -55,21 +56,17 @@ function appendToHistory(state, prefsState, expression) {
 
   // Append new expression only if it isn't the same as
   // the one recently added.
-  // If it's the same don't forget to remove the current
-  // input value that has been appended in updatePlaceholder.
-  if (expression.trim() != state.entries[state.index - 1]) {
-    state.entries[state.index++] = expression;
-  } else if (state.index < state.entries.length) {
-    state.entries.pop();
+  if (expression.trim() != state.entries[state.entries.length - 1]) {
+    state.entries.push(expression);
   }
-
-  state.placeHolder = state.entries.length;
 
   // Remove entries if the limit is reached
   if (state.entries.length > prefsState.historyCount) {
     state.entries.splice(0, state.entries.length - prefsState.historyCount);
-    state.index = state.placeHolder = state.entries.length;
   }
+
+  state.position = state.entries.length;
+  state.originalUserValue = null;
 
   return state;
 }
@@ -91,40 +88,39 @@ function historyLoaded(state, entries) {
   return {
     ...state,
     entries: newEntries,
-    placeHolder: newEntries.length,
-    index: newEntries.length,
+    // Default position is at the end of the list
+    // (at the latest inserted item).
+    position: newEntries.length,
+    originalUserValue: null,
   };
 }
 
-function updatePlaceHolder(state, direction, expression) {
+function updateHistoryPosition(state, direction, expression) {
   // Handle UP arrow key => HISTORY_BACK
   // Handle DOWN arrow key => HISTORY_FORWARD
   if (direction == HISTORY_BACK) {
-    if (state.placeHolder <= 0) {
+    if (state.position <= 0) {
       return state;
     }
 
     // Clone state
     state = {...state};
 
-    // Save the current input value as the latest entry in history, only if
-    // the user is already at the last entry.
-    // Note: this code does not store changes to items that are already in
-    // history.
-    if (state.placeHolder == state.index) {
-      state.entries = [...state.entries];
-      state.entries[state.index] = expression || "";
+    // Store the current input value when the user starts
+    // browsing through the history.
+    if (state.position == state.entries.length) {
+      state.originalUserValue = expression || "";
     }
 
-    state.placeHolder--;
+    state.position--;
   } else if (direction == HISTORY_FORWARD) {
-    if (state.placeHolder >= (state.entries.length - 1)) {
+    if (state.position >= state.entries.length) {
       return state;
     }
 
     state = {
       ...state,
-      placeHolder: state.placeHolder + 1,
+      position: state.position + 1,
     };
   }
 

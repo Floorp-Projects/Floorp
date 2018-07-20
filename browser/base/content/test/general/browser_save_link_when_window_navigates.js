@@ -153,7 +153,7 @@ function test() {
 
   Services.prefs.setBoolPref(ALWAYS_DOWNLOAD_DIR_PREF, false);
   testOnWindow(undefined, function(win) {
-    let windowGonePromise = promiseWindowWillBeClosed(win);
+    let windowGonePromise = BrowserTestUtils.domWindowClosed(win);
     Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, true);
     triggerSave(win, function() {
       windowGonePromise.then(function() {

@@ -609,6 +609,17 @@ function isShadowRoot(node) {
 }
 exports.isShadowRoot = isShadowRoot;
 
+/*
+ * Gets the shadow root mode (open or closed).
+ *
+ * @param {DOMNode} node
+ * @return {String|null}
+ */
+function getShadowRootMode(node) {
+  return isShadowRoot(node) ? node.mode : null;
+}
+exports.getShadowRootMode = getShadowRootMode;
+
 /**
  * Determine whether a node is a shadow host, ie. an element that has a shadowRoot
  * attached to itself.

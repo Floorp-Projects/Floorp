@@ -183,6 +183,20 @@ var tests = [
       goNext();
     }
   },
+  // Test that autoplay media icon is shown
+  { id: "Test#8",
+    async run() {
+      let notifyObj = new BasicNotification(this.id);
+      notifyObj.anchorID = "autoplay-media-notification-icon";
+      notifyObj.addOptions({neverShow: true});
+      let promiseTopic = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+      showNotification(notifyObj);
+      await promiseTopic;
+      isnot(document.getElementById("autoplay-media-notification-icon").boxObject.width, 0,
+            "autoplay media icon should be visible");
+      goNext();
+    }
+  },
   // Test notification close button
   { id: "Test#9",
     run() {
