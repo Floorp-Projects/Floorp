@@ -21,7 +21,9 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild()
   // ensure we don't leak any promise holders for which we haven't yet
   // received responses
   for (UniquePtr<MozPromiseHolder<GenericPromise>>& promiseHolder : mResponsePromises) {
-    promiseHolder->RejectIfExists(NS_ERROR_ABORT, __func__);
+    if (promiseHolder) {
+      promiseHolder->RejectIfExists(NS_ERROR_ABORT, __func__);
+    }
   }
 }
 
@@ -33,7 +35,7 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
     MakeUnique<MozPromiseHolder<GenericPromise>>();
   if (!SendSetDictionaryFromList(
          aList,
-         reinterpret_cast<intptr_t>(promiseHolder.get()))) {
+         mResponsePromises.Length())) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
   RefPtr<GenericPromise> result = promiseHolder->Ensure(__func__);
@@ -47,19 +49,16 @@ RemoteSpellcheckEngineChild::RecvNotifyOfCurrentDictionary(
                                const nsString& aDictionary,
                                const intptr_t& aId)
 {
-  MozPromiseHolder<GenericPromise>* promiseHolder =
-    reinterpret_cast<MozPromiseHolder<GenericPromise>*>(aId);
+  MOZ_RELEASE_ASSERT((size_t) aId < mResponsePromises.Length());
   mOwner->mCurrentDictionary = aDictionary;
   if (aDictionary.IsEmpty()) {
-    promiseHolder->RejectIfExists(NS_ERROR_NOT_AVAILABLE, __func__);
+    mResponsePromises[aId]->RejectIfExists(NS_ERROR_NOT_AVAILABLE, __func__);
   } else {
-    promiseHolder->ResolveIfExists(true, __func__);
+    mResponsePromises[aId]->ResolveIfExists(true, __func__);
   }
-  for (uint32_t i = 0; i < mResponsePromises.Length(); ++i) {
-    if (mResponsePromises[i].get() == promiseHolder) {
-      mResponsePromises.RemoveElementAt(i);
-      break;
-    }
+  mResponsePromises[aId] = nullptr;
+  while (mResponsePromises.Length() && !mResponsePromises.LastElement()) {
+    (void) mResponsePromises.PopLastElement();
   }
   return IPC_OK();
 }
