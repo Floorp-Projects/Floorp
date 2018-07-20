@@ -76,3 +76,8 @@ skip-if(!asyncPan) == checkerboard-1.html checkerboard-1-ref.html
 skip-if(!asyncPan) == checkerboard-2.html checkerboard-2-ref.html
 skip-if(!asyncPan) == checkerboard-3.html checkerboard-3-ref.html
 default-preferences
+
+skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-1.html position-fixed-async-zoom-1-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-2.html position-fixed-async-zoom-2-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-1.html position-sticky-async-zoom-1-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-2.html position-sticky-async-zoom-2-ref.html
