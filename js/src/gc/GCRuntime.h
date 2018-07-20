@@ -293,7 +293,9 @@ class GCRuntime
     void onOutOfMallocMemory(const AutoLockGC& lock);
 
 #ifdef JS_GC_ZEAL
-    const void* addressOfZealModeBits() { return &zealModeBits; }
+    const uint32_t* addressOfZealModeBits() {
+        return &zealModeBits.refNoCheck();
+    }
     void getZealBits(uint32_t* zealBits, uint32_t* frequency, uint32_t* nextScheduled);
     void setZeal(uint8_t zeal, uint32_t frequency);
     bool parseAndSetZeal(const char* str);
@@ -1005,7 +1007,7 @@ class GCRuntime
     // after minor GC.
     MainThreadData<LifoAlloc> blocksToFreeAfterMinorGC;
 
-    const void* addressOfNurseryPosition() {
+    void* addressOfNurseryPosition() {
         return nursery_.refNoCheck().addressOfPosition();
     }
     const void* addressOfNurseryCurrentEnd() {

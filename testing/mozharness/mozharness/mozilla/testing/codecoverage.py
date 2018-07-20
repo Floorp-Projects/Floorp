@@ -204,16 +204,20 @@ class CodeCoverageMixin(SingleTestMixin):
     def coverage_args(self):
         return []
 
-    def set_coverage_env(self, env):
+    def set_coverage_env(self, env, is_baseline_test=False):
         # Set the GCOV directory.
-        gcov_dir = tempfile.mkdtemp()
-        env['GCOV_PREFIX'] = gcov_dir
+        self.gcov_dir = tempfile.mkdtemp()
+        env['GCOV_PREFIX'] = self.gcov_dir
+
+        # Set the GCOV directory where counters will be dumped in per-test mode.
+        # Resetting/dumping is only available on Linux for the time being
+        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1471576).
+        if self.per_test_coverage and not is_baseline_test and self._is_linux():
+            env['GCOV_RESULTS_DIR'] = tempfile.mkdtemp()
 
         # Set JSVM directory.
-        jsvm_dir = tempfile.mkdtemp()
-        env['JS_CODE_COVERAGE_OUTPUT_DIR'] = jsvm_dir
-
-        return (gcov_dir, jsvm_dir)
+        self.jsvm_dir = tempfile.mkdtemp()
+        env['JS_CODE_COVERAGE_OUTPUT_DIR'] = self.jsvm_dir
 
     @PreScriptAction('run-tests')
     def _set_gcov_prefix(self, action):
@@ -223,7 +227,7 @@ class CodeCoverageMixin(SingleTestMixin):
         if self.per_test_coverage:
             return
 
-        self.gcov_dir, self.jsvm_dir = self.set_coverage_env(os.environ)
+        self.set_coverage_env(os.environ)
 
     def parse_coverage_artifacts(self,
                                  gcov_dir,
@@ -286,9 +290,11 @@ class CodeCoverageMixin(SingleTestMixin):
         else:
             return grcov_output_file, jsvm_output_file
 
-    def add_per_test_coverage_report(self, gcov_dir, jsvm_dir, suite, test):
+    def add_per_test_coverage_report(self, env, suite, test):
+        gcov_dir = env['GCOV_RESULTS_DIR'] if 'GCOV_RESULTS_DIR' in env else self.gcov_dir
+
         grcov_file = self.parse_coverage_artifacts(
-            gcov_dir, jsvm_dir, merge=True, output_format='coveralls',
+            gcov_dir, self.jsvm_dir, merge=True, output_format='coveralls',
             filter_covered=True,
         )
 
@@ -299,6 +305,11 @@ class CodeCoverageMixin(SingleTestMixin):
             self.per_test_reports[suite] = {}
         assert test not in self.per_test_reports[suite]
         self.per_test_reports[suite][test] = report_file
+
+        if 'GCOV_RESULTS_DIR' in env:
+            # In this case, parse_coverage_artifacts has removed GCOV_RESULTS_DIR
+            # so we need to remove GCOV_PREFIX.
+            shutil.rmtree(self.gcov_dir)
 
     def is_covered(self, sf):
         # For C/C++ source files, we can consider a file as being uncovered

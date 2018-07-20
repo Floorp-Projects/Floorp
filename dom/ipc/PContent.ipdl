@@ -1165,7 +1165,8 @@ parent:
      */
     async FirstPartyStorageAccessGrantedForOrigin(Principal aParentPrincipal,
                                                   nsCString aTrackingOrigin,
-                                                  nsCString aGrantedOrigin);
+                                                  nsCString aGrantedOrigin)
+          returns (bool unused);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,

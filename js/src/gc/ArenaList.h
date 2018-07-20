@@ -241,7 +241,7 @@ class FreeLists
 
     inline void unmarkPreMarkedFreeCells(AllocKind kind);
 
-    const void* addressOfFreeList(AllocKind thingKind) const {
+    FreeSpan** addressOfFreeList(AllocKind thingKind) {
         return &freeLists_[thingKind];
     }
 };
@@ -298,7 +298,7 @@ class ArenaLists
     FreeLists& freeLists() { return freeLists_.ref(); }
     const FreeLists& freeLists() const { return freeLists_.ref(); }
 
-    const void* addressOfFreeList(AllocKind thingKind) const {
+    FreeSpan** addressOfFreeList(AllocKind thingKind) {
         return freeLists_.refNoCheck().addressOfFreeList(thingKind);
     }
 

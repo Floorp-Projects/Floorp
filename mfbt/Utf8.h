@@ -12,6 +12,10 @@
 #ifndef mozilla_Utf8_h
 #define mozilla_Utf8_h
 
+#include "mozilla/Casting.h" // for mozilla::AssertedCast
+#include "mozilla/Likely.h" // for MOZ_UNLIKELY
+#include "mozilla/Maybe.h" // for mozilla::Maybe
+#include "mozilla/TextUtils.h" // for mozilla::IsAscii
 #include "mozilla/Types.h" // for MFBT_API
 
 #include <limits.h> // for CHAR_BIT
@@ -204,6 +208,217 @@ public:
  */
 extern MFBT_API bool
 IsValidUtf8(const void* aCodeUnits, size_t aCount);
+
+/**
+ * Given |aLeadUnit| that is a non-ASCII code unit, a pointer to an |Iter aIter|
+ * that (initially) itself points one unit past |aLeadUnit|, and
+ * |const EndIter aEnd| that denotes the end of the UTF-8 data when compared
+ * against |*aIter| using |aEnd - *aIter|:
+ *
+ * If |aLeadUnit| and subsequent code units computed using |*aIter| (up to
+ * |aEnd|) encode a valid code point -- not exceeding Unicode's range, not a
+ * surrogate, in shortest form -- then return Some(that code point) and advance
+ * |*aIter| past those code units.
+ *
+ * Otherwise decrement |*aIter| (so that it points at |aLeadUnit|) and return
+ * Nothing().
+ *
+ * |Iter| and |EndIter| are generalized concepts most easily understood as if
+ * they were |const char*|, |const unsigned char*|, or |const Utf8Unit*|:
+ * iterators that when dereferenced can be used to construct a |Utf8Unit| and
+ * that can be compared and modified in certain limited ways.  (Carefully note
+ * that this function mutates |*aIter|.)  |Iter| and |EndIter| are template
+ * parameters to support more-complicated adaptor iterators.
+ *
+ * The template parameters after |Iter| allow users to implement custom handling
+ * for various forms of invalid UTF-8.  A version of this function that defaults
+ * all such handling to no-ops is defined below this function.  To learn how to
+ * define your own custom handling, consult the implementation of that function,
+ * which documents exactly how custom handler functors are invoked.
+ *
+ * This function is MOZ_ALWAYS_INLINE: if you don't need that, use the version
+ * of this function without the "Inline" suffix on the name.
+ */
+template<typename Iter,
+         typename EndIter,
+         class OnBadLeadUnit,
+         class OnNotEnoughUnits,
+         class OnBadTrailingUnit,
+         class OnBadCodePoint,
+         class OnNotShortestForm>
+MOZ_ALWAYS_INLINE Maybe<char32_t>
+DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
+                             Iter* aIter, const EndIter aEnd,
+                             OnBadLeadUnit aOnBadLeadUnit,
+                             OnNotEnoughUnits aOnNotEnoughUnits,
+                             OnBadTrailingUnit aOnBadTrailingUnit,
+                             OnBadCodePoint aOnBadCodePoint,
+                             OnNotShortestForm aOnNotShortestForm)
+{
+  MOZ_ASSERT(Utf8Unit((*aIter)[-1]) == aLeadUnit);
+
+  char32_t n = aLeadUnit.toUint8();
+  MOZ_ASSERT(!IsAscii(n));
+
+  // |aLeadUnit| determines the number of trailing code units in the code point
+  // and the bits of |aLeadUnit| that contribute to the code point's value.
+  uint8_t remaining;
+  uint32_t min;
+  if ((n & 0b1110'0000) == 0b1100'0000) {
+    remaining = 1;
+    min = 0x80;
+    n &= 0b0001'1111;
+  } else if ((n & 0b1111'0000) == 0b1110'0000) {
+    remaining = 2;
+    min = 0x800;
+    n &= 0b0000'1111;
+  } else if ((n & 0b1111'1000) == 0b1111'0000) {
+    remaining = 3;
+    min = 0x10000;
+    n &= 0b0000'0111;
+  } else {
+    *aIter -= 1;
+    aOnBadLeadUnit();
+    return Nothing();
+  }
+
+  // If the code point would require more code units than remain, the encoding
+  // is invalid.
+  auto actual = aEnd - *aIter;
+  if (MOZ_UNLIKELY(actual < remaining)) {
+    *aIter -= 1;
+    aOnNotEnoughUnits(AssertedCast<uint8_t>(actual + 1), remaining + 1);
+    return Nothing();
+  }
+
+  for (uint8_t i = 0; i < remaining; i++) {
+    uint8_t unit = Utf8Unit(*(*aIter)++).toUint8();
+
+    // Every non-leading code unit in properly encoded UTF-8 has its high
+    // bit set and the next-highest bit unset.
+    if (MOZ_UNLIKELY((unit & 0b1100'0000) != 0b1000'0000)) {
+      uint8_t unitsObserved = i + 1 + 1;
+      *aIter -= unitsObserved;
+      aOnBadTrailingUnit(unitsObserved);
+      return Nothing();
+    }
+
+    // The code point being encoded is the concatenation of all the
+    // unconstrained bits.
+    n = (n << 6) | (unit & 0b0011'1111);
+  }
+
+  // UTF-16 surrogates and values outside the Unicode range are invalid.
+  if (MOZ_UNLIKELY(n > 0x10FFFF || (0xD800 <= n && n <= 0xDFFF))) {
+    uint8_t unitsObserved = remaining + 1;
+    *aIter -= unitsObserved;
+    aOnBadCodePoint(n, unitsObserved);
+    return Nothing();
+  }
+
+  // Overlong code points are also invalid.
+  if (MOZ_UNLIKELY(n < min)) {
+    uint8_t unitsObserved = remaining + 1;
+    *aIter -= unitsObserved;
+    aOnNotShortestForm(n, unitsObserved);
+    return Nothing();
+  }
+
+  return Some(n);
+}
+
+/**
+ * Identical to the above function, but not forced to be instantiated inline --
+ * the compiler is permitted to common up separate invocations if it chooses.
+ */
+template<typename Iter,
+         typename EndIter,
+         class OnBadLeadUnit,
+         class OnNotEnoughUnits,
+         class OnBadTrailingUnit,
+         class OnBadCodePoint,
+         class OnNotShortestForm>
+inline Maybe<char32_t>
+DecodeOneUtf8CodePoint(const Utf8Unit aLeadUnit,
+                       Iter* aIter, const EndIter aEnd,
+                       OnBadLeadUnit aOnBadLeadUnit,
+                       OnNotEnoughUnits aOnNotEnoughUnits,
+                       OnBadTrailingUnit aOnBadTrailingUnit,
+                       OnBadCodePoint aOnBadCodePoint,
+                       OnNotShortestForm aOnNotShortestForm)
+{
+  return DecodeOneUtf8CodePointInline(aLeadUnit, aIter, aEnd,
+                                      aOnBadLeadUnit, aOnNotEnoughUnits,
+                                      aOnBadTrailingUnit, aOnBadCodePoint,
+                                      aOnNotShortestForm);
+}
+
+/**
+ * Like the always-inlined function above, but with no-op behavior from all
+ * trailing if-invalid notifier functors.
+ *
+ * This function is MOZ_ALWAYS_INLINE: if you don't need that, use the version
+ * of this function without the "Inline" suffix on the name.
+ */
+template<typename Iter, typename EndIter>
+MOZ_ALWAYS_INLINE Maybe<char32_t>
+DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
+                             Iter* aIter, const EndIter aEnd)
+{
+  // aOnBadLeadUnit is called when |aLeadUnit| itself is an invalid lead unit in
+  // a multi-unit code point.  It is passed no arguments: the caller already has
+  // |aLeadUnit| on hand, so no need to provide it again.
+  auto onBadLeadUnit = []() {};
+
+  // aOnNotEnoughUnits is called when |aLeadUnit| properly indicates a code
+  // point length, but there aren't enough units from |*aIter| to |aEnd| to
+  // satisfy that length.  It is passed the number of code units actually
+  // available (according to |aEnd - *aIter|) and the number of code units that
+  // |aLeadUnit| indicates are needed.  Both numbers include the contribution
+  // of |aLeadUnit| itself: so |aUnitsAvailable <= 3|, |aUnitsNeeded <= 4|, and
+  // |aUnitsAvailable < aUnitsNeeded|.  As above, it also is not passed the lead
+  // code unit.
+  auto onNotEnoughUnits = [](uint8_t aUnitsAvailable, uint8_t aUnitsNeeded) {};
+
+  // aOnBadTrailingUnit is called when one of the trailing code units implied by
+  // |aLeadUnit| doesn't match the 0b10xx'xxxx bit pattern that all UTF-8
+  // trailing code units must satisfy.  It is passed the total count of units
+  // observed (including |aLeadUnit|).  The bad trailing code unit will
+  // conceptually be at |(*aIter)[aUnitsObserved - 1]| if this functor is
+  // called, and so |aUnitsObserved <= 4|.
+  auto onBadTrailingUnit = [](uint8_t aUnitsObserved) {};
+
+  // aOnBadCodePoint is called when a structurally-correct code point encoding
+  // is found, but the *value* that is encoded is not a valid code point: either
+  // because it exceeded the U+10FFFF Unicode maximum code point, or because it
+  // was a UTF-16 surrogate.  It is passed the non-code point value and the
+  // number of code units used to encode it.
+  auto onBadCodePoint = [](char32_t aBadCodePoint, uint8_t aUnitsObserved) {};
+
+  // aOnNotShortestForm is called when structurally-correct encoding is found,
+  // but the encoded value should have been encoded in fewer code units (e.g.
+  // mis-encoding U+0000 as 0b1100'0000 0b1000'0000 in two code units instead of
+  // as 0b0000'0000).  It is passed the mis-encoded code point (which will be
+  // valid and not a surrogate) and the count of code units that mis-encoded it.
+  auto onNotShortestForm = [](char32_t aBadCodePoint, uint8_t aUnitsObserved) {};
+
+  return DecodeOneUtf8CodePointInline(aLeadUnit, aIter, aEnd,
+                                      onBadLeadUnit, onNotEnoughUnits,
+                                      onBadTrailingUnit, onBadCodePoint,
+                                      onNotShortestForm);
+}
+
+/**
+ * Identical to the above function, but not forced to be instantiated inline --
+ * the compiler/linker are allowed to common up separate invocations.
+ */
+template<typename Iter, typename EndIter>
+inline Maybe<char32_t>
+DecodeOneUtf8CodePoint(const Utf8Unit aLeadUnit,
+                       Iter* aIter, const EndIter aEnd)
+{
+  return DecodeOneUtf8CodePointInline(aLeadUnit, aIter, aEnd);
+}
 
 } // namespace mozilla
 

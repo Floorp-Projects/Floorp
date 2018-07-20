@@ -28,7 +28,7 @@ CompileRuntime::get(JSRuntime* rt)
 }
 
 #ifdef JS_GC_ZEAL
-const void*
+const uint32_t*
 CompileRuntime::addressOfGCZealModeBits()
 {
     return runtime()->gc.addressOfZealModeBits();
@@ -171,25 +171,25 @@ CompileZone::addressOfIonBailAfter()
 }
 #endif
 
-const void*
+const uint32_t*
 CompileZone::addressOfNeedsIncrementalBarrier()
 {
     return zone()->addressOfNeedsIncrementalBarrier();
 }
 
-const void*
+gc::FreeSpan**
 CompileZone::addressOfFreeList(gc::AllocKind allocKind)
 {
     return zone()->arenas.addressOfFreeList(allocKind);
 }
 
-const void*
+void*
 CompileZone::addressOfNurseryPosition()
 {
     return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
 }
 
-const void*
+void*
 CompileZone::addressOfStringNurseryPosition()
 {
     // Objects and strings share a nursery, for now at least.
@@ -205,6 +205,12 @@ CompileZone::addressOfNurseryCurrentEnd()
 const void*
 CompileZone::addressOfStringNurseryCurrentEnd()
 {
+    // Although objects and strings share a nursery (and this may change)
+    // there is still a separate string end address.  The only time it
+    // is different from the regular end address, is when nursery strings are
+    // disabled (it will be NULL).
+    //
+    // This function returns _a pointer to_ that end address.
     return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
 }
 
@@ -254,7 +260,7 @@ CompileRealm::runtime()
     return CompileRuntime::get(realm()->runtimeFromAnyThread());
 }
 
-const void*
+const mozilla::non_crypto::XorShift128PlusRNG*
 CompileRealm::addressOfRandomNumberGenerator()
 {
     return realm()->addressOfRandomNumberGenerator();
