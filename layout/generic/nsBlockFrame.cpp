@@ -7092,12 +7092,13 @@ nsBlockFrame::Init(nsIContent*       aContent,
   //   If the box is a block container, then it establishes a new block
   //   formatting context.
   // (http://dev.w3.org/csswg/css-writing-modes/#block-flow)
-  // If the box has contain: paint (or contain: strict), then it should also
-  // establish a formatting context.
+  // If the box has contain: paint or contain:layout (or contain:strict),
+  // then it should also establish a formatting context.
   if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
       (GetParent() && StyleVisibility()->mWritingMode !=
                       GetParent()->StyleVisibility()->mWritingMode) ||
-      StyleDisplay()->IsContainPaint()) {
+      StyleDisplay()->IsContainPaint() ||
+      StyleDisplay()->IsContainLayout()) {
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
 
