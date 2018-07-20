@@ -15,7 +15,7 @@ use glutin::PixelFormatRequirements;
 use glutin::ReleaseBehavior;
 use glutin::Robustness;
 use glutin::Api;
-use glutin::dpi::PhysicalSize;
+use winit::dpi::PhysicalSize;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_int;
