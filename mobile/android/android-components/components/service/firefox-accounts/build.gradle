@@ -33,15 +33,26 @@ repositories {
             artifact '/project.fxaclient.builds.[revision]/artifacts/public/bin/[organisation]/[module]_[revision].[ext]'
         }
     }
+
+    ivy {
+        url 'https://github.com/'
+        layout 'pattern', {
+            artifact '/java-native-access/[organisation]/raw/[revision]/dist/[module].[ext]'
+        }
+    }
 }
 
 configurations{
-    jni
+    fxa
+    jna
 }
 
 dependencies {
-    jni "mozilla:fxa_client_android:${rootProject.ext.dependencies['fxa']}@zip"
-    jni "mozilla:fxa_client_android_deps:${rootProject.ext.dependencies['fxa']}@zip"
+    fxa "mozilla:fxa_client_android:${rootProject.ext.dependencies['fxa']}@zip"
+    fxa "mozilla:fxa_client_android_deps:${rootProject.ext.dependencies['fxa']}@zip"
+    jna "jna:android-armv7:${rootProject.ext.dependencies['jna']}@jar"
+    jna "jna:android-aarch64:${rootProject.ext.dependencies['jna']}@jar"
+    jna "jna:android-x86:${rootProject.ext.dependencies['jna']}@jar"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "net.java.dev.jna:jna:${rootProject.ext.dependencies['jna']}"
@@ -52,13 +63,24 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
 }
 
-task unzipJniLibs(type: Copy) {
-    def outputDir = "$project.projectDir/src/main/jniLibs"
-    from configurations.jni.files.collect { zipTree(it) }
-    into outputDir
-}
+ext.jniOutputDir = "src/main/jniLibs"
 
-preBuild.dependsOn(unzipJniLibs)
+ext.jnaUnzip = { task, source, target ->
+    configure(task) {
+        from zipTree(configurations.jna.find { it.name.startsWith(source) })
+        include 'libjnidispatch.so'
+        into "$jniOutputDir/$target"
+    }
+}
+task unzipJnaArm(type: Copy) { t -> jnaUnzip(t, "android-armv7", "armeabi") }
+task unzipJnaArm64(type: Copy) { t -> jnaUnzip(t, "android-aarch64", "arm64") }
+task unzipJnaX86(type: Copy) { t -> jnaUnzip(t, "android-x86", "x86") }
+
+task unzipFxaLibs(dependsOn: [unzipJnaArm, unzipJnaArm64, unzipJnaX86], type: Copy) {
+    from configurations.fxa.files.collect { zipTree(it) }
+    into jniOutputDir
+}
+preBuild.dependsOn(unzipFxaLibs)
 
 archivesBaseName = "fxa"
 

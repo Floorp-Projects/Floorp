@@ -50,4 +50,3 @@ l10n-repo/
 
 # jniLibs
 *.so
-!libjnidispatch.so
