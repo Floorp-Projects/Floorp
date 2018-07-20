@@ -864,7 +864,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.av1.enabled",
    MediaAv1Enabled,
-  RelaxedAtomicBool, true
+  RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
