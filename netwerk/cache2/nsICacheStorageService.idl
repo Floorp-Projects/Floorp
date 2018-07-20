@@ -10,6 +10,7 @@ interface nsIApplicationCache;
 interface nsIEventTarget;
 interface nsICacheStorageConsumptionObserver;
 interface nsICacheStorageVisitor;
+interface nsIPrincipal;
 
 /**
  * Provides access to particual cache storages of the network URI cache.
@@ -69,6 +70,14 @@ interface nsICacheStorageService : nsISupports
    * This cache storage has no limits on file size to allow the ServiceWorker to intercept large files.
    */
   nsICacheStorage synthesizedCacheStorage(in nsILoadContextInfo aLoadContextInfo);
+
+  /**
+   * Evict any cache entry having the same origin of aPrincipal.
+   *
+   * @param aPrincipal
+   *   The principal to compare the entries with.
+   */
+  void clearOrigin(in nsIPrincipal aPrincipal);
 
   /**
    * Evict the whole cache.

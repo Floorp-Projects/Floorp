@@ -332,7 +332,8 @@ public:
   static nsresult EvictIfOverLimit();
   static nsresult EvictAll();
   static nsresult EvictByContext(nsILoadContextInfo *aLoadContextInfo,
-                                 bool aPinning);
+                                 bool aPinning,
+                                 const nsAString& aOrigin);
 
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  OriginAttrsHash  aOriginAttrsHash,
@@ -417,7 +418,7 @@ private:
   nsresult OverLimitEvictionInternal();
   nsresult EvictAllInternal();
   nsresult EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo,
-                                  bool aPinning);
+                                  bool aPinning, const nsAString& aOrigin);
 
   nsresult TrashDirectory(nsIFile *aFile);
   static void OnTrashTimer(nsITimer *aTimer, void *aClosure);
