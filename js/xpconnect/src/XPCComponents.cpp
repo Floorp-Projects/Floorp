@@ -443,20 +443,15 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
     RootedId id(cx, idArg);
     RootedObject obj(cx, objArg);
 
-    JSAutoByteString name;
+    RootedValue cidv(cx);
     if (JSID_IS_STRING(id) &&
-        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
-        name.ptr()[0] != '{') { // we only allow contractids here
-        RootedValue cidv(cx);
-        if (xpc::ContractID2JSValue(cx, nsDependentCString(name.ptr()),
-                                    &cidv)) {
-            *resolvedp = true;
-            *_retval = JS_DefinePropertyById(cx, obj, id, cidv,
-                                             JSPROP_ENUMERATE |
-                                             JSPROP_READONLY |
-                                             JSPROP_PERMANENT |
-                                             JSPROP_RESOLVING);
-        }
+        xpc::ContractID2JSValue(cx, JSID_TO_STRING(id), &cidv)) {
+        *resolvedp = true;
+        *_retval = JS_DefinePropertyById(cx, obj, id, cidv,
+                                         JSPROP_ENUMERATE |
+                                         JSPROP_READONLY |
+                                         JSPROP_PERMANENT |
+                                         JSPROP_RESOLVING);
     }
     return NS_OK;
 }

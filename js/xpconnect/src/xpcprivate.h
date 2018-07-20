@@ -120,7 +120,6 @@
 #include "XPCForwards.h"
 #include "XPCLog.h"
 #include "xpccomponents.h"
-#include "xpcjsid.h"
 #include "prenv.h"
 #include "prcvar.h"
 #include "nsString.h"
@@ -891,6 +890,15 @@ public:
         if (mXrayExpandos.initialized()) {
             mXrayExpandos.trace(trc);
         }
+        if (mIDProto) {
+            mIDProto.trace(trc, "XPCWrappedNativeScope::mIDProto");
+        }
+        if (mIIDProto) {
+            mIIDProto.trace(trc, "XPCWrappedNativeScope::mIIDProto");
+        }
+        if (mCIDProto) {
+            mCIDProto.trace(trc, "XPCWrappedNativeScope::mCIDProto");
+        }
     }
 
     static void
@@ -951,6 +959,11 @@ public:
     bool AllowContentXBLScope();
     bool UseContentXBLScope() { return mUseContentXBLScope; }
     void ClearContentXBLScope() { mContentXBLScope = nullptr; }
+
+    // ID Object prototype caches.
+    JS::ObjectPtr mIDProto;
+    JS::ObjectPtr mIIDProto;
+    JS::ObjectPtr mCIDProto;
 
 protected:
     virtual ~XPCWrappedNativeScope();
@@ -2135,100 +2148,6 @@ public:
                                         const void** iterp);
 
     static uint32_t GetNSResultCount();
-};
-
-/***************************************************************************/
-/*
-* nsJSID implements nsIJSID. It is also used by nsJSIID and nsJSCID as a
-* member (as a hidden implementaion detail) to which they delegate many calls.
-*/
-
-// Initialization is done on demand, and calling the destructor below is always
-// safe.
-extern void xpc_DestroyJSxIDClassObjects();
-
-class nsJSID final : public nsIJSID
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSID
-
-    void InitWithName(const nsID& id, const char* nameString);
-    void SetName(const char* name);
-    void   SetNameToNoString()
-        {MOZ_ASSERT(!mName, "name already set"); mName = const_cast<char*>(gNoString);}
-    bool NameIsSet() const {return nullptr != mName;}
-    const nsID& ID() const {return mID;}
-    bool IsValid() const {return !mID.Equals(GetInvalidIID());}
-
-    static already_AddRefed<nsJSID> NewID(const char* str);
-    static already_AddRefed<nsJSID> NewID(const nsID& id);
-
-    nsJSID();
-
-    void Reset();
-    const nsID& GetInvalidIID() const;
-
-protected:
-    virtual ~nsJSID();
-    static const char gNoString[];
-    nsID    mID;
-    char*   mNumber;
-    char*   mName;
-};
-
-
-// nsJSIID
-
-class nsJSIID : public nsIJSIID,
-                public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // we manually delegate these to nsJSID
-    NS_DECL_NSIJSID
-
-    // we implement the rest...
-    NS_DECL_NSIJSIID
-    NS_DECL_NSIXPCSCRIPTABLE
-
-    static already_AddRefed<nsJSIID> NewID(const nsXPTInterfaceInfo* aInfo);
-
-    explicit nsJSIID(const nsXPTInterfaceInfo* aInfo);
-    nsJSIID() = delete;
-
-private:
-    virtual ~nsJSIID();
-
-    const nsXPTInterfaceInfo* mInfo;
-};
-
-// nsJSCID
-
-class nsJSCID : public nsIJSCID, public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // we manually delegate these to nsJSID
-    NS_DECL_NSIJSID
-
-    // we implement the rest...
-    NS_DECL_NSIJSCID
-    NS_DECL_NSIXPCSCRIPTABLE
-
-    static already_AddRefed<nsJSCID> NewID(const char* str);
-
-    nsJSCID();
-
-private:
-    virtual ~nsJSCID();
-
-    void ResolveName();
-
-private:
-    RefPtr<nsJSID> mDetails;
 };
 
 
