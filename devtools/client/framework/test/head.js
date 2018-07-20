@@ -251,13 +251,24 @@ async function openChevronMenu(toolbox) {
   const chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
   EventUtils.synthesizeMouseAtCenter(chevronMenuButton, {}, toolbox.win);
 
-  const menuPopup = toolbox.doc.querySelector("#tools-chevron-menupopup");
+  const menuPopup = toolbox.doc.getElementById("tools-chevron-menu-button-panel");
   ok(menuPopup, "tools-chevron-menupopup is available");
 
   info("Waiting for the menu popup to be displayed");
-  await waitUntil(() => menuPopup && menuPopup.state === "open");
+  await waitUntil(() => menuPopup.classList.contains("tooltip-visible"));
+}
 
-  return menuPopup;
+async function closeChevronMenu(toolbox) {
+  // In order to close the popup menu with escape key, set the focus to the chevron
+  // button at first.
+  const chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  chevronMenuButton.focus();
+
+  EventUtils.sendKey("ESCAPE", toolbox.doc.defaultView);
+  const menuPopup = toolbox.doc.getElementById("tools-chevron-menu-button-panel");
+
+  info("Closing the chevron popup menu");
+  await waitUntil(() => !menuPopup.classList.contains("tooltip-visible"));
 }
 
 function prepareToolTabReorderTest(toolbox, startingOrder) {
