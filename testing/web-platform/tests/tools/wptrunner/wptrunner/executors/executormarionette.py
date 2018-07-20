@@ -375,6 +375,11 @@ class MarionetteTestDriverProtocolPart(TestDriverProtocolPart):
 class MarionetteCoverageProtocolPart(CoverageProtocolPart):
     def setup(self):
         self.marionette = self.parent.marionette
+
+        if not self.parent.ccov:
+            self.is_enabled = False
+            return
+
         script = """
             ChromeUtils.import("chrome://marionette/content/PerTestCoverageUtils.jsm");
             return PerTestCoverageUtils.enabled;
@@ -431,7 +436,7 @@ class MarionetteProtocol(Protocol):
                   MarionetteAssertsProtocolPart,
                   MarionetteCoverageProtocolPart]
 
-    def __init__(self, executor, browser, capabilities=None, timeout_multiplier=1, e10s=True):
+    def __init__(self, executor, browser, capabilities=None, timeout_multiplier=1, e10s=True, ccov=False):
         do_delayed_imports()
 
         super(MarionetteProtocol, self).__init__(executor, browser)
@@ -441,6 +446,7 @@ class MarionetteProtocol(Protocol):
         self.timeout_multiplier = timeout_multiplier
         self.runner_handle = None
         self.e10s = e10s
+        self.ccov = ccov
 
     def connect(self):
         self.logger.debug("Connecting to Marionette on port %i" % self.marionette_port)
@@ -586,12 +592,12 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
     def __init__(self, browser, server_config, timeout_multiplier=1,
                  close_after_done=True, debug_info=None, capabilities=None,
-                 debug=False, **kwargs):
+                 debug=False, ccov=False, **kwargs):
         """Marionette-based executor for testharness.js tests"""
         TestharnessExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_info=debug_info)
-        self.protocol = MarionetteProtocol(self, browser, capabilities, timeout_multiplier, kwargs["e10s"])
+        self.protocol = MarionetteProtocol(self, browser, capabilities, timeout_multiplier, kwargs["e10s"], ccov)
         self.script = open(os.path.join(here, "testharness_webdriver.js")).read()
         self.script_resume = open(os.path.join(here, "testharness_webdriver_resume.js")).read()
         self.close_after_done = close_after_done
@@ -684,7 +690,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
     def __init__(self, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, reftest_internal=False,
-                 reftest_screenshot="unexpected",
+                 reftest_screenshot="unexpected", ccov=False,
                  group_metadata=None, capabilities=None, debug=False, **kwargs):
         """Marionette-based executor for reftests"""
         RefTestExecutor.__init__(self,
@@ -694,7 +700,8 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                                  timeout_multiplier=timeout_multiplier,
                                  debug_info=debug_info)
         self.protocol = MarionetteProtocol(self, browser, capabilities,
-                                           timeout_multiplier, kwargs["e10s"])
+                                           timeout_multiplier, kwargs["e10s"],
+                                           ccov)
         self.implementation = (InternalRefTestImplementation
                                if reftest_internal
                                else RefTestImplementation)(self)
