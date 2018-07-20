@@ -226,7 +226,7 @@ static PromiseAllDataHolder*
 NewPromiseAllDataHolder(JSContext* cx, HandleObject resultPromise, HandleValue valuesArray,
                         HandleObject resolve)
 {
-    PromiseAllDataHolder* dataHolder = NewObjectWithClassProto<PromiseAllDataHolder>(cx);
+    PromiseAllDataHolder* dataHolder = NewBuiltinClassInstance<PromiseAllDataHolder>(cx);
     if (!dataHolder)
         return nullptr;
 
@@ -267,7 +267,7 @@ class PromiseDebugInfo : public NativeObject
   public:
     static const Class class_;
     static PromiseDebugInfo* create(JSContext* cx, Handle<PromiseObject*> promise) {
-        Rooted<PromiseDebugInfo*> debugInfo(cx, NewObjectWithClassProto<PromiseDebugInfo>(cx));
+        Rooted<PromiseDebugInfo*> debugInfo(cx, NewBuiltinClassInstance<PromiseDebugInfo>(cx));
         if (!debugInfo)
             return nullptr;
 
@@ -3021,7 +3021,7 @@ NewReactionRecord(JSContext* cx, Handle<PromiseCapability> resultCapability,
             return nullptr;
     }
 
-    PromiseReactionRecord* reaction = NewObjectWithClassProto<PromiseReactionRecord>(cx);
+    PromiseReactionRecord* reaction = NewBuiltinClassInstance<PromiseReactionRecord>(cx);
     if (!reaction)
         return nullptr;
 
