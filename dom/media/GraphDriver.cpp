@@ -597,7 +597,9 @@ bool IsMacbookOrMacbookAir()
         return true;
       }
     }
-    return false;
+    // Bug 1477200, we're temporarily capping the latency to 512 here to help
+    // with audio quality.
+    return true;
   }
 #endif
   return false;
