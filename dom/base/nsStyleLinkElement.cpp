@@ -263,20 +263,9 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                                     ForceUpdate aForceUpdate)
+nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver)
 {
-  if (aForceUpdate == ForceUpdate::Yes) {
-    // We remove this stylesheet from the cache to load a new version.
-    nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
-    nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
-      thisContent->OwnerDoc() : thisContent->GetUncomposedDoc();
-    if (doc && doc->CSSLoader()->GetEnabled() &&
-        mStyleSheet && !mStyleSheet->IsInline()) {
-      doc->CSSLoader()->ObsoleteSheet(mStyleSheet->GetOriginalURI());
-    }
-  }
-  return DoUpdateStyleSheet(nullptr, nullptr, aObserver, aForceUpdate);
+  return DoUpdateStyleSheet(nullptr, nullptr, aObserver, ForceUpdate::No);
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
