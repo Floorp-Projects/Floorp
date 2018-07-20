@@ -13,7 +13,6 @@
 #include "jsapi.h"
 
 #include "xpcpublic.h"
-#include "xpcjsid.h"
 
 namespace mozilla {
 namespace dom {

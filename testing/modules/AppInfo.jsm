@@ -132,9 +132,4 @@ var updateAppInfo = function(options) {
   };
 
   registrar.registerFactory(id, "XULAppInfo", contractid, factory);
-
-  // Ensure that Cc actually maps contractid to the new shim AppInfo. This is
-  // needed when JSM global sharing is enabled, because some prior code may
-  // already have looked up |Cc[contractid]|.
-  Cc[contractid].refreshCID();
 };

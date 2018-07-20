@@ -766,7 +766,7 @@ bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
  *
  * Use 'xpc::JSValue2ID' to unwrap JS::Values created with this function.
  */
-bool ContractID2JSValue(JSContext* aCx, const nsACString& aContract,
+bool ContractID2JSValue(JSContext* aCx, JSString* aContract,
                         JS::MutableHandleValue aVal);
 
 } // namespace xpc
