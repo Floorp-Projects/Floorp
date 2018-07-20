@@ -21,18 +21,8 @@ a Bug 566245</a>
 <pre id="test">
 <script src="can_play_type_webm.js"></script>
 <script>
-  async function runTest() {
-    try {
-      await check_webm(document.getElementById('v'), true);
-      mediaTestCleanup();
-    } catch (e) {
-      info("Exception " + e.message);
-      ok(false, "Threw exception " + e.message);
-    }
-    SimpleTest.finish();
-  }
-  SimpleTest.waitForExplicitFinish();
-  addLoadEvent(runTest);
+check_webm(document.getElementById('v'), true);
+mediaTestCleanup();
 </script>
 </pre>
 </body>
