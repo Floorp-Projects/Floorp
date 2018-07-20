@@ -7,7 +7,7 @@
 // exact preview images because they are drawn on a canvas causing them to vary
 // between systems, platforms and software versions.
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);
