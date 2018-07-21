@@ -333,7 +333,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
   int32_t numColumns = colStyle->mColumnCount;
 
   // If column-fill is set to 'balance', then we want to balance the columns.
-  const bool isBalancing = colStyle->mColumnFill == NS_STYLE_COLUMN_FILL_BALANCE
+  const bool isBalancing = colStyle->mColumnFill == StyleColumnFill::Balance
                            && !aForceAuto;
   if (isBalancing) {
     const uint32_t MAX_NESTED_COLUMN_BALANCING = 2;
@@ -663,7 +663,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
     if (skipIncremental && changingBSize &&
-        StyleColumn()->mColumnFill == NS_STYLE_COLUMN_FILL_AUTO) {
+        StyleColumn()->mColumnFill == StyleColumnFill::Auto) {
       skipIncremental = false;
     }
     // If we need to pull up content from the prev-in-flow then this is not just

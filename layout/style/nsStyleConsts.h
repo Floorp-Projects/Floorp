@@ -87,6 +87,11 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
+enum class StyleColumnFill : uint8_t {
+  Balance,
+  Auto,
+};
+
 // Counters and generated content.
 enum class StyleContentType : uint8_t {
   String = 1,
@@ -978,9 +983,6 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_PAGE_BREAK_AVOID               2
 #define NS_STYLE_PAGE_BREAK_LEFT                3
 #define NS_STYLE_PAGE_BREAK_RIGHT               4
-
-#define NS_STYLE_COLUMN_FILL_AUTO               0
-#define NS_STYLE_COLUMN_FILL_BALANCE            1
 
 #define NS_STYLE_COLUMN_SPAN_NONE               0
 #define NS_STYLE_COLUMN_SPAN_ALL                1
