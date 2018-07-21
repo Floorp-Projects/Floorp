@@ -16,6 +16,7 @@
 #include "nsTObserverArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/SynchronizedEventQueue.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TimeStamp.h"
@@ -136,6 +137,14 @@ public:
   }
 
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent);
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  // Returns the size of this object, its PRThread, and its shutdown contexts,
+  // but excluding its event queues.
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  size_t SizeOfEventQueues(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static nsThreadEnumerator Enumerate();
 
