@@ -6,7 +6,7 @@
 #ifndef nsStringBundle_h__
 #define nsStringBundle_h__
 
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Mutex.h"
 #include "nsIStringBundle.h"
 #include "nsIMemoryReporter.h"
 #include "nsCOMPtr.h"
@@ -55,10 +55,10 @@ protected:
 
     void RegisterMemoryReporter();
 
-    nsCString              mPropertiesURL;
-    mozilla::ReentrantMonitor    mReentrantMonitor;
-    bool                         mAttemptedLoad;
-    bool                         mLoaded;
+    nsCString mPropertiesURL;
+    mozilla::Mutex mMutex;
+    bool mAttemptedLoad;
+    bool mLoaded;
 
     size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
