@@ -51,6 +51,30 @@
     is(anode[prop], null, `anode.${prop} was assigned null`);
   }
 
+  function testDoubleProp(anode, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    anode[prop] = Number.MAX_VALUE;
+    is(anode[prop], Number.MAX_VALUE, `anode.${prop} was assigned ${Number.MAX_VALUE}`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
+
+  function testIntProp(anode, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    anode[prop] = -1;
+    is(anode[prop], -1, `anode.${prop} was assigned -1`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
+
+  function testUIntProp(anode, prop) {
+    is(anode[prop], null, `anode.${prop} should be null`);
+    anode[prop] = 4294967295;
+    is(anode[prop], 4294967295, `anode.${prop} was assigned 4294967295`);
+    anode[prop] = null;
+    is(anode[prop], null, `anode.${prop} was assigned null`);
+  }
+
   // Check that the WebIDL is as expected.
   function checkImplementation(ifrDoc) {
     let anode = ifrDoc.accessibleNode;
@@ -116,6 +140,24 @@
 
     for (const boolProp of boolProps) {
       testBoolProp(anode, boolProp);
+    }
+
+    const doubleProps = ["valueMax", "valueMin", "valueNow"];
+
+    for (const doubleProp of doubleProps) {
+      testDoubleProp(anode, doubleProp);
+    }
+
+    const intProps = ["colCount", "rowCount", "setSize"];
+
+    for (const intProp of intProps) {
+      testIntProp(anode, intProp);
+    }
+
+    const uintProps = ["colIndex", "colSpan", "level", "posInSet", "rowIndex", "rowSpan"];
+
+    for (const uintProp of uintProps) {
+      testUIntProp(anode, uintProp);
     }
 
     // Check if an AccessibleNode is properly cached.

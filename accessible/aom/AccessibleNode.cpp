@@ -43,6 +43,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(AccessibleNode)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AccessibleNode)
 
 AccessibleNode::AccessibleNode(nsINode* aNode) :
+    mDoubleProperties(3),
+    mIntProperties(3),
+    mUIntProperties(6),
     mBooleanProperties(0),
     mDOMNode(aNode)
 {
