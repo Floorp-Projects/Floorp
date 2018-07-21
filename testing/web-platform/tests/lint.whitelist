@@ -156,11 +156,11 @@ SET TIMEOUT: html/browsers/history/the-location-interface/*
 SET TIMEOUT: html/browsers/history/the-session-history-of-browsing-contexts/*
 SET TIMEOUT: html/browsers/offline/*
 SET TIMEOUT: html/browsers/the-window-object/*
-SET TIMEOUT: html/dom/dynamic-markup-insertion/opening-the-input-stream/*
 SET TIMEOUT: html/editing/dnd/*
 SET TIMEOUT: html/semantics/embedded-content/the-iframe-element/*
 SET TIMEOUT: html/semantics/embedded-content/the-img-element/*
 SET TIMEOUT: html/semantics/scripting-1/the-script-element/*
+SET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/0*
 SET TIMEOUT: html/webappapis/scripting/event-loops/*
 SET TIMEOUT: html/webappapis/scripting/events/event-handler-processing-algorithm-error/*
 SET TIMEOUT: html/webappapis/scripting/processing-model-2/*
