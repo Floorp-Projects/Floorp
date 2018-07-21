@@ -9,6 +9,7 @@
 <!ENTITY retry.label "Try Again">
 <!ENTITY returnToPreviousPage.label "Go Back">
 <!ENTITY advanced.label "Advanced">
+<!ENTITY continue.label "Continue">
 
 <!-- Specific error messages -->
 
