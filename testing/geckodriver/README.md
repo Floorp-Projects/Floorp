@@ -94,7 +94,7 @@ geckodriver supports a number of [capabilities]:
  <tr>
   <td><code>pageLoadStrategy</code>
   <td>string
-  <td>`normal`
+  <td><code>normal</code>
   <td>Defines the page load strategy
    to use for the duration of the session.
    Setting a page load strategy will cause navigation
