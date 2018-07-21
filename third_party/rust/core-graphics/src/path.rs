@@ -10,7 +10,7 @@
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID};
 use foreign_types::ForeignType;
 use geometry::CGPoint;
-use libc::c_void;
+use std::os::raw::c_void;
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 use std::ops::Deref;

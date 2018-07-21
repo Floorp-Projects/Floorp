@@ -18,7 +18,7 @@ use core_foundation::string::{CFString, CFStringRef};
 use core_foundation::url::CFURL;
 use core_graphics::base::CGFloat;
 
-use libc::c_void;
+use std::os::raw::c_void;
 use std::mem;
 use std::path::PathBuf;
 
