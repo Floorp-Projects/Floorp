@@ -1,1 +1,2 @@
 == test_bug920877.html test_bug920877-ref.html
+HTTP == test_xmlPrettyPrint_csp.xml test_xmlPrettyPrint_csp-ref.xml
