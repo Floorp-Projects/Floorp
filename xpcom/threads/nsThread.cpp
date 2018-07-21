@@ -868,11 +868,6 @@ nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
   PR_JoinThread(mThread);
   mThread = nullptr;
 
-  // We hold strong references to our event observers, and once the thread is
-  // shut down the observers can't easily unregister themselves. Do it here
-  // to avoid leaking.
-  ClearObservers();
-
 #ifdef DEBUG
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
   MOZ_ASSERT(!obs, "Should have been cleared at shutdown!");
