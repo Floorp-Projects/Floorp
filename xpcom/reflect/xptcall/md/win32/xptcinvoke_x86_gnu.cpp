@@ -13,9 +13,9 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 {
     for(uint32_t i = paramCount; i >0; i--, d++, s++)
     {
-        if(s->IsPtrData())
+        if(s->IsIndirect())
         {
-            *((void**)d) = s->ptr;
+            *((void**)d) = &s->val;
             continue;
         }
 

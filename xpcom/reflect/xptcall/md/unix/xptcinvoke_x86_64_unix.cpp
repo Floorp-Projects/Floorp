@@ -25,8 +25,8 @@ InvokeCopyToStack(uint64_t * gpregs, double * fpregs,
     uint64_t value = 0u;
 
     for (uint32_t i = 0; i < paramCount; i++, s++) {
-        if (s->IsPtrData())
-            value = (uint64_t) s->ptr;
+        if (s->IsIndirect())
+            value = (uint64_t) &s->val;
         else {
             switch (s->type) {
             case nsXPTType::T_FLOAT:                                break;
@@ -46,7 +46,7 @@ InvokeCopyToStack(uint64_t * gpregs, double * fpregs,
             }
         }
 
-        if (!s->IsPtrData() && s->type == nsXPTType::T_DOUBLE) {
+        if (!s->IsIndirect() && s->type == nsXPTType::T_DOUBLE) {
             if (nr_fpr < FPR_COUNT)
                 fpregs[nr_fpr++] = s->val.d;
             else {
@@ -54,7 +54,7 @@ InvokeCopyToStack(uint64_t * gpregs, double * fpregs,
                 d++;
             }
         }
-        else if (!s->IsPtrData() && s->type == nsXPTType::T_FLOAT) {
+        else if (!s->IsIndirect() && s->type == nsXPTType::T_FLOAT) {
             if (nr_fpr < FPR_COUNT)
                 // The value in %xmm register is already prepared to
                 // be retrieved as a float. Therefore, we pass the
