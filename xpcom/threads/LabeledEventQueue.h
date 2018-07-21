@@ -49,6 +49,12 @@ public:
   void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    return mEpochs.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+           mUnlabeled.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
 
   // The basic problem here is to keep track of the ordering relationships

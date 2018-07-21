@@ -40,6 +40,11 @@ public:
   void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    return mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   mozilla::Queue<nsCOMPtr<nsIRunnable>> mQueue;
 };
