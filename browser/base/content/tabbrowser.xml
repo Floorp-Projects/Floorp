@@ -952,7 +952,10 @@
     </implementation>
 
     <handlers>
-      <handler event="TabSelect" action="this._handleTabSelect();"/>
+      <handler event="TabSelect"><![CDATA[
+        this._handleTabSelect();
+        gBrowser.clearMultiSelectedTabs(true);
+      ]]></handler>
 
       <handler event="TabClose"><![CDATA[
         this._hiddenSoundPlayingStatusChanged(event.target, {closed: true});
@@ -2007,10 +2010,12 @@
           if (shiftKey) {
             const lastSelectedTab = gBrowser.lastMultiSelectedTab;
             if (!accelKey) {
-              gBrowser.clearMultiSelectedTabs(true);
+              gBrowser.selectedTab = lastSelectedTab;
+
+              // Make sure selection is cleared when tab-switch doesn't happen.
+              gBrowser.clearMultiSelectedTabs(false);
             }
             gBrowser.addRangeToMultiSelectedTabs(lastSelectedTab, this);
-            gBrowser.selectedTab = lastSelectedTab;
             return;
           }
           if (accelKey) {

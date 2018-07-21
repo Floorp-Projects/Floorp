@@ -57,7 +57,7 @@ add_task(async function selectionWithCtrlPreviously() {
   is(gBrowser.multiSelectedTabsCount, 0, "No tab is multi-selected");
 
   info("Click on tab3 with Ctrl key down");
-  await triggerClickOn(tab5, { ctrlKey: true });
+  await triggerClickOn(tab3, { ctrlKey: true });
 
   is(gBrowser.selectedTab, tab1, "Tab1 has focus");
   ok(tab1.multiselected, "Tab1 is multi-selected");
