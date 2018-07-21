@@ -671,17 +671,6 @@ GetFirstSubsumedFrame(JSContext* cx, HandleSavedFrame frame, JS::SavedFrameSelfH
 }
 
 JS_FRIEND_API(JSObject*)
-GetFirstSubsumedSavedFrame(JSContext* cx, HandleObject savedFrame,
-                           JS::SavedFrameSelfHosted selfHosted)
-{
-    if (!savedFrame)
-        return nullptr;
-    bool skippedAsync;
-    RootedSavedFrame frame(cx, &savedFrame->as<SavedFrame>());
-    return GetFirstSubsumedFrame(cx, frame, selfHosted, skippedAsync);
-}
-
-JS_FRIEND_API(JSObject*)
 GetFirstSubsumedSavedFrame(JSContext* cx, JSPrincipals* principals,
                            HandleObject savedFrame,
                            JS::SavedFrameSelfHosted selfHosted)
