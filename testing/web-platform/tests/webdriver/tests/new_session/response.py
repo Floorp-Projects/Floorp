@@ -51,16 +51,3 @@ def test_data(new_session, add_browser_capabilities, platform_name):
     assert value["capabilities"]["timeouts"]["script"] == 30000
     assert value["capabilities"]["proxy"] == {}
     assert value["capabilities"]["pageLoadStrategy"] == "normal"
-
-
-def test_timeouts(new_session, add_browser_capabilities, platform_name):
-    response, _ = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilities({"timeouts": {"implicit": 1000}}),
-    }})
-    value = assert_success(response)
-
-    assert value["capabilities"]["timeouts"] == {
-        "implicit": 1000,
-        "pageLoad": 300000,
-        "script": 30000
-    }
