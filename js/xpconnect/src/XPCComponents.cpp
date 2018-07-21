@@ -2051,7 +2051,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
     if (!scripterr) {
         RootedObject stackObj(cx);
         if (stack.isObject()) {
-            if (!JS::IsSavedFrame(&stack.toObject())) {
+            if (!JS::IsMaybeWrappedSavedFrame(&stack.toObject())) {
                 return NS_ERROR_INVALID_ARG;
             }
 
