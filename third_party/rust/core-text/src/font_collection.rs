@@ -18,7 +18,7 @@ use core_foundation::number::CFNumber;
 use core_foundation::set::CFSet;
 use core_foundation::string::{CFString, CFStringRef};
 
-use libc::c_void;
+use std::os::raw::c_void;
 
 #[repr(C)]
 pub struct __CTFontCollection(c_void);

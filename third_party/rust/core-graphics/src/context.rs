@@ -12,7 +12,8 @@ use color_space::CGColorSpace;
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID};
 use font::{CGFont, CGGlyph};
 use geometry::CGPoint;
-use libc::{c_void, c_int, size_t};
+use libc::{c_int, size_t};
+use std::os::raw::c_void;
 
 use std::cmp;
 use std::ptr;
