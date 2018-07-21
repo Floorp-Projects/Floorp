@@ -1133,16 +1133,10 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
 }
 
 JS_PUBLIC_API(bool)
-IsSavedFrame(JSObject* obj)
+IsMaybeWrappedSavedFrame(JSObject* obj)
 {
-    if (!obj)
-        return false;
-
-    JSObject* unwrapped = js::CheckedUnwrap(obj);
-    if (!unwrapped)
-        return false;
-
-    return js::SavedFrame::isSavedFrameAndNotProto(*unwrapped);
+    MOZ_ASSERT(obj);
+    return js::SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj);
 }
 
 } /* namespace JS */

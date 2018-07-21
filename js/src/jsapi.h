@@ -6351,7 +6351,7 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
  * around a SavedFrame object, and it is not the SavedFrame.prototype object.
  */
 extern JS_PUBLIC_API(bool)
-IsSavedFrame(JSObject* obj);
+IsMaybeWrappedSavedFrame(JSObject* obj);
 
 } /* namespace JS */
 
