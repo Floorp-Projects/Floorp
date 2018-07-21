@@ -979,10 +979,6 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_PAGE_BREAK_LEFT                3
 #define NS_STYLE_PAGE_BREAK_RIGHT               4
 
-// See nsStyleColumn
-#define NS_STYLE_COLUMN_COUNT_AUTO              0
-#define NS_STYLE_COLUMN_COUNT_UNLIMITED         (-1)
-
 #define NS_STYLE_COLUMN_FILL_AUTO               0
 #define NS_STYLE_COLUMN_FILL_BALANCE            1
 

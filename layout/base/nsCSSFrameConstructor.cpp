@@ -3303,7 +3303,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       nsContainerFrame* columnSetFrame = nullptr;
       RefPtr<ComputedStyle> innerSC = fieldsetContentStyle;
       const nsStyleColumn* columns = fieldsetContentStyle->StyleColumn();
-      if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
+      if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto ||
           columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
         columnSetFrame =
           NS_NewColumnSetFrame(mPresShell, fieldsetContentStyle,
@@ -3925,7 +3925,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
             nsContainerFrame* columnSetFrame = nullptr;
             RefPtr<ComputedStyle> innerSC = outerSC;
             const nsStyleColumn* columns = outerSC->StyleColumn();
-            if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
+            if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto ||
                 columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
               columnSetFrame =
                 NS_NewColumnSetFrame(mPresShell, outerSC,
@@ -11015,7 +11015,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   RefPtr<ComputedStyle> blockStyle = aComputedStyle;
   const nsStyleColumn* columns = aComputedStyle->StyleColumn();
 
-  if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO
+  if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto
       || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
     nsContainerFrame* columnSetFrame =
       NS_NewColumnSetFrame(mPresShell, aComputedStyle,
