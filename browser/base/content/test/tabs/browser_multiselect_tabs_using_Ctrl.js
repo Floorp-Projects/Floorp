@@ -37,18 +37,19 @@ add_task(async function clickWithPrefSet() {
     set: [[PREF_MULTISELECT_TABS, true]]
   });
 
-  let mSelectedTabs = gBrowser._multiSelectedTabsSet;
   const initialFocusedTab = await addTab();
   await BrowserTestUtils.switchTab(gBrowser, initialFocusedTab);
   const tab = await addTab();
 
   await triggerClickOn(tab, { ctrlKey: true });
-  ok(tab.multiselected && mSelectedTabs.has(tab), "Tab should be (multi) selected after click");
+  ok(tab.multiselected && gBrowser._multiSelectedTabsSet.has(tab),
+    "Tab should be (multi) selected after click");
   isnot(gBrowser.selectedTab, tab, "Multi-selected tab is not focused");
   is(gBrowser.selectedTab, initialFocusedTab, "Focused tab doesn't change");
 
   await triggerClickOn(tab, { ctrlKey: true });
-  ok(!tab.multiselected && !mSelectedTabs.has(tab), "Tab is not (multi) selected anymore");
+  ok(!tab.multiselected && !gBrowser._multiSelectedTabsSet.has(tab),
+    "Tab is not (multi) selected anymore");
   is(gBrowser.selectedTab, initialFocusedTab, "Focused tab still doesn't change");
 
   BrowserTestUtils.removeTab(initialFocusedTab);
