@@ -6956,18 +6956,24 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   NS_ASSERTION(mDocShell, "Must have docshell here");
 
+  nsAutoCString options;
   bool forceNoOpener = aForceNoOpener;
-  if (!forceNoOpener) {
-    // Unlike other window flags, "noopener" comes from splitting on commas with
-    // HTML whitespace trimming...
-    nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
-      aOptions, ',');
-    while (tok.hasMoreTokens()) {
-      if (tok.nextToken().EqualsLiteral("noopener")) {
-        forceNoOpener = true;
-        break;
-      }
+  // Unlike other window flags, "noopener" comes from splitting on commas with
+  // HTML whitespace trimming...
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
+    aOptions, ',');
+  while (tok.hasMoreTokens()) {
+    auto nextTok = tok.nextToken();
+    if (nextTok.EqualsLiteral("noopener")) {
+      forceNoOpener = true;
+      continue;
     }
+    // Want to create a copy of the options without 'noopener' because having
+    // 'noopener' in the options affects other window features.
+    if (!options.IsEmpty()) {
+      options.Append(',');
+    }
+    AppendUTF16toUTF8(nextTok, options);
   }
 
   bool windowExists = WindowExists(aName, forceNoOpener, !aCalledNoScript);
@@ -7038,10 +7044,9 @@ nsGlobalWindowOuter::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   NS_ENSURE_TRUE(wwatch, rv);
 
-  NS_ConvertUTF16toUTF8 options(aOptions);
   NS_ConvertUTF16toUTF8 name(aName);
 
-  const char *options_ptr = aOptions.IsEmpty() ? nullptr : options.get();
+  const char *options_ptr  = options.IsEmpty() ? nullptr : options.get();
   const char *name_ptr = aName.IsEmpty() ? nullptr : name.get();
 
   nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
