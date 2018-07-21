@@ -16,7 +16,6 @@ extern crate webdriver;
 #[macro_use]
 extern crate log;
 
-use std::fmt;
 use std::io::Write;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
@@ -33,14 +32,14 @@ macro_rules! try_opt {
     })
 }
 
+mod build;
 mod logging;
 mod prefs;
 mod marionette;
 mod capabilities;
 
+use build::BuildInfo;
 use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
-
-include!(concat!(env!("OUT_DIR"), "/build-info.rs"));
 
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
@@ -48,33 +47,6 @@ enum ExitCode {
     Ok = 0,
     Usage = 64,
     Unavailable = 69,
-}
-
-struct BuildInfo;
-impl BuildInfo {
-    pub fn version() -> &'static str {
-        crate_version!()
-    }
-
-    pub fn hash() -> Option<&'static str> {
-        COMMIT_HASH
-    }
-
-    pub fn date() -> Option<&'static str> {
-        COMMIT_DATE
-    }
-}
-
-impl fmt::Display for BuildInfo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", BuildInfo::version())?;
-        match (BuildInfo::hash(), BuildInfo::date()) {
-            (Some(hash), Some(date)) => write!(f, " ({} {})", hash, date)?,
-            (Some(hash), None) => write!(f, " ({})", hash)?,
-            _ => {}
-        }
-        Ok(())
-    }
 }
 
 fn print_version() {
