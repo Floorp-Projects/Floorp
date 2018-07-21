@@ -507,8 +507,10 @@ END_GLOBALS
 // 6.25% of the process address space on a 32-bit OS for later use.
 static const size_t gRecycleLimit = 128_MiB;
 
-// The current amount of recycled bytes, updated atomically.
-static Atomic<size_t, ReleaseAcquire> gRecycledSize;
+// The current amount of recycled bytes, updated atomically. Malloc may be
+// called non-deterministically when recording/replaying, so this atomic's
+// accesses are not recorded.
+static Atomic<size_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve> gRecycledSize;
 
 // Maximum number of dirty pages per arena.
 #define DIRTY_MAX_DEFAULT (1U << 8)
@@ -548,7 +550,10 @@ base_alloc(size_t aSize);
 // threads are created.
 static bool malloc_initialized;
 #else
-static Atomic<bool> malloc_initialized;
+// Malloc may be called non-deterministically when recording/replaying, so this
+// atomic's accesses are not recorded.
+static Atomic<bool, SequentiallyConsistent,
+	      recordreplay::Behavior::DontPreserve> malloc_initialized;
 #endif
 
 static StaticMutex gInitLock = { STATIC_MUTEX_INIT };
