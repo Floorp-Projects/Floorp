@@ -83,6 +83,20 @@ public:
 
   Mutex& MutexRef() { return mLock; }
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    size_t n = 0;
+
+    n += mBaseQueue->SizeOfIncludingThis(aMallocSizeOf);
+
+    n += mNestedQueues.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto& queue : mNestedQueues) {
+      n += queue.mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return SynchronizedEventQueue::SizeOfExcludingThis(aMallocSizeOf) + n;
+  }
+
 private:
   class NestedSink;
 

@@ -38,6 +38,14 @@ public:
     mQueue = nullptr;
   }
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    if (mQueue) {
+      return mQueue->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return 0;
+  }
+
 private:
   friend class ThreadEventQueue;
 
