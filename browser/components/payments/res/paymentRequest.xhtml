@@ -40,7 +40,6 @@
   <!ENTITY approvePaymentButton.label  "Pay">
   <!ENTITY processingPaymentButton.label "Processing">
   <!ENTITY successPaymentButton.label    "Done">
-  <!ENTITY failPaymentButton.label       "Fail">
   <!ENTITY unknownPaymentButton.label    "Unknown">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
@@ -55,6 +54,16 @@
   <!ENTITY addressPage.backButton.label       "Back">
   <!ENTITY addressPage.saveButton.label       "Save">
   <!ENTITY addressPage.persistCheckbox.label  "Save address to &brandShortName;">
+  <!ENTITY failErrorPage.title  "Sorry! Something went wrong with the payment process.">
+  <!ENTITY failErrorPage.suggestion1  "Check your credit card has not expired.">
+  <!ENTITY failErrorPage.suggestion2  "Make sure your credit card information is accurate.">
+  <!ENTITY failErrorPage.suggestion3  "If no other solutions work, check with shopping.com.">
+  <!ENTITY failErrorPage.doneButton.label     "OK">
+  <!ENTITY timeoutErrorPage.title  "Whoops! Shopping.com took too long to respond.">
+  <!ENTITY timeoutErrorPage.suggestion1  "Try again later.">
+  <!ENTITY timeoutErrorPage.suggestion2  "Check your network connection." >
+  <!ENTITY timeoutErrorPage.suggestion3  "If no other solutions work, check with shopping.com.">
+  <!ENTITY timeoutErrorPage.doneButton.label     "OK">
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -74,6 +83,7 @@
   <link rel="stylesheet" href="containers/basic-card-form.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
   <link rel="stylesheet" href="containers/rich-picker.css"/>
+  <link rel="stylesheet" href="containers/error-page.css"/>
 
   <script src="unprivileged-fallbacks.js"></script>
 
@@ -127,7 +137,6 @@
                   class="primary"
                   data-initial-label="&approvePaymentButton.label;"
                   data-processing-label="&processingPaymentButton.label;"
-                  data-fail-label="&failPaymentButton.label;"
                   data-unknown-label="&unknownPaymentButton.label;"
                   data-success-label="&successPaymentButton.label;"></button>
         </footer>
@@ -158,6 +167,15 @@
                     data-save-button-label="&addressPage.saveButton.label;"
                     data-persist-checkbox-label="&addressPage.persistCheckbox.label;"
                     hidden="hidden"></address-form>
+
+      <completion-error-page id="completion-timeout-error" class="illustrated"
+                  data-page-title="&timeoutErrorPage.title;"
+                  data-done-button-label="&timeoutErrorPage.doneButton.label;"
+                  hidden="hidden"></completion-error-page>
+      <completion-error-page id="completion-fail-error" class="illustrated"
+                  data-page-title="&failErrorPage.title;"
+                  data-done-button-label="&failErrorPage.doneButton.label;"
+                  hidden="hidden"></completion-error-page>
     </div>
 
     <div id="disabled-overlay" hidden="hidden">

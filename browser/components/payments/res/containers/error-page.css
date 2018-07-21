@@ -1,0 +1,22 @@
+.error-page.illustrated > .page-body {
+  min-height: 300px;
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 38%;
+  padding-inline-start: 38%;
+}
+
+.error-page.illustrated > .page-body:dir(rtl) {
+  background-position: right center;
+}
+
+.error-page.illustrated > .page-body > h2 {
+  background: none;
+  padding-inline-start: 0;
+  margin-inline-start: 0;
+}
+
+.error-page#completion-timeout-error > .page-body,
+.error-page#completion-fail-error > .page-body {
+  background-image: url("./placeholder.svg");
+}

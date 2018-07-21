@@ -135,10 +135,10 @@ payment-dialog #pay::before {
   width: 16px;
 }
 
-payment-dialog[changes-prevented][completion-state="fail"] #pay,
-payment-dialog[changes-prevented][completion-state="unknown"] #pay,
-payment-dialog[changes-prevented][completion-state="processing"] #pay,
-payment-dialog[changes-prevented][completion-state="success"] #pay {
+payment-dialog[changes-prevented][complete-status="fail"] #pay,
+payment-dialog[changes-prevented][complete-status="unknown"] #pay,
+payment-dialog[changes-prevented][complete-status="processing"] #pay,
+payment-dialog[changes-prevented][complete-status="success"] #pay {
   /* Show the pay button above #disabled-overlay */
   position: relative;
   z-index: 1;

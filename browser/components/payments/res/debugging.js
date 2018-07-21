@@ -406,33 +406,12 @@ let buttonActions = {
     });
   },
 
-  setStateDefault() {
-    requestStore.setState({
-      completionState: "initial",
-    });
-  },
-
-  setStateProcessing() {
-    requestStore.setState({
-      completionState: "processing",
-    });
-  },
-
-  setStateSuccess() {
-    requestStore.setState({
-      completionState: "success",
-    });
-  },
-
-  setStateFail() {
-    requestStore.setState({
-      completionState: "fail",
-    });
-  },
-
-  setStateUnknown() {
-    requestStore.setState({
-      completionState: "unknown",
+  setCompleteStatus(e) {
+    let input = document.querySelector("[name='completionState']:checked");
+    let completeStatus = input.value;
+    let request = requestStore.getState().request;
+    requestStore.setStateFromParent({
+      request: Object.assign({}, request, { completeStatus }),
     });
   },
 };
