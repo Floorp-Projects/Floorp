@@ -47,7 +47,9 @@ static size_t allocGranularity = 0;
 
 #if defined(XP_UNIX)
 // The addresses handed out by mmap may grow up or down.
-static mozilla::Atomic<int, mozilla::Relaxed> growthDirection(0);
+static mozilla::Atomic<int,
+                       mozilla::Relaxed,
+                       mozilla::recordreplay::Behavior::DontPreserve> growthDirection(0);
 #endif
 
 // Data from OOM crashes shows there may be up to 24 chunksized but unusable
