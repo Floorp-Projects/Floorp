@@ -94,8 +94,8 @@ invoke_copy_to_stack(uint64_t* stk, uint64_t *end,
     for (uint32_t i = 0; i < paramCount; i++, s++) {
         uint64_t word;
 
-        if (s->IsPtrData()) {
-            word = (uint64_t)s->ptr;
+        if (s->IsIndirect()) {
+            word = (uint64_t)&s->val;
         } else {
             // According to the ABI, integral types that are smaller than 8
             // bytes are to be passed in 8-byte registers or 8-byte stack
