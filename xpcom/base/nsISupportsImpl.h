@@ -22,6 +22,7 @@
 #include <atomic>
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
@@ -317,14 +318,15 @@ private:
 };
 
 namespace mozilla {
-class ThreadSafeAutoRefCnt
+template <recordreplay::Behavior Recording>
+class ThreadSafeAutoRefCntWithRecording
 {
 public:
-  ThreadSafeAutoRefCnt() : mValue(0) {}
-  explicit ThreadSafeAutoRefCnt(nsrefcnt aValue) : mValue(aValue) {}
+  ThreadSafeAutoRefCntWithRecording() : mValue(0) {}
+  explicit ThreadSafeAutoRefCntWithRecording(nsrefcnt aValue) : mValue(aValue) {}
 
-  ThreadSafeAutoRefCnt(const ThreadSafeAutoRefCnt&) = delete;
-  void operator=(const ThreadSafeAutoRefCnt&) = delete;
+  ThreadSafeAutoRefCntWithRecording(const ThreadSafeAutoRefCntWithRecording&) = delete;
+  void operator=(const ThreadSafeAutoRefCntWithRecording&) = delete;
 
   // only support prefix increment/decrement
   MOZ_ALWAYS_INLINE nsrefcnt operator++()
@@ -337,6 +339,7 @@ public:
     // first increment on that thread.  The necessary memory
     // synchronization is done by the mechanism that transfers the
     // pointer between threads.
+    detail::AutoRecordAtomicAccess<Recording> record;
     return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
   }
   MOZ_ALWAYS_INLINE nsrefcnt operator--()
@@ -345,6 +348,7 @@ public:
     // release semantics so that prior writes on this thread are visible
     // to the thread that destroys the object when it reads mValue with
     // acquire semantics.
+    detail::AutoRecordAtomicAccess<Recording> record;
     nsrefcnt result = mValue.fetch_sub(1, std::memory_order_release) - 1;
     if (result == 0) {
       // We're going to destroy the object on this thread, so we need
@@ -360,6 +364,7 @@ public:
   {
     // Use release semantics since we're not sure what the caller is
     // doing.
+    detail::AutoRecordAtomicAccess<Recording> record;
     mValue.store(aValue, std::memory_order_release);
     return aValue;
   }
@@ -368,6 +373,7 @@ public:
   {
     // Use acquire semantics since we're not sure what the caller is
     // doing.
+    detail::AutoRecordAtomicAccess<Recording> record;
     return mValue.load(std::memory_order_acquire);
   }
 
@@ -377,6 +383,10 @@ private:
   nsrefcnt operator--(int) = delete;
   std::atomic<nsrefcnt> mValue;
 };
+
+typedef ThreadSafeAutoRefCntWithRecording<recordreplay::Behavior::DontPreserve>
+  ThreadSafeAutoRefCnt;
+
 } // namespace mozilla
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -398,7 +408,7 @@ protected:                                                                    \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
 
-#define NS_DECL_THREADSAFE_ISUPPORTS                                          \
+#define NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(_recording)               \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
                             void** aInstancePtr) override;                    \
@@ -406,9 +416,12 @@ public:                                                                       \
   NS_IMETHOD_(MozExternalRefCountType) Release(void) override;                \
   typedef mozilla::TrueType HasThreadSafeRefCnt;                              \
 protected:                                                                    \
-  ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
+  ::mozilla::ThreadSafeAutoRefCntWithRecording<_recording> mRefCnt;           \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
+
+#define NS_DECL_THREADSAFE_ISUPPORTS                                          \
+  NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(mozilla::recordreplay::Behavior::DontPreserve)
 
 #define NS_DECL_CYCLE_COLLECTING_ISUPPORTS                                    \
 public:                                                                       \
