@@ -9,11 +9,11 @@ const TESTS = [
   {id: "#test6", name: "uniquename3", opener: false, newWindow: false},
 
   {id: "#test7", name: "", opener: true, newWindow: false},
-  {id: "#test8", name: "", opener: false, newWindow: true},
+  {id: "#test8", name: "", opener: false, newWindow: false},
   {id: "#test9", name: "", opener: true, newWindow: true},
 
   {id: "#test10", name: "uniquename1", opener: true, newWindow: false},
-  {id: "#test11", name: "uniquename2", opener: false, newWindow: true},
+  {id: "#test11", name: "uniquename2", opener: false, newWindow: false},
   {id: "#test12", name: "uniquename3", opener: true, newWindow: true},
 ];
 
