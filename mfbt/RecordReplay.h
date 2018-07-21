@@ -482,6 +482,9 @@ public:
 // API inline function implementation
 ///////////////////////////////////////////////////////////////////////////////
 
+// Define inline wrappers on builds where recording/replaying is enabled.
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+
 #define MOZ_MakeRecordReplayWrapperVoid(aName, aFormals, aActuals)      \
   MFBT_API void Internal ##aName aFormals;                              \
   static inline void aName aFormals                                     \
@@ -500,6 +503,19 @@ public:
     }                                                                   \
     return aDefaultValue;                                               \
   }
+
+// Define inline wrappers on other builds. Avoiding references to the out of
+// line method avoids link errors when e.g. using Atomic<> but not linking
+// against MFBT.
+#else
+
+#define MOZ_MakeRecordReplayWrapperVoid(aName, aFormals, aActuals)      \
+  static inline void aName aFormals {}
+
+#define MOZ_MakeRecordReplayWrapper(aName, aReturnType, aDefaultValue, aFormals, aActuals) \
+  static inline aReturnType aName aFormals { return aDefaultValue; }
+
+#endif
 
 MOZ_MakeRecordReplayWrapperVoid(BeginOrderedAtomicAccess, (), ())
 MOZ_MakeRecordReplayWrapperVoid(EndOrderedAtomicAccess, (), ())
