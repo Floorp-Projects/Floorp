@@ -107,8 +107,8 @@ private:
 #endif
 };
 
-typedef BaseAutoLock<CrossProcessMutex> CrossProcessMutexAutoLock;
-typedef BaseAutoUnlock<CrossProcessMutex> CrossProcessMutexAutoUnlock;
+typedef BaseAutoLock<CrossProcessMutex&> CrossProcessMutexAutoLock;
+typedef BaseAutoUnlock<CrossProcessMutex&> CrossProcessMutexAutoUnlock;
 
 } // namespace mozilla
 
