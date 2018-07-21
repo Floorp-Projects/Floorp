@@ -753,10 +753,10 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
 // nsStyleColumn
 //
 /* static */ const uint32_t nsStyleColumn::kMaxColumnCount;
+/* static */ const uint32_t nsStyleColumn::kColumnCountAuto;
 
 nsStyleColumn::nsStyleColumn(const nsPresContext* aContext)
-  : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
-  , mColumnWidth(eStyleUnit_Auto)
+  : mColumnWidth(eStyleUnit_Auto)
   , mColumnRuleColor(StyleComplexColor::CurrentColor())
   , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
   , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
