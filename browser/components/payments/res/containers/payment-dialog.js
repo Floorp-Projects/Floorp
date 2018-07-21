@@ -12,6 +12,7 @@ import "../components/payment-request-page.js";
 import "./address-picker.js";
 import "./address-form.js";
 import "./basic-card-form.js";
+import "./completion-error-page.js";
 import "./order-details.js";
 import "./payment-method-picker.js";
 import "./shipping-option-picker.js";
@@ -121,6 +122,21 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     return [];
   }
 
+  _updateCompleteStatus(state) {
+    let {completeStatus} = state.request;
+    switch (completeStatus) {
+      case "fail":
+      case "timeout":
+      case "unknown":
+        state.page = {
+          id: `completion-${completeStatus}-error`,
+        };
+        state.changesPrevented = false;
+        break;
+    }
+    return state;
+  }
+
   /**
    * Set some state from the privileged parent process.
    * Other elements that need to set state should use their own `this.requestStore.setState`
@@ -130,6 +146,9 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
    */
   setStateFromParent(state) {
     let oldAddresses = paymentRequest.getAddresses(this.requestStore.getState());
+    if (state.request) {
+      state = this._updateCompleteStatus(state);
+    }
     this.requestStore.setState(state);
 
     // Check if any foreign-key constraints were invalidated.
@@ -203,19 +222,32 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   _renderPayButton(state) {
-    this._payButton.disabled = state.changesPrevented;
-    switch (state.completionState) {
+    let completeStatus = state.request.completeStatus;
+    switch (completeStatus) {
       case "initial":
       case "processing":
       case "success":
-      case "fail":
-      case "unknown":
+      case "unknown": {
+        this._payButton.disabled = state.changesPrevented;
+        this._payButton.textContent = this._payButton.dataset[completeStatus + "Label"];
         break;
-      default:
-        throw new Error("Invalid completionState");
+      }
+      case "fail":
+      case "timeout": {
+        // pay button is hidden in these states. Reset its label and disable it
+        this._payButton.textContent = this._payButton.dataset.initialLabel;
+        this._payButton.disabled = true;
+        break;
+      }
+      case "": {
+        completeStatus = "initial";
+        break;
+      }
+      default: {
+        throw new Error(`Invalid completeStatus: ${completeStatus}`);
+      }
     }
-
-    this._payButton.textContent = this._payButton.dataset[state.completionState + "Label"];
+    this._payButton.textContent = this._payButton.dataset[completeStatus + "Label"];
   }
 
   stateChangeCallback(state) {
@@ -301,17 +333,13 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       page.hidden = state.page.id != page.id;
     }
 
-    let {
-      changesPrevented,
-      completionState,
-    } = state;
-    if (changesPrevented) {
+    if (state.changesPrevented) {
       this.setAttribute("changes-prevented", "");
     } else {
       this.removeAttribute("changes-prevented");
     }
-    this.setAttribute("completion-state", completionState);
-    this._disabledOverlay.hidden = !changesPrevented;
+    this.setAttribute("complete-status", request.completeStatus);
+    this._disabledOverlay.hidden = !state.changesPrevented;
   }
 }
 

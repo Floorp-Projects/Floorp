@@ -36,21 +36,6 @@ import PaymentDialog from "../../res/containers/payment-dialog.js";
 
 let el1;
 
-let completionStates = [
-    ["processing", "Processing"],
-    ["success", "Done"],
-    ["fail", "Fail"],
-    ["unknown", "Unknown"],
-];
-
-/* test that:
-  the view-all-items button exists
-  that clicking it changes the state on the store
-  that clicking it causes render to be called
-
-  that order details element's hidden state matches the state on the store
-*/
-
 add_task(async function setup_once() {
   let templateFrame = document.getElementById("templateFrame");
   await SimpleTest.promiseFocus(templateFrame.contentWindow);
@@ -70,10 +55,14 @@ add_task(async function setup_once() {
 });
 
 async function setup() {
+  let {request} = el1.requestStore.getState();
   await el1.requestStore.setState({
     changesPrevented: false,
-    completionState: "initial",
+    request: Object.assign({}, request, {completeStatus: "initial"}),
     orderDetailsShowing: false,
+    page: {
+      id: "payment-summary",
+    },
   });
 
   el1.render.reset();
@@ -115,7 +104,6 @@ add_task(async function test_viewAllButtonVisibility() {
   ok(!button.hidden, "Button is visible");
 });
 
-
 add_task(async function test_viewAllButton() {
   await setup();
 
@@ -144,42 +132,92 @@ add_task(async function test_changesPrevented() {
   ok(!disabledOverlay.hidden, "Overlay should prevent changes");
 });
 
-add_task(async function test_completionState() {
+add_task(async function test_initial_completeStatus() {
   await setup();
-  let state = el1.requestStore.getState();
-  is(state.completionState, "initial", "completionState is initially initial");
+  let {request, page} = el1.requestStore.getState();
+  is(request.completeStatus, "initial", "completeStatus is initially initial");
+
   let payButton = document.getElementById("pay");
+  is(payButton, document.querySelector(`#${page.id} button.primary`),
+     "Primary button is the pay button in the initial state");
   is(payButton.textContent, "Pay", "Check default label");
   ok(!payButton.disabled, "Button is enabled");
-  for (let [completionState, label] of completionStates) {
-    await el1.requestStore.setState({completionState});
+});
+
+add_task(async function test_processing_completeStatus() {
+  // "processing": has overlay. Check button visibility
+  await setup();
+  let {request} = el1.requestStore.getState();
+  // this a transition state, set when waiting for a response from the merchant page
+  el1.requestStore.setState({
+    changesPrevented: true,
+    request: Object.assign({}, request, {completeStatus: "processing"}),
+  });
+  await asyncElementRendered();
+
+  let primaryButtons = document.querySelectorAll("footer button.primary");
+  ok(Array.from(primaryButtons).every(el => isHidden(el) || el.disabled),
+     "all primary footer buttons are hidden or disabled");
+});
+
+add_task(async function test_success_unknown_completeStatus() {
+  // in the "success" and "unknown" completion states the dialog would normally be closed
+  // so just ensure it is left in a good state
+  for (let completeStatus of ["success", "unknown"]) {
+    await setup();
+    let {request} = el1.requestStore.getState();
+    el1.requestStore.setState({
+      request: Object.assign({}, request, {completeStatus}),
+    });
     await asyncElementRendered();
-    is(payButton.textContent, label, "Check payButton label");
-    ok(!payButton.disabled, "Button is still enabled");
+
+    let {page} = el1.requestStore.getState();
+
+    // this status doesnt change page
+    let payButton = document.getElementById("pay");
+    is(payButton, document.querySelector(`#${page.id} button.primary`),
+       `Primary button is the pay button in the ${completeStatus} state`);
+
+    if (completeStatus == "success") {
+      is(payButton.textContent, "Done", "Check button label");
+    }
+    if (completeStatus == "unknown") {
+      is(payButton.textContent, "Unknown", "Check button label");
+    }
+    ok(!payButton.disabled, "Button is enabled");
   }
 });
 
-add_task(async function test_completionStateChangesPrevented() {
-  await setup();
-  let state = el1.requestStore.getState();
-  is(state.completionState, "initial", "completionState is initially initial");
-  is(state.changesPrevented, false, "changesPrevented is initially false");
-  let payButton = document.getElementById("pay");
-  is(payButton.textContent, "Pay", "Check default label");
-  ok(!payButton.disabled, "Button is enabled");
-
-  for (let [completionState, label] of completionStates) {
-    await el1.requestStore.setState({
-      changesPrevented: true,
-      completionState,
+add_task(async function test_timeout_fail_completeStatus() {
+  // in these states the dialog stays open and presents a single
+  // button for acknowledgement
+  for (let completeStatus of ["fail", "timeout"]) {
+    await setup();
+    let {request} = el1.requestStore.getState();
+    el1.requestStore.setState({
+      request: Object.assign({}, request, {completeStatus}),
+      page: {
+        id: `completion-${completeStatus}-error`,
+      },
     });
     await asyncElementRendered();
-    is(payButton.textContent, label, "Check payButton label");
-    ok(payButton.disabled, "Button is disabled");
-    let rect = payButton.getBoundingClientRect();
+
+    let {page} = el1.requestStore.getState();
+    let pageElem = document.querySelector(`#${page.id}`);
+    let payButton = document.getElementById("pay");
+    let primaryButton = pageElem.querySelector("button.primary");
+
+    ok(pageElem && !isHidden(pageElem, `page element for ${page.id} exists and is visible`));
+    ok(!isHidden(primaryButton), "Primary button is visible");
+    ok(payButton != primaryButton,
+       `Primary button is the not pay button in the ${completeStatus} state`);
+    ok(isHidden(payButton), "Pay button is not visible");
+    is(primaryButton.textContent, "OK", "Check button label");
+
+    let rect = primaryButton.getBoundingClientRect();
     let visibleElement =
       document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-    ok(payButton === visibleElement, "Pay button is on top of the overlay");
+    ok(primaryButton === visibleElement, "Primary button is on top of the overlay");
   }
 });
 
