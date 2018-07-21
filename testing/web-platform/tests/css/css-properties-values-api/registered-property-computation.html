@@ -27,6 +27,10 @@
     --list-2: 4em 9px;
     --list-3: 3% 10vmax 22px;
     --list-4: calc(50% + 1em) 4px;
+    --transform-function-1: translateX(2px);
+    --transform-function-2: translateX(10em);
+    --transform-function-3: translateX(calc(11em + 10%));
+    --transform-function-4: translateX(10%) scale(2);
 }
 </style>
 
@@ -56,6 +60,10 @@ test(() => {
     CSS.registerProperty({name: '--list-2', syntax: '<length>+', initialValue: '0px', inherits: false});
     CSS.registerProperty({name: '--list-3', syntax: '<length-percentage>+', initialValue: '0px', inherits: false});
     CSS.registerProperty({name: '--list-4', syntax: '<length-percentage>+', initialValue: '0px', inherits: false});
+    CSS.registerProperty({name: '--transform-function-1', syntax: '<transform-function>', initialValue: 'translateX(0px)', inherits: false});
+    CSS.registerProperty({name: '--transform-function-2', syntax: '<transform-function>', initialValue: 'translateX(0px)', inherits: false});
+    CSS.registerProperty({name: '--transform-function-3', syntax: '<transform-function>', initialValue: 'translateX(0px)', inherits: false});
+    CSS.registerProperty({name: '--transform-function-4', syntax: '<transform-function>+', initialValue: 'translateX(0px)', inherits: false});
 }, "CSS.registerProperty");
 
 for (var element of [divWithFontSizeSet, divWithFontSizeInherited]) {
@@ -98,5 +106,12 @@ for (var element of [divWithFontSizeSet, divWithFontSizeInherited]) {
         assert_equals(computedStyle.getPropertyValue('--list-3'), '3% 80px 22px');
         assert_equals(computedStyle.getPropertyValue('--list-4'), 'calc(10px + 50%) 4px');
     }, "<length-percentage>+ values are computed correctly for " + id);
+
+    test(function() {
+        assert_equals(computedStyle.getPropertyValue('--transform-function-1'), 'translateX(2px)');
+        assert_equals(computedStyle.getPropertyValue('--transform-function-2'), 'translateX(100px)');
+        assert_equals(computedStyle.getPropertyValue('--transform-function-3'), 'translateX(calc(110px + 10%))');
+        assert_equals(computedStyle.getPropertyValue('--transform-function-4'), 'translateX(10%) scale(2)');
+    }, "<transform-function> values are computed correctly for " + id);
 }
 </script>

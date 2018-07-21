@@ -16,6 +16,7 @@ test(function() {
     CSS.registerProperty({name: '--length-percentage', syntax: '<length-percentage>', initialValue: 'calc(1in + 10% + 4px)', inherits: false});
     CSS.registerProperty({name: '--inherited-color', syntax: '<color>', initialValue: 'pink', inherits: true});
     CSS.registerProperty({name: '--non-inherited-color', syntax: '<color>', initialValue: 'purple', inherits: false});
+    CSS.registerProperty({name: '--transform-function', syntax: '<transform-function>', initialValue: 'rotate(42deg)', inherits: false});
     CSS.registerProperty({name: '--single-transform-list', syntax: '<transform-list>', initialValue: 'scale(calc(2 + 2))', inherits: false});
     CSS.registerProperty({name: '--multiple-transform-list', syntax: '<transform-list>', initialValue: 'scale(calc(2 + 1)) translateX(calc(3px + 1px))', inherits: false});
 
@@ -24,6 +25,7 @@ test(function() {
     assert_equals(computedStyle.getPropertyValue('--length-percentage'), 'calc(100px + 10%)');
     assert_equals(computedStyle.getPropertyValue('--inherited-color'), 'pink');
     assert_equals(computedStyle.getPropertyValue('--non-inherited-color'), 'purple');
+    assert_equals(computedStyle.getPropertyValue('--transform-function'), 'rotate(42deg)');
     assert_equals(computedStyle.getPropertyValue('--single-transform-list'), 'scale(4)');
     assert_equals(computedStyle.getPropertyValue('--multiple-transform-list'), 'scale(3) translateX(4px)');
 
