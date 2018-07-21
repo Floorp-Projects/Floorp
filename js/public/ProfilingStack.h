@@ -132,21 +132,26 @@ class ProfilingStackFrame
 
     // Descriptive label for this stack frame. Must be a static string! Can be
     // an empty string, but not a null pointer.
-    mozilla::Atomic<const char*, mozilla::ReleaseAcquire> label_;
+    mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> label_;
 
     // An additional descriptive string of this frame which is combined with
     // |label_| in profiler output. Need not be (and usually isn't) static. Can
     // be null.
-    mozilla::Atomic<const char*, mozilla::ReleaseAcquire> dynamicString_;
+    mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> dynamicString_;
 
     // Stack pointer for non-JS stack frames, the script pointer otherwise.
-    mozilla::Atomic<void*, mozilla::ReleaseAcquire> spOrScript;
+    mozilla::Atomic<void*, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> spOrScript;
 
     // Line number for non-JS stack frames, the bytecode offset otherwise.
-    mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> lineOrPcOffset;
+    mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> lineOrPcOffset;
 
     // Bits 0...1 hold the Kind. Bits 2...31 hold the category.
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> kindAndCategory_;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> kindAndCategory_;
 
     static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
 
@@ -431,7 +436,8 @@ class ProfilingStack final
     // current thread.
     //
     // This is effectively a unique pointer.
-    mozilla::Atomic<js::ProfilingStackFrame*> frames { nullptr };
+    mozilla::Atomic<js::ProfilingStackFrame*, mozilla::SequentiallyConsistent,
+                    mozilla::recordreplay::Behavior::DontPreserve> frames { nullptr };
 
     // This may exceed the capacity, so instead use the stackSize() method to
     // determine the number of valid frames in stackFrames. When this is less
@@ -444,7 +450,8 @@ class ProfilingStack final
     // This is an atomic variable that uses ReleaseAcquire memory ordering.
     // See the "Concurrency considerations" paragraph at the top of this file
     // for more details.
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stackPointer;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> stackPointer;
 };
 
 namespace js {
