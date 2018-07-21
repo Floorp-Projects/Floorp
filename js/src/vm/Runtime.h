@@ -292,7 +292,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * considered inaccessible, and those JitcodeGlobalTable entry can be
      * disposed of.
      */
-    mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> profilerSampleBufferRangeStart_;
+    mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> profilerSampleBufferRangeStart_;
 
     mozilla::Maybe<uint64_t> profilerSampleBufferRangeStart() {
         if (beingDestroyed_ || !geckoProfiler().enabled()) {
