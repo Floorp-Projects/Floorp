@@ -2038,10 +2038,11 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
     nsCOMPtr<nsIScriptError> scripterr;
 
     if (errorObj) {
-        JS::RootedObject stackVal(cx,
-          FindExceptionStackForConsoleReport(win, error));
+        JS::RootedObject stackVal(cx);
+        JS::RootedObject stackGlobal(cx);
+        FindExceptionStackForConsoleReport(win, error, &stackVal, &stackGlobal);
         if (stackVal) {
-            scripterr = new nsScriptErrorWithStack(stackVal);
+            scripterr = new nsScriptErrorWithStack(stackVal, stackGlobal);
         }
     }
 
@@ -2050,12 +2051,17 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
 
     if (!scripterr) {
         RootedObject stackObj(cx);
+        RootedObject stackGlobal(cx);
         if (stack.isObject()) {
             if (!JS::IsMaybeWrappedSavedFrame(&stack.toObject())) {
                 return NS_ERROR_INVALID_ARG;
             }
 
+            // |stack| might be a wrapper, but it must be same-compartment with
+            // the current global.
             stackObj = &stack.toObject();
+            stackGlobal = JS::CurrentGlobalOrNull(cx);
+            js::AssertSameCompartment(stackObj, stackGlobal);
 
             if (GetSavedFrameLine(cx, stackObj, &lineNo) != SavedFrameResult::Ok) {
                 JS_ClearPendingException(cx);
@@ -2078,12 +2084,14 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
                 nsresult rv = frame->GetNativeSavedFrame(&stack);
                 if (NS_SUCCEEDED(rv) && stack.isObject()) {
                   stackObj = &stack.toObject();
+                  MOZ_ASSERT(JS::IsUnwrappedSavedFrame(stackObj));
+                  stackGlobal = JS::GetNonCCWObjectGlobal(stackObj);
                 }
             }
         }
 
         if (stackObj) {
-            scripterr = new nsScriptErrorWithStack(stackObj);
+            scripterr = new nsScriptErrorWithStack(stackObj, stackGlobal);
         }
     }
 

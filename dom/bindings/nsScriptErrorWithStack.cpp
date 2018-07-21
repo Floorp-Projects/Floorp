@@ -44,6 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptErrorWithStack)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptErrorWithStack)
   tmp->mStack = nullptr;
+  tmp->mStackGlobal = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptErrorWithStack)
@@ -51,6 +52,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsScriptErrorWithStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStack)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStackGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsScriptErrorWithStack)
@@ -62,10 +64,16 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScriptErrorWithStack)
   NS_INTERFACE_MAP_ENTRY(nsIScriptError)
 NS_INTERFACE_MAP_END
 
-nsScriptErrorWithStack::nsScriptErrorWithStack(JS::HandleObject aStack)
+nsScriptErrorWithStack::nsScriptErrorWithStack(JS::HandleObject aStack,
+                                               JS::HandleObject aStackGlobal)
   : mStack(aStack)
+  , mStackGlobal(aStackGlobal)
 {
     MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
+
+    MOZ_ASSERT(JS_IsGlobalObject(mStackGlobal));
+    js::AssertSameCompartment(mStack, mStackGlobal);
+
     mozilla::HoldJSObjects(this);
 }
 
@@ -94,7 +102,7 @@ nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult)
     }
 
     AutoJSAPI jsapi;
-    if (!jsapi.Init(mStack)) {
+    if (!jsapi.Init(mStackGlobal)) {
         return NS_ERROR_FAILURE;
     }
 
