@@ -5117,7 +5117,9 @@ JS_PUBLIC_API(void)
 JS::DumpPromiseAllocationSite(JSContext* cx, JS::HandleObject promise)
 {
     RootedObject stack(cx, promise->as<PromiseObject>().allocationSite());
-    UniqueChars stackStr(reinterpret_cast<char*>(BuildUTF8StackString(cx, stack).get()));
+    JSPrincipals* principals = cx->realm()->principals();
+    UniqueChars stackStr(
+        reinterpret_cast<char*>(BuildUTF8StackString(cx, principals, stack).get()));
     if (stackStr.get())
         fputs(stackStr.get(), stderr);
 }
@@ -5126,7 +5128,9 @@ JS_PUBLIC_API(void)
 JS::DumpPromiseResolutionSite(JSContext* cx, JS::HandleObject promise)
 {
     RootedObject stack(cx, promise->as<PromiseObject>().resolutionSite());
-    UniqueChars stackStr(reinterpret_cast<char*>(BuildUTF8StackString(cx, stack).get()));
+    JSPrincipals* principals = cx->realm()->principals();
+    UniqueChars stackStr(
+        reinterpret_cast<char*>(BuildUTF8StackString(cx, principals, stack).get()));
     if (stackStr.get())
         fputs(stackStr.get(), stderr);
 }

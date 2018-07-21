@@ -379,7 +379,7 @@ js::ComputeStackString(JSContext* cx)
         return nullptr;
 
     RootedString str(cx);
-    if (!BuildStackString(cx, stack, &str))
+    if (!BuildStackString(cx, cx->realm()->principals(), stack, &str))
         return nullptr;
 
     return str.get();
