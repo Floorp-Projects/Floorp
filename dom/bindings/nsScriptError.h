@@ -91,7 +91,7 @@ private:
 
 class nsScriptErrorWithStack : public nsScriptErrorBase {
 public:
-  explicit nsScriptErrorWithStack(JS::HandleObject);
+  nsScriptErrorWithStack(JS::HandleObject aStack, JS::HandleObject aStackGlobal);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptErrorWithStack)
@@ -102,8 +102,10 @@ public:
 private:
   virtual ~nsScriptErrorWithStack();
   // Complete stackframe where the error happened.
-  // Must be SavedFrame object.
-  JS::Heap<JSObject*>  mStack;
+  // Must be a (possibly wrapped) SavedFrame object.
+  JS::Heap<JSObject*> mStack;
+  // Global object that must be same-compartment with mStack.
+  JS::Heap<JSObject*> mStackGlobal;
 };
 
 #endif /* mozilla_dom_nsScriptError_h */
