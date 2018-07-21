@@ -72,5 +72,5 @@ dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
-core-graphics = "0.14"
-core-text = { version = "10", default-features = false }
+core-graphics = "0.16"
+core-text = { version = "11", default-features = false }
