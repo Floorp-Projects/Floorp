@@ -172,7 +172,9 @@ class LogModuleManager
 {
 public:
   LogModuleManager()
-    : mModulesLock("logmodules")
+      // As for logging atomics, don't preserve behavior for this lock when
+      // recording/replaying.
+    : mModulesLock("logmodules", recordreplay::Behavior::DontPreserve)
     , mModules(kInitialModuleCount)
     , mPrintEntryCount(0)
     , mOutFile(nullptr)
