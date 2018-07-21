@@ -6353,6 +6353,13 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
 extern JS_PUBLIC_API(bool)
 IsMaybeWrappedSavedFrame(JSObject* obj);
 
+/**
+ * Return true iff the given object is a SavedFrame object and not the
+ * SavedFrame.prototype object.
+ */
+extern JS_PUBLIC_API(bool)
+IsUnwrappedSavedFrame(JSObject* obj);
+
 } /* namespace JS */
 
 

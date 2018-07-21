@@ -1139,6 +1139,13 @@ IsMaybeWrappedSavedFrame(JSObject* obj)
     return js::SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj);
 }
 
+JS_PUBLIC_API(bool)
+IsUnwrappedSavedFrame(JSObject* obj)
+{
+    MOZ_ASSERT(obj);
+    return js::SavedFrame::isSavedFrameAndNotProto(*obj);
+}
+
 } /* namespace JS */
 
 namespace js {

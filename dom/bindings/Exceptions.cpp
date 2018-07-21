@@ -255,6 +255,7 @@ JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
   , mFormattedStackInitialized(false)
 {
   MOZ_ASSERT(mStack);
+  MOZ_ASSERT(JS::IsUnwrappedSavedFrame(mStack));
 
   mozilla::HoldJSObjects(this);
 }
