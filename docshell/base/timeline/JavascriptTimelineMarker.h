@@ -54,9 +54,8 @@ public:
       stackFrame.mSource.Construct(mFileName);
       stackFrame.mFunctionDisplayName.Construct(mFunctionName);
 
-      if (mAsyncStack.isObject() && !mAsyncStack.isNullOrUndefined() &&
-          !mAsyncCause.IsEmpty()) {
-        JS::Rooted<JSObject*> asyncStack(aCx, mAsyncStack.toObjectOrNull());
+      if (mAsyncStack.isObject() && !mAsyncCause.IsEmpty()) {
+        JS::Rooted<JSObject*> asyncStack(aCx, &mAsyncStack.toObject());
         JS::Rooted<JSObject*> parentFrame(aCx);
         JS::Rooted<JSString*> asyncCause(aCx, JS_NewUCStringCopyN(aCx, mAsyncCause.BeginReading(),
                                                                   mAsyncCause.Length()));
@@ -65,7 +64,7 @@ public:
           return;
         }
 
-        if (JS::IsSavedFrame(asyncStack) &&
+        if (JS::IsMaybeWrappedSavedFrame(asyncStack) &&
             !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, mozilla::Nothing())) {
           JS_ClearPendingException(aCx);
         } else {

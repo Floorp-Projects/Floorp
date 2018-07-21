@@ -709,7 +709,7 @@ ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
                          JS::Handle<JSObject*> aStack,
                          JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv)
 {
-  if (aStack && !JS::IsSavedFrame(aStack)) {
+  if (aStack && !JS::IsMaybeWrappedSavedFrame(aStack)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
