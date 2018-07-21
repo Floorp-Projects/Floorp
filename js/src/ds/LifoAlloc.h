@@ -1033,7 +1033,8 @@ class LifoAllocPolicy
     T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
         return maybe_pod_realloc<T>(p, oldSize, newSize);
     }
-    void free_(void* p) {
+    template <typename T>
+    void free_(T* p, size_t numElems) {
     }
     void reportAllocOverflow() const {
     }

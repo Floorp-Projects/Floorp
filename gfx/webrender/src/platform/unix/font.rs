@@ -328,7 +328,7 @@ impl FontContext {
         };
 
         if succeeded(result) {
-            result = unsafe { FT_Load_Glyph(face.face, glyph.index as FT_UInt, load_flags as FT_Int32) };
+            result = unsafe { FT_Load_Glyph(face.face, glyph.index() as FT_UInt, load_flags as FT_Int32) };
         };
 
         if succeeded(result) {
@@ -356,7 +356,7 @@ impl FontContext {
             error!("Unable to load glyph");
             debug!(
                 "{} of size {:?} from font {:?}, {:?}",
-                glyph.index,
+                glyph.index(),
                 font.size,
                 font.font_key,
                 result

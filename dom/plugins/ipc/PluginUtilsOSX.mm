@@ -282,7 +282,7 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
     return false;
   }
 
-  CFTypeRef currentAsn = getASNFunc();
+  CFTypeRef currentAsn = getASNFunc ? getASNFunc() : nullptr;
 
   if (!getASNFunc || !setInformationItemFunc || 
       !displayNameKey || !currentAsn) {

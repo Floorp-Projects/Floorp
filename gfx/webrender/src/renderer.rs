@@ -9,7 +9,7 @@
 //!
 //! [renderer]: struct.Renderer.html
 
-use api::{BlobImageRenderer, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{BlobImageHandler, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
@@ -1693,7 +1693,7 @@ impl Renderer {
         let sampler = options.sampler;
         let enable_render_on_scroll = options.enable_render_on_scroll;
 
-        let blob_image_renderer = options.blob_image_renderer.take();
+        let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
         let thread_listener_for_scene_builder = thread_listener.clone();
         let scene_builder_hooks = options.scene_builder_hooks;
@@ -1729,7 +1729,7 @@ impl Renderer {
             let resource_cache = ResourceCache::new(
                 texture_cache,
                 glyph_rasterizer,
-                blob_image_renderer,
+                blob_image_handler,
             );
 
             let mut backend = RenderBackend::new(
@@ -4095,7 +4095,7 @@ pub struct RendererOptions {
     pub scatter_gpu_cache_updates: bool,
     pub upload_method: UploadMethod,
     pub workers: Option<Arc<ThreadPool>>,
-    pub blob_image_renderer: Option<Box<BlobImageRenderer>>,
+    pub blob_image_handler: Option<Box<BlobImageHandler>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
     pub enable_render_on_scroll: bool,
@@ -4130,7 +4130,7 @@ impl Default for RendererOptions {
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
             workers: None,
-            blob_image_renderer: None,
+            blob_image_handler: None,
             recorder: None,
             thread_listener: None,
             enable_render_on_scroll: true,

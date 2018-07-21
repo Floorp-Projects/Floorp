@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{TileOffset, LayoutRect, LayoutSize, LayoutPoint, DeviceUintSize};
-use euclid::vec2;
+use api::{TileOffset, TileRange, LayoutRect, LayoutSize, LayoutPoint};
+use api::{DeviceUintSize, NormalizedRect};
+use euclid::{vec2, point2};
 use prim_store::EdgeAaSegmentMask;
 
 /// If repetitions are far enough apart that only one is within
@@ -221,6 +222,42 @@ pub fn for_each_tile(
             }
 
             callback(&segment_rect, tile_offset, edge_flags);
+        }
+    }
+}
+
+pub fn compute_tile_range(
+    visible_area: &NormalizedRect,
+    image_size: &DeviceUintSize,
+    tile_size: u16,
+) -> TileRange {
+    // Tile dimensions in normalized coordinates.
+    let tw = (image_size.width as f32) / (tile_size as f32);
+    let th = (image_size.height as f32) / (tile_size as f32);
+
+    let t0 = point2(
+        f32::floor(visible_area.origin.x * tw),
+        f32::floor(visible_area.origin.y * th),
+    ).cast::<u16>();
+
+    let t1 = point2(
+        f32::ceil(visible_area.max_x() * tw),
+        f32::ceil(visible_area.max_y() * th),
+    ).cast::<u16>();
+
+    TileRange {
+        origin: t0,
+        size: (t1 - t0).to_size(),
+    }
+}
+
+pub fn for_each_tile_in_range(
+    range: &TileRange,
+    callback: &mut FnMut(TileOffset),
+) {
+    for y in 0..range.size.height {
+        for x in 0..range.size.width {
+            callback(range.origin + vec2(x, y));
         }
     }
 }

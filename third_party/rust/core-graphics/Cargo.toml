@@ -12,7 +12,7 @@
 
 [package]
 name = "core-graphics"
-version = "0.14.0"
+version = "0.16.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Core Graphics for OS X"
 homepage = "https://github.com/servo/core-graphics-rs"
@@ -33,3 +33,4 @@ version = "0.2"
 [features]
 default = []
 elcapitan = []
+highsierra = []

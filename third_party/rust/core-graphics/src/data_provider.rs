@@ -10,9 +10,11 @@
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID, TCFType};
 use core_foundation::data::{CFData, CFDataRef};
 
-use libc::{c_void, size_t, off_t};
+use libc::{size_t, off_t};
 use std::mem;
+use std::ptr;
 use std::sync::Arc;
+use std::os::raw::c_void;
 
 use foreign_types::{ForeignType, ForeignTypeRef};
 
@@ -60,6 +62,15 @@ impl CGDataProvider {
         unsafe extern "C" fn release(info: *mut c_void, _: *const c_void, _: size_t) {
             drop(mem::transmute::<*mut c_void, Arc<Vec<u8>>>(info))
         }
+    }
+
+    /// Creates a data prvider from a given slice. The data provider does not own the slice in this
+    /// case, so it's up to the user to ensure the memory safety here.
+    pub unsafe fn from_slice(buffer: &[u8]) -> Self {
+        let ptr = buffer.as_ptr() as *const c_void;
+        let len = buffer.len() as size_t;
+        let result = CGDataProviderCreateWithData(ptr::null_mut(), ptr, len, None);
+        CGDataProvider::from_ptr(result)
     }
 }
 

@@ -1319,7 +1319,7 @@ class HashTable : private AllocPolicy
         Entry* end = oldTable + capacity;
         for (Entry* e = oldTable; e < end; ++e)
             e->~Entry();
-        alloc.free_(oldTable);
+        alloc.free_(oldTable, capacity);
     }
 
   public:
@@ -1587,7 +1587,7 @@ class HashTable : private AllocPolicy
         }
 
         // All entries have been destroyed, no need to destroyTable.
-        this->free_(oldTable);
+        this->free_(oldTable, oldCap);
         return Rehashed;
     }
 

@@ -103,6 +103,8 @@ public:
                            ImageKey aKey,
                            ImageIntRect aDirtyRect);
 
+  void SetImageVisibleArea(ImageKey aKey, const gfx::Rect& aArea);
+
   void DeleteImage(wr::ImageKey aKey);
 
   bool AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);

@@ -127,6 +127,8 @@ public:
                                         const wr::DeviceUintRect& aDirtyRect,
                                         uint8_t aChannelIndex = 0);
 
+  void SetImageVisibleArea(ImageKey aKey, const wr::NormalizedRect& aArea);
+
   void DeleteImage(wr::ImageKey aKey);
 
   void AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex);

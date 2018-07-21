@@ -4,7 +4,7 @@
 
 use glutin::{self, ContextBuilder, CreationError};
 #[cfg(not(windows))]
-use glutin::dpi::PhysicalSize;
+use winit::dpi::PhysicalSize;
 use winit::{EventsLoop, Window, WindowBuilder};
 
 #[cfg(not(windows))]
