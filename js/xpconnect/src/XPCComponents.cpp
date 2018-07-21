@@ -2063,13 +2063,15 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSConte
             stackGlobal = JS::CurrentGlobalOrNull(cx);
             js::AssertSameCompartment(stackObj, stackGlobal);
 
-            if (GetSavedFrameLine(cx, stackObj, &lineNo) != SavedFrameResult::Ok) {
+            JSPrincipals* principals = JS::GetRealmPrincipals(js::GetContextRealm(cx));
+
+            if (GetSavedFrameLine(cx, principals, stackObj, &lineNo) != SavedFrameResult::Ok) {
                 JS_ClearPendingException(cx);
             }
 
             RootedString source(cx);
             nsAutoJSString str;
-            if (GetSavedFrameSource(cx, stackObj, &source) == SavedFrameResult::Ok &&
+            if (GetSavedFrameSource(cx, principals, stackObj, &source) == SavedFrameResult::Ok &&
                 str.init(cx, source)) {
                 fileName = str;
             } else {

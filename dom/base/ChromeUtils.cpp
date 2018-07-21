@@ -732,9 +732,10 @@ ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
       stack = UncheckedUnwrap(aStack);
       ar.emplace(cx, stack);
 
-      if (JS::GetSavedFrameLine(cx, stack, &line) != JS::SavedFrameResult::Ok ||
-          JS::GetSavedFrameColumn(cx, stack, &column) != JS::SavedFrameResult::Ok ||
-          JS::GetSavedFrameSource(cx, stack, &fileName) != JS::SavedFrameResult::Ok) {
+      JSPrincipals* principals = JS::GetRealmPrincipals(js::GetContextRealm(cx));
+      if (JS::GetSavedFrameLine(cx, principals, stack, &line) != JS::SavedFrameResult::Ok ||
+          JS::GetSavedFrameColumn(cx, principals, stack, &column) != JS::SavedFrameResult::Ok ||
+          JS::GetSavedFrameSource(cx, principals, stack, &fileName) != JS::SavedFrameResult::Ok) {
         return;
       }
     }
