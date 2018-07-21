@@ -885,16 +885,12 @@ impl MarionetteSession {
                 WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
             },
             NewSession(_) => {
-                let mut session_id = try_opt!(
+                let session_id = try_opt!(
                     try_opt!(resp.result.find("sessionId"),
                              ErrorStatus::InvalidSessionId,
                              "Failed to find sessionId field").as_string(),
                     ErrorStatus::InvalidSessionId,
-                    "sessionId was not a string");
-
-                if session_id.starts_with("{") && session_id.ends_with("}") {
-                    session_id = &session_id[1..session_id.len()-1];
-                }
+                    "sessionId is not a string");
 
                 let mut capabilities = try_opt!(
                     try_opt!(resp.result.find("capabilities"),
