@@ -104,12 +104,16 @@ public:
            uintptr_t(getpid()), uintptr_t(pthread_self()));
   }
 
-  Atomic<int32_t> mAllocCount;
-  Atomic<int32_t> mReallocCount;
-  Atomic<int32_t> mFreeCount;
-  Atomic<int32_t> mShareCount;
-  Atomic<int32_t> mAdoptCount;
-  Atomic<int32_t> mAdoptFreeCount;
+  typedef Atomic<int32_t,
+                 mozilla::SequentiallyConsistent,
+                 mozilla::recordreplay::Behavior::DontPreserve> AtomicInt;
+
+  AtomicInt mAllocCount;
+  AtomicInt mReallocCount;
+  AtomicInt mFreeCount;
+  AtomicInt mShareCount;
+  AtomicInt mAdoptCount;
+  AtomicInt mAdoptFreeCount;
 };
 static nsStringStats gStringStats;
 #define STRING_STAT_INCREMENT(_s) (gStringStats.m ## _s ## Count)++

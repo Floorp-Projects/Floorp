@@ -186,8 +186,12 @@ private:
   static const uint32_t kReadMax = 9999;
   static const uint32_t kWrite   = 10000;
 
-  mutable mozilla::Atomic<uint32_t> mState;
-  mutable mozilla::Atomic<uint32_t> mIsWritable;
+  mutable mozilla::Atomic<uint32_t,
+                          mozilla::SequentiallyConsistent,
+                          mozilla::recordreplay::Behavior::DontPreserve> mState;
+  mutable mozilla::Atomic<uint32_t,
+                          mozilla::SequentiallyConsistent,
+                          mozilla::recordreplay::Behavior::DontPreserve> mIsWritable;
 };
 #endif
 
