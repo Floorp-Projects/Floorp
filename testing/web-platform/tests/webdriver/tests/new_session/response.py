@@ -64,11 +64,3 @@ def test_timeouts(new_session, add_browser_capabilities, platform_name):
         "pageLoad": 300000,
         "script": 30000
     }
-
-
-def test_pageLoadStrategy(new_session, add_browser_capabilities, platform_name):
-    response, _ = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilities({"pageLoadStrategy": "eager"})}})
-    value = assert_success(response)
-
-    assert value["capabilities"]["pageLoadStrategy"] == "eager"
