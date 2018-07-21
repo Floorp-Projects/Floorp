@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<title>button setCustomValidity</title>
+<title>textarea setCustomValidity</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
-<button id='button_test'></button>
+<textarea id='textarea_test'></textarea>
 
 <script>
 
 test(() => {
-  let elem = document.getElementById("button_test");
+  let elem = document.getElementById("textarea_test");
   assert_false(elem.validity.customError);
   elem.setCustomValidity("custom error");
   assert_true(elem.validity.customError);
-}, "button setCustomValidity is correct")
+}, "textarea setCustomValidity is correct")
 
 </script>
