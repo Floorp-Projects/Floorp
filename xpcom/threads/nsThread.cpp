@@ -1035,6 +1035,37 @@ nsThread::GetPerformanceCounter(nsIRunnable* aEvent)
   return nullptr;
 }
 
+size_t
+nsThread::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mShutdownContext) {
+    n += aMallocSizeOf(mShutdownContext);
+  }
+  n += mRequestedShutdownContexts.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return aMallocSizeOf(this) + aMallocSizeOf(mThread) + n;
+}
+
+size_t
+nsThread::SizeOfEventQueues(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mCurrentPerformanceCounter) {
+    n += aMallocSizeOf(mCurrentPerformanceCounter);
+  }
+  if (mEventTarget) {
+    // The size of mEvents is reported by mEventTarget.
+    n += mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return n;
+}
+
+size_t
+nsThread::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return ShallowSizeOfIncludingThis(aMallocSizeOf) + SizeOfEventQueues(aMallocSizeOf);
+}
+
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
