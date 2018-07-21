@@ -41,10 +41,7 @@ build_binutils() {
     #
     # --enable-targets builds extra target support in ld.
     # Enabling aarch64 support brings in arm support, so we don't need to specify that too.
-    #
-    # It is important to have the binutils --target and the gcc --target match,
-    # so binutils will install binaries in a place that gcc will look for them.
-    binutils_configure_flags="--enable-targets=aarch64-unknown-linux-gnu --build=x86_64-unknown-linux-gnu --target=x86_64-unknown-linux-gnu --disable-gold --enable-plugins --disable-nls --with-sysroot=/"
+    binutils_configure_flags="--enable-targets=aarch64-unknown-linux-gnu --disable-gold --enable-plugins --disable-nls --with-sysroot=/"
   fi
 
   mkdir $root_dir/binutils-objdir
@@ -57,13 +54,9 @@ build_binutils() {
 }
 
 build_gcc() {
-  # Be explicit about --build and --target so header and library install
-  # directories are consistent.
-  local target="${1:-x86_64-unknown-linux-gnu}"
-
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
+  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
