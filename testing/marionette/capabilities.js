@@ -465,57 +465,45 @@ class Capabilities extends Map {
       switch (k) {
         case "acceptInsecureCerts":
           assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
-          matched.set("acceptInsecureCerts", v);
           break;
 
         case "pageLoadStrategy":
           assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
-
-          if (Object.values(PageLoadStrategy).includes(v)) {
-            matched.set("pageLoadStrategy", v);
-          } else {
+          if (!Object.values(PageLoadStrategy).includes(v)) {
             throw new InvalidArgumentError("Unknown page load strategy: " + v);
           }
-
           break;
 
         case "proxy":
-          let proxy = Proxy.fromJSON(v);
-          matched.set("proxy", proxy);
+          v = Proxy.fromJSON(v);
           break;
 
         case "timeouts":
-          let timeouts = Timeouts.fromJSON(v);
-          matched.set("timeouts", timeouts);
+          v = Timeouts.fromJSON(v);
           break;
 
         case "unhandledPromptBehavior":
           assert.string(v, pprint`Expected ${k} to be a string, got ${v}`);
-
-          if (Object.values(UnhandledPromptBehavior).includes(v)) {
-            matched.set("unhandledPromptBehavior", v);
-          } else {
+          if (!Object.values(UnhandledPromptBehavior).includes(v)) {
             throw new InvalidArgumentError(
                 `Unknown unhandled prompt behavior: ${v}`);
           }
-
           break;
 
         case "moz:accessibilityChecks":
-          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
-          matched.set("moz:accessibilityChecks", v);
+          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
 
         case "moz:useNonSpecCompliantPointerOrigin":
-          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
-          matched.set("moz:useNonSpecCompliantPointerOrigin", v);
+          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
 
         case "moz:webdriverClick":
-          assert.boolean(v, pprint`Expected ${k} to be a boolean, got ${v}`);
-          matched.set("moz:webdriverClick", v);
+          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
       }
+
+      matched.set(k, v);
     }
 
     return matched;
