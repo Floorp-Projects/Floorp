@@ -1433,8 +1433,10 @@ public:
 
     size_t eventQueueSizes = 0;
     size_t wrapperSizes = 0;
+    size_t threadCount = 0;
 
     for (auto* thread : nsThread::Enumerate()) {
+      threadCount++;
       eventQueueSizes += thread->SizeOfEventQueues(MallocSizeOf);
       wrapperSizes += thread->ShallowSizeOfIncludingThis(MallocSizeOf);
 
@@ -1528,6 +1530,36 @@ public:
       "explicit/threads/overhead/wrappers", KIND_HEAP, UNITS_BYTES,
       wrapperSizes,
       "The sizes of nsThread/PRThread wrappers.");
+
+#if defined(XP_WIN)
+    // Each thread on Windows has a fixed kernel overhead. For 32 bit Windows,
+    // that's 12K. For 64 bit, it's 24K.
+    //
+    // See https://blogs.technet.microsoft.com/markrussinovich/2009/07/05/pushing-the-limits-of-windows-processes-and-threads/
+    constexpr size_t kKernelSize = (sizeof(void*) == 8 ? 24 : 12) * 1024;
+#elif defined(XP_LINUX)
+    // On Linux, kernel stacks are usually 8K. However, on x86, they are
+    // allocated virtually, and start out at 4K. They may grow to 8K, but we
+    // have no way of knowing which ones do, so all we can do is guess.
+#if defined(__x86_64__) || defined(__i386__)
+    constexpr size_t kKernelSize = 4 * 1024;
+#else
+    constexpr size_t kKernelSize = 8 * 1024;
+#endif
+#elif defined(XP_MACOSX)
+    // On Darwin, kernel stacks are 16K:
+    //
+    // https://books.google.com/books?id=K8vUkpOXhN4C&lpg=PA513&dq=mach%20kernel%20thread%20stack%20size&pg=PA513#v=onepage&q=mach%20kernel%20thread%20stack%20size&f=false
+    constexpr size_t kKernelSize = 16 * 1024;
+#else
+    // Elsewhere, just assume that kernel stacks require at least 8K.
+    constexpr size_t kKernelSize = 8 * 1024;
+#endif
+
+    MOZ_COLLECT_REPORT(
+      "explicit/threads/overhead/kernel", KIND_NONHEAP, UNITS_BYTES,
+      threadCount * kKernelSize,
+      "The total kernel overhead for all active threads.");
 
     return NS_OK;
   }
