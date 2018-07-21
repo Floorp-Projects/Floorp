@@ -1174,11 +1174,10 @@ JSErrorToXPCException(const char* toStringResult,
     }
 
     if (data) {
-        nsAutoCString formattedMsg;
-        data->ToString(formattedMsg);
-
+        // Pass nullptr for the message: ConstructException will get a message
+        // from the nsIScriptError.
         rv = XPCConvert::ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,
-                                            formattedMsg.get(), ifaceName,
+                                            nullptr, ifaceName,
                                             methodName,
                                             static_cast<nsIScriptError*>(data.get()),
                                             exceptn, nullptr, nullptr);

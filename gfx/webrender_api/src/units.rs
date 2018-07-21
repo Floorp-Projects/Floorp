@@ -86,6 +86,7 @@ pub type WorldVector3D = TypedVector3D<f32, WorldPixel>;
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
 pub type TileOffset = TypedPoint2D<u16, Tiles>;
+pub type TileRange = TypedRect<u16, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = TypedScale<f32, WorldPixel, DevicePixel>;
@@ -114,6 +115,12 @@ pub fn as_scroll_parent_rect(rect: &LayoutRect) -> ScrollLayerRect {
 pub fn as_scroll_parent_vector(vector: &LayoutVector2D) -> ScrollLayerVector2D {
     ScrollLayerVector2D::from_untyped(&vector.to_untyped())
 }
+
+/// Coordinates in normalized space (between zero and one).
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct NormalizedCoordinates;
+
+pub type NormalizedRect = TypedRect<f32, NormalizedCoordinates>;
 
 /// Stores two coordinates in texel space. The coordinates
 /// are stored in texel coordinates because the texture atlas

@@ -14,7 +14,7 @@ use font_descriptor::{CTFontDescriptor, CTFontDescriptorRef, CTFontOrientation};
 use font_descriptor::{CTFontSymbolicTraits, CTFontTraits, SymbolicTraitAccessors, TraitAccessors};
 
 use core_foundation::array::{CFArray, CFArrayRef};
-use core_foundation::base::{CFIndex, CFOptionFlags, CFTypeID, CFTypeRef, TCFType};
+use core_foundation::base::{CFIndex, CFOptionFlags, CFType, CFTypeID, CFTypeRef, TCFType};
 use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::CFNumber;
@@ -27,7 +27,8 @@ use core_graphics::geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
 use core_graphics::path::CGPath;
 
 use foreign_types::ForeignType;
-use libc::{self, size_t, c_void};
+use libc::{self, size_t};
+use std::os::raw::c_void;
 use std::ptr;
 
 type CGContextRef = *mut <CGContext as ForeignType>::CType;
@@ -316,6 +317,16 @@ impl CTFont {
         }
     }
 
+    pub fn get_variation_axes(&self) -> Option<CFArray<CFDictionary<CFString, CFType>>> {
+        unsafe {
+            let axes = CTFontCopyVariationAxes(self.0);
+            if axes.is_null() {
+                return None;
+            }
+            Some(TCFType::wrap_under_create_rule(axes))
+        }
+    }
+
     pub fn create_path_for_glyph(&self, glyph: CGGlyph, matrix: &CGAffineTransform)
                                  -> Result<CGPath, ()> {
         unsafe {
@@ -491,7 +502,7 @@ extern {
     //fn CTFontGetVerticalTranslationsForGlyphs
 
     /* Working With Font Variations */
-    //fn CTFontCopyVariationAxes
+    fn CTFontCopyVariationAxes(font: CTFontRef) -> CFArrayRef;
     //fn CTFontCopyVariation
 
     /* Getting Font Features */

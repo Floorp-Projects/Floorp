@@ -1029,8 +1029,10 @@ class JS_PUBLIC_API(Concrete<RootList>) : public Base {
 // JS::TraceChildren.
 template<typename Referent>
 class JS_PUBLIC_API(TracerConcrete) : public Base {
-    js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     JS::Zone* zone() const override;
+
+  public:
+    js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
 
   protected:
     explicit TracerConcrete(Referent* ptr) : Base(ptr) { }

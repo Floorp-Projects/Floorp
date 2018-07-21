@@ -319,11 +319,21 @@ xpc::ErrorReport::LogToStderr()
 void
 xpc::ErrorReport::LogToConsole()
 {
-  LogToConsoleWithStack(nullptr);
+    LogToConsoleWithStack(nullptr, nullptr);
 }
+
 void
-xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
+xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
+                                        JS::HandleObject aStackGlobal)
 {
+    if (aStack) {
+        MOZ_ASSERT(aStackGlobal);
+        MOZ_ASSERT(JS_IsGlobalObject(aStackGlobal));
+        js::AssertSameCompartment(aStack, aStackGlobal);
+    } else {
+        MOZ_ASSERT(!aStackGlobal);
+    }
+
     LogToStderr();
 
     MOZ_LOG(gJSDiagnostics,
@@ -344,7 +354,7 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
       // As we cache messages in the console service,
       // we have to ensure not leaking them after the related
       // context is destroyed and we only track document lifecycle for now.
-      errorObject = new nsScriptErrorWithStack(aStack);
+      errorObject = new nsScriptErrorWithStack(aStack, aStackGlobal);
     } else {
       errorObject = new nsScriptError();
     }

@@ -186,7 +186,8 @@ public:
     return p;
   }
 
-  static void free_(void* aPtr) { gMallocTable.free(aPtr); }
+  template <typename T>
+  static void free_(T* aPtr, size_t aSize = 0) { gMallocTable.free(aPtr); }
 
   static char* strdup_(const char* aStr)
   {

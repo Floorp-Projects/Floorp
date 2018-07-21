@@ -255,6 +255,7 @@ JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
   , mFormattedStackInitialized(false)
 {
   MOZ_ASSERT(mStack);
+  MOZ_ASSERT(JS::IsUnwrappedSavedFrame(mStack));
 
   mozilla::HoldJSObjects(this);
 }
@@ -286,9 +287,54 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSStackFrame)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+// Helper method to determine the JSPrincipals* to pass to JS SavedFrame APIs.
+//
+// @argument aStack the stack we're working with; must be non-null.
+// @argument [out] aCanCache whether we can use cached JSStackFrame values.
+static JSPrincipals*
+GetPrincipalsForStackGetter(JSContext* aCx, JS::Handle<JSObject*> aStack,
+                            bool* aCanCache)
+{
+  MOZ_ASSERT(JS::IsUnwrappedSavedFrame(aStack));
+
+  JSPrincipals* currentPrincipals =
+    JS::GetRealmPrincipals(js::GetContextRealm(aCx));
+  JSPrincipals* stackPrincipals =
+    JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(aStack));
+
+  // Fast path for when the principals are equal. This check is also necessary
+  // for workers: no nsIPrincipal there so we can't use the code below.
+  if (currentPrincipals == stackPrincipals) {
+    *aCanCache = true;
+    return stackPrincipals;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (nsJSPrincipals::get(currentPrincipals)->Subsumes(
+        nsJSPrincipals::get(stackPrincipals))) {
+    // The current principals subsume the stack's principals. In this case use
+    // the stack's principals: the idea is that this way devtools code that's
+    // asking an exception object for a stack to display will end up with the
+    // stack the web developer would see via doing .stack in a web page, with
+    // Firefox implementation details excluded.
+
+    // Because we use the stack's principals and don't rely on the current
+    // context realm, we can use cached values.
+    *aCanCache = true;
+    return stackPrincipals;
+  }
+
+  // The stack was captured in more-privileged code, so use the less privileged
+  // principals. Don't use cached values because we don't want these values to
+  // depend on the current realm/principals.
+  *aCanCache = false;
+  return currentPrincipals;
+}
+
 // Helper method to get the value of a stack property, if it's not already
-// cached.  This will make sure we skip the cache if the access is happening
-// over Xrays.
+// cached.  This will make sure we skip the cache if the property value depends
+// on the (current) context's realm/principals.
 //
 // @argument aStack the stack we're working with; must be non-null.
 // @argument aPropGetter the getter function to call.
@@ -301,6 +347,7 @@ template<typename ReturnType, typename GetterOutParamType>
 static void
 GetValueIfNotCached(JSContext* aCx, const JS::Heap<JSObject*>& aStack,
                     JS::SavedFrameResult (*aPropGetter)(JSContext*,
+                                                        JSPrincipals*,
                                                         JS::Handle<JSObject*>,
                                                         GetterOutParamType,
                                                         JS::SavedFrameSelfHosted),
@@ -308,11 +355,11 @@ GetValueIfNotCached(JSContext* aCx, const JS::Heap<JSObject*>& aStack,
                     ReturnType aValue)
 {
   MOZ_ASSERT(aStack);
+  MOZ_ASSERT(JS::IsUnwrappedSavedFrame(aStack));
 
   JS::Rooted<JSObject*> stack(aCx, aStack);
-  // Allow caching if aCx and stack are same-compartment.  Otherwise take the
-  // slow path.
-  *aCanCache = js::GetContextCompartment(aCx) == js::GetObjectCompartment(stack);
+
+  JSPrincipals* principals = GetPrincipalsForStackGetter(aCx, stack, aCanCache);
   if (*aCanCache && aIsCached) {
     *aUseCachedValue = true;
     return;
@@ -320,7 +367,8 @@ GetValueIfNotCached(JSContext* aCx, const JS::Heap<JSObject*>& aStack,
 
   *aUseCachedValue = false;
 
-  aPropGetter(aCx, stack, aValue, JS::SavedFrameSelfHosted::Exclude);
+  aPropGetter(aCx, principals, stack, aValue,
+              JS::SavedFrameSelfHosted::Exclude);
 }
 
 NS_IMETHODIMP JSStackFrame::GetFilenameXPCOM(JSContext* aCx, nsAString& aFilename)
@@ -612,19 +660,17 @@ JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
   // make the templates more complicated to deal, but in the meantime
   // let's just inline GetValueIfNotCached here.
 
-  // Allow caching if aCx and stack are same-compartment.  Otherwise take the
-  // slow path.
-  bool canCache =
-    js::GetContextCompartment(aCx) == js::GetObjectCompartment(mStack);
+  JS::Rooted<JSObject*> stack(aCx, mStack);
+
+  bool canCache;
+  JSPrincipals* principals = GetPrincipalsForStackGetter(aCx, stack, &canCache);
   if (canCache && mFormattedStackInitialized) {
     aStack = mFormattedStack;
     return;
   }
 
-  JS::Rooted<JSObject*> stack(aCx, mStack);
-
   JS::Rooted<JSString*> formattedStack(aCx);
-  if (!JS::BuildStackString(aCx, stack, &formattedStack)) {
+  if (!JS::BuildStackString(aCx, principals, stack, &formattedStack)) {
     JS_ClearPendingException(aCx);
     aStack.Truncate();
     return;

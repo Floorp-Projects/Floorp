@@ -214,7 +214,7 @@ impl Wrench {
             enable_clear_scissor: !no_scissor,
             max_recorded_profiles: 16,
             precache_shaders,
-            blob_image_renderer: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
+            blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             disable_dual_source_blending,
             chase_primitive,
             ..Default::default()

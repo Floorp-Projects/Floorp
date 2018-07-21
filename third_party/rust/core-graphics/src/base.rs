@@ -42,6 +42,12 @@ pub const kCGBitmapByteOrder32Little: u32 = (2 << 12);
 pub const kCGBitmapByteOrder16Big: u32 = (3 << 12);
 pub const kCGBitmapByteOrder32Big: u32 = (4 << 12);
 
+pub const kCGRenderingIntentDefault: u32 = 0;
+pub const kCGRenderingIntentAbsoluteColorimetric: u32 = 1;
+pub const kCGRenderingIntentRelativeColorimetric: u32 = 2;
+pub const kCGRenderingIntentPerceptual: u32 = 3;
+pub const kCGRenderingIntentSaturation: u32 = 4;
+
 #[cfg(target_endian = "big")]
 pub const kCGBitmapByteOrder16Host: u32 = kCGBitmapByteOrder16Big;
 #[cfg(target_endian = "big")]

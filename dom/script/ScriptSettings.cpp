@@ -588,9 +588,10 @@ AutoJSAPI::ReportException()
         JS::RootingContext* rcx = JS::RootingContext::get(cx());
         DispatchScriptErrorEvent(inner, rcx, xpcReport, exn);
       } else {
-        JS::Rooted<JSObject*> stack(cx(),
-          xpc::FindExceptionStackForConsoleReport(inner, exn));
-        xpcReport->LogToConsoleWithStack(stack);
+        JS::Rooted<JSObject*> stack(cx());
+        JS::Rooted<JSObject*> stackGlobal(cx());
+        xpc::FindExceptionStackForConsoleReport(inner, exn, &stack, &stackGlobal);
+        xpcReport->LogToConsoleWithStack(stack, stackGlobal);
       }
     } else {
       // On a worker, we just use the worker error reporting mechanism and don't

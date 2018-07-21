@@ -4,7 +4,7 @@
 
 use {WindowWrapper, NotifierEvent};
 use blob;
-use euclid::{TypedRect, TypedSize2D, TypedPoint2D};
+use euclid::{TypedRect, TypedSize2D, TypedPoint2D, point2, size2};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::mpsc::Receiver;
@@ -47,6 +47,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_blob_update_epoch_test();
         self.test_tile_decomposition();
         self.test_very_large_blob();
+        self.test_insufficient_blob_visible_area();
         self.test_offscreen_blob();
         self.test_save_restore();
         self.test_blur_cache();
@@ -180,6 +181,14 @@ impl<'a> RawtestHarness<'a> {
             AlphaType::PremultipliedAlpha,
             blob_img,
         );
+        txn.set_image_visible_area(
+            blob_img,
+            NormalizedRect {
+                origin: point2(0.0, 0.03),
+                size: size2(1.0, 0.03),
+            }
+        );
+
         builder.pop_clip_id();
 
         let mut epoch = Epoch(0);
@@ -189,7 +198,7 @@ impl<'a> RawtestHarness<'a> {
         let pixels = self.render_and_get_pixels(window_rect);
 
         // make sure we didn't request too many blobs
-        assert_eq!(called.load(Ordering::SeqCst), 16);
+        assert!(called.load(Ordering::SeqCst) < 20);
 
         // make sure things are in the right spot
         assert!(
@@ -228,6 +237,99 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.api.update_resources(txn.resource_updates);
 
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
+    }
+
+    fn test_insufficient_blob_visible_area(&mut self) {
+        println!("\tinsufficient blob visible area.");
+
+        // This test compares two almost identical display lists containing the a blob
+        // image. The only difference is that one of the display lists specifies a visible
+        // area for its blob image which is too small, causing frame building to run into
+        // missing tiles, and forcing it to exercise the code path where missing tiles are
+        // rendered synchronously on demand.
+
+        assert_eq!(self.wrench.device_pixel_ratio, 1.);
+
+        let window_size = self.window.get_inner_size();
+        let test_size = DeviceUintSize::new(800, 800);
+        let window_rect = DeviceUintRect::new(
+            DeviceUintPoint::new(0, window_size.height - test_size.height),
+            test_size,
+        );
+        let layout_size = LayoutSize::new(800.0, 800.0);
+        let image_size = size(800.0, 800.0);
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 800.0, 800.0));
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let mut txn = Transaction::new();
+
+        let blob_img1 = self.wrench.api.generate_image_key();
+        txn.add_image(
+            blob_img1,
+            ImageDescriptor::new(
+                image_size.width as u32,
+                image_size.height as u32,
+                ImageFormat::BGRA8,
+                false,
+                false
+            ),
+            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            Some(100),
+        );
+
+        builder.push_image(
+            &info,
+            image_size,
+            image_size,
+            ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
+            blob_img1,
+        );
+
+        self.submit_dl(&mut Epoch(0), layout_size, builder, &txn.resource_updates);
+        let pixels1 = self.render_and_get_pixels(window_rect);
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let mut txn = Transaction::new();
+
+        let blob_img2 = self.wrench.api.generate_image_key();
+        txn.add_image(
+            blob_img2,
+            ImageDescriptor::new(
+                image_size.width as u32,
+                image_size.height as u32,
+                ImageFormat::BGRA8,
+                false,
+                false
+            ),
+            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            Some(100),
+        );
+        // Set a visible rectangle that is too small.
+        // This will force sync rasterization of the missing tiles during frame building.
+        txn.set_image_visible_area(blob_img2, NormalizedRect {
+            origin: point2(0.25, 0.25),
+            size: size2(0.1, 0.1),
+        });
+
+        builder.push_image(
+            &info,
+            image_size,
+            image_size,
+            ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
+            blob_img2,
+        );
+
+        self.submit_dl(&mut Epoch(1), layout_size, builder, &txn.resource_updates);
+        let pixels2 = self.render_and_get_pixels(window_rect);
+
+        assert!(pixels1 == pixels2);
+
+        txn = Transaction::new();
+        txn.delete_image(blob_img1);
+        txn.delete_image(blob_img2);
+        self.wrench.api.update_resources(txn.resource_updates);
     }
 
     fn test_offscreen_blob(&mut self) {
@@ -466,12 +568,14 @@ impl<'a> RawtestHarness<'a> {
         let img2_requested_inner = Arc::clone(&img2_requested);
 
         // track the number of times that the second image has been requested
-        self.wrench.callbacks.lock().unwrap().request = Box::new(move |&desc| {
-            if desc.key == blob_img {
-                img1_requested_inner.fetch_add(1, Ordering::SeqCst);
-            }
-            if desc.key == blob_img2 {
-                img2_requested_inner.fetch_add(1, Ordering::SeqCst);
+        self.wrench.callbacks.lock().unwrap().request = Box::new(move |requests| {
+            for item in requests {
+                if item.request.key == blob_img {
+                    img1_requested_inner.fetch_add(1, Ordering::SeqCst);
+                }
+                if item.request.key == blob_img2 {
+                    img2_requested_inner.fetch_add(1, Ordering::SeqCst);
+                }
             }
         });
 

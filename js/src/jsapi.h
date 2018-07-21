@@ -6243,23 +6243,24 @@ CopyAsyncStack(JSContext* cx, HandleObject asyncStack,
  * and the object is not the SavedFrame.prototype object.
  *
  * Each of these functions will find the first SavedFrame object in the chain
- * whose underlying stack frame principals are subsumed by the cx's current
- * compartment's principals, and operate on that SavedFrame object. This
- * prevents leaking information about privileged frames to un-privileged
- * callers. As a result, the SavedFrame in parameters do _NOT_ need to be in the
- * same compartment as the cx, and the various out parameters are _NOT_
- * guaranteed to be in the same compartment as cx.
+ * whose underlying stack frame principals are subsumed by the given
+ * |principals|, and operate on that SavedFrame object. This prevents leaking
+ * information about privileged frames to un-privileged callers
+ *
+ * The SavedFrame in parameters do _NOT_ need to be in the same compartment as
+ * the cx, and the various out parameters are _NOT_ guaranteed to be in the same
+ * compartment as cx.
  *
  * You may consider or skip over self-hosted frames by passing
  * `SavedFrameSelfHosted::Include` or `SavedFrameSelfHosted::Exclude`
  * respectively.
  *
  * Additionally, it may be the case that there is no such SavedFrame object
- * whose captured frame's principals are subsumed by the caller's compartment's
- * principals! If the `HandleObject savedFrame` argument is null, or the
- * caller's principals do not subsume any of the chained SavedFrame object's
- * principals, `SavedFrameResult::AccessDenied` is returned and a (hopefully)
- * sane default value is chosen for the out param.
+ * whose captured frame's principals are subsumed by |principals|! If the
+ * `HandleObject savedFrame` argument is null, or the |principals| do not
+ * subsume any of the chained SavedFrame object's principals,
+ * `SavedFrameResult::AccessDenied` is returned and a (hopefully) sane default
+ * value is chosen for the out param.
  *
  * See also `js/src/doc/SavedFrame/SavedFrame.md`.
  */
@@ -6279,21 +6280,24 @@ enum class SavedFrameSelfHosted {
  * string.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameSource(JSContext* cx, HandleObject savedFrame, MutableHandleString sourcep,
+GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                    MutableHandleString sourcep,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its line property. Defaults to 0.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameLine(JSContext* cx, HandleObject savedFrame, uint32_t* linep,
+GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                  uint32_t* linep,
                   SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its column property. Defaults to 0.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameColumn(JSContext* cx, HandleObject savedFrame, uint32_t* columnp,
+GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                    uint32_t* columnp,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
@@ -6302,14 +6306,16 @@ GetSavedFrameColumn(JSContext* cx, HandleObject savedFrame, uint32_t* columnp,
  * function. Defaults to nullptr.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameFunctionDisplayName(JSContext* cx, HandleObject savedFrame, MutableHandleString namep,
+GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                                 MutableHandleString namep,
                                  SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its asyncCause string. Defaults to nullptr.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameAsyncCause(JSContext* cx, HandleObject savedFrame, MutableHandleString asyncCausep,
+GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                        MutableHandleString asyncCausep,
                         SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
@@ -6318,8 +6324,9 @@ GetSavedFrameAsyncCause(JSContext* cx, HandleObject savedFrame, MutableHandleStr
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameAsyncParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject asyncParentp,
-                SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
+GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                         MutableHandleObject asyncParentp,
+                         SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
  * Given a SavedFrame JSObject, get its parent SavedFrame object or nullptr if
@@ -6327,7 +6334,8 @@ GetSavedFrameAsyncParent(JSContext* cx, HandleObject savedFrame, MutableHandleOb
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
 extern JS_PUBLIC_API(SavedFrameResult)
-GetSavedFrameParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject parentp,
+GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+                    MutableHandleObject parentp,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
 /**
@@ -6338,20 +6346,29 @@ GetSavedFrameParent(JSContext* cx, HandleObject savedFrame, MutableHandleObject 
  * The same notes above about SavedFrame accessors applies here as well: cx
  * doesn't need to be in stack's compartment, and stack can be null, a
  * SavedFrame object, or a wrapper (CCW or Xray) around a SavedFrame object.
+ * SavedFrames not subsumed by |principals| are skipped.
  *
  * Optional indent parameter specifies the number of white spaces to indent
  * each line.
  */
 extern JS_PUBLIC_API(bool)
-BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
-                 size_t indent = 0, js::StackFormat stackFormat = js::StackFormat::Default);
+BuildStackString(JSContext* cx, JSPrincipals* principals, HandleObject stack,
+                 MutableHandleString stringp, size_t indent = 0,
+                 js::StackFormat stackFormat = js::StackFormat::Default);
 
 /**
  * Return true iff the given object is either a SavedFrame object or wrapper
  * around a SavedFrame object, and it is not the SavedFrame.prototype object.
  */
 extern JS_PUBLIC_API(bool)
-IsSavedFrame(JSObject* obj);
+IsMaybeWrappedSavedFrame(JSObject* obj);
+
+/**
+ * Return true iff the given object is a SavedFrame object and not the
+ * SavedFrame.prototype object.
+ */
+extern JS_PUBLIC_API(bool)
+IsUnwrappedSavedFrame(JSObject* obj);
 
 } /* namespace JS */
 

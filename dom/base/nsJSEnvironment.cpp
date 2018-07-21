@@ -220,27 +220,40 @@ namespace xpc {
 // This handles JS Exceptions (via ExceptionStackOrNull), as well as DOM and XPC
 // Exceptions.
 //
-// Note that the returned object is _not_ wrapped into the compartment of
-// exceptionValue.
-JSObject*
+// Note that the returned stackObj and stackGlobal are _not_ wrapped into the
+// compartment of exceptionValue.
+void
 FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
-                                   JS::HandleValue exceptionValue)
+                                   JS::HandleValue exceptionValue,
+                                   JS::MutableHandleObject stackObj,
+                                   JS::MutableHandleObject stackGlobal)
 {
+  stackObj.set(nullptr);
+  stackGlobal.set(nullptr);
+
   if (!exceptionValue.isObject()) {
-    return nullptr;
+    return;
   }
 
   if (win && win->AsGlobal()->IsDying()) {
     // Pretend like we have no stack, so we don't end up keeping the global
     // alive via the stack.
-    return nullptr;
+    return;
   }
 
   JS::RootingContext* rcx = RootingCx();
   JS::RootedObject exceptionObject(rcx, &exceptionValue.toObject());
-  JSObject* stackObject = JS::ExceptionStackOrNull(exceptionObject);
-  if (stackObject) {
-    return stackObject;
+  if (JSObject* excStack = JS::ExceptionStackOrNull(exceptionObject)) {
+    // At this point we know exceptionObject is a possibly-wrapped
+    // js::ErrorObject that has excStack as stack. excStack might also be a CCW,
+    // but excStack must be same-compartment with the unwrapped ErrorObject.
+    // Return the ErrorObject's global as stackGlobal. This matches what we do
+    // in the ErrorObject's |.stack| getter and ensures stackObj and stackGlobal
+    // are same-compartment.
+    JSObject* unwrappedException = js::UncheckedUnwrap(exceptionObject);
+    stackObj.set(excStack);
+    stackGlobal.set(JS::GetNonCCWObjectGlobal(unwrappedException));
+    return;
   }
 
   // It is not a JS Exception, try DOM Exception.
@@ -250,20 +263,22 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
     // Not a DOM Exception, try XPC Exception.
     UNWRAP_OBJECT(Exception, exceptionObject, exception);
     if (!exception) {
-      return nullptr;
+      return;
     }
   }
 
   nsCOMPtr<nsIStackFrame> stack = exception->GetLocation();
   if (!stack) {
-    return nullptr;
+    return;
   }
   JS::RootedValue value(rcx);
   stack->GetNativeSavedFrame(&value);
   if (value.isObject()) {
-    return &value.toObject();
+    stackObj.set(&value.toObject());
+    MOZ_ASSERT(JS::IsUnwrappedSavedFrame(stackObj));
+    stackGlobal.set(JS::GetNonCCWObjectGlobal(stackObj));
+    return;
   }
-  return nullptr;
 }
 
 } /* namespace xpc */
@@ -466,9 +481,11 @@ public:
     }
 
     if (status != nsEventStatus_eConsumeNoDefault) {
-      JS::Rooted<JSObject*> stack(rootingCx,
-        xpc::FindExceptionStackForConsoleReport(win, mError));
-      mReport->LogToConsoleWithStack(stack);
+      JS::Rooted<JSObject*> stack(rootingCx);
+      JS::Rooted<JSObject*> stackGlobal(rootingCx);
+      xpc::FindExceptionStackForConsoleReport(win, mError,
+                                              &stack, &stackGlobal);
+      mReport->LogToConsoleWithStack(stack, stackGlobal);
     }
 
     return NS_OK;

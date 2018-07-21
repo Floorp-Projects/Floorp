@@ -10,6 +10,7 @@
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "nsXBLPrototypeBinding.h"
@@ -197,6 +198,8 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
     if (doEnqueueSlotChange) {
       oldSlot->EnqueueSlotChangeEvent();
       currentSlot->EnqueueSlotChangeEvent();
+      SlotStateChanged(oldSlot);
+      SlotStateChanged(currentSlot);
     }
   } else {
     bool doEnqueueSlotChange = false;
@@ -217,6 +220,7 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
 
     if (doEnqueueSlotChange) {
       currentSlot->EnqueueSlotChangeEvent();
+      SlotStateChanged(currentSlot);
     }
   }
 }
@@ -522,6 +526,9 @@ ShadowRoot::MaybeReassignElement(Element* aElement)
     }
     assignment.mSlot->EnqueueSlotChangeEvent();
   }
+
+  SlotStateChanged(oldSlot);
+  SlotStateChanged(assignment.mSlot);
 }
 
 Element*
@@ -601,6 +608,8 @@ ShadowRoot::ContentInserted(nsIContent* aChild)
       assignment.mSlot->AppendAssignedNode(aChild);
     }
     assignment.mSlot->EnqueueSlotChangeEvent();
+
+    SlotStateChanged(assignment.mSlot);
     return;
   }
 

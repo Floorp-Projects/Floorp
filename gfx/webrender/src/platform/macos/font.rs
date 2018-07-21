@@ -361,7 +361,7 @@ impl FontContext {
     ) -> Option<GlyphDimensions> {
         self.get_ct_font(font.font_key, font.size, &font.variations)
             .and_then(|ref ct_font| {
-                let glyph = key.index as CGGlyph;
+                let glyph = key.index() as CGGlyph;
                 let bitmap = is_bitmap_font(ct_font);
                 let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
                 let transform = if font.synthetic_italics.is_enabled() ||
@@ -525,7 +525,7 @@ impl FontContext {
             None
         };
 
-        let glyph = key.index as CGGlyph;
+        let glyph = key.index() as CGGlyph;
         let (strike_scale, pixel_step) = if bitmap { (y_scale, 1.0) } else { (x_scale, y_scale / x_scale) };
         let extra_strikes = font.get_extra_strikes(strike_scale / scale);
         let metrics = get_glyph_metrics(

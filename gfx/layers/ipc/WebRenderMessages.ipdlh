@@ -26,6 +26,7 @@ using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::MaybeIntSize from "mozilla/gfx/Point.h";
 using mozilla::LayoutDeviceRect from "Units.h";
 using mozilla::ImageIntRect from "Units.h";
+using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
@@ -137,6 +138,11 @@ struct OpUpdateBlobImage {
   ImageIntRect dirtyRect;
 };
 
+struct OpSetImageVisibleArea {
+  Rect area;
+  ImageKey key;
+};
+
 struct OpUpdateExternalImage {
   ExternalImageId externalImageId;
   ImageKey key;
@@ -181,6 +187,7 @@ union OpUpdateResource {
   OpAddBlobImage;
   OpUpdateImage;
   OpUpdateBlobImage;
+  OpSetImageVisibleArea;
   OpDeleteImage;
   OpAddRawFont;
   OpAddFontDescriptor;
