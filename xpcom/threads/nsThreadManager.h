@@ -90,7 +90,9 @@ private:
   RefPtr<nsThread>  mMainThread;
   PRThread*         mMainPRThread;
   mozilla::OffTheBooksMutex mLock;  // protects tables
-  mozilla::Atomic<bool> mInitialized;
+  mozilla::Atomic<bool,
+                  mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve> mInitialized;
 
   // The current number of threads
   uint32_t            mCurrentNumberOfThreads;
