@@ -7686,8 +7686,9 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!stackObj)
         return true;
 
+    JSPrincipals* principals = exnObj->as<ErrorObject>().realm()->principals();
     RootedString stackStr(cx);
-    if (!BuildStackString(cx, stackObj, &stackStr, 2))
+    if (!BuildStackString(cx, principals, stackObj, &stackStr, 2))
         return false;
 
     UniqueChars stack(JS_EncodeStringToUTF8(cx, stackStr));

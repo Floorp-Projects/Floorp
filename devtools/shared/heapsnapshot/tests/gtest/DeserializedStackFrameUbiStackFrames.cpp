@@ -52,16 +52,21 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
     JS::RootedObject savedFrame(cx);
     EXPECT_TRUE(ubiFrame.constructSavedFrameStack(cx, &savedFrame));
 
+    JSPrincipals* principals = JS::GetRealmPrincipals(js::GetContextRealm(cx));
+
     uint32_t frameLine;
-    ASSERT_EQ(JS::SavedFrameResult::Ok, JS::GetSavedFrameLine(cx, savedFrame, &frameLine));
+    ASSERT_EQ(JS::SavedFrameResult::Ok,
+              JS::GetSavedFrameLine(cx, principals, savedFrame, &frameLine));
     EXPECT_EQ(line, frameLine);
 
     uint32_t frameColumn;
-    ASSERT_EQ(JS::SavedFrameResult::Ok, JS::GetSavedFrameColumn(cx, savedFrame, &frameColumn));
+    ASSERT_EQ(JS::SavedFrameResult::Ok,
+              JS::GetSavedFrameColumn(cx, principals, savedFrame, &frameColumn));
     EXPECT_EQ(column, frameColumn);
 
     JS::RootedObject parent(cx);
-    ASSERT_EQ(JS::SavedFrameResult::Ok, JS::GetSavedFrameParent(cx, savedFrame, &parent));
+    ASSERT_EQ(JS::SavedFrameResult::Ok,
+              JS::GetSavedFrameParent(cx, principals, savedFrame, &parent));
     EXPECT_EQ(nullptr, parent);
 
     ASSERT_EQ(NS_strlen(source), 21U);

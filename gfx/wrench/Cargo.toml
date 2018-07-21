@@ -10,8 +10,8 @@ base64 = "0.6"
 bincode = "1.0"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }
-euclid = "0.17"
-gleam = "0.5"
+euclid = "0.18"
+gleam = "0.6"
 glutin = "0.17"
 app_units = "0.6"
 image = "0.19"
@@ -31,7 +31,7 @@ winit = "0.16"
 serde = {version = "1.0", features = ["derive"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.14"
+core-graphics = "0.16"
 core-foundation = "0.6"
 
 [features]

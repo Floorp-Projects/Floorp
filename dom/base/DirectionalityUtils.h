@@ -17,6 +17,7 @@ class nsTextNode;
 namespace mozilla {
 namespace dom {
 class Element;
+class HTMLSlotElement;
 } // namespace dom
 } // namespace mozilla
 
@@ -72,6 +73,12 @@ void SetDirectionalityOnDescendants(mozilla::dom::Element* aElement,
 void WalkDescendantsResetAutoDirection(mozilla::dom::Element* aElement);
 
 /**
+ * In case a slot element was added or removed or its assigned nodes changed,
+ * it may change the directionality of ancestors or assigned nodes.
+ */
+void SlotStateChanged(mozilla::dom::HTMLSlotElement* aSlot);
+
+/**
  * After setting dir=auto on an element, walk its descendants in tree order.
  * If the node doesn't have the NODE_ANCESTOR_HAS_DIR_AUTO flag, set the
  * NODE_ANCESTOR_HAS_DIR_AUTO flag on all of its descendants.
@@ -87,7 +94,7 @@ void WalkDescendantsSetDirAuto(mozilla::dom::Element* aElement,
  * skipping any that have dir=auto themselves, and unset the
  * NODE_ANCESTOR_HAS_DIR_AUTO flag
  */
-void WalkDescendantsClearAncestorDirAuto(mozilla::dom::Element* aElement);
+void WalkDescendantsClearAncestorDirAuto(nsIContent* aContent);
 
 /**
  * When the contents of a text node are about to change, retrieve the current

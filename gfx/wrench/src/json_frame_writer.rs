@@ -177,6 +177,7 @@ impl JsonFrameWriter {
                     );
                 }
                 ResourceUpdate::DeleteFontInstance(_) => {}
+                ResourceUpdate::SetImageVisibleArea(..) => {}
             }
         }
     }

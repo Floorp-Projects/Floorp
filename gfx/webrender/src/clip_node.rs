@@ -34,8 +34,8 @@ impl ClipNode {
     const EMPTY: ClipNode = ClipNode {
         spatial_node: SpatialNodeIndex(0),
         handle: None,
-        clip_chain_index: ClipChainIndex(0),
-        parent_clip_chain_index: ClipChainIndex(0),
+        clip_chain_index: ClipChainIndex::NO_CLIP,
+        parent_clip_chain_index: ClipChainIndex::NO_CLIP,
         clip_chain_node: None,
     };
 
@@ -83,7 +83,8 @@ impl ClipNode {
             },
             local_clip_rect: spatial_node
                 .coordinate_system_relative_transform
-                .transform_rect(&local_outer_rect),
+                .transform_rect(&local_outer_rect)
+                .expect("clip node transform is not valid"),
             screen_outer_rect,
             screen_inner_rect,
             prev: None,

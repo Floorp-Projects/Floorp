@@ -328,6 +328,12 @@ IpcResourceUpdateQueue::UpdateExternalImage(wr::ExternalImageId aExtId,
 }
 
 void
+IpcResourceUpdateQueue::SetImageVisibleArea(ImageKey aKey, const gfx::Rect& aArea)
+{
+  mUpdates.AppendElement(layers::OpSetImageVisibleArea(aArea, aKey));
+}
+
+void
 IpcResourceUpdateQueue::DeleteImage(ImageKey aKey)
 {
   mUpdates.AppendElement(layers::OpDeleteImage(aKey));

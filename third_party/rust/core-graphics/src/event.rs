@@ -443,6 +443,7 @@ impl CGEvent {
         }
     }
 
+    #[cfg(feature = "highsierra")]
     pub fn new_scroll_event(
         source: CGEventSource,
         units: CGScrollEventUnit,
@@ -584,6 +585,7 @@ extern {
     ///
     /// This function allows you to create a scrolling event and customize the
     /// event before posting it to the event system.
+    #[cfg(feature = "highsierra")]
     fn CGEventCreateScrollWheelEvent2(
         source: ::sys::CGEventSourceRef,
         units: CGScrollEventUnit,

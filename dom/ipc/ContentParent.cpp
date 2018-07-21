@@ -4055,7 +4055,10 @@ ContentParent::RecvScriptErrorInternal(const nsString& aMessage,
     }
 
     JS::RootedObject stackObj(cx, &stack.toObject());
-    msg = new nsScriptErrorWithStack(stackObj);
+    MOZ_ASSERT(JS::IsUnwrappedSavedFrame(stackObj));
+
+    JS::RootedObject stackGlobal(cx, JS::GetNonCCWObjectGlobal(stackObj));
+    msg = new nsScriptErrorWithStack(stackObj, stackGlobal);
   } else {
     msg = new nsScriptError();
   }

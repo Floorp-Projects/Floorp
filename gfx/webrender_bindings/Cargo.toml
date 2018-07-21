@@ -7,9 +7,9 @@ license = "MPL-2.0"
 [dependencies]
 rayon = "1"
 thread_profiler = "0.1.1"
-euclid = { version = "0.17", features = ["serde"] }
+euclid = { version = "0.18", features = ["serde"] }
 app_units = "0.6"
-gleam = "0.5"
+gleam = "0.6"
 log = "0.4"
 nsstring = { path = "../../servo/support/gecko/nsstring" }
 bincode = "1.0"
@@ -27,6 +27,6 @@ dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
-core-graphics = "0.14"
+core-graphics = "0.16"
 foreign-types = "0.3.0"
 

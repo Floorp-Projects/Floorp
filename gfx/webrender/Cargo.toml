@@ -24,14 +24,14 @@ bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.0"
 cfg-if = "0.1.2"
-euclid = "0.17.3"
+euclid = "0.18"
 fxhash = "0.2.1"
-gleam = "0.5"
+gleam = "0.6"
 image = { optional = true, version = "0.19" }
 lazy_static = "1"
 log = "0.4"
 num-traits = "0.1.43"
-plane-split = "0.9.1"
+plane-split = "0.10"
 png = { optional = true, version = "0.12" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }
@@ -72,5 +72,5 @@ dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
-core-graphics = "0.14"
-core-text = { version = "10", default-features = false }
+core-graphics = "0.16"
+core-text = { version = "11", default-features = false }

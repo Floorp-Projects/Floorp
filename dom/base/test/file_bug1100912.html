@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1100912
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1100912</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  td {
+    border-right: 1px solid black;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1100912">Mozilla Bug 1100912</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+  <!-- The table is here just to make the web page easier to read -->
+  <table>
+  <tr>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+  </tr>
+
+  <tr><td>1.</td><td>
+    <div id="host1" dir="rtl"><span> 3 4 </span></div>
+  </td><td></td><td>rtl on host</td></tr>
+
+  <tr><td>2.</td><td>
+    <div id="host2" dir="rtl"><span> 3 4 </span></div>
+  </td><td></td><td>rtl on host, ltr slot's parent</td></tr>
+
+  <tr><td>3.</td><td>
+    <div id="host3" dir="rtl"><span> 3 4 </span></div>
+  </td><td></td><td>rtl on host, ltr on slot</td></tr>
+
+  <tr><td>4.</td><td>
+    <div id="host4" dir="auto"><span> 1 2 </span></div>
+  </td><td></td><td>auto host, rtl in shadow</td></tr>
+
+  <tr><td>5.</td><td>
+    <div id="host5" dir="auto"><span> &#1571;&#1582;&#1576;&#1575;&#1585; </span></div>
+  </td><td></td><td>auto host, rtl in host (in assigned node)</td></tr>
+
+  <tr><td>6.</td><td>
+    <div id="host6" dir="auto"><span> &#1571;&#1582;&#1576;&#1575;&#1585; </span></div>
+  </td><td></td><td>auto host, rtl in host, no assigned node</td></tr>
+
+  <tr><td>7.</td><td>
+    <div id="host7" dir="auto"><span> &#1571;&#1582;&#1576;&#1575;&#1585; </span></div>
+  </td><td></td><td>auto host, rtl in host, explicit ltr in shadow</td></tr>
+
+  <tr><td>8.</td><td>
+    <div id="host8" dir="auto"><span slot="second">&lrm;1 2 </span><span slot="first"> &#1571;&#1582;&#1576;&#1575;&#1585; </span></div>
+  </td><td></td><td>auto host, ltr in host, rtl in host, reverse order in slots</td></tr>
+
+  <tr><td>9.</td><td>
+    <div id="host9" dir="auto">&#1571;&#1582;&#1576;&#1575;&#1585;</div>
+  </td><td></td><td>auto host, rtl in host (in assigned text node)</td></tr>
+
+  <tr><td>10.</td><td>
+    <div id="host10" dir="auto"> 1 2</div>
+  </td><td></td><td>auto host, 1 2 in host (in assigned text node)</td></tr>
+
+</table>
+<script>
+
+function ltrExpected(element) {
+  opener.is(element.parentNode.querySelector(":dir(ltr)"), element,
+            "Should have got an ltr element.");
+}
+
+function rtlExpected(element) {
+  opener.is(element.parentNode.querySelector(":dir(rtl)"), element,
+            "Should have got an rtl element.");
+}
+
+const shadowRoot1 = host1.attachShadow({mode: 'closed'});
+shadowRoot1.innerHTML = '<div> 1 2 <span><slot></slot></span></div>';
+rtlExpected(host1);
+rtlExpected(host1.firstChild);
+rtlExpected(shadowRoot1.firstChild.lastChild); // span in the Shadow DOM
+
+const shadowRoot2 = host2.attachShadow({mode: 'closed'});
+shadowRoot2.innerHTML = '<div> 1 2 <span dir="ltr"><slot></slot></span></div>';
+rtlExpected(host2);
+ltrExpected(host2.firstChild);
+
+// This is weird case, and we have similar behavior as Blink. dir= on <slot>
+// doesn't affect to UI since slot has display: contents by default.
+const shadowRoot3 = host3.attachShadow({mode: 'closed'});
+shadowRoot3.innerHTML = '<div> 1 2 <span><slot dir="ltr"></slot></span></div>';
+rtlExpected(host3);
+
+const shadowRoot4 = host4.attachShadow({mode: 'closed'});
+shadowRoot4.innerHTML = '<div> &#1571;&#1582;&#1576;&#1575;&#1585; <span><slot></slot></span></div>';
+rtlExpected(host4);
+rtlExpected(host4.firstChild);
+rtlExpected(shadowRoot4.firstChild.lastChild);
+
+const shadowRoot5 = host5.attachShadow({mode: 'closed'});
+shadowRoot5.innerHTML = '<div> 1 2 <span><slot></slot></span></div>';
+rtlExpected(host5);
+rtlExpected(host5.firstChild);
+rtlExpected(shadowRoot5.firstChild.lastChild);
+
+// This case is different to Blink since it doesn't deal with nodes which aren't
+// in the flattened tree, so it doesn't detect rtl in child nodes, which
+// aren't assigned to any slot.
+const shadowRoot6 = host6.attachShadow({mode: 'closed'});
+shadowRoot6.innerHTML = '<div> 1 2 <span></span></div>';
+rtlExpected(host6);
+rtlExpected(host6.firstChild);
+rtlExpected(shadowRoot6.firstChild.lastChild);
+
+const shadowRoot7 = host7.attachShadow({mode: 'closed'});
+shadowRoot7.innerHTML = '<div> &lrm;1 2 <span><slot></slot></span></div>';
+ltrExpected(host7);
+ltrExpected(host7.firstChild);
+ltrExpected(shadowRoot7.firstChild.lastChild);
+
+const shadowRoot8 = host8.attachShadow({mode: 'closed'});
+shadowRoot8.innerHTML = '<div><slot name="first"></slot><slot name="second"></slot></div>';
+rtlExpected(host8);
+rtlExpected(host8.firstChild);
+rtlExpected(shadowRoot8.firstChild.firstChild);
+
+const shadowRoot9 = host9.attachShadow({mode: 'closed'});
+shadowRoot9.innerHTML = '<div> 1 2 <span><slot></slot></span></div>';
+rtlExpected(host9);
+rtlExpected(shadowRoot9.firstChild.lastChild);
+
+const shadowRoot10 = host10.attachShadow({mode: 'closed'});
+shadowRoot10.innerHTML = '<div> &#1571;&#1582;&#1576;&#1575;&#1585; <span><slot></slot></span></div>';
+rtlExpected(host10);
+rtlExpected(shadowRoot10.firstChild.lastChild);
+
+opener.didRunTests();
+window.close();
+</script>
+</body>
+</html>

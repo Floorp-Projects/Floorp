@@ -62,6 +62,10 @@ pub struct ClipChainDescriptor {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ClipChainIndex(pub usize);
 
+impl ClipChainIndex {
+    pub const NO_CLIP: Self = ClipChainIndex(0);
+}
+
 pub struct ClipScrollTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.

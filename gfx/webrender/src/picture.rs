@@ -79,7 +79,7 @@ pub struct PictureCacheKey {
     //       we relax that, we'll need to consider some
     //       extra parameters, depending on transform.
 
-    // This is a globally unique id of the scene this picture 
+    // This is a globally unique id of the scene this picture
     // is associated with, to avoid picture id collisions.
     scene_id: u64,
 
@@ -593,7 +593,16 @@ fn calculate_screen_uv(
     rendered_rect: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> DevicePoint {
-    let world_pos = transform.m.transform_point2d(local_pos);
+    let world_pos = match transform.m.transform_point2d(local_pos) {
+        Some(pos) => pos,
+        None => {
+            //Warning: this is incorrect and needs to be fixed properly.
+            // The transformation has put a local vertex behind the near clipping plane...
+            // Proper solution would be to keep the near-clipping-plane results around
+            // (currently produced by calculate_screen_bounding_rect) and use them here.
+            return DevicePoint::new(0.5, 0.5);
+        }
+    };
 
     let mut device_pos = world_pos * device_pixel_scale;
 

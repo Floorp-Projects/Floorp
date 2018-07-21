@@ -249,7 +249,7 @@ impl FontInstance {
     #[allow(dead_code)]
     pub fn get_subpx_offset(&self, glyph: &GlyphKey) -> (f64, f64) {
         if self.use_subpixel_position() {
-            let (dx, dy) = glyph.subpixel_offset;
+            let (dx, dy) = glyph.subpixel_offset();
             (dx.into(), dy.into())
         } else {
             (0.0, 0.0)
@@ -287,7 +287,8 @@ impl FontInstance {
         if max_size > FONT_SIZE_LIMIT &&
            self.transform.is_identity() &&
            self.render_mode != FontRenderMode::Subpixel &&
-           !self.use_subpixel_position() {
+           !self.use_subpixel_position()
+        {
             max_size / FONT_SIZE_LIMIT
         } else {
             1.0
@@ -372,30 +373,36 @@ impl Into<f64> for SubpixelOffset {
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GlyphKey {
-    pub index: u32,
-    pub subpixel_offset: (SubpixelOffset, SubpixelOffset),
-}
+pub struct GlyphKey(u32);
 
 impl GlyphKey {
     pub fn new(
         index: u32,
         point: DevicePoint,
         subpx_dir: SubpixelDirection,
-    ) -> GlyphKey {
+    ) -> Self {
         let (dx, dy) = match subpx_dir {
             SubpixelDirection::None => (0.0, 0.0),
             SubpixelDirection::Horizontal => (point.x, 0.0),
             SubpixelDirection::Vertical => (0.0, point.y),
             SubpixelDirection::Mixed => (point.x, point.y),
         };
+        let sox = SubpixelOffset::quantize(dx);
+        let soy = SubpixelOffset::quantize(dy);
+        assert_eq!(0, index & 0xF0000000);
 
-        GlyphKey {
-            index,
-            subpixel_offset: (
-                SubpixelOffset::quantize(dx),
-                SubpixelOffset::quantize(dy),
-            ),
+        GlyphKey(index | (sox as u32) << 28 | (soy as u32) << 30)
+    }
+
+    pub fn index(&self) -> GlyphIndex {
+        self.0 & 0x0FFFFFFF
+    }
+
+    fn subpixel_offset(&self) -> (SubpixelOffset, SubpixelOffset) {
+        let x = (self.0 >> 28) as u8 & 3;
+        let y = (self.0 >> 30) as u8 & 3;
+        unsafe {
+            (mem::transmute(x), mem::transmute(y))
         }
     }
 }

@@ -26,7 +26,8 @@ public:
     return rv;
   }
 
-  void free_(void* aPtr) { free(aPtr); }
+  template <typename T>
+  void free_(T* aPtr, size_t aNumElems = 0) { free(aPtr); }
 
   void reportAllocOverflow() const {}
 
