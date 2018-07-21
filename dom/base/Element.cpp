@@ -1246,6 +1246,10 @@ Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 
+  if (NodeOrAncestorHasDirAuto()) {
+    shadowRoot->SetAncestorHasDirAuto();
+  }
+
   /**
    * 5. Set context object’s shadow root to shadow.
    */
