@@ -1,7 +1,10 @@
+use std::ptr;
+
+use base::CGFloat;
 use core_foundation::base::{CFRetain, CFTypeID};
 use core_foundation::data::CFData;
 use color_space::CGColorSpace;
-use data_provider::CGDataProviderRef;
+use data_provider::{CGDataProviderRef, CGDataProvider};
 use libc::size_t;
 use foreign_types::{ForeignType, ForeignTypeRef};
 
@@ -36,6 +39,34 @@ foreign_type! {
 }
 
 impl CGImage {
+    pub fn new(width: size_t,
+               height: size_t,
+               bits_per_component: size_t,
+               bits_per_pixel: size_t,
+               bytes_per_row: size_t,
+               colorspace: &CGColorSpace,
+               bitmap_info: u32,
+               provider: &CGDataProvider,
+               should_interpolate: bool,
+               rendering_intent: u32)
+               -> Self {
+        unsafe {
+            let result =  CGImageCreate(width,
+                                        height,
+                                        bits_per_component,
+                                        bits_per_pixel,
+                                        bytes_per_row,
+                                        colorspace.as_ptr(),
+                                        bitmap_info,
+                                        provider.as_ptr(),
+                                        ptr::null_mut(),
+                                        should_interpolate,
+                                        rendering_intent);
+            assert!(!result.is_null());
+            Self::from_ptr(result)
+        }
+    }
+
     pub fn type_id() -> CFTypeID {
         unsafe {
             CGImageGetTypeID()
@@ -103,6 +134,18 @@ extern {
     fn CGImageGetColorSpace(image: ::sys::CGImageRef) -> ::sys::CGColorSpaceRef;
     fn CGImageGetDataProvider(image: ::sys::CGImageRef) -> ::sys::CGDataProviderRef;
     fn CGImageRelease(image: ::sys::CGImageRef);
+    fn CGImageCreate(width: size_t,
+                     height: size_t,
+                     bitsPerComponent: size_t,
+                     bitsPerPixel: size_t,
+                     bytesPerRow: size_t,
+                     space: ::sys::CGColorSpaceRef,
+                     bitmapInfo: u32,
+                     provider: ::sys::CGDataProviderRef,
+                     decode: *const CGFloat,
+                     shouldInterpolate: bool,
+                     intent: u32)
+                     -> ::sys::CGImageRef;
 
     //fn CGImageGetAlphaInfo(image: ::sys::CGImageRef) -> CGImageAlphaInfo;
     //fn CGImageCreateCopyWithColorSpace(image: ::sys::CGImageRef, space: ::sys::CGColorSpaceRef) -> ::sys::CGImageRef
