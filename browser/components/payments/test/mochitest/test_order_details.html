@@ -127,26 +127,23 @@ add_task(async function test_list_population() {
 
 add_task(async function test_additionalDisplayItems() {
   setup();
-  let state = requestStore.getState();
-  let request = state.request;
-  let paymentDetails = request.paymentDetails;
-
-  paymentDetails.modifiers = [{
-    additionalDisplayItems: [
-      {
-        label: "Card fee",
-        amount: { currency: "USD", value: "1.50" },
+  let request = Object.assign({}, requestStore.getState().request);
+  request.paymentDetails = Object.assign({}, request.paymentDetails, {
+    modifiers: [{
+      additionalDisplayItems: [
+        {
+          label: "Card fee",
+          amount: { currency: "USD", value: "1.50" },
+        },
+      ],
+      supportedMethods: "basic-card",
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "3.50" },
       },
-    ],
-    supportedMethods: "basic-card",
-    total: {
-      label: "Total due",
-      amount: { currency: "USD", value: "3.50" },
-    },
-  }];
-
-  Object.assign(request, { paymentDetails });
-  requestStore.setState(state);
+    }],
+  });
+  requestStore.setState({ request });
   await asyncElementRendered();
 
   is(orderDetails.mainItemsList.childElementCount, 0,
@@ -158,11 +155,10 @@ add_task(async function test_additionalDisplayItems() {
 
 add_task(async function test_total() {
   setup();
-  let request = requestStore.getState().request;
-  let paymentDetails = request.paymentDetails;
-  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: "5" }};
-
-  Object.assign(request, { paymentDetails });
+  let request = Object.assign({}, requestStore.getState().request);
+  request.paymentDetails = Object.assign({}, request.paymentDetails, {
+    totalItem: { label: "foo", amount: { currency: "JPY", value: "5" }},
+  });
   requestStore.setState({ request });
   await asyncElementRendered();
 
@@ -172,19 +168,18 @@ add_task(async function test_total() {
 
 add_task(async function test_modified_total() {
   setup();
-  let state = requestStore.getState();
-  let request = state.request;
-  let paymentDetails = request.paymentDetails;
-  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: "5" }};
-  paymentDetails.modifiers = [{
-    supportedMethods: "basic-card",
-    total: {
-      label: "Total due",
-      amount: { currency: "USD", value: "3.5" },
-    },
-  }];
-  Object.assign(request, { paymentDetails });
-  requestStore.setState(state);
+  let request = Object.assign({}, requestStore.getState().request);
+  request.paymentDetails = Object.assign({}, request.paymentDetails, {
+    totalItem: { label: "foo", amount: { currency: "JPY", value: "5" }},
+    modifiers: [{
+      supportedMethods: "basic-card",
+      total: {
+        label: "Total due",
+        amount: { currency: "USD", value: "3.5" },
+      },
+    }],
+  });
+  requestStore.setState({request});
   await asyncElementRendered();
 
   is(orderDetails.totalAmountElem.value, "3.5", "total amount uses modifier total");

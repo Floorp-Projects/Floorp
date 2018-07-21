@@ -68,8 +68,19 @@ PaymentUIService.prototype = {
   },
 
   completePayment(requestId) {
-    this.log.debug("completePayment:", requestId);
-    let closed = this.closeDialog(requestId);
+    // completeStatus should be one of "timeout", "success", "fail", ""
+    let {completeStatus} = paymentSrv.getPaymentRequestById(requestId);
+    this.log.debug(`completePayment: requestId: ${requestId}, completeStatus: ${completeStatus}`);
+
+    let closed;
+    switch (completeStatus) {
+      case "fail":
+      case "timeout":
+        break;
+      default:
+        closed = this.closeDialog(requestId);
+        break;
+    }
     let responseCode = closed ?
         Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED :
         Ci.nsIPaymentActionResponse.COMPLETE_FAILED;
@@ -77,6 +88,15 @@ PaymentUIService.prototype = {
                              .createInstance(Ci.nsIPaymentCompleteActionResponse);
     completeResponse.init(requestId, responseCode);
     paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+
+    if (!closed) {
+      let dialog = this.findDialog(requestId);
+      if (!dialog) {
+        this.log.error("completePayment: no dialog found");
+        return;
+      }
+      dialog.paymentDialogWrapper.updateRequest();
+    }
   },
 
   updatePayment(requestId) {

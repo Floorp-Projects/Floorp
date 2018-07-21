@@ -229,16 +229,21 @@ void JumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise)
   // The returned objArray of removed items are for manually removed items.
   // This does not return items which are removed because they were previously
   // part of the jump list but are no longer part of the jump list.
-  if (SUCCEEDED(hr) && objArray) {
+  if (SUCCEEDED(hr)) {
     sBuildingList = true;
     RemoveIconCacheAndGetJumplistShortcutURIs(objArray, urisToRemove);
-  }
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildResolve",
-                                                 [urisToRemove = std::move(urisToRemove),
-                                                  promise = std::move(aPromise)]() {
-    promise->MaybeResolve(urisToRemove);
-  }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildResolve",
+                                                   [urisToRemove = std::move(urisToRemove),
+                                                    promise = std::move(aPromise)]() {
+      promise->MaybeResolve(urisToRemove);
+    }));
+  } else {
+    NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildReject",
+                                                   [promise = std::move(aPromise)]() {
+      promise->MaybeReject(NS_ERROR_FAILURE);
+    }));
+  }
 }
 
 // Ensures that we have no old ICO files left in the jump list cache
@@ -527,6 +532,11 @@ void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray *aO
                                                                 nsTArray<nsString>& aURISpecs)
 {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  // Early return here just in case some versions of Windows don't populate this
+  if (!aObjArray) {
+    return;
+  }
 
   uint32_t count = 0;
   aObjArray->GetCount(&count);

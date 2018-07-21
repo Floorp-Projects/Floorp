@@ -74,9 +74,9 @@ invoke_copy_to_stack(uint32_t* stk, uint32_t *end,
         if (d == end) d = stk;
         NS_ASSERTION(d >= stk && d < end,
             "invoke_copy_to_stack is copying outside its given buffer");
-        if(s->IsPtrData())
+        if(s->IsIndirect())
         {
-            *((void**)d) = s->ptr;
+            *((void**)d) = &s->val;
             continue;
         }
         // According to the ARM EABI, integral types that are smaller than a word
@@ -314,8 +314,8 @@ invoke_copy_to_stack(uint32_t* stk, uint32_t *end,
   float    *vfp_end    = vfp_s_args + 16;
 
   for (uint32_t i = 0; i < paramCount; i++, s++) {
-    if (s->IsPtrData()) {
-      copy_word(ireg_args, stk, end, (uint32_t)s->ptr);
+    if (s->IsIndirect()) {
+      copy_word(ireg_args, stk, end, (uint32_t)&s->val);
       continue;
     }
     // According to the ARM EABI, integral types that are smaller than a word

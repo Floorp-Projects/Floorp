@@ -11,37 +11,60 @@
   </head>
   <body>
     <div>
-      <button id="refresh">Refresh</button>
-      <button id="rerender">Re-render</button>
-      <button id="logState">Log state</button>
-      <button id="debugFrame" hidden>Debug frame</button>
-      <h1>Requests</h1>
-      <button id="setRequest1">Request 1</button>
-      <button id="setRequest2">Request 2</button>
-      <fieldset id="paymentOptions">
-        <legend>Payment Options</legend>
-        <label><input type="checkbox" autocomplete="off" name="requestPayerName" id="setRequestPayerName">requestPayerName</label>
-        <label><input type="checkbox" autocomplete="off" name="requestPayerEmail" id="setRequestPayerEmail">requestPayerEmail</label>
-        <label><input type="checkbox" autocomplete="off" name="requestPayerPhone" id="setRequestPayerPhone">requestPayerPhone</label>
-        <label><input type="checkbox" autocomplete="off" name="requestShipping" id="setRequestShipping">requestShipping</label>
-      </fieldset>
-      <h1>Addresses</h1>
-      <button id="setAddresses1">Set Addreses 1</button>
-      <button id="setDupesAddresses">Set Duped Addresses</button>
-      <button id="delete1Address">Delete 1 Address</button>
-      <h1>Payment Methods</h1>
-      <button id="setBasicCards1">Set Basic Cards 1</button>
-      <button id="delete1Card">Delete 1 Card</button>
-      <h1>States</h1>
-      <button id="setChangesPrevented">Prevent changes</button>
-      <button id="setChangesAllowed">Allow changes</button>
-      <button id="setShippingError">Shipping Error</button>
-      <button id="setAddressErrors">Address Errors</button>
-      <button id="setStateDefault">Default</button>
-      <button id="setStateProcessing">Processing</button>
-      <button id="setStateSuccess">Success</button>
-      <button id="setStateFail">Fail</button>
-      <button id="setStateUnknown">Unknown</button>
+      <section class="group">
+        <button id="refresh">Refresh</button>
+        <button id="rerender">Re-render</button>
+        <button id="logState">Log state</button>
+        <button id="debugFrame" hidden>Debug frame</button>
+      </section>
+      <section class="group">
+        <h1>Requests</h1>
+        <button id="setRequest1">Request 1</button>
+        <button id="setRequest2">Request 2</button>
+        <fieldset id="paymentOptions">
+          <legend>Payment Options</legend>
+          <label><input type="checkbox" autocomplete="off" name="requestPayerName" id="setRequestPayerName">requestPayerName</label>
+          <label><input type="checkbox" autocomplete="off" name="requestPayerEmail" id="setRequestPayerEmail">requestPayerEmail</label>
+          <label><input type="checkbox" autocomplete="off" name="requestPayerPhone" id="setRequestPayerPhone">requestPayerPhone</label>
+          <label><input type="checkbox" autocomplete="off" name="requestShipping" id="setRequestShipping">requestShipping</label>
+        </fieldset>
+      </section>
+
+      <section class="group">
+        <h1>Addresses</h1>
+        <button id="setAddresses1">Set Addreses 1</button>
+        <button id="setDupesAddresses">Set Duped Addresses</button>
+        <button id="delete1Address">Delete 1 Address</button>
+      </section>
+
+      <section class="group">
+        <h1>Payment Methods</h1>
+        <button id="setBasicCards1">Set Basic Cards 1</button>
+        <button id="delete1Card">Delete 1 Card</button>
+      </section>
+
+      <section class="group">
+        <h1>States</h1>
+        <fieldset>
+          <legend>Complete Status</legend>
+          <label class="block"><input type="radio" name="completeStatus" value="initial" checked="checked">Initial (default)</label>
+          <label class="block"><input type="radio" name="completeStatus" value="processing">Processing</label>
+          <label class="block"><input type="radio" name="completeStatus" value="success">Success</label>
+          <label class="block"><input type="radio" name="completeStatus" value="fail">Fail</label>
+          <label class="block"><input type="radio" name="completeStatus" value="unknown">Unknown</label>
+          <label class="block"><input type="radio" name="completeStatus" value="timeout">Timeout</label>
+        </fieldset>
+        <label class="block"><input type="checkbox" id="setChangesPrevented">Prevent changes</label>
+        <button id="setCompleteStatus" class="wide">Set Complete Status</button>
+
+        <section class="group">
+          <fieldset>
+            <legend>User Data Errors</legend>
+            <button id="setShippingError">Shipping Error</button>
+            <button id="setAddressErrors">Address Errors</button>
+          </fieldset>
+        </section>
+      </section>
     </div>
   </body>
 </html>
