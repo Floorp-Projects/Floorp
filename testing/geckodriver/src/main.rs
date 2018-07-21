@@ -188,8 +188,6 @@ fn run() -> ProgramResult {
         logging::init().unwrap();
     }
 
-    info!("geckodriver {}", BuildInfo);
-
     let settings = MarionetteSettings {
         port: marionette_port,
         binary,
@@ -199,7 +197,7 @@ fn run() -> ProgramResult {
     let handler = MarionetteHandler::new(settings);
     let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
         .map_err(|err| (ExitCode::Unavailable, err.to_string()))?;
-    info!("Listening on {}", listening.socket);
+    debug!("Listening on {}", listening.socket);
 
     Ok(())
 }
