@@ -112,18 +112,7 @@ def delete(path):
 
 
 def install_libgcc(gcc_dir, clang_dir):
-    gcc_bin_dir = os.path.join(gcc_dir, 'bin')
-
-    # Copy over gcc toolchain bits that clang looks for, to ensure that
-    # clang is using a consistent version of ld, since the system ld may
-    # be incompatible with the output clang produces.  But copy it to a
-    # target-specific directory so a cross-compiler to Mac doesn't pick
-    # up the (Linux-specific) ld with disastrous results.
-    x64_bin_dir = os.path.join(clang_dir, 'x86_64-unknown-linux-gnu', 'bin')
-    mkdir_p(x64_bin_dir)
-    shutil.copy2(os.path.join(gcc_bin_dir, 'ld'), x64_bin_dir)
-
-    out = subprocess.check_output([os.path.join(gcc_bin_dir, "gcc"),
+    out = subprocess.check_output([os.path.join(gcc_dir, "bin", "gcc"),
                                    '-print-libgcc-file-name'])
 
     libgcc_dir = os.path.dirname(out.rstrip())
@@ -289,8 +278,7 @@ def get_tool(config, key):
 #       run-clang-tidy.py
 def prune_final_dir_for_clang_tidy(final_dir):
     # Make sure we only have what we expect.
-    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools",
-            "x86_64-unknown-linux-gnu")
+    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools")
     for f in glob.glob("%s/*" % final_dir):
         if os.path.basename(f) not in dirs:
             raise Exception("Found unknown file %s in the final directory" % f)
@@ -537,15 +525,9 @@ if __name__ == "__main__":
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
-        # When building stage2 and stage3, we want the newly-built clang to pick
-        # up whatever headers were installed from the gcc we used to build stage1,
-        # always, rather than the system headers.  Providing -gcc-toolchain
-        # encourages clang to do that.
-        extra_cflags2 = ["-fPIC",
-                         '-gcc-toolchain', stage1_inst_dir]
+        extra_cflags2 = ["-fPIC"]
         # Silence clang's warnings about arguments not being used in compilation.
-        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++",
-                           '-gcc-toolchain', stage1_inst_dir]
+        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++"]
         extra_asmflags = []
         extra_ldflags = []
 
