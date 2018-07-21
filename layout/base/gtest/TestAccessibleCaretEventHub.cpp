@@ -262,13 +262,13 @@ public:
 }; // class AccessibleCaretEventHubTester
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnNoCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressReleaseOnNoCaret(CreateMousePressEvent, CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnNoCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
@@ -296,13 +296,13 @@ AccessibleCaretEventHubTester::TestPressReleaseOnNoCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressReleaseOnCaret(CreateMousePressEvent, CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressReleaseOnCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
@@ -340,14 +340,14 @@ AccessibleCaretEventHubTester::TestPressReleaseOnCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnNoCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressMoveReleaseOnNoCaret(CreateMousePressEvent, CreateMouseMoveEvent,
                                 CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnNoCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressMoveReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
                                 CreateTouchEndEvent);
@@ -396,14 +396,14 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnNoCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressMoveReleaseOnCaret(CreateMousePressEvent, CreateMouseMoveEvent,
                               CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnCaret)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestPressMoveReleaseOnCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
                               CreateTouchEndEvent);
@@ -465,7 +465,7 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnCaret(
 
 TEST_F(AccessibleCaretEventHubTester,
        TestTouchStartMoveEndOnCaretWithTouchCancelIgnored)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   nscoord x0 = 0, y0 = 0;
   nscoord x1 = 100, y1 = 100;
@@ -524,14 +524,14 @@ MOZ_CAN_RUN_SCRIPT
                            nsEventStatus_eIgnore);}
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordSuccessful)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestLongTapWithSelectWordSuccessful(CreateMousePressEvent,
                                       CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordSuccessful)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestLongTapWithSelectWordSuccessful(CreateTouchStartEvent,
                                       CreateTouchEndEvent);
@@ -606,14 +606,14 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordFailed)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestLongTapWithSelectWordFailed(CreateMousePressEvent,
                                   CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordFailed)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestLongTapWithSelectWordFailed(CreateTouchStartEvent,
                                   CreateTouchEndEvent);
@@ -649,14 +649,14 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordFailed(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchEventDrivenAsyncPanZoomScroll)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestEventDrivenAsyncPanZoomScroll(CreateTouchStartEvent, CreateTouchMoveEvent,
                                     CreateTouchEndEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseEventDrivenAsyncPanZoomScroll)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestEventDrivenAsyncPanZoomScroll(CreateMousePressEvent, CreateMouseMoveEvent,
                                     CreateMouseReleaseEvent);
@@ -750,7 +750,8 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
                            nsEventStatus_eIgnore);
 }
 
-TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll) MOZ_CAN_RUN_SCRIPT
+TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   TestAsyncPanZoomScroll();
 }
@@ -801,7 +802,7 @@ AccessibleCaretEventHubTester::TestAsyncPanZoomScroll()
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollStartedThenBlur)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   {
     InSequence dummy;
@@ -822,7 +823,7 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
-MOZ_CAN_RUN_SCRIPT
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
 {
   {
     InSequence dummy;
