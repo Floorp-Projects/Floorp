@@ -176,31 +176,41 @@ protected:
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
 
-  mozilla::CycleCollectedJSContext* mScriptObserver;
-
-  int32_t   mPriority;
-  uint32_t  mThreadId;
-  PRThread* mThread;
-  uint32_t  mNestedEventLoopDepth;
-  uint32_t  mStackSize;
-  void*     mStackBase = nullptr;
-
-  // The shutdown context for ourselves.
-  struct nsThreadShutdownContext* mShutdownContext;
   // The shutdown contexts for any other threads we've asked to shut down.
   nsTArray<nsAutoPtr<struct nsThreadShutdownContext>> mRequestedShutdownContexts;
+  // The shutdown context for ourselves.
+  struct nsThreadShutdownContext* mShutdownContext;
+
+  mozilla::CycleCollectedJSContext* mScriptObserver;
+
+  PRThread* mThread;
+  void*     mStackBase = nullptr;
+  uint32_t  mStackSize;
+  uint32_t  mThreadId;
+
+  uint32_t  mNestedEventLoopDepth;
+  uint32_t  mCurrentEventLoopDepth;
 
   mozilla::Atomic<bool> mShutdownRequired;
-  MainThreadFlag mIsMainThread;
+
+  int8_t   mPriority;
+
+  uint8_t  mIsMainThread;
+
+  bool IsMainThread() const
+  {
+    return MainThreadFlag(mIsMainThread) == MAIN_THREAD;
+  }
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
 
-  mozilla::TimeStamp mNextIdleDeadline;
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;
+
   mozilla::TimeStamp mCurrentEventStart;
-  uint32_t mCurrentEventLoopDepth;
+  mozilla::TimeStamp mNextIdleDeadline;
+
   RefPtr<mozilla::PerformanceCounter> mCurrentPerformanceCounter;
 };
 
