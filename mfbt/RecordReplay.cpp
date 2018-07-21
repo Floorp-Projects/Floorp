@@ -6,6 +6,8 @@
 
 #include "RecordReplay.h"
 
+#include "js/GCAnnotations.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
 
 #include <stdlib.h>
@@ -139,9 +141,24 @@ FOR_EACH_INTERFACE_VOID(INIT_SYMBOL_VOID)
   initialize(aArgc, aArgv);
 }
 
+// Record/replay API functions can't GC, but we can't use
+// JS::AutoSuppressGCAnalysis here due to linking issues.
+struct AutoSuppressGCAnalysis
+{
+  AutoSuppressGCAnalysis() {}
+  ~AutoSuppressGCAnalysis() {
+#ifdef DEBUG
+    // Need nontrivial destructor.
+    static Atomic<int, SequentiallyConsistent, Behavior::DontPreserve> dummy;
+    dummy++;
+#endif
+  }
+} JS_HAZ_GC_SUPPRESSED;
+
 #define DEFINE_WRAPPER(aName, aReturnType, aFormals, aActuals)  \
   aReturnType aName aFormals                                    \
   {                                                             \
+    AutoSuppressGCAnalysis suppress;                            \
     MOZ_ASSERT(IsRecordingOrReplaying() || IsMiddleman());      \
     return gPtr ##aName aActuals;                               \
   }
@@ -149,6 +166,7 @@ FOR_EACH_INTERFACE_VOID(INIT_SYMBOL_VOID)
 #define DEFINE_WRAPPER_VOID(aName, aFormals, aActuals)          \
   void aName aFormals                                           \
   {                                                             \
+    AutoSuppressGCAnalysis suppress;                            \
     MOZ_ASSERT(IsRecordingOrReplaying() || IsMiddleman());      \
     gPtr ##aName aActuals;                                      \
   }
