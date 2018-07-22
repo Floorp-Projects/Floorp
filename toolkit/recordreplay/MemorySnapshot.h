@@ -40,11 +40,11 @@ void RestoreWritableFixedMemory(void* aAddress, size_t aSize);
 
 // Allocate memory, trying to use a specific address if provided but only if
 // it is free.
-void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, AllocatedMemoryKind aKind);
+void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind);
 
 // Note a range of memory that was just allocated from the system, and the
 // kind of memory allocation that was performed.
-void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, AllocatedMemoryKind aKind);
+void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind);
 
 // Initialize the memory snapshots system.
 void InitializeMemorySnapshots();

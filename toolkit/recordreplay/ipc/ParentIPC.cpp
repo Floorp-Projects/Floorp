@@ -761,10 +761,10 @@ HasSavedCheckpointsInRange(ChildProcessInfo* aChild, size_t aStart, size_t aEnd)
 // child to inspect its state. This excludes breakpoints set for things
 // internal to the debugger.
 static bool
-IsUserBreakpoint(JS::replay::ExecutionPosition::Kind aKind)
+IsUserBreakpoint(js::BreakpointPosition::Kind aKind)
 {
-  MOZ_RELEASE_ASSERT(aKind != JS::replay::ExecutionPosition::Invalid);
-  return aKind != JS::replay::ExecutionPosition::NewScript;
+  MOZ_RELEASE_ASSERT(aKind != js::BreakpointPosition::Invalid);
+  return aKind != js::BreakpointPosition::NewScript;
 }
 
 static void
@@ -829,9 +829,6 @@ MainThreadMessageLoop()
   return gMainThreadMessageLoop;
 }
 
-// Initialize hooks used by the debugger.
-static void InitDebuggerHooks();
-
 // Contents of the prefs shmem block that is sent to the child on startup.
 static char* gShmemPrefs;
 static size_t gShmemPrefsLen;
@@ -859,7 +856,6 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
   MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording ||
                      gProcessKind == ProcessKind::MiddlemanReplaying);
 
-  InitDebuggerHooks();
   InitializeGraphicsMemory();
 
   gMonitor = new Monitor();
@@ -882,19 +878,17 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Buffer for receiving the next debugger response.
-static JS::replay::CharBuffer* gResponseBuffer;
+static js::CharBuffer* gResponseBuffer;
 
 static void
 RecvDebuggerResponse(const DebuggerResponseMessage& aMsg)
 {
   MOZ_RELEASE_ASSERT(gResponseBuffer && gResponseBuffer->empty());
-  if (!gResponseBuffer->append(aMsg.Buffer(), aMsg.BufferSize())) {
-    MOZ_CRASH("RecvDebuggerResponse");
-  }
+  gResponseBuffer->append(aMsg.Buffer(), aMsg.BufferSize());
 }
 
-static void
-HookDebuggerRequest(const JS::replay::CharBuffer& aBuffer, JS::replay::CharBuffer* aResponse)
+void
+SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse)
 {
   MaybeCreateCheckpointInRecordingChild();
   gActiveChild->WaitUntilPaused();
@@ -913,8 +907,8 @@ HookDebuggerRequest(const JS::replay::CharBuffer& aBuffer, JS::replay::CharBuffe
   gResponseBuffer = nullptr;
 }
 
-static void
-HookSetBreakpoint(size_t aId, const JS::replay::ExecutionPosition& aPosition)
+void
+SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition)
 {
   MaybeCreateCheckpointInRecordingChild();
   gActiveChild->WaitUntilPaused();
@@ -938,8 +932,8 @@ static bool gChildExecuteBackward = false;
 // main thread. This will continue execution in the preferred direction.
 static bool gResumeForwardOrBackward = false;
 
-static void
-HookResume(bool aForward)
+void
+Resume(bool aForward)
 {
   gActiveChild->WaitUntilPaused();
 
@@ -1000,8 +994,8 @@ HookResume(bool aForward)
   gActiveChild->SendMessage(ResumeMessage(aForward));
 }
 
-static void
-HookPause()
+void
+Pause()
 {
   MaybeCreateCheckpointInRecordingChild();
   gActiveChild->WaitUntilPaused();
@@ -1020,7 +1014,7 @@ ResumeForwardOrBackward()
   MOZ_RELEASE_ASSERT(!gChildExecuteForward || !gChildExecuteBackward);
 
   if (gResumeForwardOrBackward && (gChildExecuteForward || gChildExecuteBackward)) {
-    HookResume(gChildExecuteForward);
+    Resume(gChildExecuteForward);
   }
 }
 
@@ -1034,7 +1028,7 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
   // the process to pause. Immediately resume if the main thread is blocked.
   if (MainThreadIsWaitingForIPDLReply()) {
     MOZ_RELEASE_ASSERT(gChildExecuteForward);
-    HookResume(true);
+    Resume(true);
   } else if (!gResumeForwardOrBackward) {
     gResumeForwardOrBackward = true;
     gMainThreadMessageLoop->PostTask(NewRunnableFunction("ResumeForwardOrBackward",
@@ -1054,7 +1048,7 @@ HitBreakpoint(uint32_t* aBreakpoints, size_t aNumBreakpoints)
   // backward travel.
   for (size_t i = 0; i < aNumBreakpoints && gResumeForwardOrBackward; i++) {
     AutoSafeJSContext cx;
-    if (!JS::replay::hooks.hitBreakpointMiddleman(cx, aBreakpoints[i])) {
+    if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
       Print("Warning: hitBreakpoint hook threw an exception.\n");
     }
   }
@@ -1075,16 +1069,6 @@ RecvHitBreakpoint(const HitBreakpointMessage& aMsg)
   PodCopy(breakpoints, aMsg.Breakpoints(), aMsg.NumBreakpoints());
   gMainThreadMessageLoop->PostTask(NewRunnableFunction("HitBreakpoint", HitBreakpoint,
                                                        breakpoints, aMsg.NumBreakpoints()));
-}
-
-static void
-InitDebuggerHooks()
-{
-  JS::replay::hooks.debugRequestMiddleman = HookDebuggerRequest;
-  JS::replay::hooks.setBreakpointMiddleman = HookSetBreakpoint;
-  JS::replay::hooks.resumeMiddleman = HookResume;
-  JS::replay::hooks.pauseMiddleman = HookPause;
-  JS::replay::hooks.canRewindMiddleman = CanRewind;
 }
 
 } // namespace parent

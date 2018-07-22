@@ -638,7 +638,7 @@ RR_mmap(void* aAddress, size_t aSize, int aProt, int aFlags, int aFd, off_t aOff
       memory = aAddress;
     } else {
       memory = AllocateMemoryTryAddress(aAddress, RoundupSizeToPageBoundary(aSize),
-                                        TrackedMemoryKind);
+                                        MemoryKind::Tracked);
     }
   } else {
     // We have to call mmap itself, which can change memory protection flags
@@ -652,7 +652,7 @@ RR_mmap(void* aAddress, size_t aSize, int aProt, int aFlags, int aFd, off_t aOff
       MOZ_RELEASE_ASSERT(memory == aAddress);
       RestoreWritableFixedMemory(memory, RoundupSizeToPageBoundary(aSize));
     } else if (memory && memory != (void*)-1) {
-      RegisterAllocatedMemory(memory, RoundupSizeToPageBoundary(aSize), TrackedMemoryKind);
+      RegisterAllocatedMemory(memory, RoundupSizeToPageBoundary(aSize), MemoryKind::Tracked);
     }
   }
 
@@ -670,7 +670,7 @@ RR_mmap(void* aAddress, size_t aSize, int aProt, int aFlags, int aFd, off_t aOff
 static ssize_t
 RR_munmap(void* aAddress, size_t aSize)
 {
-  DeallocateMemory(aAddress, aSize, TrackedMemoryKind);
+  DeallocateMemory(aAddress, aSize, MemoryKind::Tracked);
   return 0;
 }
 
@@ -1505,14 +1505,14 @@ static kern_return_t
 RR_mach_vm_allocate(vm_map_t aTarget, mach_vm_address_t* aAddress,
                     mach_vm_size_t aSize, int aFlags)
 {
-  *aAddress = (mach_vm_address_t) AllocateMemory(aSize, TrackedMemoryKind);
+  *aAddress = (mach_vm_address_t) AllocateMemory(aSize, MemoryKind::Tracked);
   return KERN_SUCCESS;
 }
 
 static kern_return_t
 RR_mach_vm_deallocate(vm_map_t aTarget, mach_vm_address_t aAddress, mach_vm_size_t aSize)
 {
-  DeallocateMemory((void*) aAddress, aSize, TrackedMemoryKind);
+  DeallocateMemory((void*) aAddress, aSize, MemoryKind::Tracked);
   return KERN_SUCCESS;
 }
 

@@ -57,7 +57,7 @@ void
 InitializeThreadSnapshots(size_t aNumThreads)
 {
   gThreadState = (ThreadState*) AllocateMemory(aNumThreads * sizeof(ThreadState),
-                                               UntrackedMemoryKind::ThreadSnapshot);
+                                               MemoryKind::ThreadSnapshot);
 
   jmp_buf buf;
   if (setjmp(buf) == 0) {
@@ -70,7 +70,7 @@ static void
 ClearThreadState(ThreadState* aInfo)
 {
   MOZ_RELEASE_ASSERT(aInfo->mShouldRestore);
-  DeallocateMemory(aInfo->mStackContents, aInfo->mStackBytes, UntrackedMemoryKind::ThreadSnapshot);
+  DeallocateMemory(aInfo->mStackContents, aInfo->mStackBytes, MemoryKind::ThreadSnapshot);
   aInfo->mShouldRestore = false;
   aInfo->mStackContents = nullptr;
   aInfo->mStackBytes = 0;
@@ -221,7 +221,7 @@ SaveThreadStack(SavedThreadStack& aStack, size_t aId)
 
   MOZ_RELEASE_ASSERT(stackBytes >= info.mStackTopBytes);
 
-  aStack.mStack = (uint8_t*) AllocateMemory(stackBytes, UntrackedMemoryKind::ThreadSnapshot);
+  aStack.mStack = (uint8_t*) AllocateMemory(stackBytes, MemoryKind::ThreadSnapshot);
   aStack.mStackBytes = stackBytes;
 
   MemoryMove(aStack.mStack, info.mStackTop, info.mStackTopBytes);
@@ -241,7 +241,7 @@ RestoreStackForLoadingByThread(const SavedThreadStack& aStack, size_t aId)
   info.mStackBytes = aStack.mStackBytes;
 
   uint8_t* stackContents =
-    (uint8_t*) AllocateMemory(info.mStackBytes, UntrackedMemoryKind::ThreadSnapshot);
+    (uint8_t*) AllocateMemory(info.mStackBytes, MemoryKind::ThreadSnapshot);
   MemoryMove(stackContents, aStack.mStack, aStack.mStackBytes);
   info.mStackContents = stackContents;
   info.mShouldRestore = true;
