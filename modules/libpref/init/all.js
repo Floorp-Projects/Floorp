@@ -570,6 +570,9 @@ pref("media.autoplay.default", 0);
 // By default, don't block WebAudio from playing automatically.
 pref("media.autoplay.block-webaudio", false);
 
+// By default, don't block muted media from playing automatically.
+pref("media.autoplay.allow-muted", true);
+
 // If "media.autoplay.default" is not ALLOWED, and this pref is true,
 // then audible media would only be allowed to autoplay after website has
 // been activated by specific user gestures, but non-audible
