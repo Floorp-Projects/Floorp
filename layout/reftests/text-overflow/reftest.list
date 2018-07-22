@@ -22,7 +22,7 @@ skip-if(Android) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elem
 fuzzy-if(gtkWidget,10,32) fuzzy-if(webrender,47,18) == two-value-syntax.html two-value-syntax-ref.html
 == single-value.html single-value-ref.html
 fuzzy-if(gtkWidget,10,2) == atomic-under-marker.html atomic-under-marker-ref.html
-fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(gtkWidget) == xulscroll.html xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
+pref(layout.css.xul-box-display-values.content.enabled,true) fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(gtkWidget) == xulscroll.html xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
 == combobox-zoom.html combobox-zoom-ref.html
 == dynamic-change-1.html dynamic-change-1-ref.html
 == float-edges-1.html float-edges-1-ref.html
