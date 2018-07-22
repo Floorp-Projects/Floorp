@@ -401,10 +401,6 @@ public:
   // called on the channel's message thread.
   typedef std::function<void(Message*)> MessageHandler;
 
-  // The recording channel is opened at startup and is initialized differently
-  // from other channels.
-  static const size_t RecordingId = 0;
-
 private:
   // ID for this channel, unique for the middleman.
   size_t mId;
@@ -443,7 +439,7 @@ private:
 public:
   // Initialize this channel, connect to the other side, and spin up a thread
   // to process incoming messages by calling aHandler.
-  Channel(size_t aId, const MessageHandler& aHandler);
+  Channel(size_t aId, bool aMiddlemanRecording, const MessageHandler& aHandler);
 
   size_t GetId() { return mId; }
 
