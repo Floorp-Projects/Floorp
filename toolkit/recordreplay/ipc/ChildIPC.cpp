@@ -21,7 +21,6 @@
 
 #include "InfallibleVector.h"
 #include "MemorySnapshot.h"
-#include "Monitor.h"
 #include "ParentInternal.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRedirect.h"
@@ -42,7 +41,7 @@ namespace child {
 ///////////////////////////////////////////////////////////////////////////////
 
 // Monitor used for various synchronization tasks.
-static Monitor* gMonitor;
+Monitor* gMonitor;
 
 // The singleton channel for communicating with the middleman.
 Channel* gChannel;
