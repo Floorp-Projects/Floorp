@@ -13,7 +13,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/ScopedXREEmbed.h"
 #include "mozilla/ipc/Shmem.h"
-#include "js/ReplayHooks.h"
 
 namespace mozilla {
 namespace recordreplay {
