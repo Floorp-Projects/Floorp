@@ -150,7 +150,7 @@ this.EventManager.prototype = {
         }
 
         // Blur to document if new position is not explicitly focused.
-        if (!position || !Utils.getState(position).contains(States.FOCUSED)) {
+        if (!Utils.getState(position).contains(States.FOCUSED)) {
           aEvent.accessibleDocument.takeFocus();
         }
 
@@ -163,13 +163,25 @@ this.EventManager.prototype = {
       }
       case Events.STATE_CHANGE:
       {
-        const event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
-        const state = Utils.getState(event);
+        let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
+        let state = Utils.getState(event);
         if (state.contains(States.CHECKED)) {
-          this.present(Presentation.checked(aEvent.accessible));
+          if (aEvent.accessible.role === Roles.SWITCH) {
+            this.present(
+              Presentation.
+                actionInvoked(aEvent.accessible,
+                              event.isEnabled ? "on" : "off"));
+          } else {
+            this.present(
+              Presentation.
+                actionInvoked(aEvent.accessible,
+                              event.isEnabled ? "check" : "uncheck"));
+          }
         } else if (state.contains(States.SELECTED)) {
-          this.present(Presentation.selected(aEvent.accessible,
-                                             event.isEnabled ? "select" : "unselect"));
+          this.present(
+            Presentation.
+              actionInvoked(aEvent.accessible,
+                            event.isEnabled ? "select" : "unselect"));
         }
         break;
       }

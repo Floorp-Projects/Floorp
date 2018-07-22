@@ -408,9 +408,12 @@ var Input = {
     mm.sendAsyncMessage("AccessFu:Clipboard", aDetails);
   },
 
-  activateCurrent: function activateCurrent(aData) {
+  activateCurrent: function activateCurrent(aData, aActivateIfKey = false) {
     let mm = Utils.getMessageManager();
-    mm.sendAsyncMessage("AccessFu:Activate", { offset: 0 });
+    let offset = 0;
+
+    mm.sendAsyncMessage("AccessFu:Activate",
+                        {offset, activateIfKey: aActivateIfKey});
   },
 
   // XXX: This is here for backwards compatability with screen reader simulator
