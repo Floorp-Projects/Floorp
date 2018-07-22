@@ -46,3 +46,19 @@ function promiseContentToChromeMessage(messageType) {
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
+
+// Listen for errors to fail tests
+SpecialPowers.registerConsoleListener(function onConsoleMessage(msg) {
+  if (msg.isWarning || !msg.errorMessage) {
+    // Ignore warnings and non-errors.
+    return;
+  }
+  if (msg.category == "CSP_CSPViolationWithURI" && msg.errorMessage.includes("at inline")) {
+    // Ignore unknown CSP error.
+    return;
+  }
+  ok(false, msg.message || msg.errorMessage);
+});
+SimpleTest.registerCleanupFunction(function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+});
