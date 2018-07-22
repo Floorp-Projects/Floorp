@@ -8,8 +8,13 @@
 #define mozilla_recordreplay_ChildIPC_h
 
 #include "base/process.h"
+#include "mozilla/gfx/2D.h"
+#include "Units.h"
 
 namespace mozilla {
+
+class VsyncObserver;
+
 namespace recordreplay {
 namespace child {
 
@@ -41,6 +46,16 @@ char* PrefsShmemContents(size_t aPrefsLen);
 
 base::ProcessId MiddlemanProcessId();
 base::ProcessId ParentProcessId();
+
+void SetVsyncObserver(VsyncObserver* aObserver);
+void NotifyVsyncObserver();
+
+void NotifyPaint();
+void NotifyPaintStart();
+void NotifyPaintComplete();
+void WaitForPaintToComplete();
+
+already_AddRefed<gfx::DrawTarget> DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize);
 
 // Notify the middleman that the recording was flushed.
 void NotifyFlushedRecording();

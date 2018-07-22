@@ -348,6 +348,106 @@ NotifyAlwaysMarkMajorCheckpoints()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Vsyncs
+///////////////////////////////////////////////////////////////////////////////
+
+static VsyncObserver* gVsyncObserver;
+
+void
+SetVsyncObserver(VsyncObserver* aObserver)
+{
+  MOZ_RELEASE_ASSERT(!gVsyncObserver || !aObserver);
+  gVsyncObserver = aObserver;
+}
+
+void
+NotifyVsyncObserver()
+{
+  if (gVsyncObserver) {
+    gVsyncObserver->NotifyVsync(TimeStamp::Now());
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Painting
+///////////////////////////////////////////////////////////////////////////////
+
+// Graphics memory is only written on the compositor thread and read on the
+// main thread and by the middleman. The gPendingPaint flag is used to
+// synchronize access, so that data is not read until the paint has completed.
+static Maybe<PaintMessage> gPaintMessage;
+static bool gPendingPaint;
+
+// Target buffer for the draw target created by the child process widget.
+static void* gDrawTargetBuffer;
+static size_t gDrawTargetBufferSize;
+
+already_AddRefed<gfx::DrawTarget>
+DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
+{
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+
+  gPaintMessage = Some(PaintMessage(aSize.width, aSize.height));
+
+  gfx::IntSize size(aSize.width, aSize.height);
+  size_t bufferSize = layers::ImageDataSerializer::ComputeRGBBufferSize(size, gSurfaceFormat);
+  MOZ_RELEASE_ASSERT(bufferSize <= parent::GraphicsMemorySize);
+
+  if (bufferSize != gDrawTargetBufferSize) {
+    free(gDrawTargetBuffer);
+    gDrawTargetBuffer = malloc(bufferSize);
+    gDrawTargetBufferSize = bufferSize;
+  }
+
+  size_t stride = layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat, aSize.width);
+  RefPtr<gfx::DrawTarget> drawTarget =
+    gfx::Factory::CreateDrawTargetForData(gfx::BackendType::SKIA, (uint8_t*) gDrawTargetBuffer,
+                                          size, stride, gSurfaceFormat,
+                                          /* aUninitialized = */ true);
+  if (!drawTarget) {
+    MOZ_CRASH();
+  }
+
+  return drawTarget.forget();
+}
+
+void
+NotifyPaintStart()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  NewCheckpoint(/* aTemporary = */ false);
+
+  gPendingPaint = true;
+}
+
+void
+WaitForPaintToComplete()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  MonitorAutoLock lock(*gMonitor);
+  while (gPendingPaint) {
+    gMonitor->Wait();
+  }
+  if (IsActiveChild() && gPaintMessage.isSome()) {
+    memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
+    gChannel->SendMessage(gPaintMessage.ref());
+  }
+}
+
+void
+NotifyPaintComplete()
+{
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+
+  MonitorAutoLock lock(*gMonitor);
+  MOZ_RELEASE_ASSERT(gPendingPaint);
+  gPendingPaint = false;
+  gMonitor->Notify();
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Checkpoint Messages
 ///////////////////////////////////////////////////////////////////////////////
 
