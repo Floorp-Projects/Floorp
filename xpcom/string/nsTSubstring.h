@@ -46,7 +46,6 @@ public:
 
   typedef typename mozilla::detail::nsTStringRepr<T> base_string_type;
   typedef typename base_string_type::substring_type substring_type;
-  typedef typename base_string_type::literalstring_type literalstring_type;
 
   typedef typename base_string_type::fallible_t fallible_t;
 
@@ -188,13 +187,6 @@ public:
   void NS_FASTCALL Assign(self_type&&);
   MOZ_MUST_USE bool NS_FASTCALL Assign(self_type&&, const fallible_t&);
 
-  // XXX(nika): GCC 4.9 doesn't correctly resolve calls to Assign a
-  // nsLiteralCString into a nsTSubstring, due to a frontend bug. This explcit
-  // Assign overload (and the corresponding constructor and operator= overloads)
-  // are used to avoid this bug. Once we stop supporting GCC 4.9 we can remove
-  // them.
-  void NS_FASTCALL Assign(const literalstring_type&);
-
   void NS_FASTCALL Assign(const substring_tuple_type&);
   MOZ_MUST_USE bool NS_FASTCALL Assign(const substring_tuple_type&,
                                        const fallible_t&);
@@ -282,12 +274,6 @@ public:
   self_type& operator=(self_type&& aStr)
   {
     Assign(std::move(aStr));
-    return *this;
-  }
-  // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.
-  self_type& operator=(const literalstring_type& aStr)
-  {
-    Assign(aStr);
     return *this;
   }
   self_type& operator=(const substring_tuple_type& aTuple)
