@@ -186,23 +186,28 @@ ListenForCheckpointThreadMain(void*)
 void* gGraphicsShmem;
 
 void
-InitRecordingOrReplayingProcess(base::ProcessId aParentPid,
-                                int* aArgc, char*** aArgv)
+InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 {
   if (!IsRecordingOrReplaying()) {
     return;
   }
 
-  gMiddlemanPid = aParentPid;
-
+  Maybe<int> middlemanPid;
   Maybe<int> channelID;
   for (int i = 0; i < *aArgc; i++) {
+    if (!strcmp((*aArgv)[i], gMiddlemanPidOption)) {
+      MOZ_RELEASE_ASSERT(middlemanPid.isNothing() && i + 1 < *aArgc);
+      middlemanPid.emplace(atoi((*aArgv)[i + 1]));
+    }
     if (!strcmp((*aArgv)[i], gChannelIDOption)) {
       MOZ_RELEASE_ASSERT(channelID.isNothing() && i + 1 < *aArgc);
       channelID.emplace(atoi((*aArgv)[i + 1]));
     }
   }
+  MOZ_RELEASE_ASSERT(middlemanPid.isSome());
   MOZ_RELEASE_ASSERT(channelID.isSome());
+
+  gMiddlemanPid = middlemanPid.ref();
 
   Maybe<AutoPassThroughThreadEvents> pt;
   pt.emplace();
@@ -332,7 +337,6 @@ ReportFatalError(const char* aFormat, ...)
   DirectPrint(buf);
   DirectPrint("\n");
 
-  DeleteSnapshotFiles();
   UnrecoverableSnapshotFailure();
 
   // Block until we get a terminate message and die.

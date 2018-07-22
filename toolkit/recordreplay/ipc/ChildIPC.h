@@ -33,9 +33,8 @@ namespace child {
 ///////////////////////////////////////////////////////////////////////////////
 
 // Initialize replaying IPC state. This is called once during process startup,
-// and is a no-op if the process is not replaying.
-void InitRecordingOrReplayingProcess(base::ProcessId aParentPid,
-                                     int* aArgc, char*** aArgv);
+// and is a no-op if the process is not recording/replaying.
+void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv);
 
 // Get the contents of the prefs shmem as conveyed to the middleman process.
 char* PrefsShmemContents(size_t aPrefsLen);
