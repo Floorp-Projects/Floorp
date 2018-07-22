@@ -417,7 +417,7 @@ fuzzy-if(webrender&&winWidget,35-35,1-1) == 321402-3.xul 321402-3-ref.xul
 == 321402-5.xul 321402-5-ref.xul
 == 321402-6.xul 321402-6-ref.xul
 == 321738-1.html 321738-1-ref.html
-== 322436-1.html 322436-1-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 322436-1.html 322436-1-ref.html
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
@@ -956,7 +956,7 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 412607-1b.html 412607-1-ref.html
 random-if(Android) == 412679-1.html 412679-1-ref.html
 fuzzy-if(skiaContent,1,17) == 412679-2.html 412679-2-ref.html
-== 413027-1.html 413027-1-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
 == 413286-1a.html 413286-1-ref.html
@@ -1409,7 +1409,7 @@ fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
 random == 508816-1.xul 508816-1-ref.xul # Bug 1375012
-== 508816-2.html 508816-2-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 508816-2.html 508816-2-ref.html
 skip-if(isDebugBuild) == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
@@ -1449,7 +1449,7 @@ fuzzy-if(skiaContent,5,50) == 526463-1.html 526463-1-ref.html
 == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
-== 531098-1.html 531098-1-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 531098-1.html 531098-1-ref.html
 fuzzy-if(Android,2,48) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
 == 534526-1a.html 534526-1-ref.html
@@ -1564,7 +1564,7 @@ random-if(!winWidget) random-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 5
 random-if(!winWidget) fails-if(winWidget&&!dwrite) random-if(winWidget&&dwrite) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-== 579323-1.html 579323-1-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 skip-if(!haveTestPlugin) fails-if(Android) HTTP == 579808-1.html 579808-1-ref.html
