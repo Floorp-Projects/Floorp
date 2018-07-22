@@ -19,6 +19,11 @@ namespace dom {
 class VideoDocument final : public MediaDocument
 {
 public:
+  enum MediaDocumentKind MediaDocumentKind() const override
+  {
+    return MediaDocumentKind::Video;
+  }
+
   virtual nsresult StartDocumentLoad(const char*         aCommand,
                                      nsIChannel*         aChannel,
                                      nsILoadGroup*       aLoadGroup,

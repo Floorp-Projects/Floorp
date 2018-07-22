@@ -147,7 +147,11 @@ private:
   LogModule& operator=(const LogModule&) = delete;
 
   char* mName;
-  Atomic<LogLevel, Relaxed> mLevel;
+
+  // Logging atomics and other state are not preserved by web replay, as they
+  // may be accessed during the GC and other areas where recorded events are
+  // not allowed.
+  Atomic<LogLevel, Relaxed, recordreplay::Behavior::DontPreserve> mLevel;
 };
 
 /**
@@ -176,7 +180,10 @@ public:
 private:
   const char* const mLogName;
   const CorruptionCanaryForStatics mCanary;
-  Atomic<LogModule*, ReleaseAcquire> mLog;
+
+  // As for LogModule::mLevel, don't preserve behavior for this atomic when
+  // recording/replaying.
+  Atomic<LogModule*, ReleaseAcquire, recordreplay::Behavior::DontPreserve> mLog;
 };
 
 namespace detail {

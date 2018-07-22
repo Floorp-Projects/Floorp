@@ -312,7 +312,8 @@ struct Statistics
     /* Number of events of this type for this GC. */
     EnumeratedArray<Stat,
                     STAT_LIMIT,
-                    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire>> counts;
+                    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                                    mozilla::recordreplay::Behavior::DontPreserve>> counts;
 
     /* Allocated space before the GC started. */
     size_t preBytes;

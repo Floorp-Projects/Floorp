@@ -61,7 +61,10 @@ enum class GCKind {
 // threads are operating the same atom, so it has to be signed so that
 // we wouldn't use overflow value for comparison.
 // See nsAtom::AddRef() and nsAtom::Release().
-static Atomic<int32_t, ReleaseAcquire> gUnusedAtomCount(0);
+// This atomic can be accessed during the GC and other places where recorded
+// events are not allowed, so its value is not preserved when recording or
+// replaying.
+static Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve> gUnusedAtomCount(0);
 
 nsDynamicAtom::nsDynamicAtom(const nsAString& aString, uint32_t aHash)
   : nsAtom(AtomKind::DynamicNormal, aString, aHash)

@@ -109,7 +109,10 @@ job-template:
          win.*: aws-provisioner-v1/gecko-{level}-b-win2012
    treeherder:
       symbol: L10n(N)
-      tier: 1
+      tier:
+         by-build-platform:
+            default: 1
+            android-api-16-nightly: 2
       platform:
          by-build-platform:
             linux64-nightly: linux64/opt
