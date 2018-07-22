@@ -23,7 +23,9 @@ namespace recordreplay {
 namespace parent {
 
 void* gGraphicsMemory;
-mach_port_t gGraphicsPort;
+
+static mach_port_t gGraphicsPort;
+static ReceivePort* gGraphicsReceiver;
 
 void
 InitializeGraphicsMemory()
@@ -44,6 +46,26 @@ InitializeGraphicsMemory()
   MOZ_RELEASE_ASSERT(memoryObjectSize == GraphicsMemorySize);
 
   gGraphicsMemory = (void*) address;
+  gGraphicsReceiver = new ReceivePort(nsPrintfCString("WebReplay.%d", getpid()).get());
+}
+
+void
+SendGraphicsMemoryToChild()
+{
+  MachReceiveMessage handshakeMessage;
+  kern_return_t kr = gGraphicsReceiver->WaitForMessage(&handshakeMessage, 0);
+  MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
+
+  MOZ_RELEASE_ASSERT(handshakeMessage.GetMessageID() == GraphicsHandshakeMessageId);
+  mach_port_t childPort = handshakeMessage.GetTranslatedPort(0);
+  MOZ_RELEASE_ASSERT(childPort != MACH_PORT_NULL);
+
+  MachSendMessage message(GraphicsMemoryMessageId);
+  message.AddDescriptor(MachMsgPortDescriptor(gGraphicsPort, MACH_MSG_TYPE_COPY_SEND));
+
+  MachPortSender sender(childPort);
+  kr = sender.SendMessage(message, 1000);
+  MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
 }
 
 } // namespace parent

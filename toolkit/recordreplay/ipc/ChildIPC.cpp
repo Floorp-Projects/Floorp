@@ -22,6 +22,7 @@
 #include "InfallibleVector.h"
 #include "MemorySnapshot.h"
 #include "Monitor.h"
+#include "ParentInternal.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRedirect.h"
 #include "ProcessRewind.h"
@@ -226,28 +227,25 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   pt.emplace();
 
   // Setup a mach port to receive the graphics shmem handle over.
-  char portName[128];
-  SprintfLiteral(portName, "WebReplay.%d.%d", gMiddlemanPid, channelID.ref());
-  ReceivePort receivePort(portName);
+  ReceivePort receivePort(nsPrintfCString("WebReplay.%d.%d", gMiddlemanPid, (int) channelID.ref()).get());
 
-  pt.reset();
+  MachSendMessage handshakeMessage(parent::GraphicsHandshakeMessageId);
+  handshakeMessage.AddDescriptor(MachMsgPortDescriptor(receivePort.GetPort(), MACH_MSG_TYPE_COPY_SEND));
 
-  // We are ready to receive initialization messages from the middleman, pause
-  // so they can be sent.
-  HitCheckpoint(InvalidCheckpointId, /* aRecordingEndpoint = */ false);
-
-  pt.emplace();
-
-  // The parent should have sent us a handle to the graphics shmem.
-  MachReceiveMessage message;
-  kern_return_t kr = receivePort.WaitForMessage(&message, 0);
+  MachPortSender sender(nsPrintfCString("WebReplay.%d", gMiddlemanPid).get());
+  kern_return_t kr = sender.SendMessage(handshakeMessage, 1000);
   MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
-  MOZ_RELEASE_ASSERT(message.GetMessageID() == GraphicsMessageId);
+
+  // The parent should send us a handle to the graphics shmem.
+  MachReceiveMessage message;
+  kr = receivePort.WaitForMessage(&message, 0);
+  MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
+  MOZ_RELEASE_ASSERT(message.GetMessageID() == parent::GraphicsMemoryMessageId);
   mach_port_t graphicsPort = message.GetTranslatedPort(0);
   MOZ_RELEASE_ASSERT(graphicsPort != MACH_PORT_NULL);
 
   mach_vm_address_t address = 0;
-  kr = mach_vm_map(mach_task_self(), &address, GraphicsMemorySize, 0, VM_FLAGS_ANYWHERE,
+  kr = mach_vm_map(mach_task_self(), &address, parent::GraphicsMemorySize, 0, VM_FLAGS_ANYWHERE,
                    graphicsPort, 0, false,
                    VM_PROT_READ | VM_PROT_WRITE, VM_PROT_READ | VM_PROT_WRITE,
                    VM_INHERIT_NONE);
@@ -256,6 +254,10 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   gGraphicsShmem = (void*) address;
 
   pt.reset();
+
+  // We are ready to receive initialization messages from the middleman, pause
+  // so they can be sent.
+  HitCheckpoint(CheckpointId::Invalid, /* aRecordingEndpoint = */ false);
 
   // Process the introduction message to fill in arguments.
   MOZ_RELEASE_ASSERT(!gShmemPrefs);
@@ -392,7 +394,7 @@ HitCheckpoint(size_t aId, bool aRecordingEndpoint)
   double time = CurrentTime();
   PauseMainThreadAndInvokeCallback([=]() {
       double duration = 0;
-      if (aId > FirstCheckpointId) {
+      if (aId > CheckpointId::First) {
         duration = time - gLastCheckpointTime;
         MOZ_RELEASE_ASSERT(duration > 0);
       }
