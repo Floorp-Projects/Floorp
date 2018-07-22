@@ -511,14 +511,6 @@ protected:
   already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, bool aFlushContent);
 
   /**
-   * Get the full URL to submit to.  Do not submit if the returned URL is null.
-   *
-   * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
-   * @param aOriginatingElement the originating element of the form submission [IN]
-   */
-  nsresult GetActionURL(nsIURI** aActionURL, Element* aOriginatingElement);
-
-  /**
    * Check the form validity following this algorithm:
    * http://www.whatwg.org/specs/web-apps/current-work/#statically-validate-the-constraints
    *
@@ -557,6 +549,14 @@ public:
    * returns false or there is an action/target change in the script)
    */
   void FlushPendingSubmission();
+
+  /**
+   * Get the full URL to submit to.  Do not submit if the returned URL is null.
+   *
+   * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
+   * @param aOriginatingElement the originating element of the form submission [IN]
+   */
+  nsresult GetActionURL(nsIURI** aActionURL, Element* aOriginatingElement);
 protected:
 
   //
