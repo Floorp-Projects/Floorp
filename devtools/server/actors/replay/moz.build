@@ -6,5 +6,6 @@
 
 DevToolsModules(
     'debugger.js',
+    'graphics.js',
     'replay.js',
 )
