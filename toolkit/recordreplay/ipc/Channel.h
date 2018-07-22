@@ -208,6 +208,16 @@ struct IntroductionMessage : public Message
 
     return res;
   }
+
+  static IntroductionMessage* RecordReplay(const IntroductionMessage& aMsg) {
+    size_t introductionSize = RecordReplayValue(aMsg.mSize);
+    IntroductionMessage* msg = (IntroductionMessage*) malloc(introductionSize);
+    if (IsRecording()) {
+      memcpy(msg, &aMsg, introductionSize);
+    }
+    RecordReplayBytes(msg, introductionSize);
+    return msg;
+  }
 };
 
 template <MessageType Type>
