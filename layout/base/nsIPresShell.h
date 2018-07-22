@@ -1660,13 +1660,13 @@ public:
   // clears that capture.
   static void ClearMouseCapture(nsIFrame* aFrame);
 
-  void SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight);
-  bool IsScrollPositionClampingScrollPortSizeSet() {
-    return mScrollPositionClampingScrollPortSizeSet;
+  void SetVisualViewportSize(nscoord aWidth, nscoord aHeight);
+  bool IsVisualViewportSizeSet() {
+    return mVisualViewportSizeSet;
   }
-  nsSize GetScrollPositionClampingScrollPortSize() {
-    NS_ASSERTION(mScrollPositionClampingScrollPortSizeSet, "asking for scroll port when its not set?");
-    return mScrollPositionClampingScrollPortSize;
+  nsSize GetVisualViewportSize() {
+    NS_ASSERTION(mVisualViewportSizeSet, "asking for visual viewport size when its not set?");
+    return mVisualViewportSize;
   }
 
   void SetVisualViewportOffset(const nsPoint& aScrollOffset) {
@@ -1753,7 +1753,7 @@ protected:
   // Count of the number of times this presshell has been painted to a window.
   uint64_t                  mPaintCount;
 
-  nsSize                    mScrollPositionClampingScrollPortSize;
+  nsSize                    mVisualViewportSize;
 
   nsPoint                   mVisualViewportOffset;
 
@@ -1813,7 +1813,7 @@ protected:
 
   // Whether the most recent interruptible reflow was actually interrupted:
   bool                      mWasLastReflowInterrupted : 1;
-  bool                      mScrollPositionClampingScrollPortSizeSet : 1;
+  bool                      mVisualViewportSizeSet : 1;
 
   // True if a layout flush might not be a no-op
   bool mNeedLayoutFlush : 1;

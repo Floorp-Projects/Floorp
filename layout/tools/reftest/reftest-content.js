@@ -292,8 +292,8 @@ function setupViewport(contentRootElement) {
     var sw = attrOrDefault(contentRootElement, "reftest-scrollport-w", 0);
     var sh = attrOrDefault(contentRootElement, "reftest-scrollport-h", 0);
     if (sw !== 0 || sh !== 0) {
-        LogInfo("Setting scrollport to <w=" + sw + ", h=" + sh + ">");
-        windowUtils().setScrollPositionClampingScrollPortSize(sw, sh);
+        LogInfo("Setting viewport to <w=" + sw + ", h=" + sh + ">");
+        windowUtils().setVisualViewportSize(sw, sh);
     }
 
     // XXX support resolution when needed

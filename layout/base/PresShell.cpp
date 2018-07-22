@@ -777,7 +777,7 @@ nsIPresShell::nsIPresShell()
     , mIsFirstPaint(false)
     , mObservesMutationsForPrint(false)
     , mWasLastReflowInterrupted(false)
-    , mScrollPositionClampingScrollPortSizeSet(false)
+    , mVisualViewportSizeSet(false)
     , mNeedLayoutFlush(true)
     , mNeedStyleFlush(true)
     , mObservingStyleFlushes(false)
@@ -850,7 +850,7 @@ PresShell::PresShell()
   mFrozen = false;
   mRenderFlags = 0;
 
-  mScrollPositionClampingScrollPortSizeSet = false;
+  mVisualViewportSizeSet = false;
 
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
@@ -3445,7 +3445,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aFrameAsScrollable,
 {
   nsPoint scrollPt = aFrameAsScrollable->GetScrollPosition();
   nsRect visibleRect(scrollPt,
-                     aFrameAsScrollable->GetScrollPositionClampingScrollPortSize());
+                     aFrameAsScrollable->GetVisualViewportSize());
 
   nsSize lineSize;
   // Don't call GetLineScrollAmount unless we actually need it. Not only
@@ -10590,14 +10590,14 @@ nsIPresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty)
 }
 
 void
-nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight)
+nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight)
 {
-  if (!mScrollPositionClampingScrollPortSizeSet ||
-      mScrollPositionClampingScrollPortSize.width != aWidth ||
-      mScrollPositionClampingScrollPortSize.height != aHeight) {
-    mScrollPositionClampingScrollPortSizeSet = true;
-    mScrollPositionClampingScrollPortSize.width = aWidth;
-    mScrollPositionClampingScrollPortSize.height = aHeight;
+  if (!mVisualViewportSizeSet ||
+      mVisualViewportSize.width != aWidth ||
+      mVisualViewportSize.height != aHeight) {
+    mVisualViewportSizeSet = true;
+    mVisualViewportSize.width = aWidth;
+    mVisualViewportSize.height = aHeight;
 
     if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
       rootScrollFrame->MarkScrollbarsDirtyForReflow();

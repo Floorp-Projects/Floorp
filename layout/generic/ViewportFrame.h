@@ -68,7 +68,7 @@ public:
 
   /**
    * Adjust aReflowInput to account for scrollbars and pres shell
-   * GetScrollPositionClampingScrollPortSizeSet and
+   * GetVisualViewportSizeSet and
    * GetContentDocumentFixedPositionMargins adjustments.
    * @return the rect to use as containing block rect
    */
