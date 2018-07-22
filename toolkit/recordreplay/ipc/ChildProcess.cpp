@@ -448,13 +448,12 @@ void
 ChildProcessInfo::LaunchSubprocess()
 {
   size_t channelId = gNumChannels++;
-  MOZ_RELEASE_ASSERT((channelId == Channel::RecordingId) == IsRecording());
 
   // Create a new channel every time we launch a new subprocess, without
   // deleting or tearing down the old one's state. This is pretty lame and it
   // would be nice if we could do something better here, especially because
   // with restarts we could create any number of channels over time.
-  mChannel = new Channel(channelId, [=](Message* aMsg) {
+  mChannel = new Channel(channelId, IsRecording(), [=](Message* aMsg) {
       ReceiveChildMessageOnMainThread(channelId, aMsg);
     });
 

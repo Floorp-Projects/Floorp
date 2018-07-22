@@ -59,7 +59,7 @@ struct HelloMessage
   int32_t mMagic;
 };
 
-Channel::Channel(size_t aId, const MessageHandler& aHandler)
+Channel::Channel(size_t aId, bool aMiddlemanRecording, const MessageHandler& aHandler)
   : mId(aId)
   , mHandler(aHandler)
   , mInitialized(false)
@@ -86,7 +86,7 @@ Channel::Channel(size_t aId, const MessageHandler& aHandler)
     MOZ_RELEASE_ASSERT(IsMiddleman());
 
     ipc::FileDescriptor connection;
-    if (mId == RecordingId) {
+    if (aMiddlemanRecording) {
       // When starting the recording child process we have not done enough
       // initialization to ask for a channel from the parent, but have also not
       // started the sandbox so we can do it ourselves.
