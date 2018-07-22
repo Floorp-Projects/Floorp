@@ -149,10 +149,10 @@ class BrowserToolbar @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         forEach { child ->
             child.layout(
-                    left + paddingLeft,
-                    top + paddingTop,
-                    right - paddingRight,
-                    bottom - paddingBottom)
+                    0 + paddingLeft,
+                    0 + paddingTop,
+                    child.measuredWidth - paddingRight,
+                    child.measuredHeight - paddingBottom)
         }
     }
 

@@ -16,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -217,19 +218,24 @@ class BrowserToolbarTest {
     fun `display and edit toolbar will be laid out at the exact same position`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         val displayToolbar = mock(DisplayToolbar::class.java)
-        val ediToolbar = mock(EditToolbar::class.java)
+        val editToolbar = mock(EditToolbar::class.java)
 
         toolbar.displayToolbar = displayToolbar
-        toolbar.editToolbar = ediToolbar
+        toolbar.editToolbar = editToolbar
 
         toolbar.removeAllViews()
         toolbar.addView(toolbar.displayToolbar)
         toolbar.addView(toolbar.editToolbar)
 
+        `when`(displayToolbar.measuredWidth).thenReturn(1000)
+        `when`(displayToolbar.measuredHeight).thenReturn(200)
+        `when`(editToolbar.measuredWidth).thenReturn(1000)
+        `when`(editToolbar.measuredHeight).thenReturn(200)
+
         toolbar.layout(100, 100, 1100, 300)
 
-        verify(displayToolbar).layout(100, 100, 1100, 300)
-        verify(ediToolbar).layout(100, 100, 1100, 300)
+        verify(displayToolbar).layout(0, 0, 1000, 200)
+        verify(editToolbar).layout(0, 0, 1000, 200)
     }
 
     @Test
