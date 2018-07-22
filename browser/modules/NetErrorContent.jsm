@@ -16,6 +16,11 @@ ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 });
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+});
+XPCOMUtils.defineLazyPreferenceGetter(this, "newErrorPagesEnabled",
+  "browser.security.newcerterrorpage.enabled");
 XPCOMUtils.defineLazyGetter(this, "gNSSErrorsBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/nsserrors.properties");
 });
@@ -32,6 +37,7 @@ const SEC_ERROR_CA_CERT_INVALID                    = SEC_ERROR_BASE + 36;
 const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
 const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
+const SEC_ERROR_OCSP_INVALID_SIGNING_CERT          = SEC_ERROR_BASE + 144;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
@@ -40,6 +46,7 @@ const MOZILLA_PKIX_ERROR_MITM_DETECTED             = MOZILLA_PKIX_ERROR_BASE + 1
 
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
+const SSL_ERROR_BAD_CERT_DOMAIN = SSL_ERROR_BASE + 12;
 const SSL_ERROR_SSL_DISABLED  = SSL_ERROR_BASE + 20;
 const SSL_ERROR_SSL2_DISABLED  = SSL_ERROR_BASE + 14;
 
@@ -113,9 +120,18 @@ var NetErrorContent = {
         // We only want to measure MitM rates for now. Treat it as unkown issuer.
         case MOZILLA_PKIX_ERROR_MITM_DETECTED:
         case SEC_ERROR_UNKNOWN_ISSUER:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") + "\n";
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer3") + "\n";
+          let brandName = gBrandBundle.GetStringFromName("brandShortName");
+          if (newErrorPagesEnabled) {
+            msg1 = "";
+            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer4", [hostString], 1);
+            msg1 += "\n\n";
+            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer5", [brandName, hostString], 2);
+            msg1 += "\n\n";
+          } else {
+            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
+            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") + "\n";
+            msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer3") + "\n";
+          }
           break;
         case SEC_ERROR_CA_CERT_INVALID:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_CaInvalid") + "\n";
@@ -145,8 +161,14 @@ var NetErrorContent = {
       let msgPrefix = "";
       if (numSubjectAltNames != 0) {
         if (numSubjectAltNames == 1) {
-          msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
-
+          if (newErrorPagesEnabled) {
+            technicalInfo.textContent = "";
+            let brandName = gBrandBundle.GetStringFromName("brandShortName");
+            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2);
+            msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
+          } else {
+            msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
+          }
           // Let's check if we want to make this a link.
           let okHost = input.data.certSubjectAltNames;
           let href = "";
@@ -212,7 +234,14 @@ var NetErrorContent = {
           }
           technicalInfo.append("\n");
         } else {
-          let msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
+          let msg = "";
+          if (newErrorPagesEnabled) {
+            technicalInfo.textContent = "";
+            let brandName = gBrandBundle.GetStringFromName("brandShortName");
+            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple1", [brandName, hostString], 2) + " ";
+          } else {
+            msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
+          }
           for (let i = 0; i < numSubjectAltNames; i++) {
             msg += subjectAltNames[i];
             if (i != (numSubjectAltNames - 1)) {
@@ -222,8 +251,15 @@ var NetErrorContent = {
           technicalInfo.append(msg + "\n");
         }
       } else {
-        let msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
+        let msg = "";
+        if (newErrorPagesEnabled) {
+          technicalInfo.textContent = "";
+          let brandName = gBrandBundle.GetStringFromName("brandShortName");
+          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch1", [brandName, hostString], 2) + " ";
+        } else {
+          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
                                                      [hostString], 1);
+        }
         technicalInfo.append(msg + "\n");
       }
     }
@@ -235,16 +271,42 @@ var NetErrorContent = {
       let msg = "";
       if (input.data.validity.notBefore) {
         if (nowTime > input.data.validity.notAfter) {
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                    [input.data.validity.notAfterLocalTime, now], 2) + "\n";
+          if (newErrorPagesEnabled) {
+            technicalInfo.textContent = "";
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow1",
+                                                    [hostString], 1);
+            msg += "\n";
+          } else {
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
+                                                      [input.data.validity.notAfterLocalTime, now], 2);
+            msg += "\n";
+          }
         } else {
-          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow",
-                                                    [input.data.validity.notBeforeLocalTime, now], 2) + "\n";
-        }
-      } else {
+          // eslint-disable-next-line no-lonely-if
+          if (newErrorPagesEnabled) {
+            technicalInfo.textContent = "";
+            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow1",
+                                                      [hostString], 1);
+            msg += "\n";
+          } else {
+            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow",
+                                                      [input.data.validity.notBeforeLocalTime, now], 2);
+            msg += "\n";
+          }
+         }
+        } else {
         // If something goes wrong, we assume the cert expired.
-        msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                  ["", now], 2) + "\n";
+        // eslint-disable-next-line no-lonely-if
+          if (newErrorPagesEnabled) {
+            technicalInfo.textContent = "";
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow1",
+                                                      [hostString], 1);
+            msg += "\n";
+          } else {
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
+                                                      ["", now], 2);
+            msg += "\n";
+          }
       }
       technicalInfo.append(msg);
     }
@@ -272,14 +334,39 @@ var NetErrorContent = {
   onCertErrorDetails(global, msg, docShell) {
     let doc = docShell.document;
 
+  function updateContainerPosition() {
+    let textContainer = doc.getElementById("text-container");
+    textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
+  }
+
     let div = doc.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
     this._setTechDetails(msg, doc);
     let learnMoreLink = doc.getElementById("learnMoreLink");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    let errWhatToDo = doc.getElementById("es_nssBadCert_" + msg.data.codeString);
+    let es = doc.getElementById("errorWhatToDoText");
+    let errWhatToDoTitle = doc.getElementById("edd_nssBadCert");
+    let est = doc.getElementById("errorWhatToDoTitleText");
 
     switch (msg.data.code) {
+      case SSL_ERROR_BAD_CERT_DOMAIN:
+      case SEC_ERROR_OCSP_INVALID_SIGNING_CERT:
       case SEC_ERROR_UNKNOWN_ISSUER:
+        if (!newErrorPagesEnabled) {
+          break;
+        }
+        if (es) {
+          // eslint-disable-next-line no-unsanitized/property
+          es.innerHTML = errWhatToDo.innerHTML;
+        }
+        if (est) {
+          // eslint-disable-next-line no-unsanitized/property
+          est.innerHTML = errWhatToDoTitle.innerHTML;
+        }
+        updateContainerPosition();
+        break;
+
       case MOZILLA_PKIX_ERROR_MITM_DETECTED:
       case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
         learnMoreLink.href = baseURL + "security-error";
@@ -295,6 +382,28 @@ var NetErrorContent = {
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
+        learnMoreLink.href = baseURL + "time-errors";
+        if (newErrorPagesEnabled) {
+          let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
+          let systemDate = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
+          doc.getElementById("wrongSystemTime_systemDate").textContent = systemDate;
+          let errDesc = doc.getElementById("ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
+          let sd = doc.getElementById("errorShortDescText2");
+          if (sd) {
+            // eslint-disable-next-line no-unsanitized/property
+            sd.innerHTML = errDesc.innerHTML;
+          }
+          if (es) {
+            // eslint-disable-next-line no-unsanitized/property
+            es.innerHTML = errWhatToDo.innerHTML;
+          }
+          if (est) {
+            // eslint-disable-next-line no-unsanitized/property
+            est.innerHTML = errWhatToDoTitle.innerHTML;
+          }
+          updateContainerPosition();
+        break;
+        }
         // We check against the remote-settings server time first if available, because that allows us
         // to give the user an approximation of what the correct time is.
         let difference = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, 0);
@@ -352,7 +461,6 @@ var NetErrorContent = {
             doc.getElementById("wrongSystemTimeWithoutReferencePanel").style.display = "block";
           }
         }
-        learnMoreLink.href = baseURL + "time-errors";
         break;
     }
   },

@@ -75,7 +75,7 @@
 
 .popup-notification-button[disabled] {
   background-color: var(--arrowpanel-dimmed-further);
-  color: graytext;
+  color: var(--panel-disabled-color);
 }
 
 .popup-notification-button[default]:not([alone]) {
