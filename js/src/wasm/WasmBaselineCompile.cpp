@@ -5882,10 +5882,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool storeCommon(MemoryAccessDesc* access, ValType resultType);
     MOZ_MUST_USE bool emitSelect();
 
-    // Mark these templates as inline to work around a compiler crash in
-    // gcc 4.8.5 when compiling for linux64-opt.
-
-    template<bool isSetLocal> MOZ_MUST_USE inline bool emitSetOrTeeLocal(uint32_t slot);
+    template<bool isSetLocal> MOZ_MUST_USE bool emitSetOrTeeLocal(uint32_t slot);
 
     void endBlock(ExprType type);
     void endLoop(ExprType type);
