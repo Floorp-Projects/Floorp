@@ -363,6 +363,8 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
 
+  recordreplay::Initialize(aArgc, aArgv);
+
 #ifdef MOZ_ASAN_REPORTER
   // In ASan reporter builds, we need to set ASan's log_path as early as
   // possible, so it dumps its errors into files there instead of using
