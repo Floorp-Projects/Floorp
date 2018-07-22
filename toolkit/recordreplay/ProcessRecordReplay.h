@@ -194,6 +194,30 @@ VectorAddOrRemoveEntry(Vector& aVector, const Entry& aEntry, bool aAdding)
   aVector.append(aEntry);
 }
 
+bool SpewEnabled();
+void InternalPrint(const char* aFormat, va_list aArgs);
+
+#define MOZ_MakeRecordReplayPrinter(aName, aSpewing)            \
+  static inline void                                            \
+  aName(const char* aFormat, ...)                               \
+  {                                                             \
+    if ((IsRecordingOrReplaying() || IsMiddleman()) && (!aSpewing || SpewEnabled())) { \
+      va_list ap;                                               \
+      va_start(ap, aFormat);                                    \
+      InternalPrint(aFormat, ap);                               \
+      va_end(ap);                                               \
+    }                                                           \
+  }
+
+// Print information about record/replay state. Printing is independent from
+// the recording and will be printed by any recording, replaying, or middleman
+// process. Spew is only printed when enabled via the RECORD_REPLAY_SPEW
+// environment variable.
+MOZ_MakeRecordReplayPrinter(Print, false)
+MOZ_MakeRecordReplayPrinter(PrintSpew, true)
+
+#undef MOZ_MakeRecordReplayPrinter
+
 ///////////////////////////////////////////////////////////////////////////////
 // Profiling
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,26 +249,95 @@ private:
 
 void DumpTimers();
 
-// Different kinds of untracked memory used in the system.
-namespace UntrackedMemoryKind {
-  // Note: 0 is TrackedMemoryKind, 1 is DebuggerAllocatedMemoryKind.
-  static const AllocatedMemoryKind Generic = 2;
+///////////////////////////////////////////////////////////////////////////////
+// Memory Management
+///////////////////////////////////////////////////////////////////////////////
 
-  // Memory used by untracked files.
-  static const AllocatedMemoryKind File = 3;
+// In cases where memory is tracked and should be saved/restored with
+// checkoints, malloc and other standard library functions suffice to allocate
+// memory in the record/replay system. The routines below are used for handling
+// redirections for the raw system calls underlying the standard libraries, and
+// for cases where allocated memory should be untracked: the contents are
+// ignored when saving/restoring checkpoints.
+
+// Different kinds of memory used in the system.
+enum class MemoryKind {
+  // Memory whose contents are saved/restored with checkpoints.
+  Tracked,
+
+  // All remaining memory kinds refer to untracked memory.
+
+  // Memory not fitting into one of the categories below.
+  Generic,
 
   // Memory used for thread snapshots.
-  static const AllocatedMemoryKind ThreadSnapshot = 4;
+  ThreadSnapshot,
 
   // Memory used by various parts of the memory snapshot system.
-  static const AllocatedMemoryKind TrackedRegions = 5;
-  static const AllocatedMemoryKind FreeRegions = 6;
-  static const AllocatedMemoryKind DirtyPageSet = 7;
-  static const AllocatedMemoryKind SortedDirtyPageSet = 8;
-  static const AllocatedMemoryKind PageCopy = 9;
+  TrackedRegions,
+  FreeRegions,
+  DirtyPageSet,
+  SortedDirtyPageSet,
+  PageCopy,
 
-  static const size_t Count = 10;
-}
+  // Memory used for navigation state.
+  Navigation,
+
+  Count
+};
+
+// Allocate or deallocate a block of memory of a particular kind. Allocated
+// memory is initially zeroed.
+void* AllocateMemory(size_t aSize, MemoryKind aKind);
+void DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind);
+
+// Allocation policy for managing memory of a particular kind.
+template <MemoryKind Kind>
+class AllocPolicy
+{
+public:
+  template <typename T>
+  T* maybe_pod_calloc(size_t aNumElems) {
+    if (aNumElems & tl::MulOverflowMask<sizeof(T)>::value) {
+      MOZ_CRASH();
+    }
+    // Note: AllocateMemory always returns zeroed memory.
+    return static_cast<T*>(AllocateMemory(aNumElems * sizeof(T), Kind));
+  }
+
+  template <typename T>
+  void free_(T* aPtr, size_t aSize) {
+    DeallocateMemory(aPtr, aSize * sizeof(T), Kind);
+  }
+
+  template <typename T>
+  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
+    T* res = maybe_pod_calloc<T>(aNewSize);
+    memcpy(res, aPtr, aOldSize * sizeof(T));
+    free_<T>(aPtr, aOldSize);
+    return res;
+  }
+
+  template <typename T>
+  T* maybe_pod_malloc(size_t aNumElems) { return maybe_pod_calloc<T>(aNumElems); }
+
+  template <typename T>
+  T* pod_malloc(size_t aNumElems) { return maybe_pod_malloc<T>(aNumElems); }
+
+  template <typename T>
+  T* pod_calloc(size_t aNumElems) { return maybe_pod_calloc<T>(aNumElems); }
+
+  template <typename T>
+  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
+    return maybe_pod_realloc<T>(aPtr, aOldSize, aNewSize);
+  }
+
+  void reportAllocOverflow() const {}
+
+  MOZ_MUST_USE bool checkSimulatedOOM() const {
+    return true;
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Redirection Bypassing
@@ -258,7 +351,7 @@ namespace UntrackedMemoryKind {
 // Generic typedef for a system file handle.
 typedef size_t FileHandle;
 
-// Allocate/deallocate a block of memory.
+// Allocate/deallocate a block of memory directly from the system.
 void* DirectAllocateMemory(void* aAddress, size_t aSize);
 void DirectDeallocateMemory(void* aAddress, size_t aSize);
 
