@@ -572,7 +572,7 @@ nsComponentManagerImpl::RegisterCIDEntryLocked(
     return;
   }
 
-  if (auto entry = mFactories.LookupForAdd(*aEntry->cid)) {
+  if (auto entry = mFactories.LookupForAdd(aEntry->cid)) {
     nsFactoryEntry* f = entry.Data();
     NS_WARNING("Re-registering a CID?");
 
@@ -605,7 +605,7 @@ nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
+  nsFactoryEntry* f = mFactories.Get(aEntry->cid);
   if (!f) {
     NS_WARNING("No CID found when attempting to map contract ID");
 
@@ -699,9 +699,8 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   fl.GetURIString(hash);
 
   MutexLock lock(mLock);
-  auto entry = mFactories.LookupForAdd(cid);
-  if (entry) {
-    nsFactoryEntry* f = entry.Data();
+  nsFactoryEntry* f = mFactories.Get(&cid);
+  if (f) {
     char idstr[NSID_LENGTH];
     cid.ToProvidedString(idstr);
 
@@ -737,7 +736,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   auto* e = new (KnownNotNull, place) mozilla::Module::CIDEntry();
   e->cid = permanentCID;
 
-  entry.OrInsert([e, km] () { return new nsFactoryEntry(e, km); });
+  mFactories.Put(permanentCID, new nsFactoryEntry(e, km));
 }
 
 void
@@ -757,7 +756,7 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& aCx,
   }
 
   MutexLock lock(mLock);
-  nsFactoryEntry* f = mFactories.Get(cid);
+  nsFactoryEntry* f = mFactories.Get(&cid);
   if (!f) {
     lock.Unlock();
     LogMessageWithContext(aCx.mFile, aLineNo,
@@ -924,7 +923,7 @@ nsFactoryEntry*
 nsComponentManagerImpl::GetFactoryEntry(const nsCID& aClass)
 {
   SafeMutexAutoLock lock(mLock);
-  return mFactories.Get(aClass);
+  return mFactories.Get(&aClass);
 }
 
 already_AddRefed<nsIFactory>
@@ -1253,7 +1252,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
   nsCOMPtr<nsISupports> service;
   MutexLock lock(mLock);
 
-  nsFactoryEntry* entry = mFactories.Get(aClass);
+  nsFactoryEntry* entry = mFactories.Get(&aClass);
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
@@ -1369,7 +1368,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
 
   {
     SafeMutexAutoLock lock(mLock);
-    entry = mFactories.Get(aClass);
+    entry = mFactories.Get(&aClass);
   }
 
   if (entry && entry->mServiceObject) {
@@ -1574,7 +1573,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
     }
 
     SafeMutexAutoLock lock(mLock);
-    nsFactoryEntry* oldf = mFactories.Get(aClass);
+    nsFactoryEntry* oldf = mFactories.Get(&aClass);
     if (!oldf) {
       return NS_ERROR_FACTORY_NOT_REGISTERED;
     }
@@ -1586,7 +1585,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
   nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
   SafeMutexAutoLock lock(mLock);
-  if (auto entry = mFactories.LookupForAdd(aClass)) {
+  if (auto entry = mFactories.LookupForAdd(f->mCIDEntry->cid)) {
     return NS_ERROR_FACTORY_EXISTS;
   } else {
     if (aContractID) {
@@ -1609,7 +1608,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
 
   {
     SafeMutexAutoLock lock(mLock);
-    auto entry = mFactories.Lookup(aClass);
+    auto entry = mFactories.Lookup(&aClass);
     nsFactoryEntry* f = entry ? entry.Data() : nullptr;
     if (!f || f->mFactory != aFactory) {
       return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1697,9 +1696,9 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsCOMArray<nsISupports> array;
   for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    const nsID& id = iter.Key();
+    const nsID* id = iter.Key();
     nsCOMPtr<nsISupportsID> wrapper = new nsSupportsID();
-    wrapper->SetData(&id);
+    wrapper->SetData(id);
     array.AppendObject(wrapper);
   }
   return NS_NewArrayEnumerator(aEnumerator, array);
