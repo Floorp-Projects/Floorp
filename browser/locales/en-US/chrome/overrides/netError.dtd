@@ -8,7 +8,9 @@
 <!ENTITY loadError.label "Problem loading page">
 <!ENTITY retry.label "Try Again">
 <!ENTITY returnToPreviousPage.label "Go Back">
+<!ENTITY returnToPreviousPage1.label "Go Back (Recommended)">
 <!ENTITY advanced.label "Advanced">
+<!ENTITY continue.label "Continue">
 
 <!-- Specific error messages -->
 
@@ -146,10 +148,30 @@
 ">
 
 <!ENTITY certerror.longpagetitle1 "Your connection is not secure">
-<!-- Localization note (certerror.introPara) - The text content of the span tag
+<!ENTITY certerror.longpagetitle2 "Warning: Potential Security Risk Ahead">
+<!-- Localization note (certerror.introPara, certerror.introPara1) - The text content of the span tag
 will be replaced at runtime with the name of the server to which the user
 was trying to connect. -->
 <!ENTITY certerror.introPara "The owner of <span class='hostname'/> has configured their website improperly.  To protect your information from being stolen, &brandShortName; has not connected to this website.">
+<!ENTITY certerror.introPara1 "&brandShortName; detected a potential security threat and did not continue to <span class='hostname'/>. If you visit this site, attackers could try to steal information like your passwords, emails, or credit cards.">
+
+<!ENTITY certerror.expiredCert.secondPara "This issue is most likely because your computer clock is set to the wrong time, which would prevent &brandShortName; from connecting securely.">
+
+<!ENTITY certerror.whatCanYouDoAboutItTitle "What can you do about it?">
+
+<!ENTITY certerror.unknownIssuer.whatCanYouDoAboutIt "
+<p>The issue is most likely with the website, and there is nothing you can do to resolve it.</p>
+<p>If you are on a corporate network or using anti-virus software, you can reach out to the support teams for assistance. You can also notify the website’s administrator about the problem.</p>
+">
+
+<!ENTITY certerror.expiredCert.whatCanYouDoAboutIt "
+<p>Your computer clock is set to <span id='wrongSystemTime_systemDate'/>. Make sure your computer is set to the correct date, time, and time zone in your system settings, and then refresh <span class='hostname'/>.</p>
+<p>If your clock is already set to the right time, the website is likely misconfigured, and there is nothing you can do to resolve the issue. You can notify the website’s administrator about the problem.</p>
+">
+
+<!ENTITY certerror.badCertDomain.whatCanYouDoAboutIt "
+<p>The issue is most likely with the website, and there is nothing you can do to resolve it. You can notify the website’s administrator about the problem.</p>
+">
 
 <!ENTITY sharedLongDesc "
 <ul>
@@ -189,10 +211,12 @@ was trying to connect. -->
 <!ENTITY certerror.wrongSystemTimeWithoutReference "<p>&brandShortName; did not connect to <span id='wrongSystemTimeWithoutReference_URL'/> because your computer’s clock appears to show the wrong time and this is preventing a secure connection.</p> <p>Your computer is set to <span id='wrongSystemTimeWithoutReference_systemDate'/>. To fix this problem, change your date and time settings to match the correct time.</p>">
 
 <!ENTITY certerror.pagetitle1  "Insecure Connection">
+<!ENTITY certerror.pagetitle2  "Warning: Potential Security Risk Ahead">
 <!ENTITY certerror.whatShouldIDo.badStsCertExplanation "This site uses HTTP
 Strict Transport Security (HSTS) to specify that &brandShortName; may only connect
 to it securely. As a result, it is not possible to add an exception for this
 certificate.">
+<!ENTITY certerror.whatShouldIDo.badStsCertExplanation1 "<span class='hostname'></span> has a security policy called HTTP Strict Transport Security (HSTS), which means that &brandShortName; can only connect to it securely. You can’t add an exception to visit this site.">
 <!ENTITY certerror.copyToClipboard.label "Copy text to clipboard">
 
 <!ENTITY inadequateSecurityError.title "Your connection is not secure">
