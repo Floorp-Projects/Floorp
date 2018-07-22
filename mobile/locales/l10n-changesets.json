@@ -501,7 +501,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "149fed54427f"
+        "revision": "256e6d344380"
     }, 
     "trs": {
         "platforms": [
@@ -555,7 +555,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "9473195d2de5"
+        "revision": "7f3a4de66c24"
     }, 
     "zh-TW": {
         "platforms": [
