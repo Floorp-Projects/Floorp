@@ -67,6 +67,15 @@ let whitelist = [
    isFromDevTools: true},
 ];
 
+if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {
+  // These are UA sheets which use non-content-exposed `display` values.
+  whitelist.push({
+    sourceName: /(skin\/shared\/Heartbeat|((?:res|gre-resources)\/(ua|html)))\.css$/i,
+    errorMessage: /Error in parsing value for .*\bdisplay\b/i,
+    isFromDevTools: false
+  });
+}
+
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
   whitelist.push({
     sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
