@@ -17,10 +17,12 @@ using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::net;
 
+// Bug 1436018 - Disable Stylo microbenchmark on Windows
+#if !defined(_WIN32) && !defined(_WIN64)
+
 #define PARSING_REPETITIONS 20
 #define SETPROPERTY_REPETITIONS (1000 * 1000)
 #define GETPROPERTY_REPETITIONS (1000 * 1000)
-
 
 static void ServoParsingBench() {
 
@@ -98,8 +100,6 @@ static void ServoGetPropertyValueById() {
   }
 }
 
-// Bug 1436018 - Disable Stylo microbenchmark on Windows
-#if !defined(_WIN32) && !defined(_WIN64)
 MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, ServoParsingBench);
 
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench, [] {
@@ -111,4 +111,5 @@ MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_WithInitialSpace_B
 });
 
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_GetPropertyById_Bench, ServoGetPropertyValueById);
+
 #endif
