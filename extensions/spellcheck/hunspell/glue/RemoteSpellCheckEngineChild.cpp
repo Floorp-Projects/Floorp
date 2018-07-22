@@ -58,7 +58,7 @@ RemoteSpellcheckEngineChild::RecvNotifyOfCurrentDictionary(
   }
   mResponsePromises[aId] = nullptr;
   while (mResponsePromises.Length() && !mResponsePromises.LastElement()) {
-    (void) mResponsePromises.PopLastElement();
+    mResponsePromises.RemoveLastElement();
   }
   return IPC_OK();
 }
