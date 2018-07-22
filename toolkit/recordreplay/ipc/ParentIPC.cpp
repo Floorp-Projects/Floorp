@@ -178,16 +178,9 @@ static ChildProcessInfo* gRecordingChild;
 static ChildProcessInfo* gFirstReplayingChild;
 static ChildProcessInfo* gSecondReplayingChild;
 
-// Whether to delete the recording file when finishing.
-static bool gRecordingFileIsTemporary;
-
 void
 Shutdown()
 {
-  if (gRecordingFileIsTemporary) {
-    DirectDeleteFile(gRecordingFilename);
-  }
-
   delete gRecordingChild;
   delete gFirstReplayingChild;
   delete gSecondReplayingChild;
@@ -699,8 +692,11 @@ SendMessageToUIProcess(const char* aMessage)
   err.SuppressException();
 }
 
+// Handle to the recording file opened at startup.
+static FileHandle gRecordingFd;
+
 static void
-SaveRecordingInternal(char* aFilename)
+SaveRecordingInternal(const ipc::FileDescriptor& aFile)
 {
   MOZ_RELEASE_ASSERT(gRecordingChild);
 
@@ -713,35 +709,31 @@ SaveRecordingInternal(char* aFilename)
   }
 
   // Copy the file's contents to the new file.
-  int readfd = DirectOpenFile(gRecordingFilename, /* aWriting = */ false);
-  int writefd = DirectOpenFile(aFilename, /* aWriting = */ true);
+  DirectSeekFile(gRecordingFd, 0);
+  ipc::FileDescriptor::UniquePlatformHandle writefd = aFile.ClonePlatformHandle();
   char buf[4096];
   while (true) {
-    size_t n = DirectRead(readfd, buf, sizeof(buf));
+    size_t n = DirectRead(gRecordingFd, buf, sizeof(buf));
     if (!n) {
       break;
     }
-    DirectWrite(writefd, buf, n);
+    DirectWrite(writefd.get(), buf, n);
   }
-  DirectCloseFile(readfd);
-  DirectCloseFile(writefd);
 
-  PrintSpew("Copied Recording %s\n", aFilename);
+  PrintSpew("Saved Recording Copy.\n");
   SendMessageToUIProcess("SaveRecordingFinished");
-  free(aFilename);
 }
 
 void
-SaveRecording(const nsCString& aFilename)
+SaveRecording(const ipc::FileDescriptor& aFile)
 {
   MOZ_RELEASE_ASSERT(IsMiddleman());
 
-  char* filename = strdup(aFilename.get());
   if (NS_IsMainThread()) {
-    SaveRecordingInternal(filename);
+    SaveRecordingInternal(aFile);
   } else {
     MainThreadMessageLoop()->PostTask(NewRunnableFunction("SaveRecordingInternal",
-                                                          SaveRecordingInternal, filename));
+                                                          SaveRecordingInternal, aFile));
   }
 }
 
@@ -867,14 +859,6 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
   MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording ||
                      gProcessKind == ProcessKind::MiddlemanReplaying);
 
-  // Use a temporary file for the recording if the filename is unspecified.
-  if (!strcmp(gRecordingFilename, "*")) {
-    MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording);
-    free(gRecordingFilename);
-    gRecordingFilename = mktemp(strdup("/tmp/RecordingXXXXXX"));
-    gRecordingFileIsTemporary = true;
-  }
-
   InitDebuggerHooks();
   InitializeGraphicsMemory();
 
@@ -887,6 +871,10 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
   }
 
   InitializeForwarding();
+
+  // Open a file handle to the recording file we can use for saving recordings
+  // later on.
+  gRecordingFd = DirectOpenFile(gRecordingFilename, false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -16,10 +16,8 @@ namespace recordreplay {
 namespace child {
 
 void
-InitRecordingOrReplayingProcess(base::ProcessId aParentPid,
-				int* aArgc, char*** aArgv)
+InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 {
-  MOZ_CRASH();
 }
 
 char*
@@ -128,7 +126,7 @@ SaveAllRecordingsDirectory()
 }
 
 void
-SaveRecording(const nsCString& aFilename)
+SaveRecording(const ipc::FileDescriptor& aFile)
 {
   MOZ_CRASH();
 }
@@ -147,6 +145,20 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
 
 void
 NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen)
+{
+  MOZ_CRASH();
+}
+
+void
+OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId, ipc::FileDescriptor* aConnection)
+{
+  MOZ_CRASH();
+}
+
+void
+GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
+                            const char* aRecordingFile, bool aRecording,
+                            std::vector<std::string>& aExtraArgs)
 {
   MOZ_CRASH();
 }

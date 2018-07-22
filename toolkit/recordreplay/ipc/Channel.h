@@ -401,6 +401,10 @@ public:
   // called on the channel's message thread.
   typedef std::function<void(Message*)> MessageHandler;
 
+  // The recording channel is opened at startup and is initialized differently
+  // from other channels.
+  static const size_t RecordingId = 0;
+
 private:
   // ID for this channel, unique for the middleman.
   size_t mId;
@@ -447,6 +451,9 @@ public:
   // the main thread, except for fatal error messages.
   void SendMessage(const Message& aMsg);
 };
+
+// Command line option used to specify the middleman pid for a child process.
+static const char* gMiddlemanPidOption = "-middlemanPid";
 
 // Command line option used to specify the channel ID for a child process.
 static const char* gChannelIDOption = "-recordReplayChannelID";
