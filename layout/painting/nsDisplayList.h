@@ -1465,12 +1465,11 @@ public:
       if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
           aBuilder->IsPaintingToWindow()) {
         // position: fixed items are reflowed into and only drawn inside the
-        // viewport, or the scroll position clamping scrollport size, if one is
-        // set.
+        // viewport, or the visual viewport size, if one is set.
         nsIPresShell* ps = aFrame->PresShell();
-        if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
+        if (ps->IsVisualViewportSizeSet()) {
           dirtyRectRelativeToDirtyFrame =
-            nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
+            nsRect(nsPoint(0, 0), ps->GetVisualViewportSize());
           visible = dirtyRectRelativeToDirtyFrame;
 #ifdef MOZ_WIDGET_ANDROID
         } else {
