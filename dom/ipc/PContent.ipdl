@@ -726,6 +726,9 @@ child:
      */
     async PClientOpenWindowOp(ClientOpenWindowArgs aArgs);
 
+    /* Save the execution up to the current point in a recording process. */
+    async SaveRecording(FileDescriptor file);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -736,6 +739,11 @@ parent:
         returns (ContentParentId cpId, bool isForBrowser);
     sync BridgeToChildProcess(ContentParentId cpId)
         returns (Endpoint<PContentBridgeParent> endpoint);
+
+    sync OpenRecordReplayChannel(uint32_t channelId)
+        returns (FileDescriptor connection);
+    async CreateReplayingProcess(uint32_t channelId);
+    async TerminateReplayingProcess(uint32_t channelId);
 
     async CreateGMPService();
 
