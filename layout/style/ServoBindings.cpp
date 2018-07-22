@@ -2754,7 +2754,7 @@ Gecko_UnregisterProfilerThread()
 bool
 Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed aPresContext,
                                       const nsACString* aPattern,
-                                      css::URLMatchingFunction aURLMatchingFunction)
+                                      css::DocumentMatchingFunction aMatchingFunction)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2768,7 +2768,7 @@ Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed aPresContext,
   }
 
   return CSSMozDocumentRule::Match(doc, docURI, docURISpec, *aPattern,
-                                   aURLMatchingFunction);
+                                   aMatchingFunction);
 }
 
 void

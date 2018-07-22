@@ -121,6 +121,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.css += [
+    'DocumentMatchingFunction.h',
     'ErrorReporter.h',
     'GroupRule.h',
     'ImageLoader.h',
@@ -129,7 +130,6 @@ EXPORTS.mozilla.css += [
     'SheetLoadData.h',
     'SheetParsingMode.h',
     'StreamLoader.h',
-    'URLMatchingFunction.h',
 ]
 
 UNIFIED_SOURCES += [

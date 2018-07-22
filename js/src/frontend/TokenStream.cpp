@@ -45,6 +45,7 @@ using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
+using mozilla::PointerRangeSize;
 using mozilla::Utf8Unit;
 
 struct ReservedWordInfo
@@ -442,15 +443,12 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
 
 template<>
 MOZ_MUST_USE bool
-TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
-                                                                         const char16_t* end)
+TokenStreamCharsBase<char16_t>::fillCharBufferFromSourceNormalizingAsciiLineBreaks(const char16_t* cur,
+                                                                                   const char16_t* end)
 {
     MOZ_ASSERT(this->charBuffer.length() == 0);
 
     while (cur < end) {
-        // Template literals normalize only '\r' and "\r\n" to '\n'.  The
-        // Unicode separators need no special handling here.
-        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
         char16_t ch = *cur++;
         if (ch == '\r') {
             ch = '\n';
@@ -585,7 +583,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
 
             *codePoint = '\n';
         } else {
-            MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+            MOZ_ASSERT(!IsLineTerminator(AssertedCast<char32_t>(*codePoint)));
         }
 
         return true;
@@ -595,13 +593,13 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
     if (MOZ_UNLIKELY(this->sourceUnits.atEnd() ||
                      !unicode::IsTrailSurrogate(this->sourceUnits.peekCodeUnit())))
     {
-        MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+        MOZ_ASSERT(!IsLineTerminator(AssertedCast<char32_t>(*codePoint)));
         return true;
     }
 
     // Otherwise we have a multi-unit code point.
     *codePoint = unicode::UTF16Decode(lead, this->sourceUnits.getCodeUnit());
-    MOZ_ASSERT(!SourceUnits::isRawEOLChar(*codePoint));
+    MOZ_ASSERT(!IsLineTerminator(AssertedCast<char32_t>(*codePoint)));
     return true;
 }
 
@@ -621,27 +619,115 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
         ungetCodeUnit(units[numUnits]);
 }
 
-template<typename CharT>
+template<>
 size_t
-SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
+SourceUnits<char16_t>::findWindowStart(size_t offset)
 {
-    const CharT* p = codeUnitPtrAt(start);
+    // This is JS's understanding of UTF-16 that allows lone surrogates, so
+    // we have to exclude lone surrogates from [windowStart, offset) ourselves.
 
-    size_t n = 0;
+    const char16_t* const earliestPossibleStart = codeUnitPtrAt(startOffset_);
+
+    const char16_t* const initial = codeUnitPtrAt(offset);
+    const char16_t* p = initial;
+
+    auto HalfWindowSize = [&p, &initial]() { return PointerRangeSize(p, initial); };
+
     while (true) {
-        if (p >= limit_)
+        MOZ_ASSERT(earliestPossibleStart <= p);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p <= earliestPossibleStart || HalfWindowSize() >= WindowRadius)
             break;
-        if (n >= max)
-            break;
-        n++;
+
+        char16_t c = p[-1];
 
         // This stops at U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR in
         // string and template literals.  These code points do affect line and
         // column coordinates, even as they encode their literal values.
-        if (isRawEOLChar(*p++))
+        if (IsLineTerminator(c))
             break;
+
+        // Don't allow invalid UTF-16 in pre-context.  (Current users don't
+        // require this, and this behavior isn't currently imposed on
+        // pre-context, but these facts might change someday.)
+
+        if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c)))
+            break;
+
+        // Optimistically include the code unit, reverting below if needed.
+        p--;
+
+        // If it's not a surrogate at all, keep going.
+        if (MOZ_LIKELY(!unicode::IsTrailSurrogate(c)))
+            continue;
+
+        // Stop if we don't have a usable surrogate pair.
+        if (HalfWindowSize() >= WindowRadius ||
+            p <= earliestPossibleStart || // trail surrogate at low end
+            !unicode::IsLeadSurrogate(p[-1])) // no paired lead surrogate
+        {
+            p++;
+            break;
+        }
+
+        p--;
     }
-    return start + n;
+
+    MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+    return offset - HalfWindowSize();
+}
+
+template<>
+size_t
+SourceUnits<char16_t>::findWindowEnd(size_t offset)
+{
+    const char16_t* const initial = codeUnitPtrAt(offset);
+    const char16_t* p = initial;
+
+    auto HalfWindowSize = [&initial, &p]() { return PointerRangeSize(initial, p); };
+
+    while (true) {
+        MOZ_ASSERT(p <= limit_);
+        MOZ_ASSERT(HalfWindowSize() <= WindowRadius);
+        if (p >= limit_ || HalfWindowSize() >= WindowRadius)
+            break;
+
+        char16_t c = *p;
+
+        // This stops at U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR in
+        // string and template literals.  These code points do affect line and
+        // column coordinates, even as they encode their literal values.
+        if (IsLineTerminator(c))
+            break;
+
+        // Don't allow invalid UTF-16 in post-context.  (Current users don't
+        // require this, and this behavior isn't currently imposed on
+        // pre-context, but these facts might change someday.)
+
+        if (MOZ_UNLIKELY(unicode::IsTrailSurrogate(c)))
+            break;
+
+        // Optimistically consume the code unit, ungetting it below if needed.
+        p++;
+
+        // If it's not a surrogate at all, keep going.
+        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
+            continue;
+
+        // Retract if the lead surrogate would stand alone at the end of the
+        // window.
+        if (HalfWindowSize() >= WindowRadius || // split pair
+            p >= limit_ || // half-pair at end of source
+            !unicode::IsTrailSurrogate(*p)) // no paired trail surrogate
+        {
+            p--;
+            break;
+        }
+
+        p++;
+    }
+
+    return offset + HalfWindowSize();
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -790,6 +876,61 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::currentLineAndColumn(uint32_t* line,
     anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
+template<>
+bool
+TokenStreamCharsBase<Utf8Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
+{
+    // The specialization below is 100% usable if tweaked to be a definition
+    // for any CharT, but it demands SourceUnits::findWindow{Start,End} and
+    // TokenStreamCharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks
+    // for UTF-8 that haven't been defined yet.  Use a placeholder definition
+    // til those are place.
+    return true;
+}
+
+template<>
+bool
+TokenStreamCharsBase<char16_t>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
+{
+    using CharT = char16_t;
+    size_t windowStart = sourceUnits.findWindowStart(offset);
+    size_t windowEnd = sourceUnits.findWindowEnd(offset);
+
+    size_t windowLength = windowEnd - windowStart;
+    MOZ_ASSERT(windowLength <= SourceUnits::WindowRadius * 2);
+
+    // Don't add a useless "line" of context when the window ends up empty
+    // because of an invalid encoding at the start of a line.
+    if (windowLength == 0) {
+        MOZ_ASSERT(err->lineOfContext == nullptr,
+                   "ErrorMetadata::lineOfContext must be null so we don't "
+                   "have to set the lineLength/tokenOffset fields");
+        return true;
+    }
+
+    // We might have hit an error while processing some source code feature
+    // that's accumulating text into |this->charBuffer| -- e.g. we could be
+    // halfway into a regular expression literal, then encounter invalid UTF-8.
+    // Thus we must clear |this->charBuffer| of prior work.
+    this->charBuffer.clear();
+
+    const CharT* start = sourceUnits.codeUnitPtrAt(windowStart);
+    if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(start, start + windowLength))
+        return false;
+
+    // The windowed string is null-terminated.
+    if (!this->charBuffer.append('\0'))
+        return false;
+
+    err->lineOfContext.reset(this->charBuffer.extractOrCopyRawBuffer());
+    if (!err->lineOfContext)
+        return false;
+
+    err->lineLength = windowLength;
+    err->tokenOffset = offset - windowStart;
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::computeErrorMetadata(ErrorMetadata* err,
@@ -808,64 +949,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeErrorMetadata(ErrorMetadata* 
         return true;
 
     // Add a line of context from this TokenStream to help with debugging.
-    return computeLineOfContext(err, offset);
+    return internalComputeLineOfContext(err, offset);
 }
-
-template<typename CharT, class AnyCharsAccess>
-bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* err,
-                                                                 uint32_t offset)
-{
-    // This function presumes |err| is filled in *except* for line-of-context
-    // fields.  It exists to make |TokenStreamSpecific::computeErrorMetadata|,
-    // above, more readable.
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    // We only have line-start information for the current line.  If the error
-    // is on a different line, we can't easily provide context.  (This means
-    // any error in a multi-line token, e.g. an unterminated multiline string
-    // literal, won't have context.)
-    if (err->lineNumber != anyChars.lineno)
-        return true;
-
-    constexpr size_t windowRadius = ErrorMetadata::lineOfContextRadius;
-
-    // The window must start within the current line, no earlier than
-    // |windowRadius| characters before |offset|.
-    MOZ_ASSERT(offset >= anyChars.linebase);
-    size_t windowStart = (offset - anyChars.linebase > windowRadius) ?
-                         offset - windowRadius :
-                         anyChars.linebase;
-
-    // The window must start within the portion of the current line that we
-    // actually have in our buffer.
-    if (windowStart < this->sourceUnits.startOffset())
-        windowStart = this->sourceUnits.startOffset();
-
-    // The window must end within the current line, no later than
-    // windowRadius after offset.
-    size_t windowEnd = this->sourceUnits.findEOLMax(offset, windowRadius);
-    size_t windowLength = windowEnd - windowStart;
-    MOZ_ASSERT(windowLength <= windowRadius * 2);
-
-    // Create the windowed string, not including the potential line
-    // terminator.
-    StringBuffer windowBuf(anyChars.cx);
-    if (!windowBuf.append(codeUnitPtrAt(windowStart), windowLength) ||
-        !windowBuf.append('\0'))
-    {
-        return false;
-    }
-
-    err->lineOfContext.reset(windowBuf.stealChars());
-    if (!err->lineOfContext)
-        return false;
-
-    err->lineLength = windowLength;
-    err->tokenOffset = offset - windowStart;
-    return true;
-}
-
 
 template<typename CharT, class AnyCharsAccess>
 bool
@@ -1516,7 +1601,7 @@ SpecializedTokenStreamCharsBase<char16_t>::infallibleConsumeRestOfSingleLineComm
 {
     while (MOZ_LIKELY(!this->sourceUnits.atEnd())) {
         char16_t unit = this->sourceUnits.peekCodeUnit();
-        if (SourceUnits::isRawEOLChar(unit))
+        if (IsLineTerminator(unit))
             return;
 
         this->sourceUnits.consumeKnownCodeUnit(unit);
@@ -1692,17 +1777,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
             break;
         }
 
+        // NOTE: Non-ASCII LineTerminators were handled by
+        //       ProcessNonAsciiCodePoint calls above.
         if (unit == '\r' || unit == '\n') {
             ReportUnterminatedRegExp(unit);
             return badToken();
         }
 
-        // We're accumulating regular expression *source* text here: source
-        // text matching a line break will appear as U+005C REVERSE SOLIDUS
-        // U+006E LATIN SMALL LETTER N, and |unit| here would be the latter
-        // code point.
-        MOZ_ASSERT(!SourceUnits::isRawEOLChar(unit));
-
+        MOZ_ASSERT(!IsLineTerminator(AssertedCast<char32_t>(unit)));
         if (!this->charBuffer.append(unit))
             return badToken();
     } while (true);

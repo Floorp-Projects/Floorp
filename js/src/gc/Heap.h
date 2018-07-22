@@ -820,7 +820,9 @@ class HeapUsage
      * level for GC usage. It is atomic because it is updated by both the active
      * and GC helper threads.
      */
-    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes_;
+    mozilla::Atomic<size_t,
+                    mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> gcBytes_;
 
   public:
     explicit HeapUsage(HeapUsage* parent)

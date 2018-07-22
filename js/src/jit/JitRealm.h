@@ -154,7 +154,9 @@ class JitRuntime
     // Number of Ion compilations which were finished off thread and are
     // waiting to be lazily linked. This is only set while holding the helper
     // thread state lock, but may be read from at other times.
-    mozilla::Atomic<size_t> numFinishedBuilders_;
+    typedef mozilla::Atomic<size_t, mozilla::SequentiallyConsistent,
+                            mozilla::recordreplay::Behavior::DontPreserve> NumFinishedBuildersType;
+    NumFinishedBuildersType numFinishedBuilders_;
 
     // List of Ion compilation waiting to get linked.
     using IonBuilderList = mozilla::LinkedList<js::jit::IonBuilder>;
@@ -315,7 +317,7 @@ class JitRuntime
     size_t numFinishedBuilders() const {
         return numFinishedBuilders_;
     }
-    mozilla::Atomic<size_t>& numFinishedBuildersRef(const AutoLockHelperThreadState& locked) {
+    NumFinishedBuildersType& numFinishedBuildersRef(const AutoLockHelperThreadState& locked) {
         return numFinishedBuilders_;
     }
 

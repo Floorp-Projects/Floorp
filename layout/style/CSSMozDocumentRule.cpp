@@ -25,45 +25,52 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
                           nsIURI* aDocURI,
                           const nsACString& aDocURISpec,
                           const nsACString& aPattern,
-                          URLMatchingFunction aUrlMatchingFunction)
+                          DocumentMatchingFunction aMatchingFunction)
 {
-  switch (aUrlMatchingFunction) {
-    case URLMatchingFunction::eURL: {
-      if (aDocURISpec == aPattern) {
-        return true;
+  switch (aMatchingFunction) {
+    case DocumentMatchingFunction::MediaDocument: {
+      auto kind = aDoc->MediaDocumentKind();
+      if (aPattern.EqualsLiteral("all")) {
+        return kind != nsIDocument::MediaDocumentKind::NotMedia;
       }
-    } break;
-    case URLMatchingFunction::eURLPrefix: {
-      if (StringBeginsWith(aDocURISpec, aPattern)) {
-        return true;
+      MOZ_ASSERT(aPattern.EqualsLiteral("plugin") ||
+                 aPattern.EqualsLiteral("image") ||
+                 aPattern.EqualsLiteral("video"));
+      switch (kind) {
+        case nsIDocument::MediaDocumentKind::NotMedia:
+          return false;
+        case nsIDocument::MediaDocumentKind::Plugin:
+          return aPattern.EqualsLiteral("plugin");
+        case nsIDocument::MediaDocumentKind::Image:
+          return aPattern.EqualsLiteral("image");
+        case nsIDocument::MediaDocumentKind::Video:
+          return aPattern.EqualsLiteral("video");
       }
-    } break;
-    case URLMatchingFunction::eDomain: {
+      MOZ_ASSERT_UNREACHABLE("Unknown media document kind");
+      return false;
+    }
+    case DocumentMatchingFunction::URL:
+      return aDocURISpec == aPattern;
+    case DocumentMatchingFunction::URLPrefix:
+      return StringBeginsWith(aDocURISpec, aPattern);
+    case DocumentMatchingFunction::Domain: {
       nsAutoCString host;
       if (aDocURI) {
         aDocURI->GetHost(host);
       }
       int32_t lenDiff = host.Length() - aPattern.Length();
       if (lenDiff == 0) {
-        if (host == aPattern) {
-          return true;
-        }
-      } else {
-        if (StringEndsWith(host, aPattern) &&
-            host.CharAt(lenDiff - 1) == '.') {
-          return true;
-        }
+        return host == aPattern;
       }
-    } break;
-    case URLMatchingFunction::eRegExp: {
+      return StringEndsWith(host, aPattern) && host.CharAt(lenDiff - 1) == '.';
+    }
+    case DocumentMatchingFunction::RegExp: {
       NS_ConvertUTF8toUTF16 spec(aDocURISpec);
       NS_ConvertUTF8toUTF16 regex(aPattern);
-      if (nsContentUtils::IsPatternMatching(spec, regex, aDoc)) {
-        return true;
-      }
-    } break;
+      return nsContentUtils::IsPatternMatching(spec, regex, aDoc);
+    }
   }
-
+  MOZ_ASSERT_UNREACHABLE("Unknown matching function");
   return false;
 }
 

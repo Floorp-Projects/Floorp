@@ -33,7 +33,9 @@ enum ChaosFeature {
 };
 
 namespace detail {
-extern MFBT_DATA Atomic<uint32_t> gChaosModeCounter;
+extern MFBT_DATA Atomic<uint32_t,
+                        SequentiallyConsistent,
+                        recordreplay::Behavior::DontPreserve> gChaosModeCounter;
 extern MFBT_DATA ChaosFeature gChaosFeatures;
 } // namespace detail
 

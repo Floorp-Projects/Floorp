@@ -949,6 +949,26 @@ CodeUnitValue(mozilla::Utf8Unit unit)
 template<typename CharT>
 class TokenStreamCharsBase;
 
+template<typename T>
+inline bool
+IsLineTerminator(T) = delete;
+
+inline bool
+IsLineTerminator(char32_t codePoint)
+{
+    return codePoint == '\n' ||
+           codePoint == '\r' ||
+           codePoint == unicode::LINE_SEPARATOR ||
+           codePoint == unicode::PARA_SEPARATOR;
+}
+
+inline bool
+IsLineTerminator(char16_t unit)
+{
+    // Every LineTerminator fits in char16_t, so this is exact.
+    return IsLineTerminator(static_cast<char32_t>(unit));
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -1132,16 +1152,33 @@ class SourceUnits
 #endif
     }
 
-    static bool isRawEOLChar(int32_t c) {
-        return c == '\n' ||
-               c == '\r' ||
-               c == unicode::LINE_SEPARATOR ||
-               c == unicode::PARA_SEPARATOR;
-    }
+    /**
+     * The maximum radius of code around the location of an error that should
+     * be included in a syntax error message -- this many code units to either
+     * side.  The resulting window of data is then accordinngly trimmed so that
+     * the window contains only validly-encoded data.
+     *
+     * Because this number is the same for both UTF-8 and UTF-16, windows in
+     * UTF-8 may contain fewer code points than windows in UTF-16.  As we only
+     * use this for error messages, we don't particularly care.
+     */
+    static constexpr size_t WindowRadius = ErrorMetadata::lineOfContextRadius;
 
-    // Returns the offset of the next EOL, but stops once 'max' characters
-    // have been scanned (*including* the char at startOffset_).
-    size_t findEOLMax(size_t start, size_t max);
+    /**
+     * From absolute offset |offset|, search backward to find an absolute
+     * offset within source text, no further than |WindowRadius| code units
+     * away from |offset|, such that all code points from that offset to
+     * |offset| are valid, non-LineTerminator code points.
+     */
+    size_t findWindowStart(size_t offset);
+
+    /**
+     * From absolute offset |offset|, find an absolute offset within source
+     * text, no further than |WindowRadius| code units away from |offset|, such
+     * that all code units from |offset| to that offset are valid,
+     * non-LineTerminator code points.
+     */
+    size_t findWindowEnd(size_t offset);
 
   private:
     /** Base of buffer. */
@@ -1290,12 +1327,27 @@ class TokenStreamCharsBase
     template<typename T> inline void consumeKnownCodeUnit(T) = delete;
 
     /**
-     * Accumulate the provided range of already-validated (i.e. valid UTF-8, or
-     * anything if CharT is char16_t because JS permits lone and mispaired
-     * surrogates) raw template literal text (i.e. containing no escapes or
-     * substitutions) into |charBuffer|.
+     * Accumulate the provided range of already-validated text (valid UTF-8, or
+     * anything if CharT is char16_t because JS allows lone surrogates) into
+     * |charBuffer|.  Normalize '\r', '\n', and "\r\n" into '\n'.
      */
-    MOZ_MUST_USE bool fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
+    MOZ_MUST_USE bool
+    fillCharBufferFromSourceNormalizingAsciiLineBreaks(const CharT* cur, const CharT* end);
+
+    /**
+     * Add a null-terminated line of context to error information, for the line
+     * in |sourceUnits| that contains |offset|.  Also record the window's
+     * length and the offset of the error in the window.  (Don't bother adding
+     * a line of context if it would be empty.)
+     *
+     * The window will contain no LineTerminators of any kind, and it will not
+     * extend more than |SourceUnits::WindowRadius| to either side of |offset|,
+     * nor into the previous or next lines.
+     *
+     * This function is quite internal, and you probably should be calling one
+     * of its existing callers instead.
+     */
+    MOZ_MUST_USE bool addLineOfContext(ErrorMetadata* err, uint32_t offset);
 
   protected:
     /** Code units in the source code being tokenized. */
@@ -1434,6 +1486,7 @@ class GeneralTokenStreamChars
     using CharsBase = TokenStreamCharsBase<CharT>;
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<CharT>;
 
+  private:
     Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
 
     /**
@@ -1460,8 +1513,13 @@ class GeneralTokenStreamChars
     uint32_t matchExtendedUnicodeEscape(uint32_t* codePoint);
 
   protected:
+    using CharsBase::addLineOfContext;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
-    using CharsBase::fillCharBufferWithTemplateStringContents;
+    using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
+    using TokenStreamCharsShared::isAsciiCodePoint;
+    using CharsBase::matchLineTerminator;
+    // Deliberately don't |using CharsBase::sourceUnits| because of bug 1472569.  :-(
+    using CharsBase::toCharT;
 
     using typename CharsBase::SourceUnits;
 
@@ -1548,12 +1606,65 @@ class GeneralTokenStreamChars
         CharsBase::ungetCodeUnit(c);
     }
 
+    /**
+     * Given a just-consumed ASCII code unit/point |lead|, consume a full code
+     * point or LineTerminatorSequence (normalizing it to '\n') and store it in
+     * |*codePoint|.  Return true on success, otherwise return false and leave
+     * |*codePoint| undefined on failure.
+     *
+     * If a LineTerminatorSequence was consumed, also update line/column info.
+     *
+     * This may change the current |sourceUnits| offset.
+     */
+    MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
+        MOZ_ASSERT(isAsciiCodePoint(lead),
+                   "non-ASCII code units must be handled separately");
+        MOZ_ASSERT(toCharT(lead) == this->sourceUnits.previousCodeUnit(),
+                   "getFullAsciiCodePoint called incorrectly");
+
+        if (MOZ_UNLIKELY(lead == '\r')) {
+            matchLineTerminator('\n');
+        } else if (MOZ_LIKELY(lead != '\n')) {
+            *codePoint = lead;
+            return true;
+        }
+
+        *codePoint = '\n';
+        bool ok = updateLineInfoForEOL();
+        if (!ok) {
+#ifdef DEBUG
+            *codePoint = EOF; // sentinel value to hopefully cause errors
+#endif
+            MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
+        }
+        return ok;
+    }
+
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
         return anyCharsAccess().internalUpdateLineInfoForEOL(this->sourceUnits.offset());
     }
 
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
+
+    /**
+     * If possible, compute a line of context for an otherwise-filled-in |err|
+     * at the given offset in this token stream.
+     *
+     * This function is very-internal: almost certainly you should use one of
+     * its callers instead.  It basically exists only to make those callers
+     * more readable.
+     */
+    MOZ_MUST_USE bool internalComputeLineOfContext(ErrorMetadata* err, uint32_t offset) {
+        // We only have line-start information for the current line.  If the error
+        // is on a different line, we can't easily provide context.  (This means
+        // any error in a multi-line token, e.g. an unterminated multiline string
+        // literal, won't have context.)
+        if (err->lineNumber != anyCharsAccess().lineno)
+            return true;
+
+        return addLineOfContext(err, offset);
+    }
 
   public:
     JSAtom* getRawTemplateStringAtom() {
@@ -1571,7 +1682,10 @@ class GeneralTokenStreamChars
             end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
         }
 
-        if (!fillCharBufferWithTemplateStringContents(cur, end))
+        // Template literals normalize only '\r' and "\r\n" to '\n'; Unicode
+        // separators don't need special handling.
+        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
+        if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(cur, end))
             return nullptr;
 
         return drainCharBufferIntoAtom(anyChars.cx);
@@ -1584,7 +1698,6 @@ template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public GeneralTokenStreamChars<char16_t, AnyCharsAccess>
 {
-  private:
     using CharsBase = TokenStreamCharsBase<char16_t>;
     using SpecializedCharsBase = SpecializedTokenStreamCharsBase<char16_t>;
     using GeneralCharsBase = GeneralTokenStreamChars<char16_t, AnyCharsAccess>;
@@ -1629,41 +1742,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      * on failure.
      */
     MOZ_MUST_USE bool getCodePoint(int32_t* cp);
-
-    /**
-     * Given a just-consumed ASCII code unit/point |lead|, consume a full code
-     * point or LineTerminatorSequence (normalizing it to '\n') and store it in
-     * |*codePoint|.  Return true on success, otherwise return false and leave
-     * |*codePoint| undefined on failure.
-     *
-     * If a LineTerminatorSequence was consumed, also update line/column info.
-     *
-     * This may change the current |sourceUnits| offset.
-     */
-    MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
-        MOZ_ASSERT(isAsciiCodePoint(lead),
-                   "non-ASCII code units must be handled separately");
-        // NOTE: |this->|-qualify to avoid a gcc bug: see bug 1472569.
-        MOZ_ASSERT(lead == this->sourceUnits.previousCodeUnit(),
-                   "getFullAsciiCodePoint called incorrectly");
-
-        if (MOZ_UNLIKELY(lead == '\r')) {
-            matchLineTerminator('\n');
-        } else if (MOZ_LIKELY(lead != '\n')) {
-            *codePoint = lead;
-            return true;
-        }
-
-        *codePoint = '\n';
-        bool ok = updateLineInfoForEOL();
-        if (!ok) {
-#ifdef DEBUG
-            *codePoint = EOF; // sentinel value to hopefully cause errors
-#endif
-            MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
-        }
-        return ok;
-    }
 
     /**
      * Given a just-consumed non-ASCII code unit |lead| (which may also be a
@@ -1718,6 +1796,22 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         infallibleConsumeRestOfSingleLineComment();
         return true;
     }
+};
+
+template<class AnyCharsAccess>
+class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
+  : public GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
+{
+    using CharsBase = TokenStreamCharsBase<mozilla::Utf8Unit>;
+    using SpecializedCharsBase = SpecializedTokenStreamCharsBase<mozilla::Utf8Unit>;
+    using GeneralCharsBase = GeneralTokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
+    using Self = TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>;
+
+  protected:
+    // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
+
+  protected:
+    using GeneralCharsBase::GeneralCharsBase;
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
@@ -1801,12 +1895,13 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using SpecializedChars::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
-    using CharsBase::fillCharBufferWithTemplateStringContents;
+    using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
     using SpecializedChars::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
-    using SpecializedChars::getFullAsciiCodePoint;
+    using GeneralCharsBase::getFullAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePoint;
     using SpecializedChars::getNonAsciiCodePointDontNormalize;
+    using GeneralCharsBase::internalComputeLineOfContext;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchCodeUnit;
     using CharsBase::matchLineTerminator;
@@ -1886,12 +1981,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     // Warn at the current offset.
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
-
-  private:
-    // Compute a line of context for an otherwise-filled-in |err| at the given
-    // offset in this token stream.  (This function basically exists to make
-    // |computeErrorMetadata| more readable and shouldn't be called elsewhere.)
-    MOZ_MUST_USE bool computeLineOfContext(ErrorMetadata* err, uint32_t offset);
 
   public:
     // Compute error metadata for an error at the given offset.

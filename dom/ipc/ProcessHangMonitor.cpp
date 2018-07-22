@@ -128,7 +128,10 @@ class HangMonitorChild
  private:
   void ShutdownOnThread();
 
-  static Atomic<HangMonitorChild*> sInstance;
+  // Ordering of this atomic is not preserved while recording/replaying, as it
+  // may be accessed during the JS interrupt callback.
+  static Atomic<HangMonitorChild*, SequentiallyConsistent,
+                recordreplay::Behavior::DontPreserve> sInstance;
   UniquePtr<BackgroundHangMonitor> mPaintWhileInterruptingJSMonitor;
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
@@ -157,7 +160,8 @@ class HangMonitorChild
   Atomic<bool> mBHRMonitorActive;
 };
 
-Atomic<HangMonitorChild*> HangMonitorChild::sInstance;
+Atomic<HangMonitorChild*, SequentiallyConsistent,
+       recordreplay::Behavior::DontPreserve> HangMonitorChild::sInstance;
 
 /* Parent process objects */
 
@@ -296,7 +300,9 @@ bool HangMonitorParent::sShouldPaintWhileInterruptingJS = true;
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
  : mHangMonitor(aMonitor),
-   mMonitor("HangMonitorChild lock"),
+   // Ordering of this atomic is not preserved while recording/replaying, as it
+   // may be accessed during the JS interrupt callback.
+   mMonitor("HangMonitorChild lock", recordreplay::Behavior::DontPreserve),
    mSentReport(false),
    mTerminateScript(false),
    mTerminateGlobal(false),

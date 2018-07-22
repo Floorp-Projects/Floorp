@@ -1304,10 +1304,6 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
   // Add element to the backup element queue.
   MOZ_ASSERT(mReactionsStack.IsEmpty(),
              "custom element reactions stack should be empty");
-  MOZ_ASSERT(!aReaction->IsUpgradeReaction() ||
-             nsContentUtils::IsChromeDoc(aElement->OwnerDoc()),
-             "Upgrade reaction should not be scheduled to backup queue "
-             "except when Custom Element is used inside XBL (in chrome).");
   mBackupQueue.AppendElement(aElement);
   elementData->mReactionQueue.AppendElement(aReaction);
 
@@ -1365,9 +1361,6 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
       auto reaction(std::move(reactions.ElementAt(j)));
       if (reaction) {
         if (!aGlobal && reaction->IsUpgradeReaction()) {
-          // This is for the special case when custom element is included
-          // inside XBL.
-          MOZ_ASSERT(nsContentUtils::IsChromeDoc(element->OwnerDoc()));
           nsIGlobalObject* global = element->GetOwnerGlobal();
           MOZ_ASSERT(!aes);
           aes.emplace(global, "custom elements reaction invocation");
