@@ -521,7 +521,7 @@ SVGUseElement*
 nsINode::DoGetContainingSVGUseShadowHost() const
 {
   MOZ_ASSERT(IsInShadowTree());
-  return SVGUseElement::FromNode(AsContent()->GetContainingShadowHost());
+  return SVGUseElement::FromNodeOrNull(AsContent()->GetContainingShadowHost());
 }
 
 void
