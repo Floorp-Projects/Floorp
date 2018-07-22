@@ -149,6 +149,7 @@ namespace recordreplay {
   MACRO(mach_vm_protect)                        \
   MACRO(sandbox_free_error)                     \
   MACRO(sandbox_init)                           \
+  MACRO(sandbox_init_with_parameters)           \
   MACRO(vm_copy)                                \
   MACRO(vm_purgable_control)                    \
   /* NSPR functions */                          \
@@ -176,6 +177,7 @@ namespace recordreplay {
   MACRO(CFBundleGetDataPointerForName)          \
   MACRO(CFBundleGetFunctionPointerForName)      \
   MACRO(CFBundleGetIdentifier)                  \
+  MACRO(CFBundleGetInfoDictionary)              \
   MACRO(CFBundleGetMainBundle)                  \
   MACRO(CFBundleGetValueForInfoDictionaryKey)   \
   MACRO(CFDataGetBytePtr)                       \
@@ -228,8 +230,11 @@ namespace recordreplay {
   MACRO(CFStringCreateWithFormat)               \
   MACRO(CFStringGetBytes)                       \
   MACRO(CFStringGetCharacters)                  \
+  MACRO(CFStringGetCString)                     \
+  MACRO(CFStringGetCStringPtr)                  \
   MACRO(CFStringGetIntValue)                    \
   MACRO(CFStringGetLength)                      \
+  MACRO(CFStringGetMaximumSizeForEncoding)      \
   MACRO(CFStringHasPrefix)                      \
   MACRO(CFStringTokenizerAdvanceToNextToken)    \
   MACRO(CFStringTokenizerCreate)                \
@@ -1341,18 +1346,24 @@ RRFunctionNegError3(fseek)
 RRFunctionNegError1(ftell)
 RRFunction4(fwrite)
 
+static void
+RecordReplayCString(Stream& aEvents, char** aString)
+{
+  size_t len = (IsRecording() && *aString) ? strlen(*aString) + 1 : 0;
+  aEvents.RecordOrReplayValue(&len);
+  if (IsReplaying()) {
+    *aString = len ? NewLeakyArray<char>(len) : nullptr;
+  }
+  if (len) {
+    aEvents.RecordOrReplayBytes(*aString, len);
+  }
+}
+
 static char*
 RR_getenv(char* aName)
 {
   RecordReplayFunction(getenv, char*, aName);
-  size_t len = (IsRecording() && rval) ? strlen(rval) + 1 : 0;
-  events.RecordOrReplayValue(&len);
-  if (IsReplaying()) {
-    rval = len ? NewLeakyArray<char>(len) : nullptr;
-  }
-  if (len) {
-    events.RecordOrReplayBytes(rval, len);
-  }
+  RecordReplayCString(events, &rval);
   return rval;
 }
 
@@ -1402,14 +1413,7 @@ static char*
 RR_setlocale(int aCategory, const char* aLocale)
 {
   RecordReplayFunction(setlocale, char*, aCategory, aLocale);
-  size_t len = (IsRecording() && rval) ? strlen(rval) + 1 : 0;
-  events.RecordOrReplayValue(&len);
-  if (len) {
-    if (IsReplaying()) {
-      rval = NewLeakyArray<char>(len);
-    }
-    events.RecordOrReplayBytes(rval, len);
-  }
+  RecordReplayCString(events, &rval);
   return rval;
 }
 
@@ -1478,15 +1482,23 @@ RR_sandbox_free_error(char* aBuf)
 static ssize_t
 RR_sandbox_init(const char* aProfile, uint64_t aFlags, char** aErrorBuf)
 {
-  RecordReplayFunction(sandbox_init, int, aProfile, aFlags, aErrorBuf);
-  events.RecordOrReplayValue(&rval);
-  size_t len = (IsRecording() && *aErrorBuf) ? strlen(*aErrorBuf) + 1 : 0;
-  events.RecordOrReplayValue(&len);
-  if (len) {
-    *aErrorBuf = new char[len];
-    events.RecordOrReplayBytes(*aErrorBuf, len);
-  }
-  return rval;
+  // By passing through events when initializing the sandbox, we ensure both
+  // that we actually initialize the process sandbox while replaying as well as
+  // while recording, and that any activity in here does not interfere with the
+  // replay.
+  AutoEnsurePassThroughThreadEvents pt;
+  return OriginalCall(sandbox_init, ssize_t,
+                      aProfile, aFlags, aErrorBuf);
+}
+
+static ssize_t
+RR_sandbox_init_with_parameters(const char* aProfile, uint64_t aFlags,
+                                const char *const aParameters[], char** aErrorBuf)
+{
+  // As for sandbox_init, call this function even while replaying.
+  AutoEnsurePassThroughThreadEvents pt;
+  return OriginalCall(sandbox_init_with_parameters, ssize_t,
+                      aProfile, aFlags, aParameters, aErrorBuf);
 }
 
 static kern_return_t
@@ -1871,6 +1883,7 @@ RR_CFBundleGetFunctionPointerForName(CFBundleRef aBundle, CFStringRef aFunctionN
 
 RRFunction1(CFBundleGetIdentifier)
 RRFunction2(CFBundleGetValueForInfoDictionaryKey)
+RRFunction1(CFBundleGetInfoDictionary)
 RRFunction0(CFBundleGetMainBundle)
 
 static const UInt8*
@@ -2052,7 +2065,30 @@ RR_CFStringGetCharacters(CFStringRef aString, CFRange aRange, UniChar* aBuffer)
 }
 
 RRFunction1(CFStringGetIntValue)
+
+static Boolean
+RR_CFStringGetCString(CFStringRef aString, char* aBuffer, CFIndex aBufferSize,
+                      CFStringEncoding aEncoding)
+{
+  RecordReplayFunction(CFStringGetCString, Boolean,
+                       aString, aBuffer, aBufferSize, aEncoding);
+  events.CheckInput(aBufferSize);
+  events.RecordOrReplayValue(&rval);
+  events.RecordOrReplayBytes(aBuffer, aBufferSize);
+  return rval;
+}
+
+static const char*
+RR_CFStringGetCStringPtr(CFStringRef aString, CFStringEncoding aEncoding)
+{
+  if (AreThreadEventsPassedThrough()) {
+    return OriginalCall(CFStringGetCStringPtr, const char*, aString, aEncoding);
+  }
+  return nullptr;
+}
+
 RRFunction1(CFStringGetLength)
+RRFunction2(CFStringGetMaximumSizeForEncoding)
 RRFunction2(CFStringHasPrefix)
 RRFunction1(CFStringTokenizerAdvanceToNextToken)
 RRFunction5(CFStringTokenizerCreate)
