@@ -123,12 +123,16 @@ public:
   virtual void OnIncomingMessage(const Message& aMsg) = 0;
 };
 
+// Handle to the underlying recording process, if there is one. Recording
+// processes are directly spawned by the middleman at startup, since they need
+// to receive all the same IPC which the middleman receives from the UI process
+// in order to initialize themselves. Replaying processes are all spawned by
+// the UI process itself, due to sandboxing restrictions.
+extern ipc::GeckoChildProcessHost* gRecordingProcess;
+
 // Information about a recording or replaying child process.
 class ChildProcessInfo
 {
-  // Handle for the process.
-  ipc::GeckoChildProcessHost* mProcess;
-
   // Channel for communicating with the process.
   Channel* mChannel;
 
@@ -202,8 +206,6 @@ class ChildProcessInfo
   // Whether we need this child to pause while the recording is updated.
   bool mPauseNeeded;
 
-  static void Terminate(ipc::GeckoChildProcessHost* aProcess);
-
   void OnIncomingMessage(size_t aChannelId, const Message& aMsg);
   void OnIncomingRecoveryMessage(const Message& aMsg);
   void SendNextRecoveryMessage();
@@ -226,14 +228,12 @@ class ChildProcessInfo
   bool CanRestart();
   void AttemptRestart(const char* aWhy);
   void LaunchSubprocess();
-  void TerminateSubprocess();
 
 public:
   ChildProcessInfo(UniquePtr<ChildRole> aRole, bool aRecording);
   ~ChildProcessInfo();
 
   ChildRole* Role() { return mRole.get(); }
-  ipc::GeckoChildProcessHost* Process() { return mProcess; }
   size_t GetId() { return mChannel->GetId(); }
   bool IsRecording() { return mRecording; }
   size_t LastCheckpoint() { return mLastCheckpoint; }
