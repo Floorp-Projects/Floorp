@@ -7,7 +7,7 @@
 // This file has the logic which the replayed process uses to communicate with
 // the middleman process.
 
-#include "ChildIPC.h"
+#include "ChildInternal.h"
 
 #include "base/message_loop.h"
 #include "base/task.h"
@@ -79,8 +79,13 @@ ChannelMessageHandler(Message* aMsg)
   }
   case MessageType::CreateCheckpoint: {
     MOZ_RELEASE_ASSERT(IsRecording());
-    uint8_t data = 0;
-    DirectWrite(gCheckpointWriteFd, &data, 1);
+
+    // Ignore requests to create checkpoints before we have reached the first
+    // paint and finished initializing.
+    if (navigation::IsInitialized()) {
+      uint8_t data = 0;
+      DirectWrite(gCheckpointWriteFd, &data, 1);
+    }
     break;
   }
   case MessageType::Terminate: {
@@ -109,38 +114,29 @@ ChannelMessageHandler(Message* aMsg)
   }
   case MessageType::DebuggerRequest: {
     const DebuggerRequestMessage& nmsg = (const DebuggerRequestMessage&) *aMsg;
-    JS::replay::CharBuffer* buf = js_new<JS::replay::CharBuffer>();
-    if (!buf->append(nmsg.Buffer(), nmsg.BufferSize())) {
-      MOZ_CRASH();
-    }
-    PauseMainThreadAndInvokeCallback([=]() { JS::replay::hooks.debugRequestReplay(buf); });
+    js::CharBuffer* buf = new js::CharBuffer();
+    buf->append(nmsg.Buffer(), nmsg.BufferSize());
+    PauseMainThreadAndInvokeCallback([=]() { navigation::DebuggerRequest(buf); });
     break;
   }
   case MessageType::SetBreakpoint: {
     const SetBreakpointMessage& nmsg = (const SetBreakpointMessage&) *aMsg;
     PauseMainThreadAndInvokeCallback([=]() {
-        JS::replay::hooks.setBreakpointReplay(nmsg.mId, nmsg.mPosition);
+        navigation::SetBreakpoint(nmsg.mId, nmsg.mPosition);
       });
     break;
   }
   case MessageType::Resume: {
     const ResumeMessage& nmsg = (const ResumeMessage&) *aMsg;
     PauseMainThreadAndInvokeCallback([=]() {
-        // Inform the debugger about the request to resume execution. The hooks
-        // will not have been set yet for the primordial resume, in which case
-        // just continue executing forward.
-        if (JS::replay::hooks.resumeReplay) {
-          JS::replay::hooks.resumeReplay(nmsg.mForward);
-        } else {
-          ResumeExecution();
-        }
+        navigation::Resume(nmsg.mForward);
       });
     break;
   }
   case MessageType::RestoreCheckpoint: {
     const RestoreCheckpointMessage& nmsg = (const RestoreCheckpointMessage&) *aMsg;
     PauseMainThreadAndInvokeCallback([=]() {
-        JS::replay::hooks.restoreCheckpointReplay(nmsg.mCheckpoint);
+        navigation::RestoreCheckpoint(nmsg.mCheckpoint);
       });
     break;
   }
@@ -157,11 +153,6 @@ PrefsShmemContents(size_t aPrefsLen)
   MOZ_RELEASE_ASSERT(aPrefsLen == gShmemPrefsLen);
   return gShmemPrefs;
 }
-
-// Initialize hooks used by the replay debugger.
-static void InitDebuggerHooks();
-
-static void HitCheckpoint(size_t aId, bool aRecordingEndpoint);
 
 // Main routine for a thread whose sole purpose is to listen to requests from
 // the middleman process to create a new checkpoint. This is separate from the
@@ -221,8 +212,6 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   DirectCreatePipe(&gCheckpointWriteFd, &gCheckpointReadFd);
 
   Thread::StartThread(ListenForCheckpointThreadMain, nullptr, false);
-
-  InitDebuggerHooks();
 
   pt.emplace();
 
@@ -387,7 +376,7 @@ EndIdleTime()
   gIdleTimeStart = 0;
 }
 
-static void
+void
 HitCheckpoint(size_t aId, bool aRecordingEndpoint)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -407,8 +396,8 @@ HitCheckpoint(size_t aId, bool aRecordingEndpoint)
 // Debugger Messages
 ///////////////////////////////////////////////////////////////////////////////
 
-static void
-DebuggerResponseHook(const JS::replay::CharBuffer& aBuffer)
+void
+RespondToRequest(const js::CharBuffer& aBuffer)
 {
   DebuggerResponseMessage* msg =
     DebuggerResponseMessage::New(aBuffer.begin(), aBuffer.length());
@@ -416,7 +405,7 @@ DebuggerResponseHook(const JS::replay::CharBuffer& aBuffer)
   free(msg);
 }
 
-static void
+void
 HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNumBreakpoints)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -426,27 +415,6 @@ HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNum
       gChannel->SendMessage(*msg);
       free(msg);
     });
-}
-
-static void
-PauseAfterRecoveringFromDivergence()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  PauseMainThreadAndInvokeCallback([=]() {
-      JS::replay::hooks.respondAfterRecoveringFromDivergence();
-    });
-}
-
-static void
-InitDebuggerHooks()
-{
-  // Initialize hooks the JS debugger in a recording/replaying process can invoke.
-  JS::replay::hooks.hitBreakpointReplay = HitBreakpoint;
-  JS::replay::hooks.hitCheckpointReplay = HitCheckpoint;
-  JS::replay::hooks.debugResponseReplay = DebuggerResponseHook;
-  JS::replay::hooks.pauseAndRespondAfterRecoveringFromDivergence = PauseAfterRecoveringFromDivergence;
-  JS::replay::hooks.hitCurrentRecordingEndpointReplay = HitRecordingEndpoint;
-  JS::replay::hooks.canRewindReplay = HasSavedCheckpoint;
 }
 
 } // namespace child
