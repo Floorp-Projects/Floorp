@@ -115,7 +115,8 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
   }
 
   // Muted content
-  if (aElement.Volume() == 0.0 || aElement.Muted()) {
+  if ((aElement.Volume() == 0.0 || aElement.Muted()) &&
+      Preferences::GetBool("media.autoplay.allow-muted", true)) {
     return nsIAutoplay::ALLOWED;
   }
 
