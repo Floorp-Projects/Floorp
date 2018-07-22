@@ -178,13 +178,6 @@ HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::action || aName == nsGkAtoms::target) {
-      if (mPendingSubmission) {
-        // aha, there is a pending submission that means we're in
-        // the script and we need to flush it. let's tell it
-        // that the event was ignored to force the flush.
-        // the second argument is not playing a role at all.
-        FlushPendingSubmission();
-      }
       // Don't forget we've notified the password manager already if the
       // page sets the action/target in the during submit. (bug 343182)
       bool notifiedObservers = mNotifiedObservers;
@@ -678,15 +671,8 @@ nsresult
 HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
 {
   nsresult rv;
-  Element* originatingElement = aFormSubmission->GetOriginatingElement();
 
-  //
-  // Get the action and target
-  //
-  nsCOMPtr<nsIURI> actionURI;
-  rv = GetActionURL(getter_AddRefs(actionURI), originatingElement);
-  NS_ENSURE_SUBMIT_SUCCESS(rv);
-
+  nsCOMPtr<nsIURI> actionURI = aFormSubmission->GetActionURL();
   if (!actionURI) {
     mIsSubmitting = false;
     return NS_OK;
@@ -716,21 +702,6 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
   if (NS_SUCCEEDED(actionURI->SchemeIs("javascript", &schemeIsJavaScript)) &&
       schemeIsJavaScript) {
     mIsSubmitting = false;
-  }
-
-  // The target is the originating element formtarget attribute if the element
-  // is a submit control and has such an attribute.
-  // Otherwise, the target is the form owner's target attribute,
-  // if it has such an attribute.
-  // Finally, if one of the child nodes of the head element is a base element
-  // with a target attribute, then the value of the target attribute of the
-  // first such base element; or, if there is no such element, the empty string.
-  nsAutoString target;
-  if (!(originatingElement && originatingElement->GetAttr(kNameSpaceID_None,
-                                                          nsGkAtoms::formtarget,
-                                                          target)) &&
-      !GetAttr(kNameSpaceID_None, nsGkAtoms::target, target)) {
-    GetBaseTarget(target);
   }
 
   //
@@ -776,6 +747,8 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
                                                actionURI);
     NS_ENSURE_SUBMIT_SUCCESS(rv);
 
+    nsAutoString target;
+    aFormSubmission->GetTarget(target);
     rv = linkHandler->OnLinkClickSync(this, actionURI,
                                       target.get(),
                                       VoidString(),

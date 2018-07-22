@@ -23,6 +23,7 @@ namespace dom {
 
 class Blob;
 class Directory;
+class HTMLFormElement;
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
@@ -40,7 +41,7 @@ public:
    * @param aFormSubmission the form submission object (out param)
    */
   static nsresult
-  GetFromForm(nsGenericHTMLElement* aForm,
+  GetFromForm(HTMLFormElement* aForm,
               nsGenericHTMLElement* aOriginatingElement,
               HTMLFormSubmission** aFormSubmission);
 
@@ -100,6 +101,22 @@ public:
     return mOriginatingElement.get();
   }
 
+  /**
+   * Get the action URI that will be used for submission.
+   */
+  nsIURI* GetActionURL() const
+  {
+    return mActionURL;
+  }
+
+  /**
+   * Get the target that will be used for submission.
+   */
+  void GetTarget(nsAString& aTarget)
+  {
+    aTarget = mTarget;
+  }
+
 protected:
   /**
    * Can only be constructed by subclasses.
@@ -107,13 +124,23 @@ protected:
    * @param aEncoding the character encoding of the form
    * @param aOriginatingElement the originating element (can be null)
    */
-  HTMLFormSubmission(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
+  HTMLFormSubmission(nsIURI* aActionURL,
+                     const nsAString& aTarget,
+                     mozilla::NotNull<const mozilla::Encoding*> aEncoding,
                      Element* aOriginatingElement)
-    : mEncoding(aEncoding)
+    : mActionURL(aActionURL)
+    , mTarget(aTarget)
+    , mEncoding(aEncoding)
     , mOriginatingElement(aOriginatingElement)
   {
     MOZ_COUNT_CTOR(HTMLFormSubmission);
   }
+
+  // The action url.
+  nsCOMPtr<nsIURI> mActionURL;
+
+  // The target.
+  nsString mTarget;
 
   // The character encoding of this form submission
   mozilla::NotNull<const mozilla::Encoding*> mEncoding;
@@ -125,7 +152,9 @@ protected:
 class EncodingFormSubmission : public HTMLFormSubmission
 {
 public:
-  EncodingFormSubmission(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
+  EncodingFormSubmission(nsIURI* aActionURL,
+                         const nsAString& aTarget,
+                         mozilla::NotNull<const mozilla::Encoding*> aEncoding,
                          Element* aOriginatingElement);
 
   virtual ~EncodingFormSubmission();
@@ -153,7 +182,9 @@ public:
   /**
    * @param aEncoding the character encoding of the form
    */
-  FSMultipartFormData(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
+  FSMultipartFormData(nsIURI* aActionURL,
+                      const nsAString& aTarget,
+                      mozilla::NotNull<const mozilla::Encoding*> aEncoding,
                       Element* aOriginatingElement);
   ~FSMultipartFormData();
 
