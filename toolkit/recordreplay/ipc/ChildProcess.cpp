@@ -475,17 +475,10 @@ ChildProcessInfo::LaunchSubprocess()
 
   mLastMessageTime = TimeStamp::Now();
 
+  SendGraphicsMemoryToChild();
+
   // The child should send us a HitCheckpoint with an invalid ID to pause.
   WaitUntilPaused();
-
-  // Send the child a handle to the graphics shmem via mach IPC.
-  char portName[128];
-  SprintfLiteral(portName, "WebReplay.%d.%d", getpid(), (int) channelId);
-  MachPortSender sender(portName);
-  MachSendMessage message(GraphicsMessageId);
-  message.AddDescriptor(MachMsgPortDescriptor(gGraphicsPort, MACH_MSG_TYPE_COPY_SEND));
-  kern_return_t kr = sender.SendMessage(message, 1000);
-  MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
 
   MOZ_RELEASE_ASSERT(gIntroductionMessage);
   SendMessage(*gIntroductionMessage);
