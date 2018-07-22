@@ -133,9 +133,8 @@ ChildProcessInfo::IsPausedAtMatchingBreakpoint(const BreakpointFilter& aFilter)
         }
       }
     }
-    MOZ_RELEASE_ASSERT(lastSet &&
-                       lastSet->mPosition.kind != JS::replay::ExecutionPosition::Invalid);
-    if (aFilter(lastSet->mPosition.kind)) {
+    MOZ_RELEASE_ASSERT(lastSet && lastSet->mPosition.IsValid());
+    if (aFilter(lastSet->mPosition.mKind)) {
       return true;
     }
   }
@@ -309,7 +308,7 @@ ChildProcessInfo::Recover(bool aPaused, Message* aPausedMessage, size_t aLastChe
   for (Message* msg : mMessages) {
     if (msg->mType == MessageType::SetBreakpoint) {
       SetBreakpointMessage* nmsg = static_cast<SetBreakpointMessage*>(msg);
-      SendMessageRaw(SetBreakpointMessage(nmsg->mId, JS::replay::ExecutionPosition()));
+      SendMessageRaw(SetBreakpointMessage(nmsg->mId, js::BreakpointPosition()));
     }
     free(msg);
   }

@@ -7,6 +7,7 @@
 #include "ProcessRewind.h"
 
 #include "nsString.h"
+#include "ipc/ChildInternal.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticMutex.h"
 #include "InfallibleVector.h"
@@ -14,10 +15,6 @@
 #include "Monitor.h"
 #include "ProcessRecordReplay.h"
 #include "ThreadSnapshot.h"
-#include "prcvar.h"
-
-#include <setjmp.h>
-#include <sys/time.h>
 
 namespace mozilla {
 namespace recordreplay {
@@ -35,11 +32,11 @@ struct RewindInfo
 
   // Checkpoints which have been saved. This includes only entries from
   // mShouldSaveCheckpoints, plus all temporary checkpoints.
-  InfallibleVector<SavedCheckpoint, 1024, AllocPolicy<UntrackedMemoryKind::Generic>> mSavedCheckpoints;
+  InfallibleVector<SavedCheckpoint, 1024, AllocPolicy<MemoryKind::Generic>> mSavedCheckpoints;
 
   // Unsorted list of checkpoints which the middleman has instructed us to
   // save. All those equal to or prior to mLastCheckpoint will have been saved.
-  InfallibleVector<size_t, 1024, AllocPolicy<UntrackedMemoryKind::Generic>> mShouldSaveCheckpoints;
+  InfallibleVector<size_t, 1024, AllocPolicy<MemoryKind::Generic>> mShouldSaveCheckpoints;
 };
 
 static RewindInfo* gRewindInfo;
@@ -55,7 +52,7 @@ void
 InitializeRewindState()
 {
   MOZ_RELEASE_ASSERT(gRewindInfo == nullptr);
-  void* memory = AllocateMemory(sizeof(RewindInfo), UntrackedMemoryKind::Generic);
+  void* memory = AllocateMemory(sizeof(RewindInfo), MemoryKind::Generic);
   gRewindInfo = new(memory) RewindInfo();
 
   gMainThreadCallbackMonitor = new Monitor();
@@ -67,10 +64,8 @@ CheckpointPrecedes(const CheckpointId& aFirst, const CheckpointId& aSecond)
   return aFirst.mNormal < aSecond.mNormal || aFirst.mTemporary < aSecond.mTemporary;
 }
 
-extern "C" {
-
-MOZ_EXPORT void
-RecordReplayInterface_RestoreCheckpointAndResume(const CheckpointId& aCheckpoint)
+void
+RestoreCheckpointAndResume(const CheckpointId& aCheckpoint)
 {
   MOZ_RELEASE_ASSERT(IsReplaying());
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
@@ -115,19 +110,6 @@ RecordReplayInterface_RestoreCheckpointAndResume(const CheckpointId& aCheckpoint
   Unreachable();
 }
 
-static BeforeCheckpointHook gBeforeCheckpointHook;
-static AfterCheckpointHook gAfterCheckpointHook;
-
-MOZ_EXPORT void
-RecordReplayInterface_SetCheckpointHooks(BeforeCheckpointHook aBeforeCheckpoint,
-                                         AfterCheckpointHook aAfterCheckpoint)
-{
-  gBeforeCheckpointHook = aBeforeCheckpoint;
-  gAfterCheckpointHook = aAfterCheckpoint;
-}
-
-} // extern "C"
-
 void
 SetSaveCheckpoint(size_t aCheckpoint, bool aSave)
 {
@@ -135,26 +117,17 @@ SetSaveCheckpoint(size_t aCheckpoint, bool aSave)
   VectorAddOrRemoveEntry(gRewindInfo->mShouldSaveCheckpoints, aCheckpoint, aSave);
 }
 
-extern "C" {
-
-// Mark a checkpoint, which we might or might not save.
-MOZ_EXPORT bool
-RecordReplayInterface_NewCheckpoint(bool aTemporary)
+bool
+NewCheckpoint(bool aTemporary)
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
   MOZ_RELEASE_ASSERT(IsReplaying() || !aTemporary);
 
-  gBeforeCheckpointHook();
+  navigation::BeforeCheckpoint();
 
   // Get the ID of the new checkpoint.
-  CheckpointId checkpoint = gRewindInfo->mLastCheckpoint;
-  if (aTemporary) {
-    checkpoint.mTemporary++;
-  } else {
-    checkpoint.mNormal++;
-    checkpoint.mTemporary = 0;
-  }
+  CheckpointId checkpoint = gRewindInfo->mLastCheckpoint.NextCheckpoint(aTemporary);
 
   // Save all checkpoints the middleman tells us to, and temporary checkpoints
   // (which the middleman never knows about).
@@ -202,11 +175,7 @@ RecordReplayInterface_NewCheckpoint(bool aTemporary)
 
   gRewindInfo->mLastCheckpoint = checkpoint;
 
-  AutoDisallowThreadEvents disallow;
-
-  dom::AutoJSAPI jsapi;
-  jsapi.Init();
-  gAfterCheckpointHook(checkpoint);
+  navigation::AfterCheckpoint(checkpoint);
 
   return reachedCheckpoint;
 }
@@ -214,8 +183,8 @@ RecordReplayInterface_NewCheckpoint(bool aTemporary)
 static bool gRecordingDiverged;
 static bool gUnhandledDivergeAllowed;
 
-MOZ_EXPORT void
-RecordReplayInterface_DivergeFromRecording()
+void
+DivergeFromRecording()
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(IsReplaying());
@@ -223,26 +192,22 @@ RecordReplayInterface_DivergeFromRecording()
   gUnhandledDivergeAllowed = true;
 }
 
+extern "C" {
+
 MOZ_EXPORT bool
 RecordReplayInterface_InternalHasDivergedFromRecording()
 {
   return Thread::CurrentIsMainThread() && gRecordingDiverged;
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_DisallowUnhandledDivergeFromRecording()
+} // extern "C"
+
+void
+DisallowUnhandledDivergeFromRecording()
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   gUnhandledDivergeAllowed = false;
 }
-
-MFBT_API void
-RecordReplayInterface_SaveTemporaryCheckpoint()
-{
-  NewCheckpoint(/* aTemporary = */ true);
-}
-
-} // extern "C"
 
 void
 EnsureNotDivergedFromRecording()
@@ -335,17 +300,13 @@ PauseMainThreadAndInvokeCallback(const std::function<void()>& aCallback)
   }
 }
 
-extern "C" {
-
-MOZ_EXPORT void
-RecordReplayInterface_ResumeExecution()
+void
+ResumeExecution()
 {
   MonitorAutoLock lock(*gMainThreadCallbackMonitor);
   gMainThreadShouldPause = false;
   gMainThreadCallbackMonitor->Notify();
 }
-
-} // extern "C"
 
 void
 SetIsActiveChild(bool aActive)

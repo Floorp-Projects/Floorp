@@ -9,11 +9,11 @@
 
 #include "base/process.h"
 
-#include "js/ReplayHooks.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Maybe.h"
 
 #include "File.h"
+#include "JSControl.h"
 #include "Monitor.h"
 
 namespace mozilla {
@@ -260,9 +260,9 @@ struct SetBreakpointMessage : public Message
 
   // New position of the breakpoint. If this is invalid then the breakpoint is
   // being cleared.
-  JS::replay::ExecutionPosition mPosition;
+  js::BreakpointPosition mPosition;
 
-  SetBreakpointMessage(size_t aId, const JS::replay::ExecutionPosition& aPosition)
+  SetBreakpointMessage(size_t aId, const js::BreakpointPosition& aPosition)
     : Message(MessageType::SetBreakpoint, sizeof(*this))
     , mId(aId)
     , mPosition(aPosition)
@@ -425,7 +425,7 @@ private:
   Monitor mMonitor;
 
   // Buffer for message data received from the other side of the channel.
-  InfallibleVector<char, 0, AllocPolicy<UntrackedMemoryKind::Generic>> mMessageBuffer;
+  InfallibleVector<char, 0, AllocPolicy<MemoryKind::Generic>> mMessageBuffer;
 
   // The number of bytes of data already in the message buffer.
   size_t mMessageBytes;

@@ -8,6 +8,7 @@
 #define mozilla_recordreplay_ThreadSnapshot_h
 
 #include "File.h"
+#include "ProcessRewind.h"
 #include "Thread.h"
 
 namespace mozilla {
@@ -70,7 +71,7 @@ struct SavedThreadStack
 
   void ReleaseContents() {
     if (mStackBytes) {
-      DeallocateMemory(mStack, mStackBytes, UntrackedMemoryKind::ThreadSnapshot);
+      DeallocateMemory(mStack, mStackBytes, MemoryKind::ThreadSnapshot);
     }
   }
 };
