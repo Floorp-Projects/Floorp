@@ -627,10 +627,7 @@ XRE_InitChildProcess(int aArgc,
     }
   }
 
-  // During replay we need to keep track of both the actual parent pid and the
-  // original parent pid which was in use during the recording. Replayed
-  // content uses the original pid, while IPC we perform uses the actual pid.
-  base::ProcessId actualParentPID = parentPID;
+  // While replaying, use the parent PID that existed while recording.
   parentPID = recordreplay::RecordReplayValue(parentPID);
 
 #ifdef XP_MACOSX
@@ -683,7 +680,7 @@ XRE_InitChildProcess(int aArgc,
   // according to those which were captured by the MiddlemanProcessChild in the
   // middleman process. No argument manipulation should happen between this
   // call and the point where the process child is initialized.
-  recordreplay::child::InitRecordingOrReplayingProcess(actualParentPID, &aArgc, &aArgv);
+  recordreplay::child::InitRecordingOrReplayingProcess(&aArgc, &aArgv);
 
   {
     // This is a lexical scope for the MessageLoop below.  We want it
