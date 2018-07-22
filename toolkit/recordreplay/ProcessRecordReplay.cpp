@@ -421,6 +421,9 @@ RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aA
 
   if (IsRecording()) {
     thread->Asserts().WriteScalar(thread->Events().StreamPosition());
+    if (thread->IsMainThread()) {
+      thread->Asserts().WriteScalar(*ExecutionProgressCounter());
+    }
     thread->Asserts().WriteScalar((textLen << 1) | AssertionBit);
     thread->Asserts().WriteBytes(text, textLen);
   } else {
@@ -432,6 +435,13 @@ RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aA
     size_t streamPos = thread->Asserts().ReadScalar();
     if (streamPos != thread->Events().StreamPosition()) {
       match = false;
+    }
+    size_t progress = 0;
+    if (thread->IsMainThread()) {
+      progress = thread->Asserts().ReadScalar();
+      if (progress != *ExecutionProgressCounter()) {
+        match = false;
+      }
     }
     size_t assertLen = thread->Asserts().ReadScalar() >> 1;
 
@@ -459,10 +469,11 @@ RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aA
       }
 
       child::ReportFatalError("Assertion Mismatch: Thread %d\n"
-                              "Recorded: %s [%d]\n"
-                              "Replayed: %s [%d]\n",
-                              (int) thread->Id(), buffer, (int) streamPos, text,
-                              (int) thread->Events().StreamPosition());
+                              "Recorded: %s [%d,%d]\n"
+                              "Replayed: %s [%d,%d]\n",
+                              (int) thread->Id(), buffer, (int) streamPos, (int) progress, text,
+                              (int) thread->Events().StreamPosition(),
+                              (int) (thread->IsMainThread() ? *ExecutionProgressCounter() : 0));
       Unreachable();
     }
 
