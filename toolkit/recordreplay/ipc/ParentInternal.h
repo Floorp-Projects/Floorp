@@ -55,14 +55,25 @@ static Monitor* gMonitor;
 // Graphics
 ///////////////////////////////////////////////////////////////////////////////
 
-extern mach_port_t gGraphicsPort;
 extern void* gGraphicsMemory;
 
 void InitializeGraphicsMemory();
+void SendGraphicsMemoryToChild();
 
 // Update the graphics painted in the UI process, per painting data received
 // from a child process, or null for the last paint performed.
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
+
+// ID for the mach message sent from a child process to the middleman to
+// request a port for the graphics shmem.
+static const int32_t GraphicsHandshakeMessageId = 42;
+
+// ID for the mach message sent from the middleman to a child process with the
+// requested memory for.
+static const int32_t GraphicsMemoryMessageId = 43;
+
+// Fixed size of the graphics shared memory buffer.
+static const size_t GraphicsMemorySize = 4096 * 4096 * 4;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Child Processes

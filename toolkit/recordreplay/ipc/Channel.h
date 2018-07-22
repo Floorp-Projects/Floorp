@@ -458,13 +458,6 @@ static const char* gMiddlemanPidOption = "-middlemanPid";
 // Command line option used to specify the channel ID for a child process.
 static const char* gChannelIDOption = "-recordReplayChannelID";
 
-// ID for the mach message sent when notifying a subprocess about the graphics
-// shared memory buffer.
-static const int32_t GraphicsMessageId = 42;
-
-// Fixed size of the graphics shared memory buffer.
-static const size_t GraphicsMemorySize = 4096 * 4096 * 4;
-
 } // namespace recordreplay
 } // namespace mozilla
 
