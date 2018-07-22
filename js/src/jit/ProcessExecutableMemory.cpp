@@ -442,7 +442,8 @@ class ProcessExecutableMemory
 
     // pagesAllocated_ is an Atomic so that bytesAllocated does not have to
     // take the lock.
-    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> pagesAllocated_;
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> pagesAllocated_;
 
     // Page where we should try to allocate next.
     size_t cursor_;

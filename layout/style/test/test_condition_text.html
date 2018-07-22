@@ -8,6 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814907
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style id="style">
+    @-moz-document media-document(video) {}
+    @-moz-document media-document(image) {}
+    @-moz-document media-document(plugin) {}
+    @-moz-document media-document(all) {}
+
     @-moz-document url(http://www.example.com/) {}
     @-moz-document url('http://www.example.com/') {}
     @-moz-document url("http://www.example.com/") {}
@@ -51,6 +56,10 @@ function runTest()
   var sheet = style.sheet;
 
   var conditions = [
+    "media-document(video)",
+    "media-document(image)",
+    "media-document(plugin)",
+    "media-document(all)",
     "url(\"http://www.example.com/\")",
     "url(\"http://www.example.com/\")",
     "url(\"http://www.example.com/\")",

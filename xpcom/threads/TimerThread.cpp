@@ -117,7 +117,9 @@ public:
   TimerEventAllocator()
     : mPool()
     , mFirstFree(nullptr)
-    , mMonitor("TimerEventAllocator")
+      // Timer thread state may be accessed during GC, so uses of this monitor
+      // are not preserved when recording/replaying.
+    , mMonitor("TimerEventAllocator", recordreplay::Behavior::DontPreserve)
   {
   }
 
@@ -202,12 +204,17 @@ private:
   int32_t      mGeneration;
 
   static TimerEventAllocator* sAllocator;
-  static Atomic<int32_t> sAllocatorUsers;
+
+  // Timer thread state may be accessed during GC, so uses of this atomic are
+  // not preserved when recording/replaying.
+  static Atomic<int32_t, SequentiallyConsistent,
+                recordreplay::Behavior::DontPreserve> sAllocatorUsers;
   static bool sCanDeleteAllocator;
 };
 
 TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
-Atomic<int32_t> nsTimerEvent::sAllocatorUsers;
+Atomic<int32_t, SequentiallyConsistent,
+       recordreplay::Behavior::DontPreserve> nsTimerEvent::sAllocatorUsers;
 bool nsTimerEvent::sCanDeleteAllocator = false;
 
 namespace {

@@ -394,8 +394,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   if (mFrames.IsEmpty()) {
     // Try to pull over one frame before starting so that we know
     // whether we have an anonymous block or not.
-    bool complete;
-    (void) PullOneFrame(aPresContext, irs, &complete);
+    Unused << PullOneFrame(aPresContext, irs);
   }
 
   ReflowFrames(aPresContext, aReflowInput, irs, aMetrics, aStatus);
@@ -620,19 +619,14 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   if (!done && GetNextInFlow()) {
     while (true) {
       bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
-      bool isComplete;
       if (!frame) { // Could be non-null if we pulled a first-letter frame and
                     // it created a continuation, since we don't push those.
-        frame = PullOneFrame(aPresContext, irs, &isComplete);
+        frame = PullOneFrame(aPresContext, irs);
       }
 #ifdef NOISY_PUSHING
       printf("%p pulled up %p\n", this, frame);
 #endif
-      if (nullptr == frame) {
-        if (!isComplete) {
-          aStatus.Reset();
-          aStatus.SetIncomplete();
-        }
+      if (!frame) {
         break;
       }
       ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
@@ -703,6 +697,24 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #endif
 }
 
+// Returns whether there's any remaining frame to pull.
+/* static */ bool
+nsInlineFrame::HasFramesToPull(nsInlineFrame* aNextInFlow)
+{
+  while (aNextInFlow) {
+    if (!aNextInFlow->mFrames.IsEmpty()) {
+      return true;
+    }
+    if (const nsFrameList* overflow = aNextInFlow->GetOverflowFrames()) {
+      if (!overflow->IsEmpty()) {
+        return true;
+      }
+    }
+    aNextInFlow = static_cast<nsInlineFrame*>(aNextInFlow->GetNextInFlow());
+  }
+  return false;
+}
+
 void
 nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
                                  const ReflowInput& aReflowInput,
@@ -744,17 +756,11 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     if (nextFrame) {
       aStatus.SetIncomplete();
       PushFrames(aPresContext, nextFrame, aFrame, irs);
-    }
-    else {
+    } else {
       // We must return an incomplete status if there are more child
       // frames remaining in a next-in-flow that follows this frame.
-      nsInlineFrame* nextInFlow = static_cast<nsInlineFrame*>(GetNextInFlow());
-      while (nextInFlow) {
-        if (nextInFlow->mFrames.NotEmpty()) {
-          aStatus.SetIncomplete();
-          break;
-        }
-        nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
+      if (HasFramesToPull(static_cast<nsInlineFrame*>(GetNextInFlow()))) {
+        aStatus.SetIncomplete();
       }
     }
     return;
@@ -769,14 +775,15 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
 }
 
 nsIFrame*
-nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
-                            InlineReflowInput& irs,
-                            bool* aIsComplete)
+nsInlineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& irs)
 {
-  bool isComplete = true;
-
   nsIFrame* frame = nullptr;
   nsInlineFrame* nextInFlow = irs.mNextInFlow;
+
+#ifdef DEBUG
+  bool willPull = HasFramesToPull(nextInFlow);
+#endif
+
   while (nextInFlow) {
     frame = nextInFlow->mFrames.FirstChild();
     if (!frame) {
@@ -813,7 +820,6 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       // nsFirstLineFrame::PullOneFrame calls ReparentComputedStyle.
 
       mFrames.InsertFrame(this, irs.mPrevFrame, frame);
-      isComplete = false;
       if (irs.mLineLayout) {
         irs.mLineLayout->SetDirtyNextLine();
       }
@@ -824,7 +830,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
     irs.mNextInFlow = nextInFlow;
   }
 
-  *aIsComplete = isComplete;
+  MOZ_ASSERT(!!frame == willPull);
   return frame;
 }
 
@@ -1045,10 +1051,10 @@ nsFirstLineFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsIFrame*
-nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& irs,
-                               bool* aIsComplete)
+nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext,
+                               InlineReflowInput& irs)
 {
-  nsIFrame* frame = nsInlineFrame::PullOneFrame(aPresContext, irs, aIsComplete);
+  nsIFrame* frame = nsInlineFrame::PullOneFrame(aPresContext, irs);
   if (frame && !GetPrevInFlow()) {
     // We are a first-line frame. Fixup the child frames
     // style-context that we just pulled.
@@ -1099,8 +1105,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   if (wasEmpty) {
     // Try to pull over one frame before starting so that we know
     // whether we have an anonymous block or not.
-    bool complete;
-    PullOneFrame(aPresContext, irs, &complete);
+    PullOneFrame(aPresContext, irs);
   }
 
   if (nullptr == GetPrevInFlow()) {
@@ -1112,8 +1117,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     // All of this is so that text-runs reflow properly.
     irs.mPrevFrame = mFrames.LastChild();
     for (;;) {
-      bool complete;
-      nsIFrame* frame = PullOneFrame(aPresContext, irs, &complete);
+      nsIFrame* frame = PullOneFrame(aPresContext, irs);
       if (!frame) {
         break;
       }

@@ -25,6 +25,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  enum MediaDocumentKind MediaDocumentKind() const override
+  {
+    return MediaDocumentKind::Image;
+  }
+
   virtual nsresult Init() override;
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,

@@ -393,7 +393,8 @@ class ScriptSource
     };
 
   private:
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refs;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                    mozilla::recordreplay::Behavior::DontPreserve> refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
     // modified by the main thread, and all members are always safe to access
@@ -794,7 +795,8 @@ class SharedScriptData
     // This class is reference counted as follows: each pointer from a JSScript
     // counts as one reference plus there may be one reference from the shared
     // script data table.
-    mozilla::Atomic<uint32_t> refCount_;
+    mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                    mozilla::recordreplay::Behavior::DontPreserve> refCount_;
 
     uint32_t natoms_;
     uint32_t codeLength_;
@@ -1008,7 +1010,8 @@ class JSScript : public js::gc::TenuredCell
     // Number of times the script has been called or has had backedges taken.
     // When running in ion, also increased for any inlined scripts. Reset if
     // the script's JIT code is forcibly discarded.
-    mozilla::Atomic<uint32_t, mozilla::Relaxed> warmUpCount = {};
+    mozilla::Atomic<uint32_t, mozilla::Relaxed,
+                    mozilla::recordreplay::Behavior::DontPreserve> warmUpCount = {};
 
     // 16-bit fields.
 
