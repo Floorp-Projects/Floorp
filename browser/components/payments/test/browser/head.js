@@ -313,11 +313,23 @@ function cleanupFormAutofillStorage() {
 }
 
 add_task(async function setup_head() {
+  SpecialPowers.registerConsoleListener(function onConsoleMessage(msg) {
+    if (msg.isWarning || !msg.errorMessage) {
+      // Ignore warnings and non-errors.
+      return;
+    }
+    if (msg.category == "CSP_CSPViolationWithURI" && msg.errorMessage.includes("at inline")) {
+      // Ignore unknown CSP error.
+      return;
+    }
+    ok(false, msg.message || msg.errorMessage);
+  });
   await setupFormAutofillStorage();
   registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
     cleanupFormAutofillStorage();
     Services.prefs.clearUserPref(RESPONSE_TIMEOUT_PREF);
+    SpecialPowers.postConsoleSentinel();
   });
 });
 
