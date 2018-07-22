@@ -79,6 +79,42 @@ namespace recordreplay {
 // rewind.
 ///////////////////////////////////////////////////////////////////////////////
 
+// The ID of a checkpoint in a child process. Checkpoints are either normal or
+// temporary. Normal checkpoints occur at the same point in the recording and
+// all replays, while temporary checkpoints are not used while recording and
+// may be at different points in different replays.
+struct CheckpointId
+{
+  // ID of the most recent normal checkpoint, which are numbered in sequence
+  // starting at FirstCheckpointId.
+  size_t mNormal;
+
+  // Special IDs for normal checkpoints.
+  static const size_t Invalid = 0;
+  static const size_t First = 1;
+
+  // How many temporary checkpoints have been generated since the most recent
+  // normal checkpoint, zero if this represents the normal checkpoint itself.
+  size_t mTemporary;
+
+  explicit CheckpointId(size_t aNormal = Invalid, size_t aTemporary = 0)
+    : mNormal(aNormal), mTemporary(aTemporary)
+  {}
+
+  inline bool operator==(const CheckpointId& o) const {
+    return mNormal == o.mNormal && mTemporary == o.mTemporary;
+  }
+
+  inline bool operator!=(const CheckpointId& o) const {
+    return mNormal != o.mNormal || mTemporary != o.mTemporary;
+  }
+
+  CheckpointId NextCheckpoint(bool aTemporary) const {
+    return CheckpointId(aTemporary ? mNormal : mNormal + 1,
+                        aTemporary ? mTemporary + 1 : 0);
+  }
+};
+
 // Initialize state needed for rewinding.
 void InitializeRewindState();
 
@@ -105,6 +141,29 @@ bool HasSavedCheckpoint();
 // Get the ID of the most recent saved checkpoint.
 CheckpointId GetLastSavedCheckpoint();
 
+// When paused at a breakpoint or at a checkpoint, restore a checkpoint that
+// was saved earlier and resume execution.
+void RestoreCheckpointAndResume(const CheckpointId& aCheckpoint);
+
+// When paused at a breakpoint or at a checkpoint, unpause and proceed with
+// execution.
+void ResumeExecution();
+
+// Allow execution after this point to diverge from the recording. Execution
+// will remain diverged until an earlier checkpoint is restored.
+//
+// If an unhandled divergence occurs (see the 'Recording Divergence' comment
+// in ProcessRewind.h) then the process rewinds to the most recent saved
+// checkpoint.
+void DivergeFromRecording();
+
+// After a call to DivergeFromRecording(), this may be called to prevent future
+// unhandled divergence from causing earlier checkpoints to be restored
+// (the process will immediately crash instead). This state lasts until a new
+// call to DivergeFromRecording, or to an explicit restore of an earlier
+// checkpoint.
+void DisallowUnhandledDivergeFromRecording();
+
 // Make sure that execution has not diverged from the recording after a call to
 // DivergeFromRecording, by rewinding to the last saved checkpoint if so.
 void EnsureNotDivergedFromRecording();
@@ -112,6 +171,12 @@ void EnsureNotDivergedFromRecording();
 // Access the flag for whether this is the active child process.
 void SetIsActiveChild(bool aActive);
 bool IsActiveChild();
+
+// Note a checkpoint at the current execution position. This checkpoint will be
+// saved if either (a) it is temporary, or (b) the middleman has instructed
+// this process to save this normal checkpoint. This method returns true if the
+// checkpoint was just saved, and false if it was just restored.
+bool NewCheckpoint(bool aTemporary);
 
 } // namespace recordreplay
 } // namespace mozilla
