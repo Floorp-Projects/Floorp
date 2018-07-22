@@ -92,6 +92,11 @@ enum class StyleColumnFill : uint8_t {
   Auto,
 };
 
+enum class StyleColumnSpan : uint8_t {
+  None,
+  All,
+};
+
 // Counters and generated content.
 enum class StyleContentType : uint8_t {
   String = 1,
@@ -983,9 +988,6 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_PAGE_BREAK_AVOID               2
 #define NS_STYLE_PAGE_BREAK_LEFT                3
 #define NS_STYLE_PAGE_BREAK_RIGHT               4
-
-#define NS_STYLE_COLUMN_SPAN_NONE               0
-#define NS_STYLE_COLUMN_SPAN_ALL                1
 
 // See nsStyleUIReset
 #define NS_STYLE_IME_MODE_AUTO                  0
