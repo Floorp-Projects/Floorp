@@ -931,6 +931,9 @@ parent:
     // Graphics errors
     async GraphicsError(nsCString aError);
 
+    // Record/replay errors.
+    async RecordReplayFatalError(nsCString aError);
+
     // Driver crash guards. aGuardType must be a member of CrashGuardType.
     sync BeginDriverCrashGuard(uint32_t aGuardType) returns (bool crashDetected);
     sync EndDriverCrashGuard(uint32_t aGuardType);
