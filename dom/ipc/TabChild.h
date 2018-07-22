@@ -659,6 +659,8 @@ public:
   void PaintWhileInterruptingJS(uint64_t aLayerObserverEpoch,
                                 bool aForceRepaint);
 
+  uint64_t LayerObserverEpoch() const { return mLayerObserverEpoch; }
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
 #endif

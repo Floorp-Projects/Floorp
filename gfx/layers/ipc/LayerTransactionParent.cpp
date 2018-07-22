@@ -162,6 +162,12 @@ LayerTransactionParent::RecvPaintTime(const TransactionId& aTransactionId,
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 {
+  auto guard = MakeScopeExit([&] {
+      if (recordreplay::IsRecordingOrReplaying()) {
+        recordreplay::child::NotifyPaintComplete();
+      }
+    });
+
   AUTO_PROFILER_TRACING("Paint", "LayerTransaction");
   AUTO_PROFILER_LABEL("LayerTransactionParent::RecvUpdate", GRAPHICS);
 
@@ -487,6 +493,11 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     }
 
     mLayerManager->RecordUpdateTime((TimeStamp::Now() - updateStart).ToMilliseconds());
+  }
+
+  // Compose after every update when recording/replaying.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    mCompositorBridge->ForceComposeToTarget(nullptr);
   }
 
   return IPC_OK();
