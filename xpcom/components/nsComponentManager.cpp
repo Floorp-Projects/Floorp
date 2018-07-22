@@ -57,6 +57,10 @@
 #include "mozilla/Logging.h"
 #include "LogModulePrefWatcher.h"
 
+#ifdef MOZ_MEMORY
+#include "mozmemory.h"
+#endif
+
 using namespace mozilla;
 
 static LazyLogModule nsComponentManagerLog("nsComponentManager");
@@ -468,6 +472,39 @@ ProcessSelectorMatches(Module::ProcessSelector aSelector)
 
 static const int kModuleVersionWithSelector = 51;
 
+template<typename T>
+static void
+AssertNotMallocAllocated(T* aPtr)
+{
+#if defined(DEBUG) && defined(MOZ_MEMORY)
+  jemalloc_ptr_info_t info;
+  jemalloc_ptr_info((void*)aPtr, &info);
+  MOZ_ASSERT(info.tag == TagUnknown);
+#endif
+}
+
+template<typename T>
+static void
+AssertNotStackAllocated(T* aPtr)
+{
+  // The main thread's stack should be allocated at the top of our address
+  // space. Anything stack allocated should be above us on the stack, and
+  // therefore above our first argument pointer.
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(uintptr_t(aPtr) < uintptr_t(&aPtr));
+}
+
+static inline nsCString
+AsLiteralCString(const char* aStr)
+{
+  AssertNotMallocAllocated(aStr);
+  AssertNotStackAllocated(aStr);
+
+  nsCString str;
+  str.AssignLiteral(aStr, strlen(aStr));
+  return str;
+}
+
 void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                        FileLocation* aFile)
@@ -583,7 +620,7 @@ nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  mContractIDs.Put(nsDependentCString(aEntry->contractid), f);
+  mContractIDs.Put(AsLiteralCString(aEntry->contractid), f);
 }
 
 static void
