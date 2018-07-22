@@ -7017,8 +7017,8 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (viewportFrame) {
     // Fixed position frames are reflowed into the scroll-port size if one has
     // been set.
-    if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
-      anchorRect.SizeTo(presContext->PresShell()->GetScrollPositionClampingScrollPortSize());
+    if (presContext->PresShell()->IsVisualViewportSizeSet()) {
+      anchorRect.SizeTo(presContext->PresShell()->GetVisualViewportSize());
     } else {
       anchorRect.SizeTo(viewportFrame->GetSize());
     }
@@ -7193,9 +7193,9 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   // reflowed into the scroll-port size if one has been set.
   nsSize scrollFrameSize = scrollFrame->GetSize();
   if (scrollFrame == presContext->PresShell()->GetRootScrollFrame() &&
-      presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+      presContext->PresShell()->IsVisualViewportSizeSet()) {
     scrollFrameSize = presContext->PresShell()->
-      GetScrollPositionClampingScrollPortSize();
+      GetVisualViewportSize();
   }
 
   nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame,
