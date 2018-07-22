@@ -124,10 +124,10 @@ def make_task_description(config, jobs):
 
             # ccov and msvc builds are tier 2, so they cannot have tier 1 tasks
             # depending on them.
-            if '-ccov' in build_platform or '-msvc' in build_platform:
-                treeherder.setdefault('tier', 2)
-            else:
-                treeherder.setdefault('tier', 1)
+            treeherder.setdefault(
+                'tier',
+                dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
+            )
             treeherder.setdefault('kind', 'build')
 
         label = job['label']
