@@ -301,8 +301,8 @@ MobileViewportManager::UpdateSPCSPS(const ScreenIntSize& aDisplaySize,
   compositionSize.width -= scrollbars.LeftRight();
   compositionSize.height -= scrollbars.TopBottom();
   CSSSize compSize = compositionSize / aZoom;
-  MVM_LOG("%p: Setting SPCSPS %s\n", this, Stringify(compSize).c_str());
-  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(mPresShell, compSize);
+  MVM_LOG("%p: Setting VVPS %s\n", this, Stringify(compSize).c_str());
+  nsLayoutUtils::SetVisualViewportSize(mPresShell, compSize);
 }
 
 void
