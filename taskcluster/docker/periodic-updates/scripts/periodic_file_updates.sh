@@ -35,7 +35,7 @@ APP_NAME=''
 HGHOST="hg.mozilla.org"
 STAGEHOST="archive.mozilla.org"
 WGET="wget -nv"
-UNZIP="unzip -q"
+UNTAR="tar -zxf"
 DIFF="$(command -v diff) -u"
 BASEDIR="${HOME}"
 TOOLSDIR="${HOME}/tools"
@@ -182,7 +182,7 @@ function unpack_artifacts {
   ${UNPACK_CMD} "${BROWSER_ARCHIVE}"
   mkdir -p tests
   cd tests
-  ${UNZIP} "../${TESTS_ARCHIVE}"
+  ${UNTAR} "../${TESTS_ARCHIVE}"
   cd "${BASEDIR}"
   cp tests/bin/xpcshell "${PRODUCT}"
 }
