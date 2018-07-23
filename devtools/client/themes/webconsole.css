@@ -280,18 +280,17 @@ html #webconsole-notificationbox {
 .jsterm-input-container {
   background-color: var(--theme-tab-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
+  position: relative;
 }
 
 .jsterm-input-node {
-  /* Always allow scrolling on input - it auto expands in js by setting height,
-     but don't want it to get bigger than the window. 24px = toolbar height. */
-  max-height: calc(90vh - 24px);
   background-image: var(--theme-command-line-image);
   background-repeat: no-repeat;
   background-size: 16px 16px;
-  background-position: 4px 50%;
+  background-position: 4px 4px;
   color: var(--theme-content-color1);
   box-sizing: border-box;
+  height: 100%;
 }
 
 .jsterm-complete-node {
@@ -308,15 +307,13 @@ html #webconsole-notificationbox {
 textarea.jsterm-input-node,
 textarea.jsterm-complete-node {
   width: 100%;
-  border: 1px solid transparent;
   margin: 0;
+  border: none;
   background-color: transparent;
   resize: none;
   font-size: inherit;
   line-height: 16px;
   overflow-x: hidden;
-  /* Set padding for console input on textarea to make sure it is included in
-     scrollHeight that is used when resizing JSTerminal's input. */
   padding: 4px 0;
   padding-inline-start: 20px;
 }
@@ -332,31 +329,11 @@ textarea.jsterm-complete-node {
 textarea.jsterm-input-node:focus {
   background-image: var(--theme-command-line-image-focus);
   box-shadow: none;
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
   outline: none;
 }
 
-:root[platform="mac"] textarea.jsterm-input-node,
-:root[platform="mac"] textarea.jsterm-complete-node {
-  border-radius: 0 0 4px 4px;
-}
-
-/* Unset the bottom right radius on the jsterm inputs when the sidebar is visible */
-:root[platform="mac"] .sidebar ~ .jsterm-input-container textarea.jsterm-input-node,
-:root[platform="mac"] .sidebar ~ .jsterm-input-container textarea.jsterm-complete-node {
-  border-bottom-right-radius: 0;
-}
-
 /* CodeMirror-powered JsTerm */
-.jsterm-cm .jsterm-input-container {
-  /* Always allow scrolling on input - it auto expands in js by setting height,
-     but don't want it to get bigger than the window. 24px = toolbar height. */
-  max-height: calc(90vh - 24px);
-}
-
 .jsterm-cm .jsterm-input-container > .CodeMirror {
-  border: 1px solid transparent;
   font-size: inherit;
   line-height: 16px;
   padding-inline-start: 20px;
@@ -369,17 +346,6 @@ textarea.jsterm-input-node:focus {
 
 .jsterm-cm .jsterm-input-container > .CodeMirror-focused {
   background-image: var(--theme-command-line-image-focus);
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
-}
-
-:root[platform="mac"] .jsterm-cm .jsterm-input-container > .CodeMirror {
-  border-radius: 0 0 4px 4px;
-}
-
-/* Unset the bottom right radius on the jsterm inputs when the sidebar is visible */
-:root[platform="mac"]  .jsterm-cm .sidebar ~ .jsterm-input-container > .CodeMirror {
-  border-bottom-right-radius: 0;
 }
 
 .jsterm-cm .cm-auto-complete-shadow-text::after {
@@ -504,20 +470,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 #output-container {
   height: 100%;
-}
-
-.webconsole-output-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  -moz-user-focus: normal;
-  color: var(--console-output-color);
-  --console-output-indent-border-color: var(--theme-selection-background);
-  --icon-top-margin: 3px;
-  --object-inspector-hover-background: transparent;
-  --attachment-margin-block-end: 3px;
-  --primary-toolbar-height: 29px;
-  --close-button-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 /* Webconsole specific theme variables */
@@ -669,10 +621,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-filtered-messages .reset-filters-button {
   margin-inline-start: 0.5em;
-}
-
-.webconsole-output {
-  overflow: auto;
 }
 
 .webconsole-output-wrapper .message {
@@ -945,12 +893,10 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* Layout */
 .webconsole-output {
-  flex: 1;
   direction: ltr;
   overflow: auto;
   -moz-user-select: text;
   position: relative;
-  grid-row: 2 / 3;
 }
 
 html,
@@ -980,36 +926,66 @@ body #output-container {
  * Here's what the layout of the console looks like:
  *
  *  +------------------------------+--------------+
- *  | FILTER BAR                   |              |
- *  +------------------------------+              |
  *  |                              |              |
- *  | CONSOLE OUTPUT               |   SIDEBAR    |
+ *  |  WEBCONSOLE FLEX WRAPPER     |   SIDEBAR    |
  *  |                              |              |
- *  +------------------------------+              |
- *  | NOTIFICATION BOX             |              |
- *  +------------------------------+              |
- *  | JSTERM CONTAINER             |              |
  *  +------------------------------+--------------+
  */
 .webconsole-output-wrapper {
+  -moz-user-focus: normal;
+  color: var(--console-output-color);
+  --console-output-indent-border-color: var(--theme-selection-background);
+  --icon-top-margin: 3px;
+  --object-inspector-hover-background: transparent;
+  --attachment-margin-block-end: 3px;
+  --primary-toolbar-height: 29px;
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
   display: grid;
   grid-template-columns: minmax(200px, 1fr) auto;
-  grid-template-rows: auto 1fr auto auto;
-  height: 100%;
-  max-height: 100%;
+  max-height: 100vh !important;
+  height: 100vh !important;
   width: 100vw;
+  overflow: hidden;
 }
 
+.webconsole-flex-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.webconsole-flex-wrapper .webconsole-filteringbar-wrapper {
+  flex-shrink: 0;
+}
+
+.webconsole-flex-wrapper .webconsole-output {
+  flex-shrink: 100000;
+}
+
+.webconsole-flex-wrapper > .webconsole-output:not(:empty) {
+  min-height: 19px;
+}
+
+
 .webconsole-output-wrapper #webconsole-notificationbox {
-  grid-column: 1 / 2;
-  grid-row: 3 / 4;
+  flex-shrink: 0;
 }
 
 .webconsole-output-wrapper .jsterm-input-container {
-  grid-column: 1 / 2;
-  grid-row: -1 / -2;
-  position: relative;
-  z-index: 1;
+  min-height: 28px;
+  overflow: auto;
+  padding-top: 1px;
+}
+
+.webconsole-flex-wrapper > .webconsole-output:empty ~ .jsterm-input-container {
+  border-top: none;
+}
+
+/* Last item in the flex wrapper should take the whole remaining height */
+.webconsole-flex-wrapper > :last-child {
+  flex-grow: 1;
 }
 
 /* Object Inspector */
