@@ -591,6 +591,10 @@ public:
   void SetReadyToHandleInputEvents() { mIsReadyToHandleInputEvents = true; }
   bool IsReadyToHandleInputEvents() { return mIsReadyToHandleInputEvents; }
 
+  static bool AreRecordReplayTabsActive() {
+    return gNumActiveRecordReplayTabs != 0;
+  }
+
 protected:
   bool ReceiveMessage(const nsString& aMessage,
                       bool aSync,
@@ -785,6 +789,15 @@ private:
   // not ready to handle it. We will resend it when the next time we fire a
   // mouse event and the TabChild is ready.
   bool mIsMouseEnterIntoWidgetEventSuppressed;
+
+  // How many record/replay tabs have active docshells in this process.
+  static size_t gNumActiveRecordReplayTabs;
+
+  // Whether this tab is contributing to gNumActiveRecordReplayTabs.
+  bool mIsActiveRecordReplayTab;
+
+  // Update whether this is an active record/replay tab.
+  void SetIsActiveRecordReplayTab(bool aIsActive);
 
 public:
   static TabParent* GetTabParentFromLayersId(layers::LayersId aLayersId);
