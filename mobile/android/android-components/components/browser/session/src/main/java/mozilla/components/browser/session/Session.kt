@@ -32,6 +32,7 @@ class Session(
      */
     interface Observer {
         fun onUrlChanged(session: Session, url: String) = Unit
+        fun onTitleChanged(session: Session, title: String) = Unit
         fun onProgress(session: Session, progress: Int) = Unit
         fun onLoadingStateChanged(session: Session, loading: Boolean) = Unit
         fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) = Unit
@@ -109,6 +110,13 @@ class Session(
     }
 
     /**
+     * The title of the currently displayed website changed.
+     */
+    var title: String by Delegates.observable("") {
+        _, old, new -> notifyObservers(old, new) { onTitleChanged(this@Session, new) }
+    }
+
+    /**
      * The progress loading the current URL.
      */
     var progress: Int by Delegates.observable(0) {
@@ -158,6 +166,9 @@ class Session(
         _, _, new -> notifyObservers { onCustomTabConfigChanged(this@Session, new) }
     }
 
+    /**
+     * Last download request if it wasn't consumed by at least one observer.
+     */
     var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
         val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
         !download.consumeBy(consumers)

@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation project(':concept-engine')
     implementation project(':support-utils')
+    implementation project(':support-ktx')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "com.android.support:customtabs:${rootProject.ext.dependencies['supportLibraries']}"

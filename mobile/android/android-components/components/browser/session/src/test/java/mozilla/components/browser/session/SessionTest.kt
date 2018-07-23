@@ -348,4 +348,27 @@ class SessionTest {
         assertTrue(consumerExecuted)
         assertTrue(session.download.isConsumed())
     }
+
+    @Test
+    fun `observer is notified when title changes`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.title = "Internet for people, not profit — Mozilla"
+
+        verify(observer).onTitleChanged(
+            eq(session),
+            eq("Internet for people, not profit — Mozilla"))
+
+        assertEquals("Internet for people, not profit — Mozilla", session.title)
+    }
+
+    @Test
+    fun `website title is empty by default`() {
+        val session = Session("https://www.mozilla.org")
+        assertTrue(session.title.isEmpty())
+        assertEquals("", session.title)
+    }
 }
