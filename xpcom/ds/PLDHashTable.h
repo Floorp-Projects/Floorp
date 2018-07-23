@@ -287,16 +287,12 @@ public:
                uint32_t aLength = kDefaultInitialLength);
 
   PLDHashTable(PLDHashTable&& aOther)
-      // We initialize mOps and mEntrySize here because they are |const|, and
-      // the move assignment operator cannot modify them.
-      // We initialize mEntryStore because it is required for a safe call to
-      // the destructor, which the move assignment operator does.
-      // We initialize mGeneration because it is modified by the move
-      // assignment operator.
-    : mOps(aOther.mOps)
+      // Initialize fields which are checked by the move assignment operator
+      // and the destructor (which the move assignment operator calls).
+    : mOps(nullptr)
     , mEntryStore()
     , mGeneration(0)
-    , mEntrySize(aOther.mEntrySize)
+    , mEntrySize(0)
 #ifdef DEBUG
     , mChecker()
 #endif
@@ -309,7 +305,10 @@ public:
   ~PLDHashTable();
 
   // This should be used rarely.
-  const PLDHashTableOps* Ops() const { return mOps; }
+  const PLDHashTableOps* Ops() const
+  {
+    return mozilla::recordreplay::UnwrapPLDHashTableCallbacks(mOps);
+  }
 
   // Size in entries (gross, not net of free and removed sentinels) for table.
   // This can be zero if no elements have been added yet, in which case the
