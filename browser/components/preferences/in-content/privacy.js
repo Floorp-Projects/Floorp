@@ -429,12 +429,36 @@ var gPrivacyPane = {
     setEventListener("contentBlockingToggle", "command",
       () => contentBlockingCheckbox.click());
     setEventListener("changeBlockListLink", "click", this.showBlockLists);
+    setEventListener("contentBlockingRestoreDefaults", "command",
+      this.restoreContentBlockingPrefs);
     setEventListener("trackingProtectionMenu", "command",
       this.trackingProtectionWritePrefs);
 
     let link = document.getElementById("contentBlockingLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
+  },
+
+  /**
+   * Resets all user-exposed content blocking preferences to their default values.
+   */
+  async restoreContentBlockingPrefs() {
+    function clearIfNotLocked(pref) {
+      if (!Services.prefs.prefIsLocked(pref)) {
+        Services.prefs.clearUserPref(pref);
+      }
+    }
+
+    clearIfNotLocked("browser.contentblocking.enabled");
+    clearIfNotLocked("urlclassifier.trackingTable");
+
+    let controllingExtension = await getControllingExtension(
+      PREF_SETTING_TYPE, TRACKING_PROTECTION_KEY);
+    if (!controllingExtension) {
+      for (let preference of TRACKING_PROTECTION_PREFS) {
+        clearIfNotLocked(preference);
+      }
+    }
   },
 
   /**
