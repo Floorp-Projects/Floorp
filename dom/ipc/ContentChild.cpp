@@ -1252,8 +1252,12 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   RecvSetCaptivePortalState(aXPCOMInit.captivePortalState());
   RecvBidiKeyboardNotify(aXPCOMInit.isLangRTL(), aXPCOMInit.haveBidiKeyboards());
 
-  // Create the CPOW manager as soon as possible.
-  SendPJavaScriptConstructor();
+  // Create the CPOW manager as soon as possible. Middleman processes don't use
+  // CPOWs, because their recording child will also have a CPOW manager that
+  // communicates with the UI process.
+  if (!recordreplay::IsMiddleman()) {
+    SendPJavaScriptConstructor();
+  }
 
   if (aXPCOMInit.domainPolicy().active()) {
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
@@ -2051,6 +2055,9 @@ ContentChild::GetCPOWManager()
 {
   if (PJavaScriptChild* c = LoneManagedOrNullAsserts(ManagedPJavaScriptChild())) {
     return CPOWManagerFor(c);
+  }
+  if (recordreplay::IsMiddleman()) {
+    return nullptr;
   }
   return CPOWManagerFor(SendPJavaScriptConstructor());
 }
