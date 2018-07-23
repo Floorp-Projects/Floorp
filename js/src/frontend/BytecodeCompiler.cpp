@@ -799,7 +799,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     // syntax parsing and start of full parsing, so we do this now rather than
     // after parsing below.
     if (!lazy->scriptSource()->parseEnded().IsNull()) {
-        const mozilla::TimeDuration delta = mozilla::TimeStamp::Now() -
+        const mozilla::TimeDuration delta = ReallyNow() -
             lazy->scriptSource()->parseEnded();
 
         // Differentiate between web-facing and privileged code, to aid

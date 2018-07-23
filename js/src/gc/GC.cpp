@@ -954,7 +954,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
     chunkAllocationSinceLastGC(false),
-    lastGCTime(mozilla::TimeStamp::Now()),
+    lastGCTime(ReallyNow()),
     mode(TuningDefaults::Mode),
     numActiveZoneIters(0),
     cleanUpEverything(false),
@@ -3247,7 +3247,7 @@ SliceBudget::SliceBudget(TimeBudget time)
         makeUnlimited();
     } else {
         // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
-        deadline = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(time.budget);
+        deadline = ReallyNow() + mozilla::TimeDuration::FromMilliseconds(time.budget);
         counter = CounterReset;
     }
 }
@@ -3280,7 +3280,7 @@ SliceBudget::checkOverBudget()
     if (deadline.IsNull())
         return true;
 
-    bool over = mozilla::TimeStamp::Now() >= deadline;
+    bool over = ReallyNow() >= deadline;
     if (!over)
         counter = CounterReset;
     return over;
@@ -4238,7 +4238,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     *isFullOut = true;
     bool any = false;
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    auto currentTime = ReallyNow();
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         /* Set up which zones will be collected. */
