@@ -3048,8 +3048,11 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return false;
+  if (aCpows) {
+    jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
+    if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
+      return false;
+    }
   }
   if (aIsSync) {
     return SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
@@ -3072,8 +3075,11 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return NS_ERROR_UNEXPECTED;
+  if (aCpows) {
+    jsipc::CPOWManager* mgr = Manager()->GetCPOWManager();
+    if (!mgr || !mgr->Wrap(aCx, aCpows, &cpows)) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
   if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows,
                         Principal(aPrincipal), data)) {
