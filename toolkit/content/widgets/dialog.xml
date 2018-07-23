@@ -14,9 +14,6 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="dialog">
-    <resources>
-      <stylesheet src="chrome://global/skin/dialog.css"/>
-    </resources>
     <content>
       <xul:vbox class="box-inherit dialog-content-box" flex="1">
         <children/>

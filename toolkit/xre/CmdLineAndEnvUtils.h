@@ -23,8 +23,10 @@
 #include "mozilla/Vector.h"
 
 #include <wchar.h>
+#include <windows.h>
 #endif // defined(XP_WIN)
 
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/TypedEnumBits.h"
 
 #include <ctype.h>
@@ -345,6 +347,48 @@ MakeCommandLine(int argc, wchar_t **argv)
   *c = '\0';
 
   return std::move(s);
+}
+
+inline bool
+SetArgv0ToFullBinaryPath(wchar_t* aArgv[])
+{
+  if (!aArgv) {
+    return false;
+  }
+
+  DWORD bufLen = MAX_PATH;
+  mozilla::UniquePtr<wchar_t[]> buf;
+  DWORD retLen;
+
+  while (true) {
+    buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
+    retLen = ::GetModuleFileNameW(nullptr, buf.get(), bufLen);
+    if (!retLen) {
+      return false;
+    }
+
+    if (retLen == bufLen && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      bufLen *= 2;
+      continue;
+    }
+
+    break;
+  }
+
+  // Upon success, retLen *excludes* the null character
+  ++retLen;
+
+  // Since we're likely to have a bunch of unused space in buf, let's reallocate
+  // a string to the actual size of the file name.
+  auto newArgv_0 = mozilla::MakeUnique<wchar_t[]>(retLen);
+  if (wcscpy_s(newArgv_0.get(), retLen, buf.get())) {
+    return false;
+  }
+
+  // We intentionally leak newArgv_0 into argv[0]
+  aArgv[0] = newArgv_0.release();
+  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(aArgv[0]);
+  return true;
 }
 
 #endif // defined(XP_WIN)

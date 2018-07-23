@@ -1,0 +1,439 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1475849: Test CSP worker inheritance</title>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="worker_helper.js"></script>
+
+  </head>
+  <body>
+    <script type="application/javascript">
+      const SJS = "worker.sjs";
+      const SAME_BASE = "http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs";
+      const CROSS_BASE = "http://example.com/tests/dom/security/test/csp/file_CSP.sjs";
+
+      SimpleTest.waitForExplicitFinish();
+      /* test data format :
+        {
+          id: test id, short description of test,
+          base: URL of the request in worker,
+          action: type of request in worker (fetch, xhr, importscript)
+          type: how do we create the worker, from URL or Blob,
+          csp: csp of worker,
+          child: how do we create the child worker, from URL or Blob,
+          childCsp: csp of child worker
+          expectedBlock: result when CSP policy, true or false
+        }
+      */
+
+      // Document's CSP is defined in main_csp_worker.html^headers^
+      // Content-Security-Policy: default-src 'self' blob: 'unsafe-inline'
+      var tests = [
+        // create new Worker(url), worker's csp should be deliveried from header.
+        // csp should be: default-src 'self' blob: ; connect-src CROSS_BASE
+        {
+          id: "worker_url_fetch_same_bad",
+          base: SAME_BASE,
+          action: "fetch",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_importScripts_same_good",
+          base: SAME_BASE,
+          action: "importScripts",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_xhr_same_bad",
+          base: SAME_BASE,
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_fetch_cross_good",
+          base: CROSS_BASE,
+          action: "fetch",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_xhr_cross_good",
+          base: CROSS_BASE,
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+
+        // create new Worker(blob:), worker's csp should be inherited from
+        // document.
+        // csp should be : default-src 'self' blob: 'unsafe-inline'
+        {
+          id: "worker_blob_fetch_same_good",
+          base: SAME_BASE,
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_xhr_same_good",
+          base: SAME_BASE,
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_importScripts_same_good",
+          base: SAME_BASE,
+          action: "importScripts",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_fetch_cross_bad",
+          base: CROSS_BASE,
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_xhr_cross_bad",
+          base: CROSS_BASE,
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          type: "blob",
+          csp: "default-src 'self' blob: ; connect-src http://example.com",
+          expectBlocked: true
+        },
+
+        // create parent worker from url, child worker from blob,
+        // Parent delivery csp then propagate to child
+        // csp should be: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+        {
+          id: "worker_url_child_blob_fetch_same_good",
+          base: SAME_BASE,
+          action: "fetch",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_child_blob_importScripts_same_good",
+          base: SAME_BASE,
+          action: "importScripts",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_child_blob_xhr_same_good",
+          base: SAME_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_child_blob_fetch_cross_good",
+          base: CROSS_BASE,
+          action: "fetch",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: false
+        },
+        {
+          id: "worker_url_child_blob_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_blob_xhr_cross_godd",
+          base: CROSS_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob: ; connect-src 'self' http://example.com",
+          expectBlocked: false
+        },
+
+
+        // create parent worker from blob, child worker from blob,
+        // Csp: document->parent->child
+        // csp should be : default-src 'self' blob: 'unsafe-inline'
+        {
+          id: "worker_blob_child_blob_fetch_same_good",
+          base: SAME_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_child_blob_xhr_same_good",
+          base: SAME_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_child_blob_importScripts_same_good",
+          base: SAME_BASE,
+          action: "importScripts",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: false
+        },
+        {
+          id: "worker_blob_child_blob_fetch_cross_bad",
+          base: CROSS_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_blob_xhr_cross_bad",
+          base: CROSS_BASE,
+          child: "blob",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_blob_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          child: "blob",
+          childCsp: "default-src 'none'",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+
+        // create parent worker from url, child worker from url,
+        // child delivery csp from header
+        // csp should be : default-src 'none'
+        {
+          id: "worker_url_child_url_fetch_cross_bad",
+          base: CROSS_BASE,
+          action: "fetch",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_url_xhr_cross_bad",
+          base: CROSS_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_url_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_url_fetch_same_bad",
+          base: SAME_BASE,
+          action: "fetch",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_url_xhr_same_bad",
+          base: SAME_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_url_child_url_importScripts_same_bad",
+          base: SAME_BASE,
+          action: "importScripts",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "url",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+
+        // create parent worker from blob, child worker from url,
+        // child delivery csp from header
+        // csp should be : default-src 'none'
+        {
+          id: "worker_blob_child_url_fetch_cross_bad",
+          base: CROSS_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_url_xhr_cross_bad",
+          base: CROSS_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_url_importScripts_cross_bad",
+          base: CROSS_BASE,
+          action: "importScripts",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_url_fetch_same_bad",
+          base: SAME_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "fetch",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_url_xhr_same_bad",
+          base: SAME_BASE,
+          child: "url",
+          childCsp: "default-src 'none'",
+          action: "xhr",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+        {
+          id: "worker_blob_child_url_importScripts_same_bad",
+          base: SAME_BASE,
+          action: "importScripts",
+          child: "url",
+          childCsp: "default-src 'none'",
+          type: "blob",
+          csp: "default-src 'self' blob:",
+          expectBlocked: true
+        },
+
+
+      ];
+
+      async function runWorkerTest(data) {
+        let src = SJS;
+        src += "?base=" + escape(data.base);
+        src += "&action=" + escape(data.action);
+        src += "&csp=" + escape(data.csp);
+        src += "&id=" + escape(data.id);
+
+        if (data.child) {
+          src += "&child=" + escape(data.child);
+        }
+
+        if (data.childCsp) {
+          src += "&childCsp=" + escape(data.childCsp);
+        }
+
+        switch (data.type) {
+          case "url":
+            new Worker(src);
+            break;
+
+          case "blob":
+            new Worker(URL.createObjectURL(await doXHRGetBlob(src)));
+            break;
+
+          default:
+            throw "Unsupport type";
+        }
+
+        let checkUri = data.base + "?id=" + data.id;
+        await assertCSPBlock(checkUri, data.expectBlocked);
+        runNextTest();
+      };
+
+      tests.forEach(function(test) {
+        addAsyncTest(async function() {
+          runWorkerTest(test);
+        });
+      });
+
+      runNextTest();
+    </script>
+
+  </body>
+</html>
