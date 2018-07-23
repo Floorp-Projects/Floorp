@@ -220,7 +220,7 @@ nsHtml5StreamParser::~nsHtml5StreamParser()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   mTokenizer->end();
   if (recordreplay::IsRecordingOrReplaying()) {
-    JS::EndContentParseForRecordReplay(this);
+    recordreplay::EndContentParse(this);
   }
 #ifdef DEBUG
   {
@@ -290,8 +290,7 @@ nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL)
   if (recordreplay::IsRecordingOrReplaying()) {
     nsAutoCString spec;
     aURL->GetSpec(spec);
-    JS::BeginContentParseForRecordReplay(this, spec.get(), "text/html",
-                                         JS::SmallestEncoding::UTF16);
+    recordreplay::BeginContentParse(this, spec.get(), "text/html");
   }
 
   if (aURL) {
@@ -846,7 +845,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, false);
     if (recordreplay::IsRecordingOrReplaying()) {
-      JS::AddContentParseDataForRecordReplay(this, dst.data(), written * sizeof(char16_t));
+      recordreplay::AddContentParseData(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;
@@ -1105,7 +1104,7 @@ nsHtml5StreamParser::DoStopRequest()
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, true);
     if (recordreplay::IsRecordingOrReplaying()) {
-      JS::AddContentParseDataForRecordReplay(this, dst.data(), written * sizeof(char16_t));
+      recordreplay::AddContentParseData(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;

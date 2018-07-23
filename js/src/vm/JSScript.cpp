@@ -2221,10 +2221,8 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
             ScriptSource::PinnedChars chars(xdr->cx(), this, holder, 0, length());
             if (!chars.get())
                 return xdr->fail(JS::TranscodeResult_Throw);
-            JS::BeginContentParseForRecordReplay(this, filename(), "application/javascript",
-                                                 JS::SmallestEncoding::UTF16);
-            JS::AddContentParseDataForRecordReplay(this, chars.get(), length() * sizeof(char16_t));
-            JS::EndContentParseForRecordReplay(this);
+            mozilla::recordreplay::NoteContentParse(this, filename(), "application/javascript",
+                                                    chars.get(), length());
         }
     }
 
