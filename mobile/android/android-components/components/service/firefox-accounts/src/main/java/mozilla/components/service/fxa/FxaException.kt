@@ -1,5 +1,9 @@
 package mozilla.components.service.fxa
 
+/**
+ * Wrapper class for the exceptions thrown in the Rust library, which ensures that the
+ * error messages will be consumed and freed properly in Rust.
+ */
 open class FxaException(message: String) : Exception(message) {
     class Unspecified(msg: String) : FxaException(msg)
     class Unauthorized(msg: String) : FxaException(msg)
