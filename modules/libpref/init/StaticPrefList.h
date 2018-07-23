@@ -186,17 +186,11 @@ VARCACHE_PREF(
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
 
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "dom.clearSiteData.enabled",
    dom_clearSiteData_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // Full-screen prefs
