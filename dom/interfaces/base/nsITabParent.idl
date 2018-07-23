@@ -113,4 +113,10 @@ interface nsITabParent : nsISupports
    * autoscrolled.
    */
   void stopApzAutoscroll(in nsViewID aScrollId, in uint32_t aPresShellId);
+
+  /**
+   * Save a recording of the associated content process' behavior to the
+   * specified filename. Returns whether the process is being recorded.
+   */
+  bool saveRecording(in AString aFileName);
 };
