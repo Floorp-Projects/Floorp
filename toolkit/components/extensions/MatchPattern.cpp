@@ -189,7 +189,7 @@ nsIURI*
 URLInfo::URINoRef() const
 {
   if (!mURINoRef) {
-    if (NS_FAILED(mURI->CloneIgnoringRef(getter_AddRefs(mURINoRef)))) {
+    if (NS_FAILED(NS_GetURIWithoutRef(mURI, getter_AddRefs(mURINoRef)))) {
       mURINoRef = mURI;
     }
   }

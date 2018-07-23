@@ -470,7 +470,7 @@ ProxyMessenger = {
       // connected to the tab's top-level message manager. To deal with
       // this, we find the options <browser> for the tab, and use that
       // directly, insteead.
-      if (browser.currentURI.cloneIgnoringRef().spec === "about:addons") {
+      if (browser.currentURI.specIgnoringRef === "about:addons") {
         let optionsBrowser = browser.contentDocument.querySelector(".inline-options-browser");
         if (optionsBrowser) {
           browser = optionsBrowser;

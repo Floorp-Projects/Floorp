@@ -633,18 +633,6 @@ nsSimpleURI::Clone(nsIURI** result)
     return CloneInternal(eHonorRef, EmptyCString(), result);
 }
 
-NS_IMETHODIMP
-nsSimpleURI::CloneIgnoringRef(nsIURI** result)
-{
-    return CloneInternal(eIgnoreRef, EmptyCString(), result);
-}
-
-NS_IMETHODIMP
-nsSimpleURI::CloneWithNewRef(const nsACString &newRef, nsIURI** result)
-{
-    return CloneInternal(eReplaceRef, newRef, result);
-}
-
 nsresult
 nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
                            const nsACString &newRef,

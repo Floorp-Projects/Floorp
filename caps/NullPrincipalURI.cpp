@@ -291,22 +291,6 @@ NullPrincipalURI::Clone(nsIURI** _newURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-NullPrincipalURI::CloneIgnoringRef(nsIURI** _newURI)
-{
-  // GetRef/SetRef not supported by NullPrincipalURI, so
-  // CloneIgnoringRef() is the same as Clone().
-  return Clone(_newURI);
-}
-
-NS_IMETHODIMP
-NullPrincipalURI::CloneWithNewRef(const nsACString& newRef, nsIURI** _newURI)
-{
-  // GetRef/SetRef not supported by NullPrincipalURI, so
-  // CloneWithNewRef() is the same as Clone().
-  return Clone(_newURI);
-}
-
 NS_IMPL_ISUPPORTS(NullPrincipalURI::Mutator, nsIURISetters, nsIURIMutator)
 
 NS_IMETHODIMP
