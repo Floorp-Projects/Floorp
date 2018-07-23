@@ -6766,7 +6766,7 @@ GCRuntime::finishCollection()
     marker.stop();
     clearBufferedGrayRoots();
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    auto currentTime = ReallyNow();
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
