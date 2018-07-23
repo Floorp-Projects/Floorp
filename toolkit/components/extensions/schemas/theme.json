@@ -42,6 +42,37 @@
         ]
       },
       {
+        "id": "ThemeExperiment",
+        "type": "object",
+        "properties": {
+          "stylesheet": {
+            "optional": true,
+            "$ref": "ExtensionURL"
+          },
+          "images": {
+            "type": "object",
+            "optional": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "colors": {
+            "type": "object",
+            "optional": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "optional": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
         "id": "ThemeType",
         "type": "object",
         "properties": {
@@ -64,7 +95,7 @@
                 "optional": true
               }
             },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "additionalProperties": { "$ref": "ImageDataOrExtensionURL" }
           },
           "colors": {
             "type": "object",
@@ -207,7 +238,7 @@
                 "optional": true
               }
             },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "additionalProperties": { "$ref": "ThemeColor" }
           },
           "icons": {
             "type": "object",
@@ -564,7 +595,7 @@
                 "optional": true
               }
             },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "additionalProperties": { "type": "string" }
           }
         },
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
@@ -580,7 +611,11 @@
           },
           "default_locale": {
             "type": "string",
-            "optional": "true"
+            "optional": true
+          },
+          "theme_experiment": {
+            "$ref": "ThemeExperiment",
+            "optional": true
           },
           "icons": {
             "type": "object",
@@ -588,6 +623,15 @@
             "patternProperties": {
               "^[1-9]\\d*$": { "type": "string" }
             }
+          }
+        }
+      },
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "theme_experiment": {
+            "$ref": "ThemeExperiment",
+            "optional": true
           }
         }
       }
