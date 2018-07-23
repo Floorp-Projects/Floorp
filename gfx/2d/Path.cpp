@@ -306,6 +306,10 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
     PointD cp41 = aControlPoints.mCP4 - aControlPoints.mCP1;
 
     if (cp21.x == 0. && cp21.y == 0.) {
+      cp21 = aControlPoints.mCP3 - aControlPoints.mCP1;
+    }
+
+    if (cp21.x == 0. && cp21.y == 0.) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
 
       // Use the absolute value so that Min and Max will correspond with the
