@@ -6664,7 +6664,7 @@ BinASTParser<Tok>::parseInterfaceTryCatchStatement(const size_t start, const Bin
 
     BINJS_MOZ_TRY_DECL(catchClause, parseCatchClause());
 
-    BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, /* finally = */ nullptr));
+    BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, /* finallyBlock = */ nullptr));
     return result;
 }
 
@@ -7385,7 +7385,7 @@ BinASTParser<Tok>::parseArguments()
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseSpreadElementOrExpression());
-        factory_.addList(/* list = */ result, /* child = */ item);
+        factory_.addList(/* list = */ result, /* kid = */ item);
     }
 
     MOZ_TRY(guard.done());
@@ -7530,7 +7530,7 @@ BinASTParser<Tok>::parseListOfParameter()
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseParameter());
-        factory_.addList(/* list = */ result, /* item = */ item);
+        factory_.addList(/* list = */ result, /* kid = */ item);
     }
 
     MOZ_TRY(guard.done());
