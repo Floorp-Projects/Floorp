@@ -11,6 +11,7 @@ DIRS += [
     'highlighters',
     'inspector',
     'object',
+    'replay',
     'targets',
     'utils',
     'webconsole',

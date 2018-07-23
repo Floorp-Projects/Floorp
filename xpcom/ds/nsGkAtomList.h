@@ -1982,6 +1982,8 @@ GK_ATOM(DisplayPortMargins, "_displayportmargins")
 GK_ATOM(DisplayPortBase, "_displayportbase")
 GK_ATOM(forcemessagemanager, "forcemessagemanager")
 GK_ATOM(preloadedState, "preloadedState")
+GK_ATOM(RecordExecution, "recordExecution")
+GK_ATOM(ReplayExecution, "replayExecution")
 
 // Names for system metrics
 GK_ATOM(scrollbar_start_backward, "scrollbar-start-backward")
