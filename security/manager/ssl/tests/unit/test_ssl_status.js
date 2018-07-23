@@ -20,8 +20,8 @@ function run_test() {
   // succeededCertChain should be set as expected)
   add_connection_test(
     "good.include-subdomains.pinning.example.com", PRErrorCodeSuccess, null,
-    function withSecurityInfo(aSecInfo) {
-      let sslstatus = aSecInfo.SSLStatus;
+    function withSecurityInfo(aSSLStatus) {
+      let sslstatus = aSSLStatus.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
       equal(sslstatus.failedCertChain, null,
             "failedCertChain for a successful connection should be null");
       ok(sslstatus.succeededCertChain.equals(build_cert_chain(["default-ee", "test-ca"])),
@@ -33,8 +33,8 @@ function run_test() {
   // succeededCertChain should be null)
   add_connection_test(
     "expired.example.com", SEC_ERROR_EXPIRED_CERTIFICATE, null,
-    function withSecurityInfo(aSecInfo) {
-      let sslstatus = aSecInfo.SSLStatus;
+    function withSecurityInfo(aSSLStatus) {
+      let sslstatus = aSSLStatus.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
       equal(sslstatus.succeededCertChain, null,
             "succeededCertChain for a failed connection should be null");
       ok(sslstatus.failedCertChain.equals(build_cert_chain(["expired-ee", "test-ca"])),
