@@ -47,6 +47,13 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             "default": "ffxbld <release@mozilla.com>",
             "help": "Specify what user to use to commit to hg.",
         }],
+        [['--ssh-user', ], {
+            "action": "store",
+            "dest": "ssh_user",
+            "type": "string",
+            "default": None,
+            "help": "The user to push to hg.mozilla.org as.",
+        }],
         [['--balrog-api-root', ], {
             "action": "store",
             "dest": "balrog_api_root",
@@ -191,7 +198,12 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
     def set_push_to_ssh(self):
         for cwd in self.query_push_dirs():
             repo_url = self.read_repo_hg_rc(cwd).get('paths', 'default')
-            push_dest = repo_url.replace('https://', 'ssh://')
+            username = self.config.get('ssh_user', '')
+            # Add a trailing @ to the username if it exists, otherwise it gets
+            # mushed up with the hostname.
+            if username:
+                username += '@'
+            push_dest = repo_url.replace('https://', 'ssh://' + username)
 
             if not push_dest.startswith('ssh://'):
                 raise Exception('Warning: path "{}" is not supported. Protocol must be ssh')
