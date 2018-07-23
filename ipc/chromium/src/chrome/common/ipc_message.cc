@@ -145,6 +145,12 @@ Message& Message::operator=(Message&& other) {
   return *this;
 }
 
+void Message::CopyFrom(const Message& other) {
+  Pickle::CopyFrom(other);
+#if defined(OS_POSIX)
+  file_descriptor_set_ = other.file_descriptor_set_;
+#endif
+}
 
 #if defined(OS_POSIX)
 bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {

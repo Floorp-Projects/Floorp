@@ -187,19 +187,27 @@ public class GeckoJavaSampler {
 
     @WrapForJNI
     public static void stop() {
+        Thread samplingThread;
+
         synchronized (GeckoJavaSampler.class) {
             if (sSamplingThread == null) {
                 return;
             }
 
             sSamplingRunnable.mStopSampler = true;
+            samplingThread = sSamplingThread;
+            sSamplingThread = null;
+            sSamplingRunnable = null;
+        }
+
+        boolean retry = true;
+        while (retry) {
             try {
-                sSamplingThread.join();
+                samplingThread.join();
+                retry = false;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            sSamplingThread = null;
-            sSamplingRunnable = null;
         }
     }
 }

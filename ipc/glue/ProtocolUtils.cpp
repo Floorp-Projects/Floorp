@@ -18,6 +18,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/recordreplay/ChildIPC.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
@@ -723,7 +725,15 @@ IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid,
                                      ProcessIdState aState)
 {
   MonitorAutoLock lock(mMonitor);
-  mOtherPid = aOtherPid;
+  // When recording an execution, all communication we do is forwarded from
+  // the middleman to the parent process, so use its pid instead of the
+  // middleman's pid.
+  if (recordreplay::IsRecordingOrReplaying() &&
+      aOtherPid == recordreplay::child::MiddlemanProcessId()) {
+    mOtherPid = recordreplay::child::ParentProcessId();
+  } else {
+    mOtherPid = aOtherPid;
+  }
   mOtherPidState = aState;
   lock.NotifyAll();
 }
@@ -1066,13 +1076,13 @@ IToplevelProtocol::ToplevelState::ReplaceEventTargetForActor(
 const MessageChannel*
 IToplevelProtocol::ToplevelState::GetIPCChannel() const
 {
-  return &mChannel;
+  return ProtocolState::mChannel ? ProtocolState::mChannel : &mChannel;
 }
 
 MessageChannel*
 IToplevelProtocol::ToplevelState::GetIPCChannel()
 {
-  return &mChannel;
+  return ProtocolState::mChannel ? ProtocolState::mChannel : &mChannel;
 }
 
 } // namespace ipc
