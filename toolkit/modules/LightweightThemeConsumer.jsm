@@ -112,10 +112,6 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
-  this._winId = this._win
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils)
-    .outerWindowID;
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
@@ -125,6 +121,8 @@ function LightweightThemeConsumer(aDocument) {
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
+  this._win.addEventListener("EndSwapDocShells", this, true);
+  this._win.messageManager.addMessageListener("LightweightTheme:Request", this);
 
   let darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
   darkThemeMediaQuery.addListener(temp.LightweightThemeManager);
@@ -140,16 +138,27 @@ LightweightThemeConsumer.prototype = {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
+    const { outerWindowID } = this._win
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
     let parsedData = JSON.parse(aData);
     if (!parsedData) {
       parsedData = { theme: null };
     }
 
-    if (parsedData.window && parsedData.window !== this._winId) {
+    if (parsedData.window && parsedData.window !== outerWindowID) {
       return;
     }
 
     this._update(parsedData.theme);
+  },
+
+  receiveMessage({ name, target }) {
+    if (name == "LightweightTheme:Request") {
+      let contentThemeData = _getContentProperties(this._doc, this._active, this._lastData);
+      target.messageManager.sendAsyncMessage("LightweightTheme:Update", contentThemeData);
+    }
   },
 
   handleEvent(aEvent) {
@@ -161,9 +170,13 @@ LightweightThemeConsumer.prototype = {
         break;
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-        Services.ppmm.sharedData.delete(`theme/${this._winId}`);
         this._win.removeEventListener("resolutionchange", this);
+        this._win.removeEventListener("EndSwapDocShells", this, true);
         this._win = this._doc = null;
+        break;
+      case "EndSwapDocShells":
+        let contentThemeData = _getContentProperties(this._doc, this._active, this._lastData);
+        aEvent.target.messageManager.sendAsyncMessage("LightweightTheme:Update", contentThemeData);
         break;
     }
   },
@@ -218,7 +231,11 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwthemefooter");
 
     let contentThemeData = _getContentProperties(this._doc, active, aData);
-    Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);
+
+    let browserMessageManager = this._win.getGroupMessageManager("browsers");
+    browserMessageManager.broadcastAsyncMessage(
+      "LightweightTheme:Update", contentThemeData
+    );
   }
 };
 
