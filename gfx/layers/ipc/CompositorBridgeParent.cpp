@@ -1045,7 +1045,12 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
 
   TimeStamp time = mTestTime.valueOr(mCompositorScheduler->GetLastComposeTime());
   bool requestNextFrame = mCompositionManager->TransformShadowTree(time, mVsyncRate);
-  if (requestNextFrame) {
+
+  // Don't eagerly schedule new compositions here when recording or replaying.
+  // Recording/replaying processes schedule composites at the top of the main
+  // thread's event loop rather than via PVsync, which can cause the composites
+  // scheduled here to pile up without any drawing actually happening.
+  if (requestNextFrame && !recordreplay::IsRecordingOrReplaying()) {
     ScheduleComposition();
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
     // If we have visible windowed plugins then we need to wait for content (and
