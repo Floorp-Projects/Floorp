@@ -7,6 +7,9 @@
 #ifndef vm_Time_h
 #define vm_Time_h
 
+#include "mozilla/RecordReplay.h"
+#include "mozilla/TimeStamp.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -166,5 +169,17 @@ ReadTimestampCounter(void)
 #undef MOZ_HAVE_RDTSC
 
 #endif
+
+namespace js {
+
+// Get the current time, bypassing any record/replay instrumentation.
+static inline mozilla::TimeStamp
+ReallyNow()
+{
+    mozilla::recordreplay::AutoPassThroughThreadEvents pt;
+    return mozilla::TimeStamp::Now();
+}
+
+} // namespace js
 
 #endif /* vm_Time_h */

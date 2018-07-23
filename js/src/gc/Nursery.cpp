@@ -375,13 +375,13 @@ js::Nursery::allocate(size_t size)
         if (chunkno == maxChunkCount())
             return nullptr;
         if (MOZ_UNLIKELY(chunkno == allocatedChunkCount())) {
-            mozilla::TimeStamp start = TimeStamp::Now();
+            mozilla::TimeStamp start = ReallyNow();
             {
                 AutoLockGCBgAlloc lock(runtime());
                 if (!allocateNextChunk(chunkno, lock))
                     return nullptr;
             }
-            timeInChunkAlloc_ += TimeStamp::Now() - start;
+            timeInChunkAlloc_ += ReallyNow() - start;
             MOZ_ASSERT(chunkno < allocatedChunkCount());
         }
         setCurrentChunk(chunkno);
