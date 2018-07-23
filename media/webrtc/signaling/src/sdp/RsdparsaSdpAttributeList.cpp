@@ -434,6 +434,7 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
         return;
       case SdpAttribute::kIceLiteAttribute:
       case SdpAttribute::kRtcpMuxAttribute:
+      case SdpAttribute::kRtcpRsizeAttribute:
       case SdpAttribute::kBundleOnlyAttribute:
       case SdpAttribute::kEndOfCandidatesAttribute:
         LoadFlags(attributeList);
@@ -489,15 +490,11 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kCandidateAttribute:
         LoadCandidate(attributeList);
         return;
-
-
-      case SdpAttribute::kLabelAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
-      case SdpAttribute::kRtcpRsizeAttribute:
       case SdpAttribute::kConnectionAttribute:
       case SdpAttribute::kIceMismatchAttribute:
-        // TODO: Not implemented, or not applicable.
-        // Sort this out in Bug 1437165.
+      case SdpAttribute::kLabelAttribute:
+        // These attributes are unused
         return;
     }
   }
@@ -828,6 +825,9 @@ RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList)
   }
   if (flags.rtcpMux) {
     SetAttribute(new SdpFlagAttribute(SdpAttribute::kRtcpMuxAttribute));
+  }
+  if (flags.rtcpRsize) {
+    SetAttribute(new SdpFlagAttribute(SdpAttribute::kRtcpRsizeAttribute));
   }
   if (flags.bundleOnly) {
     SetAttribute(new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
