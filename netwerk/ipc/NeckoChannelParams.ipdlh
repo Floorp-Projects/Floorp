@@ -242,6 +242,7 @@ struct HttpChannelOpenArgs
   TimeStamp                   handleFetchEventStart;
   TimeStamp                   handleFetchEventEnd;
   bool                        forceMainDocumentChannel;
+  TimeStamp                   navigationStartTimeStamp;
 };
 
 struct HttpChannelConnectArgs
