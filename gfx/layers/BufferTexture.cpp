@@ -185,11 +185,15 @@ BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                            aCbCrStride, aCbCrSize.height,
                                            yOffset, cbOffset, crOffset);
 
+  bool supportsTextureDirectMapping =
+    aAllocator->SupportsTextureDirectMapping() && aAllocator->GetMaxTextureSize() >
+    std::max(aYSize.width, std::max(aYSize.height, std::max(aCbCrSize.width, aCbCrSize.height)));
+
   bool hasIntermediateBuffer =
     aAllocator
       ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
                                      aAllocator->GetCompositorBackendType(),
-                                     aAllocator->SupportsTextureDirectMapping())
+                                     supportsTextureDirectMapping)
       : true;
 
   YCbCrDescriptor descriptor = YCbCrDescriptor(aYSize, aYStride,
