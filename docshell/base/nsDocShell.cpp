@@ -8996,29 +8996,28 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
 #endif
 }
 
-class InternalLoadEvent : public Runnable
-{
+struct InternalLoadData {
 public:
-  InternalLoadEvent(nsDocShell* aDocShell,
-                    nsIURI* aURI,
-                    nsIURI* aOriginalURI,
-                    Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
-                    bool aLoadReplace,
-                    nsIURI* aReferrer, uint32_t aReferrerPolicy,
-                    nsIPrincipal* aTriggeringPrincipal,
-                    nsIPrincipal* aPrincipalToInherit,
-                    uint32_t aFlags,
-                    const char* aTypeHint,
-                    nsIInputStream* aPostData,
-                    nsIInputStream* aHeadersData,
-                    uint32_t aLoadType,
-                    nsISHEntry* aSHEntry,
-                    bool aFirstParty,
-                    const nsAString& aSrcdoc,
-                    nsIDocShell* aSourceDocShell,
-                    nsIURI* aBaseURI)
-    : mozilla::Runnable("InternalLoadEvent")
-    , mSrcdoc(aSrcdoc)
+  InternalLoadData(nsDocShell* aDocShell,
+                   nsIURI* aURI,
+                   nsIURI* aOriginalURI,
+                   Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+                   bool aLoadReplace,
+                   nsIURI* aReferrer,
+                   uint32_t aReferrerPolicy,
+                   nsIPrincipal* aTriggeringPrincipal,
+                   nsIPrincipal* aPrincipalToInherit,
+                   uint32_t aFlags,
+                   const char* aTypeHint,
+                   nsIInputStream* aPostData,
+                   nsIInputStream* aHeadersData,
+                   uint32_t aLoadType,
+                   nsISHEntry* aSHEntry,
+                   bool aFirstParty,
+                   const nsAString& aSrcdoc,
+                   nsIDocShell* aSourceDocShell,
+                   nsIURI* aBaseURI)
+    : mSrcdoc(aSrcdoc)
     , mDocShell(aDocShell)
     , mURI(aURI)
     , mOriginalURI(aOriginalURI)
@@ -9045,25 +9044,19 @@ public:
     }
   }
 
-  NS_IMETHOD
-  Run() override
+  nsresult Run()
   {
     return mDocShell->InternalLoad(mURI, mOriginalURI, mResultPrincipalURI,
-                                   mLoadReplace,
-                                   mReferrer,
-                                   mReferrerPolicy,
+                                   mLoadReplace, mReferrer, mReferrerPolicy,
                                    mTriggeringPrincipal, mPrincipalToInherit,
                                    mFlags, EmptyString(),
                                    mTypeHint.IsVoid() ? nullptr
                                                       : mTypeHint.get(),
-                                   VoidString(), mPostData,
-                                   mHeadersData, mLoadType, mSHEntry,
-                                   mFirstParty, mSrcdoc, mSourceDocShell,
-                                   mBaseURI, nullptr,
-                                   nullptr);
+                                   VoidString(), mPostData, mHeadersData, 
+                                   mLoadType, mSHEntry, mFirstParty, mSrcdoc, 
+                                   mSourceDocShell, mBaseURI, nullptr, nullptr);
   }
 
-private:
   nsCString mTypeHint;
   nsString mSrcdoc;
 
@@ -9085,6 +9078,145 @@ private:
   nsCOMPtr<nsIDocShell> mSourceDocShell;
   nsCOMPtr<nsIURI> mBaseURI;
 };
+
+class InternalLoadEvent : public Runnable
+{
+public:
+  InternalLoadEvent(nsDocShell* aDocShell,
+                    nsIURI* aURI,
+                    nsIURI* aOriginalURI,
+                    Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+                    bool aLoadReplace,
+                    nsIURI* aReferrer,
+                    uint32_t aReferrerPolicy,
+                    nsIPrincipal* aTriggeringPrincipal,
+                    nsIPrincipal* aPrincipalToInherit,
+                    uint32_t aFlags,
+                    const char* aTypeHint,
+                    nsIInputStream* aPostData,
+                    nsIInputStream* aHeadersData,
+                    uint32_t aLoadType,
+                    nsISHEntry* aSHEntry,
+                    bool aFirstParty,
+                    const nsAString& aSrcdoc,
+                    nsIDocShell* aSourceDocShell,
+                    nsIURI* aBaseURI)
+    : mozilla::Runnable("InternalLoadEvent")
+    , mLoadData(aDocShell,
+                aURI,
+                aOriginalURI,
+                aResultPrincipalURI,
+                aLoadReplace,
+                aReferrer,
+                aReferrerPolicy,
+                aTriggeringPrincipal,
+                aPrincipalToInherit,
+                aFlags,
+                aTypeHint,
+                aPostData,
+                aHeadersData,
+                aLoadType,
+                aSHEntry,
+                aFirstParty,
+                aSrcdoc,
+                aSourceDocShell,
+                aBaseURI) 
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    return mLoadData.Run();
+  }
+
+private:
+  InternalLoadData mLoadData;
+};
+
+class LoadURIDelegateHandler final : public PromiseNativeHandler
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(LoadURIDelegateHandler)
+
+  LoadURIDelegateHandler(nsDocShell* aDocShell,
+                         nsIURI* aURI,
+                         nsIURI* aOriginalURI,
+                         Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+                         bool aLoadReplace,
+                         nsIURI* aReferrer,
+                         uint32_t aReferrerPolicy,
+                         nsIPrincipal* aTriggeringPrincipal,
+                         nsIPrincipal* aPrincipalToInherit,
+                         uint32_t aFlags,
+                         const char* aTypeHint,
+                         nsIInputStream* aPostData,
+                         nsIInputStream* aHeadersData,
+                         uint32_t aLoadType,
+                         nsISHEntry* aSHEntry,
+                         bool aFirstParty,
+                         const nsAString& aSrcdoc,
+                         nsIDocShell* aSourceDocShell,
+                         nsIURI* aBaseURI)
+    : mLoadData(aDocShell,
+                aURI,
+                aOriginalURI,
+                aResultPrincipalURI,
+                aLoadReplace,
+                aReferrer,
+                aReferrerPolicy,
+                aTriggeringPrincipal,
+                aPrincipalToInherit,
+                aFlags,
+                aTypeHint,
+                aPostData,
+                aHeadersData,
+                aLoadType,
+                aSHEntry,
+                aFirstParty,
+                aSrcdoc,
+                aSourceDocShell,
+                aBaseURI)
+  {}
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    if (aValue.isBoolean() && !aValue.toBoolean()) {
+      // Things went fine, not handled by app, let gecko do its thing
+      mLoadData.Run();
+    }
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    // In the event of a rejected callback, let Gecko handle the load
+    mLoadData.Run();
+  }
+
+private:
+  ~LoadURIDelegateHandler()
+  {}
+
+  InternalLoadData mLoadData;
+};
+
+NS_IMPL_CYCLE_COLLECTION(LoadURIDelegateHandler, mLoadData.mDocShell,
+                         mLoadData.mURI, mLoadData.mOriginalURI,
+                         mLoadData.mResultPrincipalURI, mLoadData.mReferrer,
+                         mLoadData.mTriggeringPrincipal,
+                         mLoadData.mPrincipalToInherit, 
+                         mLoadData.mPostData, mLoadData.mHeadersData,
+                         mLoadData.mSHEntry, mLoadData.mSourceDocShell,
+                         mLoadData.mBaseURI)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadURIDelegateHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadURIDelegateHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadURIDelegateHandler)
 
 /**
  * Returns true if we started an asynchronous load (i.e., from the network), but
@@ -9332,7 +9464,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   const bool isDocumentAuxSandboxed = doc &&
     (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 
-  if (aURI && mLoadURIDelegate &&
+  const bool checkLoadDelegates = !(aFlags & INTERNAL_LOAD_FLAGS_DELEGATES_CHECKED);
+
+  if (aURI && mLoadURIDelegate && checkLoadDelegates &&
       (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
     // Dispatch only load requests for the current or a new window to the
     // delegate, e.g., to allow for GeckoView apps to handle the load event
@@ -9345,11 +9479,24 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
-    bool loadURIHandled = false;
+    RefPtr<dom::Promise> promise;
     rv = mLoadURIDelegate->LoadURI(aURI, where, aFlags, aTriggeringPrincipal,
-                                   &loadURIHandled);
-    if (NS_SUCCEEDED(rv) && loadURIHandled) {
-      // The request has been handled, nothing to do here.
+                                   getter_AddRefs(promise));
+
+    if (NS_SUCCEEDED(rv) && promise) {
+      const uint32_t flags = aFlags | INTERNAL_LOAD_FLAGS_DELEGATES_CHECKED;
+
+      RefPtr<LoadURIDelegateHandler> handler = 
+        new LoadURIDelegateHandler(this, aURI, aOriginalURI, aResultPrincipalURI,
+                                   aLoadReplace, aReferrer, aReferrerPolicy,
+                                   aTriggeringPrincipal, principalToInherit,
+                                   flags, aTypeHint, aPostData,
+                                   aHeadersData, aLoadType, aSHEntry, aFirstParty,
+                                   aSrcdoc, aSourceDocShell, aBaseURI);
+
+      promise->AppendNativeHandler(handler);
+
+      // Checking for load delegates; InternalLoad will be re-called if needed.
       return NS_OK;
     }
   }
