@@ -45,6 +45,7 @@
                     android:id="@+id/edit_bookmark_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:inputType="text"
                     android:ellipsize="end"
                     android:gravity="start"
                     android:hint="@string/bookmark_edit_name"
