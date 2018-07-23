@@ -2132,6 +2132,10 @@ class JSScript : public js::gc::TenuredCell
         void holdScript(JS::HandleFunction fun);
         void dropScript();
     };
+
+    // Return whether the record/replay execution progress counter
+    // (see RecordReplay.h) should be updated as this script runs.
+    inline bool trackRecordReplayProgress() const;
 };
 
 /* If this fails, add/remove padding within JSScript. */
