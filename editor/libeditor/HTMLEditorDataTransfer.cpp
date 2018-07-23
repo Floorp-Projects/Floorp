@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "HTMLEditUtils.h"
+#include "InternetCiter.h"
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/dom/Comment.h"
@@ -1865,7 +1866,36 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 NS_IMETHODIMP
 HTMLEditor::Rewrap(bool aRespectNewlines)
 {
-  return TextEditor::Rewrap(aRespectNewlines);
+  // Rewrap makes no sense if there's no wrap column; default to 72.
+  int32_t wrapWidth = WrapWidth();
+  if (wrapWidth <= 0) {
+    wrapWidth = 72;
+  }
+
+  nsAutoString current;
+  bool isCollapsed;
+  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
+                                   nsIDocumentEncoder::OutputLFLineBreak,
+                                   &isCollapsed, current);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsString wrapped;
+  uint32_t firstLineOffset = 0;   // XXX need to reset this if there is a
+                                  //     selection
+  rv = InternetCiter::Rewrap(current, wrapWidth, firstLineOffset,
+                             aRespectNewlines, wrapped);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (isCollapsed) {
+    DebugOnly<nsresult> rv = SelectAllInternal();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),  "Failed to select all text");
+  }
+
+  return InsertTextWithQuotations(wrapped);
 }
 
 NS_IMETHODIMP
