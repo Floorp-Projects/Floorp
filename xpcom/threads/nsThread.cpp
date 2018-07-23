@@ -1050,6 +1050,12 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
+  // When recording or replaying, execute triggers that were activated
+  // non-deterministically at some point since the last turn of the event loop.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::ExecuteTriggers();
+  }
+
   // The toplevel event loop normally blocks waiting for the next event, but
   // if we're trying to shut this thread down, we must exit the event loop when
   // the event queue is empty.
