@@ -11,6 +11,10 @@
   This window opens a new window which contains a longtask. We test that the
   longtask from the new window is not observed by the observer of this window. */
 async_test(t => {
+  if (typeof PerformanceLongTaskTiming === 'undefined') {
+      assert_unreached("Longtasks are not supported.");
+      t.done();
+  }
   const observer = new PerformanceObserver(
       t.step_func(function (entryList) {
           const entries = entryList.getEntries();
