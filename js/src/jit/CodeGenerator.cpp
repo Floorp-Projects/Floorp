@@ -5198,7 +5198,6 @@ CodeGenerator::generateArgumentsChecks(bool assert)
         if (!types || types->unknown())
             continue;
 
-#ifndef JS_CODEGEN_ARM64
         // Calculate the offset on the stack of the argument.
         // (i - info.startArgSlot())    - Compute index of arg within arg vector.
         // ... * sizeof(Value)          - Scale by value size.
@@ -5208,16 +5207,9 @@ CodeGenerator::generateArgumentsChecks(bool assert)
 
         // guardObjectType will zero the stack pointer register on speculative
         // paths.
-        Register spectreRegToZero = masm.getStackPointer();
+        Register spectreRegToZero = AsRegister(masm.getStackPointer());
         masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2,
                           spectreRegToZero, &miss);
-#else
-        // On ARM64, the stack pointer situation is more complicated. When we
-        // enable Ion, we should figure out how to mitigate Spectre there.
-        mozilla::Unused << temp1;
-        mozilla::Unused << temp2;
-        MOZ_CRASH("NYI");
-#endif
     }
 
     if (miss.used()) {
