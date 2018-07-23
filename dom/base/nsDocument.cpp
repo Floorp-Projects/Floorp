@@ -827,7 +827,7 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
 
   // First, make sure we strip the ref from aURI.
   nsCOMPtr<nsIURI> clone;
-  nsresult rv = aURI->CloneIgnoringRef(getter_AddRefs(clone));
+  nsresult rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(clone));
   if (NS_FAILED(rv) || !clone) {
     return nullptr;
   }

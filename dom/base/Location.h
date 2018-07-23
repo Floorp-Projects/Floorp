@@ -166,11 +166,6 @@ protected:
   // Note, this method can return NS_OK with a null value for aURL. This happens
   // if the docShell is null.
   nsresult GetURI(nsIURI** aURL, bool aGetInnermostURI = false);
-  // Note, this method can return NS_OK with a null value for aURL. This happens
-  // if the docShell is null.
-  nsresult GetWritableURI(nsIURI** aURL,
-                          // If not null, give it the new ref
-                          const nsACString* aNewRef = nullptr);
   nsresult SetURI(nsIURI* aURL, bool aReplace = false);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                            bool aReplace);

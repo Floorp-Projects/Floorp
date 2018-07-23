@@ -53,7 +53,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
     // of the URI that does not have a ref and in most cases should share
     // string buffers with the original URI.
     nsCOMPtr<nsIURI> uri;
-    rv = URI()->CloneIgnoringRef(getter_AddRefs(uri));
+    rv = NS_GetURIWithoutRef(URI(), getter_AddRefs(uri));
     if (NS_FAILED(rv))
         return rv;
 

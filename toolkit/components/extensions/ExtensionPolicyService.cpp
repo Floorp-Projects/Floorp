@@ -327,7 +327,7 @@ ExtensionPolicyService::CheckWindow(nsPIDOMWindowOuter* aWindow)
 
   nsCOMPtr<nsIURI> docUri = doc->GetDocumentURI();
   nsCOMPtr<nsIURI> uri;
-  if (!docUri || NS_FAILED(docUri->CloneIgnoringRef(getter_AddRefs(uri))) ||
+  if (!docUri || NS_FAILED(NS_GetURIWithoutRef(docUri, getter_AddRefs(uri))) ||
       !NS_IsAboutBlank(uri)) {
     return;
   }
