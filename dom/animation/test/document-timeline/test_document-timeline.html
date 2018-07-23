@@ -27,7 +27,7 @@ test(function() {
 });
 
 async_test(function(t) {
-  assert_true(document.timeline.currentTime > 0,
+  assert_greater_than(document.timeline.currentTime, 0,
     'document.timeline.currentTime is positive');
   // document.timeline.currentTime should be set even before document
   // load fires. We expect this code to be run before document load and hence
@@ -108,7 +108,7 @@ async_test(function(t) {
     getComputedStyle(hiddenIFrame).display;
 
     window.requestAnimationFrame(t.step_func(function() {
-      assert_true(hiddenIFrame.contentDocument.timeline.currentTime > 0,
+      assert_greater_than(hiddenIFrame.contentDocument.timeline.currentTime, 0,
         'document.timeline.currentTime is positive after removing'
         + ' display:none');
       var previousValue = hiddenIFrame.contentDocument.timeline.currentTime;

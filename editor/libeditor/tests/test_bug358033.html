@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=358033
+-->
+<head>
+ <title>Test for Bug 358033</title>
+ <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+ <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+ <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=358033">Mozilla Bug 358033</a>
+<p id="display"></p>
+<div id="content">
+<input type="text" id="input1">
+</div>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let input = document.getElementById("input1");
+
+  input.value = "ABC DEF"
+  input.focus();
+  input.setSelectionRange(4, 7, "backward");
+  synthesizeKey("KEY_Backspace");
+  is(input.value, "ABC ", "KEY_Backspace should remove selected string");
+  synthesizeKey("Z", { accelKey: true });
+  is(input.value, "ABC DEF", "Undo should restore string");
+  synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
+  synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
+  synthesizeKey("KEY_Backspace");
+
+  is(input.value, "AB", "anchor node and focus node should be kept order after undo");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

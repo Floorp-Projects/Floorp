@@ -61,7 +61,14 @@ TEST_DIRS += [
     'tests/gtest',
 ]
 
-CXXFLAGS += ['-Wall']
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    # -Wall on clang-cl maps to -Weverything, which turns on way too
+    # much, so we're using -W4 instead, which is mapped to clang's
+    # -Wall -Wextra.
+    CXXFLAGS += ['-W4']
+else:
+    CXXFLAGS += ['-Wall']
+
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # -Wall with Visual C++ enables too many problematic warnings
     CXXFLAGS += [
