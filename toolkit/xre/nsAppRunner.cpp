@@ -4279,9 +4279,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // If we see .purgecaches, that means someone did a make.
   // Re-register components to catch potential changes.
   nsCOMPtr<nsIFile> flagFile;
-  rv = NS_ERROR_FILE_NOT_FOUND;
   if (mAppData->directory) {
-    rv = mAppData->directory->Clone(getter_AddRefs(flagFile));
+    Unused << mAppData->directory->Clone(getter_AddRefs(flagFile));
   }
   if (flagFile) {
     flagFile->AppendNative(FILE_INVALIDATE_CACHES);
