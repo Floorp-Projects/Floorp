@@ -10,10 +10,6 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="progressmeter">
-    <resources>
-      <stylesheet src="chrome://global/skin/progressmeter.css"/>
-    </resources>
-
     <content>
       <xul:spacer class="progress-bar" xbl:inherits="mode"/>
       <xul:spacer class="progress-remainder" xbl:inherits="mode"/>

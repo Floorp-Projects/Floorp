@@ -715,6 +715,12 @@ IsVP9CodecString(const nsAString& aCodec)
           ExtractVPXCodecDetails(aCodec, profile, level, bitDepth));
 }
 
+bool
+IsAV1CodecString(const nsAString& aCodec)
+{
+  return aCodec.EqualsLiteral("av1"); // AV1
+}
+
 UniquePtr<TrackInfo>
 CreateTrackInfoWithMIMEType(const nsACString& aCodecMIMEType)
 {

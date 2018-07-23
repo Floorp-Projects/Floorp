@@ -186,16 +186,6 @@ this.ContentControl.prototype = {
       Logger.debug(() => {
         return ["activateAccessible", Logger.accessibleToString(aAccessible)];
       });
-      try {
-        if (aMessage.json.activateIfKey &&
-          !Utils.isActivatableOnFingerUp(aAccessible)) {
-          // Only activate keys, don't do anything on other objects.
-          return;
-        }
-      } catch (e) {
-        // accessible is invalid. Silently fail.
-        return;
-      }
 
       if (aAccessible.actionCount > 0) {
         aAccessible.doAction(0);
@@ -229,8 +219,9 @@ this.ContentControl.prototype = {
         }
       }
 
-      if (!Utils.isActivatableOnFingerUp(aAccessible)) {
-        // Keys will typically have a sound of their own.
+      // Action invoked will be presented on checked/selected state change.
+      if (!Utils.getState(aAccessible).contains(States.CHECKABLE) &&
+          !Utils.getState(aAccessible).contains(States.SELECTABLE)) {
         this._contentScope.get().sendAsyncMessage("AccessFu:Present",
           Presentation.actionInvoked(aAccessible, "click"));
       }

@@ -385,14 +385,6 @@ var Utils = { // jshint ignore:line
 
     return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
       aStaticText.indexInParent === 0;
-  },
-
-  isActivatableOnFingerUp: function isActivatableOnFingerUp(aAccessible) {
-    if (aAccessible.role === Roles.KEY) {
-      return true;
-    }
-    let quick_activate = this.getAttributes(aAccessible)["moz-quick-activate"];
-    return quick_activate && JSON.parse(quick_activate);
   }
 };
 

@@ -81,32 +81,6 @@ ShowError(DWORD aError = ::GetLastError())
   ::LocalFree(rawMsgBuf);
 }
 
-static bool
-SetArgv0ToFullBinaryPath(wchar_t* aArgv[])
-{
-  DWORD bufLen = MAX_PATH;
-  mozilla::UniquePtr<wchar_t[]> buf;
-
-  while (true) {
-    buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
-    DWORD retLen = ::GetModuleFileNameW(nullptr, buf.get(), bufLen);
-    if (!retLen) {
-      return false;
-    }
-
-    if (retLen == bufLen && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-      bufLen *= 2;
-      continue;
-    }
-
-    break;
-  }
-
-  // We intentionally leak buf into argv[0]
-  aArgv[0] = buf.release();
-  return true;
-}
-
 namespace mozilla {
 
 // Eventually we want to be able to set a build config flag such that, when set,
