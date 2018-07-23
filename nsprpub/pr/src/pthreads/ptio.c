@@ -1750,7 +1750,12 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
     if (addr->raw.family == AF_UNIX)
     {
         /* Disallow relative pathnames */
-        if (addr->local.path[0] != '/')
+        if (addr->local.path[0] != '/'
+#if defined(LINUX)
+            /* Linux has abstract socket address support */
+            && addr->local.path[0] != 0
+#endif
+            )
         {
             PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
             return PR_FAILURE;
