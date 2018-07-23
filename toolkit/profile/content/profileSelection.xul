@@ -57,7 +57,7 @@
     <separator flex="1"/>
 
     <vbox flex="1">
-      <richlistbox id="profiles" class="theme-listbox" height="100" seltype="single"
+      <richlistbox id="profiles" class="theme-listbox" seltype="single"
                    ondblclick="onProfilesDblClick(event)"
                    onkeypress="onProfilesKey(event);">
       </richlistbox>
