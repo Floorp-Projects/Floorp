@@ -755,12 +755,24 @@ checkbox:-moz-focusring {
   width: 15px;
   height: 100%;
 
+  padding: 0;
+  border: none;
   border-inline-start: 1px solid var(--theme-splitter-color);
 
   background: var(--theme-tab-toolbar-background);
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-photon-icon-color);
+}
+
+.all-tabs-menu:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.all-tabs-menu:hover:active {
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .devtools-tab-line {
