@@ -9,7 +9,6 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/EventDispatcher.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventStateManager.h"

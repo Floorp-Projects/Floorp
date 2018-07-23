@@ -152,8 +152,7 @@ DataTransferItemList::Add(const nsAString& aData,
     return nullptr;
   }
 
-  RefPtr<nsVariantCC> data(new nsVariantCC());
-  data->SetAsAString(aData);
+  nsCOMPtr<nsIVariant> data(new storage::TextVariant(aData));
 
   nsAutoString format;
   mDataTransfer->GetRealFormat(aType, format);
