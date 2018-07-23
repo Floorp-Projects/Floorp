@@ -19,11 +19,11 @@
 #include "jit/MIRGenerator.h"
 #include "jit/OptimizationTracking.h"
 #include "js/Conversions.h"
-#include "vm/ReplayDebugger.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -129,8 +129,8 @@ CodeGeneratorShared::generatePrologue()
     if (isProfilerInstrumentationEnabled())
         masm.profilerEnterFrame(masm.getStackPointer(), CallTempReg0);
 
-    if (ReplayDebugger::trackProgress(gen->info().script()))
-        masm.inc64(AbsoluteAddress(&ReplayDebugger::gProgressCounter));
+    if (gen->info().script()->trackRecordReplayProgress())
+        masm.inc64(AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
 
     // Ensure that the Ion frame is properly aligned.
     masm.assertStackAlignment(JitStackAlignment, 0);
