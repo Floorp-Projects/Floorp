@@ -39,6 +39,7 @@ template nsresult
 RangeUpdater::SelAdjInsertNode(const EditorRawDOMPoint& aPoint);
 
 SelectionState::SelectionState()
+  : mDirection(eDirNext)
 {
 }
 
@@ -71,6 +72,8 @@ SelectionState::SaveSelection(Selection* aSel)
   for (int32_t i = 0; i < rangeCount; i++) {
     mArray[i]->StoreRange(aSel->GetRangeAt(i));
   }
+
+  mDirection = aSel->GetDirection();
 }
 
 nsresult
@@ -80,6 +83,8 @@ SelectionState::RestoreSelection(Selection* aSel)
 
   // clear out selection
   aSel->RemoveAllRanges(IgnoreErrors());
+
+  aSel->SetDirection(mDirection);
 
   // set the selection ranges anew
   size_t arrayCount = mArray.Length();
@@ -118,6 +123,9 @@ SelectionState::IsEqual(SelectionState* aSelState)
   if (!myCount) {
     return false;
   }
+  if (mDirection != aSelState->mDirection) {
+    return false;
+  }
 
   for (size_t i = 0; i < myCount; i++) {
     RefPtr<nsRange> myRange = mArray[i]->GetRange();
@@ -145,6 +153,7 @@ SelectionState::MakeEmpty()
 {
   // free any items in the array
   mArray.Clear();
+  mDirection = eDirNext;
 }
 
 bool
