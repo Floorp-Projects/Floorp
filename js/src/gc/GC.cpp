@@ -7753,6 +7753,10 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 void
 GCRuntime::gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
+    // Garbage collection can occur at different points between recording and
+    // replay, so disallow recorded events from occurring during the GC.
+    mozilla::recordreplay::AutoDisallowThreadEvents d;
+
     invocationKind = gckind;
     collect(true, SliceBudget::unlimited(), reason);
 }
