@@ -142,11 +142,23 @@ struct RecyclableAtomMapValueWrapper
     }
 };
 
+struct NameMapHasher : public DefaultHasher<JSAtom*>
+{
+    static inline HashNumber hash(const Lookup& l) {
+        // Name maps use the atom's precomputed hash code, which is based on
+        // the atom's contents rather than its pointer value. This is necessary
+        // to preserve iteration order while recording/replaying: iteration can
+        // affect generated script bytecode and the order in which e.g. lookup
+        // property hooks are performed on the associated global.
+        return l->hash();
+    }
+};
+
 template <typename MapValue>
 using RecyclableNameMap = InlineMap<JSAtom*,
                                     RecyclableAtomMapValueWrapper<MapValue>,
                                     24,
-                                    DefaultHasher<JSAtom*>,
+                                    NameMapHasher,
                                     SystemAllocPolicy>;
 
 using DeclaredNameMap = RecyclableNameMap<DeclaredNameInfo>;
