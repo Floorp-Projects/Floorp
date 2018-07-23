@@ -2,7 +2,12 @@
 
 async function setup() {
   await setupFormAutofillStorage();
-  await addSampleAddressesAndBasicCard();
+  let prefilledGuids = await addSampleAddressesAndBasicCard();
+
+  info("associating the card with the billing address");
+  formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
+    billingAddressGUID: prefilledGuids.address1GUID,
+  }, true);
 }
 
 add_task(async function test_change_shipping() {
