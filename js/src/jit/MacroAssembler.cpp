@@ -967,34 +967,18 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
     // The nursery position (allocation pointer) and the nursery end are stored
-    // very close to each other. In practice, the zone will probably be close
-    // (within 32 bits) as well. If so, use relative offsets between them, to
-    // avoid multiple 64-bit immediate loads.
+    // very close to each other -- specifically, easily within a 32 bit offset.
+    // Use relative offsets between them, to avoid 64-bit immediate loads.
     auto nurseryPosAddr = intptr_t(zone->addressOfStringNurseryPosition());
     auto nurseryEndAddr = intptr_t(zone->addressOfStringNurseryCurrentEnd());
-    auto zoneAddr = intptr_t(zone);
 
-    intptr_t maxOffset = std::max(std::abs(nurseryPosAddr - zoneAddr),
-                                  std::abs(nurseryEndAddr - zoneAddr));
-    if (maxOffset < (1 << 31)) {
-        movePtr(ImmPtr(zone), temp); // temp holds the Zone pointer from here on.
-        loadPtr(Address(temp, nurseryPosAddr - zoneAddr), result);
-        addPtr(Imm32(totalSize), result); // result points past this allocation.
-        branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - zoneAddr), result, fail);
-        storePtr(result, Address(temp, nurseryPosAddr - zoneAddr)); // Update position.
-        subPtr(Imm32(thingSize), result); // Point result at Cell data.
-        storePtr(temp, Address(result, -js::Nursery::stringHeaderSize())); // Store Zone*
-    } else {
-        // Otherwise, the zone is far from the nursery pointers. But the
-        // nursery pos/end pointers are still near each other.
-        movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
-        loadPtr(Address(temp, 0), result);
-        addPtr(Imm32(totalSize), result);
-        branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - nurseryPosAddr), result, fail);
-        storePtr(result, Address(temp, 0));
-        subPtr(Imm32(thingSize), result);
-        storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
-    }
+    movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
+    loadPtr(Address(temp, 0), result);
+    addPtr(Imm32(totalSize), result);
+    branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - nurseryPosAddr), result, fail);
+    storePtr(result, Address(temp, 0));
+    subPtr(Imm32(thingSize), result);
+    storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
 }
 
 // Inlined equivalent of gc::AllocateString, jumping to fail if nursery
