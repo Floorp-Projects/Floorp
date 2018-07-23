@@ -298,6 +298,13 @@
       <vbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
+          <button id="contentBlockingRestoreDefaults"
+                  class="accessory-button"
+                  flex="1"
+                  data-l10n-id="content-blocking-restore-defaults"/>
+        </hbox>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
           <button id="trackingProtectionExceptions"
                   class="accessory-button"
                   flex="1"
