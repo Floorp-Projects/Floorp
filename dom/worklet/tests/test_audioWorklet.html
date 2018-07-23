@@ -43,7 +43,7 @@ function runTestInIframe() {
   var audioContext = new AudioContext();
   ok(audioContext.audioWorklet instanceof AudioWorklet,
      "AudioContext.audioWorklet should be an instance of AudioWorklet");
-  audioContext.audioWorklet.import("worklet_audioWorklet.js")
+  audioContext.audioWorklet.addModule("worklet_audioWorklet.js")
 }
 </script>
 </body>

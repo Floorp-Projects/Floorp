@@ -2279,19 +2279,6 @@ nsStandardURL::Clone(nsIURI **result)
     return CloneInternal(eHonorRef, EmptyCString(), result);
 }
 
-
-NS_IMETHODIMP
-nsStandardURL::CloneIgnoringRef(nsIURI **result)
-{
-    return CloneInternal(eIgnoreRef, EmptyCString(), result);
-}
-
-NS_IMETHODIMP
-nsStandardURL::CloneWithNewRef(const nsACString& newRef, nsIURI **result)
-{
-    return CloneInternal(eReplaceRef, newRef, result);
-}
-
 nsresult
 nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
                              const nsACString& newRef,

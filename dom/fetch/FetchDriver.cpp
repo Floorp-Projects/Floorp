@@ -1287,7 +1287,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     MOZ_ALWAYS_SUCCEEDS(aNewChannel->GetURI(getter_AddRefs(uri)));
 
     nsCOMPtr<nsIURI> uriClone;
-    nsresult rv = uri->CloneIgnoringRef(getter_AddRefs(uriClone));
+    nsresult rv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriClone));
     if(NS_WARN_IF(NS_FAILED(rv))){
       return rv;
     }

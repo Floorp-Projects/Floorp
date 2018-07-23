@@ -212,9 +212,9 @@ nsSimpleNestedURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode,
     if (refHandlingMode == eHonorRef) {
         innerClone = mInnerURI;
     } else if (refHandlingMode == eReplaceRef) {
-        rv = mInnerURI->CloneWithNewRef(newRef, getter_AddRefs(innerClone));
+        rv = NS_GetURIWithNewRef(mInnerURI, newRef, getter_AddRefs(innerClone));
     } else {
-        rv = mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
+        rv = NS_GetURIWithoutRef(mInnerURI, getter_AddRefs(innerClone));
     }
 
     if (NS_FAILED(rv)) {

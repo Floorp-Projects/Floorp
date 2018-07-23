@@ -448,7 +448,7 @@ function do_test_uri_basic(aTest) {
   // Sanity-check
   do_info("testing " + aTest.spec + " equals a clone of itself");
   do_check_uri_eq(URI, URI.mutate().finalize());
-  do_check_uri_eqExceptRef(URI, URI.cloneIgnoringRef());
+  do_check_uri_eqExceptRef(URI, URI.mutate().setRef("").finalize());
   do_info("testing " + aTest.spec + " instanceof nsIURL");
   Assert.equal(URI instanceof Ci.nsIURL, aTest.nsIURL);
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
@@ -530,7 +530,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
     // These tests fail if origURI has a ref
     do_info("testing cloneIgnoringRef on " + testURI.spec +
             " is equal to no-ref version but not equal to ref version");
-    var cloneNoRef = testURI.cloneIgnoringRef();
+    var cloneNoRef = testURI.mutate().setRef("").finalize();
     do_check_uri_eq(cloneNoRef, origURI);
     Assert.ok(!cloneNoRef.equals(testURI));
   }

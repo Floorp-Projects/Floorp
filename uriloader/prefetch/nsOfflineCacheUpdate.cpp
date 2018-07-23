@@ -86,9 +86,8 @@ DropReferenceFromURL(nsCOMPtr<nsIURI>& aURI)
 {
     // XXXdholbert If this SetRef fails, callers of this method probably
     // want to call aURI->CloneIgnoringRef() and use the result of that.
-    return NS_MutateURI(aURI)
-             .SetRef(EmptyCString())
-             .Finalize(aURI);
+    nsCOMPtr<nsIURI> uri(aURI);
+    return NS_GetURIWithoutRef(uri, getter_AddRefs(aURI));
 }
 
 void
@@ -1247,7 +1246,7 @@ nsOfflineCacheUpdate::GetCacheKey(nsIURI *aURI, nsACString &aKey)
     aKey.Truncate();
 
     nsCOMPtr<nsIURI> newURI;
-    nsresult rv = aURI->CloneIgnoringRef(getter_AddRefs(newURI));
+    nsresult rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(newURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = newURI->GetAsciiSpec(aKey);

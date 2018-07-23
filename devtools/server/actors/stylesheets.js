@@ -321,8 +321,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   get styleSheetIndex() {
     if (this._styleSheetIndex == -1) {
-      for (let i = 0; i < this.document.styleSheets.length; i++) {
-        if (this.document.styleSheets[i] == this.rawSheet) {
+      const styleSheets = InspectorUtils.getAllStyleSheets(this.document, true);
+      for (let i = 0; i < styleSheets.length; i++) {
+        if (styleSheets[i] == this.rawSheet) {
           this._styleSheetIndex = i;
           break;
         }

@@ -6,7 +6,7 @@
 
 requestLongerTimeout(2);
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);

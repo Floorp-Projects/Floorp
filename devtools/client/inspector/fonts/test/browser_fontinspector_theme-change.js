@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 
 const { getTheme, setTheme } = require("devtools/client/shared/theme");
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 const originalTheme = getTheme();
 
 registerCleanupFunction(() => {
