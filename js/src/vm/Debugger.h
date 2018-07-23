@@ -721,6 +721,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool startTraceLogger(JSContext* cx, unsigned argc, Value* vp);
     static bool endTraceLogger(JSContext* cx, unsigned argc, Value* vp);
     static bool isCompilableUnit(JSContext* cx, unsigned argc, Value* vp);
+    static bool recordReplayProcessKind(JSContext* cx, unsigned argc, Value* vp);
 #ifdef NIGHTLY_BUILD
     static bool setupTraceLogger(JSContext* cx, unsigned argc, Value* vp);
     static bool drainTraceLogger(JSContext* cx, unsigned argc, Value* vp);

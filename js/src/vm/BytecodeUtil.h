@@ -836,6 +836,11 @@ GetNextPc(jsbytecode* pc)
     return pc + GetBytecodeLength(pc);
 }
 
+typedef Vector<jsbytecode*, 4, SystemAllocPolicy> PcVector;
+
+bool GetSuccessorBytecodes(jsbytecode* pc, PcVector& successors);
+bool GetPredecessorBytecodes(JSScript* script, jsbytecode* pc, PcVector& predecessors);
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 /*
  * Disassemblers, for debugging only.
