@@ -26,6 +26,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
+#include "vm/ReplayDebugger.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
@@ -360,6 +361,9 @@ BaselineCompiler::emitPrologue()
     masm.checkStackAlignment();
 #endif
     emitProfilerEnterFrame();
+
+    if (ReplayDebugger::trackProgress(script))
+        masm.inc64(AbsoluteAddress(&ReplayDebugger::gProgressCounter));
 
     masm.push(BaselineFrameReg);
     masm.moveStackPtrTo(BaselineFrameReg);
@@ -1356,7 +1360,11 @@ BaselineCompiler::emit_JSOP_LOOPENTRY()
     if (!emit_JSOP_JUMPTARGET())
         return false;
     frame.syncStack(0);
-    return emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc));
+    if (!emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc)))
+        return false;
+    if (ReplayDebugger::trackProgress(script))
+        masm.inc64(AbsoluteAddress(&ReplayDebugger::gProgressCounter));
+    return true;
 }
 
 bool
