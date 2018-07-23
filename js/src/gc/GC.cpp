@@ -2144,7 +2144,9 @@ GCRuntime::shouldCompact()
 bool
 GCRuntime::isCompactingGCEnabled() const
 {
-    return compactingEnabled && rt->mainContextFromOwnThread()->compactingDisabledCount == 0;
+    return compactingEnabled
+        && rt->mainContextFromOwnThread()->compactingDisabledCount == 0
+        && !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
 AutoDisableCompactingGC::AutoDisableCompactingGC(JSContext* cx)
