@@ -1944,7 +1944,7 @@ TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
-  return InsertAsQuotation(aQuotedText, aNodeInserted);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
