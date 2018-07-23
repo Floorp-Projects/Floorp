@@ -89,12 +89,14 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         viewModel.getExperimentsLiveData().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean aBoolean) {
-                ExperimentsSettingsFragment preferenceFragment = new ExperimentsSettingsFragment();
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, preferenceFragment, ExperimentsSettingsFragment.FRAGMENT_TAG)
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss();
+                if (aBoolean) {
+                    ExperimentsSettingsFragment preferenceFragment = new ExperimentsSettingsFragment();
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, preferenceFragment, ExperimentsSettingsFragment.FRAGMENT_TAG)
+                            .addToBackStack(null)
+                            .commitAllowingStateLoss();
+                }
             }
         });
     }
