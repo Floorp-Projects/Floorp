@@ -697,6 +697,9 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void blockThreadedExecution(in nsIBlockThreadedExecutionCallback aBlockedCallback);
     void unblockThreadedExecution();
+
+    /* Give a directive to the record/replay system. */
+    void recordReplayDirective(in long directive);
 };
 
 /**

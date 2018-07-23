@@ -33,11 +33,11 @@ namespace recordreplay {
         (const PLDHashTableOps* aOps), (aOps))                  \
   Macro(InternalUnwrapPLDHashTableCallbacks, const PLDHashTableOps*, \
         (const PLDHashTableOps* aOps), (aOps))                  \
-  Macro(AllocateMemory, void*, (size_t aSize, AllocatedMemoryKind aKind), (aSize, aKind)) \
   Macro(InternalThingIndex, size_t, (void* aThing), (aThing))   \
   Macro(InternalVirtualThingName, const char*, (void* aThing), (aThing)) \
-  Macro(NewCheckpoint, bool, (bool aTemporary), (aTemporary))   \
-  Macro(SpewEnabled, bool, (), ())
+  Macro(ExecutionProgressCounter, ProgressCounter*, (), ())     \
+  Macro(IsInternalScript, bool, (const char* aURL), (aURL))     \
+  Macro(DefineRecordReplayControlObject, bool, (JSContext* aCx, JSObject* aObj), (aCx, aObj))
 
 #define FOR_EACH_INTERFACE_VOID(Macro)                          \
   Macro(InternalBeginOrderedAtomicAccess, (), ())               \
@@ -50,7 +50,6 @@ namespace recordreplay {
   Macro(InternalEndCaptureEventStacks, (), ())                  \
   Macro(InternalRecordReplayBytes,                              \
         (void* aData, size_t aSize), (aData, aSize))            \
-  Macro(DisallowUnhandledDivergeFromRecording, (), ())          \
   Macro(NotifyUnrecordedWait,                                   \
         (const std::function<void()>& aCallback), (aCallback))  \
   Macro(MaybeWaitForCheckpointSave, (), ())                     \
@@ -60,16 +59,8 @@ namespace recordreplay {
   Macro(InternalMovePLDHashTableContents,                       \
         (const PLDHashTableOps* aFirstOps, const PLDHashTableOps* aSecondOps), \
         (aFirstOps, aSecondOps))                                \
-  Macro(SetCheckpointHooks,                                     \
-        (BeforeCheckpointHook aBefore, AfterCheckpointHook aAfter), \
-        (aBefore, aAfter))                                      \
-  Macro(ResumeExecution, (), ())                                \
-  Macro(RestoreCheckpointAndResume, (const CheckpointId& aId), (aId)) \
-  Macro(DivergeFromRecording, (), ())                           \
-  Macro(DeallocateMemory,                                       \
-        (void* aAddress, size_t aSize, AllocatedMemoryKind aKind), (aAddress, aSize, aKind)) \
   Macro(SetWeakPointerJSRoot,                                   \
-        (const void* aPtr, void* aJSObj), (aPtr, aJSObj))       \
+        (const void* aPtr, JSObject* aJSObj), (aPtr, aJSObj))   \
   Macro(RegisterTrigger,                                        \
         (void* aObj, const std::function<void()>& aCallback),   \
         (aObj, aCallback))                                      \
@@ -83,7 +74,13 @@ namespace recordreplay {
   Macro(InternalRegisterThing, (void* aThing), (aThing))        \
   Macro(InternalUnregisterThing, (void* aThing), (aThing))      \
   Macro(InternalRecordReplayDirective, (long aDirective), (aDirective)) \
-  Macro(InternalPrint, (const char* aFormat, va_list aArgs), (aFormat, aArgs))
+  Macro(BeginContentParse,                                      \
+        (const void* aToken, const char* aURL, const char* aContentType), \
+        (aToken, aURL, aContentType))                           \
+  Macro(AddContentParseData,                                    \
+        (const void* aToken, const char16_t* aBuffer, size_t aLength), \
+        (aToken, aBuffer, aLength))                             \
+  Macro(EndContentParse, (const void* aToken), (aToken))
 
 #define DECLARE_SYMBOL(aName, aReturnType, aFormals, _) \
   static aReturnType (*gPtr ##aName) aFormals;

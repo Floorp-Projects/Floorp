@@ -64,6 +64,8 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/recordreplay/ChildIPC.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginProcessChild.h"
@@ -361,6 +363,8 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
 
+  recordreplay::Initialize(aArgc, aArgv);
+
 #ifdef MOZ_ASAN_REPORTER
   // In ASan reporter builds, we need to set ASan's log_path as early as
   // possible, so it dumps its errors into files there instead of using
@@ -444,6 +448,9 @@ XRE_InitChildProcess(int aArgc,
     return NS_ERROR_FAILURE;
   const char* const mach_port_name = aArgv[--aArgc];
 
+  Maybe<recordreplay::AutoPassThroughThreadEvents> pt;
+  pt.emplace();
+
   const int kTimeoutMs = 1000;
 
   MachSendMessage child_message(0);
@@ -510,6 +517,7 @@ XRE_InitChildProcess(int aArgc,
     return NS_ERROR_FAILURE;
   }
 
+  pt.reset();
 #endif
 
   SetupErrorHandling(aArgv[0]);
@@ -619,6 +627,9 @@ XRE_InitChildProcess(int aArgc,
     }
   }
 
+  // While replaying, use the parent PID that existed while recording.
+  parentPID = recordreplay::RecordReplayValue(parentPID);
+
 #ifdef XP_MACOSX
   mozilla::ipc::SharedMemoryBasic::SetupMachMemory(parentPID, ports_in_receiver, ports_in_sender,
                                                    ports_out_sender, ports_out_receiver, true);
@@ -664,6 +675,12 @@ XRE_InitChildProcess(int aArgc,
       uiLoopType = MessageLoop::TYPE_UI;
       break;
   }
+
+  // If we are recording or replaying, initialize state and update arguments
+  // according to those which were captured by the MiddlemanProcessChild in the
+  // middleman process. No argument manipulation should happen between this
+  // call and the point where the process child is initialized.
+  recordreplay::child::InitRecordingOrReplayingProcess(&aArgc, &aArgv);
 
   {
     // This is a lexical scope for the MessageLoop below.  We want it
@@ -962,7 +979,7 @@ TestShellParent* GetOrCreateTestShellParent()
         // processes.
         RefPtr<ContentParent> parent =
             ContentParent::GetNewOrUsedBrowserProcess(
-                NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+		nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
         parent.forget(&gContentParent);
     } else if (!gContentParent->IsAlive()) {
         return nullptr;

@@ -1,0 +1,57 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.recordreplay += [
+    'ipc/ChildIPC.h',
+    'ipc/ParentIPC.h',
+]
+
+if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
+    UNIFIED_SOURCES += [
+        'Assembler.cpp',
+        'Callback.cpp',
+        'DirtyMemoryHandler.cpp',
+        'File.cpp',
+        'HashTable.cpp',
+        'ipc/Channel.cpp',
+        'ipc/ChildIPC.cpp',
+        'ipc/ChildNavigation.cpp',
+        'ipc/ChildProcess.cpp',
+        'ipc/JSControl.cpp',
+        'ipc/ParentForwarding.cpp',
+        'ipc/ParentGraphics.cpp',
+        'ipc/ParentIPC.cpp',
+        'Lock.cpp',
+        'MemorySnapshot.cpp',
+        'ProcessRecordReplay.cpp',
+        'ProcessRedirectDarwin.cpp',
+        'ProcessRewind.cpp',
+        'Thread.cpp',
+        'ThreadSnapshot.cpp',
+        'Trigger.cpp',
+        'ValueIndex.cpp',
+        'WeakPointer.cpp',
+    ]
+    SOURCES += [
+        # ProcessRedirect includes udis86 directly and will not compile if the
+        # udis86 headers are included elsewhere in the same compilation unit.
+        'ProcessRedirect.cpp',
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'ipc/DisabledIPC.cpp',
+    ]
+
+LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
+    '/ipc/chromium/src',
+    '/js/xpconnect/src',
+]
+
+FINAL_LIBRARY = 'xul'
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Web Replay')
