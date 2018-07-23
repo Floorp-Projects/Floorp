@@ -1904,15 +1904,17 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
-  // Don't let anyone insert html into a "plaintext" editor:
+  // Don't let anyone insert HTML when we're in plaintext mode.
   if (IsPlaintextEditor()) {
-    NS_ASSERTION(!aInsertHTML, "InsertAsCitedQuotation: trying to insert html into plaintext editor");
+    NS_ASSERTION(!aInsertHTML,
+      "InsertAsCitedQuotation: trying to insert html into plaintext editor");
     return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
   }
 
-  // get selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
@@ -1933,9 +1935,11 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
     return NS_OK; // rules canceled the operation
   }
 
-  nsCOMPtr<Element> newNode =
+  RefPtr<Element> newNode =
     DeleteSelectionAndCreateElement(*nsGkAtoms::blockquote);
-  NS_ENSURE_TRUE(newNode, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!newNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Try to set type=cite.  Ignore it if this fails.
   newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
