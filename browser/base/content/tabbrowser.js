@@ -3422,7 +3422,7 @@ window._gBrowser = {
     if (contextTab.multiselected) {
       tabs = this.selectedTabs;
     } else {
-      tabs = [gBrowser.selectedTab];
+      tabs = [contextTab];
     }
 
     if (this.tabs.length == tabs.length) {
