@@ -800,11 +800,6 @@
   box-shadow: inset 4px 0 var(--blue-40);
 }
 
-.all-tabs-button,
-.all-tabs-secondary-button {
-  background-color: transparent !important;
-}
-
 .all-tabs-secondary-button > label {
   display: none;
   margin: 0 5.5px;
