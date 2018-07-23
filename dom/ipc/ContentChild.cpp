@@ -1809,7 +1809,11 @@ FirstIdle(void)
 {
   MOZ_ASSERT(gFirstIdleTask);
   gFirstIdleTask = nullptr;
-  ContentChild::GetSingleton()->SendFirstIdle();
+
+  // When recording or replaying, the middleman process will send this message instead.
+  if (!recordreplay::IsRecordingOrReplaying()) {
+    ContentChild::GetSingleton()->SendFirstIdle();
+  }
 }
 
 mozilla::jsipc::PJavaScriptChild *
