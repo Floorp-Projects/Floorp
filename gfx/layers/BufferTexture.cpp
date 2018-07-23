@@ -162,34 +162,6 @@ BufferTextureData::CreateInternal(LayersIPCChannel* aAllocator,
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
-                                                int32_t aBufferSize,
-                                                YUVColorSpace aYUVColorSpace,
-                                                uint32_t aBitDepth,
-                                                TextureFlags aTextureFlags)
-{
-  if (aBufferSize == 0 || !gfx::Factory::CheckBufferSize(aBufferSize)) {
-    return nullptr;
-  }
-
-  bool hasIntermediateBuffer = aAllocator ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                                                         aAllocator->GetCompositorBackendType(),
-                                                                         aAllocator->SupportsTextureDirectMapping())
-                                          : true;
-
-  // Initialize the metadata with something, even if it will have to be rewritten
-  // afterwards since we don't know the dimensions of the texture at this point.
-  BufferDescriptor desc = YCbCrDescriptor(gfx::IntSize(), 0, gfx::IntSize(), 0,
-                                          0, 0, 0, StereoMode::MONO,
-                                          aYUVColorSpace,
-                                          aBitDepth,
-                                          hasIntermediateBuffer);
-
-  return CreateInternal(aAllocator ? aAllocator->GetTextureForwarder() : nullptr,
-                       desc, gfx::BackendType::NONE, aBufferSize, aTextureFlags);
-}
-
-BufferTextureData*
 BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                   gfx::IntSize aYSize,
                                   uint32_t aYStride,
