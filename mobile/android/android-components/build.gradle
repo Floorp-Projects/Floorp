@@ -32,16 +32,16 @@ buildscript {
     // Synchronized versions numbers of GeckoView (Nightly) artifacts.
     ext.geckoNightly = [
         // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
-        nightlyDate: '2018.07.04',
-        revision: 'cc3401e78e8bbae22e6dbc854e525ceae4923bcf',
-        version: '63.0.20180704100138'
+        nightlyDate: '2018.07.24',
+        revision: '1e5fa52a612e8985e12212d1950a732954e00e45',
+        version: '63.0.20180724100046'
     ]
 
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
     ext.geckoBeta = [
-        // mozilla-beta: FENNEC_62_0b5_RELEASE
-        revision: '801112336847960bbb9a018695cf09ea437dc137',
-        version: '62.0.20180702164905'
+        // mozilla-beta: FENNEC_62_0b9_RELEASE
+        revision: 'd7ab2f3df0840cdb8557659afd46f61afa310379',
+        version: '62.0.20180713213322'
     ]
 
     ext.geckoRelease = [

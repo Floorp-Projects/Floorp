@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.os.Handler
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -19,7 +20,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
@@ -185,23 +187,24 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testSaveState() {
+        ThreadUtils.sGeckoHandler = Handler()
+
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.geckoSession = mock(GeckoSession::class.java)
         val currentState = GeckoSession.SessionState("")
         val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
 
-        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
-                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(currentState) })
-
+        `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
         assertEquals(stateMap, engineSession.saveState())
     }
 
     @Test
-    fun testSaveStateThrowsExceptionOnNullResult() {
+    fun testSaveStateThrowsException() {
+        ThreadUtils.sGeckoHandler = Handler()
+
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.geckoSession = mock(GeckoSession::class.java)
-        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
-                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(null) })
+        `when`(engineSession.geckoSession.saveState()).thenThrow(GeckoEngineException("test"))
 
         try {
             engineSession.saveState()
