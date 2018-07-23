@@ -24,6 +24,7 @@
 #include "nsIChannel.h"
 #include "nsIX509Cert.h"
 #include "nsISSLStatus.h"
+#include "nsISSLStatusProvider.h"
 #endif
 #include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
@@ -334,12 +335,12 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
         if (NS_FAILED(rv))
             return rv;
 
-        nsCOMPtr<nsITransportSecurityInfo> secInfo =
+        nsCOMPtr<nsISSLStatusProvider> statusProvider =
             do_QueryInterface(security);
 
-        if (mUseNative && secInfo) {
+        if (mUseNative && statusProvider) {
             nsCOMPtr<nsISSLStatus> status;
-            rv = secInfo->GetSSLStatus(getter_AddRefs(status));
+            rv = statusProvider->GetSSLStatus(getter_AddRefs(status));
             if (NS_FAILED(rv))
                 return rv;
 
