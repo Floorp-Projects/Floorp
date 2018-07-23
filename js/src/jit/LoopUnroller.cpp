@@ -7,6 +7,7 @@
 #include "jit/LoopUnroller.h"
 
 #include "jit/MIRGraph.h"
+#include "vm/ReplayDebugger.h"
 
 using namespace js;
 using namespace js::jit;
@@ -401,6 +402,11 @@ bool
 jit::UnrollLoops(MIRGraph& graph, const LoopIterationBoundVector& bounds)
 {
     if (bounds.empty())
+        return true;
+
+    // Loop unrolling interferes with the progress tracking performed when
+    // recording/replaying.
+    if (ReplayDebugger::trackProgress(graph.entryBlock()->info().script()))
         return true;
 
     for (size_t i = 0; i < bounds.length(); i++) {

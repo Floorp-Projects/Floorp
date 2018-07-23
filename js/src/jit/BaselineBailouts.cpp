@@ -450,13 +450,16 @@ GetStubReturnAddress(JSContext* cx, jsbytecode* pc)
 }
 
 static inline jsbytecode*
-GetNextNonLoopEntryPc(jsbytecode* pc)
+GetNextNonLoopEntryPc(jsbytecode* pc, jsbytecode** skippedLoopEntry)
 {
     JSOp op = JSOp(*pc);
     if (op == JSOP_GOTO)
         return pc + GET_JUMP_OFFSET(pc);
-    if (op == JSOP_LOOPENTRY || op == JSOP_NOP || op == JSOP_LOOPHEAD)
+    if (op == JSOP_LOOPENTRY || op == JSOP_NOP || op == JSOP_LOOPHEAD) {
+        if (op == JSOP_LOOPENTRY)
+            *skippedLoopEntry = pc;
         return GetNextPc(pc);
+    }
     return pc;
 }
 
@@ -982,15 +985,18 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     //
     // The algorithm below is the "tortoise and the hare" algorithm. See bug
     // 994444 for more explanation.
+    jsbytecode* skippedLoopEntry = nullptr;
     if (!resumeAfter) {
         jsbytecode* fasterPc = pc;
         while (true) {
-            pc = GetNextNonLoopEntryPc(pc);
-            fasterPc = GetNextNonLoopEntryPc(GetNextNonLoopEntryPc(fasterPc));
+            pc = GetNextNonLoopEntryPc(pc, &skippedLoopEntry);
+            fasterPc = GetNextNonLoopEntryPc(GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry), &skippedLoopEntry);
             if (fasterPc == pc)
                 break;
         }
         op = JSOp(*pc);
+        if (skippedLoopEntry && ReplayDebugger::trackProgress(script))
+            ReplayDebugger::gProgressCounter++;
     }
 
     const uint32_t pcOff = script->pcToOffset(pc);
@@ -1178,8 +1184,8 @@ InitFromBailout(JSContext* cx, size_t frameNo,
             JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
                     int(sizeof(Value) * numUnsynced), int(frameSize));
 
-            // If envChain is nullptr, then bailout is occurring during argument check.
-            // In this case, resume into the prologue.
+            // If envChain is nullptr, then bailout is occurring during argument check
+            // or early in the script's execution. In this case, resume into the prologue.
             uint8_t* opReturnAddr;
             if (envChain == nullptr) {
                 // Global and eval scripts expect the env chain in R1, so only
@@ -1189,6 +1195,10 @@ InitFromBailout(JSContext* cx, size_t frameNo,
                 opReturnAddr = baselineScript->prologueEntryAddr();
                 JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
 
+                // Undo the progress for any loop entry we thought we were skipping
+                // over earlier.
+                if (skippedLoopEntry && ReplayDebugger::trackProgress(script))
+                    ReplayDebugger::gProgressCounter--;
             } else {
                 opReturnAddr = nativeCodeForPC;
             }
