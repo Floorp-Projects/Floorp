@@ -486,11 +486,14 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kMaxptimeAttribute:
         LoadMaxPtime(attributeList);
         return;
+      case SdpAttribute::kCandidateAttribute:
+        LoadCandidate(attributeList);
+        return;
+
 
       case SdpAttribute::kLabelAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
       case SdpAttribute::kRtcpRsizeAttribute:
-      case SdpAttribute::kCandidateAttribute:
       case SdpAttribute::kConnectionAttribute:
       case SdpAttribute::kIceMismatchAttribute:
         // TODO: Not implemented, or not applicable.
@@ -1287,6 +1290,28 @@ RsdparsaSdpAttributeList::LoadMaxPtime(RustAttributeList* attributeList)
     SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxptimeAttribute,
                                         maxPtime));
   }
+}
+
+void
+RsdparsaSdpAttributeList::LoadCandidate(RustAttributeList* attributeList)
+{
+  size_t candidatesCount = sdp_get_candidate_count(attributeList);
+  if (!candidatesCount) {
+    return;
+  }
+
+  StringVec* rustCandidatesStrings;
+  sdp_get_candidates(attributeList, candidatesCount, &rustCandidatesStrings);
+
+  std::vector<std::string> candidatesStrings =
+                                  convertStringVec(rustCandidatesStrings);
+  free_boxed_string_vec(rustCandidatesStrings);
+
+  auto candidates = MakeUnique<SdpMultiStringAttribute>(
+                                  SdpAttribute::kCandidateAttribute);
+  candidates->mValues = candidatesStrings;
+
+  SetAttribute(candidates.release());
 }
 
 bool

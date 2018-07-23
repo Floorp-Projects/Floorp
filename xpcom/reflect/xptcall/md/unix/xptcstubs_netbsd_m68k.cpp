@@ -23,7 +23,6 @@ extern "C" {
         const nsXPTMethodInfo* info;
         uint8_t paramCount;
         uint8_t i;
-        nsresult result = NS_ERROR_FAILURE;
 
         NS_ASSERTION(self,"no self");
 
@@ -80,7 +79,8 @@ extern "C" {
             }
         }
 
-        result = self->CallMethod((uint16_t)methodIndex, info, dispatchParams);
+        nsresult result = self->CallMethod((uint16_t)methodIndex, info,
+                                           dispatchParams);
 
         if(dispatchParams != paramBuffer)
             delete [] dispatchParams;

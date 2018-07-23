@@ -27,7 +27,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
     const nsXPTMethodInfo* info = nullptr;
     uint8_t paramCount;
     uint8_t i;
-    nsresult result = NS_ERROR_FAILURE;
 
     // If anything fails before stackBytesToPop can be set then
     // the failure is completely catastrophic!
@@ -86,7 +85,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
     }
     *stackBytesToPop = ((uint32_t)ap) - ((uint32_t)args);
 
-    result = self->mOuter->CallMethod((uint16_t)methodIndex, info, dispatchParams);
+    nsresult result = self->mOuter->CallMethod((uint16_t)methodIndex, info,
+                                               dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

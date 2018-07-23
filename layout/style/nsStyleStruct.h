@@ -2806,19 +2806,20 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
 
   nsChangeHint CalcDifference(const nsStyleColumn& aNewData) const;
 
-  /**
-   * This is the maximum number of columns we can process. It's used in both
-   * nsColumnSetFrame and nsRuleNode.
-   */
+  // This is the maximum number of columns we can process. It's used in
+  // nsColumnSetFrame.
   static const uint32_t kMaxColumnCount = 1000;
 
-  uint32_t     mColumnCount; // NS_STYLE_COLUMN_COUNT_* or another integer
+  // This represents the value of column-count: auto.
+  static const uint32_t kColumnCountAuto = 0;
+
+  uint32_t mColumnCount = kColumnCountAuto;
   nsStyleCoord mColumnWidth; // coord, auto
 
   mozilla::StyleComplexColor mColumnRuleColor;
   uint8_t      mColumnRuleStyle;  // NS_STYLE_BORDER_STYLE_*
-  uint8_t      mColumnFill;  // NS_STYLE_COLUMN_FILL_*
-  uint8_t      mColumnSpan;  // NS_STYLE_COLUMN_SPAN_*
+  mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
+  mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
 
   void SetColumnRuleWidth(nscoord aWidth) {
     mColumnRuleWidth = NS_ROUND_BORDER_TO_PIXELS(aWidth, mTwipsPerPixel);

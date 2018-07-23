@@ -153,6 +153,8 @@ rusty-enums = [
     "mozilla::StyleOrient",
     "mozilla::StyleBoxSizing",
     "mozilla::StyleClear",
+    "mozilla::StyleColumnFill",
+    "mozilla::StyleColumnSpan",
     "mozilla::StyleComplexColor_Tag",
     "mozilla::StyleFloat",
     "mozilla::StyleImageOrientation",
