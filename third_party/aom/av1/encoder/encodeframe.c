@@ -41,7 +41,6 @@
 #include "av1/common/seg_common.h"
 #include "av1/common/tile_common.h"
 
-#include "av1/encoder/ab_partition_model_weights.h"
 #include "av1/encoder/aq_complexity.h"
 #include "av1/encoder/aq_cyclicrefresh.h"
 #include "av1/encoder/aq_variance.h"
@@ -54,6 +53,7 @@
 #include "av1/encoder/ethread.h"
 #include "av1/encoder/extend.h"
 #include "av1/encoder/ml.h"
+#include "av1/encoder/partition_model_weights.h"
 #include "av1/encoder/rd.h"
 #include "av1/encoder/rdopt.h"
 #include "av1/encoder/segmentation.h"
@@ -2099,7 +2099,7 @@ static void rd_auto_partition_range(AV1_COMP *cpi, const TileInfo *const tile,
   // When use_square_partition_only is true, make sure at least one square
   // partition is allowed by selecting the next smaller square size as
   // *min_block_size.
-  if (cpi->sf.use_square_partition_only) {
+  if (min_size >= cpi->sf.use_square_partition_only_threshold) {
     min_size = AOMMIN(min_size, next_square_size[max_size]);
   }
 
@@ -2363,6 +2363,7 @@ static int64_t dist_8x8_yuv(const AV1_COMP *const cpi, MACROBLOCK *const x,
 static void reset_partition(PC_TREE *pc_tree, BLOCK_SIZE bsize) {
   pc_tree->partitioning = PARTITION_NONE;
   pc_tree->cb_search_range = SEARCH_FULL_PLANE;
+  pc_tree->none.skip = 0;
 
   if (bsize >= BLOCK_8X8) {
     BLOCK_SIZE subsize = get_partition_subsize(bsize, PARTITION_SPLIT);
@@ -2876,6 +2877,168 @@ static void ml_prune_ab_partition(BLOCK_SIZE bsize, int part_ctx, int var_ctx,
   }
 }
 
+#define FEATURES 18
+#define LABELS 4
+// Use a ML model to predict if horz4 and vert4 should be considered.
+static void ml_prune_4_partition(const AV1_COMP *const cpi,
+                                 const MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                 int part_ctx, int64_t best_rd,
+                                 int64_t horz_rd[2], int64_t vert_rd[2],
+                                 int64_t split_rd[4],
+                                 int *const partition_horz4_allowed,
+                                 int *const partition_vert4_allowed) {
+  if (best_rd >= 1000000000) return;
+  const NN_CONFIG *nn_config = NULL;
+  switch (bsize) {
+    case BLOCK_16X16: nn_config = &av1_4_partition_nnconfig_16; break;
+    case BLOCK_32X32: nn_config = &av1_4_partition_nnconfig_32; break;
+    case BLOCK_64X64: nn_config = &av1_4_partition_nnconfig_64; break;
+    default: assert(0 && "Unexpected bsize.");
+  }
+  if (!nn_config) return;
+
+  aom_clear_system_state();
+
+  // Generate features.
+  float features[FEATURES];
+  int feature_index = 0;
+  features[feature_index++] = (float)part_ctx;
+  features[feature_index++] = (float)get_unsigned_bits(x->source_variance);
+
+  const int rdcost = (int)AOMMIN(INT_MAX, best_rd);
+  int sub_block_rdcost[8] = { 0 };
+  int rd_index = 0;
+  for (int i = 0; i < 2; ++i) {
+    if (horz_rd[i] > 0 && horz_rd[i] < 1000000000)
+      sub_block_rdcost[rd_index] = (int)horz_rd[i];
+    ++rd_index;
+  }
+  for (int i = 0; i < 2; ++i) {
+    if (vert_rd[i] > 0 && vert_rd[i] < 1000000000)
+      sub_block_rdcost[rd_index] = (int)vert_rd[i];
+    ++rd_index;
+  }
+  for (int i = 0; i < 4; ++i) {
+    if (split_rd[i] > 0 && split_rd[i] < 1000000000)
+      sub_block_rdcost[rd_index] = (int)split_rd[i];
+    ++rd_index;
+  }
+  for (int i = 0; i < 8; ++i) {
+    // Ratio between the sub-block RD and the whole-block RD.
+    float rd_ratio = 1.0f;
+    if (sub_block_rdcost[i] > 0 && sub_block_rdcost[i] < rdcost)
+      rd_ratio = (float)sub_block_rdcost[i] / (float)rdcost;
+    features[feature_index++] = rd_ratio;
+  }
+
+  // Get variance of the 1:4 and 4:1 sub-blocks.
+  unsigned int horz_4_source_var[4] = { 0 };
+  unsigned int vert_4_source_var[4] = { 0 };
+  {
+    BLOCK_SIZE horz_4_bs = get_partition_subsize(bsize, PARTITION_HORZ_4);
+    BLOCK_SIZE vert_4_bs = get_partition_subsize(bsize, PARTITION_VERT_4);
+    const int src_stride = x->plane[0].src.stride;
+    const uint8_t *src = x->plane[0].src.buf;
+    const MACROBLOCKD *const xd = &x->e_mbd;
+    for (int i = 0; i < 4; ++i) {
+      const uint8_t *horz_src =
+          src + i * block_size_high[horz_4_bs] * src_stride;
+      const uint8_t *vert_src = src + i * block_size_wide[vert_4_bs];
+      unsigned int horz_var, vert_var, sse;
+      if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
+        switch (xd->bd) {
+          case 10:
+            horz_var = cpi->fn_ptr[horz_4_bs].vf(
+                horz_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_10),
+                0, &sse);
+            vert_var = cpi->fn_ptr[vert_4_bs].vf(
+                vert_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_10),
+                0, &sse);
+            break;
+          case 12:
+            horz_var = cpi->fn_ptr[horz_4_bs].vf(
+                horz_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_12),
+                0, &sse);
+            vert_var = cpi->fn_ptr[vert_4_bs].vf(
+                vert_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_12),
+                0, &sse);
+            break;
+          case 8:
+          default:
+            horz_var = cpi->fn_ptr[horz_4_bs].vf(
+                horz_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_8),
+                0, &sse);
+            vert_var = cpi->fn_ptr[vert_4_bs].vf(
+                vert_src, src_stride, CONVERT_TO_BYTEPTR(AV1_HIGH_VAR_OFFS_8),
+                0, &sse);
+            break;
+        }
+        horz_4_source_var[i] =
+            ROUND_POWER_OF_TWO(horz_var, num_pels_log2_lookup[horz_4_bs]);
+        vert_4_source_var[i] =
+            ROUND_POWER_OF_TWO(vert_var, num_pels_log2_lookup[vert_4_bs]);
+      } else {
+        horz_var = cpi->fn_ptr[horz_4_bs].vf(horz_src, src_stride, AV1_VAR_OFFS,
+                                             0, &sse);
+        vert_var = cpi->fn_ptr[vert_4_bs].vf(vert_src, src_stride, AV1_VAR_OFFS,
+                                             0, &sse);
+        horz_4_source_var[i] =
+            ROUND_POWER_OF_TWO(horz_var, num_pels_log2_lookup[horz_4_bs]);
+        vert_4_source_var[i] =
+            ROUND_POWER_OF_TWO(vert_var, num_pels_log2_lookup[vert_4_bs]);
+      }
+    }
+  }
+
+  const float denom = (float)(x->source_variance + 1);
+  const float low_b = 0.1f;
+  const float high_b = 10.0f;
+  for (int i = 0; i < 4; ++i) {
+    // Ratio between the 4:1 sub-block variance and the whole-block variance.
+    float var_ratio = (float)(horz_4_source_var[i] + 1) / denom;
+    if (var_ratio < low_b) var_ratio = low_b;
+    if (var_ratio > high_b) var_ratio = high_b;
+    features[feature_index++] = var_ratio;
+  }
+  for (int i = 0; i < 4; ++i) {
+    // Ratio between the 1:4 sub-block RD and the whole-block RD.
+    float var_ratio = (float)(vert_4_source_var[i] + 1) / denom;
+    if (var_ratio < low_b) var_ratio = low_b;
+    if (var_ratio > high_b) var_ratio = high_b;
+    features[feature_index++] = var_ratio;
+  }
+  assert(feature_index == FEATURES);
+
+  // Calculate scores using the NN model.
+  float score[LABELS] = { 0.0f };
+  av1_nn_predict(features, nn_config, score);
+  int int_score[LABELS];
+  int max_score = -1000;
+  for (int i = 0; i < LABELS; ++i) {
+    int_score[i] = (int)(100 * score[i]);
+    max_score = AOMMAX(int_score[i], max_score);
+  }
+
+  // Make decisions based on the model scores.
+  int thresh = max_score;
+  switch (bsize) {
+    case BLOCK_16X16: thresh -= 400; break;
+    case BLOCK_32X32: thresh -= 400; break;
+    case BLOCK_64X64: thresh -= 100; break;
+    default: break;
+  }
+  *partition_horz4_allowed = 0;
+  *partition_vert4_allowed = 0;
+  for (int i = 0; i < LABELS; ++i) {
+    if (int_score[i] >= thresh) {
+      if ((i >> 0) & 1) *partition_horz4_allowed = 1;
+      if ((i >> 1) & 1) *partition_vert4_allowed = 1;
+    }
+  }
+}
+#undef FEATURES
+#undef LABELS
+
 // TODO(jingning,jimbankoski,rbultje): properly skip partition types that are
 // unlikely to be selected depending on previous rate-distortion optimization
 // results, for encoding speed-up.
@@ -3003,7 +3166,8 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
     partition_vert_allowed &= partition_allowed || !has_cols;
     do_square_split &= bsize > min_size;
   }
-  if (cpi->sf.use_square_partition_only) {
+
+  if (bsize > cpi->sf.use_square_partition_only_threshold) {
     partition_horz_allowed &= !has_rows;
     partition_vert_allowed &= !has_cols;
   }
@@ -3480,13 +3644,6 @@ BEGIN_PARTITION_SEARCH:
   const int ext_partition_allowed =
       do_rectangular_split && bsize > BLOCK_8X8 && partition_none_allowed;
 
-  // partition4_allowed is 1 if we can use a PARTITION_HORZ_4 or
-  // PARTITION_VERT_4 for this block. This is almost the same as
-  // ext_partition_allowed, except that we don't allow 128x32 or 32x128 blocks,
-  // so we require that bsize is not BLOCK_128X128.
-  const int partition4_allowed =
-      ext_partition_allowed && bsize != BLOCK_128X128;
-
   // The standard AB partitions are allowed whenever ext-partition-types are
   // allowed
   int horzab_partition_allowed = ext_partition_allowed;
@@ -3642,15 +3799,34 @@ BEGIN_PARTITION_SEARCH:
     restore_context(x, &x_ctx, mi_row, mi_col, bsize, num_planes);
   }
 
-  // PARTITION_HORZ_4
+  // partition4_allowed is 1 if we can use a PARTITION_HORZ_4 or
+  // PARTITION_VERT_4 for this block. This is almost the same as
+  // ext_partition_allowed, except that we don't allow 128x32 or 32x128 blocks,
+  // so we require that bsize is not BLOCK_128X128.
+  const int partition4_allowed =
+      ext_partition_allowed && bsize != BLOCK_128X128;
   int partition_horz4_allowed = partition4_allowed && partition_horz_allowed;
+  int partition_vert4_allowed = partition4_allowed && partition_vert_allowed;
   if (cpi->sf.prune_ext_partition_types_search_level == 2) {
     partition_horz4_allowed &= (pc_tree->partitioning == PARTITION_HORZ ||
                                 pc_tree->partitioning == PARTITION_HORZ_A ||
                                 pc_tree->partitioning == PARTITION_HORZ_B ||
                                 pc_tree->partitioning == PARTITION_SPLIT ||
                                 pc_tree->partitioning == PARTITION_NONE);
+    partition_vert4_allowed &= (pc_tree->partitioning == PARTITION_VERT ||
+                                pc_tree->partitioning == PARTITION_VERT_A ||
+                                pc_tree->partitioning == PARTITION_VERT_B ||
+                                pc_tree->partitioning == PARTITION_SPLIT ||
+                                pc_tree->partitioning == PARTITION_NONE);
   }
+  if (cpi->sf.ml_prune_4_partition && partition4_allowed &&
+      partition_horz_allowed && partition_vert_allowed) {
+    ml_prune_4_partition(cpi, x, bsize, pc_tree->partitioning, best_rdc.rdcost,
+                         horz_rd, vert_rd, split_rd, &partition_horz4_allowed,
+                         &partition_vert4_allowed);
+  }
+
+  // PARTITION_HORZ_4
   if (partition_horz4_allowed && has_rows &&
       (do_rectangular_split || active_h_edge(cpi, mi_row, mi_step))) {
     av1_init_rd_stats(&sum_rdc);
@@ -3687,14 +3863,6 @@ BEGIN_PARTITION_SEARCH:
   }
 
   // PARTITION_VERT_4
-  int partition_vert4_allowed = partition4_allowed && partition_vert_allowed;
-  if (cpi->sf.prune_ext_partition_types_search_level == 2) {
-    partition_vert4_allowed &= (pc_tree->partitioning == PARTITION_VERT ||
-                                pc_tree->partitioning == PARTITION_VERT_A ||
-                                pc_tree->partitioning == PARTITION_VERT_B ||
-                                pc_tree->partitioning == PARTITION_SPLIT ||
-                                pc_tree->partitioning == PARTITION_NONE);
-  }
   if (partition_vert4_allowed && has_cols &&
       (do_rectangular_split || active_v_edge(cpi, mi_row, mi_step))) {
     av1_init_rd_stats(&sum_rdc);
@@ -3857,6 +4025,7 @@ static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
     }
     xd->cur_frame_force_integer_mv = cm->cur_frame_force_integer_mv;
 
+    x->sb_energy_level = 0;
     if (cm->delta_q_present_flag) {
       // Delta-q modulation based on variance
       av1_setup_src_planes(x, cpi->source, mi_row, mi_col, num_planes);
@@ -3865,11 +4034,13 @@ static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
       if (DELTAQ_MODULATION == 1) {
         const int block_wavelet_energy_level =
             av1_block_wavelet_energy_level(cpi, x, cm->seq_params.sb_size);
+        x->sb_energy_level = block_wavelet_energy_level;
         offset_qindex = av1_compute_deltaq_from_energy_level(
             cpi, block_wavelet_energy_level);
       } else {
         const int block_var_level =
             av1_block_energy(cpi, x, cm->seq_params.sb_size);
+        x->sb_energy_level = block_var_level;
         offset_qindex =
             av1_compute_deltaq_from_energy_level(cpi, block_var_level);
       }
@@ -3943,6 +4114,8 @@ static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
       x->use_cb_search_range = 0;
       init_first_partition_pass_stats_tables(x->first_partition_pass_stats);
       if (cpi->sf.two_pass_partition_search &&
+          cpi->sf.use_square_partition_only_threshold <
+              cm->seq_params.sb_size &&
           mi_row + mi_size_high[cm->seq_params.sb_size] < cm->mi_rows &&
           mi_col + mi_size_wide[cm->seq_params.sb_size] < cm->mi_cols &&
           cm->frame_type != KEY_FRAME) {
@@ -4030,7 +4203,8 @@ static void init_encode_frame_mb_context(AV1_COMP *cpi) {
   // Copy data over into macro block data structures.
   av1_setup_src_planes(x, cpi->source, 0, 0, num_planes);
 
-  av1_setup_block_planes(xd, cm->subsampling_x, cm->subsampling_y, num_planes);
+  av1_setup_block_planes(xd, cm->seq_params.subsampling_x,
+                         cm->seq_params.subsampling_y, num_planes);
 }
 
 static MV_REFERENCE_FRAME get_frame_type(const AV1_COMP *cpi) {
@@ -4116,8 +4290,8 @@ void av1_encode_tile(AV1_COMP *cpi, ThreadData *td, int tile_row,
   TOKENEXTRA *tok = cpi->tile_tok[tile_row][tile_col];
   int mi_row;
 
-  av1_zero_above_context(cm, tile_info->mi_col_start, tile_info->mi_col_end,
-                         tile_row);
+  av1_zero_above_context(cm, &td->mb.e_mbd, tile_info->mi_col_start,
+                         tile_info->mi_col_end, tile_row);
   av1_init_above_context(cm, &td->mb.e_mbd, tile_row);
 
   // Set up pointers to per thread motion search counters.
@@ -4128,7 +4302,7 @@ void av1_encode_tile(AV1_COMP *cpi, ThreadData *td, int tile_row,
   this_tile->tctx = *cm->fc;
   td->mb.e_mbd.tile_ctx = &this_tile->tctx;
 
-  cfl_init(&td->mb.e_mbd.cfl, cm);
+  cfl_init(&td->mb.e_mbd.cfl, &cm->seq_params);
 
   av1_crc32c_calculator_init(&td->mb.mb_rd_record.crc_calculator);
 
@@ -4263,25 +4437,24 @@ static int is_screen_content(const uint8_t *src, int use_hbd, int bd,
   return counts * blk_h * blk_w * 10 > width * height;
 }
 
+static const uint8_t ref_frame_flag_list[REF_FRAMES] = { 0,
+                                                         AOM_LAST_FLAG,
+                                                         AOM_LAST2_FLAG,
+                                                         AOM_LAST3_FLAG,
+                                                         AOM_GOLD_FLAG,
+                                                         AOM_BWD_FLAG,
+                                                         AOM_ALT2_FLAG,
+                                                         AOM_ALT_FLAG };
+
 // Enforce the number of references for each arbitrary frame limited to
 // (INTER_REFS_PER_FRAME - 1)
 static void enforce_max_ref_frames(AV1_COMP *cpi) {
   AV1_COMMON *const cm = &cpi->common;
-  static const int flag_list[REF_FRAMES] = { 0,
-                                             AOM_LAST_FLAG,
-                                             AOM_LAST2_FLAG,
-                                             AOM_LAST3_FLAG,
-                                             AOM_GOLD_FLAG,
-                                             AOM_BWD_FLAG,
-                                             AOM_ALT2_FLAG,
-                                             AOM_ALT_FLAG };
   MV_REFERENCE_FRAME ref_frame;
   int total_valid_refs = 0;
-
-  (void)flag_list;
-
   for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
-    if (cpi->ref_frame_flags & flag_list[ref_frame]) total_valid_refs++;
+    if (cpi->ref_frame_flags & ref_frame_flag_list[ref_frame])
+      total_valid_refs++;
   }
 
   // NOTE(zoeliu): When all the possible reference frames are availble, we
@@ -4617,7 +4790,6 @@ static void encode_frame_internal(AV1_COMP *cpi) {
   cm->prev_mi = cm->allow_ref_frame_mvs ? cm->prev_mip : NULL;
 
   x->txb_split_count = 0;
-  av1_zero(x->blk_skip_drl);
 
   av1_zero(rdc->global_motion_used);
   av1_zero(cpi->gmparams_cost);
@@ -4672,8 +4844,9 @@ static void encode_frame_internal(AV1_COMP *cpi) {
           }
 
           compute_global_motion_feature_based(
-              model, cpi->source, ref_buf[frame], cpi->common.bit_depth,
-              inliers_by_motion, params_by_motion, RANSAC_NUM_MOTIONS);
+              model, cpi->source, ref_buf[frame],
+              cpi->common.seq_params.bit_depth, inliers_by_motion,
+              params_by_motion, RANSAC_NUM_MOTIONS);
 
           for (i = 0; i < RANSAC_NUM_MOTIONS; ++i) {
             if (inliers_by_motion[i] == 0) continue;
@@ -4733,6 +4906,15 @@ static void encode_frame_internal(AV1_COMP *cpi) {
                              cm->allow_high_precision_mv) +
           cpi->gmtype_cost[cm->global_motion[frame].wmtype] -
           cpi->gmtype_cost[IDENTITY];
+    }
+    // clear disabled ref_frames
+    for (frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame) {
+      const int ref_disabled =
+          !(cpi->ref_frame_flags & ref_frame_flag_list[frame]);
+      if (ref_disabled && cpi->sf.recode_loop != DISALLOW_RECODE) {
+        cpi->gmparams_cost[frame] = 0;
+        cm->global_motion[frame] = default_warp_params;
+      }
     }
     cpi->global_motion_search_done = 1;
   }
@@ -5082,8 +5264,9 @@ static void encode_superblock(const AV1_COMP *const cpi, TileDataEnc *tile_data,
   }
 
   if (!is_inter) {
-    xd->cfl.is_chroma_reference = is_chroma_reference(
-        mi_row, mi_col, bsize, cm->subsampling_x, cm->subsampling_y);
+    xd->cfl.is_chroma_reference =
+        is_chroma_reference(mi_row, mi_col, bsize, cm->seq_params.subsampling_x,
+                            cm->seq_params.subsampling_y);
     xd->cfl.store_y = store_cfl_required(cm, xd);
     mbmi->skip = 1;
     for (int plane = 0; plane < num_planes; ++plane) {

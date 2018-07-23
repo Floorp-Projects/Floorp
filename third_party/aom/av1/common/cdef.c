@@ -110,7 +110,7 @@ void copy_rect8_16bit_to_16bit_c(uint16_t *dst, int dstride,
 static void copy_sb8_16(AOM_UNUSED AV1_COMMON *cm, uint16_t *dst, int dstride,
                         const uint8_t *src, int src_voffset, int src_hoffset,
                         int sstride, int vsize, int hsize) {
-  if (cm->use_highbitdepth) {
+  if (cm->seq_params.use_highbitdepth) {
     const uint16_t *base =
         &CONVERT_TO_SHORTPTR(src)[src_voffset * sstride + src_hoffset];
     copy_rect8_16bit_to_16bit(dst, dstride, base, sstride, vsize, hsize);
@@ -153,7 +153,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   int mi_high_l2[3];
   int xdec[3];
   int ydec[3];
-  int coeff_shift = AOMMAX(cm->bit_depth - 8, 0);
+  int coeff_shift = AOMMAX(cm->seq_params.bit_depth - 8, 0);
   const int nvfb = (cm->mi_rows + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
   const int nhfb = (cm->mi_cols + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
   av1_setup_dst_planes(xd->plane, cm->seq_params.sb_size, frame, 0, 0, 0,
@@ -363,7 +363,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                     vsize + 2 * CDEF_VBORDER, CDEF_HBORDER, CDEF_VERY_LARGE);
         }
 
-        if (cm->use_highbitdepth) {
+        if (cm->seq_params.use_highbitdepth) {
           cdef_filter_fb(
               NULL,
               &CONVERT_TO_SHORTPTR(

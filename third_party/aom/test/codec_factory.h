@@ -71,6 +71,11 @@ class CodecTestWith4Params
     : public ::testing::TestWithParam< ::testing::tuple<
           const libaom_test::CodecFactory *, T1, T2, T3, T4> > {};
 
+template <class T1, class T2, class T3, class T4, class T5>
+class CodecTestWith5Params
+    : public ::testing::TestWithParam< ::testing::tuple<
+          const libaom_test::CodecFactory *, T1, T2, T3, T4, T5> > {};
+
 /*
  * AV1 Codec Definitions
  */

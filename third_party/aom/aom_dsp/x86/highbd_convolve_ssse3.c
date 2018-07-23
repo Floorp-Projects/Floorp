@@ -18,8 +18,8 @@
 
 void av1_highbd_convolve_y_sr_ssse3(const uint16_t *src, int src_stride,
                                     uint16_t *dst, int dst_stride, int w, int h,
-                                    InterpFilterParams *filter_params_x,
-                                    InterpFilterParams *filter_params_y,
+                                    const InterpFilterParams *filter_params_x,
+                                    const InterpFilterParams *filter_params_y,
                                     const int subpel_x_q4,
                                     const int subpel_y_q4,
                                     ConvolveParams *conv_params, int bd) {
@@ -166,8 +166,8 @@ void av1_highbd_convolve_y_sr_ssse3(const uint16_t *src, int src_stride,
 
 void av1_highbd_convolve_x_sr_ssse3(const uint16_t *src, int src_stride,
                                     uint16_t *dst, int dst_stride, int w, int h,
-                                    InterpFilterParams *filter_params_x,
-                                    InterpFilterParams *filter_params_y,
+                                    const InterpFilterParams *filter_params_x,
+                                    const InterpFilterParams *filter_params_y,
                                     const int subpel_x_q4,
                                     const int subpel_y_q4,
                                     ConvolveParams *conv_params, int bd) {

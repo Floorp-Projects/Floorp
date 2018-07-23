@@ -572,7 +572,7 @@ static void enqueue_lr_jobs(AV1LrSync *lr_sync, AV1LrStruct *lr_ctxt,
   for (int plane = 0; plane < num_planes; plane++) {
     if (cm->rst_info[plane].frame_restoration_type == RESTORE_NONE) continue;
     const int is_uv = plane > 0;
-    const int ss_y = is_uv && cm->subsampling_y;
+    const int ss_y = is_uv && cm->seq_params.subsampling_y;
 
     AV1PixelRect tile_rect = ctxt[plane].tile_rect;
     const int unit_size = ctxt[plane].rsi->restoration_unit_size;

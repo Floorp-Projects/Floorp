@@ -44,7 +44,7 @@ static INLINE int get_relative_dist(const AV1_COMMON *cm, int a, int b) {
   assert(b >= 0 && b < (1 << bits));
 
   int diff = a - b;
-  int m = 1 << (bits - 1);
+  const int m = 1 << (bits - 1);
   diff = (diff & (m - 1)) - (diff & m);
   return diff;
 }

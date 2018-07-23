@@ -39,7 +39,6 @@ typedef struct FrameWorkerData {
   const uint8_t *data_end;
   size_t data_size;
   void *user_priv;
-  int result;
   int worker_id;
   int received_frame;
 

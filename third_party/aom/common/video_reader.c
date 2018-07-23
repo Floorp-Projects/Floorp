@@ -8,19 +8,20 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#include "common/video_reader.h"
-
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "aom_ports/mem_ops.h"
 #include "common/ivfdec.h"
-
-static const char *const kIVFSignature = "DKIF";
+#include "common/obudec.h"
+#include "common/tools_common.h"
+#include "common/video_reader.h"
 
 struct AvxVideoReaderStruct {
   AvxVideoInfo info;
-  FILE *file;
+  struct AvxInputContext input_ctx;
+  struct ObuDecInputContext obu_ctx;
   uint8_t *buffer;
   size_t buffer_size;
   size_t frame_size;
@@ -28,42 +29,64 @@ struct AvxVideoReaderStruct {
 };
 
 AvxVideoReader *aom_video_reader_open(const char *filename) {
-  char header[32];
   AvxVideoReader *reader = NULL;
   FILE *const file = fopen(filename, "rb");
   if (!file) return NULL;  // Can't open file
 
-  if (fread(header, 1, 32, file) != 32) return NULL;  // Can't read file header
-
-  if (memcmp(kIVFSignature, header, 4) != 0)
-    return NULL;  // Wrong IVF signature
-
-  if (mem_get_le16(header + 4) != 0) return NULL;  // Wrong IVF version
-
   reader = (AvxVideoReader *)calloc(1, sizeof(*reader));
-  if (!reader) return NULL;  // Can't allocate AvxVideoReader
+  if (!reader) {
+    fclose(file);
+    return NULL;  // Can't allocate AvxVideoReader
+  }
 
-  reader->file = file;
-  reader->info.codec_fourcc = mem_get_le32(header + 8);
-  reader->info.frame_width = mem_get_le16(header + 12);
-  reader->info.frame_height = mem_get_le16(header + 14);
-  reader->info.time_base.numerator = mem_get_le32(header + 16);
-  reader->info.time_base.denominator = mem_get_le32(header + 20);
+  reader->input_ctx.filename = filename;
+  reader->input_ctx.file = file;
+  reader->obu_ctx.avx_ctx = &reader->input_ctx;
+  reader->obu_ctx.is_annexb = 1;
+
+  if (file_is_ivf(&reader->input_ctx)) {
+    reader->input_ctx.file_type = FILE_TYPE_IVF;
+    reader->info.codec_fourcc = reader->input_ctx.fourcc;
+    reader->info.frame_width = reader->input_ctx.width;
+    reader->info.frame_height = reader->input_ctx.height;
+  } else if (file_is_obu(&reader->obu_ctx)) {
+    reader->input_ctx.file_type = FILE_TYPE_OBU;
+    // assume AV1
+    reader->info.codec_fourcc = AV1_FOURCC;
+    reader->info.is_annexb = reader->obu_ctx.is_annexb;
+  } else {
+    fclose(file);
+    free(reader);
+    return NULL;  // Unknown file type
+  }
 
   return reader;
 }
 
 void aom_video_reader_close(AvxVideoReader *reader) {
   if (reader) {
-    fclose(reader->file);
+    fclose(reader->input_ctx.file);
+    if (reader->input_ctx.file_type == FILE_TYPE_OBU) {
+      obudec_free(&reader->obu_ctx);
+    }
     free(reader->buffer);
     free(reader);
   }
 }
 
 int aom_video_reader_read_frame(AvxVideoReader *reader) {
-  return !ivf_read_frame(reader->file, &reader->buffer, &reader->frame_size,
-                         &reader->buffer_size, &reader->pts);
+  if (reader->input_ctx.file_type == FILE_TYPE_IVF) {
+    return !ivf_read_frame(reader->input_ctx.file, &reader->buffer,
+                           &reader->frame_size, &reader->buffer_size,
+                           &reader->pts);
+  } else if (reader->input_ctx.file_type == FILE_TYPE_OBU) {
+    return !obudec_read_temporal_unit(&reader->obu_ctx, &reader->buffer,
+                                      &reader->frame_size,
+                                      &reader->buffer_size);
+  } else {
+    assert(0);
+    return 0;
+  }
 }
 
 const uint8_t *aom_video_reader_get_frame(AvxVideoReader *reader,
@@ -77,7 +100,9 @@ int64_t aom_video_reader_get_frame_pts(AvxVideoReader *reader) {
   return (int64_t)reader->pts;
 }
 
-FILE *aom_video_reader_get_file(AvxVideoReader *reader) { return reader->file; }
+FILE *aom_video_reader_get_file(AvxVideoReader *reader) {
+  return reader->input_ctx.file;
+}
 
 const AvxVideoInfo *aom_video_reader_get_info(AvxVideoReader *reader) {
   return &reader->info;

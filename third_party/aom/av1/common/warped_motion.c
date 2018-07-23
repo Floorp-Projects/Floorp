@@ -92,33 +92,6 @@ static const int error_measure_lut[512] = {
 };
 /* clang-format on */
 
-void project_points_affine(const int32_t *mat, int *points, int *proj,
-                           const int n, const int stride_points,
-                           const int stride_proj, const int subsampling_x,
-                           const int subsampling_y) {
-  for (int i = 0; i < n; ++i) {
-    const int x = *(points++), y = *(points++);
-    if (subsampling_x)
-      *(proj++) = ROUND_POWER_OF_TWO_SIGNED(
-          mat[2] * 2 * x + mat[3] * 2 * y + mat[0] +
-              (mat[2] + mat[3] - (1 << WARPEDMODEL_PREC_BITS)) / 2,
-          WARPEDDIFF_PREC_BITS + 1);
-    else
-      *(proj++) = ROUND_POWER_OF_TWO_SIGNED(mat[2] * x + mat[3] * y + mat[0],
-                                            WARPEDDIFF_PREC_BITS);
-    if (subsampling_y)
-      *(proj++) = ROUND_POWER_OF_TWO_SIGNED(
-          mat[4] * 2 * x + mat[5] * 2 * y + mat[1] +
-              (mat[4] + mat[5] - (1 << WARPEDMODEL_PREC_BITS)) / 2,
-          WARPEDDIFF_PREC_BITS + 1);
-    else
-      *(proj++) = ROUND_POWER_OF_TWO_SIGNED(mat[4] * x + mat[5] * y + mat[1],
-                                            WARPEDDIFF_PREC_BITS);
-    points += stride_points - 2;
-    proj += stride_proj - 2;
-  }
-}
-
 // For warping, we really use a 6-tap filter, but we do blocks of 8 pixels
 // at a time. The zoom/rotation/shear in the model are applied to the
 // "fractional" position of each pixel, which therefore varies within

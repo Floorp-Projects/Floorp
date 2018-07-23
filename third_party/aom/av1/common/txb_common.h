@@ -466,31 +466,6 @@ static AOM_FORCE_INLINE int get_nz_mag(const uint8_t *const levels,
   return mag;
 }
 
-static INLINE int get_nz_count(const uint8_t *const levels, const int bwl,
-                               const TX_CLASS tx_class) {
-  int count;
-
-  count = (levels[1] != 0);                         // { 0, 1 }
-  count += (levels[(1 << bwl) + TX_PAD_HOR] != 0);  // { 1, 0 }
-
-  for (int idx = 0; idx < SIG_REF_DIFF_OFFSET_NUM; ++idx) {
-    const int row_offset =
-        ((tx_class == TX_CLASS_2D) ? sig_ref_diff_offset[idx][0]
-                                   : ((tx_class == TX_CLASS_VERT)
-                                          ? sig_ref_diff_offset_vert[idx][0]
-                                          : sig_ref_diff_offset_horiz[idx][0]));
-    const int col_offset =
-        ((tx_class == TX_CLASS_2D) ? sig_ref_diff_offset[idx][1]
-                                   : ((tx_class == TX_CLASS_VERT)
-                                          ? sig_ref_diff_offset_vert[idx][1]
-                                          : sig_ref_diff_offset_horiz[idx][1]));
-    const int nb_pos =
-        (row_offset << bwl) + (row_offset << TX_PAD_HOR_LOG2) + col_offset;
-    count += (levels[nb_pos] != 0);
-  }
-  return count;
-}
-
 #define NZ_MAP_CTX_0 SIG_COEF_CONTEXTS_2D
 #define NZ_MAP_CTX_5 (NZ_MAP_CTX_0 + 5)
 #define NZ_MAP_CTX_10 (NZ_MAP_CTX_0 + 10)

@@ -630,7 +630,9 @@ int read_frame() {
     die_codec(&codec, "Failed to decode frame.");
   }
   int got_any_frames = 0;
-  while ((img = aom_codec_get_frame(&codec, &iter))) {
+  aom_image_t *frame_img;
+  while ((frame_img = aom_codec_get_frame(&codec, &iter))) {
+    img = frame_img;
     ++frame_count;
     got_any_frames = 1;
   }

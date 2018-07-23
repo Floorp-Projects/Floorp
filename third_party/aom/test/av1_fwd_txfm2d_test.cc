@@ -247,9 +247,9 @@ void AV1FwdTxfm2dMatchTest(TX_SIZE tx_size, lowbd_fwd_txfm_func target_func) {
 
     FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
     if (ref_func != NULL) {
-      DECLARE_ALIGNED(16, int16_t, input[64 * 64]) = { 0 };
-      DECLARE_ALIGNED(16, int32_t, output[64 * 64]);
-      DECLARE_ALIGNED(16, int32_t, ref_output[64 * 64]);
+      DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
+      DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
+      DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
       int input_stride = 64;
       ACMRandom rnd(ACMRandom::DeterministicSeed());
       for (int cnt = 0; cnt < 500; ++cnt) {
@@ -339,4 +339,16 @@ INSTANTIATE_TEST_CASE_P(SSE4_1, AV1FwdTxfm2dTest,
                         Combine(ValuesIn(fwd_txfm_for_sse41),
                                 Values(av1_lowbd_fwd_txfm_sse4_1)));
 #endif  // HAVE_SSE4_1
+
+#if HAVE_AVX2
+static TX_SIZE fwd_txfm_for_avx2[] = {
+  TX_4X4,  TX_8X8,  TX_16X16, TX_32X32, TX_64X64, TX_4X8,   TX_8X4,
+  TX_8X16, TX_16X8, TX_16X32, TX_32X16, TX_32X64, TX_64X32, TX_4X16,
+  TX_16X4, TX_8X32, TX_32X8,  TX_16X64, TX_64X16,
+};
+
+INSTANTIATE_TEST_CASE_P(AVX2, AV1FwdTxfm2dTest,
+                        Combine(ValuesIn(fwd_txfm_for_avx2),
+                                Values(av1_lowbd_fwd_txfm_avx2)));
+#endif  // HAVE_AVX2
 }  // namespace
