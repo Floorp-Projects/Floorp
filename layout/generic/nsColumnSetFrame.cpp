@@ -1286,7 +1286,7 @@ nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID != kPrincipalList || aChildList.OnlyChild(),
              "initial principal child list must have exactly one child");
-  nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
 void
