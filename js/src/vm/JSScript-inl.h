@@ -209,4 +209,19 @@ JSScript::isDebuggee() const
     return realm_->debuggerObservesAllExecution() || bitFields_.hasDebugScript_;
 }
 
+inline bool
+JSScript::trackRecordReplayProgress() const
+{
+    // Progress is only tracked when recording or replaying, and only for
+    // scripts associated with the main thread's runtime. Whether self hosted
+    // scripts execute may depend on performed Ion optimizations (for example,
+    // self hosted TypedObject logic), so they are ignored. Some scripts are
+    // internal to record/replay and run non-deterministically, so are also
+    // ignored.
+    return MOZ_UNLIKELY(mozilla::recordreplay::IsRecordingOrReplaying())
+        && !runtimeFromAnyThread()->parentRuntime
+        && !selfHosted()
+        && !mozilla::recordreplay::IsInternalScript(filename());
+}
+
 #endif /* vm_JSScript_inl_h */

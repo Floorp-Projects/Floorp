@@ -26,7 +26,6 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
-#include "vm/ReplayDebugger.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
@@ -362,8 +361,8 @@ BaselineCompiler::emitPrologue()
 #endif
     emitProfilerEnterFrame();
 
-    if (ReplayDebugger::trackProgress(script))
-        masm.inc64(AbsoluteAddress(&ReplayDebugger::gProgressCounter));
+    if (script->trackRecordReplayProgress())
+        masm.inc64(AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
 
     masm.push(BaselineFrameReg);
     masm.moveStackPtrTo(BaselineFrameReg);
@@ -1362,8 +1361,8 @@ BaselineCompiler::emit_JSOP_LOOPENTRY()
     frame.syncStack(0);
     if (!emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc)))
         return false;
-    if (ReplayDebugger::trackProgress(script))
-        masm.inc64(AbsoluteAddress(&ReplayDebugger::gProgressCounter));
+    if (script->trackRecordReplayProgress())
+        masm.inc64(AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
     return true;
 }
 
