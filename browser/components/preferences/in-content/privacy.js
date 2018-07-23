@@ -49,6 +49,9 @@ Preferences.addAll([
   // Content Blocking
   { id: "browser.contentblocking.enabled", type: "bool" },
 
+  // FastBlock
+  { id: "browser.fastblock.enabled", type: "bool" },
+
   // Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
@@ -450,6 +453,7 @@ var gPrivacyPane = {
     }
 
     clearIfNotLocked("browser.contentblocking.enabled");
+    clearIfNotLocked("browser.fastblock.enabled");
     clearIfNotLocked("urlclassifier.trackingTable");
 
     let controllingExtension = await getControllingExtension(
