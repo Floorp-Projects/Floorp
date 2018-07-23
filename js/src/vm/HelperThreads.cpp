@@ -1888,6 +1888,11 @@ HelperThread::ThreadMain(void* arg)
 {
     ThisThread::SetName("JS Helper");
 
+    // Helper threads are allowed to run differently during recording and
+    // replay, as compiled scripts and GCs are allowed to vary. Because of
+    // this, no recorded events at all should occur while on helper threads.
+    mozilla::recordreplay::AutoDisallowThreadEvents d;
+
     static_cast<HelperThread*>(arg)->threadLoop();
     Mutex::ShutDown();
 }
