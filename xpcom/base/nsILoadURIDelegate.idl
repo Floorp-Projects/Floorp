@@ -26,8 +26,11 @@ interface nsILoadURIDelegate : nsISupports
    * @param aWhere See possible values described in nsIBrowserDOMWindow.
    * @param aFlags Flags which control the behavior of the load.
    * @param aTriggeringPrincipal The principal that triggered the load of aURI.
+   * @return A promise which can resolve to a boolean indicating whether or
+   *         not the app handled the load. Rejection should be treated the same
+   *         as a false resolution.
   */
-  boolean
+  Promise
   loadURI(in nsIURI aURI, in short aWhere, in long aFlags,
           in nsIPrincipal aTriggeringPrincipal);
 };
