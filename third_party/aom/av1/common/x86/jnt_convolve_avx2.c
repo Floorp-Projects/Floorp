@@ -23,8 +23,8 @@
 
 void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
                              int dst_stride0, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   CONV_BUF_TYPE *dst = conv_params->dst;
@@ -53,10 +53,10 @@ void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   assert(bits >= 0);
   assert(conv_params->round_0 > 0);
 
-  filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx2);
-  filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx2);
-  filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx2);
-  filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx2);
+  filt[0] = _mm256_load_si256((__m256i const *)filt_global_avx2);
+  filt[1] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32));
+  filt[2] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 2));
+  filt[3] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 3));
 
   prepare_coeffs_lowbd(filter_params_x, subpel_x_q4, coeffs);
 
@@ -126,8 +126,8 @@ void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
 void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
                              int dst_stride0, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   CONV_BUF_TYPE *dst = conv_params->dst;
@@ -389,8 +389,8 @@ void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
 void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
                               int dst_stride0, int w, int h,
-                              InterpFilterParams *filter_params_x,
-                              InterpFilterParams *filter_params_y,
+                              const InterpFilterParams *filter_params_x,
+                              const InterpFilterParams *filter_params_y,
                               const int subpel_x_q4, const int subpel_y_q4,
                               ConvolveParams *conv_params) {
   CONV_BUF_TYPE *dst = conv_params->dst;
@@ -422,10 +422,10 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
   assert(conv_params->round_0 > 0);
 
-  filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx2);
-  filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx2);
-  filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx2);
-  filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx2);
+  filt[0] = _mm256_load_si256((__m256i const *)filt_global_avx2);
+  filt[1] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32));
+  filt[2] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 2));
+  filt[3] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 3));
 
   prepare_coeffs_lowbd(filter_params_x, subpel_x_q4, coeffs_x);
   prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_y);
@@ -581,8 +581,8 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
 void av1_jnt_convolve_2d_copy_avx2(const uint8_t *src, int src_stride,
                                    uint8_t *dst0, int dst_stride0, int w, int h,
-                                   InterpFilterParams *filter_params_x,
-                                   InterpFilterParams *filter_params_y,
+                                   const InterpFilterParams *filter_params_x,
+                                   const InterpFilterParams *filter_params_y,
                                    const int subpel_x_q4, const int subpel_y_q4,
                                    ConvolveParams *conv_params) {
   const int bd = 8;

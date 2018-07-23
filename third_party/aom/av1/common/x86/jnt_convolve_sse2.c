@@ -18,8 +18,8 @@
 
 void av1_jnt_convolve_x_sse2(const uint8_t *src, int src_stride, uint8_t *dst0,
                              int dst_stride0, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   const int bd = 8;
@@ -152,8 +152,8 @@ void av1_jnt_convolve_x_sse2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
 void av1_jnt_convolve_y_sse2(const uint8_t *src, int src_stride, uint8_t *dst0,
                              int dst_stride0, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   const int bd = 8;

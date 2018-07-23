@@ -296,7 +296,7 @@ void av1_cdef_search(YV12_BUFFER_CONFIG *frame, const YV12_BUFFER_CONFIG *ref,
   int ydec[3];
   int pli;
   int cdef_count;
-  int coeff_shift = AOMMAX(cm->bit_depth - 8, 0);
+  int coeff_shift = AOMMAX(cm->seq_params.bit_depth - 8, 0);
   uint64_t best_tot_mse = (uint64_t)1 << 63;
   uint64_t tot_mse;
   int sb_count;
@@ -317,8 +317,8 @@ void av1_cdef_search(YV12_BUFFER_CONFIG *frame, const YV12_BUFFER_CONFIG *ref,
   DECLARE_ALIGNED(32, uint16_t, inbuf[CDEF_INBUF_SIZE]);
   uint16_t *in;
   DECLARE_ALIGNED(32, uint16_t, tmp_dst[1 << (MAX_SB_SIZE_LOG2 * 2)]);
-  quantizer =
-      av1_ac_quant_Q3(cm->base_qindex, 0, cm->bit_depth) >> (cm->bit_depth - 8);
+  quantizer = av1_ac_quant_Q3(cm->base_qindex, 0, cm->seq_params.bit_depth) >>
+              (cm->seq_params.bit_depth - 8);
   lambda = .12 * quantizer * quantizer / 256.;
 
   av1_setup_dst_planes(xd->plane, cm->seq_params.sb_size, frame, 0, 0, 0,
@@ -361,7 +361,7 @@ void av1_cdef_search(YV12_BUFFER_CONFIG *frame, const YV12_BUFFER_CONFIG *ref,
 
     for (r = 0; r < frame_height; ++r) {
       for (c = 0; c < frame_width; ++c) {
-        if (cm->use_highbitdepth) {
+        if (cm->seq_params.use_highbitdepth) {
           src[pli][r * stride[pli] + c] = CONVERT_TO_SHORTPTR(
               xd->plane[pli].dst.buf)[r * xd->plane[pli].dst.stride + c];
           ref_coeff[pli][r * stride[pli] + c] =

@@ -40,26 +40,16 @@ typedef struct ConvolveParams {
 
 typedef void (*aom_convolve_fn_t)(const uint8_t *src, int src_stride,
                                   uint8_t *dst, int dst_stride, int w, int h,
-                                  InterpFilterParams *filter_params_x,
-                                  InterpFilterParams *filter_params_y,
+                                  const InterpFilterParams *filter_params_x,
+                                  const InterpFilterParams *filter_params_y,
                                   const int subpel_x_q4, const int subpel_y_q4,
                                   ConvolveParams *conv_params);
 
 typedef void (*aom_highbd_convolve_fn_t)(
     const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride, int w,
-    int h, InterpFilterParams *filter_params_x,
-    InterpFilterParams *filter_params_y, const int subpel_x_q4,
+    int h, const InterpFilterParams *filter_params_x,
+    const InterpFilterParams *filter_params_y, const int subpel_x_q4,
     const int subpel_y_q4, ConvolveParams *conv_params, int bd);
-
-static INLINE void av1_get_convolve_filter_params(InterpFilters interp_filters,
-                                                  InterpFilterParams *params_x,
-                                                  InterpFilterParams *params_y,
-                                                  int w, int h) {
-  InterpFilter filter_x = av1_extract_interp_filter(interp_filters, 1);
-  InterpFilter filter_y = av1_extract_interp_filter(interp_filters, 0);
-  *params_x = av1_get_interp_filter_params_with_block_size(filter_x, w);
-  *params_y = av1_get_interp_filter_params_with_block_size(filter_y, h);
-}
 
 struct AV1Common;
 struct scale_factors;

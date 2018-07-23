@@ -19,8 +19,8 @@
 
 void av1_convolve_y_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
                             int dst_stride, int w, int h,
-                            InterpFilterParams *filter_params_x,
-                            InterpFilterParams *filter_params_y,
+                            const InterpFilterParams *filter_params_x,
+                            const InterpFilterParams *filter_params_y,
                             const int subpel_x_q4, const int subpel_y_q4,
                             ConvolveParams *conv_params) {
   int i, j;
@@ -176,8 +176,8 @@ void av1_convolve_y_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
 
 void av1_convolve_x_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
                             int dst_stride, int w, int h,
-                            InterpFilterParams *filter_params_x,
-                            InterpFilterParams *filter_params_y,
+                            const InterpFilterParams *filter_params_x,
+                            const InterpFilterParams *filter_params_y,
                             const int subpel_x_q4, const int subpel_y_q4,
                             ConvolveParams *conv_params) {
   int i, j;
@@ -187,10 +187,10 @@ void av1_convolve_x_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
 
   __m256i filt[4], coeffs[4];
 
-  filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx2);
-  filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx2);
-  filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx2);
-  filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx2);
+  filt[0] = _mm256_load_si256((__m256i const *)filt_global_avx2);
+  filt[1] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32));
+  filt[2] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 2));
+  filt[3] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 3));
 
   prepare_coeffs_lowbd(filter_params_x, subpel_x_q4, coeffs);
 

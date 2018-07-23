@@ -81,7 +81,7 @@ typedef struct yv12_buffer_config {
 
   // Indicate whether y_buffer, u_buffer, and v_buffer points to the internally
   // allocated memory or external buffers.
-  int use_external_refernce_buffers;
+  int use_external_reference_buffers;
   // This is needed to store y_buffer, u_buffer, and v_buffer when set reference
   // uses an external refernece, and restore those buffer pointers after the
   // external reference frame is no longer used.

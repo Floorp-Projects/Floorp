@@ -320,10 +320,14 @@ uint8_t av1_read_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *const xd,
   return cul_level;
 }
 
-uint8_t av1_read_coeffs_txb_facade(const AV1_COMMON *const cm,
-                                   MACROBLOCKD *const xd, aom_reader *const r,
-                                   const int row, const int col,
-                                   const int plane, const TX_SIZE tx_size) {
+void av1_read_coeffs_txb_facade(const AV1_COMMON *const cm,
+                                MACROBLOCKD *const xd, aom_reader *const r,
+                                const int plane, const int row, const int col,
+                                const TX_SIZE tx_size) {
+#if TXCOEFF_TIMER
+  struct aom_usec_timer timer;
+  aom_usec_timer_start(&timer);
+#endif
   MB_MODE_INFO *const mbmi = xd->mi[0];
   struct macroblockd_plane *const pd = &xd->plane[plane];
 
@@ -337,5 +341,22 @@ uint8_t av1_read_coeffs_txb_facade(const AV1_COMMON *const cm,
   const uint8_t cul_level =
       av1_read_coeffs_txb(cm, xd, r, row, col, plane, &txb_ctx, tx_size);
   av1_set_contexts(xd, pd, plane, plane_bsize, tx_size, cul_level, col, row);
-  return cul_level;
+
+  if (is_inter_block(mbmi)) {
+    PLANE_TYPE plane_type = get_plane_type(plane);
+    // tx_type will be read out in av1_read_coeffs_txb_facade
+    const TX_TYPE tx_type = av1_get_tx_type(plane_type, xd, row, col, tx_size,
+                                            cm->reduced_tx_set_used);
+
+    if (plane == 0)
+      update_txk_array(mbmi->txk_type, mbmi->sb_type, row, col, tx_size,
+                       tx_type);
+  }
+
+#if TXCOEFF_TIMER
+  aom_usec_timer_mark(&timer);
+  const int64_t elapsed_time = aom_usec_timer_elapsed(&timer);
+  cm->txcoeff_timer += elapsed_time;
+  ++cm->txb_count;
+#endif
 }

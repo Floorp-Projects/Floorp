@@ -143,8 +143,8 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
   static const int kBufSize = ((2 * MAX_TX_SIZE) << 1) + 16;
 
   DrPredTest()
-      : upsample_above_(0), upsample_left_(0), bw_(0), bh_(0), dx_(1), dy_(1),
-        bd_(8), txsize_(TX_4X4) {
+      : enable_upsample_(0), upsample_above_(0), upsample_left_(0), bw_(0),
+        bh_(0), dx_(1), dy_(1), bd_(8), txsize_(TX_4X4) {
     params_ = this->GetParam();
     start_angle_ = params_.start_angle;
     stop_angle_ = start_angle_ + 90;
@@ -193,7 +193,7 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
     OutputTimes(kNumTests, ref_time, tst_time, tx);
   }
 
-  void RunTest(bool speedtest) {
+  void RunTest(bool speedtest, int p_angle) {
     for (int i = 0; i < kBufSize; ++i) {
       above_data_[i] = left_data_[i] = (1 << bd_) - 1;
     }
@@ -211,6 +211,15 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
 
       bw_ = tx_size_wide[kTxSize[tx]];
       bh_ = tx_size_high[kTxSize[tx]];
+
+      if (enable_upsample_) {
+        upsample_above_ =
+            av1_use_intra_edge_upsample(bw_, bh_, p_angle - 90, 0);
+        upsample_left_ =
+            av1_use_intra_edge_upsample(bw_, bh_, p_angle - 180, 0);
+      } else {
+        upsample_above_ = upsample_left_ = 0;
+      }
 
       Predict(speedtest, tx);
 
@@ -252,6 +261,7 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
   Pixel *left_;
   int dst_stride_;
 
+  int enable_upsample_;
   int upsample_above_;
   int upsample_left_;
   int bw_;
@@ -273,25 +283,25 @@ class LowbdDrPredTest : public DrPredTest<uint8_t, DrPred> {};
 
 TEST_P(LowbdDrPredTest, SaturatedValues) {
   for (int iter = 0; iter < kIterations && !HasFatalFailure(); ++iter) {
-    upsample_above_ = iter & 1;
+    enable_upsample_ = iter & 1;
     for (int angle = start_angle_; angle < stop_angle_; ++angle) {
       dx_ = av1_get_dx(angle);
       dy_ = av1_get_dy(angle);
-      if (dx_ && dy_) RunTest(false);
+      if (dx_ && dy_) RunTest(false, angle);
     }
   }
 }
 
 TEST_P(LowbdDrPredTest, DISABLED_Speed) {
   const int angles[] = { 3, 45, 87 };
-  for (upsample_above_ = 0; upsample_above_ < 2; ++upsample_above_) {
-    upsample_left_ = upsample_above_;
+  for (enable_upsample_ = 0; enable_upsample_ < 2; ++enable_upsample_) {
     for (int i = 0; i < 3; ++i) {
-      dx_ = av1_get_dx(angles[i] + start_angle_);
-      dy_ = av1_get_dy(angles[i] + start_angle_);
-      printf("upsample_above: %d upsample_left: %d angle: %d ~~~~~~~~~~~~~~~\n",
-             upsample_above_, upsample_left_, angles[i] + start_angle_);
-      if (dx_ && dy_) RunTest(true);
+      const int angle = angles[i] + start_angle_;
+      dx_ = av1_get_dx(angle);
+      dy_ = av1_get_dy(angle);
+      printf("enable_upsample: %d angle: %d ~~~~~~~~~~~~~~~\n",
+             enable_upsample_, angle);
+      if (dx_ && dy_) RunTest(true, angle);
     }
   }
 }
@@ -311,25 +321,25 @@ class HighbdDrPredTest : public DrPredTest<uint16_t, DrPred_Hbd> {};
 
 TEST_P(HighbdDrPredTest, SaturatedValues) {
   for (int iter = 0; iter < kIterations && !HasFatalFailure(); ++iter) {
-    upsample_above_ = iter & 1;
+    enable_upsample_ = iter & 1;
     for (int angle = start_angle_; angle < stop_angle_; ++angle) {
       dx_ = av1_get_dx(angle);
       dy_ = av1_get_dy(angle);
-      if (dx_ && dy_) RunTest(false);
+      if (dx_ && dy_) RunTest(false, angle);
     }
   }
 }
 
 TEST_P(HighbdDrPredTest, DISABLED_Speed) {
   const int angles[] = { 3, 45, 87 };
-  for (upsample_above_ = 0; upsample_above_ < 2; ++upsample_above_) {
-    upsample_left_ = upsample_above_;
+  for (enable_upsample_ = 0; enable_upsample_ < 2; ++enable_upsample_) {
     for (int i = 0; i < 3; ++i) {
-      dx_ = av1_get_dx(angles[i] + start_angle_);
-      dy_ = av1_get_dy(angles[i] + start_angle_);
-      printf("upsample_above: %d upsample_left: %d angle: %d ~~~~~~~~~~~~~~~\n",
-             upsample_above_, upsample_left_, angles[i] + start_angle_);
-      if (dx_ && dy_) RunTest(true);
+      const int angle = angles[i] + start_angle_;
+      dx_ = av1_get_dx(angle);
+      dy_ = av1_get_dy(angle);
+      printf("enable_upsample: %d angle: %d ~~~~~~~~~~~~~~~\n",
+             enable_upsample_, angle);
+      if (dx_ && dy_) RunTest(true, angle);
     }
   }
 }

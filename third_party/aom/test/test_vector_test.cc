@@ -30,8 +30,9 @@ namespace {
 
 const int kThreads = 0;
 const int kFileName = 1;
+const int kRowMT = 2;
 
-typedef ::testing::tuple<int, const char *> DecodeParam;
+typedef ::testing::tuple<int, const char *, int> DecodeParam;
 
 class TestVectorTest : public ::libaom_test::DecoderTest,
                        public ::libaom_test::CodecTestWithParam<DecodeParam> {
@@ -48,6 +49,12 @@ class TestVectorTest : public ::libaom_test::DecoderTest,
         << "Md5 file open failed. Filename: " << md5_file_name_;
   }
 
+  virtual void PreDecodeFrameHook(
+      const libaom_test::CompressedVideoSource &video,
+      libaom_test::Decoder *decoder) {
+    if (video.frame_number() == 0) decoder->Control(AV1D_SET_ROW_MT, row_mt_);
+  }
+
   virtual void DecompressedFrameHook(const aom_image_t &img,
                                      const unsigned int frame_number) {
     ASSERT_TRUE(md5_file_ != NULL);
@@ -60,13 +67,31 @@ class TestVectorTest : public ::libaom_test::DecoderTest,
     expected_md5[32] = '\0';
 
     ::libaom_test::MD5 md5_res;
-    md5_res.Add(&img);
-    const char *actual_md5 = md5_res.Get();
+#if !CONFIG_LOWBITDEPTH
+    const aom_img_fmt_t shifted_fmt =
+        (aom_img_fmt)(img.fmt & ~AOM_IMG_FMT_HIGHBITDEPTH);
+    if (img.bit_depth == 8 && shifted_fmt != img.fmt) {
+      aom_image_t *img_shifted =
+          aom_img_alloc(NULL, shifted_fmt, img.d_w, img.d_h, 16);
+      img_shifted->bit_depth = img.bit_depth;
+      img_shifted->monochrome = img.monochrome;
+      aom_img_downshift(img_shifted, &img, 0);
+      md5_res.Add(img_shifted);
+      aom_img_free(img_shifted);
+    } else {
+#endif
+      md5_res.Add(&img);
+#if !CONFIG_LOWBITDEPTH
+    }
+#endif
 
+    const char *actual_md5 = md5_res.Get();
     // Check md5 match.
     ASSERT_STREQ(expected_md5, actual_md5)
         << "Md5 checksums don't match: frame number = " << frame_number;
   }
+
+  unsigned int row_mt_;
 
  private:
   FILE *md5_file_;
@@ -84,6 +109,7 @@ TEST_P(TestVectorTest, MD5Match) {
   char str[256];
 
   cfg.threads = ::testing::get<kThreads>(input);
+  row_mt_ = ::testing::get<kRowMT>(input);
 
   snprintf(str, sizeof(str) / sizeof(str[0]) - 1, "file: %s threads: %d",
            filename.c_str(), cfg.threads);
@@ -118,17 +144,14 @@ TEST_P(TestVectorTest, MD5Match) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(video.get(), cfg));
 }
 
-// TODO(yaowu): Current md5 check works only when CONFIG_LOWBITDEPTH is enabled,
-// remove CONFIG_LOWBITDEPTH when md5 check is reworked to be compatible with
-// CONFIG_LOWBITDEPTH = 0
-#if CONFIG_AV1_DECODER && CONFIG_LOWBITDEPTH
+#if CONFIG_AV1_DECODER
 AV1_INSTANTIATE_TEST_CASE(
     TestVectorTest,
-    ::testing::Combine(
-        ::testing::Values(1),  // Single thread.
-        ::testing::ValuesIn(libaom_test::kAV1TestVectors,
-                            libaom_test::kAV1TestVectors +
-                                libaom_test::kNumAV1TestVectors)));
+    ::testing::Combine(::testing::Values(1),  // Single thread.
+                       ::testing::ValuesIn(libaom_test::kAV1TestVectors,
+                                           libaom_test::kAV1TestVectors +
+                                               libaom_test::kNumAV1TestVectors),
+                       ::testing::Values(0)));
 
 // Test AV1 decode in with different numbers of threads.
 INSTANTIATE_TEST_CASE_P(
@@ -140,7 +163,8 @@ INSTANTIATE_TEST_CASE_P(
             ::testing::Range(2, 9),  // With 2 ~ 8 threads.
             ::testing::ValuesIn(libaom_test::kAV1TestVectors,
                                 libaom_test::kAV1TestVectors +
-                                    libaom_test::kNumAV1TestVectors))));
+                                    libaom_test::kNumAV1TestVectors),
+            ::testing::Range(0, 2))));
 
 #endif  // CONFIG_AV1_DECODER
 

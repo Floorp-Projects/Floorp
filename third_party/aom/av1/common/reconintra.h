@@ -12,6 +12,8 @@
 #ifndef AV1_COMMON_RECONINTRA_H_
 #define AV1_COMMON_RECONINTRA_H_
 
+#include <stdlib.h>
+
 #include "aom/aom_integer.h"
 #include "av1/common/blockd.h"
 #include "av1/common/onyxc_int.h"
@@ -102,6 +104,14 @@ static INLINE int av1_get_dy(int angle) {
     // In this case, we are not really going to use dy. We may return any value.
     return 1;
   }
+}
+
+static INLINE int av1_use_intra_edge_upsample(int bs0, int bs1, int delta,
+                                              int type) {
+  const int d = abs(delta);
+  const int blk_wh = bs0 + bs1;
+  if (d <= 0 || d >= 40) return 0;
+  return type ? (blk_wh <= 8) : (blk_wh <= 16);
 }
 #ifdef __cplusplus
 }  // extern "C"

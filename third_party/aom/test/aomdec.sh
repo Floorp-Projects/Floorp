@@ -37,7 +37,7 @@ aomdec_verify_environment() {
 # input file path and shifted away. All remaining parameters are passed through
 # to aomdec.
 aomdec_pipe() {
-  local readonly input="$1"
+  local input="$1"
   shift
   if [ ! -e "${input}" ]; then
     elog "Input file ($input) missing in aomdec_pipe()"
@@ -51,8 +51,8 @@ aomdec_pipe() {
 # the directory containing aomdec. $1 one is used as the input file path and
 # shifted away. All remaining parameters are passed through to aomdec.
 aomdec() {
-  local readonly decoder="$(aom_tool_path aomdec)"
-  local readonly input="$1"
+  local decoder="$(aom_tool_path aomdec)"
+  local input="$1"
   shift
   eval "${AOM_TEST_PREFIX}" "${decoder}" "$input" "$@" ${devnull}
 }
@@ -65,7 +65,7 @@ aomdec_can_decode_av1() {
 
 aomdec_av1_ivf() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="${AV1_IVF_FILE}"
+    local file="${AV1_IVF_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --ivf
     fi
@@ -75,7 +75,7 @@ aomdec_av1_ivf() {
 
 aomdec_av1_ivf_error_resilient() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="av1.error-resilient.ivf"
+    local file="av1.error-resilient.ivf"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --ivf --error-resilient=1
     fi
@@ -85,7 +85,7 @@ aomdec_av1_ivf_error_resilient() {
 
 aomdec_av1_ivf_multithread() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="${AV1_IVF_FILE}"
+    local file="${AV1_IVF_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --ivf
     fi
@@ -97,7 +97,7 @@ aomdec_av1_ivf_multithread() {
 
 aomdec_aom_ivf_pipe_input() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="${AV1_IVF_FILE}"
+    local file="${AV1_IVF_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --ivf
     fi
@@ -107,7 +107,7 @@ aomdec_aom_ivf_pipe_input() {
 
 aomdec_av1_obu_annexb() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="${AV1_OBU_ANNEXB_FILE}"
+    local file="${AV1_OBU_ANNEXB_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --obu --annexb=1
     fi
@@ -117,7 +117,7 @@ aomdec_av1_obu_annexb() {
 
 aomdec_av1_obu_section5() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ]; then
-    local readonly file="${AV1_OBU_SEC5_FILE}"
+    local file="${AV1_OBU_SEC5_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}" --obu
     fi
@@ -128,7 +128,7 @@ aomdec_av1_obu_section5() {
 aomdec_av1_webm() {
   if [ "$(aomdec_can_decode_av1)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
-    local readonly file="${AV1_WEBM_FILE}"
+    local file="${AV1_WEBM_FILE}"
     if [ ! -e "${file}" ]; then
       encode_yuv_raw_input_av1 "${file}"
     fi

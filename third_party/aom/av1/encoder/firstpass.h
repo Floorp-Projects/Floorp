@@ -122,6 +122,11 @@ typedef struct {
   unsigned char arf_src_offset[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char arf_update_idx[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char arf_ref_idx[(MAX_LAG_BUFFERS * 2) + 1];
+#if USE_SYMM_MULTI_LAYER
+  unsigned char arf_pos_in_gf[(MAX_LAG_BUFFERS * 2) + 1];
+  unsigned char pyramid_level[(MAX_LAG_BUFFERS * 2) + 1];
+  unsigned char pyramid_height;
+#endif
   unsigned char brf_src_offset[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char bidir_pred_enabled[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char ref_fb_idx_map[(MAX_LAG_BUFFERS * 2) + 1][REF_FRAMES];
@@ -186,6 +191,8 @@ void av1_end_first_pass(struct AV1_COMP *cpi);
 
 void av1_init_second_pass(struct AV1_COMP *cpi);
 void av1_rc_get_second_pass_params(struct AV1_COMP *cpi);
+void av1_configure_buffer_updates_firstpass(struct AV1_COMP *cpi,
+                                            FRAME_UPDATE_TYPE update_type);
 
 // Post encode update of the rate control parameters for 2-pass
 void av1_twopass_postencode_update(struct AV1_COMP *cpi);

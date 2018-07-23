@@ -163,7 +163,7 @@ static int encode_frame(aom_codec_ctx_t *ecodec, aom_image_t *img,
 
         // Copy out first decoded frame, and use it as reference later.
         if (*frame_out == 1 && ext_ref != NULL)
-          if (aom_codec_control(dcodec, AV1_GET_NEW_FRAME_IMAGE, ext_ref))
+          if (aom_codec_control(dcodec, AV1_COPY_NEW_FRAME_IMAGE, ext_ref))
             die_codec(dcodec, "Failed to get decoder new frame");
       }
     }

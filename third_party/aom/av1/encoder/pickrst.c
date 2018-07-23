@@ -163,8 +163,8 @@ static int64_t try_restoration_unit(const RestSearchCtxt *rsc,
   const int is_uv = plane > 0;
   const RestorationInfo *rsi = &cm->rst_info[plane];
   RestorationLineBuffers rlbs;
-  const int bit_depth = cm->bit_depth;
-  const int highbd = cm->use_highbitdepth;
+  const int bit_depth = cm->seq_params.bit_depth;
+  const int highbd = cm->seq_params.use_highbitdepth;
 
   const YV12_BUFFER_CONFIG *fts = cm->frame_to_show;
   // TODO(yunqing): For now, only use optimized LR filter in decoder. Can be
@@ -173,7 +173,8 @@ static int64_t try_restoration_unit(const RestSearchCtxt *rsc,
 
   av1_loop_restoration_filter_unit(
       limits, rui, &rsi->boundaries, &rlbs, tile_rect, rsc->tile_stripe0,
-      is_uv && cm->subsampling_x, is_uv && cm->subsampling_y, highbd, bit_depth,
+      is_uv && cm->seq_params.subsampling_x,
+      is_uv && cm->seq_params.subsampling_y, highbd, bit_depth,
       fts->buffers[plane], fts->strides[is_uv], rsc->dst->buffers[plane],
       rsc->dst->strides[is_uv], cm->rst_tmpbuf, optimized_lr);
 
@@ -540,8 +541,8 @@ static void search_sgrproj(const RestorationTileLimits *limits,
 
   const MACROBLOCK *const x = rsc->x;
   const AV1_COMMON *const cm = rsc->cm;
-  const int highbd = cm->use_highbitdepth;
-  const int bit_depth = cm->bit_depth;
+  const int highbd = cm->seq_params.use_highbitdepth;
+  const int bit_depth = cm->seq_params.bit_depth;
 
   uint8_t *dgd_start =
       rsc->dgd_buffer + limits->v_start * rsc->dgd_stride + limits->h_start;
@@ -549,8 +550,8 @@ static void search_sgrproj(const RestorationTileLimits *limits,
       rsc->src_buffer + limits->v_start * rsc->src_stride + limits->h_start;
 
   const int is_uv = rsc->plane > 0;
-  const int ss_x = is_uv && cm->subsampling_x;
-  const int ss_y = is_uv && cm->subsampling_y;
+  const int ss_x = is_uv && cm->seq_params.subsampling_x;
+  const int ss_y = is_uv && cm->seq_params.subsampling_y;
   const int procunit_width = RESTORATION_PROC_UNIT_SIZE >> ss_x;
   const int procunit_height = RESTORATION_PROC_UNIT_SIZE >> ss_y;
 
@@ -1067,7 +1068,7 @@ static void search_wiener(const RestorationTileLimits *limits,
   double vfilterd[WIENER_WIN], hfilterd[WIENER_WIN];
 
   const AV1_COMMON *const cm = rsc->cm;
-  if (cm->use_highbitdepth) {
+  if (cm->seq_params.use_highbitdepth) {
     compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                          limits->h_start, limits->h_end, limits->v_start,
                          limits->v_end, rsc->dgd_stride, rsc->src_stride, M, H);
@@ -1149,7 +1150,7 @@ static void search_norestore(const RestorationTileLimits *limits,
   RestSearchCtxt *rsc = (RestSearchCtxt *)priv;
   RestUnitSearchInfo *rusi = &rsc->rusi[rest_unit_idx];
 
-  const int highbd = rsc->cm->use_highbitdepth;
+  const int highbd = rsc->cm->seq_params.use_highbitdepth;
   rusi->sse[RESTORE_NONE] = sse_restoration_unit(
       limits, rsc->src, rsc->cm->frame_to_show, rsc->plane, highbd);
 
@@ -1280,7 +1281,7 @@ void av1_pick_filter_restoration(const YV12_BUFFER_CONFIG *src, AV1_COMP *cpi) {
     double best_cost = 0;
     RestorationType best_rtype = RESTORE_NONE;
 
-    const int highbd = rsc.cm->use_highbitdepth;
+    const int highbd = rsc.cm->seq_params.use_highbitdepth;
     extend_frame(rsc.dgd_buffer, rsc.plane_width, rsc.plane_height,
                  rsc.dgd_stride, RESTORATION_BORDER, RESTORATION_BORDER,
                  highbd);
