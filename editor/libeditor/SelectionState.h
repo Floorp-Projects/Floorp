@@ -8,6 +8,7 @@
 
 #include "mozilla/EditorDOMPoint.h"
 #include "nsCOMPtr.h"
+#include "nsDirection.h"
 #include "nsINode.h"
 #include "nsTArray.h"
 #include "nscore.h"
@@ -67,6 +68,7 @@ public:
   bool IsEmpty();
 private:
   AutoTArray<RefPtr<RangeItem>, 1> mArray;
+  nsDirection mDirection;
 
   friend class RangeUpdater;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
