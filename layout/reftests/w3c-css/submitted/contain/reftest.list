@@ -27,4 +27,6 @@ fuzzy-if(webrender&&winWidget,0-3,0-2) == contain-size-inline-flex-001.html cont
 == contain-size-fieldset-002.html contain-size-fieldset-002-ref.html
 == contain-size-multicol-002.html contain-size-multicol-002-ref.html
 == contain-size-multicol-003.html contain-size-multicol-003-ref.html
+== contain-layout-overflow-001.html contain-layout-overflow-001-ref.html
+fails == contain-layout-overflow-002.html contain-layout-overflow-002-ref.html # bug 1481951
 == contain-size-table-caption-001.html contain-size-table-caption-001-ref.html
