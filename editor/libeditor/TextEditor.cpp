@@ -121,7 +121,6 @@ NS_IMPL_RELEASE_INHERITED(TextEditor, EditorBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
-  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
 
@@ -1836,18 +1835,6 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
   return encoder->EncodeToString(aOutputString);
 }
 
-NS_IMETHODIMP
-TextEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TextEditor::PasteAsQuotation(int32_t aSelectionType)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
 {
@@ -1905,13 +1892,6 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
-                              nsINode** aNodeInserted)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
 {
@@ -1964,15 +1944,6 @@ TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
-                                   const nsAString& aCitation,
-                                   bool aInsertHTML,
-                                   nsINode** aNodeInserted)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 TextEditor::SharedOutputString(uint32_t aFlags,
                                bool* aIsCollapsed,
@@ -1988,18 +1959,6 @@ TextEditor::SharedOutputString(uint32_t aFlags,
   }
   // If the selection isn't collapsed, we'll use the whole document.
   return ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
-}
-
-NS_IMETHODIMP
-TextEditor::Rewrap(bool aRespectNewlines)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TextEditor::GetEmbeddedObjects(nsIArray** aNodeList)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
