@@ -5553,6 +5553,18 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
 
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(newChannel, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        TimeStamp timestamp;
+        rv = GetNavigationStartTimeStamp(&timestamp);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        if (timestamp) {
+            Unused << internalChannel->SetNavigationStartTimeStamp(timestamp);
+        }
+    }
+
     return NS_OK;
 }
 
