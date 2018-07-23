@@ -153,7 +153,7 @@ TextureClientPool::AllocateTextureClient()
 
   TextureAllocationFlags allocFlags = ALLOC_DEFAULT;
 
-  if (mSupportsTextureDirectMapping) {
+  if (mSupportsTextureDirectMapping && std::max(mSize.width, mSize.height) <= mMaxTextureSize) {
     allocFlags = TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
   }
 
