@@ -949,14 +949,17 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (timelines && !timelines->IsEmpty()) {
-    UniquePtr<AbstractTimelineMarker> abstractMarker(
-      MakeUnique<MinorGCMarker>(aProgress, aReason));
-    timelines->AddMarkerForAllObservedDocShells(abstractMarker);
+  if (!recordreplay::IsRecordingOrReplaying()) {
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    if (timelines && !timelines->IsEmpty()) {
+      UniquePtr<AbstractTimelineMarker> abstractMarker(
+        MakeUnique<MinorGCMarker>(aProgress, aReason));
+      timelines->AddMarkerForAllObservedDocShells(abstractMarker);
+    }
   }
 
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
+    recordreplay::AutoPassThroughThreadEvents pt;
     self->mLatestNurseryCollectionStart = TimeStamp::Now();
   }
 #ifdef MOZ_GECKO_PROFILER
