@@ -1876,7 +1876,9 @@ TextEditor::PasteAsQuotation(int32_t aSelectionType)
         nsAutoString stuffToPaste;
         textDataObj->GetData ( stuffToPaste );
         AutoPlaceholderBatch beginBatching(this);
-        rv = InsertAsQuotation(stuffToPaste, 0);
+        rv = InsertWithQuotationsAsSubAction(stuffToPaste);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+          "Failed to insert the text with quotations");
       }
     }
   }
@@ -1888,13 +1890,21 @@ NS_IMETHODIMP
 TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
+{
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   // Let the citer quote it for us:
   nsString quotedStuff;
   nsresult rv = InternetCiter::GetCiteString(aQuotedText, quotedStuff);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
@@ -1902,16 +1912,18 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
     quotedStuff.Append(char16_t('\n'));
   }
 
-  // get selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertText,
                                       nsIEditor::eNext);
 
-  // give rules a chance to handle or cancel
+  // XXX This WillDoAction() usage is hacky.  If it returns as handled,
+  //     this method cannot work as expected.  So, this should have specific
+  //     sub-action rather than using eInsertElement.
   EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
@@ -1921,17 +1933,16 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   if (cancel) {
     return NS_OK; // Rules canceled the operation.
   }
+  MOZ_ASSERT(handled, "WillDoAction() shouldn't handle in this case");
   if (!handled) {
+    // TODO: Use InsertTextAsSubAction() when bug 1467796 is fixed.
     rv = InsertTextAsAction(quotedStuff);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert quoted text");
-
-    // XXX Should set *aNodeInserted to the first node inserted
-    if (aNodeInserted && NS_SUCCEEDED(rv)) {
-      *aNodeInserted = nullptr;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   // XXX Why don't we call TextEditRules::DidDoAction()?
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
