@@ -560,7 +560,7 @@ void InitLibrary()
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 #ifdef MOZ_CUBEB_REMOTING
-  if (sCubebSandbox && XRE_IsContentProcess()) {
+  if (sCubebSandbox && XRE_IsContentProcess() && !recordreplay::IsMiddleman()) {
     InitAudioIPCConnection();
   }
 #endif
