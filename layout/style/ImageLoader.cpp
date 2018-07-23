@@ -46,6 +46,25 @@ ImageLoader::DropDocumentReference()
   mDocument = nullptr;
 }
 
+// Normally, arrays of requests and frames are sorted by their pointer address,
+// for faster lookup. When recording or replaying, we don't do this, so that
+// the arrays retain their insertion order and are consistent between recording
+// and replaying.
+template <typename Elem, typename Item, typename Comparator = nsDefaultComparator<Elem, Item>>
+static size_t
+GetMaybeSortedIndex(const nsTArray<Elem>& aArray, const Item& aItem, bool* aFound,
+                    Comparator aComparator = Comparator())
+{
+  if (recordreplay::IsRecordingOrReplaying()) {
+    size_t index = aArray.IndexOf(aItem, 0, aComparator);
+    *aFound = index != nsTArray<Elem>::NoIndex;
+    return *aFound ? index + 1 : aArray.Length();
+  }
+  size_t index = aArray.IndexOfFirstElementGt(aItem, aComparator);
+  *aFound = index > 0 && aComparator.Equals(aItem, aArray.ElementAt(index - 1));
+  return index;
+}
+
 void
 ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
                                      nsIFrame* aFrame,
@@ -84,8 +103,9 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   FrameWithFlags* fwfToModify(&fwf);
 
   // See if the frameSet already has this frame.
-  uint32_t i = frameSet->IndexOfFirstElementGt(fwf, FrameOnlyComparator());
-  if (i > 0 && aFrame == frameSet->ElementAt(i-1).mFrame) {
+  bool found;
+  uint32_t i = GetMaybeSortedIndex(*frameSet, fwf, &found, FrameOnlyComparator());
+  if (found) {
     // We're already tracking this frame, so prepare to modify the
     // existing FrameWithFlags object.
     fwfToModify = &frameSet->ElementAt(i-1);
@@ -149,14 +169,14 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   DebugOnly<bool> didAddToRequestSet(false);
 
   // If we weren't already tracking this frame, add it to the frameSet.
-  if (i == 0 || aFrame != frameSet->ElementAt(i-1).mFrame) {
+  if (!found) {
     frameSet->InsertElementAt(i, fwf);
     didAddToFrameSet = true;
   }
 
   // Add request to the request set if it wasn't already there.
-  i = requestSet->IndexOfFirstElementGt(aRequest);
-  if (i == 0 || aRequest != requestSet->ElementAt(i-1)) {
+  i = GetMaybeSortedIndex(*requestSet, aRequest, &found);
+  if (!found) {
     requestSet->InsertElementAt(i, aRequest);
     didAddToRequestSet = true;
   }
@@ -219,10 +239,10 @@ ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
     MOZ_ASSERT(frameSet, "This should never be null");
 
     // Before we remove aFrame from the frameSet, unblock onload if needed.
-    uint32_t i = frameSet->IndexOfFirstElementGt(FrameWithFlags(aFrame),
-                                                 FrameOnlyComparator());
-
-    if (i > 0 && aFrame == frameSet->ElementAt(i-1).mFrame) {
+    bool found;
+    uint32_t i = GetMaybeSortedIndex(*frameSet, FrameWithFlags(aFrame), &found,
+                                     FrameOnlyComparator());
+    if (found) {
       FrameWithFlags& fwf = frameSet->ElementAt(i-1);
       if (fwf.mFlags & REQUEST_HAS_BLOCKED_ONLOAD) {
         mDocument->UnblockOnload(false);
@@ -249,7 +269,11 @@ ImageLoader::RemoveFrameToRequestMapping(imgIRequest* aRequest,
   if (auto entry = mFrameToRequestMap.Lookup(aFrame)) {
     RequestSet* requestSet = entry.Data();
     MOZ_ASSERT(requestSet, "This should never be null");
-    requestSet->RemoveElementSorted(aRequest);
+    if (recordreplay::IsRecordingOrReplaying()) {
+      requestSet->RemoveElement(aRequest);
+    } else {
+      requestSet->RemoveElementSorted(aRequest);
+    }
     if (requestSet->IsEmpty()) {
       aFrame->SetHasImageRequest(false);
       entry.Remove();
