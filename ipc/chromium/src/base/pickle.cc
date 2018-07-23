@@ -175,6 +175,14 @@ Pickle& Pickle::operator=(Pickle&& other) {
   return *this;
 }
 
+void Pickle::CopyFrom(const Pickle& other) {
+  MOZ_ALWAYS_TRUE(buffers_.CopyFrom(other.buffers_));
+  MOZ_ASSERT(other.header_ == reinterpret_cast<const Header*>(other.buffers_.Start()));
+
+  header_ = reinterpret_cast<Header*>(buffers_.Start());
+  header_size_ = other.header_size_;
+}
+
 bool Pickle::ReadBool(PickleIterator* iter, bool* result) const {
   DCHECK(iter);
 

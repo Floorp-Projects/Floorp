@@ -174,7 +174,8 @@ public:
    * 3. normal iframe
    */
   static already_AddRefed<ContentParent>
-  GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
+  GetNewOrUsedBrowserProcess(Element* aFrameElement,
+                             const nsAString& aRemoteType,
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
@@ -302,6 +303,11 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvBridgeToChildProcess(const ContentParentId& aCpId,
                                                            Endpoint<PContentBridgeParent>* aEndpoint) override;
+
+  virtual mozilla::ipc::IPCResult RecvOpenRecordReplayChannel(const uint32_t& channelId,
+                                                              FileDescriptor* connection) override;
+  virtual mozilla::ipc::IPCResult RecvCreateReplayingProcess(const uint32_t& aChannelId) override;
+  virtual mozilla::ipc::IPCResult RecvTerminateReplayingProcess(const uint32_t& aChannelId) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateGMPService() override;
 
@@ -743,16 +749,28 @@ private:
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
+  enum RecordReplayState
+  {
+    eNotRecordingOrReplaying,
+    eRecording,
+    eReplaying
+  };
+
   explicit ContentParent(int32_t aPluginID)
-    : ContentParent(nullptr, EmptyString(), aPluginID)
+    : ContentParent(nullptr, EmptyString(), eNotRecordingOrReplaying, EmptyString(), aPluginID)
   {}
   ContentParent(ContentParent* aOpener,
-                const nsAString& aRemoteType)
-    : ContentParent(aOpener, aRemoteType, nsFakePluginTag::NOT_JSPLUGIN)
+                const nsAString& aRemoteType,
+                RecordReplayState aRecordReplayState = eNotRecordingOrReplaying,
+                const nsAString& aRecordingFile = EmptyString())
+    : ContentParent(aOpener, aRemoteType, aRecordReplayState, aRecordingFile,
+                    nsFakePluginTag::NOT_JSPLUGIN)
   {}
 
   ContentParent(ContentParent* aOpener,
                 const nsAString& aRemoteType,
+                RecordReplayState aRecordReplayState,
+                const nsAString& aRecordingFile,
                 int32_t aPluginID);
 
   // Launch the subprocess and associated initialization.
@@ -1126,6 +1144,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
 
+  virtual mozilla::ipc::IPCResult RecvRecordReplayFatalError(const nsCString& aError) override;
+
   virtual mozilla::ipc::IPCResult
   RecvBeginDriverCrashGuard(const uint32_t& aGuardType,
                             bool* aOutCrashed) override;
@@ -1246,6 +1266,8 @@ public:
 
   bool CanCommunicateWith(ContentParentId aOtherProcess);
 
+  nsresult SaveRecording(nsIFile* aFile, bool* aRetval);
+
 private:
 
   // If you add strong pointers to cycle collected objects here, be sure to
@@ -1288,6 +1310,16 @@ private:
   bool mIsAlive;
 
   bool mIsForBrowser;
+
+  // Whether this process is recording or replaying its execution, and any
+  // associated recording file.
+  RecordReplayState mRecordReplayState;
+  nsString mRecordingFile;
+
+  // When recording or replaying, the child process is a middleman. This vector
+  // stores any replaying children we have spawned on behalf of that middleman,
+  // indexed by their record/replay channel ID.
+  Vector<mozilla::ipc::GeckoChildProcessHost*> mReplayingChildren;
 
   // These variables track whether we've called Close() and KillHard() on our
   // channel.

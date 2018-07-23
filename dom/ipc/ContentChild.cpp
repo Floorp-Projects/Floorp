@@ -77,6 +77,7 @@
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
+#include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "nsBaseDragService.h"
@@ -671,6 +672,12 @@ ContentChild::Init(MessageLoop* aIOLoop,
   nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
+  }
+
+  // Middleman processes use a special channel for forwarding messages to
+  // their own children.
+  if (recordreplay::IsMiddleman()) {
+    SetMiddlemanIPCChannel(recordreplay::parent::ChannelToUIProcess());
   }
 
   if (!Open(aChannel, aParentPid, aIOLoop)) {
@@ -3818,6 +3825,13 @@ mozilla::ipc::IPCResult
 ContentChild::RecvAddDynamicScalars(nsTArray<DynamicScalarDefinition>&& aDefs)
 {
   TelemetryIPC::AddDynamicScalarDefinitions(aDefs);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvSaveRecording(const FileDescriptor& aFile)
+{
+  recordreplay::parent::SaveRecording(aFile);
   return IPC_OK();
 }
 
