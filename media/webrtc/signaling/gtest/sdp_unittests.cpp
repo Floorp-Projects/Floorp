@@ -2823,7 +2823,6 @@ TEST_P(NewSdpTest, CheckDirections) {
 }
 
 TEST_P(NewSdpTest, CheckCandidates) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";

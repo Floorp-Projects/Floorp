@@ -22,14 +22,23 @@ pub enum SdpAttributePayloadType {
     Wildcard, // Wildcard means "*",
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateTransport {
     Udp,
     Tcp,
 }
 
-#[derive(Clone)]
+impl ToString for SdpAttributeCandidateTransport {
+    fn to_string(&self) -> String {
+        match *self {
+            SdpAttributeCandidateTransport::Udp => "UDP".to_string(),
+            SdpAttributeCandidateTransport::Tcp => "TCP".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateType {
     Host,
@@ -38,12 +47,33 @@ pub enum SdpAttributeCandidateType {
     Relay,
 }
 
-#[derive(Clone)]
+impl ToString for SdpAttributeCandidateType {
+    fn to_string(&self) -> String {
+        match *self {
+            SdpAttributeCandidateType::Host => "host".to_string(),
+            SdpAttributeCandidateType::Srflx => "srflx".to_string(),
+            SdpAttributeCandidateType::Prflx => "prflx".to_string(),
+            SdpAttributeCandidateType::Relay => "relay".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateTcpType {
     Active,
     Passive,
     Simultaneous,
+}
+
+impl ToString for SdpAttributeCandidateTcpType {
+    fn to_string(&self) -> String {
+        match *self {
+            SdpAttributeCandidateTcpType::Active => "active".to_string(),
+            SdpAttributeCandidateTcpType::Passive => "passive".to_string(),
+            SdpAttributeCandidateTcpType::Simultaneous => "so".to_string(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -112,6 +142,36 @@ impl SdpAttributeCandidate {
 
     fn set_network_cost(&mut self, n: u32) {
         self.networkcost = Some(n)
+    }
+}
+
+impl ToString for SdpAttributeCandidate {
+    fn to_string(&self) -> String {
+        macro_rules! option_to_string {
+            ($fmt_str:expr, $opt:expr) => {
+                match $opt {
+                    Some(ref x) => format!($fmt_str, x.to_string()),
+                    None => "".to_string()
+                }
+            };
+        }
+
+        format!("candidate:{foundation} {component_id} {transport} {priority} \
+                           {connection_address} {port} typ {cand_type}\
+                           {rel_addr}{rel_port}{tcp_type}{generation}{ufrag}{network_cost}",
+                foundation = self.foundation,
+                component_id = self.component.to_string(),
+                transport = self.transport.to_string(),
+                priority = self.priority.to_string(),
+                connection_address = self.address.to_string(),
+                port = self.port.to_string(),
+                cand_type = self.c_type.to_string(),
+                rel_addr = option_to_string!(" raddr {}", self.raddr),
+                rel_port = option_to_string!(" rport {}", self.rport),
+                tcp_type = option_to_string!(" tcptype {}", self.tcp_type),
+                generation = option_to_string!(" generation {}", self.generation),
+                ufrag = option_to_string!(" ufrag {}", self.ufrag),
+                network_cost = option_to_string!(" network-cost {}", self.networkcost))
     }
 }
 
@@ -2046,45 +2106,63 @@ pub fn parse_attribute(value: &str) -> Result<SdpType, SdpParserInternalError> {
     Ok(SdpType::Attribute(value.trim().parse()?))
 }
 
+
+#[cfg(test)]
+macro_rules! make_check_parse {
+    ($attr_type:ty, $attr_kind:path) => {
+        |attr_str: &str| -> $attr_type {
+            if let Ok(SdpType::Attribute($attr_kind(attr))) = parse_attribute(attr_str) {
+                attr
+            } else {
+                unreachable!();
+            }
+        }
+    }
+}
+
 #[test]
 fn test_parse_attribute_candidate() {
-    assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ host").is_ok());
-    assert!(parse_attribute("candidate:foo 1 UDP 2122252543 172.16.156.106 49760 typ host")
-                .is_ok());
-    assert!(parse_attribute("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host").is_ok());
-    assert!(parse_attribute("candidate:0 1 TCP 2122252543 ::1 49760 typ host").is_ok());
-    assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ srflx").is_ok());
-    assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ prflx").is_ok());
-    assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ relay").is_ok());
-    assert!(
-        parse_attribute(
-            "candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype active"
-        ).is_ok()
-    );
-    assert!(
-        parse_attribute(
-            "candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype passive"
-        ).is_ok()
-    );
-    assert!(
-        parse_attribute("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype so")
-            .is_ok()
-    );
-    assert!(
-        parse_attribute("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host ufrag foobar")
-            .is_ok()
-    );
-    assert!(
-        parse_attribute(
-            "candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host network-cost 50"
-        ).is_ok()
-    );
-    assert!(parse_attribute("candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 generation 0").is_ok());
-    assert!(parse_attribute("candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665").is_ok());
-    assert!(parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive").is_ok());
-    assert!(parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1").is_ok());
-    assert!(parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd").is_ok());
-    assert!(parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd network-cost 1").is_ok());
+    let check_parse = make_check_parse!(SdpAttributeCandidate, SdpAttribute::Candidate);
+
+    let check_parse_and_serialize = |attr_str| {
+        let parsed = check_parse(attr_str);
+        assert_eq!(parsed.to_string(), attr_str.to_string());
+    };
+
+    check_parse_and_serialize("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ host");
+    check_parse_and_serialize("candidate:foo 1 UDP 2122252543 172.16.156.106 49760 typ host");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 ::1 49760 typ host");
+    check_parse_and_serialize("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ srflx");
+    check_parse_and_serialize("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ prflx");
+    check_parse_and_serialize("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ relay");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype active");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype passive");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype so");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host ufrag foobar");
+    check_parse_and_serialize("candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host network-cost 50");
+    check_parse_and_serialize("candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 generation 0");
+    check_parse_and_serialize("candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665");
+    check_parse_and_serialize("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive");
+    check_parse_and_serialize("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1");
+    check_parse_and_serialize("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd");
+    check_parse_and_serialize("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd network-cost 1");
+
+    let candidate = check_parse("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd network-cost 1");
+    assert_eq!(candidate.foundation, "1".to_string());
+    assert_eq!(candidate.component, 1);
+    assert_eq!(candidate.transport, SdpAttributeCandidateTransport::Tcp);
+    assert_eq!(candidate.priority, 1685987071);
+    assert_eq!(candidate.address, IpAddr::from_str("24.23.204.141").unwrap());
+    assert_eq!(candidate.port, 54609);
+    assert_eq!(candidate.c_type, SdpAttributeCandidateType::Srflx);
+    assert_eq!(candidate.raddr, Some(IpAddr::from_str("192.168.1.4").unwrap()));
+    assert_eq!(candidate.rport, Some(61665));
+    assert_eq!(candidate.tcp_type, Some(SdpAttributeCandidateTcpType::Passive));
+    assert_eq!(candidate.generation, Some(1));
+    assert_eq!(candidate.ufrag, Some("+DGd".to_string()));
+    assert_eq!(candidate.networkcost, Some(1));
+
 
     assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 49760 typ").is_err());
     assert!(parse_attribute("candidate:0 foo UDP 2122252543 172.16.156.106 49760 typ host")
