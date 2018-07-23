@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -21,8 +22,10 @@ import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -253,5 +256,57 @@ class GeckoEngineSessionTest {
 
         engineSession.geckoSession.navigationDelegate.onLocationChange(null, "about:blank")
         assertEquals("about:blank", observedUrl)
+    }
+
+    @Test
+    fun testTrackingProtectionDelegateNotifiesObservers() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        var trackerBlocked = ""
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlocked(url: String) {
+                trackerBlocked = url
+            }
+        })
+
+        engineSession.geckoSession.trackingProtectionDelegate.onTrackerBlocked(engineSession.geckoSession, "tracker1", 0)
+        assertEquals("tracker1", trackerBlocked)
+    }
+
+    @Test
+    fun testEnableTrackingProtection() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+        val engineSession = GeckoEngineSession(runtime)
+
+        var trackerBlockingEnabledObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
+                trackerBlockingEnabledObserved = enabled
+            }
+        })
+
+        engineSession.enableTrackingProtection(TrackingProtectionPolicy.select(
+                TrackingProtectionPolicy.ANALYTICS, TrackingProtectionPolicy.AD))
+        assertTrue(trackerBlockingEnabledObserved)
+        assertTrue(engineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION))
+    }
+
+    @Test
+    fun testDisableTrackingProtection() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+        val engineSession = GeckoEngineSession(runtime)
+
+        var trackerBlockingDisabledObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
+                trackerBlockingDisabledObserved = !enabled
+            }
+        })
+
+        engineSession.disableTrackingProtection()
+        assertTrue(trackerBlockingDisabledObserved)
+        Assert.assertFalse(engineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION))
     }
 }

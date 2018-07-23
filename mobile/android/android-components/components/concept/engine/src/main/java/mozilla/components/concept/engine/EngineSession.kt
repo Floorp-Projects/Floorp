@@ -26,6 +26,8 @@ abstract class EngineSession(
         fun onLoadingStateChange(loading: Boolean) = Unit
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
+        fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
+        fun onTrackerBlocked(url: String) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(
@@ -36,6 +38,26 @@ abstract class EngineSession(
             cookie: String? = null,
             userAgent: String? = null
         ) = Unit
+    }
+
+    /**
+     * Represents a tracking protection policy which is a combination of
+     * tracker categories that should be blocked.
+     */
+    class TrackingProtectionPolicy(val categories: Int) {
+        companion object {
+            internal const val NONE: Int = 0
+            const val AD: Int = 1 shl 0
+            const val ANALYTICS: Int = 1 shl 1
+            const val SOCIAL: Int = 1 shl 2
+            const val CONTENT: Int = 1 shl 3
+            internal const val ALL: Int = (1 shl 4) - 1
+
+            fun none(): TrackingProtectionPolicy = TrackingProtectionPolicy(NONE)
+            fun all(): TrackingProtectionPolicy = TrackingProtectionPolicy(ALL)
+            fun select(vararg categories: Int): TrackingProtectionPolicy =
+                TrackingProtectionPolicy(categories.sum())
+        }
     }
 
     /**
@@ -74,6 +96,18 @@ abstract class EngineSession(
      * @param state state retrieved from [saveState]
      */
     abstract fun restoreState(state: Map<String, Any>)
+
+    /**
+     * Enables tracking protection for this engine session.
+     *
+     * @param policy the tracking protection policy to use, defaults to blocking all trackers.
+     */
+    open fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.all()) = Unit
+
+    /**
+     * Disables tracking protection for this engine session.
+     */
+    open fun disableTrackingProtection() = Unit
 
     /**
      * Close the session. This may free underlying objects. Call this when you are finished using

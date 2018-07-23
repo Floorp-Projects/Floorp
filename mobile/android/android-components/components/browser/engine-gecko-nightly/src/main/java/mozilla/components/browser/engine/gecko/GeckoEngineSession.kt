@@ -11,12 +11,14 @@ import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSessionSettings
 
 /**
  * Gecko-based EngineSession implementation.
  */
+@Suppress("TooManyFunctions")
 class GeckoEngineSession(
-    runtime: GeckoRuntime
+    private val runtime: GeckoRuntime
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
@@ -29,6 +31,7 @@ class GeckoEngineSession(
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()
         geckoSession.contentDelegate = createContentDelegate()
+        geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
     }
 
     /**
@@ -206,6 +209,23 @@ class GeckoEngineSession(
         }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
+    }
+
+    private fun createTrackingProtectionDelegate() = GeckoSession.TrackingProtectionDelegate {
+        session, uri, _ ->
+            session?.let { uri?.let { notifyObservers { onTrackerBlocked(it) } } }
+    }
+
+    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true)
+        runtime.settings.trackingProtectionCategories = policy.categories
+        notifyObservers { onTrackerBlockingEnabledChange(true) }
+    }
+
+    override fun disableTrackingProtection() {
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
+        runtime.settings.trackingProtectionCategories = TrackingProtectionPolicy.none().categories
+        notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
     companion object {

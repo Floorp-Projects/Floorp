@@ -15,6 +15,7 @@ import kotlin.properties.Delegates
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
+@Suppress("TooManyFunctions")
 class Session(
     initialUrl: String,
     val source: Source = Source.NONE,
@@ -40,6 +41,8 @@ class Session(
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
         fun onDownload(session: Session, download: Download): Boolean = false
+        fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
+        fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit
     }
 
     /**
@@ -172,6 +175,24 @@ class Session(
     var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
         val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
         !download.consumeBy(consumers)
+    }
+
+    /**
+     * Tracker blocking state, true if blocking trackers is enabled, otherwise false.
+     */
+    var trackerBlockingEnabled: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) { onTrackerBlockingEnabledChanged(this@Session, trackerBlockingEnabled) }
+    }
+
+    /**
+     * List of URIs that have been blocked in this session.
+     */
+    var trackersBlocked: List<String> by Delegates.observable(emptyList()) { _, old, new ->
+        notifyObservers(old, new) {
+            if (new.isNotEmpty()) {
+                onTrackerBlocked(this@Session, trackersBlocked.last(), trackersBlocked)
+            }
+        }
     }
 
     /**

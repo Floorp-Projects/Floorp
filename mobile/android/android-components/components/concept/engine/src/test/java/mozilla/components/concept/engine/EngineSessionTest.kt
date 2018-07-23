@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine
 
+import org.junit.Assert.assertEquals
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -26,6 +28,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
+        session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
+        session.notifyInternalObservers { onTrackerBlocked("tracker") }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -33,6 +37,8 @@ class EngineSessionTest {
         verify(observer).onProgress(100)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
+        verify(observer).onTrackerBlockingEnabledChange(true)
+        verify(observer).onTrackerBlocked("tracker")
         verifyNoMoreInteractions(observer)
     }
 
@@ -47,6 +53,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
+        session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
+        session.notifyInternalObservers { onTrackerBlocked("tracker") }
 
         session.unregister(observer)
 
@@ -54,15 +62,21 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
+        session.notifyInternalObservers { onTrackerBlocked("tracker2") }
+        session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
+        verify(observer).onTrackerBlockingEnabledChange(true)
+        verify(observer).onTrackerBlocked("tracker")
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
+        verify(observer, never()).onTrackerBlockingEnabledChange(false)
+        verify(observer, never()).onTrackerBlocked("tracker2")
         verifyNoMoreInteractions(observer)
     }
 
@@ -77,6 +91,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
+        session.notifyInternalObservers { onTrackerBlockingEnabledChange(true) }
+        session.notifyInternalObservers { onTrackerBlocked("tracker") }
 
         session.close()
 
@@ -84,16 +100,21 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
+        session.notifyInternalObservers { onTrackerBlocked("tracker2") }
+        session.notifyInternalObservers { onTrackerBlockingEnabledChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
-
+        verify(observer).onTrackerBlockingEnabledChange(true)
+        verify(observer).onTrackerBlocked("tracker")
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
+        verify(observer, never()).onTrackerBlockingEnabledChange(false)
+        verify(observer, never()).onTrackerBlocked("tracker2")
         verifyNoMoreInteractions(observer)
     }
 
@@ -139,6 +160,17 @@ class EngineSessionTest {
             userAgent = "Components/1.0"
         )
     }
+
+    @Test
+    fun `tracking policies have correct categories`() {
+        assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.all().categories)
+        assertEquals(TrackingProtectionPolicy.NONE, TrackingProtectionPolicy.none().categories)
+        assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.select(
+                TrackingProtectionPolicy.AD,
+                TrackingProtectionPolicy.ANALYTICS,
+                TrackingProtectionPolicy.CONTENT,
+                TrackingProtectionPolicy.SOCIAL).categories)
+    }
 }
 
 open class DummyEngineSession : EngineSession() {
@@ -153,6 +185,10 @@ open class DummyEngineSession : EngineSession() {
     override fun goBack() {}
 
     override fun goForward() {}
+
+    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
+
+    override fun disableTrackingProtection() {}
 
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {
