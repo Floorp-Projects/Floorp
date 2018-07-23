@@ -456,8 +456,6 @@ public:
 
   virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
 
-  virtual void SetDispAcquireFence(Layer* aLayer);
-
   /**
    * Whether textures created by this compositor can receive partial updates.
    */

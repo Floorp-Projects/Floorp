@@ -993,9 +993,6 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
 
     mCompositor->EndFrame();
-
-    // Call after EndFrame()
-    mCompositor->SetDispAcquireFence(mRoot);
   }
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
