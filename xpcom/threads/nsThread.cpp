@@ -1080,6 +1080,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // non-deterministically at some point since the last turn of the event loop.
   if (recordreplay::IsRecordingOrReplaying()) {
     recordreplay::ExecuteTriggers();
+
+    // Vsync observers are notified whenever processing events on the main
+    // thread. Waiting for explicit vsync messages from the UI process can
+    // result in paints happening at unexpected times when replaying/rewinding.
+    if (mIsMainThread == MAIN_THREAD) {
+      recordreplay::child::NotifyVsyncObserver();
+    }
   }
 
   // The toplevel event loop normally blocks waiting for the next event, but
