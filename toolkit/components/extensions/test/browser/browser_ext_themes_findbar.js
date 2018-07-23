@@ -3,12 +3,6 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the toolbar and toolbar_field properties also theme the findbar.
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_support_toolbar_properties_on_findbar() {
   const TOOLBAR_COLOR = "#ff00ff";
   const TOOLBAR_TEXT_COLOR = "#9400ff";

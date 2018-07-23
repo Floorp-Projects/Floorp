@@ -162,8 +162,7 @@ async function runTestWithIcons(icons) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true],
-          ["extensions.webextensions.themes.icons.enabled", true]],
+    set: [["extensions.webextensions.themes.icons.enabled", true]],
   });
 });
 
