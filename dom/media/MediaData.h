@@ -662,7 +662,7 @@ private:
   MediaRawData* mTarget;
 };
 
-class MediaRawData final : public MediaData
+class MediaRawData : public MediaData
 {
 public:
   MediaRawData();
@@ -700,11 +700,11 @@ public:
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
-  already_AddRefed<MediaRawData> Clone() const;
+  virtual already_AddRefed<MediaRawData> Clone() const;
   // Create a MediaRawDataWriter for this MediaRawData. The writer is not
   // thread-safe.
-  UniquePtr<MediaRawDataWriter> CreateWriter();
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  virtual UniquePtr<MediaRawDataWriter> CreateWriter();
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
 protected:
   ~MediaRawData();
