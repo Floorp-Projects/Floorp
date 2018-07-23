@@ -7,7 +7,7 @@
 
 // A command in a menu.
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button, li, span } = dom;
@@ -48,6 +48,27 @@ class MenuItem extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.labelRef = createRef();
+  }
+
+  componentDidMount() {
+    if (!this.labelRef.current) {
+      return;
+    }
+
+    // Pre-fetch any backgrounds specified for the button.
+    const win = this.labelRef.current.ownerDocument.defaultView;
+    const backgrounds = win
+      .getComputedStyle(this.labelRef.current, ":before")
+      .getCSSImageURLs("background-image");
+    for (const background of backgrounds) {
+      const image = new Image();
+      image.src = background;
+    }
+  }
+
   render() {
     const attr = {
       className: "command",
@@ -80,7 +101,7 @@ class MenuItem extends PureComponent {
     }
 
     const textLabel = span(
-      { className: "label" },
+      { className: "label", ref: this.labelRef },
       this.props.label
     );
     const children = [textLabel];
