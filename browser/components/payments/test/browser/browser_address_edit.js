@@ -9,6 +9,11 @@ async function setup() {
   let prefilledGuids = await addSampleAddressesAndBasicCard(
     [PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
 
+  info("associating the card with the billing address");
+  formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
+    billingAddressGUID: prefilledGuids.address1GUID,
+  }, true);
+
   return prefilledGuids;
 }
 
