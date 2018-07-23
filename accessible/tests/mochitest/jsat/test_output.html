@@ -253,11 +253,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           // Test selected tab
           accOrElmOrID: "tab1",
-          expectedUtterance: [[{"string": "pagetablist"},
-            {"string": "stateSelected"}, {"string": "pagetab"},
+          expectedUtterance: [[{"string": "pagetablist"}, {"string": "pagetab"},
             {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
-            {"string": "stateSelected"}, {"string": "pagetab"},
-            {"string": "objItemOfN", "args": [1, 2]}, {"string": "pagetablist"}]
+            {"string": "pagetab"}, {"string": "objItemOfN", "args": [1, 2]},
+            {"string": "pagetablist"}]
           ],
           expectedBraille: [[{"string": "pagetabAbbr"},
             {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
@@ -277,27 +276,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           // Landing on this label should mimic landing on the checkbox.
           accOrElmOrID: "label1",
-          expectedUtterance: [[{"string": "stateNotChecked"},
-            {"string": "checkbutton"}, "Orange"], ["Orange",
-            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
-          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Orange"],
-                            ["Orange", {"string": "stateUncheckedAbbr"}]]
+          expectedUtterance: [[{"string": "checkbutton"}, "Orange"], ["Orange",
+            {"string": "checkbutton"}]],
+          expectedBraille: [["Orange"], ["Orange"]]
         }, {
           // Here we get a top-level view of the form.
           accOrElmOrID: "form1",
-          expectedUtterance: [[{"string": "label"},
-            {"string": "stateNotChecked"}, {"string": "checkbutton"}, "Orange",
-            "Orange", {"string": "stateNotChecked"}, {"string": "checkbutton"},
-            "Blue", {"string": "label"}, "Blue"], ["Orange",
-            {"string": "stateNotChecked"}, {"string": "checkbutton"}, "Orange",
-            {"string": "label"}, "Blue", {"string": "stateNotChecked"},
+          expectedUtterance: [[{"string": "label"}, {"string": "checkbutton"}, "Orange",
+            "Orange", {"string": "checkbutton"}, "Blue", {"string": "label"}, "Blue"],
+            ["Orange", {"string": "checkbutton"}, "Orange", {"string": "label"}, "Blue",
             {"string": "checkbutton"}, "Blue", {"string": "label"}]],
-          expectedBraille: [[{"string": "labelAbbr"},
-            {"string": "stateUncheckedAbbr"}, "Orange", "Orange",
-            {"string": "stateUncheckedAbbr"}, "Blue", {"string": "labelAbbr"},
-            "Blue"], ["Orange", {"string": "stateUncheckedAbbr"}, "Orange",
-            {"string": "labelAbbr"}, "Blue", {"string": "stateUncheckedAbbr"},
-            "Blue", {"string": "labelAbbr"}]]
+          expectedBraille: [[{"string": "labelAbbr"}, "Orange", "Orange", "Blue",
+            {"string": "labelAbbr"}, "Blue"], ["Orange", "Orange",
+            {"string": "labelAbbr"}, "Blue", "Blue", {"string": "labelAbbr"}]]
         }, {
           // This is a non-nesting label.
           accOrElmOrID: "label2",
@@ -308,19 +299,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           // This is a distinct control.
           accOrElmOrID: "input2",
-          expectedUtterance: [[{"string": "stateNotChecked"},
-            {"string": "checkbutton"}, "Blue"], ["Blue",
-            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
-          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Blue"], ["Blue",
-            {"string": "stateUncheckedAbbr"}]]
+          expectedUtterance: [[ {"string": "checkbutton"}, "Blue"],
+                              ["Blue", {"string": "checkbutton"}]],
+          expectedBraille: [["Blue"], ["Blue"]]
         }, {
           // This is a nested control.
           accOrElmOrID: "input1",
-          expectedUtterance: [[{"string": "stateNotChecked"},
-            {"string": "checkbutton"}, "Orange"], ["Orange",
-            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
-          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Orange"],
-            ["Orange", {"string": "stateUncheckedAbbr"}]]
+          expectedUtterance: [[ {"string": "checkbutton"}, "Orange"], ["Orange",
+            {"string": "checkbutton"}]],
+          expectedBraille: [["Orange"], ["Orange"]]
         }, {
           // Landing on this label should mimic landing on the entry.
           accOrElmOrID: "label3",
@@ -350,30 +337,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
                             ["Secret Password", {"string": "passwordtextAbbr"}]]
         }, {
           accOrElmOrID: "input5",
-          expectedUtterance: [[{"string": "stateChecked"},
-            {"string": "checkbutton"}, "Boring label"], ["Boring label",
-            {"string": "stateChecked"}, {"string": "checkbutton"}]],
-          expectedBraille: [[{"string": "stateCheckedAbbr"}, "Boring label"],
-            ["Boring label", {"string": "stateCheckedAbbr"}]]
+          expectedUtterance: [[{"string": "checkbutton"}, "Boring label"],
+                              ["Boring label", {"string": "checkbutton"}]],
+          expectedBraille: [["Boring label"], ["Boring label"]]
         }, {
           accOrElmOrID: "radio_unselected",
-          expectedUtterance: [[{"string": "stateNotChecked"},
-            {"string": "radiobutton"}, "any old radio button"],
-            ["any old radio button", {"string": "stateNotChecked"},
-            {"string": "radiobutton"}]
+          expectedUtterance: [[{"string": "radiobutton"}, "any old radio button"],
+                              ["any old radio button", {"string": "radiobutton"}]
           ],
-          expectedBraille: [
-            [{"string": "stateUncheckedAbbr"}, "any old radio button"],
-            ["any old radio button", {"string": "stateUncheckedAbbr"}]]
+          expectedBraille: [["any old radio button"], ["any old radio button"]]
         }, {
           accOrElmOrID: "radio_selected",
-          expectedUtterance: [[{"string": "stateChecked"},
-            {"string": "radiobutton"}, "a unique radio button"],
-            ["a unique radio button", {"string": "stateChecked"},
-            {"string": "radiobutton"}]],
-          expectedBraille: [
-            [{"string": "stateCheckedAbbr"}, "a unique radio button"],
-            ["a unique radio button", {"string": "stateCheckedAbbr"}]]
+          expectedUtterance: [[{"string": "radiobutton"}, "a unique radio button"],
+                              ["a unique radio button", {"string": "radiobutton"}]],
+          expectedBraille: [["a unique radio button"], ["a unique radio button"]]
         }, {
           accOrElmOrID: "togglebutton_notpressed",
           expectedUtterance: [[{"string": "togglebutton"}, "I am not pressed"],
@@ -437,8 +414,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           accOrElmOrID: "gridcell3",
           oldAccOrElmOrID: "grid",
-          expectedUtterance: [[{"string": "stateSelected"}, "5"],
-                              ["5", {"string": "stateSelected"}]],
+          expectedUtterance: [["5"], ["5"]],
           expectedBraille: [["5"], ["5"]],
         }, {
           accOrElmOrID: "frequency",
@@ -451,9 +427,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           accOrElmOrID: "selected-combobox-option",
           oldAccOrElmOrID: "frequency",
-          expectedUtterance: [[{"string": "stateSelected"},
-            {"string": "comboboxoption"}, "15 min"], ["15 min",
-            {"string": "stateSelected"}, {"string": "comboboxoption"}]],
+          expectedUtterance: [[{"string": "comboboxoption"}, "15 min"],
+                              ["15 min", {"string": "comboboxoption"}]],
           expectedBraille: [[{"string": "comboboxoptionAbbr"}, "15 min"], [
             "15 min", {"string": "comboboxoptionAbbr"}]]
         }, {
@@ -484,19 +459,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [["Last sync: 30min ago"], ["Last sync: 30min ago"]]
         }, {
           accOrElmOrID: "switch-1",
-          expectedUtterance: [[{"string": "stateOn"}, {"string": "switch"},
-            "Simple switch"], ["Simple switch", {"string": "stateOn"},
-            {"string": "switch"}]],
-          expectedBraille: [[{"string": "stateCheckedAbbr"}, "Simple switch"],
-            ["Simple switch", {"string": "stateCheckedAbbr"}]]
+          expectedUtterance: [[{"string": "switch"}, "Simple switch"],
+                              ["Simple switch", {"string": "switch"}]],
+          expectedBraille: [["Simple switch"], ["Simple switch"]]
         }, {
           accOrElmOrID: "switch-2",
-          expectedUtterance: [[{"string": "stateOff"},
-            {"string": "switch"}, "Another switch"], ["Another switch",
-            {"string": "stateOff"}, {"string": "switch"}]],
-          expectedBraille: [
-            [{"string": "stateUncheckedAbbr"}, "Another switch"],
-            ["Another switch", {"string": "stateUncheckedAbbr"}]]
+          expectedUtterance: [[{"string": "switch"}, "Another switch"],
+                              ["Another switch", {"string": "switch"}]],
+          expectedBraille: [["Another switch"], ["Another switch"]]
         }];
 
         // Test all possible utterance order preference values.

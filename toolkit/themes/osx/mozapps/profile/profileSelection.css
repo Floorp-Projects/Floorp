@@ -14,3 +14,7 @@ box#managebuttons > button {
 #managebuttons {
   padding-top: 1em;
 }
+
+#profiles {
+  height: 12em;
+}

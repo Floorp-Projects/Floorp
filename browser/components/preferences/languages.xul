@@ -49,7 +49,7 @@
       </columns>
       <rows>
         <row flex="1">
-          <richlistbox id="activeLanguages" flex="1" height="200"
+          <richlistbox id="activeLanguages" flex="1"
                        seltype="multiple"
                        onselect="gLanguagesDialog.onLanguageSelect();"/>
           <vbox>
