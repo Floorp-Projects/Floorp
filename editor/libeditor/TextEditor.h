@@ -333,6 +333,15 @@ protected: // Shouldn't be used by friend classes
                                           bool aDoDeleteSelection) override;
 
   /**
+   * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
+   * to start of every line.
+   *
+   * @param aQuotedText         String to insert.  This will be quoted by ">"
+   *                            automatically.
+   */
+  nsresult InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
+
+  /**
    * Return true if the data is safe to insert as the source and destination
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
