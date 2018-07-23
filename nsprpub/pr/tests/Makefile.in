@@ -18,6 +18,7 @@ include $(topsrcdir)/config/config.mk
 DIRS = dll
 
 CSRCS =             \
+	abstract.c		\
 	accept.c		\
 	acceptread.c	\
 	acceptreademu.c	\
