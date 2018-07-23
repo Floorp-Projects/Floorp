@@ -687,7 +687,7 @@ nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBase
         if (!aSpec.IsEmpty() && aSpec[0] == '#') {
             // Looks like a reference instead of a fully-specified URI.
             // --> initialize |uri| as a clone of |aBaseURI|, with ref appended.
-            return aBaseURI->CloneWithNewRef(aSpec, result);
+            return NS_GetURIWithNewRef(aBaseURI, aSpec, result);
         }
 
         rv = aBaseURI->GetScheme(scheme);

@@ -752,7 +752,7 @@ nsApplicationCache::GetManifestURI(nsIURI **out)
   nsresult rv = NS_NewURI(getter_AddRefs(uri), mGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = uri->CloneIgnoringRef(out);
+  rv = NS_GetURIWithNewRef(uri, EmptyCString(), out);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1372,7 +1372,7 @@ nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
                                                    nsACString &_result)
 {
   nsCOMPtr<nsIURI> newURI;
-  nsresult rv = aManifestURL->CloneIgnoringRef(getter_AddRefs(newURI));
+  nsresult rv = NS_GetURIWithNewRef(aManifestURL, EmptyCString(), getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString manifestSpec;

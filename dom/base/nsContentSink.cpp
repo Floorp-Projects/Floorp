@@ -376,7 +376,7 @@ nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor)
   // we want to ignore that because it's invisible to the server
   // and just affects the local interpretation in the recipient
   nsCOMPtr<nsIURI> contextUri;
-  nsresult rv = docUri->CloneIgnoringRef(getter_AddRefs(contextUri));
+  nsresult rv = NS_GetURIWithoutRef(docUri, getter_AddRefs(contextUri));
 
   if (NS_FAILED(rv)) {
     // copying failed

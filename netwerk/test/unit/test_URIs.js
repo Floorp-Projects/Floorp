@@ -339,7 +339,7 @@ function do_test_uri_basic(aTest) {
   // Sanity-check
   do_info("testing " + aTest.spec + " equals a clone of itself");
   do_check_uri_eq(URI, URI.mutate().finalize());
-  do_check_uri_eqExceptRef(URI, URI.cloneIgnoringRef());
+  do_check_uri_eqExceptRef(URI, URI.mutate().setRef("").finalize());
   do_info("testing " + aTest.spec + " instanceof nsIURL");
   Assert.equal(URI instanceof Ci.nsIURL, aTest.nsIURL);
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
@@ -419,22 +419,24 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 
   if (!origURI.ref) {
     // These tests fail if origURI has a ref
-    do_info("testing cloneIgnoringRef on " + testURI.spec +
+    do_info("testing setRef('') on " + testURI.spec +
             " is equal to no-ref version but not equal to ref version");
-    var cloneNoRef = testURI.cloneIgnoringRef();
+    var cloneNoRef = testURI.mutate().setRef("").finalize(); // we used to clone here.
+    do_info("cloneNoRef: " + cloneNoRef.spec + " hasRef: " + cloneNoRef.hasRef);
+    do_info("testURI: " + testURI.spec + " hasRef: " + testURI.hasRef);
     do_check_uri_eq(cloneNoRef, origURI);
     Assert.ok(!cloneNoRef.equals(testURI));
 
     do_info("testing cloneWithNewRef on " + testURI.spec +
             " with an empty ref is equal to no-ref version but not equal to ref version");
-    var cloneNewRef = testURI.cloneWithNewRef("");
+    var cloneNewRef = testURI.mutate().setRef("").finalize();
     do_check_uri_eq(cloneNewRef, origURI);
     do_check_uri_eq(cloneNewRef, cloneNoRef);
     Assert.ok(!cloneNewRef.equals(testURI));
 
     do_info("testing cloneWithNewRef on " + origURI.spec +
             " with the same new ref is equal to ref version and not equal to no-ref version");
-    cloneNewRef = origURI.cloneWithNewRef(aSuffix);
+    cloneNewRef = origURI.mutate().setRef(aSuffix).finalize();
     do_check_uri_eq(cloneNewRef, testURI);
     Assert.ok(cloneNewRef.equals(testURI));
   }

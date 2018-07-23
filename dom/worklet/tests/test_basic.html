@@ -22,14 +22,14 @@ function runTestInIframe() {
   ok(!!audioContext.audioWorklet, "audioContext.audioWorklet exists");
 
   // First loading
-  audioContext.audioWorklet.import("common.js")
+  audioContext.audioWorklet.addModule("common.js")
   .then(() => {
     ok(true, "Import should load a resource.");
   })
 
   // Second loading - same file
   .then(() => {
-    return audioContext.audioWorklet.import("common.js")
+    return audioContext.audioWorklet.addModule("common.js")
   })
   .then(() => {
     ok(true, "Import should load a resource.");
@@ -37,7 +37,7 @@ function runTestInIframe() {
 
   // 3rd loading - a network error
   .then(() => {
-    return audioContext.audioWorklet.import("404.js");
+    return audioContext.audioWorklet.addModule("404.js");
   })
   .then(() => {
     ok(false, "The loading should fail.");
@@ -47,7 +47,7 @@ function runTestInIframe() {
 
   // 4th loading - a network error
   .then(() => {
-    return audioContext.audioWorklet.import("404.js");
+    return audioContext.audioWorklet.addModule("404.js");
   })
   .then(() => {
     ok(false, "The loading should fail.");

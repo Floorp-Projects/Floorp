@@ -611,11 +611,6 @@ Compositor::IsValid() const
 }
 
 void
-Compositor::SetDispAcquireFence(Layer* aLayer)
-{
-}
-
-void
 Compositor::UnlockAfterComposition(TextureHost* aTexture)
 {
   TextureSourceProvider::UnlockAfterComposition(aTexture);

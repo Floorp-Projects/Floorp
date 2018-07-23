@@ -1283,7 +1283,7 @@ nsGlobalWindowOuter::WouldReuseInnerWindow(nsIDocument* aNewDocument)
 #ifdef DEBUG
 {
   nsCOMPtr<nsIURI> uri;
-  mDoc->GetDocumentURI()->CloneIgnoringRef(getter_AddRefs(uri));
+  NS_GetURIWithoutRef(mDoc->GetDocumentURI(), getter_AddRefs(uri));
   NS_ASSERTION(NS_IsAboutBlank(uri), "How'd this happen?");
 }
 #endif

@@ -1038,11 +1038,11 @@ class StorageUI {
 
       switch (reason) {
         case REASON.POPULATE:
+        case REASON.NEXT_50_ITEMS:
           // Update without flashing the row.
           this.table.push(item, true);
           break;
         case REASON.NEW_ROW:
-        case REASON.NEXT_50_ITEMS:
           // Update and flash the row.
           this.table.push(item, false);
           break;

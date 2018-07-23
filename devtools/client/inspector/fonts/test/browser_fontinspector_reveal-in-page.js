@@ -5,7 +5,7 @@
 
 // Test that fonts usage can be revealed in the page using the FontsHighlighter.
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);
