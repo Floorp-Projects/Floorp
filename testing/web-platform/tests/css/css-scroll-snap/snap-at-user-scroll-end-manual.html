@@ -45,7 +45,6 @@ body {
 </div>
 
 <script>
-var snap_test = async_test('Tests that window should snap at user scroll end.');
 var body = document.body;
 var button = document.getElementById("btn");
 var target = document.getElementById("target");
@@ -81,7 +80,7 @@ button.onclick = function() {
   // To make the test result visible.
   var content = document.getElementById("content");
   body.removeChild(content);
-  snap_test.done();
+  done();
 }
 
 </script>
