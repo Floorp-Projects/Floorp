@@ -278,4 +278,16 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession.navigationDelegate.onLocationChange(null, "about:blank")
         assertEquals("about:blank", observedUrl)
     }
+
+    @Test
+    fun testWebsiteTitleUpdates() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+
+        verify(observer).onTitleChange("Hello World!")
+    }
 }

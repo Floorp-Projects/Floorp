@@ -21,6 +21,7 @@ abstract class EngineSession(
      */
     interface Observer {
         fun onLocationChange(url: String) = Unit
+        fun onTitleChange(title: String) = Unit
         fun onProgress(progress: Int) = Unit
         fun onLoadingStateChange(loading: Boolean) = Unit
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit

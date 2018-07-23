@@ -80,6 +80,10 @@ class SystemEngineView @JvmOverloads constructor(
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 session?.internalNotifyObservers { onProgress(newProgress) }
             }
+
+            override fun onReceivedTitle(view: WebView, title: String?) {
+                session?.internalNotifyObservers { onTitleChange(title ?: "") }
+            }
         }
 
         webView.setDownloadListener(createDownloadListener())

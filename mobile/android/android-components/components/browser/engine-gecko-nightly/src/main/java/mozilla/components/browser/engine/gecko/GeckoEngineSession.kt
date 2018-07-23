@@ -201,7 +201,9 @@ class GeckoEngineSession(
 
         override fun onCloseRequest(session: GeckoSession) = Unit
 
-        override fun onTitleChange(session: GeckoSession, title: String) = Unit
+        override fun onTitleChange(session: GeckoSession, title: String) {
+            notifyObservers { onTitleChange(title) }
+        }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
     }

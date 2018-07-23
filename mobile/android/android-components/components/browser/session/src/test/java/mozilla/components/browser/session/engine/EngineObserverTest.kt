@@ -7,6 +7,7 @@ package mozilla.components.browser.session.engine
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class EngineObserverTest {
@@ -68,5 +69,20 @@ class EngineObserverTest {
 
         engineSession.loadUrl("https://mozilla.org")
         Assert.assertEquals(Session.SecurityInfo(true, "host", "issuer"), session.securityInfo)
+    }
+
+    @Test
+    fun testEngineObserverClearsWebsiteTitleIfNewPageStartsLoading() {
+        val session = Session("https://www.mozilla.org")
+        session.title = "Hello World"
+
+        val observer = EngineObserver(session)
+        observer.onTitleChange("Mozilla")
+
+        assertEquals("Mozilla", session.title)
+
+        observer.onLocationChange("https://getpocket.com")
+
+        assertEquals("", session.title)
     }
 }

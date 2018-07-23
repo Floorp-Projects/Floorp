@@ -7,6 +7,8 @@ package mozilla.components.browser.engine.system
 import android.net.http.SslCertificate
 import android.webkit.WebView
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.eq
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -15,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -90,6 +93,21 @@ class SystemEngineViewTest {
 
         engineView.currentWebView.webChromeClient.onProgressChanged(null, 100)
         assertEquals(100, observedProgress)
+    }
+
+    @Test
+    fun testWebViewClientNotifiesObserversAboutTitleChanges() {
+        val engineSession = SystemEngineSession()
+
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        engineView.currentWebView.webChromeClient.onReceivedTitle(engineView.currentWebView, "Hello World!")
+
+        verify(observer).onTitleChange(eq("Hello World!"))
     }
 
     @Test

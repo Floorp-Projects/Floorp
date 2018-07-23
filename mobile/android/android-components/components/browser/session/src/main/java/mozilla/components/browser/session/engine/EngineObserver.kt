@@ -14,6 +14,11 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
     override fun onLocationChange(url: String) {
         session.url = url
         session.searchTerms = ""
+        session.title = ""
+    }
+
+    override fun onTitleChange(title: String) {
+        session.title = title
     }
 
     override fun onProgress(progress: Int) {
