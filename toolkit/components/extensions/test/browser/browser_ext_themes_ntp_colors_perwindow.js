@@ -10,7 +10,6 @@
  * @returns {Promise} The task as a promise
  */
 function test_ntp_theme(browser, theme, isBrightText) {
-  Services.ppmm.sharedData.flush();
   return ContentTask.spawn(browser, {
     isBrightText,
     background: hexToCSS(theme.colors.ntp_background),
@@ -35,7 +34,6 @@ function test_ntp_theme(browser, theme, isBrightText) {
  * @returns {Promise} The task as a promise
  */
 function test_ntp_default_theme(browser) {
-  Services.ppmm.sharedData.flush();
   return ContentTask.spawn(browser, {
     background: hexToCSS("#F9F9FA"),
     color: hexToCSS("#0C0C0D"),
