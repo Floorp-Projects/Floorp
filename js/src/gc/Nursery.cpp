@@ -669,13 +669,13 @@ js::Nursery::maybeClearProfileDurations()
 inline void
 js::Nursery::startProfile(ProfileKey key)
 {
-    startTimes_[key] = TimeStamp::Now();
+    startTimes_[key] = ReallyNow();
 }
 
 inline void
 js::Nursery::endProfile(ProfileKey key)
 {
-    profileDurations_[key] = TimeStamp::Now() - startTimes_[key];
+    profileDurations_[key] = ReallyNow() - startTimes_[key];
     totalDurations_[key] += profileDurations_[key];
 }
 

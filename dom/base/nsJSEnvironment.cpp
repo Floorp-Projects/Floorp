@@ -286,6 +286,9 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
 static PRTime
 GetCollectionTimeDelta()
 {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return 0;
+  }
   PRTime now = PR_Now();
   if (sFirstCollectionTime) {
     return now - sFirstCollectionTime;
