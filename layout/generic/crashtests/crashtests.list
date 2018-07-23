@@ -652,8 +652,8 @@ load 1233607.html
 load 1234701-1.html
 load 1234701-2.html
 load 1271765.html
-pref(layout.css.xul-box-display-values.content.enabled,true) asserts(2) asserts-if(Android,1) load 1272983-1.html # bug 586628
-pref(layout.css.xul-box-display-values.content.enabled,true) asserts(2) asserts-if(Android,1) load 1272983-2.html # bug 586628
+asserts(2) asserts-if(Android,1) load 1272983-1.html # bug 586628
+asserts(2) asserts-if(Android,1) load 1272983-2.html # bug 586628
 load 1275059.html
 load 1278007.html
 load 1278080.html

@@ -18,10 +18,7 @@ const VALUES = [
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  {"set": [
-    ["layout.css.xul-display-values.content.enabled", true],
-    ["layout.css.xul-box-display-values.content.enabled", true],
-  ]}
+  {"set": [["layout.css.xul-display-values.content.enabled", true]]}
 ).then(runTest);
 
 function runTest() {
