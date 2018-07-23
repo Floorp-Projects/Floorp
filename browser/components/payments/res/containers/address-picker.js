@@ -110,7 +110,7 @@ export default class AddressPicker extends RichPicker {
     this.dropdown.value = selectedAddressGUID;
 
     if (selectedAddressGUID && selectedAddressGUID !== this.dropdown.value) {
-      throw new Error(`${this.selectedStateKey} option ${selectedAddressGUID}` +
+      throw new Error(`${this.selectedStateKey} option ${selectedAddressGUID} ` +
                       `does not exist in the address picker`);
     }
   }
