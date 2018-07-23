@@ -3138,6 +3138,12 @@ locked_profiler_stop(PSLockRef aLock)
   // At the very start, clear RacyFeatures.
   RacyFeatures::SetInactive();
 
+#if defined(GP_OS_android)
+  if (ActivePS::FeatureJava(aLock)) {
+    java::GeckoJavaSampler::Stop();
+  }
+#endif
+
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
     tasktracer::StopLogging();

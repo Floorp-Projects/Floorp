@@ -18,6 +18,8 @@
 #include <stdarg.h>
 
 struct PLDHashTableOps;
+struct JSContext;
+class JSObject;
 
 namespace mozilla {
 namespace recordreplay {
@@ -201,7 +203,7 @@ static inline void MovePLDHashTableContents(const PLDHashTableOps* aFirstOps,
 
 // Associate an arbitrary pointer with a JS object root while replaying. This
 // is useful for replaying the behavior of weak pointers.
-MFBT_API void SetWeakPointerJSRoot(const void* aPtr, /*JSObject*/void* aJSObj);
+MFBT_API void SetWeakPointerJSRoot(const void* aPtr, JSObject* aJSObj);
 
 // API for ensuring that a function executes at a consistent point when
 // recording or replaying. This is primarily needed for finalizers and other
@@ -323,160 +325,59 @@ static const char gProcessKindOption[] = "-recordReplayKind";
 static const char gRecordingFileOption[] = "-recordReplayFile";
 
 ///////////////////////////////////////////////////////////////////////////////
-// Devtools API
+// JS interface
 ///////////////////////////////////////////////////////////////////////////////
 
-// This interface is used by devtools C++ code (e.g. the JS Debugger) running
-// in a child or middleman process.
+// Get the counter used to keep track of how much progress JS execution has
+// made while running on the main thread. Progress must advance whenever a JS
+// function is entered or loop entry point is reached, so that no script
+// location may be hit twice while the progress counter is the same. See
+// JSControl.h for more.
+typedef uint64_t ProgressCounter;
+MFBT_API ProgressCounter* ExecutionProgressCounter();
 
-// The ID of a checkpoint in a child process. Checkpoints are either normal or
-// temporary. Normal checkpoints occur at the same point in the recording and
-// all replays, while temporary checkpoints are not used while recording and
-// may be at different points in different replays.
-struct CheckpointId
+static inline void
+AdvanceExecutionProgressCounter()
 {
-  // ID of the most recent normal checkpoint, which are numbered in sequence
-  // starting at FirstCheckpointId.
-  size_t mNormal;
+  ++*ExecutionProgressCounter();
+}
 
-  // Special IDs for normal checkpoints.
-  static const size_t Invalid = 0;
-  static const size_t First = 1;
+// Return whether a script is internal to the record/replay infrastructure,
+// may run non-deterministically between recording and replaying, and whose
+// execution must not update the progress counter.
+MFBT_API bool IsInternalScript(const char* aURL);
 
-  // How many temporary checkpoints have been generated since the most recent
-  // normal checkpoint, zero if this represents the normal checkpoint itself.
-  size_t mTemporary;
+// Define a RecordReplayControl object on the specified global object, with
+// methods specialized to the current recording/replaying or middleman process
+// kind.
+MFBT_API bool DefineRecordReplayControlObject(JSContext* aCx, JSObject* aObj);
 
-  explicit CheckpointId(size_t aNormal = Invalid, size_t aTemporary = 0)
-    : mNormal(aNormal), mTemporary(aTemporary)
-  {}
+// Notify the infrastructure that some URL which contains JavaScript is
+// being parsed. This is used to provide the complete contents of the URL to
+// devtools code when it is inspecting the state of this process; that devtools
+// code can't simply fetch the URL itself since it may have been changed since
+// the recording was made or may no longer exist. The token for a parse may not
+// be used in other parses until after EndContentParse() is called.
+MFBT_API void BeginContentParse(const void* aToken,
+                                const char* aURL, const char* aContentType);
 
-  inline bool operator==(const CheckpointId& o) const {
-    return mNormal == o.mNormal && mTemporary == o.mTemporary;
-  }
+// Add some parse data to an existing content parse.
+MFBT_API void AddContentParseData(const void* aToken,
+                                  const char16_t* aBuffer, size_t aLength);
 
-  inline bool operator!=(const CheckpointId& o) const {
-    return mNormal != o.mNormal || mTemporary != o.mTemporary;
-  }
-};
+// Mark a content parse as having completed.
+MFBT_API void EndContentParse(const void* aToken);
 
-// Signature for the hook called when running forward, immediately before
-// hitting a normal or temporary checkpoint.
-typedef void (*BeforeCheckpointHook)();
-
-// Signature for the hook called immediately after hitting a normal or
-// temporary checkpoint, either when running forward or after rewinding.
-typedef void (*AfterCheckpointHook)(const CheckpointId& aCheckpoint);
-
-// Set hooks to call when encountering checkpoints.
-MFBT_API void SetCheckpointHooks(BeforeCheckpointHook aBeforeCheckpoint,
-                                 AfterCheckpointHook aAfterCheckpoint);
-
-// When paused at a breakpoint or at a checkpoint, unpause and proceed with
-// execution.
-MFBT_API void ResumeExecution();
-
-// When paused at a breakpoint or at a checkpoint, restore a checkpoint that
-// was saved earlier and resume execution.
-MFBT_API void RestoreCheckpointAndResume(const CheckpointId& aCheckpoint);
-
-// Allow execution after this point to diverge from the recording. Execution
-// will remain diverged until an earlier checkpoint is restored.
-//
-// If an unhandled divergence occurs (see the 'Recording Divergence' comment
-// in ProcessRewind.h) then the process rewinds to the most recent saved
-// checkpoint.
-MFBT_API void DivergeFromRecording();
-
-// After a call to DivergeFromRecording(), this may be called to prevent future
-// unhandled divergence from causing earlier checkpoints to be restored
-// (the process will immediately crash instead). This state lasts until a new
-// call to DivergeFromRecording, or to an explicit restore of an earlier
-// checkpoint.
-MFBT_API void DisallowUnhandledDivergeFromRecording();
-
-// Note a checkpoint at the current execution position. This checkpoint will be
-// saved if either (a) it is temporary, or (b) the middleman has instructed
-// this process to save this normal checkpoint. This method returns true if the
-// checkpoint was just saved, and false if it was just restored.
-MFBT_API bool NewCheckpoint(bool aTemporary);
-
-// Print information about record/replay state. Printing is independent from
-// the recording and will be printed by any recording, replaying, or middleman
-// process. Spew is only printed when enabled via the RECORD_REPLAY_SPEW
-// environment variable.
-static inline void Print(const char* aFormat, ...);
-static inline void PrintSpew(const char* aFormat, ...);
-MFBT_API bool SpewEnabled();
-
-///////////////////////////////////////////////////////////////////////////////
-// Allocation policies
-///////////////////////////////////////////////////////////////////////////////
-
-// Type describing what kind of memory to allocate/deallocate by APIs below.
-// TrackedMemoryKind is reserved for memory that is saved and restored when
-// saving or restoring checkpoints. All other values refer to memory that is
-// untracked, and whose contents are preserved when restoring checkpoints.
-// Different values are used to distinguish different classes of memory for
-// diagnosing leaks and reporting memory usage.
-typedef size_t AllocatedMemoryKind;
-static const AllocatedMemoryKind TrackedMemoryKind = 0;
-
-// Memory kind to use for untracked debugger memory.
-static const AllocatedMemoryKind DebuggerAllocatedMemoryKind = 1;
-
-// Allocate or deallocate a block of memory of a particular kind. Allocated
-// memory is initially zeroed.
-MFBT_API void* AllocateMemory(size_t aSize, AllocatedMemoryKind aKind);
-MFBT_API void DeallocateMemory(void* aAddress, size_t aSize, AllocatedMemoryKind aKind);
-
-// Allocation policy for managing memory of a particular kind.
-template <AllocatedMemoryKind Kind>
-class AllocPolicy
+// Perform an entire content parse, when the entire URL is available at once.
+static inline void
+NoteContentParse(const void* aToken,
+                 const char* aURL, const char* aContentType,
+                 const char16_t* aBuffer, size_t aLength)
 {
-public:
-  template <typename T>
-  T* maybe_pod_calloc(size_t aNumElems) {
-    if (aNumElems & tl::MulOverflowMask<sizeof(T)>::value) {
-      MOZ_CRASH();
-    }
-    // Note: AllocateMemory always returns zeroed memory.
-    return static_cast<T*>(AllocateMemory(aNumElems * sizeof(T), Kind));
-  }
-
-  template <typename T>
-  void free_(T* aPtr, size_t aSize) {
-    DeallocateMemory(aPtr, aSize * sizeof(T), Kind);
-  }
-
-  template <typename T>
-  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
-    T* res = maybe_pod_calloc<T>(aNewSize);
-    memcpy(res, aPtr, aOldSize * sizeof(T));
-    free_<T>(aPtr, aOldSize);
-    return res;
-  }
-
-  template <typename T>
-  T* maybe_pod_malloc(size_t aNumElems) { return maybe_pod_calloc<T>(aNumElems); }
-
-  template <typename T>
-  T* pod_malloc(size_t aNumElems) { return maybe_pod_malloc<T>(aNumElems); }
-
-  template <typename T>
-  T* pod_calloc(size_t aNumElems) { return maybe_pod_calloc<T>(aNumElems); }
-
-  template <typename T>
-  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
-    return maybe_pod_realloc<T>(aPtr, aOldSize, aNewSize);
-  }
-
-  void reportAllocOverflow() const {}
-
-  MOZ_MUST_USE bool checkSimulatedOOM() const {
-    return true;
-  }
-};
+  BeginContentParse(aToken, aURL, aContentType);
+  AddContentParseData(aToken, aBuffer, aLength);
+  EndContentParse(aToken);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // API inline function implementation
@@ -570,25 +471,6 @@ RecordReplayAssert(const char* aFormat, ...)
     va_end(ap);
   }
 }
-
-MFBT_API void InternalPrint(const char* aFormat, va_list aArgs);
-
-#define MOZ_MakeRecordReplayPrinter(aName, aSpewing)            \
-  static inline void                                            \
-  aName(const char* aFormat, ...)                               \
-  {                                                             \
-    if ((IsRecordingOrReplaying() || IsMiddleman()) && (!aSpewing || SpewEnabled())) { \
-      va_list ap;                                               \
-      va_start(ap, aFormat);                                    \
-      InternalPrint(aFormat, ap);                               \
-      va_end(ap);                                               \
-    }                                                           \
-  }
-
-MOZ_MakeRecordReplayPrinter(Print, false)
-MOZ_MakeRecordReplayPrinter(PrintSpew, true)
-
-#undef MOZ_MakeRecordReplayPrinter
 
 } // recordreplay
 } // mozilla
