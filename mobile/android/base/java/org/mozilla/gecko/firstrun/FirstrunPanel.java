@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.firstrun;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -33,11 +32,11 @@ public class FirstrunPanel extends Fragment {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_basepanel_checkable_fragment, container, false);
         final Bundle args = getArguments();
         if (args != null) {
-            final Bitmap image = args.getParcelable(FirstrunPagerConfig.KEY_IMAGE);
+            final int image = args.getInt(FirstrunPagerConfig.KEY_IMAGE);
             final String message = args.getString(FirstrunPagerConfig.KEY_MESSAGE);
             final String subtext = args.getString(FirstrunPagerConfig.KEY_SUBTEXT);
 
-            ((ImageView) root.findViewById(R.id.firstrun_image)).setImageBitmap(image);
+            ((ImageView) root.findViewById(R.id.firstrun_image)).setImageDrawable(getResources().getDrawable(image));
             ((TextView) root.findViewById(R.id.firstrun_text)).setText(message);
             ((TextView) root.findViewById(R.id.firstrun_subtext)).setText(subtext);
         }

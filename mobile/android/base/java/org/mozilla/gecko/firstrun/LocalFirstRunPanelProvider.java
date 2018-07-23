@@ -7,7 +7,6 @@ package org.mozilla.gecko.firstrun;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 
 import org.mozilla.gecko.R;
@@ -20,28 +19,28 @@ public class LocalFirstRunPanelProvider implements FirstRunPanelConfigProviderSt
                 return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_welcome),
                         resources.getString(R.string.firstrun_urlbar_message),
                         resources.getString(R.string.firstrun_urlbar_subtext),
-                        BitmapFactory.decodeResource(resources, R.drawable.firstrun_welcome));
+                        R.drawable.firstrun_welcome);
             case PRIVACY:
                 return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_privacy),
                         resources.getString(R.string.firstrun_privacy_message),
                         resources.getString(R.string.firstrun_privacy_subtext),
-                        BitmapFactory.decodeResource(resources, R.drawable.firstrun_private));
+                        R.drawable.firstrun_private);
             case CUSTOMIZE:
             case LAST_CUSTOMIZE:
                 return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_customize),
                         resources.getString(R.string.firstrun_customize_message),
                         resources.getString(R.string.firstrun_customize_subtext),
-                        BitmapFactory.decodeResource(resources, R.drawable.firstrun_data));
+                        R.drawable.firstrun_data);
             case SYNC:
                 return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_sync_title),
                         resources.getString(R.string.firstrun_sync_message),
                         resources.getString(R.string.firstrun_sync_subtext),
-                        BitmapFactory.decodeResource(resources, R.drawable.firstrun_sync));
+                        R.drawable.firstrun_sync);
             default:    // This will also be the case for "WELCOME"
                 return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_welcome),
                         resources.getString(R.string.firstrun_urlbar_message),
                         resources.getString(R.string.firstrun_urlbar_subtext),
-                        BitmapFactory.decodeResource(resources, R.drawable.firstrun_welcome));
+                        R.drawable.firstrun_welcome);
         }
     }
 }
