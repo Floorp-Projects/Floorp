@@ -36,12 +36,6 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   Assert.equal(style.color, textColor, "Expected correct text color");
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_dynamic_theme_updates() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

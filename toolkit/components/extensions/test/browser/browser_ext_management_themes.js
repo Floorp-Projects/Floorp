@@ -7,12 +7,6 @@ const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/Lig
 const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null);
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_management_themes() {
   const TEST_ID = "test_management_themes@tests.mozilla.com";
 
