@@ -1839,11 +1839,7 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
 NS_IMETHODIMP
 TextEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
-  nsresult rv = InsertTextAsAction(aStringToInsert);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
