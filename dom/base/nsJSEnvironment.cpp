@@ -628,7 +628,7 @@ nsJSContext::~nsJSContext()
 void
 nsJSContext::Destroy()
 {
-  if (mGCOnDestruction) {
+  if (mGCOnDestruction && !recordreplay::IsRecordingOrReplaying()) {
     PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY, mWindowProxy);
   }
 
@@ -1626,6 +1626,13 @@ ICCRunnerFired(TimeStamp aDeadline)
   return true;
 }
 
+// Whether to skip the generation of timers for future GC/CC activity.
+static bool
+SkipCollectionTimers()
+{
+  return sShuttingDown || recordreplay::IsRecordingOrReplaying();
+}
+
 //static
 void
 nsJSContext::BeginCycleCollectionCallback()
@@ -1641,7 +1648,7 @@ nsJSContext::BeginCycleCollectionCallback()
 
   MOZ_ASSERT(!sICCRunner, "Tried to create a new ICC timer when one already existed.");
 
-  if (sShuttingDown) {
+  if (SkipCollectionTimers()) {
     return;
   }
 
@@ -1873,7 +1880,7 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
   nsJSContext::KillGCTimer();
   nsJSContext::KillInterSliceGCRunner();
-  if (sShuttingDown) {
+  if (SkipCollectionTimers()) {
     return;
   }
 
@@ -2176,7 +2183,7 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason,
 void
 nsJSContext::PokeShrinkingGC()
 {
-  if (sShrinkingGCTimer || sShuttingDown) {
+  if (sShrinkingGCTimer || SkipCollectionTimers()) {
     return;
   }
 
@@ -2192,7 +2199,7 @@ nsJSContext::PokeShrinkingGC()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCRunner || sICCRunner || sShuttingDown || !sHasRunGC) {
+  if (sCCRunner || sICCRunner || !sHasRunGC || SkipCollectionTimers()) {
     return;
   }
 
@@ -2363,7 +2370,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       nsJSContext::MaybePokeCC();
 
       if (aDesc.isZone_) {
-        if (!sFullGCTimer && !sShuttingDown) {
+        if (!sFullGCTimer && !SkipCollectionTimers()) {
           NS_NewTimerWithFuncCallback(&sFullGCTimer,
                                       FullGCTimerFired,
                                       nullptr,
@@ -2376,7 +2383,8 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
         nsJSContext::KillFullGCTimer();
       }
 
-      if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+      if (!recordreplay::IsRecordingOrReplaying() &&
+          ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -2396,7 +2404,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
 
       // Schedule another GC slice if the GC has more work to do.
       nsJSContext::KillInterSliceGCRunner();
-      if (!sShuttingDown && !aDesc.isComplete_) {
+      if (!SkipCollectionTimers() && !aDesc.isComplete_) {
         sInterSliceGCRunner =
           IdleTaskRunner::Create([](TimeStamp aDeadline) {
             return InterSliceGCRunnerFired(aDeadline, nullptr);
@@ -2408,7 +2416,8 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
              TaskCategory::GarbageCollection);
       }
 
-      if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+      if (!recordreplay::IsRecordingOrReplaying() &&
+          ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
