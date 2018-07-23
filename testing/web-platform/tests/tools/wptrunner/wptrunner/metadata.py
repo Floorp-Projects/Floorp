@@ -250,7 +250,11 @@ class ExpectedUpdater(object):
     def update_from_raw_log(self, log_file):
         action_map = self.action_map
         for line in log_file:
-            data = json.loads(line)
+            try:
+                data = json.loads(line)
+            except ValueError:
+                # Just skip lines that aren't json
+                continue
             action = data["action"]
             if action in action_map:
                 action_map[action](data)
