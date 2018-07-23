@@ -28,9 +28,6 @@ with Files("test/browser/browser_taskbar_preview.js"):
 with Files("test/browser/browser_urlBar_zoom.js"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("test/unit/test_AttributionCode.js"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
-
 with Files("test/unit/test_E10SUtils_nested_URIs.js"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
@@ -45,9 +42,6 @@ with Files("AboutNewTab.jsm"):
 
 with Files('AsyncTabSwitcher.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
-
-with Files("AttributionCode.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
 
 with Files("BrowserWindowTracker.jsm"):
     BUG_COMPONENT = ("Core", "Networking")
@@ -140,7 +134,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 EXTRA_JS_MODULES += [
     'AboutNewTab.jsm',
     'AsyncTabSwitcher.jsm',
-    'AttributionCode.jsm',
     'BlockedSiteContent.jsm',
     'BrowserErrorReporter.jsm',
     'BrowserUsageTelemetry.jsm',

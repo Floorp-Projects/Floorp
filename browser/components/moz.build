@@ -34,6 +34,7 @@ with Files('controlcenter/**'):
 
 DIRS += [
     'about',
+    'attribution',
     'contextualidentity',
     'customizableui',
     'dirprovider',
