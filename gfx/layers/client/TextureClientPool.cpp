@@ -39,7 +39,6 @@ ClearCallback(nsITimer *aTimer, void *aClosure)
 }
 
 TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
-                                     bool aSupportsTextureDirectMapping,
                                      int32_t aMaxTextureSize,
                                      gfx::SurfaceFormat aFormat,
                                      gfx::IntSize aSize,
@@ -61,7 +60,6 @@ TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
   , mOutstandingClients(0)
   , mSurfaceAllocator(aAllocator)
   , mDestroyed(false)
-  , mSupportsTextureDirectMapping(aSupportsTextureDirectMapping)
 {
   TCP_LOG("TexturePool %p created with maximum unused texture clients %u\n",
       this, mInitialPoolSize);
@@ -151,12 +149,6 @@ TextureClientPool::AllocateTextureClient()
   TCP_LOG("TexturePool %p allocating TextureClient, outstanding %u\n",
       this, mOutstandingClients);
 
-  TextureAllocationFlags allocFlags = ALLOC_DEFAULT;
-
-  if (mSupportsTextureDirectMapping && std::max(mSize.width, mSize.height) <= mMaxTextureSize) {
-    allocFlags = TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
-  }
-
   RefPtr<TextureClient> newClient;
   if (gfxPrefs::ForceShmemTiles()) {
     // gfx::BackendType::NONE means use the content backend
@@ -165,7 +157,7 @@ TextureClientPool::AllocateTextureClient()
                                               mFormat, mSize,
                                               gfx::BackendType::NONE,
                                               mBackend,
-                                              mFlags, allocFlags);
+                                              mFlags, ALLOC_DEFAULT);
   } else {
     newClient =
       TextureClient::CreateForDrawing(mSurfaceAllocator,
@@ -173,7 +165,7 @@ TextureClientPool::AllocateTextureClient()
                                       mBackend,
                                       mMaxTextureSize,
                                       BackendSelector::Content,
-                                      mFlags, allocFlags);
+                                      mFlags);
   }
 
   if (newClient) {

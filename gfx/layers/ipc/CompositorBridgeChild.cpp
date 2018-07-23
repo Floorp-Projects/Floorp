@@ -936,7 +936,6 @@ CompositorBridgeChild::GetTexturePool(KnowsCompositor* aAllocator,
 
   mTexturePools.AppendElement(
       new TextureClientPool(aAllocator->GetCompositorBackendType(),
-                            aAllocator->SupportsTextureDirectMapping(),
                             aAllocator->GetMaxTextureSize(),
                             aFormat,
                             gfx::gfxVars::TileSize(),

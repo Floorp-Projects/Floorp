@@ -94,10 +94,6 @@ enum TextureAllocationFlags {
   // The texture is going to be updated using UpdateFromSurface and needs to support
   // that call.
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
-
-  // In practice, this means we support the APPLE_client_storage extension, meaning
-  // the buffer will not be internally copied by the graphics driver.
-  ALLOC_ALLOW_DIRECT_MAPPING = 1 << 8,
 };
 
 /**
@@ -378,6 +374,16 @@ public:
                            gfx::BackendType aMoz2dBackend,
                            TextureFlags aTextureFlags,
                            TextureAllocationFlags flags = ALLOC_DEFAULT);
+
+  // Creates and allocates a TextureClient (can beaccessed through raw
+  // pointers) with a certain buffer size. It's unfortunate that we need this.
+  // providing format and sizes could let us do more optimization.
+  static already_AddRefed<TextureClient>
+  CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
+                               size_t aSize,
+                               YUVColorSpace aYUVColorSpace,
+                               uint32_t aBitDepth,
+                               TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient of the same type.
   already_AddRefed<TextureClient>
