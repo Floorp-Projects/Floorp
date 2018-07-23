@@ -71,6 +71,7 @@ class HTMLEditor final : public TextEditor
                        , public nsIHTMLInlineTableEditor
                        , public nsIEditorStyleSheets
                        , public nsStubMutationObserver
+                       , public nsIEditorMailSupport
 {
 public:
   /****************************************************************************
