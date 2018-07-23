@@ -150,25 +150,13 @@ class GeckoViewNavigation extends GeckoViewModule {
     return browser || null;
   }
 
-  isURIHandled(aUri, aWhere, aFlags) {
-    debug `isURIHandled: uri=${aUri} where=${aWhere} flags=${aFlags}`;
-
-    let handled = undefined;
-    LoadURIDelegate.load(this.window, this.eventDispatcher, aUri, aWhere, aFlags).then((response) => {
-      handled = response;
-    });
-
-    Services.tm.spinEventLoopUntil(() => this.window.closed || handled !== undefined);
-
-    return handled;
-  }
-
   // nsIBrowserDOMWindow.
   createContentWindow(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
     debug `createContentWindow: uri=${aUri && aUri.spec}
                                 where=${aWhere} flags=${aFlags}`;
 
-    if (this.isURIHandled(aUri, aWhere, aFlags)) {
+    if (LoadURIDelegate.load(this.window, this.eventDispatcher,
+                             aUri, aWhere, aFlags)) {
       // The app has handled the load, abort open-window handling.
       Components.returnCode = Cr.NS_ERROR_ABORT;
       return null;
@@ -191,7 +179,8 @@ class GeckoViewNavigation extends GeckoViewModule {
                                        nextTabParentId=${aNextTabParentId}
                                        name=${aName}`;
 
-    if (this.isURIHandled(aUri, aWhere, aFlags)) {
+    if (LoadURIDelegate.load(this.window, this.eventDispatcher,
+                             aUri, aWhere, aFlags)) {
       // The app has handled the load, abort open-window handling.
       Components.returnCode = Cr.NS_ERROR_ABORT;
       return null;
@@ -211,7 +200,8 @@ class GeckoViewNavigation extends GeckoViewModule {
     debug `handleOpenUri: uri=${aUri && aUri.spec}
                           where=${aWhere} flags=${aFlags}`;
 
-    if (this.isURIHandled(aUri, aWhere, aFlags)) {
+    if (LoadURIDelegate.load(this.window, this.eventDispatcher,
+                             aUri, aWhere, aFlags)) {
       return null;
     }
 
