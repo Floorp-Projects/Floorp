@@ -2499,7 +2499,7 @@ gfxPlatform::InitCompositorAccelerationPrefs()
     feature.UserForceEnable("Force-enabled by pref");
   }
 
-  // Safe and headless modes override everything.
+  // Safe, headless, and record/replay modes override everything.
   if (InSafeMode()) {
     feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by safe-mode",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
@@ -2507,6 +2507,10 @@ gfxPlatform::InitCompositorAccelerationPrefs()
   if (IsHeadless()) {
     feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by headless mode",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_HEADLESSMODE"));
+  }
+  if (recordreplay::IsRecordingOrReplaying()) {
+    feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by recording/replaying",
+                         NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_RECORDREPLAY"));
   }
 }
 
