@@ -129,6 +129,10 @@
   min-width: 250px;
 }
 
+.fastblock-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers.svg);
+}
+
 .tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
 }
