@@ -111,8 +111,8 @@ function processStsHeader(host, header, status, securityInfo) {
   if (header != null && securityInfo != null) {
     try {
       let uri = Services.io.newURI("https://" + host.name);
-      let sslStatus = securityInfo.
-                       QueryInterface(Ci.nsITransportSecurityInfo).SSLStatus;
+      let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                                  .SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                                uri, header, sslStatus, 0,
                                Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST,

@@ -5688,8 +5688,9 @@ var IdentityHandler = {
    * (if available). Return the data needed to update the UI.
    */
   checkIdentity: function checkIdentity(aState, aBrowser) {
-    this._lastStatus = aBrowser.securityUI.secInfo &&
-                       aBrowser.securityUI.secInfo.SSLStatus;
+    this._lastStatus = aBrowser.securityUI
+                               .QueryInterface(Ci.nsISSLStatusProvider)
+                               .SSLStatus;
 
     // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we

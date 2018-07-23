@@ -89,7 +89,8 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
                   nsISecureBrowserUI,
                   nsIWebProgressListener,
-                  nsISupportsWeakReference)
+                  nsISupportsWeakReference,
+                  nsISSLStatusProvider)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(mozIDOMWindowProxy* aWindow)
@@ -373,21 +374,23 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest,
           ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n",
            this, mNewToplevelSecurityState));
 
-  nsCOMPtr<nsITransportSecurityInfo> psmInfo(do_QueryInterface(info));
-  if (psmInfo) {
+  nsCOMPtr<nsISSLStatusProvider> sp(do_QueryInterface(info));
+  if (sp) {
     // Ignore result
     updateStatus = true;
-    (void) psmInfo->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
+    (void) sp->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
     if (temp_SSLStatus) {
       bool aTemp;
       if (NS_SUCCEEDED(temp_SSLStatus->GetIsExtendedValidation(&aTemp))) {
         mNewToplevelIsEV = aTemp;
       }
     }
-    mSecInfo = psmInfo;
   }
 
   mNewToplevelSecurityStateKnown = true;
+  if (updateStatus) {
+    mSSLStatus = temp_SSLStatus;
+  }
   MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: remember securityInfo %p\n", this,
           info));
@@ -1011,7 +1014,7 @@ nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
 
     // If we have no security, we also shouldn't have any SSL status.
     if (newSecurityState == lis_no_security) {
-      mSecInfo = nullptr;
+      mSSLStatus = nullptr;
     }
   }
 
@@ -1163,8 +1166,9 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+// nsISSLStatusProvider methods
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::GetSecInfo(nsITransportSecurityInfo** _result)
+nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1183,7 +1187,7 @@ nsSecureBrowserUIImpl::GetSecInfo(nsITransportSecurityInfo** _result)
       return NS_OK;
   }
 
-  *_result = mSecInfo;
+  *_result = mSSLStatus;
   NS_IF_ADDREF(*_result);
 
   return NS_OK;

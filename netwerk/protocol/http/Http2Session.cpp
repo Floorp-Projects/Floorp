@@ -27,6 +27,8 @@
 #include "nsHttpConnection.h"
 #include "nsIRequestContext.h"
 #include "nsISSLSocketControl.h"
+#include "nsISSLStatus.h"
+#include "nsISSLStatusProvider.h"
 #include "nsISupportsPriority.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"

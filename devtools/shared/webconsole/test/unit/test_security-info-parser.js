@@ -33,7 +33,8 @@ const MockCertificate = {
 };
 
 const MockSecurityInfo = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsITransportSecurityInfo]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITransportSecurityInfo,
+                                          Ci.nsISSLStatusProvider]),
   securityState: wpl.STATE_IS_SECURE,
   errorCode: 0,
   SSLStatus: {

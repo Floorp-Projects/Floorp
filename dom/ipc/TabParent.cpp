@@ -59,7 +59,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadInfo.h"
 #include "nsIPromptFactory.h"
-#include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
@@ -888,15 +887,6 @@ TabParent::GetState(uint32_t *aState)
   NS_ENSURE_ARG(aState);
   NS_WARNING("SecurityState not valid here");
   *aState = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetSecInfo(nsITransportSecurityInfo** _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-  NS_WARNING("TransportSecurityInfo not valid here");
-  *_result = nullptr;
   return NS_OK;
 }
 
