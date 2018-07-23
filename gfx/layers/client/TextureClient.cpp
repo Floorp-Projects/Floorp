@@ -1330,28 +1330,6 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
                                       aAllocator->GetTextureForwarder());
 }
 
-// static
-already_AddRefed<TextureClient>
-TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
-                                            size_t aSize,
-                                            YUVColorSpace aYUVColorSpace,
-                                            uint32_t aBitDepth,
-                                            TextureFlags aTextureFlags)
-{
-  if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
-    return nullptr;
-  }
-
-  TextureData* data = BufferTextureData::CreateForYCbCrWithBufferSize(
-    aAllocator, aSize, aYUVColorSpace, aBitDepth, aTextureFlags);
-  if (!data) {
-    return nullptr;
-  }
-
-  return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                      aAllocator->GetTextureForwarder());
-}
-
 TextureClient::TextureClient(TextureData* aData,
                              TextureFlags aFlags,
                              LayersIPCChannel* aAllocator)
