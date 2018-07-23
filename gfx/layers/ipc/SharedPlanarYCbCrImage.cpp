@@ -116,7 +116,9 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
 
   auto fwd = mCompositable->GetForwarder();
   bool supportsTextureDirectMapping = fwd->SupportsTextureDirectMapping() &&
-    std::max(mSize.width, mSize.height) <= fwd->GetMaxTextureSize();
+    std::max(aData.mYSize.width,
+             std::max(aData.mYSize.height,
+                      std::max(aData.mCbCrSize.width, aData.mCbCrSize.height))) <= fwd->GetMaxTextureSize();
   bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(
     gfx::SurfaceFormat::YUV, fwd->GetCompositorBackendType(),
     supportsTextureDirectMapping);
