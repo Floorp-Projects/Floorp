@@ -8754,7 +8754,8 @@ JS::DisableIncrementalGC(JSContext* cx)
 JS_PUBLIC_API(bool)
 JS::IsIncrementalGCEnabled(JSContext* cx)
 {
-    return cx->runtime()->gc.isIncrementalGCEnabled();
+    return cx->runtime()->gc.isIncrementalGCEnabled()
+        && !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
 JS_PUBLIC_API(bool)
