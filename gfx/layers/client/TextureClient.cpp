@@ -1065,7 +1065,8 @@ TextureClient::CreateForDrawing(KnowsCompositor* aAllocator,
                                 TextureAllocationFlags aAllocFlags)
 {
   LayersBackend layersBackend = aAllocator->GetCompositorBackendType();
-  if (aAllocator->SupportsTextureDirectMapping()) {
+  if (aAllocator->SupportsTextureDirectMapping() &&
+      std::max(aSize.width, aSize.height) <= aAllocator->GetMaxTextureSize()) {
     aAllocFlags = TextureAllocationFlags(aAllocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
   }
   return TextureClient::CreateForDrawing(aAllocator->GetTextureForwarder(),
