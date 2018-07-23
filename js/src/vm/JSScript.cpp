@@ -2214,6 +2214,18 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), filename());
         if (mode == XDR_DECODE && !xdr->hasOptions() && !setFilename(xdr->cx(), fn))
             return xdr->fail(JS::TranscodeResult_Throw);
+
+        // Note the content of sources decoded when recording or replaying.
+        if (mode == XDR_DECODE && hasSourceData() && mozilla::recordreplay::IsRecordingOrReplaying()) {
+            UncompressedSourceCache::AutoHoldEntry holder;
+            ScriptSource::PinnedChars chars(xdr->cx(), this, holder, 0, length());
+            if (!chars.get())
+                return xdr->fail(JS::TranscodeResult_Throw);
+            JS::BeginContentParseForRecordReplay(this, filename(), "application/javascript",
+                                                 JS::SmallestEncoding::UTF16);
+            JS::AddContentParseDataForRecordReplay(this, chars.get(), length() * sizeof(char16_t));
+            JS::EndContentParseForRecordReplay(this);
+        }
     }
 
     return Ok();
