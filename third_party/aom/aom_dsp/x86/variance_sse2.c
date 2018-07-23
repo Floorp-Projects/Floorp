@@ -569,7 +569,7 @@ void aom_upsampled_pred_sse2(MACROBLOCKD *xd, const struct AV1Common *const cm,
     }
   }
 
-  const InterpFilterParams filter =
+  const InterpFilterParams *filter =
       av1_get_interp_filter_params_with_block_size(EIGHTTAP_REGULAR, 8);
 
   if (!subpel_x_q3 && !subpel_y_q3) {
@@ -633,12 +633,12 @@ void aom_upsampled_pred_sse2(MACROBLOCKD *xd, const struct AV1Common *const cm,
     const int16_t *const kernel_y =
         av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
     const int intermediate_height =
-        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter.taps;
+        (((height - 1) * 8 + subpel_y_q3) >> 3) + filter->taps;
     assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
-    aom_convolve8_horiz(ref - ref_stride * ((filter.taps >> 1) - 1), ref_stride,
-                        temp, MAX_SB_SIZE, kernel_x, 16, NULL, -1, width,
-                        intermediate_height);
-    aom_convolve8_vert(temp + MAX_SB_SIZE * ((filter.taps >> 1) - 1),
+    aom_convolve8_horiz(ref - ref_stride * ((filter->taps >> 1) - 1),
+                        ref_stride, temp, MAX_SB_SIZE, kernel_x, 16, NULL, -1,
+                        width, intermediate_height);
+    aom_convolve8_vert(temp + MAX_SB_SIZE * ((filter->taps >> 1) - 1),
                        MAX_SB_SIZE, comp_pred, width, NULL, -1, kernel_y, 16,
                        width, height);
   }

@@ -405,7 +405,7 @@ function(setup_aom_test_targets)
         OR (CONFIG_AV1_DECODER AND  "${var}" MATCHES "_TEST_DECODER_"))
       list(APPEND aom_test_source_vars ${var})
     endif()
-    # cmake-format:on
+    # cmake-format: on
   endforeach()
 
   # Libaom_test_srcs.txt generation.

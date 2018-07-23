@@ -42,8 +42,8 @@ const sgr_params_type sgr_params[SGRPROJ_PARAMS] = {
 AV1PixelRect av1_whole_frame_rect(const AV1_COMMON *cm, int is_uv) {
   AV1PixelRect rect;
 
-  int ss_x = is_uv && cm->subsampling_x;
-  int ss_y = is_uv && cm->subsampling_y;
+  int ss_x = is_uv && cm->seq_params.subsampling_x;
+  int ss_y = is_uv && cm->seq_params.subsampling_y;
 
   rect.top = 0;
   rect.bottom = ROUND_POWER_OF_TWO(cm->height, ss_y);
@@ -1146,16 +1146,17 @@ void av1_loop_restoration_filter_frame_init(AV1LrStruct *lr_ctxt,
                                             YV12_BUFFER_CONFIG *frame,
                                             AV1_COMMON *cm, int optimized_lr,
                                             int num_planes) {
-  const int bit_depth = cm->bit_depth;
-  const int highbd = cm->use_highbitdepth;
+  const SequenceHeader *const seq_params = &cm->seq_params;
+  const int bit_depth = seq_params->bit_depth;
+  const int highbd = seq_params->use_highbitdepth;
   lr_ctxt->dst = &cm->rst_frame;
 
   const int frame_width = frame->crop_widths[0];
   const int frame_height = frame->crop_heights[0];
-  if (aom_realloc_frame_buffer(lr_ctxt->dst, frame_width, frame_height,
-                               cm->subsampling_x, cm->subsampling_y,
-                               cm->use_highbitdepth, AOM_BORDER_IN_PIXELS,
-                               cm->byte_alignment, NULL, NULL, NULL) < 0)
+  if (aom_realloc_frame_buffer(
+          lr_ctxt->dst, frame_width, frame_height, seq_params->subsampling_x,
+          seq_params->subsampling_y, highbd, AOM_BORDER_IN_PIXELS,
+          cm->byte_alignment, NULL, NULL, NULL) < 0)
     aom_internal_error(&cm->error, AOM_CODEC_MEM_ERROR,
                        "Failed to allocate restoration dst buffer");
 
@@ -1180,8 +1181,8 @@ void av1_loop_restoration_filter_frame_init(AV1LrStruct *lr_ctxt,
                  highbd);
 
     lr_plane_ctxt->rsi = rsi;
-    lr_plane_ctxt->ss_x = is_uv && cm->subsampling_x;
-    lr_plane_ctxt->ss_y = is_uv && cm->subsampling_y;
+    lr_plane_ctxt->ss_x = is_uv && seq_params->subsampling_x;
+    lr_plane_ctxt->ss_y = is_uv && seq_params->subsampling_y;
     lr_plane_ctxt->highbd = highbd;
     lr_plane_ctxt->bit_depth = bit_depth;
     lr_plane_ctxt->data8 = frame->buffers[plane];
@@ -1337,7 +1338,7 @@ void av1_foreach_rest_unit_in_plane(const struct AV1Common *cm, int plane,
                                     int32_t *tmpbuf,
                                     RestorationLineBuffers *rlbs) {
   const int is_uv = plane > 0;
-  const int ss_y = is_uv && cm->subsampling_y;
+  const int ss_y = is_uv && cm->seq_params.subsampling_y;
 
   const RestorationInfo *rsi = &cm->rst_info[plane];
 
@@ -1350,7 +1351,7 @@ void av1_foreach_rest_unit_in_plane(const struct AV1Common *cm, int plane,
 int av1_loop_restoration_corners_in_sb(const struct AV1Common *cm, int plane,
                                        int mi_row, int mi_col, BLOCK_SIZE bsize,
                                        int *rcol0, int *rcol1, int *rrow0,
-                                       int *rrow1, int *tile_tl_idx) {
+                                       int *rrow1) {
   assert(rcol0 && rcol1 && rrow0 && rrow1);
 
   if (bsize != cm->seq_params.sb_size) return 0;
@@ -1383,8 +1384,8 @@ int av1_loop_restoration_corners_in_sb(const struct AV1Common *cm, int plane,
   const int vert_units = av1_lr_count_units_in_tile(size, tile_h);
 
   // The size of an MI-unit on this plane of the image
-  const int ss_x = is_uv && cm->subsampling_x;
-  const int ss_y = is_uv && cm->subsampling_y;
+  const int ss_x = is_uv && cm->seq_params.subsampling_x;
+  const int ss_y = is_uv && cm->seq_params.subsampling_y;
   const int mi_size_x = MI_SIZE >> ss_x;
   const int mi_size_y = MI_SIZE >> ss_y;
 
@@ -1418,9 +1419,6 @@ int av1_loop_restoration_corners_in_sb(const struct AV1Common *cm, int plane,
   // unit might not exist, in which case we'll clamp accordingly.
   *rcol1 = AOMMIN((mi_rel_col1 * mi_to_num_x + rnd_x) / denom_x, horz_units);
   *rrow1 = AOMMIN((mi_rel_row1 * mi_to_num_y + rnd_y) / denom_y, vert_units);
-
-  const int tile_idx = 0;
-  *tile_tl_idx = tile_idx * rsi->units_per_tile;
 
   return *rcol0 < *rcol1 && *rrow0 < *rrow1;
 }
@@ -1468,7 +1466,7 @@ static void save_deblock_boundary_lines(
   int upscaled_width;
   int line_bytes;
   if (av1_superres_scaled(cm)) {
-    const int ss_x = is_uv && cm->subsampling_x;
+    const int ss_x = is_uv && cm->seq_params.subsampling_x;
     upscaled_width = (cm->superres_upscaled_width + ss_x) >> ss_x;
     line_bytes = upscaled_width << use_highbd;
     if (use_highbd)
@@ -1515,7 +1513,7 @@ static void save_cdef_boundary_lines(const YV12_BUFFER_CONFIG *frame,
   // At the point where this function is called, we've already applied
   // superres. So we don't need to extend the lines here, we can just
   // pull directly from the topmost row of the upscaled frame.
-  const int ss_x = is_uv && cm->subsampling_x;
+  const int ss_x = is_uv && cm->seq_params.subsampling_x;
   const int upscaled_width = av1_superres_scaled(cm)
                                  ? (cm->superres_upscaled_width + ss_x) >> ss_x
                                  : src_width;
@@ -1535,7 +1533,7 @@ static void save_tile_row_boundary_lines(const YV12_BUFFER_CONFIG *frame,
                                          int use_highbd, int plane,
                                          AV1_COMMON *cm, int after_cdef) {
   const int is_uv = plane > 0;
-  const int ss_y = is_uv && cm->subsampling_y;
+  const int ss_y = is_uv && cm->seq_params.subsampling_y;
   const int stripe_height = RESTORATION_PROC_UNIT_SIZE >> ss_y;
   const int stripe_off = RESTORATION_UNIT_OFFSET >> ss_y;
 
@@ -1600,7 +1598,7 @@ static void save_tile_row_boundary_lines(const YV12_BUFFER_CONFIG *frame,
 void av1_loop_restoration_save_boundary_lines(const YV12_BUFFER_CONFIG *frame,
                                               AV1_COMMON *cm, int after_cdef) {
   const int num_planes = av1_num_planes(cm);
-  const int use_highbd = cm->use_highbitdepth;
+  const int use_highbd = cm->seq_params.use_highbitdepth;
   for (int p = 0; p < num_planes; ++p) {
     save_tile_row_boundary_lines(frame, use_highbd, p, cm, after_cdef);
   }

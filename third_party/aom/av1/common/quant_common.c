@@ -223,29 +223,6 @@ int16_t av1_ac_quant_QTX(int qindex, int delta, aom_bit_depth_t bit_depth) {
   return av1_ac_quant_Q3(qindex, delta, bit_depth);
 }
 
-int16_t av1_qindex_from_ac_Q3(int ac_Q3, aom_bit_depth_t bit_depth) {
-  int i;
-  const int16_t *tab = ac_qlookup_Q3;
-  switch (bit_depth) {
-    case AOM_BITS_10: {
-      tab = ac_qlookup_10_Q3;
-      break;
-    }
-    case AOM_BITS_12: {
-      tab = ac_qlookup_12_Q3;
-      break;
-    }
-    default:
-      assert(0 && "bit_depth should be AOM_BITS_8, AOM_BITS_10 or AOM_BITS_12");
-      return -1;
-  }
-  (void)bit_depth;
-  for (i = 0; i < QINDEX_RANGE; i++) {
-    if (ac_Q3 <= tab[i]) return i;
-  }
-  return QINDEX_RANGE - 1;
-}
-
 int av1_get_qindex(const struct segmentation *seg, int segment_id,
                    int base_qindex) {
   if (segfeature_active(seg, segment_id, SEG_LVL_ALT_Q)) {

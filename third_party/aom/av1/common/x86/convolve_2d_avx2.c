@@ -24,8 +24,8 @@
 
 void av1_convolve_2d_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
                              int dst_stride, int w, int h,
-                             InterpFilterParams *filter_params_x,
-                             InterpFilterParams *filter_params_y,
+                             const InterpFilterParams *filter_params_x,
+                             const InterpFilterParams *filter_params_y,
                              const int subpel_x_q4, const int subpel_y_q4,
                              ConvolveParams *conv_params) {
   const int bd = 8;
@@ -46,10 +46,10 @@ void av1_convolve_2d_sr_avx2(const uint8_t *src, int src_stride, uint8_t *dst,
 
   assert(conv_params->round_0 > 0);
 
-  filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx2);
-  filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx2);
-  filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx2);
-  filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx2);
+  filt[0] = _mm256_load_si256((__m256i const *)filt_global_avx2);
+  filt[1] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32));
+  filt[2] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 2));
+  filt[3] = _mm256_load_si256((__m256i const *)(filt_global_avx2 + 32 * 3));
 
   prepare_coeffs_lowbd(filter_params_x, subpel_x_q4, coeffs_h);
   prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_v);
@@ -180,8 +180,8 @@ static INLINE void copy_128(const uint8_t *src, uint8_t *dst) {
 
 void av1_convolve_2d_copy_sr_avx2(const uint8_t *src, int src_stride,
                                   uint8_t *dst, int dst_stride, int w, int h,
-                                  InterpFilterParams *filter_params_x,
-                                  InterpFilterParams *filter_params_y,
+                                  const InterpFilterParams *filter_params_x,
+                                  const InterpFilterParams *filter_params_y,
                                   const int subpel_x_q4, const int subpel_y_q4,
                                   ConvolveParams *conv_params) {
   (void)filter_params_x;
