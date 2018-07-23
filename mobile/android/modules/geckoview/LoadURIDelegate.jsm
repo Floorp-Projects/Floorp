@@ -8,10 +8,6 @@ var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
 var LoadURIDelegate = {
   // Delegate URI loading to the app.
   // Return whether the loading has been handled.
