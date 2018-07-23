@@ -26,7 +26,6 @@ from tempfile import mkdtemp
 
 BASE_SUBSTS = [
     ('PYTHON', mozpath.normsep(sys.executable)),
-    ('MOZ_UI_LOCALE', 'en-US'),
 ]
 
 
