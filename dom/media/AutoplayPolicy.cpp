@@ -104,8 +104,9 @@ static bool
 IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
 {
   return ((aElement.Volume() == 0.0 || aElement.Muted()) &&
-          Preferences::GetBool("media.autoplay.allow-muted", true)) ||
-         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+           Preferences::GetBool("media.autoplay.allow-muted", true)) ||
+          IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow()) ||
+          (aElement.OwnerDoc()->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video);
 }
 
 /* static */ bool
