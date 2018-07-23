@@ -379,16 +379,6 @@ public:
                            TextureFlags aTextureFlags,
                            TextureAllocationFlags flags = ALLOC_DEFAULT);
 
-  // Creates and allocates a TextureClient (can beaccessed through raw
-  // pointers) with a certain buffer size. It's unfortunate that we need this.
-  // providing format and sizes could let us do more optimization.
-  static already_AddRefed<TextureClient>
-  CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
-                               size_t aSize,
-                               YUVColorSpace aYUVColorSpace,
-                               uint32_t aBitDepth,
-                               TextureFlags aTextureFlags);
-
   // Creates and allocates a TextureClient of the same type.
   already_AddRefed<TextureClient>
   CreateSimilar(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
