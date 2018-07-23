@@ -137,8 +137,6 @@ struct GLContextSymbols final
     void (GLAPIENTRY * fTexSubImage2D)(GLenum, GLint, GLint, GLint, GLsizei,
                                         GLsizei, GLenum, GLenum, const void*);
     void (GLAPIENTRY * fTextureRangeAPPLE)(GLenum, GLsizei, GLvoid*);
-    void (GLAPIENTRY * fFinishObjectAPPLE)(GLenum, GLint);
-    realGLboolean (GLAPIENTRY * fTestObjectAPPLE)(GLenum, GLint);
     void (GLAPIENTRY * fUniform1f)(GLint, GLfloat);
     void (GLAPIENTRY * fUniform1fv)(GLint, GLsizei, const GLfloat*);
     void (GLAPIENTRY * fUniform1i)(GLint, GLint);

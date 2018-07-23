@@ -175,7 +175,6 @@ struct TextureFactoryIdentifier
   LayersBackend mParentBackend;
   GeckoProcessType mParentProcessType;
   int32_t mMaxTextureSize;
-  bool mSupportsTextureDirectMapping;
   bool mCompositorUseANGLE;
   bool mCompositorUseDComp;
   bool mSupportsTextureBlitting;
@@ -187,7 +186,6 @@ struct TextureFactoryIdentifier
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                                     GeckoProcessType aParentProcessType = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
-                                    bool aSupportsTextureDirectMapping = false,
                                     bool aCompositorUseANGLE = false,
                                     bool aCompositorUseDComp = false,
                                     bool aSupportsTextureBlitting = false,
@@ -197,7 +195,6 @@ struct TextureFactoryIdentifier
     : mParentBackend(aLayersBackend)
     , mParentProcessType(aParentProcessType)
     , mMaxTextureSize(aMaxTextureSize)
-    , mSupportsTextureDirectMapping(aSupportsTextureDirectMapping)
     , mCompositorUseANGLE(aCompositorUseANGLE)
     , mCompositorUseDComp(aCompositorUseDComp)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
@@ -212,13 +209,11 @@ struct TextureFactoryIdentifier
       mParentBackend == aOther.mParentBackend &&
       mParentProcessType == aOther.mParentProcessType &&
       mMaxTextureSize == aOther.mMaxTextureSize &&
-      mSupportsTextureDirectMapping == aOther.mSupportsTextureDirectMapping &&
       mCompositorUseANGLE == aOther.mCompositorUseANGLE &&
       mCompositorUseDComp == aOther.mCompositorUseDComp &&
       mSupportsTextureBlitting == aOther.mSupportsTextureBlitting &&
       mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
       mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&
-      mUsingAdvancedLayers == aOther.mUsingAdvancedLayers &&
       mSyncHandle == aOther.mSyncHandle;
   }
 };
