@@ -9,8 +9,6 @@
 #include "mozilla/EditorBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIEditor.h"
-#include "nsIEditorMailSupport.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISupportsImpl.h"
 #include "nscore.h"
@@ -36,7 +34,6 @@ class Selection;
  */
 class TextEditor : public EditorBase
                  , public nsIPlaintextEditor
-                 , public nsIEditorMailSupport
 {
 public:
   /****************************************************************************
@@ -56,9 +53,6 @@ public:
 
   // nsIPlaintextEditor methods
   NS_DECL_NSIPLAINTEXTEDITOR
-
-  // nsIEditorMailSupport overrides
-  NS_DECL_NSIEDITORMAILSUPPORT
 
   // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
