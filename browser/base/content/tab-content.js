@@ -24,6 +24,8 @@ ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
   "resource:///modules/PageStyleHandler.jsm");
+ChromeUtils.defineModuleGetter(this, "LightweightThemeChildListener",
+  "resource:///modules/LightweightThemeChildListener.jsm");
 
 // TabChildGlobal
 var global = this;
@@ -87,21 +89,33 @@ addMessageListener("MixedContent:ReenableProtection", function() {
   docShell.mixedContentChannel = null;
 });
 
-XPCOMUtils.defineLazyProxy(this, "LightweightThemeChildHelper",
-  "resource:///modules/LightweightThemeChildHelper.jsm");
+var LightweightThemeChildListenerStub = {
+  _childListener: null,
+  get childListener() {
+    if (!this._childListener) {
+      this._childListener = new LightweightThemeChildListener();
+    }
+    return this._childListener;
+  },
 
-let themeablePagesWhitelist = new Set([
-  "about:home",
-  "about:newtab",
-  "about:welcome",
-]);
+  init() {
+    addEventListener("LightweightTheme:Support", this, false, true);
+    addMessageListener("LightweightTheme:Update", this);
+    sendAsyncMessage("LightweightTheme:Request");
+    this.init = null;
+  },
 
-addEventListener("pageshow", function({ originalTarget }) {
-  if (originalTarget.defaultView == content && themeablePagesWhitelist.has(content.document.documentURI)) {
-    LightweightThemeChildHelper.listen(themeablePagesWhitelist);
-    LightweightThemeChildHelper.update(chromeOuterWindowID, content);
-  }
-}, false, true);
+  handleEvent(event) {
+    return this.childListener.handleEvent(event);
+  },
+
+  receiveMessage(msg) {
+    return this.childListener.receiveMessage(msg);
+  },
+};
+
+LightweightThemeChildListenerStub.init();
+
 
 var AboutReaderListener = {
 
