@@ -297,6 +297,7 @@ class WebGLContext
     friend class WebGLExtensionDisjointTimerQuery;
     friend class WebGLExtensionDrawBuffers;
     friend class WebGLExtensionLoseContext;
+    friend class WebGLExtensionMOZDebug;
     friend class WebGLExtensionVertexArray;
     friend class WebGLMemoryTracker;
     friend class webgl::AvailabilityRunnable;
