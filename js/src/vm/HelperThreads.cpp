@@ -1560,7 +1560,7 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
 {
     assertNotStarted();
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
-    TimeStamp timeStart = TimeStamp::Now();
+    TimeStamp timeStart = ReallyNow();
     runTask();
     duration_ = TimeSince(timeStart);
 }
@@ -1575,7 +1575,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
 
     {
         AutoUnlockHelperThreadState parallelSection(lock);
-        TimeStamp timeStart = TimeStamp::Now();
+        TimeStamp timeStart = ReallyNow();
         runTask();
         duration_ = TimeSince(timeStart);
     }
