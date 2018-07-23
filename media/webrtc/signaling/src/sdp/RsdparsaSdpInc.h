@@ -220,6 +220,7 @@ struct RustSdpAttributeFmtp {
 struct RustSdpAttributeFlags {
   bool iceLite;
   bool rtcpMux;
+  bool rtcpRsize;
   bool bundleOnly;
   bool endOfCandidates;
 };
