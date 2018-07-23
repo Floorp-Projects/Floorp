@@ -52,3 +52,6 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Web Replay')
