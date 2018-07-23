@@ -347,7 +347,8 @@ public class DateTimePicker extends FrameLayout {
         mMonthSpinnerInput = (EditText) mMonthSpinner.getChildAt(1);
 
         mWeekSpinner = setupSpinner(R.id.week, 1,
-                                    mTempDate.get(Calendar.WEEK_OF_YEAR));
+                                    mTempDate.getActualMaximum(Calendar.WEEK_OF_YEAR));
+        mWeekSpinner.setValue(mTempDate.get(Calendar.WEEK_OF_YEAR));
         mWeekSpinner.setFormatter(TWO_DIGIT_FORMATTER);
         mWeekSpinnerInput = (EditText) mWeekSpinner.getChildAt(1);
 
