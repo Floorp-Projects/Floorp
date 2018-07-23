@@ -4,9 +4,9 @@
 
 package mozilla.components.browser.toolbar.display
 
-import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
+import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -148,8 +148,6 @@ internal class DisplayToolbar(
         addView(urlView)
         addView(menuView)
         addView(progressView)
-
-        layoutTransition = LayoutTransition()
     }
 
     /**
@@ -221,6 +219,8 @@ internal class DisplayToolbar(
      * should be updated if needed.
      */
     fun invalidateActions() {
+        TransitionManager.beginDelayedTransition(this)
+
         for (action in navigationActions + pageActions + browserActions) {
             val visible = action.actual.visible()
 
@@ -238,8 +238,6 @@ internal class DisplayToolbar(
 
             action.view?.let { action.actual.bind(it) }
         }
-
-        requestLayout()
     }
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
