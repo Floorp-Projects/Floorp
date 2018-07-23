@@ -917,6 +917,9 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
     return active || HasActiveChildren(*opacityItem->GetChildren(), aDisplayListBuilder);
   }
   // TODO: handle other items?
+  if (aItem->GetChildren()) {
+    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);;
+  }
   return false;
 }
 
