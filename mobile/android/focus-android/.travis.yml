@@ -20,7 +20,7 @@ before_install:
   - yes | sdkmanager "platforms;android-27"
 
 script:
-  - ./gradlew -Pcoverage --no-daemon clean assembleFocusGeckoX86
+  - ./gradlew -Pcoverage --no-daemon clean assembleFocusX86Nightly
   - echo "--" > .adjust_token
   - ./gradlew -Pcoverage --no-daemon jacocoTestReport
 

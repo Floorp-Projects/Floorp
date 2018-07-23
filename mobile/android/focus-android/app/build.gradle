@@ -34,7 +34,7 @@ android {
     }
 
     // We have a three dimensional build configuration:
-    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webview, gecko)
+    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar) X ARCHITECTURE (x86, arm, aarch64)
 
     buildTypes {
         release {
@@ -45,6 +45,9 @@ android {
         debug {
             applicationIdSuffix ".debug"
         }
+        nightly {
+            initWith debug
+        }
     }
     testOptions {
         unitTests {
@@ -52,7 +55,7 @@ android {
         }
     }
 
-    flavorDimensions "product", "engine", "abi"
+    flavorDimensions "product", "abi"
 
     productFlavors {
         // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
@@ -65,15 +68,6 @@ android {
             dimension "product"
 
             applicationIdSuffix ".klar"
-        }
-
-        // We can build with two engines: webview or gecko
-        webview {
-            dimension "engine"
-        }
-
-        gecko {
-            dimension "engine"
         }
 
         x86 {
@@ -99,57 +93,28 @@ android {
             }
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        // WebView
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
         // Release
-        focusWebviewX86Release.root = 'src/focusRelease'
-        focusWebviewArmRelease.root = 'src/focusRelease'
-        focusWebviewAarch64Release.root = 'src/focusRelease'
+        focusX86Release.root = 'src/focusRelease'
+        focusArmRelease.root = 'src/focusRelease'
+        focusAarch64Release.root = 'src/focusRelease'
 
-        klarWebviewX86Release.root = 'src/klarRelease'
-        klarWebviewArmRelease.root = 'src/klarRelease'
-        klarWebviewAarch64Release.root = 'src/klarRelease'
+        klarX86Release.root = 'src/klarRelease'
+        klarArmRelease.root = 'src/klarRelease'
+        klarAarch64Release.root = 'src/klarRelease'
 
         // Debug
-        focusWebviewX86Debug.root = 'src/focusDebug'
-        focusWebviewX86Debug.root = 'src/focusDebug'
-        focusWebviewX86Debug.root = 'src/focusDebug'
+        focusX86Debug.root = 'src/focusDebug'
+        focusX86Debug.root = 'src/focusDebug'
+        focusX86Debug.root = 'src/focusDebug'
 
-        klarWebviewX86Debug.root = 'src/klarDebug'
-        klarWebviewX86Debug.root = 'src/klarDebug'
-        klarWebviewX86Debug.root = 'src/klarDebug'
+        klarX86Debug.root = 'src/klarDebug'
+        klarX86Debug.root = 'src/klarDebug'
+        klarX86Debug.root = 'src/klarDebug'
 
         // UI test
         androidTestWebviewCompile {
             java.srcDirs += ['src/androidTestWebview/java']
         }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        // Gecko
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Release
-
-        klarGeckoArmRelease.root = 'src/klarRelease'
-        klarGeckoX86Release.root = 'src/klarRelease'
-        klarGeckoAarch64Release.root = 'src/klarRelease'
-
-        focusGeckoArmRelease.root = 'src/focusRelease'
-        focusGeckoX86Release.root = 'src/focusRelease'
-        focusGeckoAarch64Release.root = 'src/focusRelease'
-
-        // Debug
-
-        focusGeckoArmDebug.root = 'src/focusDebug'
-        focusGeckoX86Debug.root = 'src/focusDebug'
-        focusGeckoAarch64Debug.root = 'src/focusDebug'
-
-        klarGeckoArmDebug.root = 'src/klarDebug'
-        klarGeckoX86Debug.root = 'src/klarDebug'
-        klarGeckoAarch64Debug.root = 'src/klarDebug'
 
         // UI tests
         androidTestGeckoCompile {
@@ -276,7 +241,7 @@ dependencies {
 android.applicationVariants.all { variant ->
     def buildType = variant.buildType.name
 
-    if (buildType == "release") {
+    if (buildType == "release" || buildType == "nightly") {
         def versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the

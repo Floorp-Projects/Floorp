@@ -9,6 +9,7 @@ import android.content.Context;
 import android.preference.PreferenceManager;
 
 import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.web.Config;
 
 import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
@@ -35,7 +36,7 @@ public final class AppConstants {
 
     public static boolean isGeckoBuild(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(ENGINE_PREF_STRING_KEY, false);
+                .getBoolean(ENGINE_PREF_STRING_KEY, Config.DEFAULT_NEW_RENDERER);
     }
 
     public static boolean supportsDownloadingFiles() {

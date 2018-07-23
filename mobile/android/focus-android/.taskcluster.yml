@@ -37,7 +37,7 @@ tasks:
           && git checkout {{event.head.sha}}
           && echo "--" > .adjust_token
           && python tools/l10n/check_locales.py
-          && ./gradlew --no-daemon clean assemble assembleFocusWebviewX86DebugAndroidTest detektCheck ktlint lint pmd checkstyle spotbugs test
+          && ./gradlew --no-daemon clean assemble assembleFocusX86DebugAndroidTest detektCheck ktlint lint pmd checkstyle spotbugs test
       artifacts:
         'public':
           type: 'directory'
@@ -140,12 +140,12 @@ tasks:
             --track alpha \
             --commit \
             --output /opt/focus-android/app/build/outputs/apk \
-            --apk focusWebviewX86/release/app-focus-webview-x86-release-unsigned.apk \
-            --apk klarWebviewX86/release/app-klar-webview-x86-release-unsigned.apk \
-            --apk focusWebviewArm/release/app-focus-webview-arm-release-unsigned.apk \
-            --apk klarWebviewArm/release/app-klar-webview-arm-release-unsigned.apk \
-            --apk focusWebviewAarch64/release/app-focus-webview-aarch64-release-unsigned.apk \
-            --apk klarWebviewAarch64/release/app-klar-webview-aarch64-release-unsigned.apk
+            --apk focusX86/release/app-focus-x86-release-unsigned.apk \
+            --apk klarX86/release/app-klar-x86-release-unsigned.apk \
+            --apk focusArm/release/app-focus-arm-release-unsigned.apk \
+            --apk klarArm/release/app-klar-arm-release-unsigned.apk \
+            --apk focusAarch64/release/app-focus-aarch64-release-unsigned.apk \
+            --apk klarAarch64/release/app-klar-aarch64-release-unsigned.apk
       features:
         taskclusterProxy: true
         chainOfTrust: true
