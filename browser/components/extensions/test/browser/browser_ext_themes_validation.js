@@ -1,11 +1,5 @@
 "use strict";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 /**
  * Helper function for testing a theme with invalid properties.
  * @param {object} invalidProps The invalid properties to load the theme with.

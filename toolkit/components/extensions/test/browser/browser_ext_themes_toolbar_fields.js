@@ -7,10 +7,6 @@ ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["extensions.webextensions.themes.enabled", true],
-  ]});
-
   await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

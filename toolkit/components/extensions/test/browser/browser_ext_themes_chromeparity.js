@@ -1,11 +1,5 @@
 "use strict";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_support_theme_frame() {
   const FRAME_COLOR = [71, 105, 91];
   const TAB_TEXT_COLOR = [207, 221, 192];

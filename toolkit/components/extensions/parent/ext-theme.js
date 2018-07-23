@@ -7,10 +7,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
-  return Services.prefs.getBoolPref("extensions.webextensions.themes.enabled");
-});
-
 var {
   getWinUtils,
 } = ExtensionUtils;
@@ -312,18 +308,8 @@ class Theme {
 
 this.theme = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    if (!gThemesEnabled) {
-      // Return early if themes are disabled.
-      return;
-    }
-
     let {extension} = this;
     let {manifest} = extension;
-
-    if (!gThemesEnabled) {
-      // Return early if themes are disabled.
-      return;
-    }
 
     defaultTheme = new Theme(extension);
     defaultTheme.load(manifest.theme);
@@ -363,11 +349,6 @@ this.theme = class extends ExtensionAPI {
           return Promise.resolve(defaultTheme.details);
         },
         update: (windowId, details) => {
-          if (!gThemesEnabled) {
-            // Return early if themes are disabled.
-            return;
-          }
-
           if (windowId) {
             const browserWindow = windowTracker.getWindow(windowId, context);
             if (!browserWindow) {
@@ -379,11 +360,6 @@ this.theme = class extends ExtensionAPI {
           theme.load(details);
         },
         reset: (windowId) => {
-          if (!gThemesEnabled) {
-            // Return early if themes are disabled.
-            return;
-          }
-
           if (windowId) {
             const browserWindow = windowTracker.getWindow(windowId, context);
             if (!browserWindow) {
