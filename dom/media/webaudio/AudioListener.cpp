@@ -62,7 +62,7 @@ AudioListenerEngine::RightVector() const
 
 AudioListener::AudioListener(AudioContext* aContext)
   : mContext(aContext)
-  , mEngine(MakeUnique<AudioListenerEngine>())
+  , mEngine(new AudioListenerEngine())
   , mPosition()
   , mFrontVector(0., 0., -1.)
   , mRightVector(1., 0., 0.)
@@ -142,19 +142,18 @@ AudioListener::SendListenerEngineEvent(
       , mEngine(aEngine)
       , mParameter(aParameter)
       , mValue(aValue)
-    {
-    }
+    { }
     void Run() override
     {
       mEngine->RecvListenerEngineEvent(mParameter, mValue);
     }
-    AudioListenerEngine* mEngine;
+    RefPtr<AudioListenerEngine> mEngine;
     AudioListenerEngine::AudioListenerParameter mParameter;
     ThreeDPoint mValue;
   };
 
   mContext->DestinationStream()->GraphImpl()->AppendMessage(
-    MakeUnique<Message>(mEngine.get(), aParameter, aValue));
+    MakeUnique<Message>(Engine(), aParameter, aValue));
 }
 
 size_t

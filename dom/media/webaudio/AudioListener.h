@@ -24,13 +24,16 @@ namespace dom {
 class AudioListenerEngine final
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioListenerEngine)
+
+  AudioListenerEngine();
+
   enum class AudioListenerParameter
   {
     POSITION,
     FRONT, // unit length
     RIGHT // unit length, orthogonal to FRONT
   };
-  AudioListenerEngine();
   void RecvListenerEngineEvent(
     AudioListenerEngine::AudioListenerParameter aParameter,
     const ThreeDPoint& aValue);
@@ -39,6 +42,8 @@ public:
   const ThreeDPoint& RightVector() const;
 
 private:
+  ~AudioListenerEngine() = default;
+
   ThreeDPoint mPosition;
   ThreeDPoint mFrontVector;
   ThreeDPoint mRightVector;
@@ -65,7 +70,7 @@ public:
   void SetOrientation(double aX, double aY, double aZ,
                       double aXUp, double aYUp, double aZUp);
 
-  const AudioListenerEngine* Engine() { return mEngine.get(); }
+  AudioListenerEngine* Engine() { return mEngine.get(); }
 
 private:
   void SendListenerEngineEvent(
@@ -77,7 +82,7 @@ private:
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
 private:
   RefPtr<AudioContext> mContext;
-  const UniquePtr<AudioListenerEngine> mEngine;
+  RefPtr<AudioListenerEngine> mEngine;
   ThreeDPoint mPosition;
   ThreeDPoint mFrontVector;
   ThreeDPoint mRightVector;
