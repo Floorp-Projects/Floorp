@@ -40,7 +40,6 @@ class ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams;
 class ServiceWorkerContainer;
 class DOMRequest;
 class CredentialsContainer;
-class Clipboard;
 } // namespace dom
 } // namespace mozilla
 
@@ -208,7 +207,6 @@ public:
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
 
   mozilla::dom::CredentialsContainer* Credentials();
-  dom::Clipboard* Clipboard();
 
   static bool Webdriver();
 
@@ -270,7 +268,6 @@ private:
   RefPtr<Promise> mBatteryPromise;
   RefPtr<network::Connection> mConnection;
   RefPtr<CredentialsContainer> mCredentials;
-  RefPtr<dom::Clipboard> mClipboard;
   RefPtr<MediaDevices> mMediaDevices;
   RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
