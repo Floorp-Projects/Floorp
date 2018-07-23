@@ -501,11 +501,11 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   for (uint32_t i = 0; i < oldCapacity; ++i) {
     PLDHashEntryHdr* oldEntry = (PLDHashEntryHdr*)oldEntryAddr;
     if (EntryIsLive(oldEntry)) {
-      oldEntry->mKeyHash &= ~kCollisionFlag;
-      PLDHashEntryHdr* newEntry = FindFreeEntry(oldEntry->mKeyHash);
+      const PLDHashNumber key = oldEntry->mKeyHash & ~kCollisionFlag;
+      PLDHashEntryHdr* newEntry = FindFreeEntry(key);
       NS_ASSERTION(EntryIsFree(newEntry), "EntryIsFree(newEntry)");
       moveEntry(this, oldEntry, newEntry);
-      newEntry->mKeyHash = oldEntry->mKeyHash;
+      newEntry->mKeyHash = key;
     }
     oldEntryAddr += mEntrySize;
   }
