@@ -7,6 +7,10 @@
 
 #include <string.h>
 
+#if defined(LINUX)
+#include <sys/un.h>
+#endif
+
 /*
  * On Unix, the error code for gethostbyname() and gethostbyaddr()
  * is returned in the global variable h_errno, instead of the usual
@@ -1366,7 +1370,17 @@ PRUintn _PR_NetAddrSize(const PRNetAddr* addr)
 #endif
 #if defined(XP_UNIX) || defined(XP_OS2)
     else if (AF_UNIX == addr->raw.family)
-        addrsize = sizeof(addr->local);
+    {
+#if defined(LINUX)
+        if (addr->local.path[0] == 0)
+            /* abstract socket address is supported on Linux only */
+            addrsize = strnlen(addr->local.path + 1,
+                               sizeof(addr->local.path)) +
+                       offsetof(struct sockaddr_un, sun_path) + 1;
+        else
+#endif
+            addrsize = sizeof(addr->local);
+    }
 #endif
     else addrsize = 0;
 

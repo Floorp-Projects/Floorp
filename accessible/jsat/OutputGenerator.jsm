@@ -770,30 +770,18 @@ var UtteranceGenerator = {  // jshint ignore:line
     }
   },
 
+  /**
+   * Add localized state information to output data.
+   * Note: We do not expose checked and selected states, we let TalkBack do it for us
+   * there. This is because we expose the checked information on the node info itself.
+   */
   _addState: function _addState(aOutput, aState, aRoleStr) {
-
     if (aState.contains(States.UNAVAILABLE)) {
       aOutput.push({string: "stateUnavailable"});
     }
 
     if (aState.contains(States.READONLY)) {
       aOutput.push({string: "stateReadonly"});
-    }
-
-    // Don't utter this in Jelly Bean, we let TalkBack do it for us there.
-    // This is because we expose the checked information on the node itself.
-    // XXX: this means the checked state is always appended to the end,
-    // regardless of the utterance ordering preference.
-    if ((Utils.AndroidSdkVersion < 16 || Utils.MozBuildApp === "browser") &&
-      aState.contains(States.CHECKABLE)) {
-      let checked = aState.contains(States.CHECKED);
-      let statetr;
-      if (aRoleStr === "switch") {
-        statetr = checked ? "stateOn" : "stateOff";
-      } else {
-        statetr = checked ? "stateChecked" : "stateNotChecked";
-      }
-      aOutput.push({string: statetr});
     }
 
     if (aState.contains(States.PRESSED)) {
@@ -816,10 +804,6 @@ var UtteranceGenerator = {  // jshint ignore:line
 
     if (aState.contains(States.HASPOPUP)) {
       aOutput.push({string: "stateHasPopup"});
-    }
-
-    if (aState.contains(States.SELECTED)) {
-      aOutput.push({string: "stateSelected"});
     }
   },
 

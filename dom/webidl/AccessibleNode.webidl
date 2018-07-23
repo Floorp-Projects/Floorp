@@ -25,6 +25,11 @@ interface AccessibleNode {
   attribute boolean? readOnly;
   attribute boolean? required;
 
+  // Range values
+  attribute double? valueMax;
+  attribute double? valueMin;
+  attribute double? valueNow;
+
   // Accessible states
   attribute boolean? disabled;
   attribute boolean? expanded;
@@ -34,4 +39,15 @@ interface AccessibleNode {
   // Live regions
   attribute boolean? atomic;
   attribute boolean? busy;
+
+  // Collections.
+  attribute long? colCount;
+  attribute unsigned long? colIndex;
+  attribute unsigned long? colSpan;
+  attribute unsigned long? level;
+  attribute unsigned long? posInSet;
+  attribute long? rowCount;
+  attribute unsigned long? rowIndex;
+  attribute unsigned long? rowSpan;
+  attribute long? setSize;
 };

@@ -96,6 +96,9 @@ function check_mp4(v, enabled) {
     check(codec, "probably");
     ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
   });
+
+  // AV1 (disabled until bug 1417050 is fixed)
+  check("video/mp4; codecs=\"av1\"", "");
 }
 
 function check_mp3(v, enabled) {

@@ -224,7 +224,7 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
     static constexpr uintptr_t magicNumber = uintptr_t(0x4c6966);
 #endif
 
-#if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(DEBUG) || defined(MOZ_ASAN)
 # define LIFO_CHUNK_PROTECT 1
 #endif
 

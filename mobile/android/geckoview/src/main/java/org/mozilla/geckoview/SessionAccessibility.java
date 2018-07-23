@@ -379,6 +379,7 @@ public class SessionAccessibility {
         node.setPassword(message.getBoolean("password"));
         node.setFocusable(message.getBoolean("focusable"));
         node.setFocused(message.getBoolean("focused"));
+        node.setSelected(message.getBoolean("selected"));
 
         node.setClassName(message.getString("className", "android.view.View"));
 
@@ -431,6 +432,15 @@ public class SessionAccessibility {
         node.setBoundsInParent(screenBounds);
     }
 
+    private void updateState(final AccessibilityNodeInfo node, final GeckoBundle message) {
+        if (message.containsKey("checked")) {
+            node.setChecked(message.getBoolean("checked"));
+        }
+        if (message.containsKey("selected")) {
+            node.setSelected(message.getBoolean("selected"));
+        }
+    }
+
     private void sendAccessibilityEvent(final GeckoBundle message) {
         if (mView == null || !Settings.isEnabled())
             return;
@@ -472,6 +482,11 @@ public class SessionAccessibility {
         if (mVirtualContentNode != null) {
             // Bounds for the virtual content can be updated from any event.
             updateBounds(mVirtualContentNode, message);
+
+            // State for the virtual content can be updated when view is clicked.
+            if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                updateState(mVirtualContentNode, message);
+            }
         }
 
         final AccessibilityEvent accessibilityEvent = obtainEvent(eventType, eventSource);

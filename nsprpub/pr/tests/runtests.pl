@@ -241,6 +241,7 @@ $prog = shift;  # Program to test
 
 # MAIN ---------------
 @progs = (
+"abstract",
 "accept",
 "acceptread",
 "acceptreademu",

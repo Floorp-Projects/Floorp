@@ -7,6 +7,7 @@
 #ifndef A11Y_AOM_ACCESSIBLENODE_H
 #define A11Y_AOM_ACCESSIBLENODE_H
 
+#include "nsDataHashtable.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -44,6 +45,28 @@ struct ParentObject;
     MOZ_FOR_EACH(ANODE_ENUM, (), (__VA_ARGS__))              \
   };                                                         \
   MOZ_FOR_EACH(ANODE_FUNC, (typeName, type,), (__VA_ARGS__)) \
+
+#define ANODE_ACCESSOR_MUTATOR(typeName, type, defVal)                          \
+  nsDataHashtable<nsUint32HashKey, type> m##typeName##Properties;               \
+                                                                                \
+  dom::Nullable<type> GetProperty(AOM##typeName##Property aProperty)            \
+  {                                                                             \
+    type value = defVal;                                                        \
+    if (m##typeName##Properties.Get(static_cast<int>(aProperty), &value)) {     \
+      return dom::Nullable<type>(value);                                        \
+    }                                                                           \
+    return dom::Nullable<type>();                                               \
+  }                                                                             \
+                                                                                \
+  void SetProperty(AOM##typeName##Property aProperty,                           \
+                   const dom::Nullable<type>& aValue)                           \
+  {                                                                             \
+    if (aValue.IsNull()) {                                                      \
+      m##typeName##Properties.Remove(static_cast<int>(aProperty));              \
+    } else {                                                                    \
+      m##typeName##Properties.Put(static_cast<int>(aProperty), aValue.Value()); \
+    }                                                                           \
+  }                                                                             \
 
 class AccessibleNode : public nsISupports,
                        public nsWrapperCache
@@ -84,6 +107,27 @@ public:
     Selected
   )
 
+  ANODE_PROPS(UInt, uint32_t,
+    ColIndex,
+    ColSpan,
+    Level,
+    PosInSet,
+    RowIndex,
+    RowSpan
+  )
+
+  ANODE_PROPS(Int, int32_t,
+    ColCount,
+    RowCount,
+    SetSize
+  )
+
+  ANODE_PROPS(Double, double,
+    ValueMax,
+    ValueMin,
+    ValueNow
+  )
+
 protected:
   AccessibleNode(const AccessibleNode& aCopy) = delete;
   AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;
@@ -111,6 +155,10 @@ protected:
                                            : mBooleanProperties & ~(1U << (2 * num + 1)));
     }
   }
+
+  ANODE_ACCESSOR_MUTATOR(Double, double, 0.0)
+  ANODE_ACCESSOR_MUTATOR(Int, int32_t, 0)
+  ANODE_ACCESSOR_MUTATOR(UInt, uint32_t, 0)
 
   // The 2k'th bit indicates whether the k'th boolean property is used(1) or not(0)
   // and 2k+1'th bit contains the property's value(1:true, 0:false)
