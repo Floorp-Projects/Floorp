@@ -317,6 +317,9 @@ EXPORT_XPCOM_API(void)
 NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
               const char* aFile, int32_t aLine)
 {
+  // Allow messages to be printed during GC if we are recording or replaying.
+  recordreplay::AutoEnsurePassThroughThreadEvents pt;
+
   FixedBuffer nonPIDBuf;
   FixedBuffer buf;
   const char* sevString = "WARNING";
