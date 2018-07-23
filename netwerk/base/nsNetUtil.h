@@ -103,6 +103,19 @@ nsresult NS_NewFileURI(nsIURI **result,
                        nsIFile *spec,
                        nsIIOService *ioService = nullptr);     // pass in nsIIOService to optimize callers
 
+// These methods will only mutate the URI if the ref of aInput doesn't already
+// match the ref we are trying to set.
+// If aInput has no ref, and we are calling NS_GetURIWithoutRef, or
+// NS_GetURIWithNewRef with an empty string, then aOutput will be the same
+// as aInput. The same is true if aRef is already equal to the ref of aInput.
+// This is OK because URIs are immutable and threadsafe.
+// If the URI doesn't support ref fragments aOutput will be the same as aInput.
+nsresult NS_GetURIWithNewRef(nsIURI* aInput,
+                             const nsACString& aRef,
+                             nsIURI** aOutput);
+nsresult NS_GetURIWithoutRef(nsIURI* aInput,
+                             nsIURI** aOutput);
+
 nsresult NS_GetSanitizedURIStringFromURI(nsIURI *aUri,
                                          nsAString &aSanitizedSpec);
 

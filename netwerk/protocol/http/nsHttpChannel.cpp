@@ -8186,7 +8186,7 @@ nsHttpChannel::OfflineCacheEntryAsForeignMarker::MarkAsForeign()
     nsresult rv;
 
     nsCOMPtr<nsIURI> noRefURI;
-    rv = mCacheURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+    rv = NS_GetURIWithoutRef(mCacheURI, getter_AddRefs(noRefURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString spec;

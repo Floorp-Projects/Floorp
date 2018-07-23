@@ -19,7 +19,7 @@ function configureTest() {
 // This function is called into an iframe.
 function runTestInIframe() {
   var audioContext = new AudioContext();
-  audioContext.audioWorklet.import("worklet_dump.js")
+  audioContext.audioWorklet.addModule("worklet_dump.js")
   .then(() => {
     ok(true, "All good!");
     SimpleTest.finish();

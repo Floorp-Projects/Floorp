@@ -117,9 +117,7 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   }
 
   nsCOMPtr<nsIURI> resolvedURIClone;
-  // We use CloneIgnoringRef to strip away the fragment even if the original URI
-  // is immutable.
-  aRv = resolvedURI->CloneIgnoringRef(getter_AddRefs(resolvedURIClone));
+  aRv = NS_GetURIWithoutRef(resolvedURI, getter_AddRefs(resolvedURIClone));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -165,9 +163,7 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   }
 
   nsCOMPtr<nsIURI> uriClone;
-  // We use CloneIgnoringRef to strip away the fragment even if the original URI
-  // is immutable.
-  aRv = uri->CloneIgnoringRef(getter_AddRefs(uriClone));
+  aRv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriClone));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

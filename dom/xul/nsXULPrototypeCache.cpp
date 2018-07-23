@@ -143,7 +143,7 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI)
         return nullptr;
 
     nsCOMPtr<nsIURI> uriWithoutRef;
-    aURI->CloneIgnoringRef(getter_AddRefs(uriWithoutRef));
+    NS_GetURIWithoutRef(aURI, getter_AddRefs(uriWithoutRef));
 
     nsXULPrototypeDocument* protoDoc = mPrototypeTable.GetWeak(uriWithoutRef);
     if (protoDoc)
@@ -183,7 +183,7 @@ nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument)
     }
 
     nsCOMPtr<nsIURI> uri;
-    aDocument->GetURI()->CloneIgnoringRef(getter_AddRefs(uri));
+    NS_GetURIWithoutRef(aDocument->GetURI(), getter_AddRefs(uri));
 
     // Put() releases any old value and addrefs the new one
     mPrototypeTable.Put(uri, aDocument);

@@ -2134,10 +2134,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     bool shaped = false;
     if (eTransparencyTransparent == GetTransparencyMode()) {
-        GdkScreen *screen = gdk_window_get_screen(mGdkWindow);
-        if (gdk_screen_is_composited(screen) &&
-            gdk_window_get_visual(mGdkWindow) ==
-            gdk_screen_get_rgba_visual(screen)) {
+        if (IsComposited()) {
             // Remove possible shape mask from when window manger was not
             // previously compositing.
             static_cast<nsWindow*>(GetTopLevelWidget())->
@@ -2238,12 +2235,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     bool painted = false;
     {
       if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-        GdkScreen *screen = gdk_window_get_screen(mGdkWindow);
         if (GetTransparencyMode() == eTransparencyTransparent &&
             layerBuffering == BufferMode::BUFFER_NONE &&
-            gdk_screen_is_composited(screen) &&
-            gdk_window_get_visual(mGdkWindow) ==
-            gdk_screen_get_rgba_visual(screen)) {
+            IsComposited()) {
           // If our draw target is unbuffered and we use an alpha channel,
           // clear the image beforehand to ensure we don't get artifacts from a
           // reused SHM image. See bug 1258086.
@@ -7217,7 +7211,7 @@ nsWindow::IsComposited() const
     return false;
   }
 
-  GdkScreen* gdkScreen = gdk_screen_get_default();
+  GdkScreen* gdkScreen = gdk_window_get_screen(mGdkWindow);
   return gdk_screen_is_composited(gdkScreen) &&
          (gdk_window_get_visual(mGdkWindow)
             == gdk_screen_get_rgba_visual(gdkScreen));

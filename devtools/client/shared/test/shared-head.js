@@ -722,3 +722,11 @@ async function injectEventUtilsInContentTask(browser) {
       "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
   });
 }
+
+/**
+ * Temporarily flip all the preferences needed to enable web components.
+ */
+async function enableWebComponents() {
+  await pushPref("dom.webcomponents.shadowdom.enabled", true);
+  await pushPref("dom.webcomponents.customelements.enabled", true);
+}

@@ -8,7 +8,7 @@
 // Test that keyword values for font properties don't show up in the font editor,
 // but their computed style values show up instead.
 
-const TEST_URI = URL_ROOT + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.fonteditor.enabled", true);

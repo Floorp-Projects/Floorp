@@ -915,7 +915,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   RefPtr<nsXBLDocumentInfo> info;
 
   nsCOMPtr<nsIURI> documentURI;
-  nsresult rv = aBindingURI->CloneIgnoringRef(getter_AddRefs(documentURI));
+  nsresult rv = NS_GetURIWithoutRef(aBindingURI, getter_AddRefs(documentURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsBindingManager *bindingManager = nullptr;

@@ -207,26 +207,6 @@ Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
 }
 
 nsresult
-Location::GetWritableURI(nsIURI** aURI, const nsACString* aNewRef)
-{
-  *aURI = nullptr;
-
-  nsCOMPtr<nsIURI> uri;
-
-  nsresult rv = GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return rv;
-  }
-
-  if (!aNewRef) {
-    uri.forget(aURI);
-    return NS_OK;
-  }
-
-  return uri->CloneWithNewRef(*aNewRef, aURI);
-}
-
-nsresult
 Location::SetURI(nsIURI* aURI, bool aReplace)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
@@ -313,7 +293,14 @@ Location::SetHash(const nsAString& aHash,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri), &hash);
+  aRv = GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(aRv.Failed()) || !uri) {
+    return;
+  }
+
+  aRv = NS_MutateURI(uri)
+          .SetRef(hash)
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }

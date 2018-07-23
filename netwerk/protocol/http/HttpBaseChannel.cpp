@@ -1788,9 +1788,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   //  (1) modify it
   //  (2) keep a reference to it after returning from this function
   //
-  // Use CloneIgnoringRef to strip away any fragment per RFC 2616 section 14.36
+  // Strip away any fragment per RFC 2616 section 14.36
   // and Referrer Policy section 6.3.5.
-  rv = referrer->CloneIgnoringRef(getter_AddRefs(clone));
+  rv = NS_GetURIWithoutRef(referrer, getter_AddRefs(clone));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString currentHost;
@@ -1835,7 +1835,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   // send spoofed referrer if desired
   if (userSpoofReferrerSource) {
     nsCOMPtr<nsIURI> mURIclone;
-    rv = mURI->CloneIgnoringRef(getter_AddRefs(mURIclone));
+    rv = NS_GetURIWithoutRef(mURI, getter_AddRefs(mURIclone));
     if (NS_FAILED(rv)) return rv;
     clone = mURIclone;
     currentHost = referrerHost;

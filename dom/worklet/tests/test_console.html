@@ -40,7 +40,7 @@ function configureTest() {
 // This function is called into an iframe.
 function runTestInIframe() {
   var audioContext = new AudioContext();
-  audioContext.audioWorklet.import("worklet_console.js");
+  audioContext.audioWorklet.addModule("worklet_console.js");
 }
 
 </script>

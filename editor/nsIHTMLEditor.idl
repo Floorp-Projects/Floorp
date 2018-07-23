@@ -348,11 +348,6 @@ interface nsIHTMLEditor : nsISupports
   nsISupports getSelectedElement(in AString aTagName);
 
   /**
-   * Replace all children of <HEAD> with string of HTML source
-   */
-  void replaceHeadContentsWithHTML(in AString aSourceToInsert);
-
-  /**
    * Return a new element with default attribute values
    *
    * This does not rely on the selection, and is not sensitive to context.

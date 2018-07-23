@@ -20,7 +20,7 @@ function configureTest() {
 function runTestInIframe() {
   var audioContext = new AudioContext();
   function loading() {
-    audioContext.audioWorklet.import("server_import_with_cache.sjs")
+    audioContext.audioWorklet.addModule("server_import_with_cache.sjs")
     .then(() => {
       ok(true, "Import should load a resource.");
     }, () => {
