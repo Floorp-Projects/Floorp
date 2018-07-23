@@ -1859,7 +1859,7 @@ HelperThread::destroy()
 void
 HelperThread::ensureRegisteredWithProfiler()
 {
-    if (registered)
+    if (registered || mozilla::recordreplay::IsRecordingOrReplaying())
         return;
 
     JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
