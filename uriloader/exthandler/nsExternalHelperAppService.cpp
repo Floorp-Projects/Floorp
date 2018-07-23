@@ -2595,16 +2595,11 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
   // (3) No match yet. Ask extras.
   if (!found) {
     rv = NS_ERROR_FAILURE;
-#ifdef XP_WIN
-    /* XXX Gross hack to wallpaper over the most common Win32
-     * extension issues caused by the fix for bug 116938.  See bug
-     * 120327, comment 271 for why this is needed.  Not even sure we
-     * want to remove this once we have fixed all this stuff to work
-     * right; any info we get from extras on this type is pretty much
-     * useless....
-     */
+    // Getting info for application/octet-stream content-type from extras
+    // does not make a sense because this tends to open all octet-streams
+    // as Binary file with exe, com or bin extension regardless the real
+    // extension.
     if (!typeToUse.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator()))
-#endif
       rv = FillMIMEInfoForMimeTypeFromExtras(typeToUse, *_retval);
     LOG(("Searched extras (by type), rv 0x%08" PRIX32 "\n", static_cast<uint32_t>(rv)));
     // If that didn't work out, try file extension from extras

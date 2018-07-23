@@ -26,7 +26,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args, u
     const nsXPTMethodInfo* info = nullptr;
     uint8_t paramCount;
     uint8_t i;
-    nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
@@ -158,7 +157,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args, u
         }
     }
 
-    result = self->mOuter->CallMethod((uint16_t)methodIndex,info,dispatchParams);
+    nsresult result = self->mOuter->CallMethod((uint16_t)methodIndex, info,
+                                               dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

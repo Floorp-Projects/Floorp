@@ -31,6 +31,7 @@
 #include "prenv.h"      // for PR_GetEnv()
 #include "nsAutoPtr.h"
 #include "mozilla/Preferences.h"
+#include "nsMimeTypes.h"
 
 using namespace mozilla;
 
@@ -1450,7 +1451,12 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
                                         const nsACString& aFileExt,
                                         bool       *aFound) {
   *aFound = true;
-  RefPtr<nsMIMEInfoBase> retval = GetFromType(PromiseFlatCString(aType));
+  RefPtr<nsMIMEInfoBase> retval;
+  // Fallback to lookup by extension when generic 'application/octet-stream'
+  // content type is received.
+  if (!aType.EqualsLiteral(APPLICATION_OCTET_STREAM)) {
+    retval = GetFromType(PromiseFlatCString(aType));
+  }
   bool hasDefault = false;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);

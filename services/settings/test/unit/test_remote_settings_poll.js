@@ -501,7 +501,7 @@ add_task(async function test_syncs_clients_with_local_dump() {
     last_modified: 8000,
     host: "localhost",
     bucket: "main",
-    collection: "tippytop"
+    collection: "example"
   }]));
 
   let error;
@@ -513,9 +513,9 @@ add_task(async function test_syncs_clients_with_local_dump() {
 
   // The `main/some-unknown` should be skipped because it has no dump.
   // The `blocklists/addons` should be skipped because it is not the main bucket.
-  // The `tippytop` has a dump, and should cause a network error because the test
+  // The `example` has a dump, and should cause a network error because the test
   // does not setup the server to receive the requests of `maybeSync()`.
   Assert.ok(/HTTP 404/.test(error.message), "server will return 404 on sync");
-  Assert.equal(error.details.collection, "tippytop");
+  Assert.equal(error.details.collection, "example");
 });
 add_task(clear_state);

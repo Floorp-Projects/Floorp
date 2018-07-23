@@ -25,7 +25,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCMiniVariant* dispatchParams = nullptr;
   const nsXPTMethodInfo* info;
-  nsresult result = NS_ERROR_FAILURE;
   uint64_t* iargs = intargs;
   uint64_t* fargs = floatargs;
   uint8_t paramCount;
@@ -121,7 +120,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
     }
   }
 
-  result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams);
+  nsresult result = self->mOuter->CallMethod((uint16_t) methodIndex, info,
+                                             dispatchParams);
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;
@@ -151,4 +151,3 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
-

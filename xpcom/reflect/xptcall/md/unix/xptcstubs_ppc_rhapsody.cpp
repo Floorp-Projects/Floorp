@@ -50,7 +50,6 @@ PrepareAndDispatch(
   const nsXPTMethodInfo *methodInfo;
   uint8_t                paramCount;
   uint8_t                i;
-  nsresult               result         = NS_ERROR_FAILURE;
   uint32_t               argIndex       = 0;
   uint32_t               fprIndex       = 0;
 
@@ -144,7 +143,7 @@ PrepareAndDispatch(
     }
   }
 
-  result = self->mOuter->
+  nsresult result = self->mOuter->
     CallMethod((uint16_t)methodIndex, methodInfo, dispatchParams);
 
   if(dispatchParams != paramBuffer)

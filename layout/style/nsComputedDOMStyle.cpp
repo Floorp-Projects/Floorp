@@ -1187,7 +1187,7 @@ nsComputedDOMStyle::DoGetColumnCount()
 
   const nsStyleColumn* column = StyleColumn();
 
-  if (column->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
+  if (column->mColumnCount == nsStyleColumn::kColumnCountAuto) {
     val->SetIdent(eCSSKeyword_auto);
   } else {
     val->SetNumber(column->mColumnCount);

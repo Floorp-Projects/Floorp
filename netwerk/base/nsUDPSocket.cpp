@@ -457,7 +457,7 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   NS_ASSERTION(mFD == fd, "wrong file descriptor");
   NS_ASSERTION(outFlags != -1, "unexpected timeout condition reached");
 
-  if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL))
+  if (outFlags & (PR_POLL_HUP | PR_POLL_NVAL))
   {
     NS_WARNING("error polling on listening socket");
     mCondition = NS_ERROR_UNEXPECTED;
