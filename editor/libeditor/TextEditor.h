@@ -128,6 +128,16 @@ public:
   nsresult InsertTextAsAction(const nsAString& aStringToInsert);
 
   /**
+   * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
+   * If the editor is TextEditor or in plaintext mode, will paste the content
+   * with appending ">" to start of each line.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   */
+  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType);
+
+  /**
    * DeleteSelectionAsAction() removes selection content or content around
    * caret with transactions.  This should be used for handling it as an
    * edit action.  If you'd like to remove selection for preparing to insert
