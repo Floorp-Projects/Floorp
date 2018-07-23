@@ -129,6 +129,71 @@ const TemporaryBlockedPermissions = {
   },
 };
 
+// This hold a flag per browser to indicate whether we should show the
+// user a notification as a permission has been requested that has been
+// blocked globally. We only want to notify the user in the case that
+// they actually requested the permission within the current page load
+// so will clear the flag on navigation.
+const GloballyBlockedPermissions = {
+
+  _stateByBrowser: new WeakMap(),
+
+  set(browser, id) {
+    if (!this._stateByBrowser.has(browser)) {
+      this._stateByBrowser.set(browser, {});
+    }
+    let entry = this._stateByBrowser.get(browser);
+    let prePath = browser.currentURI.prePath;
+    if (!entry[prePath]) {
+      entry[prePath] = {};
+    }
+
+    entry[prePath][id] = true;
+
+    // Listen to any top level navigations, once we see one clear the flag
+    // and remove the listener.
+    browser.addProgressListener({
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                              Ci.nsISupportsWeakReference]),
+      onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+        if (aWebProgress.isTopLevel) {
+          GloballyBlockedPermissions.remove(browser, id);
+          browser.removeProgressListener(this);
+        }
+      },
+    });
+  },
+
+  // Removes a permission with the specified id for the specified browser.
+  remove(browser, id) {
+    let entry = this._stateByBrowser.get(browser);
+    let prePath = browser.currentURI.prePath;
+    if (entry && entry[prePath]) {
+      delete entry[prePath][id];
+    }
+  },
+
+  // Gets all permissions for the specified browser.
+  // Note that only permissions that apply to the current URI
+  // of the passed browser element will be returned.
+  getAll(browser) {
+    let permissions = [];
+    let entry = this._stateByBrowser.get(browser);
+    let prePath = browser.currentURI.prePath;
+    if (entry && entry[prePath]) {
+      let timeStamps = entry[prePath];
+      for (let id of Object.keys(timeStamps)) {
+        permissions.push({
+          id,
+          state: SitePermissions.BLOCK,
+          scope: SitePermissions.SCOPE_GLOBAL
+        });
+      }
+    }
+    return permissions;
+  },
+};
+
 /**
  * A module to manage permanent and temporary permissions
  * by URI and browser.
@@ -153,6 +218,7 @@ var SitePermissions = {
   SCOPE_SESSION: "{SitePermissions.SCOPE_SESSION}",
   SCOPE_PERSISTENT: "{SitePermissions.SCOPE_PERSISTENT}",
   SCOPE_POLICY: "{SitePermissions.SCOPE_POLICY}",
+  SCOPE_GLOBAL: "{SitePermissions.SCOPE_GLOBAL}",
 
   _defaultPrefBranch: Services.prefs.getBranch("permissions.default."),
 
@@ -228,6 +294,10 @@ var SitePermissions = {
 
     for (let permission of TemporaryBlockedPermissions.getAll(browser)) {
       permission.scope = this.SCOPE_TEMPORARY;
+      permissions[permission.id] = permission;
+    }
+
+    for (let permission of GloballyBlockedPermissions.getAll(browser)) {
       permissions[permission.id] = permission;
     }
 
@@ -331,6 +401,23 @@ var SitePermissions = {
   },
 
   /**
+   * Return whether the browser should notify the user if a permission was
+   * globally blocked due to a preference.
+   *
+   * @param {string} permissionID
+   *        The ID to get the state for.
+   *
+   * @return boolean Whether to show notification for globally blocked permissions.
+   */
+  showGloballyBlocked(permissionID) {
+    if (permissionID in gPermissionObject &&
+        gPermissionObject[permissionID].showGloballyBlocked)
+      return gPermissionObject[permissionID].showGloballyBlocked;
+
+    return false;
+  },
+
+  /**
    * Returns the state and scope of a particular permission for a given URI.
    *
    * This method will NOT dispatch a "PermissionStateChange" event on the specified
@@ -404,6 +491,13 @@ var SitePermissions = {
    *        This needs to be provided if the scope is SCOPE_TEMPORARY!
    */
   set(uri, permissionID, state, scope = this.SCOPE_PERSISTENT, browser = null) {
+
+    if (scope == this.SCOPE_GLOBAL && state == this.BLOCK) {
+      GloballyBlockedPermissions.set(browser, permissionID);
+      browser.dispatchEvent(new browser.ownerGlobal.CustomEvent("PermissionStateChange"));
+      return;
+    }
+
     if (state == this.UNKNOWN || state == this.getDefault(permissionID)) {
       // Because they are controlled by two prefs with many states that do not
       // correspond to the classical ALLOW/DENY/PROMPT model, we want to always
@@ -607,13 +701,14 @@ var gPermissionObject = {
 
   "autoplay-media": {
     exactHostMatch: true,
+    showGloballyBlocked: true,
     getDefault() {
       let state = Services.prefs.getIntPref("media.autoplay.default",
                                             Ci.nsIAutoplay.PROMPT);
-      if (state == Ci.nsIAutoplay.ALLOW) {
+      if (state == Ci.nsIAutoplay.ALLOWED) {
         return SitePermissions.ALLOW;
-      } if (state == Ci.nsIAutoplay.BLOCK) {
-        return SitePermissions.DENY;
+      } if (state == Ci.nsIAutoplay.BLOCKED) {
+        return SitePermissions.BLOCK;
       }
       return SitePermissions.UNKNOWN;
     },

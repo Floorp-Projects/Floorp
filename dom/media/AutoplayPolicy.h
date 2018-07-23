@@ -36,7 +36,7 @@ class AutoplayPolicy
 {
 public:
   // Returns whether a given media element is allowed to play.
-  static uint32_t IsAllowedToPlay(const HTMLMediaElement& aElement);
+  static bool IsAllowedToPlay(const HTMLMediaElement& aElement);
 
   // Returns true if a given media element would be allowed to play
   // if block autoplay was enabled. If this returns false, it means we would
