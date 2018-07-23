@@ -1112,7 +1112,7 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
     }
 
     nsCOMPtr<nsIURI> noRefURI;
-    rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+    rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = noRefURI->GetAsciiSpec(uriSpec);

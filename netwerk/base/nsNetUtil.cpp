@@ -164,6 +164,47 @@ NS_NewFileURI(nsIURI **result,
 }
 
 nsresult
+NS_GetURIWithNewRef(nsIURI* aInput,
+                    const nsACString& aRef,
+                    nsIURI** aOutput)
+{
+  if (NS_WARN_IF(!aInput || !aOutput)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  bool hasRef;
+  nsresult rv = aInput->GetHasRef(&hasRef);
+
+  nsAutoCString ref;
+  if (NS_SUCCEEDED(rv)) {
+    rv = aInput->GetRef(ref);
+  }
+
+  // If the ref is already equal to the new ref, we do not need to do anything.
+  // Also, if the GetRef failed (it could return NS_ERROR_NOT_IMPLEMENTED)
+  // we can assume SetRef would fail as well, so returning the original
+  // URI is OK.
+  if (NS_FAILED(rv) ||
+      (!hasRef && aRef.IsEmpty()) ||
+      (!aRef.IsEmpty() && aRef == ref)) {
+    nsCOMPtr<nsIURI> uri = aInput;
+    uri.forget(aOutput);
+    return NS_OK;
+  }
+
+  return NS_MutateURI(aInput)
+           .SetRef(aRef)
+           .Finalize(aOutput);
+}
+
+nsresult
+NS_GetURIWithoutRef(nsIURI* aInput,
+                    nsIURI** aOutput)
+{
+  return NS_GetURIWithNewRef(aInput, EmptyCString(), aOutput);
+}
+
+nsresult
 NS_NewChannelInternal(nsIChannel           **outChannel,
                       nsIURI                *aUri,
                       nsILoadInfo           *aLoadInfo,

@@ -1368,7 +1368,7 @@ public:
     // fragment manually here instead.  We can't do it later when we create
     // the Request because that code executes off the main thread.
     nsCOMPtr<nsIURI> uriNoFragment;
-    rv = uri->CloneIgnoringRef(getter_AddRefs(uriNoFragment));
+    rv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriNoFragment));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = uriNoFragment->GetSpec(mSpec);
     NS_ENSURE_SUCCESS(rv, rv);

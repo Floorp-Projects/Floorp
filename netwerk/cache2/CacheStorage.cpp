@@ -16,6 +16,7 @@
 #include "nsIApplicationCacheService.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
@@ -64,7 +65,7 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   bool truncate = aFlags & nsICacheStorage::OPEN_TRUNCATE;
 
   nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString asciiSpec;
@@ -120,7 +121,7 @@ NS_IMETHODIMP CacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExt
   nsresult rv;
 
   nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString asciiSpec;
@@ -156,7 +157,7 @@ NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension
   nsresult rv;
 
   nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString asciiSpec;
@@ -183,7 +184,7 @@ CacheStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
   nsresult rv;
 
   nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString asciiSpec;
@@ -203,7 +204,7 @@ NS_IMETHODIMP CacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExt
   nsresult rv;
 
   nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = NS_GetURIWithoutRef(aURI, getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString asciiSpec;

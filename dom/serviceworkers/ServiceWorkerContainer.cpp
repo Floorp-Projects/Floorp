@@ -254,13 +254,13 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
 
   // Strip the any ref from both the script and scope URLs.
   nsCOMPtr<nsIURI> cloneWithoutRef;
-  aRv = scriptURI->CloneIgnoringRef(getter_AddRefs(cloneWithoutRef));
+  aRv = NS_GetURIWithoutRef(scriptURI, getter_AddRefs(cloneWithoutRef));
   if (aRv.Failed()) {
     return nullptr;
   }
   scriptURI = cloneWithoutRef.forget();
 
-  aRv = scopeURI->CloneIgnoringRef(getter_AddRefs(cloneWithoutRef));
+  aRv = NS_GetURIWithoutRef(scopeURI, getter_AddRefs(cloneWithoutRef));
   if (aRv.Failed()) {
     return nullptr;
   }
