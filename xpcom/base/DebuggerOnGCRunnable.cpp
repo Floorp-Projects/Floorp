@@ -17,6 +17,12 @@ namespace mozilla {
 /* static */ nsresult
 DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
 {
+  // Runnables are not fired when recording or replaying, as GCs can happen at
+  // non-deterministic points in execution.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return NS_OK;
+  }
+
   auto gcEvent = aDesc.toGCEvent(aCx);
   if (!gcEvent) {
     return NS_ERROR_OUT_OF_MEMORY;
