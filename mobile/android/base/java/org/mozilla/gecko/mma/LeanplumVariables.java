@@ -7,8 +7,6 @@ package org.mozilla.gecko.mma;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
@@ -100,23 +98,20 @@ public class LeanplumVariables {
         syncDrawableId = R.drawable.firstrun_sync;
     }
 
-    public static Bitmap getWelcomeImage() {
-        return getBitmapFromMmaVar(welcomeDrawableId);
+    public static int getWelcomeImage() {
+        return welcomeDrawableId;
     }
 
-    public static Bitmap getPrivacyImage() {
-        return getBitmapFromMmaVar(privacyDrawableId);
+    public static int getPrivacyImage() {
+        return privacyDrawableId;
     }
 
-    public static Bitmap getCustomizingImage() {
-        return getBitmapFromMmaVar(customizingDrawableId);
+    public static int getCustomizingImage() {
+        return customizingDrawableId;
     }
 
-    public static Bitmap getSyncImage() {
-        return getBitmapFromMmaVar(syncDrawableId);
+    public static int getSyncImage() {
+        return syncDrawableId;
     }
 
-    private static Bitmap getBitmapFromMmaVar(@DrawableRes final int drawableRes) {
-        return BitmapFactory.decodeResource(appResources, drawableRes);
-    }
 }

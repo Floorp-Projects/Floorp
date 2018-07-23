@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.firstrun;
 
-import android.graphics.Bitmap;
-
 /**
  * Onboarding screens configuration object.
  */
@@ -20,9 +18,9 @@ public class PanelConfig {
     private final String title;
     private final String message;
     private final String text;
-    private final Bitmap image;
+    private final int image;
 
-    public PanelConfig(TYPE type, boolean useLocalValues, String title, String message, String text, Bitmap image) {
+    public PanelConfig(TYPE type, boolean useLocalValues, String title, String message, String text, int image) {
         this.type = type;
         this.useLocalValues = useLocalValues;
         this.title = title;
@@ -66,7 +64,7 @@ public class PanelConfig {
         return text;
     }
 
-    public Bitmap getImage() {
+    public int getImage() {
         return image;
     }
 }
