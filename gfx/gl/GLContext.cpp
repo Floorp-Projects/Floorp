@@ -81,7 +81,6 @@ static const char* const sExtensionNames[] = {
     "GL_ANGLE_texture_compression_dxt5",
     "GL_ANGLE_timer_query",
     "GL_APPLE_client_storage",
-    "GL_APPLE_fence",
     "GL_APPLE_framebuffer_multisample",
     "GL_APPLE_sync",
     "GL_APPLE_texture_range",
@@ -1079,15 +1078,6 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
             END_SYMBOLS
         };
         fnLoadForExt(symbols, APPLE_texture_range);
-    }
-
-    if (IsExtensionSupported(APPLE_fence)) {
-        const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fFinishObjectAPPLE, { "FinishObjectAPPLE", nullptr } },
-            { (PRFuncPtr*) &mSymbols.fTestObjectAPPLE, { "TestObjectAPPLE", nullptr } },
-            END_SYMBOLS
-        };
-        fnLoadForExt(symbols, APPLE_fence);
     }
 
     if (IsSupported(GLFeature::vertex_array_object)) {

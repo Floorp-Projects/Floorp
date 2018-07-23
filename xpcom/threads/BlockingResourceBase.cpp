@@ -587,15 +587,15 @@ RecursiveMutex::AssertCurrentThreadIn()
 //
 // Debug implementation of CondVar
 void
-OffTheBooksCondVar::Wait()
+CondVar::Wait()
 {
-  // Forward to the timed version of OffTheBooksCondVar::Wait to avoid code duplication.
+  // Forward to the timed version of CondVar::Wait to avoid code duplication.
   CVStatus status = Wait(TimeDuration::Forever());
   MOZ_ASSERT(status == CVStatus::NoTimeout);
 }
 
 CVStatus
-OffTheBooksCondVar::Wait(TimeDuration aDuration)
+CondVar::Wait(TimeDuration aDuration)
 {
   AssertCurrentThreadOwnsMutex();
 
