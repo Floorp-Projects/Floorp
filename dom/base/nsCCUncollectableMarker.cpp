@@ -471,6 +471,12 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
   }
 
   if (ProcessGlobal::WasCreated() && nsFrameMessageManager::GetChildProcessManager()) {
+    // ProcessGlobal::Get() can perform recorded events such as lock accesses,
+    // which we're not supposed to do here since tracing occurs
+    // non-deterministically when recording/replaying. Sidestep this by not
+    // recording these events.
+    recordreplay::AutoPassThroughThreadEvents pt;
+
     ProcessGlobal* pg = ProcessGlobal::Get();
     if (pg) {
       mozilla::TraceScriptHolder(ToSupports(pg), aTrc);
