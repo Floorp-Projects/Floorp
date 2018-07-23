@@ -384,6 +384,10 @@ button > hbox > label {
   margin-bottom: 4px;
 }
 
+#trackingProtectionBox {
+  margin-top: 16px;
+}
+
 #doNotTrackLearnMoreBox {
   margin-top: 32px;
 }
