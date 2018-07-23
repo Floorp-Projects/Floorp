@@ -267,7 +267,6 @@ class Output(object):
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
 
-        # TODO: DRY object literal
         total_subtest = {
             'unit': test.unit,
             'alertThreshold': float(test.alert_threshold),
@@ -282,18 +281,12 @@ class Output(object):
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = average = self._average(_subtests[name]['replicates'])
+            _subtests[name]['value'] = filter.mean(_subtests[name]['replicates'])
             subtests.append(_subtests[name])
-            total_subtest['value'] += average
 
             vals.append([_subtests[name]['value'], name])
-        vals.append([total_subtest['value'], total_subtest['name']])
 
         return subtests, vals
-
-    @classmethod
-    def _average(cls, iterable):
-        return sum(iterable)/float(len(iterable))
 
     def output(self):
         """output to file and perfherder data json """
@@ -387,6 +380,11 @@ class Output(object):
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 
+    @classmethod
+    def sunspider_score(cls, val_list):
+        results = [i for i, j in val_list]
+        return sum(results)
+
     def construct_summary(self, vals, testname):
         if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
@@ -398,6 +396,8 @@ class Output(object):
             return self.speedometer_score(vals)
         elif testname.startswith('raptor-stylebench'):
             return self.stylebench_score(vals)
+        elif testname.startswith('raptor-sunspider'):
+            return self.sunspider_score(vals)
         elif testname.startswith('raptor-webaudio'):
             return self.webaudio_score(vals)
         elif len(vals) > 1:
