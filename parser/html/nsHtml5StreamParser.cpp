@@ -219,6 +219,9 @@ nsHtml5StreamParser::~nsHtml5StreamParser()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   mTokenizer->end();
+  if (recordreplay::IsRecordingOrReplaying()) {
+    JS::EndContentParseForRecordReplay(this);
+  }
 #ifdef DEBUG
   {
     mozilla::MutexAutoLock flushTimerLock(mFlushTimerMutex);
@@ -284,6 +287,13 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
 void
 nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL)
 {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    nsAutoCString spec;
+    aURL->GetSpec(spec);
+    JS::BeginContentParseForRecordReplay(this, spec.get(), "text/html",
+                                         JS::SmallestEncoding::UTF16);
+  }
+
   if (aURL) {
     nsCOMPtr<nsIURI> temp;
     bool isViewSource;
@@ -835,6 +845,9 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, false);
+    if (recordreplay::IsRecordingOrReplaying()) {
+      JS::AddContentParseDataForRecordReplay(this, dst.data(), written * sizeof(char16_t));
+    }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;
       if (mEncoding == UTF_8_ENCODING) {
@@ -1091,6 +1104,9 @@ nsHtml5StreamParser::DoStopRequest()
     bool hadErrors;
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, true);
+    if (recordreplay::IsRecordingOrReplaying()) {
+      JS::AddContentParseDataForRecordReplay(this, dst.data(), written * sizeof(char16_t));
+    }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;
       if (mEncoding == UTF_8_ENCODING) {
