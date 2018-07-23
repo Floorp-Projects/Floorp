@@ -1364,9 +1364,12 @@ IncrementalFinalizeRunnable::ReleaseNow(bool aLimited)
                "We should have at least ReleaseSliceNow to run");
     MOZ_ASSERT(mFinalizeFunctionToRun < mDeferredFinalizeFunctions.Length(),
                "No more finalizers to run?");
+    if (recordreplay::IsRecordingOrReplaying()) {
+      aLimited = false;
+    }
 
     TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
-    TimeStamp started = TimeStamp::Now();
+    TimeStamp started = aLimited ? TimeStamp::Now() : TimeStamp();
     bool timeout = false;
     do {
       const DeferredFinalizeFunctionHolder& function =
