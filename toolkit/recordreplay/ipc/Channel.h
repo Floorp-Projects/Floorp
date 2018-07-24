@@ -171,33 +171,25 @@ protected:
 struct IntroductionMessage : public Message
 {
   base::ProcessId mParentPid;
-  uint32_t mPrefsLen;
   uint32_t mArgc;
 
-  IntroductionMessage(uint32_t aSize, base::ProcessId aParentPid, uint32_t aPrefsLen, uint32_t aArgc)
+  IntroductionMessage(uint32_t aSize, base::ProcessId aParentPid, uint32_t aArgc)
     : Message(MessageType::Introduction, aSize)
     , mParentPid(aParentPid)
-    , mPrefsLen(aPrefsLen)
     , mArgc(aArgc)
   {}
 
-  char* PrefsData() { return Data<IntroductionMessage, char>(); }
-  char* ArgvString() { return Data<IntroductionMessage, char>() + mPrefsLen; }
+  char* ArgvString() { return Data<IntroductionMessage, char>(); }
+  const char* ArgvString() const { return Data<IntroductionMessage, char>(); }
 
-  const char* PrefsData() const { return Data<IntroductionMessage, char>(); }
-  const char* ArgvString() const { return Data<IntroductionMessage, char>() + mPrefsLen; }
-
-  static IntroductionMessage* New(base::ProcessId aParentPid, char* aPrefs, size_t aPrefsLen,
-                                  int aArgc, char* aArgv[]) {
+  static IntroductionMessage* New(base::ProcessId aParentPid, int aArgc, char* aArgv[]) {
     size_t argsLen = 0;
     for (int i = 0; i < aArgc; i++) {
       argsLen += strlen(aArgv[i]) + 1;
     }
 
     IntroductionMessage* res =
-      NewWithData<IntroductionMessage, char>(aPrefsLen + argsLen, aParentPid, aPrefsLen, aArgc);
-
-    memcpy(res->PrefsData(), aPrefs, aPrefsLen);
+      NewWithData<IntroductionMessage, char>(argsLen, aParentPid, aArgc);
 
     size_t offset = 0;
     for (int i = 0; i < aArgc; i++) {
