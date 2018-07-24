@@ -5,6 +5,7 @@
 
 #include "TestHarness.h"
 
+#include "nsGlobalWindowOuter.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIDocument.h"
@@ -193,17 +194,14 @@ public:
         return NS_ERROR_FAILURE;
       }
 
-      nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
+      nsCOMPtr<nsPIDOMWindowOuter> window = document->GetWindow();
       if (!window) {
         fail("Failed to get window from document!");
         return NS_ERROR_FAILURE;
       }
 
-      nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-      if (!utils) {
-        fail("Failed to get DOMWindowUtils!");
-        return NS_ERROR_FAILURE;
-      }
+      nsCOMPtr<nsIDOMWindowUtils> utils =
+	nsGlobalWindowOuter::Cast(window)->WindowUtils();
 
       if (!ScheduleTimer(utils)) {
         return NS_ERROR_FAILURE;
