@@ -32,6 +32,7 @@ var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
 var makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const Debugger = require("Debugger");
+const ReplayDebugger = require("devtools/server/actors/replay/debugger");
 const InspectorUtils = require("InspectorUtils");
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
@@ -238,6 +239,12 @@ const browsingContextTargetPrototype = {
     // Used by the ParentProcessTargetActor to list all frames in the Browser Toolbox
     this.listenForNewDocShells = false;
 
+    let canRewind = false;
+    if (Debugger.recordReplayProcessKind() == "Middleman") {
+      const replayDebugger = new ReplayDebugger();
+      canRewind = replayDebugger.canRewind();
+    }
+
     this.traits = {
       reconfigure: true,
       // Supports frame listing via `listFrames` request and `frameUpdate` events
@@ -249,7 +256,7 @@ const browsingContextTargetPrototype = {
       // Supports the logInPage request.
       logInPage: true,
       // Supports requests related to rewinding.
-      canRewind: Debugger.allDebuggersCanRewind(),
+      canRewind,
     };
 
     this._workerTargetActorList = null;
