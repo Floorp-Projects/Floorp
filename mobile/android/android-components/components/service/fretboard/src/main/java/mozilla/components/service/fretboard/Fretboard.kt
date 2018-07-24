@@ -90,6 +90,17 @@ class Fretboard(
     }
 
     /**
+     * Provides the list of active experiments
+     *
+     * @param context context
+     *
+     * @return active experiments
+     */
+    fun getActiveExperiments(context: Context): List<Experiment> {
+        return experiments.filter { isInExperiment(context, ExperimentDescriptor(it.id)) }.toList()
+    }
+
+    /**
      * Overrides a specified experiment
      *
      * @param descriptor descriptor of the experiment

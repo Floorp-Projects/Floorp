@@ -56,10 +56,10 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     }
 
     private fun isInBucket(userBucket: Int, experiment: Experiment): Boolean {
-        return !(experiment.bucket?.min == null ||
-            userBucket < experiment.bucket.min ||
-            experiment.bucket.max == null ||
-            userBucket >= experiment.bucket.max)
+        return (experiment.bucket?.min == null ||
+            userBucket >= experiment.bucket.min) &&
+            (experiment.bucket?.max == null ||
+            userBucket < experiment.bucket.max)
     }
 
     private fun getUserBucket(context: Context): Int {
