@@ -17,6 +17,15 @@ transforms:
 job-defaults:
     index:
         product: firefox
+    worker:
+        skip-artifacts: true
+        max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
+    run:
+        using: mozharness
+        actions: [static-analysis-autotest]
+        script: mozharness/scripts/fx_desktop_build.py
     treeherder:
         symbol: Sa
         kind: build
@@ -30,17 +39,10 @@ jobs:
         treeherder:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-t-linux-large
-        worker:
-            max-run-time: 3600
-            env:
-                PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
         run:
-            using: mozharness
-            actions: [static-analysis-autotest]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
-            script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
         toolchains:
@@ -48,3 +50,26 @@ jobs:
             - linux64-clang-tidy
             - linux64-rust
             - linux64-sccache
+
+    win64-st-autotest/debug:
+        description: "Win64 Debug Static Analysis Autotest"
+        index:
+            job-name: win64-st-autotest-debug
+        treeherder:
+            platform: windows2012-64/debug
+            tier: 2
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
+                - builds/taskcluster_base_win64.py
+                - builds/taskcluster_sub_win64/clang_debug.py
+        toolchains:
+            - win64-clang-cl-st-an
+            - win64-rust
+            - win64-sccache
+            - win64-clang-tidy

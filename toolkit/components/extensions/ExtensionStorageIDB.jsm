@@ -204,6 +204,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
     // as soon as one of the put requests fails.
     const transaction = this.transaction(IDB_DATA_STORENAME, "readwrite");
     const objectStore = transaction.objectStore(IDB_DATA_STORENAME, "readwrite");
+    const transactionCompleted = transaction.promiseComplete();
 
     for (let key of Object.keys(items)) {
       try {
@@ -217,11 +218,17 @@ class ExtensionStorageLocalIDB extends IndexedDB {
         };
         changed = true;
       } catch (err) {
+        transactionCompleted.catch(err => {
+          // We ignore this rejection because we are explicitly aborting the transaction,
+          // the transaction.error will be null, and we throw the original error below.
+        });
         transaction.abort();
 
         throw err;
       }
     }
+
+    await transactionCompleted;
 
     return changed ? changes : null;
   }

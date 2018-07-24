@@ -853,7 +853,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ScrollAreaEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SecurityPolicyViolationEvent", insecureContext: true, release: false},
+    {name: "SecurityPolicyViolationEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Selection", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
