@@ -58,7 +58,7 @@ async function setup() {
   let {request} = el1.requestStore.getState();
   await el1.requestStore.setState({
     changesPrevented: false,
-    request: Object.assign({}, request, {completeStatus: "initial"}),
+    request: Object.assign({}, request, {completeStatus: ""}),
     orderDetailsShowing: false,
     page: {
       id: "payment-summary",
@@ -135,7 +135,7 @@ add_task(async function test_changesPrevented() {
 add_task(async function test_initial_completeStatus() {
   await setup();
   let {request, page} = el1.requestStore.getState();
-  is(request.completeStatus, "initial", "completeStatus is initially initial");
+  is(request.completeStatus, "", "completeStatus is initially empty");
 
   let payButton = document.getElementById("pay");
   is(payButton, document.querySelector(`#${page.id} button.primary`),
