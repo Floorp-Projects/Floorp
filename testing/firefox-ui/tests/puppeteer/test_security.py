@@ -10,27 +10,25 @@ from marionette_harness import MarionetteTestCase
 class TestSecurity(PuppeteerMixin, MarionetteTestCase):
 
     def test_get_address_from_certificate(self):
-        url = 'https://ssl-ev.mozqa.com'
+        url = 'https://extended-validation.badssl.com'
 
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
             self.marionette.navigate(url)
 
         cert = self.browser.tabbar.tabs[0].certificate
         self.assertIn(cert['commonName'], url)
-        self.assertEqual(cert['organization'], 'Mozilla Corporation')
+        self.assertEqual(cert['organization'], 'Mozilla Foundation')
         self.assertEqual(cert['issuerOrganization'], 'DigiCert Inc')
 
         address = self.puppeteer.security.get_address_from_certificate(cert)
         self.assertIsNotNone(address)
         self.assertIsNotNone(address['city'])
         self.assertIsNotNone(address['country'])
-        self.assertIsNotNone(address['postal_code'])
         self.assertIsNotNone(address['state'])
-        self.assertIsNotNone(address['street'])
 
     def test_get_certificate(self):
         url_http = self.marionette.absolute_url('layout/mozilla.html')
-        url_https = 'https://ssl-ev.mozqa.com'
+        url_https = 'https://extended-validation.badssl.com'
 
         # Test EV certificate
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
