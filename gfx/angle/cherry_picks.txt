@@ -1,3 +1,17 @@
+commit ae3b5a6552ee26164b9a95ebb6f8e51db9494815
+Author: Jacek Caban <cjacek@gmail.com>
+Date:   Wed Jun 27 17:35:19 2018 +0200
+
+    Fix PMurHash.cpp mingw clang 64-bit compilation.
+    
+    Tested with Firefox build, upstream bug:
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1471632
+    
+    Change-Id: I4b44847dfc69ee26cf2215b0a0b7573becfd369d
+    Reviewed-on: https://chromium-review.googlesource.com/1117187
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+
 commit fc96a1a98357cfa17510bcf701e99a59ab474ce0
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Fri Jun 29 19:06:56 2018 -0700

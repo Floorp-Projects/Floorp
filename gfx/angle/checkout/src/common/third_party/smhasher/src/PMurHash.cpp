@@ -49,6 +49,7 @@ on big endian machines, or a byte-by-byte read if the endianess is unknown.
 
 
 #include "PMurHash.h"
+#include <stdint.h>
 
 /* I used ugly type names in the header to avoid potential conflicts with
  * application or system typedefs & defines. Since I'm not including any more
@@ -208,7 +209,7 @@ void PMurHash32_Process(uint32_t *ph1, uint32_t *pcarry, const void *key, int le
   /* This CPU does not handle unaligned word access */
 
   /* Consume enough so that the next data byte is word aligned */
-  int i = -(long)ptr & 3;
+  int i = -(intptr_t)ptr & 3;
   if(i && i <= len) {
       DOBYTES(i, h1, c, n, ptr, len);
   }
