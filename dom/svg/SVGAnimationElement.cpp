@@ -282,6 +282,10 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
   }
 
+  if (!IsInComposedDoc()) {
+    return rv;
+  }
+
   if (!((aNamespaceID == kNameSpaceID_None ||
          aNamespaceID == kNameSpaceID_XLink) &&
         aName == nsGkAtoms::href)) {
@@ -305,8 +309,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       AnimationTargetChanged();
     } // else: we unset xlink:href, but we still have href attribute, so keep
       // mHrefTarget linking to href.
-  } else if (IsInComposedDoc() &&
-             !(aNamespaceID == kNameSpaceID_XLink &&
+  } else if (!(aNamespaceID == kNameSpaceID_XLink &&
                HasAttr(kNameSpaceID_None, nsGkAtoms::href))) {
     // Note: "href" takes priority over xlink:href. So if "xlink:href" is being
     // set here, we only let that update our target if "href" is *unset*.
