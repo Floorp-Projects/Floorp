@@ -1089,8 +1089,8 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(catMan, NS_ERROR_NOT_AVAILABLE);
   nsCString contractId;
-  nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", type.get(),
-                                         getter_Copies(contractId));
+  nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", type,
+                                         contractId);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
     do_GetService(contractId.get());

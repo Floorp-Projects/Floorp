@@ -94,8 +94,8 @@ static constexpr Register r##N { Registers::x##N };
 REGISTER_CODE_LIST(DEFINE_UNSIZED_REGISTERS)
 #undef DEFINE_UNSIZED_REGISTERS
 static constexpr Register ip0 { Registers::x16 };
-static constexpr Register ip1 { Registers::x16 };
-static constexpr Register fp  { Registers::x30 };
+static constexpr Register ip1 { Registers::x17 };
+static constexpr Register fp  { Registers::x29 };
 static constexpr Register lr  { Registers::x30 };
 static constexpr Register rzr { Registers::xzr };
 

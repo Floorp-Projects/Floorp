@@ -2690,11 +2690,14 @@ HttpChannelChild::ContinueAsyncOpen()
   // This id identifies the inner window's top-level document,
   // which changes on every new load or navigation.
   uint64_t contentWindowId = 0;
+  TimeStamp navigationStartTimeStamp;
   if (tabChild) {
     MOZ_ASSERT(tabChild->WebNavigation());
     nsCOMPtr<nsIDocument> document = tabChild->GetDocument();
     if (document) {
       contentWindowId = document->InnerWindowID();
+      navigationStartTimeStamp =
+        document->GetNavigationTiming()->GetNavigationStartTimeStamp();
       mTopLevelOuterContentWindowId = document->OuterWindowID();
     }
   }
@@ -2806,6 +2809,8 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.handleFetchEventEnd()      = mHandleFetchEventEnd;
 
   openArgs.forceMainDocumentChannel() = mForceMainDocumentChannel;
+
+  openArgs.navigationStartTimeStamp() = navigationStartTimeStamp;
 
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event

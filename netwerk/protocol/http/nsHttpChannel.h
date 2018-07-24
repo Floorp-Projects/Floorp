@@ -161,6 +161,8 @@ public:
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
     NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
+    NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) override;
+    NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value) override;
     // nsIClassOfService
@@ -655,6 +657,9 @@ private:
     // Called on untail when tailed because of being a tracking resource.
     nsresult ConnectOnTailUnblock();
 
+    // Check if current channel should be canceled by FastBlock rules.
+    bool CheckFastBlocked();
+
     nsCString mUsername;
 
     // If non-null, warnings should be reported to this object.
@@ -703,6 +708,8 @@ private:
     // Lock preventing OnCacheEntryCheck and SetupTransaction being called at
     // the same time.
     mozilla::Mutex mRCWNLock;
+
+    TimeStamp mNavigationStartTimeStamp;
 
 protected:
     virtual void DoNotifyListenerCleanup() override;

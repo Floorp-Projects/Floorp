@@ -954,7 +954,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
     chunkAllocationSinceLastGC(false),
-    lastGCTime(mozilla::TimeStamp::Now()),
+    lastGCTime(ReallyNow()),
     mode(TuningDefaults::Mode),
     numActiveZoneIters(0),
     cleanUpEverything(false),
@@ -2144,7 +2144,9 @@ GCRuntime::shouldCompact()
 bool
 GCRuntime::isCompactingGCEnabled() const
 {
-    return compactingEnabled && rt->mainContextFromOwnThread()->compactingDisabledCount == 0;
+    return compactingEnabled
+        && rt->mainContextFromOwnThread()->compactingDisabledCount == 0
+        && !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
 AutoDisableCompactingGC::AutoDisableCompactingGC(JSContext* cx)
@@ -3245,7 +3247,7 @@ SliceBudget::SliceBudget(TimeBudget time)
         makeUnlimited();
     } else {
         // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
-        deadline = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(time.budget);
+        deadline = ReallyNow() + mozilla::TimeDuration::FromMilliseconds(time.budget);
         counter = CounterReset;
     }
 }
@@ -3278,7 +3280,7 @@ SliceBudget::checkOverBudget()
     if (deadline.IsNull())
         return true;
 
-    bool over = mozilla::TimeStamp::Now() >= deadline;
+    bool over = ReallyNow() >= deadline;
     if (!over)
         counter = CounterReset;
     return over;
@@ -4236,7 +4238,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     *isFullOut = true;
     bool any = false;
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    auto currentTime = ReallyNow();
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         /* Set up which zones will be collected. */
@@ -6766,7 +6768,7 @@ GCRuntime::finishCollection()
     marker.stop();
     clearBufferedGrayRoots();
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    auto currentTime = ReallyNow();
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
@@ -7751,6 +7753,10 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 void
 GCRuntime::gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
+    // Garbage collection can occur at different points between recording and
+    // replay, so disallow recorded events from occurring during the GC.
+    mozilla::recordreplay::AutoDisallowThreadEvents d;
+
     invocationKind = gckind;
     collect(true, SliceBudget::unlimited(), reason);
 }
@@ -8754,7 +8760,8 @@ JS::DisableIncrementalGC(JSContext* cx)
 JS_PUBLIC_API(bool)
 JS::IsIncrementalGCEnabled(JSContext* cx)
 {
-    return cx->runtime()->gc.isIncrementalGCEnabled();
+    return cx->runtime()->gc.isIncrementalGCEnabled()
+        && !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
 JS_PUBLIC_API(bool)

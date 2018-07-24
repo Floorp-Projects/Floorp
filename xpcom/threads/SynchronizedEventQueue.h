@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AbstractEventQueue.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "nsTObserverArray.h"
 
@@ -40,6 +41,13 @@ public:
 
   // After this method is called, no more events can be posted.
   virtual void Disconnect(const MutexAutoLock& aProofOfLock) = 0;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
 protected:
   virtual ~ThreadTargetSink() {}
@@ -74,6 +82,11 @@ public:
   virtual void FlushInputEventPrioritization() = 0;
   virtual void SuspendInputEventPrioritization() = 0;
   virtual void ResumeInputEventPrioritization() = 0;
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    return mEventObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
 
 protected:
   virtual ~SynchronizedEventQueue() {}

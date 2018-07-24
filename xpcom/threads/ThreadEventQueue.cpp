@@ -38,6 +38,14 @@ public:
     mQueue = nullptr;
   }
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    if (mQueue) {
+      return mQueue->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return 0;
+  }
+
 private:
   friend class ThreadEventQueue;
 
@@ -259,6 +267,22 @@ ThreadEventQueue<InnerQueueT>::PopEventQueue(nsIEventTarget* aTarget)
   }
 
   mNestedQueues.RemoveLastElement();
+}
+
+template<class InnerQueueT>
+size_t
+ThreadEventQueue<InnerQueueT>::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+
+  n += mBaseQueue->SizeOfIncludingThis(aMallocSizeOf);
+
+  n += mNestedQueues.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto& queue : mNestedQueues) {
+    n += queue.mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return SynchronizedEventQueue::SizeOfExcludingThis(aMallocSizeOf) + n;
 }
 
 template<class InnerQueueT>

@@ -1404,10 +1404,10 @@ public:
 };
 NS_IMPL_ISUPPORTS(AtomTablesReporter, nsIMemoryReporter)
 
-#if defined(XP_LINUX) || defined(XP_WIN)
-class ThreadStacksReporter final : public nsIMemoryReporter
+class ThreadsReporter final : public nsIMemoryReporter
 {
-  ~ThreadStacksReporter() = default;
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  ~ThreadsReporter() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -1431,12 +1431,20 @@ public:
     };
     AutoTArray<ThreadData, 32> threads;
 
+    size_t eventQueueSizes = 0;
+    size_t wrapperSizes = 0;
+    size_t threadCount = 0;
+
     for (auto* thread : nsThread::Enumerate()) {
+      threadCount++;
+      eventQueueSizes += thread->SizeOfEventQueues(MallocSizeOf);
+      wrapperSizes += thread->ShallowSizeOfIncludingThis(MallocSizeOf);
+
       if (!thread->StackBase()) {
         continue;
       }
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX)
       int idx = mappings.BinaryIndexOf(thread->StackBase());
       if (idx < 0) {
         continue;
@@ -1479,9 +1487,13 @@ public:
       MOZ_ASSERT(mappings[idx].Size() == thread->StackSize(),
                  "Mapping region size doesn't match stack allocation size");
 #endif
-#else
+#elif defined(XP_WIN)
       auto memInfo = MemoryInfo::Get(thread->StackBase(), thread->StackSize());
       size_t privateSize = memInfo.Committed();
+#else
+      size_t privateSize = thread->StackSize();
+      MOZ_ASSERT_UNREACHABLE("Shouldn't have stack base pointer on this "
+                             "platform");
 #endif
 
       threads.AppendElement(ThreadData{
@@ -1497,7 +1509,7 @@ public:
     }
 
     for (auto& thread : threads) {
-      nsPrintfCString path("explicit/thread-stacks/%s (tid=%u)",
+      nsPrintfCString path("explicit/threads/stacks/%s (tid=%u)",
                            thread.mName.get(), thread.mThreadId);
 
       aHandleReport->Callback(
@@ -1509,11 +1521,50 @@ public:
           aData);
     }
 
+    MOZ_COLLECT_REPORT(
+      "explicit/threads/overhead/event-queues", KIND_HEAP, UNITS_BYTES,
+      eventQueueSizes,
+      "The sizes of nsThread event queues and observers.");
+
+    MOZ_COLLECT_REPORT(
+      "explicit/threads/overhead/wrappers", KIND_HEAP, UNITS_BYTES,
+      wrapperSizes,
+      "The sizes of nsThread/PRThread wrappers.");
+
+#if defined(XP_WIN)
+    // Each thread on Windows has a fixed kernel overhead. For 32 bit Windows,
+    // that's 12K. For 64 bit, it's 24K.
+    //
+    // See https://blogs.technet.microsoft.com/markrussinovich/2009/07/05/pushing-the-limits-of-windows-processes-and-threads/
+    constexpr size_t kKernelSize = (sizeof(void*) == 8 ? 24 : 12) * 1024;
+#elif defined(XP_LINUX)
+    // On Linux, kernel stacks are usually 8K. However, on x86, they are
+    // allocated virtually, and start out at 4K. They may grow to 8K, but we
+    // have no way of knowing which ones do, so all we can do is guess.
+#if defined(__x86_64__) || defined(__i386__)
+    constexpr size_t kKernelSize = 4 * 1024;
+#else
+    constexpr size_t kKernelSize = 8 * 1024;
+#endif
+#elif defined(XP_MACOSX)
+    // On Darwin, kernel stacks are 16K:
+    //
+    // https://books.google.com/books?id=K8vUkpOXhN4C&lpg=PA513&dq=mach%20kernel%20thread%20stack%20size&pg=PA513#v=onepage&q=mach%20kernel%20thread%20stack%20size&f=false
+    constexpr size_t kKernelSize = 16 * 1024;
+#else
+    // Elsewhere, just assume that kernel stacks require at least 8K.
+    constexpr size_t kKernelSize = 8 * 1024;
+#endif
+
+    MOZ_COLLECT_REPORT(
+      "explicit/threads/overhead/kernel", KIND_NONHEAP, UNITS_BYTES,
+      threadCount * kKernelSize,
+      "The total kernel overhead for all active threads.");
+
     return NS_OK;
   }
 };
-NS_IMPL_ISUPPORTS(ThreadStacksReporter, nsIMemoryReporter)
-#endif
+NS_IMPL_ISUPPORTS(ThreadsReporter, nsIMemoryReporter)
 
 #ifdef DEBUG
 
@@ -1676,9 +1727,7 @@ nsMemoryReporterManager::Init()
 
   RegisterStrongReporter(new AtomTablesReporter());
 
-#if defined(XP_LINUX) || defined(XP_WIN)
-  RegisterStrongReporter(new ThreadStacksReporter());
-#endif
+  RegisterStrongReporter(new ThreadsReporter());
 
 #ifdef DEBUG
   RegisterStrongReporter(new DeadlockDetectorReporter());

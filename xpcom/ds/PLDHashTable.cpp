@@ -198,7 +198,7 @@ PLDHashTable::HashShift(uint32_t aEntrySize, uint32_t aLength)
 
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
                            uint32_t aLength)
-  : mOps(aOps)
+  : mOps(recordreplay::GeneratePLDHashTableCallbacks(aOps))
   , mEntryStore()
   , mGeneration(0)
   , mHashShift(HashShift(aEntrySize, aLength))
@@ -227,13 +227,16 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
   // |mOps| and |mEntrySize| are required to stay the same, they're
   // conceptually part of the type -- indeed, if PLDHashTable was a templated
   // type like nsTHashtable, they *would* be part of the type -- so it only
-  // makes sense to assign in cases where they match.
-  MOZ_RELEASE_ASSERT(mOps == aOther.mOps);
-  MOZ_RELEASE_ASSERT(mEntrySize == aOther.mEntrySize);
+  // makes sense to assign in cases where they match. An exception is when we
+  // are recording or replaying the execution, in which case custom ops are
+  // generated for each table.
+  MOZ_RELEASE_ASSERT(mOps == aOther.mOps || !mOps || recordreplay::IsRecordingOrReplaying());
+  MOZ_RELEASE_ASSERT(mEntrySize == aOther.mEntrySize || !mEntrySize);
 
   // Reconstruct |this|.
+  const PLDHashTableOps* ops = recordreplay::UnwrapPLDHashTableCallbacks(aOther.mOps);
   this->~PLDHashTable();
-  new (KnownNotNull, this) PLDHashTable(aOther.mOps, aOther.mEntrySize, 0);
+  new (KnownNotNull, this) PLDHashTable(ops, aOther.mEntrySize, 0);
 
   // Move non-const pieces over.
   mHashShift = std::move(aOther.mHashShift);
@@ -243,6 +246,8 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
 #ifdef DEBUG
   mChecker = std::move(aOther.mChecker);
 #endif
+
+  recordreplay::MovePLDHashTableContents(aOther.mOps, mOps);
 
   // Clear up |aOther| so its destruction will be a no-op and it reports being
   // empty.
@@ -317,6 +322,7 @@ PLDHashTable::~PLDHashTable()
 #endif
 
   if (!mEntryStore.Get()) {
+    recordreplay::DestroyPLDHashTableCallbacks(mOps);
     return;
   }
 
@@ -331,6 +337,8 @@ PLDHashTable::~PLDHashTable()
     entryAddr += mEntrySize;
   }
 
+  recordreplay::DestroyPLDHashTableCallbacks(mOps);
+
   // Entry storage is freed last, by ~EntryStore().
 }
 
@@ -338,7 +346,7 @@ void
 PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 {
   // Get these values before the destructor clobbers them.
-  const PLDHashTableOps* ops = mOps;
+  const PLDHashTableOps* ops = recordreplay::UnwrapPLDHashTableCallbacks(mOps);
   uint32_t entrySize = mEntrySize;
 
   this->~PLDHashTable();

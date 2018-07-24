@@ -7,6 +7,7 @@
 #ifndef mozilla_ThreadEventTarget_h
 #define mozilla_ThreadEventTarget_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/SynchronizedEventQueue.h" // for ThreadTargetSink
 #include "nsISerialEventTarget.h"
@@ -29,6 +30,15 @@ public:
 
   // Sets the thread for which IsOnCurrentThread returns true to the current thread.
   void SetCurrentThread();
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = 0;
+    if (mSink) {
+      n += mSink->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return aMallocSizeOf(this) + n;
+  }
 
 private:
   ~ThreadEventTarget() {}
