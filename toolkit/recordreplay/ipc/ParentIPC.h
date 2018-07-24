@@ -7,6 +7,7 @@
 #ifndef mozilla_recordreplay_ParentIPC_h
 #define mozilla_recordreplay_ParentIPC_h
 
+#include "base/shared_memory.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -43,7 +44,9 @@ void SaveRecording(const ipc::FileDescriptor& aFile);
 ipc::MessageChannel* ChannelToUIProcess();
 
 // Initialize state in a middleman process.
-void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid);
+void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
+                         const base::SharedMemoryHandle& aPrefsHandle,
+                         const ipc::FileDescriptor& aPrefMapHandle);
 
 // Open a socket which a recording/replaying child can use to connect to its
 // middleman process.
