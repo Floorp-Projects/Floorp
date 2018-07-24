@@ -152,7 +152,7 @@ void ClientMultiTiledLayerBuffer::MaybeSyncTextures(const nsIntRegion& aPaintReg
     // texture IDs that we need to ensure are unused by the GPU before we
     // continue.
     if (!aPaintRegion.IsEmpty()) {
-      MOZ_ASSERT(mPaintStates.size() == 0);
+      MOZ_ASSERT(mPaintTasks.size() == 0);
       for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
         const TileCoordIntPoint tileCoord = aNewTiles.TileCoord(i);
 
@@ -220,7 +220,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   MaybeSyncTextures(paintRegion, newTiles, scaledTileSize);
 
   if (!paintRegion.IsEmpty()) {
-    MOZ_ASSERT(mPaintStates.size() == 0);
+    MOZ_ASSERT(mPaintTasks.size() == 0);
 
     for (size_t i = 0; i < newTileCount; ++i) {
       const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
@@ -281,11 +281,11 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
     // Dispatch to the paint thread
     if (aFlags & TilePaintFlags::Async) {
-      for (const auto& state : mPaintStates) {
-        PaintThread::Get()->PaintTiledContents(state);
+      for (const auto& state : mPaintTasks) {
+        PaintThread::Get()->QueuePaintTask(state);
       }
       mManager->SetQueuedAsyncPaints();
-      mPaintStates.clear();
+      mPaintTasks.clear();
     }
 
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
@@ -380,11 +380,11 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   mPaintTiles.push_back(paintTile);
 
   if (aFlags & TilePaintFlags::Async) {
-    RefPtr<CapturedTiledPaintState> paintState = new CapturedTiledPaintState();
-    paintState->mCapture = backBuffer->mCapture;
-    paintState->mTarget = backBuffer->mBackBuffer;
-    paintState->mClients = std::move(backBuffer->mTextureClients);
-    mPaintStates.push_back(paintState);
+    RefPtr<PaintTask> task = new PaintTask();
+    task->mCapture = backBuffer->mCapture;
+    task->mTarget = backBuffer->mBackBuffer;
+    task->mClients = std::move(backBuffer->mTextureClients);
+    mPaintTasks.push_back(task);
   } else {
     MOZ_RELEASE_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
     MOZ_RELEASE_ASSERT(backBuffer->mCapture == nullptr);
