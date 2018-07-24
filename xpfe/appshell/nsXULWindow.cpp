@@ -2154,7 +2154,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
 
   nsCOMPtr<nsIURI> uri;
   nsAutoCString urlStr;
-  urlStr.AssignLiteral(MOZ_BROWSER_CHROME_URL_QUOTED);
+  urlStr.AssignLiteral(BROWSER_CHROME_URL_QUOTED);
 
   nsCOMPtr<nsIIOService> service(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (service) {
