@@ -185,10 +185,7 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
       nsAutoString hrefStr;
       href->ToString(hrefStr);
 
-      // Pass in |aParent| instead of |this| -- first argument is only used
-      // for a call to GetComposedDoc(), and |this| might not have a current
-      // document yet.
-      UpdateHrefTarget(aParent, hrefStr);
+      UpdateHrefTarget(hrefStr);
     }
 
     mTimedElement.BindToTree(aParent);
@@ -301,7 +298,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       const nsAttrValue* xlinkHref =
         mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
       if (xlinkHref) {
-        UpdateHrefTarget(this, xlinkHref->GetStringValue());
+        UpdateHrefTarget(xlinkHref->GetStringValue());
       }
     } else if (!HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
       mHrefTarget.Unlink();
@@ -315,7 +312,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     // set here, we only let that update our target if "href" is *unset*.
     MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
                "Expected href attribute to be string type");
-    UpdateHrefTarget(this, aValue->GetStringValue());
+    UpdateHrefTarget(aValue->GetStringValue());
   } // else: we're not yet in a document -- we'll update the target on
     // next BindToTree call.
 
@@ -411,14 +408,13 @@ SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName)
 }
 
 void
-SVGAnimationElement::UpdateHrefTarget(nsIContent* aNodeForContext,
-                                      const nsAString& aHrefStr)
+SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr)
 {
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
                                             aHrefStr, OwnerDoc(), baseURI);
-  mHrefTarget.Reset(aNodeForContext, targetURI);
+  mHrefTarget.Reset(this, targetURI);
   AnimationTargetChanged();
 }
 

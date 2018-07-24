@@ -17,6 +17,27 @@ struct nsCSSKTableEntry;
 class nsCSSValue;
 class nsStaticAtom;
 
+struct nsCSSKeywordAndBoolTableEntry : public nsCSSKTableEntry {
+  constexpr nsCSSKeywordAndBoolTableEntry(nsCSSKeyword aKeyword, int16_t aValue)
+    : nsCSSKTableEntry(aKeyword, aValue)
+    , mValueInBooleanContext(true)
+  {
+  }
+
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  constexpr nsCSSKeywordAndBoolTableEntry(
+      nsCSSKeyword aKeyword,
+      T aValue,
+      bool aValueInBooleanContext)
+    : nsCSSKTableEntry(aKeyword, aValue)
+    , mValueInBooleanContext(aValueInBooleanContext)
+  {
+  }
+
+  bool mValueInBooleanContext;
+};
+
 struct nsMediaFeature;
 typedef void (*nsMediaFeatureValueGetter)(nsIDocument* aDocument,
                                           const nsMediaFeature* aFeature,
@@ -32,16 +53,18 @@ struct nsMediaFeature
   enum ValueType {
     // All value types allow eCSSUnit_Null to indicate that no value
     // was given (in addition to the types listed below).
-    eLength,     // values are eCSSUnit_Pixel
-    eInteger,    // values are eCSSUnit_Integer
-    eFloat,      // values are eCSSUnit_Number
-    eBoolInteger,// values are eCSSUnit_Integer (0, -0, or 1 only)
-    eIntRatio,   // values are eCSSUnit_Array of two eCSSUnit_Integer
-    eResolution, // values are in eCSSUnit_Inch (for dpi),
-                 //   eCSSUnit_Pixel (for dppx), or
-                 //   eCSSUnit_Centimeter (for dpcm)
-    eEnumerated, // values are eCSSUnit_Enumerated (uses keyword table)
-    eIdent       // values are eCSSUnit_Ident
+    eLength,         // values are eCSSUnit_Pixel
+    eInteger,        // values are eCSSUnit_Integer
+    eFloat,          // values are eCSSUnit_Number
+    eBoolInteger,    // values are eCSSUnit_Integer (0, -0, or 1 only)
+    eIntRatio,       // values are eCSSUnit_Array of two eCSSUnit_Integer
+    eResolution,     // values are in eCSSUnit_Inch (for dpi),
+                     //   eCSSUnit_Pixel (for dppx), or
+                     //   eCSSUnit_Centimeter (for dpcm)
+    eEnumerated,     // values are eCSSUnit_Enumerated (uses keyword table)
+    eBoolEnumerated, // values are eCSSUnit_Enumerated (uses keyword and boolean
+                     // pair table)
+    eIdent           // values are eCSSUnit_Ident
     // Note that a number of pieces of code (both for parsing and
     // for matching of valueless expressions) assume that all numeric
     // value types cannot be negative.  The parsing code also does
@@ -73,6 +96,9 @@ struct nsMediaFeature
     // If mValueType == eEnumerated:  const int32_t*: keyword table in
     //   the same format as the keyword tables in nsCSSProps.
     const nsCSSKTableEntry* mKeywordTable;
+    // If mValueType == eBoolEnumerated:  similar to the above but having a
+    // boolean field representing the value in Boolean context.
+    const nsCSSKeywordAndBoolTableEntry* mKeywordAndBoolTable;
     // If mGetter == GetSystemMetric (which implies mValueType ==
     //   eBoolInteger): nsAtom * const *, for the system metric.
     nsAtom * const * mMetric;

@@ -14,3 +14,9 @@ fuzzy-if(Android,8,454) == mq_print_maxheight.xhtml mq_print-ref.xhtml
 == mq_print_maxheight_updown.xhtml mq_print-ref.xhtml
 == mq_print_minheight_updown.xhtml mq_print-ref.xhtml
 == mq_print_minwidth_updown.xhtml mq_print-ref.xhtml
+test-pref(ui.prefersReducedMotion,0) == mq_prefers_reduced_motion.html about:blank
+test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion.html greenbox.html
+test-pref(ui.prefersReducedMotion,0) == mq_prefers_reduced_motion_no_preference.html greenbox.html
+test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_no_preference.html about:blank
+test-pref(ui.prefersReducedMotion,0) == mq_prefers_reduced_motion_reduce.html about:blank
+test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_reduce.html greenbox.html
