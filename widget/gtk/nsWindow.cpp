@@ -6672,12 +6672,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
       return mLayerManager;
     }
 
-    if (!mLayerManager && !IsComposited() &&
-        eTransparencyTransparent == GetTransparencyMode())
-    {
-        mLayerManager = CreateBasicLayerManager();
-    }
-
     return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint, aPersistence);
 }
 
