@@ -8,42 +8,25 @@
 #define mozilla_dom_BlobURL_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/File.h"
 #include "nsCOMPtr.h"
-#include "nsIClassInfo.h"
-#include "nsIPrincipal.h"
 #include "nsISerializable.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsSimpleURI.h"
 #include "nsIIPCSerializableURI.h"
-#include "nsProxyRelease.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
 
 /**
- * These URIs refer to host objects with "blob" scheme. The underlying object is
- * a BlobImpl.
+ * These URIs refer to host objects with "blob" scheme.
  */
-class BlobURL final
-  : public mozilla::net::nsSimpleURI
-  , public nsIURIWithPrincipal
+class BlobURL final : public mozilla::net::nsSimpleURI
 {
 private:
-  explicit BlobURL(nsIPrincipal* aPrincipal)
-    : mozilla::net::nsSimpleURI()
-  {
-    mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", aPrincipal, false);
-  }
-
-  // For use only from deserialization
-  explicit BlobURL()
-    : mozilla::net::nsSimpleURI()
-  {}
+  BlobURL();
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIURIWITHPRINCIPAL
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
   NS_DECL_NSIIPCSERIALIZABLEURI
@@ -65,9 +48,13 @@ public:
     return url;
   }
 
-  NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
+  bool
+  Revoked() const
+  {
+    return mRevoked;
+  }
 
-  nsMainThreadPtrHandle<nsIPrincipal> mPrincipal;
+  NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
 
 private:
   virtual ~BlobURL() = default;
@@ -80,7 +67,6 @@ public:
   class Mutator final
     : public nsIURIMutator
     , public BaseURIMutator<BlobURL>
-    , public nsIPrincipalURIMutator
     , public nsISerializable
   {
     NS_DECL_ISUPPORTS
@@ -90,24 +76,13 @@ public:
     NS_IMETHOD
     Write(nsIObjectOutputStream *aOutputStream) override
     {
-        return NS_ERROR_NOT_IMPLEMENTED;
+      return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     MOZ_MUST_USE NS_IMETHOD
     Read(nsIObjectInputStream* aStream) override
     {
-        return InitFromInputStream(aStream);
-    }
-
-    MOZ_MUST_USE NS_IMETHOD
-    SetPrincipal(nsIPrincipal *aPrincipal) override
-    {
-        if (!mURI) {
-            return NS_ERROR_NULL_POINTER;
-        }
-        MOZ_ASSERT(NS_IsMainThread());
-        mURI->mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", aPrincipal, false);
-        return NS_OK;
+      return InitFromInputStream(aStream);
     }
 
     Mutator() = default;
@@ -119,6 +94,8 @@ public:
   };
 
   friend BaseURIMutator<BlobURL>;
+
+  bool mRevoked;
 };
 
 #define NS_HOSTOBJECTURI_CID \

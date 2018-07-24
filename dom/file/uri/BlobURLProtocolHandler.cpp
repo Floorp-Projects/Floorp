@@ -6,8 +6,8 @@
 
 #include "BlobURLProtocolHandler.h"
 #include "BlobURLChannel.h"
-
 #include "mozilla/dom/BlobURL.h"
+
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -18,6 +18,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SystemGroup.h"
 #include "nsClassHashtable.h"
@@ -52,14 +53,18 @@ struct DataInfo
     , mBlobImpl(aBlobImpl)
     , mPrincipal(aPrincipal)
     , mRevoked(false)
-  {}
+  {
+    MOZ_ASSERT(aPrincipal);
+  }
 
   DataInfo(MediaSource* aMediaSource, nsIPrincipal* aPrincipal)
     : mObjectType(eMediaSource)
     , mMediaSource(aMediaSource)
     , mPrincipal(aPrincipal)
     , mRevoked(false)
-  {}
+  {
+    MOZ_ASSERT(aPrincipal);
+  }
 
   ObjectType mObjectType;
 
@@ -136,6 +141,7 @@ BroadcastBlobURLRegistration(const nsACString& aURI,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlobImpl);
+  MOZ_ASSERT(aPrincipal);
 
   if (XRE_IsParentProcess()) {
     dom::ContentParent::BroadcastBlobURLRegistration(aURI, aBlobImpl,
@@ -406,12 +412,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   static void
-  Create(const nsACString& aURI, bool aBroadcastToOtherProcesses)
+  Create(const nsACString& aURI)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    RefPtr<ReleasingTimerHolder> holder =
-      new ReleasingTimerHolder(aURI, aBroadcastToOtherProcesses);
+    RefPtr<ReleasingTimerHolder> holder = new ReleasingTimerHolder(aURI);
 
     auto raii = MakeScopeExit([holder] {
       holder->CancelTimerAndRevokeURI();
@@ -420,7 +425,7 @@ public:
     nsresult rv =
       SystemGroup::EventTargetFor(TaskCategory::Other)->Dispatch(holder.forget());
     NS_ENSURE_SUCCESS_VOID(rv);
- 
+
     raii.release();
   }
 
@@ -456,7 +461,7 @@ public:
   NS_IMETHOD
   Notify(nsITimer* aTimer) override
   {
-    RevokeURI(mBroadcastToOtherProcesses);
+    RevokeURI();
     return NS_OK;
   }
 
@@ -488,27 +493,21 @@ public:
   }
 
 private:
-  ReleasingTimerHolder(const nsACString& aURI, bool aBroadcastToOtherProcesses)
+  explicit ReleasingTimerHolder(const nsACString& aURI)
     : Runnable("ReleasingTimerHolder")
     , mURI(aURI)
-    , mBroadcastToOtherProcesses(aBroadcastToOtherProcesses)
   {}
 
   ~ReleasingTimerHolder()
   {}
 
   void
-  RevokeURI(bool aBroadcastToOtherProcesses)
+  RevokeURI()
   {
     // Remove the shutting down blocker
     nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();
     if (phase) {
       phase->RemoveBlocker(this);
-    }
-
-    // If we have to broadcast the unregistration, let's do it now.
-    if (aBroadcastToOtherProcesses) {
-      BroadcastBlobURLUnregistration(mURI);
     }
 
     DataInfo* info = GetDataInfo(mURI, true /* We care about revoked dataInfo */);
@@ -534,7 +533,7 @@ private:
       mTimer = nullptr;
     }
 
-    RevokeURI(false /* aBroadcastToOtherProcesses */);
+    RevokeURI();
   }
 
   static nsCOMPtr<nsIAsyncShutdownClient>
@@ -551,8 +550,6 @@ private:
   }
 
   nsCString mURI;
-  bool mBroadcastToOtherProcesses;
-
   nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -598,6 +595,9 @@ BlobURLProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
                                      nsIPrincipal* aPrincipal,
                                      nsACString& aUri)
 {
+  MOZ_ASSERT(aBlobImpl);
+  MOZ_ASSERT(aPrincipal);
+
   Init();
 
   nsresult rv = GenerateURIString(aPrincipal, aUri);
@@ -615,6 +615,9 @@ BlobURLProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
                                      nsIPrincipal* aPrincipal,
                                      nsACString& aUri)
 {
+  MOZ_ASSERT(aMediaSource);
+  MOZ_ASSERT(aPrincipal);
+
   Init();
 
   nsresult rv = GenerateURIString(aPrincipal, aUri);
@@ -631,6 +634,9 @@ BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
                                      nsIPrincipal* aPrincipal,
                                      BlobImpl* aBlobImpl)
 {
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aBlobImpl);
+
   return AddDataEntryInternal(aURI, aBlobImpl, aPrincipal);
 }
 
@@ -683,12 +689,14 @@ BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
 
   info->mRevoked = true;
 
+  if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
+    BroadcastBlobURLUnregistration(nsCString(aUri));
+  }
+
   // The timer will take care of removing the entry for real after
   // RELEASING_TIMER milliseconds. In the meantime, the DataInfo, marked as
   // revoked, will not be exposed.
-  ReleasingTimerHolder::Create(aUri,
-                               aBroadcastToOtherProcesses &&
-                                 info->mObjectType == DataInfo::eBlobImpl);
+  ReleasingTimerHolder::Create(aUri);
 }
 
 /* static */ void
@@ -817,27 +825,28 @@ BlobURLProtocolHandler::NewURI(const nsACString& aSpec,
                                nsIURI **aResult)
 {
   *aResult = nullptr;
-  nsresult rv;
-
-  DataInfo* info = GetDataInfo(aSpec);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  RefPtr<BlobImpl> blob;
-  if (info && info->mObjectType == DataInfo::eBlobImpl) {
-    MOZ_ASSERT(info->mBlobImpl);
-    principal = info->mPrincipal;
-    blob = info->mBlobImpl;
-  }
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_MutateURI(new BlobURL::Mutator())
-         .SetSpec(aSpec)
-         .Apply(NS_MutatorMethod(&nsIPrincipalURIMutator::SetPrincipal, principal))
-         .Finalize(uri);
+  nsresult rv = NS_MutateURI(new BlobURL::Mutator())
+                  .SetSpec(aSpec)
+                  .Finalize(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uri.forget(aResult);
+  bool revoked = true;
+  DataInfo* info = GetDataInfo(aSpec);
+  if (info && info->mObjectType == DataInfo::eBlobImpl) {
+    revoked = info->mRevoked;
+  }
 
+  RefPtr<BlobURL> blobURL;
+  rv = uri->QueryInterface(kHOSTOBJECTURICID,
+                           getter_AddRefs(blobURL));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(blobURL);
+  blobURL->mRevoked = revoked;
+
+  uri.forget(aResult);
   return NS_OK;
 }
 
@@ -853,26 +862,21 @@ BlobURLProtocolHandler::NewChannel2(nsIURI* aURI,
     channel.forget(aResult);
   });
 
+  RefPtr<BlobURL> blobURL;
+  nsresult rv = aURI->QueryInterface(kHOSTOBJECTURICID,
+                                     getter_AddRefs(blobURL));
+  if (NS_FAILED(rv) || !blobURL) {
+    return NS_OK;
+  }
+
   DataInfo* info = GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
   if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
     return NS_OK;
   }
 
-  RefPtr<BlobImpl> blobImpl = info->mBlobImpl;
-  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
-  if (!uriPrinc) {
+  if (blobURL->Revoked()) {
     return NS_OK;
   }
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  if (!principal) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(info->mPrincipal == principal);
 
   // We want to be sure that we stop the creation of the channel if the blob URL
   // is copy-and-pasted on a different context (ex. private browsing or
@@ -886,13 +890,13 @@ BlobURLProtocolHandler::NewChannel2(nsIURI* aURI,
   if (aLoadInfo &&
       !nsContentUtils::IsSystemPrincipal(aLoadInfo->LoadingPrincipal()) &&
       !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(aLoadInfo->GetOriginAttributes(),
-                                                         BasePrincipal::Cast(principal)->OriginAttributesRef())) {
+                                                       BasePrincipal::Cast(info->mPrincipal)->OriginAttributesRef())) {
     return NS_OK;
   }
 
   raii.release();
 
-  channel->Initialize(blobImpl);
+  channel->Initialize(info->mBlobImpl);
   channel.forget(aResult);
   return NS_OK;
 }
@@ -917,6 +921,38 @@ BlobURLProtocolHandler::GetScheme(nsACString &result)
 {
   result.AssignLiteral(BLOBURI_SCHEME);
   return NS_OK;
+}
+
+/* static */ bool
+BlobURLProtocolHandler::GetBlobURLPrincipal(nsIURI* aURI,
+                                            nsIPrincipal** aPrincipal)
+{
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aPrincipal);
+
+  RefPtr<BlobURL> blobURL;
+  nsresult rv = aURI->QueryInterface(kHOSTOBJECTURICID,
+                                     getter_AddRefs(blobURL));
+  if (NS_FAILED(rv) || !blobURL) {
+    return false;
+  }
+
+  DataInfo* info = GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
+  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+
+  if (blobURL->Revoked()) {
+    principal =
+      NullPrincipal::Create(BasePrincipal::Cast(info->mPrincipal)->OriginAttributesRef());
+  } else {
+    principal = info->mPrincipal;
+  }
+
+  principal.forget(aPrincipal);
+  return true;
 }
 
 } // dom namespace
