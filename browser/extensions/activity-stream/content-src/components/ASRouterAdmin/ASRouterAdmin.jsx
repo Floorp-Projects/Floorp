@@ -54,16 +54,18 @@ export class ASRouterAdmin extends React.PureComponent {
   renderMessageItem(msg) {
     const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked = this.state.blockList.includes(msg.id);
+    const impressions = this.state.impressions[msg.id] ? this.state.impressions[msg.id].length : 0;
 
     let itemClassName = "message-item";
     if (isCurrent) { itemClassName += " current"; }
     if (isBlocked) { itemClassName += " blocked"; }
 
     return (<tr className={itemClassName} key={msg.id}>
-      <td className="message-id"><span>{msg.id}</span></td>
+      <td className="message-id"><span>{msg.id} <br /></span></td>
       <td>
         <button className={`button ${(isBlocked ? "" : " primary")}`} onClick={isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)}>{isBlocked ? "Unblock" : "Block"}</button>
        {isBlocked ? null : <button className="button" onClick={this.handleOverride(msg.id)}>Show</button>}
+       <br />({impressions} impressions)
       </td>
       <td className="message-summary">
         <pre>{JSON.stringify(msg, null, 2)}</pre>

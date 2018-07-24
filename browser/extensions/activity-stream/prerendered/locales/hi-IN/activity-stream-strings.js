@@ -2,7 +2,7 @@
 window.gActivityStreamStrings = {
   "newtab_page_title": "नया टैब",
   "header_top_sites": "सर्वोच्च साइटें",
-  "header_highlights": "झलकियाँ",
+  "header_highlights": "प्रमुखताएँ",
   "header_recommended_by": "{provider} द्वारा अनुशंसित",
   "context_menu_button_sr": "{title} के लिए कॉन्टेक्स्ट मेनू खोलें",
   "section_context_menu_button_sr": "अनुभाग प्रसंग मेनू खोलें",
@@ -53,7 +53,7 @@ window.gActivityStreamStrings = {
   "prefs_snippets_description": "Mozilla और Firefox से अद्यतन",
   "settings_pane_button_label": "अपने नए टैब पृष्ठ को अनुकूलित करें",
   "settings_pane_topsites_header": "सर्वोच्च साइटें",
-  "settings_pane_highlights_header": "झलकियाँ",
+  "settings_pane_highlights_header": "प्रमुखताएँ",
   "settings_pane_highlights_options_bookmarks": "पुस्तचिह्न",
   "settings_pane_snippets_header": "अंश",
   "edit_topsites_button_text": "संपादित करें",

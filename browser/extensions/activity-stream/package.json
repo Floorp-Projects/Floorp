@@ -90,7 +90,7 @@
     "mc_dir": "../mozilla-central"
   },
   "scripts": {
-    "mochitest": "(cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest )",
+    "mochitest": "(cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest --headless)",
     "mochitest-debug": "(cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/extensions/activity-stream/test/functional/mochitest)",
     "bundle": "npm-run-all bundle:*",
     "bundle:locales": "pontoon-to-json --src locales --dest data",

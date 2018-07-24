@@ -18,12 +18,12 @@ body {
   font-size: 16px;
   overflow-y: scroll;
 
-  &.hide-onboarding > #onboarding-overlay-button,
-  &.hide-main > #onboarding-overlay-button {
-    display: none !important;
+  &.hide-onboarding > #onboarding-overlay-button, // sass-lint:disable-line no-ids
+  &.hide-main > #onboarding-overlay-button { // sass-lint:disable-line no-ids
+    display: none !important; // sass-lint:disable-line no-important
   }
 
-  &.hide-main > #onboarding-notification-bar {
+  &.hide-main > #onboarding-notification-bar { // sass-lint:disable-line no-ids
     display: none;
   }
 }
