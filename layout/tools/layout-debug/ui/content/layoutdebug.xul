@@ -8,7 +8,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://layoutdebug/locale/layoutdebug.dtd">
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css" ?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css" ?>
 
 <!--
 
