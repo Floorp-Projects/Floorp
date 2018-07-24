@@ -598,8 +598,7 @@ add_task(async function sendToDevice_inUrlbar() {
     Assert.notEqual(deviceMenuItem, null);
 
     // For good measure, wait until it's visible.
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = window.windowUtils;
     await BrowserTestUtils.waitForCondition(() => {
       let bounds = dwu.getBoundsWithoutFlushing(deviceMenuItem);
       return bounds.height > 0 && bounds.width > 0;

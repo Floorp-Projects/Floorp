@@ -354,9 +354,7 @@
               // remove close buttons from background tabs so that people don't
               // accidentally close tabs by selecting them.
               let rect = ele => {
-                return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils)
-                             .getBoundsWithoutFlushing(ele);
+                return window.windowUtils.getBoundsWithoutFlushing(ele);
               };
               let tab = this._getVisibleTabs()[gBrowser._numPinnedTabs];
               if (tab && rect(tab).width <= this._tabClipWidth) {
@@ -1171,7 +1169,7 @@
         // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
         // canvas size (in CSS pixels) to the window's backing resolution in order
         // to get a full-resolution drag image for use on HiDPI displays.
-        let windowUtils = window.getInterface(Ci.nsIDOMWindowUtils);
+        let windowUtils = window.windowUtils;
         let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
         let canvas = this._dndCanvas;
         if (!canvas) {

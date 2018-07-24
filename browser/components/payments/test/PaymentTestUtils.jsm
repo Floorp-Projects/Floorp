@@ -86,9 +86,7 @@ var PaymentTestUtils = {
       const rq = new content.PaymentRequest(methodData, details, options);
       content.rq = rq; // assign it so we can retrieve it later
 
-      const handle = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils)
-                            .setHandlingUserInput(true);
+      const handle = content.windowUtils.setHandlingUserInput(true);
       content.showPromise = rq.show();
 
       handle.destruct();
