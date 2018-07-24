@@ -34,12 +34,12 @@ Object.defineProperty(this, "EVENTS", {
    DevToolsUtils, system */
 var React = require("devtools/client/shared/vendor/react");
 var ReactDOM = require("devtools/client/shared/vendor/react-dom");
-var Waterfall = React.createFactory(require("devtools/client/performance/components/Waterfall"));
-var JITOptimizationsView = React.createFactory(require("devtools/client/performance/components/JITOptimizations"));
-var RecordingControls = React.createFactory(require("devtools/client/performance/components/RecordingControls"));
-var RecordingButton = React.createFactory(require("devtools/client/performance/components/RecordingButton"));
-var RecordingList = React.createFactory(require("devtools/client/performance/components/RecordingList"));
-var RecordingListItem = React.createFactory(require("devtools/client/performance/components/RecordingListItem"));
+var Waterfall = React.createFactory(require("devtools/client/performance/components/waterfall"));
+var JITOptimizationsView = React.createFactory(require("devtools/client/performance/components/jit-optimizations"));
+var RecordingControls = React.createFactory(require("devtools/client/performance/components/recording-controls"));
+var RecordingButton = React.createFactory(require("devtools/client/performance/components/recording-button"));
+var RecordingList = React.createFactory(require("devtools/client/performance/components/recording-list"));
+var RecordingListItem = React.createFactory(require("devtools/client/performance/components/recording-list-item"));
 
 var Services = require("Services");
 var promise = require("promise");
