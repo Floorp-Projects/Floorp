@@ -15,7 +15,7 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
 
-        self.url = 'https://ssl-ev.mozqa.com/'
+        self.url = 'https://extended-validation.badssl.com'
 
     def tearDown(self):
         try:
