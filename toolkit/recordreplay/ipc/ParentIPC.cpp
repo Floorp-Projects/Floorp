@@ -829,28 +829,14 @@ MainThreadMessageLoop()
   return gMainThreadMessageLoop;
 }
 
-// Contents of the prefs shmem block that is sent to the child on startup.
-static char* gShmemPrefs;
-static size_t gShmemPrefsLen;
-
-void
-NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen)
-{
-  MOZ_RELEASE_ASSERT(!gShmemPrefs);
-  gShmemPrefs = new char[aPrefsLen];
-  memcpy(gShmemPrefs, aPrefs, aPrefsLen);
-  gShmemPrefsLen = aPrefsLen;
-}
-
 void
 InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gShmemPrefs);
 
   // Construct the message that will be sent to each child when starting up.
   IntroductionMessage* msg =
-    IntroductionMessage::New(aParentPid, gShmemPrefs, gShmemPrefsLen, aArgc, aArgv);
+    IntroductionMessage::New(aParentPid, aArgc, aArgv);
   ChildProcessInfo::SetIntroductionMessage(msg);
 
   MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording ||
