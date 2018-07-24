@@ -11,9 +11,37 @@ Bug 1171903 - Storage Inspector endless scrolling
 <script type="text/javascript">
 "use strict";
 
-for (let i = 1; i < 151; i++) {
-  localStorage.setItem(`item-${i}`, `value-${i}`);
+function createLocalStorageEntries() {
+  for (let i = 1; i < 151; i++) {
+    localStorage.setItem(`item-${i}`, `value-${i}`);
+  }
 }
+
+function createIndexedDBEntries() {
+  const open = indexedDB.open("database", 1);
+  open.onupgradeneeded = function() {
+    const db = open.result;
+    db.createObjectStore("store", {keyPath: "id"});
+  };
+
+  open.onsuccess = function() {
+    const db = open.result;
+    const tx = db.transaction("store", "readwrite");
+    const store = tx.objectStore("store");
+
+    for (let i = 1; i < 151; i++) {
+      store.put({id: i});
+    }
+
+    tx.oncomplete = function() {
+      db.close();
+    };
+  };
+}
+
+createLocalStorageEntries();
+createIndexedDBEntries();
+
 </script>
 </body>
 </html>
