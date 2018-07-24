@@ -13,7 +13,7 @@
 
 #include "nsCategoryCache.h"
 
-nsCategoryObserver::nsCategoryObserver(const nsACString& aCategory)
+nsCategoryObserver::nsCategoryObserver(const char* aCategory)
   : mCategory(aCategory)
   , mCallback(nullptr)
   , mClosure(nullptr)
@@ -43,7 +43,9 @@ nsCategoryObserver::nsCategoryObserver(const nsACString& aCategory)
     strings->GetNext(entryName);
 
     nsCString entryValue;
-    rv = catMan->GetCategoryEntry(aCategory, entryName, entryValue);
+    rv = catMan->GetCategoryEntry(aCategory,
+                                  entryName.get(),
+                                  getter_Copies(entryValue));
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
       if (service) {
@@ -149,7 +151,9 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     nsCString entryValue;
-    catMan->GetCategoryEntry(mCategory, str, entryValue);
+    catMan->GetCategoryEntry(mCategory.get(),
+                             str.get(),
+                             getter_Copies(entryValue));
 
     nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
 

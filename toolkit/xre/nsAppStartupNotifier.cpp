@@ -30,10 +30,8 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
                     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsDependentCString topic(aTopic);
-
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = categoryManager->EnumerateCategory(topic,
+    rv = categoryManager->EnumerateCategory(aTopic,
                                getter_AddRefs(enumerator));
     if (NS_FAILED(rv)) return rv;
 
@@ -46,8 +44,9 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
             rv = category->GetData(categoryEntry);
 
             nsCString contractId;
-            categoryManager->GetCategoryEntry(topic, categoryEntry,
-                                              contractId);
+            categoryManager->GetCategoryEntry(aTopic,
+                                              categoryEntry.get(),
+                                              getter_Copies(contractId));
 
             if (NS_SUCCEEDED(rv)) {
 

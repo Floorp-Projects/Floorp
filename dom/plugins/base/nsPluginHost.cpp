@@ -2771,15 +2771,16 @@ nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
     return;
   }
 
-  NS_NAMED_LITERAL_CSTRING(contractId,
-                           "@mozilla.org/content/plugin/document-loader-factory;1");
+  const char *contractId =
+    "@mozilla.org/content/plugin/document-loader-factory;1";
 
   if (aType == ePluginRegister) {
     catMan->AddCategoryEntry("Gecko-Content-Viewers",
-                             aMimeType,
+                             aMimeType.get(),
                              contractId,
                              false, /* persist: broken by bug 193031 */
-                             mOverrideInternalTypes);
+                             mOverrideInternalTypes,
+                             nullptr);
   } else {
     if (aType == ePluginMaybeUnregister) {
       // Bail out if this type is still used by an enabled plugin
@@ -2793,10 +2794,12 @@ nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
     // Only delete the entry if a plugin registered for it
     nsCString value;
     nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
-                                           aMimeType, value);
-    if (NS_SUCCEEDED(rv) && value == contractId) {
+                                           aMimeType.get(),
+                                           getter_Copies(value));
+    if (NS_SUCCEEDED(rv) && strcmp(value.get(), contractId) == 0) {
       catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
-                                  aMimeType, true);
+                                  aMimeType.get(),
+                                  true);
     }
   }
 }

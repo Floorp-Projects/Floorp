@@ -6952,7 +6952,8 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
 
   nsCString contractID;
   nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
-                                         aType, contractID);
+                                         PromiseFlatCString(aType).get(),
+                                         getter_Copies(contractID));
   if (NS_SUCCEEDED(rv)) {
     docFactory = do_GetService(contractID.get());
     if (docFactory && aLoaderType) {

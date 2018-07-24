@@ -358,8 +358,8 @@ nsDirectoryService::RegisterCategoryProviders()
     strings->GetNext(entry);
 
     nsCString contractID;
-    catman->GetCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY, entry,
-                             contractID);
+    catman->GetCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY, entry.get(),
+                             getter_Copies(contractID));
 
     if (!contractID.IsVoid()) {
       nsCOMPtr<nsIDirectoryServiceProvider> provider = do_GetService(contractID.get());
