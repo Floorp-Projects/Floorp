@@ -372,7 +372,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             jsonschema.validate(data, schema)
         except Exception as e:
             self.exception("Error while validating PERFHERDER_DATA")
-            self.info(e)
+            self.info(str(e))
 
     def _artifact_perf_data(self, dest):
         src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor.json')
@@ -385,7 +385,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             copyfile(src, dest)
         except Exception as e:
             self.critical("Error copying results %s to upload dir %s" % (src, dest))
-            self.info(e)
+            self.info(str(e))
 
     def run_tests(self, args=None, **kw):
         """run raptor tests"""
