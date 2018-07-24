@@ -475,3 +475,17 @@ def enable_build_binast(target, milestone):
 
 set_define('JS_BUILD_BINAST', enable_build_binast)
 set_config('JS_BUILD_BINAST', enable_build_binast)
+
+
+# Experimental support for wasm code generation with Cranelift
+# ==============================================================
+js_option('--enable-cranelift',
+          help='Enable Cranelift code generator for wasm')
+
+@depends('--enable-cranelift')
+def enable_cranelift(value):
+    if value:
+        return True
+
+set_config('MOZ_WASM_CRANELIFT', enable_cranelift)
+set_define('MOZ_WASM_CRANELIFT', enable_cranelift)
