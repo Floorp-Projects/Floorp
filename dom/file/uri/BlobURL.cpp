@@ -206,17 +206,18 @@ BlobURL::EqualsInternal(nsIURI* aOther,
   }
 
   // Compare the member data that our base class knows about.
-  if (!mozilla::net::nsSimpleURI::EqualsInternal(otherUri, aRefHandlingMode)) {
-    *aResult = false;
-    return NS_OK;
-  }
+  *aResult = mozilla::net::nsSimpleURI::EqualsInternal(otherUri,
+                                                       aRefHandlingMode);
 
-  if (mPrincipal && otherUri->mPrincipal) {
-    // Both of us have mPrincipals. Compare them.
-    return mPrincipal->Equals(otherUri->mPrincipal, aResult);
+#ifdef DEBUG
+  // mPrincipal can be null if the blobURL has been revoked.
+  if (*aResult && mPrincipal && otherUri->mPrincipal) {
+    bool equal = false;
+    nsresult rv = mPrincipal->Equals(otherUri->mPrincipal, &equal);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && equal);
   }
-  // else, at least one of us lacks a principal; only equal if *both* lack it.
-  *aResult = (!mPrincipal && !otherUri->mPrincipal);
+#endif
+
   return NS_OK;
 }
 
