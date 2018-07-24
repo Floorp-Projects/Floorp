@@ -235,11 +235,11 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   if (asyncPaint) {
-    RefPtr<CapturedTiledPaintState> state = new CapturedTiledPaintState();
-    state->mCapture = backBuffer->mCapture;
-    state->mTarget = backBuffer->mBackBuffer;
-    state->mClients = std::move(backBuffer->mTextureClients);
-    PaintThread::Get()->PaintTiledContents(state);
+    RefPtr<PaintTask> task = new PaintTask();
+    task->mCapture = backBuffer->mCapture;
+    task->mTarget = backBuffer->mBackBuffer;
+    task->mClients = std::move(backBuffer->mTextureClients);
+    PaintThread::Get()->QueuePaintTask(task);
     mManager->SetQueuedAsyncPaints();
   } else {
     MOZ_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
