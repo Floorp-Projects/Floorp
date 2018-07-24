@@ -515,13 +515,13 @@ class MediaPipelineTest : public ::testing::Test {
       ASSERT_GE(p1_.GetAudioRtpCountSent(), 40);
       ASSERT_EQ(p1_.GetAudioRtpCountReceived(), p2_.GetAudioRtpCountSent());
       ASSERT_EQ(p1_.GetAudioRtpCountSent(), p2_.GetAudioRtpCountReceived());
-
-      // Calling ShutdownMedia_m on both pipelines does not stop the flow of
-      // RTCP. So, we might be off by one here.
-      ASSERT_LE(p2_.GetAudioRtcpCountReceived(), p1_.GetAudioRtcpCountSent());
-      ASSERT_GE(p2_.GetAudioRtcpCountReceived() + 1, p1_.GetAudioRtcpCountSent());
     }
 
+    // No RTCP packets should have been dropped, because we do not filter them.
+    // Calling ShutdownMedia_m on both pipelines does not stop the flow of
+    // RTCP. So, we might be off by one here.
+    ASSERT_LE(p2_.GetAudioRtcpCountReceived(), p1_.GetAudioRtcpCountSent());
+    ASSERT_GE(p2_.GetAudioRtcpCountReceived() + 1, p1_.GetAudioRtcpCountSent());
   }
 
   void TestAudioReceiverBundle(bool bundle_accepted,
@@ -588,89 +588,6 @@ TEST_F(MediaPipelineFilterTest, TestSSRCFilter) {
 #define RTCP_TYPEINFO(num_rrs, type, size) \
   0x80 + num_rrs, type, 0, size
 
-const unsigned char rtcp_sr_s16[] = {
-  // zero rrs, size 6 words
-  RTCP_TYPEINFO(0, MediaPipelineFilter::SENDER_REPORT_T, 6),
-  REPORT_FRAGMENT(16)
-};
-
-const unsigned char rtcp_sr_s16_r17[] = {
-  // one rr, size 12 words
-  RTCP_TYPEINFO(1, MediaPipelineFilter::SENDER_REPORT_T, 12),
-  REPORT_FRAGMENT(16),
-  REPORT_FRAGMENT(17)
-};
-
-const unsigned char unknown_type[] = {
-  RTCP_TYPEINFO(1, 222, 0)
-};
-
-TEST_F(MediaPipelineFilterTest, TestEmptyFilterReport0) {
-  MediaPipelineFilter filter;
-  ASSERT_FALSE(filter.FilterSenderReport(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReport0) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(16);
-  ASSERT_TRUE(filter.FilterSenderReport(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReport0PTTruncated) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(16);
-  const unsigned char data[] = {0x80};
-  ASSERT_FALSE(filter.FilterSenderReport(data, sizeof(data)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReport0CountTruncated) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(16);
-  const unsigned char* data = {};
-  ASSERT_FALSE(filter.FilterSenderReport(data, sizeof(data)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReport1SSRCTruncated) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(16);
-  const unsigned char sr[] = {
-    RTCP_TYPEINFO(1, MediaPipelineFilter::SENDER_REPORT_T, 12),
-    REPORT_FRAGMENT(16),
-    0,0,0
-  };
-  ASSERT_TRUE(filter.FilterSenderReport(sr, sizeof(sr)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReport1BigSSRC) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(0x01020304);
-  const unsigned char sr[] = {
-    RTCP_TYPEINFO(1, MediaPipelineFilter::SENDER_REPORT_T, 12),
-    SSRC(0x01020304),
-    REPORT_FRAGMENT(0x11121314)
-  };
-  ASSERT_TRUE(filter.FilterSenderReport(sr, sizeof(sr)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReportMatch) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(16);
-  ASSERT_TRUE(filter.FilterSenderReport(rtcp_sr_s16_r17,
-                                        sizeof(rtcp_sr_s16_r17)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterReportNoMatch) {
-  MediaPipelineFilter filter;
-  filter.AddRemoteSSRC(17);
-  ASSERT_FALSE(filter.FilterSenderReport(rtcp_sr_s16_r17,
-                                         sizeof(rtcp_sr_s16_r17)));
-}
-
-TEST_F(MediaPipelineFilterTest, TestFilterUnknownRTCPType) {
-  MediaPipelineFilter filter;
-  ASSERT_FALSE(filter.FilterSenderReport(unknown_type, sizeof(unknown_type)));
-}
-
 TEST_F(MediaPipelineFilterTest, TestCorrelatorFilter) {
   MediaPipelineFilter filter;
   filter.SetCorrelator(7777);
@@ -679,9 +596,6 @@ TEST_F(MediaPipelineFilterTest, TestCorrelatorFilter) {
   // This should also have resulted in the SSRC 16 being added to the filter
   ASSERT_TRUE(Filter(filter, 0, 16, 110));
   ASSERT_FALSE(Filter(filter, 0, 17, 110));
-
-  // rtcp_sr_s16 has 16 as an SSRC
-  ASSERT_TRUE(filter.FilterSenderReport(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilter) {
@@ -689,15 +603,6 @@ TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilter) {
   filter.AddUniquePT(110);
   ASSERT_TRUE(Filter(filter, 0, 555, 110));
   ASSERT_FALSE(Filter(filter, 0, 556, 111));
-}
-
-TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilterSSRCUpdate) {
-  MediaPipelineFilter filter;
-  filter.AddUniquePT(110);
-  ASSERT_TRUE(Filter(filter, 0, 16, 110));
-
-  // rtcp_sr_s16 has 16 as an SSRC
-  ASSERT_TRUE(filter.FilterSenderReport(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithCorrelator) {
@@ -752,8 +657,6 @@ TEST_F(MediaPipelineTest, TestAudioSendBundle) {
   ASSERT_GT(p1_.GetAudioRtpCountSent(), p2_.GetAudioRtpCountReceived());
   ASSERT_GT(p2_.GetAudioRtpCountReceived(), 40);
   ASSERT_GT(p1_.GetAudioRtcpCountSent(), 1);
-  ASSERT_GT(p1_.GetAudioRtcpCountSent(), p2_.GetAudioRtcpCountReceived());
-  ASSERT_GT(p2_.GetAudioRtcpCountReceived(), 0);
 }
 
 TEST_F(MediaPipelineTest, TestAudioSendEmptyBundleFilter) {

@@ -1459,6 +1459,8 @@ nsIDocument::nsIDocument()
     mParserAborted(false),
     mReportedUseCounters(false),
     mHasReportedShadowDOMUsage(false),
+    mDocTreeHadAudibleMedia(false),
+    mDocTreeHadPlayRevoked(false),
 #ifdef DEBUG
     mWillReparent(false),
 #endif
@@ -1635,6 +1637,14 @@ nsDocument::~nsDocument()
 
       if (MOZ_UNLIKELY(mMathMLEnabled)) {
         ScalarAdd(Telemetry::ScalarID::MATHML_DOC_COUNT, 1);
+      }
+
+      ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_COUNT, 1);
+      if (mDocTreeHadAudibleMedia) {
+        ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_MEDIA_COUNT, 1);
+      }
+      if (mDocTreeHadPlayRevoked) {
+        ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_PLAY_REVOKED_COUNT, 1);
       }
     }
   }
@@ -12486,6 +12496,24 @@ nsIDocument::NotifyUserGestureActivation()
             ("Document %p has been activated by user.", this));
     doc->mUserGestureActivated = true;
     doc = doc->GetSameTypeParentDocument();
+  }
+}
+
+void
+nsIDocument::SetDocTreeHadAudibleMedia()
+{
+  nsIDocument* topLevelDoc = GetTopLevelContentDocument();
+  if (topLevelDoc) {
+    topLevelDoc->mDocTreeHadAudibleMedia = true;
+  }
+}
+
+void
+nsIDocument::SetDocTreeHadPlayRevoked()
+{
+  nsIDocument* topLevelDoc = GetTopLevelContentDocument();
+  if (topLevelDoc) {
+    topLevelDoc->mDocTreeHadPlayRevoked = true;
   }
 }
 

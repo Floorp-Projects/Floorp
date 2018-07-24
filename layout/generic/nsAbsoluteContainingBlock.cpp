@@ -501,12 +501,13 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   AlignJustifyFlags flags = AlignJustifyFlags::eIgnoreAutoMargins;
   uint16_t alignConst =
     aPlaceholderContainer->CSSAlignmentForAbsPosChild(aKidReflowInput, pcAxis);
-  // XXXdholbert: Handle <overflow-position> in bug 1311892 (by conditionally
-  // setting AlignJustifyFlags::eOverflowSafe in |flags|.)  For now, we behave
-  // as if "unsafe" was the specified value (which is basically equivalent to
-  // the default behavior, when no value is specified -- though the default
-  // behavior also has some [at-risk] extra nuance about scroll containers...)
-  // For now we ignore & strip off <overflow-position> bits, until bug 1311892.
+  // If the safe bit in alignConst is set, set the safe flag in |flags|.
+  // Note: If no <overflow-position> is specified, we behave as 'unsafe'.
+  // This doesn't quite match the css-align spec, which has an [at-risk]
+  // "smart default" behavior with some extra nuance about scroll containers.
+  if (alignConst & NS_STYLE_ALIGN_SAFE) {
+    flags |= AlignJustifyFlags::eOverflowSafe;
+  }
   alignConst &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
   // Find out if placeholder-container & the OOF child have the same start-sides

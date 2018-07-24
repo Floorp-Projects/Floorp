@@ -94,33 +94,5 @@ void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
   correlator_ = filter_update.correlator_;
 }
 
-bool
-MediaPipelineFilter::FilterSenderReport(const unsigned char* data,
-                                        size_t len) const {
-
-  if (!data) {
-    return false;
-  }
-
-  if (len < FIRST_SSRC_OFFSET + 4) {
-    return false;
-  }
-
-  uint8_t payload_type = data[PT_OFFSET];
-
-  if (payload_type != SENDER_REPORT_T) {
-    // Not a sender report, let it through
-    return true;
-  }
-
-  uint32_t ssrc = 0;
-  ssrc += (uint32_t)data[FIRST_SSRC_OFFSET] << 24;
-  ssrc += (uint32_t)data[FIRST_SSRC_OFFSET + 1] << 16;
-  ssrc += (uint32_t)data[FIRST_SSRC_OFFSET + 2] << 8;
-  ssrc += (uint32_t)data[FIRST_SSRC_OFFSET + 3];
-
-  return !!remote_ssrc_set_.count(ssrc);
-}
-
 } // end namespace mozilla
 

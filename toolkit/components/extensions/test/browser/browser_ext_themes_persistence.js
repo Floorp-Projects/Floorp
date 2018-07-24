@@ -3,12 +3,6 @@
 // This test checks whether applied WebExtension themes are persisted and applied
 // on newly opened windows.
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_multiple_windows() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

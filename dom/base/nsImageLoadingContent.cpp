@@ -447,13 +447,12 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
     return;
   }
 
-  nsresult rv = NS_OK;
   RefPtr<imgRequestProxy> currentReq;
   if (mCurrentRequest) {
     // Scripted observers may not belong to the same document as us, so when we
     // create the imgRequestProxy, we shouldn't use any. This allows the request
     // to dispatch notifications from the correct scheduler group.
-    rv = mCurrentRequest->Clone(aObserver, nullptr, getter_AddRefs(currentReq));
+    nsresult rv = mCurrentRequest->Clone(aObserver, nullptr, getter_AddRefs(currentReq));
     if (NS_FAILED(rv)) {
       return;
     }
@@ -462,7 +461,7 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
   RefPtr<imgRequestProxy> pendingReq;
   if (mPendingRequest) {
     // See above for why we don't use the loading document.
-    rv = mPendingRequest->Clone(aObserver, nullptr, getter_AddRefs(pendingReq));
+    nsresult rv = mPendingRequest->Clone(aObserver, nullptr, getter_AddRefs(pendingReq));
     if (NS_FAILED(rv)) {
       mCurrentRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
       return;
