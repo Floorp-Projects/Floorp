@@ -218,15 +218,7 @@ public:
     return DisplayItemEntry { next, DisplayItemEntryType::ITEM };
   }
 
-  nsDisplayItem* GetNext()
-  {
-    // This function is only supposed to be called if there are no markers set.
-    // Breaking this invariant can potentially break effect flattening and/or
-    // display item merging.
-    MOZ_ASSERT(mMarkers.empty());
-
-    return FlattenedDisplayItemIterator::GetNext();
-  }
+  nsDisplayItem* GetNext();
 
   bool HasNext() const
   {
@@ -1748,6 +1740,49 @@ protected:
   };
   CachedScrollMetadata mCachedScrollMetadata;
 };
+
+nsDisplayItem*
+FLBDisplayItemIterator::GetNext()
+{
+  // This function is only supposed to be called if there are no markers set.
+  // Breaking this invariant can potentially break effect flattening and/or
+  // display item merging.
+  MOZ_ASSERT(mMarkers.empty());
+
+  nsDisplayItem* next = mNext;
+
+  // Advance mNext to the following item
+  if (next) {
+    nsDisplayItem* peek = next->GetAbove();
+
+    // Peek ahead to the next item and see if it can be merged with the
+    // current item.
+    if (peek && next->CanMerge(peek)) {
+      // Create a list of consecutive items that can be merged together.
+      AutoTArray<nsDisplayItem*, 2> mergedItems { next, peek };
+      while ((peek = peek->GetAbove())) {
+        if (!next->CanMerge(peek)) {
+          break;
+        }
+
+        mergedItems.AppendElement(peek);
+      }
+
+      // We have items that can be merged together.
+      // Merge them into a temporary item and process that item immediately.
+      MOZ_ASSERT(mergedItems.Length() > 1);
+      next = mState->mBuilder->MergeItems(mergedItems);
+    }
+
+    // |mNext| is either the first item that could not be merged with |next|,
+    // or a nullptr.
+    mNext = peek;
+
+    ResolveFlattening();
+  }
+
+  return next;
+}
 
 bool
 FLBDisplayItemIterator::NextItemWantsInactiveLayer()
@@ -4590,32 +4625,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         MOZ_ASSERT(selectedLayer);
         selectedLayer->AccumulateHitTestInfo(this, hitTestInfo, transformNode);
         continue;
-      }
-    }
-
-    if (marker == DisplayItemEntryType::ITEM) {
-      // Peek ahead to the next item and see if it can be merged with the
-      // current item.
-      nsDisplayItem* peek = iter.PeekNext();
-      if (peek && item->CanMerge(peek)) {
-        // Create a list of consecutive items that can be merged together.
-        AutoTArray<nsDisplayItem*, 2> mergedItems { item };
-        while ((peek = iter.PeekNext())) {
-          if (!item->CanMerge(peek)) {
-            break;
-          }
-
-          mergedItems.AppendElement(peek);
-
-          // Move the iterator forward since we will merge this item.
-          iter.GetNext();
-        }
-
-        // We have items that can be merged together.
-        // Merge them into a temporary item and process that item immediately.
-        MOZ_ASSERT(mergedItems.Length() > 1);
-        item = mBuilder->MergeItems(mergedItems);
-        MOZ_ASSERT(item && itemType == item->GetType());
       }
     }
 
