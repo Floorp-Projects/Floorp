@@ -124,8 +124,8 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 
       check_unset(...FOLDER_ONLY_PROPS);
 
-      let itemURI = uri(aNode.uri);
-      let expectedCharset = await PlacesUtils.getCharsetForURI(itemURI);
+      let pageInfo = await PlacesUtils.history.fetch(aNode.uri, {includeAnnotations: true});
+      let expectedCharset = pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO);
       if (expectedCharset)
         Assert.equal(aItem.charset, expectedCharset);
       else

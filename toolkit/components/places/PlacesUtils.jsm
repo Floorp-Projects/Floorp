@@ -1483,26 +1483,6 @@ var PlacesUtils = {
   },
 
   /**
-   * Gets the last saved character-set for a URI.
-   *
-   * @param aURI nsIURI
-   * @return {Promise}
-   * @resolve a character-set or null.
-   */
-  getCharsetForURI: function PU_getCharsetForURI(aURI) {
-    return new Promise(resolve => {
-      Services.tm.dispatchToMainThread(function() {
-        let charset = null;
-        try {
-          charset = PlacesUtils.annotations.getPageAnnotation(aURI,
-                                                              PlacesUtils.CHARSET_ANNO);
-        } catch (ex) { }
-        resolve(charset);
-      });
-    });
-  },
-
-  /**
    * Gets favicon data for a given page url.
    *
    * @param aPageUrl url of the page to look favicon for.
