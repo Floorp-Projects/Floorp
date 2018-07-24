@@ -1,0 +1,12 @@
+[package]
+name = "bench-collections-gtest"
+version = "0.1.0"
+license = "MPL-2.0"
+description = "Benchmarks for various collections"
+
+[dependencies]
+fnv = "1.0"
+fxhash = "0.2.1"
+
+[lib]
+path = "bench.rs"
