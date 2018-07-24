@@ -5672,15 +5672,15 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                *style, CSSPseudoElementType::before, aItems);
 
     FlattenedChildIterator iter(aContent);
+    InsertionPoint insertion(aParentFrame, aContent);
+    MOZ_ASSERT(!aAnonChildren,
+               "display: contents can't generate NAC");
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      if (!ShouldCreateItemsForChild(aState, child, aParentFrame)) {
-        continue;
-      }
-
-      RefPtr<ComputedStyle> childContext = ResolveComputedStyle(child);
-      DoAddFrameConstructionItems(aState, child, childContext,
-                                  aSuppressWhiteSpaceOptimizations,
-                                  aParentFrame, aAnonChildren, aItems);
+      AddFrameConstructionItems(aState,
+                                child,
+                                aSuppressWhiteSpaceOptimizations,
+                                insertion,
+                                aItems);
     }
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
