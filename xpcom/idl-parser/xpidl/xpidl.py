@@ -132,6 +132,9 @@ class Builtin(object):
         return self.nativename.endswith('*')
 
     def nativeType(self, calltype, shared=False, const=False):
+        if self.name in ["string", "wstring"] and calltype == 'element':
+            raise IDLError("Use string class types for string Sequence elements", self.location)
+
         if const:
             print >>sys.stderr, IDLError(
                 "[const] doesn't make sense on builtin types.", self.location, warning=True)
@@ -409,6 +412,9 @@ class Typedef(object):
         parent.setName(self)
         self.realtype = parent.getName(self.type, self.location)
 
+        if not isinstance(self.realtype, (Builtin, Native, Typedef)):
+            raise IDLError("Unsupported typedef target type", self.location)
+
     def isScriptable(self):
         return self.realtype.isScriptable()
 
@@ -452,6 +458,8 @@ class Forward(object):
         return True
 
     def nativeType(self, calltype):
+        if calltype == 'element':
+            return 'RefPtr<%s>' % self.name
         return "%s *%s" % (self.name, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
@@ -534,7 +542,7 @@ class Native(object):
     def nativeType(self, calltype, const=False, shared=False):
         if shared:
             if calltype != 'out':
-                raise IDLError("[shared] only applies to out parameters.")
+                raise IDLError("[shared] only applies to out parameters.", self.location)
             const = True
 
         if isinstance(self.nativename, tuple):
@@ -548,6 +556,21 @@ class Native(object):
         # 'in' nsid parameters should be made 'const'
         if self.specialtype == 'nsid' and calltype == 'in':
             const = True
+
+        if calltype == 'element':
+            if self.isRef(calltype):
+                raise IDLError("[ref] qualified type unsupported in Sequence<T>", self.location)
+
+            # Promises should be held in RefPtr<T> in Sequence<T>s
+            if self.specialtype == 'promise':
+                return 'RefPtr<mozilla::dom::Promise>'
+
+            # We don't support nsIDPtr, in Sequence<T> currently, although
+            # this or support for Sequence<nsID> will be needed to replace
+            # [array] completely.
+            if self.specialtype == 'nsid':
+                raise IDLError("Sequence<nsIDPtr> not yet supported. "
+                               "File an XPConnect bug if you need it.", self.location)
 
         if self.isRef(calltype):
             m = '& '  # [ref] is always passed with a single indirection
@@ -575,11 +598,11 @@ class Native(object):
         if self.specialtype == 'nsid':
             return prefix + self.nativename
         if self.specialtype in ['cstring', 'utf8string']:
-            if calltype == 'element':
+            if 'element' in calltype:
                 return '::nsstring::nsCString'
             return prefix + '::nsstring::nsACString'
         if self.specialtype in ['astring', 'domstring']:
-            if calltype == 'element':
+            if 'element' in calltype:
                 return '::nsstring::nsString'
             return prefix + '::nsstring::nsAString'
         if self.nativename == 'void':
@@ -627,6 +650,8 @@ class WebIDL(object):
         return True  # All DOM objects are script exposed.
 
     def nativeType(self, calltype):
+        if calltype == 'element':
+            return 'RefPtr<%s>' % self.native
         return "%s *%s" % (self.native, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
@@ -727,6 +752,8 @@ class Interface(object):
         return True
 
     def nativeType(self, calltype, const=False):
+        if calltype == 'element':
+            return 'RefPtr<%s>' % self.name
         return "%s%s *%s" % ('const ' if const else '', self.name,
                              '*' if 'out' in calltype else '')
 
@@ -752,7 +779,7 @@ class Interface(object):
         while name not in iface.namemap and iface is not None:
             iface = self.idl.getName(TypeId(self.base), self.location)
         if iface is None:
-            raise IDLError("cannot find symbol '%s'" % name)
+            raise IDLError("cannot find symbol '%s'" % name, self.location)
         c = iface.namemap.get(name, location)
         if c.kind != 'const':
             raise IDLError("symbol '%s' is not a constant", c.location)
@@ -1227,24 +1254,28 @@ class Param(object):
 class Array(object):
     def __init__(self, basetype):
         self.type = basetype
+        self.location = self.type.location
 
     def isScriptable(self):
         return self.type.isScriptable()
 
     def nativeType(self, calltype, const=False):
+        if 'element' in calltype:
+            raise IDLError("nested [array] unsupported", self.location)
+
         # For legacy reasons, we have to add a 'const ' to builtin pointer array
         # types. (`[array] in string` and `[array] in wstring` parameters)
         if calltype == 'in' and isinstance(self.type, Builtin) and self.type.isPointer():
             const = True
 
         return "%s%s*%s" % ('const ' if const else '',
-                            self.type.nativeType('element'),
+                            self.type.nativeType('legacyelement'),
                             '*' if 'out' in calltype else '')
 
     def rustType(self, calltype, const=False):
         return "%s%s%s" % ('*mut ' if 'out' in calltype else '',
                            '*const ' if const else '*mut ',
-                           self.type.rustType('element'))
+                           self.type.rustType('legacyelement'))
 
 
 class Sequence(object):
@@ -1265,6 +1296,9 @@ class Sequence(object):
         return self.type.isScriptable()
 
     def nativeType(self, calltype):
+        if calltype == 'legacyelement':
+            raise IDLError("[array] Sequence<T> is unsupported", self.location)
+
         base = 'nsTArray<%s>' % self.type.nativeType('element')
         if 'out' in calltype:
             return '%s& ' % base
@@ -1274,6 +1308,8 @@ class Sequence(object):
             return base
 
     def rustType(self, calltype):
+        # NOTE: To add Rust support, ensure 'element' is handled correctly in
+        # all rustType callees.
         raise RustNoncompat("Sequence<...> types")
 
 
