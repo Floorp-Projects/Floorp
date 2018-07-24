@@ -1693,7 +1693,8 @@ static Result<Pref*, nsresult>
 pref_LookupForModify(const char* aPrefName,
                      const std::function<bool(const PrefWrapper&)>& aCheckFn)
 {
-  Maybe<PrefWrapper> wrapper = pref_Lookup(aPrefName, /* includeTypeNone */ true);
+  Maybe<PrefWrapper> wrapper =
+    pref_Lookup(aPrefName, /* includeTypeNone */ true);
   if (wrapper.isNothing()) {
     return Err(NS_ERROR_INVALID_ARG);
   }
@@ -1756,8 +1757,8 @@ pref_SetPref(const char* aPrefName,
   bool valueChanged = false;
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
-    rv = pref->SetDefaultValue(
-      aType, aValue, aIsSticky, aIsLocked, &valueChanged);
+    rv =
+      pref->SetDefaultValue(aType, aValue, aIsSticky, aIsLocked, &valueChanged);
   } else {
     MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
     rv = pref->SetUserValue(aType, aValue, aFromInit, &valueChanged);
@@ -4778,6 +4779,41 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
   return NS_OK;
 }
 
+// These preference getter wrappers allow us to look up the value for static
+// preferences based on their native types, rather than manually mapping them to
+// the appropriate Preferences::Get* functions.
+template<typename T>
+static T
+GetPref(const char* aName, T aDefaultValue);
+
+template<>
+bool
+GetPref<bool>(const char* aName, bool aDefaultValue)
+{
+  return Preferences::GetBool(aName, aDefaultValue);
+}
+
+template<>
+int32_t
+GetPref<int32_t>(const char* aName, int32_t aDefaultValue)
+{
+  return Preferences::GetInt(aName, aDefaultValue);
+}
+
+template<>
+uint32_t
+GetPref<uint32_t>(const char* aName, uint32_t aDefaultValue)
+{
+  return Preferences::GetInt(aName, aDefaultValue);
+}
+
+template<>
+float MOZ_MAYBE_UNUSED
+GetPref<float>(const char* aName, float aDefaultValue)
+{
+  return Preferences::GetFloat(aName, aDefaultValue);
+}
+
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
 /* static */ Result<Ok, const char*>
@@ -4805,6 +4841,21 @@ Preferences::InitInitialObjects(bool aIsStartup)
         NotifyCallbacks(pref.Name(), PrefWrapper(pref));
       }
     }
+
+#ifdef DEBUG
+    // Check that all varcache preferences match their current values. This can
+    // currently fail if the default value of a static varcache preference is
+    // changed in a preference file or at runtime, rather than in
+    // StaticPrefList.h.
+
+#define PREF(name, cpp_type, value)
+#define VARCACHE_PREF(name, id, cpp_type, value)                               \
+  MOZ_ASSERT(GetPref<StripAtomic<cpp_type>>(name, value) == StaticPrefs::id(), \
+             "Incorrect cached value for " name);
+#include "mozilla/StaticPrefList.h"
+#undef PREF
+#undef VARCACHE_PREF
+#endif
 
     return Ok();
   }
