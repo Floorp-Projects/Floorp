@@ -1595,7 +1595,7 @@
                     onoverflow="this.setAttribute('textoverflow', 'true');"
                     onunderflow="this.removeAttribute('textoverflow');"
                     flex="1">
-            <xul:label class="tab-text tab-label"
+            <xul:label class="tab-text tab-label" anonid="tab-label"
                        xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
                        role="presentation"/>
           </xul:hbox>
