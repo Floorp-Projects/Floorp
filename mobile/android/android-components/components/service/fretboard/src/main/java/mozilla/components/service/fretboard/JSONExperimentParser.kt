@@ -5,7 +5,6 @@
 package mozilla.components.service.fretboard
 
 import mozilla.components.support.ktx.kotlin.putIfNotNull
-import mozilla.components.support.ktx.kotlin.toJsonArray
 import mozilla.components.support.ktx.kotlin.toList
 import mozilla.components.support.ktx.kotlin.tryGetInt
 import mozilla.components.support.ktx.kotlin.tryGetLong
@@ -81,7 +80,7 @@ class JSONExperimentParser {
         matchObject.putIfNotNull(DEVICE_KEY, experiment.match?.device)
         matchObject.putIfNotNull(LANG_KEY, experiment.match?.language)
         matchObject.putIfNotNull(MANUFACTURER_KEY, experiment.match?.manufacturer)
-        matchObject.putIfNotNull(REGIONS_KEY, experiment.match?.regions?.toJsonArray())
+        matchObject.putIfNotNull(REGIONS_KEY, experiment.match?.regions?.let { JSONArray(it) })
         matchObject.putIfNotNull(RELEASE_CHANNEL_KEY, experiment.match?.releaseChannel)
         matchObject.putIfNotNull(VERSION_KEY, experiment.match?.version)
         return matchObject
@@ -110,7 +109,7 @@ class JSONExperimentParser {
         for (key in payload.getKeys()) {
             val value = payload.get(key)
             when (value) {
-                is List<*> -> jsonObject.put(key, value.toJsonArray())
+                is List<*> -> jsonObject.put(key, JSONArray(value))
                 else -> jsonObject.put(key, value)
             }
         }
