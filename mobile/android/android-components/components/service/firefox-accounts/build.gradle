@@ -72,7 +72,7 @@ ext.jnaUnzip = { task, source, target ->
         into "$jniOutputDir/$target"
     }
 }
-task unzipJnaArm(type: Copy) { t -> jnaUnzip(t, "android-armv7", "armeabi") }
+task unzipJnaArm(type: Copy) { t -> jnaUnzip(t, "android-armv7", "armeabi-v7a") }
 task unzipJnaArm64(type: Copy) { t -> jnaUnzip(t, "android-aarch64", "arm64") }
 task unzipJnaX86(type: Copy) { t -> jnaUnzip(t, "android-x86", "x86") }
 
