@@ -137,7 +137,10 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     false, 0 },
   { "ui.systemUsesDarkTheme",
     eIntID_SystemUsesDarkTheme,
-    false, 0 }
+    false, 0 },
+  { "ui.prefersReducedMotion",
+    eIntID_PrefersReducedMotion,
+    false, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

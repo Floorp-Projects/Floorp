@@ -44,7 +44,7 @@ class PannerNodeEngine final : public AudioNodeEngine
 public:
   explicit PannerNodeEngine(AudioNode* aNode,
                             AudioDestinationNode* aDestination,
-                            const AudioListenerEngine* aListenerEngine)
+                            AudioListenerEngine* aListenerEngine)
     : AudioNodeEngine(aNode)
     , mDestination(aDestination->Stream())
     , mListenerEngine(aListenerEngine)
@@ -256,9 +256,7 @@ public:
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
-  // This is set in the ctor, and guaranteed to live longer than this engine:
-  // its lifetime is the same as the AudioContext itself.
-  const AudioListenerEngine* mListenerEngine;
+  RefPtr<AudioListenerEngine> mListenerEngine;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
   PanningModelFunction mPanningModelFunction;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
