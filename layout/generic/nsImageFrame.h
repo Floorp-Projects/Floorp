@@ -149,8 +149,8 @@ public:
    * should get an image frame.  Note that this method is only used by the
    * frame constructor; it's only here because it uses gIconLoad for now.
    */
-  static bool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
-                                        ComputedStyle* aComputedStyle);
+  static bool ShouldCreateImageFrameFor(const mozilla::dom::Element& aElement,
+                                        ComputedStyle& aStyle);
 
   ImgDrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
