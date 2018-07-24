@@ -1063,9 +1063,8 @@ class RecursiveMakeBackend(CommonBackend):
         for p in ('Makefile', 'backend.mk', '.deps/.mkdir.done'):
             build_files.add_optional_exists(p)
 
-        for idl in manager.idls.values():
-            self._install_manifests['dist_include'].add_optional_exists('%s.h'
-                % idl['root'])
+        for stem in manager.idl_stems():
+            self._install_manifests['dist_include'].add_optional_exists('%s.h' % stem)
 
         for module in manager.modules:
             build_files.add_optional_exists(mozpath.join('.deps',
@@ -1077,10 +1076,10 @@ class RecursiveMakeBackend(CommonBackend):
         mk = Makefile()
         all_directories = set()
 
-        for module in xpt_modules:
-            sources, directories = modules[module]
-            all_directories |= directories
-            deps = sorted(sources)
+        for module_name in xpt_modules:
+            module = manager.modules[module_name]
+            all_directories |= module.directories
+            deps = sorted(module.idl_files)
 
             # It may seem strange to have the .idl files listed as
             # prerequisites both here and in the auto-generated .pp files.
@@ -1093,10 +1092,9 @@ class RecursiveMakeBackend(CommonBackend):
             # reference to the new .idl. Since the new .idl presumably has
             # an mtime newer than the .xpt, it will trigger xpt generation.
 
-            mk.add_statement('%s_deps = %s' % (module, ' '.join(d.full_path
-                                                                for d in deps)))
+            mk.add_statement('%s_deps = %s' % (module_name, ' '.join(deps)))
 
-            build_files.add_optional_exists('%s.xpt' % module)
+            build_files.add_optional_exists('%s.xpt' % module_name)
 
         mk.add_statement('all_idl_dirs = %s' % ' '.join(sorted(all_directories)))
 
