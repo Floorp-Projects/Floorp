@@ -31,6 +31,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
 var makeDebugger = require("devtools/server/actors/utils/make-debugger");
+const Debugger = require("Debugger");
 const InspectorUtils = require("InspectorUtils");
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
@@ -247,6 +248,8 @@ const browsingContextTargetPrototype = {
       noTabReconfigureOnClose: true,
       // Supports the logInPage request.
       logInPage: true,
+      // Supports requests related to rewinding.
+      canRewind: Debugger.allDebuggersCanRewind(),
     };
 
     this._workerTargetActorList = null;
