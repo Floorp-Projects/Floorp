@@ -3,6 +3,15 @@
 yue{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"協調世界時間"}
+        }
+        "Europe:Dublin"{
+            ld{"愛爾蘭標準時間"}
+        }
+        "Europe:London"{
+            ld{"英國夏令時間"}
+        }
         "meta:Acre"{
             ld{"艾克夏令時間"}
             lg{"艾克時間"}

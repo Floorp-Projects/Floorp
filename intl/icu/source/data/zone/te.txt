@@ -3,6 +3,15 @@
 te{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"సమన్వయ సార్వజనీన సమయం"}
+        }
+        "Europe:Dublin"{
+            ld{"ఐరిష్ ప్రామాణిక సమయం"}
+        }
+        "Europe:London"{
+            ld{"బ్రిటీష్ వేసవి సమయం"}
+        }
         "meta:Acre"{
             ld{"ఏకర్ వేసవి సమయం"}
             lg{"ఏకర్ సమయం"}

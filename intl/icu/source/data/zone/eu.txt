@@ -3,6 +3,15 @@
 eu{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Ordu Unibertsal Koordinatua"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlandako ordu estandarra"}
+        }
+        "Europe:London"{
+            ld{"Londresko udako ordua"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistango ordua"}
         }

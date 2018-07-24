@@ -3,6 +3,15 @@
 mr{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"समन्वित वैश्विक वेळ"}
+        }
+        "Europe:Dublin"{
+            ld{"आयरिश प्रमाण वेळ"}
+        }
+        "Europe:London"{
+            ld{"ब्रिटिश उन्हाळी वेळ"}
+        }
         "meta:Acre"{
             ld{"ऐकर ग्रीष्म वेळ"}
             lg{"एकर वेळ"}

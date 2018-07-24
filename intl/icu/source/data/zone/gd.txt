@@ -3,6 +3,22 @@
 gd{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Àm Uile-choitcheann Co-òrdanaichte"}
+        }
+        "Europe:Dublin"{
+            ld{"Bun-àm na h-Èireann"}
+            sd{"TSÈ (Èirinn)"}
+        }
+        "Europe:London"{
+            ld{"Tìde samhraidh Bhreatainn"}
+            sd{"TSB"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Acre"{
             ld{"Tìde samhraidh Acre"}
             lg{"Àm Acre"}

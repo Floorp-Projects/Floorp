@@ -3,6 +3,12 @@
 dz{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"ཨཱ་ཡརིཤ་བྱཱར་དུས་ཆུ་ཚོད"}
+        }
+        "Europe:London"{
+            ld{"བྲཱི་ཊིཤ་བྱཱར་དུས་ཆུ་ཚོད"}
+        }
         "meta:Afghanistan"{
             ls{"ཨཕ་ག་ནི་ས྄ཏཱནཆུ་ཚོད"}
         }

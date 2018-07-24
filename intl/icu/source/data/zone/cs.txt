@@ -3,6 +3,21 @@
 cs{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinovaný světový čas"}
+            ss{"UTC"}
+        }
+        "Europe:Dublin"{
+            ld{"Irský letní čas"}
+        }
+        "Europe:London"{
+            ld{"Britský letní čas"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Acre"{
             ld{"Acrejský letní čas"}
             lg{"Acrejský čas"}

@@ -3,6 +3,15 @@
 bs{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinirano svjetsko vrijeme"}
+        }
+        "Europe:Dublin"{
+            ld{"Irsko standardno vrijeme"}
+        }
+        "Europe:London"{
+            ld{"Britansko ljetno vrijeme"}
+        }
         "meta:Acre"{
             ld{"Acre letnje računanje vremena"}
             lg{"Acre vreme"}

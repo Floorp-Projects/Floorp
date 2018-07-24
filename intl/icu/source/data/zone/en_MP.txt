@@ -3,6 +3,11 @@
 en_MP{
     Version{"2.1.38.69"}
     zoneStrings{
+        "Pacific:Honolulu"{
+            sd{"∅∅∅"}
+            sg{"∅∅∅"}
+            ss{"∅∅∅"}
+        }
         "meta:Alaska"{
             sd{"∅∅∅"}
             sg{"∅∅∅"}

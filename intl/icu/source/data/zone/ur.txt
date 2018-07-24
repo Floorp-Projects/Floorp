@@ -3,6 +3,15 @@
 ur{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"کوآرڈینیٹڈ یونیورسل ٹائم"}
+        }
+        "Europe:Dublin"{
+            ld{"آئرش اسٹینڈرڈ ٹائم"}
+        }
+        "Europe:London"{
+            ld{"برٹش سمر ٹائم"}
+        }
         "meta:Afghanistan"{
             ls{"افغانستان کا وقت"}
         }

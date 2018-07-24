@@ -3,6 +3,15 @@
 lt{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"pasaulio suderintasis laikas"}
+        }
+        "Europe:Dublin"{
+            ld{"Airijos vasaros laikas"}
+        }
+        "Europe:London"{
+            ld{"Britanijos vasaros laikas"}
+        }
         "meta:Acre"{
             ld{"Ako vasaros laikas"}
             lg{"Ako laikas"}

@@ -3,6 +3,15 @@
 gu{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"સંકલિત યુનિવર્સલ સમય"}
+        }
+        "Europe:Dublin"{
+            ld{"આઈરિશ માનક સમય"}
+        }
+        "Europe:London"{
+            ld{"બ્રિટિશ ગ્રીષ્મ સમય"}
+        }
         "meta:Acre"{
             ld{"એકર ગ્રીષ્મ સમય"}
             lg{"એકર સમય"}

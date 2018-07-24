@@ -3,6 +3,12 @@
 fy{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Ierse simmertiid"}
+        }
+        "Europe:London"{
+            ld{"Britse simmertiid"}
+        }
         "meta:Acre"{
             ld{"Acre-simmertiid"}
             lg{"Acre-tiid"}

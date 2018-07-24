@@ -3,6 +3,15 @@
 ps{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"همغږۍ نړیواله موده"}
+        }
+        "Europe:Dublin"{
+            ld{"ایراني معیاري وخ"}
+        }
+        "Europe:London"{
+            ld{"د انګلستان سمر وخت"}
+        }
         "meta:Afghanistan"{
             ls{"افغانستان وخت"}
         }
