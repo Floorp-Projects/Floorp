@@ -7,9 +7,7 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.SwitchPreference
-import android.widget.RadioButton
 import org.mozilla.focus.R
-import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
@@ -18,6 +16,8 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.privacy_security_settings)
+
+        updateStealthToggleAvailability()
     }
 
     override fun onResume() {
@@ -30,8 +30,7 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         updater.updateTitle(R.string.preference_privacy_and_security_header)
         updater.updateIcon(R.drawable.ic_back)
     }
-
-
+    
     override fun onPause() {
         preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
         super.onPause()
@@ -39,18 +38,19 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+        updateStealthToggleAvailability()
+    }
 
-        if (key == resources.getString(R.string.pref_key_biometric)) {
-            val switch =  preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreference
-            if (sharedPreferences.getBoolean(resources.getString(R.string.pref_key_biometric), false)) {
-                sharedPreferences.edit().putBoolean(resources.getString(R.string.pref_key_secure), true).apply()
-                // Disable the stealth switch
-                switch.isChecked = true
-                switch.isEnabled = false
-            } else {
-                // Enable the stealth switch
-                switch.isEnabled = true
-            }
+    fun updateStealthToggleAvailability() {
+        val switch =  preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreference
+        if (preferenceManager.sharedPreferences.getBoolean(resources.getString(R.string.pref_key_biometric), false)) {
+            preferenceManager.sharedPreferences.edit().putBoolean(resources.getString(R.string.pref_key_secure), true).apply()
+            // Disable the stealth switch
+            switch.isChecked = true
+            switch.isEnabled = false
+        } else {
+            // Enable the stealth switch
+            switch.isEnabled = true
         }
     }
 

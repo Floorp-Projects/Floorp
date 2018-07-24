@@ -65,7 +65,6 @@ class BiometricAuthenticationHandler(
             throw RuntimeException(err)
         }
 
-
         if (initCipher(defaultCipher, DEFAULT_KEY_NAME)) {
             cryptoObject = FingerprintManagerCompat.CryptoObject(defaultCipher)
         }
