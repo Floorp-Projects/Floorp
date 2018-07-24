@@ -1206,7 +1206,7 @@ class Param(object):
     def resolve(self, method):
         self.realtype = method.iface.idl.getName(self.type, self.location)
         if self.array:
-            self.realtype = Array(self.realtype)
+            self.realtype = LegacyArray(self.realtype)
         if (self.null is not None and
                 getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Null' attribute can only be used on DOMString",
@@ -1251,7 +1251,7 @@ class Param(object):
                                self.name)
 
 
-class Array(object):
+class LegacyArray(object):
     def __init__(self, basetype):
         self.type = basetype
         self.location = self.type.location

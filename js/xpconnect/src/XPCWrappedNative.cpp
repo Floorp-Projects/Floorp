@@ -1258,7 +1258,7 @@ CallMethodHelper::GetArraySizeFromParam(const nsXPTType& type,
                                         HandleValue maybeArray,
                                         uint32_t* result)
 {
-    if (type.Tag() != nsXPTType::T_ARRAY &&
+    if (type.Tag() != nsXPTType::T_LEGACY_ARRAY &&
         type.Tag() != nsXPTType::T_PSTRING_SIZE_IS &&
         type.Tag() != nsXPTType::T_PWSTRING_SIZE_IS) {
         *result = 0;
@@ -1687,7 +1687,7 @@ TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
         for (uint32_t i = 0; i < sequence->Length(); ++i) {
             TraceParam(aTrc, elty.ElementPtr(sequence->Elements(), i), elty);
         }
-    } else if (aType.Tag() == nsXPTType::T_ARRAY && *(void**)aVal) {
+    } else if (aType.Tag() == nsXPTType::T_LEGACY_ARRAY && *(void**)aVal) {
         const nsXPTType& elty = aType.ArrayElementType();
 
         for (uint32_t i = 0; i < aArrayLen; ++i) {
