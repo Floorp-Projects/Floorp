@@ -3050,7 +3050,7 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 //     value : char[16_t]** (free)
 //   TD_INTERFACE_TYPE, TD_INTERFACE_IS_TYPE
 //     value : nsISupports** (release)
-//   TD_ARRAY (NOTE: aArrayLen should be passed)
+//   TD_LEGACY_ARRAY (NOTE: aArrayLen should be passed)
 //     value : void** (cleanup elements & free)
 //   TD_DOMOBJECT
 //     value : T** (cleanup)
