@@ -903,24 +903,32 @@ HasActiveChildren(const nsDisplayList& aList, nsDisplayListBuilder *aDisplayList
 static bool
 IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+  switch (aItem->GetType()) {
+  case DisplayItemType::TYPE_TRANSFORM: {
     nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(aItem);
     Matrix4x4Flagged t = transformItem->GetTransform();
     Matrix t2d;
     bool is2D = t.Is2D(&t2d);
     GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
     return transformItem->MayBeAnimated(aDisplayListBuilder) || !is2D || HasActiveChildren(*transformItem->GetChildren(), aDisplayListBuilder);
-  } else if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
+  }
+  case DisplayItemType::TYPE_OPACITY: {
     nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
     bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder, opacityItem->Frame());
     GP("active: %d\n", active);
     return active || HasActiveChildren(*opacityItem->GetChildren(), aDisplayListBuilder);
   }
-  // TODO: handle other items?
-  if (aItem->GetChildren()) {
-    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);;
+  case DisplayItemType::TYPE_WRAP_LIST:
+  case DisplayItemType::TYPE_PERSPECTIVE: {
+    if (aItem->GetChildren()) {
+      return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
+    }
+    return false;
   }
-  return false;
+  default:
+    // TODO: handle other items?
+    return false;
+  }
 }
 
 // If we have an item we need to make sure it matches the current group
