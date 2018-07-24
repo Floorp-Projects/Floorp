@@ -406,7 +406,6 @@ private:
                                    ComputedStyle* aComputedStyle,
                                    bool aSuppressWhiteSpaceOptimizations,
                                    nsContainerFrame* aParentFrame,
-                                   nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                    FrameConstructionItemList& aItems);
 
   // Construct the frames for the document element.  This can return null if the
@@ -847,14 +846,12 @@ private:
                                       nsIContent* aContent,
                                       PendingBinding* aPendingBinding,
                                       already_AddRefed<ComputedStyle>&& aComputedStyle,
-                                      bool aSuppressWhiteSpaceOptimizations,
-                                      nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
+                                      bool aSuppressWhiteSpaceOptimizations)
     {
       FrameConstructionItem* item =
         new (aFCtor) FrameConstructionItem(aFCData, aContent,
                                            aPendingBinding, aComputedStyle,
-                                           aSuppressWhiteSpaceOptimizations,
-                                           aAnonChildren);
+                                           aSuppressWhiteSpaceOptimizations);
       mItems.insertBack(item);
       ++mItemCount;
       ++mDesiredParentCounts[item->DesiredParentType()];
@@ -867,14 +864,12 @@ private:
                                        nsIContent* aContent,
                                        PendingBinding* aPendingBinding,
                                        already_AddRefed<ComputedStyle>&& aComputedStyle,
-                                       bool aSuppressWhiteSpaceOptimizations,
-                                       nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
+                                       bool aSuppressWhiteSpaceOptimizations)
     {
       FrameConstructionItem* item =
         new (aFCtor) FrameConstructionItem(aFCData, aContent,
                                            aPendingBinding, aComputedStyle,
-                                           aSuppressWhiteSpaceOptimizations,
-                                           aAnonChildren);
+                                           aSuppressWhiteSpaceOptimizations);
       mItems.insertFront(item);
       ++mItemCount;
       ++mDesiredParentCounts[item->DesiredParentType()];
@@ -1096,14 +1091,14 @@ private:
    * frame constructor state.  You probably want to use
    * AutoFrameConstructionItem instead of this struct. */
   struct FrameConstructionItem final
-    : public mozilla::LinkedListElement<FrameConstructionItem> {
+    : public mozilla::LinkedListElement<FrameConstructionItem>
+  {
     FrameConstructionItem(const FrameConstructionData* aFCData,
                           nsIContent* aContent,
                           PendingBinding* aPendingBinding,
                           already_AddRefed<ComputedStyle>& aComputedStyle,
-                          bool aSuppressWhiteSpaceOptimizations,
-                          nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren) :
-      mFCData(aFCData), mContent(aContent),
+                          bool aSuppressWhiteSpaceOptimizations)
+    : mFCData(aFCData), mContent(aContent),
       mPendingBinding(aPendingBinding), mComputedStyle(aComputedStyle),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
@@ -1113,17 +1108,6 @@ private:
       mIsLineParticipant(false), mIsForSVGAElement(false)
     {
       MOZ_COUNT_CTOR(FrameConstructionItem);
-      if (aAnonChildren) {
-        NS_ASSERTION(!(mFCData->mBits & FCDATA_FUNC_IS_FULL_CTOR) ||
-                     mFCData->mFullConstructor ==
-                       &nsCSSFrameConstructor::ConstructInline,
-                     "This is going to fail");
-        NS_ASSERTION(!(mFCData->mBits & FCDATA_USE_CHILD_ITEMS),
-                     "nsIAnonymousContentCreator::CreateAnonymousContent "
-                     "implementations should not output a list where the "
-                     "items have children in this case");
-        mAnonChildren.SwapElements(*aAnonChildren);
-      }
     }
 
     void* operator new(size_t, nsCSSFrameConstructor* aFCtor)
@@ -1163,22 +1147,6 @@ private:
 
     // Child frame construction items.
     FrameConstructionItemList mChildItems;
-
-    // ContentInfo list for children that have yet to have
-    // FrameConstructionItem objects created for them. This exists because
-    // AddFrameConstructionItemsInternal needs a valid frame, but in the case
-    // that nsIAnonymousContentCreator::CreateAnonymousContent returns items
-    // that have their own children (so we have a tree of ContentInfo objects
-    // rather than a flat list) we don't yet have a frame to provide to
-    // AddFrameConstructionItemsInternal in order to create the items for the
-    // grandchildren. That prevents FrameConstructionItems from being created
-    // for these grandchildren (and any descendants that they may have),
-    // otherwise they could have been added to the mChildItems member of their
-    // parent FrameConstructionItem. As it is, the grandchildren ContentInfo
-    // list has to be stored in this mAnonChildren member in order to delay
-    // construction of the FrameConstructionItems for the grandchildren until
-    // a frame has been created for their parent item.
-    nsTArray<nsIAnonymousContentCreator::ContentInfo> mAnonChildren;
 
     // The FrameConstructionData to use.
     const FrameConstructionData* mFCData;
@@ -1497,7 +1465,6 @@ private:
                                          bool                     aSuppressWhiteSpaceOptimizations,
                                          ComputedStyle*           aComputedStyle,
                                          uint32_t                 aFlags,
-                                         nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                          FrameConstructionItemList& aItems);
 
   /**
@@ -1659,7 +1626,7 @@ private:
   void AddFCItemsForAnonymousContent(
             nsFrameConstructorState& aState,
             nsContainerFrame* aFrame,
-            nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
+            const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
             FrameConstructionItemList& aItemsToConstruct,
             uint32_t aExtraFlags = 0);
 
