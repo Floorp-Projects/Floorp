@@ -11,8 +11,7 @@ const gfxFrameScript = {
                        .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
 
-    this.domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+    this.domUtils = content.windowUtils;
 
     webNav.loadURI("chrome://gfxsanity/content/sanitytest.html",
                    Ci.nsIWebNavigation.LOAD_FLAGS_NONE,

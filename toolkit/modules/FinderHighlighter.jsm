@@ -543,8 +543,7 @@ FinderHighlighter.prototype = {
    */
   _getDWU(window = null) {
     return (window || this.finder._getWindow())
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+      .windowUtils;
   },
 
   /**
