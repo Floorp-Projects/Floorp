@@ -38,9 +38,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -94,6 +93,8 @@ public class TelemetryTest {
         Thread.sleep(2100);
         telemetry.recordSessionEnd();
 
+        telemetry.recordActiveExperiments(Arrays.asList("first-experiment-id", "second-experiment-id"));
+
         telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
         telemetry.scheduleUpload();
 
@@ -126,9 +127,15 @@ public class TelemetryTest {
         assertTrue(object.has("tz"));
         assertTrue(object.has("sessions"));
         assertTrue(object.has("durations"));
+        assertTrue(object.has("experiments"));
 
         assertEquals(1, object.getInt("sessions"));
         assertTrue(object.getInt("durations") > 0);
+
+        final JSONArray experimentsArray = object.getJSONArray("experiments");
+        assertEquals(2, experimentsArray.length());
+        assertEquals("first-experiment-id", experimentsArray.get(0));
+        assertEquals("second-experiment-id", experimentsArray.get(1));
 
         server.shutdown();
     }

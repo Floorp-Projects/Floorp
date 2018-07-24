@@ -23,6 +23,7 @@ import org.mozilla.telemetry.storage.TelemetryStorage;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -186,6 +187,27 @@ public class Telemetry {
         final TelemetryCorePingBuilder builder = (TelemetryCorePingBuilder) pingBuilders.get(TelemetryCorePingBuilder.TYPE);
         builder.getSearchesMeasurement()
                 .recordSearch(location, identifier);
+
+        return this;
+    }
+
+    /**
+     * Records the list of active experiments
+     *
+     * @param activeExperimentsIds list of active experiments ids
+     */
+    public Telemetry recordActiveExperiments(List<String> activeExperimentsIds) {
+        if (!configuration.isCollectionEnabled()) {
+            return this;
+        }
+
+        if (!pingBuilders.containsKey(TelemetryCorePingBuilder.TYPE)) {
+            throw new IllegalStateException("This configuration does not contain a core ping builder");
+        }
+
+        final TelemetryCorePingBuilder builder = (TelemetryCorePingBuilder) pingBuilders.get(TelemetryCorePingBuilder.TYPE);
+        builder.getExperimentsMeasurement()
+                .setActiveExperiments(activeExperimentsIds);
 
         return this;
     }

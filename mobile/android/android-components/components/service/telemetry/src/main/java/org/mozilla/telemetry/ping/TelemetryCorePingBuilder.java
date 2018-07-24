@@ -9,6 +9,7 @@ import org.mozilla.telemetry.measurement.ArchMeasurement;
 import org.mozilla.telemetry.measurement.CreatedDateMeasurement;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
 import org.mozilla.telemetry.measurement.DeviceMeasurement;
+import org.mozilla.telemetry.measurement.ExperimentsMeasurement;
 import org.mozilla.telemetry.measurement.FirstRunProfileDateMeasurement;
 import org.mozilla.telemetry.measurement.LocaleMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemMeasurement;
@@ -35,6 +36,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private SessionDurationMeasurement sessionDurationMeasurement;
     private DefaultSearchMeasurement defaultSearchMeasurement;
     private SearchesMeasurement searchesMeasurement;
+    private ExperimentsMeasurement experimentsMeasurement;
 
     public TelemetryCorePingBuilder(TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
@@ -52,6 +54,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         addMeasurement(sessionCountMeasurement = new SessionCountMeasurement(configuration));
         addMeasurement(sessionDurationMeasurement = new SessionDurationMeasurement(configuration));
         addMeasurement(searchesMeasurement = new SearchesMeasurement(configuration));
+        addMeasurement(experimentsMeasurement = new ExperimentsMeasurement());
     }
 
     public SessionCountMeasurement getSessionCountMeasurement() {
@@ -68,6 +71,10 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
 
     public DefaultSearchMeasurement getDefaultSearchMeasurement() {
         return defaultSearchMeasurement;
+    }
+
+    public ExperimentsMeasurement getExperimentsMeasurement() {
+        return experimentsMeasurement;
     }
 
     @Override
