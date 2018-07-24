@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 966 520">
+  <defs>
+    <filter id="goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 21 -9"></feColorMatrix>
+      <feBlend></feBlend>
+    </filter>
+    <path id="bean" d="M468,146.24c8,4.81,3.39,13.19,10.53,14.61s21.48-.6,21.77,9.12c.23,8-18.6,18.21-38,9.64-12-5.29-16.84-17.93-15.69-25.65C448.27,142.45,460.86,142,468,146.24Z"></path>
+  </defs>
+  <g filter="url(#goo)" clip-path="url(#worldMapMask)" opacity="0.1" fill="#3ac0f0" style="opacity: 0.054;">
+    <use id="animated" xlink:href="#bean" style="transform-origin: 0px 0px 0px;" transform="matrix(0.40499,0,0,0.40499,281.6573805236819,97.17512744903576)"></use>
+  </g>
+</svg>
+
+<script>
+var animated = document.getElementById('animated');
+var transforms = [
+    'matrix(0.40499,0,0,0.40499,281.65738000000005,97.17513000000001)',
+    'matrix(0,0,0,0,473.36901451812747,163.31791128669738)',
+    'matrix(0.40499,0,0,0.40499,281.65738000000005,97.17513000000001)',
+    'matrix(0,0,0,0,473.36901451812747,163.31791128669738)',
+    'matrix(9,0,0,9,-3786.9947244955442,-1306.5579660936737)',
+    'matrix(0,0,0,0,473.36901451812747,163.31791128669738)',
+    'matrix(3,0,0,3,-946.7522318197632,-326.64071450675965)'
+];
+var index = 0;
+function nextFrame() {
+    animated.setAttribute('transform', transforms[index]);
+    index++;
+    if (index < transforms.length) {
+        requestAnimationFrame(nextFrame);
+    } else {
+        document.documentElement.classList.remove('reftest-wait');
+    }
+}
+window.addEventListener('load', nextFrame);
+</script>
+</body></html>
