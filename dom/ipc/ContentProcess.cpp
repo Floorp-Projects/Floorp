@@ -282,7 +282,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   Scheduler::SetPrefs(*schedulerPrefs);
 
   if (recordreplay::IsMiddleman()) {
-    recordreplay::parent::InitializeMiddleman(aArgc, aArgv, ParentPid());
+    recordreplay::parent::InitializeMiddleman(aArgc, aArgv, ParentPid(),
+                                              *prefsHandle, *prefMapHandle);
   }
 
   mContent.Init(IOThreadChild::message_loop(),

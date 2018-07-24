@@ -539,11 +539,11 @@ UpdateCheckpointTimes(const HitCheckpointMessage& aMsg)
 ///////////////////////////////////////////////////////////////////////////////
 
 static void
-SpawnRecordingChild()
+SpawnRecordingChild(const RecordingProcessData& aRecordingProcessData)
 {
   MOZ_RELEASE_ASSERT(!gRecordingChild && !gFirstReplayingChild && !gSecondReplayingChild);
   gRecordingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), /* aRecording = */ true);
+    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), Some(aRecordingProcessData));
 }
 
 static void
@@ -551,7 +551,7 @@ SpawnSingleReplayingChild()
 {
   MOZ_RELEASE_ASSERT(!gRecordingChild && !gFirstReplayingChild && !gSecondReplayingChild);
   gFirstReplayingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), /* aRecording = */ false);
+    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), Nothing());
 }
 
 static void
@@ -565,9 +565,9 @@ SpawnReplayingChildren()
     firstRole = MakeUnique<ChildRoleActive>();
   }
   gFirstReplayingChild =
-    new ChildProcessInfo(std::move(firstRole), /* aRecording = */ false);
+    new ChildProcessInfo(std::move(firstRole), Nothing());
   gSecondReplayingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleStandby>(), /* aRecording = */ false);
+    new ChildProcessInfo(MakeUnique<ChildRoleStandby>(), Nothing());
   AssignMajorCheckpoint(gSecondReplayingChild, CheckpointId::First);
 }
 
@@ -830,7 +830,9 @@ MainThreadMessageLoop()
 }
 
 void
-InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
+InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
+                    const base::SharedMemoryHandle& aPrefsHandle,
+                    const ipc::FileDescriptor& aPrefMapHandle)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -849,7 +851,8 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
   gMainThreadMessageLoop = MessageLoop::current();
 
   if (gProcessKind == ProcessKind::MiddlemanRecording) {
-    SpawnRecordingChild();
+    RecordingProcessData data(aPrefsHandle, aPrefMapHandle);
+    SpawnRecordingChild(data);
   }
 
   InitializeForwarding();
