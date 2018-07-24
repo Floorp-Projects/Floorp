@@ -72,7 +72,7 @@ from ..frontend.data import (
     StaticLibrary,
     TestManifest,
     VariablePassthru,
-    XPIDLFile,
+    XPIDLModule,
 )
 from ..util import (
     ensureParentDir,
@@ -437,10 +437,10 @@ class RecursiveMakeBackend(CommonBackend):
 
         consumed = CommonBackend.consume_object(self, obj)
 
-        # CommonBackend handles XPIDLFile, but we want to do
+        # CommonBackend handles XPIDLModule, but we want to do
         # some extra things for them.
-        if isinstance(obj, XPIDLFile):
-            backend_file.xpt_name = '%s.xpt' % obj.module
+        if isinstance(obj, XPIDLModule):
+            backend_file.xpt_name = '%s.xpt' % obj.name
             self._idl_dirs.add(obj.relobjdir)
 
         # If CommonBackend acknowledged the object, we're done with it.
