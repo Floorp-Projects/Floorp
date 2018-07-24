@@ -429,8 +429,7 @@ var Input = {
     let horizontal = aDetails.horizontal;
     let page = aDetails.page;
     let win = aBrowser.ownerGlobal;
-    let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
-      Ci.nsIDOMWindowUtils);
+    let winUtils = win.windowUtils;
     let p = AccessFu.screenToClientBounds(aDetails.bounds, win).center();
     winUtils.sendWheelEvent(p.x, p.y,
       horizontal ? page : 0, horizontal ? 0 : page, 0,

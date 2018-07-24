@@ -221,9 +221,7 @@ var Utils = { // jshint ignore:line
 
   getContentResolution: function _getContentResolution(aAccessible) {
     let res = { value: 1 };
-    aAccessible.document.window.QueryInterface(
-      Ci.nsIInterfaceRequestor).getInterface(
-      Ci.nsIDOMWindowUtils).getResolution(res);
+    aAccessible.document.window.windowUtils.getResolution(res);
     return res.value;
   },
 
