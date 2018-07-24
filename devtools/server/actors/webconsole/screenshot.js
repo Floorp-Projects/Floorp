@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const { getRect } = require("devtools/shared/layout/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
@@ -78,8 +78,7 @@ function createScreenshotData(document, args) {
 
   // Only adjust for scrollbars when considering the full window
   if (!args.selector) {
-    const winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    const winUtils = window.windowUtils;
     const scrollbarHeight = {};
     const scrollbarWidth = {};
     winUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);

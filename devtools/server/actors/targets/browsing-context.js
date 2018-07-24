@@ -51,9 +51,7 @@ loader.lazyRequireGetter(this, "StyleSheetActor", "devtools/server/actors/styles
 loader.lazyRequireGetter(this, "getSheetText", "devtools/server/actors/stylesheets", true);
 
 function getWindowID(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils)
-               .currentInnerWindowID;
+  return window.windowUtils.currentInnerWindowID;
 }
 
 function getDocShellChromeEventHandler(docShell) {
@@ -94,8 +92,7 @@ exports.getChildDocShells = getChildDocShells;
  */
 
 function getInnerId(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+  return window.windowUtils.currentInnerWindowID;
 }
 
 const browsingContextTargetPrototype = {
@@ -347,9 +344,7 @@ const browsingContextTargetPrototype = {
 
   get outerWindowID() {
     if (this.window) {
-      return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils)
-                        .outerWindowID;
+      return this.window.windowUtils.outerWindowID;
     }
     return null;
   },
@@ -782,9 +777,7 @@ const browsingContextTargetPrototype = {
     const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     const window = webProgress.DOMWindow;
-    const id = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
-                   .outerWindowID;
+    const id = window.windowUtils.outerWindowID;
     let parentID = undefined;
     // Ignore the parent of the original document on non-e10s firefox,
     // as we get the xul window as parent and don't care about it.
@@ -792,10 +785,7 @@ const browsingContextTargetPrototype = {
     // current window in order to deal with front end. e.g. toolbox will be fall
     // into infinite loop due to recursive search with by using parent id.
     if (window.parent && window.parent != window && window != this._originalWindow) {
-      parentID = window.parent
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .outerWindowID;
+      parentID = window.parent.windowUtils.outerWindowID;
     }
 
     return {
@@ -830,10 +820,7 @@ const browsingContextTargetPrototype = {
 
   _notifyDocShellDestroy(webProgress) {
     webProgress = webProgress.QueryInterface(Ci.nsIWebProgress);
-    const id = webProgress.DOMWindow
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils)
-                        .outerWindowID;
+    const id = webProgress.DOMWindow.windowUtils.outerWindowID;
     this.emit("frameUpdate", {
       frames: [{
         id,
@@ -1138,8 +1125,7 @@ const browsingContextTargetPrototype = {
    * Disable or enable the service workers testing features.
    */
   _setServiceWorkersTestingEnabled(enabled) {
-    const windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = this.window.windowUtils;
     windowUtils.serviceWorkersTestingEnabled = enabled;
   },
 
@@ -1166,8 +1152,7 @@ const browsingContextTargetPrototype = {
       return null;
     }
 
-    const windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = this.window.windowUtils;
     return windowUtils.serviceWorkersTestingEnabled;
   },
 
@@ -1179,9 +1164,7 @@ const browsingContextTargetPrototype = {
       // The browsing context is already closed.
       return;
     }
-    const windowUtils = this.window
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = this.window.windowUtils;
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
   },
@@ -1194,9 +1177,7 @@ const browsingContextTargetPrototype = {
       // The browsing context is already closed.
       return;
     }
-    const windowUtils = this.window
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = this.window.windowUtils;
     windowUtils.resumeTimeouts();
     windowUtils.suppressEventHandling(false);
   },
