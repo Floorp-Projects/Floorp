@@ -484,7 +484,7 @@ AssertNotStackAllocated(T* aPtr)
   // space. Anything stack allocated should be above us on the stack, and
   // therefore above our first argument pointer.
   // Only this is apparently not the case on Windows.
-#ifndef XP_WIN
+#if !(defined(XP_WIN) || defined(ANDROID))
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(uintptr_t(aPtr) < uintptr_t(&aPtr));
 #endif
