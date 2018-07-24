@@ -26,7 +26,6 @@
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsWrapperCacheInlines.h"
-#include "NodeUbiReporting.h"
 
 namespace mozilla {
 namespace dom {
@@ -307,12 +306,6 @@ JSObject*
 Attr::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return Attr_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-Attr::ConstructUbiNode(void* storage)
-{
-  JS::ubi::Concrete<Attr>::construct(storage, this);
 }
 
 } // namespace dom
