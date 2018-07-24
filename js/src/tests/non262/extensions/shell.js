@@ -259,8 +259,12 @@
         map(function (p) { return [p, Object.getOwnPropertyDescriptor(obj, p)]; });
     }
 
-    function isCloneable(pair) {
-      return typeof pair[0] === 'string' && pair[1].enumerable;
+    function isArrayLength(obj, pair) {
+      return Array.isArray(obj) && pair[0] == "length";
+    }
+
+    function isCloneable(obj, pair) {
+      return isArrayLength(obj, pair) || (typeof pair[0] === 'string' && pair[1].enumerable);
     }
 
     function notIndex(p) {
@@ -279,21 +283,17 @@
                path);
 
       // 'b', the original object, may have non-enumerable or XMLName
-      // properties; ignore them.  'a', the clone, should not have any
-      // non-enumerable properties (except .length, if it's an Array) or
-      // XMLName properties.
-      var pb = ownProperties(b).filter(isCloneable);
+      // properties; ignore them (except .length, if it's an Array).
+      // 'a', the clone, should not have any non-enumerable properties
+      // (except .length, if it's an Array) or XMLName properties.
+      var pb = ownProperties(b).filter(function(element) {
+        return isCloneable(b, element);
+      });
       var pa = ownProperties(a);
       for (var i = 0; i < pa.length; i++) {
         assertEq(typeof pa[i][0], "string", "clone should not have E4X properties " + path);
-        if (!pa[i][1].enumerable) {
-          if (Array.isArray(a) && pa[i][0] == "length") {
-            // remove it so that the comparisons below will work
-            pa.splice(i, 1);
-            i--;
-          } else {
-            throw new Error("non-enumerable clone property " + uneval(pa[i][0]) + " " + path);
-          }
+        if (!isCloneable(a, pa[i])) {
+          throw new Error("non-cloneable clone property " + uneval(pa[i][0]) + " " + path);
         }
       }
 
@@ -316,7 +316,9 @@
         var path2 = path + "." + aName;
         var da = pa[i][1];
         var db = pb[i][1];
-        assertEq(da.configurable, true, path2);
+        if (!isArrayLength(a, pa[i])) {
+          assertEq(da.configurable, true, path2);
+        }
         assertEq(da.writable, true, path2);
         assertEq("value" in da, true, path2);
         var va = da.value;
