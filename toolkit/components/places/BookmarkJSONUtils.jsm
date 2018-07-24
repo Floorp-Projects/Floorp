@@ -438,7 +438,7 @@ function translateTreeTypes(node) {
   if (node.tags) {
      // Separate any tags into an array, and ignore any that are too long.
     node.tags = node.tags.split(",").filter(aTag =>
-      aTag.length > 0 && aTag.length <= Ci.nsITaggingService.MAX_TAG_LENGTH);
+      aTag.length > 0 && aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH);
 
     // If we end up with none, then delete the property completely.
     if (!node.tags.length) {
