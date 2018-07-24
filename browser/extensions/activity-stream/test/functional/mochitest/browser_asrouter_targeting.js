@@ -6,6 +6,10 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
 
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
 
@@ -28,7 +32,7 @@ add_task(async function find_matching_message() {
   ];
   const context = {FOO: true};
 
-  const match = await ASRouterTargeting.findMatchingMessage(messages, {}, context);
+  const match = await ASRouterTargeting.findMatchingMessage({messages, target: {}, context});
 
   is(match, messages[0], "should match and return the correct message");
 });
@@ -37,7 +41,7 @@ add_task(async function return_nothing_for_no_matching_message() {
   const messages = [{id: "bar", targeting: "!FOO"}];
   const context = {FOO: true};
 
-  const match = await ASRouterTargeting.findMatchingMessage(messages, {}, context);
+  const match = await ASRouterTargeting.findMatchingMessage({messages, target: {}, context});
 
   is(match, undefined, "should return nothing since no matching message exists");
 });
@@ -49,7 +53,7 @@ add_task(async function checkProfileAgeCreated() {
     "should return correct profile age creation date");
 
   const message = {id: "foo", targeting: `profileAgeCreated > ${await profileAccessor.created - 100}`};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by profile age created");
 });
 
@@ -59,7 +63,7 @@ add_task(async function checkProfileAgeReset() {
     "should return correct profile age reset");
 
   const message = {id: "foo", targeting: `profileAgeReset == ${await profileAccessor.reset}`};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by profile age reset");
 });
 
@@ -69,7 +73,7 @@ add_task(async function checkhasFxAccount() {
     "should return true if a fx account is set");
 
   const message = {id: "foo", targeting: "hasFxAccount"};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by hasFxAccount");
 });
 
@@ -89,11 +93,11 @@ add_task(async function checksearchEngines() {
     "searchEngines.current should be the current engine name");
 
   const message = {id: "foo", targeting: `searchEngines[.current == ${Services.search.currentEngine.identifier}]`};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by searchEngines.current");
 
   const message2 = {id: "foo", targeting: `searchEngines[${Services.search.getVisibleEngines()[0].identifier} in .installed]`};
-  is(await ASRouterTargeting.findMatchingMessage([message2], {}), message2,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message2], target: {}}), message2,
     "should select correct item by searchEngines.installed");
 });
 
@@ -105,7 +109,7 @@ add_task(async function checkisDefaultBrowser() {
   is(result, expected,
     "isDefaultBrowser should be equal to ShellService.isDefaultBrowser()");
   const message = {id: "foo", targeting: `isDefaultBrowser == ${expected.toString()}`};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by isDefaultBrowser");
 });
 
@@ -114,7 +118,7 @@ add_task(async function checkdevToolsOpenedCount() {
   is(ASRouterTargeting.Environment.devToolsOpenedCount, 5,
     "devToolsOpenedCount should be equal to devtools.selfxss.count pref value");
   const message = {id: "foo", targeting: "devToolsOpenedCount >= 5"};
-  is(await ASRouterTargeting.findMatchingMessage([message], {}), message,
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
     "should select correct item by devToolsOpenedCount");
 });
 
@@ -173,6 +177,53 @@ add_task(async function checkAddonsInfo() {
     "should correctly provide `userDisabled` property from full data");
 
   ok(Object.prototype.hasOwnProperty.call(testAddon, "installDate") &&
-    (Math.abs(new Date() - new Date(testAddon.installDate)) < 60 * 1000),
+    (Math.abs(Date.now() - new Date(testAddon.installDate)) < 60 * 1000),
     "should correctly provide `installDate` property from full data");
+});
+
+add_task(async function checkFrecentSites() {
+  const now = Date.now();
+  const timeDaysAgo = numDays => now - numDays * 24 * 60 * 60 * 1000;
+
+  const visits = [];
+  for (const [uri, count, visitDate] of [
+    ["https://mozilla1.com/", 10, timeDaysAgo(0)], // frecency 1000
+    ["https://mozilla2.com/", 5, timeDaysAgo(1)],  // frecency 500
+    ["https://mozilla3.com/", 1, timeDaysAgo(2)]   // frecency 100
+  ]) {
+    [...Array(count).keys()].forEach(() => visits.push({
+      uri,
+      visitDate: visitDate * 1000 // Places expects microseconds
+    }));
+  }
+
+  await PlacesTestUtils.addVisits(visits);
+
+  let message = {id: "foo", targeting: "'mozilla3.com' in topFrecentSites|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
+    "should select correct item by host in topFrecentSites");
+
+  message = {id: "foo", targeting: "'non-existent.com' in topFrecentSites|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), undefined,
+    "should not select incorrect item by host in topFrecentSites");
+
+  message = {id: "foo", targeting: "'mozilla2.com' in topFrecentSites[.frecency >= 400]|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
+    "should select correct item when filtering by frecency");
+
+  message = {id: "foo", targeting: "'mozilla2.com' in topFrecentSites[.frecency >= 600]|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), undefined,
+    "should not select incorrect item when filtering by frecency");
+
+  message = {id: "foo", targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${timeDaysAgo(1) - 1}]|mapToProperty('host')`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
+    "should select correct item when filtering by lastVisitDate");
+
+  message = {id: "foo", targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${timeDaysAgo(0) - 1}]|mapToProperty('host')`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), undefined,
+    "should not select incorrect item when filtering by lastVisitDate");
+
+  message = {id: "foo", targeting: `(topFrecentSites[.frecency >= 900 && .lastVisitDate >= ${timeDaysAgo(1) - 1}]|mapToProperty('host') intersect ['mozilla3.com', 'mozilla2.com', 'mozilla1.com'])|length > 0`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message], target: {}}), message,
+    "should select correct item when filtering by frecency and lastVisitDate with multiple candidate domains");
 });

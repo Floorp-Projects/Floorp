@@ -1,5 +1,7 @@
 # activity-stream
 
+[![Task Status](https://github.taskcluster.net/v1/repository/mozilla/activity-stream/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla/activity-stream/master/latest)
+
 This system add-on replaces the new tab page in Firefox with a new design and
 functionality as part of the Activity Stream project.
 

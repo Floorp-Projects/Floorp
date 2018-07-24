@@ -10,6 +10,9 @@ Field name | Type     | Required | Description | Example / Note
 `campaign` | `string` | No | Campaign id that the message belongs to | `RustWebAssembly`
 `targeting` | `string` `JEXL` | No | A [JEXL expression](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#jexl-basics) with all targeting information needed in order to decide if the message is shown | Not yet implemented, [Examples](#targeting-attributes)
 `trigger` | `string` | No | An event or condition upon which the message will be immediately shown. This can be combined with `targeting`. Messages that define a trigger will not be shown during non-trigger-based passive message rotation.
+`frequency` | `object` | No | A definition for frequency cap information for the message
+`frequency.lifetime` | `integer` | No | The maximum number of lifetime impressions for the message.
+`frequency.custom` | `array` | No | An array of frequency cap definition objects including `period`, a time period in milliseconds, and `cap`, a max number of impressions for that period.
 
 ### Message example
 ```javascript
@@ -19,6 +22,11 @@ Field name | Type     | Required | Description | Example / Note
   content: {
     title: "Find it faster",
     body: "Access all of your favorite search engines with a click. Search the whole Web or just one website from the search box."
+  },
+  targeting: "hasFxAccount && !addonsInfo.addons['activity-stream@mozilla.org']",
+  frequency: {
+    lifetime: 20,
+    custom: [{period: "daily", cap: 5}, {period: 3600000, cap: 1}]
   }
 }
 ```
