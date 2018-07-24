@@ -57,7 +57,7 @@ var MemoryObserver = {
   },
 
   gc: function() {
-    window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
+    window.windowUtils.garbageCollect();
     Cu.forceGC();
   },
 
