@@ -18,7 +18,7 @@
 
 "use strict";
 
-const RecordReplayControl = require("RecordReplayControl");
+const RecordReplayControl = !isWorker && require("RecordReplayControl");
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReplayDebugger
