@@ -1011,7 +1011,8 @@ GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     const bool composing = !mIMERanges->IsEmpty();
     nsEventStatus status = nsEventStatus_eIgnore;
 
-    if (!mIMEKeyEvents.IsEmpty() || !mDispatcher->IsComposing() ||
+    if (!mIMEKeyEvents.IsEmpty() ||
+        !composition || !mDispatcher->IsComposing() ||
         uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
         uint32_t(aEnd) != composition->NativeOffsetOfStartComposition() +
                           composition->String().Length()) {
@@ -1173,7 +1174,7 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
     RefPtr<TextComposition> composition(GetComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
-    if (!mDispatcher->IsComposing() ||
+    if (!composition || !mDispatcher->IsComposing() ||
         uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
         uint32_t(aEnd) != composition->NativeOffsetOfStartComposition() +
                           composition->String().Length()) {
