@@ -395,7 +395,7 @@ var FullScreen = {
     let browser = aMessage.target;
     switch (aMessage.name) {
       case "DOMFullscreen:Request": {
-        this._windowUtils.remoteFrameFullscreenChanged(browser);
+        window.windowUtils.remoteFrameFullscreenChanged(browser);
         break;
       }
       case "DOMFullscreen:NewOrigin": {
@@ -406,7 +406,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:Exit": {
-        this._windowUtils.remoteFrameFullscreenReverted();
+        window.windowUtils.remoteFrameFullscreenReverted();
         break;
       }
       case "DOMFullscreen:Painted": {
@@ -490,11 +490,6 @@ var FullScreen = {
 
   _isRemoteBrowser(aBrowser) {
     return gMultiProcessBrowser && aBrowser.getAttribute("remote") == "true";
-  },
-
-  get _windowUtils() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils);
   },
 
   getMouseTargetRect() {

@@ -196,9 +196,7 @@ var SessionStorageInternal = {
     }
 
     // If the DOMSessionStorage contains too much data, ignore it.
-    let usage = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils)
-                      .getStorageUsage(storage);
+    let usage = window.windowUtils.getStorageUsage(storage);
     if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
       return hostData;
     }

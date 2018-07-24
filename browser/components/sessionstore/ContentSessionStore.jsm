@@ -516,9 +516,7 @@ class SessionStorageListener extends Handler {
     let {content} = this.mm;
 
     // How much data does DOMSessionStorage contain?
-    let usage = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .getStorageUsage(event.storageArea);
+    let usage = content.windowUtils.getStorageUsage(event.storageArea);
 
     // Don't store any data if we exceed the limit. Wipe any data we previously
     // collected so that we don't confuse websites with partial state.
