@@ -3480,6 +3480,8 @@ var SessionStoreInternal = {
         let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
 
         let url = "about:blank";
+        let triggeringPrincipal;
+
         if (createLazyBrowser && tabData.entries && tabData.entries.length) {
           // Let tabbrowser know the future URI because progress listeners won't
           // get onLocationChange notification before the browser is inserted.
@@ -3487,6 +3489,7 @@ var SessionStoreInternal = {
           // Ensure the index is in bounds.
           activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
           activeIndex = Math.max(activeIndex, 0);
+          triggeringPrincipal = Utils.deserializePrincipal(tabData.entries[activeIndex].triggeringPrincipal_base64);
           url = tabData.entries[activeIndex].url;
         }
 
@@ -3495,6 +3498,8 @@ var SessionStoreInternal = {
         // Each tab will get its initial label set in restoreTab.
         tab = tabbrowser.addTab(url,
                                 { createLazyBrowser,
+                                  triggeringPrincipal: triggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({ userContextId }),
+                                  allowInheritPrincipal: true,
                                   skipAnimation: true,
                                   noInitialLabel: true,
                                   userContextId,

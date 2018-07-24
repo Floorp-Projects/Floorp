@@ -936,7 +936,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             params.targetBrowser = browser;
             params.indicateErrorPageLoad = true;
             params.allowPinnedTabHostChange = true;
-            params.disallowInheritPrincipal = !mayInheritPrincipal;
+            params.allowInheritPrincipal = mayInheritPrincipal;
             params.allowPopups = url.startsWith("javascript:");
           } else {
             params.initiatingDoc = document;

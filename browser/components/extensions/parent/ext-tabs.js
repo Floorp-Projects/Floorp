@@ -567,10 +567,6 @@ this.tabs = class extends ExtensionAPI {
               }
             }
 
-            // Make sure things like about:blank and data: URIs never inherit,
-            // and instead always get a NullPrincipal.
-            options.disallowInheritPrincipal = true;
-
             tabListener.initTabReady();
             let currentTab = window.gBrowser.selectedTab;
 

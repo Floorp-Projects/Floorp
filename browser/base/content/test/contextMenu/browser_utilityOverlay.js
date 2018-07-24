@@ -7,7 +7,7 @@ const gTests = [
   test_getTopWin,
   test_getBoolPref,
   test_openNewTabWith,
-  test_openUILink
+  test_openUILink,
 ];
 
 function test() {
