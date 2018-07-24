@@ -26,7 +26,7 @@ config = {
     # hostutils_manifest_path is relative to branch's root in hg.mozilla.org.
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "tooltool_cache": "/builds/worker/tooltool_cache",
-    "tooltool_servers": ['https://api.pub.build.mozilla.org/tooltool/'],
+    "tooltool_servers": ['https://tooltool.mozilla-releng.net/'],
     # minidump_tooltool_manifest_path is relative to workspace/build/tests/
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/linux64/releng.manifest",
     "find_links": [
