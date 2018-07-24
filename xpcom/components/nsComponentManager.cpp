@@ -57,10 +57,6 @@
 #include "mozilla/Logging.h"
 #include "LogModulePrefWatcher.h"
 
-#ifdef MOZ_MEMORY
-#include "mozmemory.h"
-#endif
-
 using namespace mozilla;
 
 static LazyLogModule nsComponentManagerLog("nsComponentManager");
@@ -102,6 +98,12 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID,
     goto error;
   }
 
+  if (!mCategory || !mEntry) {
+    // when categories have defaults, use that for null mEntry
+    rv = NS_ERROR_NULL_POINTER;
+    goto error;
+  }
+
   rv = compMgr->nsComponentManagerImpl::GetService(kCategoryManagerCID,
                                                    NS_GET_IID(nsICategoryManager),
                                                    getter_AddRefs(catman));
@@ -110,7 +112,8 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID,
   }
 
   /* find the contractID for category.entry */
-  rv = catman->GetCategoryEntry(mCategory, mEntry, value);
+  rv = catman->GetCategoryEntry(mCategory, mEntry,
+                                getter_Copies(value));
   if (NS_FAILED(rv)) {
     goto error;
   }
@@ -465,39 +468,6 @@ ProcessSelectorMatches(Module::ProcessSelector aSelector)
 
 static const int kModuleVersionWithSelector = 51;
 
-template<typename T>
-static void
-AssertNotMallocAllocated(T* aPtr)
-{
-#if defined(DEBUG) && defined(MOZ_MEMORY)
-  jemalloc_ptr_info_t info;
-  jemalloc_ptr_info((void*)aPtr, &info);
-  MOZ_ASSERT(info.tag == TagUnknown);
-#endif
-}
-
-template<typename T>
-static void
-AssertNotStackAllocated(T* aPtr)
-{
-  // The main thread's stack should be allocated at the top of our address
-  // space. Anything stack allocated should be above us on the stack, and
-  // therefore above our first argument pointer.
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(uintptr_t(aPtr) < uintptr_t(&aPtr));
-}
-
-static inline nsCString
-AsLiteralCString(const char* aStr)
-{
-  AssertNotMallocAllocated(aStr);
-  AssertNotStackAllocated(aStr);
-
-  nsCString str;
-  str.AssignLiteral(aStr, strlen(aStr));
-  return str;
-}
-
 void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                        FileLocation* aFile)
@@ -548,10 +518,9 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
   if (aModule->mCategoryEntries) {
     const mozilla::Module::CategoryEntry* entry;
     for (entry = aModule->mCategoryEntries; entry->category; ++entry)
-      nsCategoryManager::GetSingleton()->AddCategoryEntry(
-          AsLiteralCString(entry->category),
-          AsLiteralCString(entry->entry),
-          AsLiteralCString(entry->value));
+      nsCategoryManager::GetSingleton()->AddCategoryEntry(entry->category,
+                                                          entry->entry,
+                                                          entry->value);
   }
 }
 
@@ -566,7 +535,7 @@ nsComponentManagerImpl::RegisterCIDEntryLocked(
     return;
   }
 
-  if (auto entry = mFactories.LookupForAdd(aEntry->cid)) {
+  if (auto entry = mFactories.LookupForAdd(*aEntry->cid)) {
     nsFactoryEntry* f = entry.Data();
     NS_WARNING("Re-registering a CID?");
 
@@ -599,7 +568,7 @@ nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  nsFactoryEntry* f = mFactories.Get(aEntry->cid);
+  nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
   if (!f) {
     NS_WARNING("No CID found when attempting to map contract ID");
 
@@ -614,7 +583,7 @@ nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  mContractIDs.Put(AsLiteralCString(aEntry->contractid), f);
+  mContractIDs.Put(nsDependentCString(aEntry->contractid), f);
 }
 
 static void
@@ -693,8 +662,9 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   fl.GetURIString(hash);
 
   MutexLock lock(mLock);
-  nsFactoryEntry* f = mFactories.Get(&cid);
-  if (f) {
+  auto entry = mFactories.LookupForAdd(cid);
+  if (entry) {
+    nsFactoryEntry* f = entry.Data();
     char idstr[NSID_LENGTH];
     cid.ToProvidedString(idstr);
 
@@ -730,7 +700,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   auto* e = new (KnownNotNull, place) mozilla::Module::CIDEntry();
   e->cid = permanentCID;
 
-  mFactories.Put(permanentCID, new nsFactoryEntry(e, km));
+  entry.OrInsert([e, km] () { return new nsFactoryEntry(e, km); });
 }
 
 void
@@ -750,7 +720,7 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& aCx,
   }
 
   MutexLock lock(mLock);
-  nsFactoryEntry* f = mFactories.Get(&cid);
+  nsFactoryEntry* f = mFactories.Get(cid);
   if (!f) {
     lock.Unlock();
     LogMessageWithContext(aCx.mFile, aLineNo,
@@ -771,8 +741,7 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& aCx,
   char* value = aArgv[2];
 
   nsCategoryManager::GetSingleton()->
-  AddCategoryEntry(nsDependentCString(category), nsDependentCString(key),
-                   nsDependentCString(value));
+  AddCategoryEntry(category, key, value);
 }
 
 void
@@ -918,7 +887,7 @@ nsFactoryEntry*
 nsComponentManagerImpl::GetFactoryEntry(const nsCID& aClass)
 {
   SafeMutexAutoLock lock(mLock);
-  return mFactories.Get(&aClass);
+  return mFactories.Get(aClass);
 }
 
 already_AddRefed<nsIFactory>
@@ -1247,7 +1216,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
   nsCOMPtr<nsISupports> service;
   MutexLock lock(mLock);
 
-  nsFactoryEntry* entry = mFactories.Get(&aClass);
+  nsFactoryEntry* entry = mFactories.Get(aClass);
   if (!entry) {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
@@ -1363,7 +1332,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
 
   {
     SafeMutexAutoLock lock(mLock);
-    entry = mFactories.Get(&aClass);
+    entry = mFactories.Get(aClass);
   }
 
   if (entry && entry->mServiceObject) {
@@ -1542,8 +1511,8 @@ nsComponentManagerImpl::LoaderForExtension(const nsACString& aExt)
 {
   nsCOMPtr<mozilla::ModuleLoader> loader = mLoaderMap.Get(aExt);
   if (!loader) {
-    loader = do_GetServiceFromCategory(NS_LITERAL_CSTRING("module-loader"),
-                                       aExt);
+    loader = do_GetServiceFromCategory("module-loader",
+                                       PromiseFlatCString(aExt).get());
     if (!loader) {
       return nullptr;
     }
@@ -1568,7 +1537,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
     }
 
     SafeMutexAutoLock lock(mLock);
-    nsFactoryEntry* oldf = mFactories.Get(&aClass);
+    nsFactoryEntry* oldf = mFactories.Get(aClass);
     if (!oldf) {
       return NS_ERROR_FACTORY_NOT_REGISTERED;
     }
@@ -1580,7 +1549,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
   nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
   SafeMutexAutoLock lock(mLock);
-  if (auto entry = mFactories.LookupForAdd(f->mCIDEntry->cid)) {
+  if (auto entry = mFactories.LookupForAdd(aClass)) {
     return NS_ERROR_FACTORY_EXISTS;
   } else {
     if (aContractID) {
@@ -1603,7 +1572,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
 
   {
     SafeMutexAutoLock lock(mLock);
-    auto entry = mFactories.Lookup(&aClass);
+    auto entry = mFactories.Lookup(aClass);
     nsFactoryEntry* f = entry ? entry.Data() : nullptr;
     if (!f || f->mFactory != aFactory) {
       return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1691,9 +1660,9 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsCOMArray<nsISupports> array;
   for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    const nsID* id = iter.Key();
+    const nsID& id = iter.Key();
     nsCOMPtr<nsISupportsID> wrapper = new nsSupportsID();
-    wrapper->SetData(id);
+    wrapper->SetData(&id);
     array.AppendObject(wrapper);
   }
   return NS_NewArrayEnumerator(aEnumerator, array);

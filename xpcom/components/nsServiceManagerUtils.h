@@ -9,7 +9,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 
 inline const nsGetServiceByCID
 do_GetService(const nsCID& aCID)
@@ -38,7 +37,7 @@ do_GetService(const char* aContractID, nsresult* aError)
 class MOZ_STACK_CLASS nsGetServiceFromCategory final : public nsCOMPtr_helper
 {
 public:
-  nsGetServiceFromCategory(const nsACString& aCategory, const nsACString& aEntry,
+  nsGetServiceFromCategory(const char* aCategory, const char* aEntry,
                            nsresult* aErrorPtr)
     : mCategory(aCategory)
     , mEntry(aEntry)
@@ -49,13 +48,13 @@ public:
   virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const
     override;
 protected:
-  const nsCString             mCategory;
-  const nsCString             mEntry;
+  const char*                 mCategory;
+  const char*                 mEntry;
   nsresult*                   mErrorPtr;
 };
 
 inline const nsGetServiceFromCategory
-do_GetServiceFromCategory(const nsACString& aCategory, const nsACString& aEntry,
+do_GetServiceFromCategory(const char* aCategory, const char* aEntry,
                           nsresult* aError = 0)
 {
   return nsGetServiceFromCategory(aCategory, aEntry, aError);

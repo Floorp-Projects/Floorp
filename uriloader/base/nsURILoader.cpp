@@ -465,7 +465,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       if (catman) {
         nsCString contractidString;
         rv = catman->GetCategoryEntry(NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
-                                      mContentType, contractidString);
+                                      mContentType.get(),
+                                      getter_Copies(contractidString));
         if (NS_SUCCEEDED(rv) && !contractidString.IsEmpty()) {
           LOG(("  Listener contractid for '%s' is '%s'",
                mContentType.get(), contractidString.get()));

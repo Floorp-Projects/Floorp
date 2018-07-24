@@ -332,7 +332,7 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   NS_ENSURE_TRUE(catMan, NS_ERROR_NOT_AVAILABLE);
   nsCString contractId;
   nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", IMAGE_SVG_XML,
-                                         contractId);
+                                         getter_Copies(contractId));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
     do_GetService(contractId.get());

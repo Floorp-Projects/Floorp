@@ -515,8 +515,9 @@ nsCommandLine::EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClo
     strenum->GetNext(entry);
 
     nsCString contractID;
-    rv = catman->GetCategoryEntry("command-line-handler", entry,
-				  contractID);
+    rv = catman->GetCategoryEntry("command-line-handler",
+				  entry.get(),
+				  getter_Copies(contractID));
     if (NS_FAILED(rv))
       continue;
 
@@ -561,7 +562,8 @@ nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *
 
     nsCString contractID;
     rv = catman->GetCategoryEntry("command-line-validator",
-				  entry, contractID);
+				  entry.get(),
+				  getter_Copies(contractID));
     if (contractID.IsVoid())
       continue;
 
