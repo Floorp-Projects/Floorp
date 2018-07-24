@@ -98,6 +98,9 @@
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
+    <command id="Tools:RecordExecution" oncommand="BeginRecordExecution()"/>
+    <command id="Tools:SaveRecording" oncommand="SaveRecordedExecution()"/>
+    <command id="Tools:ReplayExecution" oncommand="BeginReplayExecution()"/>
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
@@ -153,6 +156,15 @@
                  sidebarurl="chrome://browser/content/syncedtabs/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
     <broadcaster id="workOfflineMenuitemState"/>
+    <broadcaster id="devtoolsMenuBroadcaster_RecordExecution"
+                 label="&devtoolsRecordExecution.label;"
+                 command="Tools:RecordExecution"/>
+    <broadcaster id="devtoolsMenuBroadcaster_SaveRecording"
+                 label="&devtoolsSaveRecording.label;"
+                 command="Tools:SaveRecording"/>
+    <broadcaster id="devtoolsMenuBroadcaster_ReplayExecution"
+                 label="&devtoolsReplayExecution.label;"
+                 command="Tools:ReplayExecution"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">

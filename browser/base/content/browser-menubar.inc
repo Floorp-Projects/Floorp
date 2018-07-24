@@ -518,6 +518,15 @@
                             accesskey="&pageSourceCmd.accesskey;">
                     <observes element="canViewSource" attribute="disabled"/>
                   </menuitem>
+                  <menuitem id="menu_devtools_recordExecution"
+                            observes="devtoolsMenuBroadcaster_RecordExecution"
+                            hidden="true"/>
+                  <menuitem id="menu_devtools_saveRecording"
+                            observes="devtoolsMenuBroadcaster_SaveRecording"
+                            hidden="true"/>
+                  <menuitem id="menu_devtools_replayExecution"
+                            observes="devtoolsMenuBroadcaster_ReplayExecution"
+                            hidden="true"/>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"
