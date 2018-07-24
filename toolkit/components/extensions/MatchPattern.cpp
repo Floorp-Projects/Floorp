@@ -328,9 +328,7 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
   tail.Rebind(aPattern, offset);
 
   if (scheme == nsGkAtoms::about || scheme == nsGkAtoms::data) {
-    // about: and data: URIs don't have hosts, so just treat the host as a
-    // wildcard and match on the path.
-    mMatchSubdomain = true;
+    // about: and data: URIs don't have hosts, so just match on the path.
     // And so, ignorePath doesn't make sense for these matchers.
     aIgnorePath = false;
   } else {
