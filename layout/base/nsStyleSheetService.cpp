@@ -74,7 +74,7 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
     icStr->GetData(name);
 
     nsCString spec;
-    aManager->GetCategoryEntry(nsDependentCString(aCategory), name, spec);
+    aManager->GetCategoryEntry(aCategory, name.get(), getter_Copies(spec));
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), spec);

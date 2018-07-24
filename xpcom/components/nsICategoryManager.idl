@@ -7,15 +7,11 @@
 
 interface nsISimpleEnumerator;
 
-%{C++
-#include "nsString.h"
-%}
-
 /*
  * nsICategoryManager
  */
 
-[builtinclass, scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]
+[scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]
 interface nsICategoryManager : nsISupports
 {
     /**
@@ -24,7 +20,7 @@ interface nsICategoryManager : nsISupports
      * @param aEntry The entry you're looking for ("http")
      * @return The value.
      */
-    ACString getCategoryEntry(in ACString aCategory, in ACString aEntry);
+    string getCategoryEntry(in string aCategory, in string aEntry);
     
     /**
      * Add an entry to a category.
@@ -35,9 +31,9 @@ interface nsICategoryManager : nsISupports
      * @param aReplace Should we replace an existing entry?
      * @return Previous entry, if any
      */
-    ACString addCategoryEntry(in ACString aCategory, in ACString aEntry,
-                              in ACString aValue, in boolean aPersist,
-                              in boolean aReplace);
+    string addCategoryEntry(in string aCategory, in string aEntry,
+			    in string aValue, in boolean aPersist,
+			    in boolean aReplace);
 
     /**
      * Delete an entry from the category.
@@ -45,14 +41,14 @@ interface nsICategoryManager : nsISupports
      * @param aEntry The entry to be added ("http")
      * @param aPersist Delete persistent data from registry, if present?
      */
-    void deleteCategoryEntry(in ACString aCategory, in ACString aEntry,
-                             in boolean aPersist);
+    void deleteCategoryEntry(in string aCategory, in string aEntry,
+                               in boolean aPersist);
 
     /**
      * Delete a category and all entries.
      * @param aCategory The category to be deleted.
      */
-    void deleteCategory(in ACString aCategory);
+    void deleteCategory(in string aCategory);
 
     /**
      * Enumerate the entries in a category.
@@ -60,7 +56,7 @@ interface nsICategoryManager : nsISupports
      * @return a simple enumerator, each result QIs to
      *         nsISupportsCString.
      */
-    nsISimpleEnumerator enumerateCategory(in ACString aCategory);
+    nsISimpleEnumerator enumerateCategory(in string aCategory);
 
     /**
      * Enumerate all existing categories
@@ -69,60 +65,5 @@ interface nsICategoryManager : nsISupports
      *         nsISupportsCString.
      */
     nsISimpleEnumerator enumerateCategories();
-
-    %{C++
-    template<size_t N>
-    nsresult
-    GetCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry,
-                     nsACString& aResult)
-    {
-        return GetCategoryEntry(nsLiteralCString(aCategory),
-                                aEntry, aResult);
-    }
-
-    template<size_t N, size_t M>
-    nsresult
-    GetCategoryEntry(const char (&aCategory)[N], const char (&aEntry)[M],
-                     nsACString& aResult)
-    {
-        return GetCategoryEntry(nsLiteralCString(aCategory),
-                                nsLiteralCString(aEntry),
-                                aResult);
-    }
-
-    nsresult
-    AddCategoryEntry(const nsACString& aCategory, const nsACString& aEntry,
-                     const nsACString& aValue, bool aPersist, bool aReplace)
-    {
-        nsCString oldValue;
-        return AddCategoryEntry(aCategory, aEntry, aValue, aPersist, aReplace,
-                                oldValue);
-    }
-
-    template<size_t N>
-    nsresult
-    AddCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry,
-                     const nsACString& aValue, bool aPersist, bool aReplace)
-    {
-        nsCString oldValue;
-        return AddCategoryEntry(nsLiteralCString(aCategory), aEntry, aValue,
-                                aPersist, aReplace, oldValue);
-    }
-
-    template<size_t N>
-    nsresult
-    DeleteCategoryEntry(const char (&aCategory)[N], const nsACString& aEntry, bool aPersist)
-    {
-        return DeleteCategoryEntry(nsLiteralCString(aCategory), aEntry, aPersist);
-    }
-
-
-    template<size_t N>
-    nsresult
-    EnumerateCategory(const char (&aCategory)[N], nsISimpleEnumerator** aResult)
-    {
-        return EnumerateCategory(nsLiteralCString(aCategory), aResult);
-    }
-    %}
 };
 

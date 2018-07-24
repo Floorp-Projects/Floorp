@@ -474,37 +474,6 @@ private:
 };
 
 /**
- * hashkey wrapper using nsID* KeyType
- *
- * @see nsTHashtable::EntryType for specification
- */
-class nsIDPointerHashKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsID* KeyType;
-  typedef const nsID* KeyTypePointer;
-
-  explicit nsIDPointerHashKey(const nsID* aInID) : mID(aInID) {}
-  nsIDPointerHashKey(const nsIDPointerHashKey& aToCopy) : mID(aToCopy.mID) {}
-  ~nsIDPointerHashKey() = default;
-
-  KeyType GetKey() const { return mID; }
-  bool KeyEquals(KeyTypePointer aKey) const { return aKey->Equals(*mID); }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    // Hash the nsID object's raw bytes.
-    return mozilla::HashBytes(aKey, sizeof(*aKey));
-  }
-
-  enum { ALLOW_MEMMOVE = true };
-
-private:
-  const nsID* mID;
-};
-
-/**
  * hashkey wrapper for "dependent" const char*; this class does not "own"
  * its string pointer.
  *
