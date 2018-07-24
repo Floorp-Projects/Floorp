@@ -525,6 +525,13 @@ GetPrefersReducedMotion(nsIDocument* aDocument,
                         const nsMediaFeature* aFeature,
                         nsCSSValue& aResult)
 {
+  const bool isAccessibleFromContentPages =
+    !(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
+  if (isAccessibleFromContentPages &&
+      nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return;
+  }
+
   StylePrefersReducedMotion prefersReducedMotion =
     StylePrefersReducedMotion::NoPreference;
 
