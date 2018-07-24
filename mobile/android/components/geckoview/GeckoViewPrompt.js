@@ -365,8 +365,7 @@ PromptDelegate.prototype = {
     }
     // Accessing the document object can throw if this window no longer exists. See bug 789888.
     try {
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       if (!aEntering) {
         winUtils.leaveModalState();
       }

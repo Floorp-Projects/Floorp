@@ -145,7 +145,7 @@ InternalPrompt.prototype = {
   showPrompt: function showPrompt(aPrompt) {
     if (this._domWin) {
       PromptUtils.fireDialogEvent(this._domWin, "DOMWillOpenModalDialog");
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.enterModalState();
     }
 
@@ -158,7 +158,7 @@ InternalPrompt.prototype = {
     Services.tm.spinEventLoopUntil(() => retval != null);
 
     if (this._domWin) {
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.leaveModalState();
       PromptUtils.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
@@ -793,8 +793,7 @@ var PromptUtils = {
         return;
       let event = aDomWin.document.createEvent("Events");
       event.initEvent(aEventName, true, true);
-      let winUtils = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = aDomWin.windowUtils;
       winUtils.dispatchEventToChromeOnly(aDomWin, event);
     } catch (ex) {
     }

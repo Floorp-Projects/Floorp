@@ -27,8 +27,7 @@ async function navigateToAddonDetails(addonId) {
   let rect = item.getBoundingClientRect();
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
-  let domWinUtils = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+  let domWinUtils = content.window.windowUtils;
 
   domWinUtils.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0);
   domWinUtils.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0);

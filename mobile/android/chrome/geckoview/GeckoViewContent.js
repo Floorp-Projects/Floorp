@@ -68,7 +68,7 @@ class GeckoViewContent extends GeckoViewContentModule {
 
     // Save the current document resolution.
     let zoom = { value: 1 };
-    let domWindowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let domWindowUtils = content.windowUtils;
     domWindowUtils.getResolution(zoom);
     scrolldata = scrolldata || {};
     scrolldata.zoom = {};
@@ -96,23 +96,20 @@ class GeckoViewContent extends GeckoViewContentModule {
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenEntered":
         if (content) {
-          content.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils)
+          content.windowUtils
                  .handleFullscreenRequests();
         }
         break;
 
       case "GeckoView:DOMFullscreenExited":
         if (content) {
-          content.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils)
+          content.windowUtils
                  .exitFullscreen();
         }
         break;
 
       case "GeckoView:ZoomToInput": {
-        let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+        let dwu = content.windowUtils;
 
         let zoomToFocusedInput = function() {
           if (!dwu.flushApzRepaints()) {
@@ -294,7 +291,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     if (this._savedState) {
       const scrolldata = this._savedState.scrolldata;
       if (scrolldata && scrolldata.zoom && scrolldata.zoom.displaySize) {
-        let utils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let utils = content.windowUtils;
         // Restore zoom level.
         utils.setRestoreResolution(scrolldata.zoom.resolution,
                                    scrolldata.zoom.displaySize.width,
