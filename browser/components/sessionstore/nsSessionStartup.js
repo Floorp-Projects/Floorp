@@ -266,6 +266,7 @@ SessionStartup.prototype = {
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       // free _initialState after nsSessionStore is done with it
       this._initialState = null;
+      this._didRestore = true;
       break;
     case "browser:purge-session-history":
       Services.obs.removeObserver(this, "browser:purge-session-history");
@@ -337,6 +338,10 @@ SessionStartup.prototype = {
     // session file, but waiting for that would delay loading the homepage in
     // the non-crash case.
     if (!this._initialState && !this._resumeSessionEnabled) {
+      return false;
+    }
+    // If we've already restored the session, we won't override again.
+    if (this._didRestore) {
       return false;
     }
 
