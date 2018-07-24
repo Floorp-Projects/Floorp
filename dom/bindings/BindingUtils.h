@@ -2737,6 +2737,12 @@ BindingJSObjectMallocBytes(void *aNativePtr)
   return 0;
 }
 
+// Register a thing which DeferredFinalize might be called on during GC
+// finalization. See DeferredFinalize.h
+template<class T>
+static void
+RecordReplayRegisterDeferredFinalize(T* aObject);
+
 // The BindingJSObjectCreator class is supposed to be used by a caller that
 // wants to create and initialise a binding JSObject. After initialisation has
 // been successfully completed it should call ForgetObject().
@@ -2778,6 +2784,7 @@ public:
       js::SetProxyReservedSlot(aReflector, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
       mNative = aNative;
       mReflector = aReflector;
+      RecordReplayRegisterDeferredFinalize<T>(aNative);
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
@@ -2795,6 +2802,7 @@ public:
       js::SetReservedSlot(aReflector, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
       mNative = aNative;
       mReflector = aReflector;
+      RecordReplayRegisterDeferredFinalize<T>(aNative);
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
@@ -2908,6 +2916,15 @@ struct DeferredFinalizer
     DeferredFinalize(Impl::AppendDeferredFinalizePointer,
                      Impl::DeferredFinalize, aObject);
   }
+
+  static void
+  RecordReplayRegisterDeferredFinalize(T* aObject)
+  {
+    typedef DeferredFinalizerImpl<T> Impl;
+    RecordReplayRegisterDeferredFinalizeThing(Impl::AppendDeferredFinalizePointer,
+                                              Impl::DeferredFinalize,
+                                              aObject);
+  }
 };
 
 template<class T>
@@ -2918,6 +2935,12 @@ struct DeferredFinalizer<T, true>
   {
     DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
   }
+
+  static void
+  RecordReplayRegisterDeferredFinalize(T* aObject)
+  {
+    RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, aObject);
+  }
 };
 
 template<class T>
@@ -2925,6 +2948,13 @@ static void
 AddForDeferredFinalization(T* aObject)
 {
   DeferredFinalizer<T>::AddForDeferredFinalization(aObject);
+}
+
+template<class T>
+static void
+RecordReplayRegisterDeferredFinalize(T* aObject)
+{
+  DeferredFinalizer<T>::RecordReplayRegisterDeferredFinalize(aObject);
 }
 
 // This returns T's CC participant if it participates in CC or null if it
@@ -3064,6 +3094,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     NS_ADDREF(aNative);
 
     aCache->SetWrapper(aGlobal);
+    RecordReplayRegisterDeferredFinalize<T>(aNative);
 
     dom::AllocateProtoAndIfaceCache(aGlobal,
                                     CreateGlobalOptions<T>::ProtoAndIfaceCacheKind);

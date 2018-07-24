@@ -51,7 +51,7 @@ class AutoMemMap
 
         void reset();
 
-        bool initialized() { return addr; }
+        bool initialized() const { return addr; }
 
         uint32_t size() const { return size_; }
 

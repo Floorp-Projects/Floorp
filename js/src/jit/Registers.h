@@ -141,6 +141,12 @@ AsRegister(RegisterOrSP r)
     return Register::FromCode(r.code);
 }
 
+static inline Register
+AsRegister(Register r)
+{
+    return r;
+}
+
 inline bool
 operator == (Register r, RegisterOrSP e) {
     return r.code() == e.code;

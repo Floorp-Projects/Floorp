@@ -193,8 +193,8 @@ private:
   AutoHashtable<SlowSQLEntryType> mPrivateSQL;
   AutoHashtable<SlowSQLEntryType> mSanitizedSQL;
   Mutex mHashMutex;
-  Atomic<bool> mCanRecordBase;
-  Atomic<bool> mCanRecordExtended;
+  Atomic<bool, SequentiallyConsistent, recordreplay::Behavior::DontPreserve> mCanRecordBase;
+  Atomic<bool, SequentiallyConsistent, recordreplay::Behavior::DontPreserve> mCanRecordExtended;
 
 #if defined(MOZ_GECKO_PROFILER)
   // Stores data about stacks captured on demand.
@@ -1114,6 +1114,9 @@ TelemetryImpl::GetCanRecordBase(bool *ret) {
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordBase(bool canRecord) {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return NS_OK;
+  }
   if (canRecord != mCanRecordBase) {
     TelemetryHistogram::SetCanRecordBase(canRecord);
     TelemetryScalar::SetCanRecordBase(canRecord);
@@ -1138,6 +1141,9 @@ TelemetryImpl::GetCanRecordExtended(bool *ret) {
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordExtended(bool canRecord) {
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return NS_OK;
+  }
   if (canRecord != mCanRecordExtended) {
     TelemetryHistogram::SetCanRecordExtended(canRecord);
     TelemetryScalar::SetCanRecordExtended(canRecord);
@@ -1175,9 +1181,14 @@ TelemetryImpl::CreateTelemetryInstance()
   MOZ_ASSERT(sTelemetry == nullptr, "CreateTelemetryInstance may only be called once, via GetService()");
 
   bool useTelemetry = false;
-  if (XRE_IsParentProcess() ||
-      XRE_IsContentProcess() ||
-      XRE_IsGPUProcess())
+  if ((XRE_IsParentProcess() ||
+       XRE_IsContentProcess() ||
+       XRE_IsGPUProcess()) &&
+      // Telemetry is never accumulated when recording or replaying, both
+      // because the resulting measurements might be biased and because
+      // measurements might occur at non-deterministic points in execution
+      // (e.g. garbage collections).
+      !recordreplay::IsRecordingOrReplaying())
   {
     useTelemetry = true;
   }

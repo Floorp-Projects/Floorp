@@ -102,7 +102,10 @@ ExtractFinalizationEvent(JSObject *objSelf)
 void Finalize(JSFreeOp *fop, JSObject *objSelf)
 {
   RefPtr<FinalizationEvent> event = ExtractFinalizationEvent(objSelf);
-  if (event == nullptr || gShuttingDown) {
+
+  // Finalize witnesses are not notified when recording or replaying, as
+  // finalizations occur non-deterministically in the recording.
+  if (event == nullptr || gShuttingDown || recordreplay::IsRecordingOrReplaying()) {
     // NB: event will be null if Forget() has been called
     return;
   }

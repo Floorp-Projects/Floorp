@@ -43,26 +43,71 @@ LIRGeneratorARM64::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 void
 LIRGenerator::visitBox(MBox* box)
 {
-    MOZ_CRASH("visitBox");
+    MDefinition* opd = box->getOperand(0);
+
+    // If the operand is a constant, emit near its uses.
+    if (opd->isConstant() && box->canEmitAtUses()) {
+        emitAtUses(box);
+        return;
+    }
+
+    if (opd->isConstant()) {
+        define(new(alloc()) LValue(opd->toConstant()->toJSValue()), box, LDefinition(LDefinition::BOX));
+    } else {
+        LBox* ins = new(alloc()) LBox(useRegister(opd), opd->type());
+        define(ins, box, LDefinition(LDefinition::BOX));
+    }
 }
 
 void
 LIRGenerator::visitUnbox(MUnbox* unbox)
 {
-    MOZ_CRASH("visitUnbox");
+    MDefinition* box = unbox->getOperand(0);
+
+    if (box->type() == MIRType::ObjectOrNull) {
+        LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
+        if (unbox->fallible())
+            assignSnapshot(lir, unbox->bailoutKind());
+        defineReuseInput(lir, unbox, 0);
+        return;
+    }
+
+    MOZ_ASSERT(box->type() == MIRType::Value);
+
+    LUnboxBase* lir;
+    if (IsFloatingPointType(unbox->type())) {
+        lir = new(alloc()) LUnboxFloatingPoint(useRegisterAtStart(box), unbox->type());
+    } else if (unbox->fallible()) {
+        // If the unbox is fallible, load the Value in a register first to
+        // avoid multiple loads.
+        lir = new(alloc()) LUnbox(useRegisterAtStart(box));
+    } else {
+        lir = new(alloc()) LUnbox(useAtStart(box));
+    }
+
+    if (unbox->fallible())
+        assignSnapshot(lir, unbox->bailoutKind());
+
+    define(lir, unbox);
 }
 
 void
 LIRGenerator::visitReturn(MReturn* ret)
 {
-    MOZ_CRASH("visitReturn");
+    MDefinition* opd = ret->getOperand(0);
+    MOZ_ASSERT(opd->type() == MIRType::Value);
+
+    LReturn* ins = new(alloc()) LReturn;
+    ins->setOperand(0, useFixed(opd, JSReturnReg));
+    add(ins);
 }
 
 // x = !y
 void
 LIRGeneratorARM64::lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir, MDefinition* input)
 {
-    MOZ_CRASH("lowerForALU");
+    ins->setOperand(0, ins->snapshot() ? useRegister(input) : useRegisterAtStart(input));
+    define(ins, mir, LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 // z = x+y
@@ -70,7 +115,10 @@ void
 LIRGeneratorARM64::lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                                MDefinition* lhs, MDefinition* rhs)
 {
-    MOZ_CRASH("lowerForALU");
+    ins->setOperand(0, ins->snapshot() ? useRegister(lhs) : useRegisterAtStart(lhs));
+    ins->setOperand(1, ins->snapshot() ? useRegisterOrConstant(rhs) :
+                                         useRegisterOrConstantAtStart(rhs));
+    define(ins, mir, LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 void

@@ -58,6 +58,7 @@ StructuredCloneData::~StructuredCloneData()
 StructuredCloneData&
 StructuredCloneData::operator=(StructuredCloneData&& aOther)
 {
+  mBlobImplArray = std::move(aOther.mBlobImplArray);
   mExternalData = std::move(aOther.mExternalData);
   mSharedData = std::move(aOther.mSharedData);
   mIPCStreams = std::move(aOther.mIPCStreams);

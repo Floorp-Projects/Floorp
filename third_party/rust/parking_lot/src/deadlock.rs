@@ -1,4 +1,4 @@
-//! [Experimental] Deadlock detection
+//! \[Experimental\] Deadlock detection
 //!
 //! This feature is optional and can be enabled via the `deadlock_detection` feature flag.
 //!
@@ -40,8 +40,8 @@ pub(crate) use parking_lot_core::deadlock::{acquire_resource, release_resource};
 #[cfg(test)]
 #[cfg(feature = "deadlock_detection")]
 mod tests {
-    use std::thread::{self, sleep};
     use std::sync::{Arc, Barrier};
+    use std::thread::{self, sleep};
     use std::time::Duration;
     use {Mutex, ReentrantMutex, RwLock};
 

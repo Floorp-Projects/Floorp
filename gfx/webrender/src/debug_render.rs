@@ -4,7 +4,7 @@
 
 use api::{ColorU, DeviceIntRect, DeviceUintSize, ImageFormat, TextureTarget};
 use debug_font_data;
-use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, VAO};
+use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
 use euclid::{Point2D, Rect, Size2D, Transform3D};
 use internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
@@ -104,13 +104,11 @@ pub struct DebugRenderer {
 }
 
 impl DebugRenderer {
-    pub fn new(device: &mut Device) -> Self {
-        let font_program = device.create_program("debug_font", "", &DESC_FONT).unwrap();
+    pub fn new(device: &mut Device) -> Result<Self, ShaderError> {
+        let font_program = device.create_program("debug_font", "", &DESC_FONT)?;
         device.bind_shader_samplers(&font_program, &[("sColor0", DebugSampler::Font)]);
 
-        let color_program = device
-            .create_program("debug_color", "", &DESC_COLOR)
-            .unwrap();
+        let color_program = device.create_program("debug_color", "", &DESC_COLOR)?;
 
         let font_vao = device.create_vao(&DESC_FONT);
         let line_vao = device.create_vao(&DESC_COLOR);
@@ -127,7 +125,7 @@ impl DebugRenderer {
             Some(&debug_font_data::FONT_BITMAP),
         );
 
-        DebugRenderer {
+        Ok(DebugRenderer {
             font_vertices: Vec::new(),
             font_indices: Vec::new(),
             line_vertices: Vec::new(),
@@ -139,7 +137,7 @@ impl DebugRenderer {
             font_vao,
             line_vao,
             font_texture,
-        }
+        })
     }
 
     pub fn deinit(self, device: &mut Device) {

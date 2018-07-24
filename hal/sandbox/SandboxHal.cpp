@@ -134,7 +134,10 @@ LockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation)
 void
 UnlockScreenOrientation()
 {
-  Hal()->SendUnlockScreenOrientation();
+  // Don't send this message from both the middleman and recording processes.
+  if (!recordreplay::IsMiddleman()) {
+    Hal()->SendUnlockScreenOrientation();
+  }
 }
 
 void

@@ -345,7 +345,8 @@ AlwaysPoison(void* ptr, uint8_t value, size_t num, MemCheckKind kind)
 static inline void
 Poison(void* ptr, uint8_t value, size_t num, MemCheckKind kind)
 {
-    static bool disablePoison = bool(getenv("JSGC_DISABLE_POISONING"));
+    static bool disablePoison = !mozilla::recordreplay::IsRecordingOrReplaying()
+                             && bool(getenv("JSGC_DISABLE_POISONING"));
     if (!disablePoison)
         AlwaysPoison(ptr, value, num, kind);
 }

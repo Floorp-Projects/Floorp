@@ -2,13 +2,29 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+
+const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 
 const remote = AppConstants.platform !== "android";
 
 ExtensionTestUtils.init(this);
 
 let contentPage;
+
+Cu.importGlobalProperties(["Blob", "FileReader"]);
+
+async function readBlob(key, sharedData = Services.cpmm.sharedData) {
+  let reader = new FileReader();
+  reader.readAsText(sharedData.get(key));
+  await ExtensionUtils.promiseEvent(reader, "loadend");
+  return reader.result;
+}
+
+function getKey(key, sharedData = Services.cpmm.sharedData) {
+  return sharedData.get(key);
+}
 
 function getContents(sharedMap = Services.cpmm.sharedData) {
   return {
@@ -60,9 +76,23 @@ async function checkContentMaps(expected, parentOnly = false) {
   }
 }
 
+async function loadContentPage() {
+  let page = await ExtensionTestUtils.loadContentPage("about:blank", {remote});
+  registerCleanupFunction(() => page.close());
+
+  page.addFrameScriptHelper(`
+    ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+    Cu.importGlobalProperties(["FileReader"]);
+  `);
+  return page;
+}
+
 add_task(async function setup() {
-  contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {remote});
-  registerCleanupFunction(() => contentPage.close());
+  // Start with one content process so that we can increase the number
+  // later and test the behavior of a fresh content process.
+  Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
+
+  contentPage = await loadContentPage();
 });
 
 add_task(async function test_sharedMap() {
@@ -159,4 +189,62 @@ add_task(async function test_sharedMap() {
 
   checkParentMap(expected);
   await checkContentMaps(expected);
+});
+
+add_task(async function test_blobs() {
+  let {sharedData} = Services.ppmm;
+
+  let text = [
+    "The quick brown fox jumps over the lazy dog",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+    "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  ];
+  let blobs = text.map(str => new Blob([str]));
+
+  let data = {foo: {bar: "baz"}};
+
+  sharedData.set("blob0", blobs[0]);
+  sharedData.set("blob1", blobs[1]);
+  sharedData.set("data", data);
+
+  equal(await readBlob("blob0", sharedData), text[0], "Expected text for blob0 in parent ppmm");
+
+  sharedData.flush();
+
+  equal(await readBlob("blob0", sharedData), text[0], "Expected text for blob0 in parent ppmm");
+  equal(await readBlob("blob1", sharedData), text[1], "Expected text for blob1 in parent ppmm");
+
+  equal(await readBlob("blob0"), text[0], "Expected text for blob0 in parent cpmm");
+  equal(await readBlob("blob1"), text[1], "Expected text for blob1 in parent cpmm");
+
+  equal(await contentPage.spawn("blob0", readBlob), text[0], "Expected text for blob0 in child 1 cpmm");
+  equal(await contentPage.spawn("blob1", readBlob), text[1], "Expected text for blob1 in child 1 cpmm");
+
+  // Start a second child process
+  Services.prefs.setIntPref(PROCESS_COUNT_PREF, 2);
+
+  let page2 = await loadContentPage();
+
+  equal(await page2.spawn("blob0", readBlob), text[0], "Expected text for blob0 in child 2 cpmm");
+  equal(await page2.spawn("blob1", readBlob), text[1], "Expected text for blob1 in child 2 cpmm");
+
+  sharedData.set("blob0", blobs[2]);
+
+  equal(await readBlob("blob0", sharedData), text[2], "Expected text for blob0 in parent ppmm");
+
+  sharedData.flush();
+
+  equal(await readBlob("blob0", sharedData), text[2], "Expected text for blob0 in parent ppmm");
+  equal(await readBlob("blob1", sharedData), text[1], "Expected text for blob1 in parent ppmm");
+
+  equal(await readBlob("blob0"), text[2], "Expected text for blob0 in parent cpmm");
+  equal(await readBlob("blob1"), text[1], "Expected text for blob1 in parent cpmm");
+
+  equal(await contentPage.spawn("blob0", readBlob), text[2], "Expected text for blob0 in child 1 cpmm");
+  equal(await contentPage.spawn("blob1", readBlob), text[1], "Expected text for blob1 in child 1 cpmm");
+
+  equal(await page2.spawn("blob0", readBlob), text[2], "Expected text for blob0 in child 2 cpmm");
+  equal(await page2.spawn("blob1", readBlob), text[1], "Expected text for blob1 in child 2 cpmm");
+
+  deepEqual(await page2.spawn("data", getKey), data, "Expected data for data key in child 2 cpmm");
 });

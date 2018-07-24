@@ -663,6 +663,17 @@ public:
   RefPtr<nsFrameMessageManager> mMM;
 };
 
+// When recording or replaying, return whether a message should be received in
+// the middleman process instead of the recording/replaying process.
+static bool
+DirectMessageToMiddleman(const nsAString& aMessage)
+{
+  // Middleman processes run developer tools server code and need to receive
+  // debugger related messages. The session store flush message needs to be
+  // received in order to cleanly shutdown the process.
+  return StringBeginsWith(aMessage, NS_LITERAL_STRING("debug:"))
+      || aMessage.EqualsLiteral("SessionStore:flush");
+}
 
 void
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
@@ -676,6 +687,19 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       nsTArray<StructuredCloneData>* aRetVal,
                                       ErrorResult& aError)
 {
+  // If we are recording or replaying, we will end up here in both the
+  // middleman process and the recording/replaying process. Ignore the message
+  // in one of the processes, so that it is only received in one place.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    if (DirectMessageToMiddleman(aMessage)) {
+      return;
+    }
+  } else if (recordreplay::IsMiddleman()) {
+    if (!DirectMessageToMiddleman(aMessage)) {
+      return;
+    }
+  }
+
   MOZ_ASSERT(aTarget);
 
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =

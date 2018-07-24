@@ -5,13 +5,14 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use deadlock;
+use lock_api::RawMutex as RawMutexTrait;
+use mutex::MutexGuard;
+use parking_lot_core::{self, ParkResult, RequeueOp, UnparkResult, DEFAULT_PARK_TOKEN};
+use raw_mutex::{RawMutex, TOKEN_HANDOFF, TOKEN_NORMAL};
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::time::{Duration, Instant};
-use std::ptr;
-use parking_lot_core::{self, ParkResult, RequeueOp, UnparkResult, DEFAULT_PARK_TOKEN};
-use mutex::{guard_lock, MutexGuard};
-use raw_mutex::{RawMutex, TOKEN_HANDOFF, TOKEN_NORMAL};
-use deadlock;
+use std::{fmt, ptr};
 
 /// A type indicating whether a timed wait on a condition variable returned
 /// due to a time out or not.
@@ -216,7 +217,7 @@ impl Condvar {
     /// with a different `Mutex` object.
     #[inline]
     pub fn wait<T: ?Sized>(&self, mutex_guard: &mut MutexGuard<T>) {
-        self.wait_until_internal(guard_lock(mutex_guard), None);
+        self.wait_until_internal(unsafe { MutexGuard::mutex(mutex_guard).raw() }, None);
     }
 
     /// Waits on this condition variable for a notification, timing out after
@@ -248,12 +249,19 @@ impl Condvar {
         mutex_guard: &mut MutexGuard<T>,
         timeout: Instant,
     ) -> WaitTimeoutResult {
-        self.wait_until_internal(guard_lock(mutex_guard), Some(timeout))
+        self.wait_until_internal(
+            unsafe { MutexGuard::mutex(mutex_guard).raw() },
+            Some(timeout),
+        )
     }
 
     // This is a non-generic function to reduce the monomorphization cost of
     // using `wait_until`.
-    fn wait_until_internal(&self, mutex: &RawMutex, timeout: Option<Instant>) -> WaitTimeoutResult {
+    fn wait_until_internal(
+        &self,
+        mutex: &RawMutex,
+        timeout: Option<Instant>,
+    ) -> WaitTimeoutResult {
         unsafe {
             let result;
             let mut bad_mutex = false;
@@ -276,7 +284,7 @@ impl Condvar {
                 };
                 let before_sleep = || {
                     // Unlock the mutex before sleeping...
-                    mutex.unlock(false);
+                    mutex.unlock();
                 };
                 let timed_out = |k, was_last_thread| {
                     // If we were requeued to a mutex, then we did not time out.
@@ -351,6 +359,12 @@ impl Default for Condvar {
     #[inline]
     fn default() -> Condvar {
         Condvar::new()
+    }
+}
+
+impl fmt::Debug for Condvar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.pad("Condvar { .. }")
     }
 }
 
@@ -509,5 +523,11 @@ mod tests {
         drop(g);
 
         let _ = c.wait_for(&mut m3.lock(), Duration::from_millis(1));
+    }
+
+    #[test]
+    fn test_debug_condvar() {
+        let c = Condvar::new();
+        assert_eq!(format!("{:?}", c), "Condvar { .. }");
     }
 }
