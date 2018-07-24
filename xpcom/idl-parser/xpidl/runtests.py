@@ -81,7 +81,7 @@ long bar(in long a, in float b, [array] in long c);
         self.assertEqual("in", m.params[1].paramtype)
         self.assertEqual("long", m.params[2].type)
         self.assertEqual("in", m.params[2].paramtype)
-        self.assertTrue(isinstance(m.params[2].realtype, xpidl.Array))
+        self.assertTrue(isinstance(m.params[2].realtype, xpidl.LegacyArray))
         self.assertEqual("long", m.params[2].realtype.type.name)
 
     def testAttribute(self):

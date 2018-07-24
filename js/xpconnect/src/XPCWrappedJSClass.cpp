@@ -668,7 +668,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(const nsXPTMethodInfo* method,
                                            nsXPTCMiniVariant* nativeParams,
                                            uint32_t* result) const
 {
-    if (type.Tag() != nsXPTType::T_ARRAY &&
+    if (type.Tag() != nsXPTType::T_LEGACY_ARRAY &&
         type.Tag() != nsXPTType::T_PSTRING_SIZE_IS &&
         type.Tag() != nsXPTType::T_PWSTRING_SIZE_IS) {
         *result = 0;
