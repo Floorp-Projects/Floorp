@@ -68,8 +68,8 @@ Val::Val(const LitVal& val)
       case ValType::F32: u.f32_ = val.f32(); return;
       case ValType::I64: u.i64_ = val.i64(); return;
       case ValType::F64: u.f64_ = val.f64(); return;
+      case ValType::Ref:
       case ValType::AnyRef: u.ptr_ = val.ptr(); return;
-      case ValType::Ref: break;
     }
     MOZ_CRASH();
 }

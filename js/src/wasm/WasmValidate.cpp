@@ -1644,7 +1644,7 @@ DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
 
 static bool
 DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalDescVector& globals,
-                            ValType expected, InitExpr* init)
+                            ValType expected, uint32_t numTypes, InitExpr* init)
 {
     OpBytes op;
     if (!d.readOp(&op))
@@ -1683,12 +1683,18 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
         if (gcTypesEnabled == HasGcTypes::False)
             return d.fail("unexpected initializer expression");
         uint8_t valType;
-        uint32_t unusedRefTypeIndex;
-        if (!d.readValType(&valType, &unusedRefTypeIndex))
+        uint32_t refTypeIndex;
+        if (!d.readValType(&valType, &refTypeIndex))
             return false;
-        if (valType != uint8_t(ValType::AnyRef))
-            return d.fail("expected anyref as type for ref.null");
-        *init = InitExpr(LitVal(ValType::AnyRef, nullptr));
+        if (valType == uint8_t(ValType::AnyRef)) {
+            *init = InitExpr(LitVal(ValType::AnyRef, nullptr));
+        } else if (valType == uint8_t(ValType::Ref)) {
+            if (refTypeIndex >= numTypes)
+                return d.fail("invalid reference type for ref.null");
+            *init = InitExpr(LitVal(ValType(ValType::Ref, refTypeIndex), nullptr));
+        } else {
+            return d.fail("expected anyref/ref as type for ref.null");
+        }
         break;
       }
       case uint16_t(Op::GetGlobal): {
@@ -1745,8 +1751,11 @@ DecodeGlobalSection(Decoder& d, ModuleEnvironment* env)
             return false;
 
         InitExpr initializer;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, type, &initializer))
+        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, type,
+                                         env->types.length(), &initializer))
+        {
             return false;
+        }
 
         env->globals.infallibleAppend(GlobalDesc(initializer, isMutable));
     }
@@ -1927,8 +1936,10 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
 
         InitExpr offset;
         if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
-                                         &offset))
+                                         env->types.length(), &offset))
+        {
             return false;
+        }
 
         uint32_t numElems;
         if (!d.readVarU32(&numElems))
@@ -2098,8 +2109,10 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
 
         DataSegment seg;
         if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
-                                         &seg.offset))
+                                         env->types.length(), &seg.offset))
+        {
             return false;
+        }
 
         if (!d.readVarU32(&seg.length))
             return d.fail("expected segment size");
