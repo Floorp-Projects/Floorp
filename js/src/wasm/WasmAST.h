@@ -1334,6 +1334,13 @@ class AstModule : public AstNode
     bool append(AstStructType* str) {
         return types_.append(str);
     }
+    bool append(AstTypeDef* td) {
+        if (td->isFuncType())
+            return append(&td->asFuncType());
+        if (td->isStructType())
+            return append(&td->asStructType());
+        MOZ_CRASH("Bad type");
+    }
     bool append(AstImport* imp) {
         switch (imp->kind()) {
           case DefinitionKind::Function:

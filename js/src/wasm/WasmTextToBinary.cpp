@@ -4046,7 +4046,7 @@ ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueC
             AstTypeDef* typeDef = ParseTypeDef(c);
             if (!typeDef)
                 return nullptr;
-            if (!module->append(static_cast<AstFuncType*>(typeDef)))
+            if (!module->append(typeDef))
                 return nullptr;
             break;
           }
@@ -4729,26 +4729,30 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     for (size_t i = 0; i < numTypes; i++) {
         AstTypeDef* td = module->types()[i];
         if (td->isFuncType()) {
-            AstFuncType* funcType = static_cast<AstFuncType*>(td);
+            AstFuncType* funcType = &td->asFuncType();
             if (!r.registerFuncTypeName(funcType->name(), i))
                 return r.fail("duplicate signature");
         } else if (td->isStructType()) {
-            AstStructType* structType = static_cast<AstStructType*>(td);
+            AstStructType* structType = &td->asStructType();
             if (!r.registerTypeName(structType->name(), i))
                 return r.fail("duplicate type name");
+        } else {
+            MOZ_CRASH("Bad type");
         }
     }
 
     for (size_t i = 0; i < numTypes; i++) {
         AstTypeDef* td = module->types()[i];
         if (td->isFuncType()) {
-            AstFuncType* funcType = static_cast<AstFuncType*>(td);
+            AstFuncType* funcType = &td->asFuncType();
             if (!ResolveSignature(r, *funcType))
                 return false;
         } else if (td->isStructType()) {
-            AstStructType* structType = static_cast<AstStructType*>(td);
+            AstStructType* structType = &td->asStructType();
             if (!ResolveStruct(r, *structType))
                 return false;
+        } else {
+            MOZ_CRASH("Bad type");
         }
     }
 
@@ -5392,7 +5396,7 @@ EncodeTypeSection(Encoder& e, AstModule& module)
 
     for (AstTypeDef* td : module.types()) {
         if (td->isFuncType()) {
-            AstFuncType* funcType = static_cast<AstFuncType*>(td);
+            AstFuncType* funcType = &td->asFuncType();
             if (!e.writeVarU32(uint32_t(TypeCode::Func)))
                 return false;
 
@@ -5412,7 +5416,7 @@ EncodeTypeSection(Encoder& e, AstModule& module)
                     return false;
             }
         } else if (td->isStructType()) {
-            AstStructType* st = static_cast<AstStructType*>(td);
+            AstStructType* st = &td->asStructType();
             if (!e.writeVarU32(uint32_t(TypeCode::Struct)))
                 return false;
 
@@ -5428,7 +5432,7 @@ EncodeTypeSection(Encoder& e, AstModule& module)
                     return false;
             }
         } else {
-            MOZ_CRASH();
+            MOZ_CRASH("Bad type");
         }
     }
 
