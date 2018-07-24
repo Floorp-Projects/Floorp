@@ -105,8 +105,13 @@ static bool UsingX11Compositor()
 }
 
 bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend)
+                                  LayersBackend aLayersBackend,
+                                  bool aSupportsTextureDirectMapping)
 {
+  if (aSupportsTextureDirectMapping) {
+    return false;
+  }
+
   return aLayersBackend != LayersBackend::LAYERS_BASIC
       || UsingX11Compositor()
       || aFormat == gfx::SurfaceFormat::UNKNOWN;
@@ -157,33 +162,6 @@ BufferTextureData::CreateInternal(LayersIPCChannel* aAllocator,
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
-                                                int32_t aBufferSize,
-                                                YUVColorSpace aYUVColorSpace,
-                                                uint32_t aBitDepth,
-                                                TextureFlags aTextureFlags)
-{
-  if (aBufferSize == 0 || !gfx::Factory::CheckBufferSize(aBufferSize)) {
-    return nullptr;
-  }
-
-  bool hasIntermediateBuffer = aAllocator ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                                                         aAllocator->GetCompositorBackendType())
-                                          : true;
-
-  // Initialize the metadata with something, even if it will have to be rewritten
-  // afterwards since we don't know the dimensions of the texture at this point.
-  BufferDescriptor desc = YCbCrDescriptor(gfx::IntSize(), 0, gfx::IntSize(), 0,
-                                          0, 0, 0, StereoMode::MONO,
-                                          aYUVColorSpace,
-                                          aBitDepth,
-                                          hasIntermediateBuffer);
-
-  return CreateInternal(aAllocator ? aAllocator->GetTextureForwarder() : nullptr,
-                       desc, gfx::BackendType::NONE, aBufferSize, aTextureFlags);
-}
-
-BufferTextureData*
 BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                   gfx::IntSize aYSize,
                                   uint32_t aYStride,
@@ -207,10 +185,15 @@ BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                            aCbCrStride, aCbCrSize.height,
                                            yOffset, cbOffset, crOffset);
 
+  bool supportsTextureDirectMapping =
+    aAllocator->SupportsTextureDirectMapping() && aAllocator->GetMaxTextureSize() >
+    std::max(aYSize.width, std::max(aYSize.height, std::max(aCbCrSize.width, aCbCrSize.height)));
+
   bool hasIntermediateBuffer =
     aAllocator
       ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                     aAllocator->GetCompositorBackendType())
+                                     aAllocator->GetCompositorBackendType(),
+                                     supportsTextureDirectMapping)
       : true;
 
   YCbCrDescriptor descriptor = YCbCrDescriptor(aYSize, aYStride,
@@ -525,7 +508,9 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
+  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat,
+                                                            aLayersBackend,
+                                                            aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
 
   GfxMemoryImageReporter::DidAlloc(buf);
 
@@ -601,7 +586,9 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
+  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(aFormat,
+                                                            aLayersBackend,
+                                                            aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
 
   BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
 

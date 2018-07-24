@@ -17,7 +17,8 @@ namespace mozilla {
 namespace layers {
 
 bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend);
+                                  LayersBackend aLayersBackend,
+                                  bool aSupportsTextureDirectMapping);
 
 class BufferTextureData : public TextureData
 {
@@ -38,15 +39,6 @@ public:
                                            YUVColorSpace aYUVColorSpace,
                                            uint32_t aBitDepth,
                                            TextureFlags aTextureFlags);
-
-  // It is generally better to use CreateForYCbCr instead.
-  // This creates a half-initialized texture since we don't know the sizes and
-  // offsets in the buffer.
-  static BufferTextureData* CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
-                                                         int32_t aSize,
-                                                         YUVColorSpace aYUVColorSpace,
-                                                         uint32_t aBitDepth,
-                                                         TextureFlags aTextureFlags);
 
   virtual bool Lock(OpenMode aMode) override { return true; }
 
