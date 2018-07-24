@@ -144,7 +144,7 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
         dismissed = true;
 
         if (backStackId >= 0) {
-            getFragmentManager().popBackStackImmediate(backStackId, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            getChildFragmentManager().popBackStackImmediate(backStackId, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             backStackId = -1;
         }
 
