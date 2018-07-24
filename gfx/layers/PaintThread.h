@@ -185,10 +185,10 @@ typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintStat
 
 // Holds the key operations needed to update a tiled content client on the
 // paint thread.
-class CapturedTiledPaintState {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedTiledPaintState)
+class PaintTask {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaintTask)
 public:
-  CapturedTiledPaintState() {}
+  PaintTask() {}
 
   template<typename F>
   void ForEachTextureClient(F aClosure) const
@@ -208,7 +208,7 @@ public:
   std::vector<RefPtr<TextureClient>> mClients;
 
 protected:
-  virtual ~CapturedTiledPaintState() {}
+  virtual ~PaintTask() {}
 };
 
 class CompositorBridgeChild;
@@ -233,7 +233,7 @@ public:
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
-  void PaintTiledContents(CapturedTiledPaintState* aState);
+  void QueuePaintTask(PaintTask* aTask);
 
   // Must be called on the main thread. Signifies that the current
   // batch of CapturedPaintStates* for PaintContents have been recorded
@@ -273,10 +273,12 @@ private:
   void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
-  void AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
-                               CapturedTiledPaintState* aState);
-  void AsyncPaintTiledContentsFinished(CompositorBridgeChild* aBridge,
-                                       CapturedTiledPaintState* aState);
+
+  void AsyncPaintTask(CompositorBridgeChild* aBridge,
+                      PaintTask* aTask);
+  void AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
+                              PaintTask* aTask);
+
   void AsyncEndLayer();
   void AsyncEndLayerTransaction(CompositorBridgeChild* aBridge);
 

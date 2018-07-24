@@ -341,25 +341,25 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
 }
 
 void
-PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
+PaintThread::QueuePaintTask(PaintTask* aTask)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aState);
+  MOZ_ASSERT(aTask);
 
-  if (gfxPrefs::LayersOMTPDumpCapture() && aState->mCapture) {
-    aState->mCapture->Dump();
+  if (gfxPrefs::LayersOMTPDumpCapture() && aTask->mCapture) {
+    aTask->mCapture->Dump();
   }
 
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
-  RefPtr<CapturedTiledPaintState> state(aState);
+  RefPtr<PaintTask> state(aTask);
 
   cbc->NotifyBeginAsyncPaint(state);
 
   RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintTiledContents",
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTask",
     [self, cbc, state]() -> void
   {
-    self->AsyncPaintTiledContents(cbc, state);
+    self->AsyncPaintTask(cbc, state);
   });
 
   nsIEventTarget* paintThread = mPaintWorkers ?
@@ -374,16 +374,16 @@ PaintThread::PaintTiledContents(CapturedTiledPaintState* aState)
 }
 
 void
-PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
-                                     CapturedTiledPaintState* aState)
+PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
+                            PaintTask* aTask)
 {
-  AUTO_PROFILER_LABEL("PaintThread::AsyncPaintTiledContents", GRAPHICS);
+  AUTO_PROFILER_LABEL("PaintThread::AsyncPaintTask", GRAPHICS);
   
   MOZ_ASSERT(IsOnPaintWorkerThread());
-  MOZ_ASSERT(aState);
+  MOZ_ASSERT(aTask);
 
-  gfx::DrawTargetCapture* capture = aState->mCapture;
-  gfx::DrawTarget* target = aState->mTarget;
+  gfx::DrawTargetCapture* capture = aTask->mCapture;
+  gfx::DrawTarget* target = aTask->mTarget;
 
   target->DrawCapturedDT(capture, Matrix());
   target->Flush();
@@ -392,18 +392,18 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
     // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
     // gets destroyed on the main thread (See bug 1404742). This assumes (unflushed) target
     // DrawTargets do not themselves hold on to UnscaledFonts.
-    NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
+    NS_ReleaseOnMainThreadSystemGroup("PaintTask::DrawTargetCapture", aTask->mCapture.forget());
   }
 
   {
     RefPtr<CompositorBridgeChild> cbc(aBridge);
-    RefPtr<CapturedTiledPaintState> state(aState);
+    RefPtr<PaintTask> Task(aTask);
 
     RefPtr<PaintThread> self = this;
-    RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTiledContentsFinished",
-      [self, cbc, state]() -> void
+    RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTaskFinished",
+      [self, cbc, Task]() -> void
     {
-      self->AsyncPaintTiledContentsFinished(cbc, state);
+      self->AsyncPaintTaskFinished(cbc, Task);
     });
 
   #ifndef OMTP_FORCE_SYNC
@@ -415,11 +415,11 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
 }
 
 void
-PaintThread::AsyncPaintTiledContentsFinished(CompositorBridgeChild* aBridge,
-                                             CapturedTiledPaintState* aState)
+PaintThread::AsyncPaintTaskFinished(CompositorBridgeChild* aBridge,
+                                    PaintTask* aTask)
 {
   MOZ_ASSERT(IsOnPaintThread());
-  if (aBridge->NotifyFinishedAsyncWorkerPaint(aState)) {
+  if (aBridge->NotifyFinishedAsyncWorkerPaint(aTask)) {
     aBridge->NotifyFinishedAsyncEndLayerTransaction();
   }
 }
