@@ -91,10 +91,6 @@ payment-dialog > header {
   padding-bottom: 18px;
 }
 
-#error-text {
-  text-align: center;
-}
-
 #order-details-overlay {
   background-color: var(--in-content-page-background);
   overflow: auto;
