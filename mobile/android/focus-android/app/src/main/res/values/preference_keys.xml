@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="pref_key_search_engine" translatable="false"><xliff:g id="preference_key">pref_search_engine</xliff:g></string>
+    <string name="pref_key_show_search_suggestions" translatable="false"><xliff:g id="preference_key">pref_show_search_suggestions</xliff:g></string>
     <string name="pref_key_manual_add_search_engine" translatable="false"><xliff:g id="preference_key">pref_manual_add_search_engine</xliff:g></string>
     <string name="pref_key_radio_search_engine_list" translatable="false">pref_radio_search_engine_list</string>
     <string name="pref_key_multiselect_search_engine_list" translatable="false">pref_multiselect_search_engine_list</string>
