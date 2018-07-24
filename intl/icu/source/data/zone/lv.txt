@@ -3,6 +3,15 @@
 lv{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Universālais koordinētais laiks"}
+        }
+        "Europe:Dublin"{
+            ld{"Īrijas ziemas laiks"}
+        }
+        "Europe:London"{
+            ld{"Lielbritānijas vasaras laiks"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistānas laiks"}
         }

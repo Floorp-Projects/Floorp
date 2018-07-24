@@ -3,6 +3,15 @@
 ja{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"協定世界時"}
+        }
+        "Europe:Dublin"{
+            ld{"アイルランド標準時"}
+        }
+        "Europe:London"{
+            ld{"英国夏時間"}
+        }
         "meta:Acre"{
             ld{"アクレ夏時間"}
             lg{"アクレ時間"}

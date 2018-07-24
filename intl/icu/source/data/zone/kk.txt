@@ -3,6 +3,15 @@
 kk{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Дүниежүзілік үйлестірілген уақыт"}
+        }
+        "Europe:Dublin"{
+            ld{"Ирландия жазғы уақыты"}
+        }
+        "Europe:London"{
+            ld{"Ұлыбритания жазғы уақыты"}
+        }
         "meta:Afghanistan"{
             ls{"Ауғанстан уақыты"}
         }

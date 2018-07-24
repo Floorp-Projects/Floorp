@@ -4,6 +4,9 @@ en_GB{
     %%Parent{"en_001"}
     Version{"2.1.38.73"}
     zoneStrings{
+        "Europe:London"{
+            sd{"BST"}
+        }
         "meta:Australia_Central"{
             lg{"Central Australia Time"}
             ls{"Australian Central Standard Time"}

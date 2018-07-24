@@ -3,6 +3,12 @@
 brx{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"आईरीश समर टाईम"}
+        }
+        "Europe:London"{
+            ld{"ब्रीटीश समर टाईम"}
+        }
         "meta:Acre"{
             ld{"आकर समर टाईम"}
             lg{"आकर टाईम"}

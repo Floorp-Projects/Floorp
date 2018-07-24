@@ -3,6 +3,15 @@
 pt{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Horário Universal Coordenado"}
+        }
+        "Europe:Dublin"{
+            ld{"Horário Padrão da Irlanda"}
+        }
+        "Europe:London"{
+            ld{"Horário de Verão Britânico"}
+        }
         "meta:Acre"{
             ld{"Horário de Verão do Acre"}
             lg{"Horário do Acre"}

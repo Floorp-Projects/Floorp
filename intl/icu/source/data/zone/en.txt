@@ -3,6 +3,20 @@
 en{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Coordinated Universal Time"}
+        }
+        "Europe:Dublin"{
+            ld{"Irish Standard Time"}
+        }
+        "Europe:London"{
+            ld{"British Summer Time"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Acre"{
             ld{"Acre Summer Time"}
             lg{"Acre Time"}

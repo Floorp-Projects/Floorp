@@ -3,6 +3,15 @@
 se_FI{
     Version{"2.1.38.73"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"koordinerejuvvon oktasaš áigi"}
+        }
+        "Europe:Dublin"{
+            ld{"Irlánddalaš dálveáigi"}
+        }
+        "Europe:London"{
+            ld{"Brihtalaš geasseáigi"}
+        }
         "meta:Afghanistan"{
             ls{"Afganisthana áigi"}
         }

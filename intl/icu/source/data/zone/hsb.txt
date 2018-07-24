@@ -3,6 +3,12 @@
 hsb{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Irski lětni čas"}
+        }
+        "Europe:London"{
+            ld{"Britiski lětni čas"}
+        }
         "meta:Afghanistan"{
             ls{"afghanski čas"}
         }

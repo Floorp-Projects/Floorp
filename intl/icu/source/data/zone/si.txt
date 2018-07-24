@@ -3,6 +3,15 @@
 si{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"සමකක්ෂ සාර්ව වේලාව"}
+        }
+        "Europe:Dublin"{
+            ld{"අයර්ලන්ත සම්මත වේලාව"}
+        }
+        "Europe:London"{
+            ld{"බ්‍රිතාන්‍ය ගිම්හාන වේලාව"}
+        }
         "meta:Afghanistan"{
             ls{"ඇෆ්ගනිස්ථාන වේලාව"}
         }

@@ -3,6 +3,12 @@
 br{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"eur cʼhoañv Iwerzhon"}
+        }
+        "Europe:London"{
+            ld{"eur hañv Breizh-Veur"}
+        }
         "meta:Afghanistan"{
             ls{"eur Afghanistan"}
         }

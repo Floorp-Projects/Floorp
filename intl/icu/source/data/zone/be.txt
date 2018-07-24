@@ -3,6 +3,15 @@
 be{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Універсальны каардынаваны час"}
+        }
+        "Europe:Dublin"{
+            ld{"Ірландскі стандартны час"}
+        }
+        "Europe:London"{
+            ld{"Брытанскі летні час"}
+        }
         "meta:Afghanistan"{
             ls{"Афганістанскі час"}
         }

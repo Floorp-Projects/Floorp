@@ -3,6 +3,15 @@
 ar{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"التوقيت العالمي المنسق"}
+        }
+        "Europe:Dublin"{
+            ld{"توقيت أيرلندا الرسمي"}
+        }
+        "Europe:London"{
+            ld{"توقيت بريطانيا الصيفي"}
+        }
         "meta:Afghanistan"{
             ls{"توقيت أفغانستان"}
         }

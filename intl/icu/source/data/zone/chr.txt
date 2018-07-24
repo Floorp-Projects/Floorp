@@ -3,6 +3,20 @@
 chr{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"ᎢᎩᏠᏱ ᏂᎦᏓ ᎠᏟᎢᎵᏒ"}
+        }
+        "Europe:Dublin"{
+            ld{"ᎨᎵᎩ ᎠᏟᎶᏍᏗ ᎠᏟᎢᎵᏒ"}
+        }
+        "Europe:London"{
+            ld{"ᏈᏗᏏ ᎪᎩ ᎠᏟᎢᎵᏒ"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Afghanistan"{
             ls{"ᎠᏫᎨᏂᏍᏖᏂ ᎠᏟᎢᎵᏒ"}
         }
