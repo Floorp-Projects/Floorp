@@ -138,7 +138,7 @@ mozterm:
 
 mozversioncontrol:
     description: python/mozversioncontrol unit tests
-    python-version: [2]
+    python-version: [2, 3]
     treeherder:
         symbol: vcs
     run:
