@@ -173,12 +173,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
-    void emitSimdExtractLane8x16(FloatRegister input, Register output, unsigned lane,
-                                 SimdSign signedness);
-    void emitSimdExtractLane16x8(FloatRegister input, Register output, unsigned lane,
-                                 SimdSign signedness);
-    void emitSimdExtractLane32x4(FloatRegister input, Register output, unsigned lane);
-
     template <class T, class Reg> void visitSimdGeneralShuffle(LSimdGeneralShuffleBase* lir, Reg temp);
 
     void generateInvalidateEpilogue();

@@ -1127,9 +1127,9 @@ MacroAssembler::canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
     float nanf = float(JS::GenericNaN());
     loadConstantSimd128Float(SimdConstant::SplatX4(nanf), ifFalse);
 
-    bitwiseAndSimd128(Operand(mask), reg);
-    bitwiseAndNotSimd128(Operand(ifFalse), mask);
-    bitwiseOrSimd128(Operand(mask), reg);
+    bitwiseAndFloat32x4(reg, Operand(mask), reg);
+    bitwiseAndNotFloat32x4(mask, Operand(ifFalse), mask);
+    bitwiseOrFloat32x4(reg, Operand(mask), reg);
 }
 
 // ========================================================================
