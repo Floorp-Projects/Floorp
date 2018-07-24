@@ -206,45 +206,47 @@ CategoryNode::operator new(size_t aSize, CategoryAllocator* aArena)
   return aArena->Allocate(aSize, mozilla::fallible);
 }
 
+static inline const char*
+MaybeStrdup(const nsACString& aStr, CategoryAllocator* aArena)
+{
+  if (aStr.IsLiteral()) {
+    return aStr.BeginReading();
+  }
+  return ArenaStrdup(PromiseFlatCString(aStr).get(), *aArena);
+}
+
 nsresult
-CategoryNode::GetLeaf(const char* aEntryName,
-                      char** aResult)
+CategoryNode::GetLeaf(const nsACString& aEntryName,
+                      nsACString& aResult)
 {
   MutexAutoLock lock(mLock);
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  CategoryLeaf* ent = mTable.GetEntry(aEntryName);
+  CategoryLeaf* ent = mTable.GetEntry(PromiseFlatCString(aEntryName).get());
 
   if (ent && ent->value) {
-    *aResult = NS_strdup(ent->value);
-    if (*aResult) {
-      rv = NS_OK;
-    }
+    aResult.Assign(ent->value);
+    return NS_OK;
   }
 
   return rv;
 }
 
 nsresult
-CategoryNode::AddLeaf(const char* aEntryName,
-                      const char* aValue,
+CategoryNode::AddLeaf(const nsACString& aEntryName,
+                      const nsACString& aValue,
                       bool aReplace,
-                      char** aResult,
+                      nsACString& aResult,
                       CategoryAllocator* aArena)
 {
-  if (aResult) {
-    *aResult = nullptr;
-  }
+  aResult.SetIsVoid(true);
+
+  auto entryName = PromiseFlatCString(aEntryName);
 
   MutexAutoLock lock(mLock);
-  CategoryLeaf* leaf = mTable.GetEntry(aEntryName);
+  CategoryLeaf* leaf = mTable.GetEntry(entryName.get());
 
   if (!leaf) {
-    const char* arenaEntryName = ArenaStrdup(aEntryName, *aArena);
-    if (!arenaEntryName) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    leaf = mTable.PutEntry(arenaEntryName);
+    leaf = mTable.PutEntry(MaybeStrdup(aEntryName, aArena));
     if (!leaf) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -254,31 +256,24 @@ CategoryNode::AddLeaf(const char* aEntryName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  const char* arenaValue = ArenaStrdup(aValue, *aArena);
-  if (!arenaValue) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (leaf->value) {
+    aResult.AssignLiteral(leaf->value, strlen(leaf->value));
+  } else {
+    aResult.SetIsVoid(true);
   }
-
-  if (aResult && leaf->value) {
-    *aResult = ToNewCString(nsDependentCString(leaf->value));
-    if (!*aResult) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  leaf->value = arenaValue;
+  leaf->value = MaybeStrdup(aValue, aArena);
   return NS_OK;
 }
 
 void
-CategoryNode::DeleteLeaf(const char* aEntryName)
+CategoryNode::DeleteLeaf(const nsACString& aEntryName)
 {
   // we don't throw any errors, because it normally doesn't matter
   // and it makes JS a lot cleaner
   MutexAutoLock lock(mLock);
 
   // we can just remove the entire hash entry without introspection
-  mTable.RemoveEntry(aEntryName);
+  mTable.RemoveEntry(PromiseFlatCString(aEntryName).get());
 }
 
 nsresult
@@ -339,8 +334,7 @@ CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>&
     // if a category has no entries, we pretend it doesn't exist
     CategoryNode* aNode = iter.UserData();
     if (aNode->Count()) {
-      const char* str = iter.Key();
-      enumObj->mArray[enumObj->mCount++] = str;
+      enumObj->mArray[enumObj->mCount++] = iter.Key();
     }
   }
 
@@ -423,10 +417,10 @@ nsCategoryManager::~nsCategoryManager()
 }
 
 inline CategoryNode*
-nsCategoryManager::get_category(const char* aName)
+nsCategoryManager::get_category(const nsACString& aName)
 {
   CategoryNode* node;
-  if (!mTable.Get(aName, &node)) {
+  if (!mTable.Get(PromiseFlatCString(aName).get(), &node)) {
     return nullptr;
   }
   return node;
@@ -469,7 +463,7 @@ class CategoryNotificationRunnable : public Runnable
 public:
   CategoryNotificationRunnable(nsISupports* aSubject,
                                const char* aTopic,
-                               const char* aData)
+                               const nsACString& aData)
     : Runnable("CategoryNotificationRunnable")
     , mSubject(aSubject)
     , mTopic(aTopic)
@@ -502,8 +496,8 @@ CategoryNotificationRunnable::Run()
 
 void
 nsCategoryManager::NotifyObservers(const char* aTopic,
-                                   const char* aCategoryName,
-                                   const char* aEntryName)
+                                   const nsACString& aCategoryName,
+                                   const nsACString& aEntryName)
 {
   if (mSuppressNotifications) {
     return;
@@ -511,14 +505,14 @@ nsCategoryManager::NotifyObservers(const char* aTopic,
 
   RefPtr<CategoryNotificationRunnable> r;
 
-  if (aEntryName) {
+  if (aEntryName.Length()) {
     nsCOMPtr<nsISupportsCString> entry =
       do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if (!entry) {
       return;
     }
 
-    nsresult rv = entry->SetData(nsDependentCString(aEntryName));
+    nsresult rv = entry->SetData(aEntryName);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -534,16 +528,10 @@ nsCategoryManager::NotifyObservers(const char* aTopic,
 }
 
 NS_IMETHODIMP
-nsCategoryManager::GetCategoryEntry(const char* aCategoryName,
-                                    const char* aEntryName,
-                                    char** aResult)
+nsCategoryManager::GetCategoryEntry(const nsACString& aCategoryName,
+                                    const nsACString& aEntryName,
+                                    nsACString& aResult)
 {
-  if (NS_WARN_IF(!aCategoryName) ||
-      NS_WARN_IF(!aEntryName) ||
-      NS_WARN_IF(!aResult)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   nsresult status = NS_ERROR_NOT_AVAILABLE;
 
   CategoryNode* category;
@@ -560,12 +548,12 @@ nsCategoryManager::GetCategoryEntry(const char* aCategoryName,
 }
 
 NS_IMETHODIMP
-nsCategoryManager::AddCategoryEntry(const char* aCategoryName,
-                                    const char* aEntryName,
-                                    const char* aValue,
+nsCategoryManager::AddCategoryEntry(const nsACString& aCategoryName,
+                                    const nsACString& aEntryName,
+                                    const nsACString& aValue,
                                     bool aPersist,
                                     bool aReplace,
-                                    char** aResult)
+                                    nsACString& aResult)
 {
   if (aPersist) {
     NS_ERROR("Category manager doesn't support persistence.");
@@ -577,15 +565,13 @@ nsCategoryManager::AddCategoryEntry(const char* aCategoryName,
 }
 
 void
-nsCategoryManager::AddCategoryEntry(const char* aCategoryName,
-                                    const char* aEntryName,
-                                    const char* aValue,
+nsCategoryManager::AddCategoryEntry(const nsACString& aCategoryName,
+                                    const nsACString& aEntryName,
+                                    const nsACString& aValue,
                                     bool aReplace,
-                                    char** aOldValue)
+                                    nsACString& aOldValue)
 {
-  if (aOldValue) {
-    *aOldValue = nullptr;
-  }
+  aOldValue.SetIsVoid(true);
 
   // Before we can insert a new entry, we'll need to
   //  find the |CategoryNode| to put it in...
@@ -598,8 +584,8 @@ nsCategoryManager::AddCategoryEntry(const char* aCategoryName,
       // That category doesn't exist yet; let's make it.
       category = CategoryNode::Create(&mArena);
 
-      char* categoryName = ArenaStrdup(aCategoryName, mArena);
-      mTable.Put(categoryName, category);
+      mTable.Put(MaybeStrdup(aCategoryName, &mArena),
+                 category);
     }
   }
 
@@ -607,41 +593,28 @@ nsCategoryManager::AddCategoryEntry(const char* aCategoryName,
     return;
   }
 
-  // We will need the return value of AddLeaf even if the called doesn't want it
-  char* oldEntry = nullptr;
-
   nsresult rv = category->AddLeaf(aEntryName,
                                   aValue,
                                   aReplace,
-                                  &oldEntry,
+                                  aOldValue,
                                   &mArena);
 
   if (NS_SUCCEEDED(rv)) {
-    if (oldEntry) {
+    if (!aOldValue.IsEmpty()) {
       NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
                       aCategoryName, aEntryName);
     }
     NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID,
                     aCategoryName, aEntryName);
 
-    if (aOldValue) {
-      *aOldValue = oldEntry;
-    } else {
-      free(oldEntry);
-    }
   }
 }
 
 NS_IMETHODIMP
-nsCategoryManager::DeleteCategoryEntry(const char* aCategoryName,
-                                       const char* aEntryName,
+nsCategoryManager::DeleteCategoryEntry(const nsACString& aCategoryName,
+                                       const nsACString& aEntryName,
                                        bool aDontPersist)
 {
-  if (NS_WARN_IF(!aCategoryName) ||
-      NS_WARN_IF(!aEntryName)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   /*
     Note: no errors are reported since failure to delete
     probably won't hurt you, and returning errors seriously
@@ -665,12 +638,8 @@ nsCategoryManager::DeleteCategoryEntry(const char* aCategoryName,
 }
 
 NS_IMETHODIMP
-nsCategoryManager::DeleteCategory(const char* aCategoryName)
+nsCategoryManager::DeleteCategory(const nsACString& aCategoryName)
 {
-  if (NS_WARN_IF(!aCategoryName)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // the categories are arena-allocated, so we don't
   // actually delete them. We just remove all of the
   // leaf nodes.
@@ -684,21 +653,16 @@ nsCategoryManager::DeleteCategory(const char* aCategoryName)
   if (category) {
     category->Clear();
     NotifyObservers(NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID,
-                    aCategoryName, nullptr);
+                    aCategoryName, VoidCString());
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCategoryManager::EnumerateCategory(const char* aCategoryName,
+nsCategoryManager::EnumerateCategory(const nsACString& aCategoryName,
                                      nsISimpleEnumerator** aResult)
 {
-  if (NS_WARN_IF(!aCategoryName) ||
-      NS_WARN_IF(!aResult)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   CategoryNode* category;
   {
     MutexAutoLock lock(mLock);
@@ -767,8 +731,10 @@ NS_CreateServicesFromCategory(const char* aCategory,
     return;
   }
 
+  nsDependentCString category(aCategory);
+
   nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = categoryManager->EnumerateCategory(aCategory,
+  rv = categoryManager->EnumerateCategory(category,
                                           getter_AddRefs(enumerator));
   if (NS_FAILED(rv)) {
     return;
@@ -790,8 +756,7 @@ NS_CreateServicesFromCategory(const char* aCategory,
     }
 
     nsCString contractID;
-    rv = categoryManager->GetCategoryEntry(aCategory, entryString.get(),
-                                           getter_Copies(contractID));
+    rv = categoryManager->GetCategoryEntry(category, entryString, contractID);
     if (NS_FAILED(rv)) {
       continue;
     }
