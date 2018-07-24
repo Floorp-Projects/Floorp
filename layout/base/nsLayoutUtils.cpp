@@ -2090,7 +2090,7 @@ nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
   RefPtr<ComputedStyle> pseudoContext;
   if (aContent) {
     pseudoContext = aPresContext->StyleSet()->
-      ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+      ProbePseudoElementStyle(*aContent->AsElement(), aPseudoElement,
                               aComputedStyle);
   }
   return pseudoContext != nullptr;
@@ -10264,7 +10264,7 @@ nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart)
              "Root element is the only case for this fallback "
              "path to be triggered");
   RefPtr<ComputedStyle> style =
-    pc->StyleSet()->ResolveServoStyle(content->AsElement());
+    pc->StyleSet()->ResolveServoStyle(*content->AsElement());
   // Dropping the strong reference is fine because the style should be
   // held strongly by the element.
   return style.get();

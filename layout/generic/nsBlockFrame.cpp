@@ -7844,8 +7844,8 @@ already_AddRefed<ComputedStyle>
 nsBlockFrame::GetFirstLetterStyle(nsPresContext* aPresContext)
 {
   return aPresContext->StyleSet()->
-    ProbePseudoElementStyle(mContent->AsElement(),
+    ProbePseudoElementStyle(*mContent->AsElement(),
                             CSSPseudoElementType::firstLetter,
-                            mComputedStyle);
+                            Style());
 }
 #endif

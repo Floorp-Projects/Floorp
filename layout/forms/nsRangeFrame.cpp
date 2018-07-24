@@ -81,7 +81,7 @@ nsRangeFrame::Init(nsIContent*       aContent,
   ServoStyleSet* styleSet = PresContext()->StyleSet();
 
   mOuterFocusStyle =
-    styleSet->ProbePseudoElementStyle(aContent->AsElement(),
+    styleSet->ProbePseudoElementStyle(*aContent->AsElement(),
                                       CSSPseudoElementType::mozFocusOuter,
                                       Style());
 

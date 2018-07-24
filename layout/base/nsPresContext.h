@@ -775,7 +775,7 @@ public:
    * Check whether the given element would propagate its scrollbar styles to the
    * viewport in non-paginated mode.  Must only be called if IsPaginated().
    */
-  bool ElementWouldPropagateScrollbarStyles(mozilla::dom::Element* aElement);
+  bool ElementWouldPropagateScrollbarStyles(const mozilla::dom::Element&);
 
   /**
    * Set and get methods for controlling the background drawing
