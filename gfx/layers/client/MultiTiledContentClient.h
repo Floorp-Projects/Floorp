@@ -53,7 +53,7 @@ public:
                          BasicTiledLayerPaintData* aPaintData,
                          LayerManager::DrawPaintedLayerCallback aCallback,
                          void* aCallbackData) override;
-  
+
   void ResetPaintedAndValidState() override {
     mValidRegion.SetEmpty();
     mTiles.mSize.width = 0;

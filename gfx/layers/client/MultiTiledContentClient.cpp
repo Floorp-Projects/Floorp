@@ -8,7 +8,6 @@
 
 #include "ClientTiledPaintedLayer.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
-#include "mozilla/layers/BufferEdgePad.h"
 
 namespace mozilla {
 
@@ -222,6 +221,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
   if (!paintRegion.IsEmpty()) {
     MOZ_ASSERT(mPaintStates.size() == 0);
+
     for (size_t i = 0; i < newTileCount; ++i) {
       const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
 
@@ -244,13 +244,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     }
 
     if (!mPaintTiles.empty()) {
-      // Perform buffer copies and clears if we don't have the paint thread
-      if (!(aFlags & TilePaintFlags::Async)) {
-        for (const auto& state : mPaintStates) {
-          state->PrePaint();
-        }
-      }
-
       // Create a tiled draw target
       gfx::TileSet tileset;
       for (size_t i = 0; i < mPaintTiles.size(); ++i) {
@@ -275,23 +268,24 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
                 DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
       ctx = nullptr;
 
-      // Dispatch to the paint thread or do any work left over
-      if (aFlags & TilePaintFlags::Async) {
-        for (const auto& state : mPaintStates) {
-          PaintThread::Get()->PaintTiledContents(state);
-        }
-        mManager->SetQueuedAsyncPaints();
-      } else {
-        for (const auto& state : mPaintStates) {
-          state->PostPaint();
-        }
+      // Edge padding allows us to avoid resampling artifacts
+      if (gfxPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
+        drawTarget->PadEdges(newValidRegion);
       }
-      mPaintStates.clear();
 
       // Reset
       mPaintTiles.clear();
       mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
                                std::numeric_limits<int32_t>::max());
+    }
+
+    // Dispatch to the paint thread
+    if (aFlags & TilePaintFlags::Async) {
+      for (const auto& state : mPaintStates) {
+        PaintThread::Get()->PaintTiledContents(state);
+      }
+      mManager->SetQueuedAsyncPaints();
+      mPaintStates.clear();
     }
 
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
@@ -335,21 +329,19 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   nsIntRegion tileVisibleRegion = mNewValidRegion.MovedBy(-aTileOrigin);
   tileVisibleRegion.ScaleRoundOut(mResolution, mResolution);
 
-  std::vector<CapturedTiledPaintState::Copy> asyncPaintCopies;
   std::vector<RefPtr<TextureClient>> asyncPaintClients;
 
-  nsIntRegion extraPainted;
-  RefPtr<TextureClient> backBufferOnWhite;
-  RefPtr<TextureClient> backBuffer =
-    aTile.GetBackBuffer(mCompositableClient,
-                        tileDirtyRegion,
-                        tileVisibleRegion,
-                        content, mode,
-                        extraPainted,
-                        aFlags,
-                        &backBufferOnWhite,
-                        &asyncPaintCopies,
-                        &asyncPaintClients);
+  Maybe<AcquiredBackBuffer> backBuffer =
+    aTile.AcquireBackBuffer(mCompositableClient,
+                            tileDirtyRegion,
+                            tileVisibleRegion,
+                            content,
+                            mode,
+                            aFlags);
+
+  if (!backBuffer) {
+    return false;
+  }
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
@@ -370,95 +362,33 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   // Mark the region we will be painting and the region we copied from the front buffer as
   // needing to be uploaded to the compositor
-  aTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
-
-  // Add the region we copied from the front buffer into the painted region
-  extraPainted.MoveBy(aTileOrigin);
-  extraPainted.And(extraPainted, mNewValidRegion);
-
-  if (!backBuffer) {
-    return false;
-  }
-
-  // Get the targets to draw into, and create a dual target
-  // if we are using component alpha
-  RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
-  RefPtr<DrawTarget> dtOnWhite;
-  if (backBufferOnWhite) {
-    dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
-  }
-
-  if (!dt || (backBufferOnWhite && !dtOnWhite)) {
-    aTile.DiscardBuffers();
-    return false;
-  }
-
-  RefPtr<DrawTarget> drawTarget;
-  if (dtOnWhite) {
-    drawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
-  } else {
-    drawTarget = dt;
-  }
-
-  // Create the paint operation that will be either dispatched to the paint
-  // thread, or executed synchronously
-  RefPtr<CapturedTiledPaintState> paintState = new CapturedTiledPaintState();
-
-  paintState->mCopies = std::move(asyncPaintCopies);
+  aTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(backBuffer->mUpdatedRect);
 
   // We need to clear the dirty region of the tile before painting
   // if we are painting non-opaque content
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
-    auto clear = CapturedTiledPaintState::Clear{
-      dt,
-      dtOnWhite,
-      tileDirtyRegion
-    };
-    paintState->mClears.push_back(clear);
-  }
-
-  // Only worry about padding when not doing low-res because it simplifies
-  // the math and the artifacts won't be noticable
-  // Edge padding prevents sampling artifacts when compositing.
-  if (gfxPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
-    IntRect tileRect = IntRect(0, 0,
-                               GetScaledTileSize().width,
-                               GetScaledTileSize().height);
-
-    // We only need to pad out if the tile has area that's not valid
-    if (!tileVisibleRegion.Contains(tileRect)) {
-      tileVisibleRegion = tileVisibleRegion.Intersect(tileRect);
-
-      paintState->mEdgePad = Some(CapturedTiledPaintState::EdgePad{
-        drawTarget,
-        std::move(tileVisibleRegion),
-      });
+    for (auto iter = tileDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
+                               iter.Get().Width(), iter.Get().Height());
+      backBuffer->mTarget->ClearRect(drawRect);
     }
-  }
-
-  paintState->mClients = std::move(asyncPaintClients);
-  paintState->mClients.push_back(backBuffer);
-  if (backBufferOnWhite) {
-    paintState->mClients.push_back(backBufferOnWhite);
   }
 
   gfx::Tile paintTile;
   paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+  paintTile.mDrawTarget = backBuffer->mTarget;
+  mPaintTiles.push_back(paintTile);
 
   if (aFlags & TilePaintFlags::Async) {
-    RefPtr<DrawTargetCapture> captureDT =
-      Factory::CreateCaptureDrawTarget(drawTarget->GetBackendType(),
-                                       drawTarget->GetSize(),
-                                       drawTarget->GetFormat());
-    paintTile.mDrawTarget = captureDT;
-    paintState->mTarget = drawTarget;
-    paintState->mCapture = captureDT;
+    RefPtr<CapturedTiledPaintState> paintState = new CapturedTiledPaintState();
+    paintState->mCapture = backBuffer->mCapture;
+    paintState->mTarget = backBuffer->mBackBuffer;
+    paintState->mClients = std::move(backBuffer->mTextureClients);
+    mPaintStates.push_back(paintState);
   } else {
-    paintTile.mDrawTarget = drawTarget;
+    MOZ_RELEASE_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
+    MOZ_RELEASE_ASSERT(backBuffer->mCapture == nullptr);
   }
-
-  mPaintStates.push_back(paintState);
-  mPaintTiles.push_back(paintTile);
 
   mTilingOrigin.x = std::min(mTilingOrigin.x, paintTile.mTileOrigin.x);
   mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);

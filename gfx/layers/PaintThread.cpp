@@ -58,82 +58,6 @@ CapturedBufferState::PrepareBuffer()
          (!mBufferInitialize || mBufferInitialize->CopyBuffer());
 }
 
-bool
-CapturedTiledPaintState::Copy::CopyBuffer()
-{
-  RefPtr<gfx::SourceSurface> source = mSource->Snapshot();
-
-  // This operation requires the destination draw target to be untranslated,
-  // but the destination will have a transform from being part of a tiled draw
-  // target. However in this case, CopySurface ignores transforms so we don't
-  // need to do anything.
-  mDestination->CopySurface(source,
-                            mSourceBounds,
-                            mDestinationPoint);
-  return true;
-}
-
-void
-CapturedTiledPaintState::Clear::ClearBuffer()
-{
-  // See the comment in CopyBuffer for why we need to temporarily reset
-  // the transform of the draw target.
-  Matrix oldTransform = mTarget->GetTransform();
-  mTarget->SetTransform(Matrix());
-
-  if (mTargetOnWhite) {
-    mTargetOnWhite->SetTransform(Matrix());
-    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
-                               iter.Get().Width(), iter.Get().Height());
-      mTarget->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-      mTargetOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-    }
-    mTargetOnWhite->SetTransform(oldTransform);
-  } else {
-    for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
-                               iter.Get().Width(), iter.Get().Height());
-      mTarget->ClearRect(drawRect);
-    }
-  }
-
-  mTarget->SetTransform(oldTransform);
-}
-
-void
-CapturedTiledPaintState::EdgePad::EdgePadBuffer()
-{
-  PadDrawTargetOutFromRegion(mTarget, mValidRegion);
-}
-
-void
-CapturedTiledPaintState::PrePaint()
-{
-  for (auto& copy : mCopies) {
-    copy.CopyBuffer();
-  }
-
-  for (auto& clear : mClears) {
-    clear.ClearBuffer();
-  }
-}
-
-void
-CapturedTiledPaintState::Paint()
-{
-  mTarget->DrawCapturedDT(mCapture, Matrix());
-  mTarget->Flush();
-}
-
-void
-CapturedTiledPaintState::PostPaint()
-{
-  if (mEdgePad) {
-    mEdgePad->EdgePadBuffer();
-  }
-}
-
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
@@ -458,9 +382,11 @@ PaintThread::AsyncPaintTiledContents(CompositorBridgeChild* aBridge,
   MOZ_ASSERT(IsOnPaintWorkerThread());
   MOZ_ASSERT(aState);
 
-  aState->PrePaint();
-  aState->Paint();
-  aState->PostPaint();
+  gfx::DrawTargetCapture* capture = aState->mCapture;
+  gfx::DrawTarget* target = aState->mTarget;
+
+  target->DrawCapturedDT(capture, Matrix());
+  target->Flush();
 
   if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
     // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
