@@ -413,6 +413,15 @@ class MachCommands(MachCommandBase):
 
         return 0
 
+    @SubCommand('android', 'archive-geckoview-coverage-artifacts',
+                """Archive compiled geckoview classfiles to be used later in generating code coverage reports.""")  # NOQA: E501
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_archive_geckoview_classfiles(self, args):
+        self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_COVERAGE_ARTIFACTS_TASKS'] +
+                    ["--continue"] + args, verbose=True)
+
+        return 0
+
     @SubCommand('android', 'archive-geckoview',
                 """Create GeckoView archives.
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")  # NOQA: E501
