@@ -246,8 +246,8 @@ MessagePort::Create(nsIGlobalObject* aGlobal,
 void
 MessagePort::UnshippedEntangle(MessagePort* aEntangledPort)
 {
-  MOZ_ASSERT(aEntangledPort);
-  MOZ_ASSERT(!mUnshippedEntangledPort);
+  MOZ_DIAGNOSTIC_ASSERT(aEntangledPort);
+  MOZ_DIAGNOSTIC_ASSERT(!mUnshippedEntangledPort);
 
   mUnshippedEntangledPort = aEntangledPort;
 }
@@ -297,6 +297,8 @@ MessagePort::Initialize(const nsID& aUUID,
                               [self]() { self->CloseForced(); });
     if (NS_WARN_IF(!strongWorkerRef)) {
       // The worker is shutting down.
+      mState = eStateDisentangled;
+      UpdateMustKeepAlive();
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
@@ -378,7 +380,7 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   // If we are unshipped we are connected to the other port on the same thread.
   if (mState == eStateUnshippedEntangled) {
-    MOZ_ASSERT(mUnshippedEntangledPort);
+    MOZ_DIAGNOSTIC_ASSERT(mUnshippedEntangledPort);
     mUnshippedEntangledPort->mMessages.AppendElement(data);
     mUnshippedEntangledPort->Dispatch();
     return;
