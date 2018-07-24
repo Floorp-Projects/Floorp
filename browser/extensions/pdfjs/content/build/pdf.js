@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.688';
-var pdfjsBuild = '61db85ab';
+var pdfjsVersion = '2.0.694';
+var pdfjsBuild = '1aaeaf33';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4223,7 +4223,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.688',
+    apiVersion: '2.0.694',
     source: {
       data: source.data,
       url: source.url,
@@ -5563,8 +5563,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.688';
-  exports.build = build = '61db85ab';
+  exports.version = version = '2.0.694';
+  exports.build = build = '1aaeaf33';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -8941,6 +8941,9 @@ class SimpleXMLParser extends XMLParserBase {
       return undefined;
     }
     const [documentElement] = this._currentFragment;
+    if (!documentElement) {
+      return undefined;
+    }
     return { documentElement };
   }
   onResolveEntity(name) {
