@@ -320,21 +320,15 @@ private:
   nsCOMPtr<nsIContent> mTextField;
 };
 
-nsresult
-nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
-                                           nsTArray<ContentInfo>& aElements,
+already_AddRefed<Element>
+nsNumberControlFrame::MakeAnonymousElement(Element* aParent,
                                            nsAtom* aTagName,
                                            CSSPseudoElementType aPseudoType)
 {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
-  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
+  nsIDocument* doc = mContent->GetComposedDoc();
   RefPtr<Element> resultElement = doc->CreateHTMLElement(aTagName);
   resultElement->SetPseudoElementType(aPseudoType);
-
-  // Associate the pseudo-element with the anonymous child
-  if (!aElements.AppendElement(resultElement)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (aPseudoType == CSSPseudoElementType::mozNumberSpinDown ||
       aPseudoType == CSSPseudoElementType::mozNumberSpinUp) {
@@ -342,15 +336,16 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
                            NS_LITERAL_STRING("button"), false);
   }
 
-  resultElement.forget(aResult);
-  return NS_OK;
+  if (aParent) {
+    aParent->AppendChildTo(resultElement, false);
+  }
+
+  return resultElement.forget();
 }
 
 nsresult
 nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  nsresult rv;
-
   // We create an anonymous tree for our input element that is structured as
   // follows:
   //
@@ -366,23 +361,19 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 
   // Create the anonymous outer wrapper:
-  rv = MakeAnonymousElement(getter_AddRefs(mOuterWrapper),
-                            aElements,
-                            nsGkAtoms::div,
-                            CSSPseudoElementType::mozNumberWrapper);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mOuterWrapper = MakeAnonymousElement(nullptr,
+                                       nsGkAtoms::div,
+                                       CSSPseudoElementType::mozNumberWrapper);
 
-  ContentInfo& outerWrapperCI = aElements.LastElement();
+  aElements.AppendElement(mOuterWrapper);
 
   // Create the ::-moz-number-text pseudo-element:
-  rv = MakeAnonymousElement(getter_AddRefs(mTextField),
-                            outerWrapperCI.mChildren,
-                            nsGkAtoms::input,
-                            CSSPseudoElementType::mozNumberText);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTextField = MakeAnonymousElement(mOuterWrapper,
+                                    nsGkAtoms::input,
+                                    CSSPseudoElementType::mozNumberText);
 
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                      NS_LITERAL_STRING("text"), PR_FALSE);
+                      NS_LITERAL_STRING("text"), false);
 
   HTMLInputElement* content = HTMLInputElement::FromNode(mContent);
   HTMLInputElement* textField = HTMLInputElement::FromNode(mTextField);
@@ -418,34 +409,29 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (StyleDisplay()->mAppearance == NS_THEME_TEXTFIELD) {
     // The author has elected to hide the spinner by setting this
     // -moz-appearance. We will reframe if it changes.
-    return rv;
+    return NS_OK;
   }
 
   // Create the ::-moz-number-spin-box pseudo-element:
-  rv = MakeAnonymousElement(getter_AddRefs(mSpinBox),
-                            outerWrapperCI.mChildren,
-                            nsGkAtoms::div,
-                            CSSPseudoElementType::mozNumberSpinBox);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ContentInfo& spinBoxCI = outerWrapperCI.mChildren.LastElement();
+  mSpinBox = MakeAnonymousElement(mOuterWrapper,
+                                  nsGkAtoms::div,
+                                  CSSPseudoElementType::mozNumberSpinBox);
 
   // Create the ::-moz-number-spin-up pseudo-element:
-  rv = MakeAnonymousElement(getter_AddRefs(mSpinUp),
-                            spinBoxCI.mChildren,
-                            nsGkAtoms::div,
-                            CSSPseudoElementType::mozNumberSpinUp);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mSpinUp = MakeAnonymousElement(mSpinBox,
+                                 nsGkAtoms::div,
+                                 CSSPseudoElementType::mozNumberSpinUp);
 
   // Create the ::-moz-number-spin-down pseudo-element:
-  rv = MakeAnonymousElement(getter_AddRefs(mSpinDown),
-                            spinBoxCI.mChildren,
-                            nsGkAtoms::div,
-                            CSSPseudoElementType::mozNumberSpinDown);
+  mSpinDown = MakeAnonymousElement(mSpinBox,
+                                   nsGkAtoms::div,
+                                   CSSPseudoElementType::mozNumberSpinDown);
 
+  // FIXME(emilio): doesn't this need to be done in the appearance: textfield
+  // case as well?
   SyncDisabledState();
 
-  return rv;
+  return NS_OK;
 }
 
 void
