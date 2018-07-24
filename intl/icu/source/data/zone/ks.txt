@@ -3,6 +3,12 @@
 ks{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"اَیرِش سَمَر ٹایِم"}
+        }
+        "Europe:London"{
+            ld{"برطٲنوی سَمَر ٹایِم"}
+        }
         "meta:Acre"{
             ld{"اٮ۪کرے سَمَر ٹایِم"}
             lg{"اٮ۪کرے ٹایِم"}

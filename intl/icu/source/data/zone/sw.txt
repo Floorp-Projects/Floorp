@@ -3,6 +3,15 @@
 sw{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Mfumo wa kuratibu saa ulimwenguni"}
+        }
+        "Europe:Dublin"{
+            ld{"Saa za Majira ya Joto za Ayalandi"}
+        }
+        "Europe:London"{
+            ld{"Saa za Majira ya Joto za Uingereza"}
+        }
         "meta:Afghanistan"{
             ls{"Saa za Afghanistan"}
         }

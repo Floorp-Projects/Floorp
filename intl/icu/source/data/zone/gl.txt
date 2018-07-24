@@ -3,6 +3,15 @@
 gl{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Horario universal coordinado"}
+        }
+        "Europe:Dublin"{
+            ld{"Horario estándar irlandés"}
+        }
+        "Europe:London"{
+            ld{"Horario de verán británico"}
+        }
         "meta:Afghanistan"{
             ls{"Horario de Afganistán"}
         }

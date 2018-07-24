@@ -3,6 +3,15 @@
 az{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinasiya edilmiş ümumdünya vaxtı"}
+        }
+        "Europe:Dublin"{
+            ld{"İrlandiya Yay Vaxtı"}
+        }
+        "Europe:London"{
+            ld{"Britaniya Yay Vaxtı"}
+        }
         "meta:Afghanistan"{
             ls{"Əfqanıstan Vaxtı"}
         }

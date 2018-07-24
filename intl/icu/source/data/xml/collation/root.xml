@@ -12,7 +12,7 @@
 >
 <ldml>
     <identity>
-        <version number="$Revision: 40674 $"/>
+        <version number="$Revision$"/>
         <language type="root"/> 
     </identity>
     <special xmlns:icu="http://www.icu-project.org/">

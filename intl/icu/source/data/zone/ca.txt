@@ -3,6 +3,15 @@
 ca{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Temps universal coordinat"}
+        }
+        "Europe:Dublin"{
+            ld{"Hora estàndard d’Irlanda"}
+        }
+        "Europe:London"{
+            ld{"Hora d’estiu britànica"}
+        }
         "meta:Afghanistan"{
             ls{"Hora de l’Afganistan"}
         }

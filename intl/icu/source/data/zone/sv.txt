@@ -3,6 +3,21 @@
 sv{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinerad universell tid"}
+            ss{"UTC"}
+        }
+        "Europe:Dublin"{
+            ld{"irländsk sommartid"}
+        }
+        "Europe:London"{
+            ld{"brittisk sommartid"}
+        }
+        "Pacific:Honolulu"{
+            sd{"Honolulusommartid"}
+            sg{"Honolulutid"}
+            ss{"Honolulunormaltid"}
+        }
         "meta:Acre"{
             ld{"västbrasiliansk sommartid"}
             lg{"västbrasiliansk tid"}

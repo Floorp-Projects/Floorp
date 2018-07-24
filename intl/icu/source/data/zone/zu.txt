@@ -3,6 +3,15 @@
 zu{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"isikhathi somhlaba esididiyelwe"}
+        }
+        "Europe:Dublin"{
+            ld{"isikhathi sase-Irish esivamile"}
+        }
+        "Europe:London"{
+            ld{"isikhathi sase-British sasehlobo"}
+        }
         "meta:Afghanistan"{
             ls{"Isikhathi sase-Afghanistan"}
         }

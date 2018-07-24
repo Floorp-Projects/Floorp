@@ -4,6 +4,14 @@ es_US{
     %%Parent{"es_419"}
     Version{"2.1.38.73"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"hora universal coordinada"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Alaska"{
             sd{"AKDT"}
             sg{"AKT"}

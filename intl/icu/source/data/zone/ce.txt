@@ -3,6 +3,12 @@
 ce{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Europe:Dublin"{
+            ld{"Ирланди, аьхкенан хан"}
+        }
+        "Europe:London"{
+            ld{"Британин, аьхкенан хан"}
+        }
         "meta:Afghanistan"{
             ls{"ОвхӀан"}
         }

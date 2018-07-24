@@ -3,6 +3,15 @@
 kok{
     Version{"2.1.38.69"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"समन्वित वैश्विक वेळ"}
+        }
+        "Europe:Dublin"{
+            ld{"आयरिश प्रमाणित वेळ"}
+        }
+        "Europe:London"{
+            ld{"ब्रिटिश ग्रीष्म वेळ"}
+        }
         "meta:India"{
             ls{"भारतीय समय"}
             ss{"IST"}

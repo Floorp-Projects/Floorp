@@ -3,6 +3,15 @@
 zh{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"协调世界时"}
+        }
+        "Europe:Dublin"{
+            ld{"爱尔兰标准时间"}
+        }
+        "Europe:London"{
+            ld{"英国夏令时间"}
+        }
         "meta:Acre"{
             ld{"阿克里夏令时间"}
             lg{"阿克里时间"}

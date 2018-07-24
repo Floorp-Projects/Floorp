@@ -3,6 +3,15 @@
 pa{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"ਕੋਔਰਡੀਨੇਟੇਡ ਵਿਆਪਕ ਵੇਲਾ"}
+        }
+        "Europe:Dublin"{
+            ld{"ਆਇਰਿਸ਼ ਮਿਆਰੀ ਵੇਲਾ"}
+        }
+        "Europe:London"{
+            ld{"ਬ੍ਰਿਟਿਸ਼ ਗਰਮੀਆਂ ਦਾ ਵੇਲਾ"}
+        }
         "meta:Afghanistan"{
             ls{"ਅਫ਼ਗਾਨਿਸਤਾਨ ਵੇਲਾ"}
         }

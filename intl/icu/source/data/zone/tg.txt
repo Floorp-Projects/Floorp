@@ -3,6 +3,9 @@
 tg{
     Version{"2.1.38.71"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Вақти ҷаҳонии ҳамоҳангсозӣ"}
+        }
         "meta:America_Central"{
             ld{"Вақти рӯзонаи марказӣ"}
             lg{"Вақти марказӣ"}

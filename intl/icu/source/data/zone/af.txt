@@ -3,6 +3,15 @@
 af{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Gekoördineerde universele tyd"}
+        }
+        "Europe:Dublin"{
+            ld{"Ierse standaardtyd"}
+        }
+        "Europe:London"{
+            ld{"Britse somertyd"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistan-tyd"}
         }

@@ -4,6 +4,9 @@ es_MX{
     %%Parent{"es_419"}
     Version{"2.1.38.73"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Tiempo Universal Coordinado"}
+        }
         "meta:America_Mountain"{
             ld{"hora de verano de las Montañas Rocosas"}
             lg{"hora de las Montañas Rocosas"}

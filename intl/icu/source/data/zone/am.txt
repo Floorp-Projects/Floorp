@@ -3,6 +3,15 @@
 am{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"የተቀነባበረ ሁለገብ ሰዓት"}
+        }
+        "Europe:Dublin"{
+            ld{"የአይሪሽ መደበኛ ሰዓት አቆጣጠር"}
+        }
+        "Europe:London"{
+            ld{"የብሪትሽ የበጋ ሰዓት አቆጣጠር"}
+        }
         "meta:Afghanistan"{
             ls{"የአፍጋኒስታን ሰዓት"}
         }

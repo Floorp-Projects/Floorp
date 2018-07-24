@@ -3,6 +3,15 @@
 de{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Koordinierte Weltzeit"}
+        }
+        "Europe:Dublin"{
+            ld{"Irische Sommerzeit"}
+        }
+        "Europe:London"{
+            ld{"Britische Sommerzeit"}
+        }
         "meta:Acre"{
             ld{"Acre-Sommerzeit"}
             lg{"Acre-Zeit"}

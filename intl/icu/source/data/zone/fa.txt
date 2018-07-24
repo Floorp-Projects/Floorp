@@ -3,6 +3,15 @@
 fa{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"زمان هماهنگ جهانی"}
+        }
+        "Europe:Dublin"{
+            ld{"وقت عادی ایرلند"}
+        }
+        "Europe:London"{
+            ld{"وقت تابستانی بریتانیا"}
+        }
         "meta:Afghanistan"{
             ls{"وقت افغانستان"}
         }

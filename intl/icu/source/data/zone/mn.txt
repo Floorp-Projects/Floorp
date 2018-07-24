@@ -3,6 +3,15 @@
 mn{
     Version{"2.1.41.97"}
     zoneStrings{
+        "Etc:UTC"{
+            ls{"Олон улсын зохицуулалттай цаг"}
+        }
+        "Europe:Dublin"{
+            ld{"Ирландын стандарт цаг"}
+        }
+        "Europe:London"{
+            ld{"Британийн зуны цаг"}
+        }
         "meta:Afghanistan"{
             ls{"Афганистаны цаг"}
         }
