@@ -90,8 +90,7 @@ public:
  protected:
   // nsSVGElement overrides
 
-  void UpdateHrefTarget(nsIContent* aNodeForContext,
-                        const nsAString& aHrefStr);
+  void UpdateHrefTarget(const nsAString& aHrefStr);
   void AnimationTargetChanged();
 
   /**

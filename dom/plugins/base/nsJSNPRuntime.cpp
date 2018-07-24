@@ -1904,7 +1904,8 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
   }
 }
 
-// Look up or create a JSObject that wraps the NPObject npobj.
+// Look up or create a JSObject that wraps the NPObject npobj. The return value
+// is always in the compartment of the passed-in JSContext (it might be a CCW).
 
 // static
 JSObject *

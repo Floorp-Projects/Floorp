@@ -608,6 +608,13 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SystemUsesDarkTheme:
         res = SystemWantsDarkTheme(aResult);
         break;
+    case eIntID_PrefersReducedMotion: {
+      BOOL enableAnimation = TRUE;
+      ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION,
+                              0, &enableAnimation, 0);
+      aResult = enableAnimation ? 0 : 1;
+      break;
+    }
     default:
         aResult = 0;
         res = NS_ERROR_FAILURE;

@@ -21,6 +21,11 @@ pref("marionette.debugging.clicktostart", false);
 // The value is treated case-insensitively.
 pref("marionette.log.level", "info");
 
+// Certain log messages that are known to be long are truncated
+// before they are dumped to stdout.  The `marionette.log.truncate`
+// preference indicates that the values should not be truncated.
+pref("marionette.log.truncate", true);
+
 // Port to start Marionette server on.
 pref("marionette.port", 2828);
 

@@ -134,10 +134,6 @@ struct CompileTask
     {}
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-    {
-        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
-    }
 };
 
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
