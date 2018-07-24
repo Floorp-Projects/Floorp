@@ -336,7 +336,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
                 }
 
                 if (callback != null) {
-                    final Download download = new Download(url, userAgent, contentDisposition, mimetype, contentLength, Environment.DIRECTORY_DOWNLOADS);
+                    final Download download = new Download(url, userAgent, contentDisposition, mimetype, contentLength, Environment.DIRECTORY_DOWNLOADS, null);
                     callback.onDownloadStart(download);
                 }
             }

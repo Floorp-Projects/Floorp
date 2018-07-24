@@ -31,6 +31,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -718,7 +719,7 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
 
                     pendingDownload = download;
 
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_STORAGE_PERMISSION);
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_STORAGE_PERMISSION);
                 }
             }
         });
@@ -803,17 +804,17 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
     void showDownloadPromptDialog(Download download) {
         final FragmentManager fragmentManager = getFragmentManager();
 
-        if (fragmentManager.findFragmentByTag(DownloadDialogFragment.FRAGMENT_TAG) != null) {
+        if (fragmentManager.findFragmentByTag(DownloadDialogFragment.Companion.getFRAGMENT_TAG()) != null) {
             // We are already displaying a download dialog fragment (Probably a restored fragment).
             // No need to show another one.
             return;
         }
 
-        final DialogFragment downloadDialogFragment = DownloadDialogFragment.newInstance(download);
+        final DialogFragment downloadDialogFragment = DownloadDialogFragment.Companion.newInstance(download);
         downloadDialogFragment.setTargetFragment(BrowserFragment.this, 300);
 
         try {
-            downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG);
+            downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.Companion.getFRAGMENT_TAG());
         } catch (IllegalStateException e) {
             // It can happen that at this point in time the activity is already in the background
             // and onSaveInstanceState() has already been called. Fragment transactions are not
@@ -940,22 +941,25 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
             return;
         }
 
-        final String cookie = CookieManager.getInstance().getCookie(download.getUrl());
-        final String fileName = DownloadUtils.guessFileName(
-                download.getContentDisposition(),
-                download.getUrl(),
-                download.getMimeType());
+        final String fileName = !TextUtils.isEmpty(download.getFileName()) ? download.getFileName() :
+                DownloadUtils.guessFileName(
+                        download.getContentDisposition(),
+                        download.getUrl(),
+                        download.getMimeType());
 
         final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(download.getUrl()))
-                .addRequestHeader("User-Agent", download.getUserAgent())
-                .addRequestHeader("Cookie", cookie)
                 .addRequestHeader("Referer", getUrl())
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setMimeType(download.getMimeType());
 
+        if (!AppConstants.isGeckoBuild(getContext())) {
+            final String cookie = CookieManager.getInstance().getCookie(download.getUrl());
+            request.addRequestHeader("Cookie", cookie)
+                    .addRequestHeader("User-Agent", download.getUserAgent());
+        }
+
         try {
-            request.setDestinationInExternalPublicDir(
-                    download.getDestinationDirectory(), fileName);
+            request.setDestinationInExternalPublicDir(download.getDestinationDirectory(), fileName);
         } catch (IllegalStateException e) {
             Log.e(FRAGMENT_TAG, "Cannot create download directory");
             return;

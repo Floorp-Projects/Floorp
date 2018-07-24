@@ -19,6 +19,7 @@ public class Download implements Parcelable {
                     source.readString(),
                     source.readString(),
                     source.readLong(),
+                    source.readString(),
                     source.readString());
         }
 
@@ -34,15 +35,17 @@ public class Download implements Parcelable {
     private final long contentLength;
     private final String userAgent;
     private final String destinationDirectory;
+    private final String fileName;
 
     public Download(String url, String userAgent, String contentDisposition, String mimeType, long contentLength,
-                    String destinationDirectory) {
+                    String destinationDirectory, String fileName) {
         this.url = url;
         this.userAgent = userAgent;
         this.contentDisposition = contentDisposition;
         this.mimeType = mimeType;
         this.contentLength = contentLength;
         this.destinationDirectory = destinationDirectory;
+        this.fileName = fileName;
     }
 
     /**
@@ -72,6 +75,10 @@ public class Download implements Parcelable {
         return userAgent;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -85,5 +92,6 @@ public class Download implements Parcelable {
         dest.writeString(mimeType);
         dest.writeLong(contentLength);
         dest.writeString(destinationDirectory);
+        dest.writeString(fileName);
     }
 }

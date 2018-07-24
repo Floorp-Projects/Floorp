@@ -310,7 +310,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     val download = Download(
                         response.uri, USER_AGENT,
                         response.filename, response.contentType, response.contentLength,
-                        Environment.DIRECTORY_DOWNLOADS
+                        Environment.DIRECTORY_DOWNLOADS, response.filename
                     )
                     callback?.onDownloadStart(download)
                 }
