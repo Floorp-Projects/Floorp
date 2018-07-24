@@ -115,7 +115,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   get globalDebugObject() {
-    if (!this._parent.window) {
+    if (!this._parent.window || this.dbg.replaying) {
       return null;
     }
     return this.dbg.makeGlobalObjectReference(this._parent.window);
@@ -411,7 +411,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parentClosed ? null : undefined;
   },
 
-  _makeOnEnterFrame: function({ pauseAndRespond }) {
+  _makeOnEnterFrame: function({ pauseAndRespond, rewinding }) {
     return frame => {
       const generatedLocation = this.sources.getFrameLocation(frame);
       const { originalSourceActor } = this.unsafeSynchronize(
@@ -419,6 +419,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       );
 
       const url = originalSourceActor.url;
+
+      // When rewinding into a frame, we end up at the point when it is being popped.
+      if (rewinding) {
+        frame.reportedPop = true;
+      }
 
       if (this.sources.isBlackBoxed(url)) {
         return undefined;
@@ -1224,6 +1229,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
+    this.dbg.onPopFrame = undefined;
     this.dbg.onExceptionUnwind = undefined;
     if (frame) {
       frame.onStep = undefined;
@@ -1233,7 +1239,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Clear DOM event breakpoints.
     // XPCShell tests don't use actual DOM windows for globals and cause
     // removeListenerForAllEvents to throw.
-    if (!isWorker && this.global && !this.global.toString().includes("Sandbox")) {
+    if (!isWorker && this.global && !this.dbg.replaying && !this.global.toString().includes("Sandbox")) {
       Services.els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
       for (const [, bp] of this._hiddenBreakpoints) {
         bp.delete();
