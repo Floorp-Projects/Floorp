@@ -248,12 +248,6 @@ struct Grouper
                                        wr::IpcResourceUpdateQueue& aResources,
                                        DIGroup* aGroup, nsDisplayList* aList,
                                        const StackingContextHelper& aSc);
-  // Helper method for processing a single inactive item
-  void ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
-                                   wr::DisplayListBuilder& aBuilder,
-                                   wr::IpcResourceUpdateQueue& aResources,
-                                   DIGroup* aGroup, nsDisplayItem* aItem,
-                                   const StackingContextHelper& aSc);
   ~Grouper() {
   }
 };
@@ -911,7 +905,7 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
 {
   if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
     nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(aItem);
-    const Matrix4x4Flagged& t = transformItem->GetTransform();
+    Matrix4x4Flagged t = transformItem->GetTransform();
     Matrix t2d;
     bool is2D = t.Is2D(&t2d);
     GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
@@ -921,10 +915,11 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
     bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder, opacityItem->Frame());
     GP("active: %d\n", active);
     return active || HasActiveChildren(*opacityItem->GetChildren(), aDisplayListBuilder);
-  } else if (aItem->GetType() == DisplayItemType::TYPE_WRAP_LIST && aItem->GetChildren()) {
-    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
   }
   // TODO: handle other items?
+  if (aItem->GetChildren()) {
+    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);;
+  }
   return false;
 }
 
@@ -969,6 +964,7 @@ Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
   nsDisplayItem* item = aList->GetBottom();
   nsDisplayItem* startOfCurrentGroup = item;
   while (item) {
+    nsDisplayList* children = item->GetChildren();
     if (IsItemProbablyActive(item, mDisplayListBuilder)) {
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder, aBuilder, aResources, this, startOfCurrentGroup, item);
       mClipManager.BeginItem(item, aSc);
@@ -1016,8 +1012,31 @@ Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
       startOfCurrentGroup = item->GetAbove();
     } else { // inactive item
-      ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
-                                  currentGroup, item, aSc);
+
+      if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+        nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(item);
+        Matrix4x4Flagged t = transformItem->GetTransform();
+        Matrix t2d;
+        bool is2D = t.Is2D(&t2d);
+        MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
+
+        // Save the current transform.
+        Matrix m = mTransform;
+
+        GP("t2d: %f %f\n", t2d._31, t2d._32);
+        mTransform.PreMultiply(t2d);
+        GP("mTransform: %f %f\n", mTransform._31, mTransform._32);
+        ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, currentGroup, children, aSc);
+
+        mTransform = m; // restore it
+      } else if (children) {
+        ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, currentGroup, children, aSc);
+      }
+
+      GP("Including %s of %d\n", item->Name(), currentGroup->mDisplayItems.Count());
+
+      BlobItemData* data = GetBlobItemDataForGroup(item, currentGroup);
+      currentGroup->ComputeGeometryChange(item, data, mTransform, mDisplayListBuilder); // we compute the geometry change here because we have the transform around still
     }
 
     item = item->GetAbove();
@@ -1035,46 +1054,38 @@ Grouper::ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
                                        DIGroup* aGroup, nsDisplayList* aList,
                                        const StackingContextHelper& aSc)
 {
+  DIGroup* currentGroup = aGroup;
+
   nsDisplayItem* item = aList->GetBottom();
   while (item) {
-    ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
-                                aGroup, item, aSc);
+    nsDisplayList* children = item->GetChildren();
+
+    if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+      nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(item);
+      Matrix4x4Flagged t = transformItem->GetTransform();
+      Matrix t2d;
+      bool is2D = t.Is2D(&t2d);
+      MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
+
+      Matrix m = mTransform;
+
+      GP("t2d: %f %f\n", t2d._31, t2d._32);
+      mTransform.PreMultiply(t2d);
+      GP("mTransform: %f %f\n", mTransform._31, mTransform._32);
+      ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, currentGroup, children, aSc);
+
+      mTransform = m;
+    } else if (children) {
+      ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, currentGroup, children, aSc);
+    }
+
+    GP("Including %s of %d\n", item->Name(), currentGroup->mDisplayItems.Count());
+
+    BlobItemData* data = GetBlobItemDataForGroup(item, currentGroup);
+    currentGroup->ComputeGeometryChange(item, data, mTransform, mDisplayListBuilder); // we compute the geometry change here because we have the transform around still
+
     item = item->GetAbove();
   }
-}
-
-void
-Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
-                                     wr::DisplayListBuilder& aBuilder,
-                                     wr::IpcResourceUpdateQueue& aResources,
-                                     DIGroup* aGroup, nsDisplayItem* aItem,
-                                     const StackingContextHelper& aSc)
-{
-  nsDisplayList* children = aItem->GetChildren();
-
-  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
-    nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(aItem);
-    const Matrix4x4Flagged& t = transformItem->GetTransform();
-    Matrix t2d;
-    bool is2D = t.Is2D(&t2d);
-    MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
-
-    Matrix m = mTransform;
-
-    GP("t2d: %f %f\n", t2d._31, t2d._32);
-    mTransform.PreMultiply(t2d);
-    GP("mTransform: %f %f\n", mTransform._31, mTransform._32);
-    ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);
-
-    mTransform = m;
-  } else if (children) {
-    ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);
-  }
-
-  GP("Including %s of %d\n", aItem->Name(), aGroup->mDisplayItems.Count());
-
-  BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
-  aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder); // we compute the geometry change here because we have the transform around still
 }
 
 /* This is just a copy of nsRect::ScaleToOutsidePixels with an offset added in.
