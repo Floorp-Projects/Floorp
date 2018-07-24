@@ -109,17 +109,6 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
             static_assert(sizeof(ExportArg) >= jit::Simd128DataSize,
                           "ExportArg must be big enough to store SIMD values");
             switch (type) {
-              case MIRType::Int8x16:
-              case MIRType::Int16x8:
-              case MIRType::Int32x4:
-              case MIRType::Bool8x16:
-              case MIRType::Bool16x8:
-              case MIRType::Bool32x4:
-                masm.loadUnalignedSimd128Int(src, iter->fpu());
-                break;
-              case MIRType::Float32x4:
-                masm.loadUnalignedSimd128Float(src, iter->fpu());
-                break;
               case MIRType::Double:
                 masm.loadDouble(src, iter->fpu());
                 break;
@@ -166,21 +155,6 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
                 masm.storeFloat32(ScratchFloat32Reg,
                                   Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType::Int8x16:
-              case MIRType::Int16x8:
-              case MIRType::Int32x4:
-              case MIRType::Bool8x16:
-              case MIRType::Bool16x8:
-              case MIRType::Bool32x4:
-                masm.loadUnalignedSimd128Int(src, ScratchSimd128Reg);
-                masm.storeAlignedSimd128Int(
-                  ScratchSimd128Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
-                break;
-              case MIRType::Float32x4:
-                masm.loadUnalignedSimd128Float(src, ScratchSimd128Reg);
-                masm.storeAlignedSimd128Float(
-                  ScratchSimd128Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
-                break;
               default:
                 MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected stack arg type");
             }
@@ -215,19 +189,6 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
       case ExprType::Ref:
       case ExprType::AnyRef:
         masm.storePtr(ReturnReg, Address(argv, 0));
-        break;
-      case ExprType::I8x16:
-      case ExprType::I16x8:
-      case ExprType::I32x4:
-      case ExprType::B8x16:
-      case ExprType::B16x8:
-      case ExprType::B32x4:
-        // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedSimd128Int(ReturnSimd128Reg, Address(argv, 0));
-        break;
-      case ExprType::F32x4:
-        // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedSimd128Float(ReturnSimd128Reg, Address(argv, 0));
         break;
       case ExprType::Limit:
         MOZ_CRASH("Limit");
@@ -833,13 +794,6 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         MOZ_CRASH("return anyref in jitentry NYI");
         break;
       case ExprType::I64:
-      case ExprType::I8x16:
-      case ExprType::I16x8:
-      case ExprType::I32x4:
-      case ExprType::B8x16:
-      case ExprType::B16x8:
-      case ExprType::B32x4:
-      case ExprType::F32x4:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
@@ -1212,14 +1166,6 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadPtr(argv, ReturnReg);
         break;
-      case ExprType::I8x16:
-      case ExprType::I16x8:
-      case ExprType::I32x4:
-      case ExprType::F32x4:
-      case ExprType::B8x16:
-      case ExprType::B16x8:
-      case ExprType::B32x4:
-        MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -1393,14 +1339,6 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
       case ExprType::AnyRef:
         MOZ_CRASH("anyref returned by import (jit exit) NYI");
         break;
-      case ExprType::I8x16:
-      case ExprType::I16x8:
-      case ExprType::I32x4:
-      case ExprType::F32x4:
-      case ExprType::B8x16:
-      case ExprType::B16x8:
-      case ExprType::B32x4:
-        MOZ_CRASH("SIMD types shouldn't be returned from an import");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -1598,11 +1536,13 @@ static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask & ~((uint32_t(1) << Registers::StackPointer) |
                                               (uint32_t(1) << Registers::lr))),
-    FloatRegisterSet(FloatRegisters::AllMask));
+    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too");
 #else
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask & ~(uint32_t(1) << Registers::StackPointer)),
-    FloatRegisterSet(FloatRegisters::AllMask));
+    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too");
 #endif
 
 // Generate a stub which calls WasmReportTrap() and can be executed by having
@@ -1659,13 +1599,12 @@ GenerateTrapExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
 }
 
 // Generate a stub which is only used by the signal handlers to handle out of
-// bounds access by experimental SIMD.js and Atomics and unaligned accesses on
-// ARM. This stub is executed by direct PC transfer from the faulting memory
-// access and thus the stack depth is unknown. Since
-// JitActivation::packedExitFP() is not set before calling the error reporter,
-// the current wasm activation will be lost. This stub should be removed when
-// SIMD.js and Atomics are moved to wasm and given proper traps and when we use
-// a non-faulting strategy for unaligned ARM access.
+// bounds access by Atomics and unaligned accesses on ARM. This stub is
+// executed by direct PC transfer from the faulting memory access and thus the
+// stack depth is unknown. Since JitActivation::packedExitFP() is not set
+// before calling the error reporter, the current wasm activation will be lost.
+// This stub should be removed when Atomics are moved to wasm and given proper
+// traps and when we use a non-faulting strategy for unaligned ARM access.
 static bool
 GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, Label* throwLabel,
                                 Offsets* offsets)

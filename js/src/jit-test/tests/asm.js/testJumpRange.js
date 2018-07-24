@@ -18,26 +18,6 @@ for (let threshold of [0, 50, 100, 5000, -1]) {
             return h
         `)()(), 45);
 
-    if (isSimdAvailable() && this.SIMD) {
-        var buf = new ArrayBuffer(BUF_MIN);
-        new Int32Array(buf)[0] = 10;
-        new Float32Array(buf)[1] = 42;
-        assertEq(asmCompile('stdlib', 'ffis', 'buf',
-            USE_ASM + `
-                var H = new stdlib.Uint8Array(buf);
-                var i4 = stdlib.SIMD.Int32x4;
-                var f4 = stdlib.SIMD.Float32x4;
-                var i4load = i4.load;
-                var f4load = f4.load;
-                var toi4 = i4.fromFloat32x4;
-                var i4ext = i4.extractLane;
-                function f(i) { i=i|0; return i4ext(i4load(H, i), 0)|0 }
-                function g(i) { i=i|0; return (i4ext(toi4(f4load(H, i)),1) + (f(i)|0))|0 }
-                function h(i) { i=i|0; return g(i)|0 }
-                return h
-            `)(this, null, buf)(0), 52);
-    }
-
     enableGeckoProfiling();
     asmLink(asmCompile(USE_ASM + 'function f() {} function g() { f() } function h() { g() } return h'))();
     disableGeckoProfiling();

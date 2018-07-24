@@ -121,7 +121,6 @@ namespace type {
 enum Kind {
     Scalar = JS_TYPEREPR_SCALAR_KIND,
     Reference = JS_TYPEREPR_REFERENCE_KIND,
-    Simd = JS_TYPEREPR_SIMD_KIND,
     Struct = JS_TYPEREPR_STRUCT_KIND,
     Array = JS_TYPEREPR_ARRAY_KIND
 };
@@ -133,7 +132,6 @@ enum Kind {
 
 class SimpleTypeDescr;
 class ComplexTypeDescr;
-class SimdTypeDescr;
 class StructTypeDescr;
 class TypedProto;
 
@@ -255,14 +253,6 @@ class ScalarTypeDescr : public SimpleTypeDescr
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
         static_assert(Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED,
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
-        static_assert(Scalar::Float32x4 == JS_SCALARTYPEREPR_FLOAT32X4,
-                      "TypedObjectConstants.h must be consistent with Scalar::Type");
-        static_assert(Scalar::Int8x16 == JS_SCALARTYPEREPR_INT8X16,
-                      "TypedObjectConstants.h must be consistent with Scalar::Type");
-        static_assert(Scalar::Int16x8 == JS_SCALARTYPEREPR_INT16X8,
-                      "TypedObjectConstants.h must be consistent with Scalar::Type");
-        static_assert(Scalar::Int32x4 == JS_SCALARTYPEREPR_INT32X4,
-                      "TypedObjectConstants.h must be consistent with Scalar::Type");
 
         return Type(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
     }
@@ -338,25 +328,6 @@ class ComplexTypeDescr : public TypeDescr
     TypedProto& instancePrototype() const {
         return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
     }
-};
-
-enum class SimdType;
-
-/*
- * SIMD Type descriptors.
- */
-class SimdTypeDescr : public ComplexTypeDescr
-{
-  public:
-    static const type::Kind Kind = type::Simd;
-    static const bool Opaque = false;
-    static const Class class_;
-    static uint32_t size(SimdType t);
-    static uint32_t alignment(SimdType t);
-    static MOZ_MUST_USE bool call(JSContext* cx, unsigned argc, Value* vp);
-    static bool is(const Value& v);
-
-    SimdType type() const;
 };
 
 bool IsTypedObjectClass(const Class* clasp); // Defined below
@@ -794,16 +765,6 @@ class InlineOpaqueTypedObject : public InlineTypedObject
     static const Class class_;
 };
 
-// Class for the global SIMD object.
-class SimdObject : public NativeObject
-{
-  public:
-    static const Class class_;
-    static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc, Value* vp);
-    static MOZ_MUST_USE bool resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId,
-                                     bool* resolved);
-};
-
 /*
  * Usage: NewOpaqueTypedObject(typeObj)
  *
@@ -900,16 +861,6 @@ MOZ_MUST_USE bool ClampToUint8(JSContext* cx, unsigned argc, Value* vp);
  * system.
  */
 MOZ_MUST_USE bool GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetSimdTypeDescr(simdTypeRepr)
- *
- * Returns one of the SIMD type objects, identified by `simdTypeRepr` which must
- * be one of the JS_SIMDTYPEREPR_* constants.
- *
- * The SIMD pseudo-module must have been initialized for this to be safe.
- */
-MOZ_MUST_USE bool GetSimdTypeDescr(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: Store_int8(targetDatum, targetOffset, value)
@@ -1045,8 +996,7 @@ inline bool
 IsComplexTypeDescrClass(const Class* clasp)
 {
     return clasp == &StructTypeDescr::class_ ||
-           clasp == &ArrayTypeDescr::class_ ||
-           clasp == &SimdTypeDescr::class_;
+           clasp == &ArrayTypeDescr::class_;
 }
 
 inline bool

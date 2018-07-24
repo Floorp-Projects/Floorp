@@ -253,9 +253,6 @@ def main(argv):
     # This part is equivalent to:
     # skip-if = coverage
     if os.getenv('GCOV_PREFIX') is not None:
-        # GCOV errors.
-        options.exclude += [os.path.join('asm.js', 'testSIMD.js')]               # Bug 1347245
-
         # JSVM errors.
         options.exclude += [os.path.join('basic', 'functionnames.js')]           # Bug 1369783
         options.exclude += [os.path.join('debug', 'Debugger-findScripts-23.js')]

@@ -86,9 +86,6 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggles whether Effective Address Analysis is globally disabled.
     SET_DEFAULT(disableEaa, false);
 
-    // Toggle whether eager simd unboxing is globally disabled.
-    SET_DEFAULT(disableEagerSimdUnbox, false);
-
     // Toggles whether Edge Case Analysis is gobally disabled.
     SET_DEFAULT(disableEdgeCaseAnalysis, false);
 
