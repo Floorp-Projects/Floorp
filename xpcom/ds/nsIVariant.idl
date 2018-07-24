@@ -39,7 +39,7 @@ struct nsIDataType
         VTYPE_WCHAR_STR         = TD_PWSTRING         ,
         VTYPE_INTERFACE         = TD_INTERFACE_TYPE   ,
         VTYPE_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
-        VTYPE_ARRAY             = TD_ARRAY            ,
+        VTYPE_ARRAY             = TD_LEGACY_ARRAY     ,
         VTYPE_STRING_SIZE_IS    = TD_PSTRING_SIZE_IS  ,
         VTYPE_WSTRING_SIZE_IS   = TD_PWSTRING_SIZE_IS ,
         VTYPE_UTF8STRING        = TD_UTF8STRING       ,
