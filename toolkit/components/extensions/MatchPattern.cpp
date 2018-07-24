@@ -265,6 +265,9 @@ CookieInfo::RawHost() const
 
 const char* PERMITTED_SCHEMES[] = {"http", "https", "ws", "wss", "file", "ftp", "data", nullptr};
 
+// Known schemes that are followed by "://" instead of ":".
+const char* HOST_LOCATOR_SCHEMES[] = {"http", "https", "ws", "wss", "file", "ftp", "moz-extension", "chrome", "resource", "moz", "moz-icon", "moz-gio", nullptr};
+
 const char* WILDCARD_SCHEMES[] = {"http", "https", "ws", "wss", nullptr};
 
 /* static */ already_AddRefed<MatchPattern>
@@ -310,12 +313,15 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
   }
 
   RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
+  bool requireHostLocatorScheme = true;
   if (scheme == nsGkAtoms::_asterisk) {
     mSchemes = AtomSet::Get<WILDCARD_SCHEMES>();
   } else if (!aRestrictSchemes ||
              permittedSchemes->Contains(scheme) ||
              scheme == nsGkAtoms::moz_extension) {
     mSchemes = new AtomSet({scheme});
+    RefPtr<AtomSet> hostLocatorSchemes = AtomSet::Get<HOST_LOCATOR_SCHEMES>();
+    requireHostLocatorScheme = hostLocatorSchemes->Contains(scheme);
   } else {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -327,8 +333,9 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
   offset = index + 1;
   tail.Rebind(aPattern, offset);
 
-  if (scheme == nsGkAtoms::about || scheme == nsGkAtoms::data) {
-    // about: and data: URIs don't have hosts, so just match on the path.
+  if (!requireHostLocatorScheme) {
+    // Unrecognized schemes and some schemes such as about: and data: URIs
+    // don't have hosts, so just match on the path.
     // And so, ignorePath doesn't make sense for these matchers.
     aIgnorePath = false;
   } else {
