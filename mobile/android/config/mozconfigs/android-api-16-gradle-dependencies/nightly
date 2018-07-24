@@ -34,6 +34,9 @@ ac_add_options --target=arm-linux-androideabi
 
 ac_add_options --with-branding=mobile/android/branding/nightly
 
+# Pull code coverage dependencies too.
+ac_add_options --enable-java-coverage
+
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 export MOZ_ANDROID_MMA=1
