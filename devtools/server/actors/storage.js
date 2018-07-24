@@ -337,7 +337,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
      *          - data - The requested values.
      */
     async getStoreObjects(host, names, options = {}) {
-      let offset = options.offset || 0;
+      const offset = options.offset || 0;
       let size = options.size || MAX_STORE_OBJECT_COUNT;
       if (size > MAX_STORE_OBJECT_COUNT) {
         size = MAX_STORE_OBJECT_COUNT;
@@ -381,19 +381,6 @@ StorageActors.defaults = function(typeName, observationTopics) {
         }
 
         toReturn.total = this.getObjectsSize(host, names, options);
-
-        if (offset > toReturn.total) {
-          // In this case, toReturn.data is an empty array.
-          toReturn.offset = toReturn.total;
-          toReturn.data = [];
-        } else {
-          // We need to use natural sort before slicing.
-          const sorted = toReturn.data.sort((a, b) => {
-            return naturalSortCaseInsensitive(a[sortOn], b[sortOn]);
-          });
-          const sliced = sorted.slice(offset, offset + size);
-          toReturn.data = sliced.map(a => this.toStoreObject(a));
-        }
       } else {
         let obj = await this.getValuesForHost(host, undefined, undefined,
                                               this.hostVsStores, principal);
@@ -402,19 +389,28 @@ StorageActors.defaults = function(typeName, observationTopics) {
         }
 
         toReturn.total = obj.length;
+        toReturn.data = obj;
+      }
 
-        if (offset > toReturn.total) {
-          // In this case, toReturn.data is an empty array.
-          toReturn.offset = offset = toReturn.total;
-          toReturn.data = [];
+      if (offset > toReturn.total) {
+        // In this case, toReturn.data is an empty array.
+        toReturn.offset = toReturn.total;
+        toReturn.data = [];
+      } else {
+        // We need to use natural sort before slicing.
+        const sorted = toReturn.data.sort((a, b) => {
+          return naturalSortCaseInsensitive(a[sortOn], b[sortOn]);
+        });
+        let sliced;
+        if (this.typeName === "indexedDB") {
+          // indexedDB's getValuesForHost never returns *all* values available but only
+          // a slice, starting at the expected offset. Therefore the result is already
+          // sliced as expected.
+          sliced = sorted;
         } else {
-          // We need to use natural sort before slicing.
-          const sorted = obj.sort((a, b) => {
-            return naturalSortCaseInsensitive(a[sortOn], b[sortOn]);
-          });
-          const sliced = sorted.slice(offset, offset + size);
-          toReturn.data = sliced.map(object => this.toStoreObject(object));
+          sliced = sorted.slice(offset, offset + size);
         }
+        toReturn.data = sliced.map(a => this.toStoreObject(a));
       }
 
       return toReturn;
@@ -2358,15 +2354,15 @@ var indexedDBHelpers = {
       objectStore: objectStore,
       id: id,
       index: options.index,
-      offset: 0,
+      offset: options.offset,
       size: options.size
     });
     return this.backToChild("getValuesForHost", {result: result});
   },
 
   /**
-   * Returns all or requested entries from a particular objectStore from the db
-   * in the given host.
+   * Returns requested entries (or at most MAX_STORE_OBJECT_COUNT) from a particular
+   * objectStore from the db in the given host.
    *
    * @param {string} host
    *        The given host.
