@@ -82,7 +82,7 @@ use_sse2 = False
 use_vmx = False
 use_arm_simd_gcc = False
 use_arm_neon_gcc = False
-if '86' in CONFIG['OS_TEST']:
+if CONFIG['INTEL_ARCHITECTURE']:
     use_sse2 = True
     if '64' not in CONFIG['OS_TEST']:
         if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
