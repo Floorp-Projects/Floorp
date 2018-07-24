@@ -93,7 +93,7 @@ function measureHero() {
                          startMark = startMeasure,
                          endMark = heroFound);
         var perfResult = perfData.getEntriesByName(resultType);
-        var _result = perfResult[0].duration;
+        var _result = Math.round(perfResult[0].duration);
         var resultType = "hero:" + heroFound;
         sendResult(resultType, _result);
         perfData.clearMarks();

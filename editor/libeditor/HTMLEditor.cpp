@@ -270,6 +270,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsITableEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorStyleSheets)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(TextEditor)
 
 nsresult
@@ -3076,19 +3077,29 @@ HTMLEditor::GetURLForStyleSheet(StyleSheet* aStyleSheet,
 NS_IMETHODIMP
 HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
 {
-  NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aNodeList)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsresult rv;
   nsCOMPtr<nsIMutableArray> nodes = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsCOMPtr<nsIContentIterator> iter =
-      do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
-  NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_SUCCESS(rv, rv);
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
+  if (NS_WARN_IF(!iter)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   iter->Init(doc->GetRootElement());
 
@@ -3111,7 +3122,7 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
    }
 
   nodes.forget(aNodeList);
-  return rv;
+  return NS_OK;
 }
 
 nsresult

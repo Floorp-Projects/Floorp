@@ -14,7 +14,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
   let store = Services.xulStore;
   let getValue = attr =>
-    store.getValue("chrome://browser/content/browser.xul", "main-window", attr);
+    store.getValue(AppConstants.BROWSER_CHROME_URL, "main-window", attr);
   let width = getValue("width");
   let height = getValue("height");
 
@@ -1790,7 +1790,7 @@ BrowserGlue.prototype = {
    * "collapsed" attribute, try to determine whether it's customized.
    */
   _maybeToggleBookmarkToolbarVisibility() {
-    const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+    const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
     const NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE = 3;
     let xulStore = Services.xulStore;
 
@@ -1816,7 +1816,7 @@ BrowserGlue.prototype = {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
     const UI_VERSION = 69;
-    const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+    const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
     if (Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -2367,7 +2367,7 @@ BrowserGlue.prototype = {
     let urlString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     urlString.data = url;
     return new Promise(resolve => {
-      let win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
+      let win = Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL,
                                        "_blank", "chrome,all,dialog=no", urlString);
       win.addEventListener("load", () => { resolve(win); }, {once: true});
     });

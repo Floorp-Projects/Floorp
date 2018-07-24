@@ -11,8 +11,8 @@
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const WaterfallHeader = createFactory(require("./waterfall-header"));
-const WaterfallTree = createFactory(require("./waterfall-tree"));
+const WaterfallHeader = createFactory(require("./WaterfallHeader"));
+const WaterfallTree = createFactory(require("./WaterfallTree"));
 
 function Waterfall(props) {
   return dom.div(

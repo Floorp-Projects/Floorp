@@ -104,8 +104,9 @@ async function testMenuBookmarks() {
   Assert.equal("test", entry.keyword);
   Assert.equal("hidden1%3Dbar&text1%3D%25s", entry.postData);
 
-  Assert.equal("ISO-8859-1",
-               (await PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))));
+  let pageInfo = await PlacesUtils.history.fetch(bookmarkNode.uri, {includeAnnotations: true});
+  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), "ISO-8859-1",
+    "Should have the correct charset");
 
   folderNode.containerOpen = false;
   root.containerOpen = false;

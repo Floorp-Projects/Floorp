@@ -717,7 +717,7 @@ EditorEventListener::HandleMiddleClickPaste(MouseEvent* aMouseEvent)
   // If the ctrl key is pressed, we'll do paste as quotation.
   // Would've used the alt key, but the kde wmgr treats alt-middle specially.
   if (clickEvent->IsControl()) {
-    textEditor->PasteAsQuotation(clipboard);
+    textEditor->PasteAsQuotationAsAction(clipboard);
   } else {
     textEditor->Paste(clipboard);
   }

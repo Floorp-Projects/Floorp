@@ -291,6 +291,14 @@ public:
     return mEvent->mFlags.mIsSynthesizedForTests;
   }
 
+  bool IsSafeToBeDispatchedAsynchronously() const
+  {
+    // If mEvent is not created by dom::Event nor its subclasses, its lifetime
+    // is not guaranteed.  So, only when mEventIsInternal is true, it's safe
+    // to be dispatched asynchronously.
+    return mEventIsInternal;
+  }
+
   double TimeStamp();
 
   EventTarget* GetOriginalTarget() const;

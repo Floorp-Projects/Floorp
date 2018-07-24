@@ -6,11 +6,8 @@
 package org.mozilla.gecko.firstrun;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-
-import org.mozilla.gecko.mma.MmaDelegate;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -54,17 +51,17 @@ class FirstrunPagerConfig {
         private Bundle args;
 
         FirstrunPanelConfig(String resource, String title) {
-            this(resource, title, null, null, null, true);
+            this(resource, title, -1, null, null, true);
         }
 
-        private FirstrunPanelConfig(String classname, String title, Bitmap image, String message,
+        private FirstrunPanelConfig(String classname, String title, int image, String message,
                                     String subtext, boolean isCustom) {
             this.classname = classname;
             this.title = title;
 
             if (!isCustom) {
                 args = new Bundle();
-                args.putParcelable(KEY_IMAGE, image);
+                args.putInt(KEY_IMAGE, image);
                 args.putString(KEY_MESSAGE, message);
                 args.putString(KEY_SUBTEXT, subtext);
             }

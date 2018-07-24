@@ -17,8 +17,6 @@ gcc_ext=xz
 binutils_version=2.28.1
 binutils_ext=xz
 
-$HOME_DIR/src/taskcluster/scripts/misc/fetch-content task-artifacts -d $root_dir $MOZ_FETCHES
-
 pushd $root_dir/gcc-$gcc_version
 ln -sf ../gmp-6.1.0 gmp
 ln -sf ../isl-0.16.1 isl

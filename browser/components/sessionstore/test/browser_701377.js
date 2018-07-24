@@ -30,7 +30,7 @@ function test() {
 // ----------
 function newWindowWithState(aState, aCallback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
-  let win = window.openDialog(getBrowserURL(), "_blank", opts);
+  let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", opts);
 
   registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
 

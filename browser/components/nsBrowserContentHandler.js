@@ -176,7 +176,7 @@ function getPostUpdateOverridePage(defaultOverridePage) {
  */
 function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
                            forcePrivate = false) {
-  let chromeURL = Services.prefs.getCharPref("browser.chromeURL");
+  let chromeURL = AppConstants.BROWSER_CHROME_URL;
 
   let args;
   if (!urlOrUrlList) {

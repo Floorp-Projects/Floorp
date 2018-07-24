@@ -9,50 +9,36 @@ job-defaults:
             linux64.*:
                 env:
                     SHELL: /bin/bash
+                    JSSHELL: /home/cltbld/fetches/js
                 max-run-time: 1800
     treeherder:
         kind: test
         tier: 2
     run:
-        using: run-task
-        use-artifacts:
-            build:
-                - target.jsshell.zip
+        using: mach
         workdir: /home/cltbld
     run-on-projects: ['mozilla-central', 'try']
+    fetches:
+        build:
+            - target.jsshell.zip
 
 bench-ares6:
     description: Ares6 JavaScript shell benchmark suite
     treeherder:
         symbol: js-bench(ares6)
     run:
-        command: >
-            cd $USE_ARTIFACT_PATH/build &&
-            unzip -qo -d jsshell target.jsshell.zip &&
-            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
-            cd $GECKO_PATH &&
-            ./mach jsshell-bench --binary $JSSHELL --perfherder ares6
+        mach: jsshell-bench --binary $JSSHELL --perfherder ares6
 
 bench-sixspeed:
     description: Six-Speed JavaScript shell benchmark suite
     treeherder:
         symbol: js-bench(6speed)
     run:
-        command: >
-            cd $USE_ARTIFACT_PATH/build &&
-            unzip -qo -d jsshell target.jsshell.zip &&
-            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
-            cd $GECKO_PATH &&
-            ./mach jsshell-bench --binary $JSSHELL --perfherder six-speed
+        mach: jsshell-bench --binary $JSSHELL --perfherder six-speed
 
 bench-asmjsapps:
     description: asm.js Apps shell benchmark suite
     treeherder:
         symbol: js-bench(asm.js-apps)
     run:
-        command: >
-            cd $USE_ARTIFACT_PATH/build &&
-            unzip -qo -d jsshell target.jsshell.zip &&
-            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
-            cd $GECKO_PATH &&
-            ./mach jsshell-bench --binary $JSSHELL --perfherder asmjs-apps
+        mach: jsshell-bench --binary $JSSHELL --perfherder asmjs-apps

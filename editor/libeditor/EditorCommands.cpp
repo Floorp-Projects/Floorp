@@ -19,8 +19,6 @@
 #include "nsID.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
-#include "nsIEditorMailSupport.h"
-#include "nsIPlaintextEditor.h"
 #include "nsISelectionController.h"
 #include "nsITransferable.h"
 #include "nsString.h"
@@ -1310,7 +1308,7 @@ PasteQuotationCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotation(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
@@ -1324,7 +1322,7 @@ PasteQuotationCommand::DoCommandParams(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotation(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
