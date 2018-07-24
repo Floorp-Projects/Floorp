@@ -135,7 +135,7 @@ add_task(async function setup_once() {
   let {request} = elDialog.requestStore.getState();
   initialState = Object.assign({}, {
     changesPrevented: false,
-    request: Object.assign({}, request, { completeStatus: "initial" }),
+    request: Object.assign({}, request, { completeStatus: "" }),
     orderDetailsShowing: false,
   });
 });
