@@ -1026,7 +1026,7 @@ class TupBackend(CommonBackend):
         all_idl_directories.update(*map(lambda x: x[1], manager.modules.itervalues()))
 
         all_xpts = []
-        for module, (idls, _) in sorted(manager.modules.iteritems()):
+        for module_name, module in sorted(manager.modules.iteritems()):
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
@@ -1044,13 +1044,13 @@ class TupBackend(CommonBackend):
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
                 '.',
-                module,
+                module_name,
             ])
-            cmd.extend(sorted(idls))
+            cmd.extend(sorted(module.idl_files))
 
             all_xpts.append('$(MOZ_OBJ_ROOT)/%s/%s.xpt' % (backend_file.relobjdir, module))
             outputs = ['%s.xpt' % module]
-            stems = sorted(mozpath.splitext(mozpath.basename(idl))[0] for idl in idls)
+            stems = sorted(module.stems())
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in stems])
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in stems])
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in stems])

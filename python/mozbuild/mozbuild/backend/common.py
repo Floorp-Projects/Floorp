@@ -4,8 +4,11 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import itertools
 import json
 import os
+
+from collections import defaultdict
 
 import mozpack.path as mozpath
 
@@ -52,13 +55,30 @@ from mozbuild.util import (
 
 class XPIDLManager(object):
     """Helps manage XPCOM IDLs in the context of the build system."""
+
+    class Module(object):
+        def __init__(self):
+            self.idl_files = set()
+            self.directories = set()
+            self._stems = set()
+
+        def add_idls(self, idls):
+            self.idl_files.update(idl.full_path for idl in idls)
+            self.directories.update(mozpath.dirname(idl.full_path)
+                                    for idl in idls)
+            self._stems.update(mozpath.splitext(mozpath.basename(idl))[0]
+                               for idl in idls)
+
+        def stems(self):
+            return iter(self._stems)
+
     def __init__(self, config):
         self.config = config
         self.topsrcdir = config.topsrcdir
         self.topobjdir = config.topobjdir
 
-        self.idls = {}
-        self.modules = {}
+        self._idls = set()
+        self.modules = defaultdict(self.Module)
 
     def register_idl(self, idl):
         """Registers an IDL file with this instance.
@@ -66,29 +86,19 @@ class XPIDLManager(object):
         The IDL file will be built, installed, etc.
         """
         basename = mozpath.basename(idl.source_path.full_path)
-        dirname = mozpath.dirname(idl.source_path.full_path)
-        root = mozpath.splitext(basename)[0]
-        xpt = '%s.xpt' % idl.module
 
-        entry = {
-            'source': idl.source_path,
-            'module': idl.module,
-            'basename': basename,
-            'root': root,
-        }
+        if basename in self._idls:
+            raise Exception('IDL already registered: %s' % basename)
+        self._idls.add(basename)
 
-        if entry['basename'] in self.idls:
-            raise Exception('IDL already registered: %s' % entry['basename'])
+        self.modules[idl.module].add_idls([idl.source_path])
 
-        self.idls[entry['basename']] = entry
-        # First element is a set of interface file basenames (no extension).
-        #
-        # Second element is a set of directory names where module IDLs
-        # can be found.  Yes, we have XPIDL modules with files from
-        # multiple directories.
-        t = self.modules.setdefault(entry['module'], (set(), set()))
-        t[0].add(entry['source'])
-        t[1].add(dirname)
+    def idl_stems(self):
+        """Return an iterator of stems of the managed IDL files.
+
+        The stem of an IDL file is the basename of the file with no .idl extension.
+        """
+        return itertools.chain(*[m.stems() for m in self.modules.itervalues()])
 
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""
@@ -176,10 +186,11 @@ class CommonBackend(BuildBackend):
         return True
 
     def consume_finished(self):
-        if len(self._idl_manager.idls):
+        if len(self._idl_manager.modules):
             self._write_rust_xpidl_summary(self._idl_manager)
             self._handle_idl_manager(self._idl_manager)
-            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
+            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
+                                           for stem in self._idl_manager.idl_stems())
 
 
         for config in self._configs:
@@ -472,16 +483,19 @@ class CommonBackend(BuildBackend):
 
         include_tmpl = "include!(concat!(env!(\"MOZ_TOPOBJDIR\"), \"/dist/xpcrs/%s/%s.rs\"))"
 
+        # Ensure deterministic output files.
+        stems = sorted(manager.idl_stems())
+
         with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'rt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
-            for idl in manager.idls.values():
-                fh.write(include_tmpl % ("rt", idl['root']))
+            for stem in stems:
+                fh.write(include_tmpl % ("rt", stem))
                 fh.write(";\n")
 
         with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'bt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
             fh.write("&[\n")
-            for idl in manager.idls.values():
-                fh.write(include_tmpl % ("bt", idl['root']))
+            for stem in stems:
+                fh.write(include_tmpl % ("bt", stem))
                 fh.write(",\n")
             fh.write("]\n")
