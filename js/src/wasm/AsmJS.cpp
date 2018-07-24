@@ -2110,8 +2110,10 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
                                    PropertyName* field)
     {
-        if (!JitOptions.asmJSAtomicsEnable)
-            return failCurrentOffset("asm.js Atomics only enabled when asmjs.atomics.enable is set");
+        if (!JitOptions.asmJSAtomicsEnable) {
+            return failCurrentOffset("asm.js Atomics only enabled when the environment variable "
+                                     "JIT_OPTION_asmJSAtomicsEnable is set to true");
+        }
 
         atomicsPresent_ = true;
 
@@ -8120,10 +8122,14 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     } else {
         if (!buffer->as<SharedArrayBufferObject>().isPreparedForAsmJS()) {
-            if (buffer->as<SharedArrayBufferObject>().isWasm())
-                return LinkFail(cx, "SharedArrayBuffer created for Wasm cannot be used for asm.js");
-            if (!jit::JitOptions.asmJSAtomicsEnable)
-                return LinkFail(cx, "Can link with SharedArrayBuffer only when asmjs.atomics.enable is set");
+            if (buffer->as<SharedArrayBufferObject>().isWasm()) {
+                return LinkFail(cx, "SharedArrayBuffer created for Wasm cannot be used for "
+                                    "asm.js");
+            }
+            if (!jit::JitOptions.asmJSAtomicsEnable) {
+                return LinkFail(cx, "Can link with SharedArrayBuffer only when the environment "
+                                    "variable JIT_OPTION_asmJSAtomicsEnable is set to true");
+            }
             return LinkFail(cx, "Unable to prepare SharedArrayBuffer for asm.js use");
         }
     }
