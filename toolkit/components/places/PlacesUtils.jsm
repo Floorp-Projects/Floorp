@@ -267,7 +267,7 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
                                 Object.values(PlacesSyncUtils.bookmarks.KINDS).includes(v)),
   query: simpleValidateFunc(v => v === null || (typeof v == "string" && v)),
   folder: simpleValidateFunc(v => typeof v == "string" && v &&
-                                  v.length <= Ci.nsITaggingService.MAX_TAG_LENGTH),
+                                  v.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH),
   tags: v => {
     if (v === null) {
       return [];
@@ -277,7 +277,7 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
     }
     for (let tag of v) {
       if (typeof tag != "string" || !tag ||
-          tag.length > Ci.nsITaggingService.MAX_TAG_LENGTH) {
+          tag.length > PlacesUtils.bookmarks.MAX_TAG_LENGTH) {
         throw new Error(`Invalid tag: ${tag}`);
       }
     }
