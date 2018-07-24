@@ -164,8 +164,7 @@ Damp.prototype = {
   },
 
   async waitForPendingPaints(window) {
-    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = window.windowUtils;
     window.performance.mark("pending paints.start");
     while (utils.isMozAfterPaintPending) {
       await new Promise(done => {

@@ -23,9 +23,7 @@ let gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
 function test(win, sheet) {
     let cs = win.getComputedStyle(win.document.body);
     is(cs.getPropertyValue('color'), "rgb(0, 0, 0)", "should have default color");
-    var windowUtils = SpecialPowers.wrap(win)
-      .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-      .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+    var windowUtils = SpecialPowers.getDOMWindowUtils(win);
     windowUtils.addSheet(sheet, SpecialPowers.Ci.nsIDOMWindowUtils.USER_SHEET);
     is(cs.getPropertyValue('color'), "rgb(255, 0, 0)", "should have changed color to red");
 }

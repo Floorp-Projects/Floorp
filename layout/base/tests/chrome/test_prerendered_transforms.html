@@ -18,8 +18,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var t = document.getElementById("t");
-var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-               getInterface(Ci.nsIDOMWindowUtils);
+var utils = window.windowUtils;
 
 function startTest() {
   // Do a couple of transform changes to ensure we've triggered activity heuristics

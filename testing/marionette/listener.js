@@ -7,8 +7,7 @@
 
 "use strict";
 
-const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils);
+const winUtil = content.windowUtils;
 
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -343,8 +342,7 @@ const loadListener = {
   observe(subject, topic) {
     const win = curContainer.frame;
     const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    const curWinID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+    const curWinID = win.windowUtils.outerWindowID;
 
     logger.debug(`Received observer notification ${topic} for ${winID}`);
 
@@ -704,9 +702,7 @@ function emitTouchEvent(type, touch) {
 
   // we get here if we're not in asyncPacZoomEnabled land, or if we're
   // the main process
-  let domWindowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
-  domWindowUtils.sendTouchEvent(
+  win.windowUtils.sendTouchEvent(
       type,
       [touch.identifier],
       [touch.clientX],
@@ -1569,12 +1565,10 @@ function flushRendering() {
   let content = curContainer.frame;
   let anyPendingPaintsGeneratedInDescendants = false;
 
-  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils);
+  let windowUtils = content.windowUtils;
 
   function flushWindow(win) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
     let afterPaintWasPending = utils.isMozAfterPaintPending;
 
     let root = win.document.documentElement;
@@ -1611,8 +1605,7 @@ async function reftestWait(url, remote) {
   let win = curContainer.frame;
   let document = curContainer.frame.document;
 
-  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+  let windowUtils = content.windowUtils;
 
   let reftestWait = false;
 

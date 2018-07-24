@@ -27,8 +27,7 @@ var gLeftWindow, gRightWindow, gIFrame;
 var gExpectedEvents = [];
 
 function moveMouseTo(x, y, andThen) {
-  var utils = gLeftWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                                 getInterface(Ci.nsIDOMWindowUtils);
+  var utils = gLeftWindow.windowUtils;
   utils.sendNativeMouseEvent(x, y, NSMouseMoved, 0, gLeftWindow.documentElement);
   SimpleTest.executeSoon(andThen);
 }

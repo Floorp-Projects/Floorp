@@ -41,9 +41,7 @@ function go() {
             return;
         }
 
-        let winID = w.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .outerWindowID;
+        let winID = w.windowUtils.outerWindowID;
         // Remove the frame. This will nuke the WindowProxy wrapper from our chrome
         // document's global, so evaluating 'this' in it will return a dead wrapper
         // once the window is destroyed.

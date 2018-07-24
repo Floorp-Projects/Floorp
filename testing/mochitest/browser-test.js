@@ -725,8 +725,7 @@ Tester.prototype = {
         }));
       }
 
-      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = window.windowUtils;
       if (winUtils.isTestControllingRefreshes) {
         this.currentTest.addResult(new testResult({
           name: "test left refresh driver under test control",

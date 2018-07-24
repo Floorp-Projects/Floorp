@@ -23,8 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-      const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+      const utils = window.windowUtils;
 
       function checkCrossOriginSandbox(sandbox)
       {
