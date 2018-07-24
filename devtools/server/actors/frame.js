@@ -50,7 +50,14 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
   },
 
   getEnvironment: function() {
-    if (!this.frame.environment) {
+    try {
+      if (!this.frame.environment) {
+        return {};
+      }
+    } catch (e) {
+      // |this.frame| might not be live. FIXME Bug 1477030 we shouldn't be
+      // using frames we derived from a point where we are not currently
+      // paused at.
       return {};
     }
 
