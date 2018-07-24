@@ -426,9 +426,7 @@ function doGC() {
 
 function doCC() {
   Services.obs.notifyObservers(null, "child-cc-request");
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .cycleCollect();
+  window.windowUtils.cycleCollect();
   updateMainAndFooter("Cycle collection completed", SHOW_TIMESTAMP,
                       HIDE_FOOTER);
 }

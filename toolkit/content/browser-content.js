@@ -312,8 +312,7 @@ var AudioPlaybackListener = {
   },
 
   handleMediaControlMessage(msg) {
-    let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = global.content.windowUtils;
     let suspendTypes = Ci.nsISuspendedTypes;
     switch (msg) {
       case "mute":

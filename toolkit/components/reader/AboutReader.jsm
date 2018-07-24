@@ -41,8 +41,7 @@ var AboutReader = function(mm, win, articlePromise) {
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
-  this._innerWindowId = win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+  this._innerWindowId = win.windowUtils.currentInnerWindowID;
 
   this._article = null;
   this._languagePromise = new Promise(resolve => {

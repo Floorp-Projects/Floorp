@@ -328,8 +328,7 @@ var E10SUtils = {
   wrapHandlingUserInput(aWindow, aIsHandling, aCallback) {
     var handlingUserInput;
     try {
-      handlingUserInput = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils)
+      handlingUserInput = aWindow.windowUtils
                                  .setHandlingUserInput(aIsHandling);
       aCallback();
     } finally {

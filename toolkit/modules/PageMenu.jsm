@@ -160,8 +160,7 @@ PageMenu.prototype = {
         this._builder.click(target.getAttribute(this.GENERATEDITEMID_ATTR));
       } else if (this._browser) {
         let win = target.ownerGlobal;
-        let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+        let windowUtils = win.windowUtils;
         this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand", {
           generatedItemId: target.getAttribute(this.GENERATEDITEMID_ATTR),
           handlingUserInput: windowUtils.isHandlingUserInput

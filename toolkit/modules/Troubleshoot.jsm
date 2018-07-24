@@ -361,9 +361,7 @@ var dataProviders = {
     data.numAcceleratedWindows = 0;
     let winEnumer = Services.ww.getWindowEnumerator();
     while (winEnumer.hasMoreElements()) {
-      let winUtils = winEnumer.getNext().
-                     QueryInterface(Ci.nsIInterfaceRequestor).
-                     getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = winEnumer.getNext().windowUtils;
       try {
         // NOTE: windowless browser's windows should not be reported in the graphics troubleshoot report
         if (winUtils.layerManagerType == "None" || !winUtils.layerManagerRemote) {
@@ -562,9 +560,7 @@ var dataProviders = {
     }
 
     let data = {};
-    let winUtils = Services.wm.getMostRecentWindow("").
-                   QueryInterface(Ci.nsIInterfaceRequestor).
-                   getInterface(Ci.nsIDOMWindowUtils);
+    let winUtils = Services.wm.getMostRecentWindow("").windowUtils;
     data.currentAudioBackend = winUtils.currentAudioBackend;
     data.currentMaxAudioChannels = winUtils.currentMaxAudioChannels;
     data.currentPreferredSampleRate = winUtils.currentPreferredSampleRate;
@@ -579,9 +575,7 @@ var dataProviders = {
     let data = {};
     let winEnumer = Services.ww.getWindowEnumerator();
     if (winEnumer.hasMoreElements())
-      data.incrementalGCEnabled = winEnumer.getNext().
-                                  QueryInterface(Ci.nsIInterfaceRequestor).
-                                  getInterface(Ci.nsIDOMWindowUtils).
+      data.incrementalGCEnabled = winEnumer.getNext().windowUtils.
                                   isIncrementalGCEnabled();
     done(data);
   },

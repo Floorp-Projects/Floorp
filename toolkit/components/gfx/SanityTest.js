@@ -168,8 +168,7 @@ var listener = {
   scheduleTest(win) {
     this.win = win;
     this.win.onload = this.onWindowLoaded.bind(this);
-    this.utils = this.win.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    this.utils = this.win.windowUtils;
     setTimeout(TIMEOUT_SEC * 1000, () => {
       if (this.win) {
         reportResult(TEST_TIMEOUT);

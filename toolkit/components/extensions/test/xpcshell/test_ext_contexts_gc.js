@@ -156,11 +156,7 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
     let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
 
     let frame = this.content.document.querySelector("iframe[src*='iframe.html']");
-    let innerWindowID =
-      frame.contentWindow
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .currentInnerWindowID;
+    let innerWindowID = frame.contentWindow.windowUtils.currentInnerWindowID;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
     Assert.ok(context, "Got extension page context for child frame");
@@ -198,10 +194,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   await contentPage.spawn(extension.id, async extensionId => {
     let {ExtensionPageChild} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
 
-    let innerWindowID = this.content
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .currentInnerWindowID;
+    let innerWindowID = this.content.windowUtils.currentInnerWindowID;
     let context = ExtensionPageChild.extensionContexts.get(innerWindowID);
 
     Assert.ok(context, "Got extension page context for top-level document");
