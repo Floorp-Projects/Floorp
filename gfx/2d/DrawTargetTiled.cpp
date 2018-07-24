@@ -384,6 +384,7 @@ DrawTargetTiled::PopLayer()
   MOZ_ASSERT(mPushedLayers.size());
   const PushedLayer& layer = mPushedLayers.back();
   SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
+  mPushedLayers.pop_back();
 }
 
 } // namespace gfx
