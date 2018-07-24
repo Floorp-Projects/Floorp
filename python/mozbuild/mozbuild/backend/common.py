@@ -38,7 +38,7 @@ from mozbuild.frontend.data import (
     SharedLibrary,
     StaticLibrary,
     UnifiedSources,
-    XPIDLFile,
+    XPIDLModule,
     WebIDLCollection,
 )
 from mozbuild.jar import (
@@ -80,18 +80,16 @@ class XPIDLManager(object):
         self._idls = set()
         self.modules = defaultdict(self.Module)
 
-    def register_idl(self, idl):
-        """Registers an IDL file with this instance.
+    def link_module(self, module):
+        """Links an XPIDL module with with this instance."""
+        for idl in module.idl_files:
+            basename = mozpath.basename(idl.full_path)
 
-        The IDL file will be built, installed, etc.
-        """
-        basename = mozpath.basename(idl.source_path.full_path)
+            if basename in self._idls:
+                raise Exception('IDL already registered: %s' % basename)
+            self._idls.add(basename)
 
-        if basename in self._idls:
-            raise Exception('IDL already registered: %s' % basename)
-        self._idls.add(basename)
-
-        self.modules[idl.module].add_idls([idl.source_path])
+        self.modules[module.name].add_idls(module.idl_files)
 
     def idl_stems(self):
         """Return an iterator of stems of the managed IDL files.
@@ -119,10 +117,10 @@ class CommonBackend(BuildBackend):
     def consume_object(self, obj):
         self._configs.add(obj.config)
 
-        if isinstance(obj, XPIDLFile):
+        if isinstance(obj, XPIDLModule):
             # TODO bug 1240134 tracks not processing XPIDL files during
             # artifact builds.
-            self._idl_manager.register_idl(obj)
+            self._idl_manager.link_module(obj)
 
         elif isinstance(obj, ConfigFileSubstitution):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that
