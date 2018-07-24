@@ -140,6 +140,24 @@ add_task(async function test_MatchPattern_matches() {
   pass({url: "about:reader?explicit", pattern: ["about:reader?explicit"], options: {restrictSchemes: false}, explicit: true});
   pass({url: "data:,explicit", pattern: ["data:,explicit"], explicit: true});
   pass({url: "data:,explicit", pattern: ["data:,*"], explicit: true});
+
+  // Matchers without "//" separator in the pattern.
+  pass({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:*"]});
+  pass({url: "about:blank", pattern: ["about:*"], options: {restrictSchemes: false}});
+  pass({url: "view-source:https://example.com", pattern: ["view-source:*"], options: {restrictSchemes: false}});
+  invalid({pattern: ["chrome:*"], options: {restrictSchemes: false}});
+  invalid({pattern: "http:*"});
+
+  // Matchers for unrecognized schemes.
+  invalid({pattern: "unknown-scheme:*"});
+  pass({url: "unknown-scheme:foo", pattern: ["unknown-scheme:foo"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme:foo", pattern: ["unknown-scheme:*"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme://foo"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme://*"], options: {restrictSchemes: false}});
+  pass({url: "unknown-scheme://foo", pattern: ["unknown-scheme:*"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme://foo", pattern: ["unknown-scheme:foo"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://foo"], options: {restrictSchemes: false}});
+  fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://*"], options: {restrictSchemes: false}});
 });
 
 add_task(async function test_MatchPattern_overlaps() {
