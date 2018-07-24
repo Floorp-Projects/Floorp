@@ -204,8 +204,8 @@ enum nsXPTTypeTag : uint8_t
   TD_CSTRING           = 26,
   TD_ASTRING           = 27,
   TD_JSVAL             = 28,
-  TD_SEQUENCE          = 29,
-  _TD_LAST_COMPLEX     = TD_SEQUENCE
+  TD_ARRAY             = 29,
+  _TD_LAST_COMPLEX     = TD_ARRAY
 };
 
 static_assert(_TD_LAST_COMPLEX < 32, "nsXPTTypeTag must fit in 5 bits");
@@ -244,7 +244,7 @@ public:
     if (Tag() == TD_LEGACY_ARRAY) {
       return xpt::detail::GetType(mData2);
     }
-    MOZ_ASSERT(Tag() == TD_SEQUENCE);
+    MOZ_ASSERT(Tag() == TD_ARRAY);
     return xpt::detail::GetType(Data16());
   }
 
@@ -272,14 +272,14 @@ public:
   }
 
   bool IsDependent() const {
-    return (Tag() == TD_SEQUENCE && InnermostType().IsDependent()) ||
+    return (Tag() == TD_ARRAY && InnermostType().IsDependent()) ||
            Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_LEGACY_ARRAY ||
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
   }
 
   // Unwrap a nested type to its innermost value (e.g. through arrays).
   const nsXPTType& InnermostType() const {
-    if (Tag() == TD_LEGACY_ARRAY || Tag() == TD_SEQUENCE) {
+    if (Tag() == TD_LEGACY_ARRAY || Tag() == TD_ARRAY) {
       return ArrayElementType().InnermostType();
     }
     return *this;
@@ -368,7 +368,7 @@ public:
   TD_ALIAS_(T_JSVAL             , TD_JSVAL            );
   TD_ALIAS_(T_DOMOBJECT         , TD_DOMOBJECT        );
   TD_ALIAS_(T_PROMISE           , TD_PROMISE          );
-  TD_ALIAS_(T_SEQUENCE          , TD_SEQUENCE         );
+  TD_ALIAS_(T_ARRAY             , TD_ARRAY            );
 #undef TD_ALIAS_
 
   ////////////////////////////////////////////////////////////////
@@ -531,9 +531,9 @@ struct nsXPTDOMObjectInfo
 namespace xpt {
 namespace detail {
 
-// The UntypedSequence type allows low-level access from XPConnect to nsTArray
+// The UntypedTArray type allows low-level access from XPConnect to nsTArray
 // internals without static knowledge of the array element type in question.
-class UntypedSequence
+class UntypedTArray
   : public nsTArray_base<nsTArrayFallibleAllocator, nsTArray_CopyWithMemutils>
 {
 public:
@@ -686,7 +686,7 @@ nsXPTType::Stride() const
     case TD_CSTRING:           return sizeof(nsCString);
     case TD_ASTRING:           return sizeof(nsString);
     case TD_JSVAL:             return sizeof(JS::Value);
-    case TD_SEQUENCE:          return sizeof(xpt::detail::UntypedSequence);
+    case TD_ARRAY:             return sizeof(xpt::detail::UntypedTArray);
   }
 
   MOZ_CRASH("Unknown type");
