@@ -109,8 +109,6 @@ files = {
     '../../third_party/aom/av1/decoder/dthread.c',
     '../../third_party/aom/av1/decoder/obu.c',
     '../../third_party/aom/av1/encoder/arm/neon/quantize_neon.c',
-    '../../third_party/aom/stats/aomstats.c',
-    '../../third_party/aom/stats/rate_hist.c',
   ],
   'GENERIC_EXPORTS': [
     '../../third_party/aom/aom/aom.h',
@@ -201,8 +199,6 @@ files = {
     '../../third_party/aom/av1/decoder/detokenize.c',
     '../../third_party/aom/av1/decoder/dthread.c',
     '../../third_party/aom/av1/decoder/obu.c',
-    '../../third_party/aom/stats/aomstats.c',
-    '../../third_party/aom/stats/rate_hist.c',
   ],
   'IA32_EXPORTS': [
     '../../third_party/aom/aom/aom.h',
@@ -363,8 +359,6 @@ files = {
     '../../third_party/aom/av1/decoder/detokenize.c',
     '../../third_party/aom/av1/decoder/dthread.c',
     '../../third_party/aom/av1/decoder/obu.c',
-    '../../third_party/aom/stats/aomstats.c',
-    '../../third_party/aom/stats/rate_hist.c',
   ],
   'X64_EXPORTS': [
     '../../third_party/aom/aom/aom.h',
@@ -524,7 +518,5 @@ files = {
     '../../third_party/aom/av1/decoder/detokenize.c',
     '../../third_party/aom/av1/decoder/dthread.c',
     '../../third_party/aom/av1/decoder/obu.c',
-    '../../third_party/aom/stats/aomstats.c',
-    '../../third_party/aom/stats/rate_hist.c',
   ],
 }
