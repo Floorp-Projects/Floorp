@@ -22,8 +22,7 @@ function test() {
 function runTests() {
   const sp = gScratchpadWindow.Scratchpad;
   const doc = gScratchpadWindow.document;
-  const winUtils = gScratchpadWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils);
+  const winUtils = gScratchpadWindow.windowUtils;
   const OS = Services.appinfo.OS;
 
   info("will test the Edit menu");

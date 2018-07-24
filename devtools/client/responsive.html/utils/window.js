@@ -21,8 +21,7 @@ function getToplevelWindow(window) {
 exports.getToplevelWindow = getToplevelWindow;
 
 function getDOMWindowUtils(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
+  return window.windowUtils;
 }
 exports.getDOMWindowUtils = getDOMWindowUtils;
 

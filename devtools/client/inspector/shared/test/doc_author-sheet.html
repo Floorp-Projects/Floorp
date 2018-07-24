@@ -12,9 +12,7 @@
     "use strict";
     var style = "data:text/css,div { background-color: seagreen; }";
     var uri = SpecialPowers.Services.io.newURI(style);
-    var windowUtils = SpecialPowers.wrap(window)
-                      .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                      .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+    var windowUtils = SpecialPowers.getDOMWindowUtils(window);
     windowUtils.loadSheet(uri, windowUtils.AUTHOR_SHEET);
   </script>
 </head>
