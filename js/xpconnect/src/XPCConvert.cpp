@@ -389,11 +389,11 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return NativeArray2JS(d, *static_cast<const void* const*>(s),
                               type.ArrayElementType(), iid, arrlen, pErr);
 
-    case nsXPTType::T_SEQUENCE:
+    case nsXPTType::T_ARRAY:
     {
-        auto* sequence = static_cast<const xpt::detail::UntypedSequence*>(s);
-        return NativeArray2JS(d, sequence->Elements(), type.ArrayElementType(),
-                              iid, sequence->Length(), pErr);
+        auto* array = static_cast<const xpt::detail::UntypedTArray*>(s);
+        return NativeArray2JS(d, array->Elements(), type.ArrayElementType(),
+                              iid, array->Length(), pErr);
     }
 
     default:
@@ -885,9 +885,9 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         return ok;
     }
 
-    case nsXPTType::T_SEQUENCE:
+    case nsXPTType::T_ARRAY:
     {
-        auto* dest = (xpt::detail::UntypedSequence*)d;
+        auto* dest = (xpt::detail::UntypedTArray*)d;
         const nsXPTType& elty = type.ArrayElementType();
 
         bool ok = JSArray2Native(s, elty, iid, pErr, [&] (uint32_t* aLength) -> void* {
@@ -1600,7 +1600,7 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             free(*(void**)aValue);
             break;
 
-        // Array Types
+        // Legacy Array Type
         case nsXPTType::T_LEGACY_ARRAY:
         {
             const nsXPTType& elty = aType.ArrayElementType();
@@ -1613,16 +1613,16 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             break;
         }
 
-        // Sequence Type
-        case nsXPTType::T_SEQUENCE:
+        // Array Type
+        case nsXPTType::T_ARRAY:
         {
             const nsXPTType& elty = aType.ArrayElementType();
-            auto* sequence = (xpt::detail::UntypedSequence*)aValue;
+            auto* array = (xpt::detail::UntypedTArray*)aValue;
 
-            for (uint32_t i = 0; i < sequence->Length(); ++i) {
-                CleanupValue(elty, elty.ElementPtr(sequence->Elements(), i));
+            for (uint32_t i = 0; i < array->Length(); ++i) {
+                CleanupValue(elty, elty.ElementPtr(array->Elements(), i));
             }
-            sequence->Clear();
+            array->Clear();
             break;
         }
 
@@ -1668,8 +1668,8 @@ xpc::InitializeValue(const nsXPTType& aType, void* aValue)
             new (aValue) nsCString();
             break;
 
-        case nsXPTType::T_SEQUENCE:
-            new (aValue) xpt::detail::UntypedSequence();
+        case nsXPTType::T_ARRAY:
+            new (aValue) xpt::detail::UntypedTArray();
             break;
 
         // The remaining types all have valid states where all bytes are '0'.

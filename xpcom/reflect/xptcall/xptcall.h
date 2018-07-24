@@ -58,7 +58,7 @@ struct nsXPTCVariant
         nsCString  nscstr;
         nsString   nsstr;
         JS::Value  jsval;
-        xpt::detail::UntypedSequence sequence;
+        xpt::detail::UntypedTArray array;
 
         // This type contains non-standard-layout types, so needs an explicit
         // Ctor/Dtor - we'll just delete them.

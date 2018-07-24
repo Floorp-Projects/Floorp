@@ -1680,12 +1680,12 @@ TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
     if (aType.Tag() == nsXPTType::T_JSVAL) {
         JS::UnsafeTraceRoot(aTrc, (JS::Value*)aVal,
                             "XPCWrappedNative::CallMethod param");
-    } else if (aType.Tag() == nsXPTType::T_SEQUENCE) {
-        auto* sequence = (xpt::detail::UntypedSequence*)aVal;
+    } else if (aType.Tag() == nsXPTType::T_ARRAY) {
+        auto* array = (xpt::detail::UntypedTArray*)aVal;
         const nsXPTType& elty = aType.ArrayElementType();
 
-        for (uint32_t i = 0; i < sequence->Length(); ++i) {
-            TraceParam(aTrc, elty.ElementPtr(sequence->Elements(), i), elty);
+        for (uint32_t i = 0; i < array->Length(); ++i) {
+            TraceParam(aTrc, elty.ElementPtr(array->Elements(), i), elty);
         }
     } else if (aType.Tag() == nsXPTType::T_LEGACY_ARRAY && *(void**)aVal) {
         const nsXPTType& elty = aType.ArrayElementType();
