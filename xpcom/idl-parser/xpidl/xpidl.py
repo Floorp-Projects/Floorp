@@ -133,7 +133,7 @@ class Builtin(object):
 
     def nativeType(self, calltype, shared=False, const=False):
         if self.name in ["string", "wstring"] and calltype == 'element':
-            raise IDLError("Use string class types for string Sequence elements", self.location)
+            raise IDLError("Use string class types for string Array elements", self.location)
 
         if const:
             print >>sys.stderr, IDLError(
@@ -333,11 +333,11 @@ class IDL(object):
         self.namemap.set(object)
 
     def getName(self, id, location):
-        if id.name == 'Sequence':
+        if id.name == 'Array':
             if id.params is None or len(id.params) != 1:
-                raise IDLError("Sequence takes exactly 1 parameter", location)
+                raise IDLError("Array takes exactly 1 parameter", location)
             self.hasSequence = True
-            return Sequence(self.getName(id.params[0], location), location)
+            return Array(self.getName(id.params[0], location), location)
 
         if id.params is not None:
             raise IDLError("Generic type '%s' unrecognized" % id.name, location)
@@ -559,17 +559,17 @@ class Native(object):
 
         if calltype == 'element':
             if self.isRef(calltype):
-                raise IDLError("[ref] qualified type unsupported in Sequence<T>", self.location)
+                raise IDLError("[ref] qualified type unsupported in Array<T>", self.location)
 
-            # Promises should be held in RefPtr<T> in Sequence<T>s
+            # Promises should be held in RefPtr<T> in Array<T>s
             if self.specialtype == 'promise':
                 return 'RefPtr<mozilla::dom::Promise>'
 
-            # We don't support nsIDPtr, in Sequence<T> currently, although
-            # this or support for Sequence<nsID> will be needed to replace
+            # We don't support nsIDPtr, in Array<T> currently, although
+            # this or support for Array<nsID> will be needed to replace
             # [array] completely.
             if self.specialtype == 'nsid':
-                raise IDLError("Sequence<nsIDPtr> not yet supported. "
+                raise IDLError("Array<nsIDPtr> not yet supported. "
                                "File an XPConnect bug if you need it.", self.location)
 
         if self.isRef(calltype):
@@ -1278,8 +1278,8 @@ class LegacyArray(object):
                            self.type.rustType('legacyelement'))
 
 
-class Sequence(object):
-    kind = 'sequence'
+class Array(object):
+    kind = 'array'
 
     def __init__(self, type, location):
         self.type = type
@@ -1287,7 +1287,7 @@ class Sequence(object):
 
     @property
     def name(self):
-        return "Sequence<%s>" % self.type.name
+        return "Array<%s>" % self.type.name
 
     def resolve(self, idl):
         idl.getName(self.type, self.location)
@@ -1297,7 +1297,7 @@ class Sequence(object):
 
     def nativeType(self, calltype):
         if calltype == 'legacyelement':
-            raise IDLError("[array] Sequence<T> is unsupported", self.location)
+            raise IDLError("[array] Array<T> is unsupported", self.location)
 
         base = 'nsTArray<%s>' % self.type.nativeType('element')
         if 'out' in calltype:
@@ -1310,7 +1310,7 @@ class Sequence(object):
     def rustType(self, calltype):
         # NOTE: To add Rust support, ensure 'element' is handled correctly in
         # all rustType callees.
-        raise RustNoncompat("Sequence<...> types")
+        raise RustNoncompat("Array<...> types")
 
 
 TypeId = namedtuple('TypeId', 'name params')
