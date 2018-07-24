@@ -284,7 +284,7 @@ TimeStamp
 DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
 {
   TimeStamp result;
-  RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+  nsDOMNavigationTiming* timing = mDocument->GetNavigationTiming();
   if (MOZ_UNLIKELY(!timing)) {
     return result;
   }
