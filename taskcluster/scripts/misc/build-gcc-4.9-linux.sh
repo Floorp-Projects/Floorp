@@ -17,8 +17,6 @@ gcc_ext=bz2
 binutils_version=2.25.1
 binutils_ext=bz2
 
-$HOME_DIR/src/taskcluster/scripts/misc/fetch-content task-artifacts -d $root_dir $MOZ_FETCHES
-
 pushd $root_dir/gcc-$gcc_version
 ln -sf ../cloog-0.18.1 cloog
 ln -sf ../gmp-5.1.3 gmp
