@@ -322,7 +322,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         return new DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                if (!AppConstants.supportsDownloadingFiles()) {
+                if (!AppConstants.INSTANCE.supportsDownloadingFiles()) {
                     return;
                 }
 

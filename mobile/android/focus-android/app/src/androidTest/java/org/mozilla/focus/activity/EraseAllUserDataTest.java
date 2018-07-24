@@ -62,7 +62,7 @@ public class EraseAllUserDataTest {
 
             // This test runs on both GV and WV.
             // Klar is used to test Geckoview. make sure it's set to Gecko
-            if (AppConstants.isKlarBuild() && !AppConstants.isGeckoBuild(appContext)) {
+            if (AppConstants.INSTANCE.isKlarBuild() && !AppConstants.INSTANCE.isGeckoBuild()) {
                 PreferenceManager.getDefaultSharedPreferences(appContext)
                         .edit()
                         .putBoolean(ENGINE_PREF_STRING_KEY, true)

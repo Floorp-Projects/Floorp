@@ -146,12 +146,12 @@ public class ClassicWebViewProvider implements IWebViewProvider {
         CookieManager.getInstance().setAcceptCookie(true);
     }
 
-    public void requestDesktopSite(WebSettings settings) {
+    public void requestDesktopSite(@NonNull WebSettings settings) {
         settings.setUserAgentString(toggleDesktopUA(settings, true));
         settings.setUseWideViewPort(true);
     }
 
-    public void requestMobileSite(Context context, WebSettings settings) {
+    public void requestMobileSite(@NonNull Context context, @NonNull WebSettings settings) {
         settings.setUserAgentString(toggleDesktopUA(settings, false));
         settings.setUseWideViewPort(false);
     }
@@ -159,7 +159,8 @@ public class ClassicWebViewProvider implements IWebViewProvider {
     /**
      * Build the browser specific portion of the UA String, based on the webview's existing UA String.
      */
-    public String getUABrowserString(final String existingUAString, final String focusToken) {
+    @NonNull
+    public String getUABrowserString(@NonNull final String existingUAString, @NonNull final String focusToken) {
         // Use the default WebView agent string here for everything after the platform, but insert
         // Focus in front of Chrome.
         // E.g. a default webview UA string might be:

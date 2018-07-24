@@ -23,11 +23,11 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.CustomDomains
+import org.mozilla.focus.IO
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -227,7 +227,7 @@ open class AutocompleteListFragment : Fragment() {
             Collections.swap(domains, from, to)
             notifyItemMoved(from, to)
 
-            launch(CommonPool) {
+            launch(IO) {
                 CustomDomains.save(activity.applicationContext, domains)
 
                 TelemetryWrapper.reorderAutocompleteDomainEvent(from, to)

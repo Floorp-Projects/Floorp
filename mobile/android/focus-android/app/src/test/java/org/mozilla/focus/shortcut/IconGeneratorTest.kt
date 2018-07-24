@@ -4,11 +4,10 @@
 
 package org.mozilla.focus.shortcut
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-
-import org.junit.Assert.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class IconGeneratorTest {

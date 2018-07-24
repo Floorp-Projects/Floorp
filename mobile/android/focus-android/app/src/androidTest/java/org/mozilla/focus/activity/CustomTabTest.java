@@ -71,7 +71,7 @@ public class CustomTabTest {
 
         // This test runs on both GV and WV.
         // Klar is used to test Geckoview. make sure it's set to Gecko
-        if (AppConstants.isKlarBuild() && !AppConstants.isGeckoBuild(appContext)) {
+        if (AppConstants.INSTANCE.isKlarBuild() && !AppConstants.INSTANCE.isGeckoBuild()) {
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
                     .putBoolean(ENGINE_PREF_STRING_KEY, true)
@@ -96,7 +96,7 @@ public class CustomTabTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
-            if (!AppConstants.isGeckoBuild(appContext)) {
+            if (!AppConstants.INSTANCE.isGeckoBuild()) {
                 onWebView()
                         .withElement(findElement(Locator.ID, TEST_PAGE_HEADER_ID))
                         .check(webMatches(getText(), equalTo(TEST_PAGE_HEADER_TEXT)));

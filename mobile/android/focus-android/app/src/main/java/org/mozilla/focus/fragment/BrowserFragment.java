@@ -1501,7 +1501,7 @@ public class BrowserFragment extends WebFragment implements LifecycleObserver, V
             findInPagePrevious.setAlpha(1.0F);
             // We don't want the presentation of the activeMatchOrdinal to be zero indexed. So let's
             // increment it by one for WebView.
-            if (!AppConstants.isGeckoBuild(context)) {
+            if (!AppConstants.INSTANCE.isGeckoBuild()) {
                 activeMatchOrdinal++;
             }
             final String visibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);

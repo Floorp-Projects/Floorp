@@ -5,14 +5,13 @@
 package org.mozilla.focus.settings
 
 import okhttp3.mockwebserver.MockResponse
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment.Companion.isValidSearchQueryURL
+import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 // This unit test is not running on an Android device. Allow me to use spaces in function names.

@@ -14,10 +14,10 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.CustomDomains
+import org.mozilla.focus.IO
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -63,7 +63,7 @@ class AutocompleteAddFragment : Fragment() {
                     .trim()
                     .toLowerCase()
 
-            launch(CommonPool) {
+            launch(IO) {
                 val domains = CustomDomains.load(activity)
                 val error = when {
                     domain.isEmpty() -> getString(R.string.preference_autocomplete_add_error)
@@ -87,7 +87,7 @@ class AutocompleteAddFragment : Fragment() {
     }
 
     private fun saveDomainAndClose(context: Context, domain: String) {
-        launch(CommonPool) {
+        launch(IO) {
             CustomDomains.add(context, domain)
 
             TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.SETTINGS)

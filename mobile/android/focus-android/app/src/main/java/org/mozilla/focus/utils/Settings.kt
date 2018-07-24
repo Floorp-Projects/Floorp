@@ -11,6 +11,7 @@ import android.preference.PreferenceManager
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
+import org.mozilla.focus.web.GeckoWebViewProvider
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -77,6 +78,9 @@ class Settings private constructor(context: Context) {
 
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
+
+    fun isFirstGeckoRun(): Boolean =
+            preferences.getBoolean(GeckoWebViewProvider.PREF_FIRST_GECKO_RUN, true)
 
     fun shouldUseBiometrics(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_biometric), false)

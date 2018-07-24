@@ -9,8 +9,11 @@ import android.os.Bundle
 import android.support.v14.preference.SwitchPreference
 import android.support.v7.preference.PreferenceFragmentCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
+import mozilla.components.service.fretboard.Fretboard
+import org.mozilla.focus.FocusApplication
 import org.mozilla.focus.R
-import org.mozilla.focus.web.Config
+import org.mozilla.focus.utils.experimentDescriptor
+import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
 
 class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -19,13 +22,15 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
     }
 
     private var rendererPreferenceChanged = false
+    private lateinit var fretboard: Fretboard
+    private lateinit var enginePreference: SwitchPreference
+    lateinit var application: FocusApplication
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
-        val enginePref: SwitchPreference? = preferenceManager
-                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreference?
-        enginePref?.isChecked = preferenceManager.sharedPreferences
-                .getBoolean(ENGINE_PREF_STRING_KEY, Config.DEFAULT_NEW_RENDERER)
+        enginePreference = preferenceManager
+                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreference
+        enginePreference.isChecked = activity!!.isInExperiment(experimentDescriptor)
     }
 
     override fun onResume() {
@@ -37,6 +42,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         if (rendererPreferenceChanged) {
+            fretboard.setOverride(application, experimentDescriptor, enginePreference.isChecked)
             val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity?.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
         }

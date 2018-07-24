@@ -44,10 +44,22 @@ import org.mozilla.geckoview.SessionFinder
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
+@Suppress("TooManyFunctions")
 class GeckoWebViewProvider : IWebViewProvider {
 
     override fun preload(context: Context) {
+        sendTelemetryEventOnSwitchToGecko(context)
         createGeckoRuntime(context)
+    }
+
+    private fun sendTelemetryEventOnSwitchToGecko(context: Context) {
+        val settings = Settings.getInstance(context)
+        if (!settings.shouldShowFirstrun() && settings.isFirstGeckoRun()) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit().putBoolean(PREF_FIRST_GECKO_RUN, false).apply()
+            Log.d(javaClass.simpleName, "Sending change to Gecko ping")
+            TelemetryWrapper.changeToGeckoEngineEvent()
+        }
     }
 
     override fun create(context: Context, attributeSet: AttributeSet?): View {
@@ -90,8 +102,8 @@ class GeckoWebViewProvider : IWebViewProvider {
     override fun disableBlocking(webSettings: WebSettings, systemWebView: SystemWebView) {
     }
 
-    override fun getUABrowserString(existingUAString: String, focusToken: String): String? {
-        return null
+    override fun getUABrowserString(existingUAString: String, focusToken: String): String {
+        return ""
     }
 
     @Suppress("LargeClass", "TooManyFunctions")
@@ -594,5 +606,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         private var internalRightsData: String? = null
         private const val USER_AGENT =
             "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0"
+        const val PREF_FIRST_GECKO_RUN: String = "first_gecko_run"
     }
 }

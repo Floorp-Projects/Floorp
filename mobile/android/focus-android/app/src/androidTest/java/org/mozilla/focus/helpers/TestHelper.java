@@ -54,7 +54,7 @@ public final class TestHelper {
 
     // wait for web area to be visible
     public static void waitForWebContent() {
-        if (!AppConstants.isGeckoBuild(InstrumentationRegistry.getContext())) {
+        if (!AppConstants.INSTANCE.isGeckoBuild()) {
             assertTrue(webView.waitForExists(waitingTime));
         } else {
             assertTrue(geckoView.waitForExists(waitingTime));

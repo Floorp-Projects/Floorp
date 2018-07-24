@@ -19,5 +19,5 @@ interface IWebViewProvider {
     fun requestDesktopSite(webSettings: WebSettings)
     fun applyAppSettings(context: Context, webSettings: WebSettings, systemWebView: SystemWebView)
     fun disableBlocking(webSettings: WebSettings, systemWebView: SystemWebView)
-    fun getUABrowserString(existingUAString: String, focusToken: String): String?
+    fun getUABrowserString(existingUAString: String, focusToken: String): String
 }

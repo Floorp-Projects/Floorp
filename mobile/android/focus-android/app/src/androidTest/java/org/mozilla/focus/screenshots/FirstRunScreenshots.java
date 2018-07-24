@@ -4,8 +4,6 @@
 
 package org.mozilla.focus.screenshots;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -34,13 +32,9 @@ public class FirstRunScreenshots extends ScreenshotTest {
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
 
-            Context appContext = InstrumentationRegistry.getInstrumentation()
-                    .getTargetContext()
-                    .getApplicationContext();
-
             // This test is for webview only for now.
-            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext.getApplicationContext()) &&
-                    !AppConstants.isKlarBuild());
+            org.junit.Assume.assumeTrue(!AppConstants.INSTANCE.isGeckoBuild() &&
+                    !AppConstants.INSTANCE.isKlarBuild());
         }
     };
 

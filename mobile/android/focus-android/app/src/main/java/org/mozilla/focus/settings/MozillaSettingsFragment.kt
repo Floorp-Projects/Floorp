@@ -58,7 +58,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 activity.finish()
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
-                SessionManager.getInstance().createSession(Source.MENU, if (AppConstants.isKlarBuild())
+                SessionManager.getInstance().createSession(Source.MENU, if (AppConstants.isKlarBuild)
                     SupportUtils.PRIVACY_NOTICE_KLAR_URL
                 else
                     SupportUtils.PRIVACY_NOTICE_URL)
