@@ -78,7 +78,6 @@ var ecmaGlobals =
     {name: "RegExp", insecureContext: true},
     {name: "Set", insecureContext: true},
     {name: "SharedArrayBuffer", insecureContext: true, disabled: true},
-    {name: "SIMD", insecureContext: true, nightly: true},
     {name: "String", insecureContext: true},
     {name: "Symbol", insecureContext: true},
     {name: "SyntaxError", insecureContext: true},

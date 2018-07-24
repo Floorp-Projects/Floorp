@@ -365,67 +365,6 @@ class ObjectPolicy final : public TypePolicy
 // a primitive, we use ValueToNonNullObject.
 typedef ObjectPolicy<0> SingleObjectPolicy;
 
-// Convert an operand to have a type identical to the scalar type of the
-// returned type of the instruction.
-template <unsigned Op>
-class SimdScalarPolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdScalarPolicy() { }
-    EMPTY_DATA_;
-    static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* def) const override {
-        return staticAdjustInputs(alloc, def);
-    }
-};
-
-class SimdAllPolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdAllPolicy () { }
-    SPECIALIZATION_DATA_;
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
-};
-
-template <unsigned Op>
-class SimdPolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdPolicy() { }
-    SPECIALIZATION_DATA_;
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
-};
-
-class SimdSelectPolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdSelectPolicy() { }
-    SPECIALIZATION_DATA_;
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
-};
-
-class SimdShufflePolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdShufflePolicy() { }
-    SPECIALIZATION_DATA_;
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
-};
-
-// SIMD value-type policy, use the returned type of the instruction to determine
-// how to unbox its operand.
-template <unsigned Op>
-class SimdSameAsReturnedTypePolicy final : public TypePolicy
-{
-  public:
-    constexpr SimdSameAsReturnedTypePolicy() { }
-    EMPTY_DATA_;
-    static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
-    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override {
-        return staticAdjustInputs(alloc, ins);
-    }
-};
-
 template <unsigned Op>
 class BoxPolicy final : public TypePolicy
 {
