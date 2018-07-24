@@ -512,6 +512,7 @@ class TestChecksConfigure(unittest.TestCase):
             'JAR': jar,
             'JARSIGNER': jarsigner,
             'KEYTOOL': keytool,
+            'MOZ_JAVA_CODE_COVERAGE': False,
         })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
@@ -555,6 +556,7 @@ class TestChecksConfigure(unittest.TestCase):
             'JAR': alt_jar,
             'JARSIGNER': alt_jarsigner,
             'KEYTOOL': alt_keytool,
+            'MOZ_JAVA_CODE_COVERAGE': False,
         })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
@@ -584,6 +586,7 @@ class TestChecksConfigure(unittest.TestCase):
             'JAR': alt_jar,
             'JARSIGNER': alt_jarsigner,
             'KEYTOOL': alt_keytool,
+            'MOZ_JAVA_CODE_COVERAGE': False,
         })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
@@ -614,6 +617,7 @@ class TestChecksConfigure(unittest.TestCase):
             'JAR': alt_jar,
             'JARSIGNER': alt_jarsigner,
             'KEYTOOL': alt_keytool,
+            'MOZ_JAVA_CODE_COVERAGE': False,
         })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
@@ -625,6 +629,26 @@ class TestChecksConfigure(unittest.TestCase):
              checking for javac version... 1.8
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
                alt_keytool, alt_javac)))
+
+        # --enable-java-coverage should set MOZ_JAVA_CODE_COVERAGE.
+        config, out, status = self.get_result(
+            args=['--enable-java-coverage'],
+            includes=includes,
+            extra_paths=paths,
+            environ={
+                'PATH': mozpath.dirname(java),
+                'JAVA_HOME': mozpath.dirname(mozpath.dirname(java)),
+            })
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'JAVA': java,
+            'JAVAH': javah,
+            'JAVAC': javac,
+            'JAR': jar,
+            'JARSIGNER': jarsigner,
+            'KEYTOOL': keytool,
+            'MOZ_JAVA_CODE_COVERAGE': True,
+        })
 
         def mock_old_javac(_, args):
             if len(args) == 1 and args[0] == '-version':
