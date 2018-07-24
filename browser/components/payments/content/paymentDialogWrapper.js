@@ -199,8 +199,6 @@ var paymentDialogWrapper = {
       throw new Error("Invalid PaymentRequest ID");
     }
 
-    window.addEventListener("unload", this);
-
     // The Request object returned by the Payment Service is live and
     // will automatically get updated if event.updateWith is used.
     this.request = paymentSrv.getPaymentRequestById(requestId);
@@ -623,24 +621,6 @@ var paymentDialogWrapper = {
       this.sendMessageToContent("updateState", successStateChange);
     } catch (ex) {
       this.sendMessageToContent("updateState", errorStateChange);
-    }
-  },
-
-  /**
-   * @implement {nsIDOMEventListener}
-   * @param {Event} event
-   */
-  handleEvent(event) {
-    switch (event.type) {
-      case "unload": {
-        // Remove the observer to avoid message manager errors while the dialog
-        // is closing and tests are cleaning up autofill storage.
-        Services.obs.removeObserver(this, "formautofill-storage-changed");
-        break;
-      }
-      default: {
-        throw new Error("Unexpected event handled");
-      }
     }
   },
 

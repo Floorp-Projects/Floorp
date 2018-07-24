@@ -82,7 +82,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       is(basicCardTitle.textContent, "Add Credit Card", "Basic card page title is correctly shown");
 
       info("Check if the correct billing address is selected in the basic card page");
-      PTU.DialogContentUtils.waitForState(content, (state) => {
+      PTU.DialogContentUtils.waitForState((state) => {
         let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
         return state.selectedShippingAddress == billingAddressSelect.value;
       }, "Shipping address is selected as the billing address");
@@ -352,7 +352,7 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
       ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
 
       info("Check if the correct billing address is selected in the basic card page");
-      PTU.DialogContentUtils.waitForState(content, (state) => {
+      PTU.DialogContentUtils.waitForState((state) => {
         let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
         return state["basic-card-page"].billingAddressGUID == billingAddressSelect.value;
       }, "Billing Address is correctly shown");
