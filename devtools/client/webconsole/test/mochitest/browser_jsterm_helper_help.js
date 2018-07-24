@@ -8,6 +8,7 @@ const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 add_task(async function() {
   // Run test with legacy JsTerm
+  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   await performTests();
   // And then run it with the CodeMirror-powered one.
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
