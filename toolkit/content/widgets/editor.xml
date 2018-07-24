@@ -157,10 +157,7 @@
       </property>
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
-          return this.contentWindow
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .outerWindowID;
+          return this.contentWindow.windowUtils.outerWindowID;
         ]]></getter>
       </property>
     </implementation>

@@ -34,7 +34,7 @@ CleanupManager.addCleanupHandler(() => {
     while (windowEnumerator.hasMoreElements()) {
       const window = windowEnumerator.getNext();
       if (windowsWithInjectedCss.has(window)) {
-        const utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        const utils = window.windowUtils;
         utils.removeSheet(HEARTBEAT_CSS_URI, window.AGENT_SHEET);
         if (AppConstants.platform === "macosx") {
           utils.removeSheet(HEARTBEAT_CSS_URI_OSX, window.AGENT_SHEET);
@@ -123,7 +123,7 @@ var Heartbeat = class {
 
     if (!windowsWithInjectedCss.has(chromeWindow)) {
       windowsWithInjectedCss.add(chromeWindow);
-      const utils = chromeWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      const utils = chromeWindow.windowUtils;
       utils.loadSheet(HEARTBEAT_CSS_URI, chromeWindow.AGENT_SHEET);
       if (AppConstants.platform === "macosx") {
         utils.loadSheet(HEARTBEAT_CSS_URI_OSX, chromeWindow.AGENT_SHEET);

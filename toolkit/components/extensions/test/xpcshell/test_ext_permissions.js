@@ -23,9 +23,7 @@ function frameScript() {
   MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
     receiveMessage({name, data}) {
       if (data) {
-        handle = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils)
-                        .setHandlingUserInput(true);
+        handle = content.windowUtils.setHandlingUserInput(true);
       } else if (handle) {
         handle.destruct();
         handle = null;

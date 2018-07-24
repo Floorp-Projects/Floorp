@@ -15,7 +15,7 @@ function getDocShellOuterWindowId(docShell) {
 
   return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIDOMWindow)
-                 .getInterface(Ci.nsIDOMWindowUtils)
+                 .windowUtils
                  .outerWindowID;
 }
 

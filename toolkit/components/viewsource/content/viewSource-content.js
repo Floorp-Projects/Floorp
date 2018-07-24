@@ -195,7 +195,7 @@ var ViewSourceContent = {
         // this document off of the network.
       }
 
-      let utils = requestor.getInterface(Ci.nsIDOMWindowUtils);
+      let utils = contentWindow.windowUtils;
       let doc = contentWindow.document;
       forcedCharSet = utils.docCharsetIsForced ? doc.characterSet
                                                : null;

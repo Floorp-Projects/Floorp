@@ -91,8 +91,7 @@ var PageThumbUtils = {
    * minus the scroll bars.
    */
   getContentSize(aWindow) {
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = aWindow.windowUtils;
     // aWindow may be a cpow, add exposed props security values.
     let sbWidth = {}, sbHeight = {};
 
@@ -261,8 +260,7 @@ var PageThumbUtils = {
     if (Cu.isCrossProcessWrapper(aWindow)) {
       throw new Error("Do not pass cpows here.");
     }
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = aWindow.windowUtils;
     // aWindow may be a cpow, add exposed props security values.
     let sbWidth = {}, sbHeight = {};
 
