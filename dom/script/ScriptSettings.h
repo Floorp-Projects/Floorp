@@ -228,8 +228,7 @@ public:
   MOZ_MUST_USE bool Init(nsIGlobalObject* aGlobalObject);
 
   // This is a helper that grabs the native global associated with aObject and
-  // invokes the above Init() with that. aObject must not be a cross-compartment
-  // wrapper: CCWs are not associated with a single global.
+  // invokes the above Init() with that.
   MOZ_MUST_USE bool Init(JSObject* aObject);
 
   // Unsurprisingly, this uses aCx and enters the compartment of aGlobalObject.
