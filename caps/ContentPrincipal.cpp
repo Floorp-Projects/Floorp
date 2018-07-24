@@ -31,6 +31,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
@@ -170,9 +171,14 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     rv = uriWithPrincipal->GetPrincipal(getter_AddRefs(uriPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (uriPrincipal) {
-      return uriPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
+    // If there is not a principal for this blobURL, it means that the blobURL
+    // has been revoked. Let's use a nullPrincipal instead.
+    if (!uriPrincipal) {
+      uriPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+      MOZ_ASSERT(uriPrincipal);
     }
+
+    return uriPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
   }
 
   // If we reached this branch, we can only create an origin if we have a
@@ -274,11 +280,14 @@ ContentPrincipal::MayLoadInternal(nsIURI* aURI)
   // See if aURI is something like a Blob URI that is actually associated with
   // a principal.
   nsCOMPtr<nsIURIWithPrincipal> uriWithPrin = do_QueryInterface(aURI);
-  nsCOMPtr<nsIPrincipal> uriPrin;
   if (uriWithPrin) {
-    uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
-  }
-  if (uriPrin) {
+    nsCOMPtr<nsIPrincipal> uriPrin;
+    nsresult rv = uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
+    if (NS_WARN_IF(NS_FAILED(rv)) || !uriPrin) {
+      // BlobURL has been revoked.
+      return false;
+    }
+
     return nsIPrincipal::Subsumes(uriPrin);
   }
 
