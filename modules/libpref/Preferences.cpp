@@ -466,6 +466,7 @@ public:
     , mType(static_cast<uint32_t>(PrefType::None))
     , mIsSticky(false)
     , mIsLocked(false)
+    , mDefaultChanged(false)
     , mHasDefaultValue(false)
     , mHasUserValue(false)
     , mDefaultValue()
@@ -501,6 +502,8 @@ public:
   bool IsLocked() const { return mIsLocked; }
   void SetIsLocked(bool aValue) { mIsLocked = aValue; }
 
+  bool DefaultChanged() const { return mDefaultChanged; }
+
   bool IsSticky() const { return mIsSticky; }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
@@ -510,7 +513,11 @@ public:
   void AddToMap(SharedPrefMapBuilder& aMap)
   {
     aMap.Add(Name(),
-             { HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked() },
+             { HasDefaultValue(),
+               HasUserValue(),
+               IsSticky(),
+               IsLocked(),
+               DefaultChanged() },
              HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
              HasUserValue() ? mUserValue.Get<T>() : T());
   }
@@ -713,6 +720,9 @@ public:
       }
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
+        if (mHasDefaultValue) {
+          mDefaultChanged = true;
+        }
         mHasDefaultValue = true;
         if (aIsSticky) {
           mIsSticky = true;
@@ -936,6 +946,7 @@ private:
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
+  uint32_t mDefaultChanged : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
 
@@ -1008,6 +1019,7 @@ public:
     return match(Matcher());                                                   \
   }
 
+  FORWARD(bool, DefaultChanged)
   FORWARD(bool, IsLocked)
   FORWARD(bool, IsSticky)
   FORWARD(bool, HasDefaultValue)
@@ -4830,23 +4842,19 @@ Preferences::InitInitialObjects(bool aIsStartup)
     // don't need to add them to the DB. For static var caches, though, the
     // current preference values may differ from their static defaults. So we
     // still need to notify callbacks for each of our shared prefs which have
-    // user values.
-    //
-    // While it is technically also possible for the default values to have
-    // changed at runtime, and therefore not match the static defaults, we don't
-    // support that for static preferences in this configuration, and therefore
-    // ignore the possibility.
+    // user values, of whose default values have changed since they were
+    // initialized.
     for (auto& pref : gSharedMap->Iter()) {
-      if (pref.HasUserValue() || pref.IsLocked()) {
+      if (pref.HasUserValue() || pref.DefaultChanged()) {
         NotifyCallbacks(pref.Name(), PrefWrapper(pref));
       }
     }
 
 #ifdef DEBUG
-    // Check that all varcache preferences match their current values. This can
-    // currently fail if the default value of a static varcache preference is
-    // changed in a preference file or at runtime, rather than in
-    // StaticPrefList.h.
+      // Check that all varcache preferences match their current values. This
+      // can currently fail if the default value of a static varcache preference
+      // is changed in a preference file or at runtime, rather than in
+      // StaticPrefList.h.
 
 #define PREF(name, cpp_type, value)
 #define VARCACHE_PREF(name, id, cpp_type, value)                               \
