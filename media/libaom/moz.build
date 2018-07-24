@@ -121,7 +121,7 @@ if CONFIG['CC_TYPE'] != 'msvc':
         elif f.endswith('avx2.c'):
             SOURCES[f].flags += ['-mavx2']
 
-if CONFIG['CC_TYPE'] == 'msvc':
+if CONFIG['CC_TYPE'] == 'msvc' and CONFIG['INTEL_ARCHITECTURE']:
     for f in SOURCES:
         if f.endswith('avx.c'):
             SOURCES[f].flags += ['-arch:AVX']
