@@ -200,8 +200,7 @@ async function contentSpawnMutation(browser, waitFor, func, args = null) {
     // 100ms is an arbitrary positive number to advance the clock.
     // We don't need to advance the clock for a11y mutations, but other
     // tick listeners may depend on an advancing clock with each refresh.
-    content.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).advanceTimeAndRefresh(100);
+    content.windowUtils.advanceTimeAndRefresh(100);
   }
 
   // This stops the refreh driver from doing its regular ticks, and leaves
@@ -220,8 +219,7 @@ async function contentSpawnMutation(browser, waitFor, func, args = null) {
 
   // Go back to normal refresh driver ticks.
   await ContentTask.spawn(browser, null, function() {
-    content.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).restoreNormalRefresh();
+    content.windowUtils.restoreNormalRefresh();
   });
 
   return events;
