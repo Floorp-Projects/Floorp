@@ -63,6 +63,11 @@ nsPrintingProxy::GetInstance()
 nsresult
 nsPrintingProxy::Init()
 {
+  // Don't create a printing proxy in middleman processes, to avoid conflicts
+  // with the one created in the child recording process.
+  if (recordreplay::IsMiddleman()) {
+    return NS_ERROR_FAILURE;
+  }
   mozilla::Unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
   return NS_OK;
 }

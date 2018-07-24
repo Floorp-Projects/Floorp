@@ -707,7 +707,7 @@ BackgroundHangMonitor::BackgroundHangMonitor(const char* aName,
   }
 # endif
 
-  if (!BackgroundHangManager::sDisabled && !mThread) {
+  if (!BackgroundHangManager::sDisabled && !mThread && !recordreplay::IsMiddleman()) {
     mThread = new BackgroundHangThread(aName, aTimeoutMs, aMaxTimeoutMs,
                                        aThreadType);
   }

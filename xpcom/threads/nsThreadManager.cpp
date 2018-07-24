@@ -354,7 +354,6 @@ nsThreadManager::Shutdown()
   // main thread is special we do it manually here after we're sure all events
   // have been processed.
   mMainThread->SetObserver(nullptr);
-  mMainThread->ClearObservers();
 
   // Release main thread object.
   mMainThread = nullptr;

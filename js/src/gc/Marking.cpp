@@ -3499,6 +3499,10 @@ UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing);
 
+    // Gray cell unmarking can occur at different points between recording and
+    // replay, so disallow recorded events from occurring in the tracer.
+    mozilla::recordreplay::AutoDisallowThreadEvents d;
+
     UnmarkGrayTracer unmarker(rt);
     gcstats::AutoPhase innerPhase(rt->gc.stats(), gcstats::PhaseKind::UNMARK_GRAY);
     unmarker.unmark(thing);

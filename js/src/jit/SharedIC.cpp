@@ -1313,7 +1313,7 @@ DoCompareFallback(JSContext* cx, void* payload, ICCompare_Fallback* stub_, Handl
         return true;
     }
 
-    if (engine ==  ICStubEngine::Baseline) {
+    if (engine ==  ICStubEngine::Baseline && !JitOptions.disableCacheIR) {
         RootedScript script(cx, info.outerScript(cx));
         CompareIRGenerator gen(cx, script, pc, stub->state().mode(), op, lhs, rhs);
         bool attached = false;

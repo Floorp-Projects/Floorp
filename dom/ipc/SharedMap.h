@@ -22,6 +22,9 @@ class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
+
+class ContentParent;
+
 namespace ipc {
 
 /**
@@ -58,7 +61,8 @@ public:
 
   SharedMap();
 
-  SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor&, size_t);
+  SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor&, size_t,
+            nsTArray<RefPtr<BlobImpl>>&& aBlobs);
 
   // Returns true if the map contains the given (UTF-8) key.
   bool Has(const nsACString& name);
@@ -105,7 +109,7 @@ public:
    * memory region for this map. The file descriptor may be passed between
    * processes, and used to update corresponding instances in child processes.
    */
-  FileDescriptor CloneMapFile();
+  FileDescriptor CloneMapFile() const;
 
   /**
    * Returns the size of the memory mapped region that backs this map. Must be
@@ -344,6 +348,10 @@ public:
   // Flushes any queued changes to a new snapshot, and broadcasts it to all
   // child SharedMap instances.
   void Flush();
+
+
+  // Sends the current set of shared map data to the given content process.
+  void SendTo(ContentParent* aContentParent) const;
 
 
   /**

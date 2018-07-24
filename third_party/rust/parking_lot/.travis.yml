@@ -2,7 +2,7 @@ language: rust
 sudo: false
 
 rust:
-- 1.18.0
+- 1.26.2
 - stable
 - beta
 - nightly
@@ -15,21 +15,18 @@ before_script:
 script:
 - cd core;
 - travis-cargo build;
+- cd ../lock_api;
+- travis-cargo build;
 - cd ..;
 - travis-cargo build
 - travis-cargo test
 - travis-cargo test -- --features=deadlock_detection
-- travis-cargo --only nightly doc -- --all-features --no-deps -p parking_lot -p parking_lot_core
-- if [ "$TRAVIS_RUST_VERSION" != "1.8.0" ]; then
-      cd benchmark;
-      travis-cargo build;
-      travis-cargo run -- --release --bin mutex 2 1 0 1;
-      travis-cargo run -- --release --bin rwlock 1 1 1 0 1;
-      cd ..;
-  fi
-
-after_success:
-- travis-cargo --only nightly doc-upload
+- travis-cargo --only nightly doc -- --all-features --no-deps -p parking_lot -p parking_lot_core -p lock_api
+- cd benchmark
+- travis-cargo build
+- cargo run -- --release --bin mutex 2 1 0 1 2
+- cargo run -- --release --bin rwlock 1 1 1 0 1 2
+- cd ..
 
 env:
   global:

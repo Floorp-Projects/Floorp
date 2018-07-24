@@ -3931,6 +3931,12 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     mCCJSRuntime->CheckGrayBits();
   }
 
+  // If we are recording or replaying, force the release of any references
+  // from objects that have recently been finalized.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::ExecuteTriggers();
+  }
+
   FreeSnowWhite(true);
   timeLog.Checkpoint("BeginCollection FreeSnowWhite");
 

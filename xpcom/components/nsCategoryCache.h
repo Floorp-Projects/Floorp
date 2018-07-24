@@ -28,7 +28,7 @@ class nsCategoryObserver final : public nsIObserver
   ~nsCategoryObserver();
 
 public:
-  explicit nsCategoryObserver(const char* aCategory);
+  explicit nsCategoryObserver(const nsACString& aCategory);
 
   void ListenerDied();
   void SetListener(void(aCallback)(void*), void* aClosure);
@@ -104,7 +104,7 @@ private:
     // Lazy initialization, so that services in this category can't
     // cause reentrant getService (bug 386376)
     if (!mObserver) {
-      mObserver = new nsCategoryObserver(mCategoryName.get());
+      mObserver = new nsCategoryObserver(mCategoryName);
       mObserver->SetListener(nsCategoryCache<T>::OnCategoryChanged, this);
     }
   }

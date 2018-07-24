@@ -76,6 +76,22 @@ public:
   void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    size_t n = 0;
+
+    n += mHighQueue->SizeOfIncludingThis(aMallocSizeOf);
+    n += mInputQueue->SizeOfIncludingThis(aMallocSizeOf);
+    n += mNormalQueue->SizeOfIncludingThis(aMallocSizeOf);
+    n += mIdleQueue->SizeOfIncludingThis(aMallocSizeOf);
+
+    if (mIdlePeriod) {
+      n += aMallocSizeOf(mIdlePeriod);
+    }
+
+    return n;
+  }
+
 private:
   EventPriority SelectQueue(bool aUpdateState, const MutexAutoLock& aProofOfLock);
 

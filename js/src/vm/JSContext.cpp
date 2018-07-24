@@ -300,6 +300,7 @@ js::ReportOutOfMemory(JSContext* cx)
      */
     fprintf(stderr, "ReportOutOfMemory called\n");
 #endif
+    mozilla::recordreplay::InvalidateRecording("OutOfMemory exception thrown");
 
     if (cx->helperThread())
         return cx->addPendingOutOfMemory();
@@ -336,6 +337,7 @@ js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber)
      */
     fprintf(stderr, "ReportOverRecursed called\n");
 #endif
+    mozilla::recordreplay::InvalidateRecording("OverRecursed exception thrown");
     if (maybecx) {
         if (!maybecx->helperThread()) {
             JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, errorNumber);
