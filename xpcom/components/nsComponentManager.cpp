@@ -102,12 +102,6 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID,
     goto error;
   }
 
-  if (!mCategory || !mEntry) {
-    // when categories have defaults, use that for null mEntry
-    rv = NS_ERROR_NULL_POINTER;
-    goto error;
-  }
-
   rv = compMgr->nsComponentManagerImpl::GetService(kCategoryManagerCID,
                                                    NS_GET_IID(nsICategoryManager),
                                                    getter_AddRefs(catman));
@@ -116,8 +110,7 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID,
   }
 
   /* find the contractID for category.entry */
-  rv = catman->GetCategoryEntry(mCategory, mEntry,
-                                getter_Copies(value));
+  rv = catman->GetCategoryEntry(mCategory, mEntry, value);
   if (NS_FAILED(rv)) {
     goto error;
   }
@@ -558,9 +551,10 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
   if (aModule->mCategoryEntries) {
     const mozilla::Module::CategoryEntry* entry;
     for (entry = aModule->mCategoryEntries; entry->category; ++entry)
-      nsCategoryManager::GetSingleton()->AddCategoryEntry(entry->category,
-                                                          entry->entry,
-                                                          entry->value);
+      nsCategoryManager::GetSingleton()->AddCategoryEntry(
+          AsLiteralCString(entry->category),
+          AsLiteralCString(entry->entry),
+          AsLiteralCString(entry->value));
   }
 }
 
@@ -780,7 +774,8 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& aCx,
   char* value = aArgv[2];
 
   nsCategoryManager::GetSingleton()->
-  AddCategoryEntry(category, key, value);
+  AddCategoryEntry(nsDependentCString(category), nsDependentCString(key),
+                   nsDependentCString(value));
 }
 
 void
@@ -1550,8 +1545,8 @@ nsComponentManagerImpl::LoaderForExtension(const nsACString& aExt)
 {
   nsCOMPtr<mozilla::ModuleLoader> loader = mLoaderMap.Get(aExt);
   if (!loader) {
-    loader = do_GetServiceFromCategory("module-loader",
-                                       PromiseFlatCString(aExt).get());
+    loader = do_GetServiceFromCategory(NS_LITERAL_CSTRING("module-loader"),
+                                       aExt);
     if (!loader) {
       return nullptr;
     }
