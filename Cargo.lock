@@ -141,6 +141,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bench-collections-gtest"
+version = "0.1.0"
+dependencies = [
+ "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "binary-space-partition"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -820,6 +828,7 @@ dependencies = [
 name = "gkrust-gtest"
 version = "0.1.0"
 dependencies = [
+ "bench-collections-gtest 0.1.0",
  "gkrust-shared 0.1.0",
  "mp4parse-gtest 0.1.0",
  "nsstring-gtest 0.1.0",
