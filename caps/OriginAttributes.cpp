@@ -93,7 +93,7 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
       rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
       NS_ENSURE_SUCCESS_VOID(rv);
 
-      MOZ_ASSERT(principal, "blob URI but no principal.");
+      // a revoked blobURL doesn't expose a principal.
       if (principal) {
         mFirstPartyDomain = principal->OriginAttributesRef().mFirstPartyDomain;
       }
