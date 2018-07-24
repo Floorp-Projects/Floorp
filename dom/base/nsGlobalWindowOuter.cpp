@@ -6817,10 +6817,6 @@ nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID, void** aSink)
     }
   }
 #endif
-  else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
-    nsCOMPtr<nsIDOMWindowUtils> utils = WindowUtils();
-    utils.forget(aSink);
-  }
   else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
     nsGlobalWindowOuter* outer = GetOuterWindowInternal();
     NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);

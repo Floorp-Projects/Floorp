@@ -28,6 +28,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMAttributeMap.h"
 #include "nsFrameLoader.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
 #include "nsIDOMWindowUtils.h"
@@ -149,11 +150,8 @@ WebBrowserPersistLocalDocument::GetContentDisposition(nsAString& aCD)
         aCD.SetIsVoid(true);
         return NS_OK;
     }
-    nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-    if (NS_WARN_IF(!utils)) {
-        aCD.SetIsVoid(true);
-        return NS_OK;
-    }
+    nsCOMPtr<nsIDOMWindowUtils> utils =
+        nsGlobalWindowOuter::Cast(window)->WindowUtils();
     nsresult rv = utils->GetDocumentMetadata(
         NS_LITERAL_STRING("content-disposition"), aCD);
     if (NS_WARN_IF(NS_FAILED(rv))) {
