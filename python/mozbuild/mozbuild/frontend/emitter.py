@@ -1385,6 +1385,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 '{path}: DIST_INSTALL = False has no effect on XPIDL_SOURCES.')
 
         for idl in context['XPIDL_SOURCES']:
+            if not os.path.exists(idl.full_path):
+                raise SandboxValidationError('File %s from XPIDL_SOURCES '
+                    'does not exist' % idl.full_path, context)
+
             yield XPIDLFile(context, idl, xpidl_module)
 
     def _process_generated_files(self, context):
