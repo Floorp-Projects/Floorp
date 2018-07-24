@@ -555,7 +555,7 @@ MenuItem.prototype = {
     }
 
     if (createProperties.targetUrlPatterns != null) {
-      this.targetUrlMatchPattern = new MatchPatternSet(this.targetUrlPatterns);
+      this.targetUrlMatchPattern = new MatchPatternSet(this.targetUrlPatterns, {restrictSchemes: false});
     }
 
     // If a child MenuItem does not specify any contexts, then it should
