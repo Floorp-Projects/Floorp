@@ -124,6 +124,12 @@ var Bookmarks = Object.freeze({
   DEFAULT_INDEX: -1,
 
   /**
+   * Maximum length of a tag.
+   * Any tag above this length is rejected.
+   */
+  MAX_TAG_LENGTH: 100,
+
+  /**
    * Bookmark change source constants, passed as optional properties and
    * forwarded to observers. See nsINavBookmarksService.idl for an explanation.
    */
