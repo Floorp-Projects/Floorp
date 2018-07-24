@@ -242,14 +242,12 @@ GLTextureSource::GLTextureSource(TextureSourceProvider* aProvider,
                                  GLuint aTextureHandle,
                                  GLenum aTarget,
                                  gfx::IntSize aSize,
-                                 gfx::SurfaceFormat aFormat,
-                                 bool aExternallyOwned)
+                                 gfx::SurfaceFormat aFormat)
   : mGL(aProvider->GetGLContext())
   , mTextureHandle(aTextureHandle)
   , mTextureTarget(aTarget)
   , mSize(aSize)
   , mFormat(aFormat)
-  , mExternallyOwned(aExternallyOwned)
 {
   MOZ_COUNT_CTOR(GLTextureSource);
 }
@@ -257,17 +255,13 @@ GLTextureSource::GLTextureSource(TextureSourceProvider* aProvider,
 GLTextureSource::~GLTextureSource()
 {
   MOZ_COUNT_DTOR(GLTextureSource);
-  if (!mExternallyOwned) {
-    DeleteTextureHandle();
-  }
+  DeleteTextureHandle();
 }
 
 void
 GLTextureSource::DeallocateDeviceData()
 {
-  if (!mExternallyOwned) {
-    DeleteTextureHandle();
-  }
+  DeleteTextureHandle();
 }
 
 void
@@ -313,6 +307,98 @@ bool
 GLTextureSource::IsValid() const
 {
   return !!gl() && mTextureHandle != 0;
+}
+
+////////////////////////////////////////////////////////////////////////
+// DirectMapTextureSource
+
+DirectMapTextureSource::DirectMapTextureSource(TextureSourceProvider* aProvider,
+                                               gfx::DataSourceSurface* aSurface)
+  : GLTextureSource(aProvider,
+                    0,
+                    LOCAL_GL_TEXTURE_2D,
+                    aSurface->GetSize(),
+                    aSurface->GetFormat())
+{
+  MOZ_ASSERT(aSurface);
+
+  UpdateInternal(aSurface, nullptr, nullptr, true);
+}
+
+bool
+DirectMapTextureSource::Update(gfx::DataSourceSurface* aSurface,
+                               nsIntRegion* aDestRegion,
+                               gfx::IntPoint* aSrcOffset)
+{
+  if (!aSurface) {
+    return false;
+  }
+
+  return UpdateInternal(aSurface, aDestRegion, aSrcOffset, false);
+}
+
+bool
+DirectMapTextureSource::Sync(bool aBlocking)
+{
+  gl()->MakeCurrent();
+  if (!gl()->IsDestroyed()) {
+    if (aBlocking) {
+      gl()->fFinishObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
+    } else {
+      return gl()->fTestObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
+    }
+  }
+  return true;
+}
+
+bool
+DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
+                                       nsIntRegion* aDestRegion,
+                                       gfx::IntPoint* aSrcOffset,
+                                       bool aInit)
+{
+  gl()->MakeCurrent();
+
+  if (aInit) {
+    gl()->fGenTextures(1, &mTextureHandle);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
+
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                         LOCAL_GL_TEXTURE_STORAGE_HINT_APPLE,
+                         LOCAL_GL_STORAGE_CACHED_APPLE);
+
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                         LOCAL_GL_TEXTURE_WRAP_S,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                         LOCAL_GL_TEXTURE_WRAP_T,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+  }
+
+  MOZ_ASSERT(mTextureHandle);
+
+  // APPLE_client_storage
+  gl()->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE, LOCAL_GL_TRUE);
+
+  nsIntRegion destRegion = aDestRegion ? *aDestRegion
+                                       : IntRect(0, 0,
+                                                 aSurface->GetSize().width,
+                                                 aSurface->GetSize().height);
+  gfx::IntPoint srcPoint = aSrcOffset ? *aSrcOffset
+                                      : gfx::IntPoint(0, 0);
+  mFormat = gl::UploadSurfaceToTexture(gl(),
+                                       aSurface,
+                                       destRegion,
+                                       mTextureHandle,
+                                       aSurface->GetSize(),
+                                       nullptr,
+                                       aInit,
+                                       srcPoint,
+                                       LOCAL_GL_TEXTURE0,
+                                       LOCAL_GL_TEXTURE_2D);
+
+  gl()->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE, LOCAL_GL_FALSE);
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -764,8 +850,7 @@ GLTextureHost::Lock()
                                          mTexture,
                                          mTarget,
                                          mSize,
-                                         format,
-                                         false /* owned by the client */);
+                                         format);
   }
 
   return true;

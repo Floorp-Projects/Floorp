@@ -33,12 +33,14 @@ class WebPlatformTestsRunnerSetup(object):
         if kwargs["stackfix_dir"] is None:
             kwargs["stackfix_dir"] = self.context.bin_dir
         if kwargs["ssl_type"] in (None, "pregenerated"):
+            cert_root = os.path.join(self.context.package_root, "web-platform",
+                                     "tests", "tools", "certs")
             if kwargs["ca_cert_path"] is None:
-                kwargs["ca_cert_path"] = os.path.join(self.context.package_root, "web-platform", "certs", "cacert.pem")
+                kwargs["ca_cert_path"] = os.path.join(cert_root, "cacert.pem")
             if kwargs["host_key_path"] is None:
-                kwargs["host_key_path"] = os.path.join(self.context.package_root, "web-platform", "certs", "web-platform.test.key")
+                kwargs["host_key_path"] = os.path.join(cert_root, "web-platform.test.key")
             if kwargs["host_cert_path"] is None:
-                kwargs["host_cert_path"] = os.path.join(self.context.package_root, "web-platform", "certs", "web-platform.test.pem")
+                kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
         kwargs["capture_stdio"] = True
 
         if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):

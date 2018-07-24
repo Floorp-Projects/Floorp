@@ -21,6 +21,9 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
+#ifdef XP_DARWIN
+#include "mozilla/layers/TextureSync.h"
+#endif
 #include "mozilla/layers/GPUVideoTextureHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/webrender/RenderBufferTextureHost.h"
@@ -370,11 +373,14 @@ TextureHost::TextureHost(TextureFlags aFlags)
 
 TextureHost::~TextureHost()
 {
-  // If we still have a ReadLock, unlock it. At this point we don't care about
-  // the texture client being written into on the other side since it should be
-  // destroyed by now. But we will hit assertions if we don't ReadUnlock before
-  // destroying the lock itself.
-  ReadUnlock();
+  if (mReadLocked) {
+    // If we still have a ReadLock, unlock it. At this point we don't care about
+    // the texture client being written into on the other side since it should be
+    // destroyed by now. But we will hit assertions if we don't ReadUnlock before
+    // destroying the lock itself.
+    ReadUnlock();
+    MaybeNotifyUnlocked();
+  }
 }
 
 void TextureHost::Finalize()
@@ -400,6 +406,7 @@ TextureHost::UnbindTextureSource()
       // GetCompositor returned null which means no compositor can be using this
       // texture. We can ReadUnlock right away.
       ReadUnlock();
+      MaybeNotifyUnlocked();
     }
   }
 }
@@ -701,6 +708,9 @@ TextureHost::SetReadLocked()
   // side should not have been able to write into this texture and read lock again!
   MOZ_ASSERT(!mReadLocked);
   mReadLocked = true;
+  if (mProvider) {
+    mProvider->MaybeUnlockBeforeNextComposition(this);
+  }
 }
 
 void
@@ -887,11 +897,35 @@ BufferTextureHost::AcquireTextureSource(CompositableTextureSourceRef& aTexture)
 }
 
 void
+BufferTextureHost::ReadUnlock()
+{
+  if (mFirstSource) {
+    mFirstSource->Sync(true);
+  }
+
+  TextureHost::ReadUnlock();
+}
+
+void
+BufferTextureHost::MaybeNotifyUnlocked()
+{
+#ifdef XP_DARWIN
+  auto actor = GetIPDLActor();
+  if (actor) {
+    AutoTArray<uint64_t, 1> serials;
+    serials.AppendElement(TextureHost::GetTextureSerial(actor));
+    TextureSync::SetTexturesUnlocked(actor->OtherPid(), serials);
+  }
+#endif
+}
+
+void
 BufferTextureHost::UnbindTextureSource()
 {
   if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
     mFirstSource->Unbind();
   }
+
   // This texture is not used by any layer anymore.
   // If the texture doesn't have an intermediate buffer, it means we are
   // compositing synchronously on the CPU, so we don't need to wait until
@@ -900,6 +934,7 @@ BufferTextureHost::UnbindTextureSource()
   // If the texture has an intermediate buffer we don't care either because
   // texture uploads are also performed synchronously for BufferTextureHost.
   ReadUnlock();
+  MaybeNotifyUnlocked();
 }
 
 gfx::SurfaceFormat
@@ -966,6 +1001,7 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
     // We just did the texture upload, the content side can now freely write
     // into the shared buffer.
     ReadUnlock();
+    MaybeNotifyUnlocked();
   }
 
   // We no longer have an invalid region.
@@ -995,7 +1031,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     return false;
   }
   if (!mHasIntermediateBuffer && EnsureWrappingTextureSource()) {
-    return true;
+    if (!mFirstSource || !mFirstSource->IsDirectMap()) {
+      return true;
+    }
   }
 
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
@@ -1277,9 +1315,12 @@ TextureParent::Destroy()
     return;
   }
 
-  // ReadUnlock here to make sure the ReadLock's shmem does not outlive the
-  // protocol that created it.
-  mTextureHost->ReadUnlock();
+  if (mTextureHost->mReadLocked) {
+    // ReadUnlock here to make sure the ReadLock's shmem does not outlive the
+    // protocol that created it.
+    mTextureHost->ReadUnlock();
+    mTextureHost->MaybeNotifyUnlocked();
+  }
 
   if (mTextureHost->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
     mTextureHost->ForgetSharedData();

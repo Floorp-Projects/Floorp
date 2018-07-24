@@ -17,12 +17,6 @@ TEST_HARNESS_FILES['web-platform'] += [
     'wptrunner.ini',
 ]
 
-TEST_HARNESS_FILES['web-platform'].certs += [
-    'certs/cacert.pem',
-    'certs/web-platform.test.key',
-    'certs/web-platform.test.pem',
-]
-
 TEST_HARNESS_FILES['web-platform'].prefs += [
     '/build/sanitizers/lsan_suppressions.txt',
 ]
@@ -92,9 +86,6 @@ with Files("mozilla/tests/wasm/**"):
     BUG_COMPONENT = ("Core", "JavaScript Engine: JIT")
 
 with Files("update/**"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
-with Files("certs/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("mach*"):

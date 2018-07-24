@@ -317,6 +317,15 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                            void* aCallbackData,
                                            EndTransactionFlags)
 {
+  // This just causes the compositor to check whether the GPU is done with its
+  // textures or not and unlock them if it is. This helps us avoid the case
+  // where we take a long time painting asynchronously, turn IPC back on at
+  // the end of that, and then have to wait for the compositor to to get into
+  // TiledLayerBufferComposite::UseTiles before getting a response.
+  if (mForwarder) {
+    mForwarder->UpdateTextureLocks();
+  }
+
   // Wait for any previous async paints to complete before starting to paint again.
   // Do this outside the profiler and telemetry block so this doesn't count as time
   // spent rasterizing.

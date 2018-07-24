@@ -762,10 +762,14 @@ ContentClientRemoteBuffer::CreateBufferInternal(const gfx::IntRect& aRect,
 
   RefPtr<TextureClient> textureClientOnWhite;
   if (aFlags & TextureFlags::COMPONENT_ALPHA) {
+    TextureAllocationFlags allocFlags = ALLOC_CLEAR_BUFFER_WHITE;
+    if (mForwarder->SupportsTextureDirectMapping()) {
+      allocFlags = TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
+    }
     textureClientOnWhite = textureClient->CreateSimilar(
       mForwarder->GetCompositorBackendType(),
       aFlags | ExtraTextureFlags(),
-      TextureAllocationFlags::ALLOC_CLEAR_BUFFER_WHITE
+      allocFlags
     );
     if (!textureClientOnWhite || !AddTextureClient(textureClientOnWhite)) {
       return nullptr;

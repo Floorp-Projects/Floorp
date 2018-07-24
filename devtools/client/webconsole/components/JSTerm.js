@@ -1267,7 +1267,8 @@ class JSTerm extends Component {
       value: inputValue,
       matchProp: lastPart,
     };
-    if (items.length > 0 && !popup.isOpen) {
+
+    if (items.length > 0) {
       let popupAlignElement;
       let xOffset;
       let yOffset;

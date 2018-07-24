@@ -43,6 +43,8 @@ clang_checkers:
   - name: clang-analyzer-unix.cstring.NullArg
     publish: !!bool yes
   - name: misc-argument-comment
+    # Name with clang tidy 6.0
+    # - name: bugprone-argument-comment
     publish: !!bool yes
   - name: misc-assert-side-effect
     publish: !!bool yes

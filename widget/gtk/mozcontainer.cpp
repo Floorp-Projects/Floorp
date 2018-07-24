@@ -605,6 +605,15 @@ moz_container_get_wl_surface(MozContainer *container)
             return nullptr;
 
         moz_container_map_surface(container);
+        // Set the scale factor for the buffer right after we create it.
+        if (container->surface) {
+            static auto sGdkWindowGetScaleFactorPtr = (gint (*)(GdkWindow*))
+            dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
+            if (sGdkWindowGetScaleFactorPtr && window) {
+              gint scaleFactor = (*sGdkWindowGetScaleFactorPtr)(window);
+              wl_surface_set_buffer_scale(container->surface, scaleFactor);
+            }
+        }
     }
 
     return container->surface;
