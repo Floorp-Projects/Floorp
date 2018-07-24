@@ -315,3 +315,19 @@ def write_artifact(filename, data):
             f.write(json.dumps(data))
     else:
         raise TypeError("Don't know how to write to {}".format(filename))
+
+
+def read_artifact(filename):
+    path = os.path.join(ARTIFACTS_DIR, filename)
+    if filename.endswith('.yml'):
+        with open(path, 'r') as f:
+            return yaml.load(f)
+    elif filename.endswith('.json'):
+        with open(path, 'r') as f:
+            return json.load(f)
+    elif filename.endswith('.gz'):
+        import gzip
+        with gzip.open(path, 'rb') as f:
+            return json.load(f)
+    else:
+        raise TypeError("Don't know how to read {}".format(filename))
