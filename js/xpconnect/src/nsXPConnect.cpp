@@ -326,6 +326,11 @@ void
 xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
                                         JS::HandleObject aStackGlobal)
 {
+    // Don't log failures after diverging from a recording during replay, as
+    // this will cause the associated debugger operation to fail.
+    if (recordreplay::HasDivergedFromRecording())
+        return;
+
     if (aStack) {
         MOZ_ASSERT(aStackGlobal);
         MOZ_ASSERT(JS_IsGlobalObject(aStackGlobal));
