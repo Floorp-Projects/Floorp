@@ -1,0 +1,47 @@
+diff --git a/media/libcubeb/src/cubeb_resampler.cpp b/media/libcubeb/src/cubeb_resampler.cpp
+--- a/media/libcubeb/src/cubeb_resampler.cpp
++++ b/media/libcubeb/src/cubeb_resampler.cpp
+@@ -188,17 +188,20 @@ cubeb_resampler_speex<T, InputProcessor,
+ 
+   /* The input data, after eventual resampling. This is passed to the callback. */
+   T * resampled_input = nullptr;
+   uint32_t resampled_frame_count = input_processor->output_for_input(*input_frames_count);
+ 
+   /* process the input, and present exactly `output_frames_needed` in the
+   * callback. */
+   input_processor->input(input_buffer, *input_frames_count);
+-  resampled_input = input_processor->output(resampled_frame_count, (size_t*)input_frames_count);
++
++  size_t frames_resampled = 0;
++  resampled_input = input_processor->output(resampled_frame_count, &frames_resampled);
++  *input_frames_count = frames_resampled;
+ 
+   long got = data_callback(stream, user_ptr,
+                            resampled_input, nullptr, resampled_frame_count);
+ 
+   /* Return the number of initial input frames or part of it.
+   * Since output_frames_needed == 0 in input scenario, the only
+   * available number outside resampler is the initial number of frames. */
+   return (*input_frames_count) * (got / resampled_frame_count);
+@@ -239,18 +242,21 @@ cubeb_resampler_speex<T, InputProcessor,
+    /* fill directly the input buffer of the output processor to save a copy */
+   out_unprocessed =
+     output_processor->input_buffer(output_frames_before_processing);
+ 
+   if (in_buffer) {
+     /* process the input, and present exactly `output_frames_needed` in the
+     * callback. */
+     input_processor->input(in_buffer, *input_frames_count);
++
++    size_t frames_resampled = 0;
+     resampled_input =
+-      input_processor->output(output_frames_before_processing, (size_t*)input_frames_count);
++      input_processor->output(output_frames_before_processing, &frames_resampled);
++    *input_frames_count = frames_resampled;
+   } else {
+     resampled_input = nullptr;
+   }
+ 
+   got = data_callback(stream, user_ptr,
+                       resampled_input, out_unprocessed,
+                       output_frames_before_processing);
