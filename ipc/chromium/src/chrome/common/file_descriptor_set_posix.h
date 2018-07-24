@@ -29,6 +29,8 @@ class FileDescriptorSet {
     MAX_DESCRIPTORS_PER_MESSAGE = 250
   };
 
+  void CopyFrom(const FileDescriptorSet& other);
+
   // ---------------------------------------------------------------------------
   // Interfaces for building during message serialisation...
 
