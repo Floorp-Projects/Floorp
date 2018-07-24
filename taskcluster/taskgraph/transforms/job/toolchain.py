@@ -131,12 +131,18 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     support_vcs_checkout(config, job, taskdesc, sparse=True)
 
+    # Toolchain checkouts don't live under {workdir}/checkouts
+    workspace = '{workdir}/workspace/build'.format(**run)
+    gecko_path = '{}/src'.format(workspace)
+
     env = worker['env']
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'TOOLS_DISABLE': 'true',
         'MOZ_AUTOMATION': '1',
+        'MOZ_FETCHES_DIR': workspace,
+        'GECKO_PATH': gecko_path,
     })
 
     if run['tooltool-downloads']:
@@ -145,7 +151,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     # Use `mach` to invoke python scripts so in-tree libraries are available.
     if run['script'].endswith('.py'):
-        wrapper = 'workspace/build/src/mach python '
+        wrapper = '{}/mach python '.format(gecko_path)
     else:
         wrapper = ''
 
@@ -160,7 +166,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     worker['command'] = [
         '{workdir}/bin/run-task'.format(**run),
-        '--vcs-checkout={workdir}/workspace/build/src'.format(**run),
+        '--vcs-checkout={}'.format(gecko_path),
     ] + sparse_profile + [
         '--',
         'bash',
