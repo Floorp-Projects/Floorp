@@ -61,6 +61,7 @@ class nsIBaseWindow;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
+class nsIDOMWindowUtils;
 class nsIScrollableFrame;
 class nsIControllers;
 class nsIJSID;
@@ -739,6 +740,8 @@ public:
                       mozilla::ErrorResult& aError);
 
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
+
+  nsIDOMWindowUtils* WindowUtils();
 
   virtual bool IsInSyncOperation() override
   {

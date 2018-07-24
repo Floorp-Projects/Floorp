@@ -2400,6 +2400,12 @@ nsGlobalWindowInner::GetInstallTrigger()
   return do_AddRef(mInstallTrigger);
 }
 
+nsIDOMWindowUtils*
+nsGlobalWindowInner::GetWindowUtils(ErrorResult& aRv)
+{
+  FORWARD_TO_OUTER_OR_THROW(WindowUtils, (), aRv, nullptr);
+}
+
 nsGlobalWindowInner::CallState
 nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
                                                                bool* aResultOut)
