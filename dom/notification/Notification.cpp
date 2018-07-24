@@ -930,21 +930,14 @@ Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                            const nsAString& aTag, const nsAString& aIconUrl,
                            bool aRequireInteraction,
                            const NotificationBehavior& aBehavior)
-  : DOMEventTargetHelper(),
+  : DOMEventTargetHelper(aGlobal),
     mWorkerPrivate(nullptr), mObserver(nullptr),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
     mTag(aTag), mIconUrl(aIconUrl), mRequireInteraction(aRequireInteraction),
     mBehavior(aBehavior), mData(JS::NullValue()),
     mIsClosed(false), mIsStored(false), mTaskCount(0)
 {
-  if (NS_IsMainThread()) {
-    // We can only call this on the main thread because
-    // Event::SetEventType() called down the call chain when dispatching events
-    // using DOMEventTargetHelper::DispatchTrustedEvent() will assume the event
-    // is a main thread event if it has a valid owner. It will then attempt to
-    // fetch the atom for the event name which asserts main thread only.
-    BindToOwner(aGlobal);
-  } else {
+  if (!NS_IsMainThread()) {
     mWorkerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(mWorkerPrivate);
   }
