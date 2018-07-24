@@ -915,11 +915,10 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
     bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder, opacityItem->Frame());
     GP("active: %d\n", active);
     return active || HasActiveChildren(*opacityItem->GetChildren(), aDisplayListBuilder);
+  } else if (aItem->GetType() == DisplayItemType::TYPE_WRAP_LIST && aItem->GetChildren()) {
+    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
   }
   // TODO: handle other items?
-  if (aItem->GetChildren()) {
-    return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);;
-  }
   return false;
 }
 
