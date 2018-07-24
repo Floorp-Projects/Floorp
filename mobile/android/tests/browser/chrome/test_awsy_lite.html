@@ -59,7 +59,7 @@
   };
 
   function doFullGc(aCallback, aIterations) {
-    var domWindowUtils = gWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    var domWindowUtils = gWindow.windowUtils;
 
     function runSoon(f) {
         Services.tm.dispatchToMainThread({ run: f });
