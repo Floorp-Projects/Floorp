@@ -53,7 +53,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     this._header = contents.querySelector("header");
 
-    this._errorText = contents.querySelector("#error-text");
+    this._errorText = contents.querySelector("#payment-summary .page-error");
 
     this._disabledOverlay = contents.getElementById("disabled-overlay");
 
