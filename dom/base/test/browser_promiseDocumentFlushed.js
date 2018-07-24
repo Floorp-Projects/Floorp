@@ -22,8 +22,7 @@ function dirtyStyle() {
   gNavToolbox.style.color = "red";
 }
 
-const gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+const gWindowUtils = window.windowUtils;
 
 /**
  * Asserts that no style or layout flushes are required by the

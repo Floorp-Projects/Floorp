@@ -219,8 +219,7 @@ BrowserElementParent.prototype = {
   },
 
   get _windowUtils() {
-    return this._window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    return this._window.windowUtils;
   },
 
   promptAuth: function(authDetail, callback) {

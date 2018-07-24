@@ -85,8 +85,7 @@
   }
 
   function doTest() {
-    let domWinUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
+    let domWinUtils = window.windowUtils;
 
     let text = document.getElementById("text");
 

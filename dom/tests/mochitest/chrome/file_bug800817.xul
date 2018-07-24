@@ -21,8 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
   /** Test for Bug 800817 **/
 
   function sendClick(win) {
-    var wu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils);
+    var wu = win.windowUtils;
     wu.sendMouseEventToWindow("mousedown", 10, 10, 0, 0, 0);
     wu.sendMouseEventToWindow("mouseup", 10, 10, 0, 0, 0);
   }

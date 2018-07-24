@@ -52,9 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378518
     var myExtendedBoxClicked = false;
 
     function testClick(elemName) {
-      var wu  =
-        window.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindowUtils);
+      var wu = window.windowUtils;
 
       var a = document.getElementById(elemName).getBoundingClientRect();
       wu.sendMouseEvent('mousedown',  a.left + 1, a.top + 1, 0, 1, 0);

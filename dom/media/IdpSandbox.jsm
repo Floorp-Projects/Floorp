@@ -235,8 +235,7 @@ IdpSandbox.prototype = {
   // can't rethrow anything else because that could leak information about the
   // internal workings of the IdP across origins.
   _logError(e) {
-    let winID = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    let winID = this.window.windowUtils.currentInnerWindowID;
     let scriptError = Cc["@mozilla.org/scripterror;1"]
         .createInstance(Ci.nsIScriptError);
     scriptError.initWithWindowID(e.message, e.fileName, null,

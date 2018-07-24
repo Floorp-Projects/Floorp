@@ -310,8 +310,7 @@ ContentAreaDropListener.prototype =
       return false;
 
     return ownerDoc.defaultView
-                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .windowUtils
                    .isNodeDisabledForEvents(aEvent.originalTarget);
   }
 };
