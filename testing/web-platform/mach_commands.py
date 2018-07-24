@@ -33,32 +33,33 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
     def kwargs_common(self, kwargs):
         build_path = os.path.join(self.topobjdir, 'build')
+        here = os.path.split(__file__)[0]
+        tests_src_path = os.path.join(here, "tests")
         if build_path not in sys.path:
             sys.path.append(build_path)
 
         if kwargs["config"] is None:
-            kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
+            kwargs["config"] = os.path.join(here, 'wptrunner.ini')
 
         if kwargs["prefs_root"] is None:
-            kwargs["prefs_root"] = os.path.join(self.topobjdir, '_tests', 'web-platform', "prefs")
+            kwargs["prefs_root"] = os.path.join(self.topsrcdir, 'testing', 'profiles')
 
         if kwargs["stackfix_dir"] is None:
             kwargs["stackfix_dir"] = self.bindir
-
-        here = os.path.split(__file__)[0]
 
         if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):
             kwargs["exclude"] = ["css"]
 
         if kwargs["ssl_type"] in (None, "pregenerated"):
+            cert_root = os.path.join(tests_src_path, "tools", "certs")
             if kwargs["ca_cert_path"] is None:
-                kwargs["ca_cert_path"] = os.path.join(here, "certs", "cacert.pem")
+                kwargs["ca_cert_path"] = os.path.join(cert_root, "cacert.pem")
 
             if kwargs["host_key_path"] is None:
-                kwargs["host_key_path"] = os.path.join(here, "certs", "web-platform.test.key")
+                kwargs["host_key_path"] = os.path.join(cert_root, "web-platform.test.key")
 
             if kwargs["host_cert_path"] is None:
-                kwargs["host_cert_path"] = os.path.join(here, "certs", "web-platform.test.pem")
+                kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
 
         kwargs["capture_stdio"] = True
 

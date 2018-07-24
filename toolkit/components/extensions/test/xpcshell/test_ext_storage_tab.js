@@ -199,7 +199,7 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
         </html>`,
 
         "tab.js"() {
-          browser.test.onMessage.addListener(async ({msg, expectErrorOnSet}) => {
+          browser.test.onMessage.addListener(async ({msg, expectErrorOnSet, errorShouldInclude}) => {
             if (msg !== "call-storage-local") {
               return;
             }
@@ -209,7 +209,7 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
             try {
               await browser.storage.local.set({"newkey": expectedValue});
             } catch (err) {
-              if (expectErrorOnSet) {
+              if (expectErrorOnSet && err.message.includes(errorShouldInclude)) {
                 browser.test.sendMessage("storage-local-set-rejected");
                 return;
               }
@@ -250,8 +250,11 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
     // Turn the low disk mode on (so that opening an IndexedDB connection raises a
     // QuotaExceededError).
     setLowDiskMode(true);
-
-    extension.sendMessage({msg: "call-storage-local", expectErrorOnSet: true});
+    extension.sendMessage({
+      msg: "call-storage-local",
+      expectErrorOnSet: true,
+      errorShouldInclude: "QuotaExceededError",
+    });
     info(`Wait the storage.local.set API call to reject while the disk is full`);
     await extension.awaitMessage("storage-local-set-rejected");
     info("Got the a rejection on storage.local.set while the disk is full as expected");
@@ -262,6 +265,19 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
     await extension.awaitMessage("storage-local-get-resolved");
     info("storage.local.set and storage.local.get resolve successfully once the disk is free again");
 
+    // Turn the low disk mode on again (so that we can trigger an aborted transaction in the
+    // ExtensionStorageIDB set method, now that there is an open IndexedDb connection).
+    setLowDiskMode(true);
+    extension.sendMessage({
+      msg: "call-storage-local",
+      expectErrorOnSet: true,
+      errorShouldInclude: "QuotaExceededError",
+    });
+    info(`Wait the storage.local.set transaction to be aborted while the disk is full`);
+    await extension.awaitMessage("storage-local-set-rejected");
+    info("Got the a rejection on storage.local.set while the disk is full as expected");
+
+    setLowDiskMode(false);
     contentPage.close();
     await extension.unload();
   }
@@ -274,4 +290,3 @@ add_task(async function test_storage_local_should_not_cache_idb_open_rejections(
     [`${ExtensionStorageIDB.IDB_MIGRATED_PREF_BRANCH}.${EXTENSION_ID}`, true],
   ], test_storage_local_on_idb_disk_full_rejection);
 });
-

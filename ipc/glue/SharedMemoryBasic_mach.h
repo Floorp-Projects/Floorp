@@ -12,6 +12,7 @@
 
 #include "SharedMemory.h"
 #include <mach/port.h>
+#include "chrome/common/mach_ipc_mac.h"
 
 #ifdef FUZZING
 #include "SharedMemoryFuzzer.h"
@@ -28,6 +29,27 @@ class ReceivePort;
 namespace mozilla {
 namespace ipc {
 
+enum {
+  kGetPortsMsg = 1,
+  kSharePortsMsg,
+  kWaitForTexturesMsg,
+  kUpdateTextureLocksMsg,
+  kReturnIdMsg,
+  kReturnWaitForTexturesMsg,
+  kReturnPortsMsg,
+  kShutdownMsg,
+  kCleanupMsg,
+};
+
+struct MemoryPorts {
+  MachPortSender* mSender;
+  ReceivePort* mReceiver;
+
+  MemoryPorts() = default;
+  MemoryPorts(MachPortSender* sender, ReceivePort* receiver)
+   : mSender(sender), mReceiver(receiver) {}
+};
+
 class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t>
 {
 public:
@@ -41,6 +63,10 @@ public:
   static void CleanupForPid(pid_t pid);
 
   static void Shutdown();
+
+  static bool SendMachMessage(pid_t pid,
+                              MachSendMessage& message,
+                              MachReceiveMessage* response);
 
   SharedMemoryBasic();
 

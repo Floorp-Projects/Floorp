@@ -242,7 +242,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     worker = taskdesc['worker']
 
-    generic_worker_add_artifacts(config, job, taskdesc)
+    if not worker.get('skip-artifacts', False):
+        generic_worker_add_artifacts(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
