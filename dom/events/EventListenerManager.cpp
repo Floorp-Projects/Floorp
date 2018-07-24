@@ -414,6 +414,27 @@ EventListenerManager::AddEventListenerInternal(
      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
       window->SetHasSelectionChangeEventListeners();
     }
+  } else if (aTypeAtom == nsGkAtoms::onstart) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+      if (doc) {
+        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onstart);
+      }
+    }
+  } else if (aTypeAtom == nsGkAtoms::onbounce) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+      if (doc) {
+        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onbounce);
+      }
+    }
+  } else if (aTypeAtom == nsGkAtoms::onfinish) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+      if (doc) {
+        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onfinish);
+      }
+    }
   }
 
   if (IsApzAwareListener(listener)) {

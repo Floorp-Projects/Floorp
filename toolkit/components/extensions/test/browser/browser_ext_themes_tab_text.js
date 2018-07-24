@@ -3,12 +3,6 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the text color of the selected tab are applied properly.
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_support_tab_text_property_css_color() {
   const TAB_TEXT_COLOR = "#9400ff";
   let extension = ExtensionTestUtils.loadExtension({

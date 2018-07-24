@@ -821,8 +821,8 @@ AutoplayPermissionPrompt.prototype = {
 
   get promptActions() {
     return [{
-        label: gBrowserBundle.GetStringFromName("autoplay.Allow.label"),
-        accessKey: gBrowserBundle.GetStringFromName("autoplay.Allow.accesskey"),
+        label: gBrowserBundle.GetStringFromName("autoplay.Allow2.label"),
+        accessKey: gBrowserBundle.GetStringFromName("autoplay.Allow2.accesskey"),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
       },
       {

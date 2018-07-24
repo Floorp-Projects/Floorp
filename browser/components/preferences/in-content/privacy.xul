@@ -495,7 +495,7 @@
                                permissions-button-cancel.label,
                                permissions-button-ok.label,
                                permissions-exceptions-autoplay-media-window.title,
-                               permissions-exceptions-autoplay-media-desc
+                               permissions-exceptions-autoplay-media-desc2
                                " />
     </hbox>
   </hbox>
@@ -567,7 +567,7 @@
           <!-- Defined in dom/media/nsIAutoplay.idl -->
           <menuitem data-l10n-id="autoplay-option-allow" value="0"/>
           <menuitem data-l10n-id="autoplay-option-ask" value="2"/>
-          <menuitem data-l10n-id="autoplay-option-block" value="1"/>
+          <menuitem data-l10n-id="autoplay-option-dont" value="1"/>
         </menupopup>
       </menulist>
     </hbox>
@@ -580,7 +580,7 @@
                                permissions-button-cancel.label,
                                permissions-button-ok.label,
                                permissions-exceptions-autoplay-media-window.title,
-                               permissions-exceptions-autoplay-media-desc
+                               permissions-exceptions-autoplay-media-desc2
                                " />
     </hbox>
   </hbox>

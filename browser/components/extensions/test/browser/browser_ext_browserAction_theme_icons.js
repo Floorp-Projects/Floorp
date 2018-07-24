@@ -15,12 +15,6 @@ const DARK_THEME_COLORS = {
   "textcolor": "#FFF",
 };
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 async function testBrowserAction(extension, expectedIcon) {
   let browserActionWidget = getBrowserActionWidget(extension);
   await promiseAnimationFrame();

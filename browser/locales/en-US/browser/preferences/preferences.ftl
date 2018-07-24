@@ -854,8 +854,8 @@ autoplay-option-ask =
     .label = Always Ask
 autoplay-option-allow =
     .label = Allow Autoplay
-autoplay-option-block =
-    .label = Block Autoplay
+autoplay-option-dont =
+    .label = Don't Autoplay
 
 permissions-block-popups =
     .label = Block pop-up windows

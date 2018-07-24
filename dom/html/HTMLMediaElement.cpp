@@ -3064,6 +3064,7 @@ HTMLMediaElement::PauseIfShouldNotBePlaying()
   if (AutoplayPolicy::IsAllowedToPlay(*this) != nsIAutoplay::ALLOWED) {
     ErrorResult rv;
     Pause(rv);
+    OwnerDoc()->SetDocTreeHadPlayRevoked();
   }
 }
 
@@ -4011,6 +4012,21 @@ HTMLMediaElement::AudioChannelAgentDelayingPlayback()
   return mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked();
 }
 
+void
+HTMLMediaElement::ReportAutoplayTelemetry() const
+{
+  // If we're audible, and autoplaying...
+  if ((Volume() > 0.0 && !Muted()) &&
+      (!OwnerDoc()->HasBeenUserGestureActivated() || Autoplay())) {
+    OwnerDoc()->SetDocTreeHadAudibleMedia();
+    if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
+      ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
+    } else {
+      ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_NOT_BE_ALLOWED_COUNT, 1);
+    }
+  }
+}
+
 already_AddRefed<Promise>
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
@@ -4069,6 +4085,8 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     }
     return promise.forget();
   }
+
+  ReportAutoplayTelemetry();
 
   const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
@@ -6228,6 +6246,7 @@ HTMLMediaElement::CheckAutoplayDataReady()
     return;
   }
 
+  ReportAutoplayTelemetry();
   switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
     case nsIAutoplay::BLOCKED:
       return;

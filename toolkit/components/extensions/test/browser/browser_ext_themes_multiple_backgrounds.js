@@ -1,11 +1,5 @@
 "use strict";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
-});
-
 add_task(async function test_support_backgrounds_position() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
