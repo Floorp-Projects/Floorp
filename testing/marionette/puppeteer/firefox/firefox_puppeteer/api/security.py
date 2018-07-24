@@ -26,9 +26,7 @@ class Security(BaseLib):
 
         :returns: Address details as dictionary
         """
-        regex = re.compile('.*?L=(?P<city>.+?),ST=(?P<state>.+?),C=(?P<country>.+?)'
-                           ',postalCode=(?P<postal_code>.+?),STREET=(?P<street>.+?)'
-                           ',serial')
+        regex = re.compile('.*?L=(?P<city>.+?),ST=(?P<state>.+?),C=(?P<country>.+?),')
         results = regex.search(certificate['subjectName'])
 
         return results.groupdict() if results else results
