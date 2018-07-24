@@ -478,7 +478,11 @@ private:
   int32_t EnumTableEntryToValue(const EnumTable* aEnumTable,
                                 const EnumTable* aTableEntry);
 
+  static MiscContainer* AllocMiscContainer();
+  static void DeallocMiscContainer(MiscContainer* aCont);
+
   static nsTArray<const EnumTable*>* sEnumTableArray;
+  static MiscContainer* sMiscContainerCache;
 
   uintptr_t mBits;
 };
