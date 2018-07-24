@@ -3042,8 +3042,6 @@ public:
   // declaration of nsINode::SizeOfIncludingThis.
   virtual void DocAddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
-  void ConstructUbiNode(void* storage) override;
-
   bool MayHaveDOMMutationObservers()
   {
     return mMayHaveDOMMutationObservers;

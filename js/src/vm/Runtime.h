@@ -360,11 +360,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /* Compartment memory reporting callback. */
     js::MainThreadData<JSSizeOfIncludingThisCompartmentCallback> sizeOfIncludingThisCompartmentCallback;
 
-    /* Callback for creating ubi::Nodes representing DOM node objects. Set by
-     * JS::ubi::SetConstructUbiNodeForDOMObjectCallback. Refer to js/public/UbiNode.h.
-     */
-    void (*constructUbiNodeForDOMObjectCallback) (void*, JSObject*) = nullptr;
-
     /* Realm destroy callback. */
     js::MainThreadData<JS::DestroyRealmCallback> destroyRealmCallback;
 

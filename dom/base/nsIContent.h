@@ -55,8 +55,6 @@ class nsIContent : public nsINode {
 public:
   typedef mozilla::widget::IMEState IMEState;
 
-  void ConstructUbiNode(void* storage) override;
-
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID

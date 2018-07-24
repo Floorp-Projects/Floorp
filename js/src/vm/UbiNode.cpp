@@ -545,24 +545,5 @@ SimpleEdgeRange::addTracerEdges(JSRuntime* rt, void* thing, JS::TraceKind kind, 
     return tracer.okay;
 }
 
-void
-Concrete<JSObject>::construct(void* storage, JSObject* ptr) {
-    if (ptr) {
-        auto clasp = ptr->getClass();
-        auto callback = ptr->compartment()->
-                  runtimeFromMainThread()->constructUbiNodeForDOMObjectCallback;
-        if (clasp->isDOMClass() && callback) {
-            callback(storage, ptr);
-            return;
-        }
-    }
-    new (storage) Concrete(ptr);
-}
-
-void
-SetConstructUbiNodeForDOMObjectCallback(JSContext* cx, void (*callback)(void*, JSObject*)) {
-    cx->runtime()->constructUbiNodeForDOMObjectCallback = callback;
-}
-
 } // namespace ubi
 } // namespace JS
