@@ -3,9 +3,11 @@ parking_lot
 
 [![Build Status](https://travis-ci.org/Amanieu/parking_lot.svg?branch=master)](https://travis-ci.org/Amanieu/parking_lot) [![Build status](https://ci.appveyor.com/api/projects/status/wppcc32ttpud0a30/branch/master?svg=true)](https://ci.appveyor.com/project/Amanieu/parking-lot/branch/master) [![Crates.io](https://img.shields.io/crates/v/parking_lot.svg)](https://crates.io/crates/parking_lot)
 
-[Documentation (synchronization primitives)](https://amanieu.github.io/parking_lot/parking_lot/index.html)
+[Documentation (synchronization primitives)](https://docs.rs/parking_lot/)
 
-[Documentation (core parking lot API)](https://amanieu.github.io/parking_lot/parking_lot_core/index.html)
+[Documentation (core parking lot API)](https://docs.rs/parking_lot_core/)
+
+[Documentation (type-safe lock API)](https://docs.rs/lock_api/)
 
 This library provides implementations of `Mutex`, `RwLock`, `Condvar` and
 `Once` that are smaller, faster and more flexible than those in the Rust
@@ -87,8 +89,6 @@ There are a few restrictions when using this library on stable Rust:
   `Condvar` and `RwLock` types instead of `const fn`.
 - `RwLock` will not be able to take advantage of hardware lock elision for
   readers, which improves performance when there are multiple readers.
-- Slightly less efficient code may be generated for `compare_exchange`
-  operations. This should not affect architectures like x86 though.
 
 To enable nightly-only functionality, you need to enable the `nightly` feature
 in Cargo (see below).
@@ -99,7 +99,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.5"
+parking_lot = "0.6"
 ```
 
 and this to your crate root:
@@ -112,7 +112,7 @@ To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = {version = "0.5", features = ["nightly"]}
+parking_lot = {version = "0.6", features = ["nightly"]}
 ```
 
 The experimental deadlock detector can be enabled with the

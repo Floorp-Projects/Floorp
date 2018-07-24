@@ -5,35 +5,24 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::cell::Cell;
-use std::time::{Duration, Instant};
-use parking_lot_core::{self, FilterOp, ParkResult, ParkToken, SpinWait, UnparkResult};
-use elision::{have_elision, AtomicElisionExt};
-use raw_mutex::{TOKEN_HANDOFF, TOKEN_NORMAL};
 use deadlock;
-
-const USABLE_BITS_MASK: usize = {
-    #[cfg(feature = "nightly")]
-    {
-        const TOTAL_BITS: usize = ::std::mem::size_of::<usize>() * 8;
-        // specifies the number of usable bits, useful to test the
-        // implementation with fewer bits (the current implementation
-        // requires this to be at least 4)
-        const USABLE_BITS: usize = TOTAL_BITS;
-        (!0) >> (TOTAL_BITS - USABLE_BITS)
-    }
-    #[cfg(not(feature = "nightly"))]
-    {
-        !0
-    }
+use elision::{have_elision, AtomicElisionExt};
+use lock_api::{
+    GuardNoSend, RawRwLock as RawRwLockTrait, RawRwLockDowngrade, RawRwLockFair,
+    RawRwLockRecursive, RawRwLockRecursiveTimed, RawRwLockTimed, RawRwLockUpgrade,
+    RawRwLockUpgradeDowngrade, RawRwLockUpgradeFair, RawRwLockUpgradeTimed,
 };
+use parking_lot_core::{self, FilterOp, ParkResult, ParkToken, SpinWait, UnparkResult};
+use raw_mutex::{TOKEN_HANDOFF, TOKEN_NORMAL};
+use std::cell::Cell;
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::time::{Duration, Instant};
 
 const PARKED_BIT: usize = 0b001;
 const UPGRADING_BIT: usize = 0b010;
 // A shared guard acquires a single guard resource
 const SHARED_GUARD: usize = 0b100;
-const GUARD_COUNT_MASK: usize = USABLE_BITS_MASK & !(SHARED_GUARD - 1);
+const GUARD_COUNT_MASK: usize = !(SHARED_GUARD - 1);
 // An exclusive lock acquires all of guard resource (i.e. it is exclusive)
 const EXCLUSIVE_GUARD: usize = GUARD_COUNT_MASK;
 // An upgradable lock acquires just over half of the guard resource
@@ -48,44 +37,22 @@ const TOKEN_EXCLUSIVE: ParkToken = ParkToken(EXCLUSIVE_GUARD);
 const TOKEN_UPGRADABLE: ParkToken = ParkToken(UPGRADABLE_GUARD);
 const TOKEN_UPGRADING: ParkToken = ParkToken((EXCLUSIVE_GUARD - UPGRADABLE_GUARD) | UPGRADING_BIT);
 
-#[inline(always)]
-fn checked_add(left: usize, right: usize) -> Option<usize> {
-    if USABLE_BITS_MASK == !0 {
-        left.checked_add(right)
-    } else {
-        debug_assert!(left <= USABLE_BITS_MASK && right <= USABLE_BITS_MASK);
-        let res = left + right;
-        if res & USABLE_BITS_MASK < right {
-            None
-        } else {
-            Some(res)
-        }
-    }
-}
-
+/// Raw reader-writer lock type backed by the parking lot.
 pub struct RawRwLock {
     state: AtomicUsize,
 }
 
-impl RawRwLock {
-    #[cfg(feature = "nightly")]
-    #[inline]
-    pub const fn new() -> RawRwLock {
-        RawRwLock {
-            state: AtomicUsize::new(0),
-        }
-    }
-    #[cfg(not(feature = "nightly"))]
-    #[inline]
-    pub fn new() -> RawRwLock {
-        RawRwLock {
-            state: AtomicUsize::new(0),
-        }
-    }
+unsafe impl RawRwLockTrait for RawRwLock {
+    const INIT: RawRwLock = RawRwLock {
+        state: ATOMIC_USIZE_INIT,
+    };
+
+    type GuardMarker = GuardNoSend;
 
     #[inline]
-    pub fn lock_exclusive(&self) {
-        if self.state
+    fn lock_exclusive(&self) {
+        if self
+            .state
             .compare_exchange_weak(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
             .is_err()
         {
@@ -96,14 +63,47 @@ impl RawRwLock {
     }
 
     #[inline]
-    pub fn try_lock_exclusive_until(&self, timeout: Instant) -> bool {
-        let result = if self.state
-            .compare_exchange_weak(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
+    fn try_lock_exclusive(&self) -> bool {
+        if self
+            .state
+            .compare_exchange(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
             .is_ok()
         {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
             true
         } else {
-            self.lock_exclusive_slow(Some(timeout))
+            false
+        }
+    }
+
+    #[inline]
+    fn unlock_exclusive(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        if self
+            .state
+            .compare_exchange_weak(EXCLUSIVE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
+            .is_ok()
+        {
+            return;
+        }
+        self.unlock_exclusive_slow(false);
+    }
+
+    #[inline]
+    fn lock_shared(&self) {
+        if !self.try_lock_shared_fast(false) {
+            let result = self.lock_shared_slow(false, None);
+            debug_assert!(result);
+        }
+        unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+    }
+
+    #[inline]
+    fn try_lock_shared(&self) -> bool {
+        let result = if self.try_lock_shared_fast(false) {
+            true
+        } else {
+            self.try_lock_shared_slow(false)
         };
         if result {
             unsafe { deadlock::acquire_resource(self as *const _ as usize) };
@@ -112,8 +112,149 @@ impl RawRwLock {
     }
 
     #[inline]
-    pub fn try_lock_exclusive_for(&self, timeout: Duration) -> bool {
-        let result = if self.state
+    fn unlock_shared(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        let state = self.state.load(Ordering::Relaxed);
+        if state & PARKED_BIT == 0
+            || (state & UPGRADING_BIT == 0 && state & GUARD_COUNT_MASK != SHARED_GUARD)
+        {
+            if have_elision() {
+                if self
+                    .state
+                    .elision_release(state, state - SHARED_GUARD)
+                    .is_ok()
+                {
+                    return;
+                }
+            } else {
+                if self
+                    .state
+                    .compare_exchange_weak(
+                        state,
+                        state - SHARED_GUARD,
+                        Ordering::Release,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
+                    return;
+                }
+            }
+        }
+        self.unlock_shared_slow(false);
+    }
+}
+
+unsafe impl RawRwLockFair for RawRwLock {
+    #[inline]
+    fn unlock_shared_fair(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        let state = self.state.load(Ordering::Relaxed);
+        if state & PARKED_BIT == 0
+            || (state & UPGRADING_BIT == 0 && state & GUARD_COUNT_MASK != SHARED_GUARD)
+        {
+            if have_elision() {
+                if self
+                    .state
+                    .elision_release(state, state - SHARED_GUARD)
+                    .is_ok()
+                {
+                    return;
+                }
+            } else {
+                if self
+                    .state
+                    .compare_exchange_weak(
+                        state,
+                        state - SHARED_GUARD,
+                        Ordering::Release,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
+                    return;
+                }
+            }
+        }
+        self.unlock_shared_slow(true);
+    }
+
+    #[inline]
+    fn unlock_exclusive_fair(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        if self
+            .state
+            .compare_exchange_weak(EXCLUSIVE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
+            .is_ok()
+        {
+            return;
+        }
+        self.unlock_exclusive_slow(true);
+    }
+
+    #[inline]
+    fn bump_shared(&self) {
+        if self.state.load(Ordering::Relaxed) & PARKED_BIT != 0 {
+            self.bump_shared_slow();
+        }
+    }
+
+    #[inline]
+    fn bump_exclusive(&self) {
+        if self.state.load(Ordering::Relaxed) & PARKED_BIT != 0 {
+            self.bump_exclusive_slow();
+        }
+    }
+}
+
+unsafe impl RawRwLockDowngrade for RawRwLock {
+    #[inline]
+    fn downgrade(&self) {
+        let state = self
+            .state
+            .fetch_sub(EXCLUSIVE_GUARD - SHARED_GUARD, Ordering::Release);
+
+        // Wake up parked shared and upgradable threads if there are any
+        if state & PARKED_BIT != 0 {
+            self.downgrade_slow();
+        }
+    }
+}
+
+unsafe impl RawRwLockTimed for RawRwLock {
+    type Duration = Duration;
+    type Instant = Instant;
+
+    #[inline]
+    fn try_lock_shared_for(&self, timeout: Self::Duration) -> bool {
+        let result = if self.try_lock_shared_fast(false) {
+            true
+        } else {
+            self.lock_shared_slow(false, Some(Instant::now() + timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn try_lock_shared_until(&self, timeout: Self::Instant) -> bool {
+        let result = if self.try_lock_shared_fast(false) {
+            true
+        } else {
+            self.lock_shared_slow(false, Some(timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn try_lock_exclusive_for(&self, timeout: Duration) -> bool {
+        let result = if self
+            .state
             .compare_exchange_weak(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
             .is_ok()
         {
@@ -128,41 +269,259 @@ impl RawRwLock {
     }
 
     #[inline]
-    pub fn try_lock_exclusive(&self) -> bool {
-        if self.state
-            .compare_exchange(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
+    fn try_lock_exclusive_until(&self, timeout: Instant) -> bool {
+        let result = if self
+            .state
+            .compare_exchange_weak(0, EXCLUSIVE_GUARD, Ordering::Acquire, Ordering::Relaxed)
             .is_ok()
         {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
             true
         } else {
-            false
+            self.lock_exclusive_slow(Some(timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
         }
+        result
+    }
+}
+
+unsafe impl RawRwLockRecursive for RawRwLock {
+    #[inline]
+    fn lock_shared_recursive(&self) {
+        if !self.try_lock_shared_fast(true) {
+            let result = self.lock_shared_slow(true, None);
+            debug_assert!(result);
+        }
+        unsafe { deadlock::acquire_resource(self as *const _ as usize) };
     }
 
     #[inline]
-    pub fn unlock_exclusive(&self, force_fair: bool) {
+    fn try_lock_shared_recursive(&self) -> bool {
+        let result = if self.try_lock_shared_fast(true) {
+            true
+        } else {
+            self.try_lock_shared_slow(true)
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+}
+
+unsafe impl RawRwLockRecursiveTimed for RawRwLock {
+    #[inline]
+    fn try_lock_shared_recursive_for(&self, timeout: Self::Duration) -> bool {
+        let result = if self.try_lock_shared_fast(true) {
+            true
+        } else {
+            self.lock_shared_slow(true, Some(Instant::now() + timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn try_lock_shared_recursive_until(&self, timeout: Self::Instant) -> bool {
+        let result = if self.try_lock_shared_fast(true) {
+            true
+        } else {
+            self.lock_shared_slow(true, Some(timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+}
+
+unsafe impl RawRwLockUpgrade for RawRwLock {
+    #[inline]
+    fn lock_upgradable(&self) {
+        if !self.try_lock_upgradable_fast() {
+            let result = self.lock_upgradable_slow(None);
+            debug_assert!(result);
+        }
+        unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+    }
+
+    #[inline]
+    fn try_lock_upgradable(&self) -> bool {
+        let result = if self.try_lock_upgradable_fast() {
+            true
+        } else {
+            self.try_lock_upgradable_slow()
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn unlock_upgradable(&self) {
         unsafe { deadlock::release_resource(self as *const _ as usize) };
-        if self.state
-            .compare_exchange_weak(EXCLUSIVE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
+        if self
+            .state
+            .compare_exchange_weak(UPGRADABLE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
             .is_ok()
         {
             return;
         }
-        self.unlock_exclusive_slow(force_fair);
+        self.unlock_upgradable_slow(false);
     }
 
     #[inline]
-    pub fn exclusive_to_shared(&self) {
-        let state = self.state
-            .fetch_sub(EXCLUSIVE_GUARD - SHARED_GUARD, Ordering::Release);
-
-        // Wake up parked shared and upgradable threads if there are any
-        if state & PARKED_BIT != 0 {
-            self.exclusive_to_shared_slow();
+    fn upgrade(&self) {
+        if self
+            .state
+            .compare_exchange_weak(
+                UPGRADABLE_GUARD,
+                EXCLUSIVE_GUARD,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            )
+            .is_err()
+        {
+            let result = self.upgrade_slow(None);
+            debug_assert!(result);
         }
     }
 
+    fn try_upgrade(&self) -> bool {
+        if self
+            .state
+            .compare_exchange_weak(
+                UPGRADABLE_GUARD,
+                EXCLUSIVE_GUARD,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            true
+        } else {
+            self.try_upgrade_slow()
+        }
+    }
+}
+
+unsafe impl RawRwLockUpgradeFair for RawRwLock {
+    #[inline]
+    fn unlock_upgradable_fair(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        if self
+            .state
+            .compare_exchange_weak(UPGRADABLE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
+            .is_ok()
+        {
+            return;
+        }
+        self.unlock_upgradable_slow(true);
+    }
+
+    #[inline]
+    fn bump_upgradable(&self) {
+        if self.state.load(Ordering::Relaxed) & PARKED_BIT != 0 {
+            self.bump_upgradable_slow();
+        }
+    }
+}
+
+unsafe impl RawRwLockUpgradeDowngrade for RawRwLock {
+    #[inline]
+    fn downgrade_upgradable(&self) {
+        let state = self
+            .state
+            .fetch_sub(UPGRADABLE_GUARD - SHARED_GUARD, Ordering::Relaxed);
+
+        // Wake up parked shared and upgradable threads if there are any
+        if state & PARKED_BIT != 0 {
+            self.downgrade_upgradable_slow(state);
+        }
+    }
+
+    #[inline]
+    fn downgrade_to_upgradable(&self) {
+        let state = self
+            .state
+            .fetch_sub(EXCLUSIVE_GUARD - UPGRADABLE_GUARD, Ordering::Release);
+
+        // Wake up parked shared threads if there are any
+        if state & PARKED_BIT != 0 {
+            self.downgrade_to_upgradable_slow();
+        }
+    }
+}
+
+unsafe impl RawRwLockUpgradeTimed for RawRwLock {
+    #[inline]
+    fn try_lock_upgradable_until(&self, timeout: Instant) -> bool {
+        let result = if self.try_lock_upgradable_fast() {
+            true
+        } else {
+            self.lock_upgradable_slow(Some(timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn try_lock_upgradable_for(&self, timeout: Duration) -> bool {
+        let result = if self.try_lock_upgradable_fast() {
+            true
+        } else {
+            self.lock_upgradable_slow(Some(Instant::now() + timeout))
+        };
+        if result {
+            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
+        }
+        result
+    }
+
+    #[inline]
+    fn try_upgrade_until(&self, timeout: Instant) -> bool {
+        if self
+            .state
+            .compare_exchange_weak(
+                UPGRADABLE_GUARD,
+                EXCLUSIVE_GUARD,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            true
+        } else {
+            self.upgrade_slow(Some(timeout))
+        }
+    }
+
+    #[inline]
+    fn try_upgrade_for(&self, timeout: Duration) -> bool {
+        if self
+            .state
+            .compare_exchange_weak(
+                UPGRADABLE_GUARD,
+                EXCLUSIVE_GUARD,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            true
+        } else {
+            self.upgrade_slow(Some(Instant::now() + timeout))
+        }
+    }
+}
+
+impl RawRwLock {
     #[inline(always)]
     fn try_lock_shared_fast(&self, recursive: bool) -> bool {
         let state = self.state.load(Ordering::Relaxed);
@@ -178,92 +537,13 @@ impl RawRwLock {
         // completely empty since elision handles conflicts poorly.
         if have_elision() && state == 0 {
             self.state.elision_acquire(0, SHARED_GUARD).is_ok()
-        } else if let Some(new_state) = checked_add(state, SHARED_GUARD) {
+        } else if let Some(new_state) = state.checked_add(SHARED_GUARD) {
             self.state
                 .compare_exchange_weak(state, new_state, Ordering::Acquire, Ordering::Relaxed)
                 .is_ok()
         } else {
             false
         }
-    }
-
-    #[inline]
-    pub fn lock_shared(&self, recursive: bool) {
-        if !self.try_lock_shared_fast(recursive) {
-            let result = self.lock_shared_slow(recursive, None);
-            debug_assert!(result);
-        }
-        unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-    }
-
-    #[inline]
-    pub fn try_lock_shared_until(&self, recursive: bool, timeout: Instant) -> bool {
-        let result = if self.try_lock_shared_fast(recursive) {
-            true
-        } else {
-            self.lock_shared_slow(recursive, Some(timeout))
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn try_lock_shared_for(&self, recursive: bool, timeout: Duration) -> bool {
-        let result = if self.try_lock_shared_fast(recursive) {
-            true
-        } else {
-            self.lock_shared_slow(recursive, Some(Instant::now() + timeout))
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn try_lock_shared(&self, recursive: bool) -> bool {
-        let result = if self.try_lock_shared_fast(recursive) {
-            true
-        } else {
-            self.try_lock_shared_slow(recursive)
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn unlock_shared(&self, force_fair: bool) {
-        unsafe { deadlock::release_resource(self as *const _ as usize) };
-        let state = self.state.load(Ordering::Relaxed);
-        if state & PARKED_BIT == 0
-            || (state & UPGRADING_BIT == 0 && state & GUARD_COUNT_MASK != SHARED_GUARD)
-        {
-            if have_elision() {
-                if self.state
-                    .elision_release(state, state - SHARED_GUARD)
-                    .is_ok()
-                {
-                    return;
-                }
-            } else {
-                if self.state
-                    .compare_exchange_weak(
-                        state,
-                        state - SHARED_GUARD,
-                        Ordering::Release,
-                        Ordering::Relaxed,
-                    )
-                    .is_ok()
-                {
-                    return;
-                }
-            }
-        }
-        self.unlock_shared_slow(force_fair);
     }
 
     #[inline(always)]
@@ -276,146 +556,13 @@ impl RawRwLock {
             return false;
         }
 
-        if let Some(new_state) = checked_add(state, UPGRADABLE_GUARD) {
+        if let Some(new_state) = state.checked_add(UPGRADABLE_GUARD) {
             self.state
                 .compare_exchange_weak(state, new_state, Ordering::Acquire, Ordering::Relaxed)
                 .is_ok()
         } else {
             false
         }
-    }
-
-    #[inline]
-    pub fn lock_upgradable(&self) {
-        if !self.try_lock_upgradable_fast() {
-            let result = self.lock_upgradable_slow(None);
-            debug_assert!(result);
-        }
-        unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-    }
-
-    #[inline]
-    pub fn try_lock_upgradable_until(&self, timeout: Instant) -> bool {
-        let result = if self.try_lock_upgradable_fast() {
-            true
-        } else {
-            self.lock_upgradable_slow(Some(timeout))
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn try_lock_upgradable_for(&self, timeout: Duration) -> bool {
-        let result = if self.try_lock_upgradable_fast() {
-            true
-        } else {
-            self.lock_upgradable_slow(Some(Instant::now() + timeout))
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn try_lock_upgradable(&self) -> bool {
-        let result = if self.try_lock_upgradable_fast() {
-            true
-        } else {
-            self.try_lock_upgradable_slow()
-        };
-        if result {
-            unsafe { deadlock::acquire_resource(self as *const _ as usize) };
-        }
-        result
-    }
-
-    #[inline]
-    pub fn unlock_upgradable(&self, force_fair: bool) {
-        unsafe { deadlock::release_resource(self as *const _ as usize) };
-        if self.state
-            .compare_exchange_weak(UPGRADABLE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
-            .is_ok()
-        {
-            return;
-        }
-        self.unlock_upgradable_slow(force_fair);
-    }
-
-    #[inline]
-    pub fn upgradable_to_shared(&self) {
-        let state = self.state
-            .fetch_sub(UPGRADABLE_GUARD - SHARED_GUARD, Ordering::Relaxed);
-
-        // Wake up parked shared and upgradable threads if there are any
-        if state & PARKED_BIT != 0 {
-            self.upgradable_to_shared_slow(state);
-        }
-    }
-
-    #[inline]
-    pub fn upgradable_to_exclusive(&self) {
-        if self.state
-            .compare_exchange_weak(
-                UPGRADABLE_GUARD,
-                EXCLUSIVE_GUARD,
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            )
-            .is_err()
-        {
-            let result = self.upgradable_to_exclusive_slow(None);
-            debug_assert!(result);
-        }
-    }
-
-    #[inline]
-    pub fn try_upgradable_to_exclusive_until(&self, timeout: Instant) -> bool {
-        if self.state
-            .compare_exchange_weak(
-                UPGRADABLE_GUARD,
-                EXCLUSIVE_GUARD,
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            )
-            .is_ok()
-        {
-            true
-        } else {
-            self.upgradable_to_exclusive_slow(Some(timeout))
-        }
-    }
-
-    #[inline]
-    pub fn try_upgradable_to_exclusive_for(&self, timeout: Duration) -> bool {
-        if self.state
-            .compare_exchange_weak(
-                UPGRADABLE_GUARD,
-                EXCLUSIVE_GUARD,
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            )
-            .is_ok()
-        {
-            true
-        } else {
-            self.upgradable_to_exclusive_slow(Some(Instant::now() + timeout))
-        }
-    }
-
-    #[inline]
-    pub fn try_upgradable_to_exclusive(&self) -> bool {
-        self.state
-            .compare_exchange(
-                UPGRADABLE_GUARD,
-                EXCLUSIVE_GUARD,
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            )
-            .is_ok()
     }
 
     #[cold]
@@ -426,7 +573,7 @@ impl RawRwLock {
         loop {
             // Grab the lock if it isn't locked, even if there are other
             // threads parked.
-            if let Some(new_state) = checked_add(state, EXCLUSIVE_GUARD) {
+            if let Some(new_state) = state.checked_add(EXCLUSIVE_GUARD) {
                 match self.state.compare_exchange_weak(
                     state,
                     new_state,
@@ -517,7 +664,8 @@ impl RawRwLock {
     #[inline(never)]
     fn unlock_exclusive_slow(&self, force_fair: bool) {
         // Unlock directly if there are no parked threads
-        if self.state
+        if self
+            .state
             .compare_exchange(EXCLUSIVE_GUARD, 0, Ordering::Release, Ordering::Relaxed)
             .is_ok()
         {
@@ -525,11 +673,11 @@ impl RawRwLock {
         };
 
         // There are threads to unpark. We unpark threads up to the guard capacity.
-        let guard_count = Cell::new(0);
+        let guard_count = Cell::new(0usize);
         unsafe {
             let addr = self as *const _ as usize;
             let filter = |ParkToken(token)| -> FilterOp {
-                match checked_add(guard_count.get(), token) {
+                match guard_count.get().checked_add(token) {
                     Some(new_guard_count) => {
                         guard_count.set(new_guard_count);
                         FilterOp::Unpark
@@ -566,12 +714,38 @@ impl RawRwLock {
 
     #[cold]
     #[inline(never)]
-    fn exclusive_to_shared_slow(&self) {
+    fn downgrade_slow(&self) {
         unsafe {
             let addr = self as *const _ as usize;
             let mut guard_count = SHARED_GUARD;
             let filter = |ParkToken(token)| -> FilterOp {
-                match checked_add(guard_count, token) {
+                match guard_count.checked_add(token) {
+                    Some(new_guard_count) => {
+                        guard_count = new_guard_count;
+                        FilterOp::Unpark
+                    }
+                    None => FilterOp::Stop,
+                }
+            };
+            let callback = |result: UnparkResult| {
+                // Clear the parked bit if there no more parked threads
+                if !result.have_more_threads {
+                    self.state.fetch_and(!PARKED_BIT, Ordering::Relaxed);
+                }
+                TOKEN_NORMAL
+            };
+            parking_lot_core::unpark_filter(addr, filter, callback);
+        }
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn downgrade_to_upgradable_slow(&self) {
+        unsafe {
+            let addr = self as *const _ as usize;
+            let mut guard_count = UPGRADABLE_GUARD;
+            let filter = |ParkToken(token)| -> FilterOp {
+                match guard_count.checked_add(token) {
                     Some(new_guard_count) => {
                         guard_count = new_guard_count;
                         FilterOp::Unpark
@@ -612,8 +786,9 @@ impl RawRwLock {
             // waiting. However if we were unparked then we are allowed to grab
             // the lock even if there are pending exclusive threads.
             if unparked || recursive || state & PARKED_BIT == 0 {
-                if let Some(new_state) = checked_add(state, SHARED_GUARD) {
-                    if self.state
+                if let Some(new_state) = state.checked_add(SHARED_GUARD) {
+                    if self
+                        .state
                         .compare_exchange_weak(
                             state,
                             new_state,
@@ -726,7 +901,7 @@ impl RawRwLock {
                     Err(x) => state = x,
                 }
             } else {
-                match checked_add(state, SHARED_GUARD) {
+                match state.checked_add(SHARED_GUARD) {
                     Some(new_state) => match self.state.compare_exchange_weak(
                         state,
                         new_state,
@@ -774,7 +949,7 @@ impl RawRwLock {
         // unpark threads up to the guard capacity. Note that there is a
         // potential race condition here: another thread might grab a shared
         // lock between now and when we actually release our lock.
-        let additional_guards = Cell::new(0);
+        let additional_guards = Cell::new(0usize);
         let has_upgraded = Cell::new(if state & UPGRADING_BIT == 0 {
             None
         } else {
@@ -784,7 +959,7 @@ impl RawRwLock {
             let addr = self as *const _ as usize;
             let filter = |ParkToken(token)| -> FilterOp {
                 match has_upgraded.get() {
-                    None => match checked_add(additional_guards.get(), token) {
+                    None => match additional_guards.get().checked_add(token) {
                         Some(x) => {
                             additional_guards.set(x);
                             FilterOp::Unpark
@@ -822,7 +997,7 @@ impl RawRwLock {
                     // the state to the new value and tell the threads that we are
                     // handing the lock directly.
                     let token = if result.unparked_threads != 0 && (force_fair || result.be_fair) {
-                        match checked_add(new_state, additional_guards.get()) {
+                        match new_state.checked_add(additional_guards.get()) {
                             Some(x) => {
                                 new_state = x;
                                 TOKEN_HANDOFF
@@ -860,8 +1035,9 @@ impl RawRwLock {
             // locked or waiting. However if we were unparked then we are
             // allowed to grab the lock even if there are pending exclusive threads.
             if unparked || state & PARKED_BIT == 0 {
-                if let Some(new_state) = checked_add(state, UPGRADABLE_GUARD) {
-                    if self.state
+                if let Some(new_state) = state.checked_add(UPGRADABLE_GUARD) {
+                    if self
+                        .state
                         .compare_exchange_weak(
                             state,
                             new_state,
@@ -969,7 +1145,7 @@ impl RawRwLock {
                 return false;
             }
 
-            match checked_add(state, UPGRADABLE_GUARD) {
+            match state.checked_add(UPGRADABLE_GUARD) {
                 Some(new_state) => match self.state.compare_exchange_weak(
                     state,
                     new_state,
@@ -1007,11 +1183,11 @@ impl RawRwLock {
         }
 
         // There are threads to unpark. We unpark threads up to the guard capacity.
-        let additional_guards = Cell::new(0);
+        let additional_guards = Cell::new(0usize);
         unsafe {
             let addr = self as *const _ as usize;
             let filter = |ParkToken(token)| -> FilterOp {
-                match checked_add(additional_guards.get(), token) {
+                match additional_guards.get().checked_add(token) {
                     Some(x) => {
                         additional_guards.set(x);
                         FilterOp::Unpark
@@ -1035,7 +1211,7 @@ impl RawRwLock {
                     // the state to the new value and tell the threads that we are
                     // handing the lock directly.
                     let token = if result.unparked_threads != 0 && (force_fair || result.be_fair) {
-                        match checked_add(new_state, additional_guards.get()) {
+                        match new_state.checked_add(additional_guards.get()) {
                             Some(x) => {
                                 new_state = x;
                                 TOKEN_HANDOFF
@@ -1063,12 +1239,12 @@ impl RawRwLock {
 
     #[cold]
     #[inline(never)]
-    fn upgradable_to_shared_slow(&self, state: usize) {
+    fn downgrade_upgradable_slow(&self, state: usize) {
         unsafe {
             let addr = self as *const _ as usize;
             let mut guard_count = (state & GUARD_COUNT_MASK) - UPGRADABLE_GUARD;
             let filter = |ParkToken(token)| -> FilterOp {
-                match checked_add(guard_count, token) {
+                match guard_count.checked_add(token) {
                     Some(x) => {
                         guard_count = x;
                         FilterOp::Unpark
@@ -1089,13 +1265,33 @@ impl RawRwLock {
 
     #[cold]
     #[inline(never)]
-    fn upgradable_to_exclusive_slow(&self, timeout: Option<Instant>) -> bool {
+    fn try_upgrade_slow(&self) -> bool {
+        let mut state = self.state.load(Ordering::Relaxed);
+        loop {
+            match state.checked_add(EXCLUSIVE_GUARD - SHARED_GUARD) {
+                Some(new_state) => match self.state.compare_exchange_weak(
+                    state,
+                    new_state,
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                ) {
+                    Ok(_) => return true,
+                    Err(x) => state = x,
+                },
+                None => return false,
+            }
+        }
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn upgrade_slow(&self, timeout: Option<Instant>) -> bool {
         let mut spinwait = SpinWait::new();
         let mut state = self.state.load(Ordering::Relaxed);
         loop {
             // Grab the lock if it isn't locked, even if there are other
             // threads parked.
-            if let Some(new_state) = checked_add(state, EXCLUSIVE_GUARD - UPGRADABLE_GUARD) {
+            if let Some(new_state) = state.checked_add(EXCLUSIVE_GUARD - UPGRADABLE_GUARD) {
                 match self.state.compare_exchange_weak(
                     state,
                     new_state,
@@ -1110,7 +1306,7 @@ impl RawRwLock {
 
             // If there are no parked threads and only one other reader, try
             // spinning a few times.
-            if state == UPGRADABLE_GUARD + SHARED_GUARD && spinwait.spin() {
+            if state == UPGRADABLE_GUARD | SHARED_GUARD && spinwait.spin() {
                 state = self.state.load(Ordering::Relaxed);
                 continue;
             }
@@ -1178,5 +1374,29 @@ impl RawRwLock {
             spinwait.reset();
             state = self.state.load(Ordering::Relaxed);
         }
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn bump_shared_slow(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        self.unlock_shared_slow(true);
+        self.lock_shared();
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn bump_exclusive_slow(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        self.unlock_exclusive_slow(true);
+        self.lock_exclusive();
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn bump_upgradable_slow(&self) {
+        unsafe { deadlock::release_resource(self as *const _ as usize) };
+        self.unlock_upgradable_slow(true);
+        self.lock_upgradable();
     }
 }

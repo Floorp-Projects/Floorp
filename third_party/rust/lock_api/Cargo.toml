@@ -11,25 +11,21 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "parking_lot"
-version = "0.6.3"
+name = "lock_api"
+version = "0.1.3"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
-description = "More compact and efficient implementations of the standard synchronization primitives."
-readme = "README.md"
-keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
-categories = ["concurrency"]
+description = "Wrappers to create fully-featured Mutex and RwLock types. Compatible with no_std."
+keywords = ["mutex", "rwlock", "lock", "no_std"]
+categories = ["concurrency", "no-std"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/Amanieu/parking_lot"
-[dependencies.lock_api]
-version = "0.1"
+[dependencies.owning_ref]
+version = "0.3"
+optional = true
 
-[dependencies.parking_lot_core]
-version = "0.2"
-[dev-dependencies.rand]
-version = "0.5"
+[dependencies.scopeguard]
+version = "0.3"
+default-features = false
 
 [features]
-deadlock_detection = ["parking_lot_core/deadlock_detection"]
-default = ["owning_ref"]
-nightly = ["parking_lot_core/nightly", "lock_api/nightly"]
-owning_ref = ["lock_api/owning_ref"]
+nightly = []
