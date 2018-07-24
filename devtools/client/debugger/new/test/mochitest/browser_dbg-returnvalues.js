@@ -10,7 +10,7 @@ async function testReturnValue(dbg, val) {
   invokeInTab("return_something", val);
   await waitForPaused(dbg);
 
-  // "Step in" 3 times to get to the point where the debugger can
+  // "Step in" 2 times to get to the point where the debugger can
   // see the return value.
   await stepIn(dbg);
   await stepIn(dbg);
