@@ -25,8 +25,7 @@ const lameMultiWindowState = { windows: [
 
 
 function getOuterWindowID(aWindow) {
-  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-         getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  return aWindow.windowUtils.outerWindowID;
 }
 
 function test() {

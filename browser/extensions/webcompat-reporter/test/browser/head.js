@@ -17,8 +17,7 @@ function isURLButtonEnabled() {
 }
 
 function openPageActions() {
-  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
@@ -55,8 +54,7 @@ function promisePageActionPanelShown() {
 
 function promisePageActionViewChildrenVisible(panelViewNode) {
   info("promisePageActionViewChildrenVisible waiting for a child node to be visible");
-  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     let bodyNode = panelViewNode.firstChild;
     for (let childNode of bodyNode.childNodes) {

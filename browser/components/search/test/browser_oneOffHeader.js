@@ -29,8 +29,7 @@ function getHeaderText() {
 }
 
 const msg = isMac ? 5 : 1;
-const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+const utils = window.windowUtils;
 const scale = utils.screenPixelsPerCSSPixel;
 function synthesizeNativeMouseMove(aElement) {
   let rect = aElement.getBoundingClientRect();

@@ -413,16 +413,8 @@ var DOMFullscreenHandler = {
     this.init = null;
   },
 
-  get _windowUtils() {
-    if (!content) {
-      return null;
-    }
-    return content.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
-  },
-
   receiveMessage(aMessage) {
-    let windowUtils = this._windowUtils;
+    let windowUtils = content && content.windowUtils;
     switch (aMessage.name) {
       case "DOMFullscreen:Entered": {
         this._lastTransactionId = windowUtils.lastTransactionId;
@@ -524,9 +516,7 @@ UserContextIdNotifier.init();
 Services.obs.notifyObservers(this, "tab-content-frameloader-created");
 
 addMessageListener("AllowScriptsToClose", () => {
-  content.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIDOMWindowUtils)
-         .allowScriptsToClose();
+  content.windowUtils.allowScriptsToClose();
 });
 
 addEventListener("MozAfterPaint", function onFirstPaint() {
