@@ -875,9 +875,15 @@ impl ResourceCache {
             ImageResult::Err(_) => panic!("Errors should already have been handled"),
         };
 
-        self.texture_cache.request(&entry.texture_cache_handle, gpu_cache);
+        let needs_upload = self.texture_cache.request(&entry.texture_cache_handle, gpu_cache);
 
-        self.pending_image_requests.insert(request);
+        if !needs_upload && entry.dirty_rect.is_none() {
+            return
+        }
+
+        if !self.pending_image_requests.insert(request) {
+            return
+        }
 
         if template.data.is_blob() {
             let request: BlobImageRequest = request.into();
