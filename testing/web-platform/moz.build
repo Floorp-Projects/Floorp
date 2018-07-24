@@ -435,7 +435,7 @@ with Files("tests/payment-method-id/**"):
     BUG_COMPONENT = ("Core", "DOM: Web Payments")
 
 with Files("tests/payment-request/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
 
 with Files("tests/performance-timeline/**"):
     BUG_COMPONENT = ("Core", "DOM")
