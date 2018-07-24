@@ -905,7 +905,7 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
 {
   if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
     nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(aItem);
-    Matrix4x4Flagged t = transformItem->GetTransform();
+    const Matrix4x4Flagged& t = transformItem->GetTransform();
     Matrix t2d;
     bool is2D = t.Is2D(&t2d);
     GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
@@ -1014,7 +1014,7 @@ Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
       if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
         nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(item);
-        Matrix4x4Flagged t = transformItem->GetTransform();
+        const Matrix4x4Flagged& t = transformItem->GetTransform();
         Matrix t2d;
         bool is2D = t.Is2D(&t2d);
         MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
@@ -1061,7 +1061,7 @@ Grouper::ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
 
     if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
       nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(item);
-      Matrix4x4Flagged t = transformItem->GetTransform();
+      const Matrix4x4Flagged& t = transformItem->GetTransform();
       Matrix t2d;
       bool is2D = t.Is2D(&t2d);
       MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
