@@ -49,7 +49,5 @@ function sendZoomKey(shortcut, times) {
 }
 
 function getCurrentZoom(toolbox) {
-  const windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils);
-  return windowUtils.fullZoom;
+  return toolbox.win.windowUtils.fullZoom;
 }

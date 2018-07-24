@@ -25,7 +25,7 @@
  *   /dom/webidl/Animation*.webidl
  */
 
-const {Cu, Ci} = require("chrome");
+const {Cu} = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {Actor} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
@@ -496,9 +496,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       return {name: property.property, values: property.values};
     });
 
-    const DOMWindowUtils =
-      this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils);
+    const DOMWindowUtils = this.window.windowUtils;
 
     // Fill missing keyframe with computed value.
     for (const property of properties) {

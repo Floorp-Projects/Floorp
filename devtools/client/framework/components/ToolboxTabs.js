@@ -113,8 +113,7 @@ class ToolboxTabs extends Component {
    */
   updateCachedToolTabsWidthMap() {
     const thisNode = findDOMNode(this);
-    const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+    const utils = window.windowUtils;
     // Force a reflow before calling getBoundingWithoutFlushing on each tab.
     thisNode.clientWidth;
 

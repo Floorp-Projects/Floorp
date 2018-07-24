@@ -127,8 +127,7 @@ var global = this;
 
     for (const d of allDocShells) {
       const win = d.contentViewer.DOMDocument.defaultView;
-      const winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils);
+      const winUtils = win.windowUtils;
       try {
         winUtils.loadSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
       } catch (e) { }
@@ -144,8 +143,7 @@ var global = this;
     }
     for (const d of allDocShells) {
       const win = d.contentViewer.DOMDocument.defaultView;
-      const winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils);
+      const winUtils = win.windowUtils;
       try {
         winUtils.removeSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
       } catch (e) { }

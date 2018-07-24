@@ -225,9 +225,7 @@ RootClient.prototype = {
           packet.outerWindowID = browser.outerWindowID;
         } else {
           // <iframe mozbrowser> tabs in parent process
-          const windowUtils = browser.contentWindow
-                                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDOMWindowUtils);
+          const windowUtils = browser.contentWindow.windowUtils;
           packet.outerWindowID = windowUtils.outerWindowID;
         }
       } else {

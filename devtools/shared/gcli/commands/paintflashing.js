@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 loader.lazyRequireGetter(this, "CommandState",
   "devtools/shared/gcli/command-state", true);
 
@@ -59,8 +57,7 @@ function onPaintFlashingChanged(target, flashing) {
  * @return The new value of the window.paintFlashing flag
  */
 function setPaintFlashing(window, state) {
-  const winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+  const winUtils = window.windowUtils;
 
   if (!["on", "off", "toggle", "query"].includes(state)) {
     throw new Error(`Unsupported state: ${state}`);
