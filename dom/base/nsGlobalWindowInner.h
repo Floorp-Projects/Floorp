@@ -64,6 +64,7 @@ class nsIBaseWindow;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
+class nsIDOMWindowUtils;
 class nsDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
@@ -986,6 +987,8 @@ public:
   void PropagateClearSiteDataReload(const nsACString& aOrigin);
 
   already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
+
+  nsIDOMWindowUtils* GetWindowUtils(mozilla::ErrorResult& aRv);
 
   void UpdateTopInnerWindow();
 
