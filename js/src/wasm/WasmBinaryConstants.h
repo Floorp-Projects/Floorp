@@ -19,8 +19,6 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
-#include "builtin/SIMDConstants.h"
-
 namespace js {
 namespace wasm {
 
@@ -49,15 +47,6 @@ enum class TypeCode
     I64                                  = 0x7e,  // SLEB128(-0x02)
     F32                                  = 0x7d,  // SLEB128(-0x03)
     F64                                  = 0x7c,  // SLEB128(-0x04)
-
-    // Only emitted internally for asm.js, likely to get collapsed into I128
-    I8x16                                = 0x7b,
-    I16x8                                = 0x7a,
-    I32x4                                = 0x79,
-    F32x4                                = 0x78,
-    B8x16                                = 0x77,
-    B16x8                                = 0x76,
-    B32x4                                = 0x75,
 
     // A function pointer with any signature
     AnyFunc                              = 0x70,  // SLEB128(-0x10)
@@ -493,82 +482,6 @@ enum class MozOp
     I32AtomicsLoad,
     I32AtomicsStore,
     I32AtomicsBinOp,
-
-    // SIMD
-#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
-#define _(OP) SIMD_OPCODE(I8x16, OP)
-    FORALL_INT8X16_ASMJS_OP(_)
-    I8x16Constructor,
-    I8x16Const,
-#undef _
-    // Unsigned I8x16 operations. These are the SIMD.Uint8x16 operations that
-    // behave differently from their SIMD.Int8x16 counterparts.
-    I8x16extractLaneU,
-    I8x16addSaturateU,
-    I8x16subSaturateU,
-    I8x16shiftRightByScalarU,
-    I8x16lessThanU,
-    I8x16lessThanOrEqualU,
-    I8x16greaterThanU,
-    I8x16greaterThanOrEqualU,
-
-#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
-#define _(OP) SIMD_OPCODE(I16x8, OP)
-    FORALL_INT16X8_ASMJS_OP(_)
-    I16x8Constructor,
-    I16x8Const,
-#undef _
-    // Unsigned I16x8 operations. These are the SIMD.Uint16x8 operations that
-    // behave differently from their SIMD.Int16x8 counterparts.
-    I16x8extractLaneU,
-    I16x8addSaturateU,
-    I16x8subSaturateU,
-    I16x8shiftRightByScalarU,
-    I16x8lessThanU,
-    I16x8lessThanOrEqualU,
-    I16x8greaterThanU,
-    I16x8greaterThanOrEqualU,
-
-#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
-#define _(OP) SIMD_OPCODE(I32x4, OP)
-    FORALL_INT32X4_ASMJS_OP(_)
-    I32x4Constructor,
-    I32x4Const,
-#undef _
-    // Unsigned I32x4 operations. These are the SIMD.Uint32x4 operations that
-    // behave differently from their SIMD.Int32x4 counterparts.
-    I32x4shiftRightByScalarU,
-    I32x4lessThanU,
-    I32x4lessThanOrEqualU,
-    I32x4greaterThanU,
-    I32x4greaterThanOrEqualU,
-    I32x4fromFloat32x4U,
-#define _(OP) SIMD_OPCODE(F32x4, OP)
-    FORALL_FLOAT32X4_ASMJS_OP(_)
-    F32x4Constructor,
-    F32x4Const,
-#undef _
-
-#define _(OP) SIMD_OPCODE(B8x16, OP)
-    FORALL_BOOL_SIMD_OP(_)
-    B8x16Constructor,
-    B8x16Const,
-#undef _
-#undef OPCODE
-
-#define _(OP) SIMD_OPCODE(B16x8, OP)
-    FORALL_BOOL_SIMD_OP(_)
-    B16x8Constructor,
-    B16x8Const,
-#undef _
-#undef OPCODE
-
-#define _(OP) SIMD_OPCODE(B32x4, OP)
-    FORALL_BOOL_SIMD_OP(_)
-    B32x4Constructor,
-    B32x4Const,
-#undef _
-#undef OPCODE
 
     Limit
 };

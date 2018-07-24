@@ -48,12 +48,6 @@
 #define IF_BDATA(real,imaginary) imaginary
 #endif
 
-#ifdef ENABLE_SIMD
-# define IF_SIMD(real,imaginary) real
-#else
-# define IF_SIMD(real,imaginary) imaginary
-#endif
-
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
 #define IF_SAB(real,imaginary) real
 #else
@@ -106,7 +100,6 @@ IF_SAB(real,imaginary)(SharedArrayBuffer,       InitViaClassSpec, OCLASP(SharedA
 IF_INTL(real,imaginary) (Intl,                  InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     real(Reflect,               InitReflect,            nullptr) \
-IF_SIMD(real,imaginary)(SIMD,                   InitSimdClass, OCLASP(Simd)) \
     real(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
     real(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \

@@ -223,30 +223,6 @@ class FunctionCompiler
               case ValType::AnyRef:
                 MOZ_CRASH("ion support for ref/anyref value NYI");
                 break;
-              case ValType::I8x16:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Int8x16);
-                break;
-              case ValType::I16x8:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX8(0), MIRType::Int16x8);
-                break;
-              case ValType::I32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Int32x4);
-                break;
-              case ValType::F32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0.f), MIRType::Float32x4);
-                break;
-              case ValType::B8x16:
-                // Bool8x16 uses the same data layout as Int8x16.
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Bool8x16);
-                break;
-              case ValType::B16x8:
-                // Bool16x8 uses the same data layout as Int16x8.
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX8(0), MIRType::Bool16x8);
-                break;
-              case ValType::B32x4:
-                // Bool32x4 uses the same data layout as Int32x4.
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Bool32x4);
-                break;
             }
 
             curBlock_->add(ins);
@@ -290,16 +266,6 @@ class FunctionCompiler
     const ValTypeVector& locals() const { return locals_; }
 
     /***************************** Code generation (after local scope setup) */
-
-    MDefinition* constant(const SimdConstant& v, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-        MInstruction* constant;
-        constant = MSimdConstant::New(alloc(), v, type);
-        curBlock_->add(constant);
-        return constant;
-    }
 
     MDefinition* constant(const Value& v, MIRType type)
     {
@@ -399,172 +365,6 @@ class FunctionCompiler
             return nullptr;
 
         auto* ins = MNearbyInt::New(alloc(), input, input->type(), roundingMode);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* unarySimd(MDefinition* input, MSimdUnaryArith::Operation op, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(input->type()) && input->type() == type);
-        MInstruction* ins = MSimdUnaryArith::New(alloc(), input, op);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* binarySimd(MDefinition* lhs, MDefinition* rhs, MSimdBinaryArith::Operation op,
-                            MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
-        MOZ_ASSERT(lhs->type() == type);
-        return MSimdBinaryArith::AddLegalized(alloc(), curBlock_, lhs, rhs, op);
-    }
-
-    MDefinition* binarySimd(MDefinition* lhs, MDefinition* rhs, MSimdBinaryBitwise::Operation op,
-                            MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
-        MOZ_ASSERT(lhs->type() == type);
-        auto* ins = MSimdBinaryBitwise::New(alloc(), lhs, rhs, op);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* binarySimdComp(MDefinition* lhs, MDefinition* rhs, MSimdBinaryComp::Operation op,
-                                SimdSign sign)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        return MSimdBinaryComp::AddLegalized(alloc(), curBlock_, lhs, rhs, op, sign);
-    }
-
-    MDefinition* binarySimdSaturating(MDefinition* lhs, MDefinition* rhs,
-                                      MSimdBinarySaturating::Operation op, SimdSign sign)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        auto* ins = MSimdBinarySaturating::New(alloc(), lhs, rhs, op, sign);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* binarySimdShift(MDefinition* lhs, MDefinition* rhs, MSimdShift::Operation op)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        return MSimdShift::AddLegalized(alloc(), curBlock_, lhs, rhs, op);
-    }
-
-    MDefinition* swizzleSimd(MDefinition* vector, const uint8_t lanes[], MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(vector->type() == type);
-        MSimdSwizzle* ins = MSimdSwizzle::New(alloc(), vector, lanes);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* shuffleSimd(MDefinition* lhs, MDefinition* rhs, const uint8_t lanes[],
-                             MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(lhs->type() == type);
-        MInstruction* ins = MSimdShuffle::New(alloc(), lhs, rhs, lanes);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* insertElementSimd(MDefinition* vec, MDefinition* val, unsigned lane, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(vec->type()) && vec->type() == type);
-        MOZ_ASSERT(SimdTypeToLaneArgumentType(vec->type()) == val->type());
-        MSimdInsertElement* ins = MSimdInsertElement::New(alloc(), vec, val, lane);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* selectSimd(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(mask->type()));
-        MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
-        MOZ_ASSERT(lhs->type() == type);
-        MSimdSelect* ins = MSimdSelect::New(alloc(), mask, lhs, rhs);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* simdAllTrue(MDefinition* boolVector)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MSimdAllTrue* ins = MSimdAllTrue::New(alloc(), boolVector, MIRType::Int32);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* simdAnyTrue(MDefinition* boolVector)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MSimdAnyTrue* ins = MSimdAnyTrue::New(alloc(), boolVector, MIRType::Int32);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    // fromXXXBits()
-    MDefinition* bitcastSimd(MDefinition* vec, MIRType from, MIRType to)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(vec->type() == from);
-        MOZ_ASSERT(IsSimdType(from) && IsSimdType(to) && from != to);
-        auto* ins = MSimdReinterpretCast::New(alloc(), vec, to);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    // Int <--> Float conversions.
-    MDefinition* convertSimd(MDefinition* vec, MIRType from, MIRType to, SimdSign sign)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(from) && IsSimdType(to) && from != to);
-        return MSimdConvert::AddLegalized(alloc(), curBlock_, vec, to, sign, bytecodeOffset());
-    }
-
-    MDefinition* splatSimd(MDefinition* v, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(type));
-        MOZ_ASSERT(SimdTypeToLaneArgumentType(type) == v->type());
-        MSimdSplat* ins = MSimdSplat::New(alloc(), v, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -891,7 +691,7 @@ class FunctionCompiler
 
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* load = nullptr;
-        if (env_.isAsmJS() && !access->isAtomic() && !access->isSimd()) {
+        if (env_.isAsmJS() && !access->isAtomic()) {
             MOZ_ASSERT(access->offset() == 0);
             MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
             load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type());
@@ -912,7 +712,7 @@ class FunctionCompiler
 
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* store = nullptr;
-        if (env_.isAsmJS() && !access->isAtomic() && !access->isSimd()) {
+        if (env_.isAsmJS() && !access->isAtomic()) {
             MOZ_ASSERT(access->offset() == 0);
             MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
             store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
@@ -1041,31 +841,6 @@ class FunctionCompiler
         if (inDeadCode())
             return;
         curBlock_->add(MWasmInterruptCheck::New(alloc(), tlsPointer_, bytecodeOffset()));
-    }
-
-    MDefinition* extractSimdElement(unsigned lane, MDefinition* base, MIRType type, SimdSign sign)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(base->type()));
-        MOZ_ASSERT(!IsSimdType(type));
-        auto* ins = MSimdExtractElement::New(alloc(), base, type, lane, sign);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    template<typename T>
-    MDefinition* constructSimd(MDefinition* x, MDefinition* y, MDefinition* z, MDefinition* w,
-                               MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(type));
-        T* ins = T::New(alloc(), type, x, y, z, w);
-        curBlock_->add(ins);
-        return ins;
     }
 
     /***************************************************************** Calls */
@@ -1883,83 +1658,6 @@ EmitF64Const(FunctionCompiler& f)
 }
 
 static bool
-EmitI8x16Const(FunctionCompiler& f)
-{
-    I8x16 i8x16;
-    if (!f.iter().readI8x16Const(&i8x16))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Int8x16));
-    return true;
-}
-
-static bool
-EmitI16x8Const(FunctionCompiler& f)
-{
-    I16x8 i16x8;
-    if (!f.iter().readI16x8Const(&i16x8))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Int16x8));
-    return true;
-}
-
-static bool
-EmitI32x4Const(FunctionCompiler& f)
-{
-    I32x4 i32x4;
-    if (!f.iter().readI32x4Const(&i32x4))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Int32x4));
-    return true;
-}
-
-static bool
-EmitF32x4Const(FunctionCompiler& f)
-{
-    F32x4 f32x4;
-    if (!f.iter().readF32x4Const(&f32x4))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX4(f32x4), MIRType::Float32x4));
-    return true;
-}
-
-static bool
-EmitB8x16Const(FunctionCompiler& f)
-{
-    I8x16 i8x16;
-    if (!f.iter().readB8x16Const(&i8x16))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Bool8x16));
-    return true;
-}
-
-static bool
-EmitB16x8Const(FunctionCompiler& f)
-{
-    I16x8 i16x8;
-    if (!f.iter().readB16x8Const(&i16x8))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Bool16x8));
-    return true;
-}
-
-static bool
-EmitB32x4Const(FunctionCompiler& f)
-{
-    I32x4 i32x4;
-    if (!f.iter().readB32x4Const(&i32x4))
-        return false;
-
-    f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Bool32x4));
-    return true;
-}
-
-static bool
 EmitBlock(FunctionCompiler& f)
 {
     return f.iter().readBlock() &&
@@ -2319,18 +2017,6 @@ EmitGetGlobal(FunctionCompiler& f)
         break;
       case ValType::F64:
         result = f.constant(value.f64());
-        break;
-      case ValType::I8x16:
-        result = f.constant(SimdConstant::CreateX16(value.i8x16()), mirType);
-        break;
-      case ValType::I16x8:
-        result = f.constant(SimdConstant::CreateX8(value.i16x8()), mirType);
-        break;
-      case ValType::I32x4:
-        result = f.constant(SimdConstant::CreateX4(value.i32x4()), mirType);
-        break;
-      case ValType::F32x4:
-        result = f.constant(SimdConstant::CreateX4(value.f32x4()), mirType);
         break;
       default:
         MOZ_CRASH("unexpected type in EmitGetGlobal");
@@ -2793,7 +2479,7 @@ EmitOldAtomicsLoad(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Load());
+                            Synchronization::Load());
 
     auto* ins = f.load(addr.base, &access, ValType::I32);
     if (!f.inDeadCode() && !ins)
@@ -2813,7 +2499,7 @@ EmitOldAtomicsStore(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Store());
+                            Synchronization::Store());
 
     f.store(addr.base, &access, value);
     f.iter().setResult(value);
@@ -2831,7 +2517,7 @@ EmitOldAtomicsBinOp(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
 
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
@@ -2852,7 +2538,7 @@ EmitOldAtomicsCompareExchange(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
 
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, ValType::I32, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
@@ -2872,7 +2558,7 @@ EmitOldAtomicsExchange(FunctionCompiler& f)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
 
     auto* ins = f.atomicExchangeHeap(addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
@@ -2880,489 +2566,6 @@ EmitOldAtomicsExchange(FunctionCompiler& f)
 
     f.iter().setResult(ins);
     return true;
-}
-
-static bool
-EmitSimdUnary(FunctionCompiler& f, ValType type, SimdOperation simdOp)
-{
-    MSimdUnaryArith::Operation op;
-    switch (simdOp) {
-      case SimdOperation::Fn_abs:
-        op = MSimdUnaryArith::abs;
-        break;
-      case SimdOperation::Fn_neg:
-        op = MSimdUnaryArith::neg;
-        break;
-      case SimdOperation::Fn_not:
-        op = MSimdUnaryArith::not_;
-        break;
-      case SimdOperation::Fn_sqrt:
-        op = MSimdUnaryArith::sqrt;
-        break;
-      case SimdOperation::Fn_reciprocalApproximation:
-        op = MSimdUnaryArith::reciprocalApproximation;
-        break;
-      case SimdOperation::Fn_reciprocalSqrtApproximation:
-        op = MSimdUnaryArith::reciprocalSqrtApproximation;
-        break;
-      default:
-        MOZ_CRASH("not a simd unary arithmetic operation");
-    }
-
-    MDefinition* input;
-    if (!f.iter().readUnary(type, &input))
-        return false;
-
-    f.iter().setResult(f.unarySimd(input, op, ToMIRType(type)));
-    return true;
-}
-
-template<class OpKind>
-inline bool
-EmitSimdBinary(FunctionCompiler& f, ValType type, OpKind op)
-{
-    MDefinition* lhs;
-    MDefinition* rhs;
-    if (!f.iter().readBinary(type, &lhs, &rhs))
-        return false;
-
-    f.iter().setResult(f.binarySimd(lhs, rhs, op, ToMIRType(type)));
-    return true;
-}
-
-static bool
-EmitSimdBinaryComp(FunctionCompiler& f, ValType operandType, MSimdBinaryComp::Operation op,
-                   SimdSign sign)
-{
-    MDefinition* lhs;
-    MDefinition* rhs;
-    if (!f.iter().readSimdComparison(operandType, &lhs, &rhs))
-        return false;
-
-    f.iter().setResult(f.binarySimdComp(lhs, rhs, op, sign));
-    return true;
-}
-
-static bool
-EmitSimdBinarySaturating(FunctionCompiler& f, ValType type, MSimdBinarySaturating::Operation op,
-                         SimdSign sign)
-{
-    MDefinition* lhs;
-    MDefinition* rhs;
-    if (!f.iter().readBinary(type, &lhs, &rhs))
-        return false;
-
-    f.iter().setResult(f.binarySimdSaturating(lhs, rhs, op, sign));
-    return true;
-}
-
-static bool
-EmitSimdShift(FunctionCompiler& f, ValType operandType, MSimdShift::Operation op)
-{
-    MDefinition* lhs;
-    MDefinition* rhs;
-    if (!f.iter().readSimdShiftByScalar(operandType, &lhs, &rhs))
-        return false;
-
-    f.iter().setResult(f.binarySimdShift(lhs, rhs, op));
-    return true;
-}
-
-static ValType
-SimdToLaneType(ValType type)
-{
-    switch (type.code()) {
-      case ValType::I8x16:
-      case ValType::I16x8:
-      case ValType::I32x4:  return ValType::I32;
-      case ValType::F32x4:  return ValType::F32;
-      case ValType::B8x16:
-      case ValType::B16x8:
-      case ValType::B32x4:  return ValType::I32; // Boolean lanes are Int32 in asm.
-      case ValType::I32:
-      case ValType::I64:
-      case ValType::F32:
-      case ValType::F64:
-      case ValType::Ref:
-      case ValType::AnyRef:
-        break;
-    }
-    MOZ_CRASH("bad simd type");
-}
-
-static bool
-EmitExtractLane(FunctionCompiler& f, ValType operandType, SimdSign sign)
-{
-    uint8_t lane;
-    MDefinition* vector;
-    if (!f.iter().readExtractLane(operandType, &lane, &vector))
-        return false;
-
-    f.iter().setResult(f.extractSimdElement(lane, vector,
-                                            ToMIRType(SimdToLaneType(operandType)), sign));
-    return true;
-}
-
-// Emit an I32 expression and then convert it to a boolean SIMD lane value, i.e. -1 or 0.
-static MDefinition*
-EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition* i32)
-{
-    // Compute !i32 - 1 to force the value range into {0, -1}.
-    MDefinition* noti32 = f.unary<MNot>(i32);
-    return f.binary<MSub>(noti32, f.constant(Int32Value(1), MIRType::Int32), MIRType::Int32);
-}
-
-static bool
-EmitSimdReplaceLane(FunctionCompiler& f, ValType simdType)
-{
-    if (IsSimdBoolType(simdType))
-        f.iter().setResult(EmitSimdBooleanLaneExpr(f, f.iter().getResult()));
-
-    uint8_t lane;
-    MDefinition* vector;
-    MDefinition* scalar;
-    if (!f.iter().readReplaceLane(simdType, &lane, &vector, &scalar))
-        return false;
-
-    f.iter().setResult(f.insertElementSimd(vector, scalar, lane, ToMIRType(simdType)));
-    return true;
-}
-
-inline bool
-EmitSimdBitcast(FunctionCompiler& f, ValType fromType, ValType toType)
-{
-    MDefinition* input;
-    if (!f.iter().readConversion(fromType, toType, &input))
-        return false;
-
-    f.iter().setResult(f.bitcastSimd(input, ToMIRType(fromType), ToMIRType(toType)));
-    return true;
-}
-
-inline bool
-EmitSimdConvert(FunctionCompiler& f, ValType fromType, ValType toType, SimdSign sign)
-{
-    MDefinition* input;
-    if (!f.iter().readConversion(fromType, toType, &input))
-        return false;
-
-    f.iter().setResult(f.convertSimd(input, ToMIRType(fromType), ToMIRType(toType), sign));
-    return true;
-}
-
-static bool
-EmitSimdSwizzle(FunctionCompiler& f, ValType simdType)
-{
-    uint8_t lanes[16];
-    MDefinition* vector;
-    if (!f.iter().readSwizzle(simdType, &lanes, &vector))
-        return false;
-
-    f.iter().setResult(f.swizzleSimd(vector, lanes, ToMIRType(simdType)));
-    return true;
-}
-
-static bool
-EmitSimdShuffle(FunctionCompiler& f, ValType simdType)
-{
-    uint8_t lanes[16];
-    MDefinition* lhs;
-    MDefinition* rhs;
-    if (!f.iter().readShuffle(simdType, &lanes, &lhs, &rhs))
-        return false;
-
-    f.iter().setResult(f.shuffleSimd(lhs, rhs, lanes, ToMIRType(simdType)));
-    return true;
-}
-
-static inline Scalar::Type
-SimdExprTypeToViewType(ValType type, unsigned* defaultNumElems)
-{
-    switch (type.code()) {
-        case ValType::I8x16: *defaultNumElems = 16; return Scalar::Int8x16;
-        case ValType::I16x8: *defaultNumElems = 8; return Scalar::Int16x8;
-        case ValType::I32x4: *defaultNumElems = 4; return Scalar::Int32x4;
-        case ValType::F32x4: *defaultNumElems = 4; return Scalar::Float32x4;
-        default:              break;
-    }
-    MOZ_CRASH("type not handled in SimdExprTypeToViewType");
-}
-
-static bool
-EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
-{
-    unsigned defaultNumElems;
-    Scalar::Type viewType = SimdExprTypeToViewType(resultType, &defaultNumElems);
-
-    if (!numElems)
-        numElems = defaultNumElems;
-
-    LinearMemoryAddress<MDefinition*> addr;
-    if (!f.iter().readLoad(resultType, Scalar::byteSize(viewType), &addr))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(), numElems);
-
-    auto* ins = f.load(addr.base, &access, resultType);
-    if (!f.inDeadCode() && !ins)
-        return false;
-
-    f.iter().setResult(ins);
-    return true;
-}
-
-static bool
-EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
-{
-    unsigned defaultNumElems;
-    Scalar::Type viewType = SimdExprTypeToViewType(resultType, &defaultNumElems);
-
-    if (!numElems)
-        numElems = defaultNumElems;
-
-    LinearMemoryAddress<MDefinition*> addr;
-    MDefinition* value;
-    if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
-        return false;
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(), numElems);
-
-    f.store(addr.base, &access, value);
-    return true;
-}
-
-static bool
-EmitSimdSelect(FunctionCompiler& f, ValType simdType)
-{
-    MDefinition* trueValue;
-    MDefinition* falseValue;
-    MDefinition* condition;
-    if (!f.iter().readSimdSelect(simdType, &trueValue, &falseValue, &condition))
-        return false;
-
-    f.iter().setResult(f.selectSimd(condition, trueValue, falseValue,
-                                    ToMIRType(simdType)));
-    return true;
-}
-
-static bool
-EmitSimdAllTrue(FunctionCompiler& f, ValType operandType)
-{
-    MDefinition* input;
-    if (!f.iter().readSimdBooleanReduction(operandType, &input))
-        return false;
-
-    f.iter().setResult(f.simdAllTrue(input));
-    return true;
-}
-
-static bool
-EmitSimdAnyTrue(FunctionCompiler& f, ValType operandType)
-{
-    MDefinition* input;
-    if (!f.iter().readSimdBooleanReduction(operandType, &input))
-        return false;
-
-    f.iter().setResult(f.simdAnyTrue(input));
-    return true;
-}
-
-static bool
-EmitSimdSplat(FunctionCompiler& f, ValType simdType)
-{
-    if (IsSimdBoolType(simdType))
-        f.iter().setResult(EmitSimdBooleanLaneExpr(f, f.iter().getResult()));
-
-    MDefinition* input;
-    if (!f.iter().readSplat(simdType, &input))
-        return false;
-
-    f.iter().setResult(f.splatSimd(input, ToMIRType(simdType)));
-    return true;
-}
-
-// Build a SIMD vector by inserting lanes one at a time into an initial constant.
-static bool
-EmitSimdChainedCtor(FunctionCompiler& f, ValType valType, MIRType type, const SimdConstant& init)
-{
-    const unsigned length = SimdTypeToLength(type);
-
-    DefVector args;
-    if (!f.iter().readSimdCtor(ValType::I32, length, valType, &args))
-        return false;
-
-    MDefinition* val = f.constant(init, type);
-    for (unsigned i = 0; i < length; i++)
-        val = f.insertElementSimd(val, args[i], i, type);
-
-    f.iter().setResult(val);
-    return true;
-}
-
-// Build a boolean SIMD vector by inserting lanes one at a time into an initial constant.
-static bool
-EmitSimdBooleanChainedCtor(FunctionCompiler& f, ValType valType, MIRType type,
-                           const SimdConstant& init)
-{
-    const unsigned length = SimdTypeToLength(type);
-
-    DefVector args;
-    if (!f.iter().readSimdCtor(ValType::I32, length, valType, &args))
-        return false;
-
-    MDefinition* val = f.constant(init, type);
-    for (unsigned i = 0; i < length; i++)
-        val = f.insertElementSimd(val, EmitSimdBooleanLaneExpr(f, args[i]), i, type);
-
-    f.iter().setResult(val);
-    return true;
-}
-
-static bool
-EmitSimdCtor(FunctionCompiler& f, ValType type)
-{
-    switch (type.code()) {
-      case ValType::I8x16:
-        return EmitSimdChainedCtor(f, type, MIRType::Int8x16, SimdConstant::SplatX16(0));
-      case ValType::I16x8:
-        return EmitSimdChainedCtor(f, type, MIRType::Int16x8, SimdConstant::SplatX8(0));
-      case ValType::I32x4: {
-        DefVector args;
-        if (!f.iter().readSimdCtor(ValType::I32, 4, type, &args))
-            return false;
-
-        f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
-                                                         MIRType::Int32x4));
-        return true;
-      }
-      case ValType::F32x4: {
-        DefVector args;
-        if (!f.iter().readSimdCtor(ValType::F32, 4, type, &args))
-            return false;
-
-        f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
-                           MIRType::Float32x4));
-        return true;
-      }
-      case ValType::B8x16:
-        return EmitSimdBooleanChainedCtor(f, type, MIRType::Bool8x16, SimdConstant::SplatX16(0));
-      case ValType::B16x8:
-        return EmitSimdBooleanChainedCtor(f, type, MIRType::Bool16x8, SimdConstant::SplatX8(0));
-      case ValType::B32x4: {
-        DefVector args;
-        if (!f.iter().readSimdCtor(ValType::I32, 4, type, &args))
-            return false;
-
-        MOZ_ASSERT(args.length() == 4);
-        for (unsigned i = 0; i < 4; i++)
-            args[i] = EmitSimdBooleanLaneExpr(f, args[i]);
-
-        f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
-                           MIRType::Bool32x4));
-        return true;
-      }
-      case ValType::I32:
-      case ValType::I64:
-      case ValType::F32:
-      case ValType::F64:
-      case ValType::Ref:
-      case ValType::AnyRef:
-        break;
-    }
-    MOZ_CRASH("unexpected SIMD type");
-}
-
-static bool
-EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
-{
-    switch (op) {
-      case SimdOperation::Constructor:
-        return EmitSimdCtor(f, type);
-      case SimdOperation::Fn_extractLane:
-        return EmitExtractLane(f, type, sign);
-      case SimdOperation::Fn_replaceLane:
-        return EmitSimdReplaceLane(f, type);
-      case SimdOperation::Fn_check:
-        MOZ_CRASH("only used in asm.js' type system");
-      case SimdOperation::Fn_splat:
-        return EmitSimdSplat(f, type);
-      case SimdOperation::Fn_select:
-        return EmitSimdSelect(f, type);
-      case SimdOperation::Fn_swizzle:
-        return EmitSimdSwizzle(f, type);
-      case SimdOperation::Fn_shuffle:
-        return EmitSimdShuffle(f, type);
-      case SimdOperation::Fn_load:
-        return EmitSimdLoad(f, type, 0);
-      case SimdOperation::Fn_load1:
-        return EmitSimdLoad(f, type, 1);
-      case SimdOperation::Fn_load2:
-        return EmitSimdLoad(f, type, 2);
-      case SimdOperation::Fn_store:
-        return EmitSimdStore(f, type, 0);
-      case SimdOperation::Fn_store1:
-        return EmitSimdStore(f, type, 1);
-      case SimdOperation::Fn_store2:
-        return EmitSimdStore(f, type, 2);
-      case SimdOperation::Fn_allTrue:
-        return EmitSimdAllTrue(f, type);
-      case SimdOperation::Fn_anyTrue:
-        return EmitSimdAnyTrue(f, type);
-      case SimdOperation::Fn_abs:
-      case SimdOperation::Fn_neg:
-      case SimdOperation::Fn_not:
-      case SimdOperation::Fn_sqrt:
-      case SimdOperation::Fn_reciprocalApproximation:
-      case SimdOperation::Fn_reciprocalSqrtApproximation:
-        return EmitSimdUnary(f, type, op);
-      case SimdOperation::Fn_shiftLeftByScalar:
-        return EmitSimdShift(f, type, MSimdShift::lsh);
-      case SimdOperation::Fn_shiftRightByScalar:
-        return EmitSimdShift(f, type, MSimdShift::rshForSign(sign));
-#define _CASE(OP) \
-      case SimdOperation::Fn_##OP: \
-        return EmitSimdBinaryComp(f, type, MSimdBinaryComp::OP, sign);
-        FOREACH_COMP_SIMD_OP(_CASE)
-#undef _CASE
-      case SimdOperation::Fn_and:
-        return EmitSimdBinary(f, type, MSimdBinaryBitwise::and_);
-      case SimdOperation::Fn_or:
-        return EmitSimdBinary(f, type, MSimdBinaryBitwise::or_);
-      case SimdOperation::Fn_xor:
-        return EmitSimdBinary(f, type, MSimdBinaryBitwise::xor_);
-#define _CASE(OP) \
-      case SimdOperation::Fn_##OP: \
-        return EmitSimdBinary(f, type, MSimdBinaryArith::Op_##OP);
-      FOREACH_NUMERIC_SIMD_BINOP(_CASE)
-      FOREACH_FLOAT_SIMD_BINOP(_CASE)
-#undef _CASE
-      case SimdOperation::Fn_addSaturate:
-        return EmitSimdBinarySaturating(f, type, MSimdBinarySaturating::add, sign);
-      case SimdOperation::Fn_subSaturate:
-        return EmitSimdBinarySaturating(f, type, MSimdBinarySaturating::sub, sign);
-      case SimdOperation::Fn_fromFloat32x4:
-        return EmitSimdConvert(f, ValType::F32x4, type, sign);
-      case SimdOperation::Fn_fromInt32x4:
-        return EmitSimdConvert(f, ValType::I32x4, type, SimdSign::Signed);
-      case SimdOperation::Fn_fromUint32x4:
-        return EmitSimdConvert(f, ValType::I32x4, type, SimdSign::Unsigned);
-      case SimdOperation::Fn_fromInt8x16Bits:
-      case SimdOperation::Fn_fromUint8x16Bits:
-        return EmitSimdBitcast(f, ValType::I8x16, type);
-      case SimdOperation::Fn_fromUint16x8Bits:
-      case SimdOperation::Fn_fromInt16x8Bits:
-        return EmitSimdBitcast(f, ValType::I16x8, type);
-      case SimdOperation::Fn_fromInt32x4Bits:
-      case SimdOperation::Fn_fromUint32x4Bits:
-        return EmitSimdBitcast(f, ValType::I32x4, type);
-      case SimdOperation::Fn_fromFloat32x4Bits:
-        return EmitSimdBitcast(f, ValType::F32x4, type);
-      case SimdOperation::Fn_load3:
-      case SimdOperation::Fn_store3:
-      case SimdOperation::Fn_fromFloat64x2Bits:
-        MOZ_CRASH("NYI");
-    }
-    MOZ_CRASH("unexpected opcode");
 }
 
 static bool
@@ -3432,7 +2635,7 @@ EmitAtomicCmpXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, type, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3449,7 +2652,7 @@ EmitAtomicLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Load());
+                            Synchronization::Load());
     auto* ins = f.load(addr.base, &access, type);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3467,7 +2670,7 @@ EmitAtomicRMW(FunctionCompiler& f, ValType type, Scalar::Type viewType, jit::Ato
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, type, value);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -3485,7 +2688,7 @@ EmitAtomicStore(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Store());
+                            Synchronization::Store());
     f.store(addr.base, &access, value);
     return true;
 }
@@ -3589,7 +2792,7 @@ EmitAtomicXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                            /*numSimdExprs=*/ 0, Synchronization::Full());
+                            Synchronization::Full());
     MDefinition* ins = f.atomicExchangeHeap(addr.base, &access, type, value);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -4342,102 +3545,6 @@ EmitBodyExprs(FunctionCompiler& f)
                 CHECK(EmitOldAtomicsCompareExchange(f));
               case uint16_t(MozOp::I32AtomicsExchange):
                 CHECK(EmitOldAtomicsExchange(f));
-
-              // SIMD
-#define CASE(TYPE, OP, SIGN)                                          \
-              case uint16_t(MozOp::TYPE##OP):                         \
-                CHECK(EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN));
-#define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
-#define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
-#define I32x4CASE(OP) CASE(I32x4, OP, SimdSign::Signed)
-#define F32x4CASE(OP) CASE(F32x4, OP, SimdSign::NotApplicable)
-#define B8x16CASE(OP) CASE(B8x16, OP, SimdSign::NotApplicable)
-#define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
-#define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
-#define ENUMERATE(TYPE, FORALL, DO)                                   \
-              case uint16_t(MozOp::TYPE##Constructor):                \
-                CHECK(EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable)); \
-                FORALL(DO)
-
-              ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
-              ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
-              ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
-              ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
-              ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
-              ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
-              ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
-
-#undef CASE
-#undef I8x16CASE
-#undef I16x8CASE
-#undef I32x4CASE
-#undef F32x4CASE
-#undef B8x16CASE
-#undef B16x8CASE
-#undef B32x4CASE
-#undef ENUMERATE
-
-              case uint16_t(MozOp::I8x16Const):
-                CHECK(EmitI8x16Const(f));
-              case uint16_t(MozOp::I16x8Const):
-                CHECK(EmitI16x8Const(f));
-              case uint16_t(MozOp::I32x4Const):
-                CHECK(EmitI32x4Const(f));
-              case uint16_t(MozOp::F32x4Const):
-                CHECK(EmitF32x4Const(f));
-              case uint16_t(MozOp::B8x16Const):
-                CHECK(EmitB8x16Const(f));
-              case uint16_t(MozOp::B16x8Const):
-                CHECK(EmitB16x8Const(f));
-              case uint16_t(MozOp::B32x4Const):
-                CHECK(EmitB32x4Const(f));
-
-              case uint16_t(MozOp::I8x16addSaturateU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16subSaturateU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16shiftRightByScalarU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16lessThanU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16lessThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16greaterThanU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16greaterThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I8x16extractLaneU):
-                CHECK(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
-
-              case uint16_t(MozOp::I16x8addSaturateU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8subSaturateU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8shiftRightByScalarU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8lessThanU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8lessThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8greaterThanU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8greaterThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I16x8extractLaneU):
-                CHECK(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
-
-              case uint16_t(MozOp::I32x4shiftRightByScalarU):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-              case uint16_t(MozOp::I32x4lessThanU):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I32x4lessThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I32x4greaterThanU):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-              case uint16_t(MozOp::I32x4greaterThanOrEqualU):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-              case uint16_t(MozOp::I32x4fromFloat32x4U):
-                CHECK(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned));
 
               default:
                 return f.iter().unrecognizedOpcode(&op);

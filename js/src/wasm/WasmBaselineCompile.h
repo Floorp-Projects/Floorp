@@ -25,7 +25,7 @@ namespace js {
 namespace wasm {
 
 // Return whether BaselineCompileFunction can generate code on the current device.
-// Note: asm.js is also currently not supported due to Atomics and SIMD.
+// Note: asm.js is also currently not supported due to Atomics.
 bool
 BaselineCanCompile();
 
