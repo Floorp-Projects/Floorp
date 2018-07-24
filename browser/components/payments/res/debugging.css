@@ -29,3 +29,7 @@ label.block {
 button.wide {
   width: 100%;
 }
+
+#complete-status {
+  column-count: 2;
+}
