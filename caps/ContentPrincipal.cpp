@@ -7,6 +7,7 @@
 #include "ContentPrincipal.h"
 
 #include "mozIThirdPartyUtil.h"
+#include "nsContentUtils.h"
 #include "nscore.h"
 #include "nsScriptSecurityManager.h"
 #include "nsString.h"
@@ -15,7 +16,6 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
@@ -27,11 +27,11 @@
 #include "nsNetCID.h"
 #include "js/Wrapper.h"
 
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ExtensionPolicyService.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
@@ -165,20 +165,11 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
 
   // This URL can be a blobURL. In this case, we should use the 'parent'
   // principal instead.
-  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(origin);
-  if (uriWithPrincipal) {
-    nsCOMPtr<nsIPrincipal> uriPrincipal;
-    rv = uriWithPrincipal->GetPrincipal(getter_AddRefs(uriPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // If there is not a principal for this blobURL, it means that the blobURL
-    // has been revoked. Let's use a nullPrincipal instead.
-    if (!uriPrincipal) {
-      uriPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
-      MOZ_ASSERT(uriPrincipal);
-    }
-
-    return uriPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(origin,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    return blobPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
   }
 
   // If we reached this branch, we can only create an origin if we have a
@@ -277,18 +268,13 @@ ContentPrincipal::GetURI(nsIURI** aURI)
 bool
 ContentPrincipal::MayLoadInternal(nsIURI* aURI)
 {
-  // See if aURI is something like a Blob URI that is actually associated with
-  // a principal.
-  nsCOMPtr<nsIURIWithPrincipal> uriWithPrin = do_QueryInterface(aURI);
-  if (uriWithPrin) {
-    nsCOMPtr<nsIPrincipal> uriPrin;
-    nsresult rv = uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
-    if (NS_WARN_IF(NS_FAILED(rv)) || !uriPrin) {
-      // BlobURL has been revoked.
-      return false;
-    }
+  MOZ_ASSERT(aURI);
 
-    return nsIPrincipal::Subsumes(uriPrin);
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    return nsIPrincipal::Subsumes(blobPrincipal);
   }
 
   // If this principal is associated with an addon, check whether that addon
