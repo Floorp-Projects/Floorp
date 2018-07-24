@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 
 from .util import (
+    combine_task_graph_files,
     create_tasks,
     fetch_graph_and_labels
 )
@@ -68,3 +69,4 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id, ta
         create_tasks(to_run, full_task_graph, label_to_taskid, parameters, decision_task_id, i)
 
         logger.info('Scheduled {}{}(time {}/{})'.format(label, with_downstream, i+1, times))
+    combine_task_graph_files(list(range(times)))
