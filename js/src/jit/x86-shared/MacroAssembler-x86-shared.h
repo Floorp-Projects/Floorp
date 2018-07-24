@@ -606,37 +606,6 @@ class MacroAssemblerX86Shared : public Assembler
     template <class T> inline void loadAlignedVector(const Address& src, FloatRegister dest);
     template <class T> inline void storeAlignedVector(FloatRegister src, const Address& dest);
 
-    void loadInt32x1(const Address& src, FloatRegister dest) {
-        vmovd(Operand(src), dest);
-    }
-    void loadInt32x1(const BaseIndex& src, FloatRegister dest) {
-        vmovd(Operand(src), dest);
-    }
-    void loadInt32x2(const Address& src, FloatRegister dest) {
-        vmovq(Operand(src), dest);
-    }
-    void loadInt32x2(const BaseIndex& src, FloatRegister dest) {
-        vmovq(Operand(src), dest);
-    }
-    void loadInt32x3(const BaseIndex& src, FloatRegister dest) {
-        BaseIndex srcZ(src);
-        srcZ.offset += 2 * sizeof(int32_t);
-
-        ScratchSimd128Scope scratch(asMasm());
-        vmovq(Operand(src), dest);
-        vmovd(Operand(srcZ), scratch);
-        vmovlhps(scratch, dest, dest);
-    }
-    void loadInt32x3(const Address& src, FloatRegister dest) {
-        Address srcZ(src);
-        srcZ.offset += 2 * sizeof(int32_t);
-
-        ScratchSimd128Scope scratch(asMasm());
-        vmovq(Operand(src), dest);
-        vmovd(Operand(srcZ), scratch);
-        vmovlhps(scratch, dest, dest);
-    }
-
     void loadAlignedSimd128Int(const Address& src, FloatRegister dest) {
         vmovdqa(Operand(src), dest);
     }
@@ -669,35 +638,6 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void loadUnalignedSimd128Int(const Operand& src, FloatRegister dest) {
         vmovdqu(src, dest);
-    }
-
-    void storeInt32x1(FloatRegister src, const Address& dest) {
-        vmovd(src, Operand(dest));
-    }
-    void storeInt32x1(FloatRegister src, const BaseIndex& dest) {
-        vmovd(src, Operand(dest));
-    }
-    void storeInt32x2(FloatRegister src, const Address& dest) {
-        vmovq(src, Operand(dest));
-    }
-    void storeInt32x2(FloatRegister src, const BaseIndex& dest) {
-        vmovq(src, Operand(dest));
-    }
-    void storeInt32x3(FloatRegister src, const Address& dest) {
-        Address destZ(dest);
-        destZ.offset += 2 * sizeof(int32_t);
-        vmovq(src, Operand(dest));
-        ScratchSimd128Scope scratch(asMasm());
-        vmovhlps(src, scratch, scratch);
-        vmovd(scratch, Operand(destZ));
-    }
-    void storeInt32x3(FloatRegister src, const BaseIndex& dest) {
-        BaseIndex destZ(dest);
-        destZ.offset += 2 * sizeof(int32_t);
-        vmovq(src, Operand(dest));
-        ScratchSimd128Scope scratch(asMasm());
-        vmovhlps(src, scratch, scratch);
-        vmovd(scratch, Operand(destZ));
     }
 
     void storeUnalignedSimd128Int(FloatRegister src, const Address& dest) {
@@ -780,23 +720,6 @@ class MacroAssemblerX86Shared : public Assembler
     void packedUnsignedRightShiftByScalarInt32x4(Imm32 count, FloatRegister dest) {
         count.value &= 31;
         vpsrld(count, dest, dest);
-    }
-
-    void loadFloat32x3(const Address& src, FloatRegister dest) {
-        Address srcZ(src);
-        srcZ.offset += 2 * sizeof(float);
-        vmovsd(src, dest);
-        ScratchSimd128Scope scratch(asMasm());
-        vmovss(srcZ, scratch);
-        vmovlhps(scratch, dest, dest);
-    }
-    void loadFloat32x3(const BaseIndex& src, FloatRegister dest) {
-        BaseIndex srcZ(src);
-        srcZ.offset += 2 * sizeof(float);
-        vmovsd(src, dest);
-        ScratchSimd128Scope scratch(asMasm());
-        vmovss(srcZ, scratch);
-        vmovlhps(scratch, dest, dest);
     }
 
     void loadAlignedSimd128Float(const Address& src, FloatRegister dest) {

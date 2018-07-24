@@ -205,9 +205,6 @@ function fromNonArrayTypedObjects() {
     var myStruct = new StructType({x: uint32});
     var r1 = type.from(new myStruct({x: 42}), j => j);
     assertTypedEqual(type, r1, new type([0,0,0,0]));
-
-    var r2 = type.from(SIMD.Int32x4(0,0,0,0), j => j);
-    assertTypedEqual(type, r1, new type([0,0,0,0]));
 }
 
 function runTests() {

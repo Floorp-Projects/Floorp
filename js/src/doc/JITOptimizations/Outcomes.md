@@ -152,11 +152,6 @@ Failed to do range check of element access on a typed object.
 
 ### AccessNotDense
 
-### AccessNotSimdObject
-
-The observed type of the target of the property access doesn't guarantee
-that it is a SIMD object.
-
 ### AccessNotTypedObject
 
 The observed type of the target of the property access doesn't guarantee
@@ -221,15 +216,6 @@ the keys have never been observed to be a String, Symbol, or Int32.
 
 IonMonkey only generates inline caches for element accesses which are
 either on dense objects (e.g. dense Arrays), or Typed Arrays.
-
-### NoSimdJitSupport
-
-Optimization failed because SIMD JIT support was not enabled.
-
-### SimdTypeNotOptimized
-
-The type observed as being retrieved from this property access did not
-match an optimizable type.
 
 ### HasCommonInliningPath
 

@@ -378,10 +378,6 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
         break;
       case Scalar::Float32:
       case Scalar::Float64:
-      case Scalar::Float32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
-      case Scalar::Int32x4:
         op = OtherOperand(ToFloatRegister(alloc).encoding());
         break;
       case Scalar::Uint8Clamped:
