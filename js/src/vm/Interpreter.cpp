@@ -368,7 +368,7 @@ MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript, const CallA
     return CreateThis(cx, callee, calleeScript, newTarget, newKind, args.mutableThisv());
 }
 
-static MOZ_NEVER_INLINE bool
+static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool
 Interpret(JSContext* cx, RunState& state);
 
 InterpreterFrame*
@@ -1992,7 +1992,7 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
                               InformalValueTypeName(rref));
 }
 
-static MOZ_NEVER_INLINE bool
+static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool
 Interpret(JSContext* cx, RunState& state)
 {
 /*
