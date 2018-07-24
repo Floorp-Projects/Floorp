@@ -10168,26 +10168,11 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       NS_WARNING("ProcessChildren max depth exceeded");
     }
 
-    InsertionPoint insertion(aFrame, nullptr);
     FlattenedChildIterator iter(aContent);
+    const InsertionPoint insertion(aFrame, aContent);
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      // Get the parent of the content and check if it is a XBL children element
-      // (if the content is a children element then parent != aContent because the
-      // FlattenedChildIterator will transitively iterate through <xbl:children>
-      // for default content). Push the children element as an ancestor here because
-      // it does not have a frame and would not otherwise be pushed as an ancestor.
-      insertion.mContainer = aContent;
-
-
-      // FIXME(emilio): This code can go away, child->GetFlattenedTreeParent()
-      // is always aContent, wtf.
-      nsIContent* parent = child->GetParent();
-      MOZ_ASSERT(parent, "Parent must be non-null because we are iterating children.");
-      if (parent != aContent && parent->IsElement()) {
-        insertion.mContainer = child->GetFlattenedTreeParent();
-        MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer);
-      }
-
+      MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer,
+                 "GetInsertionPoint should agree with us");
       if (addChildItems) {
         AddFrameConstructionItems(aState, child, iter.XBLInvolved(), insertion,
                                   itemsToConstruct);
