@@ -6818,15 +6818,8 @@ nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID, void** aSink)
   }
 #endif
   else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    if (!mWindowUtils) {
-      mWindowUtils = new nsDOMWindowUtils(outer);
-    }
-
-    *aSink = mWindowUtils;
-    NS_ADDREF(((nsISupports *) *aSink));
+    nsCOMPtr<nsIDOMWindowUtils> utils = WindowUtils();
+    utils.forget(aSink);
   }
   else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
     nsGlobalWindowOuter* outer = GetOuterWindowInternal();
@@ -7389,6 +7382,15 @@ nsGlobalWindowOuter::GetWindowRootOuter()
 {
   nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
   return root.forget().downcast<nsWindowRoot>();
+}
+
+nsIDOMWindowUtils*
+nsGlobalWindowOuter::WindowUtils()
+{
+  if (!mWindowUtils) {
+    mWindowUtils = new nsDOMWindowUtils(this);
+  }
+  return mWindowUtils;
 }
 
 //Note: This call will lock the cursor, it will not change as it moves.
