@@ -112,6 +112,13 @@ add_task(async function test_MatchPattern_matches() {
   // Match url with fragments.
   pass({url: "http://mozilla.org/base#some-fragment", pattern: "http://mozilla.org/base"});
 
+  // Match data:-URLs.
+  pass({url: "data:text/plain,foo", pattern: ["data:text/plain,foo"]});
+  pass({url: "data:text/plain,foo", pattern: ["data:text/plain,*"]});
+  pass({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:text/plain;charset=utf-8,foo"]});
+  fail({url: "data:text/plain,foo", pattern: ["data:text/plain;charset=utf-8,foo"]});
+  fail({url: "data:text/plain;charset=utf-8,foo", pattern: ["data:text/plain,foo"]});
+
   // Privileged matchers:
   invalid({pattern: "about:foo"});
   invalid({pattern: "resource://foo/*"});
@@ -124,8 +131,9 @@ add_task(async function test_MatchPattern_matches() {
   fail({url: "resource://fog/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
   fail({url: "about:foo", pattern: ["about:meh"], options: {restrictSchemes: false}});
 
-  // about: matchers should ignore ignorePath.
+  // Matchers for schemes without host should ignore ignorePath.
   pass({url: "about:reader?http://e.com/", pattern: ["about:reader*"], options: {ignorePath: true, restrictSchemes: false}});
+  pass({url: "data:,", pattern: ["data:,*"], options: {ignorePath: true}});
 });
 
 add_task(async function test_MatchPattern_overlaps() {
