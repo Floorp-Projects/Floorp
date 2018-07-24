@@ -735,7 +735,7 @@ ServiceWorkerGlobalScope::GetOnfetch()
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  return GetEventHandler(nullptr, NS_LITERAL_STRING("fetch"));
+  return GetEventHandler(nsGkAtoms::onfetch);
 }
 
 namespace {
@@ -788,16 +788,16 @@ ServiceWorkerGlobalScope::SetOnfetch(mozilla::dom::EventHandlerNonNull* aCallbac
     }
     mWorkerPrivate->SetFetchHandlerWasAdded();
   }
-  SetEventHandler(nullptr, NS_LITERAL_STRING("fetch"), aCallback);
+  SetEventHandler(nsGkAtoms::onfetch, aCallback);
 }
 
 void
-ServiceWorkerGlobalScope::EventListenerAdded(const nsAString& aType)
+ServiceWorkerGlobalScope::EventListenerAdded(nsAtom* aType)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (!aType.EqualsLiteral("fetch")) {
+  if (aType != nsGkAtoms::onfetch) {
     return;
   }
 

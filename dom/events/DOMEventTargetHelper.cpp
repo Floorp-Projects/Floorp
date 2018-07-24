@@ -257,19 +257,7 @@ DOMEventTargetHelper::EventListenerAdded(nsAtom* aType)
 }
 
 void
-DOMEventTargetHelper::EventListenerAdded(const nsAString& aType)
-{
-  MaybeUpdateKeepAlive();
-}
-
-void
 DOMEventTargetHelper::EventListenerRemoved(nsAtom* aType)
-{
-  MaybeUpdateKeepAlive();
-}
-
-void
-DOMEventTargetHelper::EventListenerRemoved(const nsAString& aType)
 {
   MaybeUpdateKeepAlive();
 }

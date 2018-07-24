@@ -183,8 +183,7 @@ public:
   struct Listener
   {
     EventListenerHolder mListener;
-    RefPtr<nsAtom> mTypeAtom; // for the main thread
-    nsString mTypeString; // for non-main-threads
+    RefPtr<nsAtom> mTypeAtom;
     EventMessage mEventMessage;
 
     enum ListenerType : uint8_t
@@ -227,7 +226,6 @@ public:
     Listener(Listener&& aOther)
       : mListener(std::move(aOther.mListener))
       , mTypeAtom(aOther.mTypeAtom.forget())
-      , mTypeString(aOther.mTypeString)
       , mEventMessage(aOther.mEventMessage)
       , mListenerType(aOther.mListenerType)
       , mListenerIsHandler(aOther.mListenerIsHandler)
@@ -235,7 +233,6 @@ public:
       , mAllEvents(aOther.mAllEvents)
       , mIsChrome(aOther.mIsChrome)
     {
-      aOther.mTypeString.Truncate();
       aOther.mEventMessage = eVoidEvent;
       aOther.mListenerType = eNoListener;
       aOther.mListenerIsHandler = false;
@@ -363,7 +360,7 @@ public:
   /**
    * Remove the current "inline" event listener for aName.
    */
-  void RemoveEventHandler(nsAtom *aName, const nsAString& aTypeString);
+  void RemoveEventHandler(nsAtom *aName);
 
   void HandleEvent(nsPresContext* aPresContext,
                    WidgetEvent* aEvent,
@@ -514,6 +511,17 @@ protected:
    */
   EventMessage GetLegacyEventMessage(EventMessage aEventMessage) const;
 
+  /**
+   * Get the event message for the given event name.
+   */
+  EventMessage GetEventMessage(nsAtom* aEventName) const;
+
+  /**
+   * Get the event message and atom for the given event type.
+   */
+  EventMessage GetEventMessageAndAtomForListener(const nsAString& aType,
+                                                 nsAtom** aAtom);
+
   void ProcessApzAwareEventListenerAdd();
 
   /**
@@ -530,8 +538,7 @@ protected:
    * Find the Listener for the "inline" event listener for aTypeAtom.
    */
   Listener* FindEventHandler(EventMessage aEventMessage,
-                             nsAtom* aTypeAtom,
-                             const nsAString& aTypeString);
+                             nsAtom* aTypeAtom);
 
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler may be
@@ -541,7 +548,6 @@ protected:
    * allowed to be null.
    */
   Listener* SetEventHandlerInternal(nsAtom* aName,
-                                    const nsAString& aTypeString,
                                     const TypedEventHandler& aHandler,
                                     bool aPermitUntrustedEvents);
 
@@ -555,7 +561,6 @@ public:
    * aHandler is null, this will actually remove the event listener
    */
   void SetEventHandler(nsAtom* aEventName,
-                       const nsAString& aTypeString,
                        dom::EventHandlerNonNull* aHandler);
   void SetEventHandler(dom::OnErrorEventHandlerNonNull* aHandler);
   void SetEventHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler);
@@ -569,26 +574,23 @@ public:
    * OnErrorEventHandlerNonNull for some event targets and EventHandlerNonNull
    * for others.
    */
-  dom::EventHandlerNonNull* GetEventHandler(nsAtom* aEventName,
-                                            const nsAString& aTypeString)
+  dom::EventHandlerNonNull* GetEventHandler(nsAtom* aEventName)
   {
-    const TypedEventHandler* typedHandler =
-      GetTypedEventHandler(aEventName, aTypeString);
+    const TypedEventHandler* typedHandler = GetTypedEventHandler(aEventName);
     return typedHandler ? typedHandler->NormalEventHandler() : nullptr;
   }
 
   dom::OnErrorEventHandlerNonNull* GetOnErrorEventHandler()
   {
-    const TypedEventHandler* typedHandler = mIsMainThreadELM ?
-      GetTypedEventHandler(nsGkAtoms::onerror, EmptyString()) :
-      GetTypedEventHandler(nullptr, NS_LITERAL_STRING("error"));
+    const TypedEventHandler* typedHandler =
+      GetTypedEventHandler(nsGkAtoms::onerror);
     return typedHandler ? typedHandler->OnErrorEventHandler() : nullptr;
   }
 
   dom::OnBeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
   {
     const TypedEventHandler* typedHandler =
-      GetTypedEventHandler(nsGkAtoms::onbeforeunload, EmptyString());
+      GetTypedEventHandler(nsGkAtoms::onbeforeunload);
     return typedHandler ? typedHandler->OnBeforeUnloadEventHandler() : nullptr;
   }
 
@@ -601,8 +603,7 @@ protected:
    * Helper method for implementing the various Get*EventHandler above.  Will
    * return null if we don't have an event handler for this event name.
    */
-  const TypedEventHandler* GetTypedEventHandler(nsAtom* aEventName,
-                                                const nsAString& aTypeString);
+  const TypedEventHandler* GetTypedEventHandler(nsAtom* aEventName);
 
   void AddEventListener(const nsAString& aType,
                         EventListenerHolder aListener,
@@ -622,19 +623,16 @@ protected:
   void AddEventListenerInternal(EventListenerHolder aListener,
                                 EventMessage aEventMessage,
                                 nsAtom* aTypeAtom,
-                                const nsAString& aTypeString,
                                 const EventListenerFlags& aFlags,
                                 bool aHandler = false,
                                 bool aAllEvents = false);
   void RemoveEventListenerInternal(EventListenerHolder aListener,
                                    EventMessage aEventMessage,
                                    nsAtom* aUserType,
-                                   const nsAString& aTypeString,
                                    const EventListenerFlags& aFlags,
                                    bool aAllEvents = false);
   void RemoveAllListeners();
-  void NotifyEventListenerRemoved(nsAtom* aUserType,
-                                  const nsAString& aTypeString);
+  void NotifyEventListenerRemoved(nsAtom* aUserType);
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsAtom* aName);
   nsPIDOMWindowInner* GetInnerWindowForTarget();
