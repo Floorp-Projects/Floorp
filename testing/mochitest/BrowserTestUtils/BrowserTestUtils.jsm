@@ -1785,6 +1785,9 @@ var BrowserTestUtils = {
     if (!params.triggeringPrincipal) {
       params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     }
+    if (!params.allowInheritPrincipal) {
+      params.allowInheritPrincipal = true;
+    }
     if (beforeLoadFunc) {
       let window = tabbrowser.ownerGlobal;
       window.addEventListener("TabOpen", function(e) {
