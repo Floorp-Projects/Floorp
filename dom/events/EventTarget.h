@@ -178,28 +178,18 @@ public:
   EventHandlerNonNull* GetEventHandler(const nsAString& aType)
   {
     RefPtr<nsAtom> type = NS_Atomize(aType);
-    return GetEventHandler(type, EmptyString());
+    return GetEventHandler(type);
   }
 
   // Note, this takes the type in onfoo form!
   void SetEventHandler(const nsAString& aType, EventHandlerNonNull* aHandler,
                        ErrorResult& rv);
 
-  // The nsAtom version of EventListenerAdded is called on the main
-  // thread.  The string version is called on workers.
-  //
-  // For an event 'foo' aType will be 'onfoo' when it's an atom and
-  // 'foo' when it's a string..
+  // For an event 'foo' aType will be 'onfoo'.
   virtual void EventListenerAdded(nsAtom* aType) {}
-  virtual void EventListenerAdded(const nsAString& aType) {}
 
-  // The nsAtom version of EventListenerRemoved is called on the main
-  // thread.  The string version is called on workers.
-  //
-  // For an event 'foo' aType will be 'onfoo' when it's an atom and
-  // 'foo' when it's a string..
+  // For an event 'foo' aType will be 'onfoo'.
   virtual void EventListenerRemoved(nsAtom* aType) {}
-  virtual void EventListenerRemoved(const nsAString& aType) {}
 
   // Returns an outer window that corresponds to the inner window this event
   // target is associated with.  Will return null if the inner window is not the
@@ -281,10 +271,8 @@ public:
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) = 0;
   
 protected:
-  EventHandlerNonNull* GetEventHandler(nsAtom* aType,
-                                       const nsAString& aTypeString);
-  void SetEventHandler(nsAtom* aType, const nsAString& aTypeString,
-                       EventHandlerNonNull* aHandler);
+  EventHandlerNonNull* GetEventHandler(nsAtom* aType);
+  void SetEventHandler(nsAtom* aType, EventHandlerNonNull* aHandler);
 
   /**
    * Hook for AddEventListener that allows it to compute the right
