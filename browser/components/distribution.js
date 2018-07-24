@@ -421,7 +421,7 @@ DistributionCustomizer.prototype = {
   },
 
   _checkCustomizationComplete: function DIST__checkCustomizationComplete() {
-    const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
+    const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (this._newProfile) {
       let xulStore = Services.xulStore;

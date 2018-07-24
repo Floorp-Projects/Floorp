@@ -22,7 +22,7 @@ add_task(async function() {
       if (aTopic == "domwindowopened") {
         privateWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
         privateWindow.addEventListener("load", function() {
-          is(privateWindow.location.href, "chrome://browser/content/browser.xul",
+          is(privateWindow.location.href, AppConstants.BROWSER_CHROME_URL,
              "A new browser window was opened");
           ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "Window is private");
           windowWasHandled = true;

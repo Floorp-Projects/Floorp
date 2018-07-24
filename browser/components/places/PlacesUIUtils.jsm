@@ -605,7 +605,7 @@ var PlacesUIUtils = {
                   createInstance(Ci.nsIMutableArray);
       args.appendElement(uriList);
       browserWindow = Services.ww.openWindow(aWindow,
-                                             "chrome://browser/content/browser.xul",
+                                             AppConstants.BROWSER_CHROME_URL,
                                              null, "chrome,dialog=no,all", args);
       return;
     }
