@@ -192,22 +192,20 @@ class ComputedFlags(ContextDerived):
                     flags[dest_var].extend(value)
         return flags.items()
 
-class XPIDLFile(ContextDerived):
-    """Describes an XPIDL file to be compiled."""
+class XPIDLModule(ContextDerived):
+    """Describes an XPIDL module to be compiled."""
 
     __slots__ = (
-        'source_path',
-        'basename',
-        'module',
+        'name',
+        'idl_files',
     )
 
-    def __init__(self, context, source, module):
+    def __init__(self, context, name, idl_files):
         ContextDerived.__init__(self, context)
 
-        assert isinstance(source, SourcePath)
-        self.source_path = source
-        self.basename = mozpath.basename(source)
-        self.module = module
+        assert all(isinstance(idl, SourcePath) for idl in idl_files)
+        self.name = name
+        self.idl_files = idl_files
 
 class BaseDefines(ContextDerived):
     """Context derived container object for DEFINES/HOST_DEFINES,
