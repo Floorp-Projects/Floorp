@@ -155,8 +155,7 @@ DOMRequestIpcHelper.prototype = {
     this._window = aWindow;
     if (this._window) {
       // We don't use this.innerWindowID, but other classes rely on it.
-      let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+      let util = this._window.windowUtils;
       this.innerWindowID = util.currentInnerWindowID;
     }
 

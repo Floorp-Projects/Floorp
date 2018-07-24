@@ -5,7 +5,7 @@
     <script>
       function doTest() {
         var defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom ={}, width = {}, height = {}, autoSize = {};
-        var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        var windowUtils = window.windowUtils;
         windowUtils.getViewportInfo(1, 1, defaultZoom, allowZoom, minZoom, maxZoom, width, height, autoSize);
         document.getElementById("minZoom").innerHTML = minZoom.value.toPrecision(10);
         document.getElementById("maxZoom").innerHTML = maxZoom.value.toPrecision(10);

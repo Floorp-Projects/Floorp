@@ -14,9 +14,7 @@ function setup() {
 
 function startTest()
 {
-  var util = SpecialPowers.wrap(window)
-               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-               .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  var util = SpecialPowers.getDOMWindowUtils(window);
 
   // Check initial state.
   is(sessionStorage.length, 0, "storage is empty");

@@ -697,9 +697,7 @@ function webglHarnessCollectGarbage() {
     }
 
     try {
-        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-              .garbageCollect();
+        window.windowUtils.garbageCollect();
         return;
     } catch(e) {}
 
