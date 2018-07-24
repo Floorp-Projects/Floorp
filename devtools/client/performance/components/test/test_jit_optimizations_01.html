@@ -17,7 +17,7 @@ window.onload = async function () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
-    let JITOptimizations = React.createFactory(browserRequire("devtools/client/performance/components/JitOptimizations"));
+    let JITOptimizations = React.createFactory(browserRequire("devtools/client/performance/components/jit-optimizations"));
     ok(JITOptimizations, "Should get JITOptimizations");
     let opts;
 
