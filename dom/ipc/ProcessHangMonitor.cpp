@@ -350,7 +350,9 @@ HangMonitorChild::InterruptCallback()
     mPaintWhileInterruptingJS = false;
   }
 
-  if (paintWhileInterruptingJS) {
+  // Don't paint from the interrupt callback when recording or replaying, as
+  // the interrupt callback is triggered non-deterministically.
+  if (paintWhileInterruptingJS && !recordreplay::IsRecordingOrReplaying()) {
     RefPtr<TabChild> tabChild = TabChild::FindTabChild(paintWhileInterruptingJSTab);
     if (tabChild) {
       js::AutoAssertNoContentJS nojs(mContext);

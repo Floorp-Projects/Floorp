@@ -120,7 +120,7 @@ class StringBundleProxy : public nsIStringBundle
   NS_DECLARE_STATIC_IID_ACCESSOR(STRINGBUNDLEPROXY_IID)
 
   explicit StringBundleProxy(already_AddRefed<nsIStringBundle> aTarget)
-    : mReentrantMonitor("StringBundleProxy::mReentrantMonitor")
+    : mMutex("StringBundleProxy::mMutex")
     , mTarget(aTarget)
   {}
 
@@ -128,7 +128,7 @@ class StringBundleProxy : public nsIStringBundle
 
   void Retarget(nsIStringBundle* aTarget)
   {
-    ReentrantMonitorAutoEnter automon(mReentrantMonitor);
+    MutexAutoLock automon(mMutex);
     mTarget = aTarget;
   }
 
@@ -146,7 +146,7 @@ protected:
   virtual ~StringBundleProxy() = default;
 
 private:
-  ReentrantMonitor mReentrantMonitor;
+  Mutex mMutex;
   nsCOMPtr<nsIStringBundle> mTarget;
 
   // Atomically reads mTarget and returns a strong reference to it. This
@@ -154,7 +154,7 @@ private:
   // the main thread during access.
   nsCOMPtr<nsIStringBundle> Target()
   {
-    ReentrantMonitorAutoEnter automon(mReentrantMonitor);
+    MutexAutoLock automon(mMutex);
     return mTarget;
   }
 };
@@ -304,7 +304,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SharedStringBundle, nsStringBundleBase, SharedString
 
 nsStringBundleBase::nsStringBundleBase(const char* aURLSpec) :
   mPropertiesURL(aURLSpec),
-  mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
+  mMutex("nsStringBundle.mMutex"),
   mAttemptedLoad(false),
   mLoaded(false)
 {
@@ -595,7 +595,7 @@ nsStringBundleBase::GetStringFromName(const char* aName, nsAString& aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
 
-  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
+  MutexAutoLock autolock(mMutex);
 
   return GetStringImpl(nsDependentCString(aName), aResult);
 }

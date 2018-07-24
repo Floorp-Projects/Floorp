@@ -83,6 +83,8 @@ public:
 
   Mutex& MutexRef() { return mLock; }
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 private:
   class NestedSink;
 

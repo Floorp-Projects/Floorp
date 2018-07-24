@@ -8,6 +8,7 @@
 #define mozilla_AbstractEventQueue_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 
 class nsIRunnable;
@@ -72,6 +73,13 @@ public:
   virtual void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
   virtual void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
   virtual void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
   virtual ~AbstractEventQueue() {}
 };

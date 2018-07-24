@@ -858,15 +858,6 @@ nsCocoaWindow::Show(bool bState)
       }
     }
     else if (mWindowType == eWindowType_popup) {
-      // If a popup window is shown after being hidden, it needs to be "reset"
-      // for it to receive any mouse events aside from mouse-moved events
-      // (because it was removed from the "window cache" when it was hidden
-      // -- see below).  Setting the window number to -1 and then back to its
-      // original value seems to accomplish this.  The idea was "borrowed"
-      // from the Java Embedding Plugin.
-      NSInteger windowNumber = [mWindow windowNumber];
-      [mWindow _setWindowNumber:-1];
-      [mWindow _setWindowNumber:windowNumber];
       // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
       // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
       // creating CGSWindow", which in turn triggers an internal inconsistency
@@ -1000,17 +991,6 @@ nsCocoaWindow::Show(bool bState)
         [nativeParentWindow removeChildWindow:mWindow];
 
       [mWindow orderOut:nil];
-      // Unless it's explicitly removed from NSApp's "window cache", a popup
-      // window will keep receiving mouse-moved events even after it's been
-      // "ordered out" (instead of the browser window that was underneath it,
-      // until you click on that window).  This is bmo bug 378645, but it's
-      // surely an Apple bug.  The "window cache" is an undocumented subsystem,
-      // all of whose methods are included in the NSWindowCache category of
-      // the NSApplication class (in header files generated using class-dump).
-      // This workaround was "borrowed" from the Java Embedding Plugin (which
-      // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup)
-        [NSApp _removeWindowFromCache:mWindow];
 
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has closed.
