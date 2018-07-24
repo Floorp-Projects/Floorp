@@ -1385,8 +1385,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 '{path}: DIST_INSTALL = False has no effect on XPIDL_SOURCES.')
 
         for idl in context['XPIDL_SOURCES']:
-            yield XPIDLFile(context, mozpath.join(context.srcdir, idl),
-                xpidl_module)
+            yield XPIDLFile(context, idl, xpidl_module)
 
     def _process_generated_files(self, context):
         for path in context['CONFIGURE_DEFINE_FILES']:

@@ -65,8 +65,8 @@ class XPIDLManager(object):
 
         The IDL file will be built, installed, etc.
         """
-        basename = mozpath.basename(idl.source_path)
-        dirname = mozpath.dirname(idl.source_path)
+        basename = mozpath.basename(idl.source_path.full_path)
+        dirname = mozpath.dirname(idl.source_path.full_path)
         root = mozpath.splitext(basename)[0]
         xpt = '%s.xpt' % idl.module
 
