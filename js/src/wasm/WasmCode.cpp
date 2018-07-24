@@ -1354,7 +1354,7 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              metadata().sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf) +
-             jumpTables_.sizeOfMiscIncludingThis(mallocSizeOf);
+             jumpTables_.sizeOfMiscExcludingThis();
 
     for (auto t : tiers())
         codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);

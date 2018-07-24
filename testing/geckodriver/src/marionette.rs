@@ -50,6 +50,7 @@ use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
 
+use build::BuildInfo;
 use capabilities::{FirefoxCapabilities, FirefoxOptions};
 use logging;
 use prefs;
@@ -895,15 +896,17 @@ impl MarionetteSession {
                     session_id = &session_id[1..session_id.len()-1];
                 }
 
-                let capabilities = try_opt!(
+                let mut capabilities = try_opt!(
                     try_opt!(resp.result.find("capabilities"),
                              ErrorStatus::UnknownError,
                              "Failed to find capabilities field").as_object(),
                     ErrorStatus::UnknownError,
-                    "capabiltites field was not an Object");
+                    "capabilities field is not an object").clone();
+
+                capabilities.insert("moz:geckodriverVersion".into(), BuildInfo.into());
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id.to_string(), Json::Object(capabilities.clone())))
+                    session_id.to_string(), Json::Object(capabilities)))
             },
             DeleteSession => {
                 WebDriverResponse::DeleteSession
