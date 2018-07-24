@@ -770,7 +770,7 @@ checkbox:-moz-focusring {
   width: 100%;
   height: 2px;
   background: transparent;
-  transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }
