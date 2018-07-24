@@ -448,15 +448,20 @@ previewers.Object = [
     }
 
     const raw = obj.unsafeDereference();
-    const global = Cu.getGlobalForObject(DebuggerServer);
-    const classProto = global[obj.class].prototype;
-    // The Xray machinery for TypedArrays denies indexed access on the grounds
-    // that it's slow, and advises callers to do a structured clone instead.
-    const safeView = Cu.cloneInto(classProto.subarray.call(raw, 0,
-      OBJECT_PREVIEW_MAX_ITEMS), global);
-    const items = grip.preview.items = [];
-    for (let i = 0; i < safeView.length; i++) {
-      items.push(safeView[i]);
+
+    // The raw object will be null/unavailable when interacting with a
+    // replaying execution.
+    if (raw) {
+      const global = Cu.getGlobalForObject(DebuggerServer);
+      const classProto = global[obj.class].prototype;
+      // The Xray machinery for TypedArrays denies indexed access on the grounds
+      // that it's slow, and advises callers to do a structured clone instead.
+      const safeView = Cu.cloneInto(classProto.subarray.call(raw, 0,
+        OBJECT_PREVIEW_MAX_ITEMS), global);
+      const items = grip.preview.items = [];
+      for (let i = 0; i < safeView.length; i++) {
+        items.push(safeView[i]);
+      }
     }
 
     return true;
