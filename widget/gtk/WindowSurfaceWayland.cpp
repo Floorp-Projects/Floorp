@@ -793,9 +793,13 @@ WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion)
     wl_surface_damage(waylandSurface, 0, 0, rect.width, rect.height);
     mFullScreenDamage = false;
   } else {
+    gint scaleFactor = mWindow->GdkScaleFactor();
     for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const mozilla::LayoutDeviceIntRect &r = iter.Get();
-      wl_surface_damage(waylandSurface, r.x, r.y, r.width, r.height);
+      // We need to remove the scale factor because the wl_surface_damage
+      // also multiplies by current  scale factor.
+      wl_surface_damage(waylandSurface, r.x/scaleFactor, r.y/scaleFactor,
+                        r.width/scaleFactor, r.height/scaleFactor);
     }
   }
 
