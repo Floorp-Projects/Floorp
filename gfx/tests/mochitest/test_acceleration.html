@@ -38,8 +38,7 @@ function runTest() {
   var webrenderWindows = 0;
   var layerManagerLog = [];
   while (windows.hasMoreElements()) {
-    windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDOMWindowUtils);
+    windowutils = windows.getNext().windowUtils;
     try {
       if (windowutils.layerManagerType != "Basic") {
         acceleratedWindows++;

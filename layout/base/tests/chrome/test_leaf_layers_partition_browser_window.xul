@@ -45,8 +45,7 @@
         isnot(win.mozPaintCount, initialCount, "mozPaintCount has increased" + testInfo());
 
         function testLeafLayersPartitionWindow() {
-          var success = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils)
+          var success = win.windowUtils
                            .leafLayersPartitionWindow();
           // "[leafLayersPartitionWindow()] Always returns true in non-DEBUG builds."
           // To prevent random failures on Windows, try to run this again after a timeout.
