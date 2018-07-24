@@ -68,7 +68,10 @@ JsepSessionImpl::Init()
   SetupDefaultCodecs();
   SetupDefaultRtpExtensions();
 
-  mRunRustParser = Preferences::GetBool("media.webrtc.rsdparsa_enabled", false);
+  mRunRustParser = Preferences::GetBool("media.peerconnection.sdp.rust.enabled",
+                                        false);
+  mRunSdpComparer = Preferences::GetBool("media.peerconnection.sdp.rust.compare",
+                                         false);
 
   return NS_OK;
 }
@@ -1289,8 +1292,10 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
   UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
   if (mRunRustParser) {
     UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
-    ParsingResultComparer comparer;
-    comparer.Compare(*rustParsed, *parsed, sdp);
+    if (mRunSdpComparer) {
+    	ParsingResultComparer comparer;
+    	comparer.Compare(*rustParsed, *parsed, sdp);
+    }
   }
   if (!parsed) {
     std::string error = "Failed to parse SDP: ";
