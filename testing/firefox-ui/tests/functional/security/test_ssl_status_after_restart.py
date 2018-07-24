@@ -14,19 +14,14 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
 
         self.test_data = (
             {
-                'url': 'https://ssl-dv.mozqa.com',
+                'url': 'https://mozilla-intermediate.badssl.com',
                 'identity': '',
                 'type': 'secure'
             },
             {
-                'url': 'https://ssl-ev.mozqa.com/',
-                'identity': 'Mozilla Corporation',
+                'url': 'https://extended-validation.badssl.com',
+                'identity': 'Mozilla Foundation',
                 'type': 'secure-ev'
-            },
-            {
-                'url': 'https://ssl-ov.mozqa.com/',
-                'identity': '',
-                'type': 'secure'
             }
         )
 

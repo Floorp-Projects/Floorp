@@ -207,7 +207,7 @@ class TestIdentityPopup(PuppeteerMixin, MarionetteTestCase):
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
 
-        self.url = 'https://ssl-ev.mozqa.com'
+        self.url = 'https://extended-validation.badssl.com'
 
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
