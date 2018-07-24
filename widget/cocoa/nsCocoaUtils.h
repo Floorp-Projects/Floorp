@@ -76,6 +76,13 @@ private:
 - (BOOL)_isRunningModal;
 - (BOOL)_isRunningAppModal;
 
+// It's sometimes necessary to explicitly remove a window from the "window
+// cache" in order to deactivate it.  The "window cache" is an undocumented
+// subsystem, all of whose methods are included in the NSWindowCache category
+// of the NSApplication class (in header files generated using class-dump).
+// Present in all versions of OS X from (at least) 10.2.8 through 10.5.
+- (void)_removeWindowFromCache:(NSWindow *)aWindow;
+
 // Send an event to the current Cocoa app-modal session.  Present in all
 // versions of OS X from (at least) 10.2.8 through 10.5.
 - (void)_modalSession:(NSModalSession)aSession sendEvent:(NSEvent *)theEvent;
