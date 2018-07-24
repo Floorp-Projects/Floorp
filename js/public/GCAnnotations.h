@@ -55,6 +55,11 @@
 // subsumes JS_HAZ_GC_CALL, since anything that can run script can GC.`
 # define JS_HAZ_CAN_RUN_SCRIPT __attribute__((annotate("Can run script")))
 
+// Mark a function as able to call JSNatives. Otherwise, JSNatives don't show
+// up in the callgraph. This doesn't matter for the can-GC analysis, but it is
+// very nice for other uses of the callgraph.
+# define JS_HAZ_JSNATIVE_CALLER __attribute__((annotate("Calls JSNatives")))
+
 #else
 
 # define JS_HAZ_GC_THING
@@ -66,6 +71,7 @@
 # define JS_HAZ_GC_CALL
 # define JS_HAZ_GC_SUPPRESSED
 # define JS_HAZ_CAN_RUN_SCRIPT
+# define JS_HAZ_JSNATIVE_CALLER
 
 #endif
 
