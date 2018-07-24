@@ -207,7 +207,6 @@ const listeners = {
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
 
     "FeedConverter:addLiveBookmark": ["Feeds"],
-    "WCCR:setAutoHandler": ["Feeds"],
     "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
     "webrtc:UpdatingIndicators": ["webrtcUI"],
   },
@@ -232,7 +231,6 @@ const listeners = {
     "LoginStats:LoginEncountered": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "WCCR:registerProtocolHandler": ["Feeds"],
-    "WCCR:registerContentHandler": ["Feeds"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],

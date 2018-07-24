@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gCategoryManager: ["@mozilla.org/categorymanager;1", "nsICategoryManager"],
   gHandlerService: ["@mozilla.org/uriloader/handler-service;1", "nsIHandlerService"],
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
-  gWebContentContentConverterService: ["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1", "nsIWebContentConverterService"],
 });
 
 // Constants & Enumeration Values
@@ -56,31 +55,25 @@ const CONTAINERS_KEY = "privacy.containers";
  *   set browser.feeds.handler.default to "bookmarks";
  *
  * browser.feeds.handler.default
- * - "bookmarks", "client" or "web" -- indicates the chosen feed reader used
+ * - "bookmarks" or "client" -- indicates the chosen feed reader used
  *   to display feeds, either transiently (i.e., when the "use as default"
  *   checkbox is unchecked, corresponds to when browser.feeds.handler=="ask")
  *   or more permanently (i.e., the item displayed in the dropdown in Feeds
  *   preferences)
- *
- * browser.feeds.handler.webservice
- * - the URL of the currently selected web service used to read feeds
  *
  * browser.feeds.handlers.application
  * - nsIFile, stores the current client-side feed reading app if one has
  *   been chosen
  */
 const PREF_FEED_SELECTED_APP = "browser.feeds.handlers.application";
-const PREF_FEED_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_FEED_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_FEED_SELECTED_READER = "browser.feeds.handler.default";
 
 const PREF_VIDEO_FEED_SELECTED_APP = "browser.videoFeeds.handlers.application";
-const PREF_VIDEO_FEED_SELECTED_WEB = "browser.videoFeeds.handlers.webservice";
 const PREF_VIDEO_FEED_SELECTED_ACTION = "browser.videoFeeds.handler";
 const PREF_VIDEO_FEED_SELECTED_READER = "browser.videoFeeds.handler.default";
 
 const PREF_AUDIO_FEED_SELECTED_APP = "browser.audioFeeds.handlers.application";
-const PREF_AUDIO_FEED_SELECTED_WEB = "browser.audioFeeds.handlers.webservice";
 const PREF_AUDIO_FEED_SELECTED_ACTION = "browser.audioFeeds.handler";
 const PREF_AUDIO_FEED_SELECTED_READER = "browser.audioFeeds.handler.default";
 
@@ -188,17 +181,14 @@ Preferences.addAll([
   { id: "browser.feeds.handler", type: "string" },
   { id: "browser.feeds.handler.default", type: "string" },
   { id: "browser.feeds.handlers.application", type: "file" },
-  { id: "browser.feeds.handlers.webservice", type: "string" },
 
   { id: "browser.videoFeeds.handler", type: "string" },
   { id: "browser.videoFeeds.handler.default", type: "string" },
   { id: "browser.videoFeeds.handlers.application", type: "file" },
-  { id: "browser.videoFeeds.handlers.webservice", type: "string" },
 
   { id: "browser.audioFeeds.handler", type: "string" },
   { id: "browser.audioFeeds.handler.default", type: "string" },
   { id: "browser.audioFeeds.handlers.application", type: "file" },
-  { id: "browser.audioFeeds.handlers.webservice", type: "string" },
 
   { id: "pref.downloads.disable_button.edit_actions", type: "bool" },
 
@@ -539,17 +529,14 @@ var gMainPane = {
     Services.prefs.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
     Services.prefs.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
     Services.prefs.addObserver(PREF_FEED_SELECTED_APP, this);
-    Services.prefs.addObserver(PREF_FEED_SELECTED_WEB, this);
     Services.prefs.addObserver(PREF_FEED_SELECTED_ACTION, this);
     Services.prefs.addObserver(PREF_FEED_SELECTED_READER, this);
 
     Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
-    Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
     Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
     Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
 
     Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
-    Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
     Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
     Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
@@ -1204,17 +1191,14 @@ var gMainPane = {
     Services.prefs.removeObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
     Services.prefs.removeObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
     Services.prefs.removeObserver(PREF_FEED_SELECTED_APP, this);
-    Services.prefs.removeObserver(PREF_FEED_SELECTED_WEB, this);
     Services.prefs.removeObserver(PREF_FEED_SELECTED_ACTION, this);
     Services.prefs.removeObserver(PREF_FEED_SELECTED_READER, this);
 
     Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
-    Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
     Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
     Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
 
     Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
-    Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
     Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
     Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
@@ -1487,9 +1471,6 @@ var gMainPane = {
 
     if (aHandlerApp instanceof Ci.nsIWebHandlerApp)
       return aHandlerApp.uriTemplate;
-
-    if (aHandlerApp instanceof Ci.nsIWebContentHandlerInfo)
-      return aHandlerApp.uri;
 
     if (aHandlerApp instanceof Ci.nsIGIOMimeApp)
       return aHandlerApp.command;
@@ -1991,9 +1972,6 @@ var gMainPane = {
 
     if (aHandlerApp instanceof Ci.nsIWebHandlerApp)
       return this._getIconURLForWebApp(aHandlerApp.uriTemplate);
-
-    if (aHandlerApp instanceof Ci.nsIWebContentHandlerInfo)
-      return this._getIconURLForWebApp(aHandlerApp.uri);
 
     // We know nothing about other kinds of handler apps.
     return "";
@@ -2871,12 +2849,6 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
 
         return null;
 
-      case "web":
-        var uri = Preferences.get(this._prefSelectedWeb).value;
-        if (!uri)
-          return null;
-        return gWebContentContentConverterService.getWebContentHandlerByURI(this.type, uri);
-
       case "bookmarks":
       default:
         // When the pref is set to bookmarks, we handle feeds internally,
@@ -2890,16 +2862,6 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
     if (aNewValue instanceof Ci.nsILocalHandlerApp) {
       Preferences.get(this._prefSelectedApp).value = aNewValue.executable;
       Preferences.get(this._prefSelectedReader).value = "client";
-    } else if (aNewValue instanceof Ci.nsIWebContentHandlerInfo) {
-      Preferences.get(this._prefSelectedWeb).value = aNewValue.uri;
-      Preferences.get(this._prefSelectedReader).value = "web";
-      // Make the web handler be the new "auto handler" for feeds.
-      // Note: we don't have to unregister the auto handler when the user picks
-      // a non-web handler (local app, Live Bookmarks, etc.) because the service
-      // only uses the "auto handler" when the selected reader is a web handler.
-      // We also don't have to unregister it when the user turns on "always ask"
-      // (i.e. preview in browser), since that also overrides the auto handler.
-      gWebContentContentConverterService.setAutoHandler(this.type, aNewValue);
     }
   }
 
@@ -2950,11 +2912,6 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
       if (!defaultApp || !defaultApp.equals(preferredApp))
         this._possibleApplicationHandlers.appendElement(preferredApp);
     }
-
-    // Add the registered web handlers.  There can be any number of these.
-    var webHandlers = gWebContentContentConverterService.getContentHandlers(this.type);
-    for (let webHandler of webHandlers)
-      this._possibleApplicationHandlers.appendElement(webHandler);
 
     return this._possibleApplicationHandlers;
   }
@@ -3094,10 +3051,6 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
           if (app.equals(preferredApp))
             pref.reset();
         }
-      } else {
-        app.QueryInterface(Ci.nsIWebContentHandlerInfo);
-        gWebContentContentConverterService.removeContentHandler(app.contentType,
-                                                                app.uri);
       }
     }
     this._possibleApplicationHandlers._removed = [];
@@ -3110,7 +3063,6 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
 
 var feedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_FEED, {
   _prefSelectedApp: PREF_FEED_SELECTED_APP,
-  _prefSelectedWeb: PREF_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/feedIcon16.png",
@@ -3119,7 +3071,6 @@ var feedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_FEED, {
 
 var videoFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED, {
   _prefSelectedApp: PREF_VIDEO_FEED_SELECTED_APP,
-  _prefSelectedWeb: PREF_VIDEO_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_VIDEO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_VIDEO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/videoFeedIcon16.png",
@@ -3128,7 +3079,6 @@ var videoFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED, {
 
 var audioFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_AUDIO_FEED, {
   _prefSelectedApp: PREF_AUDIO_FEED_SELECTED_APP,
-  _prefSelectedWeb: PREF_AUDIO_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_AUDIO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_AUDIO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/audioFeedIcon16.png",
