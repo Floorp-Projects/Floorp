@@ -1051,7 +1051,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 
     if (!slices_.emplaceBack(budget,
                              reason,
-                             TimeStamp::Now(),
+                             ReallyNow(),
                              GetPageFaultCount(),
                              runtime->gc.state()))
     {
@@ -1083,7 +1083,7 @@ Statistics::endSlice()
 
     if (!aborted) {
         auto& slice = slices_.back();
-        slice.end = TimeStamp::Now();
+        slice.end = ReallyNow();
         slice.endFaults = GetPageFaultCount();
         slice.finalState = runtime->gc.state();
 
@@ -1246,7 +1246,7 @@ Statistics::resumePhases()
     {
         Phase resumePhase = suspendedPhases.popCopy();
         if (resumePhase == Phase::MUTATOR)
-            timedGCTime += TimeStamp::Now() - timedGCStart;
+            timedGCTime += ReallyNow() - timedGCStart;
         recordPhaseBegin(resumePhase);
     }
 }
@@ -1277,7 +1277,7 @@ Statistics::recordPhaseBegin(Phase phase)
     Phase current = currentPhase();
     MOZ_ASSERT(phases[phase].parent == current);
 
-    TimeStamp now = TimeStamp::Now();
+    TimeStamp now = ReallyNow();
 
     if (current != Phase::NONE) {
         MOZ_ASSERT(now >= phaseStartTimes[currentPhase()], "Inconsistent time data; see bug 1400153");
@@ -1299,7 +1299,7 @@ Statistics::recordPhaseEnd(Phase phase)
 
     MOZ_ASSERT(phaseStartTimes[phase]);
 
-    TimeStamp now = TimeStamp::Now();
+    TimeStamp now = ReallyNow();
 
     // Make sure this phase ends after it starts.
     MOZ_ASSERT(now >= phaseStartTimes[phase], "Inconsistent time data; see bug 1400153");
@@ -1383,7 +1383,7 @@ Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
 TimeStamp
 Statistics::beginSCC()
 {
-    return TimeStamp::Now();
+    return ReallyNow();
 }
 
 void
@@ -1392,7 +1392,7 @@ Statistics::endSCC(unsigned scc, TimeStamp start)
     if (scc >= sccTimes.length() && !sccTimes.resize(scc + 1))
         return;
 
-    sccTimes[scc] += TimeStamp::Now() - start;
+    sccTimes[scc] += ReallyNow() - start;
 }
 
 /*

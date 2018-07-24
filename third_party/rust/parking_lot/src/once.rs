@@ -16,9 +16,9 @@ use std::sync::atomic::AtomicUsize as AtomicU8;
 use std::sync::atomic::ATOMIC_USIZE_INIT as ATOMIC_U8_INIT;
 #[cfg(not(feature = "nightly"))]
 type U8 = usize;
-use std::mem;
-use std::fmt;
 use parking_lot_core::{self, SpinWait, DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
+use std::fmt;
+use std::mem;
 use util::UncheckedOptionExt;
 
 const DONE_BIT: U8 = 1;
@@ -345,7 +345,9 @@ impl Default for Once {
 
 impl fmt::Debug for Once {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Once {{ state: {:?} }}", &self.state())
+        f.debug_struct("Once")
+            .field("state", &self.state())
+            .finish()
     }
 }
 
@@ -469,5 +471,18 @@ mod tests {
 
         assert!(t1.join().is_ok());
         assert!(t2.join().is_ok());
+    }
+
+    #[test]
+    fn test_once_debug() {
+        static O: Once = ONCE_INIT;
+
+        assert_eq!(format!("{:?}", O), "Once { state: New }");
+        assert_eq!(
+            format!("{:#?}", O),
+            "Once {
+    state: New
+}"
+        );
     }
 }

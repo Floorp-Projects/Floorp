@@ -60,8 +60,11 @@ var snapshotFormatters = {
       case 6:
       case 7:
       case 8:
-      case 10:
         statusText = strings.GetStringFromName("multiProcessStatus." + data.autoStartStatus);
+        break;
+
+      case 10:
+        statusText = (Services.appinfo.OS == "Darwin" ? "OS X 10.6 - 10.8" : "Windows XP");
         break;
     }
 

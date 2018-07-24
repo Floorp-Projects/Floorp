@@ -268,6 +268,8 @@ public:
   NS_IMETHOD SetIntegrityMetadata(const nsAString& aIntegrityMetadata) override;
   NS_IMETHOD GetLastRedirectFlags(uint32_t *aValue) override;
   NS_IMETHOD SetLastRedirectFlags(uint32_t aValue) override;
+  NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) override;
+  NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
 
   inline void CleanRedirectCacheChainIfNecessary()
   {

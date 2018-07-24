@@ -571,6 +571,12 @@ nsHttpChannel::Connect()
           this, isTrackingResource, mClassOfService));
 
     if (isTrackingResource) {
+        if (CheckFastBlocked()) {
+            Unused << AsyncAbort(NS_ERROR_ABORT);
+            CloseCacheEntry(false);
+            return NS_OK;
+        }
+
         AddClassFlags(nsIClassOfService::Tail);
     }
 
@@ -581,6 +587,39 @@ nsHttpChannel::Connect()
     }
 
     return ConnectOnTailUnblock();
+}
+
+bool
+nsHttpChannel::CheckFastBlocked()
+{
+    LOG(("nsHttpChannel::CheckFastBlocked [this=%p]\n", this));
+
+    static bool sFastBlockInited = false;
+    static bool sIsFastBlockEnabled = false;
+    static uint32_t sFastBlockTimeout = 0;
+
+    if (!sFastBlockInited) {
+        sFastBlockInited = true;
+        Preferences::AddBoolVarCache(&sIsFastBlockEnabled, "browser.fastblock.enabled");
+        Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
+    }
+
+    TimeStamp timestamp;
+    if (NS_FAILED(GetNavigationStartTimeStamp(&timestamp))) {
+        return false;
+    }
+
+    if (!sIsFastBlockEnabled || !timestamp) {
+        return false;
+    }
+
+    TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
+    if (duration.ToMilliseconds() < sFastBlockTimeout) {
+        return false;
+    }
+
+    LOG(("FastBlock timeout (%lf) [this=%p]\n", duration.ToMilliseconds(), this));
+    return true;
 }
 
 nsresult
@@ -5514,6 +5553,18 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
 
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(newChannel, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        TimeStamp timestamp;
+        rv = GetNavigationStartTimeStamp(&timestamp);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        if (timestamp) {
+            Unused << internalChannel->SetNavigationStartTimeStamp(timestamp);
+        }
+    }
+
     return NS_OK;
 }
 
@@ -6492,6 +6543,23 @@ nsHttpChannel::AttachStreamFilter(ipc::Endpoint<extensions::PStreamFilterParent>
 
   extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
   return true;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetNavigationStartTimeStamp(TimeStamp* aTimeStamp)
+{
+  LOG(("nsHttpChannel::GetNavigationStartTimeStamp %p", this));
+  MOZ_ASSERT(aTimeStamp);
+  *aTimeStamp = mNavigationStartTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetNavigationStartTimeStamp(TimeStamp aTimeStamp)
+{
+  LOG(("nsHttpChannel::SetNavigationStartTimeStamp %p", this));
+  mNavigationStartTimeStamp = aTimeStamp;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

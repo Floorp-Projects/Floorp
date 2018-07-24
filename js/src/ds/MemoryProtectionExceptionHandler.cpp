@@ -33,7 +33,9 @@
 
 namespace js {
 
-static mozilla::Atomic<bool> sProtectedRegionsInit(false);
+// Memory protection occurs at non-deterministic points when recording/replaying.
+static mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                       mozilla::recordreplay::Behavior::DontPreserve> sProtectedRegionsInit(false);
 
 /*
  * A class to store the addresses of the regions recognized as protected

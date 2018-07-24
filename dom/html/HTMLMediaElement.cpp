@@ -514,6 +514,13 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
     return NS_BINDING_ABORTED;
   }
 
+  // Media element playback is not currently supported when recording or
+  // replaying. See bug 1304146.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    mElement->ReportLoadError("Media elements not available when recording", nullptr, 0);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // The element is only needed until we've had a chance to call
   // InitializeDecoderForChannel. So make sure mElement is cleared here.
   RefPtr<HTMLMediaElement> element;

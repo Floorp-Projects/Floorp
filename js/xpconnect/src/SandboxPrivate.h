@@ -34,6 +34,7 @@ public:
 
         // Pass on ownership of sbp to |global|.
         // The type used to cast to void needs to match the one in GetPrivate.
+        mozilla::RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, sbp);
         JS_SetPrivate(global, static_cast<nsIScriptObjectPrincipal*>(sbp.forget().take()));
     }
 

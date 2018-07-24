@@ -167,7 +167,7 @@ public:
                                   uint32_t aContractIDLen);
   nsFactoryEntry* GetFactoryEntry(const nsCID& aClass);
 
-  nsDataHashtable<nsIDHashKey, nsFactoryEntry*> mFactories;
+  nsDataHashtable<nsIDPointerHashKey, nsFactoryEntry*> mFactories;
   nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
   SafeMutex mLock;

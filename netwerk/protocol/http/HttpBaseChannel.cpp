@@ -4593,6 +4593,18 @@ HttpBaseChannel::SetLastRedirectFlags(uint32_t aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetNavigationStartTimeStamp(TimeStamp* aTimeStamp)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetNavigationStartTimeStamp(TimeStamp aTimeStamp)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const
 {

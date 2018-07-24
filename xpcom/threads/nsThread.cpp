@@ -650,18 +650,18 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
                    uint32_t aStackSize)
   : mEvents(aQueue.get())
   , mEventTarget(new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD))
-  , mScriptObserver(nullptr)
-  , mPriority(PRIORITY_NORMAL)
-  , mThread(nullptr)
-  , mNestedEventLoopDepth(0)
-  , mStackSize(aStackSize)
   , mShutdownContext(nullptr)
+  , mScriptObserver(nullptr)
+  , mThread(nullptr)
+  , mStackSize(aStackSize)
+  , mNestedEventLoopDepth(0)
+  , mCurrentEventLoopDepth(-1)
   , mShutdownRequired(false)
-  , mIsMainThread(aMainThread)
+  , mPriority(PRIORITY_NORMAL)
+  , mIsMainThread(uint8_t(aMainThread))
   , mCanInvokeJS(false)
   , mCurrentEvent(nullptr)
   , mCurrentEventStart(TimeStamp::Now())
-  , mCurrentEventLoopDepth(-1)
   , mCurrentPerformanceCounter(nullptr)
 {
 }
@@ -868,11 +868,6 @@ nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
   PR_JoinThread(mThread);
   mThread = nullptr;
 
-  // We hold strong references to our event observers, and once the thread is
-  // shut down the observers can't easily unregister themselves. Do it here
-  // to avoid leaking.
-  ClearObservers();
-
 #ifdef DEBUG
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
   MOZ_ASSERT(!obs, "Should have been cleared at shutdown!");
@@ -1040,6 +1035,37 @@ nsThread::GetPerformanceCounter(nsIRunnable* aEvent)
   return nullptr;
 }
 
+size_t
+nsThread::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mShutdownContext) {
+    n += aMallocSizeOf(mShutdownContext);
+  }
+  n += mRequestedShutdownContexts.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return aMallocSizeOf(this) + aMallocSizeOf(mThread) + n;
+}
+
+size_t
+nsThread::SizeOfEventQueues(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mCurrentPerformanceCounter) {
+    n += aMallocSizeOf(mCurrentPerformanceCounter);
+  }
+  if (mEventTarget) {
+    // The size of mEvents is reported by mEventTarget.
+    n += mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return n;
+}
+
+size_t
+nsThread::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return ShallowSizeOfIncludingThis(aMallocSizeOf) + SizeOfEventQueues(aMallocSizeOf);
+}
+
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
@@ -1048,6 +1074,12 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  // When recording or replaying, execute triggers that were activated
+  // non-deterministically at some point since the last turn of the event loop.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::ExecuteTriggers();
   }
 
   // The toplevel event loop normally blocks waiting for the next event, but
@@ -1061,7 +1093,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
   Maybe<Scheduler::EventLoopActivation> activation;
-  if (mIsMainThread == MAIN_THREAD) {
+  if (IsMainThread()) {
     DoMainThreadSpecificProcessing(reallyWait);
     activation.emplace();
   }
@@ -1106,7 +1138,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     if (event) {
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
 
-      if (MAIN_THREAD == mIsMainThread) {
+      if (IsMainThread()) {
         BackgroundHangMonitor().NotifyActivity();
       }
 
@@ -1126,12 +1158,12 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       Array<char, kRunnableNameBufSize> restoreRunnableName;
       restoreRunnableName[0] = '\0';
       auto clear = MakeScopeExit([&] {
-        if (MAIN_THREAD == mIsMainThread) {
+        if (IsMainThread()) {
           MOZ_ASSERT(NS_IsMainThread());
           sMainThreadRunnableName = restoreRunnableName;
         }
       });
-      if (MAIN_THREAD == mIsMainThread) {
+      if (IsMainThread()) {
         nsAutoCString name;
         GetLabeledRunnableName(event, name, priority);
 
@@ -1329,7 +1361,7 @@ nsThread::SetScriptObserver(mozilla::CycleCollectedJSContext* aScriptObserver)
 void
 nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
 {
-  MOZ_ASSERT(mIsMainThread == MAIN_THREAD);
+  MOZ_ASSERT(IsMainThread());
 
   ipc::CancelCPOWs();
 

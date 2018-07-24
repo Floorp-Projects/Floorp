@@ -477,7 +477,8 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
                     mozilla::recordreplay::Behavior::DontPreserve> numActiveHelperThreadZones;
 
     // Any activity affecting the heap.
-    mozilla::Atomic<JS::HeapState> heapState_;
+    mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent,
+                    mozilla::recordreplay::Behavior::DontPreserve> heapState_;
 
     friend class js::AutoLockScriptData;
 

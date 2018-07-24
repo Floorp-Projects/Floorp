@@ -9,10 +9,15 @@
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 template<class T> class nsCOMArray;
+namespace mozilla {
+class TimeStamp;
+}
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
+
+native TimeStamp(mozilla::TimeStamp);
 
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
@@ -324,4 +329,8 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [noscript, infallible]
     attribute unsigned long lastRedirectFlags;
+
+      // This is use to determine the duration since navigation started.
+    [noscript] attribute TimeStamp navigationStartTimeStamp;
+
 };

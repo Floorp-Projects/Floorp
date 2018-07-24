@@ -286,6 +286,8 @@ MarkPagesInUse(void* p, size_t size)
 size_t
 GetPageFaultCount()
 {
+    if (mozilla::recordreplay::IsRecordingOrReplaying())
+        return 0;
     PROCESS_MEMORY_COUNTERS pmc;
     if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
         return 0;
@@ -813,6 +815,8 @@ MarkPagesInUse(void* p, size_t size)
 size_t
 GetPageFaultCount()
 {
+    if (mozilla::recordreplay::IsRecordingOrReplaying())
+        return 0;
     struct rusage usage;
     int err = getrusage(RUSAGE_SELF, &usage);
     if (err)

@@ -220,6 +220,12 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                           const AudioContextOptions& aOptions,
                           ErrorResult& aRv)
 {
+  // Audio playback is not yet supported when recording or replaying. See bug 1304147.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -271,6 +277,12 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                           float aSampleRate,
                           ErrorResult& aRv)
 {
+  // Audio playback is not yet supported when recording or replaying. See bug 1304147.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);

@@ -1306,6 +1306,7 @@ struct TargetSelector {
 #[cfg(feature = "debug_renderer")]
 struct LazyInitializedDebugRenderer {
     debug_renderer: Option<DebugRenderer>,
+    failed: bool,
 }
 
 #[cfg(feature = "debug_renderer")]
@@ -1313,11 +1314,25 @@ impl LazyInitializedDebugRenderer {
     pub fn new() -> Self {
         Self {
             debug_renderer: None,
+            failed: false,
         }
     }
 
-    pub fn get_mut<'a>(&'a mut self, device: &mut Device) -> &'a mut DebugRenderer {
-        self.debug_renderer.get_or_insert_with(|| DebugRenderer::new(device))
+    pub fn get_mut<'a>(&'a mut self, device: &mut Device) -> Option<&'a mut DebugRenderer> {
+        if self.failed {
+            return None;
+        }
+        if self.debug_renderer.is_none() {
+            match DebugRenderer::new(device) {
+                Ok(renderer) => { self.debug_renderer = Some(renderer); }
+                Err(_) => {
+                    // The shader compilation code already logs errors.
+                    self.failed = true;
+                }
+            }
+        }
+
+        self.debug_renderer.as_mut()
     }
 
     pub fn deinit(self, device: &mut Device) {
@@ -2384,35 +2399,41 @@ impl Renderer {
             if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
                 if let Some(framebuffer_size) = framebuffer_size {
                     //TODO: take device/pixel ratio into equation?
-                    let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
-                    self.profiler.draw_profile(
-                        &frame_profiles,
-                        &self.backend_profile_counters,
-                        &self.profile_counters,
-                        &mut profile_timers,
-                        &profile_samplers,
-                        screen_fraction,
-                        self.debug.get_mut(&mut self.device),
-                        self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
-                    );
+                    if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                        let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
+                        self.profiler.draw_profile(
+                            &frame_profiles,
+                            &self.backend_profile_counters,
+                            &self.profile_counters,
+                            &mut profile_timers,
+                            &profile_samplers,
+                            screen_fraction,
+                            debug_renderer,
+                            self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
+                        );
+                    }
                 }
             }
 
             if self.debug_flags.contains(DebugFlags::NEW_FRAME_INDICATOR) {
-                self.new_frame_indicator.changed();
-                self.new_frame_indicator.draw(
-                    0.0, 0.0,
-                    ColorU::new(0, 110, 220, 255),
-                    self.debug.get_mut(&mut self.device)
-                );
+                if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    self.new_frame_indicator.changed();
+                    self.new_frame_indicator.draw(
+                        0.0, 0.0,
+                        ColorU::new(0, 110, 220, 255),
+                        debug_renderer,
+                    );
+                }
             }
 
             if self.debug_flags.contains(DebugFlags::NEW_SCENE_INDICATOR) {
-                self.new_scene_indicator.draw(
-                    160.0, 0.0,
-                    ColorU::new(220, 30, 10, 255),
-                    self.debug.get_mut(&mut self.device)
-                );
+                if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    self.new_scene_indicator.draw(
+                        160.0, 0.0,
+                        ColorU::new(220, 30, 10, 255),
+                        debug_renderer,
+                    );
+                }
             }
         }
 
@@ -2429,8 +2450,9 @@ impl Renderer {
             self.gpu_profile.end_frame();
             #[cfg(feature = "debug_renderer")]
             {
-                self.debug.get_mut(&mut self.device)
-                          .render(&mut self.device, framebuffer_size);
+                if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    debug_renderer.render(&mut self.device, framebuffer_size);
+                }
             }
             self.device.end_frame();
         });
@@ -3755,7 +3777,7 @@ impl Renderer {
     }
 
     #[cfg(feature = "debug_renderer")]
-    pub fn debug_renderer<'b>(&'b mut self) -> &'b mut DebugRenderer {
+    pub fn debug_renderer<'b>(&'b mut self) -> Option<&'b mut DebugRenderer> {
         self.debug.get_mut(&mut self.device)
     }
 
@@ -3893,7 +3915,10 @@ impl Renderer {
             return;
         }
 
-        let debug_renderer = self.debug.get_mut(&mut self.device);
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => { return; }
+        };
 
         let dy = debug_renderer.line_height();
         let x0: f32 = 30.0;
