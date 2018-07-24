@@ -45,9 +45,6 @@ ipc::MessageChannel* ChannelToUIProcess();
 // Initialize state in a middleman process.
 void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid);
 
-// Note the contents of the prefs shmem for use by the child process.
-void NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen);
-
 // Open a socket which a recording/replaying child can use to connect to its
 // middleman process.
 void OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId,

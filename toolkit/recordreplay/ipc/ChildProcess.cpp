@@ -464,6 +464,10 @@ ChildProcessInfo::LaunchSubprocess()
 
     MOZ_RELEASE_ASSERT(!gRecordingProcess);
     gRecordingProcess = new ipc::GeckoChildProcessHost(GeckoProcessType_Content);
+
+    gRecordingProcess->AddFdToRemap(kPrefsFileDescriptor, kPrefsFileDescriptor);
+    gRecordingProcess->AddFdToRemap(kPrefMapFileDescriptor, kPrefMapFileDescriptor);
+
     if (!gRecordingProcess->LaunchAndWaitForProcessHandle(extraArgs)) {
       MOZ_CRASH("ChildProcessInfo::LaunchSubprocess");
     }
