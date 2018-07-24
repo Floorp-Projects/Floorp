@@ -37,6 +37,8 @@
  *     passed as argument to a function of this API will be ignored.
  *  - visits: (Array<VisitInfo>)
  *     All the visits for this page, if any.
+ *  - annotations: (Map)
+ *     A map containing key/value pairs of the annotations for this page, if any.
  *
  * See the documentation of individual methods to find out which properties
  * are required for `PageInfo` arguments or returned for `PageInfo` results.
@@ -123,6 +125,8 @@ var History = Object.freeze({
    *           By default, `visits` is undefined inside the returned `PageInfo`.
    *        - `includeMeta` (boolean) set this to true to fetch page meta fields,
    *           i.e. `description` and `preview_image_url`.
+   *        - `includeAnnotations` (boolean) set this to true to fetch any
+   *           annotations that are associated with the page.
    *
    * @return (Promise)
    *      A promise resolved once the operation is complete.
@@ -154,6 +158,11 @@ var History = Object.freeze({
     let hasIncludeMeta = "includeMeta" in options;
     if (hasIncludeMeta && typeof options.includeMeta !== "boolean") {
       throw new TypeError("includeMeta should be a boolean if exists");
+    }
+
+    let hasIncludeAnnotations = "includeAnnotations" in options;
+    if (hasIncludeAnnotations && typeof options.includeAnnotations !== "boolean") {
+      throw new TypeError("includeAnnotations should be a boolean if exists");
     }
 
     return PlacesUtils.promiseDBConnection()
@@ -1001,6 +1010,7 @@ var fetch = async function(db, guidOrURL, options) {
                ${whereClauseFragment}
                ${visitOrderFragment}`;
   let pageInfo = null;
+  let placeId = null;
   await db.executeCached(
     query,
     params,
@@ -1013,6 +1023,7 @@ var fetch = async function(db, guidOrURL, options) {
           frecency: row.getResultByName("frecency"),
           title: row.getResultByName("title") || ""
         };
+        placeId = row.getResultByName("id");
       }
       if (options.includeMeta) {
         pageInfo.description = row.getResultByName("description") || "";
@@ -1031,6 +1042,19 @@ var fetch = async function(db, guidOrURL, options) {
         pageInfo.visits.push({ date, transition });
       }
     });
+
+  // Only try to get annotations if requested, and if there's an actual page found.
+  if (pageInfo && options.includeAnnotations) {
+    let rows = await db.executeCached(`
+      SELECT n.name, a.content FROM moz_anno_attributes n
+      JOIN moz_annos a ON n.id = a.anno_attribute_id
+      WHERE a.place_id = :placeId
+    `, {placeId});
+
+    pageInfo.annotations = new Map(rows.map(
+      row => [row.getResultByName("name"), row.getResultByName("content")]
+    ));
+  }
   return pageInfo;
 };
 
