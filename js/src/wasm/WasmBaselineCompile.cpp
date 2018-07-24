@@ -8359,6 +8359,7 @@ BaseCompiler::emitGetGlobal()
           case ValType::F64:
             pushF64(value.f64());
             break;
+          case ValType::Ref:
           case ValType::AnyRef:
             pushRef(intptr_t(value.ptr()));
             break;
@@ -8397,6 +8398,7 @@ BaseCompiler::emitGetGlobal()
         pushF64(rv);
         break;
       }
+      case ValType::Ref:
       case ValType::AnyRef: {
         RegPtr rv = needRef();
         ScratchI32 tmp(*this);
@@ -8454,6 +8456,7 @@ BaseCompiler::emitSetGlobal()
         break;
       }
 #ifdef ENABLE_WASM_GC
+      case ValType::Ref:
       case ValType::AnyRef: {
         RegPtr valueAddr(PreBarrierReg);
         needRef(valueAddr);
