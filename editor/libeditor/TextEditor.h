@@ -9,8 +9,6 @@
 #include "mozilla/EditorBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIEditor.h"
-#include "nsIEditorMailSupport.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISupportsImpl.h"
 #include "nscore.h"
@@ -36,7 +34,6 @@ class Selection;
  */
 class TextEditor : public EditorBase
                  , public nsIPlaintextEditor
-                 , public nsIEditorMailSupport
 {
 public:
   /****************************************************************************
@@ -56,9 +53,6 @@ public:
 
   // nsIPlaintextEditor methods
   NS_DECL_NSIPLAINTEXTEDITOR
-
-  // nsIEditorMailSupport overrides
-  NS_DECL_NSIEDITORMAILSUPPORT
 
   // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
@@ -126,6 +120,16 @@ public:
    * @param aStringToInsert     The string to insert.
    */
   nsresult InsertTextAsAction(const nsAString& aStringToInsert);
+
+  /**
+   * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
+   * If the editor is TextEditor or in plaintext mode, will paste the content
+   * with appending ">" to start of each line.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   */
+  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType);
 
   /**
    * DeleteSelectionAsAction() removes selection content or content around
@@ -331,6 +335,15 @@ protected: // Shouldn't be used by friend classes
                                           nsINode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
+
+  /**
+   * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
+   * to start of every line.
+   *
+   * @param aQuotedText         String to insert.  This will be quoted by ">"
+   *                            automatically.
+   */
+  nsresult InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
 
   /**
    * Return true if the data is safe to insert as the source and destination

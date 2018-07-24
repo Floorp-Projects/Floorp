@@ -314,8 +314,8 @@ function checkItem(aExpected, aNode) {
           break;
         }
         case "charset":
-          let testURI = NetUtil.newURI(aNode.uri);
-          Assert.equal((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
+          let pageInfo = await PlacesUtils.history.fetch(aNode.uri, {includeAnnotations: true});
+          Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), aExpected.charset);
           break;
         case "feedUrl":
           let livemark = await PlacesUtils.livemarks.getLivemark({ id });

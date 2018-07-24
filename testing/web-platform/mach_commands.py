@@ -140,6 +140,8 @@ class WebPlatformTestsUpdater(MozbuildObject):
         if kwargs["product"] is None:
             kwargs["product"] = "firefox"
 
+        kwargs["store_state"] = False
+
         kwargs = updatecommandline.check_args(kwargs)
         logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 

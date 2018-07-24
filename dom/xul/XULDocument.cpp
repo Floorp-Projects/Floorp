@@ -830,9 +830,9 @@ XULDocument::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
         persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
       nsContentUtils::AddScriptRunner(
         NewRunnableMethod<Element*, int32_t, nsAtom*>(
-          "dom::XULDocument::DoPersist",
+          "dom::XULDocument::Persist",
           this,
-          &XULDocument::DoPersist,
+          &XULDocument::Persist,
           aElement,
           kNameSpaceID_None,
           aAttribute));
@@ -999,71 +999,17 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
 }
 
 void
-XULDocument::Persist(const nsAString& aID,
-                     const nsAString& aAttr,
-                     ErrorResult& aRv)
-{
-    // If we're currently reading persisted attributes out of the
-    // localstore, _don't_ re-enter and try to set them again!
-    if (mApplyingPersistedAttrs) {
-        return;
-    }
-
-    Element* element = nsDocument::GetElementById(aID);
-    if (!element) {
-        return;
-    }
-
-    RefPtr<nsAtom> tag;
-    int32_t nameSpaceID;
-
-    RefPtr<mozilla::dom::NodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
-    nsresult rv;
-    if (ni) {
-        tag = ni->NameAtom();
-        nameSpaceID = ni->NamespaceID();
-    }
-    else {
-        // Make sure that this QName is going to be valid.
-        const char16_t *colon;
-        rv = nsContentUtils::CheckQName(PromiseFlatString(aAttr), true, &colon);
-
-        if (NS_FAILED(rv)) {
-            // There was an invalid character or it was malformed.
-            aRv.Throw(NS_ERROR_INVALID_ARG);
-            return;
-        }
-
-        if (colon) {
-            // We don't really handle namespace qualifiers in attribute names.
-            aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-            return;
-        }
-
-        tag = NS_Atomize(aAttr);
-        if (NS_WARN_IF(!tag)) {
-            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-            return;
-        }
-
-        nameSpaceID = kNameSpaceID_None;
-    }
-
-    aRv = Persist(element, nameSpaceID, tag);
-}
-
-nsresult
 XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
                      nsAtom* aAttribute)
 {
     // For non-chrome documents, persistance is simply broken
     if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()))
-        return NS_ERROR_NOT_AVAILABLE;
+        return;
 
     if (!mLocalStore) {
         mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
         if (NS_WARN_IF(!mLocalStore)) {
-            return NS_ERROR_NOT_INITIALIZED;
+            return;
         }
     }
 
@@ -1078,28 +1024,29 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
     nsAutoCString utf8uri;
     nsresult rv = mDocumentURI->GetSpec(utf8uri);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return;
     }
     NS_ConvertUTF8toUTF16 uri(utf8uri);
 
     bool hasAttr;
     rv = mLocalStore->HasValue(uri, id, attrstr, &hasAttr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return;
     }
 
     if (hasAttr && valuestr.IsEmpty()) {
-        return mLocalStore->RemoveValue(uri, id, attrstr);
+        mLocalStore->RemoveValue(uri, id, attrstr);
+        return;
     }
 
     // Persisting attributes to top level windows is handled by nsXULWindow.
     if (aElement->IsXULElement(nsGkAtoms::window)) {
         if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
-           return NS_OK;
+           return;
         }
     }
 
-    return mLocalStore->SetValue(uri, id, attrstr, valuestr);
+    mLocalStore->SetValue(uri, id, attrstr, valuestr);
 }
 
 static JSObject*

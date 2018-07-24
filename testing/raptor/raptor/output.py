@@ -94,13 +94,14 @@ class Output(object):
                 elif 'webaudio' in test.measurements:
                     subtests, vals = self.parseWebaudioOutput(test)
                 suite['subtests'] = subtests
+
+                # if there is more than one subtest, calculate a summary result
+                if len(subtests) > 1:
+                    suite['value'] = self.construct_summary(vals, testname=test.name)
+
             else:
                 LOG.error("output.summarize received unsupported test results type")
                 return
-
-        # if there is more than one subtest, calculate a summary result
-        if len(subtests) > 1:
-            suite['value'] = self.construct_results(vals, testname=test.name)
 
         self.summarized_results = test_results
 
@@ -341,7 +342,7 @@ class Output(object):
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 
-    def construct_results(self, vals, testname):
+    def construct_summary(self, vals, testname):
         if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
         elif testname.startswith('raptor-kraken'):

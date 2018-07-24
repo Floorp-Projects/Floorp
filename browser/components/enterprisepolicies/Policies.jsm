@@ -6,6 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
                                    "@mozilla.org/xul/xulstore;1",
                                    "nsIXULStore");
@@ -19,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
-const BROWSER_DOCUMENT_URL    = "chrome://browser/content/browser.xul";
+const BROWSER_DOCUMENT_URL    = AppConstants.BROWSER_CHROME_URL;
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -958,7 +959,7 @@ let ChromeURLBlockPolicy = {
     if (contentLocation.scheme == "chrome" &&
         contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT &&
         loadInfo.loadingContext &&
-        loadInfo.loadingContext.baseURI == "chrome://browser/content/browser.xul" &&
+        loadInfo.loadingContext.baseURI == AppConstants.BROWSER_CHROME_URL &&
         contentLocation.host != "mochitests") {
       return Ci.nsIContentPolicy.REJECT_REQUEST;
     }

@@ -1,5 +1,5 @@
 add_task(async function() {
-  var win = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  var win = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no");
   await SimpleTest.promiseFocus(win);
 
   let tab = win.gBrowser.tabContainer.firstChild;
@@ -14,7 +14,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  var win = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  var win = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no");
   await SimpleTest.promiseFocus(win);
 
   let tab = win.gBrowser.tabContainer.firstChild;

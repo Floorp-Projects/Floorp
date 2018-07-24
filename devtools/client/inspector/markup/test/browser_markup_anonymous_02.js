@@ -7,7 +7,7 @@
 requestLongerTimeout(2);
 
 // Test XBL anonymous content in the markupview
-const TEST_URL = "chrome://devtools/content/scratchpad/index.xul";
+const TEST_URL = URL_ROOT + "doc_markup_anonymous_xul.xul";
 
 add_task(async function() {
   const {inspector} = await openInspectorForURL(TEST_URL);
@@ -15,8 +15,8 @@ add_task(async function() {
   const toolbarbutton = await getNodeFront("toolbarbutton", inspector);
   const children = await inspector.walker.children(toolbarbutton);
 
-  is(toolbarbutton.numChildren, 3, "Correct number of children");
-  is(children.nodes.length, 3, "Children returned from walker");
+  is(toolbarbutton.numChildren, 4, "Correct number of children");
+  is(children.nodes.length, 4, "Children returned from walker");
 
   is(toolbarbutton.isAnonymous, false, "Toolbarbutton is not anonymous");
   await isEditingMenuEnabled(toolbarbutton, inspector);

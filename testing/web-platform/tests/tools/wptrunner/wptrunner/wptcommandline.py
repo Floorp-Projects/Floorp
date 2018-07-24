@@ -554,8 +554,12 @@ def create_parser_update(product_choices=None):
     parser.add_argument("--stability", nargs="?", action="store", const="unstable", default=None,
         help=("Reason for disabling tests. When updating test results, disable tests that have "
               "inconsistent results across many runs with the given reason."))
-    parser.add_argument("--continue", action="store_true", help="Continue a previously started run of the update script")
-    parser.add_argument("--abort", action="store_true", help="Clear state from a previous incomplete run of the update script")
+    parser.add_argument("--no-store-state", action="store_false", dest="store_state",
+                        help="Store state so that steps can be resumed after failure")
+    parser.add_argument("--continue", action="store_true",
+                        help="Continue a previously started run of the update script")
+    parser.add_argument("--abort", action="store_true",
+                        help="Clear state from a previous incomplete run of the update script")
     parser.add_argument("--exclude", action="store", nargs="*",
                         help="List of glob-style paths to exclude when syncing tests")
     parser.add_argument("--include", action="store", nargs="*",

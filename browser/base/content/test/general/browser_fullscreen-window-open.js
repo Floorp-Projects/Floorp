@@ -251,7 +251,7 @@ function waitForWindowOpen(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, getBrowserURL(), {
+  let listener = new WindowListener(message.title, AppConstants.BROWSER_CHROME_URL, {
     onSuccess: aOptions.successFn,
     onFinalize,
   });
@@ -292,7 +292,7 @@ function waitForWindowOpenFromChrome(aOptions) {
     runNextTest();
   };
 
-  let listener = new WindowListener(message.title, getBrowserURL(), {
+  let listener = new WindowListener(message.title, AppConstants.BROWSER_CHROME_URL, {
     onSuccess: aOptions.successFn,
     onFinalize,
   });

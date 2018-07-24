@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
-from taskgraph.transforms.job.common import support_use_artifacts, support_vcs_checkout
+from taskgraph.transforms.job.common import support_vcs_checkout
 from voluptuous import Required, Any
 
 run_task_schema = Schema({
@@ -30,14 +30,6 @@ run_task_schema = Schema({
     # gecko checkout
     Required('comm-checkout'): bool,
 
-    # maps a dependency to a list of artifact names to use from that dependency.
-    # E.g: {"build": ["target.tar.bz2"]}
-    # In the above example, the artifact would be downloaded to:
-    # $USE_ARTIFACT_PATH/build/target.tar.bz2
-    Required('use-artifacts'): Any(None, {
-        basestring: [basestring],
-    }),
-
     # The command arguments to pass to the `run-task` script, after the
     # checkout arguments.  If a list, it will be passed directly; otherwise
     # it will be included in a single argument to `bash -cx`.
@@ -53,9 +45,6 @@ def common_setup(config, job, taskdesc):
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
-
-    if run['use-artifacts']:
-        support_use_artifacts(config, job, taskdesc, run['use-artifacts'])
 
     taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
 
@@ -76,7 +65,6 @@ defaults = {
     'checkout': True,
     'comm-checkout': False,
     'sparse-profile': None,
-    'use-artifacts': None,
 }
 
 

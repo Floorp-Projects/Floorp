@@ -13,14 +13,16 @@
  */
 
 add_task(async function test_keyword_search() {
-  let uri1 = NetUtil.newURI("http://abc/?search=%s");
-  let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
-  let uri3 = NetUtil.newURI("http://abc/?search=%s&raw=%S");
-  let uri4 = NetUtil.newURI("http://abc/?search=%s&raw=%S&mozcharset=ISO-8859-1");
-  let uri5 = NetUtil.newURI("http://def/?search=%s");
+  let uri1 = "http://abc/?search=%s";
+  let uri2 = "http://abc/?search=ThisPageIsInHistory";
+  let uri3 = "http://abc/?search=%s&raw=%S";
+  let uri4 = "http://abc/?search=%s&raw=%S&mozcharset=ISO-8859-1";
+  let uri5 = "http://def/?search=%s";
+  let uri6 = "http://ghi/?search=%s&raw=%S";
   await PlacesTestUtils.addVisits([{ uri: uri1 },
                                    { uri: uri2 },
-                                   { uri: uri3 }]);
+                                   { uri: uri3 },
+                                   { uri: uri6 }]);
   await addBookmark({ uri: uri1, title: "Keyword", keyword: "key"});
   await addBookmark({ uri: uri1, title: "Post", keyword: "post", postData: "post_search=%s"});
   await addBookmark({ uri: uri3, title: "Encoded", keyword: "encoded"});
@@ -28,6 +30,10 @@ add_task(async function test_keyword_search() {
   await addBookmark({ uri: uri2, title: "Noparam", keyword: "noparam"});
   await addBookmark({ uri: uri2, title: "Noparam-Post", keyword: "post_noparam", postData: "noparam=1"});
   await addBookmark({ uri: uri5, title: "Keyword", keyword: "key2"});
+  await addBookmark({ uri: uri6, title: "Charset-history", keyword: "charset_history"});
+
+  PlacesUtils.annotations.setPageAnnotation(Services.io.newURI(uri6),
+    PlacesUtils.CHARSET_ANNO, "ISO-8859-1", 0, PlacesUtils.annotations.EXPIRE_NEVER);
 
   info("Plain keyword query");
   await check_autocomplete({
@@ -40,7 +46,7 @@ add_task(async function test_keyword_search() {
   info("Plain keyword UC");
   await check_autocomplete({
     search: "key TERM",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"),
+    matches: [ { uri: "http://abc/?search=TERM",
                  title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
@@ -148,6 +154,14 @@ add_task(async function test_keyword_search() {
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("keyword", {url: "http://abc/?search=fo%E9&raw=foé", input: "charset foé" }),
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+  });
+
+  info("escaping with ISO-8859-1 charset annotated in history");
+  await check_autocomplete({
+    search: "charset_history foé",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("keyword", {url: "http://ghi/?search=fo%E9&raw=foé", input: "charset_history foé" }),
+                 title: "ghi", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
   info("Bug 359809: escaping +, / and @ with default UTF-8 charset");

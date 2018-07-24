@@ -119,7 +119,7 @@ TabListComponent.prototype = {
       return;
     }
     if (where == "window") {
-      this._window.openDialog(this._window.getBrowserURL(), "_blank",
+      this._window.openDialog(this._window.AppConstants.BROWSER_CHROME_URL, "_blank",
                               "chrome,dialog=no,all", urls.join("|"));
     } else {
       let loadInBackground = where == "tabshifted";
