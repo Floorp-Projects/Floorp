@@ -19,6 +19,9 @@ export MOZ_PKG_SPECIAL=asan-reporter
 # Need this to add source information into platform.ini
 export MOZILLA_OFFICIAL=1
 
+# Sandboxing is currently not compatible with the way the ASan reporter works
+ac_add_options --disable-sandbox
+
 # Enable Telemetry
 # The channel reported by Telemetry here will be "nightly-asan" as specified
 # in the respective override pref (toolkit.telemetry.overrideUpdateChannel),
