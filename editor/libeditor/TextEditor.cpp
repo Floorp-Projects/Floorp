@@ -1114,6 +1114,8 @@ TextEditor::InsertParagraphSeparatorAsAction()
 nsresult
 TextEditor::SetText(const nsAString& aString)
 {
+  MOZ_ASSERT(aString.FindChar(static_cast<char16_t>('\r')) == kNotFound);
+
   if (NS_WARN_IF(!mRules)) {
     return NS_ERROR_NOT_INITIALIZED;
   }

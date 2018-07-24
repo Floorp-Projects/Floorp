@@ -104,28 +104,26 @@ public:
   void ResetIMETextPWBuf();
 
   /**
-   * Handles the newline characters either according to aNewLineHandling
-   * or to the default system prefs if aNewLineHandling is negative.
+   * Handles the newline characters according to the default system prefs
+   * (editor.singleLine.pasteNewlines).
+   * Each value means:
+   *   nsIPlaintextEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
+   *     replace newlines with spaces.
+   *   nsIPlaintextEditor::eNewlinesStrip (3):
+   *     remove newlines from the string.
+   *   nsIPlaintextEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
+   *     replace newlines with commas.
+   *   nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace (5):
+   *     collapse newlines and surrounding whitespace characters and
+   *     remove them from the string.
+   *   nsIPlaintextEditor::eNewlinesPasteIntact (0):
+   *     only remove the leading and trailing newlines.
+   *   nsIPlaintextEditor::eNewlinesPasteToFirst (1) or any other value:
+   *     remove the first newline and all characters following it.
    *
    * @param aString the string to be modified in place.
-   * @param aNewLineHandling determine the desired type of newline handling:
-   *        * negative values:
-   *          handle newlines according to platform defaults.
-   *        * nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
-   *          replace newlines with spaces.
-   *        * nsIPlaintextEditor::eNewlinesStrip:
-   *          remove newlines from the string.
-   *        * nsIPlaintextEditor::eNewlinesReplaceWithCommas:
-   *          replace newlines with commas.
-   *        * nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace:
-   *          collapse newlines and surrounding whitespace characters and
-   *          remove them from the string.
-   *        * nsIPlaintextEditor::eNewlinesPasteIntact:
-   *          only remove the leading and trailing newlines.
-   *        * nsIPlaintextEditor::eNewlinesPasteToFirst or any other value:
-   *          remove the first newline and all characters following it.
    */
-  static void HandleNewLines(nsString& aString, int32_t aNewLineHandling);
+  void HandleNewLines(nsString& aString);
 
   /**
    * Prepare a string buffer for being displayed as the contents of a password
