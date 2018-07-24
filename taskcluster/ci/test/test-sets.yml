@@ -391,6 +391,9 @@ android-x86-kvm-tests:
     - reftest
     - test-verify
 
+android-ccov-tests:
+    - geckoview-junit
+
 devtools-tests:
     - mochitest-devtools-chrome
 
