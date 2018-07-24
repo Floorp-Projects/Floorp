@@ -62,11 +62,11 @@ def get_type(type, calltype, iid_is=None, size_is=None):
             ret['size_is'] = size_is
         return ret
 
-    if isinstance(type, xpidl.Sequence):
-        # NB: For a Sequence<T> we pass down the iid_is to get the type of T.
+    if isinstance(type, xpidl.Array):
+        # NB: For a Array<T> we pass down the iid_is to get the type of T.
         #     This allows Arrays of InterfaceIs types to work.
         return {
-            'tag': 'TD_SEQUENCE',
+            'tag': 'TD_ARRAY',
             'element': get_type(type.type, calltype, iid_is),
         }
 
