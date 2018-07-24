@@ -88,8 +88,7 @@ reftest.Runner = class {
     let found = this.driver.findWindow([reftestWin], () => true);
     await this.driver.setWindowHandle(found, true);
 
-    this.windowUtils = reftestWin.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+    this.windowUtils = reftestWin.windowUtils;
     this.reftestWin = reftestWin;
     return reftestWin;
   }

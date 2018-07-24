@@ -57,8 +57,7 @@ function bindDOMWindowUtils(aWindow) {
   if (!aWindow)
     return undefined;
 
-  var util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+  var util = aWindow.windowUtils;
   return wrapPrivileged(util);
 }
 

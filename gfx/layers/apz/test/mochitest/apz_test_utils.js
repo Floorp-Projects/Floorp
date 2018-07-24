@@ -311,8 +311,7 @@ async function waitUntilApzStable() {
         if (!topWin) {
           topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
         }
-        var topUtils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+        var topUtils = topWin.windowUtils;
 
         var repaintDone = function() {
           Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");

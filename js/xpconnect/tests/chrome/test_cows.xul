@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
   <script type="application/javascript"><![CDATA[
 var sandbox = new Cu.Sandbox("about:blank");
 
-var test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIDOMWindowUtils);
+var test_utils = window.windowUtils;
 
 function getCOW(x) {
   if (typeof x != 'object' && typeof x != 'function')
