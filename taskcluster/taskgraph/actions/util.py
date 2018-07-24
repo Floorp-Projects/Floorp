@@ -14,7 +14,7 @@ import os
 from requests.exceptions import HTTPError
 
 from taskgraph import create
-from taskgraph.decision import write_artifact
+from taskgraph.decision import read_artifact, write_artifact
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.optimize import optimize_task_graph
 from taskgraph.util.taskcluster import get_session, find_task_id, get_artifact, list_tasks
@@ -152,3 +152,15 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
     write_artifact('to-run{}.json'.format(suffix), list(to_run))
     create.create_tasks(optimized_task_graph, label_to_taskid, params, decision_task_id)
     return label_to_taskid
+
+
+def combine_task_graph_files(suffixes):
+    """Combine task-graph-{suffix}.json files into a single task-graph.json file.
+
+    Since Chain of Trust verification requires a task-graph.json file that
+    contains all children tasks, we can combine the various task-graph-0.json
+    type files into a master task-graph.json file at the end."""
+    all = {}
+    for suffix in suffixes:
+        all.update(read_artifact('task-graph-{}.json'.format(suffix)))
+    write_artifact('task-graph.json', all)
