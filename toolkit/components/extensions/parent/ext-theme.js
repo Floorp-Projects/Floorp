@@ -7,10 +7,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
-  return Services.prefs.getBoolPref("extensions.webextensions.themes.enabled");
-});
-
 var {
   getWinUtils,
 } = ExtensionUtils;
@@ -40,17 +36,16 @@ class Theme {
    * @param {string} extension Extension that created the theme.
    * @param {Integer} windowId The windowId where the theme is applied.
    */
-  constructor(extension, windowId) {
-    // The base URI of the extension, used to resolve relative filepaths.
-    this.baseURI = extension.baseURI;
-    // Logger that will be used to show manifest warnings to the theme author.
-    this.logger = extension.logger;
-
+  constructor({extension, details, windowId}) {
     this.extension = extension;
+    this.details = details;
     this.windowId = windowId;
+
     this.lwtStyles = {
       icons: {},
     };
+
+    this.load();
   }
 
   /**
@@ -60,8 +55,8 @@ class Theme {
    * @param {Object} details Theme part of the manifest. Supported
    *   properties can be found in the schema under ThemeType.
    */
-  load(details) {
-    this.details = details;
+  load() {
+    const {details} = this;
 
     if (details.colors) {
       this.loadColors(details.colors);
@@ -178,6 +173,8 @@ class Theme {
    * @param {Object} images Dictionary mapping image properties to values.
    */
   loadImages(images) {
+    const {baseURI} = this.extension;
+
     for (let image of Object.keys(images)) {
       let val = images[image];
 
@@ -187,13 +184,13 @@ class Theme {
 
       switch (image) {
         case "additional_backgrounds": {
-          let backgroundImages = val.map(img => this.baseURI.resolve(img));
+          let backgroundImages = val.map(img => baseURI.resolve(img));
           this.lwtStyles.additionalBackgrounds = backgroundImages;
           break;
         }
         case "headerURL":
         case "theme_frame": {
-          let resolvedURL = this.baseURI.resolve(val);
+          let resolvedURL = baseURI.resolve(val);
           this.lwtStyles.headerURL = resolvedURL;
           break;
         }
@@ -207,6 +204,8 @@ class Theme {
    * @param {Object} icons Dictionary mapping icon properties to extension URLs.
    */
   loadIcons(icons) {
+    const {baseURI} = this.extension;
+
     if (!Services.prefs.getBoolPref("extensions.webextensions.themes.icons.enabled")) {
       // Return early if icons are disabled.
       return;
@@ -217,11 +216,11 @@ class Theme {
       // We also have to compare against the baseURI spec because
       // `val` might have been resolved already. Resolving "" against
       // the baseURI just produces that URI, so check for equality.
-      if (!val || val == this.baseURI.spec || !ICONS.includes(icon)) {
+      if (!val || val == baseURI.spec || !ICONS.includes(icon)) {
         continue;
       }
       let variableName = `--${icon}-icon`;
-      let resolvedURL = this.baseURI.resolve(val);
+      let resolvedURL = baseURI.resolve(val);
       this.lwtStyles.icons[variableName] = resolvedURL;
     }
   }
@@ -237,13 +236,14 @@ class Theme {
     let additionalBackgroundsCount = (this.lwtStyles.additionalBackgrounds &&
       this.lwtStyles.additionalBackgrounds.length) || 0;
     const assertValidAdditionalBackgrounds = (property, valueCount) => {
+      const {logger} = this.extension;
       if (!additionalBackgroundsCount) {
-        this.logger.warn(`The '${property}' property takes effect only when one ` +
+        logger.warn(`The '${property}' property takes effect only when one ` +
           `or more additional background images are specified using the 'additional_backgrounds' property.`);
         return false;
       }
       if (additionalBackgroundsCount !== valueCount) {
-        this.logger.warn(`The amount of values specified for '${property}' ` +
+        logger.warn(`The amount of values specified for '${property}' ` +
           `(${valueCount}) is not equal to the amount of additional background ` +
           `images (${additionalBackgroundsCount}), which may lead to unexpected results.`);
       }
@@ -312,21 +312,13 @@ class Theme {
 
 this.theme = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    if (!gThemesEnabled) {
-      // Return early if themes are disabled.
-      return;
-    }
-
     let {extension} = this;
     let {manifest} = extension;
 
-    if (!gThemesEnabled) {
-      // Return early if themes are disabled.
-      return;
-    }
-
-    defaultTheme = new Theme(extension);
-    defaultTheme.load(manifest.theme);
+    defaultTheme = new Theme({
+      extension,
+      details: manifest.theme,
+    });
   }
 
   onShutdown(reason) {
@@ -363,11 +355,6 @@ this.theme = class extends ExtensionAPI {
           return Promise.resolve(defaultTheme.details);
         },
         update: (windowId, details) => {
-          if (!gThemesEnabled) {
-            // Return early if themes are disabled.
-            return;
-          }
-
           if (windowId) {
             const browserWindow = windowTracker.getWindow(windowId, context);
             if (!browserWindow) {
@@ -375,15 +362,13 @@ this.theme = class extends ExtensionAPI {
             }
           }
 
-          let theme = new Theme(extension, windowId);
-          theme.load(details);
+          new Theme({
+            extension,
+            details,
+            windowId,
+          });
         },
         reset: (windowId) => {
-          if (!gThemesEnabled) {
-            // Return early if themes are disabled.
-            return;
-          }
-
           if (windowId) {
             const browserWindow = windowTracker.getWindow(windowId, context);
             if (!browserWindow) {

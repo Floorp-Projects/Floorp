@@ -566,9 +566,10 @@ def target_tasks_dmd(full_task_graph, parameters, graph_config):
 @_target_task('searchfox_index')
 def target_tasks_searchfox(full_task_graph, parameters, graph_config):
     """Select tasks required for indexing Firefox for Searchfox web site each day"""
-    # For now we only do Linux debug builds. Windows and Mac builds
+    # For now we only do Linux and Mac debug builds. Windows builds
     # are currently broken (bug 1418415).
-    return ['searchfox-linux64-searchfox/debug']
+    return ['searchfox-linux64-searchfox/debug',
+            'searchfox-macosx64-searchfox/debug']
 
 
 @_target_task('file_update')

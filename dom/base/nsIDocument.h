@@ -3575,6 +3575,10 @@ public:
 
   void ReportShadowDOMUsage();
 
+  // Sets flags for media autoplay telemetry.
+  void SetDocTreeHadAudibleMedia();
+  void SetDocTreeHadPlayRevoked();
+
 protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -4095,6 +4099,16 @@ protected:
   bool mReportedUseCounters: 1;
 
   bool mHasReportedShadowDOMUsage: 1;
+
+  // True if this document contained, either directly or in a subdocument,
+  // an HTMLMediaElement that played audibly. This should only be set on
+  // top level content documents.
+  bool mDocTreeHadAudibleMedia: 1;
+  // True if this document contained, either directly or in a subdocument,
+  // an HTMLMediaElement that was playing inaudibly and became audible and we
+  // paused the HTMLMediaElement because it wasn't allowed to autoplay audibly.
+  // This should only be set on top level content documents.
+  bool mDocTreeHadPlayRevoked: 1;
 
 #ifdef DEBUG
 public:

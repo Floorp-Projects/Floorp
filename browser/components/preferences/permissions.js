@@ -28,7 +28,7 @@ const permissionExceptionsL10n = {
   },
   "autoplay-media": {
     window: "permissions-exceptions-autoplay-media-window",
-    description: "permissions-exceptions-autoplay-media-desc",
+    description: "permissions-exceptions-autoplay-media-desc2",
   },
 };
 

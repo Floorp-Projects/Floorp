@@ -1169,13 +1169,11 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
     return;
   }
 
-  // We do not filter receiver reports, since the webrtc.org code for
-  // senders already has logic to ignore RRs that do not apply.
-  // TODO bug 1279153: remove SR check for reduced size RTCP
-  if (mFilter && !mFilter->FilterSenderReport(packet.data(), packet.len())) {
-    CSFLogWarn(LOGTAG, "Dropping incoming RTCP packet; filtered out");
-    return;
-  }
+  // We do not filter RTCP. This is because a compound RTCP packet can contain
+  // any collection of RTCP packets, and webrtc.org already knows how to filter
+  // out what it is interested in, and what it is not. Maybe someday we should
+  // have a TransportLayer that breaks up compound RTCP so we can filter them
+  // individually, but I doubt that will matter much.
 
   CSFLogDebug(LOGTAG, "%s received RTCP packet.", mDescription.c_str());
   IncrementRtcpPacketsReceived();

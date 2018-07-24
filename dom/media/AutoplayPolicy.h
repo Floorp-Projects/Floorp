@@ -38,6 +38,13 @@ public:
   // Returns whether a given media element is allowed to play.
   static uint32_t IsAllowedToPlay(const HTMLMediaElement& aElement);
 
+  // Returns true if a given media element would be allowed to play
+  // if block autoplay was enabled. If this returns false, it means we would
+  // either block or ask for permission.
+  // Note: this is for telemetry purposes, and doesn't check the prefs
+  // which enable/disable block autoplay. Do not use for blocking logic!
+  static bool WouldBeAllowedToPlayIfAutoplayDisabled(const HTMLMediaElement& aElement);
+
   // Returns whether a given AudioContext is allowed to play.
   static bool IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext);
 
