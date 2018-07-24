@@ -87,11 +87,6 @@ using mozilla::PodEqual;
 using mozilla::Some;
 using mozilla::Unused;
 
-typedef int8_t I8x16[16];
-typedef int16_t I16x8[8];
-typedef int32_t I32x4[4];
-typedef float F32x4[4];
-
 class Code;
 class DebugState;
 class GeneratedSourceMap;
@@ -250,13 +245,6 @@ class ExprType
           case TypeCode::I64:
           case TypeCode::F32:
           case TypeCode::F64:
-          case TypeCode::I8x16:
-          case TypeCode::I16x8:
-          case TypeCode::I32x4:
-          case TypeCode::F32x4:
-          case TypeCode::B8x16:
-          case TypeCode::B16x8:
-          case TypeCode::B32x4:
           case TypeCode::AnyRef:
           case TypeCode::Ref:
           case TypeCode::BlockVoid:
@@ -278,14 +266,6 @@ class ExprType
         F64    = uint8_t(TypeCode::F64),
         AnyRef = uint8_t(TypeCode::AnyRef),
         Ref    = uint8_t(TypeCode::Ref),
-
-        I8x16  = uint8_t(TypeCode::I8x16),
-        I16x8  = uint8_t(TypeCode::I16x8),
-        I32x4  = uint8_t(TypeCode::I32x4),
-        F32x4  = uint8_t(TypeCode::F32x4),
-        B8x16  = uint8_t(TypeCode::B8x16),
-        B16x8  = uint8_t(TypeCode::B16x8),
-        B32x4  = uint8_t(TypeCode::B32x4),
 
         Limit  = uint8_t(TypeCode::Limit)
     };
@@ -371,13 +351,6 @@ class ValType
           case TypeCode::I64:
           case TypeCode::F32:
           case TypeCode::F64:
-          case TypeCode::I8x16:
-          case TypeCode::I16x8:
-          case TypeCode::I32x4:
-          case TypeCode::F32x4:
-          case TypeCode::B8x16:
-          case TypeCode::B16x8:
-          case TypeCode::B32x4:
           case TypeCode::AnyRef:
           case TypeCode::Ref:
             return true;
@@ -396,14 +369,6 @@ class ValType
 
         AnyRef = uint8_t(TypeCode::AnyRef),
         Ref    = uint8_t(TypeCode::Ref),
-
-        I8x16  = uint8_t(TypeCode::I8x16),
-        I16x8  = uint8_t(TypeCode::I16x8),
-        I32x4  = uint8_t(TypeCode::I32x4),
-        F32x4  = uint8_t(TypeCode::F32x4),
-        B8x16  = uint8_t(TypeCode::B8x16),
-        B16x8  = uint8_t(TypeCode::B16x8),
-        B32x4  = uint8_t(TypeCode::B32x4)
     };
 
     ValType() : tc_(InvalidPackedTypeCode()) {}
@@ -497,102 +462,11 @@ SizeOf(ValType vt)
       case ValType::I64:
       case ValType::F64:
         return 8;
-      case ValType::I8x16:
-      case ValType::I16x8:
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B8x16:
-      case ValType::B16x8:
-      case ValType::B32x4:
-        return 16;
       case ValType::AnyRef:
       case ValType::Ref:
         return sizeof(intptr_t);
     }
     MOZ_CRASH("Invalid ValType");
-}
-
-static inline bool
-IsSimdType(ValType vt)
-{
-    switch (vt.code()) {
-      case ValType::I8x16:
-      case ValType::I16x8:
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B8x16:
-      case ValType::B16x8:
-      case ValType::B32x4:
-        return true;
-      default:
-        return false;
-    }
-}
-
-static inline uint32_t
-NumSimdElements(ValType vt)
-{
-    MOZ_ASSERT(IsSimdType(vt));
-    switch (vt.code()) {
-      case ValType::I8x16:
-      case ValType::B8x16:
-        return 16;
-      case ValType::I16x8:
-      case ValType::B16x8:
-        return 8;
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B32x4:
-        return 4;
-     default:
-        MOZ_CRASH("Unhandled SIMD type");
-    }
-}
-
-static inline ValType
-SimdElementType(ValType vt)
-{
-    MOZ_ASSERT(IsSimdType(vt));
-    switch (vt.code()) {
-      case ValType::I8x16:
-      case ValType::I16x8:
-      case ValType::I32x4:
-        return ValType::I32;
-      case ValType::F32x4:
-        return ValType::F32;
-      case ValType::B8x16:
-      case ValType::B16x8:
-      case ValType::B32x4:
-        return ValType::I32;
-     default:
-        MOZ_CRASH("Unhandled SIMD type");
-    }
-}
-
-static inline ValType
-SimdBoolType(ValType vt)
-{
-    MOZ_ASSERT(IsSimdType(vt));
-    switch (vt.code()) {
-      case ValType::I8x16:
-      case ValType::B8x16:
-        return ValType::B8x16;
-      case ValType::I16x8:
-      case ValType::B16x8:
-        return ValType::B16x8;
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B32x4:
-        return ValType::B32x4;
-     default:
-        MOZ_CRASH("Unhandled SIMD type");
-    }
-}
-
-static inline bool
-IsSimdBoolType(ValType vt)
-{
-    return vt == ValType::B8x16 || vt == ValType::B16x8 || vt == ValType::B32x4;
 }
 
 static inline jit::MIRType
@@ -605,13 +479,6 @@ ToMIRType(ValType vt)
       case ValType::F64:    return jit::MIRType::Double;
       case ValType::Ref:    return jit::MIRType::Pointer;
       case ValType::AnyRef: return jit::MIRType::Pointer;
-      case ValType::I8x16:  return jit::MIRType::Int8x16;
-      case ValType::I16x8:  return jit::MIRType::Int16x8;
-      case ValType::I32x4:  return jit::MIRType::Int32x4;
-      case ValType::F32x4:  return jit::MIRType::Float32x4;
-      case ValType::B8x16:  return jit::MIRType::Bool8x16;
-      case ValType::B16x8:  return jit::MIRType::Bool16x8;
-      case ValType::B32x4:  return jit::MIRType::Bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -642,12 +509,6 @@ NonVoidToValType(ExprType et)
     return ValType(et);
 }
 
-static inline bool
-IsSimdType(ExprType et)
-{
-    return IsVoid(et) ? false : IsSimdType(ValType(et));
-}
-
 static inline jit::MIRType
 ToMIRType(ExprType et)
 {
@@ -665,13 +526,6 @@ ToCString(ExprType type)
       case ExprType::F64:     return "f64";
       case ExprType::AnyRef:  return "anyref";
       case ExprType::Ref:     return "ref";
-      case ExprType::I8x16:   return "i8x16";
-      case ExprType::I16x8:   return "i16x8";
-      case ExprType::I32x4:   return "i32x4";
-      case ExprType::F32x4:   return "f32x4";
-      case ExprType::B8x16:   return "b8x16";
-      case ExprType::B16x8:   return "b16x8";
-      case ExprType::B32x4:   return "b32x4";
       case ExprType::Limit:;
     }
     MOZ_CRASH("bad expression type");
@@ -782,10 +636,6 @@ class LitVal
         uint64_t  i64_;
         float     f32_;
         double    f64_;
-        I8x16     i8x16_;
-        I16x8     i16x8_;
-        I32x4     i32x4_;
-        F32x4     f32x4_;
         JSObject* ptr_;
     } u;
 
@@ -804,24 +654,7 @@ class LitVal
         u.ptr_ = ptr;
     }
 
-    explicit LitVal(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
-        MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
-        memcpy(u.i8x16_, i8x16, sizeof(u.i8x16_));
-    }
-    explicit LitVal(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
-        MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
-        memcpy(u.i16x8_, i16x8, sizeof(u.i16x8_));
-    }
-    explicit LitVal(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
-        MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
-        memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
-    }
-    explicit LitVal(const F32x4& f32x4) : type_(ValType::F32x4) {
-        memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_));
-    }
-
     ValType type() const { return type_; }
-    bool isSimd() const { return IsSimdType(type()); }
     static constexpr size_t sizeofLargestValue() { return sizeof(u); }
 
     uint32_t i32() const { MOZ_ASSERT(type_ == ValType::I32); return u.i32_; }
@@ -829,25 +662,6 @@ class LitVal
     const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
     JSObject* ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
-
-    const I8x16& i8x16() const {
-        MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
-        return u.i8x16_;
-    }
-    const I16x8& i16x8() const {
-        MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
-        return u.i16x8_;
-    }
-    const I32x4& i32x4() const {
-        MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
-        return u.i32x4_;
-    }
-    const F32x4& f32x4() const {
-        MOZ_ASSERT(type_ == ValType::F32x4);
-        return u.f32x4_;
-    }
-    // To be used only by Val.
-    const void* rawSimd() const { return &u.i32x4_; }
 };
 
 typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
@@ -1480,7 +1294,7 @@ enum class Trap
     InvalidConversionToInteger,
     // Integer division by zero.
     IntegerDivideByZero,
-    // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
+    // Out of bounds on wasm memory accesses and asm.js atomic accesses.
     OutOfBounds,
     // Unaligned on wasm atomic accesses; also used for non-standard ARM
     // unaligned access faults.
@@ -1489,10 +1303,6 @@ enum class Trap
     IndirectCallToNull,
     // call_indirect signature mismatch.
     IndirectCallBadSig,
-
-    // (asm.js only) SIMD float to int conversion failed because the input
-    // wasn't in bounds.
-    ImpreciseSimdConversion,
 
     // The internal stack space was exhausted. For compatibility, this throws
     // the same over-recursed error as JS.
@@ -1636,7 +1446,7 @@ class CodeRange
         TrapExit,          // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-        OutOfBoundsExit,   // stub jumped to by non-standard asm.js SIMD/Atomics
+        OutOfBoundsExit,   // stub jumped to by non-standard asm.js Atomics
         UnalignedExit,     // stub jumped to by wasm Atomics and non-standard
                            // ARM unaligned trap
         Throw              // special stack-unwinding stub jumped to by other stubs

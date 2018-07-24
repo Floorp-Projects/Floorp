@@ -848,66 +848,6 @@ CodeGenerator::visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayEle
 }
 
 void
-CodeGenerator::visitSimdSplatX4(LSimdSplatX4* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimd128Int(LSimd128Int* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimd128Float(LSimd128Float* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdExtractElementI(LSimdExtractElementI* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdExtractElementF(LSimdExtractElementF* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryBitwise(LSimdBinaryBitwise* lir)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitAddI64(LAddI64*)
 {
     MOZ_CRASH("NYI");
@@ -1010,12 +950,6 @@ CodeGenerator::visitRotateI64(LRotateI64*)
 }
 
 void
-CodeGenerator::visitSimdShift(LSimdShift*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitWasmStore(LWasmStore*)
 {
     MOZ_CRASH("NYI");
@@ -1034,61 +968,13 @@ CodeGenerator::visitNearbyIntF(LNearbyIntF*)
 }
 
 void
-CodeGenerator::visitSimdSelect(LSimdSelect*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitWasmSelect(LWasmSelect*)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-CodeGenerator::visitSimdAllTrue(LSimdAllTrue*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdAnyTrue(LSimdAnyTrue*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdShuffle(LSimdShuffle*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdSplatX8(LSimdSplatX8*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitWasmLoadI64(LWasmLoadI64*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdSplatX16(LSimdSplatX16*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdSwizzleF(LSimdSwizzleF*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdSwizzleI(LSimdSwizzleI*)
 {
     MOZ_CRASH("NYI");
 }
@@ -1101,12 +987,6 @@ CodeGenerator::visitWasmStoreI64(LWasmStoreI64*)
 
 void
 CodeGenerator::visitMemoryBarrier(LMemoryBarrier*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdShuffleX4(LSimdShuffleX4*)
 {
     MOZ_CRASH("NYI");
 }
@@ -1160,73 +1040,7 @@ CodeGenerator::visitWrapInt64ToInt32(LWrapInt64ToInt32*)
 }
 
 void
-CodeGenerator::visitSimdBinaryCompIx8(LSimdBinaryCompIx8*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdUnaryArithFx4(LSimdUnaryArithFx4*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdUnaryArithIx4(LSimdUnaryArithIx4*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdUnaryArithIx8(LSimdUnaryArithIx8*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitExtendInt32ToInt64(LExtendInt32ToInt64*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryArithIx8(LSimdBinaryArithIx8*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryCompIx16(LSimdBinaryCompIx16*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdInsertElementF(LSimdInsertElementF*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdInsertElementI(LSimdInsertElementI*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdUnaryArithIx16(LSimdUnaryArithIx16*)
 {
     MOZ_CRASH("NYI");
 }
@@ -1238,61 +1052,13 @@ CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch*)
 }
 
 void
-CodeGenerator::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdBinaryArithIx16(LSimdBinaryArithIx16*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdExtractElementB(LSimdExtractElementB*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdGeneralShuffleF(LSimdGeneralShuffleF*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdGeneralShuffleI(LSimdGeneralShuffleI*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdReinterpretCast(LSimdReinterpretCast*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32*)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-CodeGenerator::visitSimdBinarySaturating(LSimdBinarySaturating*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGenerator::visitWasmReinterpretToI64(LWasmReinterpretToI64*)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGenerator::visitSimdExtractElementU2D(LSimdExtractElementU2D*)
 {
     MOZ_CRASH("NYI");
 }

@@ -409,17 +409,6 @@ DecodeValType(Decoder& d, ModuleKind kind, uint32_t numTypes, HasGcTypes gcTypes
         *type = ValType(ValType::Code(uncheckedCode), uncheckedRefTypeIndex);
         return true;
       }
-      case uint8_t(ValType::I8x16):
-      case uint8_t(ValType::I16x8):
-      case uint8_t(ValType::I32x4):
-      case uint8_t(ValType::F32x4):
-      case uint8_t(ValType::B8x16):
-      case uint8_t(ValType::B16x8):
-      case uint8_t(ValType::B32x4):
-        if (kind != ModuleKind::AsmJS)
-            return d.fail("bad type");
-        *type = ValType(ValType::Code(uncheckedCode));
-        return true;
       default:
         break;
     }

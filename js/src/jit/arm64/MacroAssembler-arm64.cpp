@@ -319,10 +319,6 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
-      case Scalar::Float32x4:
-      case Scalar::Int32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
         MOZ_CRASH("unexpected array type");
     }
 
@@ -371,10 +367,6 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
       case Scalar::Float64:
         Str(SelectFPReg(valany, val64, 64), dstAddr);
         break;
-      case Scalar::Float32x4:
-      case Scalar::Int32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");

@@ -663,25 +663,6 @@ BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc, const Class* cl
     return nullptr;
 }
 
-JSObject*
-BaselineInspector::getTemplateObjectForSimdCtor(jsbytecode* pc, SimdType simdType)
-{
-    if (!hasBaselineScript())
-        return nullptr;
-
-    const ICEntry& entry = icEntryFromPC(pc);
-    for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-        if (stub->isCall_ClassHook() && stub->toCall_ClassHook()->clasp() == &SimdTypeDescr::class_) {
-            JSObject* templateObj = stub->toCall_ClassHook()->templateObject();
-            InlineTypedObject& typedObj = templateObj->as<InlineTypedObject>();
-            if (typedObj.typeDescr().as<SimdTypeDescr>().type() == simdType)
-                return templateObj;
-        }
-    }
-
-    return nullptr;
-}
-
 LexicalEnvironmentObject*
 BaselineInspector::templateNamedLambdaObject()
 {

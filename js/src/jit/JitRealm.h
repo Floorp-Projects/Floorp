@@ -507,10 +507,6 @@ class JitRealm
 
     mozilla::EnumeratedArray<StubIndex, StubIndex::Count, ReadBarrieredJitCode> stubs_;
 
-    // The same approach is taken for SIMD template objects.
-
-    mozilla::EnumeratedArray<SimdType, SimdType::Count, ReadBarrieredObject> simdTemplateObjects_;
-
     JitCode* generateStringConcatStub(JSContext* cx);
     JitCode* generateRegExpMatcherStub(JSContext* cx);
     JitCode* generateRegExpSearcherStub(JSContext* cx);
@@ -523,23 +519,6 @@ class JitRealm
     }
 
   public:
-    JSObject* getSimdTemplateObjectFor(JSContext* cx, Handle<SimdTypeDescr*> descr) {
-        ReadBarrieredObject& tpl = simdTemplateObjects_[descr->type()];
-        if (!tpl)
-            tpl.set(TypedObject::createZeroed(cx, descr, gc::TenuredHeap));
-        return tpl.get();
-    }
-
-    JSObject* maybeGetSimdTemplateObjectFor(SimdType type) const {
-        // This function is used by Eager Simd Unbox phase which can run
-        // off-thread, so we cannot use the usual read barrier. For more
-        // information, see the comment above
-        // CodeGenerator::simdRefreshTemplatesDuringLink_.
-
-        MOZ_ASSERT(CurrentThreadIsIonCompiling());
-        return simdTemplateObjects_[type].unbarrieredGet();
-    }
-
     JitCode* getStubCode(uint32_t key) {
         ICStubCodeMap::Ptr p = stubCodes_->lookup(key);
         if (p)
@@ -620,15 +599,13 @@ class JitRealm
         return stubs_[RegExpTester];
     }
 
-    // Perform the necessary read barriers on stubs and SIMD template object
-    // described by the bitmasks passed in. This function can only be called
-    // from the main thread.
+    // Perform the necessary read barriers on stubs described by the bitmasks
+    // passed in. This function can only be called from the main thread.
     //
-    // The stub and template object pointers must still be valid by the time
-    // these methods are called. This is arranged by cancelling off-thread Ion
-    // compilation at the start of GC and at the start of sweeping.
+    // The stub pointers must still be valid by the time these methods are
+    // called. This is arranged by cancelling off-thread Ion compilation at the
+    // start of GC and at the start of sweeping.
     void performStubReadBarriers(uint32_t stubsToBarrier) const;
-    void performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const;
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
