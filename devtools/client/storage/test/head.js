@@ -1003,3 +1003,21 @@ async function performAdd(store) {
 
   is(rowId, value, `Row '${rowId}' was successfully added.`);
 }
+
+function checkCellLength(len) {
+  const cells = gPanelWindow.document.querySelectorAll("#name .table-widget-cell");
+  const msg = `Table should initially display ${len} items`;
+
+  is(cells.length, len, msg);
+}
+
+async function scroll() {
+  const $ = id => gPanelWindow.document.querySelector(id);
+  const table = $("#storage-table .table-widget-body");
+  const cell = $("#name .table-widget-cell");
+  const cellHeight = cell.getBoundingClientRect().height;
+
+  const onStoresUpdate = gUI.once("store-objects-updated");
+  table.scrollTop += cellHeight * 50;
+  await onStoresUpdate;
+}
