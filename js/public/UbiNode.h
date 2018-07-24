@@ -1110,7 +1110,9 @@ class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcrete<JSObject> {
     explicit Concrete(JSObject* ptr) : TracerConcrete<JSObject>(ptr) { }
 
   public:
-    static void construct(void* storage, JSObject* ptr);
+    static void construct(void* storage, JSObject* ptr) {
+        new (storage) Concrete(ptr);
+    }
 
     JS::Compartment* compartment() const override;
     JS::Realm* realm() const override;
@@ -1163,15 +1165,6 @@ class JS_PUBLIC_API(Concrete<void>) : public Base {
     static void construct(void* storage, void* ptr) { new (storage) Concrete(ptr); }
 };
 
-// The |callback| callback is much like the |Concrete<T>::construct| method: a call to
-// |callback| should construct an instance of the most appropriate JS::ubi::Base subclass
-// for |obj| in |storage|. The callback may assume that
-// |obj->getClass()->isDOMClass()|, and that |storage| refers to the
-// sizeof(JS::ubi::Base) bytes of space that all ubi::Base implementations should
-// require.
-
-// Set |cx|'s runtime hook for constructing ubi::Nodes for DOM classes to |callback|.
-void SetConstructUbiNodeForDOMObjectCallback(JSContext* cx, void (*callback)(void*, JSObject*));
 
 } // namespace ubi
 } // namespace JS
