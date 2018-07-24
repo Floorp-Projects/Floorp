@@ -77,8 +77,9 @@ var database_check = async function() {
   Assert.equal(bookmarkNode.dateAdded, 1177375336000000);
   Assert.equal(bookmarkNode.lastModified, 1177375423000000);
 
-  Assert.equal((await PlacesUtils.getCharsetForURI(NetUtil.newURI(bookmarkNode.uri))),
-               "ISO-8859-1");
+  let pageInfo = await PlacesUtils.history.fetch(bookmarkNode.uri, {includeAnnotations: true});
+  Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), "ISO-8859-1",
+    "Should have the correct charset");
 
   // clean up
   folderNode.containerOpen = false;

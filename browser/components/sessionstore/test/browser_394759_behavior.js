@@ -27,7 +27,7 @@ function testWindows(windowsToOpen, expectedResults) {
       let url = "http://example.com/?window=" + windowsToOpen.length;
 
       let openWindowPromise = BrowserTestUtils.waitForNewWindow({url});
-      openDialog(getBrowserURL(), "", features, url);
+      openDialog(AppConstants.BROWSER_CHROME_URL, "", features, url);
       let win = await openWindowPromise;
       await BrowserTestUtils.closeWindow(win);
     }

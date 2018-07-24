@@ -149,7 +149,7 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
             transformed_manifest = transform_platform(_manifest, self.config['platform'])
             self._tooltool_fetch(transformed_manifest)
 
-        # we use one pageset for all platforms (pageset was recorded on win10)
+        # we use one pageset for all platforms
         LOG.info("downloading mitmproxy pageset")
         _manifest = os.path.join(here, self.config['playback_pageset_manifest'])
         transformed_manifest = transform_platform(_manifest, self.config['platform'])

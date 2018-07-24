@@ -16,7 +16,6 @@
       "matches": ["*://*.amazon.com/*",
                   "*://*.facebook.com/*",
                   "*://*.google.com/*",
-                  "*://*.google.ca/*",
                   "*://*.youtube.com/*"],
       "js": ["measure.js"]
     },

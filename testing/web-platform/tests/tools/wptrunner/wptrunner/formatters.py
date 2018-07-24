@@ -76,3 +76,11 @@ class WptreportFormatter(BaseFormatter):
             "min": data["min_expected"],
             "max": data["max_expected"]
         }
+
+    def lsan_leak(self, data):
+        if "lsan_leaks" not in self.results:
+            self.results["lsan_leaks"] = []
+        lsan_leaks = self.results["lsan_leaks"]
+        lsan_leaks.append({"frames": data["frames"],
+                           "scope": data["scope"],
+                           "allowed_match": data.get("allowed_match")})

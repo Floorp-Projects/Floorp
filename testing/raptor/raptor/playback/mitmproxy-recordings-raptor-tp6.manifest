@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "mitmproxy-recordings-raptor-tp6.zip",
+        "size": 8767174,
+        "digest": "3343f54b6c727a2061534872888da4e3aa647e81903c675dc318c717ed0c93f6ce4e2b98c66eb4128376cf8507590531283c95f3951259607edaaae28944d9a5",
+        "algorithm": "sha512",
+        "unpack": true
+    }
+]

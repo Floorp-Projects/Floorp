@@ -121,7 +121,6 @@ NS_IMPL_RELEASE_INHERITED(TextEditor, EditorBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
-  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
 
@@ -1836,61 +1835,65 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
   return encoder->EncodeToString(aOutputString);
 }
 
-NS_IMETHODIMP
-TextEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
+nsresult
+TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
 {
-  nsresult rv = InsertTextAsAction(aStringToInsert);
+  MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
+             aClipboardType == nsIClipboard::kSelectionClipboard);
+
+  // Get Clipboard Service
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextEditor::PasteAsQuotation(int32_t aSelectionType)
-{
-  // Get Clipboard Service
-  nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareTransferable(getter_AddRefs(trans));
-  if (NS_SUCCEEDED(rv) && trans) {
-    // Get the Data from the clipboard
-    clipboard->GetData(trans, aSelectionType);
-
-    // Now we ask the transferable for the data
-    // it still owns the data, we just have a pointer to it.
-    // If it can't support a "text" output of the data the call will fail
-    nsCOMPtr<nsISupports> genericDataObj;
-    uint32_t len;
-    nsAutoCString flav;
-    rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj),
-                                   &len);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (flav.EqualsLiteral(kUnicodeMime) ||
-        flav.EqualsLiteral(kMozTextInternal)) {
-      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-      if (textDataObj && len > 0) {
-        nsAutoString stuffToPaste;
-        textDataObj->GetData ( stuffToPaste );
-        AutoPlaceholderBatch beginBatching(this);
-        rv = InsertAsQuotation(stuffToPaste, 0);
-      }
-    }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (!trans) {
+    return NS_OK;
   }
 
-  return rv;
+  // Get the Data from the clipboard
+  clipboard->GetData(trans, aClipboardType);
+
+  // Now we ask the transferable for the data
+  // it still owns the data, we just have a pointer to it.
+  // If it can't support a "text" output of the data the call will fail
+  nsCOMPtr<nsISupports> genericDataObj;
+  uint32_t len;
+  nsAutoCString flav;
+  rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj),
+                                 &len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!flav.EqualsLiteral(kUnicodeMime) &&
+      !flav.EqualsLiteral(kMozTextInternal)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
+  if (textDataObj && len > 0) {
+    nsAutoString stuffToPaste;
+    textDataObj->GetData ( stuffToPaste );
+    AutoPlaceholderBatch beginBatching(this);
+    rv = InsertWithQuotationsAsSubAction(stuffToPaste);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
-                              nsINode** aNodeInserted)
+nsresult
+TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -1898,7 +1901,9 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   // Let the citer quote it for us:
   nsString quotedStuff;
   nsresult rv = InternetCiter::GetCiteString(aQuotedText, quotedStuff);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
@@ -1906,16 +1911,18 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
     quotedStuff.Append(char16_t('\n'));
   }
 
-  // get selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertText,
                                       nsIEditor::eNext);
 
-  // give rules a chance to handle or cancel
+  // XXX This WillDoAction() usage is hacky.  If it returns as handled,
+  //     this method cannot work as expected.  So, this should have specific
+  //     sub-action rather than using eInsertElement.
   EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
@@ -1925,26 +1932,16 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   if (cancel) {
     return NS_OK; // Rules canceled the operation.
   }
+  MOZ_ASSERT(handled, "WillDoAction() shouldn't handle in this case");
   if (!handled) {
+    // TODO: Use InsertTextAsSubAction() when bug 1467796 is fixed.
     rv = InsertTextAsAction(quotedStuff);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert quoted text");
-
-    // XXX Should set *aNodeInserted to the first node inserted
-    if (aNodeInserted && NS_SUCCEEDED(rv)) {
-      *aNodeInserted = nullptr;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   // XXX Why don't we call TextEditRules::DidDoAction()?
-  return rv;
-}
-
-NS_IMETHODIMP
-TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
-                                   const nsAString& aCitation,
-                                   bool aInsertHTML,
-                                   nsINode** aNodeInserted)
-{
-  return InsertAsQuotation(aQuotedText, aNodeInserted);
+  return NS_OK;
 }
 
 nsresult
@@ -1962,51 +1959,6 @@ TextEditor::SharedOutputString(uint32_t aFlags,
   }
   // If the selection isn't collapsed, we'll use the whole document.
   return ComputeValueInternal(NS_LITERAL_STRING("text/plain"), aFlags, aResult);
-}
-
-NS_IMETHODIMP
-TextEditor::Rewrap(bool aRespectNewlines)
-{
-  // Rewrap makes no sense if there's no wrap column; default to 72.
-  int32_t wrapWidth = WrapWidth();
-  if (wrapWidth <= 0) {
-    wrapWidth = 72;
-  }
-
-  nsAutoString current;
-  bool isCollapsed;
-  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
-                                   nsIDocumentEncoder::OutputLFLineBreak,
-                                   &isCollapsed, current);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsString wrapped;
-  uint32_t firstLineOffset = 0;   // XXX need to reset this if there is a selection
-  rv = InternetCiter::Rewrap(current, wrapWidth, firstLineOffset,
-                             aRespectNewlines, wrapped);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (isCollapsed) {
-    DebugOnly<nsresult> rv = SelectAllInternal();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),  "Failed to select all text");
-  }
-
-  return InsertTextWithQuotations(wrapped);
-}
-
-NS_IMETHODIMP
-TextEditor::GetEmbeddedObjects(nsIArray** aNodeList)
-{
-  if (NS_WARN_IF(!aNodeList)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aNodeList = nullptr;
-  return NS_OK;
 }
 
 void

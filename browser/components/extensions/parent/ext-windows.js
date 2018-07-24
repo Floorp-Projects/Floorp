@@ -197,7 +197,7 @@ this.windows = class extends ExtensionAPI {
             allowScriptsToClose = typeof url === "string" && url.startsWith("moz-extension://");
           }
 
-          let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
+          let window = Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank",
                                               features.join(","), args);
 
           let win = windowManager.getWrapper(window);

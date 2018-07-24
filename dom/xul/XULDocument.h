@@ -165,8 +165,6 @@ public:
                                  const nsAString& aAttr, ErrorResult& aRv);
     void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                                     const nsAString& aAttr);
-    void Persist(const nsAString& aId, const nsAString& aAttr,
-                 ErrorResult& aRv);
     using nsDocument::GetBoxObjectFor;
 
 protected:
@@ -216,18 +214,10 @@ protected:
 
     static LazyLogModule gXULLog;
 
-    nsresult
+    void
     Persist(mozilla::dom::Element* aElement,
             int32_t aNameSpaceID,
             nsAtom* aAttribute);
-    // Just like Persist but ignores the return value so we can use it
-    // as a runnable method.
-    void DoPersist(mozilla::dom::Element* aElement,
-                   int32_t aNameSpaceID,
-                   nsAtom* aAttribute)
-    {
-        Persist(aElement, aNameSpaceID, aAttribute);
-    }
 
     virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 

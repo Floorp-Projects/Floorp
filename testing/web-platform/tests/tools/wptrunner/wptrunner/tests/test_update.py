@@ -1,3 +1,4 @@
+import json
 import mock
 import os
 import sys
@@ -38,12 +39,15 @@ item_classes = {"testharness": manifest_item.TestharnessTest,
 
 
 def update(tests, *logs):
-    updater = create_updater(tests)
+    id_test_map, updater = create_updater(tests)
     for log in logs:
         log = create_log(log)
         updater.update_from_log(log)
 
-    return metadata.coalesce_results(updater.id_test_map, False)
+    return list(metadata.update_results(id_test_map,
+                                        ["debug", "os", "version", "processor", "bits"],
+                                        ["debug"],
+                                        False))
 
 
 def create_updater(tests, url_base="/", **kwargs):
@@ -54,25 +58,32 @@ def create_updater(tests, url_base="/", **kwargs):
             "tests_path": "."}
     }
     for test_path, test_ids, test_type, manifest_str in tests:
+        tests = list(m.iterpath(test_path))
         if isinstance(test_ids, (str, unicode)):
             test_ids = [test_ids]
-        expected = manifestupdate.compile(BytesIO(manifest_str), test_path, url_base)
+        test_data = metadata.TestFileData(m, None, test_path, tests)
+        test_data._expected = manifestupdate.compile(BytesIO(manifest_str),
+                                                     test_path,
+                                                     url_base)
         for test_id in test_ids:
-            id_test_map[test_id] = metadata.TestItem(m, expected)
+            id_test_map[test_id] = test_data
 
-    return metadata.ExpectedUpdater(test_manifests, id_test_map, **kwargs)
+    return id_test_map, metadata.ExpectedUpdater(test_manifests, id_test_map, **kwargs)
 
 
 def create_log(entries):
-    logger = structuredlog.StructuredLogger("expected_test")
     data = BytesIO()
-    handler = handlers.StreamHandler(data, formatters.JSONFormatter())
-    logger.add_handler(handler)
+    if isinstance(entries, list):
+        logger = structuredlog.StructuredLogger("expected_test")
+        handler = handlers.StreamHandler(data, formatters.JSONFormatter())
+        logger.add_handler(handler)
 
-    for item in entries:
-        action, kwargs = item
-        getattr(logger, action)(**kwargs)
-    logger.remove_handler(handler)
+        for item in entries:
+            action, kwargs = item
+            getattr(logger, action)(**kwargs)
+        logger.remove_handler(handler)
+    else:
+        json.dump(entries, data)
     data.seek(0)
     return data
 
@@ -94,7 +105,7 @@ def create_test_manifest(tests, url_base="/"):
 
 
 def test_update_0():
-    tests = [("path/to/test.htm.ini", ["/path/to/test.htm"], "testharness",
+    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness",
               """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -107,15 +118,15 @@ def test_update_0():
                      ("test_end", {"test": "/path/to/test.htm",
                                    "status": "OK"})])
 
-    id_test_map = update(tests, log)
+    updated = update(tests, log)
 
-    assert len(id_test_map) == 1
-    assert id_test_map.popitem()[1].expected.is_empty
+    assert len(updated) == 1
+    assert updated[0][1].is_empty
 
 
 def test_update_1():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness",
+    tests = [("path/to/test.htm", [test_id], "testharness",
               """[test.htm]
   [test1]
     expected: ERROR""")]
@@ -128,16 +139,35 @@ def test_update_1():
                      ("test_end", {"test": test_id,
                                    "status": "OK"})])
 
-    id_test_map = update(tests, log)
+    updated = update(tests, log)
 
-    new_manifest = id_test_map.popitem()[1].expected
+    new_manifest = updated[0][1]
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get("expected") == "FAIL"
 
 
+def test_skip_0():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: FAIL""")]
+
+    log = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "FAIL",
+                                      "expected": "FAIL"}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests, log)
+    assert not updated
+
+
 def test_new_subtest():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
 
@@ -152,8 +182,8 @@ def test_new_subtest():
                                       "expected": "PASS"}),
                      ("test_end", {"test": test_id,
                                    "status": "OK"})])
-    id_test_map = update(tests, log)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log)
+    new_manifest = updated[0][1]
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get("expected") == "FAIL"
     assert new_manifest.get_test(test_id).children[1].get("expected") == "FAIL"
@@ -161,7 +191,7 @@ def test_new_subtest():
 
 def test_update_multiple_0():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
 
@@ -183,8 +213,8 @@ def test_update_multiple_0():
                                      "status": "OK"})],
                        run_info={"debug": False, "os": "linux"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
@@ -195,7 +225,7 @@ def test_update_multiple_0():
 
 def test_update_multiple_1():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
 
@@ -217,8 +247,8 @@ def test_update_multiple_1():
                                      "status": "OK"})],
                       run_info={"debug": False, "os": "linux"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
@@ -231,7 +261,7 @@ def test_update_multiple_1():
 
 def test_update_multiple_2():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
 
@@ -253,8 +283,8 @@ def test_update_multiple_2():
                                      "status": "OK"})],
                       run_info={"debug": True, "os": "osx"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
@@ -265,7 +295,7 @@ def test_update_multiple_2():
 
 def test_update_multiple_3():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
       if debug: FAIL
@@ -289,8 +319,8 @@ def test_update_multiple_3():
                                      "status": "OK"})],
                       run_info={"debug": True, "os": "osx"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
@@ -301,7 +331,7 @@ def test_update_multiple_3():
 
 def test_update_ignore_existing():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
       if debug: TIMEOUT
@@ -325,8 +355,8 @@ def test_update_ignore_existing():
                                      "status": "OK"})],
                       run_info={"debug": True, "os": "windows"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
@@ -337,7 +367,7 @@ def test_update_ignore_existing():
 
 def test_update_assertion_count_0():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
 """)]
@@ -350,8 +380,8 @@ def test_update_assertion_count_0():
                        ("test_end", {"test": test_id,
                                      "status": "OK"})])
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).get("max-asserts") == 7
@@ -360,7 +390,7 @@ def test_update_assertion_count_0():
 
 def test_update_assertion_count_1():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
 """)]
@@ -373,8 +403,8 @@ def test_update_assertion_count_1():
                        ("test_end", {"test": test_id,
                                      "status": "OK"})])
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).get("max-asserts") == 4
@@ -383,7 +413,7 @@ def test_update_assertion_count_1():
 
 def test_update_assertion_count_2():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
 """)]
@@ -396,17 +426,13 @@ def test_update_assertion_count_2():
                        ("test_end", {"test": test_id,
                                      "status": "OK"})])
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map.popitem()[1].expected
-
-    assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).get("max-asserts") == 4
-    assert new_manifest.get_test(test_id).get("min-asserts") == 2
+    updated = update(tests, log_0)
+    assert not updated
 
 
 def test_update_assertion_count_3():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
 """)]
@@ -429,8 +455,8 @@ def test_update_assertion_count_3():
                                      "status": "OK"})],
                       run_info={"os": "linux"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).get("max-asserts") == 8
@@ -439,7 +465,7 @@ def test_update_assertion_count_3():
 
 def test_update_assertion_count_4():
     test_id = "/path/to/test.htm"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", """[test.htm]""")]
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]""")]
 
     log_0 = suite_log([("test_start", {"test": test_id}),
                        ("assertion_count", {"test": test_id,
@@ -459,8 +485,8 @@ def test_update_assertion_count_4():
                                      "status": "OK"})],
                       run_info={"os": "linux"})
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map.popitem()[1].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).get("max-asserts") == "8"
@@ -470,15 +496,15 @@ def test_update_assertion_count_4():
 def test_update_lsan_0():
     test_id = "/path/to/test.htm"
     dir_id = "path/to/__dir__"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", ""),
-             ("path/to/__dir__.ini", [dir_id], None, "")]
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, "")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
                                       "frames": ["foo", "bar"]})])
 
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map[dir_id].expected
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get("lsan-allowed") == ["foo"]
@@ -487,8 +513,8 @@ def test_update_lsan_0():
 def test_update_lsan_1():
     test_id = "/path/to/test.htm"
     dir_id = "path/to/__dir__"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", ""),
-             ("path/to/__dir__.ini", [dir_id], None, """
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, """
 lsan-allowed: [foo]""")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
@@ -497,8 +523,8 @@ lsan-allowed: [foo]""")]
                                       "frames": ["baz", "foobar"]})])
 
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map[dir_id].expected
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get("lsan-allowed") == ["baz", "foo"]
@@ -507,10 +533,10 @@ lsan-allowed: [foo]""")]
 def test_update_lsan_2():
     test_id = "/path/to/test.htm"
     dir_id = "path/to/__dir__"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", ""),
-             ("path/__dir__.ini", ["path/__dir__"], None, """
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/__dir__", ["path/__dir__"], None, """
 lsan-allowed: [foo]"""),
-             ("path/to/__dir__.ini", [dir_id], None, "")]
+             ("path/to/__dir__", [dir_id], None, "")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
                                       "frames": ["foo", "bar"],
@@ -519,8 +545,8 @@ lsan-allowed: [foo]"""),
                                       "frames": ["baz", "foobar"]})])
 
 
-    id_test_map = update(tests, log_0)
-    new_manifest = id_test_map[dir_id].expected
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get("lsan-allowed") == ["baz"]
@@ -529,8 +555,8 @@ lsan-allowed: [foo]"""),
 def test_update_lsan_3():
     test_id = "/path/to/test.htm"
     dir_id = "path/to/__dir__"
-    tests = [("path/to/test.htm.ini", [test_id], "testharness", ""),
-             ("path/to/__dir__.ini", [dir_id], None, "")]
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, "")]
 
     log_0 = suite_log([("lsan_leak", {"scope": "path/to/",
                                       "frames": ["foo", "bar"]})],
@@ -541,8 +567,43 @@ def test_update_lsan_3():
                       run_info={"os": "linux"})
 
 
-    id_test_map = update(tests, log_0, log_1)
-    new_manifest = id_test_map[dir_id].expected
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     assert new_manifest.get("lsan-allowed") == ["baz", "foo"]
+
+
+def test_update_wptreport_0():
+    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness",
+              """[test.htm]
+  [test1]
+    expected: FAIL""")]
+
+    log = {"run_info": {},
+           "results": [
+               {"test": "/path/to/test.htm",
+                "subtests": [{"name": "test1",
+                              "status": "PASS",
+                              "expected": "FAIL"}],
+                "status": "OK"}
+           ]}
+
+    updated = update(tests, log)
+
+    assert len(updated) == 1
+    assert updated[0][1].is_empty
+
+
+def test_update_wptreport_1():
+    tests = [("path/to/__dir__", ["path/to/__dir__"], None, "")]
+
+    log = {"run_info": {},
+           "results": [],
+           "lsan_leaks": [{"scope": "path/to/",
+                           "frames": ["baz", "foobar"]}]}
+
+    updated = update(tests, log)
+
+    assert len(updated) == 1
+    assert updated[0][1].get("lsan-allowed") == ["baz"]

@@ -39,8 +39,5 @@ interface XULDocument : Document {
                                   DOMString attr);
 
   [Throws]
-  void persist([TreatNullAs=EmptyString] DOMString id, DOMString attr);
-
-  [Throws]
   BoxObject? getBoxObjectFor(Element? element);
 };

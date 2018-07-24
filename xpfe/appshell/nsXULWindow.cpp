@@ -2153,12 +2153,8 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   // and allow the opening code to proceed.
 
   nsCOMPtr<nsIURI> uri;
-
   nsAutoCString urlStr;
-  Preferences::GetCString("browser.chromeURL", urlStr);
-  if (urlStr.IsEmpty()) {
-    urlStr.AssignLiteral("chrome://navigator/content/navigator.xul");
-  }
+  urlStr.AssignLiteral(MOZ_BROWSER_CHROME_URL_QUOTED);
 
   nsCOMPtr<nsIIOService> service(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (service) {

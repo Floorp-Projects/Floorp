@@ -2183,8 +2183,8 @@ function BrowserGoHome(aEvent) {
 
 function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal) {
   // we're not a browser window, pass the URI string to a new browser window
-  if (window.location.href != getBrowserURL()) {
-    window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
+  if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
+    window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "all,dialog=no", aURIString);
     return;
   }
 
@@ -2234,7 +2234,7 @@ function focusAndSelectUrlBar(userInitiatedFocus = false) {
 }
 
 function openLocation() {
-  if (window.location.href == getBrowserURL()) {
+  if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
     focusAndSelectUrlBar(true);
     return;
   }
@@ -2248,7 +2248,7 @@ function openLocation() {
   }
 
   // There are no open browser windows; open a new one.
-  window.openDialog("chrome://browser/content/", "_blank",
+  window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
                     "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
 }
 
@@ -2355,7 +2355,7 @@ function BrowserOpenFileWindow() {
 
 function BrowserCloseTabOrWindow(event) {
   // If we're not a browser window, just close the window.
-  if (window.location.href != getBrowserURL()) {
+  if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
     closeWindow(true);
     return;
   }
@@ -3930,7 +3930,7 @@ const BrowserSearch = {
    * or focuses an existing window, if necessary.
    */
   webSearch: function BrowserSearch_webSearch() {
-    if (window.location.href != getBrowserURL()) {
+    if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
       var win = getTopWin();
       if (win) {
         // If there's an open browser window, it should handle this command
@@ -3944,7 +3944,7 @@ const BrowserSearch = {
             Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
           }
         };
-        win = window.openDialog(getBrowserURL(), "_blank",
+        win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
                                 "chrome,all,dialog=no", "about:blank");
         Services.obs.addObserver(observer, "browser-delayed-startup-finished");
       }
@@ -4319,10 +4319,10 @@ function OpenBrowserWindow(options) {
     let charsetArg = "charset=" + DocCharset;
 
     // we should "inherit" the charset menu setting in a new window
-    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs, charsetArg);
+    win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs, charsetArg);
   } else {
     // forget about the charset information.
-    win = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs);
+    win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no" + extraFeatures, defaultArgs);
   }
 
   win.addEventListener("MozAfterPaint", () => {
@@ -5445,7 +5445,7 @@ nsBrowserAccess.prototype = {
         }
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
-        newWindow = openDialog(getBrowserURL(), "_blank", features, url, null, null, null);
+        newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features, url, null, null, null);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         // If we have an opener, that means that the caller is expecting access
@@ -7417,7 +7417,7 @@ var gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
-    if (window.location.href == getBrowserURL()) {
+    if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
       // Adjust the window's title
       let docElement = document.documentElement;
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {

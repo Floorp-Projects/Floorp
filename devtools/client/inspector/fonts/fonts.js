@@ -438,7 +438,9 @@ class FontInspector {
     }
 
     let textProperty =
-      this.selectedRule.textProps.find(prop => prop.name === name);
+      this.selectedRule.textProps.find(prop =>
+        prop.name === name && prop.enabled && !prop.overridden
+      );
     if (!textProperty) {
       textProperty = this.selectedRule.editor.addProperty(name, value, "", true);
     }

@@ -87,7 +87,6 @@ add_task(async function testActions() {
       },
       PlacesUtils: { bookmarksMenuFolderId: "id" }
     },
-    getBrowserURL() {},
     openDialog() {},
     openTrustedLinkIn() {}
   };

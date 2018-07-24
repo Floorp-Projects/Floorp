@@ -606,7 +606,10 @@ var BrowserUtils = {
       // Try to fetch a charset from History.
       try {
         // Will return an empty string if character-set is not found.
-        charset = await PlacesUtils.getCharsetForURI(this.makeURI(url));
+        let pageInfo = await PlacesUtils.history.fetch(url, {includeAnnotations: true});
+        if (pageInfo && pageInfo.annotations.has(PlacesUtils.CHARSET_ANNO)) {
+          charset = pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO);
+        }
       } catch (ex) {
         // makeURI() throws if url is invalid.
         Cu.reportError(ex);

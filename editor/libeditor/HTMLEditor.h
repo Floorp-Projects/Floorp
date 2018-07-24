@@ -71,6 +71,7 @@ class HTMLEditor final : public TextEditor
                        , public nsIHTMLInlineTableEditor
                        , public nsIEditorStyleSheets
                        , public nsStubMutationObserver
+                       , public nsIEditorMailSupport
 {
 public:
   /****************************************************************************
@@ -155,6 +156,16 @@ public:
                                          nsINode *aNode) override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
+
+  /**
+   * PasteAsQuotationAsAction() pastes content in clipboard with newly created
+   * blockquote element.  If the editor is in plaintext mode, will paste the
+   * content with appending ">" to start of each line.
+   *
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   */
+  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType) override;
 
   /**
    * Can we paste |aTransferable| or, if |aTransferable| is null, will a call

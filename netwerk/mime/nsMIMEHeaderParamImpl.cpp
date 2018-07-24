@@ -452,7 +452,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
     const char *nameStart = str;
     const char *nameEnd = nullptr;
-    const char *valueStart = str;
+    const char *valueStart = nullptr;
     const char *valueEnd = nullptr;
     bool isQuotedString = false;
 

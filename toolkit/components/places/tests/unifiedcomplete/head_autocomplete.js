@@ -109,7 +109,8 @@ AutoCompleteInput.prototype = {
  *
  * @param {Object} match The expected match for the result, in the following form:
  * {
- *   uri: {nsIURI} The expected uri.
+ *   uri: {String|nsIURI} The expected uri. Note: nsIURI should be considered
+ *        deprecated.
  *   title: {String} The title of the entry.
  *   tags: {String} The tags for the entry.
  *   style: {Array} The style of the entry.
@@ -120,6 +121,9 @@ AutoCompleteInput.prototype = {
  */
 async function _check_autocomplete_matches(match, result) {
   let { uri, tags, style } = match;
+  if (uri instanceof Ci.nsIURI) {
+    uri = uri.spec;
+  }
   let title = match.comment || match.title;
 
   if (tags)
@@ -130,7 +134,7 @@ async function _check_autocomplete_matches(match, result) {
     style = ["favicon"];
 
   let actual = { value: result.value, comment: result.comment };
-  let expected = { value: match.value || uri.spec, comment: title };
+  let expected = { value: match.value || uri, comment: title };
   info(`Checking match: ` +
        `actual=${JSON.stringify(actual)} ... ` +
        `expected=${JSON.stringify(expected)}`);
@@ -141,7 +145,7 @@ async function _check_autocomplete_matches(match, result) {
   let actualStyle = result.style.split(/\s+/).sort();
   if (style)
     Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
-  if (uri && uri.spec.startsWith("moz-action:")) {
+  if (uri && uri.startsWith("moz-action:")) {
     Assert.ok(actualStyle.includes("action"), "moz-action results should always have 'action' in their style");
   }
 
@@ -298,7 +302,7 @@ var addBookmark = async function(aBookmarkObj) {
 
   if (aBookmarkObj.keyword) {
     await PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
-                                        url: aBookmarkObj.uri.spec,
+                                        url: aBookmarkObj.uri.spec ? aBookmarkObj.uri.spec : aBookmarkObj.uri,
                                         postData: aBookmarkObj.postData
                                       });
   }
