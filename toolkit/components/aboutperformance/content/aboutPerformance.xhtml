@@ -46,7 +46,11 @@
         margin-top: .5em;
       }
       h2 {
-        margin-top: 1cm;
+        font-size: 1.46em;
+        font-weight: 300;
+        line-height: 1.3em;
+        margin: 16px 0;
+        -moz-user-select: none;
       }
       button.show_all_items {
         margin-top: .5cm;
@@ -103,6 +107,58 @@
         border-left-color: rgb(255, 0, 0);
       }
 
+      #dispatch-table {
+        font-size: 1em;
+        border: 1px solid var(--in-content-box-border-color);
+        border-radius: 2px;
+        border-spacing: 0;
+        background-color: var(--in-content-box-background);
+        margin: 0;
+      }
+      #dispatch-table > tbody {
+        border-top: 1px solid var(--in-content-border-color);
+      }
+      #dispatch-table > thead > tr > td {
+        border: none;
+        background-color: var(--in-content-box-background-hover);
+        color: #808080;
+        padding: 5px 10px;
+      }
+      #dispatch-table > thead > tr > td:not(:first-child) {
+        border-inline-start-width: 1px;
+        border-inline-start-style: solid;
+        border-image: linear-gradient(transparent 0%, transparent 20%, #c1c1c1 20%, #c1c1c1 80%, transparent 80%, transparent 100%) 1 1;
+        border-bottom: 1px solid var(--in-content-border-color);
+      }
+      #dispatch-tbody > tr > td {
+        padding: 5px 10px;
+        min-height: 2em;
+        color: var(--in-content-text-color);
+        max-width: 70vw;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      #dispatch-tbody > tr > td:first-child {
+        padding-inline-start: 32px;
+        background-repeat: no-repeat;
+        background-size: 16px 16px;
+        background-position: 8px;
+      }
+      #dispatch-tbody > tr > td.indent {
+        padding-inline-start: 62px;
+      }
+      #dispatch-tbody > tr > td.tracking {
+        background: url(chrome://browser/skin/tracking-protection-disabled.svg) no-repeat 41px center;
+        -moz-context-properties: fill;
+        fill: rgb(224, 41, 29);
+      }
+      #dispatch-tbody > tr > td.worker {
+        background: url(chrome://devtools/skin/images/debugging-workers.svg) no-repeat 41px center;
+        -moz-context-properties: fill;
+        fill: #808080;
+      }
+
       .options {
         width: 100%;
       }
@@ -129,6 +185,19 @@
       <h2>Performance of Web pages</h2>
       <div id="webpages" class="measuring">
       </div>
+    </div>
+    <div>
+      <h2>Resource usage per tab</h2>
+      <table id="dispatch-table">
+        <thead>
+          <tr>
+            <td>Tab title</td>
+            <td>Dispatches and runtime since load</td>
+            <td>Dispatches in the last seconds</td>
+          </tr>
+        </thead>
+        <tbody id="dispatch-tbody"></tbody>
+      </table>
     </div>
   </body>
 </html>
