@@ -93,13 +93,13 @@ window.gActivityStreamStrings = {
   "firstrun_title": "Take Firefox with You",
   "firstrun_content": "Get your bookmarks, history, passwords and other settings on all your devices.",
   "firstrun_learn_more_link": "Learn more about Firefox Accounts",
-  "firstrun_form_header": "Enter your email",
+  "firstrun_form_header": "اپنی ای میل داخل کریں",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "ای میل",
   "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
-  "firstrun_terms_of_service": "Terms of Service",
-  "firstrun_privacy_notice": "Privacy Notice",
+  "firstrun_terms_of_service": "خدمت کی شرائط",
+  "firstrun_privacy_notice": "رازداری کا نوٹس",
   "firstrun_continue_to_login": "جاری رکھیں",
   "firstrun_skip_login": "Skip this step"
 };

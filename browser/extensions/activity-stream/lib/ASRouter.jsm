@@ -127,6 +127,7 @@ class _ASRouter {
       lastMessageId: null,
       providers: [],
       blockList: [],
+      impressions: {},
       messages: [],
       ...initialState
     };
@@ -211,6 +212,7 @@ class _ASRouter {
         }
       }
       await this.setState(newState);
+      await this.cleanupImpressions();
     }
   }
 
@@ -226,11 +228,13 @@ class _ASRouter {
     this.messageChannel = channel;
     this.messageChannel.addMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
     this._addASRouterPrefListener();
-    await this.loadMessagesFromAllProviders();
     this._storage = storage;
 
     const blockList = await this._storage.get("blockList") || [];
-    await this.setState({blockList});
+    const impressions = await this._storage.get("impressions") || {};
+    await this.setState({blockList, impressions});
+    await this.loadMessagesFromAllProviders();
+
     // sets .initialized to true and resolves .waitForInitialized promise
     this._finishInitializing();
   }
@@ -264,18 +268,18 @@ class _ASRouter {
     this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: state});
   }
 
-  async _findMessage(msgs, target, data = {}) {
+  async _findMessage(messages, target, data = {}) {
     let message;
-    let {trigger} = data;
+    const {trigger} = data;
+    const {impressions} = this.state;
     if (trigger) {
       // Find a message that matches the targeting context as well as the trigger context
-      message = await ASRouterTargeting.findMatchingMessageWithTrigger(msgs, target, trigger);
+      message = await ASRouterTargeting.findMatchingMessageWithTrigger({messages, impressions, target, trigger});
     }
     if (!message) {
       // If there was no messages with this trigger, try finding a regular targeted message
-      message = await ASRouterTargeting.findMatchingMessage(msgs, target);
+      message = await ASRouterTargeting.findMatchingMessage({messages, impressions, target});
     }
-
     return message;
   }
 
@@ -343,6 +347,75 @@ class _ASRouter {
     }
   }
 
+  async addImpression(message) {
+    // Don't store impressions for messages that don't include any limits on frequency
+    if (!message.frequency) {
+      return;
+    }
+    await this.setState(state => {
+      // The destructuring here is to avoid mutating existing objects in state as in redux
+      // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
+      const impressions = {...state.impressions};
+      impressions[message.id] = impressions[message.id] ? [...impressions[message.id]] : [];
+      impressions[message.id].push(Date.now());
+      this._storage.set("impressions", impressions);
+      return {impressions};
+    });
+  }
+
+  /**
+   * getLongestPeriod
+   *
+   * @param {obj} message An ASRouter message
+   * @returns {int|null} if the message has custom frequency caps, the longest period found in the list of caps.
+                         if the message has no custom frequency caps, null
+   * @memberof _ASRouter
+   */
+  getLongestPeriod(message) {
+    if (!message.frequency || !message.frequency.custom) {
+      return null;
+    }
+    return message.frequency.custom.sort((a, b) => b.period - a.period)[0].period;
+  }
+
+  /**
+   * cleanupImpressions - this function cleans up obsolete impressions whenever
+   * messages are refreshed or fetched. It will likely need to be more sophisticated in the future,
+   * but the current behaviour for when impressions are cleared is as follows:
+   *
+   * 1. If the message id for a list of impressions no longer exists in state.messages, it will be cleared.
+   * 2. If the message has time-bound frequency caps but no lifetime cap, any impressions older
+   *    than the longest time period will be cleared.
+   */
+  async cleanupImpressions() {
+    await this.setState(state => {
+      const impressions = {...state.impressions};
+      let needsUpdate = false;
+      Object.keys(impressions).forEach(id => {
+        const [message] = state.messages.filter(msg => msg.id === id);
+        // Don't keep impressions for messages that no longer exist
+        if (!message || !message.frequency || !Array.isArray(impressions[id])) {
+          delete impressions[id];
+          needsUpdate = true;
+          return;
+        }
+        if (!impressions[id].length) {
+          return;
+        }
+        // If we don't want to store impressions older than the longest period
+        if (message.frequency.custom && !message.frequency.lifetime) {
+          const now = Date.now();
+          impressions[id] = impressions[id].filter(t => (now - t) < this.getLongestPeriod(message));
+          needsUpdate = true;
+        }
+      });
+      if (needsUpdate) {
+        this._storage.set("impressions", impressions);
+      }
+      return {impressions};
+    });
+  }
+
   async sendNextMessage(target, action = {}) {
     let {data} = action;
     const msgs = this._getUnblockedMessages();
@@ -354,8 +427,8 @@ class _ASRouter {
     } else {
       message = await this._findMessage(msgs, target, data);
     }
-    await this.setState({lastMessageId: message ? message.id : null});
 
+    await this.setState({lastMessageId: message ? message.id : null});
     await this._sendMessageToTarget(message, target, data);
   }
 
@@ -368,10 +441,14 @@ class _ASRouter {
 
   async blockById(idOrIds) {
     const idsToBlock = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+
     await this.setState(state => {
       const blockList = [...state.blockList, ...idsToBlock];
+      // When a message is blocked, its impressions should be cleared as well
+      const impressions = {...state.impressions};
+      idsToBlock.forEach(id => delete impressions[id]);
       this._storage.set("blockList", blockList);
-      return {blockList};
+      return {blockList, impressions};
     });
   }
 
@@ -472,6 +549,9 @@ class _ASRouter {
         } else {
           target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
         }
+        break;
+      case "IMPRESSION":
+        this.addImpression(action.data);
         break;
     }
   }

@@ -1078,6 +1078,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
   }
 
   sendImpression(extraProps) {
+    ASRouterUtils.sendMessage({ type: "IMPRESSION", data: this.state.message });
     this.sendUserActionTelemetry(Object.assign({ event: "IMPRESSION" }, extraProps));
   }
 
@@ -1749,6 +1750,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
   renderMessageItem(msg) {
     const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked = this.state.blockList.includes(msg.id);
+    const impressions = this.state.impressions[msg.id] ? this.state.impressions[msg.id].length : 0;
 
     let itemClassName = "message-item";
     if (isCurrent) {
@@ -1767,7 +1769,9 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
         react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
           "span",
           null,
-          msg.id
+          msg.id,
+          " ",
+          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("br", null)
         )
       ),
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
@@ -1782,7 +1786,11 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
           "button",
           { className: "button", onClick: this.handleOverride(msg.id) },
           "Show"
-        )
+        ),
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("br", null),
+        "(",
+        impressions,
+        " impressions)"
       ),
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
         "td",

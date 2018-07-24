@@ -5,7 +5,7 @@
 
 scripts:
   # Run the activity-stream mochitests
-  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest )
+  mochitest: (cd $npm_package_config_mc_dir && ./mach mochitest browser/extensions/activity-stream/test/functional/mochitest --headless)
 
   # Run the activity-stream mochitests with the browser toolbox debugger.
   # Often handy in combination with adding a "debugger" statement in your
