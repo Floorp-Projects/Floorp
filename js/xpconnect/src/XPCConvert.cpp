@@ -385,7 +385,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return true;
     }
 
-    case nsXPTType::T_ARRAY:
+    case nsXPTType::T_LEGACY_ARRAY:
         return NativeArray2JS(d, *static_cast<const void* const*>(s),
                               type.ArrayElementType(), iid, arrlen, pErr);
 
@@ -841,7 +841,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         return ok;
     }
 
-    case nsXPTType::T_ARRAY:
+    case nsXPTType::T_LEGACY_ARRAY:
     {
         void** dest = (void**)d;
         const nsXPTType& elty = type.ArrayElementType();
@@ -1561,7 +1561,7 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
     MOZ_ASSERT(aArrayLen == 0 ||
                aType.Tag() == nsXPTType::T_PSTRING_SIZE_IS ||
                aType.Tag() == nsXPTType::T_PWSTRING_SIZE_IS ||
-               aType.Tag() == nsXPTType::T_ARRAY,
+               aType.Tag() == nsXPTType::T_LEGACY_ARRAY,
                "Array lengths may only appear for certain types!");
 
     switch (aType.Tag()) {
@@ -1599,7 +1599,7 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             break;
 
         // Array Types
-        case nsXPTType::T_ARRAY:
+        case nsXPTType::T_LEGACY_ARRAY:
         {
             const nsXPTType& elty = aType.ArrayElementType();
             void* elements = *(void**)aValue;

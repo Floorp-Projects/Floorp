@@ -187,7 +187,7 @@ enum nsXPTTypeTag : uint8_t
   TD_PWSTRING          = 16,
   TD_INTERFACE_TYPE    = 17,
   TD_INTERFACE_IS_TYPE = 18,
-  TD_ARRAY             = 19,
+  TD_LEGACY_ARRAY      = 19,
   TD_PSTRING_SIZE_IS   = 20,
   TD_PWSTRING_SIZE_IS  = 21,
   TD_DOMOBJECT         = 22,
@@ -228,7 +228,7 @@ struct nsXPTType
     MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
                Tag() == TD_PSTRING_SIZE_IS ||
                Tag() == TD_PWSTRING_SIZE_IS ||
-               Tag() == TD_ARRAY);
+               Tag() == TD_LEGACY_ARRAY);
     return mData1;
   }
 
@@ -241,7 +241,7 @@ public:
   // fit 8 bits of type data, while sequences support up to 16 bits of type data
   // due to not needing to store an ArgNum.
   const nsXPTType& ArrayElementType() const {
-    if (Tag() == TD_ARRAY) {
+    if (Tag() == TD_LEGACY_ARRAY) {
       return xpt::detail::GetType(mData2);
     }
     MOZ_ASSERT(Tag() == TD_SEQUENCE);
@@ -273,13 +273,13 @@ public:
 
   bool IsDependent() const {
     return (Tag() == TD_SEQUENCE && InnermostType().IsDependent()) ||
-           Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_ARRAY ||
+           Tag() == TD_INTERFACE_IS_TYPE || Tag() == TD_LEGACY_ARRAY ||
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
   }
 
   // Unwrap a nested type to its innermost value (e.g. through arrays).
   const nsXPTType& InnermostType() const {
-    if (Tag() == TD_ARRAY || Tag() == TD_SEQUENCE) {
+    if (Tag() == TD_LEGACY_ARRAY || Tag() == TD_SEQUENCE) {
       return ArrayElementType().InnermostType();
     }
     return *this;
@@ -324,7 +324,7 @@ public:
   // Helper methods for fabricating nsXPTType values used by xpconnect.
   static nsXPTType MkArrayType(Idx aInner) {
     MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
-    return { TD_ARRAY, false, false, false, 0, (uint8_t)aInner };
+    return { TD_LEGACY_ARRAY, false, false, false, 0, (uint8_t)aInner };
   }
   static const nsXPTType& Get(Idx aInner) {
     MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
@@ -359,7 +359,7 @@ public:
   TD_ALIAS_(T_WCHAR_STR         , TD_PWSTRING         );
   TD_ALIAS_(T_INTERFACE         , TD_INTERFACE_TYPE   );
   TD_ALIAS_(T_INTERFACE_IS      , TD_INTERFACE_IS_TYPE);
-  TD_ALIAS_(T_ARRAY             , TD_ARRAY            );
+  TD_ALIAS_(T_LEGACY_ARRAY      , TD_LEGACY_ARRAY     );
   TD_ALIAS_(T_PSTRING_SIZE_IS   , TD_PSTRING_SIZE_IS  );
   TD_ALIAS_(T_PWSTRING_SIZE_IS  , TD_PWSTRING_SIZE_IS );
   TD_ALIAS_(T_UTF8STRING        , TD_UTF8STRING       );
@@ -676,7 +676,7 @@ nsXPTType::Stride() const
     case TD_PWSTRING:          return sizeof(char16_t*);
     case TD_INTERFACE_TYPE:    return sizeof(nsISupports*);
     case TD_INTERFACE_IS_TYPE: return sizeof(nsISupports*);
-    case TD_ARRAY:             return sizeof(void*);
+    case TD_LEGACY_ARRAY:      return sizeof(void*);
     case TD_PSTRING_SIZE_IS:   return sizeof(char*);
     case TD_PWSTRING_SIZE_IS:  return sizeof(char16_t*);
     case TD_DOMOBJECT:         return sizeof(void*);
