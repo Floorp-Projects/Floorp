@@ -188,61 +188,7 @@ typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintStat
 class CapturedTiledPaintState {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedTiledPaintState)
 public:
-  struct Copy {
-    Copy(RefPtr<gfx::DrawTarget> aSource,
-         RefPtr<gfx::DrawTarget> aDestination,
-         gfx::IntRect aSourceBounds,
-         gfx::IntPoint aDestinationPoint)
-      : mSource(aSource)
-      , mDestination(aDestination)
-      , mSourceBounds(aSourceBounds)
-      , mDestinationPoint(aDestinationPoint)
-    {}
-
-    bool CopyBuffer();
-
-    RefPtr<gfx::DrawTarget> mSource;
-    RefPtr<gfx::DrawTarget> mDestination;
-    gfx::IntRect mSourceBounds;
-    gfx::IntPoint mDestinationPoint;
-  };
-
-  struct Clear {
-    Clear(RefPtr<gfx::DrawTarget> aTarget,
-            RefPtr<gfx::DrawTarget> aTargetOnWhite,
-            nsIntRegion aDirtyRegion)
-      : mTarget(aTarget)
-      , mTargetOnWhite(aTargetOnWhite)
-      , mDirtyRegion(aDirtyRegion)
-    {}
-
-    void ClearBuffer();
-
-    RefPtr<gfx::DrawTarget> mTarget;
-    RefPtr<gfx::DrawTarget> mTargetOnWhite;
-    nsIntRegion mDirtyRegion;
-  };
-
-  struct EdgePad {
-    EdgePad(RefPtr<gfx::DrawTarget> aTarget,
-            nsIntRegion&& aValidRegion)
-      : mTarget(aTarget)
-      , mValidRegion(aValidRegion)
-    {}
-
-    void EdgePadBuffer();
-
-    RefPtr<gfx::DrawTarget> mTarget;
-    nsIntRegion mValidRegion;
-  };
-
-  CapturedTiledPaintState()
-  {}
-  CapturedTiledPaintState(gfx::DrawTarget* aTarget,
-                          gfx::DrawTargetCapture* aCapture)
-  : mTarget(aTarget)
-  , mCapture(aCapture)
-  {}
+  CapturedTiledPaintState() {}
 
   template<typename F>
   void ForEachTextureClient(F aClosure) const
@@ -257,16 +203,8 @@ public:
     mClients.clear();
   }
 
-  void PrePaint();
-  void Paint();
-  void PostPaint();
-
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
-  std::vector<Copy> mCopies;
-  std::vector<Clear> mClears;
-  Maybe<EdgePad> mEdgePad;
-
   std::vector<RefPtr<TextureClient>> mClients;
 
 protected:
