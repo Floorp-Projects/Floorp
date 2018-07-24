@@ -753,7 +753,7 @@ var BrowserTestUtils = {
     }
 
     let win = Services.ww.openWindow(
-      opener, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
+      opener, AppConstants.BROWSER_CHROME_URL, "_blank",
       features, argString);
 
     // Wait for browser-delayed-startup-finished notification, it indicates

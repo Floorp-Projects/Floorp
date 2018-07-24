@@ -57,7 +57,7 @@ function provideWindow(aCallback, aURL, aFeatures) {
     });
   }
 
-  let win = openDialog(getBrowserURL(), "", aFeatures || "chrome,all,dialog=no", aURL || "about:blank");
+  let win = openDialog(AppConstants.BROWSER_CHROME_URL, "", aFeatures || "chrome,all,dialog=no", aURL || "about:blank");
   whenWindowLoaded(win, function onWindowLoaded(aWin) {
     if (!aURL) {
       info("Loaded a blank window.");
@@ -443,7 +443,7 @@ function whenNewWindowLoaded(aOptions, aCallback) {
     url = "about:privatebrowsing";
   }
 
-  let win = openDialog(getBrowserURL(), "", "chrome,all,dialog=no" + features, url);
+  let win = openDialog(AppConstants.BROWSER_CHROME_URL, "", "chrome,all,dialog=no" + features, url);
   let delayedStartup = promiseDelayedStartupFinished(win);
 
   let browserLoaded = new Promise(resolve => {

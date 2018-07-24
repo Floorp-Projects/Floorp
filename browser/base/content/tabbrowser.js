@@ -3405,7 +3405,7 @@ window._gBrowser = {
     }
 
     // tell a new window to take the "dropped" tab
-    return window.openDialog(getBrowserURL(), "_blank", options, aTab);
+    return window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", options, aTab);
   },
 
   /**

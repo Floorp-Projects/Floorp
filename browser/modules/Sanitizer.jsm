@@ -497,7 +497,7 @@ var Sanitizer = {
         let handler = Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler);
         let defaultArgs = handler.defaultArgs;
         let features = "chrome,all,dialog=no," + privateStateForNewWindow;
-        let newWindow = existingWindow.openDialog("chrome://browser/content/", "_blank",
+        let newWindow = existingWindow.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
                                                   features, defaultArgs);
 
         let onFullScreen = null;

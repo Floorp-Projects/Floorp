@@ -4,7 +4,7 @@
 
 add_task(async function testWindowGetAll() {
   let raisedWin = Services.ww.openWindow(
-    null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
+    null, AppConstants.BROWSER_CHROME_URL, "_blank",
     "chrome,dialog=no,all,alwaysRaised", null);
 
   await TestUtils.topicObserved("browser-delayed-startup-finished",

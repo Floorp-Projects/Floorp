@@ -48,10 +48,6 @@ function isBlankPageURL(aURL) {
          aURL == BROWSER_NEW_TAB_URL;
 }
 
-function getBrowserURL() {
-  return "chrome://browser/content/browser.xul";
-}
-
 function getTopWin(skipPopups) {
   // If this is called in a browser window, use that window regardless of
   // whether it's the frontmost window, since commands can be executed in
@@ -427,7 +423,7 @@ function openLinkIn(url, where, params) {
       };
       Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
     }
-    win = Services.ww.openWindow(sourceWindow, getBrowserURL(), null, features, sa);
+    win = Services.ww.openWindow(sourceWindow, AppConstants.BROWSER_CHROME_URL, null, features, sa);
     return;
   }
 
@@ -847,7 +843,7 @@ function openPreferences(paneID, extraArgs) {
     supportsStringPrefURL.data = preferencesURL;
     windowArguments.appendElement(supportsStringPrefURL);
 
-    win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
+    win = Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL,
       "_blank", "chrome,dialog=no,all", windowArguments);
   } else {
     let shouldReplaceFragment = friendlyCategoryName ? "whenComparingAndReplace" : "whenComparing";

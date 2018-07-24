@@ -580,7 +580,7 @@ add_task(async function checkAllTheFiles() {
 
   if (isDevtools) {
     // chrome://devtools/skin/devtools-browser.css is included from browser.xul
-    gReferencesFromCode.set("chrome://browser/content/browser.xul", null);
+    gReferencesFromCode.set(AppConstants.BROWSER_CHROME_URL, null);
     // devtools' css is currently included from browser.css, see bug 1204810.
     gReferencesFromCode.set("chrome://browser/skin/browser.css", null);
   }

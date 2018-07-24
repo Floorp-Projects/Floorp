@@ -21,7 +21,6 @@
 #endif
 #endif
 
-pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
 
 // Enables some extra Extension System Logging (can reduce performance)

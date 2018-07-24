@@ -59,7 +59,7 @@ add_task(async function() {
   Services.obs.notifyObservers(null, "chrome-flush-skin-caches");
   Services.obs.notifyObservers(null, "chrome-flush-caches");
 
-  let win = window.openDialog("chrome://browser/content/", "_blank",
+  let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
                               "chrome,all,dialog=no,remote,suppressanimation",
                               "about:home");
 

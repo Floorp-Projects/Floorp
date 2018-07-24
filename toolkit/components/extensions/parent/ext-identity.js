@@ -52,7 +52,7 @@ const openOAuthWindow = (details, redirectURI) => {
   args.appendElement(supportsStringPrefURL);
 
   let window = Services.ww.openWindow(null,
-                                      Services.prefs.getCharPref("browser.chromeURL"),
+                                      AppConstants.BROWSER_CHROME_URL,
                                       "launchWebAuthFlow_dialog",
                                       "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes",
                                       args);

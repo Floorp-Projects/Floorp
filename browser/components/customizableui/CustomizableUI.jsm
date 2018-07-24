@@ -41,7 +41,7 @@ const kPrefUIDensity                 = "browser.uidensity";
 const kPrefAutoTouchMode             = "browser.touchmode.auto";
 const kPrefAutoHideDownloadsButton   = "browser.download.autohideButton";
 
-const kExpectedWindowURL = "chrome://browser/content/browser.xul";
+const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
 /**
  * The keys are the handlers that are fired when the event type (the value)

@@ -8,11 +8,12 @@ var EXPORTED_SYMBOLS = [ "ContentWebRTC" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
                                    "@mozilla.org/mediaManagerService;1",
                                    "nsIMediaManagerService");
 
-const kBrowserURL = "chrome://browser/content/browser.xul";
+const kBrowserURL = AppConstants.BROWSER_CHROME_URL;
 
 var ContentWebRTC = {
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
