@@ -72,7 +72,7 @@ from .data import (
     TestManifest,
     UnifiedSources,
     VariablePassthru,
-    XPIDLModule,
+    XPIDLFile,
 )
 from mozpack.chrome.manifest import (
     Manifest,
@@ -1371,27 +1371,22 @@ class TreeMetadataEmitter(LoggingMixin):
         # XPIDL_MODULE.
         xpidl_module = context['XPIDL_MODULE']
 
-        if not xpidl_module:
-            if context['XPIDL_SOURCES']:
-                raise SandboxValidationError('XPIDL_MODULE must be defined if '
-                    'XPIDL_SOURCES is defined.', context)
-            return
+        if context['XPIDL_SOURCES'] and not xpidl_module:
+            raise SandboxValidationError('XPIDL_MODULE must be defined if '
+                'XPIDL_SOURCES is defined.', context)
 
-        if not context['XPIDL_SOURCES']:
+        if xpidl_module and not context['XPIDL_SOURCES']:
             raise SandboxValidationError('XPIDL_MODULE cannot be defined '
                 'unless there are XPIDL_SOURCES', context)
 
-        if context['DIST_INSTALL'] is False:
+        if context['XPIDL_SOURCES'] and context['DIST_INSTALL'] is False:
             self.log(logging.WARN, 'mozbuild_warning', dict(
                 path=context.main_path),
                 '{path}: DIST_INSTALL = False has no effect on XPIDL_SOURCES.')
 
         for idl in context['XPIDL_SOURCES']:
-            if not os.path.exists(idl.full_path):
-                raise SandboxValidationError('File %s from XPIDL_SOURCES '
-                    'does not exist' % idl.full_path, context)
-
-        yield XPIDLModule(context, xpidl_module, context['XPIDL_SOURCES'])
+            yield XPIDLFile(context, mozpath.join(context.srcdir, idl),
+                xpidl_module)
 
     def _process_generated_files(self, context):
         for path in context['CONFIGURE_DEFINE_FILES']:

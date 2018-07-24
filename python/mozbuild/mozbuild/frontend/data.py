@@ -17,10 +17,7 @@ structures.
 
 from __future__ import absolute_import, unicode_literals
 
-from mozbuild.frontend.context import (
-    ObjDirPath,
-    SourcePath,
-)
+from mozbuild.frontend.context import ObjDirPath
 from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
@@ -192,20 +189,21 @@ class ComputedFlags(ContextDerived):
                     flags[dest_var].extend(value)
         return flags.items()
 
-class XPIDLModule(ContextDerived):
-    """Describes an XPIDL module to be compiled."""
+class XPIDLFile(ContextDerived):
+    """Describes an XPIDL file to be compiled."""
 
     __slots__ = (
-        'name',
-        'idl_files',
+        'source_path',
+        'basename',
+        'module',
     )
 
-    def __init__(self, context, name, idl_files):
+    def __init__(self, context, source, module):
         ContextDerived.__init__(self, context)
 
-        assert all(isinstance(idl, SourcePath) for idl in idl_files)
-        self.name = name
-        self.idl_files = idl_files
+        self.source_path = source
+        self.basename = mozpath.basename(source)
+        self.module = module
 
 class BaseDefines(ContextDerived):
     """Context derived container object for DEFINES/HOST_DEFINES,

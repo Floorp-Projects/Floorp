@@ -4,11 +4,8 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import itertools
 import json
 import os
-
-from collections import defaultdict
 
 import mozpack.path as mozpath
 
@@ -38,7 +35,7 @@ from mozbuild.frontend.data import (
     SharedLibrary,
     StaticLibrary,
     UnifiedSources,
-    XPIDLModule,
+    XPIDLFile,
     WebIDLCollection,
 )
 from mozbuild.jar import (
@@ -55,48 +52,43 @@ from mozbuild.util import (
 
 class XPIDLManager(object):
     """Helps manage XPCOM IDLs in the context of the build system."""
-
-    class Module(object):
-        def __init__(self):
-            self.idl_files = set()
-            self.directories = set()
-            self._stems = set()
-
-        def add_idls(self, idls):
-            self.idl_files.update(idl.full_path for idl in idls)
-            self.directories.update(mozpath.dirname(idl.full_path)
-                                    for idl in idls)
-            self._stems.update(mozpath.splitext(mozpath.basename(idl))[0]
-                               for idl in idls)
-
-        def stems(self):
-            return iter(self._stems)
-
     def __init__(self, config):
         self.config = config
         self.topsrcdir = config.topsrcdir
         self.topobjdir = config.topobjdir
 
-        self._idls = set()
-        self.modules = defaultdict(self.Module)
+        self.idls = {}
+        self.modules = {}
 
-    def link_module(self, module):
-        """Links an XPIDL module with with this instance."""
-        for idl in module.idl_files:
-            basename = mozpath.basename(idl.full_path)
+    def register_idl(self, idl):
+        """Registers an IDL file with this instance.
 
-            if basename in self._idls:
-                raise Exception('IDL already registered: %s' % basename)
-            self._idls.add(basename)
-
-        self.modules[module.name].add_idls(module.idl_files)
-
-    def idl_stems(self):
-        """Return an iterator of stems of the managed IDL files.
-
-        The stem of an IDL file is the basename of the file with no .idl extension.
+        The IDL file will be built, installed, etc.
         """
-        return itertools.chain(*[m.stems() for m in self.modules.itervalues()])
+        basename = mozpath.basename(idl.source_path)
+        dirname = mozpath.dirname(idl.source_path)
+        root = mozpath.splitext(basename)[0]
+        xpt = '%s.xpt' % idl.module
+
+        entry = {
+            'source': idl.source_path,
+            'module': idl.module,
+            'basename': basename,
+            'root': root,
+        }
+
+        if entry['basename'] in self.idls:
+            raise Exception('IDL already registered: %s' % entry['basename'])
+
+        self.idls[entry['basename']] = entry
+        # First element is a set of interface file basenames (no extension).
+        #
+        # Second element is a set of directory names where module IDLs
+        # can be found.  Yes, we have XPIDL modules with files from
+        # multiple directories.
+        t = self.modules.setdefault(entry['module'], (set(), set()))
+        t[0].add(entry['source'])
+        t[1].add(dirname)
 
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""
@@ -117,10 +109,10 @@ class CommonBackend(BuildBackend):
     def consume_object(self, obj):
         self._configs.add(obj.config)
 
-        if isinstance(obj, XPIDLModule):
+        if isinstance(obj, XPIDLFile):
             # TODO bug 1240134 tracks not processing XPIDL files during
             # artifact builds.
-            self._idl_manager.link_module(obj)
+            self._idl_manager.register_idl(obj)
 
         elif isinstance(obj, ConfigFileSubstitution):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that
@@ -184,11 +176,10 @@ class CommonBackend(BuildBackend):
         return True
 
     def consume_finished(self):
-        if len(self._idl_manager.modules):
+        if len(self._idl_manager.idls):
             self._write_rust_xpidl_summary(self._idl_manager)
             self._handle_idl_manager(self._idl_manager)
-            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
-                                           for stem in self._idl_manager.idl_stems())
+            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
 
 
         for config in self._configs:
@@ -481,19 +472,16 @@ class CommonBackend(BuildBackend):
 
         include_tmpl = "include!(concat!(env!(\"MOZ_TOPOBJDIR\"), \"/dist/xpcrs/%s/%s.rs\"))"
 
-        # Ensure deterministic output files.
-        stems = sorted(manager.idl_stems())
-
         with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'rt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
-            for stem in stems:
-                fh.write(include_tmpl % ("rt", stem))
+            for idl in manager.idls.values():
+                fh.write(include_tmpl % ("rt", idl['root']))
                 fh.write(";\n")
 
         with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'bt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
             fh.write("&[\n")
-            for stem in stems:
-                fh.write(include_tmpl % ("bt", stem))
+            for idl in manager.idls.values():
+                fh.write(include_tmpl % ("bt", idl['root']))
                 fh.write(",\n")
             fh.write("]\n")
