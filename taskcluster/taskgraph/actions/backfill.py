@@ -12,7 +12,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from .registry import register_callback_action
-from .util import find_decision_task, create_tasks
+from .util import find_decision_task, create_tasks, combine_task_graph_files
 from taskgraph.util.taskcluster import get_artifact_from_index
 from taskgraph.taskgraph import TaskGraph
 
@@ -89,6 +89,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id, tas
             break
 
     pushes = sorted(pushes)[-depth:]
+    backfill_pushes = []
 
     for push in pushes:
         try:
@@ -181,8 +182,10 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id, tas
 
             create_tasks([label], full_task_graph, label_to_taskid,
                          push_params, push_decision_task_id, push, modifier=modifier)
+            backfill_pushes.append(push)
         else:
             logging.info('Could not find {} on {}. Skipping.'.format(label, push))
+    combine_task_graph_files(backfill_pushes)
 
 
 def remove_args_from_command(cmd_parts, preamble_length=0, args_to_ignore=[]):
