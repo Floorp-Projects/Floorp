@@ -742,9 +742,8 @@ HandleOutOfBounds(CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
     BytecodeOffset bytecode;
     if (!segment->code().lookupTrap(pc, &trap, &bytecode)) {
         // If there is no associated TrapSite for the faulting PC, this must be
-        // experimental SIMD.js or Atomics. When these are converted to
-        // non-experimental wasm features, this case, as well as outOfBoundsCode,
-        // can be removed.
+        // an Atomics access. When these are converted to non-experimental wasm
+        // features, this case, as well as outOfBoundsCode, can be removed.
         activation->startWasmTrap(Trap::OutOfBounds, 0, ToRegisterState(context));
         *ppc = segment->outOfBoundsCode();
         return true;
@@ -871,9 +870,8 @@ HandleOutOfBounds(CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
             // Assign the JS-defined result value to the destination register
             // (ToInt32(undefined) or ToNumber(undefined), determined by the
             // type of the destination register). Very conveniently, we can
-            // infer the type from the register class, since all SIMD accesses
-            // throw on out of bounds (see above), so the only types using FP
-            // registers are float32 and double.
+            // infer the type from the register class, so the only types using
+            // FP registers are float32 and double.
             SetRegisterToCoercedUndefined(context, access.size(), access.otherOperand());
             break;
           case Disassembler::HeapAccess::Store:
