@@ -1924,7 +1924,6 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                     true,
                                     pseudoStyle,
                                     ITEM_IS_GENERATED_CONTENT,
-                                    nullptr,
                                     aItems);
 }
 
@@ -2137,10 +2136,6 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   if (display->IsAbsPosContainingBlock(newFrame)) {
     aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
   }
-  NS_ASSERTION(aItem.mAnonChildren.IsEmpty(),
-               "nsIAnonymousContentCreator::CreateAnonymousContent "
-               "implementations for table frames are not currently expected "
-               "to output a list where the items have their own children");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems,
                                 innerFrame,
@@ -2221,10 +2216,6 @@ nsCSSFrameConstructor::ConstructTableRowOrRowGroup(nsFrameConstructorState& aSta
                                                newFrame);
 
   nsFrameItems childItems;
-  NS_ASSERTION(aItem.mAnonChildren.IsEmpty(),
-               "nsIAnonymousContentCreator::CreateAnonymousContent "
-               "implementations for table frames are not currently expected "
-               "to output a list where the items have their own children");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
                                 aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX,
@@ -2332,10 +2323,6 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
                                                newFrame);
 
   nsFrameItems childItems;
-  NS_ASSERTION(aItem.mAnonChildren.IsEmpty(),
-               "nsIAnonymousContentCreator::CreateAnonymousContent "
-               "implementations for table frames are not currently expected "
-               "to output a list where the items have their own children");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     // Need to push ourselves as a float containing block.
     // XXXbz it might be nice to work on getting the parent
@@ -2560,7 +2547,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     already_AddRefed<ComputedStyle> extraRef =
       RefPtr<ComputedStyle>(computedStyle).forget();
     AutoFrameConstructionItem item(this, &rootSVGData, aDocElement,
-                                   nullptr, extraRef, true, nullptr);
+                                   nullptr, extraRef, true);
 
     nsFrameItems frameItems;
     contentFrame = static_cast<nsContainerFrame*>(
@@ -2610,7 +2597,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     already_AddRefed<ComputedStyle> extraRef =
       RefPtr<ComputedStyle>(computedStyle).forget();
     AutoFrameConstructionItem item(this, &rootTableData, aDocElement,
-                                   nullptr, extraRef, true, nullptr);
+                                   nullptr, extraRef, true);
 
     nsFrameItems frameItems;
     // if the document is a table then just populate it.
@@ -4021,15 +4008,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         }
       }
 
-      if (!aItem.mAnonChildren.IsEmpty()) {
-        NS_ASSERTION(!(bits & FCDATA_USE_CHILD_ITEMS),
-                     "We should not have both anonymous and non-anonymous "
-                     "children in a given FrameConstructorItem");
-        AddFCItemsForAnonymousContent(aState, newFrameAsContainer, aItem.mAnonChildren,
-                                      aItem.mChildItems);
-        bits |= FCDATA_USE_CHILD_ITEMS;
-      }
-
       if (bits & FCDATA_USE_CHILD_ITEMS) {
         nsFrameConstructorSaveState floatSaveState;
 
@@ -4131,31 +4109,6 @@ SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
   }
 }
 
-/**
- * This function takes a tree of nsIAnonymousContentCreator::ContentInfo
- * objects where the nsIContent nodes have just been created, and appends the
- * nsIContent children in the tree to their parent. The leaf nsIContent objects
- * are appended first to minimize the number of notifications that are sent
- * out (i.e. by appending as many descendants as posible while their parent is
- * not yet in the document tree).
- *
- * This function is used simply as a convenience so that implementations of
- * nsIAnonymousContentCreator::CreateAnonymousContent don't all have to have
- * their own code to connect the elements that they create.
- */
-static void
-ConnectAnonymousTreeDescendants(nsIContent* aParent,
-                                const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent)
-{
-  for (const auto& info : aContent) {
-    nsIContent* content = info.mContent;
-    MOZ_ASSERT(content, "null anonymous content?");
-
-    ConnectAnonymousTreeDescendants(content, info.mChildren);
-    aParent->AppendChildTo(content, false);
-  }
-}
-
 nsresult
 nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
                                            nsIFrame* aParentFrame,
@@ -4174,9 +4127,6 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
   for (const auto& info : aContent) {
     // get our child's content and set its parent to our content
     nsIContent* content = info.mContent;
-    MOZ_ASSERT(content, "null anonymous content?");
-
-    ConnectAnonymousTreeDescendants(content, info.mChildren);
     content->SetIsNativeAnonymousRoot();
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
@@ -5125,10 +5075,6 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
   nsFrameItems childItems;
 
   // Process children
-  NS_ASSERTION(aItem.mAnonChildren.IsEmpty(),
-               "nsIAnonymousContentCreator::CreateAnonymousContent should not "
-               "be implemented for frames for which we explicitly create an "
-               "anonymous child to wrap its child frames");
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     ConstructFramesFromItemList(aState, aItem.mChildItems,
                                 innerFrame,
@@ -5436,7 +5382,7 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
     FCDATA_DECL(FCDATA_SKIP_FRAMESET, NS_NewPageBreakFrame);
 
   aItems.AppendItem(this, &sPageBreakData, aContent, nullptr,
-                    pseudoStyle.forget(), true, nullptr);
+                    pseudoStyle.forget(), true);
 }
 
 bool
@@ -5475,7 +5421,6 @@ nsCSSFrameConstructor::DoAddFrameConstructionItems(nsFrameConstructorState& aSta
                                                    ComputedStyle* aComputedStyle,
                                                    bool aSuppressWhiteSpaceOptimizations,
                                                    nsContainerFrame* aParentFrame,
-                                                   nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                                    FrameConstructionItemList& aItems)
 {
   uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
@@ -5491,8 +5436,7 @@ nsCSSFrameConstructor::DoAddFrameConstructionItems(nsFrameConstructorState& aSta
   AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
                                     aSuppressWhiteSpaceOptimizations,
                                     aComputedStyle,
-                                    flags, aAnonChildren,
-                                    aItems);
+                                    flags, aItems);
 }
 
 void
@@ -5509,7 +5453,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
   RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aContent);
   DoAddFrameConstructionItems(aState, aContent, computedStyle,
                               aSuppressWhiteSpaceOptimizations, parentFrame,
-                              nullptr, aItems);
+                              aItems);
 }
 
 // Whether we should suppress frames for a child under a <select> frame.
@@ -5587,7 +5531,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                                          bool aSuppressWhiteSpaceOptimizations,
                                                          ComputedStyle* aComputedStyle,
                                                          uint32_t aFlags,
-                                                         nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                                          FrameConstructionItemList& aItems)
 {
   MOZ_ASSERT(aContent->IsText() || aContent->IsElement(),
@@ -5673,8 +5616,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     FlattenedChildIterator iter(aContent);
     InsertionPoint insertion(aParentFrame, aContent);
-    MOZ_ASSERT(!aAnonChildren,
-               "display: contents can't generate NAC");
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
       AddFrameConstructionItems(aState,
                                 child,
@@ -5805,15 +5746,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       // the first child, so add the item to the front of the item list.
       item = aItems.PrependItem(this, data, aContent, pendingBinding,
                                 style.forget(),
-                                aSuppressWhiteSpaceOptimizations,
-                                aAnonChildren);
+                                aSuppressWhiteSpaceOptimizations);
     }
   }
 
   if (!item) {
     item = aItems.AppendItem(this, data, aContent, pendingBinding,
                              style.forget(),
-                             aSuppressWhiteSpaceOptimizations, aAnonChildren);
+                             aSuppressWhiteSpaceOptimizations);
   }
   item->mIsText = isText;
   item->mIsGeneratedContent = isGeneratedContent;
@@ -8636,7 +8576,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
                                         computedStyle,
                                         ITEM_ALLOW_XBL_BASE |
                                           ITEM_ALLOW_PAGE_BREAK,
-                                        nullptr, items);
+                                        items);
       ConstructFramesFromItemList(state, items, canvasFrame,
                                   /* aParentIsWrapperAnonBox = */ false,
                                   fixedPlaceholders);
@@ -9362,7 +9302,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                                 // no pending binding
                                 nullptr,
                                 wrapperStyle,
-                                true, nullptr);
+                                true);
 
     newItem->mIsAllInline = newItem->mHasInlineEnds =
       newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
@@ -9864,7 +9804,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
                               // no pending binding
                               nullptr,
                               wrapperStyle,
-                              true, nullptr);
+                              true);
 
   const nsStyleDisplay* disp = newItem->mComputedStyle->StyleDisplay();
   // Here we're cheating a tad... technically, table-internal items should be
@@ -9929,7 +9869,7 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
                                      // no pending binding
                                      nullptr,
                                      pseudoStyle,
-                                     true, nullptr);
+                                     true);
   newItem->mIsAllInline = true;
   newItem->mChildItems.SetParentHasNoXBLChildren(true);
   iter.InsertItem(newItem);
@@ -10032,12 +9972,12 @@ void
 nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
             nsFrameConstructorState& aState,
             nsContainerFrame* aFrame,
-            nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
+            const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
             FrameConstructionItemList& aItemsToConstruct,
             uint32_t aExtraFlags)
 {
-  for (uint32_t i = 0; i < aAnonymousItems.Length(); ++i) {
-    nsIContent* content = aAnonymousItems[i].mContent;
+  for (const auto& info : aAnonymousItems) {
+    nsIContent* content = info.mContent;
     // Gecko-styled nodes should have no pending restyle flags.
     // Assert some things about this content
     MOZ_ASSERT(!(content->GetFlags() &
@@ -10054,17 +9994,12 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
 
     RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(content);
 
-    nsTArray<nsIAnonymousContentCreator::ContentInfo>* anonChildren = nullptr;
-    if (!aAnonymousItems[i].mChildren.IsEmpty()) {
-      anonChildren = &aAnonymousItems[i].mChildren;
-    }
-
     uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK |
                      ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT | aExtraFlags;
 
     AddFrameConstructionItemsInternal(aState, content, aFrame,
                                       true, computedStyle, flags,
-                                      anonChildren, aItemsToConstruct);
+                                      aItemsToConstruct);
   }
 }
 
@@ -11286,31 +11221,21 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
     flags |= ITEM_ALLOWS_TEXT_PATH_CHILD;
   }
 
-  if (!aParentItem.mAnonChildren.IsEmpty()) {
-    // Use the anon-children list instead of the content tree child list so that
-    // we use any special style that should be associated with the children, and
-    // so that we won't try to construct grandchildren frame constructor items
-    // before the frame is available for their parent.
-    AddFCItemsForAnonymousContent(aState, nullptr, aParentItem.mAnonChildren,
-                                  aParentItem.mChildItems, flags);
-  } else {
-    // Use the content tree child list:
-    FlattenedChildIterator iter(parentContent);
-    for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
-      // Manually check for comments/PIs, since we don't have a frame to pass to
-      // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
-      // so there is no need to do the NeedFrameFor check.
-      content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-      if (content->IsComment() || content->IsProcessingInstruction()) {
-        continue;
-      }
-
-      RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
-      AddFrameConstructionItemsInternal(aState, content, nullptr,
-                                        iter.XBLInvolved(), childContext,
-                                        flags, nullptr,
-                                        aParentItem.mChildItems);
+  FlattenedChildIterator iter(parentContent);
+  for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
+    // Manually check for comments/PIs, since we don't have a frame to pass to
+    // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
+    // so there is no need to do the NeedFrameFor check.
+    content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+    if (content->IsComment() || content->IsProcessingInstruction()) {
+      continue;
     }
+
+    RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
+    AddFrameConstructionItemsInternal(aState, content, nullptr,
+                                      iter.XBLInvolved(), childContext,
+                                      flags,
+                                      aParentItem.mChildItems);
   }
 
   if (!aItemIsWithinSVGText) {
