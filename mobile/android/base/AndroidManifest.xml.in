@@ -401,29 +401,25 @@
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdatesApplyService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdatesCheckService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdatesDownloadService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
+            android:permission="android.permission.BIND_JOB_SERVICE" >
          </service>
 
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdatesRegisterService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <receiver
