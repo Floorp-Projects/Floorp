@@ -118,10 +118,6 @@ let elDialog;
 let initialState;
 
 add_task(async function setup_once() {
-  registerConsoleFilter(function consoleFilter(msg) {
-    return msg.errorMessage.includes("selectedPayerAddress option a9e830667189 does not exist");
-  });
-
   let templateFrame = document.getElementById("templateFrame");
   await SimpleTest.promiseFocus(templateFrame.contentWindow);
 
@@ -139,7 +135,7 @@ add_task(async function setup_once() {
   let {request} = elDialog.requestStore.getState();
   initialState = Object.assign({}, {
     changesPrevented: false,
-    request: Object.assign({}, request, { completeStatus: "" }),
+    request: Object.assign({}, request, { completeStatus: "initial" }),
     orderDetailsShowing: false,
   });
 });
