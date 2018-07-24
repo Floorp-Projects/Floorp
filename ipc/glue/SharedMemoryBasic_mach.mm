@@ -22,11 +22,11 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "SharedMemoryBasic.h"
-#include "chrome/common/mach_ipc_mac.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/layers/TextureSync.h"
 
 #ifdef DEBUG
 #define LOG_ERROR(str, args...)                                   \
@@ -82,28 +82,9 @@
 namespace mozilla {
 namespace ipc {
 
-struct MemoryPorts {
-  MachPortSender* mSender;
-  ReceivePort* mReceiver;
-
-  MemoryPorts() = default;
-  MemoryPorts(MachPortSender* sender, ReceivePort* receiver)
-   : mSender(sender), mReceiver(receiver) {}
-};
-
 // Protects gMemoryCommPorts and gThreads.
 static StaticMutex gMutex;
-
 static std::map<pid_t, MemoryPorts> gMemoryCommPorts;
-
-enum {
-  kGetPortsMsg = 1,
-  kSharePortsMsg,
-  kReturnIdMsg,
-  kReturnPortsMsg,
-  kShutdownMsg,
-  kCleanupMsg,
-};
 
 const int kTimeout = 1000;
 const int kLongTimeout = 60 * kTimeout;
@@ -154,6 +135,7 @@ SetupMachMemory(pid_t pid,
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
   int err = pthread_create(&thread, &attr, PortServerThread, listen_ports);
   if (err) {
     LOG_ERROR("pthread_create failed with %x\n", err);
@@ -405,30 +387,36 @@ PortServerThread(void *argument)
       delete ports;
       return nullptr;
     }
-    StaticMutexAutoLock smal(gMutex);
-    switch (rmsg.GetMessageID()) {
-    case kSharePortsMsg:
-      HandleSharePortsMessage(&rmsg, ports);
-      break;
-    case kGetPortsMsg:
-      HandleGetPortsMessage(&rmsg, ports);
-      break;
-    case kCleanupMsg:
-     if (gParentPid == 0) {
-       LOG_ERROR("Cleanup message not valid for parent process");
-       continue;
-     }
+    if (rmsg.GetMessageID() == kWaitForTexturesMsg) {
+      layers::TextureSync::HandleWaitForTexturesMessage(&rmsg, ports);
+    } else if (rmsg.GetMessageID() == kUpdateTextureLocksMsg) {
+      layers::TextureSync::DispatchCheckTexturesForUnlock();
+    } else {
+      StaticMutexAutoLock smal(gMutex);
+      switch (rmsg.GetMessageID()) {
+      case kSharePortsMsg:
+        HandleSharePortsMessage(&rmsg, ports);
+        break;
+      case kGetPortsMsg:
+        HandleGetPortsMessage(&rmsg, ports);
+        break;
+      case kCleanupMsg:
+       if (gParentPid == 0) {
+         LOG_ERROR("Cleanup message not valid for parent process");
+         continue;
+       }
 
-      pid_t* pid;
-      if (rmsg.GetDataLength() != sizeof(pid_t)) {
-        LOG_ERROR("Improperly formatted message\n");
-        continue;
+        pid_t* pid;
+        if (rmsg.GetDataLength() != sizeof(pid_t)) {
+          LOG_ERROR("Improperly formatted message\n");
+          continue;
+        }
+        pid = reinterpret_cast<pid_t*>(rmsg.GetData());
+        SharedMemoryBasic::CleanupForPid(*pid);
+        break;
+      default:
+        LOG_ERROR("Unknown message\n");
       }
-      pid = reinterpret_cast<pid_t*>(rmsg.GetData());
-      SharedMemoryBasic::CleanupForPid(*pid);
-      break;
-    default:
-      LOG_ERROR("Unknown message\n");
     }
   }
 }
@@ -450,6 +438,8 @@ SharedMemoryBasic::Shutdown()
 {
   StaticMutexAutoLock smal(gMutex);
 
+  layers::TextureSync::Shutdown();
+
   for (auto& thread : gThreads) {
     MachSendMessage shutdownMsg(kShutdownMsg);
     thread.second.mPorts->mReceiver->SendMessageToSelf(shutdownMsg, kTimeout);
@@ -469,6 +459,9 @@ SharedMemoryBasic::CleanupForPid(pid_t pid)
   if (gThreads.find(pid) == gThreads.end()) {
     return;
   }
+
+  layers::TextureSync::CleanupForPid(pid);
+
   const ListeningThread& listeningThread = gThreads[pid];
   MachSendMessage shutdownMsg(kShutdownMsg);
   kern_return_t ret = listeningThread.mPorts->mReceiver->SendMessageToSelf(shutdownMsg, kTimeout);
@@ -491,6 +484,40 @@ SharedMemoryBasic::CleanupForPid(pid_t pid)
   delete ports.mSender;
   delete ports.mReceiver;
   gMemoryCommPorts.erase(pid);
+}
+
+bool
+SharedMemoryBasic::SendMachMessage(pid_t pid,
+                                   MachSendMessage& message,
+                                   MachReceiveMessage* response)
+{
+  StaticMutexAutoLock smal(gMutex);
+  ipc::MemoryPorts* ports = GetMemoryPortsForPid(pid);
+  if (!ports) {
+    LOG_ERROR("Unable to get ports for process.\n");
+    return false;
+  }
+
+  kern_return_t err = ports->mSender->SendMessage(message, kTimeout);
+  if (err != KERN_SUCCESS) {
+    LOG_ERROR("Failed updating texture locks.\n");
+    return false;
+  }
+
+  if (response) {
+    err = ports->mReceiver->WaitForMessage(response, kTimeout);
+    if (err != KERN_SUCCESS) {
+      LOG_ERROR("short timeout didn't get an id %s %x\n", mach_error_string(err), err);
+      err = ports->mReceiver->WaitForMessage(response, kLongTimeout);
+
+      if (err != KERN_SUCCESS) {
+        LOG_ERROR("long timeout didn't get an id %s %x\n", mach_error_string(err), err);
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 SharedMemoryBasic::SharedMemoryBasic()

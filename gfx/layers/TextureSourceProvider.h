@@ -74,6 +74,9 @@ public:
   /// Returns true if notified, false otherwise.
   virtual bool NotifyNotUsedAfterComposition(TextureHost* aTextureHost);
 
+  virtual void MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost) {}
+  virtual void TryUnlockTextures() {}
+
   // If overridden, make sure to call the base function.
   virtual void Destroy();
 

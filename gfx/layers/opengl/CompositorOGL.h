@@ -44,6 +44,7 @@ class CompositingRenderTargetOGL;
 class DataTextureSource;
 class GLManagerCompositor;
 class TextureSource;
+class BufferTextureHost;
 struct Effect;
 struct EffectChain;
 class GLBlitTextureImageHelper;
@@ -131,6 +132,12 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture) override;
+
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) override;
+
   virtual bool Initialize(nsCString* const out_failureReason) override;
 
   virtual void Destroy() override;
@@ -141,6 +148,7 @@ public:
       TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
                                XRE_GetProcessType(),
                                GetMaxTextureSize(),
+                               SupportsTextureDirectMapping(),
                                false,
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
@@ -228,6 +236,11 @@ public:
   GLContext* gl() const { return mGLContext; }
   GLContext* GetGLContext() const override { return mGLContext; }
 
+#ifdef XP_DARWIN
+  virtual void MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost) override;
+  virtual void TryUnlockTextures() override;
+#endif
+
   /**
    * Clear the program state. This must be called
    * before operating on the GLContext directly. */
@@ -273,11 +286,17 @@ private:
 
   void PrepareViewport(CompositingRenderTargetOGL *aRenderTarget);
 
+  bool SupportsTextureDirectMapping();
+
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
+
+#ifdef XP_DARWIN
+  nsTArray<RefPtr<BufferTextureHost>> mMaybeUnlockBeforeNextComposition;
+#endif
 
   /** The size of the surface we are rendering to */
   gfx::IntSize mSurfaceSize;

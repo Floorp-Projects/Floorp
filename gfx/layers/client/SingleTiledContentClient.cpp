@@ -140,6 +140,15 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     mTile.SetTextureAllocator(this);
   }
 
+
+  if (mManager->AsShadowForwarder()->SupportsTextureDirectMapping()) {
+    AutoTArray<uint64_t, 2> syncTextureSerials;
+    mTile.GetSyncTextureSerials(mode, syncTextureSerials);
+    if (syncTextureSerials.Length() > 0) {
+      mManager->AsShadowForwarder()->SyncTextures(syncTextureSerials);
+    }
+  }
+
   // The dirty region relative to the top-left of the tile.
   nsIntRegion tileVisibleRegion = aNewValidRegion.MovedBy(-mTilingOrigin);
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
