@@ -1393,10 +1393,10 @@ bool ParseDeviceTable(const ots::Font *font,
     return true;
   }
   if (start_size > end_size) {
-    return OTS_FAILURE_MSG("bad size range: %u > %u", start_size, end_size);
+    return OTS_FAILURE_MSG("Bad device table size range: %u > %u", start_size, end_size);
   }
   if (delta_format == 0 || delta_format > kMaxDeltaFormatType) {
-    return OTS_FAILURE_MSG("bad delta format: %u", delta_format);
+    return OTS_FAILURE_MSG("Bad device table delta format: 0x%x", delta_format);
   }
   // The number of delta values per uint16. The device table should contain
   // at least |num_units| * 2 bytes compressed data.
