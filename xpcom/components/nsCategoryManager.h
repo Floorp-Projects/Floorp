@@ -50,16 +50,16 @@ public:
 class CategoryNode
 {
 public:
-  nsresult GetLeaf(const char* aEntryName,
-                   char** aResult);
+  nsresult GetLeaf(const nsACString& aEntryName,
+                   nsACString& aResult);
 
-  nsresult AddLeaf(const char* aEntryName,
-                   const char* aValue,
+  nsresult AddLeaf(const nsACString& aEntryName,
+                   const nsACString& aValue,
                    bool aReplace,
-                   char** aResult,
+                   nsACString& aResult,
                    CategoryAllocator* aArena);
 
-  void DeleteLeaf(const char* aEntryName);
+  void DeleteLeaf(const nsACString& aEntryName);
 
   void Clear()
   {
@@ -114,11 +114,20 @@ public:
    */
   nsresult SuppressNotifications(bool aSuppress);
 
-  void AddCategoryEntry(const char* aCategory,
-                        const char* aKey,
-                        const char* aValue,
-                        bool aReplace = true,
-                        char** aOldValue = nullptr);
+  void AddCategoryEntry(const nsACString& aCategory,
+                        const nsACString& aKey,
+                        const nsACString& aValue,
+                        bool aReplace,
+                        nsACString& aOldValue);
+
+  void AddCategoryEntry(const nsACString& aCategory,
+                        const nsACString& aKey,
+                        const nsACString& aValue,
+                        bool aReplace = true)
+  {
+    nsCString oldValue;
+    return AddCategoryEntry(aCategory, aKey, aValue, aReplace, oldValue);
+  }
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
   void InitMemoryReporter();
@@ -134,10 +143,10 @@ private:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-  CategoryNode* get_category(const char* aName);
+  CategoryNode* get_category(const nsACString& aName);
   void NotifyObservers(const char* aTopic,
-                       const char* aCategoryName, // must be a static string
-                       const char* aEntryName);
+                       const nsACString& aCategoryName, // must be a static string
+                       const nsACString& aEntryName);
 
   CategoryAllocator mArena;
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;

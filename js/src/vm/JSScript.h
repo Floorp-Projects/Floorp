@@ -29,6 +29,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
+#include "vm/Time.h"
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -682,7 +683,7 @@ class ScriptSource
     // Inform `this` source that it has been fully parsed.
     void recordParseEnded() {
         MOZ_ASSERT(parseEnded_.IsNull());
-        parseEnded_ = mozilla::TimeStamp::Now();
+        parseEnded_ = ReallyNow();
     }
 };
 

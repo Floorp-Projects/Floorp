@@ -1547,7 +1547,7 @@ static inline
 TimeDuration
 TimeSince(TimeStamp prev)
 {
-    TimeStamp now = TimeStamp::Now();
+    TimeStamp now = ReallyNow();
     // Sadly this happens sometimes.
     MOZ_ASSERT(now >= prev);
     if (now < prev)
@@ -1560,7 +1560,7 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
 {
     assertNotStarted();
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
-    TimeStamp timeStart = TimeStamp::Now();
+    TimeStamp timeStart = ReallyNow();
     runTask();
     duration_ = TimeSince(timeStart);
 }
@@ -1575,7 +1575,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
 
     {
         AutoUnlockHelperThreadState parallelSection(lock);
-        TimeStamp timeStart = TimeStamp::Now();
+        TimeStamp timeStart = ReallyNow();
         runTask();
         duration_ = TimeSince(timeStart);
     }
@@ -1859,7 +1859,7 @@ HelperThread::destroy()
 void
 HelperThread::ensureRegisteredWithProfiler()
 {
-    if (registered)
+    if (registered || mozilla::recordreplay::IsRecordingOrReplaying())
         return;
 
     JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
@@ -1887,6 +1887,11 @@ void
 HelperThread::ThreadMain(void* arg)
 {
     ThisThread::SetName("JS Helper");
+
+    // Helper threads are allowed to run differently during recording and
+    // replay, as compiled scripts and GCs are allowed to vary. Because of
+    // this, no recorded events at all should occur while on helper threads.
+    mozilla::recordreplay::AutoDisallowThreadEvents d;
 
     static_cast<HelperThread*>(arg)->threadLoop();
     Mutex::ShutDown();
@@ -2297,6 +2302,13 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         parseTask->trace(trc);
 }
 
+/* static */ void
+HelperThread::WakeupAll()
+{
+    AutoLockHelperThreadState lock;
+    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+}
+
 void
 JSContext::setHelperThread(HelperThread* thread)
 {
@@ -2390,6 +2402,19 @@ HelperThread::threadLoop()
 
         const TaskSpec* task = findHighestPriorityTask(lock);
         if (!task) {
+            if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+                // Unlock the helper thread state lock before potentially
+                // blocking while the main thread waits for all threads to
+                // become idle. Otherwise we would need to see if we need to
+                // block at every point where a helper thread acquires the
+                // helper thread state lock.
+                {
+                    AutoUnlockHelperThreadState unlock(lock);
+                    mozilla::recordreplay::MaybeWaitForCheckpointSave();
+                }
+                mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
+            }
+
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
             continue;
         }

@@ -154,7 +154,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.dispatchFetchEventEnd(),
                        a.handleFetchEventStart(),
                        a.handleFetchEventEnd(),
-                       a.forceMainDocumentChannel());
+                       a.forceMainDocumentChannel(),
+                       a.navigationStartTimeStamp());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -454,7 +455,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const TimeStamp&           aDispatchFetchEventEnd,
                                  const TimeStamp&           aHandleFetchEventStart,
                                  const TimeStamp&           aHandleFetchEventEnd,
-                                 const bool&                aForceMainDocumentChannel)
+                                 const bool&                aForceMainDocumentChannel,
+                                 const TimeStamp&           aNavigationStartTimeStamp)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -639,6 +641,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   httpChannel->SetDispatchFetchEventEnd(aDispatchFetchEventEnd);
   httpChannel->SetHandleFetchEventStart(aHandleFetchEventStart);
   httpChannel->SetHandleFetchEventEnd(aHandleFetchEventEnd);
+
+  httpChannel->SetNavigationStartTimeStamp(aNavigationStartTimeStamp);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
     do_QueryObject(httpChannel);

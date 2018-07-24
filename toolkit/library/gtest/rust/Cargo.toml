@@ -16,6 +16,7 @@ simd-accel = ["gkrust-shared/simd-accel"]
 moz_memory = ["gkrust-shared/moz_memory"]
 
 [dependencies]
+bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }
 mp4parse-gtest = { path = "../../../../dom/media/gtest" }
 nsstring-gtest = { path = "../../../../xpcom/rust/gtest/nsstring" }
 xpcom-gtest = { path = "../../../../xpcom/rust/gtest/xpcom" }

@@ -2480,12 +2480,12 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.CopyScreensToRemote(this);
 
+  Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache,
+                                          fontList);
+
   ipc::WritableSharedMap* sharedData = nsFrameMessageManager::sParentProcessManager->SharedData();
   sharedData->Flush();
-
-  Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache,
-                                          fontList, sharedData->CloneMapFile(),
-                                          sharedData->MapSize());
+  sharedData->SendTo(this);
 
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
   nsChromeRegistryChrome* chromeRegistry =
