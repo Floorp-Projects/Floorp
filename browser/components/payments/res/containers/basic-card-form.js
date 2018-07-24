@@ -161,7 +161,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     if (basicCardPage.billingAddressGUID) {
       billingAddressSelect.value = basicCardPage.billingAddressGUID;
     } else if (!editing) {
-      billingAddressSelect.value = Object.keys(addresses)[0];
+      if (paymentRequest.getAddresses(state)[selectedShippingAddress]) {
+        billingAddressSelect.value = selectedShippingAddress;
+      } else {
+        billingAddressSelect.value = Object.keys(addresses)[0];
+      }
     }
   }
 
