@@ -91,3 +91,6 @@ patch -p1 < 0002-Always-upmix-mono-to-the-first-two-channels-if-enoug.patch
 
 echo "Apply audiounit-stream-destroy-crash.patch on top of $rev"
 patch -p1 < audiounit-stream-destroy-crash.patch
+
+echo "Apply cast.patch on top of $rev"
+patch -p3 < patch.patch
