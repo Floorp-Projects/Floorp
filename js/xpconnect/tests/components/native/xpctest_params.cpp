@@ -334,13 +334,12 @@ nsXPCTestParams::TestDoubleSequence(const nsTArray<double>& a, nsTArray<double>&
     SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
 }
 
-// XXX(nika): Consider generating the exposed type 'nsTArray<RefPtr<nsIXPCTestInterfaceA>>` here instead?
 NS_IMETHODIMP
-nsXPCTestParams::TestInterfaceSequence(const nsTArray<nsIXPCTestInterfaceA*>& a,
-                                       nsTArray<nsIXPCTestInterfaceA*>& b,
-                                       nsTArray<nsIXPCTestInterfaceA*>& _retval)
+nsXPCTestParams::TestInterfaceSequence(const nsTArray<RefPtr<nsIXPCTestInterfaceA>>& a,
+                                       nsTArray<RefPtr<nsIXPCTestInterfaceA>>& b,
+                                       nsTArray<RefPtr<nsIXPCTestInterfaceA>>& _retval)
 {
-    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_INTERFACE);
+    SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
 }
 
 NS_IMETHODIMP
