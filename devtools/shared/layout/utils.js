@@ -557,11 +557,6 @@ function isXBLAnonymous(node) {
     return false;
   }
 
-  // Shadow nodes also show up in getAnonymousNodes, so return false.
-  if (parent.openOrClosedShadowRoot && parent.openOrClosedShadowRoot.contains(node)) {
-    return false;
-  }
-
   const anonNodes = [...node.ownerDocument.getAnonymousNodes(parent) || []];
   return anonNodes.indexOf(node) > -1;
 }
