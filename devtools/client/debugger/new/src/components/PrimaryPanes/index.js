@@ -10,6 +10,8 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
+var _tabs = require("devtools/client/debugger/new/dist/vendors").vendored["react-aria-components/src/tabs"];
+
 var _text = require("../../utils/text");
 
 var _actions = require("../../actions/index");
@@ -53,27 +55,11 @@ class PrimaryPanes extends _react.Component {
       });
     };
 
-    this.renderTabs = () => {
-      return _react2.default.createElement("div", {
-        className: "source-outline-tabs"
-      }, this.renderOutlineTabs());
-    };
-
-    this.renderShortcut = () => {
-      if (this.props.horizontal) {
-        const onClick = () => {
-          if (this.props.sourceSearchOn) {
-            return this.props.closeActiveSearch();
-          }
-
-          this.props.setActiveSearch("source");
-        };
-
-        return _react2.default.createElement("span", {
-          className: "sources-header-info",
-          dir: "ltr",
-          onClick: onClick
-        }, L10N.getFormatStr("sources.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"))));
+    this.onActivateTab = index => {
+      if (index === 0) {
+        this.showPane("sources");
+      } else {
+        this.showPane("outline");
       }
     };
 
@@ -89,17 +75,17 @@ class PrimaryPanes extends _react.Component {
 
     const sources = (0, _text.formatKeyShortcut)(L10N.getStr("sources.header"));
     const outline = (0, _text.formatKeyShortcut)(L10N.getStr("outline.header"));
-    return [_react2.default.createElement("div", {
+    const isSources = this.props.selectedTab === "sources";
+    const isOutline = this.props.selectedTab === "outline";
+    return [_react2.default.createElement(_tabs.Tab, {
       className: (0, _classnames2.default)("tab sources-tab", {
-        active: this.props.selectedTab === "sources"
+        active: isSources
       }),
-      onClick: () => this.showPane("sources"),
       key: "sources-tab"
-    }, sources), _react2.default.createElement("div", {
+    }, sources), _react2.default.createElement(_tabs.Tab, {
       className: (0, _classnames2.default)("tab outline-tab", {
-        active: this.props.selectedTab === "outline"
+        active: isOutline
       }),
-      onClick: () => this.showPane("outline"),
       key: "outline-tab"
     }, outline)];
   }
@@ -108,12 +94,20 @@ class PrimaryPanes extends _react.Component {
     const {
       selectedTab
     } = this.props;
-    return _react2.default.createElement("div", {
-      className: "sources-panel"
-    }, this.renderTabs(), selectedTab === "sources" ? _react2.default.createElement(_SourcesTree2.default, null) : _react2.default.createElement(_Outline2.default, {
+    const activeIndex = selectedTab === "sources" ? 0 : 1;
+    return _react2.default.createElement(_tabs.Tabs, {
+      activeIndex: activeIndex,
+      className: "sources-panel",
+      onActivateTab: this.onActivateTab
+    }, _react2.default.createElement(_tabs.TabList, {
+      className: "source-outline-tabs"
+    }, this.renderOutlineTabs()), _react2.default.createElement(_tabs.TabPanels, {
+      className: "source-outline-panel",
+      hasFocusableContent: true
+    }, _react2.default.createElement(_SourcesTree2.default, null), _react2.default.createElement(_Outline2.default, {
       alphabetizeOutline: this.state.alphabetizeOutline,
       onAlphabetizeClick: this.onAlphabetizeClick
-    }));
+    })));
   }
 
 }

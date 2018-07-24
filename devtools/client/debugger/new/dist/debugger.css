@@ -1288,6 +1288,22 @@ html .toggle-button.end.vertical svg {
   background-color: #ffffff;
   color: #000000;
 }
+.container {
+  background-color: lightgrey;
+  border: 1px solid darkgrey;
+  cursor: pointer;
+  padding: 0 3px;
+}
+
+.container[aria-selected=true] {
+  background-color: white;
+}
+.container {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1353,6 +1369,7 @@ html .toggle-button.end.vertical svg {
   flex: 1;
   overflow-x: auto;
   overflow-y: auto;
+  height: 100%;
 }
 
 .sources-list {
@@ -1420,7 +1437,7 @@ html .toggle-button.end.vertical svg {
 
 .sources-panel .outline {
   display: flex;
-  flex: 1;
+  height: 100%;
 }
 
 .tree-indent {
@@ -1436,6 +1453,8 @@ html .toggle-button.end.vertical svg {
   user-select: none;
   box-sizing: border-box;
   height: 30px;
+  margin: 0;
+  padding: 0;
 }
 
 .source-outline-tabs .tab {
@@ -1472,6 +1491,10 @@ html .toggle-button.end.vertical svg {
 .source-outline-tabs .tab.active path,
 .source-outline-tabs .tab:hover path {
   fill: var(--theme-body-color);
+}
+
+.source-outline-panel {
+  flex: 1;
 }
 
 .sources-list .managed-tree .tree .node img.blackBox {
@@ -2438,12 +2461,9 @@ button.jump-definition {
 .popover .preview-popup {
   background: var(--theme-body-background);
   width: 350px;
-  min-height: 80px;
   border: 1px solid var(--theme-splitter-color);
   padding: 10px;
   height: auto;
-  min-height: inherit;
-  max-height: 200px;
   overflow: auto;
   box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }

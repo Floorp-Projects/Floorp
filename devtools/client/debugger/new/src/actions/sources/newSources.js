@@ -12,7 +12,7 @@ var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _blackbox = require("./blackbox");
 
-var _breakpoints = require("../breakpoints");
+var _breakpoints = require("../breakpoints/index");
 
 var _loadSourceText = require("./loadSourceText");
 
