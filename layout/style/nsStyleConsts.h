@@ -317,6 +317,11 @@ enum class StyleImageLayerRepeat : uint8_t {
   Round
 };
 
+enum class StylePrefersReducedMotion : uint8_t {
+  NoPreference,
+  Reduce,
+};
+
 
 // See nsStyleImageLayers
 #define NS_STYLE_IMAGELAYER_SIZE_CONTAIN             0

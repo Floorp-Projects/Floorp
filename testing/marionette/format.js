@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
+const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -113,15 +114,15 @@ this.pprint = pprint;
  * like "X <...> Y", where X and Y are half the number of characters
  * of the maximum string length from either side of the string.
  *
- * Usage:
+ * If the `marionette.log.truncate` preference is false, this
+ * function acts as a no-op.
  *
- * <pre><code>
+ * Usage::
+ *
  *     truncate`Hello ${"x".repeat(260)}!`;
  *     // Hello xxx ... xxx!
- * </code></pre>
  *
- * Functions named <code>toJSON</code> or <code>toString</code>
- * on objects will be called.
+ * Functions named `toJSON` or `toString` on objects will be called.
  */
 function truncate(strings, ...values) {
   function walk(obj) {
@@ -135,10 +136,12 @@ function truncate(strings, ...values) {
         return obj;
 
       case "[object String]":
-        if (obj.length > MAX_STRING_LENGTH) {
-          let s1 = obj.substring(0, (MAX_STRING_LENGTH / 2));
-          let s2 = obj.substring(obj.length - (MAX_STRING_LENGTH / 2));
-          return `${s1} ... ${s2}`;
+        if (MarionettePrefs.truncateLog) {
+          if (obj.length > MAX_STRING_LENGTH) {
+            let s1 = obj.substring(0, (MAX_STRING_LENGTH / 2));
+            let s2 = obj.substring(obj.length - (MAX_STRING_LENGTH / 2));
+            return `${s1} ... ${s2}`;
+          }
         }
         return obj;
 

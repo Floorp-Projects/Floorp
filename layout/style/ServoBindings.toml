@@ -279,6 +279,7 @@ whitelist-types = [
     "nsCSSFontDesc",
     "nsCSSKTableEntry",
     "nsCSSKeyword",
+    "nsCSSKeywordAndBoolTableEntry",
     "nsCSSPropertyID",
     "nsCSSPropertyIDSet",
     "nsCSSProps",
