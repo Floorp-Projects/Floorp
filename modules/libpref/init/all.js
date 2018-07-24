@@ -1052,6 +1052,12 @@ pref("browser.dom.window.dump.enabled", true, sticky);
 // Controls whether EventEmitter module throws dump message on each emit
 pref("toolkit.dump.emit", false);
 
+// Enable recording/replaying executions.
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+pref("devtools.recordreplay.enabled", false);
+pref("devtools.recordreplay.enableRewinding", true);
+#endif
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
