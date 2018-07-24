@@ -143,10 +143,10 @@ EventTarget::RemoveSystemEventListener(const nsAString& aType,
 }
 
 EventHandlerNonNull*
-EventTarget::GetEventHandler(nsAtom* aType, const nsAString& aTypeString)
+EventTarget::GetEventHandler(nsAtom* aType)
 {
   EventListenerManager* elm = GetExistingListenerManager();
-  return elm ? elm->GetEventHandler(aType, aTypeString) : nullptr;
+  return elm ? elm->GetEventHandler(aType) : nullptr;
 }
 
 void
@@ -158,21 +158,14 @@ EventTarget::SetEventHandler(const nsAString& aType,
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
-  if (NS_IsMainThread()) {
-    RefPtr<nsAtom> type = NS_Atomize(aType);
-    SetEventHandler(type, EmptyString(), aHandler);
-    return;
-  }
-  SetEventHandler(nullptr,
-                  Substring(aType, 2), // Remove "on"
-                  aHandler);
+  RefPtr<nsAtom> type = NS_Atomize(aType);
+  SetEventHandler(type, aHandler);
 }
 
 void
-EventTarget::SetEventHandler(nsAtom* aType, const nsAString& aTypeString,
-                             EventHandlerNonNull* aHandler)
+EventTarget::SetEventHandler(nsAtom* aType, EventHandlerNonNull* aHandler)
 {
-  GetOrCreateListenerManager()->SetEventHandler(aType, aTypeString, aHandler);
+  GetOrCreateListenerManager()->SetEventHandler(aType, aHandler);
 }
 
 bool

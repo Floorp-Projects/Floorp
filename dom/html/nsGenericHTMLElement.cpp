@@ -628,7 +628,7 @@ nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
     if (!aValue && IsEventAttributeName(aName)) {
       if (EventListenerManager* manager = GetExistingListenerManager()) {
-        manager->RemoveEventHandler(aName, EmptyString());
+        manager->RemoveEventHandler(aName);
       }
     }
   }

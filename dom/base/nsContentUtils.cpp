@@ -4255,6 +4255,7 @@ nsContentUtils::IsEventAttributeName(nsAtom* aName, int32_t aType)
 EventMessage
 nsContentUtils::GetEventMessage(nsAtom* aName)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "sAtomEventTable is not threadsafe");
   if (aName) {
     EventNameMapping mapping;
     if (sAtomEventTable->Get(aName, &mapping)) {
@@ -4281,6 +4282,7 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
                                        mozilla::EventClassID aEventClassID,
                                        EventMessage* aEventMessage)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Our hashtables are not threadsafe");
   EventNameMapping mapping;
   if (sStringEventTable->Get(aName, &mapping)) {
     *aEventMessage =
@@ -4322,6 +4324,8 @@ EventMessage
 nsContentUtils::GetEventMessageAndAtomForListener(const nsAString& aName,
                                                   nsAtom** aOnName)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Our hashtables are not threadsafe");
+
   // Because of SVG/SMIL sStringEventTable contains a subset of the event names
   // comparing to the sAtomEventTable. However, usually sStringEventTable
   // contains the information we need, so in order to reduce hashtable

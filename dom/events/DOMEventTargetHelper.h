@@ -180,10 +180,8 @@ public:
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
 
   virtual void EventListenerAdded(nsAtom* aType) override;
-  virtual void EventListenerAdded(const nsAString& aType) override;
 
   virtual void EventListenerRemoved(nsAtom* aType) override;
-  virtual void EventListenerRemoved(const nsAString& aType) override;
 
   // Dispatch a trusted, non-cancellable and non-bubbling event to |this|.
   nsresult DispatchTrustedEvent(const nsAString& aEventName);
@@ -244,18 +242,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
 #define IMPL_EVENT_HANDLER(_event)                                        \
   inline mozilla::dom::EventHandlerNonNull* GetOn##_event()               \
   {                                                                       \
-    if (NS_IsMainThread()) {                                              \
-      return GetEventHandler(nsGkAtoms::on##_event, EmptyString());       \
-    }                                                                     \
-    return GetEventHandler(nullptr, NS_LITERAL_STRING(#_event));          \
+    return GetEventHandler(nsGkAtoms::on##_event);                        \
   }                                                                       \
   inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback) \
   {                                                                       \
-    if (NS_IsMainThread()) {                                              \
-      SetEventHandler(nsGkAtoms::on##_event, EmptyString(), aCallback);   \
-    } else {                                                              \
-      SetEventHandler(nullptr, NS_LITERAL_STRING(#_event), aCallback);    \
-    }                                                                     \
+    SetEventHandler(nsGkAtoms::on##_event, aCallback);                    \
   }
 
 #endif // mozilla_DOMEventTargetHelper_h_

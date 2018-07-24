@@ -2324,14 +2324,14 @@ WebSocketImpl::UpdateURI()
 void
 WebSocket::EventListenerAdded(nsAtom* aType)
 {
-  AssertIsOnMainThread();
+  AssertIsOnTargetThread();
   UpdateMustKeepAlive();
 }
 
 void
 WebSocket::EventListenerRemoved(nsAtom* aType)
 {
-  AssertIsOnMainThread();
+  AssertIsOnTargetThread();
   UpdateMustKeepAlive();
 }
 
