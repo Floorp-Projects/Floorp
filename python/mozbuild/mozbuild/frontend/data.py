@@ -17,7 +17,10 @@ structures.
 
 from __future__ import absolute_import, unicode_literals
 
-from mozbuild.frontend.context import ObjDirPath
+from mozbuild.frontend.context import (
+    ObjDirPath,
+    SourcePath,
+)
 from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
@@ -201,6 +204,7 @@ class XPIDLFile(ContextDerived):
     def __init__(self, context, source, module):
         ContextDerived.__init__(self, context)
 
+        assert isinstance(source, SourcePath)
         self.source_path = source
         self.basename = mozpath.basename(source)
         self.module = module
