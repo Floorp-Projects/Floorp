@@ -133,6 +133,9 @@ typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, jus
  * \li\b apz.allow_checkerboarding
  * Pref that allows or disallows checkerboarding
  *
+ * \li\b apz.allow_double_tap_zooming
+ * Pref that allows or disallows double tap to zoom
+ *
  * \li\b apz.allow_immediate_handoff
  * If set to true, scroll can be handed off from one APZC to another within
  * a single input block. If set to false, a single input block can only
