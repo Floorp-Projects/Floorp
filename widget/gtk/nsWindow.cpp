@@ -3661,6 +3661,8 @@ nsWindow::Create(nsIWidget* aParent,
     nsWindow       *parentnsWindow = nullptr;
     GtkWidget      *eventWidget = nullptr;
     bool            drawToContainer = false;
+    bool            useAlphaVisual = (mWindowType == eWindowType_popup &&
+                                     aInitData->mSupportTranslucency);
 
     if (aParent) {
         parentnsWindow = static_cast<nsWindow*>(aParent);
@@ -3710,14 +3712,6 @@ nsWindow::Create(nsIWidget* aParent,
                 GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
         }
         mShell = gtk_window_new(type);
-
-        bool useAlphaVisual = (mWindowType == eWindowType_popup &&
-                               aInitData->mSupportTranslucency);
-
-        // mozilla.widget.use-argb-visuals is a hidden pref defaulting to false
-        // to allow experimentation
-        if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
-            useAlphaVisual = true;
 
 #ifdef MOZ_X11
         // Ensure gfxPlatform is initialized, since that is what initializes
@@ -4136,8 +4130,10 @@ nsWindow::Create(nsIWidget* aParent,
       GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
       mXVisual = gdk_x11_visual_get_xvisual(gdkVisual);
       mXDepth = gdk_visual_get_depth(gdkVisual);
+      bool shaped = useAlphaVisual && !IsComposited();
 
-      mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth);
+      mSurfaceProvider.Initialize(mXDisplay, mXWindow, mXVisual, mXDepth,
+                                  shaped);
     }
 #ifdef MOZ_WAYLAND
     else if (!mIsX11Display) {
@@ -7200,6 +7196,7 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
                                 (mXWindow != X11None) ? mXWindow : (uintptr_t)nullptr,
                                 mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(),
+                                mIsTransparent && !IsComposited(),
                                 GetClientSize());
 }
 
