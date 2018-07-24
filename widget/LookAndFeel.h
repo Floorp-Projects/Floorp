@@ -437,7 +437,15 @@ public:
       * A boolean value indicating whether or not the OS is using a dark theme,
       * which we may want to switch to as well if not overridden by the user.
       */
-     eIntID_SystemUsesDarkTheme
+     eIntID_SystemUsesDarkTheme,
+
+     /**
+      * Corresponding to prefers-reduced-motion.
+      * https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-motion
+      * 0: no-preference
+      * 1: reduce
+      */
+     eIntID_PrefersReducedMotion,
   };
 
   /**

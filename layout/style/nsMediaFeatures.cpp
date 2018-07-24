@@ -52,6 +52,13 @@ static const nsCSSKTableEntry kDisplayModeKeywords[] = {
   { eCSSKeyword_UNKNOWN,                 -1 }
 };
 
+static const nsCSSKeywordAndBoolTableEntry kPrefersReducedMotionKeywords[] = {
+  // NOTE: The third boolean value is the value in the Boolean Context.
+  { eCSSKeyword_no_preference, StylePrefersReducedMotion::NoPreference, false },
+  { eCSSKeyword_reduce,        StylePrefersReducedMotion::Reduce,       true },
+  { eCSSKeyword_UNKNOWN,       -1 }
+};
+
 #ifdef XP_WIN
 struct WindowsThemeName {
   LookAndFeel::WindowsTheme mId;
@@ -513,6 +520,28 @@ GetIsGlyph(nsIDocument* aDocument, const nsMediaFeature* aFeature,
   aResult.SetIntValue(aDocument->IsSVGGlyphsDocument() ? 1 : 0, eCSSUnit_Integer);
 }
 
+static void
+GetPrefersReducedMotion(nsIDocument* aDocument,
+                        const nsMediaFeature* aFeature,
+                        nsCSSValue& aResult)
+{
+  StylePrefersReducedMotion prefersReducedMotion =
+    StylePrefersReducedMotion::NoPreference;
+
+  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0)) {
+    case 0:
+      prefersReducedMotion = StylePrefersReducedMotion::NoPreference;
+      break;
+    case 1:
+      prefersReducedMotion = StylePrefersReducedMotion::Reduce;
+      break;
+    default:
+      return;
+  }
+
+  aResult.SetEnumValue(prefersReducedMotion);
+}
+
 /* static */ void
 nsMediaFeatures::InitSystemMetrics()
 {
@@ -807,6 +836,14 @@ nsMediaFeatures::features[] = {
     nsMediaFeature::eNoRequirements,
     { kDisplayModeKeywords },
     GetDisplayMode
+  },
+  {
+    &nsGkAtoms::prefersReducedMotion,
+    nsMediaFeature::eMinMaxNotAllowed,
+    nsMediaFeature::eBoolEnumerated,
+    nsMediaFeature::eNoRequirements,
+    { kPrefersReducedMotionKeywords },
+    GetPrefersReducedMotion
   },
 
   // Webkit extensions that we support for de-facto web compatibility
