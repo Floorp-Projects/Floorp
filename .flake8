@@ -5,6 +5,7 @@ max-line-length = 99
 exclude =
     browser/extensions/mortar/ppapi/,
     browser/moz.configure,
+    build/moz.configure/*.configure,
     build/pymake/,
     dom/canvas/test/webgl-conf/checkout/closure-library/,
     editor/libeditor/tests/browserscope/,
