@@ -75,9 +75,13 @@ __wrap_dlopen(const char *path, int flags)
 const char *
 __wrap_dlerror(void)
 {
-  const char *error = ElfLoader::Singleton.lastError;
-  ElfLoader::Singleton.lastError = nullptr;
-  return error;
+  const char* error = ElfLoader::Singleton.lastError.exchange(nullptr);
+  if (error) {
+      // Return a custom error if available.
+      return error;
+  }
+  // Or fallback to the system error.
+  return dlerror();
 }
 
 void *
@@ -92,10 +96,8 @@ __wrap_dlsym(void *handle, const char *symbol)
     return h->GetSymbolPtr(symbol);
   }
 
-  void* sym = dlsym(handle, symbol);
-  ElfLoader::Singleton.lastError = dlerror();
-
-  return sym;
+  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
+  return dlsym(handle, symbol);
 }
 
 int
@@ -420,9 +422,9 @@ SystemElf::Load(const char *path, int flags)
     return nullptr;
   }
 
+  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
   void *handle = dlopen(path, flags);
   DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
-  ElfLoader::Singleton.lastError = dlerror();
   if (handle) {
     SystemElf *elf = new SystemElf(path, handle);
     ElfLoader::Singleton.Register(elf);
@@ -437,17 +439,17 @@ SystemElf::~SystemElf()
   if (!dlhandle)
     return;
   DEBUG_LOG("dlclose(%p [\"%s\"])", dlhandle, GetPath());
+  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
   dlclose(dlhandle);
-  ElfLoader::Singleton.lastError = dlerror();
   ElfLoader::Singleton.Forget(this);
 }
 
 void *
 SystemElf::GetSymbolPtr(const char *symbol) const
 {
+  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
   void *sym = dlsym(dlhandle, symbol);
   DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
-  ElfLoader::Singleton.lastError = dlerror();
   return sym;
 }
 
