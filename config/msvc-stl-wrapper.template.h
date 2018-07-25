@@ -12,6 +12,11 @@
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
+#if defined(__clang__)
+// Silence "warning: #include_next is a language extension [-Wgnu-include-next]"
+#pragma clang system_header
+#endif
+
 // Include mozalloc after the STL header and all other headers it includes
 // have been preprocessed.
 #if !defined(MOZ_INCLUDE_MOZALLOC_H)
