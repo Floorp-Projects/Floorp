@@ -6,8 +6,6 @@
 <script>
 const NON_CONTENT_ACCESSIBLE_VALUES = {
   "display": [
-    "-moz-box",
-    "-moz-inline-box",
     "-moz-grid",
     "-moz-inline-grid",
     "-moz-grid-group",
@@ -20,6 +18,10 @@ const NON_CONTENT_ACCESSIBLE_VALUES = {
   ],
 };
 
+if (!SpecialPowers.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {
+  NON_CONTENT_ACCESSIBLE_VALUES.display.push("-moz-box", "-moz-inline-box");
+}
+
 const sheet = document.getElementById("sheet");
 const div = document.querySelector("div");
 
@@ -29,8 +31,8 @@ test(function() {
 }, "sanity");
 
 for (const prop in NON_CONTENT_ACCESSIBLE_VALUES) {
+  const values = NON_CONTENT_ACCESSIBLE_VALUES[prop];
   test(function() {
-    const values = NON_CONTENT_ACCESSIBLE_VALUES[prop];
     for (const value of values) {
       sheet.textContent = `div { ${prop}: ${value} }`;
       const block = sheet.sheet.cssRules[0].style;
@@ -59,6 +61,6 @@ for (const prop in NON_CONTENT_ACCESSIBLE_VALUES) {
 
       assert_false(CSS.supports(prop, value), `${prop}: ${value} should not claim to be supported`)
     }
-  }, prop + " non-accessible values")
+  }, prop + " non-accessible values: " + values.join(", "))
 }
 </script>
