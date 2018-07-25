@@ -11,7 +11,7 @@ import android.view.View
 import android.webkit.WebSettings
 import org.mozilla.focus.webview.SystemWebView
 
-const val ENGINE_PREF_STRING_KEY = "renderer_preference"
+const val ENGINE_PREF_STRING_KEY = "use_gecko_engine"
 
 object WebViewProvider : IWebViewProvider {
 

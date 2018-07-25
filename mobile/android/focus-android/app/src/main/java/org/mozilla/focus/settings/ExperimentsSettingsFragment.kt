@@ -11,8 +11,7 @@ import android.support.v7.preference.PreferenceFragmentCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
 import org.mozilla.focus.R
 import org.mozilla.focus.web.Config
-
-private const val RENDERER_PREFERENCE_KEY = "renderer_preference"
+import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
 
 class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -24,9 +23,9 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
         val enginePref: SwitchPreference? = preferenceManager
-                .findPreference(RENDERER_PREFERENCE_KEY) as SwitchPreference?
+                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreference?
         enginePref?.isChecked = preferenceManager.sharedPreferences
-                .getBoolean(RENDERER_PREFERENCE_KEY, Config.DEFAULT_NEW_RENDERER)
+                .getBoolean(ENGINE_PREF_STRING_KEY, Config.DEFAULT_NEW_RENDERER)
     }
 
     override fun onResume() {
@@ -45,7 +44,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
-            RENDERER_PREFERENCE_KEY -> {
+            ENGINE_PREF_STRING_KEY -> {
                 rendererPreferenceChanged = true
             }
         }
