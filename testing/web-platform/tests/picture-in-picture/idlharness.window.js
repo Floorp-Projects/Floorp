@@ -1,5 +1,7 @@
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
+// META: script=/resources/testdriver.js
+// META: script=/resources/testdriver-vendor.js
 // META: script=resources/picture-in-picture-helpers.js
 
 'use strict';
@@ -8,10 +10,8 @@
 
 promise_test(async () => {
   try {
-    const video = await loadVideo();
-    document.body.appendChild(video);
-    self.video = video;
-    self.pipw = await video.requestPictureInPicture();
+    self.video = await loadVideo();
+    self.pipw = await requestPictureInPictureWithTrustedClick(video);
   } catch (e) {
     // Will be surfaced when video/pipw are undefined below.
   }
