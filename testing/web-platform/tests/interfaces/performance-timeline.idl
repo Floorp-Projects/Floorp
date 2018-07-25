@@ -8,6 +8,7 @@ partial interface Performance {
   PerformanceEntryList getEntriesByType(DOMString type);
   PerformanceEntryList getEntriesByName(DOMString name, optional DOMString type);
 };typedef sequence<PerformanceEntry> PerformanceEntryList;
+
 [Exposed=(Window,Worker)]
 interface PerformanceEntry {
   readonly    attribute DOMString name;
@@ -16,6 +17,7 @@ interface PerformanceEntry {
   readonly    attribute DOMHighResTimeStamp duration;
   [Default] object toJSON();
 };
+
 callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries,
                                              PerformanceObserver observer);
 [Constructor(PerformanceObserverCallback callback), Exposed=(Window,Worker)]
@@ -24,10 +26,12 @@ interface PerformanceObserver {
   void disconnect();
   PerformanceEntryList takeRecords();
 };
+
 dictionary PerformanceObserverInit {
   required sequence<DOMString> entryTypes;
   boolean buffered = false;
 };
+
 [Exposed=(Window,Worker)]
 interface PerformanceObserverEntryList {
   PerformanceEntryList getEntries();
