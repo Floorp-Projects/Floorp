@@ -1,0 +1,5 @@
+
+1 Added function:
+
+  'function char* NSSUTIL_AddNSSFlagToModuleSpec(char*, char*)'    {NSSUTIL_AddNSSFlagToModuleSpec@@NSSUTIL_3.39}
+

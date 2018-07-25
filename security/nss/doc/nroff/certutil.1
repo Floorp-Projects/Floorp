@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 27 October 2017
+.\"      Date:  5 October 2017
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "27 October 2017" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "5 October 2017" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -92,15 +92,11 @@ Add an email certificate to the certificate database\&.
 .PP
 \-F
 .RS 4
-Delete a private key from a key database\&. Specify the key to delete with the \-n argument\&. Specify the database from which to delete the key with the
+Delete a private key and the associated certificate from a database\&. Specify the key to delete with the \-n argument or the \-k argument\&. Specify the database from which to delete the key with the
 \fB\-d\fR
-argument\&. Use the
-\fB\-k\fR
-argument to specify explicitly whether to delete a DSA, RSA, or ECC key\&. If you don\*(Aqt use the
-\fB\-k\fR
-argument, the option looks for an RSA key matching the specified nickname\&.
+argument\&.
 .sp
-When you delete keys, be sure to also remove any certificates associated with those keys from the certificate database, by using \-D\&. Some smart cards do not let you remove a public key you have generated\&. In such a case, only the private key is deleted from the key pair\&. You can display the public key with the command certutil \-K \-h tokenname\&.
+Some smart cards do not let you remove a public key you have generated\&. In such a case, only the private key is deleted from the key pair\&.
 .RE
 .PP
 \-G

@@ -146,5 +146,12 @@ GPUVideoTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                          aImageKeys);
 }
 
+bool
+GPUVideoTextureHost::SupportsWrNativeTexture()
+{
+  MOZ_ASSERT(mWrappedTextureHost);
+  return mWrappedTextureHost->SupportsWrNativeTexture();
+}
+
 } // namespace layers
 } // namespace mozilla

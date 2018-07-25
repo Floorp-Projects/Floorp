@@ -448,6 +448,27 @@ cert_add_cert()
 	fi
 	cert_log "SUCCESS: $CERTNAME's mixed EC Cert Created"
 
+	echo "Importing RSA-PSS server certificate"
+	pk12u -i ${QADIR}/cert/TestUser-rsa-pss-interop.p12 -k ${R_PWFILE} -w ${R_PWFILE} -d ${PROFILEDIR}
+	# Let's get the key ID of the imported private key.
+	KEYID=`${BINDIR}/certutil -d ${PROFILEDIR} -K -f ${R_PWFILE} | \
+		grep 'TestUser-rsa-pss-interop$' | sed -n 's/^<.*> [^ ]\{1,\} *\([^ ]\{1,\}\).*/\1/p'`
+
+	CU_ACTION="Generate RSA-PSS Cert Request for $CERTNAME"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-rsa-pss@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	certu -R -d "${PROFILEDIR}" -k ${KEYID} -f "${R_PWFILE}" \
+	-z "${R_NOISE_FILE}" -o req 2>&1
+
+	CU_ACTION="Sign ${CERTNAME}'s RSA-PSS Request"
+	NEWSERIAL=`expr ${CERTSERIAL} + 30000`
+	certu -C -c "TestCA" -m "$NEWSERIAL" -v 60 -d "${P_R_CADIR}" \
+	      -i req -o "${CERTNAME}-rsa-pss.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+	CU_ACTION="Import $CERTNAME's RSA-PSS Cert -t u,u,u"
+	certu -A -n "$CERTNAME-rsa-pss" -t "u,u,u" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+	      -i "${CERTNAME}-rsa-pss.cert" 2>&1
+	cert_log "SUCCESS: $CERTNAME's RSA-PSS Cert Created"
+
     return 0
 }
 
@@ -2103,6 +2124,23 @@ cert_test_implicit_db_init()
   certu -A -n ca -t 'C,C,C' -d ${P_R_IMPLICIT_INIT_DIR} -i "${SERVER_CADIR}/serverCA.ca.cert"
 }
 
+cert_test_token_uri()
+{
+  echo "$SCRIPTNAME: specify token with PKCS#11 URI"
+
+  CERTIFICATE_DB_URI=`${BINDIR}/certutil -U -f "${R_PWFILE}" -d ${P_R_SERVERDIR} | sed -n 's/^ *uri: \(.*NSS%20Certificate%20DB.*\)/\1/p'`
+  BUILTIN_OBJECTS_URI=`${BINDIR}/certutil -U -f "${R_PWFILE}" -d ${P_R_SERVERDIR} | sed -n 's/^ *uri: \(.*Builtin%20Object%20Token.*\)/\1/p'`
+
+  CU_ACTION="List keys in NSS Certificate DB"
+  certu -K -f "${R_PWFILE}" -d ${P_R_SERVERDIR} -h ${CERTIFICATE_DB_URI}
+
+  # This token shouldn't have any keys
+  CU_ACTION="List keys in NSS Builtin Objects"
+  RETEXPECTED=255
+  certu -K -f "${R_PWFILE}" -d ${P_R_SERVERDIR} -h ${BUILTIN_OBJECTS_URI}
+  RETEXPECTED=0
+}
+
 check_sign_algo()
 {
   certu -L -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}" | \
@@ -2475,6 +2513,29 @@ EOF
   RETEXPECTED=0
 }
 
+cert_test_orphan_key_delete()
+{
+  CU_ACTION="Create orphan key in serverdir"
+  certu -G -k ec -q nistp256 -f "${R_PWFILE}" -z ${R_NOISE_FILE} -d ${PROFILEDIR}
+  # Let's get the key ID of the first orphan key.
+  # The output of certutil -K (list keys) isn't well formatted.
+  # The initial <key-number> part may or may not contain white space, which
+  # makes the use of awk to filter the column unreliable.
+  # To fix that, we remove the initial <number> field using sed, then select the
+  # column that contains the key ID.
+  ORPHAN=`${BINDIR}/certutil -d ${PROFILEDIR} -K -f ${R_PWFILE} | \
+          sed 's/^<.*>//g' | grep -w orphan | head -1 | awk '{print $2}'`
+  CU_ACTION="Delete orphan key"
+  certu -F -f "${R_PWFILE}" -k ${ORPHAN} -d ${PROFILEDIR}
+  # Ensure that the key is removed
+  certu -K -f "${R_PWFILE}" -d ${PROFILEDIR} | grep ${ORPHAN}
+  RET=$?
+  if [ "$RET" -eq 0 ]; then
+    html_failed "Deleting orphan key ($RET)"
+    cert_log "ERROR: Deleting orphan key failed $RET"
+  fi
+}
+
 cert_test_orphan_key_reuse()
 {
   CU_ACTION="Create orphan key in serverdir"
@@ -2519,6 +2580,7 @@ cert_all_CA
 cert_test_implicit_db_init
 cert_extended_ssl
 cert_ssl
+cert_test_orphan_key_delete
 cert_test_orphan_key_reuse
 cert_smime_client
 IS_FIPS_DISABLED=`certutil --build-flags |grep -cw NSS_FIPS_DISABLED`
@@ -2534,6 +2596,7 @@ cert_test_password
 cert_test_distrust
 cert_test_ocspresp
 cert_test_rsapss
+cert_test_token_uri
 
 if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
     cert_crl_ssl

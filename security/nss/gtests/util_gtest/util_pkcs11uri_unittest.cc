@@ -160,6 +160,7 @@ TEST_F(PK11URITest, ParseRetrieveTest) {
 
 TEST_F(PK11URITest, ParseFormatTest) {
   TestParseFormat("pkcs11:", "pkcs11:");
+  TestParseFormat("PKCS11:", "pkcs11:");
   TestParseFormat("pkcs11:token=aaa", "pkcs11:token=aaa");
   TestParseFormat("pkcs11:token=aaa;manufacturer=bbb",
                   "pkcs11:token=aaa;manufacturer=bbb");
