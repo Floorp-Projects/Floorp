@@ -13,7 +13,6 @@ interface Crypto {
   ArrayBufferView getRandomValues(ArrayBufferView array);
 };
 
-
 typedef (object or DOMString) AlgorithmIdentifier;
 
 typedef AlgorithmIdentifier HashAlgorithmIdentifier;
@@ -22,11 +21,9 @@ dictionary Algorithm {
   required DOMString name;
 };
 
-
 dictionary KeyAlgorithm {
   required DOMString name;
 };
-
 
 enum KeyType { "public", "private", "secret" };
 
@@ -39,7 +36,6 @@ interface CryptoKey {
   readonly attribute object algorithm;
   readonly attribute object usages;
 };
-
 
 enum KeyFormat { "raw", "spki", "pkcs8", "jwk" };
 
@@ -93,7 +89,6 @@ interface SubtleCrypto {
                          sequence<KeyUsage> keyUsages );
 };
 
-
 dictionary RsaOtherPrimesInfo {
   // The following fields are defined in Section 6.3.2.7 of JSON Web Algorithms
   DOMString r;
@@ -127,15 +122,12 @@ dictionary JsonWebKey {
   DOMString k;
 };
 
-
 typedef Uint8Array BigInteger;
-
 
 dictionary CryptoKeyPair {
   CryptoKey publicKey;
   CryptoKey privateKey;
 };
-
 
 dictionary RsaKeyGenParams : Algorithm {
   // The length, in bits, of the RSA modulus
@@ -144,12 +136,10 @@ dictionary RsaKeyGenParams : Algorithm {
   required BigInteger publicExponent;
 };
 
-
 dictionary RsaHashedKeyGenParams : RsaKeyGenParams {
   // The hash algorithm to use
   required HashAlgorithmIdentifier hash;
 };
-
 
 dictionary RsaKeyAlgorithm : KeyAlgorithm {
   // The length, in bits, of the RSA modulus
@@ -158,36 +148,30 @@ dictionary RsaKeyAlgorithm : KeyAlgorithm {
   required BigInteger publicExponent;
 };
 
-
 dictionary RsaHashedKeyAlgorithm : RsaKeyAlgorithm {
   // The hash algorithm that is used with this key
   required KeyAlgorithm hash;
 };
-
 
 dictionary RsaHashedImportParams : Algorithm {
   // The hash algorithm to use
   required HashAlgorithmIdentifier hash;
 };
 
-
 dictionary RsaPssParams : Algorithm {
   // The desired length of the random salt
   [EnforceRange] required unsigned long saltLength;
 };
-
 
 dictionary RsaOaepParams : Algorithm {
   // The optional label/application data to associate with the message
   BufferSource label;
 };
 
-
 dictionary EcdsaParams : Algorithm {
   // The hash algorithm to use
   required HashAlgorithmIdentifier hash;
 };
-
 
 typedef DOMString NamedCurve;
 
@@ -196,24 +180,20 @@ dictionary EcKeyGenParams : Algorithm {
   required NamedCurve namedCurve;
 };
 
-
 dictionary EcKeyAlgorithm : KeyAlgorithm {
   // The named curve that the key uses
   required NamedCurve namedCurve;
 };
-
 
 dictionary EcKeyImportParams : Algorithm {
   // A named curve
   required NamedCurve namedCurve;
 };
 
-
 dictionary EcdhKeyDeriveParams : Algorithm {
   // The peer's EC public key.
   required CryptoKey public;
 };
-
 
 dictionary AesCtrParams : Algorithm {
   // The initial value of the counter block. counter MUST be 16 bytes
@@ -229,30 +209,25 @@ dictionary AesCtrParams : Algorithm {
   [EnforceRange] required octet length;
 };
 
-
 dictionary AesKeyAlgorithm : KeyAlgorithm {
   // The length, in bits, of the key.
   required unsigned short length;
 };
-
 
 dictionary AesKeyGenParams : Algorithm {
   // The length, in bits, of the key.
   [EnforceRange] required unsigned short length;
 };
 
-
 dictionary AesDerivedKeyParams : Algorithm {
   // The length, in bits, of the key.
   [EnforceRange] required unsigned short length;
 };
 
-
 dictionary AesCbcParams : Algorithm {
   // The initialization vector. MUST be 16 bytes.
   required BufferSource iv;
 };
-
 
 dictionary AesGcmParams : Algorithm {
   // The initialization vector to use. May be up to 2^64-1 bytes long.
@@ -263,7 +238,6 @@ dictionary AesGcmParams : Algorithm {
   [EnforceRange] octet tagLength;
 };
 
-
 dictionary HmacImportParams : Algorithm {
   // The inner hash function to use.
   required HashAlgorithmIdentifier hash;
@@ -271,14 +245,12 @@ dictionary HmacImportParams : Algorithm {
   [EnforceRange] unsigned long length;
 };
 
-
 dictionary HmacKeyAlgorithm : KeyAlgorithm {
   // The inner hash function to use.
   required KeyAlgorithm hash;
   // The length (in bits) of the key.
   required unsigned long length;
 };
-
 
 dictionary HmacKeyGenParams : Algorithm {
   // The inner hash function to use.
@@ -289,7 +261,6 @@ dictionary HmacKeyGenParams : Algorithm {
   [EnforceRange] unsigned long length;
 };
 
-
 dictionary HkdfParams : Algorithm {
   // The algorithm to use with HMAC (e.g.: SHA-256)
   required HashAlgorithmIdentifier hash;
@@ -298,7 +269,6 @@ dictionary HkdfParams : Algorithm {
   // A bit string that corresponds to the context and application specific context for the derived keying material.
   required BufferSource info;
 };
-
 
 dictionary Pbkdf2Params : Algorithm {
   required BufferSource salt;

@@ -7,6 +7,7 @@ enum AppBannerPromptOutcome {
   "accepted",
   "dismissed"
 };
+
 [Constructor(DOMString type, optional EventInit eventInitDict),
  Exposed=Window]
 interface BeforeInstallPromptEvent : Event {
@@ -15,10 +16,12 @@ interface BeforeInstallPromptEvent : Event {
 dictionary PromptResponseObject {
   AppBannerPromptOutcome userChoice;
 };
+
 partial interface Window {
   attribute EventHandler onappinstalled;
   attribute EventHandler onbeforeinstallprompt;
 };
+
 dictionary WebAppManifest {
    TextDirectionType dir = "auto";
    DOMString lang;
@@ -39,13 +42,16 @@ dictionary WebAppManifest {
    sequence<ExternalApplicationResource> related_applications;
    boolean prefer_related_applications = "false";
 };
+
 enum TextDirectionType { "ltr", "rtl", "auto" };
+
 enum DisplayModeType {
   "fullscreen",
   "standalone",
   "minimal-ui",
   "browser"
 };
+
 dictionary ImageResource {
   required USVString src;
   DOMString sizes;
@@ -53,12 +59,14 @@ dictionary ImageResource {
   USVString purpose;
   USVString platform;
 };
+
 dictionary ServiceWorkerRegistrationObject {
   required USVString src;
   USVString scope;
   WorkerType type = "classic";
   ServiceWorkerUpdateViaCache update_via_cache = "imports";
 };
+
 dictionary ExternalApplicationResource {
   required USVString platform;
   USVString url;
@@ -66,6 +74,7 @@ dictionary ExternalApplicationResource {
   USVString min_version;
   sequence<Fingerprint> fingerprints;
 };
+
 dictionary Fingerprint {
   USVString type;
   USVString value;
