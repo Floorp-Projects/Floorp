@@ -21,9 +21,9 @@ async_test(t => {
   });
 
   var w = new Worker(URL.createObjectURL(workerBlob));
-  w.onmessage = function(e) {
+  w.onmessage = t.step_func(function(e) {
     assert_equals(e.data.originalState, WebSocket.CONNECTING, "WebSocket created on worker shutdown is in connecting state.");
     assert_equals(e.data.afterCloseState, WebSocket.CLOSING, "Closed WebSocket created on worker shutdown is in closing state.");
     t.done();
-  }
+  });
 }, 'WebSocket created after a worker self.close()');
