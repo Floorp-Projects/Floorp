@@ -392,7 +392,9 @@ js::Nursery::allocate(size_t size)
 
     void* thing = (void*)position();
     position_ = position() + size;
+#if defined(NIGHTLY_BUILD)
     runtime()->gc.stats().noteNurseryAlloc();
+#endif
 
     JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size, MemCheckKind::MakeUndefined);
 
@@ -613,8 +615,13 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
         json.property("lazy_capacity", previousGC.nurseryLazyCapacity);
     if (!timeInChunkAlloc_.IsZero())
         json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
+
+#if defined(NIGHTLY_BUILD)
+    // We don't want the cost of collecting these on the allocation hot path
+    // in non-nightly builds.
     json.property("cells_allocated_nursery", runtime()->gc.stats().allocsSinceMinorGCNursery());
     json.property("cells_allocated_tenured", runtime()->gc.stats().allocsSinceMinorGCTenured());
+#endif
 
     json.beginObjectProperty("phase_times");
 
