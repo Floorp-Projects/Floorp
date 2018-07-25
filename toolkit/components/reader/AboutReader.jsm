@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = [ "AboutReader" ];
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/ReaderMode.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm");
 ChromeUtils.defineModuleGetter(this, "NarrateControls", "resource://gre/modules/narrate/NarrateControls.jsm");

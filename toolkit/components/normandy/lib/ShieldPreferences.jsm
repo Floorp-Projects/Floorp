@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(
   this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm"
