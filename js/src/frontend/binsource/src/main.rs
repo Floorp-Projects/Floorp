@@ -426,6 +426,15 @@ struct OptionParserData {
     elements: NodeName,
 }
 
+/// What to use when calling the method to store the result value.
+enum MethodCallKind {
+    /// Use BINJS_MOZ_TRY_DECL.
+    Decl,
+
+    /// Use MOZ_TRY_VAR.
+    Var,
+}
+
 /// The actual exporter.
 struct CPPExporter {
     /// The syntax to export.
@@ -578,6 +587,29 @@ impl CPPExporter {
         )
     }
 
+    fn get_method_call(&self, var_name: &str, name: &NodeName,
+                       call_kind: MethodCallKind) -> String {
+        let type_ok = self.get_type_ok(name);
+        let call = format!("parse{name}()",
+                           name = name.to_class_cases());
+
+        if type_ok.to_str() == "Ok" {
+            // Special case: `Ok` means that we shouldn't bind the return value.
+            format!("MOZ_TRY({call});",
+                    call = call)
+        } else {
+            match call_kind {
+                MethodCallKind::Decl => {
+                    format!("BINJS_MOZ_TRY_DECL({var_name}, {call});",
+                            var_name = var_name, call = call)
+                }
+                MethodCallKind::Var => {
+                    format!("MOZ_TRY_VAR({var_name}, {call});",
+                            var_name = var_name, call = call)
+                }
+            }
+        }
+    }
 
     /// Declaring enums for kinds and fields.
     fn export_declare_kinds_and_fields_enums(&self, buffer: &mut String) {
@@ -1170,31 +1202,25 @@ impl CPPExporter {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
                         Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom());", var_name = var_name)))
                 }
-                Some(IsNullable { content: Primitive::Interface(ref interface), ..})
-                    if self.get_type_ok(interface.name()).as_str() == "Ok" =>
-                {
-                    // Special case: `Ok` means that we shouldn't bind the return value.
-                    let typename = TypeName::type_(field.type_());
-                    (None,
-                        Some(format!("MOZ_TRY(parse{typename}());",
-                            typename = typename)))
-                }
                 _else => {
                     let typename = TypeName::type_(field.type_());
-                    if needs_block {
+                    let name = self.syntax.get_node_name(typename.to_str())
+                        .expect("NodeName for the field type should exist.");
+
+                    let (decl_var, call_kind) = if needs_block {
                         (Some(format!("{typename} {var_name};",
-                            var_name = var_name,
-                            typename = typename)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, parse{typename}());",
-                            var_name = var_name,
-                            typename = typename)
-                        ))
+                                      var_name = var_name,
+                                      typename = typename)),
+                         MethodCallKind::Var)
                     } else {
                         (None,
-                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, parse{typename}());",
-                            var_name = var_name,
-                            typename = typename)))
-                    }
+                         MethodCallKind::Decl)
+                    };
+
+                    (decl_var,
+                     Some(self.get_method_call(var_name.to_str(),
+                                               &name,
+                                               call_kind)))
                 }
             };
 
