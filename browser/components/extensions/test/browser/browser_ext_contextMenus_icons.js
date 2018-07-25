@@ -35,7 +35,7 @@ add_task(async function test_root_icon() {
       browser.contextMenus.create({
         title: "child",
       }, () => {
-        browser.test.notifyPass("contextmenus-icons");
+        browser.test.sendMessage("contextmenus-icons");
       });
     },
   });
@@ -48,7 +48,7 @@ add_task(async function test_root_icon() {
   };
 
   await extension.startup();
-  await extension.awaitFinish("contextmenus-icons");
+  await extension.awaitMessage("contextmenus-icons");
 
   let extensionMenu = await openExtensionContextMenu();
 
@@ -124,7 +124,7 @@ add_task(async function test_child_icon() {
             18: "green_icon.png",
           },
         }, () => {
-          browser.test.notifyPass("extra-contextmenu-items-added");
+          browser.test.sendMessage("extra-contextmenu-items-added");
         });
       });
 
@@ -156,7 +156,7 @@ add_task(async function test_child_icon() {
   await closeContextMenu();
 
   extension.sendMessage("add-additional-contextmenu-items");
-  await extension.awaitFinish("extra-contextmenu-items-added");
+  await extension.awaitMessage("extra-contextmenu-items-added");
 
   contextMenu = await openExtensionContextMenu();
 
