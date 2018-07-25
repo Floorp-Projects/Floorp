@@ -785,6 +785,10 @@ var clear = async function(db) {
                               EXCEPT
                               SELECT icon_id FROM moz_icons_to_pages
                             )`);
+    await db.executeCached(`DELETE FROM moz_icons
+                            WHERE root = 1
+                              AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+                              AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
 
     // Expire annotations.
     await db.execute(`DELETE FROM moz_items_annos WHERE expiration = :expire_session`,
@@ -878,6 +882,10 @@ var cleanupPages = async function(db, pages) {
                             EXCEPT
                             SELECT icon_id FROM moz_icons_to_pages
                           )`);
+  await db.executeCached(`DELETE FROM moz_icons
+                          WHERE root = 1
+                            AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+                            AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
 
   await db.execute(`DELETE FROM moz_annos
                     WHERE place_id IN ( ${ idsList } )`);
