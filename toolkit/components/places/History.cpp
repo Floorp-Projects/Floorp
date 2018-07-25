@@ -1525,7 +1525,7 @@ public:
       DESTINATIONFILEURI_ANNO,
       NS_ConvertUTF8toUTF16(destinationURISpec),
       0,
-      nsIAnnotationService::EXPIRE_WITH_HISTORY
+      nsIAnnotationService::EXPIRE_NEVER
     );
     NS_ENSURE_SUCCESS(rv, rv);
 

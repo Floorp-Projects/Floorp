@@ -34,6 +34,7 @@
     <issue id="LongLogTag" severity="warning" />
     <issue id="MissingPermission" severity="warning" />
     <issue id="OnClick" severity="warning" />
+    <issue id="ProtectedPermissions" severity="warning" />
     <issue id="ReferenceType" severity="warning" />
     <issue id="ResourceAsColor" severity="warning" />
     <issue id="ResourceType" severity="warning" />
@@ -195,7 +196,6 @@
     <issue id="Proguard" severity="error" />
     <issue id="ProguardSplit" severity="error" />
     <issue id="PropertyEscape" severity="error" />
-    <issue id="ProtectedPermissions" severity="error" />
     <issue id="PxUsage" severity="error" />
     <issue id="Range" severity="error" />
     <issue id="RelativeOverlap" severity="error" />

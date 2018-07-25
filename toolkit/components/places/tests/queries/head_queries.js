@@ -104,7 +104,7 @@ async function task_populateDB(aArray) {
                                                     qdata.annoName,
                                                     qdata.annoVal,
                                                     qdata.annoFlags,
-                                                    qdata.annoExpiration);
+                                                    PlacesUtils.annotations.EXPIRE_NEVER);
         }
       }
 
@@ -117,7 +117,7 @@ async function task_populateDB(aArray) {
                                                     qdata.annoName,
                                                     qdata.annoVal,
                                                     qdata.annoFlags,
-                                                    qdata.annoExpiration);
+                                                    PlacesUtils.annotations.EXPIRE_NEVER);
         }
       }
 
