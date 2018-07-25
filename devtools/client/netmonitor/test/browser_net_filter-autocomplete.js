@@ -51,7 +51,7 @@ add_task(async function() {
   await waitNetwork;
 
   EventUtils.synthesizeMouseAtCenter(
-    document.querySelector(".devtools-filterinput"), {}, window);
+    document.querySelector(".devtools-filterinput"), {}, document.defaultView);
   // Empty Mouse click should keep autocomplete hidden
   ok(!document.querySelector(".devtools-autocomplete-popup"),
     "Autocomplete Popup still hidden");
