@@ -436,12 +436,15 @@ SocketListener.prototype = {
       if (self.isPortBased) {
         const port = Number(self.portOrPath);
         self._socket.initSpecialConnection(port, flags, backlog);
-      } else {
+      } else if (self.portOrPath.startsWith("/")) {
         const file = nsFile(self.portOrPath);
         if (file.exists()) {
           file.remove(false);
         }
         self._socket.initWithFilename(file, parseInt("666", 8), backlog);
+      } else {
+        // Path isn't absolute path, so we use abstract socket address
+        self._socket.initWithAbstractAddress(self.portOrPath, backlog);
       }
       await self._setAdditionalSocketOptions();
       self._socket.asyncListen(self);
