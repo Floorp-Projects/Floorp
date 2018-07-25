@@ -84,7 +84,7 @@
 
       <varlistentry>
         <term>-F</term>
-        <listitem><para>Delete a private key and the associated certificate from a database. Specify the key to delete with the -n argument. Specify the database from which to delete the key with the 
+        <listitem><para>Delete a private key and the associated certificate from a database. Specify the key to delete with the -n argument or the -k argument. Specify the database from which to delete the key with the
 <option>-d</option> argument.
 </para>
 <para>
