@@ -78,6 +78,10 @@ payment-dialog > header {
   display: none;
 }
 
+.page-error {
+  color: #D70022;
+}
+
 .page > footer {
   align-items: center;
   background-color: #eaeaee;
