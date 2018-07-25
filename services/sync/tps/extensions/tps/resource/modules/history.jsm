@@ -9,7 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["HistoryEntry", "DumpHistory"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
 ChromeUtils.import("resource://tps/logger.jsm");
