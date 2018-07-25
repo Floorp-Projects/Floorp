@@ -58,15 +58,32 @@ class MenuItem extends PureComponent {
       return;
     }
 
-    // Pre-fetch any backgrounds specified for the button.
+    // Pre-fetch any backgrounds specified for the item.
     const win = this.labelRef.current.ownerDocument.defaultView;
-    const backgrounds = win
-      .getComputedStyle(this.labelRef.current, ":before")
-      .getCSSImageURLs("background-image");
-    for (const background of backgrounds) {
-      const image = new Image();
-      image.src = background;
+    this.preloadCallback = win.requestIdleCallback(() => {
+      this.preloadCallback = null;
+      if (!this.labelRef.current) {
+        return;
+      }
+
+      const backgrounds = win
+        .getComputedStyle(this.labelRef.current, ":before")
+        .getCSSImageURLs("background-image");
+      for (const background of backgrounds) {
+        const image = new Image();
+        image.src = background;
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    if (!this.labelRef.current || !this.preloadCallback) {
+      return;
     }
+
+    const win = this.labelRef.current.ownerDocument.defaultView;
+    win.cancelIdleCallback(this.preloadCallback);
+    this.preloadCallback = null;
   }
 
   render() {
