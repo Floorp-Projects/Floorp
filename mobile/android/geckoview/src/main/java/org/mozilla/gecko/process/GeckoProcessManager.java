@@ -204,21 +204,13 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         final Bundle extras = GeckoThread.getActiveExtras();
-        final ParcelFileDescriptor prefsPfd;
-        final ParcelFileDescriptor prefMapPfd;
-        final ParcelFileDescriptor ipcPfd;
-        final ParcelFileDescriptor crashPfd;
-        final ParcelFileDescriptor crashAnnotationPfd;
-        try {
-            prefsPfd = ParcelFileDescriptor.fromFd(prefsFd);
-            prefMapPfd = ParcelFileDescriptor.fromFd(prefMapFd);
-            ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
-            crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
-            crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
-        } catch (final IOException e) {
-            Log.e(LOGTAG, "Cannot create fd for " + type, e);
-            return 0;
-        }
+        final ParcelFileDescriptor prefsPfd = ParcelFileDescriptor.adoptFd(prefsFd);
+        final ParcelFileDescriptor prefMapPfd = ParcelFileDescriptor.adoptFd(prefMapFd);
+        final ParcelFileDescriptor ipcPfd = ParcelFileDescriptor.adoptFd(ipcFd);
+        final ParcelFileDescriptor crashPfd =
+                (crashFd >= 0) ? ParcelFileDescriptor.adoptFd(crashFd) : null;
+        final ParcelFileDescriptor crashAnnotationPfd =
+                (crashAnnotationFd >= 0) ? ParcelFileDescriptor.adoptFd(crashAnnotationFd) : null;
 
         final int flags = filterFlagsForChild(GeckoThread.getActiveFlags());
 
@@ -229,6 +221,16 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         } catch (final RemoteException e) {
         }
 
+        if (crashAnnotationPfd != null) {
+            crashAnnotationPfd.detachFd();
+        }
+        if (crashPfd != null) {
+            crashPfd.detachFd();
+        }
+        ipcPfd.detachFd();
+        prefMapPfd.detachFd();
+        prefsPfd.detachFd();
+
         if (!started) {
             if (retry) {
                 Log.e(LOGTAG, "Cannot restart child " + type);
@@ -237,17 +239,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             Log.w(LOGTAG, "Attempting to kill running child " + type);
             connection.unbind();
             return start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
-        }
-
-        try {
-            if (crashAnnotationPfd != null) {
-                crashAnnotationPfd.close();
-            }
-            if (crashPfd != null) {
-                crashPfd.close();
-            }
-            ipcPfd.close();
-        } catch (final IOException e) {
         }
 
         return connection.getPid();
