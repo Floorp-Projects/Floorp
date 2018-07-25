@@ -913,6 +913,92 @@ NSSUTIL_MkModuleSpec(char *dllName, char *commonName, char *parameters,
     return NSSUTIL_MkModuleSpecEx(dllName, commonName, parameters, NSS, NULL);
 }
 
+/************************************************************************
+ * add a single flag to the Flags= section inside the spec's NSS= section */
+char *
+NSSUTIL_AddNSSFlagToModuleSpec(char *spec, char *addFlag)
+{
+    const char *prefix = "flags=";
+    const size_t prefixLen = strlen(prefix);
+    char *lib = NULL, *name = NULL, *param = NULL, *nss = NULL, *conf = NULL;
+    char *nss2 = NULL, *result = NULL;
+    SECStatus rv;
+
+    rv = NSSUTIL_ArgParseModuleSpecEx(spec, &lib, &name, &param, &nss, &conf);
+    if (rv != SECSuccess) {
+        return NULL;
+    }
+
+    if (nss && NSSUTIL_ArgHasFlag("flags", addFlag, nss)) {
+        /* It's already there, nothing to do! */
+        PORT_Free(lib);
+        PORT_Free(name);
+        PORT_Free(param);
+        PORT_Free(nss);
+        PORT_Free(conf);
+        return PORT_Strdup(spec);
+    }
+
+    if (!nss || !strlen(nss)) {
+        nss2 = PORT_Alloc(prefixLen + strlen(addFlag) + 1);
+        PORT_Strcpy(nss2, prefix);
+        PORT_Strcat(nss2, addFlag);
+    } else {
+        const char *iNss = nss;
+        PRBool alreadyAdded = PR_FALSE;
+        size_t maxSize = strlen(nss) + strlen(addFlag) + prefixLen + 2; /* space and null terminator */
+        nss2 = PORT_Alloc(maxSize);
+        *nss2 = 0;
+        while (*iNss) {
+            iNss = NSSUTIL_ArgStrip(iNss);
+            if (PORT_Strncasecmp(iNss, prefix, prefixLen) == 0) {
+                /* We found an existing Flags= section. */
+                char *oldFlags;
+                const char *valPtr;
+                int valSize;
+                valPtr = iNss + prefixLen;
+                oldFlags = NSSUTIL_ArgFetchValue(valPtr, &valSize);
+                iNss = valPtr + valSize;
+                PORT_Strcat(nss2, prefix);
+                PORT_Strcat(nss2, oldFlags);
+                PORT_Strcat(nss2, ",");
+                PORT_Strcat(nss2, addFlag);
+                PORT_Strcat(nss2, " ");
+                PORT_Free(oldFlags);
+                alreadyAdded = PR_TRUE;
+                iNss = NSSUTIL_ArgStrip(iNss);
+                PORT_Strcat(nss2, iNss); /* remainder of input */
+                break;
+            } else {
+                /* Append this other name=value pair and continue. */
+                const char *startOfNext = NSSUTIL_ArgSkipParameter(iNss);
+                PORT_Strncat(nss2, iNss, (startOfNext - iNss));
+                if (nss2[strlen(nss2) - 1] != ' ') {
+                    PORT_Strcat(nss2, " ");
+                }
+                iNss = startOfNext;
+            }
+            iNss = NSSUTIL_ArgStrip(iNss);
+        }
+        if (!alreadyAdded) {
+            /* nss wasn't empty, and it didn't contain a Flags section. We can
+             * assume that other content from nss has already been added to
+             * nss2, which means we already have a trailing space separator. */
+            PORT_Strcat(nss2, prefix);
+            PORT_Strcat(nss2, addFlag);
+        }
+    }
+
+    result = NSSUTIL_MkModuleSpecEx(lib, name, param, nss2, conf);
+    PORT_Free(lib);
+    PORT_Free(name);
+    PORT_Free(param);
+    PORT_Free(nss);
+    PORT_Free(nss2);
+    PORT_Free(conf);
+    return result;
+}
+
 #define NSSUTIL_ARG_FORTEZZA_FLAG "FORTEZZA"
 /******************************************************************************
  * Parse the cipher flags from the NSS parameter

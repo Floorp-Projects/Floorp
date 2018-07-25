@@ -45,7 +45,7 @@ BALROG_PLATFORM_MAP = {
         "WINNT_x86_64-msvc-x64"
     ],
     "win64-asan-reporter": [
-        "WINNT_x86_64-clangcl-asan"
+        "WINNT_x86_64-msvc-x64-asan"
     ]
 }
 
@@ -57,7 +57,7 @@ FTP_PLATFORM_MAP = {
     "Linux_x86-gcc3": "linux-i686",
     "Linux_x86_64-gcc3": "linux-x86_64",
     "Linux_x86_64-gcc3-asan": "linux-x86_64-asan-reporter",
-    "WINNT_x86_64-clangcl-asan": "win64-asan-reporter",
+    "WINNT_x86_64-msvc-x64-asan": "win64-asan-reporter",
     "WINNT_x86-msvc": "win32",
     "WINNT_x86-msvc-x64": "win32",
     "WINNT_x86-msvc-x86": "win32",
