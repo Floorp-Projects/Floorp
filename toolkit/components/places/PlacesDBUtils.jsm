@@ -536,6 +536,13 @@ var PlacesDBUtils = {
         )`
       },
 
+      { query:
+        `DELETE FROM moz_icons
+         WHERE root = 1
+           AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+           AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`
+      },
+
       // MOZ_HISTORYVISITS
       // F.1 remove orphan visits
       { query:
