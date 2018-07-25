@@ -318,6 +318,8 @@ class SharedPrefMap
     uint8_t mIsSticky : 1;
     // True if the preference is locked, as defined by the preference service.
     uint8_t mIsLocked : 1;
+    // True if the preference's default value has changed since it was first set.
+    uint8_t mDefaultChanged : 1;
   };
 
 public:
@@ -345,6 +347,7 @@ public:
       return PrefType(mEntry->mType);
     }
 
+    bool DefaultChanged() const { return mEntry->mDefaultChanged; }
     bool HasDefaultValue() const { return mEntry->mHasDefaultValue; }
     bool HasUserValue() const { return mEntry->mHasUserValue; }
     bool IsLocked() const { return mEntry->mIsLocked; }
@@ -589,6 +592,7 @@ public:
     uint8_t mHasUserValue : 1;
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
+    uint8_t mDefaultChanged : 1;
   };
 
   void Add(const char* aKey,
@@ -860,6 +864,7 @@ private:
     uint8_t mHasUserValue : 1;
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
+    uint8_t mDefaultChanged : 1;
   };
 
   // Converts a builder Value struct to a SharedPrefMap::Value struct for
