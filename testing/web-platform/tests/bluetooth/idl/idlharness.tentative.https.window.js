@@ -5,21 +5,15 @@
 
 // https://webbluetoothcg.github.io/web-bluetooth/
 
-idl_test(
-  ['web-bluetooth'],
-  ['dom', 'html', 'permissions'],
-  idl_array => {
-    try {
-      self.event = new BluetoothAdvertisingEvent('type');
-    } catch(e) {
-      // Surfaced when 'event' is undefined below.
-    }
+promise_test(async () => {
+  const srcs = ['web-bluetooth', 'dom', 'html', 'permissions'];
+  const [idl, dom, html, permissions] = await Promise.all(
+      srcs.map(i => fetch(`/interfaces/${i}.idl`).then(r => r.text())));
 
-    idl_array.add_objects({
-      Navigator: ['navigator'],
-      Bluetooth: ['navigator.bluetooth'],
-      BluetoothAdvertisingEvent: ['event'],
-    });
-  },
-  'web-bluetooth interfaces.'
-);
+  const idl_array = new IdlArray();
+  idl_array.add_idls(idl);
+  idl_array.add_dependency_idls(dom);
+  idl_array.add_dependency_idls(html);
+  idl_array.add_dependency_idls(permissions);
+  idl_array.test();
+}, 'web-bluetooth interfaces.');
