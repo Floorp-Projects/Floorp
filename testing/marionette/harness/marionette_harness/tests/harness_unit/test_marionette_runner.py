@@ -507,4 +507,4 @@ def test_option_run_until_failure(mach_parsed_kwargs, repeat, run_until_failure)
 
 
 if __name__ == '__main__':
-    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-')
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-', '--capture', 'no')
