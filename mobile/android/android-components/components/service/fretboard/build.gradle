@@ -22,19 +22,21 @@ android {
 }
 
 dependencies {
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
+    implementation Deps.arch_workmanager
+
     implementation project(':support-ktx')
     implementation project(':support-base')
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
-
-    testImplementation project(':support-test')
 
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric
     testImplementation Deps.testing_mockito
     testImplementation Deps.testing_mockwebserver
     testImplementation Deps.kotlin_reflect
+
+    testImplementation project(':support-test')
 }
 
 archivesBaseName = "fretboard"
