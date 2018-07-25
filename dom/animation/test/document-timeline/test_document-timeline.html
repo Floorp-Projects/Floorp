@@ -27,8 +27,8 @@ test(function() {
 });
 
 async_test(function(t) {
-  assert_greater_than(document.timeline.currentTime, 0,
-    'document.timeline.currentTime is positive');
+  assert_greater_than_equal(document.timeline.currentTime, 0,
+    'document.timeline.currentTime is positive or zero');
   // document.timeline.currentTime should be set even before document
   // load fires. We expect this code to be run before document load and hence
   // the above assertion is sufficient.
