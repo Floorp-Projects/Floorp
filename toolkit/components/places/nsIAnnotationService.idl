@@ -9,6 +9,18 @@ interface nsIURI;
 interface nsIVariant;
 interface mozIAnnotatedResult;
 
+/**
+ *
+ *
+ *  THE ANNOTATION SERVICE API IS
+ *
+ *  ===  D E P R E C A T E D  ===
+ *
+ * See https://bugzilla.mozilla.org/show_bug.cgi?id=699844
+ *
+ *
+ */
+
 [scriptable, uuid(63fe98e0-6889-4c2c-ac9f-703e4bc25027)]
 interface nsIAnnotationObserver : nsISupports
 {
@@ -40,44 +52,14 @@ interface nsIAnnotationService : nsISupports
 {
     /**
      * Valid values for aExpiration, which sets the expiration policy for your
-     * annotation. The times for the days, weeks and months policies are
-     * measured since the last visit date of the page in question. These
-     * will not expire so long as the user keeps visiting the page from time
-     * to time.
+     * annotation.
      */
-
-    // For temporary data that can be discarded when the user exits.
-    // Removed at application exit.
-    const unsigned short EXPIRE_SESSION = 0;
-
-    // NOTE: 1 is skipped due to its temporary use as EXPIRE_NEVER in bug #319455.
-
-    // For general page settings, things the user is interested in seeing
-    // if they come back to this page some time in the near future.
-    // Removed at 30 days.
-    const unsigned short EXPIRE_WEEKS = 2;
-
-    // Something that the user will be interested in seeing in their
-    // history like favicons. If they haven't visited a page in a couple
-    // of months, they probably aren't interested in many other annotations,
-    // the positions of things, or other stuff you create, so put that in
-    // the weeks policy.
-    // Removed at 180 days.
-    const unsigned short EXPIRE_MONTHS = 3;
 
     // For annotations that only live as long as the URI is in the database.
     // A page annotation will expire if the page has no visits
     // and is not bookmarked.
     // An item annotation will expire when the item is deleted.
     const unsigned short EXPIRE_NEVER = 4;
-
-    // For annotations that only live as long as the URI has visits.
-    // Valid only for page annotations.
-    const unsigned short EXPIRE_WITH_HISTORY = 5;
-
-    // For short-lived temporary data that you still want to outlast a session.
-    // Removed at 7 days.
-    const unsigned short EXPIRE_DAYS = 6;
 
     // type constants
     const unsigned short TYPE_INT32  = 1;

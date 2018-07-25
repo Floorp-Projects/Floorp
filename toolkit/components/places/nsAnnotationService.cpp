@@ -140,13 +140,11 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsAnnotationService, gAnnotationService)
 
 NS_IMPL_ISUPPORTS(nsAnnotationService
 , nsIAnnotationService
-, nsIObserver
 , nsISupportsWeakReference
 )
 
 
 nsAnnotationService::nsAnnotationService()
-  : mHasSessionAnnotations(false)
 {
   NS_ASSERTION(!gAnnotationService,
                "Attempting to create two instances of the service!");
@@ -168,11 +166,6 @@ nsAnnotationService::Init()
 {
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
-
-  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-  if (obsSvc) {
-    (void)obsSvc->AddObserver(this, TOPIC_PLACES_SHUTDOWN, true);
-  }
 
   return NS_OK;
 }
@@ -302,9 +295,6 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG(aValue);
 
-  if (aExpiration == EXPIRE_WITH_HISTORY)
-    return NS_ERROR_INVALID_ARG;
-
   uint16_t dataType;
   nsresult rv = aValue->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -407,9 +397,6 @@ nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
-  if (aExpiration == EXPIRE_WITH_HISTORY)
-    return NS_ERROR_INVALID_ARG;
-
   BookmarkData bookmark;
   nsresult rv = SetAnnotationStringInternal(nullptr, aItemId, &bookmark, aName,
                                             aValue, aFlags, aExpiration);
@@ -483,9 +470,6 @@ nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                             bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
-
-  if (aExpiration == EXPIRE_WITH_HISTORY)
-    return NS_ERROR_INVALID_ARG;
 
   BookmarkData bookmark;
   nsresult rv = SetAnnotationInt32Internal(nullptr, aItemId, &bookmark, aName,
@@ -561,9 +545,6 @@ nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
-  if (aExpiration == EXPIRE_WITH_HISTORY)
-    return NS_ERROR_INVALID_ARG;
-
   BookmarkData bookmark;
   nsresult rv = SetAnnotationInt64Internal(nullptr, aItemId, &bookmark, aName,
                                            aValue, aFlags, aExpiration);
@@ -637,9 +618,6 @@ nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                              bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
-
-  if (aExpiration == EXPIRE_WITH_HISTORY)
-    return NS_ERROR_INVALID_ARG;
 
   BookmarkData bookmark;
   nsresult rv = SetAnnotationDoubleInternal(nullptr, aItemId, &bookmark,
@@ -1445,11 +1423,10 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
                                         uint16_t aType,
                                         nsCOMPtr<mozIStorageStatement>& aStatement)
 {
-  bool isItemAnnotation = (aItemId > 0);
+  MOZ_ASSERT(aExpiration == EXPIRE_NEVER, "Only EXPIRE_NEVER is supported");
+  NS_ENSURE_ARG(aExpiration == EXPIRE_NEVER);
 
-  if (aExpiration == EXPIRE_SESSION) {
-    mHasSessionAnnotations = true;
-  }
+  bool isItemAnnotation = (aItemId > 0);
 
   // Ensure the annotation name exists.
   nsCOMPtr<mozIStorageStatement> addNameStmt = mDB->GetStatement(
@@ -1585,54 +1562,6 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   // On success, leave the statement open, the caller will set the value
   // and execute the statement.
   setAnnoScoper.Abandon();
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsIObserver
-
-NS_IMETHODIMP
-nsAnnotationService::Observe(nsISupports *aSubject,
-                             const char *aTopic,
-                             const char16_t *aData)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  if (strcmp(aTopic, TOPIC_PLACES_SHUTDOWN) == 0) {
-    // Remove all session annotations, if any.
-    if (mHasSessionAnnotations) {
-      nsCOMPtr<mozIStorageAsyncStatement> pageAnnoStmt = mDB->GetAsyncStatement(
-        "DELETE FROM moz_annos WHERE expiration = :expire_session"
-      );
-      NS_ENSURE_STATE(pageAnnoStmt);
-      nsresult rv = pageAnnoStmt->BindInt32ByName(NS_LITERAL_CSTRING("expire_session"),
-                                                  EXPIRE_SESSION);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<mozIStorageAsyncStatement> itemAnnoStmt = mDB->GetAsyncStatement(
-        "DELETE FROM moz_items_annos WHERE expiration = :expire_session"
-      );
-      NS_ENSURE_STATE(itemAnnoStmt);
-      rv = itemAnnoStmt->BindInt32ByName(NS_LITERAL_CSTRING("expire_session"),
-                                         EXPIRE_SESSION);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mozIStorageBaseStatement *stmts[] = {
-        pageAnnoStmt.get()
-      , itemAnnoStmt.get()
-      };
-
-      nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
-      if (!conn) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      nsCOMPtr<mozIStoragePendingStatement> ps;
-      rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
-                                         getter_AddRefs(ps));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
 
   return NS_OK;
 }
