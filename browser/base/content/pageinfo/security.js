@@ -27,6 +27,7 @@ var security = {
   },
 
   _getSecurityInfo() {
+    const nsISSLStatusProvider = Ci.nsISSLStatusProvider;
     const nsISSLStatus = Ci.nsISSLStatus;
 
     // We don't have separate info for a frame, return null until further notice
@@ -49,9 +50,11 @@ var security = {
       (ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE);
     var isEV =
       (ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
-    var status = ui.secInfo && ui.secInfo.SSLStatus;
+    ui.QueryInterface(nsISSLStatusProvider);
+    var status = ui.SSLStatus;
 
     if (!isInsecure && status) {
+      status.QueryInterface(nsISSLStatus);
       var cert = status.serverCert;
       var issuerName = cert.issuerOrganization || cert.issuerName;
 

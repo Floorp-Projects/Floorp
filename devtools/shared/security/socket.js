@@ -353,7 +353,7 @@ function _isInputAlive(input) {
  */
 function _storeCertOverride(s, host, port) {
   // eslint-disable-next-line no-shadow
-  const cert = s.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+  const cert = s.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
               .SSLStatus.serverCert;
   const overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                      Ci.nsICertOverrideService.ERROR_MISMATCH;
