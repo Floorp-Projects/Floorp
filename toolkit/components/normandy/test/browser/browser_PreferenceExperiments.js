@@ -584,7 +584,7 @@ decorate_task(
       preferenceValue: "experimentvalue",
       preferenceType: "string",
       previousPreferenceValue: "oldvalue",
-      peferenceBranchType: "default",
+      preferenceBranchType: "default",
     });
 
     await PreferenceExperiments.stop("test", {reason: "test-reason", resetValue: false});
@@ -954,6 +954,38 @@ decorate_task(
       /invalid preference type/i,
       "saveStartupPrefs throws if an experiment has an invalid preference value type",
     );
+  },
+);
+
+// saveStartupPrefs should not store values for user-branch recipes
+decorate_task(
+  withMockExperiments,
+  async function testSaveStartupPrefsUserBranch(experiments) {
+    experiments.defaultBranchRecipe = experimentFactory({
+      preferenceName: "fake.default",
+      preferenceValue: "experiment value",
+      branch: "default",
+    });
+    experiments.userBranchRecipe = experimentFactory({
+      preferenceName: "fake.user",
+      preferenceValue: "experiment value",
+      branch: "user",
+    });
+
+    await PreferenceExperiments.saveStartupPrefs();
+
+    is(
+      Services.prefs.getCharPref(`${startupPrefs}.fake.default`, "fallback value"),
+      "experiment value",
+      "The startup value for fake.default was set",
+    );
+    ok(
+      Services.prefs.getPrefType(`${startupPrefs}.fake.user`),
+      Services.prefs.PREF_INVALID,
+      "The startup value for fake.user was not set",
+    );
+
+    Services.prefs.deleteBranch(startupPrefs);
   },
 );
 
