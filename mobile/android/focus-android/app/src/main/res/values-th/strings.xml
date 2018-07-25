@@ -4,7 +4,7 @@
   <string name="action_ok">ตกลง</string>
   <string name="action_save">บันทึก</string>
   <string name="urlbar_hint">ค้นหาหรือป้อนที่อยู่</string>
-  <string name="teaser">การท่องเว็บแบบส่วนตัวอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
+  <string name="teaser">ท่องเว็บแบบส่วนตัวโดยอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
   <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
   <string name="search_hint">ค้นหา %1$s</string>
   <string name="menu_share">แบ่งปัน…</string>
