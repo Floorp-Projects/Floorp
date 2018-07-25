@@ -236,6 +236,7 @@ class BackendTester(unittest.TestCase):
         environment is cleaned up automatically when the test finishes.
         """
         config = CONFIGS[name]
+        config['substs']['MOZ_UI_LOCALE'] = 'en-US'
 
         objdir = mkdtemp()
         self.addCleanup(rmtree, objdir)
