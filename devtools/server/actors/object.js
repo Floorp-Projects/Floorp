@@ -380,25 +380,41 @@ const proto = {
         }
 
         const result = getter.call(this.obj);
-        if (result && !("throw" in result)) {
-          let getterValue = undefined;
-          if ("return" in result) {
-            getterValue = result.return;
-          } else if ("yield" in result) {
-            getterValue = result.yield;
+        if (!result || "throw" in result) {
+          continue;
+        }
+
+        let getterValue = undefined;
+        if ("return" in result) {
+          getterValue = result.return;
+        } else if ("yield" in result) {
+          getterValue = result.yield;
+        }
+
+        // Treat an already-rejected Promise as we would a thrown exception
+        // by not including it as a safe getter value (see Bug 1477765).
+        if (getterValue && (getterValue.class == "Promise" &&
+                            getterValue.promiseState == "rejected")) {
+          // Until we have a good way to handle Promise rejections through the
+          // debugger API (Bug 1478076), call `catch` when it's safe to do so.
+          const raw = getterValue.unsafeDereference();
+          if (DevToolsUtils.isSafeJSObject(raw)) {
+            raw.catch(e=>e);
           }
-          // WebIDL attributes specified with the LenientThis extended attribute
-          // return undefined and should be ignored.
-          if (getterValue !== undefined) {
-            safeGetterValues[name] = {
-              getterValue: this.hooks.createValueGrip(getterValue),
-              getterPrototypeLevel: level,
-              enumerable: desc.enumerable,
-              writable: level == 0 ? desc.writable : true,
-            };
-            if (limit && ++i == limit) {
-              break;
-            }
+          continue;
+        }
+
+        // WebIDL attributes specified with the LenientThis extended attribute
+        // return undefined and should be ignored.
+        if (getterValue !== undefined) {
+          safeGetterValues[name] = {
+            getterValue: this.hooks.createValueGrip(getterValue),
+            getterPrototypeLevel: level,
+            enumerable: desc.enumerable,
+            writable: level == 0 ? desc.writable : true,
+          };
+          if (limit && ++i == limit) {
+            break;
           }
         }
       }
