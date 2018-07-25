@@ -61,6 +61,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
       serviceContainer.hudProxy.releaseActor(actor);
     },
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
+    recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
   };
 
