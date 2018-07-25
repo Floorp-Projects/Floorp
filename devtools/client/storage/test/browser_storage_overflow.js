@@ -28,13 +28,6 @@ add_task(async function() {
 
 async function runTests() {
   gUI.tree.expandAll();
-
-  await runLocalStorageTests();
-
-  await runIndexedDBTests();
-}
-
-async function runLocalStorageTests() {
   await selectTreeItem(["localStorage", "http://test1.example.org"]);
   checkCellLength(ITEMS_PER_PAGE);
 
@@ -52,21 +45,6 @@ async function runLocalStorageTests() {
 
   // Check that the columns are sorted in a human readable way (descending).
   checkCellValues("DEC");
-}
-
-async function runIndexedDBTests() {
-  await selectTreeItem(["indexedDB",
-                        "http://test1.example.org",
-                        "database (default)",
-                        "store"]);
-
-  checkCellLength(ITEMS_PER_PAGE);
-
-  await scroll();
-  checkCellLength(ITEMS_PER_PAGE * 2);
-
-  await scroll();
-  checkCellLength(ITEMS_PER_PAGE * 3);
 }
 
 function checkCellLength(len) {
