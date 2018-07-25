@@ -131,7 +131,7 @@ var DownloadHistory = {
                                  Services.io.newURI(download.source.url),
                                  METADATA_ANNO,
                                  JSON.stringify(metaData), 0,
-                                 PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+                                 PlacesUtils.annotations.EXPIRE_NEVER);
     } catch (ex) {
       Cu.reportError(ex);
     }

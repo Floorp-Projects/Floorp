@@ -59,7 +59,7 @@ add_task(async function test_buildTestDatabase() {
   await PlacesTestUtils.addVisits(places);
 
   PlacesUtils.annotations.setPageAnnotation(testURI, testAnnoName,
-                                            testAnnoVal, 0, 0);
+                                            testAnnoVal, 0, PlacesUtils.annotations.EXPIRE_NEVER);
 });
 
 /**

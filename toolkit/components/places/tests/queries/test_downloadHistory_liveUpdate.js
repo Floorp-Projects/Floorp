@@ -50,7 +50,7 @@ add_task(async function test_downloadhistory_query_notifications() {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     });
     PlacesUtils.annotations.setPageAnnotation(uri, "test/anno", "testValue", 0,
-                                              PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+                                              PlacesUtils.annotations.EXPIRE_NEVER);
     await PlacesTestUtils.addFavicons(new Map([[uri.spec, SMALLPNG_DATA_URI.spec]]));
   }
   // Remove all the visits one by one.
