@@ -102,7 +102,7 @@
                 tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                 tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                 tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                oncommand="gEditItemOverlay.toggleTagsSelector();"/>
+                oncommand="gEditItemOverlay.toggleTagsSelector().catch(Cu.reportError);"/>
       </hbox>
     </vbox>
 

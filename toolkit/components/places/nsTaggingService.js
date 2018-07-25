@@ -326,18 +326,6 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  get allTags() {
-    var allTags = [];
-    for (var i in this._tagFolders)
-      allTags.push(this._tagFolders[i]);
-    // sort the tag list
-    allTags.sort(function(a, b) {
-        return a.toLowerCase().localeCompare(b.toLowerCase());
-      });
-    return allTags;
-  },
-
-  // nsITaggingService
   get hasTags() {
     return this._tagFolders.length > 0;
   },
@@ -473,7 +461,6 @@ TagAutoCompleteSearch.prototype = {
    * @param listener - A listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
-    let searchResults = PlacesUtils.tagging.allTags;
     this._stopped = false;
 
     // only search on characters for the last tag
@@ -503,29 +490,33 @@ TagAutoCompleteSearch.prototype = {
       return;
     }
 
-    // Chunk the search results via a generator.
-    let gen = (function* () {
-      for (let i = 0; i < searchResults.length; ++i) {
-        if (this._stopped)
-          yield false;
+    (async () => {
+      let tags = (await PlacesUtils.bookmarks.fetchTags())
+        .filter(t => t.name.toLowerCase().startsWith(searchString.toLowerCase()))
+        .map(t => t.name);
 
-        if (searchResults[i].toLowerCase().startsWith(searchString.toLowerCase())) {
+      // Chunk the search results via a generator.
+      let gen = (function* () {
+        for (let i = 0; i < tags.length; ++i) {
+          if (this._stopped)
+            yield false;
+
           // For each match, prepend what the user has typed so far.
           count++;
-          result.appendMatch(before + searchResults[i], searchResults[i]);
-        }
+          result.appendMatch(before + tags[i], tags[i]);
 
-        // In case of many tags, notify once every 50 loops.
-        if ((i % 10) == 0) {
-          this.notifyResult(result, count, listener, true);
-          yield true;
+          // In case of many tags, notify once every 10 loops.
+          if ((i % 10) == 0) {
+            this.notifyResult(result, count, listener, true);
+            yield true;
+          }
         }
-      }
-      yield false;
-    }.bind(this))();
+        yield false;
+      }.bind(this))();
 
-    while (gen.next().value);
-    this.notifyResult(result, count, listener, false);
+      while (gen.next().value);
+      this.notifyResult(result, count, listener, false);
+    })();
   },
 
   /**
