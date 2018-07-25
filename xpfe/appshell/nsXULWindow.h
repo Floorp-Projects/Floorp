@@ -105,7 +105,7 @@ protected:
    bool       LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight);
    bool       LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight);
    void       SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight);
-   bool       LoadMiscPersistentAttributesFromXUL();
+   bool       UpdateWindowStateFromMiscXULAttributes();
    void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();
 
