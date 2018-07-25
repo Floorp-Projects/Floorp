@@ -64,12 +64,6 @@ function run_test() {
   Assert.ok(tag1uris[0].equals(uri1));
   Assert.ok(tag1uris[1].equals(uri2));
 
-  // test allTags attribute
-  var allTags = tagssvc.allTags;
-  Assert.equal(allTags.length, 2);
-  Assert.equal(allTags[0], "Tag 1");
-  Assert.equal(allTags[1], "Tag 2");
-
   // test untagging
   tagssvc.untagURI(uri1, ["tag 1"]);
   Assert.equal(tag1node.childCount, 1);
