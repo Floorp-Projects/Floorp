@@ -80,6 +80,16 @@ class SrcNote {
             Count
         };
     };
+    // SRC_COLSPAN: Source note for arbitrary ops.
+    class ColSpan {
+      public:
+        enum Fields {
+            // The column span (the diff between the column corresponds to the
+            // current op and last known column).
+            Span,
+            Count
+        };
+    };
 };
 
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
@@ -106,7 +116,7 @@ class SrcNote {
                                               for toString correctness for default ctors. */       \
     M(SRC_TRY,          "try",         SrcNote::Try::Count) \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
-    M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
+    M(SRC_COLSPAN,      "colspan",     SrcNote::ColSpan::Count) \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
     M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
     M(SRC_UNUSED21,     "unused21",    0)  /* Unused. */                                           \
