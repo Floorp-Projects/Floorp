@@ -335,9 +335,7 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
       });
     }
     if (window) {
-      const iframe = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .containerElement;
+      const iframe = window.windowUtils.containerElement;
       if (iframe) {
         return this._getActorForBrowser(iframe);
       }

@@ -14,9 +14,7 @@ const TalosContent = {
   },
 
   forceGC() {
-    content.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils)
-           .garbageCollect();
+    content.windowUtils.garbageCollect();
     sendAsyncMessage("Talos:ForceGC:OK");
   },
 };

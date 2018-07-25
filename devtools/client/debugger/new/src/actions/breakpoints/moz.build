@@ -9,6 +9,7 @@ DIRS += [
 
 DevToolsModules(
     'addBreakpoint.js',
+    'index.js',
     'remapLocations.js',
     'syncBreakpoint.js',
 )

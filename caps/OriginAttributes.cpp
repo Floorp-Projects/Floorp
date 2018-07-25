@@ -6,11 +6,11 @@
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsURLHelper.h"
 
 namespace mozilla {
@@ -86,18 +86,15 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   NS_ENSURE_SUCCESS_VOID(rv);
   if (scheme.EqualsLiteral("about")) {
     mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
-  } else if (scheme.EqualsLiteral("blob")) {
-    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
-    if (uriPrinc) {
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
-      NS_ENSURE_SUCCESS_VOID(rv);
+    return;
+  }
 
-      MOZ_ASSERT(principal, "blob URI but no principal.");
-      if (principal) {
-        mFirstPartyDomain = principal->OriginAttributesRef().mFirstPartyDomain;
-      }
-    }
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    mFirstPartyDomain = blobPrincipal->OriginAttributesRef().mFirstPartyDomain;
+    return;
   }
 }
 

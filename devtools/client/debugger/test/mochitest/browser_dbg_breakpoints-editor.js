@@ -192,9 +192,7 @@ function test() {
       // Flush the layout for the iframe.
       info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
 
-      let utils = testWin
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+      let utils = testWin.windowUtils;
 
       let coords = gEditor.getCoordsFromPosition({ line: 4, ch: 0 });
       let rect = iframe.getBoundingClientRect();

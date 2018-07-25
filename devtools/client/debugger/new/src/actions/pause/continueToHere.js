@@ -7,7 +7,7 @@ exports.continueToHere = continueToHere;
 
 var _selectors = require("../../selectors/index");
 
-var _breakpoints = require("../breakpoints");
+var _breakpoints = require("../breakpoints/index");
 
 var _commands = require("./commands");
 

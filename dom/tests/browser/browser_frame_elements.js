@@ -6,17 +6,11 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/browser_frame_elements.html";
 
-function getWindowUtils(window) {
-  return window.
-    QueryInterface(Ci.nsIInterfaceRequestor).
-    getInterface(Ci.nsIDOMWindowUtils);
-}
-
 add_task(async function test() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URI }, async function(browser) {
     if (!browser.isRemoteBrowser) {
       // Non-e10s, access contentWindow and confirm its container is the browser:
-      let windowUtils = getWindowUtils(browser.contentWindow);
+      let windowUtils = browser.contentWindow.windowUtils;
       is (windowUtils.containerElement, browser,
           "Container element for main window is xul:browser");
 
@@ -28,11 +22,6 @@ add_task(async function test() {
 });
 
 function startTests() {
-  function getWindowUtils(window) {
-    return window.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils);
-  }
   info("Frame tests started");
 
   info("Checking top window");
@@ -43,7 +32,7 @@ function startTests() {
   info("Checking about:blank iframe");
   let iframeBlank = gWindow.document.querySelector("#iframe-blank");
   Assert.ok(iframeBlank, "Iframe exists on page");
-  let iframeBlankUtils = getWindowUtils(iframeBlank.contentWindow);
+  let iframeBlankUtils = iframeBlank.contentWindow.windowUtils;
   Assert.equal(iframeBlankUtils.containerElement, iframeBlank, "Container element for iframe window is iframe");
   Assert.equal(iframeBlank.contentWindow.top, gWindow, "gWindow is top");
   Assert.equal(iframeBlank.contentWindow.parent, gWindow, "gWindow is parent");
@@ -51,7 +40,7 @@ function startTests() {
   info("Checking iframe with data url src");
   let iframeDataUrl = gWindow.document.querySelector("#iframe-data-url");
   Assert.ok(iframeDataUrl, "Iframe exists on page");
-  let iframeDataUrlUtils = getWindowUtils(iframeDataUrl.contentWindow);
+  let iframeDataUrlUtils = iframeDataUrl.contentWindow.windowUtils;
   Assert.equal(iframeDataUrlUtils.containerElement, iframeDataUrl, "Container element for iframe window is iframe");
   Assert.equal(iframeDataUrl.contentWindow.top, gWindow, "gWindow is top");
   Assert.equal(iframeDataUrl.contentWindow.parent, gWindow, "gWindow is parent");
@@ -59,7 +48,7 @@ function startTests() {
   info("Checking object with data url data attribute");
   let objectDataUrl = gWindow.document.querySelector("#object-data-url");
   Assert.ok(objectDataUrl, "Object exists on page");
-  let objectDataUrlUtils = getWindowUtils(objectDataUrl.contentWindow);
+  let objectDataUrlUtils = objectDataUrl.contentWindow.windowUtils;
   Assert.equal(objectDataUrlUtils.containerElement, objectDataUrl, "Container element for object window is the object");
   Assert.equal(objectDataUrl.contentWindow.top, gWindow, "gWindow is top");
   Assert.equal(objectDataUrl.contentWindow.parent, gWindow, "gWindow is parent");

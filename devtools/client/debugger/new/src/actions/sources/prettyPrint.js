@@ -10,7 +10,7 @@ var _assert = require("../../utils/assert");
 
 var _assert2 = _interopRequireDefault(_assert);
 
-var _breakpoints = require("../breakpoints");
+var _breakpoints = require("../breakpoints/index");
 
 var _ast = require("../ast");
 

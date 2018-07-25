@@ -10,8 +10,7 @@ function frameScript()
     sendAsyncMessage("Test:Event", [e.type, e.target === content.document, e.eventPhase]);
   }
 
-  let outerID = content.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  let outerID = content.windowUtils.outerWindowID;
   function onOuterWindowDestroyed(subject, topic, data) {
     if (docShell) {
       sendAsyncMessage("Test:Fail", "docShell is non-null");

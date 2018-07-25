@@ -233,7 +233,7 @@ var ReaderMode = {
   },
 
   getUtilsForWin(win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    return win.windowUtils;
   },
 
   /**

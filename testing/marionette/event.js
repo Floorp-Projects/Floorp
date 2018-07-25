@@ -28,8 +28,7 @@ function getDOMWindowUtils(win) {
   }
 
   // this assumes we are operating in chrome space
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+  return win.windowUtils;
 }
 
 event.MouseEvents = {

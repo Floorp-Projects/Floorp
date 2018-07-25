@@ -176,6 +176,12 @@ from its prototype:
 
     **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
+`mainOffset`
+:   **If the instance refers to a `JSScript`**, the offset of the main
+    entry point of the script, excluding any prologue.
+
+    **If the instance refers to WebAssembly code**, throw a `TypeError`.
+
 `global`
 :   **If the instance refers to a `JSScript`**, a [`Debugger.Object`][object]
     instance referring to the global object in whose scope this script
@@ -286,6 +292,18 @@ methods of other kinds of objects.
 
     * isEntryPoint: true if the offset is a column entry point, as
       would be reported by getAllColumnOffsets(); otherwise false.
+
+<code>getSuccessorOffsets(<i>offset</i>)</code>
+:   **If the instance refers to a `JSScript`**, return an array
+    containing the offsets of all bytecodes in the script which are
+    immediate successors of <i>offset</i> via non-exceptional control
+    flow paths.
+
+<code>getPredecessorOffsets(<i>offset</i>)</code>
+:   **If the instance refers to a `JSScript`**, return an array
+    containing the offsets of all bytecodes in the script for which
+    <i>offset</i> is an immediate successor via non-exceptional
+    control flow paths.
 
 `getOffsetsCoverage()`:
 :   **If the instance refers to a `JSScript`**, return `null` or an array which

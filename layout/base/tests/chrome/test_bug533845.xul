@@ -39,8 +39,7 @@ function doTest() {
 function continueTest() {
   var ifrwindow = document.getElementById("contentFrame").contentWindow;
   ifrwindow.focus();
-  var utils = ifrwindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+  var utils = ifrwindow.windowUtils;
   var rect = ifrwindow.document.body.getBoundingClientRect();
   var x = rect.left + (rect.width/2);
   var y = rect.top + (rect.height/2);

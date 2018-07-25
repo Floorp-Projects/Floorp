@@ -82,8 +82,7 @@ function setHandlingUserInput(extension) {
     }
   }
   notEqual(bgwin, null, "Found background window for the test extension");
-  let winutils = bgwin.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
+  let winutils = bgwin.windowUtils;
   return winutils.setHandlingUserInput(true);
 }
 

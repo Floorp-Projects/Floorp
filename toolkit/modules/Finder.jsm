@@ -507,8 +507,7 @@ Finder.prototype = {
       return null;
     }
 
-    let utils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = topWin.windowUtils;
 
     let scrollX = {}, scrollY = {};
     utils.getScrollXY(false, scrollX, scrollY);

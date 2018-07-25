@@ -146,8 +146,7 @@ add_task(async function testDarkPageDetection() {
     };
 
     await ContentTask.spawn(browser, null, async function() {
-      let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+      let dwu = content.windowUtils;
       let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
         body {
           background: maroon radial-gradient(circle, #a01010 0%, #800000 80%) center center / cover no-repeat;
@@ -326,8 +325,7 @@ add_task(async function testTooLargeToggle() {
     await promiseOpenFindbar(findbar);
 
     await ContentTask.spawn(browser, null, async function() {
-      let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+      let dwu = content.windowUtils;
       let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
         body {
           min-height: 1234567px;

@@ -539,11 +539,11 @@ UpdateCheckpointTimes(const HitCheckpointMessage& aMsg)
 ///////////////////////////////////////////////////////////////////////////////
 
 static void
-SpawnRecordingChild()
+SpawnRecordingChild(const RecordingProcessData& aRecordingProcessData)
 {
   MOZ_RELEASE_ASSERT(!gRecordingChild && !gFirstReplayingChild && !gSecondReplayingChild);
   gRecordingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), /* aRecording = */ true);
+    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), Some(aRecordingProcessData));
 }
 
 static void
@@ -551,7 +551,7 @@ SpawnSingleReplayingChild()
 {
   MOZ_RELEASE_ASSERT(!gRecordingChild && !gFirstReplayingChild && !gSecondReplayingChild);
   gFirstReplayingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), /* aRecording = */ false);
+    new ChildProcessInfo(MakeUnique<ChildRoleActive>(), Nothing());
 }
 
 static void
@@ -565,9 +565,9 @@ SpawnReplayingChildren()
     firstRole = MakeUnique<ChildRoleActive>();
   }
   gFirstReplayingChild =
-    new ChildProcessInfo(std::move(firstRole), /* aRecording = */ false);
+    new ChildProcessInfo(std::move(firstRole), Nothing());
   gSecondReplayingChild =
-    new ChildProcessInfo(MakeUnique<ChildRoleStandby>(), /* aRecording = */ false);
+    new ChildProcessInfo(MakeUnique<ChildRoleStandby>(), Nothing());
   AssignMajorCheckpoint(gSecondReplayingChild, CheckpointId::First);
 }
 
@@ -829,28 +829,16 @@ MainThreadMessageLoop()
   return gMainThreadMessageLoop;
 }
 
-// Contents of the prefs shmem block that is sent to the child on startup.
-static char* gShmemPrefs;
-static size_t gShmemPrefsLen;
-
 void
-NotePrefsShmemContents(char* aPrefs, size_t aPrefsLen)
-{
-  MOZ_RELEASE_ASSERT(!gShmemPrefs);
-  gShmemPrefs = new char[aPrefsLen];
-  memcpy(gShmemPrefs, aPrefs, aPrefsLen);
-  gShmemPrefsLen = aPrefsLen;
-}
-
-void
-InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
+InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
+                    const base::SharedMemoryHandle& aPrefsHandle,
+                    const ipc::FileDescriptor& aPrefMapHandle)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gShmemPrefs);
 
   // Construct the message that will be sent to each child when starting up.
   IntroductionMessage* msg =
-    IntroductionMessage::New(aParentPid, gShmemPrefs, gShmemPrefsLen, aArgc, aArgv);
+    IntroductionMessage::New(aParentPid, aArgc, aArgv);
   ChildProcessInfo::SetIntroductionMessage(msg);
 
   MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording ||
@@ -863,7 +851,8 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
   gMainThreadMessageLoop = MessageLoop::current();
 
   if (gProcessKind == ProcessKind::MiddlemanRecording) {
-    SpawnRecordingChild();
+    RecordingProcessData data(aPrefsHandle, aPrefMapHandle);
+    SpawnRecordingChild(data);
   }
 
   InitializeForwarding();

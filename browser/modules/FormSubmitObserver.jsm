@@ -203,7 +203,7 @@ FormSubmitObserver.prototype =
       } else {
         offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
       }
-      let zoomFactor = this._getWindowUtils().fullZoom;
+      let zoomFactor = this._content.windowUtils.fullZoom;
       panelData.offset = Math.round(offset * zoomFactor);
       panelData.position = "after_start";
     }
@@ -212,10 +212,6 @@ FormSubmitObserver.prototype =
 
   _hidePopup() {
     this._mm.sendAsyncMessage("FormValidation:HidePopup", {});
-  },
-
-  _getWindowUtils() {
-    return this._content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
 
   _isRootDocumentEvent(aEvent) {

@@ -5068,6 +5068,27 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+/* static */ bool
+Debugger::recordReplayProcessKind(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (mozilla::recordreplay::IsMiddleman()) {
+        JSString* str = JS_NewStringCopyZ(cx, "Middleman");
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+        JSString* str = JS_NewStringCopyZ(cx, "RecordingReplaying");
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else {
+        args.rval().setUndefined();
+    }
+    return true;
+}
+
 bool
 Debugger::adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -5137,6 +5158,7 @@ const JSFunctionSpec Debugger::methods[] = {
 
 const JSFunctionSpec Debugger::static_methods[] {
     JS_FN("isCompilableUnit", Debugger::isCompilableUnit, 1, 0),
+    JS_FN("recordReplayProcessKind", Debugger::recordReplayProcessKind, 0, 0),
     JS_FS_END
 };
 
@@ -5499,6 +5521,14 @@ DebuggerScript_getSourceLength(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceEnd)", args, obj, script);
     args.rval().setNumber(uint32_t(script->sourceEnd() - script->sourceStart()));
+    return true;
+}
+
+static bool
+DebuggerScript_getMainOffset(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get mainOffset)", args, obj, script);
+    args.rval().setNumber(uint32_t(script->mainOffset()));
     return true;
 }
 
@@ -5891,6 +5921,84 @@ DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setObject(*result);
     return true;
+}
+
+class DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher
+{
+    JSContext* cx_;
+    size_t offset_;
+    bool successor_;
+    MutableHandleObject result_;
+
+  public:
+    DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher(JSContext* cx, size_t offset,
+                                                          bool successor,
+                                                          MutableHandleObject result)
+      : cx_(cx), offset_(offset), successor_(successor), result_(result) { }
+    using ReturnType = bool;
+    ReturnType match(HandleScript script) {
+        PcVector adjacent;
+        if (successor_) {
+            if (!GetSuccessorBytecodes(script->code() + offset_, adjacent)) {
+                ReportOutOfMemory(cx_);
+                return false;
+            }
+        } else {
+            if (!GetPredecessorBytecodes(script, script->code() + offset_, adjacent)) {
+                ReportOutOfMemory(cx_);
+                return false;
+            }
+        }
+
+        result_.set(NewDenseEmptyArray(cx_));
+        if (!result_)
+            return false;
+
+        for (jsbytecode* pc : adjacent) {
+            if (!NewbornArrayPush(cx_, result_, NumberValue(pc - script->code())))
+                return false;
+        }
+        return true;
+    }
+
+    ReturnType match(Handle<WasmInstanceObject*> instance) {
+        JS_ReportErrorASCII(cx_, "getSuccessorOrPredecessorOffsets NYI on wasm instances");
+        return false;
+    }
+};
+
+static bool
+DebuggerScript_getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc, Value* vp,
+                                                const char* name, bool successor)
+{
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, name, args, obj, referent);
+    if (!args.requireAtLeast(cx, name, 1))
+        return false;
+    size_t offset;
+    if (!ScriptOffset(cx, args[0], &offset))
+        return false;
+
+    RootedObject result(cx);
+    DebuggerScriptGetSuccessorOrPredecessorOffsetsMatcher matcher(cx, offset, successor, &result);
+    if (!referent.match(matcher))
+        return false;
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+static bool
+DebuggerScript_getSuccessorOffsets(JSContext* cx, unsigned argc, Value* vp)
+{
+    return DebuggerScript_getSuccessorOrPredecessorOffsets(cx, argc, vp,
+                                                           "getSuccessorOffsets", true);
+}
+
+static bool
+DebuggerScript_getPredecessorOffsets(JSContext* cx, unsigned argc, Value* vp)
+{
+    return DebuggerScript_getSuccessorOrPredecessorOffsets(cx, argc, vp,
+                                                           "getPredecessorOffsets", false);
 }
 
 static bool
@@ -6693,6 +6801,7 @@ static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("source", DebuggerScript_getSource, 0),
     JS_PSG("sourceStart", DebuggerScript_getSourceStart, 0),
     JS_PSG("sourceLength", DebuggerScript_getSourceLength, 0),
+    JS_PSG("mainOffset", DebuggerScript_getMainOffset, 0),
     JS_PSG("global", DebuggerScript_getGlobal, 0),
     JS_PSG("format", DebuggerScript_getFormat, 0),
     JS_PS_END
@@ -6704,6 +6813,8 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
     JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
     JS_FN("getOffsetLocation", DebuggerScript_getOffsetLocation, 0, 0),
+    JS_FN("getSuccessorOffsets", DebuggerScript_getSuccessorOffsets, 1, 0),
+    JS_FN("getPredecessorOffsets", DebuggerScript_getPredecessorOffsets, 1, 0),
     JS_FN("setBreakpoint", DebuggerScript_setBreakpoint, 2, 0),
     JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
     JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),

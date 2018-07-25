@@ -226,8 +226,6 @@ MockFilePickerInstance.prototype = {
     };
   },
   get domFileOrDirectoryEnumerator() {
-    this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
     return {
       index: 0,
       QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),

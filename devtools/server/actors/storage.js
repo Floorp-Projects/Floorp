@@ -2687,9 +2687,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   getWindowFromInnerWindowID(innerID) {
     innerID = innerID.QueryInterface(Ci.nsISupportsPRUint64).data;
     for (const win of this.childWindowPool.values()) {
-      const id = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
-                   .currentInnerWindowID;
+      const id = win.windowUtils.currentInnerWindowID;
       if (id == innerID) {
         return win;
       }

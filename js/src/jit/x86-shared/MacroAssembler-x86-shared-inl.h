@@ -235,8 +235,7 @@ MacroAssembler::subFloat32(FloatRegister src, FloatRegister dest)
 void
 MacroAssembler::mul32(Register rhs, Register srcDest)
 {
-    MOZ_ASSERT(srcDest == eax);
-    imull(rhs, srcDest);        // Clobbers edx
+    imull(rhs, srcDest);
 }
 
 void
@@ -656,6 +655,14 @@ void
 MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
 {
     subl(src, dest);
+    j(cond, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchMul32(Condition cond, T src, Register dest, Label* label)
+{
+    mul32(src, dest);
     j(cond, label);
 }
 

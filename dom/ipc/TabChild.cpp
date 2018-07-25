@@ -647,6 +647,12 @@ TabChild::Init()
   mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
 
   mIPCOpen = true;
+
+  // Recording/replaying processes use their own compositor.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    mPuppetWidget->CreateCompositor();
+  }
+
   return NS_OK;
 }
 
@@ -1285,7 +1291,9 @@ TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdent
 mozilla::ipc::IPCResult
 TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
 {
-    if (!mRemoteFrame) {
+    // When recording/replaying we need to make sure the dimensions are up to
+    // date on the compositor used in this process.
+    if (!mRemoteFrame && !recordreplay::IsRecordingOrReplaying()) {
         return IPC_OK();
     }
 
@@ -2920,7 +2928,10 @@ void
 TabChild::NotifyPainted()
 {
     if (!mNotified) {
-        mRemoteFrame->SendNotifyCompositorTransaction();
+        // Recording/replaying processes have a compositor but not a remote frame.
+        if (!recordreplay::IsRecordingOrReplaying()) {
+            mRemoteFrame->SendNotifyCompositorTransaction();
+        }
         mNotified = true;
     }
 }

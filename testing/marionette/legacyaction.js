@@ -111,8 +111,7 @@ action.Chain.prototype.emitMouseEvent = function (
       `clickCount: ${clickCount}`);
 
   let win = doc.defaultView;
-  let domUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+  let domUtils = win.windowUtils;
 
   let mods;
   if (typeof modifiers != "undefined") {

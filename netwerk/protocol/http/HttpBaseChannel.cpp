@@ -10,6 +10,7 @@
 
 #include "mozilla/net/HttpBaseChannel.h"
 
+#include "nsGlobalWindowOuter.h"
 #include "nsHttpHandler.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
@@ -1516,7 +1517,10 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
     if (loadContext) {
       nsCOMPtr<mozIDOMWindowProxy> topWindow;
       loadContext->GetTopWindow(getter_AddRefs(topWindow));
-      nsCOMPtr<nsIDOMWindowUtils> windowUtils = do_GetInterface(topWindow);
+      nsCOMPtr<nsIDOMWindowUtils> windowUtils;
+      if (topWindow) {
+        windowUtils = nsGlobalWindowOuter::Cast(topWindow)->WindowUtils();
+      }
       if (windowUtils) {
         windowUtils->GetCurrentInnerWindowID(&mContentWindowId);
       }

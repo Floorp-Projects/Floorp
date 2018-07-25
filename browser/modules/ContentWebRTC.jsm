@@ -415,9 +415,7 @@ function getTabStateForContentWindow(aContentWindow) {
 }
 
 function getInnerWindowIDForWindow(aContentWindow) {
-  return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .currentInnerWindowID;
+  return aContentWindow.windowUtils.currentInnerWindowID;
 }
 
 function getMessageManagerForWindow(aContentWindow) {

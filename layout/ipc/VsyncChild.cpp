@@ -55,6 +55,10 @@ VsyncChild::ActorDestroy(ActorDestroyReason aActorDestroyReason)
   MOZ_ASSERT(!mIsShutdown);
   mIsShutdown = true;
   mObserver = nullptr;
+
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::child::SetVsyncObserver(nullptr);
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -62,6 +66,12 @@ VsyncChild::RecvNotify(const TimeStamp& aVsyncTimestamp)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
+
+  // Ignore Vsync messages sent to a recording/replaying process. Vsyncs are
+  // triggered at the top of the main thread's event loop instead.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return IPC_OK();
+  }
 
   SchedulerGroup::MarkVsyncRan();
   if (mObservingVsync && mObserver) {
@@ -75,6 +85,10 @@ VsyncChild::SetVsyncObserver(VsyncObserver* aVsyncObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mObserver = aVsyncObserver;
+
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::child::SetVsyncObserver(mObserver);
+  }
 }
 
 TimeDuration
