@@ -1478,11 +1478,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
     // code points in the loop below.
     int32_t unit;
     while (true) {
-        unit = getCodeUnit();
+        unit = peekCodeUnit();
         if (unit == EOF)
             break;
 
         if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+            consumeKnownCodeUnit(unit);
+
             if (MOZ_UNLIKELY(!unicode::IsIdentifierPart(static_cast<char16_t>(unit)))) {
                 // Handle a Unicode escape -- otherwise it's not part of the
                 // identifier.
@@ -1495,14 +1497,17 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
                 escaping = IdentifierEscapes::SawUnicodeEscape;
             }
         } else {
-            int32_t codePoint;
-            if (!getNonAsciiCodePoint(unit, &codePoint))
-                return false;
-
-            if (!unicode::IsIdentifierPart(uint32_t(codePoint))) {
-                ungetNonAsciiNormalizedCodePoint(codePoint);
+            // This ignores encoding errors: subsequent caller-side code to
+            // handle source text after the IdentifierName will do so.
+            PeekedCodePoint<CharT> peeked = this->sourceUnits.peekCodePoint();
+            if (peeked.isNone() || !unicode::IsIdentifierPart(peeked.codePoint()))
                 break;
-            }
+
+            MOZ_ASSERT(!IsLineTerminator(peeked.codePoint()),
+                       "IdentifierPart must guarantee !IsLineTerminator or "
+                       "else we'll fail to maintain line-info/flags for EOL");
+
+            this->sourceUnits.consumeKnownCodePoint(peeked);
         }
     }
 
