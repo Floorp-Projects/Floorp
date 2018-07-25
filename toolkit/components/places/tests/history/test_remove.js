@@ -209,6 +209,15 @@ add_task(async function test_orphans() {
   PlacesUtils.favicons.setAndFetchFaviconForPage(
     uri, SMALLPNG_DATA_URI, true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     null, Services.scriptSecurityManager.getSystemPrincipal());
+  // Also create a root icon.
+  let faviconURI = Services.io.newURI(uri.spec + "favicon.ico");
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    faviconURI, SMALLPNG_DATA_URI.spec, 0,
+    Services.scriptSecurityManager.getSystemPrincipal());
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    uri, faviconURI, true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null, Services.scriptSecurityManager.getSystemPrincipal());
+
   PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
 
