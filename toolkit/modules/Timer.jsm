@@ -11,8 +11,6 @@
 var EXPORTED_SYMBOLS = ["setTimeout", "setTimeoutWithTarget", "clearTimeout",
                         "setInterval", "setIntervalWithTarget", "clearInterval"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 // This gives us >=2^30 unique timer IDs, enough for 1 per ms for 12.4 days.
 var gNextId = 1; // setTimeout and setInterval must return a positive integer
 

@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
 ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "IndexedDB", "resource://gre/modules/IndexedDB.jsm");

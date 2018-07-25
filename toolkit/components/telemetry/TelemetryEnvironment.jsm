@@ -10,12 +10,10 @@ var EXPORTED_SYMBOLS = [
 
 const myScope = this;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;

@@ -5,7 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function RemoteWebProgressRequest(spec, originalSpec, matchedList, requestCPOW) {
