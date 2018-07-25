@@ -46,7 +46,7 @@ android {
             applicationIdSuffix ".debug"
         }
         nightly {
-            initWith debug
+            initWith release
         }
     }
     testOptions {
