@@ -195,6 +195,7 @@
 #include <algorithm>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "jspubtd.h"
@@ -969,6 +970,125 @@ IsLineTerminator(char16_t unit)
     return IsLineTerminator(static_cast<char32_t>(unit));
 }
 
+template<typename CharT>
+struct SourceUnitTraits;
+
+template<>
+struct SourceUnitTraits<char16_t>
+{
+  public:
+    static constexpr uint8_t maxUnitsLength = 2;
+
+    static constexpr size_t lengthInUnits(char32_t codePoint) {
+        return codePoint < unicode::NonBMPMin ? 1 : 2;
+    }
+};
+
+template<>
+struct SourceUnitTraits<mozilla::Utf8Unit>
+{
+  public:
+    static constexpr uint8_t maxUnitsLength = 4;
+
+    static constexpr size_t lengthInUnits(char32_t codePoint) {
+        return codePoint < 0x80
+               ? 1
+               : codePoint < 0x800
+               ? 2
+               : codePoint < 0x10000
+               ? 3
+               : 4;
+    }
+};
+
+/**
+ * PeekedCodePoint represents the result of peeking ahead in some source text
+ * to determine the next validly-encoded code point.
+ *
+ * If there isn't a valid code point, then |isNone()|.
+ *
+ * But if there *is* a valid code point, then |!isNone()|, the code point has
+ * value |codePoint()| and its length in code units is |lengthInUnits()|.
+ *
+ * Conceptually, this class is |Maybe<struct { char32_t v; uint8_t len; }>|.
+ */
+template<typename CharT>
+class PeekedCodePoint final
+{
+    char32_t codePoint_ = 0;
+    uint8_t lengthInUnits_ = 0;
+
+  private:
+    using SourceUnitTraits = frontend::SourceUnitTraits<CharT>;
+
+    PeekedCodePoint() = default;
+
+  public:
+    /**
+     * Create a peeked code point with the given value and length in code
+     * units.
+     *
+     * While the latter value is computable from the former for both UTF-8 and
+     * JS's version of UTF-16, the caller likely computed a length in units in
+     * the course of determining the peeked value.  Passing both here avoids
+     * recomputation and lets us do a consistency-checking assertion.
+     */
+    PeekedCodePoint(char32_t codePoint, uint8_t lengthInUnits)
+      : codePoint_(codePoint),
+        lengthInUnits_(lengthInUnits)
+    {
+        MOZ_ASSERT(codePoint <= unicode::NonBMPMax);
+        MOZ_ASSERT(lengthInUnits != 0, "bad code point length");
+        MOZ_ASSERT(lengthInUnits == SourceUnitTraits::lengthInUnits(codePoint));
+    }
+
+    /** Create a PeekedCodeUnit that represents no valid code point. */
+    static PeekedCodePoint none() {
+        return PeekedCodePoint();
+    }
+
+    /** True if no code point was found, false otherwise. */
+    bool isNone() const {
+        return lengthInUnits_ == 0;
+    }
+
+    /** If a code point was found, its value. */
+    char32_t codePoint() const {
+        MOZ_ASSERT(!isNone());
+        return codePoint_;
+    }
+
+    /** If a code point was found, its length in code units. */
+    uint8_t lengthInUnits() const {
+        MOZ_ASSERT(!isNone());
+        return lengthInUnits_;
+    }
+};
+
+inline PeekedCodePoint<char16_t>
+PeekCodePoint(const char16_t* const ptr, const char16_t* const end)
+{
+    if (MOZ_UNLIKELY(ptr >= end))
+        return PeekedCodePoint<char16_t>::none();
+
+    char16_t lead = ptr[0];
+
+    char32_t c;
+    uint8_t len;
+    if (MOZ_LIKELY(!unicode::IsLeadSurrogate(lead)) ||
+        MOZ_UNLIKELY(ptr + 1 >= end ||
+                     !unicode::IsTrailSurrogate(ptr[1])))
+    {
+        c = lead;
+        len = 1;
+    } else {
+        c = unicode::UTF16Decode(lead, ptr[1]);
+        len = 2;
+    }
+
+    return PeekedCodePoint<char16_t>(c, len);
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -1037,6 +1157,47 @@ class SourceUnits
 
     CharT peekCodeUnit() const {
         return *ptr;        // this will nullptr-crash if poisoned
+    }
+
+    /**
+     * Determine the next code point in source text.  The code point is not
+     * normalized: '\r', '\n', '\u2028', and '\u2029' are returned literally.
+     * If there is no next code point because |atEnd()|, or if an encoding
+     * error is encountered, return a |PeekedCodePoint| that |isNone()|.
+     *
+     * This function does not report errors: code that attempts to get the next
+     * code point must report any error.
+     *
+     * If a next code point is found, it may be consumed by passing it to
+     * |consumeKnownCodePoint|.
+     */
+    PeekedCodePoint<CharT> peekCodePoint() const {
+        return PeekCodePoint(ptr, limit_);
+    }
+
+  private:
+#ifdef DEBUG
+    void assertNextCodePoint(const PeekedCodePoint<CharT>& peeked);
+#endif
+
+  public:
+    /**
+     * Consume a peeked code point that |!isNone()|.
+     *
+     * This call DOES NOT UPDATE LINE-STATUS.  You may need to call
+     * |updateLineInfoForEOL()| and |updateFlagsForEOL()| if this consumes a
+     * LineTerminator.  Note that if this consumes '\r', you also must consume
+     * an optional '\n' (i.e. a full LineTerminatorSequence) before doing so.
+     */
+    void consumeKnownCodePoint(const PeekedCodePoint<CharT>& peeked) {
+        MOZ_ASSERT(!peeked.isNone());
+        MOZ_ASSERT(peeked.lengthInUnits() <= remaining());
+
+#ifdef DEBUG
+        assertNextCodePoint(peeked);
+#endif
+
+        ptr += peeked.lengthInUnits();
     }
 
     /** Match |n| hexadecimal digits and store their value in |*out|. */
