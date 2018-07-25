@@ -12257,8 +12257,10 @@ IonBuilder::jsop_setarg(uint32_t arg)
     if (info().argsObjAliasesFormals()) {
         if (needsPostBarrier(val))
             current->add(MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
-        current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
-                                                 GET_ARGNO(pc), val));
+        auto* ins = MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
+                                                GET_ARGNO(pc), val);
+        current->add(ins);
+        MOZ_TRY(resumeAfter(ins));
         return Ok();
     }
 
