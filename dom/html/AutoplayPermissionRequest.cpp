@@ -96,6 +96,9 @@ AutoplayPermissionRequest::Cancel()
 {
   if (mManager) {
     mManager->DenyPlayRequest();
+    // Clear reference to manager, so we can't double report a result.
+    // This could happen in particular if we call Cancel() in the destructor.
+    mManager = nullptr;
   }
   return NS_OK;
 }
@@ -105,6 +108,9 @@ AutoplayPermissionRequest::Allow(JS::HandleValue aChoices)
 {
   if (mManager) {
     mManager->ApprovePlayRequest();
+    // Clear reference to manager, so we can't double report a result.
+    // This could happen in particular if we call Cancel() in the destructor.
+    mManager = nullptr;
   }
   return NS_OK;
 }

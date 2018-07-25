@@ -86,9 +86,16 @@ public:
                              double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
+#if defined(MOZ_WIDGET_ANDROID)
+  bool PullState(VRDisplayState* aDisplayState,
+                 VRHMDSensorState* aSensorState = nullptr,
+                 VRControllerState* aControllerState = nullptr,
+                 const std::function<bool()>& aWaitCondition = nullptr);
+#else
   bool PullState(VRDisplayState* aDisplayState,
                  VRHMDSensorState* aSensorState = nullptr,
                  VRControllerState* aControllerState = nullptr);
+#endif
   void PushState(VRBrowserState* aBrowserState, const bool aNotifyCond = false);
 
 protected:
@@ -105,6 +112,7 @@ private:
 #elif defined(MOZ_WIDGET_ANDROID)
   bool mDoShutdown;
   bool mExternalStructFailed;
+  bool mEnumerationCompleted;
 #endif
 
   volatile VRExternalShmem* mExternalShmem;

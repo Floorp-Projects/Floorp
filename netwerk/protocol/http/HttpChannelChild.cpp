@@ -2696,8 +2696,10 @@ HttpChannelChild::ContinueAsyncOpen()
     nsCOMPtr<nsIDocument> document = tabChild->GetDocument();
     if (document) {
       contentWindowId = document->InnerWindowID();
-      navigationStartTimeStamp =
-        document->GetNavigationTiming()->GetNavigationStartTimeStamp();
+      nsDOMNavigationTiming* navigationTiming = document->GetNavigationTiming();
+      if (navigationTiming) {
+        navigationStartTimeStamp = navigationTiming->GetNavigationStartTimeStamp();
+      }
       mTopLevelOuterContentWindowId = document->OuterWindowID();
     }
   }
