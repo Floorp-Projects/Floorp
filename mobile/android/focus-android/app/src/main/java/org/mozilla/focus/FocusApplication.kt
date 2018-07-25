@@ -5,7 +5,6 @@
 
 package org.mozilla.focus
 
-import android.arch.lifecycle.LifecycleObserver
 import android.os.StrictMode
 import android.preference.PreferenceManager
 import kotlinx.coroutines.experimental.CommonPool
@@ -23,7 +22,7 @@ import org.mozilla.focus.utils.StethoWrapper
 import org.mozilla.focus.web.CleanupSessionObserver
 import org.mozilla.focus.web.WebViewProvider
 
-class FocusApplication : LocaleAwareApplication(), LifecycleObserver {
+class FocusApplication : LocaleAwareApplication() {
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
 

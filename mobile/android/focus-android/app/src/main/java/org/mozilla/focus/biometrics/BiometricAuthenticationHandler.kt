@@ -12,17 +12,17 @@ import android.security.keystore.KeyProperties
 import android.support.annotation.RequiresApi
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat
 import android.support.v4.os.CancellationSignal
-import java.security.KeyStore
-import java.security.KeyStoreException
-import java.security.NoSuchAlgorithmException
-import java.security.NoSuchProviderException
+import java.io.IOException
+import java.security.*
+import java.security.cert.CertificateException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
+import javax.crypto.NoSuchPaddingException
 import javax.crypto.SecretKey
 
 @RequiresApi(Build.VERSION_CODES.M)
 class BiometricAuthenticationHandler(
-        private val context: Context): FingerprintManagerCompat.AuthenticationCallback(), LifecycleObserver {
+        private val context: Context) : FingerprintManagerCompat.AuthenticationCallback(), LifecycleObserver {
 
     private var fingerprintManager = FingerprintManagerCompat.from(context)
     private var cancellationSignal: CancellationSignal? = null
@@ -34,22 +34,22 @@ class BiometricAuthenticationHandler(
     var needsAuth = false; private set
     var biometricFragment: BiometricAuthenticationDialogFragment? = null; private set
 
-    private val DEFAULT_KEY_NAME = "default_key"
-
     init {
         try {
             keyStore = KeyStore.getInstance("AndroidKeyStore")
-
         } catch (err: KeyStoreException) {
             throw RuntimeException("Failed to get instance of KeyStore", err)
         }
 
         try {
             keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-        } catch (err: NoSuchAlgorithmException) {
-            throw RuntimeException("Failed to get an instance of KeyGenerator", err)
-        } catch (err: NoSuchProviderException) {
-            throw RuntimeException("Failed to get an instance of KeyGenerator", err)
+        } catch (err: Exception) {
+            when (err) {
+                is NoSuchAlgorithmException,
+                is NoSuchProviderException ->
+                    throw RuntimeException("Failed to get an instance of KeyGenerator", err)
+                else -> throw err
+            }
         }
 
         createKey(DEFAULT_KEY_NAME, false)
@@ -60,7 +60,12 @@ class BiometricAuthenticationHandler(
                     + KeyProperties.BLOCK_MODE_CBC + "/"
                     + KeyProperties.ENCRYPTION_PADDING_PKCS7)
         } catch (err: Exception) {
-            throw RuntimeException(err)
+            when (err) {
+                is NoSuchAlgorithmException,
+                is NoSuchPaddingException ->
+                    throw RuntimeException("Failed to get an instance of Cipher", err)
+                else -> throw err
+            }
         }
 
         if (initCipher(defaultCipher, DEFAULT_KEY_NAME)) {
@@ -76,12 +81,18 @@ class BiometricAuthenticationHandler(
             val key = keyStore?.getKey(keyName, null) as SecretKey
             cipher.init(Cipher.ENCRYPT_MODE, key)
             return true
-        } catch (err: KeyPermanentlyInvalidatedException) {
-            return false
         } catch (err: Exception) {
-            throw RuntimeException(err)
+            when (err) {
+                is KeyPermanentlyInvalidatedException -> return false
+                is KeyStoreException,
+                is CertificateException,
+                is UnrecoverableKeyException,
+                is IOException,
+                is NoSuchAlgorithmException,
+                is InvalidKeyException -> throw RuntimeException("Failed to init cipher", err)
+                else -> throw err
+            }
         }
-
     }
 
     private fun createKey(keyName: String, invalidatedByBiometricEnrollment: Boolean?) {
@@ -100,8 +111,14 @@ class BiometricAuthenticationHandler(
             keyGenerator?.init(builder.build())
             keyGenerator?.generateKey()
 
-        } catch (e: Exception) {
-            throw RuntimeException(e)
+        } catch (err: Exception) {
+            when (err) {
+                is NoSuchAlgorithmException,
+                is InvalidAlgorithmParameterException,
+                is CertificateException,
+                is IOException -> throw RuntimeException(err)
+                else -> throw err
+            }
         }
     }
 
@@ -155,5 +172,9 @@ class BiometricAuthenticationHandler(
     fun onPause() {
         needsAuth = true
         stopListening()
+    }
+
+    companion object {
+        private const val DEFAULT_KEY_NAME = "default_key"
     }
 }

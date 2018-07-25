@@ -45,12 +45,14 @@ public class BiometricAuthenticationDialogFragment extends AppCompatDialogFragme
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.biometric_prompt_dialog_content, container, false);
+        View v = inflater.inflate(R.layout.biometric_prompt_dialog_content, container,
+                false);
 
         Dialog biometricDialog = getDialog();
         this.setCancelable(true);
         biometricDialog.setCanceledOnTouchOutside(false);
-        biometricDialog.setTitle(getContext().getString(R.string.biometric_auth_title, getContext().getString(R.string.app_name)));
+        biometricDialog.setTitle(getContext().getString(R.string.biometric_auth_title,
+                getContext().getString(R.string.app_name)));
 
         TextView description = v.findViewById(R.id.description);
         description.setText(R.string.biometric_auth_description);

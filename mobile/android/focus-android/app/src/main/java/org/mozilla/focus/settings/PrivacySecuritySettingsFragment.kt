@@ -49,9 +49,13 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     }
 
     private fun updateStealthToggleAvailability() {
-        val switch =  preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreference
-        if (preferenceManager.sharedPreferences.getBoolean(resources.getString(R.string.pref_key_biometric), false)) {
-            preferenceManager.sharedPreferences.edit().putBoolean(resources.getString(R.string.pref_key_secure), true).apply()
+        val switch = preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreference
+        if (preferenceManager.sharedPreferences
+                        .getBoolean(resources.getString(R.string.pref_key_biometric),
+                                false)) {
+            preferenceManager.sharedPreferences
+                    .edit().putBoolean(resources.getString(R.string.pref_key_secure),
+                            true).apply()
             // Disable the stealth switch
             switch.isChecked = true
             switch.isEnabled = false
