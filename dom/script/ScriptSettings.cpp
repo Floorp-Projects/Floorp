@@ -670,6 +670,7 @@ AutoEntryScript::AutoEntryScript(JSObject* aObject,
                                  bool aIsMainThread)
   : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread)
 {
+  MOZ_ASSERT(!js::IsCrossCompartmentWrapper(aObject));
 }
 
 AutoEntryScript::~AutoEntryScript()
