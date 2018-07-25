@@ -15,7 +15,7 @@
 #include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventStates.h"
 #include "nsContentUtils.h"
@@ -406,7 +406,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsContentUtils::AddScriptRunner(focusJob);
   }
 
-  if (StyleDisplay()->mAppearance == NS_THEME_TEXTFIELD) {
+  if (StyleDisplay()->mAppearance == StyleAppearance::Textfield) {
     // The author has elected to hide the spinner by setting this
     // -moz-appearance. We will reframe if it changes.
     return NS_OK;
@@ -606,11 +606,11 @@ nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const
   nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
 
   return spinUpFrame &&
-    spinUpFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_UPBUTTON &&
+    spinUpFrame->StyleDisplay()->mAppearance == StyleAppearance::SpinnerUpbutton &&
     !PresContext()->HasAuthorSpecifiedRules(spinUpFrame,
                                             STYLES_DISABLING_NATIVE_THEMING) &&
     spinDownFrame &&
-    spinDownFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_DOWNBUTTON &&
+    spinDownFrame->StyleDisplay()->mAppearance == StyleAppearance::SpinnerDownbutton &&
     !PresContext()->HasAuthorSpecifiedRules(spinDownFrame,
                                             STYLES_DISABLING_NATIVE_THEMING);
 }
