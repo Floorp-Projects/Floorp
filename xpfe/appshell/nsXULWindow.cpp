@@ -1111,9 +1111,6 @@ NS_IMETHODIMP nsXULWindow::ForceRoundedDimensions()
 
   SetPrimaryContentSize(targetContentWidth, targetContentHeight);
 
-  mIgnoreXULSize = true;
-  mIgnoreXULSizeMode = true;
-
   return NS_OK;
 }
 
@@ -1370,7 +1367,7 @@ nsXULWindow::SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight)
    |persist| attribute, other than size and position. Those are special
    because it's important to load those before one of the misc
    attributes (sizemode) and they require extra processing. */
-bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
+bool nsXULWindow::UpdateWindowStateFromMiscXULAttributes()
 {
   bool     gotState = false;
 
@@ -1385,42 +1382,28 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   NS_ENSURE_TRUE(windowElement, false);
 
   nsAutoString stateString;
-
-  // sizemode
-  windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
   nsSizeMode sizeMode = nsSizeMode_Normal;
-  /* ignore request to minimize, to not confuse novices
-  if (stateString.Equals(SIZEMODE_MINIMIZED))
-    sizeMode = nsSizeMode_Minimized;
-  */
-  if (!mIgnoreXULSizeMode &&
-      (stateString.Equals(SIZEMODE_MAXIMIZED) || stateString.Equals(SIZEMODE_FULLSCREEN))) {
-    /* Honor request to maximize only if the window is sizable.
-       An unsizable, unmaximizable, yet maximized window confuses
-       Windows OS and is something of a travesty, anyway. */
-    if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
-      mIntrinsicallySized = false;
 
-      if (stateString.Equals(SIZEMODE_MAXIMIZED))
-        sizeMode = nsSizeMode_Maximized;
-      else
-        sizeMode = nsSizeMode_Fullscreen;
-    }
-  }
-
-  // If we are told to ignore the size mode attribute update the
-  // document so the attribute and window are in sync.
+  // If we are told to ignore the size mode attribute, force
+  // normal sizemode.
   if (mIgnoreXULSizeMode) {
-    nsAutoString sizeString;
-    if (sizeMode == nsSizeMode_Maximized)
-      sizeString.Assign(SIZEMODE_MAXIMIZED);
-    else if (sizeMode == nsSizeMode_Fullscreen)
-      sizeString.Assign(SIZEMODE_FULLSCREEN);
-    else if (sizeMode == nsSizeMode_Normal)
-      sizeString.Assign(SIZEMODE_NORMAL);
-    if (!sizeString.IsEmpty()) {
-      ErrorResult rv;
-      windowElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
+    windowElement->SetAttribute(MODE_ATTRIBUTE, NS_LITERAL_STRING("normal"), IgnoreErrors());
+  } else {
+    // Otherwise, read sizemode from DOM and, if the window is resizable,
+    // set it later.
+    windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
+    if ((stateString.Equals(SIZEMODE_MAXIMIZED) || stateString.Equals(SIZEMODE_FULLSCREEN))) {
+      /* Honor request to maximize only if the window is sizable.
+         An unsizable, unmaximizable, yet maximized window confuses
+         Windows OS and is something of a travesty, anyway. */
+      if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+        mIntrinsicallySized = false;
+
+        if (stateString.Equals(SIZEMODE_MAXIMIZED))
+          sizeMode = nsSizeMode_Maximized;
+        else
+          sizeMode = nsSizeMode_Fullscreen;
+      }
     }
   }
 
@@ -2516,16 +2499,26 @@ nsXULWindow::SizeShell()
 
   int32_t specWidth = -1, specHeight = -1;
   bool gotSize = false;
-  bool isContent = false;
 
-  GetHasPrimaryContent(&isContent);
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
+  nsAutoString windowType;
+  if (windowElement) {
+    windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
+  }
 
   CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow);
 
-  // If this window has a primary content and fingerprinting resistance is
-  // enabled, we enforce this window to rounded dimensions.
-  if (isContent && nsContentUtils::ShouldResistFingerprinting()) {
-    ForceRoundedDimensions();
+  // If we're using fingerprint resistance, we're going to resize the window
+  // once we have primary content.
+  if (nsContentUtils::ShouldResistFingerprinting() &&
+      windowType.EqualsLiteral("navigator:browser")) {
+    // Once we've got primary content, force dimensions.
+    if (mPrimaryContentShell || mPrimaryTabParent) {
+      ForceRoundedDimensions();
+    }
+    // Always avoid setting size/sizemode on this window.
+    mIgnoreXULSize = true;
+    mIgnoreXULSizeMode = true;
   } else if (!mIgnoreXULSize) {
     gotSize = LoadSizeFromXUL(specWidth, specHeight);
     specWidth += windowDiff.width;
@@ -2581,7 +2574,7 @@ nsXULWindow::SizeShell()
     LoadPositionFromXUL(specWidth, specHeight);
   }
 
-  LoadMiscPersistentAttributesFromXUL();
+  UpdateWindowStateFromMiscXULAttributes();
 
   if (mChromeLoaded && mCenterAfterLoad && !positionSet &&
       mWindow->SizeMode() == nsSizeMode_Normal) {
