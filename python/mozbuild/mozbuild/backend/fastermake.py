@@ -17,7 +17,7 @@ from mozbuild.frontend.data import (
     JARManifest,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
-    XPIDLFile,
+    XPIDLModule,
 )
 from mozbuild.makeutil import Makefile
 from mozbuild.util import OrderedDefaultDict
