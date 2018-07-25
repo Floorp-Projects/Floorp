@@ -211,22 +211,27 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  if [ -z "$NO_ECC_CERTS" -o "$NO_ECC_CERTS" != "1"  ] ; then
+  if [ -z "$NO_ECC_CERTS" -o "$NO_ECC_CERTS" != "1" ] ; then
       ECC_OPTIONS="-e ${HOSTADDR}-ecmixed -e ${HOSTADDR}-ec"
   else
       ECC_OPTIONS=""
   fi
+  if [ -z "$RSA_PSS_CERT" -o "$RSA_PSS_CERT" != "1" ] ; then
+      RSA_OPTIONS="-n ${HOSTADDR}"
+  else
+      RSA_OPTIONS="-n ${HOSTADDR}-rsa-pss"
+  fi
   echo "selfserv starting at `date`"
-  echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
+  echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \\"
   echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID}\\"
   echo "         -V ssl3:tls1.2 $verbose -H 1 &"
   if [ ${fileout} -eq 1 ]; then
-      ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
+      ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
                ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 \
                > ${SERVEROUTFILE} 2>&1 &
       RET=$?
   else
-      ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
+      ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
                ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 &
       RET=$?
   fi
@@ -283,6 +288,13 @@ ssl_cov()
       echo "${testname}" | grep "EXPORT" > /dev/null
       EXP=$?
 
+      # RSA-PSS tests are handled in a separate function
+      case $testname in
+	*RSA-PSS)
+	  continue
+          ;;
+      esac
+
       echo "$SCRIPTNAME: running $testname ----------------------------"
       VMAX="ssl3"
       if [ "$testmax" = "TLS10" ]; then
@@ -294,6 +306,59 @@ ssl_cov()
       if [ "$testmax" = "TLS12" ]; then
           VMAX="tls1.2"
       fi
+
+      echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
+      echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
+
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+      ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
+              -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE} \
+              >${TMP}/$HOST.tmp.$$  2>&1
+      ret=$?
+      cat ${TMP}/$HOST.tmp.$$
+      rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+      html_msg $ret 0 "${testname}" \
+               "produced a returncode of $ret, expected is 0"
+  done
+
+  kill_selfserv
+  html "</TABLE><BR>"
+}
+
+ssl_cov_rsa_pss()
+{
+  #verbose="-v"
+  html_head "SSL Cipher Coverage (RSA-PSS) $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+  testname=""
+  sparam="$CIPHER_SUITES"
+
+  if [ "$NORM_EXT" = "Extended Test" ] ; then
+      echo "$SCRIPTNAME: skipping SSL Cipher Coverage (RSA-PSS) for $NORM_EXT"
+      return 0
+  fi
+
+  RSA_PSS_CERT=1
+  NO_ECC_CERTS=1
+  start_selfserv # Launch the server
+  RSA_PSS_CERT=0
+  NO_ECC_CERTS=0
+
+  VMIN="tls1.2"
+  VMAX="tls1.2"
+
+  ignore_blank_lines ${SSLCOV} | \
+  while read ectype testmax param testname
+  do
+      case $testname in
+	*RSA-PSS)
+          ;;
+	*)
+	  continue
+	  ;;
+      esac
+
+      echo "$SCRIPTNAME: running $testname (RSA-PSS) ----------------------------"
 
       echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
       echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
@@ -1152,6 +1217,7 @@ ssl_run()
             ;;
         "cov")
             ssl_cov
+            ssl_cov_rsa_pss
             ;;
         "auth")
             ssl_auth

@@ -46,6 +46,7 @@ char *NSSUTIL_MkModuleSpec(char *dllName, char *commonName,
                            char *parameters, char *NSS);
 char *NSSUTIL_MkModuleSpecEx(char *dllName, char *commonName,
                              char *parameters, char *NSS, char *config);
+char *NSSUTIL_AddNSSFlagToModuleSpec(char *spec, char *addFlag);
 void NSSUTIL_ArgParseCipherFlags(unsigned long *newCiphers,
                                  const char *cipherList);
 char *NSSUTIL_MkNSSString(char **slotStrings, int slotCount, PRBool internal,

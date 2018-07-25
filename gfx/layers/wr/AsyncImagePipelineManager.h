@@ -12,6 +12,7 @@
 #include "CompositableHost.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/layers/WebRenderTextureHostWrapper.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -30,6 +31,7 @@ class CompositableHost;
 class CompositorVsyncScheduler;
 class WebRenderImageHost;
 class WebRenderTextureHost;
+class WebRenderTextureHostWrapper;
 
 class AsyncImagePipelineManager final
 {
@@ -48,6 +50,7 @@ public:
   void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
+  void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHostWrapper* aWrTextureWrapper);
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const wr::ExternalImageId& aImageId);
 
   // This is called from the Renderer thread to notify this class about the
@@ -106,6 +109,10 @@ public:
   void SetWillGenerateFrame();
   bool GetAndResetWillGenerateFrame();
 
+  wr::ExternalImageId GetNextExternalImageId() {
+    return wr::ToExternalImageId(GetNextResourceId());
+  }
+
 private:
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
   void ProcessPipelineRemoved(const wr::PipelineId& aPipelineId);
@@ -130,6 +137,15 @@ private:
     CompositableTextureHostRef mTexture;
   };
 
+  struct ForwardingTextureHostWrapper {
+    ForwardingTextureHostWrapper(const wr::Epoch& aEpoch, WebRenderTextureHostWrapper* aWrTextureWrapper)
+      : mEpoch(aEpoch)
+      , mWrTextureWrapper(aWrTextureWrapper)
+    {}
+    wr::Epoch mEpoch;
+    RefPtr<WebRenderTextureHostWrapper> mWrTextureWrapper;
+  };
+
   struct ForwardingExternalImage {
     ForwardingExternalImage(const wr::Epoch& aEpoch, const wr::ExternalImageId& aImageId)
       : mEpoch(aEpoch)
@@ -142,6 +158,7 @@ private:
   struct PipelineTexturesHolder {
     // Holds forwarding WebRenderTextureHosts.
     std::queue<ForwardingTextureHost> mTextureHosts;
+    std::queue<ForwardingTextureHostWrapper> mTextureHostWrappers;
     std::queue<ForwardingExternalImage> mExternalImages;
     Maybe<wr::Epoch> mDestroyedEpoch;
   };
@@ -176,6 +193,7 @@ private:
     wr::MixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;
     CompositableTextureHostRef mCurrentTexture;
+    RefPtr<WebRenderTextureHostWrapper> mWrTextureWrapper;
     nsTArray<wr::ImageKey> mKeys;
   };
 
@@ -184,7 +202,9 @@ private:
                                   AsyncImagePipeline* aPipeline,
                                   wr::TransactionBuilder& aTxn);
   Maybe<TextureHost::ResourceUpdateOp>
-  UpdateImageKeys(wr::TransactionBuilder& aResourceUpdates,
+  UpdateImageKeys(const wr::Epoch& aEpoch,
+                  const wr::PipelineId& aPipelineId,
+                  wr::TransactionBuilder& aResourceUpdates,
                   AsyncImagePipeline* aPipeline,
                   nsTArray<wr::ImageKey>& aKeys);
   Maybe<TextureHost::ResourceUpdateOp>

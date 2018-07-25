@@ -1133,3 +1133,9 @@ SEC_CreateSignatureAlgorithmParameters;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.39 { 	# NSS 3.39 release
+;+    global:
+CERT_GetCertKeyType;
+;+    local:
+;+       *;
+;+};

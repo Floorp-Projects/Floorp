@@ -135,6 +135,7 @@
             'cmd/listsuites/listsuites.gyp:listsuites',
             'cmd/makepqg/makepqg.gyp:makepqg',
             'cmd/multinit/multinit.gyp:multinit',
+            'cmd/nss-policy-check/nss-policy-check.gyp:nss-policy-check',
             'cmd/ocspclnt/ocspclnt.gyp:ocspclnt',
             'cmd/ocspresp/ocspresp.gyp:ocspresp',
             'cmd/oidcalc/oidcalc.gyp:oidcalc',

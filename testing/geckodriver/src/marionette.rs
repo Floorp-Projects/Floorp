@@ -1130,11 +1130,6 @@ impl MarionetteCommand {
                     data.insert(k.to_string(), v.to_json());
                 }
 
-                // duplicate in capabilities.desiredCapabilities for legacy compat
-                let mut legacy_caps = BTreeMap::new();
-                legacy_caps.insert("desiredCapabilities".to_string(), caps.to_json());
-                data.insert("capabilities".to_string(), legacy_caps.to_json());
-
                 (Some("WebDriver:NewSession"), Some(Ok(data)))
             }
             PerformActions(ref x) => (Some("WebDriver:PerformActions"), Some(x.to_marionette())),

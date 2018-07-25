@@ -47,6 +47,7 @@ NSS_SRCDIRS = \
  listsuites \
  makepqg  \
  multinit \
+ nss-policy-check \
  ocspclnt  \
  ocspresp \
  oidcalc  \
