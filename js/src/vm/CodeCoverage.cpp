@@ -196,7 +196,7 @@ LCovSource::writeScript(JSScript* script)
             while (!SN_IS_TERMINATOR(sn) && snpc <= pc) {
                 SrcNoteType type = SN_TYPE(sn);
                 if (type == SRC_SETLINE)
-                    lineno = size_t(GetSrcNoteOffset(sn, 0));
+                    lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
                 else if (type == SRC_NEWLINE)
                     lineno++;
                 else if (type == SRC_TABLESWITCH)

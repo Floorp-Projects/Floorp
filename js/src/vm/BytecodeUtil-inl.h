@@ -184,7 +184,7 @@ class BytecodeRangeWithPosition : private BytecodeRange
                 column += colspan;
                 lastLinePC = snpc;
             } else if (type == SRC_SETLINE) {
-                lineno = size_t(GetSrcNoteOffset(sn, 0));
+                lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
                 column = 0;
                 lastLinePC = snpc;
             } else if (type == SRC_NEWLINE) {
