@@ -20,12 +20,8 @@ const {
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
-XPCOMUtils.defineLazyServiceGetter(
-    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 
 this.EXPORTED_SYMBOLS = ["evaluate", "sandbox", "Sandboxes"];
-
-const ENV_CYCLIC = "MOZ_MARIONETTE_NEW_CYCLIC";
 
 const ARGUMENTS = "__webDriverArguments";
 const CALLBACK = "__webDriverCallback";
@@ -300,26 +296,7 @@ evaluate.toJSON = function(obj, seenEls) {
  * @return {boolean}
  *     True if object is cyclic, false otherwise.
  */
-evaluate.isCyclic = function(value) {
-  if (env.get(ENV_CYCLIC)) {
-    return isCyclicNew(value);
-  }
-  return isCyclicOld(value);
-};
-
-function isCyclicOld(value) {
-  try {
-    JSON.stringify(value);
-    return false;
-  } catch (e) {
-    return true;
-  }
-}
-
-// TODO(ato): disabled due to bug 1425588
-function isCyclicNew(value, stack = []) {
-  log.warn("Running new cyclic check");
-
+evaluate.isCyclic = function(value, stack = []) {
   let t = Object.prototype.toString.call(value);
 
   // null
@@ -344,7 +321,7 @@ function isCyclicNew(value, stack = []) {
     stack.push(value);
 
     for (let i = 0; i < value.length; i++) {
-      if (isCyclicNew(value[i], stack)) {
+      if (evaluate.isCyclic(value[i], stack)) {
         return true;
       }
     }
@@ -360,14 +337,14 @@ function isCyclicNew(value, stack = []) {
   stack.push(value);
 
   for (let prop in value) {
-    if (isCyclicNew(value[prop], stack)) {
+    if (evaluate.isCyclic(value[prop], stack)) {
       return true;
     }
   }
 
   stack.pop();
   return false;
-}
+};
 
 /**
  * `Cu.isDeadWrapper` does not return true for a dead sandbox that
