@@ -35,7 +35,6 @@ EXPORTS += [
     'nsRegion.h',
     'nsRegionFwd.h',
     'nsSize.h',
-    'nsThemeConstants.h',
     'nsTransform2D.h',
     'RegionBuilder.h',
     'X11UndefineNone.h'
