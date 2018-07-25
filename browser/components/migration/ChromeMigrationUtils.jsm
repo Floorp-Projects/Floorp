@@ -6,10 +6,8 @@
 var EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var ChromeMigrationUtils = {
   _extensionVersionDirectoryNames: {},
