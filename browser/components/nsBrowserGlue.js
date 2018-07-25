@@ -1839,63 +1839,6 @@ BrowserGlue.prototype = {
 
     let xulStore = Services.xulStore;
 
-    if (currentUIVersion < 36) {
-      xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
-                           "passwordCol",
-                           "hidden");
-    }
-
-    if (currentUIVersion < 37) {
-      Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
-    }
-
-    if (currentUIVersion < 38) {
-      LoginHelper.removeLegacySignonFiles();
-    }
-
-    if (currentUIVersion < 39) {
-      // Remove the 'defaultset' value for all the toolbars
-      let toolbars = ["nav-bar", "PersonalToolbar",
-                      "TabsToolbar", "toolbar-menubar"];
-      for (let toolbarId of toolbars) {
-        xulStore.removeValue(BROWSER_DOCURL, toolbarId, "defaultset");
-      }
-    }
-
-    if (currentUIVersion < 40) {
-      const kOldSafeBrowsingPref = "browser.safebrowsing.enabled";
-      // Default value is set to true, a user pref means that the pref was
-      // set to false.
-      if (Services.prefs.prefHasUserValue(kOldSafeBrowsingPref) &&
-          !Services.prefs.getBoolPref(kOldSafeBrowsingPref)) {
-        Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled",
-                                   false);
-        // Should just remove support for the pref entirely, even if it's
-        // only in about:config
-        Services.prefs.clearUserPref(kOldSafeBrowsingPref);
-      }
-    }
-
-    if (currentUIVersion < 41) {
-      const Preferences = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-      Preferences.resetBranch("loop.");
-    }
-
-    if (currentUIVersion < 42) {
-      let backupFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      backupFile.append("tabgroups-session-backup.json");
-      OS.File.remove(backupFile.path, {ignoreAbsent: true}).catch(ex => Cu.reportError(ex));
-    }
-
-    if (currentUIVersion < 43) {
-      let currentTheme = Services.prefs.getCharPref("lightweightThemes.selectedThemeID", "");
-      if (currentTheme == "firefox-devedition@mozilla.org") {
-        let newTheme = Services.prefs.getCharPref("devtools.theme") == "dark" ?
-          "firefox-compact-dark@mozilla.org" : "firefox-compact-light@mozilla.org";
-        Services.prefs.setCharPref("lightweightThemes.selectedThemeID", newTheme);
-      }
-    }
-
     if (currentUIVersion < 44) {
       // Merge the various cosmetic animation prefs into one. If any were set to
       // disable animations, we'll disabled cosmetic animations entirely.
@@ -2101,10 +2044,6 @@ BrowserGlue.prototype = {
         Services.prefs.clearUserPref(SELECTED_LOCALE_PREF);
         Services.prefs.clearUserPref(MATCHOS_LOCALE_PREF);
       }
-    }
-
-    if (currentUIVersion < 60) {
-      // This version is superseded by version 66.  See bug 1444965.
     }
 
     if (currentUIVersion < 61) {

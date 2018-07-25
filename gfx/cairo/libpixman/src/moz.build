@@ -136,6 +136,19 @@ if use_arm_neon_gcc:
     SOURCES += ['pixman-arm-neon.c']
     SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
 
+if CONFIG['OS_TARGET'] == 'Android' and (use_arm_neon_gcc or use_arm_simd_gcc):
+    # The assembly files in this directory are built with gas (because of
+    # -no-integrated-as), and they contain `.object_arch armv4`, which
+    # makes gas emit ARM_V4BX relocations that lld doesn't support.
+    # The code being third party and this setup being actually desirable to
+    # keep, until lld supports those relocations[1], hack around it by using
+    # the preprocessor to change it to armv7a, which is the target we use
+    # on arm android (with -march).
+    # 1. https://bugs.llvm.org/show_bug.cgi?id=38303
+    ASFLAGS += [
+        '-Darmv4=armv7a'
+    ]
+
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CFLAGS += [

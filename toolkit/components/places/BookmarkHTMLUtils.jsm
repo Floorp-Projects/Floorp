@@ -559,7 +559,7 @@ BookmarkImporter.prototype = {
 
     if (tags) {
       bookmark.tags = tags.split(",").filter(aTag => aTag.length > 0 &&
-        aTag.length <= Ci.nsITaggingService.MAX_TAG_LENGTH);
+        aTag.length <= PlacesUtils.bookmarks.MAX_TAG_LENGTH);
 
       // If we end up with none, then delete the property completely.
       if (!bookmark.tags.length) {

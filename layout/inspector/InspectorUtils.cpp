@@ -740,5 +740,26 @@ InspectorUtils::ScrollElementIntoView(GlobalObject& aGlobalObject,
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
+
+bool
+InspectorUtils::IsCustomElementName(GlobalObject&,
+                                    const nsAString& aName,
+                                    const nsAString& aNamespaceURI)
+{
+  if (aName.IsEmpty()) {
+    return false;
+  }
+
+  int32_t namespaceID;
+  nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+    aNamespaceURI,
+    namespaceID);
+
+  RefPtr<nsAtom> nameElt = NS_Atomize(aName);
+  return nsContentUtils::IsCustomElementName(
+    nameElt,
+    namespaceID);
+}
+
 } // namespace dom
 } // namespace mozilla
