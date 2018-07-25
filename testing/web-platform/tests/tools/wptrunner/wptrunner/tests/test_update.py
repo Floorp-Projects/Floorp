@@ -4,7 +4,7 @@ import os
 import sys
 from io import BytesIO
 
-from .. import metadata, manifestupdate, wptmanifest
+from .. import metadata, manifestupdate
 from mozlog import structuredlog, handlers, formatters
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
@@ -211,7 +211,7 @@ def test_update_multiple_0():
                                         "expected": "FAIL"}),
                        ("test_end", {"test": test_id,
                                      "status": "OK"})],
-                       run_info={"debug": False, "os": "linux"})
+                      run_info={"debug": False, "os": "linux"})
 
     updated = update(tests, log_0, log_1)
     new_manifest = updated[0][1]
@@ -344,7 +344,7 @@ def test_update_ignore_existing():
                                         "expected": "PASS"}),
                        ("test_end", {"test": test_id,
                                      "status": "OK"})],
-                       run_info={"debug": False, "os": "linux"})
+                      run_info={"debug": False, "os": "linux"})
 
     log_1 = suite_log([("test_start", {"test": test_id}),
                        ("test_status", {"test": test_id,
