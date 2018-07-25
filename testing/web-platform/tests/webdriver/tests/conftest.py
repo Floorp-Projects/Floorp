@@ -12,6 +12,11 @@ from tests.support.fixtures import (
     session,
     url)
 
+def pytest_configure(config):
+    # register the capabilities marker
+    config.addinivalue_line("markers",
+        "capabilities: mark test to use capabilities")
+
 
 @pytest.fixture
 def capabilities():
