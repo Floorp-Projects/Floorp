@@ -5,7 +5,7 @@ var STRINGS = {
 };
 
 var URLS = {
-  safe: "http://{{host}}:{{ports[http][0]}}/",
+  safe: "https://example.test/",
   javascript: "javascript:'scripted'",
   external: "custom-handler:whatever",
   sanitized: "about:invalid"
