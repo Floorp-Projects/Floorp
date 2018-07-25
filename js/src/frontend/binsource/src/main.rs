@@ -105,6 +105,12 @@ struct NodeRules {
 /// Extracted from the yaml file.
 #[derive(Default)]
 struct GlobalRules {
+    /// C++ class name of the parser class.
+    parser_class_name: Rc<String>,
+
+    /// The template part of the parser class.
+    parser_class_template: Rc<String>,
+
     /// The return value of each method.
     parser_type_ok: Rc<String>,
 
@@ -146,6 +152,8 @@ impl GlobalRules {
         let rules = yaml.as_hash()
             .expect("Rules are not a dictionary");
 
+        let mut parser_class_name = None;
+        let mut parser_class_template = None;
         let mut parser_type_ok = None;
         let mut parser_default_value = None;
         let mut cpp_header = None;
@@ -164,6 +172,10 @@ impl GlobalRules {
 
             match node_key {
                 "parser" => {
+                    update_rule_rc(&mut parser_class_name, &node_entries["class-name"])
+                        .unwrap_or_else(|_| panic!("Rule parser.class-name must be a string"));
+                    update_rule(&mut parser_class_template, &node_entries["class-template"])
+                        .unwrap_or_else(|_| panic!("Rule parser.class-template must be a string"));
                     update_rule_rc(&mut parser_type_ok, &node_entries["type-ok"])
                         .unwrap_or_else(|_| panic!("Rule parser.type-ok must be a string"));
                     update_rule_rc(&mut parser_default_value, &node_entries["default-value"])
@@ -321,6 +333,13 @@ impl GlobalRules {
         }
 
         Self {
+            parser_class_name: parser_class_name
+                .expect("parser.class-name should be specified"),
+            parser_class_template: Rc::new(if parser_class_template.is_some() {
+                format!("{} ", parser_class_template.unwrap())
+            } else {
+                "".to_string()
+            }),
             parser_type_ok: parser_type_ok
                 .expect("parser.type-ok should be specified"),
             parser_default_value: parser_default_value
@@ -465,7 +484,8 @@ impl CPPExporter {
         let mut enum_by_string : HashMap<String, Vec<NodeName>> = HashMap::new();
         let mut enum_types : HashMap<NodeName, Rc<String>> = HashMap::new();
         for (name, enum_) in syntax.string_enums_by_name().iter() {
-            let type_ = format!("typename BinASTParser<Tok>::{kind}",
+            let type_ = format!("typename {parser_class_name}::{kind}",
+                                parser_class_name = rules.parser_class_name,
                                 kind = name.to_class_cases());
             enum_types.insert(name.clone(), Rc::new(type_));
             for string in enum_.strings().iter() {
@@ -541,9 +561,11 @@ impl CPPExporter {
     fn get_method_definition_start(&self, name: &NodeName, prefix: &str, args: &str) -> String {
         let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
-        format!("template<typename Tok> JS::Result<{type_ok}>\nBinASTParser<Tok>::parse{prefix}{kind}({args})",
+        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args})",
+            parser_class_template = self.rules.parser_class_template,
             prefix = prefix,
             type_ok = type_ok,
+            parser_class_name = self.rules.parser_class_name,
             kind = kind,
             args = args,
         )
