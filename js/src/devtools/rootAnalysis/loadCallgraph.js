@@ -28,18 +28,13 @@ loadRelativeToScript('utility.js');
 // are FieldCalls, not just function names.
 
 var readableNames = {}; // map from mangled name => list of readable names
-var mangledName = {}; // map from demangled names => mangled names. Could be eliminated.
 var calleesOf = {}; // map from mangled => list of tuples of {'callee':mangled, 'limits':intset}
 var callersOf; // map from mangled => list of tuples of {'caller':mangled, 'limits':intset}
 var gcFunctions = {}; // map from mangled callee => reason
 var limitedFunctions = {}; // set of mangled names (map from mangled name => limit intset)
 var gcEdges = {};
 
-// Map from identifier to mangled name (or to a Class.Field)
-var idToMangled = [""];
-
-// Map from identifier to full "mangled$readable" name. Or sometimes to a
-// Class.Field name.
+// "Map" from identifier to mangled name, or sometimes to a Class.Field name.
 var functionNames = [""];
 
 var mangledToId = {};
@@ -51,7 +46,7 @@ function addGCFunction(caller, reason, functionLimits)
     if (functionLimits[caller] & LIMIT_CANNOT_GC)
         return false;
 
-    if (ignoreGCFunction(idToMangled[caller]))
+    if (ignoreGCFunction(functionNames[caller]))
         return false;
 
     if (!(caller in gcFunctions)) {
@@ -123,18 +118,22 @@ function loadCallgraph(file)
 
         let match;
         if (match = line.charAt(0) == "#" && /^\#(\d+) (.*)/.exec(line)) {
-            assert(functionNames.length == match[1]);
-            functionNames.push(match[2]);
-            const [ mangled, readable ] = splitFunction(match[2]);
+            const [ _, id, mangled ] = match;
+            assert(functionNames.length == id);
+            functionNames.push(mangled);
+            mangledToId[mangled] = id;
+            continue;
+        }
+        if (match = line.charAt(0) == "=" && /^= (\d+) (.*)/.exec(line)) {
+            const [ _, id, readable ] = match;
+            const mangled = functionNames[id];
             if (mangled in readableNames)
                 readableNames[mangled].push(readable);
             else
                 readableNames[mangled] = [ readable ];
-            mangledName[readable] = mangled;
-            mangledToId[mangled] = idToMangled.length;
-            idToMangled.push(mangled);
             continue;
         }
+
         let limits = 0;
         // Example line: D /17 6 7
         //
@@ -188,10 +187,10 @@ function loadCallgraph(file)
             // assumed to call some random function that might do anything.
             resolvedFieldCalls.add(callerField);
         } else if (match = tag == 'T' && /^T (\d+) (.*)/.exec(line)) {
-            const mangled = match[1]|0;
+            const id = match[1]|0;
             let tag = match[2];
             if (tag == 'GC Call') {
-                addGCFunction(mangled, "GC", functionLimits);
+                addGCFunction(id, "GC", functionLimits);
                 numGCCalls++;
             }
         } else {
@@ -265,9 +264,9 @@ function loadCallgraph(file)
     for (const [name, csuName] of fieldCallCSU) {
         if (resolvedFieldCalls.has(name))
             continue; // Skip resolved virtual functions.
-        const fullFieldName = idToMangled[name];
+        const fullFieldName = functionNames[name];
         if (!fieldCallCannotGC(csuName, fullFieldName)) {
-            gcFunctions[name] = 'unresolved ' + idToMangled[name];
+            gcFunctions[name] = 'unresolved ' + fullFieldName;
             worklist.push(name);
         }
     }
@@ -291,7 +290,7 @@ function loadCallgraph(file)
     // of ids.)
 
     for (const [id, limits] of Object.entries(functionLimits))
-        limitedFunctions[idToMangled[id]] = limits;
+        limitedFunctions[functionNames[id]] = limits;
 
     // The above code uses integer ids for efficiency. External code uses
     // mangled names. Rewrite the various data structures to convert ids to
@@ -403,22 +402,22 @@ function remap_ids_to_mangled_names() {
     var tmp = gcFunctions;
     gcFunctions = {};
     for (const [caller, reason] of Object.entries(tmp))
-        gcFunctions[idToMangled[caller]] = idToMangled[reason] || reason;
+        gcFunctions[functionNames[caller]] = functionNames[reason] || reason;
 
     tmp = calleesOf;
     calleesOf = {};
     for (const [callerId, callees] of Object.entries(calleesOf)) {
-        const caller = idToMangled[callerId];
+        const caller = functionNames[callerId];
         for (const {calleeId, limits} of callees)
-            calleesOf[caller][idToMangled[calleeId]] = limits;
+            calleesOf[caller][functionNames[calleeId]] = limits;
     }
 
     tmp = callersOf;
     callersOf = {};
     for (const [calleeId, callers] of Object.entries(callersOf)) {
-        const callee = idToMangled[calleeId];
+        const callee = functionNames[calleeId];
         callersOf[callee] = {};
         for (const {callerId, limits} of callers)
-            callersOf[callee][idToMangled[caller]] = limits;
+            callersOf[callee][functionNames[caller]] = limits;
     }
 }

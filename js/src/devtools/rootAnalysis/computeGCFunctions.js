@@ -23,7 +23,7 @@ printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
 
 for (var name in gcFunctions) {
-    for (let readable of readableNames[name]) {
+    for (let readable of (readableNames[name] || [])) {
         print("");
         print("GC Function: " + name + "$" + readable);
         let current = name;
@@ -40,8 +40,12 @@ for (var name in gcFunctions) {
 printErr("Writing " + gcFunctionsList_filename);
 redirect(gcFunctionsList_filename);
 for (var name in gcFunctions) {
-    for (var readable of readableNames[name])
-        print(name + "$" + readable);
+    if (name in readableNames) {
+        for (var readable of readableNames[name])
+            print(name + "$" + readable);
+    } else {
+        print(name);
+    }
 }
 
 // gcEdges is a list of edges that can GC for more specific reasons than just
