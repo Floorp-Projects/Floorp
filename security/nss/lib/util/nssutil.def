@@ -328,3 +328,9 @@ SECITEM_MakeItem;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.39 {         # NSS Utilities 3.39 release
+;+    global:
+NSSUTIL_AddNSSFlagToModuleSpec;
+;+    local:
+;+       *;
+;+};

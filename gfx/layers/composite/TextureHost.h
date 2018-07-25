@@ -674,6 +674,8 @@ public:
 
   virtual bool IsDirectMap() { return false; }
 
+  virtual bool SupportsWrNativeTexture() { return false; }
+
 protected:
   virtual void ReadUnlock();
 
