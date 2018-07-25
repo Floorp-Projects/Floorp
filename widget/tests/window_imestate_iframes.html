@@ -107,9 +107,7 @@ function observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
 
 function runTests()
 {
-  var utils =
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils);
+  var utils = window.windowUtils;
   var fm =
     Cc["@mozilla.org/focus-manager;1"]
       .getService(Ci.nsIFocusManager);

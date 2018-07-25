@@ -249,20 +249,13 @@ MediaDevices::OnDeviceChange()
 mozilla::dom::EventHandlerNonNull*
 MediaDevices::GetOndevicechange()
 {
-  if (NS_IsMainThread()) {
-    return GetEventHandler(nsGkAtoms::ondevicechange, EmptyString());
-  }
-  return GetEventHandler(nullptr, NS_LITERAL_STRING("devicechange"));
+  return GetEventHandler(nsGkAtoms::ondevicechange);
 }
 
 void
 MediaDevices::SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback)
 {
-  if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::ondevicechange, EmptyString(), aCallback);
-  } else {
-    SetEventHandler(nullptr, NS_LITERAL_STRING("devicechange"), aCallback);
-  }
+  SetEventHandler(nsGkAtoms::ondevicechange, aCallback);
 
   MediaManager::Get()->AddDeviceChangeCallback(this);
 }

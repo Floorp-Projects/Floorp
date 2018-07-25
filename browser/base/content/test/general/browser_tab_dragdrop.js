@@ -17,8 +17,7 @@ var clickTest = async function(tab) {
     let left = (rect.left + rect.right) / 2;
     let top = (rect.top + rect.bottom) / 2;
 
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });

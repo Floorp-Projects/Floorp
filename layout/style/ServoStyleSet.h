@@ -145,6 +145,8 @@ public:
 
   void SetAuthorStyleDisabled(bool aStyleDisabled);
 
+  // FIXME(emilio): All the callers pass Allow here, and aParentContext isn't
+  // used...
   already_AddRefed<ComputedStyle>
   ResolveStyleFor(dom::Element* aElement,
                   ComputedStyle* aParentContext,
@@ -253,9 +255,9 @@ public:
 
   // check whether there is ::before/::after style for an element
   already_AddRefed<ComputedStyle>
-  ProbePseudoElementStyle(dom::Element* aOriginatingElement,
+  ProbePseudoElementStyle(const dom::Element& aOriginatingElement,
                           CSSPseudoElementType aType,
-                          ComputedStyle* aParentContext);
+                          ComputedStyle* aParentStyle);
 
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
@@ -333,8 +335,7 @@ public:
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  inline already_AddRefed<ComputedStyle>
-    ResolveServoStyle(dom::Element* aElement);
+  inline already_AddRefed<ComputedStyle> ResolveServoStyle(const dom::Element&);
 
   bool GetKeyframesForName(const dom::Element&,
                            const ComputedStyle&,
@@ -345,7 +346,7 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const mozilla::ComputedStyle* aStyle);
+                               const ComputedStyle* aStyle);
 
   void
   GetAnimationValues(RawServoDeclarationBlock* aDeclarations,
@@ -428,8 +429,7 @@ public:
    * the modified attribute doesn't appear in an attribute selector in
    * a style sheet.
    */
-  bool MightHaveAttributeDependency(const dom::Element& aElement,
-                                    nsAtom* aAttribute) const;
+  bool MightHaveAttributeDependency(const dom::Element&, nsAtom* aAttribute) const;
 
   /**
    * Returns true if a change in event state on an element might require
@@ -439,8 +439,7 @@ public:
    * the changed state isn't depended upon by any pseudo-class selectors
    * in a style sheet.
    */
-  bool HasStateDependency(const dom::Element& aElement,
-                          EventStates aState) const;
+  bool HasStateDependency(const dom::Element&, EventStates) const;
 
   /**
    * Returns true if a change in document state might require us to restyle the

@@ -1016,6 +1016,14 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
 
     insertRecompileCheck();
 
+    // Insert an interrupt check when recording or replaying, which will bump
+    // the record/replay system's progress counter.
+    if (script()->trackRecordReplayProgress()) {
+        MInterruptCheck* check = MInterruptCheck::New(alloc());
+        check->setTrackRecordReplayProgress();
+        current->add(check);
+    }
+
     // Initialize the env chain now that all resume points operands are
     // initialized.
     MOZ_TRY(initEnvironmentChain(callInfo.fun()));
@@ -1749,8 +1757,17 @@ IonBuilder::jsop_loopentry()
 {
     MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
 
-    current->add(MInterruptCheck::New(alloc()));
+    MInterruptCheck* check = MInterruptCheck::New(alloc());
+    current->add(check);
     insertRecompileCheck();
+
+    if (script()->trackRecordReplayProgress()) {
+        check->setTrackRecordReplayProgress();
+
+        // When recording/replaying, MInterruptCheck is effectful and should
+        // not reexecute after bailing out.
+        MOZ_TRY(resumeAfter(check));
+    }
 
     return Ok();
 }
@@ -3555,6 +3572,12 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
       case JSOP_ADD:
       case JSOP_SUB:
       case JSOP_MUL:
+        // If not disabled, prefer the cache IR stub.
+        if (!JitOptions.disableCacheIRBinaryArith) {
+            stub = MBinaryCache::New(alloc(), left, right);
+            break;
+        }
+        MOZ_FALLTHROUGH;
       case JSOP_DIV:
       case JSOP_MOD:
       case JSOP_POW:
@@ -5752,10 +5775,13 @@ IonBuilder::jsop_eval(uint32_t argc)
 
         // Try to pattern match 'eval(v + "()")'. In this case v is likely a
         // name on the env chain and the eval is performing a call on that
-        // value. Use an env chain lookup rather than a full eval.
+        // value. Use an env chain lookup rather than a full eval. Avoid this
+        // optimization if we're tracking script progress, as this will not
+        // execute the script and give an inconsistent progress count.
         if (string->isConcat() &&
             string->getOperand(1)->type() == MIRType::String &&
-            string->getOperand(1)->maybeConstantValue())
+            string->getOperand(1)->maybeConstantValue() &&
+            !script()->trackRecordReplayProgress())
         {
             JSAtom* atom = &string->getOperand(1)->maybeConstantValue()->toString()->asAtom();
 

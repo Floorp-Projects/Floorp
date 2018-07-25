@@ -896,8 +896,7 @@ class FormAutofillHandler {
     /**
      * A WindowUtils reference of which Window the form belongs
      */
-    this.winUtils = this.form.rootElement.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+    this.winUtils = this.form.rootElement.ownerGlobal.windowUtils;
 
     /**
      * Time in milliseconds since epoch when a user started filling in the form.

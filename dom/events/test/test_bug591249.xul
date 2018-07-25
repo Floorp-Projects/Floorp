@@ -30,9 +30,7 @@ function completeTest(aBox) {
 
 function fireEvent(target, event) {
   var win = target.ownerGlobal;
-  var utils =
-    win.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIDOMWindowUtils);
+  var utils = win.windowUtils;
   utils.dispatchDOMEventViaPresShell(target, event, true);
 }
 

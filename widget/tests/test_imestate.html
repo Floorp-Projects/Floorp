@@ -127,9 +127,7 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-var gUtils = window.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils);
+var gUtils = window.windowUtils;
 var gFM = Cc["@mozilla.org/focus-manager;1"].
       getService(Ci.nsIFocusManager);
 const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
@@ -1358,9 +1356,7 @@ function runTestPasswordFieldOnDialog()
   {
     ok(true, "onPasswordFieldFocus is called");
     passwordField.removeEventListener("focus", onPasswordFieldFocus);
-    var utils = dialog.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils);
+    var utils = dialog.windowUtils;
     is(utils.IMEStatus, utils.IME_STATUS_PASSWORD,
        "IME isn't disabled on a password field of password dialog");
     synthesizeKey("VK_ESCAPE", { }, dialog);

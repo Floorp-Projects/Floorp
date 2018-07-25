@@ -3701,9 +3701,7 @@ GeckoDriver.prototype.commands = {
 };
 
 function getOuterWindowId(win) {
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .outerWindowID;
+  return win.windowUtils.outerWindowID;
 }
 
 /**

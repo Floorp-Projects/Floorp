@@ -35,6 +35,15 @@ FileDescriptorSet::~FileDescriptorSet() {
   }
 }
 
+void FileDescriptorSet::CopyFrom(const FileDescriptorSet& other)
+{
+  for (std::vector<base::FileDescriptor>::const_iterator
+       i = other.descriptors_.begin(); i != other.descriptors_.end(); ++i) {
+    int fd = IGNORE_EINTR(dup(i->fd));
+    AddAndAutoClose(fd);
+  }
+}
+
 bool FileDescriptorSet::Add(int fd) {
   if (descriptors_.size() == MAX_DESCRIPTORS_PER_MESSAGE)
     return false;

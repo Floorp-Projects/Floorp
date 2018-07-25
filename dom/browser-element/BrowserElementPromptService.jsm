@@ -618,9 +618,7 @@ var BrowserElementPromptService = {
   },
 
   _getOuterWindowID: function(win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindowUtils)
-              .outerWindowID;
+    return win.windowUtils.outerWindowID;
   },
 
   _browserElementChildMap: {},

@@ -65,8 +65,7 @@ function webNavigation() {
 }
 
 function windowUtilsForWindow(w) {
-    return w.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils);
+    return w.windowUtils;
 }
 
 function windowUtils() {
@@ -497,8 +496,7 @@ function FlushRendering(aFlushMode) {
     var anyPendingPaintsGeneratedInDescendants = false;
 
     function flushWindow(win) {
-        var utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+        var utils = win.windowUtils;
         var afterPaintWasPending = utils.isMozAfterPaintPending;
 
         var root = win.document.documentElement;

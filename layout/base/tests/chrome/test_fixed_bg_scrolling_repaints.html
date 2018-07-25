@@ -14,8 +14,7 @@
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-               getInterface(Ci.nsIDOMWindowUtils);
+var utils = window.windowUtils;
 
 function startTest() {
   // Do a scroll to ensure we trigger activity heuristics.

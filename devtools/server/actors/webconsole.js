@@ -1393,6 +1393,29 @@ WebConsoleActor.prototype =
     // as ordinary objects, not as references to be followed, so mixing
     // debuggers causes strange behaviors.)
     const dbg = frame ? frameActor.threadActor.dbg : this.dbg;
+
+    // If the debugger is replaying then we can't yet introduce new bindings
+    // for the eval, so compute the result now.
+    if (dbg.replaying) {
+      let result;
+      if (frame) {
+        try {
+          result = frame.eval(string);
+        } catch (e) {
+          result = { "throw": e };
+        }
+      } else {
+        result = { "throw": "Cannot evaluate while replaying without a frame" };
+      }
+      return {
+        result: result,
+        helperResult: null,
+        dbg: dbg,
+        frame: frame,
+        window: null,
+      };
+    }
+
     let dbgWindow = dbg.makeGlobalObjectReference(this.evalWindow);
 
     // If we have an object to bind to |_self|, create a Debugger.Object

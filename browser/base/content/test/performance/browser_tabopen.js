@@ -31,6 +31,9 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
+  let firstTabLabelRect =
+    document.getAnonymousElementByAttribute(gBrowser.selectedTab, "anonid", "tab-label")
+            .getBoundingClientRect();
   let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
     "anonid", "textbox-input-box").getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
@@ -83,6 +86,13 @@ add_task(async function() {
            condition: r =>
              r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
              r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom
+          },
+          {name: "bug 1477966 - the name of a deselected tab should appear immediately",
+           condition: r => AppConstants.platform == "macosx" &&
+                           r.x1 >= firstTabLabelRect.x &&
+                           r.x2 <= firstTabLabelRect.right &&
+                           r.y1 >= firstTabLabelRect.y &&
+                           r.y2 <= firstTabLabelRect.bottom
           }
         ]
       }

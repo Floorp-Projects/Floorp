@@ -63,6 +63,7 @@ struct DefaultJitOptions
     bool disableRecoverIns;
     bool disableScalarReplacement;
     bool disableCacheIR;
+    bool disableCacheIRBinaryArith;
     bool disableSharedStubs;
     bool disableSincos;
     bool disableSink;

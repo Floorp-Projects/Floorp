@@ -61,7 +61,6 @@
 #include "nsStringStream.h"
 #include "nsISyncStreamListener.h"
 #include "nsITransport.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsIURLParser.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIViewSourceChannel.h"
@@ -69,6 +68,7 @@
 #include "plstr.h"
 #include "nsINestedURI.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "nsIScriptError.h"
 #include "nsISiteSecurityService.h"
@@ -84,6 +84,7 @@
 
 using namespace mozilla;
 using namespace mozilla::net;
+using mozilla::dom::BlobURLProtocolHandler;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::PerformanceStorage;
 using mozilla::dom::ServiceWorkerDescriptor;
@@ -2481,15 +2482,24 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
     nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(aSourceURI);
     nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
 
-    // If either uri is an nsIURIWithPrincipal
-    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(sourceBaseURI);
-    if (uriPrinc) {
-        uriPrinc->GetPrincipalUri(getter_AddRefs(sourceBaseURI));
+    nsCOMPtr<nsIPrincipal> sourceBlobPrincipal;
+    if (BlobURLProtocolHandler::GetBlobURLPrincipal(sourceBaseURI,
+                                                    getter_AddRefs(sourceBlobPrincipal))) {
+      nsCOMPtr<nsIURI> sourceBlobOwnerURI;
+      nsresult rv = sourceBlobPrincipal->GetURI(getter_AddRefs(sourceBlobOwnerURI));
+      if (NS_SUCCEEDED(rv)) {
+        sourceBaseURI = sourceBlobOwnerURI;
+      }
     }
 
-    uriPrinc = do_QueryInterface(targetBaseURI);
-    if (uriPrinc) {
-        uriPrinc->GetPrincipalUri(getter_AddRefs(targetBaseURI));
+    nsCOMPtr<nsIPrincipal> targetBlobPrincipal;
+    if (BlobURLProtocolHandler::GetBlobURLPrincipal(targetBaseURI,
+                                                    getter_AddRefs(targetBlobPrincipal))) {
+      nsCOMPtr<nsIURI> targetBlobOwnerURI;
+      nsresult rv = targetBlobPrincipal->GetURI(getter_AddRefs(targetBlobOwnerURI));
+      if (NS_SUCCEEDED(rv)) {
+        targetBaseURI = targetBlobOwnerURI;
+      }
     }
 
     if (!sourceBaseURI || !targetBaseURI)

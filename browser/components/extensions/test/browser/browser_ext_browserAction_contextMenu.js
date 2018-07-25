@@ -165,7 +165,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   function waitForElementShown(element) {
     let win = element.ownerGlobal;
-    let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = win.windowUtils;
     return BrowserTestUtils.waitForCondition(() => {
       info("Waiting for overflow button to have non-0 size");
       let bounds = dwu.getBoundsWithoutFlushing(element);

@@ -112,7 +112,7 @@ if CONFIG['CC_TYPE'] != 'msvc':
             if 'avx2.c' in f:
                 SOURCES[f].flags += ['-mavx2']
 
-if CONFIG['CC_TYPE'] == 'msvc':
+if CONFIG['CC_TYPE'] == 'msvc' and CONFIG['INTEL_ARCHITECTURE']:
     for f in SOURCES:
         if f.endswith('.c'):
             if 'avx.c' in f:

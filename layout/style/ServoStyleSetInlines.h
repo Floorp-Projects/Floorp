@@ -20,9 +20,10 @@ ServoStyleSet::EvaluateSourceSizeList(
 }
 
 already_AddRefed<ComputedStyle>
-ServoStyleSet::ResolveServoStyle(dom::Element* aElement)
+ServoStyleSet::ResolveServoStyle(const dom::Element& aElement)
 {
-  return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
+  // TODO(emilio): mRawSet isn't used by this function, remove.
+  return Servo_ResolveStyle(&aElement, mRawSet.get()).Consume();
 }
 
 } // namespace mozilla

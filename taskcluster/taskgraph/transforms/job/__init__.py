@@ -197,7 +197,7 @@ def use_fetches(config, jobs):
         env['MOZ_FETCHES'] = {'task-reference': ' '.join(job_fetches)}
 
         workdir = job['run'].get('workdir', '/builds/worker')
-        env.setdefault('MOZ_FETCHES_DIR', '{}/fetches'.format(workdir))
+        env['MOZ_FETCHES_DIR'] = '{}/fetches'.format(workdir)
         yield job
 
 

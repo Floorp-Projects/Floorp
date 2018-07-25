@@ -356,14 +356,11 @@ BrowserElementChild.prototype = {
   },
 
   get _windowUtils() {
-    return content.document.defaultView
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+    return content.document.defaultView.windowUtils;
   },
 
   _tryGetInnerWindowID: function(win) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
     try {
       return utils.currentInnerWindowID;
     }
@@ -376,8 +373,7 @@ BrowserElementChild.prototype = {
    * Show a modal prompt.  Called by BrowserElementPromptService.
    */
   showModalPrompt: function(win, args) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
 
     args.windowID = { outer: utils.outerWindowID,
                       inner: this._tryGetInnerWindowID(win) };
@@ -398,8 +394,7 @@ BrowserElementChild.prototype = {
    */
   _waitForResult: function(win) {
     debug("_waitForResult(" + win + ")");
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
 
     let outerWindowID = utils.outerWindowID;
     let innerWindowID = this._tryGetInnerWindowID(win);
@@ -1242,16 +1237,14 @@ BrowserElementChild.prototype = {
 
   _recvSendMouseEvent: function(data) {
     let json = data.json;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEventToWindow(json.type, json.x, json.y, json.button,
                                  json.clickCount, json.modifiers);
   },
 
   _recvSendTouchEvent: function(data) {
     let json = data.json;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendTouchEventToWindow(json.type, json.identifiers, json.touchesX,
                                  json.touchesY, json.radiisX, json.radiisY,
                                  json.rotationAngles, json.forces, json.count,

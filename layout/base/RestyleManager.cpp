@@ -2352,7 +2352,7 @@ private:
   ComputedStyle& ParentStyle() {
     if (!mParentContext) {
       mLazilyResolvedParentContext =
-        mParentRestyleState.StyleSet().ResolveServoStyle(&mParentElement);
+        mParentRestyleState.StyleSet().ResolveServoStyle(mParentElement);
       mParentContext = mLazilyResolvedParentContext;
     }
     return *mParentContext;
@@ -2675,7 +2675,7 @@ RestyleManager::ProcessPostTraversal(
     Servo_Element_IsDisplayContents(aElement);
   if (isDisplayContents) {
     oldOrDisplayContentsStyle =
-      aRestyleState.StyleSet().ResolveServoStyle(aElement);
+      aRestyleState.StyleSet().ResolveServoStyle(*aElement);
   }
 
   Maybe<ServoRestyleState> thisFrameRestyleState;
@@ -2694,7 +2694,7 @@ RestyleManager::ProcessPostTraversal(
 
   RefPtr<ComputedStyle> upToDateContext =
     wasRestyled
-      ? aRestyleState.StyleSet().ResolveServoStyle(aElement)
+      ? aRestyleState.StyleSet().ResolveServoStyle(*aElement)
       : oldOrDisplayContentsStyle;
 
   ServoPostTraversalFlags childrenFlags =

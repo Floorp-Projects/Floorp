@@ -8,8 +8,7 @@
 
 <script class="testbody" type="application/javascript">
 
-  var utils = SpecialPowers.wrap(window)
-                .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   var Cc = SpecialPowers.Cc;
   var Ci = SpecialPowers.Ci;
 

@@ -116,8 +116,7 @@
       printDebug("sending event: " + x + ", " + y + " (" + msg + ")\n");
       gCurrentMouseX = x;
       gCurrentMouseY = y;
-      var utils = win.QueryInterface(Ci.nsIInterfaceRequestor).
-                                     getInterface(Ci.nsIDOMWindowUtils);
+      var utils = win.windowUtils;
       var callbackFunc = function() {
         clearExpectedEvents();
         callback();
@@ -401,8 +400,7 @@
           eventListenOnce(rightElem, "popupshown", callback);
           gCurrentMouseX = 410;
           gCurrentMouseY = 180;
-          var utils = right.QueryInterface(Ci.nsIInterfaceRequestor).
-                               getInterface(Ci.nsIDOMWindowUtils);
+          var utils = right.windowUtils;
           utils.sendNativeMouseEvent(410, 180, NSMouseMoved, 0, null);
         },
         // Now the tooltip is visible.
@@ -655,8 +653,7 @@
           eventListenOnce(rightElem, "popupshown", callback);
           gCurrentMouseX = 410;
           gCurrentMouseY = 180;
-          var utils = right.QueryInterface(Ci.nsIInterfaceRequestor).
-                               getInterface(Ci.nsIDOMWindowUtils);
+          var utils = right.windowUtils;
           utils.sendNativeMouseEvent(410, 180, NSMouseMoved, 0, null);
         },
         // Now the tooltip is visible.

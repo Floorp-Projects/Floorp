@@ -8,9 +8,5 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'build-query.js',
-    'get-matches.js',
     'index.js',
-    'project-search.js',
-    'worker.js',
 )

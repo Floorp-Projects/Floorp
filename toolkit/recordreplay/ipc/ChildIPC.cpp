@@ -50,9 +50,6 @@ static base::ProcessId gMiddlemanPid;
 static base::ProcessId gParentPid;
 static StaticInfallibleVector<char*> gParentArgv;
 
-static char* gShmemPrefs;
-static size_t gShmemPrefsLen;
-
 // File descriptors used by a pipe to create checkpoints when instructed by the
 // parent process.
 static FileHandle gCheckpointWriteFd;
@@ -144,13 +141,6 @@ ChannelMessageHandler(Message* aMsg)
   }
 
   free(aMsg);
-}
-
-char*
-PrefsShmemContents(size_t aPrefsLen)
-{
-  MOZ_RELEASE_ASSERT(aPrefsLen == gShmemPrefsLen);
-  return gShmemPrefs;
 }
 
 // Main routine for a thread whose sole purpose is to listen to requests from
@@ -248,19 +238,14 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   HitCheckpoint(CheckpointId::Invalid, /* aRecordingEndpoint = */ false);
 
   // Process the introduction message to fill in arguments.
-  MOZ_RELEASE_ASSERT(!gShmemPrefs);
   MOZ_RELEASE_ASSERT(gParentArgv.empty());
 
   gParentPid = gIntroductionMessage->mParentPid;
 
   // Record/replay the introduction message itself so we get consistent args
-  // and prefs between recording and replaying.
+  // between recording and replaying.
   {
     IntroductionMessage* msg = IntroductionMessage::RecordReplay(*gIntroductionMessage);
-
-    gShmemPrefs = new char[msg->mPrefsLen];
-    memcpy(gShmemPrefs, msg->PrefsData(), msg->mPrefsLen);
-    gShmemPrefsLen = msg->mPrefsLen;
 
     const char* pos = msg->ArgvString();
     for (size_t i = 0; i < msg->mArgc; i++) {

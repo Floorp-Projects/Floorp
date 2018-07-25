@@ -15,8 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-      var gWindowUtils  = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                                 getInterface(Ci.nsIDOMWindowUtils);
+      var gWindowUtils = window.windowUtils;
       var passed = false;
       var obj = { QueryInterface: function() { passed = true; } }
       gWindowUtils.xpconnectArgument(obj);

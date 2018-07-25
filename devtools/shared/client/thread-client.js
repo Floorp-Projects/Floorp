@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -77,12 +78,17 @@ ThreadClient.prototype = {
    *        An object with a type property set to the appropriate limit (next,
    *        step, or finish) per the remote debugging protocol specification.
    *        Use null to specify no limit.
+   * @param bool aRewind
+   *        Whether execution should rewind until the limit is reached, rather
+   *        than proceeding forwards. This parameter has no effect if the
+   *        server does not support rewinding.
    * @param function onResponse
    *        Called with the response packet.
    */
   _doResume: DebuggerClient.requester({
     type: "resume",
-    resumeLimit: arg(0)
+    resumeLimit: arg(0),
+    rewind: arg(1)
   }, {
     before: function(packet) {
       this._assertPaused("resume");
@@ -136,7 +142,7 @@ ThreadClient.prototype = {
    * Resume a paused thread.
    */
   resume: function(onResponse) {
-    return this._doResume(null, onResponse);
+    return this._doResume(null, false, onResponse);
   },
 
   /**
@@ -146,7 +152,17 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   resumeThenPause: function(onResponse) {
-    return this._doResume({ type: "break" }, onResponse);
+    return this._doResume({ type: "break" }, false, onResponse);
+  },
+
+  /**
+   * Rewind a thread until a breakpoint is hit.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  rewind: function(onResponse) {
+    this._doResume(null, true, onResponse);
   },
 
   /**
@@ -156,7 +172,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepOver: function(onResponse) {
-    return this._doResume({ type: "next" }, onResponse);
+    return this._doResume({ type: "next" }, false, onResponse);
   },
 
   /**
@@ -166,7 +182,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepIn: function(onResponse) {
-    return this._doResume({ type: "step" }, onResponse);
+    return this._doResume({ type: "step" }, false, onResponse);
   },
 
   /**
@@ -176,7 +192,37 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepOut: function(onResponse) {
-    return this._doResume({ type: "finish" }, onResponse);
+    return this._doResume({ type: "finish" }, false, onResponse);
+  },
+
+  /**
+   * Rewind step over a function call.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reverseStepOver: function(onResponse) {
+    return this._doResume({ type: "next" }, true, onResponse);
+  },
+
+  /**
+   * Rewind step into a function call.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reverseStepIn: function(onResponse) {
+    return this._doResume({ type: "step" }, true, onResponse);
+  },
+
+  /**
+   * Rewind step out of a function call.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reverseStepOut: function(onResponse) {
+    return this._doResume({ type: "finish" }, true, onResponse);
   },
 
   /**
