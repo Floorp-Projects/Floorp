@@ -20,19 +20,18 @@ add_task(async function() {
         title: "Click me!",
         contexts: ["image"],
       });
-      browser.contextMenus.onClicked.addListener(() => {});
       browser.contextMenus.create({
         id: "clickme-page",
         title: "Click me!",
         contexts: ["page"],
       }, () => {
-        browser.test.notifyPass();
+        browser.test.sendMessage("ready");
       });
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish();
+  await extension.awaitMessage("ready");
 
   let contentAreaContextMenu = await openContextMenu("#img1");
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
@@ -138,12 +137,12 @@ add_task(async function() {
         /cannot be an ancestor/,
         "Should not be able to reparent an item as descendent of itself");
 
-      browser.test.notifyPass("contextmenus");
+      browser.test.sendMessage("contextmenus");
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish("contextmenus");
+  await extension.awaitMessage("contextmenus");
 
   let expectedClickInfo = {
     menuItemId: "ext-image",
