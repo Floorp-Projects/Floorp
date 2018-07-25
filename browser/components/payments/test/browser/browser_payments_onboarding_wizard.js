@@ -86,21 +86,23 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
         let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
         return state.selectedShippingAddress == billingAddressSelect.value;
       }, "Shipping address is selected as the billing address");
+    });
 
-      for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
-        let field = content.document.getElementById(key);
-        field.value = val;
-        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-      }
-      content.document.querySelector("basic-card-form .save-button").click();
+    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
       }, "Payment summary page is shown after the basic card page during on boarding");
 
       let cancelButton = content.document.querySelector("#cancel");
-      ok(content.isVisible(cancelButton),
-         "Payment summary page is rendered");
+      ok(content.isVisible(cancelButton), "Payment summary page is rendered");
     });
 
     info("Closing the payment dialog");
@@ -356,13 +358,16 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
         let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
         return state["basic-card-page"].billingAddressGUID == billingAddressSelect.value;
       }, "Billing Address is correctly shown");
+    });
 
-      for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
-        let field = content.document.getElementById(key);
-        field.value = val;
-        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-      }
-      content.document.querySelector("basic-card-form .save-button").click();
+    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";

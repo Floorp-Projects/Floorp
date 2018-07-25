@@ -22,6 +22,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     super();
 
     this.genericErrorText = document.createElement("div");
+    this.genericErrorText.setAttribute("aria-live", "polite");
+    this.genericErrorText.classList.add("page-error");
 
     this.addressAddLink = document.createElement("a");
     this.addressAddLink.className = "add-link";
@@ -54,6 +56,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     let url = "formautofill/editCreditCard.xhtml";
     this.promiseReady = this._fetchMarkup(url).then(doc => {
       this.form = doc.getElementById("form");
+      this.form.addEventListener("input", this);
+      this.form.addEventListener("invalid", this);
       return this.form;
     });
   }
@@ -163,12 +167,22 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     } else if (!editing) {
       billingAddressSelect.value = Object.keys(addresses)[0];
     }
+
+    this.updateSaveButtonState();
   }
 
   handleEvent(event) {
     switch (event.type) {
       case "click": {
         this.onClick(event);
+        break;
+      }
+      case "input": {
+        this.onInput(event);
+        break;
+      }
+      case "invalid": {
+        this.onInvalid(event);
         break;
       }
     }
@@ -247,13 +261,27 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         break;
       }
       case this.saveButton: {
-        this.saveRecord();
+        if (this.form.checkValidity()) {
+          this.saveRecord();
+        }
         break;
       }
       default: {
         throw new Error("Unexpected click target");
       }
     }
+  }
+
+  onInput(event) {
+    this.updateSaveButtonState();
+  }
+
+  onInvalid(event) {
+    this.saveButton.disabled = true;
+  }
+
+  updateSaveButtonState() {
+    this.saveButton.disabled = !this.form.checkValidity();
   }
 
   saveRecord() {

@@ -113,12 +113,12 @@ async function add_link(aOptions = {}) {
 
     await verifyPersistCheckbox(frame, addressOptions);
 
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
     await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
-
-      content.document.querySelector("address-form button:last-of-type").click();
 
       let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && !state["basic-card-page"].guid;
@@ -152,17 +152,18 @@ async function add_link(aOptions = {}) {
       checkboxSelector: "basic-card-form .persist-checkbox",
     });
 
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
+
     await spawnPaymentDialogTask(frame, async (testArgs = {}) => {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      content.document.querySelector("basic-card-form button:last-of-type").click();
-
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
-      }, "Check we are back on the sumamry page");
+      }, "Check we are back on the summary page");
     });
+
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "123",
@@ -370,7 +371,7 @@ add_task(async function test_edit_link() {
       ok(!field.disabled, `Field #${key} shouldn't be disabled`);
     }
 
-    content.document.querySelector("address-form button:last-of-type").click();
+    content.document.querySelector("address-form button.save-button").click();
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
              Object.keys(state.savedAddresses).length == 1;
@@ -379,7 +380,7 @@ add_task(async function test_edit_link() {
     is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel.slice(0, -1) + "7",
        "Check that address was edited and saved");
 
-    content.document.querySelector("basic-card-form button:last-of-type").click();
+    content.document.querySelector("basic-card-form button.save-button").click();
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       let cards = Object.entries(state.savedBasicCards);
@@ -403,65 +404,73 @@ add_task(async function test_edit_link() {
 
 add_task(async function test_private_card_adding() {
   await setup([PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
-  const args = {
-    methodData: [PTU.MethodData.basicCard],
-    details: PTU.Details.total60USD,
-  };
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
-    let {
-      PaymentTestUtils: PTU,
-    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let addLink = content.document.querySelector("payment-method-picker .add-link");
-    is(addLink.textContent, "Add", "Add link text");
+  await BrowserTestUtils.withNewTab({
+    gBrowser: privateWin.gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} = await setupPaymentDialog(browser, {
+      methodData: [PTU.MethodData.basicCard],
+      details: PTU.Details.total60USD,
+      merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+    });
 
-    addLink.click();
+    await spawnPaymentDialogTask(frame, async function check() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && !state["basic-card-page"].guid;
-    },
-                                                          "Check add page state");
+      let addLink = content.document.querySelector("payment-method-picker .add-link");
+      is(addLink.textContent, "Add", "Add link text");
 
-    let savedCardCount = Object.keys(state.savedBasicCards).length;
-    let tempCardCount = Object.keys(state.tempBasicCards).length;
+      addLink.click();
 
-    let card = Object.assign({}, PTU.BasicCards.JohnDoe);
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page" && !state["basic-card-page"].guid;
+      },
+                                                "Check card page state");
+    });
 
-    info("filling fields");
-    for (let [key, val] of Object.entries(card)) {
-      let field = content.document.getElementById(key);
-      field.value = val;
-      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-    }
+    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
 
-    content.document.querySelector("basic-card-form button:last-of-type").click();
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return Object.keys(state.tempBasicCards).length > tempCardCount;
-    },
-                                                      "Check card was added to temp collection");
+      let card = Object.assign({}, PTU.BasicCards.JohnDoe);
+      let state = await PTU.DialogContentUtils.getCurrentState(content);
+      let savedCardCount = Object.keys(state.savedBasicCards).length;
+      let tempCardCount = Object.keys(state.tempBasicCards).length;
+      content.document.querySelector("basic-card-form button.save-button").click();
 
-    is(savedCardCount, Object.keys(state.savedBasicCards).length, "No card was saved in state");
-    is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
+      state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return Object.keys(state.tempBasicCards).length > tempCardCount;
+      },
+                                                        "Check card was added to temp collection");
 
-    let cardGUIDs = Object.keys(state.tempBasicCards);
-    is(cardGUIDs.length, 1, "Check there is one card");
+      is(savedCardCount, Object.keys(state.savedBasicCards).length, "No card was saved in state");
+      is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
 
-    let tempCard = state.tempBasicCards[cardGUIDs[0]];
-    // Card number should be masked, so skip cc-number in the compare loop below
-    delete card["cc-number"];
-    for (let [key, val] of Object.entries(card)) {
-      is(tempCard[key], val, "Check " + key + ` ${tempCard[key]} matches ${val}`);
-    }
-    // check computed fields
-    is(tempCard["cc-number"], "************1111", "cc-number is masked");
-    is(tempCard["cc-given-name"], "John", "cc-given-name was computed");
-    is(tempCard["cc-family-name"], "Doe", "cc-family-name was computed");
-    ok(tempCard["cc-exp"], "cc-exp was computed");
-    ok(tempCard["cc-number-encrypted"], "cc-number-encrypted was computed");
-  }, args, {
-    browser: privateWin.gBrowser,
+      let cardGUIDs = Object.keys(state.tempBasicCards);
+      is(cardGUIDs.length, 1, "Check there is one card");
+
+      let tempCard = state.tempBasicCards[cardGUIDs[0]];
+      // Card number should be masked, so skip cc-number in the compare loop below
+      delete card["cc-number"];
+      for (let [key, val] of Object.entries(card)) {
+        is(tempCard[key], val, "Check " + key + ` ${tempCard[key]} matches ${val}`);
+      }
+      // check computed fields
+      is(tempCard["cc-number"], "************1111", "cc-number is masked");
+      is(tempCard["cc-given-name"], "John", "cc-given-name was computed");
+      is(tempCard["cc-family-name"], "Doe", "cc-family-name was computed");
+      ok(tempCard["cc-exp"], "cc-exp was computed");
+      ok(tempCard["cc-number-encrypted"], "cc-number-encrypted was computed");
+    });
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
   await BrowserTestUtils.closeWindow(privateWin);
 });

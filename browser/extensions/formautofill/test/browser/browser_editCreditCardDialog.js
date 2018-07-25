@@ -2,6 +2,8 @@
 
 "use strict";
 
+let {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", {});
+
 add_task(async function setup() {
   let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
   await formAutofillStorage.initialize();
@@ -179,6 +181,9 @@ add_task(async function test_addInvalidCreditCard() {
 
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("test name", {}, win);
+    PromiseTestUtils.expectUncaughtRejection(/Missing\/invalid cc-number/);
     EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#save"), {}, win);
 
     is(win.document.querySelector("form").checkValidity(), false, "cc-number is invalid");
