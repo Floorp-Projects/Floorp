@@ -15,7 +15,6 @@ from mozbuild.frontend.data import (
     FinalTargetFiles,
     GeneratedFile,
     JARManifest,
-    XPIDLModule,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
     XPIDLFile,
