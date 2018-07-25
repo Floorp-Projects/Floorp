@@ -90,6 +90,15 @@ class SrcNote {
             Count
         };
     };
+    // SRC_SETLINE: Source note for arbitrary ops.
+    class SetLine {
+      public:
+        enum Fields {
+            // The file-absolute source line number of the current op.
+            Line,
+            Count
+        };
+    };
 };
 
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
@@ -118,7 +127,7 @@ class SrcNote {
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     SrcNote::ColSpan::Count) \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
-    M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
+    M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_UNUSED21,     "unused21",    0)  /* Unused. */                                           \
     M(SRC_UNUSED22,     "unused22",    0)  /* Unused. */                                           \
     M(SRC_UNUSED23,     "unused23",    0)  /* Unused. */                                           \
