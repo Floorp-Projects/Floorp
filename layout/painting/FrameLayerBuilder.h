@@ -121,6 +121,7 @@ public:
   }
 
   RefPtr<TransformClipNode> mTransform;
+  RefPtr<TransformClipNode> mOldTransform;
 
 private:
   DisplayItemData(LayerManagerData* aParent,
