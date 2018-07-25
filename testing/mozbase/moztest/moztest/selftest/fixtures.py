@@ -59,6 +59,9 @@ def setup_test_harness(request):
             if files_dir:
                 test_root = os.path.join(harness_root, 'tests', 'selftests')
                 if not os.path.exists(test_root):
+                    if os.path.lexists(test_root):
+                        os.remove(test_root)
+
                     if hasattr(os, 'symlink'):
                         os.symlink(files_dir, test_root)
                     else:
