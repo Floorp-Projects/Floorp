@@ -624,22 +624,6 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
     return true;
 }
 
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
-{
-    MOZ_ASSERT(!this->sourceUnits.atStart());
-
-    unsigned numUnits = 0;
-    char16_t units[2];
-    unicode::UTF16Encode(codePoint, units, &numUnits);
-
-    MOZ_ASSERT(numUnits == 1 || numUnits == 2);
-
-    while (numUnits-- > 0)
-        ungetCodeUnit(units[numUnits]);
-}
-
 template<>
 size_t
 SourceUnits<char16_t>::findWindowStart(size_t offset)
