@@ -1580,7 +1580,7 @@ jit::JitActivation::JitActivation(JSContext* cx)
     packedExitFP_(nullptr),
     encodedWasmExitReason_(0),
     prevJitActivation_(cx->jitActivation),
-    rematerializedFrames_(nullptr),
+    rematerializedFrames_(),
     ionRecovery_(cx),
     bailoutData_(nullptr),
     lastProfilingFrame_(nullptr),
@@ -1607,7 +1607,6 @@ jit::JitActivation::~JitActivation()
     MOZ_ASSERT(!isWasmTrapping());
 
     clearRematerializedFrames();
-    js_delete(rematerializedFrames_);
 }
 
 void
@@ -1656,11 +1655,11 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JSJitFrameIter& 
     MOZ_ASSERT(iter.isIonScripted());
 
     if (!rematerializedFrames_) {
-        rematerializedFrames_ = cx->new_<RematerializedFrameTable>(cx);
+        rematerializedFrames_ = cx->make_unique<RematerializedFrameTable>(cx);
         if (!rematerializedFrames_)
             return nullptr;
         if (!rematerializedFrames_->init()) {
-            rematerializedFrames_ = nullptr;
+            rematerializedFrames_.reset();
             ReportOutOfMemory(cx);
             return nullptr;
         }
