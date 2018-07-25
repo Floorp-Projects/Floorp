@@ -247,8 +247,9 @@
       &:not(.no-description) .card-title {
         font-size: $card-title-font-size;
         line-height: $card-title-font-size + 1;
-        max-height: $card-title-font-size + 1;
+        max-height: $card-title-font-size + 5;
         overflow: hidden;
+        padding: 0 0 4px;
         text-overflow: ellipsis;
         white-space: nowrap;
       }

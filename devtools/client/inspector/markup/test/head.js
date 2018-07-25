@@ -723,3 +723,28 @@ async function clickOnRevealLink(inspector, container) {
 
   await onSelection;
 }
+
+/**
+ * Hit `key` on the reveal link in the provided slotted container.
+ * Will resolve when selection emits "new-node-front".
+ */
+async function keydownOnRevealLink(key, inspector, container) {
+  const revealLink = container.elt.querySelector(".reveal-link");
+  const win = inspector.markup.doc.defaultView;
+
+  const root = inspector.markup.getContainer(inspector.markup._rootNode);
+  root.elt.focus();
+
+  // we need to go through a ENTER + TAB  key sequence to focus on
+  // the .reveal-link element with the keyboard
+  const revealFocused = once(revealLink, "focus");
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  EventUtils.synthesizeKey("KEY_Tab", {}, win);
+  info("Waiting for .reveal-link to be focused");
+  await revealFocused;
+
+  // hit `key` on the .reveal-link
+  const onSelection = inspector.selection.once("new-node-front");
+  EventUtils.synthesizeKey(key, {}, win);
+  await onSelection;
+}

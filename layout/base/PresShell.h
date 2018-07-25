@@ -784,9 +784,6 @@ private:
   // we finish reflowing mCurrentReflowRoot.
   nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesToDirty;
 
-  // Reflow roots that need to be reflowed.
-  nsTArray<nsIFrame*> mDirtyRoots;
-
   nsTArray<nsAutoPtr<DelayedEvent> > mDelayedEvents;
 private:
   nsIFrame* mCurrentEventFrame;

@@ -2,6 +2,7 @@
   "title": "ProviderResponse",
   "description": "A response object for remote providers of AS Router",
   "type": "object",
+  "version": "0.1.0",
   "properties": {
     "messages": {
       "type": "array",
@@ -31,6 +32,49 @@
           "trigger": {
             "type": "string",
             "description": "A string representing what the trigger to show this message is."
+          },
+          "frequency": {
+            "type": "object",
+            "description": "An object containing frequency cap information for a message.",
+            "properties": {
+              "lifetime": {
+                "type": "integer",
+                "description": "The maximum lifetime impressions for a message.",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "custom": {
+                "type": "array",
+                "description": "An array of custom frequency cap definitions.",
+                "items": {
+                  "description": "A frequency cap definition containing time and max impression information",
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "oneOf": [
+                        {
+                          "type": "integer",
+                          "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                        },
+                        {
+                          "type": "string",
+                          "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                          "enum": ["daily"]
+                        }
+                      ]
+
+                    },
+                    "cap": {
+                      "type": "integer",
+                      "description": "The maximum impressions for the message within the defined period.",
+                      "minimum": 1,
+                      "maximum": 100
+                    }
+                  },
+                  "required": ["period", "cap"]
+                }
+              }
+            }
           }
         },
         "required": ["id", "template", "content"]

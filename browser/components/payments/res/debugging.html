@@ -45,17 +45,16 @@
 
       <section class="group">
         <h1>States</h1>
-        <fieldset>
+        <fieldset id="complete-status">
           <legend>Complete Status</legend>
-          <label class="block"><input type="radio" name="completeStatus" value="initial" checked="checked">Initial (default)</label>
-          <label class="block"><input type="radio" name="completeStatus" value="processing">Processing</label>
-          <label class="block"><input type="radio" name="completeStatus" value="success">Success</label>
-          <label class="block"><input type="radio" name="completeStatus" value="fail">Fail</label>
-          <label class="block"><input type="radio" name="completeStatus" value="unknown">Unknown</label>
-          <label class="block"><input type="radio" name="completeStatus" value="timeout">Timeout</label>
+          <label class="block"><input type="radio" name="setCompleteStatus" value="">(default)</label>
+          <label class="block"><input type="radio" name="setCompleteStatus" value="processing">Processing</label>
+          <label class="block"><input type="radio" name="setCompleteStatus" value="fail">Fail</label>
+          <label class="block"><input type="radio" name="setCompleteStatus" value="unknown">Unknown</label>
+          <label class="block"><input type="radio" name="setCompleteStatus" value="timeout">Timeout</label>
         </fieldset>
         <label class="block"><input type="checkbox" id="setChangesPrevented">Prevent changes</label>
-        <button id="setCompleteStatus" class="wide">Set Complete Status</button>
+
 
         <section class="group">
           <fieldset>
