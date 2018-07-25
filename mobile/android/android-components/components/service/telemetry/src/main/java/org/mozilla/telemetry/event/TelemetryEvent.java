@@ -30,7 +30,7 @@ public class TelemetryEvent {
     private static final int MAX_LENGTH_METHOD = 20;
     private static final int MAX_LENGTH_OBJECT = 20;
     private static final int MAX_LENGTH_VALUE = 80;
-    private static final int MAX_EXTRA_KEYS = 10;
+    private static final int MAX_EXTRA_KEYS = 200;
     private static final int MAX_LENGTH_EXTRA_KEY = 15;
     private static final int MAX_LENGTH_EXTRA_VALUE = 80;
 
