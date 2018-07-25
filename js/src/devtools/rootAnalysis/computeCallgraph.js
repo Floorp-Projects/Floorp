@@ -18,14 +18,34 @@ var origOut = os.file.redirect(callgraphOut_filename);
 var memoized = new Map();
 var memoizedCount = 0;
 
-function memo(name)
+var unmangled2id = new Set();
+
+function getId(name)
 {
-    if (!memoized.has(name)) {
-        let id = memoized.size + 1;
-        memoized.set(name, "" + id);
-        print(`#${id} ${name}`);
-    }
-    return memoized.get(name);
+    let id = memoized.get(name);
+    if (id !== undefined)
+        return id;
+
+    id = memoized.size + 1;
+    memoized.set(name, id);
+    print(`#${id} ${name}`);
+
+    return id;
+}
+
+function functionId(name)
+{
+    const [mangled, unmangled] = splitFunction(name);
+    const id = getId(mangled);
+
+    // Only produce a mangled -> unmangled mapping once, unless there are
+    // multiple unmangled names for the same mangled name.
+    if (unmangled2id.has(unmangled))
+        return id;
+
+    print(`= ${id} ${unmangled}`);
+    unmangled2id.add(unmangled);
+    return id;
 }
 
 var lastline;
@@ -83,7 +103,7 @@ function processBody(functionName, body)
 
 
     for (var tag of getAnnotations(functionName, body).values())
-        print("T " + memo(functionName) + " " + tag);
+        print("T " + functionId(functionName) + " " + tag);
 
     // Set of all callees that have been output so far, in order to suppress
     // repeated callgraph edges from being recorded. This uses a Map from
@@ -111,19 +131,19 @@ function processBody(functionName, body)
             // to never GC.
             const limits = edgeLimited | callee.limits;
             let prologue = limits ? `/${limits} ` : "";
-            prologue += memo(functionName) + " ";
+            prologue += functionId(functionName) + " ";
             if (callee.kind == 'direct') {
                 const prev_limits = seen.has(callee.name) ? seen.get(callee.name) : LIMIT_UNVISITED;
                 if (prev_limits & ~limits) {
                     // Only output an edge if it loosens a limit.
                     seen.set(callee.name, prev_limits & limits);
-                    printOnce("D " + prologue + memo(callee.name));
+                    printOnce("D " + prologue + functionId(callee.name));
                 }
             } else if (callee.kind == 'field') {
                 var { csu, field, isVirtual } = callee;
                 const tag = isVirtual ? 'V' : 'F';
                 const fullfield = `${csu}.${field}`;
-                printOnce(`${tag} ${prologue}${memo(fullfield)} CLASS ${csu} FIELD ${field}`);
+                printOnce(`${tag} ${prologue}${getId(fullfield)} CLASS ${csu} FIELD ${field}`);
             } else if (callee.kind == 'resolved-field') {
                 // Fully-resolved field (virtual method) call. Record the
                 // callgraph edges. Do not consider limits, since they are
@@ -137,7 +157,7 @@ function processBody(functionName, body)
                 if (!virtualResolutionsSeen.has(fullFieldName)) {
                     virtualResolutionsSeen.add(fullFieldName);
                     for (var target of callees)
-                        printOnce("R " + memo(fullFieldName) + " " + memo(target.name));
+                        printOnce("R " + getId(fullFieldName) + " " + functionId(target.name));
                 }
             } else if (callee.kind == 'indirect') {
                 printOnce("I " + prologue + "VARIABLE " + callee.variable);
@@ -199,7 +219,7 @@ function process(functionName, functionBodies)
     var markerPos = functionName.indexOf(internalMarker);
     if (markerPos > 0) {
         var inChargeXTor = functionName.replace(internalMarker, "");
-        printOnce("D " + memo(inChargeXTor) + " " + memo(functionName));
+        printOnce("D " + functionId(inChargeXTor) + " " + functionId(functionName));
     }
 
     // Further note: from https://itanium-cxx-abi.github.io/cxx-abi/abi.html the
@@ -245,20 +265,20 @@ function process(functionName, functionBodies)
         // Another possibility! A templatized constructor will contain C4I...E
         // for template arguments.
         //
-        for (let [synthetic, variant] of [
-            ['C4E', 'C1E'],
-            ['C4E', 'C2E'],
-            ['C4E', 'C3E'],
-            ['C4I', 'C1I'],
-            ['C4I', 'C2I'],
-            ['C4I', 'C3I']])
+        for (let [synthetic, variant, desc] of [
+            ['C4E', 'C1E', 'complete_ctor'],
+            ['C4E', 'C2E', 'base_ctor'],
+            ['C4E', 'C3E', 'complete_alloc_ctor'],
+            ['C4I', 'C1I', 'complete_ctor'],
+            ['C4I', 'C2I', 'base_ctor'],
+            ['C4I', 'C3I', 'complete_alloc_ctor']])
         {
             if (mangled.indexOf(synthetic) == -1)
                 continue;
 
             let variant_mangled = mangled.replace(synthetic, variant);
-            let variant_full = variant_mangled + "$" + unmangled;
-            printOnce("D " + memo(variant_full) + " " + memo(functionName));
+            let variant_full = `${variant_mangled}$${unmangled} [[${desc}]]`;
+            printOnce("D " + functionId(variant_full) + " " + functionId(functionName));
         }
     }
 
@@ -278,12 +298,12 @@ function process(functionName, functionBodies)
     //
     if (functionName.indexOf("D4Ev") != -1 && functionName.indexOf("::~") != -1) {
         const not_in_charge_dtor = functionName.replace("(int32)", "()");
-        const D0 = not_in_charge_dtor.replace("D4Ev", "D0Ev");
-        const D1 = not_in_charge_dtor.replace("D4Ev", "D1Ev");
-        const D2 = not_in_charge_dtor.replace("D4Ev", "D2Ev");
-        printOnce("D " + memo(D0) + " " + memo(D1));
-        printOnce("D " + memo(D1) + " " + memo(D2));
-        printOnce("D " + memo(D2) + " " + memo(functionName));
+        const D0 = not_in_charge_dtor.replace("D4Ev", "D0Ev") + " [[deleting_dtor]]";
+        const D1 = not_in_charge_dtor.replace("D4Ev", "D1Ev") + " [[complete_dtor]]";
+        const D2 = not_in_charge_dtor.replace("D4Ev", "D2Ev") + " [[base_dtor]]";
+        printOnce("D " + functionId(D0) + " " + functionId(D1));
+        printOnce("D " + functionId(D1) + " " + functionId(D2));
+        printOnce("D " + functionId(D2) + " " + functionId(functionName));
     }
 }
 
