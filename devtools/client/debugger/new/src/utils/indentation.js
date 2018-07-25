@@ -14,7 +14,13 @@ function getIndentation(line) {
     return 0;
   }
 
-  return line.match(/^\s*/)[0].length;
+  const lineMatch = line.match(/^\s*/);
+
+  if (!lineMatch) {
+    return 0;
+  }
+
+  return lineMatch[0].length;
 }
 
 function getMaxIndentation(lines) {
