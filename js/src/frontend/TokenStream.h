@@ -1331,7 +1331,7 @@ class SourceUnits
      * away from |offset|, such that all code points from that offset to
      * |offset| are valid, non-LineTerminator code points.
      */
-    size_t findWindowStart(size_t offset);
+    size_t findWindowStart(size_t offset) const;
 
     /**
      * From absolute offset |offset|, find an absolute offset within source
@@ -1339,7 +1339,7 @@ class SourceUnits
      * that all code units from |offset| to that offset are valid,
      * non-LineTerminator code points.
      */
-    size_t findWindowEnd(size_t offset);
+    size_t findWindowEnd(size_t offset) const;
 
   private:
     /** Base of buffer. */
