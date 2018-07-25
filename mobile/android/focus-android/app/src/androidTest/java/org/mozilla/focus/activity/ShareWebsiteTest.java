@@ -19,6 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import java.io.IOException;
 
@@ -48,6 +49,9 @@ public class ShareWebsiteTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()

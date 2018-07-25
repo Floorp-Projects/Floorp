@@ -19,9 +19,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
+import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 // https://testrail.stage.mozaws.net/index.php?/cases/view/40062
 @RunWith(AndroidJUnit4.class)
@@ -43,6 +45,15 @@ public class FirstRunDialogueTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, false)
                     .apply();
+
+            // This test runs on both GV and WV.
+            // Klar is used to test Geckoview. make sure it's set to Gecko
+            if (AppConstants.isKlarBuild() && !AppConstants.isGeckoBuild(appContext)) {
+                PreferenceManager.getDefaultSharedPreferences(appContext)
+                        .edit()
+                        .putBoolean(ENGINE_PREF_STRING_KEY, true)
+                        .apply();
+            }
         }
     };
 

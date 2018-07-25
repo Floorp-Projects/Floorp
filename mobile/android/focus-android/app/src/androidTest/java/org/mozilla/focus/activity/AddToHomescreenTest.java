@@ -32,6 +32,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
+import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 // https://testrail.stage.mozaws.net/index.php?/cases/view/60852
 // includes:
@@ -56,6 +57,15 @@ public class AddToHomescreenTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
+
+            // This test runs on both GV and WV.
+            // Klar is used to test Geckoview. make sure it's set to Gecko
+            if (AppConstants.isKlarBuild() && !AppConstants.isGeckoBuild(appContext)) {
+                PreferenceManager.getDefaultSharedPreferences(appContext)
+                        .edit()
+                        .putBoolean(ENGINE_PREF_STRING_KEY, true)
+                        .apply();
+            }
 
             webServer = new MockWebServer();
             // note: requesting getPort() will automatically start the mock server,

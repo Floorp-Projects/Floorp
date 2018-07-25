@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.utils.AppConstants;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -46,9 +47,13 @@ public class AccessAboutAndYourRightsPagesTest {
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
 
+
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
@@ -61,6 +66,7 @@ public class AccessAboutAndYourRightsPagesTest {
 
     @Before
     public void setUp() {
+
         loadingIdlingResource = new SessionLoadedIdlingResource();
         IdlingRegistry.getInstance().register(loadingIdlingResource);
     }
@@ -73,37 +79,29 @@ public class AccessAboutAndYourRightsPagesTest {
     }
 
     @Test
-    public void AccessAboutAndYourRightsPagesTest() {
+    public void AboutAndYourRightsPagesTest() {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         // What's new page
         openMenu();
-
         clickMenuItem(R.id.whats_new);
         assertWebsiteUrlContains("support.mozilla.org");
-
         pressBack();
 
         // Help page
         openMenu();
-
         clickMenuItem(R.id.help);
         assertWebsiteUrlContains("what-firefox-focus-android");
-
         pressBack();
 
-        // Go to settings
+        // Go to settings "About" page
         openMenu();
         clickMenuItem(R.id.settings);
-
-        // "About" page
         final String mozillaMenuLabel = context.getString(R.string.preference_category_mozilla, context.getString(R.string.app_name));
         onData(withTitleText(mozillaMenuLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
-
         final String aboutLabel = context.getString(R.string.preference_about, context.getString(R.string.app_name));
-
         onData(withTitleText(aboutLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
@@ -121,7 +119,6 @@ public class AccessAboutAndYourRightsPagesTest {
         onData(withTitleText(context.getString(R.string.your_rights)))
                 .check(matches(isDisplayed()))
                 .perform(click());
-
         assertWebsiteUrlContains("focus:rights");
     }
 

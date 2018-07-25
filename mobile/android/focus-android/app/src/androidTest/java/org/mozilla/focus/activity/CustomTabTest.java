@@ -20,11 +20,13 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import java.io.IOException;
 
@@ -44,7 +46,7 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.findElemen
 import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
-
+import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -60,6 +62,23 @@ public class CustomTabTest {
     public ActivityTestRule<IntentReceiverActivity> activityTestRule  = new ActivityTestRule<>(
             IntentReceiverActivity.class, true, false);
 
+    @Before
+    public void setUp() {
+
+        Context appContext = InstrumentationRegistry.getInstrumentation()
+                .getTargetContext()
+                .getApplicationContext();
+
+        // This test runs on both GV and WV.
+        // Klar is used to test Geckoview. make sure it's set to Gecko
+        if (AppConstants.isKlarBuild() && !AppConstants.isGeckoBuild(appContext)) {
+            PreferenceManager.getDefaultSharedPreferences(appContext)
+                    .edit()
+                    .putBoolean(ENGINE_PREF_STRING_KEY, true)
+                    .apply();
+        }
+    }
+
     @After
     public void tearDown() {
         activityTestRule.getActivity().finishAndRemoveTask();
@@ -74,9 +93,14 @@ public class CustomTabTest {
             activityTestRule.launchActivity(createCustomTabIntent());
 
             // Wait for website to load
-            onWebView()
-                    .withElement(findElement(Locator.ID, TEST_PAGE_HEADER_ID))
-                    .check(webMatches(getText(), equalTo(TEST_PAGE_HEADER_TEXT)));
+            Context appContext = InstrumentationRegistry.getInstrumentation()
+                    .getTargetContext()
+                    .getApplicationContext();
+            if (!AppConstants.isGeckoBuild(appContext)) {
+                onWebView()
+                        .withElement(findElement(Locator.ID, TEST_PAGE_HEADER_ID))
+                        .check(webMatches(getText(), equalTo(TEST_PAGE_HEADER_TEXT)));
+            }
 
             // Verify action button is visible
             onView(withContentDescription(ACTION_BUTTON_DESCRIPTION))

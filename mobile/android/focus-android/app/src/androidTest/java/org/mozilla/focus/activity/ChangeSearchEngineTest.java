@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import java.util.Arrays;
 
@@ -53,6 +54,10 @@ public class ChangeSearchEngineTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
+
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)

@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -141,6 +142,9 @@ public class WebViewDataTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
 
             webServer = new MockWebServer();
 

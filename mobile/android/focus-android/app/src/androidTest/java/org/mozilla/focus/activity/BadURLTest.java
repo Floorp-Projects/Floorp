@@ -8,6 +8,7 @@ package org.mozilla.focus.activity;
 import android.content.Context;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.RequiresDevice;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObject;
@@ -20,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -30,6 +32,7 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test opens enters and invalid URL, and Focus should provide an appropriate error message
 @RunWith(AndroidJUnit4.class)
+@RequiresDevice
 public class BadURLTest {
 
     @Rule
@@ -43,6 +46,9 @@ public class BadURLTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()

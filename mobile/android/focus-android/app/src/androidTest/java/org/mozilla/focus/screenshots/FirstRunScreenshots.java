@@ -4,6 +4,8 @@
 
 package org.mozilla.focus.screenshots;
 
+import android.content.Context;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -17,6 +19,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.TestHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
@@ -26,7 +29,20 @@ import static junit.framework.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class FirstRunScreenshots extends ScreenshotTest {
     @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true);
+    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true) {
+        @Override
+        protected void beforeActivityLaunched() {
+            super.beforeActivityLaunched();
+
+            Context appContext = InstrumentationRegistry.getInstrumentation()
+                    .getTargetContext()
+                    .getApplicationContext();
+
+            // This test is for webview only for now.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext.getApplicationContext()) &&
+                    !AppConstants.isKlarBuild());
+        }
+    };
 
     @ClassRule
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();

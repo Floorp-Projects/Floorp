@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.StringRes;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.IdlingRegistry;
+import android.support.test.rule.ActivityTestRule;
 import android.support.test.uiautomator.UiDevice;
 import android.text.format.DateUtils;
 
@@ -14,8 +15,11 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.HostScreencapScreenshotStrategy;
+import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
 
@@ -29,6 +33,22 @@ abstract class ScreenshotTest {
     private SessionLoadedIdlingResource loadingIdlingResource;
 
     UiDevice device;
+
+    @Rule
+    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(false) {
+        @Override
+        protected void beforeActivityLaunched() {
+            super.beforeActivityLaunched();
+
+            Context appContext = InstrumentationRegistry.getInstrumentation()
+                    .getTargetContext()
+                    .getApplicationContext();
+
+            // This test is for webview only for now.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext.getApplicationContext()) &&
+                    !AppConstants.isKlarBuild());
+        }
+    };
 
     @Rule
     public TestRule screenshotOnFailureRule = new TestWatcher() {

@@ -4,8 +4,12 @@
 
 package org.mozilla.focus.activity;
 
+import android.content.Context;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.web.webdriver.Locator;
+import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.After;
@@ -14,8 +18,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.web.IWebView;
 
 import okhttp3.mockwebserver.MockWebServer;
@@ -35,6 +39,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
+import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton;
@@ -46,8 +51,28 @@ import static org.mozilla.focus.helpers.WebViewFakeLongPress.injectHitTarget;
  */
 @RunWith(AndroidJUnit4.class)
 public class MultitaskingTest {
+
     @Rule
-    public MainActivityFirstrunTestRule mActivityTestRule = new MainActivityFirstrunTestRule(false);
+    public ActivityTestRule<MainActivity> mActivityTestRule
+            = new ActivityTestRule<MainActivity>(MainActivity.class) {
+
+        @Override
+        protected void beforeActivityLaunched() {
+            super.beforeActivityLaunched();
+
+            Context appContext = InstrumentationRegistry.getInstrumentation()
+                    .getTargetContext()
+                    .getApplicationContext();
+
+            // This test is for webview only. Debug is defaulted to Webview, and Klar is used for GV testing.
+            org.junit.Assume.assumeTrue(!AppConstants.isGeckoBuild(appContext) && !AppConstants.isKlarBuild());
+
+            PreferenceManager.getDefaultSharedPreferences(appContext)
+                    .edit()
+                    .putBoolean(FIRSTRUN_PREF, true)
+                    .apply();
+        }
+    };
 
     private MockWebServer webServer;
 
@@ -120,7 +145,7 @@ public class MultitaskingTest {
             onFloatingTabsButton()
                     .perform(click());
 
-            final String expectedUrl = webServer.getHostName() + "/tab2.html";
+            final String expectedUrl = webServer.getHostName() + ":" + webServer.getPort() + "/tab2.html";
 
             onView(withText(expectedUrl))
                     .perform(click());

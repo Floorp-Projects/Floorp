@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.screenshots;
 
-import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiObject;
@@ -17,12 +16,9 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.TestHelper;
 
 import java.io.IOException;
@@ -46,8 +42,7 @@ import static org.hamcrest.Matchers.containsString;
 
 @RunWith(AndroidJUnit4.class)
 public class BrowserScreenScreenshots extends ScreenshotTest {
-    @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(false);
+
 
     @ClassRule
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();

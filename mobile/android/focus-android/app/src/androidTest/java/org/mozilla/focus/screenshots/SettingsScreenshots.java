@@ -8,7 +8,6 @@ import android.content.Context;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
-import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
@@ -16,12 +15,9 @@ import android.support.test.uiautomator.UiSelector;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 
 import java.util.Collections;
 
@@ -50,8 +46,6 @@ import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsScreenshots extends ScreenshotTest {
-    @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(false);
 
     @ClassRule
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();
