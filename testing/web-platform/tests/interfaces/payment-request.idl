@@ -47,7 +47,7 @@ dictionary PaymentDetailsInit : PaymentDetailsBase {
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
   DOMString error;
   PaymentItem total;
-  AddressErrorFields shippingAddressErrors;
+  AddressErrors shippingAddressErrors;
 };
 
 dictionary PaymentDetailsModifier {
@@ -115,7 +115,7 @@ dictionary AddressInit {
   DOMString phone;
 };
 
-dictionary AddressErrorFields {
+dictionary AddressErrors {
   DOMString addressLine;
   DOMString city;
   DOMString country;
