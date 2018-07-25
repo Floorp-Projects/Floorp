@@ -109,6 +109,12 @@ WebConsoleOutputWrapper.prototype = {
           if (hud && hud.owner && hud.owner.viewSource) {
             hud.owner.viewSource(frame.url, frame.line);
           }
+        },
+        recordTelemetryEvent: (eventName, extra = {}) => {
+          this.telemetry.recordEvent("devtools.main", eventName, "webconsole", null, {
+            ...extra,
+            "session_id": this.toolbox && this.toolbox.sessionId || -1
+          });
         }
       };
 
