@@ -62,6 +62,9 @@ struct FieldRules {
     /// Things to add before the field, as part of a block, typically for
     /// cleanup.
     block_after_field: Option<String>,
+
+    /// Extra arguments passed to the method when parsing this field.
+    extra_args: Option<Rc<String>>,
 }
 
 #[derive(Clone, Default)]
@@ -84,6 +87,12 @@ struct NodeRules {
 
     /// Default value for the optional field.
     default_value: Option<Rc<String>>,
+
+    /// Extra parameters for the method.
+    extra_params: Option<Rc<String>>,
+
+    /// Extra arguments passed to the method when parsing this interface.
+    extra_args: Option<Rc<String>>,
 
     /// Stuff to add at start.
     init: Option<String>,
@@ -232,6 +241,14 @@ impl GlobalRules {
                             .unwrap_or_else(|| panic!("Unknown node name {}", node_key));
                         node_rule.inherits = Some(inherits).cloned();
                     }
+                    "extra-params" => {
+                        update_rule_rc(&mut node_rule.extra_params, node_item_entry)
+                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                    }
+                    "extra-args" => {
+                        update_rule_rc(&mut node_rule.extra_args, node_item_entry)
+                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                    }
                     "init" => {
                         update_rule(&mut node_rule.init, node_item_entry)
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
@@ -292,6 +309,10 @@ impl GlobalRules {
                                     }
                                     "after" => {
                                         update_rule(&mut field_rule.after_field, &field_config_entry)
+                                            .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{} must be a string", node_key, field_key, field_config_key));
+                                    }
+                                    "extra-args" => {
+                                        update_rule_rc(&mut field_rule.extra_args, &field_config_entry)
                                             .unwrap_or_else(|()| panic!("Rule {}.fields.{}.{} must be a string", node_key, field_key, field_config_key));
                                     }
                                     _ => {
@@ -371,6 +392,8 @@ impl GlobalRules {
                 inherits: _,
                 type_ok,
                 default_value,
+                extra_params,
+                extra_args,
                 init,
                 append,
                 by_field,
@@ -382,6 +405,12 @@ impl GlobalRules {
             }
             if rules.default_value.is_none() {
                 rules.default_value = default_value;
+            }
+            if rules.extra_params.is_none() {
+                rules.extra_params = extra_params;
+            }
+            if rules.extra_args.is_none() {
+                rules.extra_args = extra_args;
             }
             if rules.init.is_none() {
                 rules.init = init;
@@ -571,32 +600,65 @@ impl CPPExporter {
         self.rules.parser_default_value.clone()
     }
 
-    fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str) -> String {
+    fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str,
+                            extra_params: &Option<Rc<String>>) -> String {
         let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
-        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args});\n",
+        let extra = match extra_params {
+            Some(s) => {
+                format!("{}\n{}",
+                        if args.len() > 0 {
+                            ","
+                        } else {
+                            ""
+                        },
+                        s.reindent("        "))
+            }
+            _ => {
+                "".to_string()
+            }
+        };
+        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra});\n",
             prefix = prefix,
             type_ok = type_ok,
             kind = kind,
             args = args,
+            extra = extra,
         )
     }
 
-    fn get_method_definition_start(&self, name: &NodeName, prefix: &str, args: &str) -> String {
+    fn get_method_definition_start(&self, name: &NodeName, prefix: &str, args: &str,
+                                   extra_params: &Option<Rc<String>>) -> String {
         let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
-        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args})",
+        let extra = match extra_params {
+            Some(s) => {
+                format!("{}\n{}",
+                        if args.len() > 0 {
+                            ","
+                        } else {
+                            ""
+                        },
+                        s.reindent("        "))
+            }
+            _ => {
+                "".to_string()
+            }
+        };
+        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args}{extra})",
             parser_class_template = self.rules.parser_class_template,
             prefix = prefix,
             type_ok = type_ok,
             parser_class_name = self.rules.parser_class_name,
             kind = kind,
             args = args,
+            extra = extra,
         )
     }
 
     fn get_method_call(&self, var_name: &str, name: &NodeName,
                        prefix: &str, args: &str,
+                       extra_params: &Option<Rc<String>>,
                        call_kind: MethodCallKind) -> String {
         let type_ok_is_ok = match call_kind {
             MethodCallKind::Decl | MethodCallKind::Var => {
@@ -606,10 +668,25 @@ impl CPPExporter {
                 false
             }
         };
-        let call = format!("parse{prefix}{name}({args})",
+        let extra = match extra_params {
+            Some(s) => {
+                format!("{}\n{}",
+                        if args.len() > 0 {
+                            ","
+                        } else {
+                            ""
+                        },
+                        s.reindent("    "))
+            }
+            _ => {
+                "".to_string()
+            }
+        };
+        let call = format!("parse{prefix}{name}({args}{extra})",
                            prefix = prefix,
                            name = name.to_class_cases(),
-                           args = args);
+                           args = args,
+                           extra = extra);
 
         if type_ok_is_ok {
             // Special case: `Ok` means that we shouldn't bind the return value.
@@ -738,11 +815,17 @@ enum class BinVariant {
         buffer.push_str("// Implementations are autogenerated\n");
         buffer.push_str("// `ParseNode*` may never be nullptr\n");
         for &(ref name, _) in &sums_of_interfaces {
-            let rendered = self.get_method_signature(name, "", "");
+            let rules_for_this_sum = self.rules.get(name);
+            let extra_params = rules_for_this_sum.extra_params;
+            let rendered = self.get_method_signature(name, "", "",
+                                                     &extra_params);
             buffer.push_str(&rendered.reindent(""));
         }
         for (name, _) in sums_of_interfaces {
-            let rendered = self.get_method_signature(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields");
+            let rules_for_this_sum = self.rules.get(name);
+            let extra_params = rules_for_this_sum.extra_params;
+            let rendered = self.get_method_signature(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields",
+                                                     &extra_params);
             buffer.push_str(&rendered.reindent(""));
         }
     }
@@ -759,8 +842,11 @@ enum class BinVariant {
         let mut inner_parsers = Vec::with_capacity(interfaces_by_name.len());
 
         for &(name, _) in &interfaces_by_name {
-            let outer = self.get_method_signature(name, "", "");
-            let inner = self.get_method_signature(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
+            let rules_for_this_interface = self.rules.get(name);
+            let extra_params = rules_for_this_interface.extra_params;
+            let outer = self.get_method_signature(name, "", "", &extra_params);
+            let inner = self.get_method_signature(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields",
+                                                  &extra_params);
             outer_parsers.push(outer.reindent(""));
             inner_parsers.push(inner.reindent(""));
         }
@@ -783,7 +869,7 @@ enum class BinVariant {
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
         for (kind, _) in string_enums_by_name {
-            let rendered = self.get_method_signature(kind, "", "");
+            let rendered = self.get_method_signature(kind, "", "", &None);
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -793,7 +879,10 @@ enum class BinVariant {
         buffer.push_str("\n\n// ----- Lists (by lexicographical order)\n");
         buffer.push_str("// Implementations are autogenerated\n");
         for parser in &self.list_parsers_to_generate {
-            let rendered = self.get_method_signature(&parser.name, "", "");
+            let rules_for_this_node = self.rules.get(&parser.name);
+            let extra_params = rules_for_this_node.extra_params;
+            let rendered = self.get_method_signature(&parser.name, "", "",
+                                                     &extra_params);
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -803,7 +892,10 @@ enum class BinVariant {
         buffer.push_str("\n\n// ----- Default values (by lexicographical order)\n");
         buffer.push_str("// Implementations are autogenerated\n");
         for parser in &self.option_parsers_to_generate {
-            let rendered = self.get_method_signature(&parser.name, "", "");
+            let rules_for_this_node = self.rules.get(&parser.name);
+            let extra_params = rules_for_this_node.extra_params;
+            let rendered = self.get_method_signature(&parser.name, "", "",
+                                                     &extra_params);
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -852,6 +944,8 @@ impl CPPExporter {
     fn generate_implement_sum(&self, buffer: &mut String, name: &NodeName, nodes: &HashSet<NodeName>) {
         // Generate comments (FIXME: We should use the actual webidl, not the resolved sum)
         let rules_for_this_sum = self.rules.get(name);
+        let extra_params = rules_for_this_sum.extra_params;
+        let extra_args = rules_for_this_sum.extra_args;
         let nodes = nodes.iter()
             .sorted();
         let kind = name.to_class_cases();
@@ -879,9 +973,11 @@ impl CPPExporter {
                 bnf = rendered_bnf,
                 call = self.get_method_call("result", name,
                                             "Sum", "start, kind, fields",
+                                            &extra_args,
                                             MethodCallKind::AlwaysDecl)
                     .reindent("    "),
-                first_line = self.get_method_definition_start(name, "", "")
+                first_line = self.get_method_definition_start(name, "", "",
+                                                              &extra_params)
         ));
 
         // Generate inner method
@@ -893,6 +989,7 @@ impl CPPExporter {
 {arm_after}        break;",
                 call = self.get_method_call("result", node,
                                             "Interface", "start, kind, fields",
+                                            &extra_args,
                                             MethodCallKind::AlwaysVar)
                     .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
@@ -914,7 +1011,8 @@ impl CPPExporter {
 ",
             kind = kind,
             cases = buffer_cases,
-            first_line = self.get_method_definition_start(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields"),
+            first_line = self.get_method_definition_start(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields",
+                                                          &extra_params),
             type_ok = self.get_type_ok(name)
         ));
     }
@@ -922,6 +1020,8 @@ impl CPPExporter {
     /// Generate the implementation of a single list parser
     fn generate_implement_list(&self, buffer: &mut String, parser: &ListParserData) {
         let rules_for_this_list = self.rules.get(&parser.name);
+        let extra_params = rules_for_this_list.extra_params;
+        let extra_args = rules_for_this_list.extra_args;
 
         // Warn if some rules are unused.
         for &(condition, name) in &[
@@ -936,7 +1036,8 @@ impl CPPExporter {
         }
 
         let kind = parser.name.to_class_cases();
-        let first_line = self.get_method_definition_start(&parser.name, "", "");
+        let first_line = self.get_method_definition_start(&parser.name, "", "",
+                                                          &extra_params);
 
         let init = match rules_for_this_list.init {
             Some(str) => str.reindent("    "),
@@ -991,6 +1092,7 @@ impl CPPExporter {
                 },
             call = self.get_method_call("item",
                                         &parser.elements, "", "",
+                                        &extra_args,
                                         MethodCallKind::Decl)
                 .reindent("        "),
             init = init,
@@ -1003,6 +1105,8 @@ impl CPPExporter {
             parser.name.to_str(), parser.elements.to_str());
 
         let rules_for_this_node = self.rules.get(&parser.name);
+        let extra_params = rules_for_this_node.extra_params;
+        let extra_args = rules_for_this_node.extra_args;
 
         // Warn if some rules are unused.
         for &(condition, name) in &[
@@ -1060,11 +1164,13 @@ impl CPPExporter {
 }}
 
 ",
-                    first_line = self.get_method_definition_start(&parser.name, "", ""),
+                    first_line = self.get_method_definition_start(&parser.name, "", "",
+                                                                  &extra_params),
                     null = self.syntax.get_null_name().to_cpp_enum_case(),
                     call = self.get_method_call("result",
                                                 &parser.elements,
                                                 "Interface", "start, kind, fields",
+                                                &extra_args,
                                                 MethodCallKind::AlwaysVar)
                         .reindent("        "),
                     type_ok = type_ok,
@@ -1095,9 +1201,11 @@ impl CPPExporter {
 }}
 
 ",
-                            first_line = self.get_method_definition_start(&parser.name, "", ""),
+                            first_line = self.get_method_definition_start(&parser.name, "", "",
+                                                                          &extra_params),
                             call = self.get_method_call("result", &parser.elements,
                                                         "Sum", "start, kind, fields",
+                                                        &extra_args,
                                                         MethodCallKind::AlwaysVar)
                                 .reindent("        "),
                             type_ok = type_ok,
@@ -1107,7 +1215,8 @@ impl CPPExporter {
                     }
                     &TypeSpec::String => {
                         let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "");
+                        let first_line = self.get_method_definition_start(&parser.name, "", "",
+                                                                          &extra_params);
                         if build_result.len() == 0 {
                             buffer.push_str(&format!("{first_line}
 {{
@@ -1144,6 +1253,8 @@ impl CPPExporter {
 
     fn generate_implement_interface(&self, buffer: &mut String, name: &NodeName, interface: &Interface) {
         let rules_for_this_interface = self.rules.get(name);
+        let extra_params = rules_for_this_interface.extra_params;
+        let extra_args = rules_for_this_interface.extra_args;
 
         for &(condition, rule_name) in &[
             (rules_for_this_interface.append.is_some(), "build:"),
@@ -1176,17 +1287,20 @@ impl CPPExporter {
 }}
 
 ",
-            first_line = self.get_method_definition_start(name, "", ""),
+            first_line = self.get_method_definition_start(name, "", "",
+                                                          &extra_params),
             kind = name.to_cpp_enum_case(),
             call = self.get_method_call("result", name,
                                         "Interface", "start, kind, fields",
+                                        &extra_args,
                                         MethodCallKind::AlwaysDecl)
                 .reindent("    ")
         ));
 
         // Generate aux method
         let number_of_fields = interface.contents().fields().len();
-        let first_line = self.get_method_definition_start(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
+        let first_line = self.get_method_definition_start(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields",
+                                                          &extra_params);
 
         let fields_type_list = format!("{{ {} }}", interface.contents()
             .fields()
@@ -1243,6 +1357,7 @@ impl CPPExporter {
                     let typename = TypeName::type_(field.type_());
                     let name = self.syntax.get_node_name(typename.to_str())
                         .expect("NodeName for the field type should exist.");
+                    let field_extra_args = rules_for_this_field.extra_args;
 
                     let (decl_var, call_kind) = if needs_block {
                         (Some(format!("{typename} {var_name};",
@@ -1256,7 +1371,7 @@ impl CPPExporter {
 
                     (decl_var,
                      Some(self.get_method_call(var_name.to_str(),
-                                               &name, "", "",
+                                               &name, "", "", &field_extra_args,
                                                call_kind)))
                 }
             };
@@ -1432,7 +1547,8 @@ impl CPPExporter {
 ",
                     rendered_doc = rendered_doc,
                     convert = convert,
-                    first_line = self.get_method_definition_start(kind, "", "")
+                    first_line = self.get_method_definition_start(kind, "", "",
+                                                                  &None)
                 ));
             }
         }
