@@ -11,8 +11,10 @@
 
 #include <inttypes.h>
 
-#include "gfxFontConstants.h"
 #include "X11UndefineNone.h"
+
+#include "gfxFontConstants.h"
+#include "mozilla/ServoStyleConsts.h"
 
 // XXX fold this into ComputedStyle and group by nsStyleXXX struct
 
@@ -441,55 +443,6 @@ enum class StyleContent : uint8_t {
 #define NS_STYLE_WRITING_MODE_SIDEWAYS_LR         \
           (NS_STYLE_WRITING_MODE_VERTICAL_LR |    \
            NS_STYLE_WRITING_MODE_SIDEWAYS_MASK)
-
-// See nsStyleDisplay
-//
-// NOTE: Order is important! If you change it, make sure to take a look at
-// the FrameConstructionDataByDisplay stuff (both the XUL and non-XUL version),
-// and ensure it's still correct!
-enum class StyleDisplay : uint8_t {
-  None = 0,
-  Block,
-  FlowRoot,
-  Inline,
-  InlineBlock,
-  ListItem,
-  Table,
-  InlineTable,
-  TableRowGroup,
-  TableColumn,
-  TableColumnGroup,
-  TableHeaderGroup,
-  TableFooterGroup,
-  TableRow,
-  TableCell,
-  TableCaption,
-  Flex,
-  InlineFlex,
-  Grid,
-  InlineGrid,
-  Ruby,
-  RubyBase,
-  RubyBaseContainer,
-  RubyText,
-  RubyTextContainer,
-  Contents,
-  WebkitBox,
-  WebkitInlineBox,
-  MozBox,
-  MozInlineBox,
-#ifdef MOZ_XUL
-  MozGrid,
-  MozInlineGrid,
-  MozGridGroup,
-  MozGridLine,
-  MozStack,
-  MozInlineStack,
-  MozDeck,
-  MozGroupbox,
-  MozPopup,
-#endif
-};
 
 // See nsStyleDisplay
 // If these are re-ordered, nsComputedDOMStyle::DoGetContain() must be updated.
