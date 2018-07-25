@@ -141,6 +141,9 @@ public:
   /// Can be called from any thread.
   void UnregisterExternalImage(uint64_t aExternalImageId);
 
+  /// Can be called from any thread.
+  void UpdateRenderTextureHost(uint64_t aSrcExternalImageId, uint64_t aWrappedExternalImageId);
+
   /// Can only be called from the render thread.
   void UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId);
 
