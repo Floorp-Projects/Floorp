@@ -27,7 +27,7 @@ from wptserve import stash
 from wptserve import config
 from wptserve.logger import set_logger
 from wptserve.handlers import filesystem_path, wrap_pipeline
-from wptserve.utils import get_port, HTTPException
+from wptserve.utils import get_port, HTTPException, http2_compatible
 from mod_pywebsocket import standalone as pywebsocket
 
 
@@ -491,11 +491,17 @@ def start_servers(host, ports, paths, routes, bind_address, config, **kwargs):
     for scheme, ports in ports.items():
         assert len(ports) == {"http":2}.get(scheme, 1)
 
+        # TODO Not very ideal, look into removing it in the future
+        # Check that python 2.7.15 is being used for HTTP/2.0
+        if scheme == 'http2' and not http2_compatible():
+            continue
+
         for port in ports:
             if port is None:
                 continue
             init_func = {"http":start_http_server,
                          "https":start_https_server,
+                         "http2":start_http2_server,
                          "ws":start_ws_server,
                          "wss":start_wss_server}[scheme]
 
@@ -666,6 +672,9 @@ def iter_procs(servers):
 def build_config(override_path=None, **kwargs):
     rv = ConfigBuilder()
 
+    if kwargs.get("h2"):
+        rv._default["ports"]["http2"] = [9000]
+
     if override_path and os.path.exists(override_path):
         with open(override_path) as f:
             override_obj = json.load(f)
@@ -719,7 +728,7 @@ class ConfigBuilder(config.ConfigBuilder):
             "http": [8000, "auto"],
             "https": [8443],
             "ws": ["auto"],
-            "wss": ["auto"]
+            "wss": ["auto"],
         },
         "check_subdomains": True,
         "log_level": "debug",
