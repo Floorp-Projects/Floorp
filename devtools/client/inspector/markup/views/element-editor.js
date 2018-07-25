@@ -75,6 +75,7 @@ function ElementEditor(container, node) {
   this.closeElt = null;
 
   this.onDisplayBadgeClick = this.onDisplayBadgeClick.bind(this);
+  this.onCustomBadgeClick = this.onCustomBadgeClick.bind(this);
   this.onTagEdit = this.onTagEdit.bind(this);
 
   // Create the main editor
@@ -187,6 +188,14 @@ ElementEditor.prototype = {
     this.displayBadge.classList.add("markup-badge");
     this.displayBadge.addEventListener("click", this.onDisplayBadgeClick);
     this.elt.appendChild(this.displayBadge);
+
+    this.customBadge = this.doc.createElement("div");
+    this.customBadge.classList.add("markup-badge");
+    this.customBadge.dataset.custom = "true";
+    this.customBadge.textContent = "custom…";
+    this.customBadge.title = INSPECTOR_L10N.getStr("markupView.custom.tooltiptext");
+    this.customBadge.addEventListener("click", this.onCustomBadgeClick);
+    this.elt.appendChild(this.customBadge);
   },
 
   set selected(value) {
@@ -281,6 +290,7 @@ ElementEditor.prototype = {
     this.eventBadge.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
     this.updateDisplayBadge();
+    this.updateCustomBadge();
     this.updateTextEditor();
   },
 
@@ -300,6 +310,14 @@ ElementEditor.prototype = {
     this.displayBadge.classList.toggle("interactive",
       Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
       (this.node.displayType === "flex" || this.node.displayType === "inline-flex"));
+  },
+
+  /**
+   * Update the markup custom element badge.
+   */
+  updateCustomBadge: function() {
+    const showCustomBadge = !!this.node.customElementLocation;
+    this.customBadge.style.display = showCustomBadge ? "inline-block" : "none";
   },
 
   /**
@@ -663,6 +681,11 @@ ElementEditor.prototype = {
       this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront,
         "markup");
     }
+  },
+
+  onCustomBadgeClick: function() {
+    const { url, line } = this.node.customElementLocation;
+    this.markup.toolbox.viewSourceInDebugger(url, line);
   },
 
   /**

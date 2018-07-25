@@ -11,6 +11,7 @@
 #define CocoaFileUtils_h_
 
 #include "nscore.h"
+#include "nsString.h"
 #include <CoreFoundation/CoreFoundation.h>
 
 namespace CocoaFileUtils {
@@ -27,7 +28,10 @@ void     AddOriginMetadataToFile(const CFStringRef filePath,
 void     AddQuarantineMetadataToFile(const CFStringRef filePath,
                                      const CFURLRef sourceURL,
                                      const CFURLRef referrerURL,
-                                     const bool isFromWeb);
+                                     const bool isFromWeb,
+                                     const bool createProps=false);
+void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
+                               nsAString& aReferrer);
 CFURLRef GetTemporaryFolderCFURLRef();
 
 } // namespace CocoaFileUtils

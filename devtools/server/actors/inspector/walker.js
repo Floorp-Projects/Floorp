@@ -29,6 +29,7 @@ loader.lazyRequireGetter(this, "isNodeDead", "devtools/server/actors/inspector/u
 loader.lazyRequireGetter(this, "nodeDocument", "devtools/server/actors/inspector/utils", true);
 loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
 
+loader.lazyRequireGetter(this, "CustomElementWatcher", "devtools/server/actors/inspector/custom-element-watcher", true);
 loader.lazyRequireGetter(this, "DocumentWalker", "devtools/server/actors/inspector/document-walker", true);
 loader.lazyRequireGetter(this, "SKIP_TO_SIBLING", "devtools/server/actors/inspector/document-walker", true);
 loader.lazyRequireGetter(this, "NodeActor", "devtools/server/actors/inspector/node", true);
@@ -128,6 +129,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._refMap = new Map();
     this._pendingMutations = [];
     this._activePseudoClassLocks = new Set();
+    this.customElementWatcher = new CustomElementWatcher(targetActor.chromeEventHandler);
+
     this.showAllAnonymousContent = options.showAllAnonymousContent;
 
     this.walkerSearch = new WalkerSearch(this);
@@ -147,11 +150,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.onShadowrootattached = this.onShadowrootattached.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
+    this.onCustomElementDefined = this.onCustomElementDefined.bind(this);
     this._throttledEmitNewMutations = throttle(this._emitNewMutations.bind(this),
       MUTATIONS_THROTTLING_DELAY);
 
     targetActor.on("will-navigate", this.onFrameUnload);
     targetActor.on("window-ready", this.onFrameLoad);
+
+    this.customElementWatcher.on("element-defined", this.onCustomElementDefined);
 
     // Keep a reference to the chromeEventHandler for the current targetActor, to make
     // sure we will be able to remove the listener during the WalkerActor destroy().
@@ -248,11 +254,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       this.targetActor.off("will-navigate", this.onFrameUnload);
       this.targetActor.off("window-ready", this.onFrameLoad);
+      this.customElementWatcher.off("element-defined", this.onCustomElementDefined);
+
       this.chromeEventHandler.removeEventListener("shadowrootattached",
         this.onShadowrootattached);
 
       this.onFrameLoad = null;
       this.onFrameUnload = null;
+
+      this.customElementWatcher.destroy();
+      this.customElementWatcher = null;
 
       this.walkerSearch.destroy();
 
@@ -284,6 +295,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           this._activePseudoClassLocks.has(actor)) {
         this.clearPseudoClassLocks(actor);
       }
+
+      this.customElementWatcher.unmanageNode(actor);
+
       this._refMap.delete(actor.rawNode);
     }
     protocol.Actor.prototype.unmanage.call(this, actor);
@@ -330,7 +344,21 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       actor.watchSlotchange(this.onSlotchange);
     }
 
+    this.customElementWatcher.manageNode(actor);
+
     return actor;
+  },
+
+  /**
+   * When a custom element is defined for one of the names currently watched, send a
+   * customElementDefined mutation for all the NodeActors using this tag name.
+   */
+  onCustomElementDefined: function(actors) {
+    actors.forEach(actor => this.queueMutation({
+      target: actor.actorID,
+      type: "customElementDefined",
+      customElementLocation: actor.getCustomElementLocation(),
+    }));
   },
 
   _onReflows: function(reflows) {

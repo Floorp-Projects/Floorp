@@ -413,6 +413,7 @@ ul.children + .tag-line::before {
   color: var(--theme-selection-color);
 }
 
+.markup-badge[data-custom],
 .markup-badge[data-display="flex"].interactive,
 .markup-badge[data-display="grid"],
 .markup-badge[data-display="inline-flex"],
