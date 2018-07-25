@@ -62,22 +62,20 @@
               }
 
               let prefix = 'start/stop: ';
-              should(actual.slice(
-                         0, startFrame,
-                         prefix + 'ConstantSourceNode frames [0, ' +
-                             startFrame + ')'))
+              should(actual.slice(0, startFrame),
+                     prefix + 'ConstantSourceNode frames [0, ' +
+                       startFrame + ')')
                   .beConstantValueOf(0);
 
-              should(actual.slice(
-                         startFrame, stopFrame,
-                         prefix + 'ConstantSourceNode frames [' + startFrame +
-                             ', ' + stopFrame + ')'))
+              should(actual.slice(startFrame, stopFrame),
+                     prefix + 'ConstantSourceNode frames [' +
+                         startFrame + ', ' + stopFrame + ')')
                   .beConstantValueOf(1);
 
               should(
                   actual.slice(stopFrame),
-                  prefix + 'ConstantSourceNode frames [' + stopFrame + ', ' +
-                      renderFrames + ')')
+                  prefix + 'ConstantSourceNode frames [' + stopFrame +
+                      ', ' + renderFrames + ')')
                   .beConstantValueOf(0);
             })
             .then(() => task.done());
@@ -105,18 +103,16 @@
               let rampEndFrame = Math.ceil(rampEndTime * context.sampleRate);
               let prefix = 'Automation: ';
 
-              should(actual.slice(
-                         0, rampEndFrame,
-                         prefix + 'ConstantSourceNode.linearRamp(1, 0.5)'))
+              should(actual.slice(0, rampEndFrame),
+                     prefix + 'ConstantSourceNode.linearRamp(1, 0.5)')
                   .beCloseToArray(expected, {
-                    // Experimentally determined threshold..
+                    // Experimentally determined threshold.
                     relativeThreshold: 7.1610e-7
                   });
 
-              should(
-                  actual.slice(rampEndFrame),
-                  prefix + 'ConstantSourceNode after ramp')
-                  .beConstantValueOf(1);
+              should(actual.slice(rampEndFrame),
+                     prefix + 'ConstantSourceNode after ramp')
+                .beConstantValueOf(1);
             })
             .then(() => task.done());
       });
