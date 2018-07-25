@@ -203,10 +203,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
           page: {
             id: "address-page",
             previousId: "basic-card-page",
-            selectedStateKey: ["basic-card-page", "billingAddressGUID"],
           },
           "address-page": {
             guid: null,
+            selectedStateKey: ["basic-card-page", "billingAddressGUID"],
             title: this.dataset.billingAddressTitleAdd,
           },
           "basic-card-page": {
@@ -284,11 +284,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.saveButton.disabled = !this.form.checkValidity();
   }
 
-  saveRecord() {
+  async saveRecord() {
     let record = this.formHandler.buildFormObject();
     let currentState = this.requestStore.getState();
     let {
-      page,
       tempBasicCards,
       "basic-card-page": basicCardPage,
     } = currentState;
@@ -308,28 +307,24 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       record["cc-number"] = record["cc-number"] || "";
     }
 
-    let state = {
-      errorStateChange: {
+    try {
+      let {guid} = await paymentRequest.updateAutofillRecord("creditCards", record,
+                                                             basicCardPage.guid);
+      this.requestStore.setState({
+        page: {
+          id: "payment-summary",
+        },
+        selectedPaymentCard: guid,
+      });
+    } catch (ex) {
+      log.warn("saveRecord: error:", ex);
+      this.requestStore.setState({
         page: {
           id: "basic-card-page",
           error: this.dataset.errorGenericSave,
         },
-      },
-      preserveOldProperties: true,
-      selectedStateKey: ["selectedPaymentCard"],
-      successStateChange: {
-        page: {
-          id: "payment-summary",
-        },
-      },
-    };
-
-    const previousId = page.previousId;
-    if (previousId) {
-      state.successStateChange[previousId] = Object.assign({}, currentState[previousId]);
+      });
     }
-
-    paymentRequest.updateAutofillRecord("creditCards", record, basicCardPage.guid, state);
   }
 }
 
