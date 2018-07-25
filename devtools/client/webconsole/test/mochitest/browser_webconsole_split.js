@@ -25,7 +25,6 @@ add_task(async function() {
 
 async function performTests() {
   let toolbox;
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   await addTab(TEST_URI);
   await testConsoleLoadOnDifferentPanel();
   await testKeyboardShortcuts();
