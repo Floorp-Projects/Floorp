@@ -951,7 +951,7 @@ impl CPPExporter {
 {init}
 
     for (uint32_t i = 0; i < length; ++i) {{
-        BINJS_MOZ_TRY_DECL(item, parse{inner}());
+{call}
 {append}    }}
 
     MOZ_TRY(guard.done());
@@ -965,7 +965,10 @@ impl CPPExporter {
                     format!("\n    if (length == 0)\n         return raiseEmpty(\"{kind}\");\n",
                         kind = kind)
                 },
-            inner = parser.elements.to_class_cases(),
+            call = self.get_method_call("item",
+                                        &parser.elements,
+                                        MethodCallKind::Decl)
+                .reindent("        "),
             init = init,
             append = append);
         buffer.push_str(&rendered);
