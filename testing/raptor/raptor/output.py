@@ -91,6 +91,8 @@ class Output(object):
                     subtests, vals = self.parseSpeedometerOutput(test)
                 elif 'motionmark' in test.measurements:
                     subtests, vals = self.parseMotionmarkOutput(test)
+                elif 'sunspider' in test.measurements:
+                    subtests, vals = self.parseSunspiderOutput(test)
                 elif 'webaudio' in test.measurements:
                     subtests, vals = self.parseWebaudioOutput(test)
                 suite['subtests'] = subtests
@@ -250,6 +252,42 @@ class Output(object):
 
         return subtests, vals
 
+    def parseSunspiderOutput(self, test):
+        _subtests = {}
+        data = test.measurements['sunspider']
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+
+        total_subtest = {
+            'unit': test.unit,
+            'alertThreshold': float(test.alert_threshold),
+            'lowerIsBetter': test.lower_is_better,
+            'replicates': [],
+            'name': 'benchmark_score',
+            'value': 0
+        }
+        subtests = [total_subtest]
+        vals = []
+
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filter.mean(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+
+            vals.append([_subtests[name]['value'], name])
+
+        return subtests, vals
+
     def output(self):
         """output to file and perfherder data json """
         if self.summarized_results == {}:
@@ -342,6 +380,11 @@ class Output(object):
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 
+    @classmethod
+    def sunspider_score(cls, val_list):
+        results = [i for i, j in val_list]
+        return sum(results)
+
     def construct_summary(self, vals, testname):
         if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
@@ -353,6 +396,8 @@ class Output(object):
             return self.speedometer_score(vals)
         elif testname.startswith('raptor-stylebench'):
             return self.stylebench_score(vals)
+        elif testname.startswith('raptor-sunspider'):
+            return self.sunspider_score(vals)
         elif testname.startswith('raptor-webaudio'):
             return self.webaudio_score(vals)
         elif len(vals) > 1:

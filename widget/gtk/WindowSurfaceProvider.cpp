@@ -31,6 +31,7 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 #ifdef MOZ_WAYLAND
     , mWidget(nullptr)
 #endif
+    , mIsShaped(false)
 {
 }
 
@@ -38,7 +39,8 @@ void WindowSurfaceProvider::Initialize(
       Display* aDisplay,
       Window aWindow,
       Visual* aVisual,
-      int aDepth)
+      int aDepth,
+      bool aIsShaped)
 {
   // We should not be initialized
   MOZ_ASSERT(!mXDisplay);
@@ -50,6 +52,7 @@ void WindowSurfaceProvider::Initialize(
   mXWindow = aWindow;
   mXVisual = aVisual;
   mXDepth = aDepth;
+  mIsShaped = aIsShaped;
   mIsX11Display = true;
 }
 
@@ -88,21 +91,22 @@ WindowSurfaceProvider::CreateWindowSurface()
   // 3. XPutImage
 
 #ifdef MOZ_WIDGET_GTK
-  if (gfxVars::UseXRender()) {
+  if (!mIsShaped && gfxVars::UseXRender()) {
     LOGDRAW(("Drawing to nsWindow %p using XRender\n", (void*)this));
     return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual, mXDepth);
   }
 #endif // MOZ_WIDGET_GTK
 
 #ifdef MOZ_HAVE_SHMIMAGE
-  if (nsShmImage::UseShm()) {
+  if (!mIsShaped && nsShmImage::UseShm()) {
     LOGDRAW(("Drawing to nsWindow %p using MIT-SHM\n", (void*)this));
     return MakeUnique<WindowSurfaceX11SHM>(mXDisplay, mXWindow, mXVisual, mXDepth);
   }
 #endif // MOZ_HAVE_SHMIMAGE
 
   LOGDRAW(("Drawing to nsWindow %p using XPutImage\n", (void*)this));
-  return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+  return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual,
+    mXDepth, mIsShaped);
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -125,7 +129,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvali
     // We can't use WindowSurfaceX11Image fallback on Wayland but
     // Lock() call on WindowSurfaceWayland should never fail.
     gfxWarningOnce() << "Failed to lock WindowSurface, falling back to XPutImage backend.";
-    mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+    mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth, mIsShaped);
     dt = mWindowSurface->Lock(aInvalidRegion);
   }
   return dt.forget();

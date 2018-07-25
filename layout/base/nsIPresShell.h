@@ -503,6 +503,8 @@ public:
 
   virtual void NotifyCounterStylesAreDirty() = 0;
 
+  bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
+
   /**
    * Destroy the frames for aElement, and reconstruct them asynchronously if
    * needed.
@@ -1760,6 +1762,9 @@ protected:
 
   // A hash table of heap allocated weak frames.
   nsTHashtable<nsPtrHashKey<WeakFrame>> mWeakFrames;
+
+  // Reflow roots that need to be reflowed.
+  nsTArray<nsIFrame*> mDirtyRoots;
 
 #ifdef MOZ_GECKO_PROFILER
   // These two fields capture call stacks of any changes that require a restyle

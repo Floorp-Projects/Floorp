@@ -13,22 +13,33 @@ const paymentOptionsUpdater = {
     this.render(state);
   },
   render(state) {
-    let options = state.request.paymentOptions;
-    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
-    for (let input of checkboxes) {
-      if (options.hasOwnProperty(input.name)) {
-        input.checked = options[input.name];
+    let {
+      completeStatus,
+      paymentOptions,
+    } = state.request;
+
+    document.getElementById("setChangesPrevented").checked = state.changesPrevented;
+
+    let paymentOptionInputs = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    for (let input of paymentOptionInputs) {
+      if (paymentOptions.hasOwnProperty(input.name)) {
+        input.checked = paymentOptions[input.name];
       }
+    }
+
+    let completeStatusInputs = document
+                                 .querySelectorAll("input[type='radio'][name='setCompleteStatus']");
+    for (let input of completeStatusInputs) {
+      input.checked = input.value == completeStatus;
     }
   },
 };
-
-requestStore.subscribe(paymentOptionsUpdater);
 
 let REQUEST_1 = {
   tabId: 9,
   topLevelPrincipal: {URI: {displayHost: "tschaeff.github.io"}},
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
+  completeStatus: "",
   paymentMethods: [],
   paymentDetails: {
     id: "",
@@ -80,6 +91,7 @@ let REQUEST_2 = {
   tabId: 9,
   topLevelPrincipal: {URI: {displayHost: "example.com"}},
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
+  completeStatus: "",
   paymentMethods: [],
   paymentDetails: {
     id: "",
@@ -333,15 +345,9 @@ let buttonActions = {
     paymentDialog.setStateFromParent({savedBasicCards: BASIC_CARDS_1});
   },
 
-  setChangesAllowed() {
+  setChangesPrevented(evt) {
     requestStore.setState({
-      changesPrevented: false,
-    });
-  },
-
-  setChangesPrevented() {
-    requestStore.setState({
-      changesPrevented: true,
+      changesPrevented: evt.target.checked,
     });
   },
 
@@ -406,23 +412,23 @@ let buttonActions = {
     });
   },
 
-  setCompleteStatus(e) {
-    let input = document.querySelector("[name='completionState']:checked");
+  setCompleteStatus() {
+    let input = document.querySelector("[name='setCompleteStatus']:checked");
     let completeStatus = input.value;
     let request = requestStore.getState().request;
-    requestStore.setStateFromParent({
+    paymentDialog.setStateFromParent({
       request: Object.assign({}, request, { completeStatus }),
     });
   },
 };
 
 window.addEventListener("click", function onButtonClick(evt) {
-  let id = evt.target.id;
+  let id = evt.target.id || evt.target.name;
   if (!id || typeof(buttonActions[id]) != "function") {
     return;
   }
 
-  buttonActions[id]();
+  buttonActions[id](evt);
 });
 
 window.addEventListener("DOMContentLoaded", function onDCL() {
@@ -433,4 +439,7 @@ window.addEventListener("DOMContentLoaded", function onDCL() {
     // is manually loaded in a tab but will be shown.
     document.getElementById("debugFrame").hidden = false;
   }
+
+  requestStore.subscribe(paymentOptionsUpdater);
+  paymentOptionsUpdater.render(requestStore.getState());
 });

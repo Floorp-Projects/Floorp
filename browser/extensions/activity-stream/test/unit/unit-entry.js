@@ -45,7 +45,12 @@ const TEST_GLOBAL = {
   ChromeUtils: {
     defineModuleGetter() {},
     generateQI() { return {}; },
-    import() {}
+    import(str) {
+      if (str === "resource://services-settings/remote-settings.js") {
+        return {RemoteSettings: TEST_GLOBAL.RemoteSettings};
+      }
+      return {};
+    }
   },
   Components: {isSuccessCode: () => true},
   // eslint-disable-next-line object-shorthand
@@ -86,6 +91,7 @@ const TEST_GLOBAL = {
   fetch() {},
   // eslint-disable-next-line object-shorthand
   Image: function() {}, // NB: This is a function/constructor
+  NewTabUtils: {activityStreamProvider: {getTopFrecentSites: () => []}},
   PlacesUtils: {
     get bookmarks() {
       return TEST_GLOBAL.Cc["@mozilla.org/browser/nav-bookmarks-service;1"];
@@ -184,7 +190,8 @@ const TEST_GLOBAL = {
   },
   EventEmitter,
   ShellService: {isDefaultBrowser: () => true},
-  FilterExpressions: {eval() { return Promise.resolve(true); }}
+  FilterExpressions: {eval() { return Promise.resolve(true); }},
+  RemoteSettings() { return {get() { return Promise.resolve([]); }}; }
 };
 overrider.set(TEST_GLOBAL);
 

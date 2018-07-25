@@ -44,7 +44,8 @@ public:
       Display* aDisplay,
       Window aWindow,
       Visual* aVisual,
-      int aDepth);
+      int aDepth,
+      bool aIsShaped);
 
 #ifdef MOZ_WAYLAND
    void Initialize(nsWindow *aWidget);
@@ -76,6 +77,7 @@ private:
 #ifdef MOZ_WAYLAND
   nsWindow*   mWidget;
 #endif
+  bool        mIsShaped;
 };
 
 }  // namespace widget

@@ -27,7 +27,7 @@
     },
     "text": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
+        {"$ref": "#/definitions/richText"},
         {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
       ]
     },

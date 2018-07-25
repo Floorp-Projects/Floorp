@@ -34,14 +34,25 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
     event.stopPropagation();
   },
 
+  _revealFromSlot() {
+    const reason = "reveal-from-slot";
+    this.markup.inspector.selection.setNodeFront(this.node, { reason });
+    this.markup.telemetry.scalarSet("devtools.shadowdom.reveal_link_clicked", true);
+  },
+
+  _onKeyDown: function(event) {
+    const isActionKey = event.code == "Enter" || event.code == "Space";
+    if (event.target.classList.contains("reveal-link") && isActionKey) {
+      this._revealFromSlot();
+    }
+  },
+
   onContainerClick: async function(event) {
     if (!event.target.classList.contains("reveal-link")) {
       return;
     }
 
-    const reason = "reveal-from-slot";
-    this.markup.inspector.selection.setNodeFront(this.node, { reason });
-    this.markup.telemetry.scalarSet("devtools.shadowdom.reveal_link_clicked", true);
+    this._revealFromSlot();
   },
 
   isDraggable: function() {

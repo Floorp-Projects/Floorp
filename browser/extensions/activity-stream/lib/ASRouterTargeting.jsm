@@ -2,14 +2,46 @@ ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.js
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.import("resource://gre/modules/Console.jsm");
 ChromeUtils.defineModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
 const ONBOARDING_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouterOnboardingCohort";
+// Max possible cap for any message
+const MAX_LIFETIME_CAP = 100;
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
+const {activityStreamProvider: asProvider} = NewTabUtils;
+
+const FRECENT_SITES_UPDATE_INTERVAL = 6 * 60 * 60 * 1000; // Six hours
+const FRECENT_SITES_IGNORE_BLOCKED = true;
+const FRECENT_SITES_NUM_ITEMS = 50;
+const FRECENT_SITES_MIN_FRECENCY = 100;
+
+const TopFrecentSitesCache = {
+  _lastUpdated: 0,
+  _topFrecentSites: null,
+  get topFrecentSites() {
+    return new Promise(async resolve => {
+      const now = Date.now();
+      if (now - this._lastUpdated >= FRECENT_SITES_UPDATE_INTERVAL) {
+        this._topFrecentSites = await asProvider.getTopFrecentSites({
+          ignoreBlocked: FRECENT_SITES_IGNORE_BLOCKED,
+          numItems: FRECENT_SITES_NUM_ITEMS,
+          topsiteFrecency: FRECENT_SITES_MIN_FRECENCY,
+          onePerDomain: true,
+          includeFavicon: false
+        });
+        this._lastUpdated = now;
+      }
+      resolve(this._topFrecentSites);
+    });
+  }
+};
 
 /**
  * removeRandomItemFromArray - Removes a random item from the array and returns it.
@@ -84,6 +116,17 @@ const TargetingGetters = {
     return Services.prefs.getIntPref("devtools.selfxss.count");
   },
 
+  get topFrecentSites() {
+    return TopFrecentSitesCache.topFrecentSites.then(sites => sites.map(site => (
+      {
+        url: site.url,
+        host: (new URL(site.url)).hostname,
+        frecency: site.frecency,
+        lastVisitDate: site.lastVisitDate
+      }
+    )));
+  },
+
   // Temporary targeting function for the purposes of running the simplified onboarding experience
   get isInExperimentCohort() {
     return Services.prefs.getIntPref(ONBOARDING_EXPERIMENT_PREF, 0);
@@ -97,6 +140,35 @@ this.ASRouterTargeting = {
     return FilterExpressions.eval(filterExpression, context);
   },
 
+  isBelowFrequencyCap(message, impressionsForMessage) {
+    if (!message.frequency || !impressionsForMessage || !impressionsForMessage.length) {
+      return true;
+    }
+
+    if (
+      message.frequency.lifetime &&
+      impressionsForMessage.length >= Math.min(message.frequency.lifetime, MAX_LIFETIME_CAP)
+    ) {
+      return false;
+    }
+
+    if (message.frequency.custom) {
+      const now = Date.now();
+      for (const setting of message.frequency.custom) {
+        let {period} = setting;
+        if (period === "daily") {
+          period = ONE_DAY;
+        }
+        const impressionsInPeriod = impressionsForMessage.filter(t => (now - t) < period);
+        if (impressionsInPeriod.length >= setting.cap) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  },
+
   /**
    * findMatchingMessage - Given an array of messages, returns one message
    *                       whos targeting expression evaluates to true
@@ -105,26 +177,37 @@ this.ASRouterTargeting = {
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @returns {obj} an AS router message
    */
-  async findMatchingMessage(messages, target, context) {
+  async findMatchingMessage({messages, impressions = {}, target, context}) {
     const arrayOfItems = [...messages];
     let match;
     let candidate;
+
     while (!match && arrayOfItems.length) {
       candidate = removeRandomItemFromArray(arrayOfItems);
-      if (candidate && !candidate.trigger && (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))) {
+      if (
+        candidate &&
+        this.isBelowFrequencyCap(candidate, impressions[candidate.id]) &&
+        !candidate.trigger &&
+        (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))
+      ) {
         match = candidate;
       }
     }
     return match;
   },
 
-  async findMatchingMessageWithTrigger(messages, target, trigger, context) {
+  async findMatchingMessageWithTrigger({messages, impressions = {}, target, trigger, context}) {
     const arrayOfItems = [...messages];
     let match;
     let candidate;
     while (!match && arrayOfItems.length) {
       candidate = removeRandomItemFromArray(arrayOfItems);
-      if (candidate && candidate.trigger === trigger && (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))) {
+      if (
+        candidate &&
+        this.isBelowFrequencyCap(candidate, impressions[candidate.id]) &&
+        candidate.trigger === trigger &&
+        (!candidate.targeting || await this.isMatch(candidate.targeting, target, context))
+      ) {
         match = candidate;
       }
     }

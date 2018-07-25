@@ -15,6 +15,7 @@ struct GtkCompositorWidgetInitData
 {
   uintptr_t           XWindow;
   nsCString           XDisplayString;
+  bool                Shaped;
 
   LayoutDeviceIntSize InitialClientSize;
 };

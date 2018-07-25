@@ -137,6 +137,7 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   sendImpression(extraProps) {
+    ASRouterUtils.sendMessage({type: "IMPRESSION", data: this.state.message});
     this.sendUserActionTelemetry({event: "IMPRESSION", ...extraProps});
   }
 

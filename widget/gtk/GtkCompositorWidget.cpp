@@ -50,8 +50,8 @@ GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aIni
       mXDisplay,
       mXWindow,
       visual,
-      depth
-      );
+      depth,
+      aInitData.Shaped());
   }
   mClientSize = aInitData.InitialClientSize();
 }

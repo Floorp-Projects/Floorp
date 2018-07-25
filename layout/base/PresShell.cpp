@@ -4563,6 +4563,27 @@ PresShell::NotifyCounterStylesAreDirty()
   mFrameConstructor->NotifyCounterStylesAreDirty();
 }
 
+bool
+nsIPresShell::FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const
+{
+  MOZ_ASSERT(aFrame);
+
+  // Look for a path from any dirty roots to aFrame, following GetParent().
+  // This check mirrors what FrameNeedsReflow() would have done if the reflow
+  // root didn't get in the way.
+  for (nsIFrame* dirtyFrame : mDirtyRoots) {
+    while (dirtyFrame) {
+      if (dirtyFrame == aFrame) {
+        return true;
+      }
+
+      dirtyFrame = dirtyFrame->GetParent();
+    }
+  }
+
+  return false;
+}
+
 void
 PresShell::ReconstructFrames()
 {

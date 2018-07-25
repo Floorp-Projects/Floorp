@@ -1,11 +1,12 @@
 options:
   merge-default-rules: true
+  max-warnings: 0
 
 files:
   include: 'content-src/**/*.scss'
 
 rules:
-  class-name-format: [{convention: ["hyphenatedlowercase", "camelcase"]}]
+  class-name-format: 0
   extends-before-declarations: 2
   extends-before-mixins: 2
   force-element-nesting: 0

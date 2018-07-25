@@ -30,8 +30,10 @@ SlottedNodeEditor.prototype = {
     this.elt.appendChild(this.tag);
 
     this.revealLink = doc.createElement("span");
-    this.revealLink.classList.add("reveal-link");
+    this.revealLink.setAttribute("role", "link");
+    this.revealLink.setAttribute("tabindex", -1);
     this.revealLink.title = INSPECTOR_L10N.getStr("markupView.revealLink.tooltip");
+    this.revealLink.classList.add("reveal-link");
     this.elt.appendChild(this.revealLink);
   },
 
