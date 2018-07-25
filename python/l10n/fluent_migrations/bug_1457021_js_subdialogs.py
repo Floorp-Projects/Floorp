@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import MESSAGE_REFERENCE, EXTERNAL_ARGUMENT, transforms_from
+from fluent.migrate.helpers import MESSAGE_REFERENCE, TERM_REFERENCE, VARIABLE_REFERENCE, transforms_from
 from fluent.migrate import REPLACE
 
 
@@ -42,10 +42,10 @@ blocklist-item-moz-full-desc = { COPY("browser/chrome/browser/preferences/prefer
                     'browser/chrome/browser/preferences/preferences.properties',
                     'mozNameTemplate',
                     {
-                        '%1$S': EXTERNAL_ARGUMENT(
+                        '%1$S': VARIABLE_REFERENCE(
                             'listName'
                         ),
-                        '%2$S': EXTERNAL_ARGUMENT(
+                        '%2$S': VARIABLE_REFERENCE(
                             'description'
                         )
                     }
@@ -74,7 +74,7 @@ fonts-label-default-unnamed =
                             'browser/chrome/browser/preferences/preferences.properties',
                             'labelDefaultFont',
                             {
-                                '%S': EXTERNAL_ARGUMENT(
+                                '%S': VARIABLE_REFERENCE(
                                     'name'
                                 )
                             }
@@ -98,10 +98,10 @@ sitedata-total-size-calculating = { COPY("browser/chrome/browser/preferences/pre
                     'browser/chrome/browser/preferences/preferences.properties',
                     'totalSiteDataSize2',
                     {
-                        '%1$S': EXTERNAL_ARGUMENT(
+                        '%1$S': VARIABLE_REFERENCE(
                             'value'
                         ),
-                        '%2$S': EXTERNAL_ARGUMENT(
+                        '%2$S': VARIABLE_REFERENCE(
                             'unit'
                         )
                     }
@@ -146,7 +146,7 @@ site-data-removing-dialog =
                     'browser/chrome/browser/preferences/preferences.properties',
                     'siteDataSettings3.description',
                     {
-                        '%S': MESSAGE_REFERENCE(
+                        '%S': TERM_REFERENCE(
                             '-brand-short-name'
                         )
                     }
@@ -158,10 +158,10 @@ site-data-removing-dialog =
                     'browser/chrome/browser/preferences/preferences.properties',
                     'siteUsage',
                     {
-                        '%1$S': EXTERNAL_ARGUMENT(
+                        '%1$S': VARIABLE_REFERENCE(
                             'value'
                         ),
-                        '%2$S': EXTERNAL_ARGUMENT(
+                        '%2$S': VARIABLE_REFERENCE(
                             'unit'
                         )
                     }
@@ -183,10 +183,10 @@ site-data-removing-dialog =
                             'browser/chrome/browser/preferences/preferences.properties',
                             'languageCodeFormat',
                             {
-                                '%1$S': EXTERNAL_ARGUMENT(
+                                '%1$S': VARIABLE_REFERENCE(
                                     'locale'
                                 ),
-                                '%2$S': EXTERNAL_ARGUMENT(
+                                '%2$S': VARIABLE_REFERENCE(
                                     'code'
                                 )
                             }
