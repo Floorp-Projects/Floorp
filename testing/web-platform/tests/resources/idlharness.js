@@ -870,6 +870,16 @@ IdlArray.prototype.collapse_partials = function()
 
             test(function () {
                 assert_true(originalExists, `Original ${parsed_idl.type} should be defined`);
+
+                var expected = IdlInterface;
+                switch (parsed_idl.type) {
+                    case 'interface': expected = IdlInterface; break;
+                    case 'dictionary': expected = IdlDictionary; break;
+                    case 'namespace': expected = IdlNamespace; break;
+                }
+                assert_true(
+                    expected.prototype.isPrototypeOf(this.members[parsed_idl.name]),
+                    `Original ${parsed_idl.name} definition should have type ${parsed_idl.type}`);
             }.bind(this), `Partial ${parsed_idl.type} ${partialTestName}: original ${parsed_idl.type} defined`);
         }
         if (!originalExists) {
