@@ -52,7 +52,6 @@ const TOPICS = [
   "weave:engine:validate:error",
 
   "weave:telemetry:event",
-  "weave:telemetry:histogram",
 ];
 
 const PING_FORMAT_VERSION = 1;
@@ -465,7 +464,6 @@ class SyncTelemetryImpl {
     this.payloads = [];
     this.discarded = 0;
     this.events = [];
-    this.histograms = {};
     this.maxEventsCount = Svc.Prefs.get("telemetry.maxEventsCount", 1000);
     this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval = Svc.Prefs.get("telemetry.submissionInterval") * 1000;
@@ -488,7 +486,6 @@ class SyncTelemetryImpl {
       deviceID: this.lastDeviceID,
       sessionStartDate: this.sessionStartDate,
       events: this.events.length == 0 ? undefined : this.events,
-      histograms: Object.keys(this.histograms).length == 0 ? undefined : this.histograms,
     };
   }
 
@@ -499,7 +496,6 @@ class SyncTelemetryImpl {
     this.payloads = [];
     this.discarded = 0;
     this.events = [];
-    this.histograms = {};
     this.submit(result);
   }
 
@@ -597,12 +593,6 @@ class SyncTelemetryImpl {
       this.finish("schedule");
       this.lastSubmissionTime = Telemetry.msSinceProcessStart();
     }
-  }
-
-  _addHistogram(hist) {
-      let id = hist.histId;
-      let histogram = Telemetry.getHistogramById(id);
-      this.histograms[id] = histogram.snapshot();
   }
 
   _recordEvent(eventDetails) {
@@ -714,10 +704,6 @@ class SyncTelemetryImpl {
 
       case "weave:telemetry:event":
         this._recordEvent(subject);
-        break;
-
-      case "weave:telemetry:histogram":
-        this._addHistogram(subject);
         break;
 
       default:
