@@ -511,6 +511,27 @@ TokenStreamAnyChars::undoInternalUpdateLineInfoForEOL()
     lineno--;
 }
 
+#ifdef DEBUG
+
+template<>
+inline void
+SourceUnits<char16_t>::assertNextCodePoint(const PeekedCodePoint<char16_t>& peeked)
+{
+    char32_t c = peeked.codePoint();
+    if (c < unicode::NonBMPMin) {
+        MOZ_ASSERT(peeked.lengthInUnits() == 1);
+        MOZ_ASSERT(ptr[0] == c);
+    } else {
+        MOZ_ASSERT(peeked.lengthInUnits() == 2);
+        char16_t lead, trail;
+        unicode::UTF16Encode(c, &lead, &trail);
+        MOZ_ASSERT(ptr[0] == lead);
+        MOZ_ASSERT(ptr[1] == trail);
+    }
+}
+
+#endif // DEBUG
+
 template<class AnyCharsAccess>
 bool
 TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
@@ -1843,7 +1864,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // This loop runs more than once only when whitespace or comments are
     // encountered.
     do {
-        int32_t unit = getCodeUnit();
+        int32_t unit = peekCodeUnit();
         if (MOZ_UNLIKELY(unit == EOF)) {
             MOZ_ASSERT(this->sourceUnits.atEnd());
             anyCharsAccess().flags.isEOF = true;
@@ -1859,16 +1880,25 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             // a variable number of code points, it's easier to assume it's an
             // identifier and maybe do a little wasted work, than to unget and
             // compute and reget if whitespace.
-            TokenStart start(this->sourceUnits, -1);
-            const CharT* identStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
+            TokenStart start(this->sourceUnits, 0);
+            const CharT* identStart = this->sourceUnits.addressOfNextCodeUnit();
 
-            int32_t codePoint;
-            if (!getNonAsciiCodePoint(unit, &codePoint))
+            PeekedCodePoint<CharT> peeked = this->sourceUnits.peekCodePoint();
+            if (peeked.isNone()) {
+                int32_t bad;
+                MOZ_ALWAYS_FALSE(getCodePoint(&bad));
                 return badToken();
+            }
 
-            if (unicode::IsSpaceOrBOM2(codePoint)) {
-                if (codePoint == '\n')
+            char32_t cp = peeked.codePoint();
+            if (unicode::IsSpaceOrBOM2(cp)) {
+                this->sourceUnits.consumeKnownCodePoint(peeked);
+                if (IsLineTerminator(cp)) {
+                    if (!updateLineInfoForEOL())
+                        return badToken();
+
                     anyCharsAccess().updateFlagsForEOL();
+                }
 
                 continue;
             }
@@ -1882,13 +1912,21 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                           "!IsUnicodeIDStart('_'), ensure that '_' is never "
                           "handled here");
 
-            if (unicode::IsUnicodeIDStart(uint32_t(codePoint)))
-                return identifierName(start, identStart, IdentifierEscapes::None, modifier, ttp);
+            if (MOZ_LIKELY(unicode::IsUnicodeIDStart(cp))) {
+                this->sourceUnits.consumeKnownCodePoint(peeked);
+                MOZ_ASSERT(!IsLineTerminator(cp),
+                           "IdentifierStart must guarantee !IsLineTerminator "
+                           "or else we'll fail to maintain line-info/flags "
+                           "for EOL here");
 
-            ungetCodePointIgnoreEOL(codePoint);
+                return identifierName(start, identStart, IdentifierEscapes::None, modifier, ttp);
+            }
+
             error(JSMSG_ILLEGAL_CHARACTER);
             return badToken();
         } // !isAsciiCodePoint(unit)
+
+        consumeKnownCodeUnit(unit);
 
         // Get the token kind, based on the first char.  The ordering of c1kind
         // comparison is based on the frequency of tokens in real code:
