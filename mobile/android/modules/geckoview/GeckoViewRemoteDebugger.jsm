@@ -57,19 +57,26 @@ var GeckoViewRemoteDebugger = {
     DebuggerServer.allowChromeProcess = true;
     DebuggerServer.chromeWindowType = "navigator:geckoview";
 
+    // Socket address for USB remote debugger expects
+    // @ANDROID_PACKAGE_NAME/firefox-debugger-socket.
+    // In /proc/net/unix, it will be outputed as
+    // @org.mozilla.geckoview_example/firefox-debugger-socket
+    //
+    // If package name isn't available, it will be "@firefox-debugger-socket".
+
     const env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-    const dataDir = env.get("MOZ_ANDROID_DATA_DIR");
-
-    if (!dataDir) {
-      warn `Missing env MOZ_ANDROID_DATA_DIR - aborting debugger server start`;
-      return;
+    let packageName = env.get("MOZ_ANDROID_PACKAGE_NAME");
+    if (packageName) {
+      packageName = packageName + "/";
+    } else {
+      warn `Missing env MOZ_ANDROID_PACKAGE_NAME. Unable to get pacakge name`;
     }
 
     this._isEnabled = true;
     this._usbDebugger.stop();
 
-    const portOrPath = dataDir + "/firefox-debugger-socket";
+    const portOrPath = packageName + "firefox-debugger-socket";
     this._usbDebugger.start(portOrPath);
   },
 
