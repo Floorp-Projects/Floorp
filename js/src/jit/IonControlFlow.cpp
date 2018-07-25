@@ -546,7 +546,7 @@ ControlFlowGenerator::processTry()
 
     // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
     // jump over the catch block.
-    jsbytecode* endpc = pc + GetSrcNoteOffset(sn, 0);
+    jsbytecode* endpc = pc + GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset);
     MOZ_ASSERT(JSOp(*endpc) == JSOP_GOTO);
     MOZ_ASSERT(GetJumpOffset(endpc) > 0);
 
