@@ -18,7 +18,6 @@ const MANAGE_CREDITCARDS_URL = "chrome://formautofill/content/manageCreditCards.
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
