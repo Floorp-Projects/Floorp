@@ -4,7 +4,6 @@
 
 var EXPORTED_SYMBOLS = [ "ZipUtils" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FileUtils",

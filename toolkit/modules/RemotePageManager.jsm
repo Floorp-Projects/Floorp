@@ -21,7 +21,6 @@ var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager", "PageListener"];
  * within AsyncPrefs.jsm.
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AsyncPrefs",
   "resource://gre/modules/AsyncPrefs.jsm");

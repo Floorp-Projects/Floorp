@@ -4,7 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "Log",
   "resource://gre/modules/Log.jsm");

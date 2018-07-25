@@ -12,8 +12,6 @@
   */
 var EXPORTED_SYMBOLS = ["GetBattery", "Battery"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
 // Load Services, for the BatteryManager API
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
