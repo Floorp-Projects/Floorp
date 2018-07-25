@@ -8,25 +8,29 @@
 <script src="/resources/WebIDLParser.js"></script>
 <script src="/resources/idlharness.js"></script>
 <script>
-"use strict";
+'use strict';
 
 promise_test(async () => {
+  const battery = await fetch('/interfaces/battery-status.idl').then(r => r.text());
+  const dom = await fetch('/interfaces/dom.idl').then(r => r.text());
+  const html = await fetch('/interfaces/html.idl').then(r => r.text());
+
   const idl_array = new IdlArray();
-  const dom_idl = await fetch("/interfaces/dom.idl").then(r => r.text());
-  const battery_idl = await fetch("/interfaces/battery.idl").then(r => r.text());
-  const manager = await navigator.getBattery();
+  idl_array.add_idls(battery);
+  idl_array.add_dependency_idls(dom);
+  idl_array.add_dependency_idls(html);
 
-  idl_array.add_untested_idls(dom_idl, {only: ['EventTarget']});
-  idl_array.add_untested_idls('interface EventHandler {};');
-  idl_array.add_untested_idls('interface Navigator {};');
-  idl_array.add_idls(battery_idl);
-
-  window.manager = manager;
+  let manager;
+  try {
+    manager = await navigator.getBattery();
+  } catch (e) {
+    // Will surface in idlharness.js's test_objects.
+  }
 
   idl_array.add_objects({
     Navigator: ['navigator'],
-    BatteryManager: ['manager'],
+    BatteryManager: [manager],
   });
   idl_array.test();
-}, "Test IDL implementation of Battery Status API");
+}, 'Test IDL implementation of Battery Status API');
 </script>
