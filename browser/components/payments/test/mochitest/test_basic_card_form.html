@@ -117,30 +117,19 @@ add_task(async function test_saveButton() {
   synthesizeMouseAtCenter(form.saveButton, {});
 
   let details = await messagePromise;
+  ok(typeof(details.messageID) == "number" && details.messageID > 0, "Check messageID type");
+  delete details.messageID;
   is(details.collectionName, "creditCards", "Check collectionName");
   isDeeply(details, {
     collectionName: "creditCards",
-    errorStateChange: {
-      page: {
-        id: "basic-card-page",
-        error: "Generic error",
-      },
-    },
     guid: undefined,
     messageType: "updateAutofillRecord",
-    preserveOldProperties: true,
     record: {
       "cc-exp-month": "11",
       "cc-exp-year": year,
       "cc-name": "J. Smith",
       "cc-number": "4111 1111-1111 1111",
       "billingAddressGUID": "",
-    },
-    selectedStateKey: ["selectedPaymentCard"],
-    successStateChange: {
-      page: {
-        id: "payment-summary",
-      },
     },
   }, "Check event details for the message to chrome");
   form.remove();
