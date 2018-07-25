@@ -166,7 +166,9 @@ AsyncImagePipelineManager::UpdateAsyncImagePipeline(const wr::PipelineId& aPipel
 }
 
 Maybe<TextureHost::ResourceUpdateOp>
-AsyncImagePipelineManager::UpdateImageKeys(wr::TransactionBuilder& aResources,
+AsyncImagePipelineManager::UpdateImageKeys(const wr::Epoch& aEpoch,
+                                           const wr::PipelineId& aPipelineId,
+                                           wr::TransactionBuilder& aResources,
                                            AsyncImagePipeline* aPipeline,
                                            nsTArray<wr::ImageKey>& aKeys)
 {
@@ -179,12 +181,18 @@ AsyncImagePipelineManager::UpdateImageKeys(wr::TransactionBuilder& aResources,
   if (texture == previousTexture) {
     // The texture has not changed, just reuse previous ImageKeys.
     aKeys = aPipeline->mKeys;
+    if (aPipeline->mWrTextureWrapper) {
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mWrTextureWrapper);
+    }
     return Nothing();
   }
 
   if (!texture) {
     // We don't have a new texture, there isn't much we can do.
     aKeys = aPipeline->mKeys;
+    if (aPipeline->mWrTextureWrapper) {
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mWrTextureWrapper);
+    }
     return Nothing();
   }
 
@@ -194,6 +202,14 @@ AsyncImagePipelineManager::UpdateImageKeys(wr::TransactionBuilder& aResources,
 
   bool useExternalImage = !gfxEnv::EnableWebRenderRecording() && wrTexture;
   aPipeline->mUseExternalImage = useExternalImage;
+
+  // Use WebRenderTextureHostWrapper only for video.
+  // And WebRenderTextureHostWrapper could be used only with WebRenderTextureHost
+  // that supports NativeTexture
+  bool useWrTextureWrapper = aPipeline->mImageHost->GetAsyncRef() &&
+                             useExternalImage &&
+                             wrTexture &&
+                             wrTexture->SupportsWrNativeTexture();
 
   // The non-external image code path falls back to converting the texture into
   // an rgb image.
@@ -205,6 +221,13 @@ AsyncImagePipelineManager::UpdateImageKeys(wr::TransactionBuilder& aResources,
                    && previousTexture->GetSize() == texture->GetSize()
                    && previousTexture->GetFormat() == texture->GetFormat()
                    && aPipeline->mKeys.Length() == numKeys;
+
+  // Check if WebRenderTextureHostWrapper could be reused.
+  if (aPipeline->mWrTextureWrapper &&
+      (!useWrTextureWrapper || !canUpdate)) {
+    aPipeline->mWrTextureWrapper = nullptr;
+    canUpdate = false;
+  }
 
   if (!canUpdate) {
     for (auto key : aPipeline->mKeys) {
@@ -224,8 +247,27 @@ AsyncImagePipelineManager::UpdateImageKeys(wr::TransactionBuilder& aResources,
     return UpdateWithoutExternalImage(aResources, texture, aKeys[0], op);
   }
 
-  Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
-  wrTexture->PushResourceUpdates(aResources, op, keys, wrTexture->GetExternalImageKey());
+  if (useWrTextureWrapper && aPipeline->mWrTextureWrapper) {
+    MOZ_ASSERT(canUpdate);
+    // Reuse WebRenderTextureHostWrapper. With it, rendered frame could be updated
+    // without batch re-creation.
+    aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(wrTexture);
+    // Ensure frame generation.
+    SetWillGenerateFrame();
+  } else {
+    if (useWrTextureWrapper) {
+      aPipeline->mWrTextureWrapper = new WebRenderTextureHostWrapper(this);
+      aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(wrTexture);
+    }
+    Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
+    auto externalImageKey =
+      aPipeline->mWrTextureWrapper ? aPipeline->mWrTextureWrapper->GetExternalImageKey() : wrTexture->GetExternalImageKey();
+    wrTexture->PushResourceUpdates(aResources, op, keys, externalImageKey);
+  }
+
+  if (aPipeline->mWrTextureWrapper) {
+    HoldExternalImage(aPipelineId, aEpoch, aPipeline->mWrTextureWrapper);
+  }
 
   return Some(op);
 }
@@ -296,7 +338,7 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
                                                       wr::TransactionBuilder& aTxn)
 {
   nsTArray<wr::ImageKey> keys;
-  auto op = UpdateImageKeys(aTxn, aPipeline, keys);
+  auto op = UpdateImageKeys(aEpoch, aPipelineId, aTxn, aPipeline, keys);
 
   bool updateDisplayList = aPipeline->mInitialised &&
                            (aPipeline->mIsChanged || op == Some(TextureHost::ADD_IMAGE)) &&
@@ -425,6 +467,23 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
 }
 
 void
+AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHostWrapper* aWrTextureWrapper)
+{
+  if (mDestroyed) {
+    return;
+  }
+  MOZ_ASSERT(aWrTextureWrapper);
+
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(holder);
+  if (!holder) {
+    return;
+  }
+  // Hold WebRenderTextureHostWrapper until end of its usage on RenderThread
+  holder->mTextureHostWrappers.push(ForwardingTextureHostWrapper(aEpoch, aWrTextureWrapper));
+}
+
+void
 AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const wr::ExternalImageId& aImageId)
 {
   if (mDestroyed) {
@@ -509,6 +568,12 @@ AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipeli
         break;
       }
       holder->mTextureHosts.pop();
+    }
+    while (!holder->mTextureHostWrappers.empty()) {
+      if (aEpoch <= holder->mTextureHostWrappers.front().mEpoch) {
+        break;
+      }
+      holder->mTextureHostWrappers.pop();
     }
     while (!holder->mExternalImages.empty()) {
       if (aEpoch <= holder->mExternalImages.front().mEpoch) {
