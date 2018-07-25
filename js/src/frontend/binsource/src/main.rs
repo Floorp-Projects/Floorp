@@ -15,6 +15,7 @@ use std::collections::{ HashMap, HashSet };
 use std::fs::*;
 use std::io::{ Read, Write };
 use std::path::Path;
+use std::rc::Rc;
 
 use clap::{ App, Arg };
 
@@ -79,7 +80,7 @@ struct NodeRules {
     inherits: Option<NodeName>,
 
     /// Override the result type for the method.
-    type_ok: Option<String>,
+    type_ok: Option<Rc<String>>,
 
     /// Stuff to add at start.
     init: Option<String>,
@@ -101,6 +102,9 @@ struct NodeRules {
 /// Extracted from the yaml file.
 #[derive(Default)]
 struct GlobalRules {
+    /// The return value of each method.
+    parser_type_ok: Rc<String>,
+
     /// Header to add at the start of the .cpp file.
     cpp_header: Option<String>,
 
@@ -136,6 +140,7 @@ impl GlobalRules {
         let rules = yaml.as_hash()
             .expect("Rules are not a dictionary");
 
+        let mut parser_type_ok = None;
         let mut cpp_header = None;
         let mut cpp_footer = None;
         let mut hpp_class_header = None;
@@ -151,6 +156,11 @@ impl GlobalRules {
                 .expect("Could not convert node_key to string");
 
             match node_key {
+                "parser" => {
+                    update_rule_rc(&mut parser_type_ok, &node_entries["type-ok"])
+                        .unwrap_or_else(|_| panic!("Rule parser.type-ok must be a string"));
+                    continue;
+                }
                 "cpp" => {
                     update_rule(&mut cpp_header, &node_entries["header"])
                         .unwrap_or_else(|_| panic!("Rule cpp.header must be a string"));
@@ -208,7 +218,7 @@ impl GlobalRules {
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
                     }
                     "type-ok" => {
-                        update_rule(&mut node_rule.type_ok, node_item_entry)
+                        update_rule_rc(&mut node_rule.type_ok, node_item_entry)
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
                     }
                     "fields" => {
@@ -298,6 +308,8 @@ impl GlobalRules {
         }
 
         Self {
+            parser_type_ok: parser_type_ok
+                .expect("parser.type-ok should be specified"),
             cpp_header,
             cpp_footer,
             hpp_class_header,
@@ -387,6 +399,9 @@ struct CPPExporter {
     /// name of the symbol as part of `enum class BinVariant`
     /// (e.g. `UnaryOperatorDelete`).
     variants_by_symbol: HashMap<String, String>,
+
+    // A map from enum class names to the type.
+    enum_types: HashMap<NodeName, Rc<String>>,
 }
 
 impl CPPExporter {
@@ -429,7 +444,11 @@ impl CPPExporter {
         // (note that there is no guarantee of unicity – if collisions show up,
         // we may need to tweak the name generation algorithm).
         let mut enum_by_string : HashMap<String, Vec<NodeName>> = HashMap::new();
+        let mut enum_types : HashMap<NodeName, Rc<String>> = HashMap::new();
         for (name, enum_) in syntax.string_enums_by_name().iter() {
+            let type_ = format!("typename BinASTParser<Tok>::{kind}",
+                                kind = name.to_class_cases());
+            enum_types.insert(name.clone(), Rc::new(type_));
             for string in enum_.strings().iter() {
                 let vec = enum_by_string.entry(string.clone())
                     .or_insert_with(|| vec![]);
@@ -455,23 +474,29 @@ impl CPPExporter {
             list_parsers_to_generate,
             option_parsers_to_generate,
             variants_by_symbol,
+            enum_types,
         }
     }
 
 // ----- Generating the header
 
     /// Get the type representing a success for parsing this node.
-    fn get_type_ok(&self, name: &NodeName, default: &str) -> String {
+    fn get_type_ok(&self, name: &NodeName) -> Rc<String> {
+        // enum has its own rule.
+        if self.enum_types.contains_key(name) {
+            return self.enum_types.get(name).unwrap().clone();
+        }
+
         let rules_for_this_interface = self.rules.get(name);
         // If the override is provided, use it.
-        if let Some(ref type_ok) = rules_for_this_interface.type_ok {
-            return type_ok.to_string()
+        if let Some(type_ok) = rules_for_this_interface.type_ok {
+            return type_ok;
         }
-        default.to_string()
+        self.rules.parser_type_ok.clone()
     }
 
-    fn get_method_signature(&self, name: &NodeName, default_type_ok: &str, prefix: &str, args: &str) -> String {
-        let type_ok = self.get_type_ok(name, default_type_ok);
+    fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str) -> String {
+        let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
         format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args});\n",
             prefix = prefix,
@@ -481,8 +506,8 @@ impl CPPExporter {
         )
     }
 
-    fn get_method_definition_start(&self, name: &NodeName, default_type_ok: &str, prefix: &str, args: &str) -> String {
-        let type_ok = self.get_type_ok(name, default_type_ok);
+    fn get_method_definition_start(&self, name: &NodeName, prefix: &str, args: &str) -> String {
+        let type_ok = self.get_type_ok(name);
         let kind = name.to_class_cases();
         format!("template<typename Tok> JS::Result<{type_ok}>\nBinASTParser<Tok>::parse{prefix}{kind}({args})",
             prefix = prefix,
@@ -602,11 +627,11 @@ enum class BinVariant {
         buffer.push_str("// Implementations are autogenerated\n");
         buffer.push_str("// `ParseNode*` may never be nullptr\n");
         for &(ref name, _) in &sums_of_interfaces {
-            let rendered = self.get_method_signature(name, "ParseNode*", "", "");
+            let rendered = self.get_method_signature(name, "", "");
             buffer.push_str(&rendered.reindent(""));
         }
         for (name, _) in sums_of_interfaces {
-            let rendered = self.get_method_signature(name, "ParseNode*", "Sum", "const size_t start, const BinKind kind, const BinFields& fields");
+            let rendered = self.get_method_signature(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields");
             buffer.push_str(&rendered.reindent(""));
         }
     }
@@ -623,8 +648,8 @@ enum class BinVariant {
         let mut inner_parsers = Vec::with_capacity(interfaces_by_name.len());
 
         for &(name, _) in &interfaces_by_name {
-            let outer = self.get_method_signature(name, "ParseNode*", "", "");
-            let inner = self.get_method_signature(name, "ParseNode*", "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
+            let outer = self.get_method_signature(name, "", "");
+            let inner = self.get_method_signature(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
             outer_parsers.push(outer.reindent(""));
             inner_parsers.push(inner.reindent(""));
         }
@@ -647,8 +672,7 @@ enum class BinVariant {
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
         for (kind, _) in string_enums_by_name {
-            let type_ok = format!("typename BinASTParser<Tok>::{kind}", kind = kind.to_class_cases());
-            let rendered = self.get_method_signature(kind, &type_ok, "", "");
+            let rendered = self.get_method_signature(kind, "", "");
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -658,7 +682,7 @@ enum class BinVariant {
         buffer.push_str("\n\n// ----- Lists (by lexicographical order)\n");
         buffer.push_str("// Implementations are autogenerated\n");
         for parser in &self.list_parsers_to_generate {
-            let rendered = self.get_method_signature(&parser.name, "ParseNode*", "", "");
+            let rendered = self.get_method_signature(&parser.name, "", "");
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -668,7 +692,7 @@ enum class BinVariant {
         buffer.push_str("\n\n// ----- Default values (by lexicographical order)\n");
         buffer.push_str("// Implementations are autogenerated\n");
         for parser in &self.option_parsers_to_generate {
-            let rendered = self.get_method_signature(&parser.name, "ParseNode*", "", "");
+            let rendered = self.get_method_signature(&parser.name, "", "");
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
         }
@@ -743,7 +767,7 @@ impl CPPExporter {
 }}\n",
                 bnf = rendered_bnf,
                 kind = kind,
-                first_line = self.get_method_definition_start(name, "ParseNode*", "", "")
+                first_line = self.get_method_definition_start(name, "", "")
         ));
 
         // Generate inner method
@@ -773,8 +797,8 @@ impl CPPExporter {
 ",
             kind = kind,
             cases = buffer_cases,
-            first_line = self.get_method_definition_start(name, "ParseNode*", "Sum", "const size_t start, const BinKind kind, const BinFields& fields"),
-            type_ok = self.get_type_ok(name, "ParseNode*")
+            first_line = self.get_method_definition_start(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields"),
+            type_ok = self.get_type_ok(name)
         ));
     }
 
@@ -795,7 +819,7 @@ impl CPPExporter {
         }
 
         let kind = parser.name.to_class_cases();
-        let first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", "");
+        let first_line = self.get_method_definition_start(&parser.name, "", "");
 
         let init = match rules_for_this_list.init {
             Some(str) => str.reindent("    "),
@@ -868,9 +892,9 @@ impl CPPExporter {
             }
         }
 
-        let type_ok = self.get_type_ok(&parser.name, "ParseNode*");
+        let type_ok = self.get_type_ok(&parser.name);
         let default_value =
-            if type_ok == "Ok" {
+            if type_ok.as_str() == "Ok" {
                 "Ok()"
             } else {
                 "nullptr"
@@ -917,7 +941,7 @@ impl CPPExporter {
 }}
 
 ",
-                    first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", ""),
+                    first_line = self.get_method_definition_start(&parser.name, "", ""),
                     null = self.syntax.get_null_name().to_cpp_enum_case(),
                     contents = parser.elements.to_class_cases(),
                     type_ok = type_ok,
@@ -948,7 +972,7 @@ impl CPPExporter {
 }}
 
 ",
-                            first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", ""),
+                            first_line = self.get_method_definition_start(&parser.name, "", ""),
                             contents = parser.elements.to_class_cases(),
                             type_ok = type_ok,
                             default_value = default_value,
@@ -957,7 +981,7 @@ impl CPPExporter {
                     }
                     &TypeSpec::String => {
                         let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", "");
+                        let first_line = self.get_method_definition_start(&parser.name, "", "");
                         if build_result.len() == 0 {
                             buffer.push_str(&format!("{first_line}
 {{
@@ -1026,14 +1050,14 @@ impl CPPExporter {
 }}
 
 ",
-            first_line = self.get_method_definition_start(name, "ParseNode*", "", ""),
+            first_line = self.get_method_definition_start(name, "", ""),
             kind = name.to_cpp_enum_case(),
             class_name = name.to_class_cases(),
         ));
 
         // Generate aux method
         let number_of_fields = interface.contents().fields().len();
-        let first_line = self.get_method_definition_start(name, "ParseNode*", "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
+        let first_line = self.get_method_definition_start(name, "Interface", "const size_t start, const BinKind kind, const BinFields& fields");
 
         let fields_type_list = format!("{{ {} }}", interface.contents()
             .fields()
@@ -1087,7 +1111,7 @@ impl CPPExporter {
                         Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom());", var_name = var_name)))
                 }
                 Some(IsNullable { content: Primitive::Interface(ref interface), ..})
-                    if &self.get_type_ok(interface.name(), "?") == "Ok" =>
+                    if self.get_type_ok(interface.name()).as_str() == "Ok" =>
                 {
                     // Special case: `Ok` means that we shouldn't bind the return value.
                     let typename = TypeName::type_(field.type_());
@@ -1285,7 +1309,7 @@ impl CPPExporter {
 ",
                     rendered_doc = rendered_doc,
                     convert = convert,
-                    first_line = self.get_method_definition_start(kind, &format!("typename BinASTParser<Tok>::{kind}", kind = kind), "", "")
+                    first_line = self.get_method_definition_start(kind, "", "")
                 ));
             }
         }
@@ -1320,7 +1344,14 @@ fn update_rule(rule: &mut Option<String>, entry: &yaml_rust::Yaml) -> Result<Opt
         Err(())
     }
 }
-
+fn update_rule_rc(rule: &mut Option<Rc<String>>, entry: &yaml_rust::Yaml) -> Result<Option<()>, ()> {
+    let mut value = None;
+    let ret = update_rule(&mut value, entry)?;
+    if let Some(s) = value {
+        *rule = Some(Rc::new(s));
+    }
+    Ok(ret)
+}
 
 fn main() {
     env_logger::init();
