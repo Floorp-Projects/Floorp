@@ -14,6 +14,7 @@ use binjs_meta::util:: { Reindentable, ToCases, ToStr };
 use std::collections::{ HashMap, HashSet };
 use std::fs::*;
 use std::io::{ Read, Write };
+use std::path::Path;
 
 use clap::{ App, Arg };
 
@@ -1398,12 +1399,34 @@ fn main() {
     let global_rules = GlobalRules::new(&new_syntax, &yaml[0]);
     let exporter = CPPExporter::new(new_syntax, global_rules);
 
+    let get_file_content = |path: &str| {
+        if !Path::new(path).is_file() {
+            return None;
+        }
+
+        let mut f = File::open(path)
+            .expect("File not found");
+        let mut contents = String::new();
+        f.read_to_string(&mut contents)
+            .expect("Failed to read file");
+        Some(contents)
+    };
     let write_to = |description, arg, data: &String| {
         let dest_path = matches.value_of(arg)
             .unwrap();
-        println!("...exporting {description}: {path}",
+        print!("...exporting {description}: {path} ... ",
             description = description,
             path = dest_path);
+
+        if let Some(old_data) = get_file_content(dest_path) {
+            if old_data == *data {
+                // To avoid unnecessary rebuild, do not touch the file if the
+                // content is not updated.
+                println!("skip");
+                return;
+            }
+        };
+
         let mut dest = File::create(&dest_path)
             .unwrap_or_else(|e| panic!("Could not create {description} at {path}: {error}",
                             description = description,
@@ -1414,6 +1437,8 @@ fn main() {
                             description = description,
                             path = dest_path,
                             error = e));
+
+        println!("done");
     };
 
     write_to("C++ class header code", "OUT_HEADER_CLASS_FILE",
