@@ -6,6 +6,7 @@ package org.mozilla.focus.fragment
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Typeface
 import android.graphics.drawable.TransitionDrawable
@@ -29,6 +30,8 @@ import org.mozilla.focus.R
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
+import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
+import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsViewModel
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
@@ -70,6 +73,8 @@ class UrlInputFragment :
         private val PLACEHOLDER = "5981086f-9d45-4f64-be99-7d2ffa03befb"
 
         private val ANIMATION_DURATION = 200
+
+        private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
         @JvmStatic
         fun createWithoutSession(): UrlInputFragment {
@@ -132,13 +137,19 @@ class UrlInputFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
+        val viewModelProviders = ViewModelProviders.of(activity!!)
+        model = viewModelProviders.get(MainViewModel::class.java)
+        searchSuggestionsViewModel = viewModelProviders.get(SearchSuggestionsViewModel::class.java)
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {
             session = if (SessionManager.getInstance().hasSessionWithUUID(it)) SessionManager
                 .getInstance().getSessionByUUID(it) else null
         }
+
+        searchSuggestionsViewModel.selectedSearchSuggestion.observe(this, Observer {
+            onSearch(it)
+        })
     }
 
     override fun onResume() {
@@ -152,9 +163,9 @@ class UrlInputFragment :
                 useCustomDomains)
         }
 
-        StatusBarUtils.getStatusBarHeight(keyboardLinearLayout, {
+        StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
             adjustViewToStatusBarHeight(it)
-        })
+        }
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
@@ -176,7 +187,7 @@ class UrlInputFragment :
         View? = inflater.inflate(R.layout.fragment_urlinput, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        listOf(dismissView, clearView, searchView).forEach { it.setOnClickListener(this) }
+        listOf(dismissView, clearView).forEach { it.setOnClickListener(this) }
 
         urlView?.setOnFilterListener(::onFilter)
         urlView?.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
@@ -215,6 +226,12 @@ class UrlInputFragment :
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
         }
+
+        val fragment = SearchSuggestionsFragment.create()
+        val transaction = fragmentManager!!.beginTransaction()
+        transaction
+                .replace(searchViewContainer.id, fragment)
+                .commit()
     }
 
     override fun applyLocale() {
@@ -277,8 +294,6 @@ class UrlInputFragment :
     override fun onClick(view: View) {
         when (view.id) {
             R.id.clearView -> clear()
-
-            R.id.searchView -> onSearch()
 
             R.id.dismissView -> if (isOverlay) {
                 animateAndDismiss()
@@ -535,8 +550,8 @@ class UrlInputFragment :
         return Triple(isUrl, url, searchTerms)
     }
 
-    private fun onSearch() {
-        val searchTerms = urlView?.originalText
+    private fun onSearch(query: String?) {
+        val searchTerms = query ?: urlView?.originalText
         val searchUrl = UrlUtils.createSearchUrl(context, searchTerms)
 
         openUrl(searchUrl, searchTerms)
@@ -612,8 +627,7 @@ class UrlInputFragment :
 
             val content = SpannableString(hint.replace(PLACEHOLDER, searchText))
             content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
-
-            searchView?.text = content
+            searchSuggestionsViewModel.search(searchText)
             searchViewContainer?.visibility = View.VISIBLE
         }
     }
