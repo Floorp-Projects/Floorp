@@ -852,14 +852,16 @@ enum class BinVariant {
             let extra_params = rules_for_this_sum.extra_params;
             let rendered = self.get_method_signature(name, "", "",
                                                      &extra_params);
-            buffer.push_str(&rendered.reindent(""));
+            buffer.push_str(&rendered.reindent("")
+                            .newline_if_not_empty());
         }
         for (name, _) in sums_of_interfaces {
             let rules_for_this_sum = self.rules.get(name);
             let extra_params = rules_for_this_sum.extra_params;
             let rendered = self.get_method_signature(name, "Sum", "const size_t start, const BinKind kind, const BinFields& fields",
                                                      &extra_params);
-            buffer.push_str(&rendered.reindent(""));
+            buffer.push_str(&rendered.reindent("")
+                            .newline_if_not_empty());
         }
     }
 
