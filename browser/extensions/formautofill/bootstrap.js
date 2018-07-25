@@ -126,6 +126,7 @@ function startup(data) {
   Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
   formAutofillParent.init().catch(Cu.reportError);
+  /* exported FormAutofillContent */
   Services.ppmm.loadProcessScript("data:,new " + function() {
     ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
   }, true);

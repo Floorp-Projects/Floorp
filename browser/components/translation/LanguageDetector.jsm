@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["LanguageDetector"];
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Since Emscripten can handle heap growth, but not heap shrinkage, we
 // need to refresh the worker after we've processed a particularly large
