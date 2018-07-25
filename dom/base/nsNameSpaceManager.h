@@ -30,10 +30,11 @@
  *
  */
 
-class nsNameSpaceManager final : public nsISupports
+class nsNameSpaceManager final
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(nsNameSpaceManager)
+
   virtual nsresult RegisterNameSpace(const nsAString& aURI,
                                      int32_t& aNameSpaceID);
   nsresult RegisterNameSpace(already_AddRefed<nsAtom> aURI,
