@@ -332,6 +332,7 @@ DisplayItemData::EndUpdate()
   mIsInvalid = false;
   mUsed = false;
   mReusedItem = false;
+  mOldTransform = nullptr;
 }
 
 void
@@ -2174,20 +2175,14 @@ AppendToString(nsACString& s, const nsIntRegion& r,
  * apply the inverse of that transform before calling InvalidateRegion.
  */
 static void
-InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsIntRegion& aRegion,
-                              const nsIntPoint& aTranslation,
-                              TransformClipNode* aTransform)
+InvalidatePostTransformRegion(PaintedLayer* aLayer,
+                              const nsIntRegion& aRegion,
+                              const nsIntPoint& aTranslation)
 {
   // Convert the region from the coordinates of the container layer
   // (relative to the snapped top-left of the display list reference frame)
   // to the PaintedLayer's own coordinates
   nsIntRegion rgn = aRegion;
-
-  if (aTransform) {
-    PaintedDisplayItemLayerUserData* data =
-      GetPaintedDisplayItemLayerUserData(aLayer);
-    rgn = aTransform->TransformRegion(rgn, data->mAppUnitsPerDevPixel);
-  }
 
   rgn.MoveBy(-aTranslation);
   aLayer->InvalidateRegion(rgn);
@@ -2201,19 +2196,26 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsIntRegion& aRegion,
 }
 
 static void
-InvalidatePostTransformRect(PaintedLayer* aLayer,
-                            const nsRect& aRect,
-                            const DisplayItemClip& aClip,
-                            const nsIntPoint& aTranslation,
-                            TransformClipNode* aTransform)
+InvalidatePreTransformRect(PaintedLayer* aLayer,
+                           const nsRect& aRect,
+                           const DisplayItemClip& aClip,
+                           const nsIntPoint& aTranslation,
+                           TransformClipNode* aTransform)
 {
   PaintedDisplayItemLayerUserData* data =
       static_cast<PaintedDisplayItemLayerUserData*>(aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
 
   nsRect rect = aClip.ApplyNonRoundedIntersection(aRect);
 
-  nsIntRect pixelRect = rect.ScaleToOutsidePixels(data->mXScale, data->mYScale, data->mAppUnitsPerDevPixel);
-  InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation, aTransform);
+  nsIntRect pixelRect = rect.ScaleToOutsidePixels(data->mXScale, data->mYScale,
+                                                  data->mAppUnitsPerDevPixel);
+
+  if (aTransform) {
+    pixelRect =
+      aTransform->TransformRect(pixelRect, data->mAppUnitsPerDevPixel);
+  }
+
+  InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation);
 }
 
 
@@ -2349,11 +2351,11 @@ FrameLayerBuilder::WillEndTransaction()
           printf_stderr("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", did->mDisplayItemKey, did->mFrameList[0], t);
         }
 #endif
-        InvalidatePostTransformRect(t,
-                                    did->mGeometry->ComputeInvalidationRegion(),
-                                    did->mClip,
-                                    GetLastPaintOffset(t),
-                                    did->mTransform);
+        InvalidatePreTransformRect(t,
+                                   did->mGeometry->ComputeInvalidationRegion(),
+                                   did->mClip,
+                                   GetLastPaintOffset(t),
+                                   did->mTransform);
       }
 
       did->ClearAnimationCompositorState();
@@ -3846,13 +3848,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                                                currentData,
                                                aItem->GetDisplayItemDataLayerManager());
 
-  if (currentData) {
-    currentData->mTransform = nullptr;
-  }
-  if (oldData) {
-    oldData->mTransform = nullptr;
-  }
-
   mAssignedDisplayItems.emplace_back(aItem, aLayerState, oldData,
                                      aContentRect, aType, hasOpacity,
                                      aTransform);
@@ -5191,16 +5186,32 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
         printf_stderr("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
       }
 #endif
-      InvalidatePostTransformRect(t,
-                                  aData->mGeometry->ComputeInvalidationRegion(),
-                                  aData->mClip,
-                                  mLayerBuilder->GetLastPaintOffset(t),
-                                  aData->mTransform);
+      InvalidatePreTransformRect(t,
+                                 aData->mGeometry->ComputeInvalidationRegion(),
+                                 aData->mClip,
+                                 mLayerBuilder->GetLastPaintOffset(t),
+                                 aData->mTransform);
     }
     // Clear the old geometry so that invalidation thinks the item has been
     // added this paint.
     aData->mGeometry = nullptr;
   }
+}
+
+static nsRect
+GetInvalidationRect(nsDisplayItemGeometry* aGeometry,
+                    const DisplayItemClip& aClip,
+                    TransformClipNode* aTransform,
+                    const int32_t aA2D)
+{
+  const nsRect& rect = aGeometry->ComputeInvalidationRegion();
+  const nsRect clipped = aClip.ApplyNonRoundedIntersection(rect);
+
+  if (aTransform) {
+    return aTransform->TransformRect(clipped, aA2D);
+  }
+
+  return clipped;
 }
 
 void
@@ -5236,16 +5247,25 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
   }
 
   const DisplayItemClip& clip = item->GetClip();
+  const int32_t appUnitsPerDevPixel = layerData->mAppUnitsPerDevPixel;
 
   // If the frame is marked as invalidated, and didn't specify a rect to invalidate then we want to
   // invalidate both the old and new bounds, otherwise we only want to invalidate the changed areas.
   // If we do get an invalid rect, then we want to add this on top of the change areas.
   nsRect invalid;
-  nsRegion combined;
+  nsIntRegion invalidPixels;
+
   if (!aData->mGeometry) {
     // This item is being added for the first time, invalidate its entire area.
     geometry = item->AllocateGeometry(mDisplayListBuilder);
-    combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
+
+    const nsRect bounds = GetInvalidationRect(geometry, clip,
+                                              aData->mTransform,
+                                              appUnitsPerDevPixel);
+
+    invalidPixels = bounds.ScaleToOutsidePixels(layerData->mXScale,
+                                                layerData->mYScale,
+                                                appUnitsPerDevPixel);
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       printf_stderr("Display item type %s(%p) added to layer %p!\n", item->Name(), item->Frame(), aData->mLayer.get());
@@ -5254,21 +5274,38 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
   } else if (aData->mIsInvalid || (item->IsInvalid(invalid) && invalid.IsEmpty())) {
     // Layout marked item/frame as needing repainting (without an explicit rect), invalidate the entire old and new areas.
     geometry = item->AllocateGeometry(mDisplayListBuilder);
-    combined = aData->mClip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
-    combined.MoveBy(shift);
-    combined.Or(combined, clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion()));
+
+    nsRect oldArea = GetInvalidationRect(aData->mGeometry, aData->mClip,
+                                         aData->mOldTransform,
+                                         appUnitsPerDevPixel);
+    oldArea.MoveBy(shift);
+
+    nsRect newArea = GetInvalidationRect(geometry, clip,
+                                         aData->mTransform,
+                                         appUnitsPerDevPixel);
+
+    nsRegion combined;
+    combined.Or(oldArea, newArea);
+    invalidPixels = combined.ScaleToOutsidePixels(layerData->mXScale,
+                                                  layerData->mYScale,
+                                                  appUnitsPerDevPixel);
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      printf_stderr("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", item->Name(), item->Frame(), aData->mLayer.get());
+      printf_stderr("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n",
+          item->Name(), item->Frame(), aData->mLayer.get());
     }
 #endif
   } else {
     // Let the display item check for geometry changes and decide what needs to be
     // repainted.
+    const nsRegion& changedFrameInvalidations =
+      aData->GetChangedFrameInvalidations();
 
-    const nsRegion& changedFrameInvalidations = aData->GetChangedFrameInvalidations();
     aData->mGeometry->MoveBy(shift);
-    item->ComputeInvalidationRegion(mDisplayListBuilder, aData->mGeometry, &combined);
+
+    nsRegion combined;
+    item->ComputeInvalidationRegion(mDisplayListBuilder, aData->mGeometry,
+                                    &combined);
 
     // Only allocate a new geometry object if something actually changed, otherwise the existing
     // one should be fine. We always reallocate for inactive layers, since these types don't
@@ -5278,6 +5315,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
         item->NeedsGeometryUpdates()) {
       geometry = item->AllocateGeometry(mDisplayListBuilder);
     }
+
     aData->mClip.AddOffsetAndComputeDifference(shift, aData->mGeometry->ComputeInvalidationRegion(),
                                                clip, geometry ? geometry->ComputeInvalidationRegion() :
                                                                 aData->mGeometry->ComputeInvalidationRegion(),
@@ -5292,19 +5330,29 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     if (clip.ComputeRegionInClips(&aData->mClip, shift, &clipRegion)) {
       combined.And(combined, clipRegion);
     }
+
+    invalidPixels = combined.ScaleToOutsidePixels(layerData->mXScale,
+                                                  layerData->mYScale,
+                                                  appUnitsPerDevPixel);
+
+    if (aData->mTransform) {
+      invalidPixels =
+        aData->mTransform->TransformRegion(invalidPixels, appUnitsPerDevPixel);
+    }
+
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       if (!combined.IsEmpty()) {
-        printf_stderr("Display item type %s(%p) (in layer %p) changed geometry!\n", item->Name(), item->Frame(), aData->mLayer.get());
+        printf_stderr("Display item type %s(%p) (in layer %p) changed geometry!\n",
+          item->Name(), item->Frame(), aData->mLayer.get());
       }
     }
 #endif
   }
-  if (!combined.IsEmpty()) {
-    InvalidatePostTransformRegion(paintedLayer,
-        combined.ScaleToOutsidePixels(layerData->mXScale, layerData->mYScale, layerData->mAppUnitsPerDevPixel),
-        layerData->mTranslation,
-        aData->mTransform);
+
+  if (!invalidPixels.IsEmpty()) {
+    InvalidatePostTransformRegion(paintedLayer, invalidPixels,
+                                  layerData->mTranslation);
   }
 
   aData->EndUpdate(geometry);
@@ -5361,6 +5409,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       data->mOptLayer = aLayer;
     }
 
+    data->mOldTransform = data->mTransform;
     data->mTransform = aItem.mTransform;
   }
 
@@ -5415,6 +5464,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                                                         tempManager);
       data = layerBuilder->StoreDataForFrame(aItem.mItem, tmpLayer,
                                              LAYER_ACTIVE, data);
+      data->mOldTransform = data->mTransform;
       data->mTransform = aItem.mTransform;
     }
 
@@ -5455,9 +5505,14 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
         invalid.And(invalid, intClip);
       }
 
+      if (data && data->mTransform) {
+        invalid =
+          data->mTransform->TransformRegion(invalid,
+                                            paintedData->mAppUnitsPerDevPixel);
+      }
+
       InvalidatePostTransformRegion(layer, invalid,
-                                    GetTranslationForPaintedLayer(layer),
-                                    data ? data->mTransform.get() : nullptr);
+                                    GetTranslationForPaintedLayer(layer));
     }
   }
   aItem.mInactiveLayerManager = tempManager;
