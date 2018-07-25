@@ -1672,7 +1672,7 @@ nsVariantBase::nsVariantBase()
       {nsIDataType::VTYPE_WCHAR_STR         , TD_PWSTRING         },
       {nsIDataType::VTYPE_INTERFACE         , TD_INTERFACE_TYPE   },
       {nsIDataType::VTYPE_INTERFACE_IS      , TD_INTERFACE_IS_TYPE},
-      {nsIDataType::VTYPE_ARRAY             , TD_LEGACY_ARRAY     },
+      {nsIDataType::VTYPE_ARRAY             , TD_ARRAY            },
       {nsIDataType::VTYPE_STRING_SIZE_IS    , TD_PSTRING_SIZE_IS  },
       {nsIDataType::VTYPE_WSTRING_SIZE_IS   , TD_PWSTRING_SIZE_IS },
       {nsIDataType::VTYPE_UTF8STRING        , TD_UTF8STRING       },
