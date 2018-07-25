@@ -620,8 +620,12 @@ function remoteSettingsFunction() {
     const { bucketName } = rsOptions;
     const key = `${bucketName}/${collectionName}`;
     if (!_clients.has(key)) {
+      // Register a new client!
       const c = new RemoteSettingsClient(collectionName, rsOptions);
       _clients.set(key, c);
+      // Invalidate the polling status, since we want the new collection to
+      // be taken into account.
+      Services.prefs.clearUserPref(PREF_SETTINGS_LAST_ETAG);
     }
     return _clients.get(key);
   };
