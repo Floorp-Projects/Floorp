@@ -86,7 +86,7 @@ The following diagram does not contain all available components. See [Components
 # Components
 
 * 🔴 **In Development** - Not ready to be used in shipping products.
-* ⚪ **Preview** - This component is almost ready and can be (partially) tested in products.
+* ⚪ **Preview** - This component is almost/partially ready and can be tested in products.
 * 🔵 **Production ready** - Used by shipping products.
 
 ## Browser
@@ -109,11 +109,11 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
 
-* 🔴 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
+* ⚪ [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
 * 🔴 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
-* 🔴 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
+* ⚪ [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
 ## Concept
 
@@ -123,7 +123,7 @@ _API contracts and abstraction layers for browser components._
 
 * 🔴 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
 
-* 🔴 [**Toolbar**](components/concept/toolbar/README.md) - Abstract definition of a browser toolbar component.
+* ⚪ [**Toolbar**](components/concept/toolbar/README.md) - Abstract definition of a browser toolbar component.
 
 ## Feature
 
@@ -155,7 +155,7 @@ _Generic low-level UI components for building apps._
 
 _Components and libraries to interact with backend services._
 
-* 🔴 [**Firefox Accounts (FxA)**](components/service/firefox-accounts/README.md) - A library for integrating with Firefox Accounts.
+* ⚪ [**Firefox Accounts (FxA)**](components/service/firefox-accounts/README.md) - A library for integrating with Firefox Accounts.
 
 * ⚪ [**Fretboard**](components/service/fretboard/README.md) - An Android framework for segmenting users in order to run A/B tests and rollout features gradually.
 
