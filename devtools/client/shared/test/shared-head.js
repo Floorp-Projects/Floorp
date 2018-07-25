@@ -730,3 +730,32 @@ async function enableWebComponents() {
   await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 }
+
+/*
+ * Register an actor in the content process of the current tab.
+ *
+ * Calling DebuggerServer.registerModule only registers the actor in the current process.
+ * As all test scripts are ran in the parent process, it is only registered here.
+ * This function helps register them in the content process used for the current tab.
+ *
+ * @param {string} url
+ *        Actor module URL or absolute require path
+ * @param {json} options
+ *        Arguments to be passed to DebuggerServer.registerModule
+ */
+async function registerActorInContentProcess(url, options) {
+  function convertChromeToFile(uri) {
+    return Cc["@mozilla.org/chrome/chrome-registry;1"]
+             .getService(Ci.nsIChromeRegistry)
+             .convertChromeURL(Services.io.newURI(uri)).spec;
+  }
+  // chrome://mochitests URI is registered only in the parent process, so convert these
+  // URLs to file:// one in order to work in the content processes
+  url = url.startsWith("chrome://mochitests") ? convertChromeToFile(url) : url;
+  return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
+    // eslint-disable-next-line no-shadow
+    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { DebuggerServer } = require("devtools/server/main");
+    DebuggerServer.registerModule(args.url, args.options);
+  });
+}

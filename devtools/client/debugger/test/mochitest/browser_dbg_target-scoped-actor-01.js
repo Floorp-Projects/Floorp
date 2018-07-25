@@ -10,58 +10,35 @@
 const ACTORS_URL = CHROME_URL + "testactors.js";
 const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
-var gClient;
+add_task(async function test() {
+  await addTab(TAB_URL);
 
-function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.registerModule(ACTORS_URL, {
+  await registerActorInContentProcess(ACTORS_URL, {
     prefix: "testOne",
     constructor: "TestActor1",
     type: { target: true },
   });
 
-  let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  const [ type ] = await client.connect();
+  is(type, "browser", "Root actor should identify itself as a browser.");
 
-    addTab(TAB_URL)
-      .then(() => attachTargetActorForUrl(gClient, TAB_URL))
-      .then(testTargetScopedActor)
-      .then(closeTab)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
-}
+  const [ grip ] = await attachTargetActorForUrl(client, TAB_URL);
+  await testTargetScopedActor(client, grip);
+  await removeTab(gBrowser.selectedTab);
+  await client.close();
+});
 
-function testTargetScopedActor([aGrip, aResponse]) {
-  let deferred = promise.defer();
-
-  ok(aGrip.testOneActor,
+async function testTargetScopedActor(client, grip) {
+  ok(grip.testOneActor,
     "Found the test target-scoped actor.");
-  ok(aGrip.testOneActor.includes("testOne"),
+  ok(grip.testOneActor.includes("testOne"),
     "testOneActor's actorPrefix should be used.");
 
-  gClient.request({ to: aGrip.testOneActor, type: "ping" }, aResponse => {
-    is(aResponse.pong, "pong",
-      "Actor should respond to requests.");
-
-    deferred.resolve();
-  });
-
-  return deferred.promise;
+  const response = await client.request({ to: grip.testOneActor, type: "ping" });
+  is(response.pong, "pong", "Actor should respond to requests.");
 }
-
-function closeTab() {
-  return removeTab(gBrowser.selectedTab);
-}
-
-registerCleanupFunction(function () {
-  gClient = null;
-});
