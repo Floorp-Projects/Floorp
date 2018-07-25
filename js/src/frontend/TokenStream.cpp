@@ -2089,29 +2089,21 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 return decimalNumber(unit, start, numStart, modifier, ttp);
             }
 
-            // Check for an identifier-start code point immediately after the
-            // number.  This must be an error, and somewhat surprisingly, if
-            // a check doesn't happen here, it never will.
-            if (MOZ_UNLIKELY(unit == EOF)) {
-                // Technically this isn't necessary -- ungetting EOF does
-                // nothing -- but it's conceptually nicer if we consider all
-                // gets requiring an unget to revert them.
-                ungetCodeUnit(unit);
-            } else if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-                ungetCodeUnit(unit);
+            ungetCodeUnit(unit);
 
+            // Error if an identifier-start code point appears immediately
+            // after the number.  Somewhat surprisingly, if we don't check
+            // here, we'll never check at all.
+            if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
                 if (unicode::IsIdentifierStart(char16_t(unit))) {
                     error(JSMSG_IDSTART_AFTER_NUMBER);
                     return badToken();
                 }
-            } else {
-                int32_t codePoint;
-                if (!getNonAsciiCodePoint(unit, &codePoint))
-                    return badToken();
-
-                ungetNonAsciiNormalizedCodePoint(codePoint);
-
-                if (unicode::IsIdentifierStart(uint32_t(codePoint))) {
+            } else if (MOZ_LIKELY(unit != EOF)) {
+                // This ignores encoding errors: subsequent caller-side code to
+                // handle source text after the number will do so.
+                PeekedCodePoint<CharT> peeked = this->sourceUnits.peekCodePoint();
+                if (!peeked.isNone() && unicode::IsIdentifierStart(peeked.codePoint())) {
                     error(JSMSG_IDSTART_AFTER_NUMBER);
                     return badToken();
                 }
