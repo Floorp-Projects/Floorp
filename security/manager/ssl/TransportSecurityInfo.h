@@ -16,6 +16,7 @@
 #include "nsDataHashtable.h"
 #include "nsIAssociatedContentSecurity.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsISSLStatusProvider.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsSSLStatus.h"
 #include "nsString.h"
@@ -25,6 +26,7 @@ namespace mozilla { namespace psm {
 
 class TransportSecurityInfo : public nsITransportSecurityInfo
                             , public nsIInterfaceRequestor
+                            , public nsISSLStatusProvider
                             , public nsIAssociatedContentSecurity
                             , public nsISerializable
                             , public nsIClassInfo
@@ -37,6 +39,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITRANSPORTSECURITYINFO
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSISSLSTATUSPROVIDER
   NS_DECL_NSIASSOCIATEDCONTENTSECURITY
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO

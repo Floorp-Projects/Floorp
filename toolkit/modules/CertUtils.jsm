@@ -143,7 +143,7 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
     return;
   }
 
-  let sslStatus = aChannel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+  let sslStatus = aChannel.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                           .SSLStatus;
   let cert = sslStatus.serverCert;
 

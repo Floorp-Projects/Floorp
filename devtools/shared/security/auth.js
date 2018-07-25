@@ -300,7 +300,7 @@ OOBCert.Client.prototype = {
     // Client verifies that Server's cert matches hash(ServerCert) from the
     // advertisement
     dumpv("Validate server cert hash");
-    const serverCert = socket.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+    const serverCert = socket.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                            .SSLStatus.serverCert;
     const advertisedCert = cert;
     if (serverCert.sha256Fingerprint != advertisedCert.sha256) {

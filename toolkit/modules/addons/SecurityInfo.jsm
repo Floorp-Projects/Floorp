@@ -94,6 +94,7 @@ const SecurityInfo = {
     }
 
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+    securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
 
     const SSLStatus = securityInfo.SSLStatus;
     if (NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {

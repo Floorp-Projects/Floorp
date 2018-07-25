@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsISSLStatus;
 interface nsIX509CertList;
 
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
@@ -22,7 +21,5 @@ interface nsITransportSecurityInfo : nsISupports {
      * If verification succeeded, this will be null.
      */
     readonly attribute nsIX509CertList failedCertChain;
-
-    readonly attribute nsISSLStatus SSLStatus;
 };
 
