@@ -4431,6 +4431,16 @@ window._gBrowser = {
         tab.finishMediaBlockTimer();
       }
     });
+
+    this.addEventListener("AudibleAutoplayMediaOccurred", (event) => {
+      let browser = event.originalTarget;
+      let tab = this.getTabForBrowser(browser);
+      if (!tab) {
+        return;
+      }
+
+      Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
+    });
   },
 };
 
