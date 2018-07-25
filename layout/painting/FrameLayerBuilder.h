@@ -20,7 +20,7 @@
 #include "Layers.h"
 #include "LayerUserData.h"
 #include "nsDisplayItemTypes.h"
-#include "MatrixStack.h"
+#include "TransformClipNode.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
