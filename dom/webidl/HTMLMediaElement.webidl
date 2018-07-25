@@ -219,3 +219,13 @@ partial interface HTMLMediaElement {
   [Pref="media.test.video-suspend"]
   boolean hasSuspendTaint();
 };
+
+/*
+ * API that exposes whether a call to HTMLMediaElement.play() would be
+ * blocked by autoplay policies; whether the promise returned by play()
+ * would be rejected with NotAllowedError.
+ */
+partial interface HTMLMediaElement {
+  [Pref="media.allowed-to-play.enabled"]
+  readonly attribute boolean allowedToPlay;
+};

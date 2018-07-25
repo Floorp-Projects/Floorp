@@ -143,7 +143,8 @@
             await once(child, "load");
             child.postMessage(test_case, window.origin);
             let result = await nextWindowMessage();
-            SimpleTest.is(result.data.played, test_case.should_play, test_case.name);
+            SimpleTest.is(result.data.allowedToPlay, test_case.should_play, "allowed - " + test_case.name);
+            SimpleTest.is(result.data.played, test_case.should_play, "played - " + test_case.name);
             child.close();
           }
           SimpleTest.finish();
