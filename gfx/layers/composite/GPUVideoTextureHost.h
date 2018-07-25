@@ -62,6 +62,8 @@ public:
                                 wr::ImageRendering aFilter,
                                 const Range<wr::ImageKey>& aImageKeys) override;
 
+  virtual bool SupportsWrNativeTexture() override;
+
 protected:
   RefPtr<TextureHost> mWrappedTextureHost;
 };

@@ -22,6 +22,7 @@ namespace wr {
 
 class RenderBufferTextureHost;
 class RenderTextureHostOGL;
+class RenderTextureHostWrapper;
 
 class RenderTextureHost
 {
@@ -33,6 +34,8 @@ public:
   virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) = 0;
   virtual void Unlock() = 0;
   virtual void ClearCachedResources() {}
+
+  virtual RenderTextureHostWrapper* AsRenderTextureHostWrapper() { return nullptr; }
 protected:
   virtual ~RenderTextureHost();
 };

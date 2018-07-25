@@ -371,6 +371,8 @@ public:
                                 wr::ImageRendering aFilter,
                                 const Range<wr::ImageKey>& aImageKeys) override;
 
+  virtual bool SupportsWrNativeTexture() override { return true; }
+
 protected:
   bool LockInternal();
   void UnlockInternal();
@@ -432,6 +434,8 @@ public:
                                 const wr::LayoutRect& aClip,
                                 wr::ImageRendering aFilter,
                                 const Range<wr::ImageKey>& aImageKeys) override;
+
+  virtual bool SupportsWrNativeTexture() override { return true; }
 
 private:
   bool EnsureTextureSource();

@@ -149,7 +149,7 @@ WebRenderTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                           const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
-  MOZ_ASSERT(mExternalImageId == aExtID);
+  MOZ_ASSERT(mExternalImageId == aExtID || SupportsWrNativeTexture());
 
   mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
@@ -169,6 +169,12 @@ WebRenderTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                          aClip,
                                          aFilter,
                                          aImageKeys);
+}
+
+bool
+WebRenderTextureHost::SupportsWrNativeTexture()
+{
+  return mWrappedTextureHost->SupportsWrNativeTexture();
 }
 
 } // namespace layers
