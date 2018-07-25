@@ -1409,8 +1409,8 @@ do_QueryObjectReferent(nsIWeakReference* aRawPtr) {
 
 
 // Not a member function so that we don't need to keep the PC live.
-static void NotifyDataChannel_m(RefPtr<nsDOMDataChannel> aChannel,
-                                RefPtr<PeerConnectionObserver> aObserver)
+static void NotifyDataChannel_m(const RefPtr<nsDOMDataChannel>& aChannel,
+                                const RefPtr<PeerConnectionObserver>& aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
   JSErrorResult rv;
@@ -3048,7 +3048,7 @@ PeerConnectionImpl::CandidateReady(const std::string& candidate,
 }
 
 static void
-SendLocalIceCandidateToContentImpl(nsWeakPtr weakPCObserver,
+SendLocalIceCandidateToContentImpl(const nsWeakPtr& weakPCObserver,
                                    uint16_t level,
                                    const std::string& mid,
                                    const std::string& candidate) {
@@ -3689,7 +3689,7 @@ void PeerConnectionImpl::GetStatsForPCObserver_s(
 void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(
     const std::string& pcHandle,
     nsresult result,
-    nsAutoPtr<RTCStatsQuery> query) {
+    const nsAutoPtr<RTCStatsQuery>& query) {
 
   // Is the PeerConnectionImpl still around?
   PeerConnectionWrapper pcw(pcHandle);

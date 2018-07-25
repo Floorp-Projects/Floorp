@@ -721,7 +721,7 @@ private:
   static void DeliverStatsReportToPCObserver_m(
       const std::string& pcHandle,
       nsresult result,
-      nsAutoPtr<RTCStatsQuery> query);
+      const nsAutoPtr<RTCStatsQuery>& query);
 
   // When ICE completes, we record a bunch of statistics that outlive the
   // PeerConnection. This is just telemetry right now, but this can also
