@@ -37,6 +37,42 @@
             .then(() => task.done());
       });
 
+      audit.define('stop before start', (task, should) => {
+        let context = new OfflineAudioContext(1, renderFrames, sampleRate);
+        let node = new ConstantSourceNode(context, {offset: 1});
+        node.connect(context.destination);
+        node.start(61 / context.sampleRate);
+        node.stop(31 / context.sampleRate);
+
+        context.startRendering()
+            .then(function(buffer) {
+                let actual = buffer.getChannelData(0);
+                should(actual,
+                       "ConstantSourceNode with stop before " +
+                           "start must output silence")
+                  .beConstantValueOf(0);
+            })
+            .then(() => task.done());
+      });
+
+      audit.define('stop equal to start', (task, should) => {
+          let context = new OfflineAudioContext(1, renderFrames, sampleRate);
+          let node = new ConstantSourceNode(context, {offset: 1});
+          node.connect(context.destination);
+          node.start(31 / context.sampleRate);
+          node.stop(31 / context.sampleRate);
+
+          context.startRendering()
+              .then(function(buffer) {
+                  let actual = buffer.getChannelData(0);
+                  should(actual,
+                         "ConstantSourceNode with stop equal to start " +
+                             " must output silence")
+                      .beConstantValueOf(0);
+          })
+          .then(() => task.done());
+      });
+
       audit.define('start/stop', (task, should) => {
         // Verify a constant source starts and stops at the correct time and has
         // the correct (fixed) value.
