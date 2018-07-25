@@ -5333,6 +5333,15 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
 
     const char* returnedStr = nullptr;
     do {
+#ifdef JS_MORE_DETERMINISTIC
+        // In order to check for differential behaviour, baselineCompile should have
+        // the same output whether --no-baseline is used or not.
+        if (fuzzingSafe) {
+            returnedStr = "skipped (fuzzing-safe)";
+            break;
+        }
+#endif
+
         AutoRealm ar(cx, script);
         if (script->hasBaselineScript()) {
             if (forceDebug && !script->baselineScript()->hasDebugInstrumentation()) {
@@ -6056,7 +6065,8 @@ gc::ZealModeHelpText),
 "  that extra boilerplate is needed afterwards to cause the VM to start\n"
 "  running the jitcode rather than staying in the interpreter:\n"
 "    baselineCompile();  for (var i=0; i<1; i++) {} ...\n"
-"  The interpreter will enter the new jitcode at the loop header.\n"),
+"  The interpreter will enter the new jitcode at the loop header unless\n"
+"  baselineCompile returned a string or threw an error.\n"),
 
     JS_FS_HELP_END
 };
