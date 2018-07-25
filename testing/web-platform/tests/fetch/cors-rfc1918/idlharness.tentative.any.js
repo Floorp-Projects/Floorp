@@ -1,24 +1,20 @@
-// META: global=window,worker
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
 
-'use strict';
+promise_test(async () => {
+  const idl = await fetch('/interfaces/cors-rfc1918.idl').then(r => r.text());
+  const html = await fetch('/interfaces/html.idl').then(r => r.text());
+  const dom = await fetch('/interfaces/dom.idl').then(r => r.text());
 
-// https://wicg.github.io/cors-rfc1918/
+  const idlArray = new IdlArray();
+  idlArray.add_idls(idl);
+  idlArray.add_dependency_idls(html);
+  idlArray.add_dependency_idls(dom);
 
-idl_test(
-  ['cors-rfc1918'],
-  ['html', 'dom'],
-  idlArray => {
-    if (self.GLOBAL.isWorker()) {
-      idlArray.add_objects({
-        WorkerGlobalScope: ['self'],
-      });
-    } else {
-      idlArray.add_objects({
-        Document: ['document'],
-      });
-    }
-  },
-  'Test CORS RFC1918 interfaces'
-);
+  const objects = {
+    Document: ['document'],
+    WorkerGlobalScope: ['self'],
+  };
+  idlArray.add_objects(objects);
+  idlArray.test();
+}, 'Test CORS RFC1918 interfaces');
