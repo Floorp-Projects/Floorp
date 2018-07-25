@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import unittest
+import filecmp
 import os
 from tempfile import mkdtemp
 import shutil
@@ -16,13 +18,188 @@ from compare_locales import mozpath
 class ContentMixin(object):
     extension = None  # OVERLOAD
 
+    @property
+    def ref(self):
+        return mozpath.join(self.tmp, "en-reference" + self.extension)
+
+    @property
+    def l10n(self):
+        return mozpath.join(self.tmp, "l10n" + self.extension)
+
     def reference(self, content):
-        self.ref = mozpath.join(self.tmp, "en-reference" + self.extension)
-        open(self.ref, "w").write(content)
+        with open(self.ref, "w") as f:
+            f.write(content)
 
     def localized(self, content):
-        self.l10n = mozpath.join(self.tmp, "l10n" + self.extension)
-        open(self.l10n, "w").write(content)
+        with open(self.l10n, "w") as f:
+            f.write(content)
+
+
+class TestNonSupported(unittest.TestCase, ContentMixin):
+    extension = '.js'
+
+    def setUp(self):
+        self.maxDiff = None
+        self.tmp = mkdtemp()
+        os.mkdir(mozpath.join(self.tmp, "merge"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+        del self.tmp
+
+    def test_good(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""foo = 'fooVal';""")
+        self.localized("""foo = 'lfoo';""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.js", ""),
+                   File(self.l10n, "l10n.js", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.js"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary': {},
+             'details': {}
+             }
+        )
+        self.assertTrue(filecmp.cmp(
+            self.l10n,
+            mozpath.join(self.tmp, "merge", 'l10n.js'))
+        )
+
+    def test_missing(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""foo = 'fooVal';""")
+        cc = ContentComparer([Observer()])
+        cc.add(File(self.ref, "en-reference.js", ""),
+               File(self.l10n, "l10n.js", ""),
+               mozpath.join(self.tmp, "merge", "l10n.js"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary': {},
+             'details': {'l10n.js': [{'missingFile': 'error'}]}
+             }
+        )
+        self.assertTrue(filecmp.cmp(
+            self.ref,
+            mozpath.join(self.tmp, "merge", 'l10n.js'))
+        )
+
+    def test_missing_ignored(self):
+
+        def ignore(*args):
+            return 'ignore'
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""foo = 'fooVal';""")
+        cc = ContentComparer([Observer(filter=ignore)])
+        cc.add(File(self.ref, "en-reference.js", ""),
+               File(self.l10n, "l10n.js", ""),
+               mozpath.join(self.tmp, "merge", "l10n.js"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary': {},
+             'details': {}
+             }
+        )
+        self.assertTrue(filecmp.cmp(
+            self.ref,
+            mozpath.join(self.tmp, "merge", 'l10n.js'))
+        )
+
+
+class TestDefines(unittest.TestCase, ContentMixin):
+    '''Test case for parsers with just CAN_COPY'''
+    extension = '.inc'
+
+    def setUp(self):
+        self.maxDiff = None
+        self.tmp = mkdtemp()
+        os.mkdir(mozpath.join(self.tmp, "merge"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+        del self.tmp
+
+    def testGood(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""#filter emptyLines
+
+#define MOZ_LANGPACK_CREATOR mozilla.org
+
+#define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Suzy Solon</em:contributor>
+
+#unfilter emptyLines
+""")
+        self.localized("""#filter emptyLines
+
+#define MOZ_LANGPACK_CREATOR mozilla.org
+
+#define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Jane Doe</em:contributor>
+
+#unfilter emptyLines
+""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.inc", ""),
+                   File(self.l10n, "l10n.inc", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.inc"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary':
+                {None: {
+                    'changed': 1,
+                    'changed_w': 2,
+                    'unchanged': 1,
+                    'unchanged_w': 1
+                }},
+             'details': {}
+             }
+        )
+        self.assertTrue(filecmp.cmp(
+            self.l10n,
+            mozpath.join(self.tmp, "merge", 'l10n.inc'))
+        )
+
+    def testMissing(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""#filter emptyLines
+
+#define MOZ_LANGPACK_CREATOR mozilla.org
+
+#define MOZ_LANGPACK_CONTRIBUTORS <em:contributor>Suzy Solon</em:contributor>
+
+#unfilter emptyLines
+""")
+        self.localized("""#filter emptyLines
+
+#define MOZ_LANGPACK_CREATOR mozilla.org
+
+#unfilter emptyLines
+""")
+        cc = ContentComparer([Observer()])
+        cc.compare(File(self.ref, "en-reference.inc", ""),
+                   File(self.l10n, "l10n.inc", ""),
+                   mozpath.join(self.tmp, "merge", "l10n.inc"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {
+                'summary':
+                    {None: {
+                        'missing': 1,
+                        'missing_w': 2,
+                        'unchanged': 1,
+                        'unchanged_w': 1
+                    }},
+                'details':
+                    {
+                        'l10n.inc': [
+                            {'missingEntity': 'MOZ_LANGPACK_CONTRIBUTORS'}
+                        ]
+                    }
+            }
+        )
+        self.assertTrue(filecmp.cmp(
+            self.ref,
+            mozpath.join(self.tmp, "merge", 'l10n.inc'))
+        )
 
 
 class TestProperties(unittest.TestCase, ContentMixin):
@@ -60,8 +237,10 @@ eff = lEff word
              'details': {}
              }
         )
-        self.assert_(not os.path.exists(mozpath.join(self.tmp, "merge",
-                                                     'l10n.properties')))
+        self.assertTrue(filecmp.cmp(
+            self.l10n,
+            mozpath.join(self.tmp, "merge", 'l10n.properties'))
+        )
 
     def testMissing(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -94,7 +273,31 @@ eff = effVal""")
         p = getParser(mergefile)
         p.readFile(mergefile)
         [m, n] = p.parse()
-        self.assertEqual(map(lambda e: e.key,  m), ["bar", "foo", "eff"])
+        self.assertEqual([e.key for e in m], ["bar", "foo", "eff"])
+
+    def test_missing_file(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.reference("""foo = fooVal
+bar = barVal
+eff = effVal""")
+        cc = ContentComparer([Observer()])
+        cc.add(File(self.ref, "en-reference.properties", ""),
+               File(self.l10n, "l10n.properties", ""),
+               mozpath.join(self.tmp, "merge", "l10n.properties"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary':
+                {None: {
+                    'missingInFiles': 3,
+                    'missing_w': 3
+                }},
+             'details': {
+                 'l10n.properties': [
+                     {'missingFile': 'error'}]
+                }
+             })
+        mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
+        self.assertTrue(filecmp.cmp(self.ref, mergefile))
 
     def testError(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -161,6 +364,29 @@ eff = leffVal
                      {'obsoleteEntity': u'other'}]
                 }
              })
+        mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
+
+    def test_obsolete_file(self):
+        self.assertTrue(os.path.isdir(self.tmp))
+        self.localized("""foo = fooVal
+eff = leffVal
+""")
+        cc = ContentComparer([Observer()])
+        cc.remove(File(self.ref, "en-reference.properties", ""),
+                  File(self.l10n, "l10n.properties", ""),
+                  mozpath.join(self.tmp, "merge", "l10n.properties"))
+        self.assertDictEqual(
+            cc.observers[0].toJSON(),
+            {'summary':
+                {},
+             'details': {
+                 'l10n.properties': [
+                     {'obsoleteFile': u'error'}]
+                }
+             })
+        mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
+        self.assertTrue(os.path.isfile(mergefile))
 
     def test_duplicate(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -193,7 +419,7 @@ bar = duplicated bar
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.properties")
-        self.assertFalse(os.path.isfile(mergefile))
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
 
 
 class TestDTD(unittest.TestCase, ContentMixin):
@@ -231,8 +457,10 @@ class TestDTD(unittest.TestCase, ContentMixin):
              'details': {}
              }
         )
-        self.assert_(
-            not os.path.exists(mozpath.join(self.tmp, "merge", 'l10n.dtd')))
+        self.assertTrue(filecmp.cmp(
+            self.l10n,
+            mozpath.join(self.tmp, "merge", 'l10n.dtd'))
+        )
 
     def testMissing(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -265,7 +493,7 @@ class TestDTD(unittest.TestCase, ContentMixin):
         p = getParser(mergefile)
         p.readFile(mergefile)
         [m, n] = p.parse()
-        self.assertEqual(map(lambda e: e.key,  m), ["bar", "foo", "eff"])
+        self.assertEqual([e.key for e in m], ["bar", "foo", "eff"])
 
     def testJunk(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -304,7 +532,7 @@ class TestDTD(unittest.TestCase, ContentMixin):
         p = getParser(mergefile)
         p.readFile(mergefile)
         [m, n] = p.parse()
-        self.assertEqual(map(lambda e: e.key,  m), ["foo", "eff", "bar"])
+        self.assertEqual([e.key for e in m], ["foo", "eff", "bar"])
 
     def test_reference_junk(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -331,6 +559,8 @@ class TestDTD(unittest.TestCase, ContentMixin):
                      {'warning': 'Parser error in en-US'}]
                 }
              })
+        mergefile = mozpath.join(self.tmp, "merge", "l10n.dtd")
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
 
     def test_reference_xml_error(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -361,6 +591,8 @@ class TestDTD(unittest.TestCase, ContentMixin):
                                  u"column 0 for bar"}]
                 }
              })
+        mergefile = mozpath.join(self.tmp, "merge", "l10n.dtd")
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
 
 
 class TestFluent(unittest.TestCase):
@@ -368,11 +600,13 @@ class TestFluent(unittest.TestCase):
 
     def reference(self, content):
         self.ref = os.path.join(self.tmp, "en-reference.ftl")
-        open(self.ref, "w").write(content)
+        with open(self.ref, "w") as f:
+            f.write(content)
 
     def localized(self, content):
         self.l10n = os.path.join(self.tmp, "l10n.ftl")
-        open(self.l10n, "w").write(content)
+        with open(self.l10n, "w") as f:
+            f.write(content)
 
     def setUp(self):
         self.tmp = mkdtemp()
@@ -414,7 +648,7 @@ bar = lBar
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMissing(self):
         self.reference("""\
@@ -454,7 +688,7 @@ eff = lEff
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testBroken(self):
         self.reference("""\
@@ -505,7 +739,7 @@ eff = lEff {
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(os.path.exists(mergepath))
+        self.assertTrue(os.path.exists(mergepath))
 
         p = getParser(mergepath)
         p.readFile(mergepath)
@@ -546,7 +780,7 @@ foo = Localized { bar }
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingReferences(self):
         self.reference("""\
@@ -603,7 +837,7 @@ baz = Localized { qux }
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingAttributes(self):
         self.reference("""
@@ -648,7 +882,7 @@ eff = lEff
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(os.path.exists(mergepath))
+        self.assertTrue(os.path.exists(mergepath))
 
         p = getParser(mergepath)
         p.readFile(mergepath)
@@ -707,7 +941,7 @@ eff = lEff
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMismatchingValues(self):
         self.reference("""
@@ -750,7 +984,7 @@ bar = lBar
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(os.path.exists(mergepath))
+        self.assertTrue(os.path.exists(mergepath))
 
         p = getParser(mergepath)
         p.readFile(mergepath)
@@ -788,7 +1022,7 @@ bar = lBar
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testMissingAttachedComment(self):
         self.reference("""\
@@ -823,7 +1057,7 @@ bar = barVal
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def testObsoleteStandaloneComment(self):
         self.reference("""\
@@ -857,7 +1091,7 @@ bar = lBar
 
         # validate merge results
         mergepath = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assert_(not os.path.exists(mergepath))
+        self.assertTrue(filecmp.cmp(self.l10n, mergepath))
 
     def test_duplicate(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -890,7 +1124,7 @@ bar = duplicated bar
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assertFalse(os.path.isfile(mergefile))
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
 
     def test_duplicate_attributes(self):
         self.assertTrue(os.path.isdir(self.tmp))
@@ -922,7 +1156,7 @@ bar = duplicated bar
                 }
              })
         mergefile = mozpath.join(self.tmp, "merge", "l10n.ftl")
-        self.assertFalse(os.path.isfile(mergefile))
+        self.assertTrue(filecmp.cmp(self.l10n, mergefile))
 
 
 if __name__ == '__main__':

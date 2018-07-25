@@ -3,10 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import unittest
 
-from compare_locales.paths import ProjectConfig, File, ProjectFiles, Matcher
+from compare_locales.paths import (
+    ProjectConfig, File, ProjectFiles, Matcher, TOMLParser
+)
 from compare_locales import mozpath
+import pytoml as toml
 
 
 class TestMatcher(unittest.TestCase):
@@ -39,6 +43,28 @@ class TestMatcher(unittest.TestCase):
         self.assertEqual(one.sub(other, 'foo/baz/one/qux/zzz'),
                          'bar/baz/other/qux/zzz')
         self.assertIsNone(one.sub(other, 'foo/baz/bez/one/qux'))
+        one = Matcher('foo/**/bar/**')
+        self.assertTrue(one.match('foo/bar/baz.qux'))
+        self.assertTrue(one.match('foo/tender/bar/baz.qux'))
+        self.assertFalse(one.match('foo/nobar/baz.qux'))
+        self.assertFalse(one.match('foo/tender/bar'))
+
+    def test_prefix(self):
+        self.assertEqual(
+            Matcher('foo/bar.file').prefix, 'foo/bar.file'
+        )
+        self.assertEqual(
+            Matcher('foo/*').prefix, 'foo/'
+        )
+        self.assertEqual(
+            Matcher('foo/**').prefix, 'foo'
+        )
+        self.assertEqual(
+            Matcher('foo/*/bar').prefix, 'foo/'
+        )
+        self.assertEqual(
+            Matcher('foo/**/bar').prefix, 'foo'
+        )
 
 
 class SetupMixin(object):
@@ -304,11 +330,11 @@ class MockProjectFiles(ProjectFiles):
 class TestProjectPaths(unittest.TestCase):
     def test_l10n_path(self):
         cfg = ProjectConfig()
+        cfg.add_environment(l10n_base='/tmp')
         cfg.locales.append('de')
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/*'
         })
-        cfg.add_environment(l10n_base='/tmp')
         mocks = {
             '/tmp/de/': [
                 'good.ftl',
@@ -339,12 +365,12 @@ class TestProjectPaths(unittest.TestCase):
 
     def test_reference_path(self):
         cfg = ProjectConfig()
+        cfg.add_environment(l10n_base='/tmp/l10n')
         cfg.locales.append('de')
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/*',
             'reference': '/tmp/reference/*'
         })
-        cfg.add_environment(l10n_base='/tmp/l10n')
         mocks = {
             '/tmp/l10n/de/': [
                 'good.ftl',
@@ -448,6 +474,97 @@ class TestProjectPaths(unittest.TestCase):
             ])
         self.assertIsNone(files.match('/tmp/fr/minor/some.ftl'))
 
+    def test_validation_mode(self):
+        cfg = ProjectConfig()
+        cfg.add_environment(l10n_base='/tmp/l10n')
+        cfg.locales.append('de')
+        cfg.add_paths({
+            'l10n': '{l10n_base}/{locale}/*',
+            'reference': '/tmp/reference/*'
+        })
+        mocks = {
+            '/tmp/l10n/de/': [
+                'good.ftl',
+                'not/subdir/bad.ftl'
+            ],
+            '/tmp/l10n/fr/': [
+                'good.ftl',
+                'not/subdir/bad.ftl'
+            ],
+            '/tmp/reference/': [
+                'ref.ftl',
+                'not/subdir/bad.ftl'
+            ],
+        }
+        # `None` switches on validation mode
+        files = MockProjectFiles(mocks, None, [cfg])
+        self.assertListEqual(
+            list(files),
+            [
+                ('/tmp/reference/ref.ftl', '/tmp/reference/ref.ftl', None,
+                 set()),
+            ])
+
+
+class MockTOMLParser(TOMLParser):
+    def __init__(self, path_data, env=None, ignore_missing_includes=False):
+        # mock, use the path as data. Yeah, not nice
+        super(MockTOMLParser, self).__init__(
+            '/tmp/base.toml',
+            env=env, ignore_missing_includes=ignore_missing_includes
+        )
+        self.data = toml.loads(path_data)
+
+    def load(self):
+        # we mocked this
+        pass
+
+
+class TestL10nMerge(unittest.TestCase):
+    # need to go through TOMLParser, as that's handling most of the
+    # environment
+    def test_merge_paths(self):
+        cfg = MockTOMLParser.parse(
+            '''\
+basepath = "."
+locales = [
+    "de",
+]
+[env]
+    l = "{l10n_base}/{locale}/"
+[[paths]]
+    reference = "reference/*"
+    l10n = "{l}*"
+''',
+            env={'l10n_base': '/tmp/l10n'}
+        )
+        mocks = {
+            '/tmp/l10n/de/': [
+                'good.ftl',
+                'not/subdir/bad.ftl'
+            ],
+            '/tmp/l10n/fr/': [
+                'good.ftl',
+                'not/subdir/bad.ftl'
+            ],
+            '/tmp/reference/': [
+                'ref.ftl',
+                'not/subdir/bad.ftl'
+            ],
+        }
+        cfg.add_global_environment(l10n_base='/tmp/l10n')
+        files = MockProjectFiles(mocks, 'de', [cfg], '/tmp/mergers')
+        self.assertListEqual(
+            list(files),
+            [
+                ('/tmp/l10n/de/good.ftl', '/tmp/reference/good.ftl',
+                 '/tmp/mergers/de/good.ftl',
+                 set()),
+                ('/tmp/l10n/de/ref.ftl', '/tmp/reference/ref.ftl',
+                 '/tmp/mergers/de/ref.ftl',
+                 set()),
+            ])
+
 
 class TestProjectConfig(unittest.TestCase):
     def test_expand_paths(self):
@@ -471,3 +588,22 @@ class TestProjectConfig(unittest.TestCase):
         child = ProjectConfig()
         pc.add_child(child)
         self.assertListEqual([pc, child], list(pc.configs))
+
+
+class TestFile(unittest.TestCase):
+    def test_hash_and_equality(self):
+        f1 = File('/tmp/full/path/to/file', 'path/to/file')
+        d = {}
+        d[f1] = True
+        self.assertIn(f1, d)
+        f2 = File('/tmp/full/path/to/file', 'path/to/file')
+        self.assertIn(f2, d)
+        f2 = File('/tmp/full/path/to/file', 'path/to/file', locale='en')
+        self.assertNotIn(f2, d)
+        # trigger hash collisions between File and non-File objects
+        self.assertEqual(hash(f1), hash(f1.localpath))
+        self.assertNotIn(f1.localpath, d)
+        f1 = File('/tmp/full/other/path', 'other/path')
+        d[f1.localpath] = True
+        self.assertIn(f1.localpath, d)
+        self.assertNotIn(f1, d)

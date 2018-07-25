@@ -12,3 +12,7 @@ class NotSupportedError(MigrationError):
 
 class UnreadableReferenceError(MigrationError):
     pass
+
+
+class InvalidTransformError(MigrationError):
+    pass
