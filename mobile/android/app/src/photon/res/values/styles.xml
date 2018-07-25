@@ -988,4 +988,17 @@
         <item name="android:textColor">@color/time_picker_header_text_selector</item>
     </style>
 
+    <style name="PhotonDatePicker" parent="@android:style/Widget.Material.DatePicker">
+        <item name="android:headerBackground">@color/dtp_header_background</item>
+        <item name="android:headerMonthTextAppearance">@style/PhotonPickerHeaderText</item>
+    </style>
+
+    <style name="PhotonCalendarView" parent="android:Widget.Material.Light.CalendarView">
+        <item name="android:dateTextAppearance">@style/PhotonDayPicker</item>
+    </style>
+
+    <style name="PhotonDayPicker" parent="android:Widget.CalendarView">
+        <item name="android:textColor">@color/calendar_view_text_selector</item>
+    </style>
+
 </resources>
