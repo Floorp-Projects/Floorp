@@ -28,8 +28,7 @@ add_task(async function() {
     const hud = toolbox.getPanel("webconsole").hud;
     const jsterm = hud.jsterm;
 
-    const jstermInput = jsterm.hud.document.querySelector(".jsterm-input-node");
-    is(jstermInput.value, "temp0", "first console variable is named temp0");
+    is(jsterm.getInputValue(), "temp0", "first console variable is named temp0");
 
     let result = await jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var">'), -1,
@@ -39,7 +38,7 @@ add_task(async function() {
     menuItem.click();
     await inspector.once("console-var-ready");
 
-    is(jstermInput.value, "temp1", "second console variable is named temp1");
+    is(jsterm.getInputValue(), "temp1", "second console variable is named temp1");
 
     result = await jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1,
