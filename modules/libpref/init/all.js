@@ -592,6 +592,14 @@ pref("media.autoplay.allow-extension-background-pages", true);
 pref("media.autoplay.enabled.user-gestures-needed", false);
 #endif
 
+// HTMLMediaElement.allowedToPlay should be exposed to web content when
+// block autoplay rides the trains to release. Until then, Nightly only.
+#ifdef NIGHTLY_BUILD
+pref("media.allowed-to-play.enabled", true);
+#else
+pref("media.allowed-to-play.enabled", false);
+#endif
+
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 10);
