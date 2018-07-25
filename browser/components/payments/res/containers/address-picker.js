@@ -144,10 +144,10 @@ export default class AddressPicker extends RichPicker {
     let nextState = {
       page: {
         id: "address-page",
-        selectedStateKey: [this.selectedStateKey],
       },
       "address-page": {
         addressFields: this.getAttribute("address-fields"),
+        selectedStateKey: [this.selectedStateKey],
       },
     };
 
