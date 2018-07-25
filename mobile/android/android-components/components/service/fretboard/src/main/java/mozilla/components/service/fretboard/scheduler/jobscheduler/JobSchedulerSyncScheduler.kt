@@ -35,6 +35,7 @@ class JobSchedulerSyncScheduler(context: Context) {
     fun schedule(jobId: Int, serviceName: ComponentName) {
         val jobInfo = JobInfo.Builder(jobId, serviceName)
             .setPeriodic(TimeUnit.DAYS.toMillis(1))
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .build()
         jobScheduler.schedule(jobInfo)
     }
