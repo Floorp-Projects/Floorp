@@ -1,6 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "HttpServer",
                                "resource://testing-common/httpd.js");
 

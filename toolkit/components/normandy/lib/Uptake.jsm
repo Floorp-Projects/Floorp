@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(
   this, "UptakeTelemetry", "resource://services-common/uptake-telemetry.js");
 
