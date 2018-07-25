@@ -82,6 +82,9 @@ struct NodeRules {
     /// Override the result type for the method.
     type_ok: Option<Rc<String>>,
 
+    /// Default value for the optional field.
+    default_value: Option<Rc<String>>,
+
     /// Stuff to add at start.
     init: Option<String>,
 
@@ -104,6 +107,9 @@ struct NodeRules {
 struct GlobalRules {
     /// The return value of each method.
     parser_type_ok: Rc<String>,
+
+    /// Default value for the optional field.
+    parser_default_value: Rc<String>,
 
     /// Header to add at the start of the .cpp file.
     cpp_header: Option<String>,
@@ -141,6 +147,7 @@ impl GlobalRules {
             .expect("Rules are not a dictionary");
 
         let mut parser_type_ok = None;
+        let mut parser_default_value = None;
         let mut cpp_header = None;
         let mut cpp_footer = None;
         let mut hpp_class_header = None;
@@ -159,6 +166,8 @@ impl GlobalRules {
                 "parser" => {
                     update_rule_rc(&mut parser_type_ok, &node_entries["type-ok"])
                         .unwrap_or_else(|_| panic!("Rule parser.type-ok must be a string"));
+                    update_rule_rc(&mut parser_default_value, &node_entries["default-value"])
+                        .unwrap_or_else(|_| panic!("Rule parser.default-value must be a string"));
                     continue;
                 }
                 "cpp" => {
@@ -219,6 +228,10 @@ impl GlobalRules {
                     }
                     "type-ok" => {
                         update_rule_rc(&mut node_rule.type_ok, node_item_entry)
+                            .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
+                    }
+                    "default-value" => {
+                        update_rule_rc(&mut node_rule.default_value, node_item_entry)
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
                     }
                     "fields" => {
@@ -310,6 +323,8 @@ impl GlobalRules {
         Self {
             parser_type_ok: parser_type_ok
                 .expect("parser.type-ok should be specified"),
+            parser_default_value: parser_default_value
+                .expect("parser.default-value should be specified"),
             cpp_header,
             cpp_footer,
             hpp_class_header,
@@ -329,6 +344,7 @@ impl GlobalRules {
             let NodeRules {
                 inherits: _,
                 type_ok,
+                default_value,
                 init,
                 append,
                 by_field,
@@ -337,6 +353,9 @@ impl GlobalRules {
             } = self.get(parent);
             if rules.type_ok.is_none() {
                 rules.type_ok = type_ok;
+            }
+            if rules.default_value.is_none() {
+                rules.default_value = default_value;
             }
             if rules.init.is_none() {
                 rules.init = init;
@@ -493,6 +512,19 @@ impl CPPExporter {
             return type_ok;
         }
         self.rules.parser_type_ok.clone()
+    }
+    fn get_default_value(&self, name: &NodeName) -> Rc<String> {
+        let rules_for_this_interface = self.rules.get(name);
+        // If the override is provided, use it.
+        if let Some(default_value) = rules_for_this_interface.default_value {
+            return default_value;
+        }
+        if let Some(type_ok) = rules_for_this_interface.type_ok {
+            if type_ok.as_str() == "Ok" {
+                return Rc::new("Ok()".to_string());
+            }
+        }
+        self.rules.parser_default_value.clone()
     }
 
     fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str) -> String {
@@ -893,12 +925,7 @@ impl CPPExporter {
         }
 
         let type_ok = self.get_type_ok(&parser.name);
-        let default_value =
-            if type_ok.as_str() == "Ok" {
-                "Ok()"
-            } else {
-                "nullptr"
-            }.to_string();
+        let default_value = self.get_default_value(&parser.name);
 
         // At this stage, thanks to deanonymization, `contents`
         // is something like `OptionalFooBar`.
