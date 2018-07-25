@@ -158,7 +158,9 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
     return null;
   }
   const content = request._response.content;
-  if (request._discardResponseBody || request._truncated || !content) {
+  if (request._discardResponseBody || request._truncated || !content || !content.size) {
+    // Do not return the stylesheet text if there is no meaningful content or if it's
+    // still loading. Let the caller handle it by doing its own separate request.
     return null;
   }
 
