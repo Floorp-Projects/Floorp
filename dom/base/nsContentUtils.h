@@ -3426,7 +3426,6 @@ private:
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;
-  static uint32_t sCookiesBehavior;
   static bool sShortcutsCustomized;
 
   static int32_t sPrivacyMaxInnerWidth;
