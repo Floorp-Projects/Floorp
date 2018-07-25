@@ -2201,10 +2201,11 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsIntRegion& aRegion,
 }
 
 static void
-InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsRect& aRect,
-                              const DisplayItemClip& aClip,
-                              const nsIntPoint& aTranslation,
-                              TransformClipNode* aTransform)
+InvalidatePostTransformRect(PaintedLayer* aLayer,
+                            const nsRect& aRect,
+                            const DisplayItemClip& aClip,
+                            const nsIntPoint& aTranslation,
+                            TransformClipNode* aTransform)
 {
   PaintedDisplayItemLayerUserData* data =
       static_cast<PaintedDisplayItemLayerUserData*>(aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
@@ -2348,11 +2349,11 @@ FrameLayerBuilder::WillEndTransaction()
           printf_stderr("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", did->mDisplayItemKey, did->mFrameList[0], t);
         }
 #endif
-        InvalidatePostTransformRegion(t,
-                                      did->mGeometry->ComputeInvalidationRegion(),
-                                      did->mClip,
-                                      GetLastPaintOffset(t),
-                                      did->mTransform);
+        InvalidatePostTransformRect(t,
+                                    did->mGeometry->ComputeInvalidationRegion(),
+                                    did->mClip,
+                                    GetLastPaintOffset(t),
+                                    did->mTransform);
       }
 
       did->ClearAnimationCompositorState();
@@ -5190,11 +5191,11 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
         printf_stderr("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
       }
 #endif
-      InvalidatePostTransformRegion(t,
-          aData->mGeometry->ComputeInvalidationRegion(),
-          aData->mClip,
-          mLayerBuilder->GetLastPaintOffset(t),
-          aData->mTransform);
+      InvalidatePostTransformRect(t,
+                                  aData->mGeometry->ComputeInvalidationRegion(),
+                                  aData->mClip,
+                                  mLayerBuilder->GetLastPaintOffset(t),
+                                  aData->mTransform);
     }
     // Clear the old geometry so that invalidation thinks the item has been
     // added this paint.
