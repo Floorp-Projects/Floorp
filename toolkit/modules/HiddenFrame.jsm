@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = ["HiddenFrame"];
 
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XUL_PAGE = "chrome://global/content/win.xul";
 

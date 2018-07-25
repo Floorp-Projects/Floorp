@@ -36,7 +36,6 @@ var EXPORTED_SYMBOLS = [ "CrashMonitor" ];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 const NOTIFICATIONS = [
   "final-ui-startup",

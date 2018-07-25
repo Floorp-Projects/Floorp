@@ -15,7 +15,6 @@ var EXPORTED_SYMBOLS = ["ExtensionChildDevToolsUtils"];
 
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Create a variable to hold the cached ThemeChangeObserver which does not
 // get created until a devtools context has been created.

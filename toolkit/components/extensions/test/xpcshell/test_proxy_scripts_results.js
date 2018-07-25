@@ -3,7 +3,6 @@
 /* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
 
 ChromeUtils.import("resource://gre/modules/Extension.jsm");
-ChromeUtils.import("resource://gre/modules/ProxyScriptContext.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
                                    "@mozilla.org/network/protocol-proxy-service;1",
