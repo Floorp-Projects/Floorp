@@ -149,6 +149,8 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// NOTE: This preference is used in unit tests. If it is removed or its default
+// value changes, please update test_sharedMap_var_caches.js accordingly.
 VARCACHE_PREF(
   "dom.webcomponents.shadowdom.report_usage",
    dom_webcomponents_shadowdom_report_usage,
@@ -157,6 +159,8 @@ VARCACHE_PREF(
 
 // Whether we disable triggering mutation events for changes to style
 // attribute via CSSOM.
+// NOTE: This preference is used in unit tests. If it is removed or its default
+// value changes, please update test_sharedMap_var_caches.js accordingly.
 VARCACHE_PREF(
   "dom.mutation-events.cssom.disabled",
    dom_mutation_events_cssom_disabled,
