@@ -117,6 +117,9 @@ struct GlobalRules {
     /// Default value for the optional field.
     parser_default_value: Rc<String>,
 
+    /// Code to append the list item.
+    parser_list_append: Option<Rc<String>>,
+
     /// Header to add at the start of the .cpp file.
     cpp_header: Option<String>,
 
@@ -156,6 +159,7 @@ impl GlobalRules {
         let mut parser_class_template = None;
         let mut parser_type_ok = None;
         let mut parser_default_value = None;
+        let mut parser_list_append = None;
         let mut cpp_header = None;
         let mut cpp_footer = None;
         let mut hpp_class_header = None;
@@ -180,6 +184,8 @@ impl GlobalRules {
                         .unwrap_or_else(|_| panic!("Rule parser.type-ok must be a string"));
                     update_rule_rc(&mut parser_default_value, &node_entries["default-value"])
                         .unwrap_or_else(|_| panic!("Rule parser.default-value must be a string"));
+                    update_rule_rc(&mut parser_list_append, &node_entries["list"]["append"])
+                        .unwrap_or_else(|_| panic!("Rule parser.list.append must be a string"));
                     continue;
                 }
                 "cpp" => {
@@ -344,6 +350,7 @@ impl GlobalRules {
                 .expect("parser.type-ok should be specified"),
             parser_default_value: parser_default_value
                 .expect("parser.default-value should be specified"),
+            parser_list_append,
             cpp_header,
             cpp_footer,
             hpp_class_header,
@@ -892,8 +899,13 @@ impl CPPExporter {
             }
         };
         let append = match rules_for_this_list.append {
-            Some(str) => format!("{}", str.reindent("        ")),
-            None => "        result->appendWithoutOrderAssumption(item);".to_string()
+            Some(str) => str.reindent("        ").newline_if_not_empty(),
+            None => {
+                match self.rules.parser_list_append {
+                    Some(ref str) => str.reindent("        ").newline_if_not_empty(),
+                    None => "".to_string(),
+                }
+            }
         };
 
 
@@ -908,8 +920,7 @@ impl CPPExporter {
 
     for (uint32_t i = 0; i < length; ++i) {{
         BINJS_MOZ_TRY_DECL(item, parse{inner}());
-{append}
-    }}
+{append}    }}
 
     MOZ_TRY(guard.done());
     return result;
