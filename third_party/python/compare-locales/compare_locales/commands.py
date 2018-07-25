@@ -4,6 +4,8 @@
 
 'Commands exposed to commandlines'
 
+from __future__ import absolute_import
+from __future__ import print_function
 import logging
 from argparse import ArgumentParser
 import os
@@ -37,6 +39,8 @@ or the all-locales file referenced by the application\'s l10n.ini."""
 Specified once, doesn't record entities. Specified twice, also drops
 missing and obsolete files. Specify thrice to hide errors and warnings and
 just show stats''')
+        parser.add_argument('--validate', action='store_true',
+                            help='Run compare-locales against reference')
         parser.add_argument('-m', '--merge',
                             help='''Use this directory to stage merged files,
 use {ab_CD} to specify a different directory for each locale''')
@@ -54,6 +58,8 @@ use {ab_CD} to specify a different directory for each locale''')
                             help="Show output for all projects unified")
         parser.add_argument('--full', action="store_true",
                             help="Compare projects that are disabled")
+        parser.add_argument('--return-zero', action="store_true",
+                            help="Return 0 regardless of l10n status")
         parser.add_argument('--clobber-merge', action="store_true",
                             default=False, dest='clobber',
                             help="""WARNING: DATALOSS.
@@ -89,12 +95,17 @@ data in a json useful for Exhibit
         logging.basicConfig()
         logging.getLogger().setLevel(logging_level)
         kwargs = vars(args)
-        # strip handeld arguments
+        # strip handled arguments
         kwargs.pop('verbose')
-        return self.handle(**kwargs)
+        return_zero = kwargs.pop('return_zero')
+        rv = self.handle(**kwargs)
+        if return_zero:
+            rv = 0
+        return rv
 
     def handle(self, config_paths, l10n_base_dir, locales,
                merge=None, defines=None, unified=False, full=False, quiet=0,
+               validate=False,
                clobber=False, data='text'):
         # using nargs multiple times in argparser totally screws things
         # up, repair that.
@@ -115,7 +126,11 @@ data in a json useful for Exhibit
         if not all_args:
             self.parser.error('l10n-base-dir not found')
         l10n_base_dir = all_args.pop(0)
-        locales.extend(all_args)
+        if validate:
+            # signal validation mode by setting locale list to [None]
+            locales = [None]
+        else:
+            locales.extend(all_args)
         # when we compare disabled projects, we set our locales
         # on all subconfigs, so deep is True.
         locales_deep = full
@@ -147,15 +162,15 @@ data in a json useful for Exhibit
                 quiet=quiet,
                 stat_observer=unified_observer,
                 merge_stage=merge, clobber_merge=clobber)
-        except (OSError, IOError), exc:
-            print "FAIL: " + str(exc)
+        except (OSError, IOError) as exc:
+            print("FAIL: " + str(exc))
             self.parser.exit(2)
         if unified:
             observers = [unified_observer]
 
         rv = 0
         for observer in observers:
-            print observer.serialize(type=data)
+            print(observer.serialize(type=data))
             # summary is a dict of lang-summary dicts
             # find out if any of our results has errors, return 1 if so
             if rv > 0:

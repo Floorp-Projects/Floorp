@@ -1,12 +1,11 @@
-#!/usr/bin/env python
 # coding=utf8
 
 import os
-import sys
-import json
 import logging
 import argparse
+from contextlib import contextmanager
 import importlib
+import sys
 
 import hglib
 from hglib.util import b
@@ -14,7 +13,15 @@ from hglib.util import b
 from fluent.migrate.context import MergeContext
 from fluent.migrate.errors import MigrationError
 from fluent.migrate.changesets import convert_blame_to_changesets
-from blame import Blame
+from fluent.migrate.blame import Blame
+
+
+@contextmanager
+def dont_write_bytecode():
+    _dont_write_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    yield
+    sys.dont_write_bytecode = _dont_write_bytecode
 
 
 def main(lang, reference_dir, localization_dir, migrations, dry_run):
@@ -82,13 +89,17 @@ def main(lang, reference_dir, localization_dir, migrations, dry_run):
                 author=author
             )
 
-            print('    Committing changeset: {}'.format(message))
+            print('  Committing changeset: {}'.format(message))
             if not dry_run:
-                client.commit(
-                    b(message), user=b(author), addremove=True
-                )
+                try:
+                    client.commit(
+                        b(message), user=b(author), addremove=True
+                    )
+                except hglib.error.CommandError as err:
+                    print('    WARNING: hg commit failed ({})'.format(err))
 
-if __name__ == '__main__':
+
+def cli():
     parser = argparse.ArgumentParser(
         description='Migrate translations to FTL.'
     )
@@ -119,10 +130,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Don't byte-compile migrations.
+    # They're not our code, and infrequently run
+    with dont_write_bytecode():
+        migrations = map(importlib.import_module, args.migrations)
+
     main(
         lang=args.lang,
         reference_dir=args.reference_dir,
         localization_dir=args.localization_dir,
-        migrations=map(importlib.import_module, args.migrations),
+        migrations=migrations,
         dry_run=args.dry_run
     )
+
+
+if __name__ == '__main__':
+    cli()

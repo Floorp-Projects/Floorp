@@ -1,3 +1,7 @@
+# coding=utf8
+from __future__ import unicode_literals
+from __future__ import absolute_import
+
 import argparse
 import json
 import os
@@ -15,9 +19,9 @@ class Blame(object):
 
     def attribution(self, file_paths):
         args = cmdbuilder(
-            b('annotate'), *map(b, file_paths), template='json',
+            b('annotate'), *[b(p) for p in file_paths], template='json',
             date=True, user=True, cwd=self.client.root())
-        blame_json = ''.join(self.client.rawcommand(args))
+        blame_json = self.client.rawcommand(args)
         file_blames = json.loads(blame_json)
 
         for file_blame in file_blames:
@@ -36,7 +40,7 @@ class Blame(object):
 
         self.blame[path] = {}
 
-        parser.readFile(os.path.join(self.client.root(), path))
+        self.readFile(parser, path)
         entities, emap = parser.parse()
         for e in entities:
             if isinstance(e, Junk):
@@ -53,6 +57,10 @@ class Blame(object):
                 self.users.append(user)
             userid = self.users.index(user)
             self.blame[path][e.key] = [userid, timestamp]
+
+    def readFile(self, parser, path):
+        parser.readFile(os.path.join(self.client.root().decode('utf-8'), path))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

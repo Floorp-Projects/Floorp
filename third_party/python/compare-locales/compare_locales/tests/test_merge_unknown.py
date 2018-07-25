@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+import six
 
 from compare_locales.merge import merge_channels, MergeNotSupportedError
 
@@ -17,5 +18,5 @@ foo = Foo 1
 foo = Foo 2
 """)
         pattern = "Unsupported file format \(foo\.unknown\)\."
-        with self.assertRaisesRegexp(MergeNotSupportedError, pattern):
+        with six.assertRaisesRegex(self, MergeNotSupportedError, pattern):
             merge_channels(self.name, *channels)

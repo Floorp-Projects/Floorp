@@ -1,9 +1,11 @@
 # coding=utf8
 from __future__ import unicode_literals
+from __future__ import absolute_import
+
+import textwrap
 
 import fluent.syntax.ast as FTL
-from fluent.syntax.parser import FluentParser
-from fluent.util import ftl
+from fluent.syntax.parser import FluentParser, FTLParserStream
 
 
 fluent_parser = FluentParser(with_spans=False)
@@ -31,8 +33,9 @@ def ftl_resource_to_json(code):
     return fluent_parser.parse(ftl(code)).to_json()
 
 
-def ftl_message_to_json(code):
-    return fluent_parser.parse_entry(ftl(code)).to_json()
+def ftl_pattern_to_json(code):
+    ps = FTLParserStream(ftl(code))
+    return fluent_parser.get_pattern(ps).to_json()
 
 
 def to_json(merged_iter):
@@ -43,6 +46,7 @@ def to_json(merged_iter):
 
 
 LOCALIZABLE_ENTRIES = (FTL.Message, FTL.Term)
+
 
 def get_message(body, ident):
     """Get message called `ident` from the `body` iterable."""
@@ -56,3 +60,43 @@ def get_transform(body, ident):
     for transform in body:
         if transform.id.name == ident:
             return transform
+
+
+def ftl(code):
+    """Nicer indentation for FTL code.
+
+    The code returned by this function is meant to be compared against the
+    output of the FTL Serializer.  The input code will end with a newline to
+    match the output of the serializer.
+    """
+
+    # The code might be triple-quoted.
+    code = code.lstrip('\n')
+
+    return textwrap.dedent(code)
+
+
+def fold(fun, node, init):
+    """Reduce `node` to a single value using `fun`.
+
+    Apply `fun` against an accumulator and each subnode of `node` (in postorder
+    traversal) to reduce it to a single value.
+    """
+
+    def fold_(vals, acc):
+        if not vals:
+            return acc
+
+        head = list(vals)[0]
+        tail = list(vals)[1:]
+
+        if isinstance(head, FTL.BaseNode):
+            acc = fold(fun, head, acc)
+        if isinstance(head, list):
+            acc = fold_(head, acc)
+        if isinstance(head, dict):
+            acc = fold_(head.values(), acc)
+
+        return fold_(tail, fun(acc, head))
+
+    return fold_(vars(node).values(), init)
