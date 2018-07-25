@@ -392,6 +392,17 @@ var UnselectedTabHoverObserver = {
 };
 UnselectedTabHoverObserver.init();
 
+
+var AudibleAutoplayObserver = {
+  init() {
+    addEventListener("AudibleAutoplayMediaOccurred", this);
+  },
+  handleEvent(event) {
+    sendAsyncMessage("AudibleAutoplayMediaOccurred");
+  }
+};
+AudibleAutoplayObserver.init();
+
 addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory() {
   let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
   if (!sessionHistory) {
