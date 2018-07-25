@@ -94,6 +94,17 @@ struct NodeRules {
     /// Extra arguments passed to the method when parsing this interface.
     extra_args: Option<Rc<String>>,
 
+    /// Things to add before calling the method when the optional field has
+    /// value.
+    some_before: Option<Rc<String>>,
+
+    /// Things to add after calling the method when the optional field has
+    /// value.
+    some_after: Option<Rc<String>>,
+
+    /// Replace the assignment when the option field has no value.
+    none_replace: Option<Rc<String>>,
+
     /// Stuff to add at start.
     init: Option<String>,
 
@@ -249,6 +260,16 @@ impl GlobalRules {
                         update_rule_rc(&mut node_rule.extra_args, node_item_entry)
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
                     }
+                    "some" => {
+                        update_rule_rc(&mut node_rule.some_before, &node_item_entry["before"])
+                            .unwrap_or_else(|()| panic!("Rule {}.{}.before must be a string", node_key, as_string));
+                        update_rule_rc(&mut node_rule.some_after, &node_item_entry["after"])
+                            .unwrap_or_else(|()| panic!("Rule {}.{}.after must be a string", node_key, as_string));
+                    }
+                    "none" => {
+                        update_rule_rc(&mut node_rule.none_replace, &node_item_entry["replace"])
+                            .unwrap_or_else(|()| panic!("Rule {}.{}.replace must be a string", node_key, as_string));
+                    }
                     "init" => {
                         update_rule(&mut node_rule.init, node_item_entry)
                             .unwrap_or_else(|()| panic!("Rule {}.{} must be a string", node_key, as_string));
@@ -394,6 +415,9 @@ impl GlobalRules {
                 default_value,
                 extra_params,
                 extra_args,
+                some_before,
+                some_after,
+                none_replace,
                 init,
                 append,
                 by_field,
@@ -411,6 +435,15 @@ impl GlobalRules {
             }
             if rules.extra_args.is_none() {
                 rules.extra_args = extra_args;
+            }
+            if rules.some_before.is_none() {
+                rules.some_before = some_before;
+            }
+            if rules.some_after.is_none() {
+                rules.some_after = some_after;
+            }
+            if rules.none_replace.is_none() {
+                rules.none_replace = none_replace;
             }
             if rules.init.is_none() {
                 rules.init = init;
@@ -1151,10 +1184,10 @@ impl CPPExporter {
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
     if (kind == BinKind::{null}) {{
-        result = {default_value};
+{none_block}
     }} else if (kind == BinKind::{kind}) {{
         const auto start = tokenizer_->offset();
-{call}
+{before}{call}{after}
     }} else {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
@@ -1173,8 +1206,22 @@ impl CPPExporter {
                                                 &extra_args,
                                                 MethodCallKind::AlwaysVar)
                         .reindent("        "),
+                    before = rules_for_this_node.some_before
+                        .map_or_else(|| "".to_string(),
+                                     |s| s
+                                     .reindent("        ")
+                                     .newline_if_not_empty()),
+                    after = rules_for_this_node.some_after
+                        .map_or_else(|| "".to_string(),
+                                     |s| s
+                                     .reindent("        ")
+                                     .newline_if_not_empty()),
+                    none_block = rules_for_this_node.none_replace
+                        .map_or_else(|| format!("result = {default_value};",
+                                                default_value = default_value)
+                                            .reindent("        "),
+                                     |s| s.reindent("        ")),
                     type_ok = type_ok,
-                    default_value = default_value,
                     kind = parser.elements.to_cpp_enum_case(),
                 ));
             }
@@ -1190,10 +1237,10 @@ impl CPPExporter {
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
     if (kind == BinKind::{null}) {{
-        result = {default_value};
+{none_block}
     }} else {{
         const auto start = tokenizer_->offset();
-{call}
+{before}{call}{after}
     }}
     MOZ_TRY(guard.done());
 
@@ -1208,8 +1255,22 @@ impl CPPExporter {
                                                         &extra_args,
                                                         MethodCallKind::AlwaysVar)
                                 .reindent("        "),
+                            before = rules_for_this_node.some_before
+                                .map_or_else(|| "".to_string(),
+                                             |s| s
+                                             .reindent("        ")
+                                             .newline_if_not_empty()),
+                            after = rules_for_this_node.some_after
+                                .map_or_else(|| "".to_string(),
+                                             |s| s
+                                             .reindent("        ")
+                                             .newline_if_not_empty()),
+                            none_block = rules_for_this_node.none_replace
+                                .map_or_else(|| format!("result = {default_value};",
+                                                        default_value = default_value)
+                                                    .reindent("        "),
+                                             |s| s.reindent("        ")),
                             type_ok = type_ok,
-                            default_value = default_value,
                             null = self.syntax.get_null_name().to_cpp_enum_case(),
                         ));
                     }
