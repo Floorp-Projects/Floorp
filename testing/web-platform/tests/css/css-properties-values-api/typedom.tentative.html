@@ -2,7 +2,7 @@
 <link rel="author" title="Anders Hartvoll Ruud" href="andruud@chromium.org">
 <!-- TODO(andruud): Add Typed OM details to spec and link to it here. -->
 <link rel="help" href="https://drafts.css-houdini.org/css-properties-values-api-1/#supported-syntax-strings" />
-<meta name="assert" content="TODO" />
+<meta name="assert" content="Verifies that registered custom properties interact correctly with CSS Typed OM" />
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
@@ -133,5 +133,35 @@ test(function(){
     assert_computed_type(gen_prop('thing1 | THING2', 'thing1'), null, CSSKeywordValue);
     assert_computed_type(gen_prop('thing1 | THING2 | <url>', 'url(fail)'), 'THING2', CSSKeywordValue);
 }, 'Computed ident is reified as CSSKeywordValue');
+
+test(function(){
+    assert_computed_type(gen_prop('<length>+', '10px 20px'), null, CSSUnitValue);
+    assert_computed_type(gen_prop('<length>+', '0px 0px'), '10px 20px', CSSUnitValue);
+}, 'First computed value correctly reified in space-separated list');
+
+test(function(){
+    assert_computed_type(gen_prop('<length>#', '10px, 20px'), null, CSSUnitValue);
+    assert_computed_type(gen_prop('<length>#', '0px, 0px'), '10px, 20px', CSSUnitValue);
+}, 'First computed value correctly reified in comma-separated list');
+
+test(function(){
+    let name = gen_prop('<length>+', '10px 20px');
+    assert_equals(target.computedStyleMap().getAll(name).length, 2);
+    assert_true(target.computedStyleMap().getAll(name).every(x => x instanceof CSSUnitValue));
+
+    target.attributeStyleMap.set(name, '10px 20px 30px');
+    assert_equals(target.computedStyleMap().getAll(name).length, 3);
+    assert_true(target.computedStyleMap().getAll(name).every(x => x instanceof CSSUnitValue));
+}, 'All computed values correctly reified in space-separated list');
+
+test(function(){
+    let name = gen_prop('<length>#', '10px, 20px');
+    assert_equals(target.computedStyleMap().getAll(name).length, 2);
+    assert_true(target.computedStyleMap().getAll(name).every(x => x instanceof CSSUnitValue));
+
+    target.attributeStyleMap.set(name, '10px, 20px, 30px');
+    assert_equals(target.computedStyleMap().getAll(name).length, 3);
+    assert_true(target.computedStyleMap().getAll(name).every(x => x instanceof CSSUnitValue));
+}, 'All computed values correctly reified in comma-separated list');
 
 </script>
