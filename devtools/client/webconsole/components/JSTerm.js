@@ -574,13 +574,10 @@ class JSTerm extends Component {
    *         received.
    */
   requestEvaluation(str, options = {}) {
-    const toolbox = gDevTools.getToolbox(this.hud.owner.target);
-
     // Send telemetry event. If we are in the browser toolbox we send -1 as the
     // toolbox session id.
-    this._telemetry.recordEvent("devtools.main", "execute_js", "webconsole", null, {
-      "lines": str.split(/\n/).length,
-      "session_id": toolbox ? toolbox.sessionId : -1
+    this.props.serviceContainer.recordTelemetryEvent("execute_js", {
+      "lines": str.split(/\n/).length
     });
 
     let frameActor = null;
