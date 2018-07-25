@@ -70,6 +70,16 @@ class SrcNote {
             Count
         };
     };
+    // SRC_TRY: Source note for JSOP_TRY.
+    class Try {
+      public:
+        enum Fields {
+            // The offset of the JSOP_GOTO at the end of the try block from
+            // JSOP_TRY.
+            EndOfTryJumpOffset,
+            Count
+        };
+    };
 };
 
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
@@ -94,8 +104,7 @@ class SrcNote {
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \
-    M(SRC_TRY,          "try",         1)  /* JSOP_TRY, offset points to goto at the end of the    \
-                                              try block. */                                        \
+    M(SRC_TRY,          "try",         SrcNote::Try::Count) \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
