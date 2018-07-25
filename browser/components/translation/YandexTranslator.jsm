@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = [ "YandexTranslator" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://gre/modules/Http.jsm");

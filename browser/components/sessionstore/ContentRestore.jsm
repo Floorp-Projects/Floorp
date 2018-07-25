@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ContentRestore"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
