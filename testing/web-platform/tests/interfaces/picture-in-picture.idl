@@ -4,18 +4,19 @@
 // See: https://wicg.github.io/picture-in-picture/
 
 partial interface HTMLVideoElement {
-  [NewObject] Promise<PictureInPictureWindow> requestPictureInPicture();
+  Promise<PictureInPictureWindow> requestPictureInPicture();
 
   attribute EventHandler onenterpictureinpicture;
   attribute EventHandler onleavepictureinpicture;
 
-  [CEReactions] attribute boolean disablePictureInPicture;
+  [CEReactions]
+  attribute boolean disablePictureInPicture;
 };
 
 partial interface Document {
   readonly attribute boolean pictureInPictureEnabled;
 
-  [NewObject] Promise<void> exitPictureInPicture();
+  Promise<void> exitPictureInPicture();
 };
 
 partial interface DocumentOrShadowRoot {
