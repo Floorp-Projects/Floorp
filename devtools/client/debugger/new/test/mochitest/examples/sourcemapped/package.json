@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "Rebuild assets for babel's test fixtures",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack -w"
+    "build": "node ./build.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +20,8 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "lodash": "^4.17.5"
+    "lodash": "^4.17.5",
+    "rollup": "^0.63.0",
+    "rollup-plugin-babel": "^3.0.7"
   }
 }

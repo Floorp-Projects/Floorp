@@ -991,8 +991,7 @@
       <handler event="popupshowing"><![CDATA[
         // Force the panel to have the width of the searchbar rather than
         // the width of the textfield.
-        let DOMUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+        let DOMUtils = window.windowUtils;
         let textboxRect = DOMUtils.getBoundsWithoutFlushing(this.mInput);
         let inputRect = DOMUtils.getBoundsWithoutFlushing(this.mInput.inputField);
 
@@ -1442,8 +1441,7 @@
           if (this._textbox) {
             // We can't get a reliable value for the popup width without flushing,
             // but the popup width won't change if the textbox width doesn't.
-            let DOMUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+            let DOMUtils = window.windowUtils;
             let textboxWidth =
               DOMUtils.getBoundsWithoutFlushing(this._textbox).width;
             // We can return early if neither the list of engines nor the panel
@@ -1482,9 +1480,7 @@
           // This is likely because the clientWidth getter rounds the value, but
           // the panel's border width is not an integer.
           // As a workaround, decrement the width if the scale is not an integer.
-          let scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils)
-                            .screenPixelsPerCSSPixel;
+          let scale = window.windowUtils.screenPixelsPerCSSPixel;
           if (Math.floor(scale) != scale) {
             --panelWidth;
           }

@@ -148,7 +148,11 @@ Message& Message::operator=(Message&& other) {
 void Message::CopyFrom(const Message& other) {
   Pickle::CopyFrom(other);
 #if defined(OS_POSIX)
-  file_descriptor_set_ = other.file_descriptor_set_;
+  MOZ_ASSERT(!file_descriptor_set_);
+  if (other.file_descriptor_set_) {
+    file_descriptor_set_ = new FileDescriptorSet;
+    file_descriptor_set_->CopyFrom(*other.file_descriptor_set_);
+  }
 #endif
 }
 

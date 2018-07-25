@@ -44,9 +44,7 @@ function theTest() {
 
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
-var gWindowUtils = SpecialPowers.wrap(window)
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
+var gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
 var nativeMouseDown;
 var nativeMouseUp;

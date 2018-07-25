@@ -11,7 +11,7 @@ DevToolsModules(
     'buildGeneratedBindingList.js',
     'filtering.js',
     'findGeneratedBindingFromPosition.js',
-    'getGeneratedLocationRanges.js',
+    'getApplicableBindingsForOriginalPosition.js',
     'index.js',
     'locColumn.js',
     'mappingContains.js',

@@ -5078,3 +5078,184 @@ UnaryArithIRGenerator::tryAttachNumber()
     writer.returnFromIC();
     return true;
 }
+
+BinaryArithIRGenerator::BinaryArithIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                                               JSOp op, HandleValue lhs, HandleValue rhs, HandleValue res)
+  : IRGenerator(cx, script, pc, CacheKind::BinaryArith, mode),
+    op_(op),
+    lhs_(lhs),
+    rhs_(rhs),
+    res_(res)
+{ }
+
+void
+BinaryArithIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.opcodeProperty("op", op_);
+        sp.valueProperty("rhs", rhs_);
+        sp.valueProperty("lhs", lhs_);
+    }
+#endif
+}
+
+bool
+BinaryArithIRGenerator::tryAttachStub()
+{
+
+    if (tryAttachInt32())
+        return true;
+    if (tryAttachDouble())
+        return true;
+    if (tryAttachBooleanWithInt32())
+        return true;
+
+    trackAttached(IRGenerator::NotAttached);
+    return false;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachDouble()
+{
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_MUL)
+        return false;
+
+    if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    writer.guardIsNumber(lhsId);
+    writer.guardIsNumber(rhsId);
+
+    switch (op_) {
+       case JSOP_ADD:
+        writer.doubleAddResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Add");
+        break;
+      case JSOP_SUB:
+        writer.doubleSubResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Sub");
+        break;
+      case JSOP_MUL:
+        writer.doubleMulResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Mul");
+        break;
+      default:
+        MOZ_CRASH("Unhandled Op");
+    }
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachInt32()
+{
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
+        op_ != JSOP_BITXOR && op_ != JSOP_MUL)
+    {
+        return false;
+    }
+
+    if (!lhs_.isInt32() || !rhs_.isInt32())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    Int32OperandId lhsIntId = writer.guardIsInt32(lhsId);
+    Int32OperandId rhsIntId = writer.guardIsInt32(rhsId);
+
+    switch (op_) {
+      case JSOP_ADD:
+        writer.int32AddResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Add");
+        break;
+      case JSOP_SUB:
+        writer.int32SubResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Sub");
+        break;
+      case JSOP_MUL:
+        writer.int32MulResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Mul");
+        break;
+      case JSOP_BITOR:
+        writer.int32BitOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitAnd");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachBooleanWithInt32()
+{
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
+        op_ != JSOP_BITXOR && op_!= JSOP_MUL)
+        return false;
+
+    if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
+        !(rhs_.isBoolean() && (lhs_.isBoolean() || lhs_.isInt32())))
+        return false;
+
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    Int32OperandId lhsIntId = (lhs_.isBoolean() ? writer.guardIsBoolean(lhsId)
+                                                : writer.guardIsInt32(lhsId));
+    Int32OperandId rhsIntId = (rhs_.isBoolean() ? writer.guardIsBoolean(rhsId)
+                                                : writer.guardIsInt32(rhsId));
+
+    switch (op_) {
+      case JSOP_ADD:
+        writer.int32AddResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Add");
+        break;
+      case JSOP_SUB:
+        writer.int32SubResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Sub");
+        break;
+      case JSOP_MUL:
+        writer.int32MulResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Mul");
+        break;
+      case JSOP_BITOR:
+        writer.int32BitOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitAnd");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
+}

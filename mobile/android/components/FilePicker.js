@@ -168,7 +168,7 @@ FilePicker.prototype = {
   show: function() {
     if (this._domWin) {
       this.fireDialogEvent(this._domWin, "DOMWillOpenModalDialog");
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.enterModalState();
     }
 
@@ -179,7 +179,7 @@ FilePicker.prototype = {
     delete this._promptActive;
 
     if (this._domWin) {
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.leaveModalState();
       this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
@@ -275,8 +275,7 @@ FilePicker.prototype = {
         return;
       let event = aDomWin.document.createEvent("Events");
       event.initEvent(aEventName, true, true);
-      let winUtils = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = aDomWin.windowUtils;
       winUtils.dispatchEventToChromeOnly(aDomWin, event);
     } catch (ex) {
     }

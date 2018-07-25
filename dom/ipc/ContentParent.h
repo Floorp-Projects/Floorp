@@ -1268,6 +1268,10 @@ public:
 
   nsresult SaveRecording(nsIFile* aFile, bool* aRetval);
 
+  bool IsRecordingOrReplaying() const {
+    return mRecordReplayState != eNotRecordingOrReplaying;
+  }
+
 private:
 
   // If you add strong pointers to cycle collected objects here, be sure to

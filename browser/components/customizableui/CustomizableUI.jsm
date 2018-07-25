@@ -4522,7 +4522,7 @@ OverflowableToolbar.prototype = {
 
       if (!shouldMoveAllItems && minSize) {
         if (!targetWidth) {
-          let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+          let dwu = win.windowUtils;
           targetWidth = Math.floor(dwu.getBoundsWithoutFlushing(this._target).width);
         }
         if (targetWidth <= minSize) {

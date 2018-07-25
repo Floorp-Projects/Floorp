@@ -81,9 +81,7 @@ function openContextMenu() {
     menu = win.document.getElementById("menu");
     var screenX = menu.boxObject.screenX;
     var screenY = menu.boxObject.screenY;
-    var utils =
-        win.QueryInterface(Ci.nsIInterfaceRequestor).
-            getInterface(Ci.nsIDOMWindowUtils);
+    var utils = win.windowUtils;
 
     utils.sendMouseEvent("contextmenu", mouseX, mouseY, 2, 0, 0);
 

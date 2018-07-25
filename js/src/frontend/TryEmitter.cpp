@@ -81,8 +81,11 @@ TryEmitter::emitTryEnd()
     }
 
     // Source note points to the jump at the end of the try block.
-    if (!bce_->setSrcNoteOffset(noteIndex_, 0, bce_->offset() - tryStart_ + JSOP_TRY_LENGTH))
+    if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
+                                bce_->offset() - tryStart_ + JSOP_TRY_LENGTH))
+    {
         return false;
+    }
 
     // Emit jump over catch and/or finally.
     if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_))

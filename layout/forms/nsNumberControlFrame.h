@@ -162,10 +162,9 @@ public:
 private:
 
   nsITextControlFrame* GetTextFieldFrame();
-  nsresult MakeAnonymousElement(Element** aResult,
-                                nsTArray<ContentInfo>& aElements,
-                                nsAtom* aTagName,
-                                CSSPseudoElementType aPseudoType);
+  already_AddRefed<Element> MakeAnonymousElement(Element* aParent,
+                                                 nsAtom* aTagName,
+                                                 CSSPseudoElementType aPseudoType);
 
   class SyncDisabledStateEvent;
   friend class SyncDisabledStateEvent;

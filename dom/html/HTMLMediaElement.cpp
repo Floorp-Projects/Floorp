@@ -7372,28 +7372,25 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
 EventHandlerNonNull*
 HTMLMediaElement::GetOnencrypted()
 {
-  return EventTarget::GetEventHandler(nsGkAtoms::onencrypted, EmptyString());
+  return EventTarget::GetEventHandler(nsGkAtoms::onencrypted);
 }
 
 void
 HTMLMediaElement::SetOnencrypted(EventHandlerNonNull* aCallback)
 {
-  EventTarget::SetEventHandler(
-    nsGkAtoms::onencrypted, EmptyString(), aCallback);
+  EventTarget::SetEventHandler(nsGkAtoms::onencrypted, aCallback);
 }
 
 EventHandlerNonNull*
 HTMLMediaElement::GetOnwaitingforkey()
 {
-  return EventTarget::GetEventHandler(nsGkAtoms::onwaitingforkey,
-                                      EmptyString());
+  return EventTarget::GetEventHandler(nsGkAtoms::onwaitingforkey);
 }
 
 void
 HTMLMediaElement::SetOnwaitingforkey(EventHandlerNonNull* aCallback)
 {
-  EventTarget::SetEventHandler(
-    nsGkAtoms::onwaitingforkey, EmptyString(), aCallback);
+  EventTarget::SetEventHandler(nsGkAtoms::onwaitingforkey, aCallback);
 }
 
 void

@@ -30,8 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
     is(o, XPCNativeWrapper.unwrap(o), "unwrap on a random object returns it");
 
     var win = $('ifr').contentWindow;
-    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
+    var utils = window.windowUtils;
     is(utils.getClassName(win), "Proxy", "win is a Proxy");
     ok("x" in XPCNativeWrapper.unwrap(win), "actually unwrapped");
     is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "Proxy",

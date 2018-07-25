@@ -156,7 +156,9 @@ IsClusterExtender(uint32_t aCh, uint8_t aCategory)
     return ((aCategory >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
              aCategory <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) ||
             (aCh >= 0x200c && aCh <= 0x200d) || // ZWJ, ZWNJ
-            (aCh >= 0xff9e && aCh <= 0xff9f));  // katakana sound marks
+            (aCh >= 0xff9e && aCh <= 0xff9f) || // katakana sound marks
+            (aCh >= 0x1F3FB && aCh <= 0x1F3FF) || // fitzpatrick skin tone modifiers
+            (aCh >= 0xe0020 && aCh <= 0xe007f)); // emoji (flag) tag characters
 }
 
 enum HSType {

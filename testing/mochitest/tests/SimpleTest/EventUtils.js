@@ -1283,9 +1283,7 @@ function _getDOMWindowUtils(aWindow = window)
   // If documentURIObject exists or `window` is a stub object, we're in
   // a chrome scope, so don't bother trying to go through SpecialPowers.
   if (!window.document || window.document.documentURIObject) {
-    return aWindow
-        .QueryInterface(_EU_Ci.nsIInterfaceRequestor)
-        .getInterface(_EU_Ci.nsIDOMWindowUtils);
+    return aWindow.windowUtils;
   }
 
   // we need parent.SpecialPowers for:
@@ -1300,9 +1298,7 @@ function _getDOMWindowUtils(aWindow = window)
   }
 
   // TODO: this is assuming we are in chrome space
-  return aWindow
-      .QueryInterface(_EU_Ci.nsIInterfaceRequestor)
-      .getInterface(_EU_Ci.nsIDOMWindowUtils);
+  return aWindow.windowUtils;
 }
 
 function _defineConstant(name, value) {

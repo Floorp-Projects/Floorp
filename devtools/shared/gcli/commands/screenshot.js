@@ -300,8 +300,7 @@ function createScreenshotData(document, args) {
 
   // Only adjust for scrollbars when considering the full window
   if (!args.selector) {
-    const winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    const winUtils = window.windowUtils;
     const scrollbarHeight = {};
     const scrollbarWidth = {};
     winUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);

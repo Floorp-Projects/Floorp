@@ -58,7 +58,7 @@ function getFrameId(window) {
     return 0;
   }
 
-  let utils = window.getInterface(Ci.nsIDOMWindowUtils);
+  let utils = window.windowUtils;
   return utils.outerWindowID;
 }
 

@@ -43,8 +43,7 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
     if (this.useDesktopMode === aUse) {
       return;
     }
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.setDesktopModeViewport(aUse);
     this._useDesktopMode = aUse;
   }

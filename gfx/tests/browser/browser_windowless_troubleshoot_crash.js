@@ -25,9 +25,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
 
   await onLoaded;
 
-  let winUtils = webNav.document.defaultView.
-                        QueryInterface(Ci.nsIInterfaceRequestor).
-                        getInterface(Ci.nsIDOMWindowUtils);
+  let winUtils = webNav.document.defaultView.windowUtils;
   try {
     is(winUtils.layerManagerType, "Basic", "windowless browser's layerManagerType should be 'Basic'");
   } catch (e) {

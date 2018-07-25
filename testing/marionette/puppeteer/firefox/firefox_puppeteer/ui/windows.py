@@ -52,9 +52,7 @@ class Windows(BaseLib):
 
                   let win = Services.focus.activeWindow;
                   if (win) {
-                    return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                              .outerWindowID.toString();
+                    return win.windowUtils.outerWindowID.toString();
                   }
 
                   return null;

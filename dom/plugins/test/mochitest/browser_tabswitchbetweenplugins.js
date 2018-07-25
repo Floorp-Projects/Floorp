@@ -2,8 +2,7 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 
 function waitForPluginVisibility(browser, shouldBeVisible, errorMessage) {
   return new Promise((resolve, reject) => {
-    let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
+    let windowUtils = window.windowUtils;
     let lastTransactionId = windowUtils.lastTransactionId;
     let listener = async (event) => {
       let visibility = await ContentTask.spawn(browser, null, async function() {

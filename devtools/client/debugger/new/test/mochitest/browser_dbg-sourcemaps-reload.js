@@ -25,33 +25,29 @@ function getBreakpoints(dbg) {
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
 
-  dump(`>> meh`);
+  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload.html", "v1.js");
 
-  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload.html", "v1");
+  await selectSource(dbg, "v1.js");
+  await addBreakpoint(dbg, "v1.js", 6);
 
-  dump(`>> select v1`);
-  await selectSource(dbg, "v1");
-  await addBreakpoint(dbg, "v1", 6);
   let breakpoint = getBreakpoints(dbg)[0];
   is(breakpoint.location.line, 6);
 
   let syncBp = waitForDispatch(dbg, "SYNC_BREAKPOINT");
-  await reload(dbg);
+  await navigate(dbg, "doc-sourcemaps-reload2.html", "v1.js");
 
-  await waitForPaused(dbg);
   await syncBp;
-  assertDebugLine(dbg, 72);
   breakpoint = getBreakpoints(dbg)[0];
 
   is(breakpoint.location.line, 9);
   is(breakpoint.generatedLocation.line, 73);
 
-  await resume(dbg);
-  syncBp = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
-  await selectSource(dbg, "v1");
-  await addBreakpoint(dbg, "v1", 13);
+  await addBreakpoint(dbg, "v1.js", 13);
 
-  await reload(dbg);
+  // NOTE: When we reload, the `foo` function and the
+  // module is no longer 13 lines long
+  syncBp = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
+  await navigate(dbg, "doc-sourcemaps-reload3.html", "v1.js");
   await waitForSource(dbg, "v1");
   await syncBp;
 

@@ -184,8 +184,7 @@ parentProcessTargetPrototype.preNest = function() {
   const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
     const win = e.getNext();
-    const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = win.windowUtils;
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
   }
@@ -199,8 +198,7 @@ parentProcessTargetPrototype.postNest = function(nestData) {
   const e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
     const win = e.getNext();
-    const windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    const windowUtils = win.windowUtils;
     windowUtils.resumeTimeouts();
     windowUtils.suppressEventHandling(false);
   }

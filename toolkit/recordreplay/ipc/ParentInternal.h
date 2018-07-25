@@ -154,6 +154,21 @@ public:
 // the UI process itself, due to sandboxing restrictions.
 extern ipc::GeckoChildProcessHost* gRecordingProcess;
 
+// Any information needed to spawn a recording child process, in addition to
+// the contents of the introduction message.
+struct RecordingProcessData
+{
+  // File descriptors that will need to be remapped for the child process.
+  const base::SharedMemoryHandle& mPrefsHandle;
+  const ipc::FileDescriptor& mPrefMapHandle;
+
+  RecordingProcessData(const base::SharedMemoryHandle& aPrefsHandle,
+                       const ipc::FileDescriptor& aPrefMapHandle)
+    : mPrefsHandle(aPrefsHandle)
+    , mPrefMapHandle(aPrefMapHandle)
+  {}
+};
+
 // Information about a recording or replaying child process.
 class ChildProcessInfo
 {
@@ -251,10 +266,11 @@ class ChildProcessInfo
 
   bool CanRestart();
   void AttemptRestart(const char* aWhy);
-  void LaunchSubprocess();
+  void LaunchSubprocess(const Maybe<RecordingProcessData>& aRecordingProcessData);
 
 public:
-  ChildProcessInfo(UniquePtr<ChildRole> aRole, bool aRecording);
+  ChildProcessInfo(UniquePtr<ChildRole> aRole,
+                   const Maybe<RecordingProcessData>& aRecordingProcessData);
   ~ChildProcessInfo();
 
   ChildRole* Role() { return mRole.get(); }

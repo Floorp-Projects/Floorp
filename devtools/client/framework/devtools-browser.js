@@ -525,8 +525,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
       // Don't return from the interrupt handler until the debugger is brought
       // up; no reason to continue executing the slow script.
-      const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+      const utils = window.windowUtils;
       utils.enterModalState();
       Services.tm.spinEventLoopUntil(() => {
         return setupFinished;

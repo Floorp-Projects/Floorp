@@ -215,9 +215,7 @@ Tart.prototype = {
       }
       startRecordTimestamp = window.performance.now();
       if (self.USE_RECORDING_API) {
-        return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .startFrameTimeRecording();
+        return window.windowUtils.startFrameTimeRecording();
       }
 
       _recording = [];
@@ -250,8 +248,7 @@ Tart.prototype = {
       }
       if (self.USE_RECORDING_API) {
         var paints = {};
-        return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
+        return window.windowUtils
                      .stopFrameTimeRecording(recordingHandle, paints);
 
       }

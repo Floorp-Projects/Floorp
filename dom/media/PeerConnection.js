@@ -236,8 +236,7 @@ setupPrototype(RTCIceCandidate, {
 class RTCSessionDescription {
   init(win) {
     this._win = win;
-    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    this._winID = this._win.windowUtils.currentInnerWindowID;
   }
 
   __init({ type, sdp }) {
@@ -391,8 +390,7 @@ class RTCPeerConnection {
   }
 
   __init(rtcConfig) {
-    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    this._winID = this._win.windowUtils.currentInnerWindowID;
     // TODO: Update this code once we support pc.setConfiguration, to track
     // setting from content independently from pref (Bug 1181768).
     if (rtcConfig.iceTransportPolicy == "all" &&
@@ -914,8 +912,7 @@ class RTCPeerConnection {
       } else {
         this._havePermission = new Promise((resolve, reject) => {
           this._settlePermission = { allow: resolve, deny: reject };
-          let outerId = this._win.QueryInterface(Ci.nsIInterfaceRequestor).
-              getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+          let outerId = this._win.windowUtils.outerWindowID;
 
           let chrome = new CreateOfferRequest(outerId, this._winID,
                                               this._globalPCListId, false);
@@ -1871,8 +1868,7 @@ setupPrototype(PeerConnectionObserver, {
 
 class RTCPeerConnectionStatic {
   init(win) {
-    this._winID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    this._winID = win.windowUtils.currentInnerWindowID;
   }
 
   registerPeerConnectionLifecycleCallback(cb) {

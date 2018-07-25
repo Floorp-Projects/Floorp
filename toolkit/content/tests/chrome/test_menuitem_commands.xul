@@ -56,8 +56,7 @@ function runTestSet(suffix)
   checkAttributes(four, "Four", "F", "", "", false);
 
   if (isMac && suffix) {
-    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                       getInterface(Ci.nsIDOMWindowUtils);
+    var utils = window.windowUtils;
     utils.forceUpdateNativeMenuAt("0");
   }
   else {

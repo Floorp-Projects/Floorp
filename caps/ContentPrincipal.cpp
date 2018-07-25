@@ -7,6 +7,7 @@
 #include "ContentPrincipal.h"
 
 #include "mozIThirdPartyUtil.h"
+#include "nsContentUtils.h"
 #include "nscore.h"
 #include "nsScriptSecurityManager.h"
 #include "nsString.h"
@@ -15,7 +16,6 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
@@ -27,6 +27,7 @@
 #include "nsNetCID.h"
 #include "js/Wrapper.h"
 
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -164,15 +165,11 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
 
   // This URL can be a blobURL. In this case, we should use the 'parent'
   // principal instead.
-  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(origin);
-  if (uriWithPrincipal) {
-    nsCOMPtr<nsIPrincipal> uriPrincipal;
-    rv = uriWithPrincipal->GetPrincipal(getter_AddRefs(uriPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (uriPrincipal) {
-      return uriPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
-    }
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(origin,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    return blobPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
   }
 
   // If we reached this branch, we can only create an origin if we have a
@@ -271,15 +268,13 @@ ContentPrincipal::GetURI(nsIURI** aURI)
 bool
 ContentPrincipal::MayLoadInternal(nsIURI* aURI)
 {
-  // See if aURI is something like a Blob URI that is actually associated with
-  // a principal.
-  nsCOMPtr<nsIURIWithPrincipal> uriWithPrin = do_QueryInterface(aURI);
-  nsCOMPtr<nsIPrincipal> uriPrin;
-  if (uriWithPrin) {
-    uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
-  }
-  if (uriPrin) {
-    return nsIPrincipal::Subsumes(uriPrin);
+  MOZ_ASSERT(aURI);
+
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    return nsIPrincipal::Subsumes(blobPrincipal);
   }
 
   // If this principal is associated with an addon, check whether that addon

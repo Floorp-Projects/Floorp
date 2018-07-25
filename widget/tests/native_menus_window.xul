@@ -58,8 +58,7 @@
     // Force a menu to update itself. All of the menus parents will be updated
     // as well. An empty string will force a complete menu system reload.
     function forceUpdateNativeMenuAt(location) {
-      var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                                          getInterface(Ci.nsIDOMWindowUtils);
+      var utils = window.windowUtils;
       try {
         utils.forceUpdateNativeMenuAt(location);
       }
@@ -71,8 +70,7 @@
     var executedCommandID = "";
 
     function testItem(location, targetID) {
-      var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                                          getInterface(Ci.nsIDOMWindowUtils);
+      var utils = window.windowUtils;
       var correctCommandHandler = false;
       try {
         utils.activateNativeMenuItemAt(location);

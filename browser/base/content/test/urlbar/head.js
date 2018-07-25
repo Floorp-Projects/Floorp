@@ -177,8 +177,7 @@ function promiseAutocompleteResultPopup(inputText,
 }
 
 function promisePageActionPanelOpen() {
-  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
@@ -284,8 +283,7 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 
 function promiseNodeVisible(node) {
   info(`promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`);
-  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     let bounds = dwu.getBoundsWithoutFlushing(node);
     if (bounds.width > 0 && bounds.height > 0) {

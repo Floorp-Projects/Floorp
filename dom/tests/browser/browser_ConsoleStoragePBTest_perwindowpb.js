@@ -16,9 +16,7 @@ function test() {
                             .getService(Ci.nsIConsoleAPIStorage);
 
   function getInnerWindowId(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils)
-                  .currentInnerWindowID;
+    return aWindow.windowUtils.currentInnerWindowID;
   }
 
   function whenNewWindowLoaded(aOptions, aCallback) {

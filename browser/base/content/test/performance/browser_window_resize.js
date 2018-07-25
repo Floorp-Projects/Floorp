@@ -54,8 +54,7 @@ async function resizeWindow(win, width, height) {
     BrowserTestUtils.waitForEvent(win, "BookmarksToolbarVisibilityUpdated");
   let resizeEvent =
     BrowserTestUtils.waitForEvent(win, "resize");
-  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = win.windowUtils;
   dwu.ensureDirtyRootFrame();
   win.resizeTo(width, height);
   await resizeEvent;

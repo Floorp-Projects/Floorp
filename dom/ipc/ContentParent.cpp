@@ -2049,7 +2049,7 @@ ContentParent::RecvOpenRecordReplayChannel(const uint32_t& aChannelId,
                                            FileDescriptor* aConnection)
 {
   // We should only get this message from the child if it is recording or replaying.
-  if (!recordreplay::IsRecordingOrReplaying()) {
+  if (!this->IsRecordingOrReplaying()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -2061,7 +2061,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvCreateReplayingProcess(const uint32_t& aChannelId)
 {
   // We should only get this message from the child if it is recording or replaying.
-  if (!recordreplay::IsRecordingOrReplaying()) {
+  if (!this->IsRecordingOrReplaying()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -2092,7 +2092,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvTerminateReplayingProcess(const uint32_t& aChannelId)
 {
   // We should only get this message from the child if it is recording or replaying.
-  if (!recordreplay::IsRecordingOrReplaying()) {
+  if (!this->IsRecordingOrReplaying()) {
     return IPC_FAIL_NO_REASON(this);
   }
 

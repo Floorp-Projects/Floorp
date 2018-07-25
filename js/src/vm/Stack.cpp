@@ -228,9 +228,9 @@ InterpreterFrame::prologue(JSContext* cx)
             lexicalEnv = &cx->global()->lexicalEnvironment();
             varObjRoot = cx->global();
         }
-        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot))
+        if (!probes::EnterScript(cx, script, nullptr, this))
             return false;
-        return probes::EnterScript(cx, script, nullptr, this);
+        return CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot);
     }
 
     if (isModuleFrame())

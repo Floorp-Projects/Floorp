@@ -13,8 +13,6 @@ var gWebRender = {
    * Trigger a WebRender capture of the current state into a local folder.
    */
   capture() {
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils)
-          .wrCapture();
+    window.windowUtils.wrCapture();
   }
 };

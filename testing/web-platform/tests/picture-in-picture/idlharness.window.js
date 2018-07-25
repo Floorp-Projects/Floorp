@@ -1,22 +1,31 @@
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
+// META: script=resources/picture-in-picture-helpers.js
 
 'use strict';
 
 // https://wicg.github.io/picture-in-picture/
 
 promise_test(async () => {
-  const srcs = ['html', 'dom', 'picture-in-picture'];
-  const [html, dom, pip] = await Promise.all(
-      srcs.map(i => fetch(`/interfaces/${i}.idl`).then(r => r.text())));
+  try {
+    const video = await loadVideo();
+    document.body.appendChild(video);
+    self.video = video;
+    self.pipw = await video.requestPictureInPicture();
+  } catch (e) {
+    // Will be surfaced when video/pipw are undefined below.
+  }
 
-  const idl_array = new IdlArray();
-  idl_array.add_idls(pip);
-  idl_array.add_dependency_idls(dom);
-  idl_array.add_dependency_idls(html);
-
-  idl_array.add_objects({
-    Document: ['document'],
-  });
-  idl_array.test();
-}, 'picture-in-picture interfaces.');
+  idl_test(
+    ['picture-in-picture'],
+    ['html', 'dom'],
+    idl_array => {
+      idl_array.add_objects({
+        Document: ['document'],
+        DocumentOrShadowRoot: ['document'],
+        HTMLVideoElement: ['video'],
+        PictureInPictureWindow: ['pipw'],
+      });
+    },
+    'picture-in-picture interfaces.');
+})

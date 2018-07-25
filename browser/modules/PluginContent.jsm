@@ -324,8 +324,7 @@ PluginContent.prototype = {
                    [centerX, centerY]];
 
     let contentWindow = plugin.ownerGlobal;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = contentWindow.windowUtils;
 
     for (let [x, y] of points) {
       if (x < 0 || y < 0) {
@@ -657,8 +656,7 @@ PluginContent.prototype = {
 
   reshowClickToPlayNotification() {
     let contentWindow = this.global.content;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
     for (let plugin of plugins) {
       let overlay = this.getPluginUI(plugin, "main");
@@ -676,8 +674,7 @@ PluginContent.prototype = {
    */
   activatePlugins(pluginInfo, newState) {
     let contentWindow = this.global.content;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
@@ -722,8 +719,7 @@ PluginContent.prototype = {
     // plugins, and we need to collect all the plugins.
     if (plugin === null) {
       let contentWindow = this.content;
-      let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+      let cwu = contentWindow.windowUtils;
       // cwu.plugins may contain non-plugin <object>s, filter them out
       plugins = cwu.plugins.filter((p) =>
         p.getContentTypeForMIMEType(p.actualType) == Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
@@ -819,8 +815,7 @@ PluginContent.prototype = {
     }
 
     // Remove plugins that are already active, or large enough to show an overlay.
-    let cwu = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = this.content.windowUtils;
     for (let plugin of cwu.plugins) {
       let info = this._getPluginInfo(plugin);
       if (!actions.has(info.permissionString)) {
@@ -967,8 +962,7 @@ PluginContent.prototype = {
                                             [pluginName], 1);
 
     let contentWindow = this.global.content;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
 
     for (let plugin of plugins) {
@@ -1053,8 +1047,7 @@ PluginContent.prototype = {
 
       // Notify others that the crash reporter UI is now ready.
       // Currently, this event is only used by tests.
-      let winUtils = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this.content.windowUtils;
       let event = new this.content.CustomEvent("PluginCrashReporterDisplayed", {bubbles: true});
       winUtils.dispatchEventToChromeOnly(plugin, event);
     } else if (!doc.mozNoPluginCrashedNotification) {
@@ -1072,8 +1065,7 @@ PluginContent.prototype = {
   NPAPIPluginCrashReportSubmitted({ runID, state }) {
     this.pluginCrashData.delete(runID);
     let contentWindow = this.global.content;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = contentWindow.windowUtils;
     let plugins = cwu.plugins;
 
     for (let plugin of plugins) {

@@ -333,8 +333,7 @@ function openModalWindow(domWin, uri, args) {
     // See bug 875157 comment 30 for more...
     if (domWin) {
         // a domWin was passed, so we can apply the check for it being hidden.
-        let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+        let winUtils = domWin.windowUtils;
 
         if (winUtils && !winUtils.isParentWindowMainWidgetVisible) {
             throw Components.Exception("Cannot call openModalWindow on a hidden window",
@@ -360,8 +359,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
     let eventDetail = Cu.cloneInto({tabPrompt: true, inPermitUnload}, domWin);
     PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog", null, eventDetail);
 
-    let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    let winUtils = domWin.windowUtils;
     winUtils.enterModalState();
 
     let frameMM = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -445,8 +443,7 @@ function openRemotePrompt(domWin, args, tabPrompt) {
     // it impossible to reach its scriptable top,
     // a.k.a. window.top. To prevent this, make sure to enter/exit
     // modal state beginning from top.
-    let winUtils = domWin.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+    let winUtils = domWin.top.windowUtils;
     winUtils.enterModalState();
     let closed = false;
 

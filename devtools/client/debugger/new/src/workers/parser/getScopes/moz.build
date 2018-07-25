@@ -9,5 +9,4 @@ DIRS += [
 
 DevToolsModules(
     'index.js',
-    'visitor.js',
 )

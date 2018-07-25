@@ -43,8 +43,7 @@ function onTestsFinished() {
 
 function openContextMenuFor(element) {
 
-    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                       getInterface(Ci.nsIDOMWindowUtils);
+    var utils = window.windowUtils;
 
     var tbX = (window.mozInnerScreenX + 10) * utils.screenPixelsPerCSSPixel;
     var tbY = (window.mozInnerScreenY + 10) * utils.screenPixelsPerCSSPixel;

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
 
 var systemAppOrigin = (function() {
@@ -220,8 +220,7 @@ TouchSimulator.prototype = {
 
   fireMouseEvent(type, evt) {
     const content = this.getContent(evt.target);
-    const utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    const utils = content.windowUtils;
     utils.sendMouseEvent(type, evt.clientX, evt.clientY, 0, 1, 0, true, 0,
                          evt.MOZ_SOURCE_TOUCH);
   },
@@ -330,8 +329,7 @@ TouchSimulator.prototype = {
       return 0;
     }
 
-    const utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    const utils = content.windowUtils;
 
     const allowZoom = {};
     const minZoom = {};

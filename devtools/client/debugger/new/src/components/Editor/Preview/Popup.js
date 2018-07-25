@@ -74,10 +74,10 @@ function inPreview(event) {
 }
 
 class Popup extends _react.Component {
-  constructor(...args) {
-    var _temp;
+  constructor(props) {
+    super(props);
 
-    return _temp = super(...args), this.onMouseLeave = e => {
+    this.onMouseLeave = e => {
       const relatedTarget = e.relatedTarget;
 
       if (!relatedTarget) {
@@ -87,7 +87,35 @@ class Popup extends _react.Component {
       if (!inPreview(e)) {
         this.props.onClose();
       }
-    }, _temp;
+    };
+
+    this.onKeyDown = e => {
+      if (e.key === "Escape") {
+        this.props.onClose();
+      }
+    };
+
+    this.calculateMaxHeight = () => {
+      const {
+        editorRef
+      } = this.props;
+
+      if (!editorRef) {
+        return "auto";
+      }
+
+      return editorRef.getBoundingClientRect().height - this.state.top;
+    };
+
+    this.onPopoverCoords = coords => {
+      this.setState({
+        top: coords.top
+      });
+    };
+
+    this.state = {
+      top: 0
+    };
   }
 
   async componentWillMount() {
@@ -235,7 +263,10 @@ class Popup extends _react.Component {
     }
 
     return _react2.default.createElement("div", {
-      className: "preview-popup"
+      className: "preview-popup",
+      style: {
+        maxHeight: this.calculateMaxHeight()
+      }
     }, header, this.renderObjectInspector(roots));
   }
 
@@ -309,7 +340,9 @@ class Popup extends _react.Component {
     return _react2.default.createElement(_Popover2.default, {
       targetPosition: popoverPos,
       onMouseLeave: this.onMouseLeave,
+      onKeyDown: this.onKeyDown,
       type: type,
+      onPopoverCoords: this.onPopoverCoords,
       editorRef: editorRef
     }, this.renderPreview());
   }

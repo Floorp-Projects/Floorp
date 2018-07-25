@@ -19,8 +19,7 @@ async function ensureVisible(node) {
   if (isInPalette) {
     node.scrollIntoView();
   }
-  window.QueryInterface(Ci.nsIInterfaceRequestor);
-  let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = window.windowUtils;
   await BrowserTestUtils.waitForCondition(() => {
     let nodeBounds = dwu.getBoundsWithoutFlushing(node);
     if (isInPalette) {

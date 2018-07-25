@@ -2360,6 +2360,12 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                 MOZ_ASSERT(aRequest->IsTextSource());
                 nsAutoString inlineData;
                 SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+
+                if (recordreplay::IsRecordingOrReplaying()) {
+                  recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
+                                                 srcBuf.get(), srcBuf.length());
+                }
+
                 rv = exec.CompileAndExec(options, srcBuf, &script);
               }
             }

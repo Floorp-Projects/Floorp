@@ -18,8 +18,7 @@ function test() {
   // Disable the default gestures support during the test
   gGestureSupport.init(false);
 
-  test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-    getInterface(Ci.nsIDOMWindowUtils);
+  test_utils = window.windowUtils;
 
   // Run the tests of "simple gesture" events generally
   test_EnsureConstantsAreDisjoint();

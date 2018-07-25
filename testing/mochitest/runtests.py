@@ -1931,6 +1931,10 @@ toolbar#nav-bar {
             prefs['media.audio_loopback_dev'] = self.mediaDevices['audio']
             prefs['media.video_loopback_dev'] = self.mediaDevices['video']
 
+        # Disable web replay rewinding by default if recordings are being saved.
+        if options.recordingPath:
+            prefs["devtools.recordreplay.enableRewinding"] = False
+
         self.profile.set_preferences(prefs)
 
         # Extra prefs from --setpref
@@ -2727,6 +2731,9 @@ toolbar#nav-bar {
 
             if options.jsdebugger:
                 options.browserArgs.extend(['-jsdebugger', '-wait-for-jsdebugger'])
+
+            if options.recordingPath:
+                options.browserArgs.extend(['--save-recordings', options.recordingPath])
 
             # Remove the leak detection file so it can't "leak" to the tests run.
             # The file is not there if leak logging was not enabled in the

@@ -10,12 +10,7 @@ Library('elfhack_inject')
 
 DIST_INSTALL = False
 
-if CONFIG['TARGET_CPU'].endswith('86'):
-    cpu = 'x86'
-elif CONFIG['TARGET_CPU'].startswith('arm'):
-    cpu = 'arm'
-else:
-    cpu = CONFIG['TARGET_CPU']
+cpu = CONFIG['CPU_ARCH']
 
 gen_src = '%s.c' % cpu
 GENERATED_FILES += [

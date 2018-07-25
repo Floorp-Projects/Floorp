@@ -131,8 +131,7 @@ function getWindowUtils(aWindow)
   if (!aWindow) {
     aWindow = window;
   }
-  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(nsIDOMWindowUtils);
+  return aWindow.windowUtils;
 }
 
 function getPointInScreen(aElement, aWindow)

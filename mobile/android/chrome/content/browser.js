@@ -1081,7 +1081,7 @@ var BrowserApp = {
   },
 
   contentDocumentChanged: function() {
-    window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
+    window.top.windowUtils.isFirstPaint = true;
     Services.androidBridge.contentDocumentChanged(window);
   },
 
@@ -1650,8 +1650,7 @@ var BrowserApp = {
       return;
     }
 
-    let dwu = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = aBrowser.contentWindow.windowUtils;
     if (!dwu) {
       return;
     }
@@ -3824,7 +3823,7 @@ Tab.prototype = {
   reloadWithMode: function (aDesktopMode) {
     // notify desktopmode for PIDOMWindow
     let win = this.browser.contentWindow;
-    let dwi = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let dwi = win.windowUtils;
     dwi.setDesktopModeViewport(aDesktopMode);
 
     // Set desktop mode for tab and send change to Java
@@ -4781,7 +4780,7 @@ Tab.prototype = {
       case "audioFocusChanged":
       case "mediaControl":
         let win = this.browser.contentWindow;
-        let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let utils = win.windowUtils;
         let suspendTypes = Ci.nsISuspendedTypes;
         switch (aData) {
           case "lostAudioFocus":

@@ -38,6 +38,7 @@ struct JS_PUBLIC_API(WorkBudget)
 class JS_PUBLIC_API(SliceBudget)
 {
     const mozilla::TimeStamp &UnlimitedDeadline() const {
+        mozilla::recordreplay::AutoPassThroughThreadEvents pt;
         static const mozilla::TimeStamp unlimitedDeadline =
             mozilla::TimeStamp::Now() + mozilla::TimeDuration::Forever();
         return unlimitedDeadline;

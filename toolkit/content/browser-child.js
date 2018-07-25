@@ -614,7 +614,5 @@ addMessageListener("PermitUnload", msg => {
 
 // We may not get any responses to Browser:Init if the browser element
 // is torn down too quickly.
-var outerWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils)
-                           .outerWindowID;
+var outerWindowID = content.windowUtils.outerWindowID;
 sendAsyncMessage("Browser:Init", {outerWindowID});

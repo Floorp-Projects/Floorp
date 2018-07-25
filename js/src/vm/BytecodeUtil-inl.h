@@ -178,12 +178,13 @@ class BytecodeRangeWithPosition : private BytecodeRange
         while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
             SrcNoteType type = SN_TYPE(sn);
             if (type == SRC_COLSPAN) {
-                ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
+                ptrdiff_t colspan =
+                    SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, SrcNote::ColSpan::Span));
                 MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
                 column += colspan;
                 lastLinePC = snpc;
             } else if (type == SRC_SETLINE) {
-                lineno = size_t(GetSrcNoteOffset(sn, 0));
+                lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
                 column = 0;
                 lastLinePC = snpc;
             } else if (type == SRC_NEWLINE) {

@@ -125,13 +125,11 @@ class GeckoViewContent extends GeckoViewModule {
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenExit":
-        this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
+        this.window.windowUtils
                    .remoteFrameFullscreenReverted();
         break;
       case "GeckoView:DOMFullscreenRequest":
-        this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
+        this.window.windowUtils
                    .remoteFrameFullscreenChanged(aMsg.target);
         break;
       case "GeckoView:SaveStateFinish":

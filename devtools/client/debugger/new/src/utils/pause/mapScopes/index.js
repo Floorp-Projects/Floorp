@@ -15,6 +15,8 @@ var _findGeneratedBindingFromPosition = require("./findGeneratedBindingFromPosit
 
 var _buildGeneratedBindingList = require("./buildGeneratedBindingList");
 
+var _getApplicableBindingsForOriginalPosition = require("./getApplicableBindingsForOriginalPosition");
+
 var _log = require("../../log");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -228,19 +230,35 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
     return null;
   }
 
+  const loadApplicableBindings = async (pos, locationType) => {
+    let applicableBindings = await (0, _getApplicableBindingsForOriginalPosition.getApplicableBindingsForOriginalPosition)(generatedAstBindings, source, pos, originalBinding.type, locationType, sourceMaps);
+
+    if (applicableBindings.length > 0) {
+      hadApplicableBindings = true;
+    }
+
+    if (locationType !== "ref" && !(await (0, _getApplicableBindingsForOriginalPosition.originalRangeStartsInside)(source, pos, sourceMaps))) {
+      applicableBindings = [];
+    }
+
+    return applicableBindings;
+  };
+
   const {
     refs
   } = originalBinding;
+  let hadApplicableBindings = false;
   let genContent = null;
 
   for (const pos of refs) {
+    const applicableBindings = await loadApplicableBindings(pos, pos.type);
     const range = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos);
 
     if (range && hasValidIdent(range, pos)) {
       if (originalBinding.type === "import") {
-        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedImportReference)(applicableBindings);
       } else {
-        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForStandardBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedReference)(applicableBindings);
       }
     }
 
@@ -248,8 +266,9 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
       const declRange = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos.declaration);
 
       if (declRange && declRange.type !== "multiple") {
-        // Resolve to first binding in the range
-        const declContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForNormalDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+        const applicableDeclBindings = await loadApplicableBindings(pos.declaration, pos.type); // Resolve to first binding in the range
+
+        const declContent = await (0, _findGeneratedBindingFromPosition.findGeneratedReference)(applicableDeclBindings);
 
         if (declContent) {
           // Prefer the declaration mapping in this case because TS sometimes
@@ -260,7 +279,10 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
       }
     }
 
-    if (!genContent && (pos.type === "import-decl" || pos.type === "import-ns-decl")) {
+    if (!genContent && pos.type === "import-decl" && typeof pos.importName === "string") {
+      const {
+        importName
+      } = pos;
       const declRange = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos.declaration); // The import declaration should have an original position mapping,
       // but otherwise we don't really have preferences on the range type
       // because it can have multiple bindings, but we do want to make sure
@@ -268,8 +290,9 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
       // import declaration.
 
       if (declRange && declRange.singleDeclaration) {
-        // match the import declaration location
-        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+        const applicableDeclBindings = await loadApplicableBindings(pos.declaration, pos.type); // match the import declaration location
+
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedImportDeclaration)(applicableDeclBindings, importName);
       }
     }
 
@@ -307,6 +330,27 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
         }
       },
       expression: null
+    };
+  } else if (!hadApplicableBindings) {
+    // If there were no applicable bindings to consider while searching for
+    // matching bindings, then the source map for this file didn't make any
+    // attempt to map the binding, and that most likely means that the
+    // code was entirely emitted from the output code.
+    return {
+      grip: {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: {
+          type: "null",
+          optimizedOut: true
+        }
+      },
+      expression: `
+        (() => {
+          throw new Error('"' + ${JSON.stringify(name)} + '" has been optimized out.');
+        })()
+      `
     };
   } // If no location mapping is found, then the map is bad, or
   // the map is okay but it original location is inside
