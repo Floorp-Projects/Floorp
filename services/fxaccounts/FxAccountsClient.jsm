@@ -4,7 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsClient"];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-common/hawkclient.js");

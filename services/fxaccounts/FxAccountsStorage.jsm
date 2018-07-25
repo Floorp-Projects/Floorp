@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = [
   "FxAccountsStorageManager",
 ];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");

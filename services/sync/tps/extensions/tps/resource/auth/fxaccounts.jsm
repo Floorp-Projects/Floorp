@@ -13,7 +13,6 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource://tps/logger.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
