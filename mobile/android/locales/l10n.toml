@@ -113,7 +113,6 @@ locales = [
 [build]
 exclude-multi-locale = [
     "ach",
-    "en-CA",
     "ia",
     "km",
     "lij",

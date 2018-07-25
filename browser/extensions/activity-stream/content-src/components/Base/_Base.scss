@@ -15,10 +15,6 @@
 }
 
 main {
-  .hide-main & {
-    visibility: hidden;
-  }
-
   margin: auto;
   // Offset the snippets container so things at the bottom of the page are still
   // visible when snippets / onboarding are visible. Adjust for other spacing.
@@ -45,6 +41,11 @@ main {
     margin-bottom: $section-spacing;
     position: relative;
   }
+
+  .hide-main & {
+    visibility: hidden;
+  }
+
 }
 
 .base-content-fallback {

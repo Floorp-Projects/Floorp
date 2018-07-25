@@ -306,17 +306,6 @@ nsMenuPopupFrame::CreateWidgetForView(nsView* aView)
   bool remote = HasRemoteContent();
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
-#ifdef MOZ_WIDGET_GTK
-  if (remote) {
-    // Paradoxically, on Linux, setting the transparency mode to opaque will
-    // give us proper transparency for composited popups. The shape-mask-based
-    // pseudo-transparency that we use otherwise will render transparent areas
-    // as opaque black when compositing is enabled.
-    // See bug 630346.
-    mode = eTransparencyOpaque;
-  }
-#endif
-
   nsIContent* parentContent = GetContent()->GetParent();
   nsAtom *tag = nullptr;
   if (parentContent && parentContent->IsXULElement())

@@ -1033,10 +1033,31 @@ SandboxBroker::ThreadMain(void)
     if (sent < 0) {
       SANDBOX_LOG_ERROR("failed to send broker response to pid %d: %s", mChildPid,
                         strerror(errno));
+    } else {
+      MOZ_ASSERT(static_cast<size_t>(sent) == ios[0].iov_len + ios[1].iov_len);
     }
+
+    // Work around Linux kernel bug: recvmsg checks for pending data
+    // and then checks for EOF or shutdown, without synchronization;
+    // if the sendmsg and last close occur between those points, it
+    // will see no pending data (before) and a closed socket (after),
+    // and incorrectly return EOF even though there is a message to be
+    // read.  To avoid this, we send an extra message with a reference
+    // to respfd, so the last close can't happen until after the real
+    // response is read.
+    //
+    // See also: https://bugzil.la/1243108#c48
+    const struct Response fakeResp = { -4095 };
+    const struct iovec fakeIO = {
+      const_cast<Response*>(&fakeResp), sizeof(fakeResp)
+    };
+    // If the client has already read the real response and closed its
+    // socket then this will fail, but that's fine.
+    if (SendWithFd(respfd, &fakeIO, 1, respfd) < 0) {
+      MOZ_ASSERT(errno == EPIPE || errno == ECONNREFUSED || errno == ENOTCONN);
+    }
+
     close(respfd);
-    MOZ_ASSERT(sent < 0 ||
-               static_cast<size_t>(sent) == ios[0].iov_len + ios[1].iov_len);
 
     if (openedFd >= 0) {
       close(openedFd);

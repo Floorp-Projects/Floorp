@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- https://bugzil.la/1330375 -->
+<meta charset="utf-8">
+<title>Test for Bug 1330375</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest.css"/>
+<body>
+    <div id="content">
+        <table>
+            <tbody>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+                <tr><td>lorem ipsum</td><td>dolor sit</td><td>amet</td><td>consectetur adipsicing</td><td>elit.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+"use strict";
+
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function flush_layout(element) {
+  (element || document.documentElement).offsetHeight;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  flush_layout(document.getElementById("content"));
+
+  let before = {
+      framesConstructed: gUtils.framesConstructed,
+      framesReflowed: gUtils.framesReflowed,
+  };
+
+  // Begin test
+  let rows = document.getElementsByTagName("tr");
+  for (var r = 0; r < rows.length; r++) {
+    let row = rows[r];
+    row.innerText;
+    // Cause potential invalidation of layout:
+    row.style.display = "none";
+  }
+
+  is(gUtils.framesConstructed, before.framesConstructed, "Frames constructed should be 0");
+  is(gUtils.framesReflowed, before.framesReflowed, "Frames reflowed should be 0");
+
+  SimpleTest.finish();
+}
+</script>
+

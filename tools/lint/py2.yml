@@ -29,7 +29,6 @@ py2:
         - python/devtools
         - python/mach
         - python/mozbuild
-        - python/mozversioncontrol
         - security
         - servo
         - taskcluster/docker/funsize-update-generator

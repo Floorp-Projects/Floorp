@@ -12,6 +12,8 @@ import {_ASRouter} from "lib/ASRouter.jsm";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER];
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
 // Creates a message object that looks like messages returned by
 // RemotePageManager listeners
 function fakeAsyncMessage(action) {
@@ -23,14 +25,18 @@ describe("ASRouter", () => {
   let channel;
   let sandbox;
   let blockList;
+  let impressions;
   let fetchStub;
   let clock;
   let getStringPrefStub;
   let addObserverStub;
 
   function createFakeStorage() {
+    const getStub = sandbox.stub();
+    getStub.withArgs("blockList").returns(Promise.resolve(blockList));
+    getStub.withArgs("impressions").returns(Promise.resolve(impressions));
     return {
-      get: sandbox.stub().returns(Promise.resolve(blockList)),
+      get: getStub,
       set: sandbox.stub().returns(Promise.resolve())
     };
   }
@@ -43,6 +49,7 @@ describe("ASRouter", () => {
 
   beforeEach(async () => {
     blockList = [];
+    impressions = {};
     sandbox = sinon.sandbox.create();
     clock = sandbox.useFakeTimers();
     fetchStub = sandbox.stub(global, "fetch")
@@ -77,12 +84,22 @@ describe("ASRouter", () => {
       assert.calledWith(addObserverStub, "remotePref");
     });
     it("should set state.blockList to the block list in persistent storage", async () => {
-      blockList = ["MESSAGE_ID"];
-
+      blockList = ["foo"];
       Router = new _ASRouter({providers: FAKE_PROVIDERS});
       await Router.init(channel, createFakeStorage());
 
-      assert.deepEqual(Router.state.blockList, ["MESSAGE_ID"]);
+      assert.deepEqual(Router.state.blockList, ["foo"]);
+    });
+    it("should set state.impressions to the impressions object in persistent storage", async () => {
+      // Note that impressions are only kept if a message exists in router and has a .frequency property,
+      // otherwise they will be cleaned up by .cleanupImpressions()
+      const testMessage = {id: "foo", frequency: {lifetimeCap: 10}};
+      impressions = {foo: [0, 1, 2]};
+
+      Router = new _ASRouter({providers: [{id: "onboarding", type: "local", messages: [testMessage]}]});
+      await Router.init(channel, createFakeStorage());
+
+      assert.deepEqual(Router.state.impressions, impressions);
     });
     it("should await .loadMessagesFromAllProviders() and add messages from providers to state.messages", async () => {
       Router = new _ASRouter({providers: FAKE_PROVIDERS});
@@ -310,7 +327,6 @@ describe("ASRouter", () => {
       assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[0].id));
       assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[1].id));
       assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_BUNDLE"});
-      assert.calledOnce(Router._storage.set);
       assert.calledWithExactly(Router._storage.set, "blockList", bundleIds);
     });
   });
@@ -326,7 +342,6 @@ describe("ASRouter", () => {
     it("should save the blockList", async () => {
       await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_MESSAGE_BY_ID", data: {id: "foo"}}));
 
-      assert.calledOnce(Router._storage.set);
       assert.calledWithExactly(Router._storage.set, "blockList", []);
     });
   });
@@ -344,7 +359,6 @@ describe("ASRouter", () => {
     it("should save the blockList", async () => {
       await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}}));
 
-      assert.calledOnce(Router._storage.set);
       assert.calledWithExactly(Router._storage.set, "blockList", []);
     });
   });
@@ -519,6 +533,100 @@ describe("ASRouter", () => {
 
       assert.equal(false, Router._validPreviewEndpoint("http://foo.com"));
       assert.calledTwice(Cu.reportError);
+    });
+  });
+
+  describe("impressions", () => {
+    it("should add an impression and update _storage with the current time if the message frequency caps", async () => {
+      clock.tick(42);
+      const msg = fakeAsyncMessage({type: "IMPRESSION", data: {id: "foo", frequency: {lifetime: 5}}});
+      await Router.onMessage(msg);
+
+      assert.isArray(Router.state.impressions.foo);
+      assert.deepEqual(Router.state.impressions.foo, [42]);
+      assert.calledWith(Router._storage.set, "impressions", {foo: [42]});
+    });
+    it("should not add an impression if the message doesn't have frequency caps", async () => {
+      // Note that storage.set is called during initialization, so it needs to be reset
+      Router._storage.set.reset();
+      clock.tick(42);
+      const msg = fakeAsyncMessage({type: "IMPRESSION", data: {id: "foo"}});
+      await Router.onMessage(msg);
+
+      assert.notProperty(Router.state.impressions, "foo");
+      assert.notCalled(Router._storage.set);
+    });
+    describe("getLongestPeriod", () => {
+      it("should return the period if there is only one definition", () => {
+        const message = {id: "foo", frequency: {custom: [{period: 200, cap: 2}]}};
+        assert.equal(Router.getLongestPeriod(message), 200);
+      });
+      it("should return the longest period if there are more than one definitions", () => {
+        const message = {id: "foo", frequency: {custom: [{period: 1000, cap: 3}, {period: ONE_DAY, cap: 5}, {period: 100, cap: 2}]}};
+        assert.equal(Router.getLongestPeriod(message), ONE_DAY);
+      });
+      it("should return null if there are is no .frequency", () => {
+        const message = {id: "foo"};
+        assert.isNull(Router.getLongestPeriod(message));
+      });
+      it("should return null if there are is no .frequency.custom", () => {
+        const message = {id: "foo", frequency: {lifetime: 10}};
+        assert.isNull(Router.getLongestPeriod(message));
+      });
+    });
+    describe("cleanup on init", () => {
+      it("should clear impressions for messages which do not exist in state.messages", async () => {
+        const messages = [{id: "foo", frequency: {lifetime: 10}}];
+        impressions = {foo: [0], bar: [0, 1]};
+        // Impressions for "bar" should be removed since that id does not exist in messages
+        const result = {foo: [0]};
+
+        await createRouterAndInit([{id: "onboarding", type: "local", messages}]);
+        assert.calledWith(Router._storage.set, "impressions", result);
+        assert.deepEqual(Router.state.impressions, result);
+      });
+      it("should clear impressions older than the period if no lifetime impression cap is included", async () => {
+        const CURRENT_TIME = ONE_DAY * 2;
+        clock.tick(CURRENT_TIME);
+        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY, cap: 5}]}}];
+        impressions = {foo: [0, 1, CURRENT_TIME - 10]};
+        // Only 0 and 1 are more than 24 hours before CURRENT_TIME
+        const result = {foo: [CURRENT_TIME - 10]};
+
+        await createRouterAndInit([{id: "onboarding", type: "local", messages}]);
+        assert.calledWith(Router._storage.set, "impressions", result);
+        assert.deepEqual(Router.state.impressions, result);
+      });
+      it("should clear impressions older than the longest period if no lifetime impression cap is included", async () => {
+        const CURRENT_TIME = ONE_DAY * 2;
+        clock.tick(CURRENT_TIME);
+        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY, cap: 5}, {period: 100, cap: 2}]}}];
+        impressions = {foo: [0, 1, CURRENT_TIME - 10]};
+        // Only 0 and 1 are more than 24 hours before CURRENT_TIME
+        const result = {foo: [CURRENT_TIME - 10]};
+
+        await createRouterAndInit([{id: "onboarding", type: "local", messages}]);
+        assert.calledWith(Router._storage.set, "impressions", result);
+        assert.deepEqual(Router.state.impressions, result);
+      });
+      it("should clear impressions if they are not properly formatted", async () => {
+        const messages = [{id: "foo", frequency: {lifetime: 10}}];
+        // this is impromperly formatted since impressions are supposed to be an array
+        impressions = {foo: 0};
+        const result = {};
+
+        await createRouterAndInit([{id: "onboarding", type: "local", messages}]);
+        assert.calledWith(Router._storage.set, "impressions", result);
+        assert.deepEqual(Router.state.impressions, result);
+      });
+      it("should not clear impressions for messages which do exist in state.messages", async () => {
+        const messages = [{id: "foo", frequency: {lifetime: 10}}, {id: "bar", frequency: {lifetime: 10}}];
+        impressions = {foo: [0], bar: []};
+
+        await createRouterAndInit([{id: "onboarding", type: "local", messages}]);
+        assert.notCalled(Router._storage.set);
+        assert.deepEqual(Router.state.impressions, impressions);
+      });
     });
   });
 });
