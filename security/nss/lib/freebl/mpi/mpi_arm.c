@@ -39,7 +39,7 @@ s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
         "2:\n"
         "str     r5, [%3]\n"
         :
-        : "r"(a), "r"(a_len), "r"(b), "r"(c)
+        : "r"(a), "l"(a_len), "r"(b), "r"(c)
         : "memory", "cc", "%r4", "%r5", "%r6");
 }
 
@@ -72,7 +72,7 @@ s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
         "2:\n"
         "str     r5, [%3]\n"
         :
-        : "r"(a), "r"(a_len), "r"(b), "r"(c)
+        : "r"(a), "l"(a_len), "r"(b), "r"(c)
         : "memory", "cc", "%r4", "%r5", "%r6");
 }
 
