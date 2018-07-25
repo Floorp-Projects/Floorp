@@ -34,9 +34,9 @@ add_task(async function test_root_icon() {
 
       browser.contextMenus.create({
         title: "child",
+      }, () => {
+        browser.test.notifyPass("contextmenus-icons");
       });
-
-      browser.test.notifyPass("contextmenus-icons");
     },
   });
 
@@ -104,16 +104,6 @@ add_task(async function test_child_icon() {
     },
 
     background: function() {
-      browser.contextMenus.create({
-        title: "child1",
-        id: "contextmenu-child1",
-        icons: {
-          18: "red_icon.png",
-        },
-      });
-
-      browser.test.sendMessage("single-contextmenu-item-added");
-
       browser.test.onMessage.addListener(msg => {
         if (msg !== "add-additional-contextmenu-items") {
           return;
@@ -133,9 +123,19 @@ add_task(async function test_child_icon() {
           icons: {
             18: "green_icon.png",
           },
+        }, () => {
+          browser.test.notifyPass("extra-contextmenu-items-added");
         });
+      });
 
-        browser.test.notifyPass("extra-contextmenu-items-added");
+      browser.contextMenus.create({
+        title: "child1",
+        id: "contextmenu-child1",
+        icons: {
+          18: "red_icon.png",
+        },
+      }, () => {
+        browser.test.sendMessage("single-contextmenu-item-added");
       });
     },
   });

@@ -20,13 +20,14 @@ add_task(async function() {
         title: "Click me!",
         contexts: ["image"],
       });
+      browser.contextMenus.onClicked.addListener(() => {});
       browser.contextMenus.create({
         id: "clickme-page",
         title: "Click me!",
         contexts: ["page"],
+      }, () => {
+        browser.test.notifyPass();
       });
-      browser.contextMenus.onClicked.addListener(() => {});
-      browser.test.notifyPass();
     },
   });
 
@@ -530,10 +531,6 @@ add_task(async function test_bookmark_contextmenu() {
         title,
         parentId: "toolbar_____",
       });
-      await browser.contextMenus.create({
-        title: "Get bookmark",
-        contexts: ["bookmark"],
-      });
       browser.contextMenus.onClicked.addListener(async (info) => {
         browser.test.assertEq(newBookmark.id, info.bookmarkId, "Bookmark ID matches");
 
@@ -544,7 +541,12 @@ add_task(async function test_bookmark_contextmenu() {
         await browser.bookmarks.remove(info.bookmarkId);
         browser.test.sendMessage("test-finish");
       });
-      browser.test.sendMessage("bookmark-created");
+      browser.contextMenus.create({
+        title: "Get bookmark",
+        contexts: ["bookmark"],
+      }, () => {
+        browser.test.sendMessage("bookmark-created");
+      });
     },
   });
   await extension.startup();
@@ -569,12 +571,13 @@ add_task(async function test_bookmark_context_requires_permission() {
     manifest: {
       permissions: ["contextMenus"],
     },
-    async background() {
-      await browser.contextMenus.create({
+    background() {
+      browser.contextMenus.create({
         title: "Get bookmark",
         contexts: ["bookmark"],
+      }, () => {
+        browser.test.sendMessage("bookmark-created");
       });
-      browser.test.sendMessage("bookmark-created");
     },
   });
   await extension.startup();

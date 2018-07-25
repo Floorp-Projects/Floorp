@@ -205,8 +205,9 @@ add_task(async function test_onclick_modifiers() {
     function onclick(info) {
       browser.test.sendMessage("click", info);
     }
-    browser.contextMenus.create({contexts: ["all"], title: "modify", onclick});
-    browser.test.sendMessage("ready");
+    browser.contextMenus.create({contexts: ["all"], title: "modify", onclick}, () => {
+      browser.test.sendMessage("ready");
+    });
   }
 
   const extension = ExtensionTestUtils.loadExtension({manifest, background});
