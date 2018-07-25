@@ -78,6 +78,10 @@ public class GeckoApplication extends Application
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
 
     private static NotificationChannel defaultNotificationChannel = null;
+    /**
+     * Mozilla Location Services Notification Channel.
+     */
+    private static NotificationChannel mlsNotificationChannel = null;
 
     private boolean mInBackground;
     private boolean mPausedGecko;
@@ -358,6 +362,7 @@ public class GeckoApplication extends Application
 
         if (!AppConstants.Versions.preO) {
             createDefaultNotificationChannel();
+            createMLSNotificationChannel();
         }
 
         EventDispatcher.getInstance().registerGeckoThreadListener(mListener,
@@ -444,6 +449,20 @@ public class GeckoApplication extends Application
         if (defaultNotificationChannel == null) {
             defaultNotificationChannel = new NotificationChannel(DEFAULT_CHANNEL, DEFAULT_NAME, DEFAULT_IMPORTANCE);
             notificationManager.createNotificationChannel(defaultNotificationChannel);
+        }
+    }
+
+    @TargetApi(26)
+    private void createMLSNotificationChannel() {
+        final String DEFAULT_CHANNEL = AppConstants.MOZ_APP_DISPLAYNAME;
+        final String DEFAULT_NAME = AppConstants.MOZ_APP_DISPLAYNAME;
+        final int DEFAULT_IMPORTANCE = NotificationManager.IMPORTANCE_LOW;
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mlsNotificationChannel = notificationManager.getNotificationChannel(DEFAULT_CHANNEL);
+        if (mlsNotificationChannel == null) {
+            mlsNotificationChannel = new NotificationChannel(DEFAULT_CHANNEL, DEFAULT_NAME, DEFAULT_IMPORTANCE);
+            notificationManager.createNotificationChannel(mlsNotificationChannel);
         }
     }
 
@@ -644,6 +663,10 @@ public class GeckoApplication extends Application
 
     public static NotificationChannel getDefaultNotificationChannel() {
         return defaultNotificationChannel;
+    }
+
+    public static NotificationChannel getMLSNotificationChannel() {
+        return mlsNotificationChannel;
     }
 
     public boolean isApplicationInBackground() {

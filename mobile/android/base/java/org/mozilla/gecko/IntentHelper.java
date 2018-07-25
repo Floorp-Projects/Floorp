@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -238,6 +239,13 @@ public final class IntentHelper implements BundleEventListener {
         intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
         intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
         intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
+        return intent;
+    }
+
+    public static Intent getPrivacySettingsIntent() {
+        final Intent intent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        GeckoPreferences.setResourceToOpen(intent, "preferences_privacy");
         return intent;
     }
 
