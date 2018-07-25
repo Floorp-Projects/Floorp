@@ -2,15 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 import os
 import re
-from ConfigParser import ConfigParser, NoSectionError, NoOptionError
+from six.moves.configparser import ConfigParser, NoSectionError, NoOptionError
 from collections import defaultdict
 import errno
 import itertools
 import logging
+import warnings
 from compare_locales import util, mozpath
 import pytoml as toml
+import six
+
+
+REFERENCE_LOCALE = 'en-x-moz-reference'
 
 
 class Matcher(object):
@@ -26,18 +32,28 @@ class Matcher(object):
     def __init__(self, pattern):
         '''Create regular expression similar to mozpath.match().
         '''
-        prefix = pattern.split("*", 1)[0]
-        p = re.escape(pattern)
-        p = re.sub(r'(^|\\\/)\\\*\\\*\\\/', r'\1(.+/)?', p)
-        p = re.sub(r'(^|\\\/)\\\*\\\*$', r'(\1.+)?', p)
-        p = p.replace(r'\*', '([^/]*)') + '$'
-        r = re.escape(pattern)
-        r = re.sub(r'(^|\\\/)\\\*\\\*\\\/', r'\\\\0', r)
-        r = re.sub(r'(^|\\\/)\\\*\\\*$', r'\\\\0', r)
-        r = r.replace(r'\*', r'\\0')
+        prefix = ''
+        last_end = 0
+        p = ''
+        r = ''
         backref = itertools.count(1)
-        r = re.sub(r'\\0', lambda m: '\\%s' % backref.next(), r)
-        r = re.sub(r'\\(.)', r'\1', r)
+        for m in re.finditer(r'(?:(^|/)\*\*(/|$))|(?P<star>\*)', pattern):
+            if m.start() > last_end:
+                p += re.escape(pattern[last_end:m.start()])
+                r += pattern[last_end:m.start()]
+                if last_end == 0:
+                    prefix = pattern[last_end:m.start()]
+            if m.group('star'):
+                p += '([^/]*)'
+                r += r'\%s' % next(backref)
+            else:
+                p += re.escape(m.group(1)) + r'(.+%s)?' % m.group(2)
+                r += m.group(1) + r'\%s' % next(backref) + m.group(2)
+            last_end = m.end()
+        p += re.escape(pattern[last_end:]) + '$'
+        r += pattern[last_end:]
+        if last_end == 0:
+            prefix = pattern
         self.prefix = prefix
         self.regex = re.compile(p)
         self.placable = r
@@ -77,7 +93,7 @@ class ProjectConfig(object):
         self.children = []
         self._cache = None
 
-    variable = re.compile('{\s*([\w]+)\s*}')
+    variable = re.compile('{ *([\w]+) *}')
 
     def expand(self, path, env=None):
         if env is None:
@@ -125,7 +141,7 @@ class ProjectConfig(object):
                 rv['locales'] = d['locales'][:]
             self.paths.append(rv)
 
-    def set_filter_py(self, filter):
+    def set_filter_py(self, filter_function):
         '''Set legacy filter.py code.
         Assert that no rules are set.
         Also, normalize output already here.
@@ -134,7 +150,7 @@ class ProjectConfig(object):
 
         def filter_(module, path, entity=None):
             try:
-                rv = filter(module, path, entity=entity)
+                rv = filter_function(module, path, entity=entity)
             except BaseException:  # we really want to handle EVERYTHING here
                 return 'error'
             rv = {
@@ -245,12 +261,12 @@ class ProjectConfig(object):
                 for __rule in self._compile_rule(_rule):
                     yield __rule
             return
-        if isinstance(rule['path'], basestring):
+        if isinstance(rule['path'], six.string_types):
             rule['path'] = self.lazy_expand(rule['path'])
         if 'key' not in rule:
             yield rule
             return
-        if not isinstance(rule['key'], basestring):
+        if not isinstance(rule['key'], six.string_types):
             for key in rule['key']:
                 _rule = rule.copy()
                 _rule['key'] = key
@@ -270,6 +286,9 @@ class ProjectConfig(object):
 class ProjectFiles(object):
     '''Iterable object to get all files and tests for a locale and a
     list of ProjectConfigs.
+
+    If the given locale is None, iterate over reference files as
+    both reference and locale for a reference self-test.
     '''
     def __init__(self, locale, projects, mergebase=None):
         self.locale = locale
@@ -279,14 +298,18 @@ class ProjectFiles(object):
         for project in projects:
             configs.extend(project.configs)
         for pc in configs:
-            if locale not in pc.locales:
+            if locale and locale not in pc.locales:
                 continue
             for paths in pc.paths:
-                if 'locales' in paths and locale not in paths['locales']:
+                if (
+                    locale and
+                    'locales' in paths and
+                    locale not in paths['locales']
+                ):
                     continue
                 m = {
                     'l10n': paths['l10n']({
-                        "locale": locale
+                        "locale": locale or REFERENCE_LOCALE
                     }),
                     'module': paths.get('module'),
                 }
@@ -330,6 +353,15 @@ class ProjectFiles(object):
             del self.matchers[i]
 
     def __iter__(self):
+        # The iteration is pretty different when we iterate over
+        # a localization vs over the reference. We do that latter
+        # when running in validation mode.
+        inner = self.iter_locale() if self.locale else self.iter_reference()
+        for t in inner:
+            yield t
+
+    def iter_locale(self):
+        '''Iterate over locale files.'''
         known = {}
         for matchers in self.matchers:
             matcher = matchers['l10n']
@@ -357,6 +389,23 @@ class ProjectFiles(object):
                             matcher.sub(matchers['merge'], path)
         for path, d in sorted(known.items()):
             yield (path, d.get('reference'), d.get('merge'), d['test'])
+
+    def iter_reference(self):
+        '''Iterate over reference files.'''
+        known = {}
+        for matchers in self.matchers:
+            if 'reference' not in matchers:
+                continue
+            matcher = matchers['reference']
+            for path in self._files(matcher):
+                refpath = matcher.sub(matchers['reference'], path)
+                if refpath not in known:
+                    known[refpath] = {
+                        'reference': path,
+                        'test': matchers.get('test')
+                    }
+        for path, d in sorted(known.items()):
+            yield (path, d.get('reference'), None, d['test'])
 
     def _files(self, matcher):
         '''Base implementation of getting all files in a hierarchy
@@ -466,7 +515,7 @@ class TOMLParser(object):
         assert self.data is not None
         for data in self.data.get('filters', []):
             paths = data['path']
-            if isinstance(paths, basestring):
+            if isinstance(paths, six.string_types):
                 paths = [paths]
             # expand if path isn't relative to a variable
             paths = [
@@ -555,7 +604,8 @@ class L10nConfigParser(object):
         filter_path = mozpath.join(mozpath.dirname(self.inipath), 'filter.py')
         try:
             local = {}
-            execfile(filter_path, {}, local)
+            with open(filter_path) as f:
+                exec(compile(f.read(), filter_path, 'exec'), {}, local)
             if 'test' in local and callable(local['test']):
                 filters = [local['test']]
             else:
@@ -629,7 +679,8 @@ class L10nConfigParser(object):
 
     def allLocales(self):
         """Return a list of all the locales of this project"""
-        return util.parseLocales(open(self.all_path).read())
+        with open(self.all_path) as f:
+            return util.parseLocales(f.read())
 
 
 class SourceTreeConfigParser(L10nConfigParser):
@@ -679,7 +730,11 @@ class File(object):
 
     def getContents(self):
         # open with universal line ending support and read
-        return open(self.fullpath, 'rU').read()
+        # ignore universal newlines deprecation
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            with open(self.fullpath, 'rbU') as f:
+                return f.read()
 
     @property
     def localpath(self):
@@ -694,13 +749,13 @@ class File(object):
     def __str__(self):
         return self.fullpath
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
         if not isinstance(other, File):
-            raise NotImplementedError
-        rv = cmp(self.module, other.module)
-        if rv != 0:
-            return rv
-        return cmp(self.file, other.file)
+            return False
+        return vars(self) == vars(other)
+
+    def __ne__(self, other):
+        return not (self == other)
 
 
 class EnumerateApp(object):
