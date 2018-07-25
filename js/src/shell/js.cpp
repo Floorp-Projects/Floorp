@@ -2731,7 +2731,7 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_SETLINE:
-            lineno = GetSrcNoteOffset(sn, 0);
+            lineno = GetSrcNoteOffset(sn, SrcNote::SetLine::Line);
             if (!sp->jsprintf(" lineno %u", lineno))
                 return false;
             break;
