@@ -428,11 +428,19 @@ struct OptionParserData {
 
 /// What to use when calling the method to store the result value.
 enum MethodCallKind {
-    /// Use BINJS_MOZ_TRY_DECL.
+    /// Use BINJS_MOZ_TRY_DECL if the result type is not "Ok",
+    /// use MOZ_TRY otherwise.
     Decl,
 
-    /// Use MOZ_TRY_VAR.
+    /// Always use MOZ_TRY_DECL regardless of the result type.
+    AlwaysDecl,
+
+    /// Use MOZ_TRY_VAR if the result type is not "Ok",
+    /// use MOZ_TRY otherwise.
     Var,
+
+    /// Always use MOZ_TRY_VAR regardless of the result type.
+    AlwaysVar,
 }
 
 /// The actual exporter.
@@ -588,22 +596,32 @@ impl CPPExporter {
     }
 
     fn get_method_call(&self, var_name: &str, name: &NodeName,
+                       prefix: &str, args: &str,
                        call_kind: MethodCallKind) -> String {
-        let type_ok = self.get_type_ok(name);
-        let call = format!("parse{name}()",
-                           name = name.to_class_cases());
+        let type_ok_is_ok = match call_kind {
+            MethodCallKind::Decl | MethodCallKind::Var => {
+                self.get_type_ok(name).to_str() == "Ok"
+            }
+            MethodCallKind::AlwaysDecl | MethodCallKind::AlwaysVar => {
+                false
+            }
+        };
+        let call = format!("parse{prefix}{name}({args})",
+                           prefix = prefix,
+                           name = name.to_class_cases(),
+                           args = args);
 
-        if type_ok.to_str() == "Ok" {
+        if type_ok_is_ok {
             // Special case: `Ok` means that we shouldn't bind the return value.
             format!("MOZ_TRY({call});",
                     call = call)
         } else {
             match call_kind {
-                MethodCallKind::Decl => {
+                MethodCallKind::Decl | MethodCallKind::AlwaysDecl => {
                     format!("BINJS_MOZ_TRY_DECL({var_name}, {call});",
                             var_name = var_name, call = call)
                 }
-                MethodCallKind::Var => {
+                MethodCallKind::Var | MethodCallKind::AlwaysVar => {
                     format!("MOZ_TRY_VAR({var_name}, {call});",
                             var_name = var_name, call = call)
                 }
@@ -868,9 +886,12 @@ impl CPPExporter {
         for node in nodes {
             buffer_cases.push_str(&format!("
       case BinKind::{variant_name}:
-        MOZ_TRY_VAR(result, parseInterface{class_name}(start, kind, fields));
+{call}
 {arm_after}        break;",
-                class_name = node.to_class_cases(),
+                call = self.get_method_call("result", node,
+                                            "Interface", "start, kind, fields",
+                                            MethodCallKind::AlwaysVar)
+                    .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
                 arm_after = rules_for_this_sum.by_sum.get(&node)
                     .cloned()
@@ -966,7 +987,7 @@ impl CPPExporter {
                         kind = kind)
                 },
             call = self.get_method_call("item",
-                                        &parser.elements,
+                                        &parser.elements, "", "",
                                         MethodCallKind::Decl)
                 .reindent("        "),
             init = init,
@@ -1026,7 +1047,7 @@ impl CPPExporter {
         result = {default_value};
     }} else if (kind == BinKind::{kind}) {{
         const auto start = tokenizer_->offset();
-        MOZ_TRY_VAR(result, parseInterface{contents}(start, kind, fields));
+{call}
     }} else {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
@@ -1038,7 +1059,11 @@ impl CPPExporter {
 ",
                     first_line = self.get_method_definition_start(&parser.name, "", ""),
                     null = self.syntax.get_null_name().to_cpp_enum_case(),
-                    contents = parser.elements.to_class_cases(),
+                    call = self.get_method_call("result",
+                                                &parser.elements,
+                                                "Interface", "start, kind, fields",
+                                                MethodCallKind::AlwaysVar)
+                        .reindent("        "),
                     type_ok = type_ok,
                     default_value = default_value,
                     kind = parser.elements.to_cpp_enum_case(),
@@ -1138,7 +1163,7 @@ impl CPPExporter {
         return raiseInvalidKind(\"{kind}\", kind);
     }}
     const auto start = tokenizer_->offset();
-    BINJS_MOZ_TRY_DECL(result, parseInterface{class_name}(start, kind, fields));
+{call}
     MOZ_TRY(guard.done());
 
     return result;
@@ -1147,7 +1172,10 @@ impl CPPExporter {
 ",
             first_line = self.get_method_definition_start(name, "", ""),
             kind = name.to_cpp_enum_case(),
-            class_name = name.to_class_cases(),
+            call = self.get_method_call("result", name,
+                                        "Interface", "start, kind, fields",
+                                        MethodCallKind::AlwaysDecl)
+                .reindent("    ")
         ));
 
         // Generate aux method
@@ -1222,7 +1250,7 @@ impl CPPExporter {
 
                     (decl_var,
                      Some(self.get_method_call(var_name.to_str(),
-                                               &name,
+                                               &name, "", "",
                                                call_kind)))
                 }
             };
