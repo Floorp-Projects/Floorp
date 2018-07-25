@@ -35,8 +35,6 @@ class BiometricAuthenticationHandler(
     var biometricFragment: BiometricAuthenticationDialogFragment? = null; private set
 
     private val DEFAULT_KEY_NAME = "default_key"
-    private val isFingerprintAuthAvailable: Boolean
-        get() = fingerprintManager.isHardwareDetected && fingerprintManager.hasEnrolledFingerprints()
 
     init {
         try {
@@ -109,7 +107,7 @@ class BiometricAuthenticationHandler(
 
     // Create the prompt and begin listening
     private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject) {
-        if (!isFingerprintAuthAvailable) return
+        if (!Biometrics.hasFingerprintHardware(context)) return
         if (biometricFragment == null) {
             biometricFragment = BiometricAuthenticationDialogFragment()
         }
