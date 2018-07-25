@@ -24,6 +24,7 @@
 #include "wasm/AsmJS.h"
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 
@@ -333,10 +334,13 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 
     for (;;) {
         ParseNode* pn;
-        if (sc->isEvalContext())
-            pn = parser->evalBody(sc->asEvalContext());
-        else
-            pn = parser->globalBody(sc->asGlobalContext());
+        {
+            AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing");
+            if (sc->isEvalContext())
+                pn = parser->evalBody(sc->asEvalContext());
+            else
+                pn = parser->globalBody(sc->asGlobalContext());
+        }
 
         // Successfully parsed. Emit the script.
         if (pn) {
