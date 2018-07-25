@@ -23171,8 +23171,9 @@ function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.le
     };
   }
 
-  // Consider "Object(foo)" to be equivalent to "foo"
-  if (t.isCallExpression(parent) && t.isIdentifier(parent.callee, { name: "Object" }) && parent.arguments.length === 1 && parent.arguments[0] === node) {
+  // Consider "Object(foo)", and "__webpack_require__.i(foo)" to be
+  // equivalent to "foo" since they are essentially identity functions.
+  if (t.isCallExpression(parent) && (t.isIdentifier(parent.callee, { name: "Object" }) || t.isMemberExpression(parent.callee, { computed: false }) && t.isIdentifier(parent.callee.object, { name: "__webpack_require__" }) && t.isIdentifier(parent.callee.property, { name: "i" })) && parent.arguments.length === 1 && parent.arguments[0] === node) {
     return {
       type: "inherit",
       start: fromBabelLocation(parent.loc.start, sourceId),
