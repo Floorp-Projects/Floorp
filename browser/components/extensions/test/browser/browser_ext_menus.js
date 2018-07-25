@@ -57,11 +57,11 @@ add_task(async function test_actionContextMenus() {
     const contexts = ["page_action", "browser_action"];
 
     const parentId = browser.menus.create({contexts, title: "parent"});
-    await browser.menus.create({parentId, title: "click A"});
-    await browser.menus.create({parentId, title: "click B"});
+    browser.menus.create({parentId, title: "click A"});
+    browser.menus.create({parentId, title: "click B"});
 
     for (let i = 1; i < 9; i++) {
-      await browser.menus.create({contexts, id: `${i}`, title: `click ${i}`});
+      browser.menus.create({contexts, id: `${i}`, title: `click ${i}`});
     }
 
     browser.menus.onClicked.addListener((info, tab) => {
@@ -120,11 +120,11 @@ add_task(async function test_hiddenPageActionContextMenu() {
     const contexts = ["page_action"];
 
     const parentId = browser.menus.create({contexts, title: "parent"});
-    await browser.menus.create({parentId, title: "click A"});
-    await browser.menus.create({parentId, title: "click B"});
+    browser.menus.create({parentId, title: "click A"});
+    browser.menus.create({parentId, title: "click B"});
 
     for (let i = 1; i < 9; i++) {
-      await browser.menus.create({contexts, id: `${i}`, title: `click ${i}`});
+      browser.menus.create({contexts, id: `${i}`, title: `click ${i}`});
     }
 
     const [tab] = await browser.tabs.query({active: true});
@@ -171,12 +171,13 @@ add_task(async function test_bookmarkContextMenu() {
     manifest: {
       permissions: ["menus", "bookmarks"],
     },
-    async background() {
-      await browser.menus.create({title: "blarg", contexts: ["bookmark"]});
+    background() {
       browser.menus.onShown.addListener(() => {
         browser.test.sendMessage("hello");
       });
-      browser.test.sendMessage("ready");
+      browser.menus.create({title: "blarg", contexts: ["bookmark"]}, () => {
+        browser.test.sendMessage("ready");
+      });
     },
   });
 
@@ -202,14 +203,14 @@ add_task(async function test_tabContextMenu() {
       permissions: ["menus"],
     },
     async background() {
-      await browser.menus.create({
+      browser.menus.create({
         id: "alpha-beta-parent", title: "alpha-beta parent", contexts: ["tab"],
       });
 
-      await browser.menus.create({parentId: "alpha-beta-parent", title: "alpha"});
-      await browser.menus.create({parentId: "alpha-beta-parent", title: "beta"});
+      browser.menus.create({parentId: "alpha-beta-parent", title: "alpha"});
+      browser.menus.create({parentId: "alpha-beta-parent", title: "beta"});
 
-      await browser.menus.create({title: "dummy", contexts: ["page"]});
+      browser.menus.create({title: "dummy", contexts: ["page"]});
 
       browser.menus.onClicked.addListener((info, tab) => {
         browser.test.sendMessage("click", {info, tab});
@@ -224,9 +225,10 @@ add_task(async function test_tabContextMenu() {
     manifest: {
       permissions: ["menus"],
     },
-    async background() {
-      await browser.menus.create({title: "gamma", contexts: ["tab"]});
-      browser.test.sendMessage("ready");
+    background() {
+      browser.menus.create({title: "gamma", contexts: ["tab"]}, () => {
+        browser.test.sendMessage("ready");
+      });
     },
   });
 
@@ -279,8 +281,9 @@ add_task(async function test_onclick_frameid() {
     function onclick(info) {
       browser.test.sendMessage("click", info);
     }
-    browser.menus.create({contexts: ["frame", "page"], title: "modify", onclick});
-    browser.test.sendMessage("ready");
+    browser.menus.create({contexts: ["frame", "page"], title: "modify", onclick}, () => {
+      browser.test.sendMessage("ready");
+    });
   }
 
   const extension = ExtensionTestUtils.loadExtension({manifest, background});
@@ -313,20 +316,20 @@ add_task(async function test_multiple_contexts_init() {
   };
 
   function background() {
-    browser.menus.create({id: "parent", title: "parent"});
-    browser.tabs.create({url: "tab.html", active: false});
+    browser.menus.create({id: "parent", title: "parent"}, () => {
+      browser.tabs.create({url: "tab.html", active: false});
+    });
   }
 
   const files = {
     "tab.html": "<!DOCTYPE html><meta charset=utf-8><script src=tab.js></script>",
     "tab.js": function() {
-      browser.menus.create({parentId: "parent", id: "child", title: "child"});
-
       browser.menus.onClicked.addListener(info => {
         browser.test.sendMessage("click", info);
       });
-
-      browser.test.sendMessage("ready");
+      browser.menus.create({parentId: "parent", id: "child", title: "child"}, () => {
+        browser.test.sendMessage("ready");
+      });
     },
   };
 
@@ -358,10 +361,11 @@ add_task(async function test_tools_menu() {
     manifest: {
       permissions: ["menus"],
     },
-    async background() {
-      await browser.menus.create({title: "alpha", contexts: ["tools_menu"]});
-      await browser.menus.create({title: "beta", contexts: ["tools_menu"]});
-      browser.test.sendMessage("ready");
+    background() {
+      browser.menus.create({title: "alpha", contexts: ["tools_menu"]});
+      browser.menus.create({title: "beta", contexts: ["tools_menu"]}, () => {
+        browser.test.sendMessage("ready");
+      });
     },
   });
 
@@ -370,7 +374,7 @@ add_task(async function test_tools_menu() {
       permissions: ["menus"],
     },
     async background() {
-      await browser.menus.create({title: "gamma", contexts: ["tools_menu"]});
+      browser.menus.create({title: "gamma", contexts: ["tools_menu"]});
       browser.menus.onClicked.addListener((info, tab) => {
         browser.test.sendMessage("click", {info, tab});
       });
