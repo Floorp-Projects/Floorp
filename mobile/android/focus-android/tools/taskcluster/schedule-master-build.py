@@ -117,12 +117,13 @@ def generate_gecko_ARM_ui_test_task(dependencies):
 			}
 		})
 
+# For GeckoView, upload nightly (it has release config) by default, all Release builds have WV
 def upload_apk_nimbledroid_task(dependencies):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Upload Debug APK to Nimbledroid",
 		description = "Upload APKs to Nimbledroid for performance measurement and tracking.",
 		command = ('echo "--" > .adjust_token'
-				   ' && ./gradlew --no-daemon clean assembleFocusArmRelease assembleKlarArmRelease'
+				   ' && ./gradlew --no-daemon clean assembleFocusArmRelease assembleKlarArmNightly'
 				   ' && python tools/taskcluster/upload_apk_nimbledroid.py'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/nimbledroid' ],
