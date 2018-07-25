@@ -3299,31 +3299,17 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       MOZ_ASSERT(fieldsetContentDisplay->mDisplay == StyleDisplay::Block,
                  "bug in nsRuleNode::ComputeDisplayData?");
 
-      nsContainerFrame* columnSetFrame = nullptr;
-      RefPtr<ComputedStyle> innerSC = fieldsetContentStyle;
-      const nsStyleColumn* columns = fieldsetContentStyle->StyleColumn();
-      if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto ||
-          columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
-        columnSetFrame =
-          NS_NewColumnSetFrame(mPresShell, fieldsetContentStyle,
-                               nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
-        InitAndRestoreFrame(aState, content, parent, columnSetFrame);
-        innerSC = mPresShell->StyleSet()->
-          ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
-                                             fieldsetContentStyle);
+      contentFrame = NS_NewBlockFormattingContext(mPresShell, fieldsetContentStyle);
+      contentFrameTop =
+        InitAndWrapInColumnSetFrameIfNeeded(aState, content, parent,
+                                            contentFrame, fieldsetContentStyle);
+      if (contentFrame != contentFrameTop) {
+        // contentFrame is wrapped in nsColumnSetFrame.
         if (absPosContainer) {
-          absPosContainer = columnSetFrame;
+          absPosContainer = contentFrameTop;
         }
       }
-      contentFrame = NS_NewBlockFormattingContext(mPresShell, innerSC);
-      if (columnSetFrame) {
-        InitAndRestoreFrame(aState, content, columnSetFrame, contentFrame);
-        SetInitialSingleChild(columnSetFrame, contentFrame);
-        contentFrameTop = columnSetFrame;
-      } else {
-        InitAndRestoreFrame(aState, content, parent, contentFrame);
-        contentFrameTop = contentFrame;
-      }
+
       break;
     }
   }
@@ -3918,28 +3904,10 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
             innerFrame = outerFrame;
             break;
           default: {
-            nsContainerFrame* columnSetFrame = nullptr;
-            RefPtr<ComputedStyle> innerSC = outerSC;
-            const nsStyleColumn* columns = outerSC->StyleColumn();
-            if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto ||
-                columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
-              columnSetFrame =
-                NS_NewColumnSetFrame(mPresShell, outerSC,
-                                     nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
-              InitAndRestoreFrame(aState, content, container, columnSetFrame);
-              innerSC = mPresShell->StyleSet()->
-                ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
-                                                   outerSC);
-            }
-            innerFrame = NS_NewBlockFormattingContext(mPresShell, innerSC);
-            if (columnSetFrame) {
-              InitAndRestoreFrame(aState, content, columnSetFrame, innerFrame);
-              SetInitialSingleChild(columnSetFrame, innerFrame);
-              outerFrame = columnSetFrame;
-            } else {
-              InitAndRestoreFrame(aState, content, container, innerFrame);
-              outerFrame = innerFrame;
-            }
+            innerFrame = NS_NewBlockFormattingContext(mPresShell, outerSC);
+            outerFrame =
+              InitAndWrapInColumnSetFrameIfNeeded(aState, content, container,
+                                                  innerFrame, outerSC);
             break;
           }
         }
@@ -10918,6 +10886,42 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame)
 
 //----------------------------------------------------------------------
 
+nsContainerFrame*
+nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
+  nsFrameConstructorState& aState,
+  nsIContent* aContent,
+  nsContainerFrame* aParentFrame,
+  nsContainerFrame* aBlockFrame,
+  ComputedStyle* aComputedStyle)
+{
+  MOZ_ASSERT((aBlockFrame->IsBlockFrame() || aBlockFrame->IsDetailsFrame()),
+             "aBlock should either be a block frame or a details frame.");
+
+  const nsStyleColumn* styleColumn = aComputedStyle->StyleColumn();
+
+  if (styleColumn->mColumnCount == nsStyleColumn::kColumnCountAuto &&
+      styleColumn->mColumnWidth.GetUnit() == eStyleUnit_Auto) {
+    aBlockFrame->SetComputedStyleWithoutNotification(aComputedStyle);
+    InitAndRestoreFrame(aState, aContent, aParentFrame, aBlockFrame);
+    return aBlockFrame;
+  }
+
+  // Wrap the block frame in a ColumnSetFrame.
+  nsContainerFrame* columnSetFrame =
+    NS_NewColumnSetFrame(mPresShell, aComputedStyle,
+                         nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+  InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
+  SetInitialSingleChild(columnSetFrame, aBlockFrame);
+
+  RefPtr<ComputedStyle> anonBlockStyle = mPresShell->StyleSet()->
+    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
+                                       aComputedStyle);
+  aBlockFrame->SetComputedStyleWithoutNotification(anonBlockStyle);
+  InitAndRestoreFrame(aState, aContent, columnSetFrame, aBlockFrame);
+
+  return columnSetFrame;
+}
+
 void
 nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
@@ -10933,31 +10937,17 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   nsContainerFrame* blockFrame = *aNewFrame;
   NS_ASSERTION((blockFrame->IsBlockFrame() || blockFrame->IsDetailsFrame()),
                "not a block frame nor a details frame?");
-  nsContainerFrame* parent = aParentFrame;
-  RefPtr<ComputedStyle> blockStyle = aComputedStyle;
-  const nsStyleColumn* columns = aComputedStyle->StyleColumn();
 
-  if (columns->mColumnCount != nsStyleColumn::kColumnCountAuto
-      || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
-    nsContainerFrame* columnSetFrame =
-      NS_NewColumnSetFrame(mPresShell, aComputedStyle,
-                           nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
+  *aNewFrame =
+    InitAndWrapInColumnSetFrameIfNeeded(aState, aContent, aParentFrame,
+                                        blockFrame, aComputedStyle);
 
-    InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
-    blockStyle = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
-                                         aComputedStyle);
-    parent = columnSetFrame;
-    *aNewFrame = columnSetFrame;
+  if (blockFrame != *aNewFrame) {
+    // blockFrame is wrapped in nsColumnSetFrame.
     if (aPositionedFrameForAbsPosContainer == blockFrame) {
-      aPositionedFrameForAbsPosContainer = columnSetFrame;
+      aPositionedFrameForAbsPosContainer = *aNewFrame;
     }
-
-    SetInitialSingleChild(columnSetFrame, blockFrame);
   }
-
-  blockFrame->SetComputedStyleWithoutNotification(blockStyle);
-  InitAndRestoreFrame(aState, aContent, parent, blockFrame);
 
   aState.AddChild(*aNewFrame, aFrameItems, aContent,
                   aContentParentFrame ? aContentParentFrame :
