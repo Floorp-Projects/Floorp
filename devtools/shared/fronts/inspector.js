@@ -383,6 +383,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           this._releaseFront(targetFront, true);
         } else if (change.type === "shadowRootAttached") {
           targetFront._form.isShadowHost = true;
+        } else if (change.type === "customElementDefined") {
+          targetFront._form.customElementLocation = change.customElementLocation;
         } else if (change.type === "unretained") {
           // Retained orphans were force-released without the intervention of
           // client (probably a navigated frame).

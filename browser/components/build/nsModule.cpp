@@ -16,6 +16,10 @@
 #include "nsGNOMEShellService.h"
 #endif
 
+#if defined(MOZ_WIDGET_COCOA)
+#include "nsMacAttribution.h"
+#endif
+
 #if defined(XP_WIN)
 #include "nsIEHistoryEnumerator.h"
 #endif
@@ -39,6 +43,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacShellService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 #endif
 
+#if defined(MOZ_WIDGET_COCOA)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacAttributionService)
+#endif
+
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
 #endif
@@ -58,6 +66,9 @@ NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
 #elif defined(XP_MACOSX)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
+#if defined(MOZ_WIDGET_COCOA)
+NS_DEFINE_NAMED_CID(NS_MACATTRIBUTIONSERVICE_CID);
+#endif
 
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_BROWSERDIRECTORYPROVIDER_CID, false, nullptr, DirectoryProviderConstructor },
@@ -72,6 +83,9 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, nullptr, nsIEHistoryEnumeratorConstructor },
 #elif defined(XP_MACOSX)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsMacShellServiceConstructor },
+#endif
+#if defined(MOZ_WIDGET_COCOA)
+    { &kNS_MACATTRIBUTIONSERVICE_CID, false, nullptr, nsMacAttributionServiceConstructor },
 #endif
     { nullptr }
 };
@@ -107,6 +121,9 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
 #elif defined(XP_MACOSX)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
+#endif
+#if defined(MOZ_WIDGET_COCOA)
+    { NS_MACATTRIBUTIONSERVICE_CONTRACTID, &kNS_MACATTRIBUTIONSERVICE_CID },
 #endif
     { nullptr }
 };

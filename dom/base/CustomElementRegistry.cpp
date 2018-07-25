@@ -6,12 +6,14 @@
 
 #include "mozilla/dom/CustomElementRegistry.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
 #include "xpcprivate.h"
@@ -964,6 +966,27 @@ CustomElementRegistry::Define(JSContext* aCx,
   mWhenDefinedPromiseMap.Remove(nameAtom, getter_AddRefs(promise));
   if (promise) {
     promise->MaybeResolveWithUndefined();
+  }
+
+  // Dispatch a "customelementdefined" event for DevTools.
+  {
+    JSString* nameJsStr = JS_NewUCStringCopyN(aCx,
+                                              aName.BeginReading(),
+                                              aName.Length());
+
+    JS::Rooted<JS::Value> detail(aCx, JS::StringValue(nameJsStr));
+    RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(doc, nullptr, nullptr);
+    event->InitCustomEvent(aCx,
+                           NS_LITERAL_STRING("customelementdefined"),
+                           /* CanBubble */ true,
+                           /* Cancelable */ true,
+                           detail);
+    event->SetTrusted(true);
+
+    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(doc, event);
+    dispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
+
+    dispatcher->PostDOMEvent();
   }
 
   /**
