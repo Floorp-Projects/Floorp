@@ -93,8 +93,7 @@ add_task(async function() {
     let bounds = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
@@ -235,8 +234,7 @@ add_task(async function() {
     let bounds = icon.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
@@ -265,8 +263,7 @@ add_task(async function() {
     let bounds = text.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
@@ -290,8 +287,7 @@ add_task(async function() {
      "Test 19e, Doorhanger should start out dismissed");
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", 50, 50, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", 50, 50, 0, 1, 0, false, 0, 0);
   });
@@ -372,8 +368,7 @@ add_task(async function() {
     let bounds = plugin.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });

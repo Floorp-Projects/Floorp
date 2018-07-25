@@ -178,8 +178,7 @@ function simulateItemDrag(aToDrag, aTarget, aEvent = {}) {
   let ev = aEvent;
   if (ev == "end" || ev == "start") {
     let win = aTarget.ownerGlobal;
-    win.QueryInterface(Ci.nsIInterfaceRequestor);
-    const dwu = win.getInterface(Ci.nsIDOMWindowUtils);
+    const dwu = win.windowUtils;
     let bounds = dwu.getBoundsWithoutFlushing(aTarget);
     if (ev == "end") {
       ev = {clientX: bounds.right - 2, clientY: bounds.bottom - 2};
@@ -478,7 +477,7 @@ function waitForOverflowButtonShown(win = window) {
 }
 function waitForElementShown(element) {
   let win = element.ownerGlobal;
-  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = win.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     info("Waiting for overflow button to have non-0 size");
     let bounds = dwu.getBoundsWithoutFlushing(element);

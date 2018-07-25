@@ -546,7 +546,7 @@ ControlFlowGenerator::processTry()
 
     // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
     // jump over the catch block.
-    jsbytecode* endpc = pc + GetSrcNoteOffset(sn, 0);
+    jsbytecode* endpc = pc + GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset);
     MOZ_ASSERT(JSOp(*endpc) == JSOP_GOTO);
     MOZ_ASSERT(GetJumpOffset(endpc) > 0);
 
@@ -1118,8 +1118,8 @@ ControlFlowGenerator::processCondSwitch()
     MOZ_ASSERT(SN_TYPE(sn) == SRC_CONDSWITCH);
 
     // Get the exit pc
-    jsbytecode* exitpc = pc + GetSrcNoteOffset(sn, 0);
-    jsbytecode* firstCase = pc + GetSrcNoteOffset(sn, 1);
+    jsbytecode* exitpc = pc + GetSrcNoteOffset(sn, SrcNote::CondSwitch::EndOffset);
+    jsbytecode* firstCase = pc + GetSrcNoteOffset(sn, SrcNote::CondSwitch::FirstCaseOffset);
 
     // Iterate all cases in the conditional switch.
     // - Stop at the default case. (always emitted after the last case)
@@ -1134,7 +1134,7 @@ ControlFlowGenerator::processCondSwitch()
         // Fetch the next case.
         jssrcnote* caseSn = GetSrcNote(gsn, script, curCase);
         MOZ_ASSERT(caseSn && SN_TYPE(caseSn) == SRC_NEXTCASE);
-        ptrdiff_t off = GetSrcNoteOffset(caseSn, 0);
+        ptrdiff_t off = GetSrcNoteOffset(caseSn, SrcNote::NextCase::NextCaseOffset);
         MOZ_ASSERT_IF(off == 0, JSOp(*GetNextPc(curCase)) == JSOP_JUMPTARGET);
         curCase = off ? curCase + off : GetNextPc(GetNextPc(curCase));
         MOZ_ASSERT(pc < curCase && curCase <= exitpc);
@@ -1167,7 +1167,7 @@ ControlFlowGenerator::processCondSwitch()
             defaultIdx++;
 
         jssrcnote* caseSn = GetSrcNote(gsn, script, curCase);
-        ptrdiff_t off = GetSrcNoteOffset(caseSn, 0);
+        ptrdiff_t off = GetSrcNoteOffset(caseSn, SrcNote::NextCase::NextCaseOffset);
         curCase = off ? curCase + off : GetNextPc(GetNextPc(curCase));
         lastTarget = curTarget;
     }
@@ -1223,7 +1223,7 @@ ControlFlowGenerator::processCondSwitchCase(CFGState& state)
 
     // Fetch the following case in which we will continue.
     jssrcnote* sn = GetSrcNote(gsn, script, pc);
-    ptrdiff_t off = GetSrcNoteOffset(sn, 0);
+    ptrdiff_t off = GetSrcNoteOffset(sn, SrcNote::NextCase::NextCaseOffset);
     MOZ_ASSERT_IF(off == 0, JSOp(*GetNextPc(pc)) == JSOP_JUMPTARGET);
     jsbytecode* casePc = off ? pc + off : GetNextPc(GetNextPc(pc));
     bool nextIsDefault = JSOp(*casePc) == JSOP_DEFAULT;
@@ -1849,7 +1849,7 @@ ControlFlowGenerator::processTableSwitch(JSOp op, jssrcnote* sn)
     MOZ_ASSERT(SN_TYPE(sn) == SRC_TABLESWITCH);
 
     // Get the default and exit pc
-    jsbytecode* exitpc = pc + GetSrcNoteOffset(sn, 0);
+    jsbytecode* exitpc = pc + GetSrcNoteOffset(sn, SrcNote::TableSwitch::EndOffset);
     jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
 
     MOZ_ASSERT(defaultpc > pc && defaultpc <= exitpc);

@@ -44,8 +44,7 @@ function waitForTransferComplete() {
  */
 function rightClickVideo(browser) {
   let frame_script = () => {
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
 
     let document = content.document;
     let video = document.getElementById("video1");

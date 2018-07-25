@@ -1405,7 +1405,16 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
     ESClass cls;
     if (!GetBuiltinClass(context(), obj, &cls))
         return false;
-    return out.writePair(cls == ESClass::Array ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+
+    if (cls == ESClass::Array) {
+        uint32_t length = 0;
+        if (!JS_GetArrayLength(context(), obj, &length))
+            return false;
+
+        return out.writePair(SCTAG_ARRAY_OBJECT, NativeEndian::swapToLittleEndian(length));
+    }
+
+    return out.writePair(SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
@@ -2359,7 +2368,7 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
       case SCTAG_ARRAY_OBJECT:
       case SCTAG_OBJECT_OBJECT: {
         JSObject* obj = (tag == SCTAG_ARRAY_OBJECT)
-                        ? (JSObject*) NewDenseEmptyArray(context())
+                        ? (JSObject*) NewDenseUnallocatedArray(context(), NativeEndian::swapFromLittleEndian(data))
                         : (JSObject*) NewBuiltinClassInstance<PlainObject>(context());
         if (!obj || !objs.append(ObjectValue(*obj)))
             return false;

@@ -59,8 +59,7 @@ add_task(async function() {
         let color = await ContentTask.spawn(browser, null, async function() {
           let iframe = content.document.getElementById("iframe");
           let elem = iframe.contentDocument.getElementById("link");
-          return content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils)
+          return content.windowUtils
                         .getVisitedDependentComputedStyle(elem, "", "color");
         });
         return (color == test.color);

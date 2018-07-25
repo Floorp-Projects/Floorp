@@ -37,8 +37,7 @@ add_task(async function() {
     let bounds = closeIcon.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = doc.defaultView.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
     Assert.ok(!overlay.classList.contains("visible"),

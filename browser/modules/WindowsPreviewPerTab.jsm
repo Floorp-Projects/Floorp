@@ -195,7 +195,7 @@ PreviewController.prototype = {
 
   get screenPixelsPerCSSPixel() {
     let chromeWin = this.tab.ownerGlobal;
-    let windowUtils = chromeWin.getInterface(Ci.nsIDOMWindowUtils);
+    let windowUtils = chromeWin.windowUtils;
     return windowUtils.screenPixelsPerCSSPixel;
   },
 

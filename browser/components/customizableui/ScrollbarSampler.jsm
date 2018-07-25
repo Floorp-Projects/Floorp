@@ -38,8 +38,7 @@ var ScrollbarSampler = {
     hdoc.appendChild(iframe);
 
     let cwindow = iframe.contentWindow;
-    let utils = cwindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = cwindow.windowUtils;
 
     return new Promise(resolve => {
       cwindow.addEventListener("load", function(aEvent) {

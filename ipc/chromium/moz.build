@@ -132,8 +132,7 @@ if os_solaris:
         'src/base/time_posix.cc',
     ]
 
-ost = CONFIG['OS_TEST']
-if '86' not in ost and 'arm' not in ost and 'aarch64' != ost and 'mips' not in ost and 'powerpc' not in ost:
+if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] not in ('arm', 'aarch64', 'mips32', 'mips64', 'ppc', 'ppc64'):
     SOURCES += [
         'src/base/atomicops_internals_mutex.cc',
     ]

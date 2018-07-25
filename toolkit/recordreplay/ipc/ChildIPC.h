@@ -41,9 +41,6 @@ namespace child {
 // and is a no-op if the process is not recording/replaying.
 void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv);
 
-// Get the contents of the prefs shmem as conveyed to the middleman process.
-char* PrefsShmemContents(size_t aPrefsLen);
-
 base::ProcessId MiddlemanProcessId();
 base::ProcessId ParentProcessId();
 

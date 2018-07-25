@@ -175,6 +175,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mHasPresented(false)
   , mHasBeforeUnload(false)
   , mIsMouseEnterIntoWidgetEventSuppressed(false)
+  , mIsActiveRecordReplayTab(false)
 {
   MOZ_ASSERT(aManager);
   // When the input event queue is disabled, we don't need to handle the case
@@ -374,6 +375,8 @@ TabParent::DestroyInternal()
        iter.Get()->GetKey())->ParentDestroy();
   }
 #endif
+
+  SetIsActiveRecordReplayTab(false);
 }
 
 void
@@ -2481,11 +2484,16 @@ TabParent::RecvSetInputContext(
 mozilla::ipc::IPCResult
 TabParent::RecvIsParentWindowMainWidgetVisible(bool* aIsVisible)
 {
+  // XXXbz This looks unused; can we just remove it?
   nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
   if (!frame)
     return IPC_OK();
-  nsCOMPtr<nsIDOMWindowUtils> windowUtils =
-    do_QueryInterface(frame->OwnerDoc()->GetWindow());
+  nsGlobalWindowOuter* outer =
+    nsGlobalWindowOuter::Cast(frame->OwnerDoc()->GetWindow());
+  if (!outer)
+    return IPC_OK();
+
+  nsCOMPtr<nsIDOMWindowUtils> windowUtils = outer->WindowUtils();
   nsresult rv = windowUtils->GetIsParentWindowMainWidgetVisible(aIsVisible);
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
@@ -2873,6 +2881,11 @@ TabParent::SetDocShellIsActive(bool isActive)
   // Let's inform the priority manager. This operation can end up with the
   // changing of the process priority.
   ProcessPriorityManager::TabActivityChanged(this, isActive);
+
+  // Keep track of how many active recording/replaying tabs there are.
+  if (Manager()->AsContentParent()->IsRecordingOrReplaying()) {
+    SetIsActiveRecordReplayTab(isActive);
+  }
 
   return NS_OK;
 }
@@ -3590,6 +3603,17 @@ void
 TabParent::LiveResizeStopped()
 {
   SuppressDisplayport(false);
+}
+
+/* static */ size_t TabParent::gNumActiveRecordReplayTabs;
+
+void
+TabParent::SetIsActiveRecordReplayTab(bool aIsActive)
+{
+  if (aIsActive != mIsActiveRecordReplayTab) {
+    gNumActiveRecordReplayTabs += aIsActive ? 1 : -1;
+    mIsActiveRecordReplayTab = aIsActive;
+  }
 }
 
 NS_IMETHODIMP

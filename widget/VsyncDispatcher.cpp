@@ -98,13 +98,13 @@ CompositorVsyncDispatcher::Shutdown()
 RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher()
   : mRefreshTimersLock("RefreshTimers lock")
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
 }
 

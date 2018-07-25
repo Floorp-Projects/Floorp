@@ -12,9 +12,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowers(window) {
   this.window = Cu.getWeakReference(window);
-  this._windowID = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .currentInnerWindowID;
+  this._windowID = window.windowUtils.currentInnerWindowID;
   this._encounteredCrashDumpFiles = [];
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;

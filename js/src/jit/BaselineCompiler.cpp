@@ -361,6 +361,9 @@ BaselineCompiler::emitPrologue()
 #endif
     emitProfilerEnterFrame();
 
+    if (script->trackRecordReplayProgress())
+        masm.inc64(AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+
     masm.push(BaselineFrameReg);
     masm.moveStackPtrTo(BaselineFrameReg);
     masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
@@ -1356,7 +1359,11 @@ BaselineCompiler::emit_JSOP_LOOPENTRY()
     if (!emit_JSOP_JUMPTARGET())
         return false;
     frame.syncStack(0);
-    return emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc));
+    if (!emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc)))
+        return false;
+    if (script->trackRecordReplayProgress())
+        masm.inc64(AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+    return true;
 }
 
 bool

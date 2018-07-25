@@ -41,8 +41,7 @@ async function openPage(enableDialogs) {
       ChromeUtils.import("resource://gre/modules/Services.jsm");
       Services.obs.addObserver(doc => {
         if (content && doc == content.document) {
-          content.QueryInterface(Ci.nsIInterfaceRequestor).
-            getInterface(Ci.nsIDOMWindowUtils)[name]();
+          content.windowUtils[name]();
         }
       }, "document-element-inserted");
     });

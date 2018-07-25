@@ -91,8 +91,7 @@ function runTests()
 }
 
 function compareCanvases() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils)
+  return window.windowUtils
                .compareCanvases(document.getElementsByTagName("canvas")[0],
                                 document.getElementsByTagName("canvas")[1],
                                 {}) == 0;

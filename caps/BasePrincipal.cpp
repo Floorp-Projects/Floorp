@@ -14,12 +14,12 @@
 
 #include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"
-#include "nsIURIWithPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -411,15 +411,12 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
   }
 
   // Check whether the URI knows what its principal is supposed to be.
-  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
-  if (uriPrinc) {
-    nsCOMPtr<nsIPrincipal> principal;
-    uriPrinc->GetPrincipal(getter_AddRefs(principal));
-    if (!principal) {
-      return NullPrincipal::Create(aAttrs);
-    }
-    RefPtr<BasePrincipal> concrete = Cast(principal);
-    return concrete.forget();
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
+                                                       getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    RefPtr<BasePrincipal> principal = Cast(blobPrincipal);
+    return principal.forget();
   }
 
   // Mint a codebase principal.
@@ -439,7 +436,7 @@ BasePrincipal::CreateCodebasePrincipal(const nsACString& aOrigin)
              "CreateCodebasePrincipal does not support NullPrincipal");
 
   nsAutoCString originNoSuffix;
-  mozilla::OriginAttributes attrs;
+  OriginAttributes attrs;
   if (!attrs.PopulateFromOrigin(aOrigin, originNoSuffix)) {
     return nullptr;
   }

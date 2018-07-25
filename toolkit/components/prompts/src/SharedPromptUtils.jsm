@@ -18,8 +18,7 @@ var PromptUtils = {
           eventOptions.detail = detail;
         }
         let event = new domWin.CustomEvent(eventName, eventOptions);
-        let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+        let winUtils = domWin.windowUtils;
         winUtils.dispatchEventToChromeOnly(target, event);
     },
 

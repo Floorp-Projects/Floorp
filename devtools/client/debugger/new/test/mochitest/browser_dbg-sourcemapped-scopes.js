@@ -190,6 +190,32 @@ add_task(async function() {
     "root()"
   ]);
 
+  await breakpointScopes(dbg, "rollup-babel-classes", { line: 6, column: 6 }, [
+    "Class",
+    "Thing()",
+    "Function Body",
+    "Another()",
+    "one",
+    "Thing()",
+    "Module",
+    "root()"
+  ]);
+
+  await breakpointScopes(dbg, "rollup-babel-classes", { line: 16, column: 6 }, [
+    "Function Body",
+    // Rollup removes these as dead code, so they are marked as optimized out.
+    ["three", "(optimized away)"],
+    ["two", "(optimized away)"],
+    "Class",
+    "Another()",
+    "Function Body",
+    "Another()",
+    ["one", "1"],
+    "Thing()",
+    "Module",
+    "root()"
+  ]);
+
   await breakpointScopes(dbg, "babel-for-loops", { line: 5, column: 4 }, [
     "For",
     ["i", "1"],
@@ -329,6 +355,76 @@ add_task(async function() {
     "Module",
     "root()"
   ]);
+
+  await breakpointScopes(dbg, "rollup-babel-lex-and-nonlex", { line: 3, column: 4 }, [
+    "Function Body",
+    "Thing()",
+    "root",
+    "someHelper()",
+    "Module",
+    "root()"
+  ]);
+
+  await breakpointScopes(
+    dbg,
+    "rollup-babel-modules",
+    { line: 20, column: 2 },
+    [
+      // This test currently bails out because Babel does not map function calls
+      // fully and includes the () of the call in the range of the identifier.
+      // this means that Rollup, has to map locations for calls to imports,
+      // it can fail. This will be addressed in Babel eventually.
+      "root",
+      ["<this>", "Window"],
+      ["arguments", "Arguments"],
+      "rollupBabelModules",
+      ["aDefault", '"a-default"'],
+      ["aDefault2", '"a-default2"'],
+      ["aDefault3", '"a-default3"'],
+      ["aNamed", '"a-named"'],
+      ["aNamed$1", '(optimized away)'],
+      ["aNamed$2", '(optimized away)'],
+      ["aNamed2", '"a-named2"'],
+      ["aNamed3", '"a-named3"'],
+      ["aNamespace", "{\u2026}"],
+      ["aNamespace3", "{\u2026}"],
+      ["arguments", "(unavailable)"],
+      ["mod12", "(optimized away)"],
+      ["mod4", "(optimized away)"],
+      ["optimizedOut", "(optimized away)"],
+      ["original", '"an-original"'],
+      ["original$1", '"an-original2"'],
+      ["original$2", '"an-original3"'],
+      "root()"
+    ]
+  );
+
+  await breakpointScopes(
+    dbg,
+    "rollup-modules",
+    { line: 20, column: 0 },
+    [
+      "Module",
+      ["aDefault", '"a-default"'],
+      ["aDefault2", '"a-default2"'],
+      ["aDefault3", '"a-default3"'],
+      ["anAliased", '"an-original"'],
+      ["anAliased2", '"an-original2"'],
+      ["anAliased3", '"an-original3"'],
+      ["aNamed", '"a-named"'],
+      ["aNamed2", '"a-named2"'],
+      ["aNamed3", '"a-named3"'],
+      ["aNamespace", "{\u2026}"],
+      // ["aNamespace2", "{\u2026}"],
+      ["aNamespace3", "{\u2026}"],
+      ["anotherNamed", '"a-named"'],
+      ["anotherNamed2", '"a-named2"'],
+      ["anotherNamed3", '"a-named3"'],
+      ["example", "(optimized away)"],
+      ["optimizedOut", "(optimized away)"],
+      "root()"
+    ]
+  );
 
   await breakpointScopes(
     dbg,

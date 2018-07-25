@@ -14,8 +14,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
  *        The window in which the frame tree needs to be marked as dirty.
  */
 function dirtyFrame(win) {
-  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
+  let dwu = win.windowUtils;
   try {
     dwu.ensureDirtyRootFrame();
   } catch (e) {
@@ -235,8 +234,7 @@ function forceImmediateToolbarOverflowHandling(win) {
     overflowableToolbar._lazyResizeHandler.disarm();
     // Ensure the root frame is dirty before resize so that, if we're
     // in the middle of a reflow test, we record the reflows deterministically.
-    let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = win.windowUtils;
     dwu.ensureDirtyRootFrame();
     overflowableToolbar._onLazyResize();
   }

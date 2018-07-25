@@ -386,13 +386,11 @@ var BrowserPageActions = {
       this.mainButtonNode.id,
       "identity-icon",
     ];
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
     for (let id of potentialAnchorNodeIDs) {
       if (id) {
         let node = document.getElementById(id);
         if (node && !node.hidden) {
-          let bounds = dwu.getBoundsWithoutFlushing(node);
+          let bounds = window.windowUtils.getBoundsWithoutFlushing(node);
           if (bounds.height > 0 && bounds.width > 0) {
             return node;
           }

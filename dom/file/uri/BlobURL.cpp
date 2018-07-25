@@ -23,7 +23,6 @@ NS_IMPL_ADDREF_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(BlobURL, mozilla::net::nsSimpleURI)
 
 NS_INTERFACE_MAP_BEGIN(BlobURL)
-  NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
@@ -36,30 +35,9 @@ NS_INTERFACE_MAP_BEGIN(BlobURL)
   else
 NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 
-// nsIURIWithPrincipal methods:
-
-NS_IMETHODIMP
-BlobURL::GetPrincipal(nsIPrincipal** aPrincipal)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
-  principal.forget(aPrincipal);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURL::GetPrincipalUri(nsIURI** aUri)
-{
-  if (mPrincipal) {
-    mPrincipal->GetURI(aUri);
-  }
-  else {
-    *aUri = nullptr;
-  }
-
-  return NS_OK;
-}
+BlobURL::BlobURL()
+  : mRevoked(false)
+{}
 
 // nsISerializable methods:
 
@@ -76,13 +54,10 @@ BlobURL::ReadPrivate(nsIObjectInputStream *aStream)
   nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> supports;
-  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
+  rv = aStream->ReadBoolean(&mRevoked);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(supports, &rv);
-  mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", principal, false);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -91,10 +66,10 @@ BlobURL::Write(nsIObjectOutputStream* aStream)
   nsresult rv = mozilla::net::nsSimpleURI::Write(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
-  return NS_WriteOptionalCompoundObject(aStream, principal,
-                                        NS_GET_IID(nsIPrincipal),
-                                        true);
+  rv = aStream->WriteBoolean(mRevoked);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 // nsIIPCSerializableURI methods:
@@ -109,18 +84,7 @@ BlobURL::Serialize(mozilla::ipc::URIParams& aParams)
   mozilla::net::nsSimpleURI::Serialize(simpleParams);
   hostParams.simpleParams() = simpleParams;
 
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
-  if (principal) {
-    PrincipalInfo info;
-    nsresult rv = PrincipalToPrincipalInfo(principal, &info);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    hostParams.principal() = info;
-  } else {
-    hostParams.principal() = mozilla::void_t();
-  }
+  hostParams.revoked() = mRevoked;
 
   aParams = hostParams;
 }
@@ -141,16 +105,7 @@ BlobURL::Deserialize(const mozilla::ipc::URIParams& aParams)
     return false;
   }
 
-  if (hostParams.principal().type() == OptionalPrincipalInfo::Tvoid_t) {
-    return true;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(hostParams.principal().get_PrincipalInfo());
-  if (!principal) {
-    return false;
-  }
-  mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", principal, false);
-
+  mRevoked = hostParams.revoked();
   return true;
 }
 
@@ -158,8 +113,7 @@ nsresult
 BlobURL::SetScheme(const nsACString& aScheme)
 {
   // Disallow setting the scheme, since that could cause us to be associated
-  // with a different protocol handler that doesn't expect us to be carrying
-  // around a principal with nsIURIWithPrincipal.
+  // with a different protocol handler.
   return NS_ERROR_FAILURE;
 }
 
@@ -181,8 +135,7 @@ BlobURL::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMo
 #endif
 
   BlobURL* u = static_cast<BlobURL*>(simpleClone.get());
-
-  u->mPrincipal = mPrincipal;
+  u->mRevoked = mRevoked;
 
   simpleClone.forget(aClone);
   return NS_OK;
@@ -206,17 +159,10 @@ BlobURL::EqualsInternal(nsIURI* aOther,
   }
 
   // Compare the member data that our base class knows about.
-  if (!mozilla::net::nsSimpleURI::EqualsInternal(otherUri, aRefHandlingMode)) {
-    *aResult = false;
-    return NS_OK;
-  }
+  *aResult = mozilla::net::nsSimpleURI::EqualsInternal(otherUri,
+                                                       aRefHandlingMode);
 
-  if (mPrincipal && otherUri->mPrincipal) {
-    // Both of us have mPrincipals. Compare them.
-    return mPrincipal->Equals(otherUri->mPrincipal, aResult);
-  }
-  // else, at least one of us lacks a principal; only equal if *both* lack it.
-  *aResult = (!mPrincipal && !otherUri->mPrincipal);
+  // We don't want to compare the revoked flag.
   return NS_OK;
 }
 
@@ -224,7 +170,6 @@ BlobURL::EqualsInternal(nsIURI* aOther,
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(BlobURL::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
-                                nsIPrincipalURIMutator,
                                 nsISerializable)
 
 NS_IMETHODIMP

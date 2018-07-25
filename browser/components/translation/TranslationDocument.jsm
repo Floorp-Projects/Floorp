@@ -38,9 +38,7 @@ this.TranslationDocument.prototype = {
    * @param document  The document to be translated
    */
   _init(document) {
-    let window = document.defaultView;
-    let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    let winUtils = document.defaultView.windowUtils;
 
     // Get all the translation nodes in the document's body:
     // a translation node is a node from the document which

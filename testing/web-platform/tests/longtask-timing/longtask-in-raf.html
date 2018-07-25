@@ -11,6 +11,10 @@
 <div id="log"></div>
 <script>
   async_test(function (t) {
+    if (typeof PerformanceLongTaskTiming === 'undefined') {
+        assert_unreached("Longtasks are not supported.");
+        t.done();
+    }
     const observer = new PerformanceObserver(
         t.step_func(function (entryList) {
             const entries = entryList.getEntries();

@@ -569,6 +569,25 @@ TabSources.prototype = {
   },
 
   /**
+   * Return the non-source-mapped location of an offset in a script.
+   *
+   * @param Debugger.Script script
+   *        The script associated with the offset.
+   * @param Number offset
+   *        Offset within the script of the location.
+   * @returns Object
+   *          Returns an object of the form { source, line, column }
+   */
+  getScriptOffsetLocation: function(script, offset) {
+    const {lineNumber, columnNumber} = script.getOffsetLocation(offset);
+    return new GeneratedLocation(
+      this.createNonSourceMappedActor(script.source),
+      lineNumber,
+      columnNumber
+    );
+  },
+
+  /**
    * Return the non-source-mapped location of the given Debugger.Frame. If the
    * frame does not have a script, the location's properties are all null.
    *
@@ -581,13 +600,7 @@ TabSources.prototype = {
     if (!frame || !frame.script) {
       return new GeneratedLocation();
     }
-    const {lineNumber, columnNumber} =
-        frame.script.getOffsetLocation(frame.offset);
-    return new GeneratedLocation(
-      this.createNonSourceMappedActor(frame.script.source),
-      lineNumber,
-      columnNumber
-    );
+    return this.getScriptOffsetLocation(frame.script, frame.offset);
   },
 
   /**

@@ -8338,6 +8338,22 @@ class MBinarySharedStub
     TRIVIAL_NEW_WRAPPERS
 };
 
+class MBinaryCache
+  : public MBinaryInstruction,
+    public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
+{
+  protected:
+    explicit MBinaryCache(MDefinition* left, MDefinition* right)
+      : MBinaryInstruction(classOpcode, left, right)
+    {
+        setResultType(MIRType::Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BinaryCache)
+    TRIVIAL_NEW_WRAPPERS
+};
+
 class MUnaryCache
   : public MUnaryInstruction,
     public BoxPolicy<0>::Data
@@ -8387,8 +8403,11 @@ class MCheckOverRecursed
 // Check whether we need to fire the interrupt handler.
 class MInterruptCheck : public MNullaryInstruction
 {
+    bool trackRecordReplayProgress_;
+
     MInterruptCheck()
-      : MNullaryInstruction(classOpcode)
+      : MNullaryInstruction(classOpcode),
+        trackRecordReplayProgress_(false)
     {
         setGuard();
     }
@@ -8399,6 +8418,13 @@ class MInterruptCheck : public MNullaryInstruction
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
+    }
+
+    bool trackRecordReplayProgress() const {
+        return trackRecordReplayProgress_;
+    }
+    void setTrackRecordReplayProgress() {
+        trackRecordReplayProgress_ = true;
     }
 };
 

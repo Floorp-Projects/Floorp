@@ -562,20 +562,13 @@ MessagePort::CloseInternal(bool aSoftly)
 EventHandlerNonNull*
 MessagePort::GetOnmessage()
 {
-  if (NS_IsMainThread()) {
-    return GetEventHandler(nsGkAtoms::onmessage, EmptyString());
-  }
-  return GetEventHandler(nullptr, NS_LITERAL_STRING("message"));
+  return GetEventHandler(nsGkAtoms::onmessage);
 }
 
 void
 MessagePort::SetOnmessage(EventHandlerNonNull* aCallback)
 {
-  if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
-  } else {
-    SetEventHandler(nullptr, NS_LITERAL_STRING("message"), aCallback);
-  }
+  SetEventHandler(nsGkAtoms::onmessage, aCallback);
 
   // When using onmessage, the call to start() is implied.
   Start();

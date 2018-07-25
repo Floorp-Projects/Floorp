@@ -133,9 +133,7 @@ var RefreshBlocker = {
    */
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
     let win = aWebProgress.DOMWindow;
-    let outerWindowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils)
-                           .outerWindowID;
+    let outerWindowID = win.windowUtils.outerWindowID;
 
     let data = {
       URI: aURI.spec,

@@ -12,8 +12,7 @@ const kValues = ["long text", "long text 2", "long text 3"];
 const isWindows = Services.appinfo.OS == "WINNT";
 const mouseDown = isWindows ? 2 : 1;
 const mouseUp = isWindows ? 4 : 2;
-const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+const utils = window.windowUtils;
 const scale = utils.screenPixelsPerCSSPixel;
 
 function synthesizeNativeMouseClick(aElement) {

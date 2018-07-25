@@ -371,9 +371,7 @@ function dead_test(finish)
 
   let gcTrigger = function() {
     // Force the GC to dead-ify the thing.
-    content.QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils)
-           .garbageCollect();
+    content.windowUtils.garbageCollect();
   }
 
   {

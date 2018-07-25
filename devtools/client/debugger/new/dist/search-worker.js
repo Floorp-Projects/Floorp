@@ -272,212 +272,6 @@ module.exports = __webpack_require__(1631);
 
 /***/ }),
 
-/***/ 1363:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(1367);
-const workerUtils = __webpack_require__(1368);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 1367:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-
-/***/ 1368:
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-WorkerDispatcher.prototype = {
-  start(url) {
-    this.worker = new Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method, { queue = false } = {}) {
-    const calls = [];
-    const push = args => {
-      return new Promise((resolve, reject) => {
-        if (queue && calls.length === 0) {
-          Promise.resolve().then(flush);
-        }
-
-        calls.push([args, resolve, reject]);
-
-        if (!queue) {
-          flush();
-        }
-      });
-    };
-
-    const flush = () => {
-      const items = calls.slice();
-      calls.length = 0;
-
-      const id = this.msgId++;
-      this.worker.postMessage({ id, method, calls: items.map(item => item[0]) });
-
-      const listener = ({ data: result }) => {
-        if (result.id !== id) {
-          return;
-        }
-
-        if (!this.worker) {
-          return;
-        }
-
-        this.worker.removeEventListener("message", listener);
-
-        result.results.forEach((resultData, i) => {
-          const [, resolve, reject] = items[i];
-
-          if (resultData.error) {
-            reject(resultData.error);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      };
-
-      this.worker.addEventListener("message", listener);
-    };
-
-    return (...args) => push(args);
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, calls } = msg.data;
-
-    Promise.all(calls.map(args => {
-      try {
-        const response = publicInterface[method].apply(undefined, args);
-        if (response instanceof Promise) {
-          return response.then(val => ({ response: val }),
-          // Error can't be sent via postMessage, so be sure to
-          // convert to string.
-          err => ({ error: err.toString() }));
-        } else {
-          return { response };
-        }
-      } catch (error) {
-        // Error can't be sent via postMessage, so be sure to convert to
-        // string.
-        return { error: error.toString() };
-      }
-    })).then(results => {
-      self.postMessage({ id, results });
-    });
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const intervalId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearInterval(intervalId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
-
-/***/ }),
-
 /***/ 14:
 /***/ (function(module, exports) {
 
@@ -514,88 +308,6 @@ module.exports = isObjectLike;
 
 /***/ }),
 
-/***/ 1402:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = buildQuery;
-
-var _escapeRegExp = __webpack_require__(259);
-
-var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Ignore doing outline matches for less than 3 whitespaces
- *
- * @memberof utils/source-search
- * @static
- */
-function ignoreWhiteSpace(str) {
-  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
-  );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function wholeMatch(query, wholeWord) {
-  if (query === "" || !wholeWord) {
-    return query;
-  }
-
-  return `\\b${query}\\b`;
-}
-
-function buildFlags(caseSensitive, isGlobal) {
-  if (caseSensitive && isGlobal) {
-    return "g";
-  }
-
-  if (!caseSensitive && isGlobal) {
-    return "gi";
-  }
-
-  if (!caseSensitive && !isGlobal) {
-    return "i";
-  }
-
-  return;
-}
-
-function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces = false }) {
-  const { caseSensitive, regexMatch, wholeWord } = modifiers;
-
-  if (originalQuery === "") {
-    return new RegExp(originalQuery);
-  }
-
-  let query = originalQuery;
-  if (ignoreSpaces) {
-    query = ignoreWhiteSpace(query);
-  }
-
-  if (!regexMatch) {
-    query = (0, _escapeRegExp2.default)(query);
-  }
-
-  query = wholeMatch(query, wholeWord);
-  const flags = buildFlags(caseSensitive, isGlobal);
-
-  if (flags) {
-    return new RegExp(query, flags);
-  }
-
-  return new RegExp(query);
-}
-
-/***/ }),
-
 /***/ 1631:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -608,7 +320,7 @@ var _getMatches2 = _interopRequireDefault(_getMatches);
 
 var _projectSearch = __webpack_require__(1633);
 
-var _devtoolsUtils = __webpack_require__(1363);
+var _devtoolsUtils = __webpack_require__(3651);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -631,7 +343,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getMatches;
 
-var _buildQuery = __webpack_require__(1402);
+var _buildQuery = __webpack_require__(3761);
 
 var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
@@ -743,6 +455,301 @@ function escapeRegExp(string) {
 
 module.exports = escapeRegExp;
 
+
+/***/ }),
+
+/***/ 3651:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(3653);
+const workerUtils = __webpack_require__(3654);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 3653:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+
+/***/ 3654:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
+      return new Promise((resolve, reject) => {
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
+
+        calls.push([args, resolve, reject]);
+
+        if (!queue) {
+          flush();
+        }
+      });
+    };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
+
+      const id = this.msgId++;
+      this.worker.postMessage({
+        id,
+        method,
+        calls: items.map(item => item[0])
+      });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        }
+        return { response };
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
+      }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const timeoutId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearTimeout(timeoutId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+
+/***/ 3761:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = buildQuery;
+
+var _escapeRegExp = __webpack_require__(259);
+
+var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Ignore doing outline matches for less than 3 whitespaces
+ *
+ * @memberof utils/source-search
+ * @static
+ */
+function ignoreWhiteSpace(str) {
+  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
+  );
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function wholeMatch(query, wholeWord) {
+  if (query === "" || !wholeWord) {
+    return query;
+  }
+
+  return `\\b${query}\\b`;
+}
+
+function buildFlags(caseSensitive, isGlobal) {
+  if (caseSensitive && isGlobal) {
+    return "g";
+  }
+
+  if (!caseSensitive && isGlobal) {
+    return "gi";
+  }
+
+  if (!caseSensitive && !isGlobal) {
+    return "i";
+  }
+
+  return;
+}
+
+function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces = false }) {
+  const { caseSensitive, regexMatch, wholeWord } = modifiers;
+
+  if (originalQuery === "") {
+    return new RegExp(originalQuery);
+  }
+
+  let query = originalQuery;
+  if (ignoreSpaces) {
+    query = ignoreWhiteSpace(query);
+  }
+
+  if (!regexMatch) {
+    query = (0, _escapeRegExp2.default)(query);
+  }
+
+  query = wholeMatch(query, wholeWord);
+  const flags = buildFlags(caseSensitive, isGlobal);
+
+  if (flags) {
+    return new RegExp(query, flags);
+  }
+
+  return new RegExp(query);
+}
 
 /***/ }),
 

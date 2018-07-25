@@ -48,20 +48,20 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += ['include']
 
-if '86' in CONFIG['OS_TEST']:
+if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['OS_ARCH'] != 'SunOS':
         if CONFIG['CC_TYPE'] == 'clang-cl':
             # clang-cl can't handle libtheora's inline asm.
             pass
-        elif CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
+        elif CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['CPU_ARCH'] != 'x86_64':
             DEFINES['OC_X86_ASM'] = True
-            if '64' in CONFIG['OS_TEST']:
+            if CONFIG['CPU_ARCH'] == 'x86_64':
                 DEFINES['OC_X86_64_ASM'] = True
     if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         if CONFIG['CC_TYPE'] == 'clang-cl':
             # clang-cl can't handle libtheora's inline asm.
             pass
-        elif '64' not in CONFIG['OS_TEST']:
+        elif CONFIG['CPU_ARCH'] == 'x86':
             SOURCES += [
                 'lib/x86_vc/mmxfrag.c',
                 'lib/x86_vc/mmxidct.c',
@@ -80,7 +80,7 @@ if '86' in CONFIG['OS_TEST']:
         ]
 
 if CONFIG['GNU_AS']:
-    if 'arm' in CONFIG['OS_TEST']:
+    if CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
             'lib/arm/armcpu.c',
             'lib/arm/armstate.c',

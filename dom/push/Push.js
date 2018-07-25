@@ -199,8 +199,7 @@ Push.prototype = {
 
     // Using askPermission from nsIDOMWindowUtils that takes care of the
     // remoting if needed.
-    let windowUtils = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    let windowUtils = this._window.windowUtils;
     windowUtils.askPermission(request);
   },
 };

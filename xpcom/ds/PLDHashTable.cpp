@@ -363,9 +363,10 @@ PLDHashTable::Clear()
 // a previously-removed entry. If |Reason| is |ForSearchOrRemove|, the return
 // value is null on a miss, and will never be a previously-removed entry on a
 // hit. This distinction is a bit grotty but this function is hot enough that
-// these differences are worthwhile.
+// these differences are worthwhile. (It's also hot enough that
+// MOZ_ALWAYS_INLINE makes a significant difference.)
 template <PLDHashTable::SearchReason Reason>
-PLDHashEntryHdr* NS_FASTCALL
+MOZ_ALWAYS_INLINE PLDHashEntryHdr*
 PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash) const
 {
   MOZ_ASSERT(mEntryStore.Get());

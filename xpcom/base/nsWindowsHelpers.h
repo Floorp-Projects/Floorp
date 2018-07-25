@@ -368,9 +368,4 @@ LoadLibrarySystem32(LPCWSTR aModule)
 
 }
 
-// How long to wait for a created process to become available for input,
-// to prevent that process's windows being forced to the background.
-// This is used across update, restart, and the launcher.
-const DWORD kWaitForInputIdleTimeoutMS = 10*1000;
-
 #endif

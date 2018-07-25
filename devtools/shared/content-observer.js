@@ -64,8 +64,5 @@ ContentObserver.prototype = {
 // Utility functions.
 
 ContentObserver.GetInnerWindowID = function(window) {
-  return window
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils)
-    .currentInnerWindowID;
+  return window.windowUtils.currentInnerWindowID;
 };

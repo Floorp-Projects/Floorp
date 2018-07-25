@@ -421,7 +421,7 @@ FrameProperties::GetInternal(UntypedDescriptor aProperty,
   if (aFoundResult) {
     *aFoundResult = true;
   }
-  return mProperties.ElementAt(index).mValue;
+  return mProperties.Elements()[index].mValue;
 }
 
 inline void
@@ -433,7 +433,7 @@ FrameProperties::SetInternal(UntypedDescriptor aProperty, void* aValue,
 
   auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
   if (index != nsTArray<PropertyValue>::NoIndex) {
-    PropertyValue* pv = &mProperties.ElementAt(index);
+    PropertyValue* pv = &mProperties.Elements()[index];
     pv->DestroyValueFor(aFrame);
     pv->mValue = aValue;
     return;
@@ -469,7 +469,7 @@ FrameProperties::RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult)
     *aFoundResult = true;
   }
 
-  void* result = mProperties.ElementAt(index).mValue;
+  void* result = mProperties.Elements()[index].mValue;
   mProperties.RemoveElementAt(index);
 
   return result;
@@ -484,7 +484,7 @@ FrameProperties::DeleteInternal(UntypedDescriptor aProperty,
 
   auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
   if (index != nsTArray<PropertyValue>::NoIndex) {
-    mProperties.ElementAt(index).DestroyValueFor(aFrame);
+    mProperties.Elements()[index].DestroyValueFor(aFrame);
     mProperties.RemoveElementAt(index);
   }
 }

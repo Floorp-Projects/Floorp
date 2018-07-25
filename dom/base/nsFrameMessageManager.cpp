@@ -746,8 +746,14 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         continue;
       }
 
-      AutoEntryScript aes(object, "message manager handler");
+      AutoEntryScript aes(js::UncheckedUnwrap(object), "message manager handler");
       JSContext* cx = aes.cx();
+
+      // We passed the unwrapped object to AutoEntryScript so we now need to
+      // enter the (maybe wrapper) object's realm. We will have to revisit this
+      // later because CCWs are not associated with a single realm so this
+      // doesn't make much sense. See bug 1477923.
+      JSAutoRealm ar(cx, object);
 
       RootedDictionary<ReceiveMessageArgument> argument(cx);
 

@@ -1647,7 +1647,7 @@ CustomizeMode.prototype = {
 
   get _dwu() {
     if (!this.__dwu) {
-      this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      this.__dwu = this.window.windowUtils;
     }
     return this.__dwu;
   },

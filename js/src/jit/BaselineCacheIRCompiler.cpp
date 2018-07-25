@@ -2113,6 +2113,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
       case CacheKind::In:
       case CacheKind::HasOwn:
       case CacheKind::InstanceOf:
+      case CacheKind::BinaryArith:
         MOZ_ASSERT(numInputs == 2);
         allocator.initInputLocation(0, R0);
         allocator.initInputLocation(1, R1);

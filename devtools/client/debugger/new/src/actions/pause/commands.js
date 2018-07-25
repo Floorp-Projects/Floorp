@@ -20,7 +20,7 @@ var _promise = require("../utils/middleware/promise");
 
 var _parser = require("../../workers/parser/index");
 
-var _breakpoints = require("../breakpoints");
+var _breakpoints = require("../breakpoints/index");
 
 var _prefs = require("../../utils/prefs");
 

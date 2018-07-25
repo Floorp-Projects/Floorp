@@ -29,9 +29,7 @@ windows.
   const TEST_PAGE_2 = "http://example.com/browser";
 
   function getOuterWindowID(win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindowUtils)
-              .outerWindowID;
+    return win.windowUtils.outerWindowID;
   }
 
   /**

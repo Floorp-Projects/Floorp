@@ -364,20 +364,14 @@
 
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
-          return this.contentWindow
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .outerWindowID;
+          return this.contentWindow.windowUtils.outerWindowID;
         ]]></getter>
       </property>
 
       <property name="innerWindowID" readonly="true">
         <getter><![CDATA[
           try {
-            return this.contentWindow
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .currentInnerWindowID;
+            return this.contentWindow.windowUtils.currentInnerWindowID;
           } catch (e) {
             if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
               throw e;

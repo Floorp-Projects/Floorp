@@ -11,6 +11,8 @@
 
 #include "vm/JSContext.h"
 
+#include "vm/JSScript-inl.h"
+
 namespace js {
 
 /*
@@ -46,6 +48,9 @@ probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
                       !fp->hasPushedGeckoProfilerFrame());
         fp->setPushedGeckoProfilerFrame();
     }
+
+    if (script->trackRecordReplayProgress())
+        mozilla::recordreplay::AdvanceExecutionProgressCounter();
 
     return true;
 }

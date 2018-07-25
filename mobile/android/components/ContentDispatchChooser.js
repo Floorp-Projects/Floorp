@@ -83,7 +83,7 @@ ContentDispatchChooser.prototype =
         // We couldn't open this. If this was from a click, it's likely that we just
         // want this to fail silently. If the user entered this on the address bar, though,
         // we want to show the neterror page.
-        let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let dwu = window.windowUtils;
         let millis = dwu.millisSinceLastUserInput;
         if (millis < 0 || millis >= 1000) {
           window.document.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);

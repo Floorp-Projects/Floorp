@@ -66,8 +66,7 @@
   }
 
   function doTest() {
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = window.windowUtils;
 
     let os = Cc["@mozilla.org/xre/app-info;1"]
                .getService(Ci.nsIXULRuntime).OS;
@@ -156,8 +155,7 @@
     let frame = document.getElementById("frame1");
     let dwuFrame = frame.contentDocument
                         .defaultView
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils);
+                        .windowUtils;
 
     frame.contentWindow.scrollTo(0, 0);
 

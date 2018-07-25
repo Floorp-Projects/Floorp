@@ -1280,8 +1280,7 @@ PlacesToolbar.prototype = {
     }
     this._updatingNodesVisibility = true;
 
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = window.windowUtils;
 
     let scrollRect =
       await window.promiseDocumentFlushed(() => dwu.getBoundsWithoutFlushing(this._rootElt));

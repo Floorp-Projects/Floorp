@@ -2562,13 +2562,11 @@ async function BrowserViewSourceOfDocument(aArgsOrDocument) {
                       "as a document.");
     }
 
-    let requestor = doc.defaultView
-                       .QueryInterface(Ci.nsIInterfaceRequestor);
-    let browser = requestor.getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell)
-                           .chromeEventHandler;
-    let outerWindowID = requestor.getInterface(Ci.nsIDOMWindowUtils)
-                                 .outerWindowID;
+    let win = doc.defaultView;
+    let browser = win.getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsIDocShell)
+                     .chromeEventHandler;
+    let outerWindowID = win.windowUtils.outerWindowID;
     let URL = browser.currentURI.spec;
     args = { browser, outerWindowID, URL };
   } else {
@@ -3249,14 +3247,12 @@ function BrowserReloadWithFlags(reloadFlags) {
   // because we only want to reset permissions on user reload.
   SitePermissions.clearTemporaryPermissions(gBrowser.selectedBrowser);
 
-  let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+  let handlingUserInput = window.windowUtils.isHandlingUserInput;
 
   gBrowser.selectedBrowser
           .messageManager
           .sendAsyncMessage("Browser:Reload",
-                            { flags: reloadFlags,
-                              handlingUserInput: windowUtils.isHandlingUserInput });
+                            { flags: reloadFlags, handlingUserInput });
 }
 
 function getSecurityInfo(securityInfoAsString) {
@@ -7715,7 +7711,7 @@ var MousePosTracker = {
 
   get _windowUtils() {
     delete this._windowUtils;
-    return this._windowUtils = window.getInterface(Ci.nsIDOMWindowUtils);
+    return this._windowUtils = window.windowUtils;
   },
 
   /**

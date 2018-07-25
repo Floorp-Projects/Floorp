@@ -138,7 +138,9 @@ ChannelToUIProcess()
 }
 
 void
-InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid)
+InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
+                    const base::SharedMemoryHandle& aPrefsHandle,
+                    const ipc::FileDescriptor& aPrefMapHandle)
 {
   MOZ_CRASH();
 }

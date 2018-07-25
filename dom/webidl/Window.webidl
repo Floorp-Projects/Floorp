@@ -21,6 +21,7 @@
 interface IID;
 interface nsIBrowserDOMWindow;
 interface XULControllers;
+interface nsIDOMWindowUtils;
 
 typedef OfflineResourceList ApplicationCache;
 
@@ -357,6 +358,12 @@ partial interface Window {
    */
   [Replaceable]
   readonly attribute InstallTriggerImpl? InstallTrigger;
+
+  /**
+   * Get the nsIDOMWindowUtils for this window.
+   */
+  [Constant, Throws, ChromeOnly]
+  readonly attribute nsIDOMWindowUtils windowUtils;
 };
 
 Window implements TouchEventHandlers;

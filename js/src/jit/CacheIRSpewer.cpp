@@ -157,6 +157,17 @@ CacheIRSpewer::valueProperty(const char* name, const Value& v)
 }
 
 void
+CacheIRSpewer::opcodeProperty(const char* name, const JSOp op)
+{
+    MOZ_ASSERT(enabled());
+    JSONPrinter& j = json.ref();
+
+    j.beginStringProperty(name);
+    output.put(CodeName[op]);
+    j.endStringProperty();
+}
+
+void
 CacheIRSpewer::attached(const char* name)
 {
     MOZ_ASSERT(enabled());
