@@ -2757,16 +2757,26 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_WHILE:
-          case SRC_NEXTCASE:
             if (!sp->jsprintf(" offset %u", unsigned(GetSrcNoteOffset(sn, 0))))
                 return false;
+            break;
+
+          case SRC_NEXTCASE:
+            if (!sp->jsprintf(" next case offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::NextCase::NextCaseOffset))))
+            {
+                return false;
+            }
             break;
 
           case SRC_TABLESWITCH: {
             mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_TABLESWITCH);
-            if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" end offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::TableSwitch::EndOffset))))
+            {
                 return false;
+            }
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
@@ -2774,9 +2784,14 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
           case SRC_CONDSWITCH: {
             mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_CONDSWITCH);
-            if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" end offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::CondSwitch::EndOffset))))
+            {
                 return false;
-            if (unsigned caseOff = (unsigned) GetSrcNoteOffset(sn, 1)) {
+            }
+            if (unsigned caseOff =
+                unsigned(GetSrcNoteOffset(sn, SrcNote::CondSwitch::FirstCaseOffset)))
+            {
                 if (!sp->jsprintf(" first case offset %u", caseOff))
                     return false;
             }

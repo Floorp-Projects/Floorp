@@ -200,7 +200,7 @@ LCovSource::writeScript(JSScript* script)
                 else if (type == SRC_NEWLINE)
                     lineno++;
                 else if (type == SRC_TABLESWITCH)
-                    tableswitchExitOffset = GetSrcNoteOffset(sn, 0);
+                    tableswitchExitOffset = GetSrcNoteOffset(sn, SrcNote::TableSwitch::EndOffset);
 
                 sn = SN_NEXT(sn);
                 snpc += SN_DELTA(sn);
