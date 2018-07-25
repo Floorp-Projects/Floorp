@@ -20,7 +20,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsCSSPseudoElements.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -263,11 +263,11 @@ nsMeterFrame::ShouldUseNativeStyle() const
   // - both frames use the native appearance;
   // - neither frame has author specified rules setting the border or the
   //   background.
-  return StyleDisplay()->mAppearance == NS_THEME_METERBAR &&
+  return StyleDisplay()->mAppearance == StyleAppearance::Meterbar &&
          !PresContext()->HasAuthorSpecifiedRules(this,
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND) &&
          barFrame &&
-         barFrame->StyleDisplay()->mAppearance == NS_THEME_METERCHUNK &&
+         barFrame->StyleDisplay()->mAppearance == StyleAppearance::Meterchunk &&
          !PresContext()->HasAuthorSpecifiedRules(barFrame,
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }

@@ -170,7 +170,7 @@ nsBox::GetXULBorder(nsMargin& aMargin)
   aMargin.SizeTo(0,0,0,0);
 
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->mAppearance && gTheme) {
+  if (disp->HasAppearance() && gTheme) {
     // Go to the theme for the border.
     nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
@@ -192,7 +192,7 @@ nsresult
 nsBox::GetXULPadding(nsMargin& aPadding)
 {
   const nsStyleDisplay *disp = StyleDisplay();
-  if (disp->mAppearance && gTheme) {
+  if (disp->HasAppearance() && gTheme) {
     // Go to the theme for the padding.
     nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
@@ -534,7 +534,7 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
 
     // See if a native theme wants to supply a minimum size.
     const nsStyleDisplay* display = aBox->StyleDisplay();
-    if (display->mAppearance) {
+    if (display->HasAppearance()) {
       nsITheme *theme = aState.PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox, display->mAppearance)) {
         LayoutDeviceIntSize size;

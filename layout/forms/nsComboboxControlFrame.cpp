@@ -39,7 +39,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsITheme.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
 #include "nsTextNode.h"
@@ -761,7 +761,7 @@ bool
 nsComboboxControlFrame::HasDropDownButton() const
 {
   const nsStyleDisplay* disp = StyleDisplay();
-  return disp->mAppearance == NS_THEME_MENULIST &&
+  return disp->mAppearance == StyleAppearance::Menulist &&
     (!IsThemed(disp) ||
      PresContext()->GetTheme()->ThemeNeedsComboboxDropmarker());
 }
