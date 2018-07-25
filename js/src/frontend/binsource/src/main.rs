@@ -249,7 +249,7 @@ impl GlobalRules {
                         let name = node_item_entry.as_str()
                             .unwrap_or_else(|| panic!("Rule {}.{} must be a string", node_key, as_string));
                         let inherits = syntax.get_node_name(name)
-                            .unwrap_or_else(|| panic!("Unknown node name {}", node_key));
+                            .unwrap_or_else(|| panic!("Unknown node name {}", name));
                         node_rule.inherits = Some(inherits).cloned();
                     }
                     "extra-params" => {
