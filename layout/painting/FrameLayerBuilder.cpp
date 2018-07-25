@@ -573,97 +573,6 @@ FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame)
 }
 
 /**
- * Transforms and clips |aRegion| using |aNode| up to the root transform node.
- * |aRegion| is expected be in integer pixels.
- */
-static nsIntRegion
-TransformWithNode(const TransformClipNode* aNode,
-                  const nsIntRegion& aRegion, const int32_t aA2D)
-{
-  MOZ_ASSERT(aNode);
-  if (aRegion.IsEmpty()) {
-    return aRegion;
-  }
-
-  nsIntRegion result = aRegion;
-
-  while (aNode) {
-    const Matrix4x4Flagged& transform = aNode->Transform();
-    result = result.Transform(transform.GetMatrix());
-
-    if (aNode->Clip()) {
-      const nsRect& clip = *aNode->Clip();
-      const gfx::IntRect clipRect = clip.ToNearestPixels(aA2D);
-      result.AndWith(clipRect);
-    }
-
-    aNode = aNode->Parent();
-  }
-
-  return result;
-}
-
-static void
-TransformRect(const TransformClipNode* aNode,
-              gfx::Rect& aRect, const int32_t aA2D)
-{
-  while (aNode) {
-    const Matrix4x4Flagged& transform = aNode->Transform();
-    gfx::Rect maxBounds = gfx::Rect::MaxIntRect();
-
-    if (aNode->Clip()) {
-      const nsRect& clip = *aNode->Clip();
-      maxBounds = IntRectToRect(clip.ToNearestPixels(aA2D));
-    }
-
-    aRect = transform.TransformAndClipBounds(aRect, maxBounds);
-    aNode = aNode->Parent();
-  }
-}
-
-/**
- * Transforms and clips |aRect| using |aNode| up to the root transform node.
- * |aRect| is expected to be in app units.
- */
-static nsRect
-TransformWithNode(const TransformClipNode* aNode,
-                  const nsRect& aRect, const int32_t aA2D)
-{
-  MOZ_ASSERT(aNode);
-  if (aRect.IsEmpty()) {
-    return aRect;
-  }
-
-  gfx::Rect result(NSAppUnitsToFloatPixels(aRect.x, aA2D),
-                   NSAppUnitsToFloatPixels(aRect.y, aA2D),
-                   NSAppUnitsToFloatPixels(aRect.width, aA2D),
-                   NSAppUnitsToFloatPixels(aRect.height, aA2D));
-  TransformRect(aNode, result, aA2D);
-  return nsRect(NSFloatPixelsToAppUnits(result.x, aA2D),
-                NSFloatPixelsToAppUnits(result.y, aA2D),
-                NSFloatPixelsToAppUnits(result.width, aA2D),
-                NSFloatPixelsToAppUnits(result.height, aA2D));
-}
-
-/**
- * Transforms and clips |aRect| using |aNode| up to the root transform node.
- * |aRect| is expected to be in integer pixels.
- */
-static gfx::IntRect
-TransformWithNode(const TransformClipNode* aNode,
-                  const gfx::IntRect& aRect, const int32_t aA2D)
-{
-  MOZ_ASSERT(aNode);
-  if (aRect.IsEmpty()) {
-    return aRect;
-  }
-
-  gfx::Rect result(IntRectToRect(aRect));
-  TransformRect(aNode, result, aA2D);
-  return RoundedToInt(result);
-}
-
-/**
  * We keep a stack of these to represent the PaintedLayers that are
  * currently available to have display items added to.
  * We use a stack here because as much as possible we want to
@@ -2277,7 +2186,7 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsIntRegion& aRegion,
   if (aTransform) {
     PaintedDisplayItemLayerUserData* data =
       GetPaintedDisplayItemLayerUserData(aLayer);
-    rgn = TransformWithNode(aTransform, rgn, data->mAppUnitsPerDevPixel);
+    rgn = aTransform->TransformRegion(rgn, data->mAppUnitsPerDevPixel);
   }
 
   rgn.MoveBy(-aTranslation);
@@ -2365,12 +2274,14 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
       PaintedDisplayItemLayerUserData* paintedData =
           static_cast<PaintedDisplayItemLayerUserData*>(t->GetUserData(&gPaintedDisplayItemLayerUserData));
       if (paintedData && data->mGeometry) {
+        const int32_t appUnitsPerDevPixel = paintedData->mAppUnitsPerDevPixel;
         nsRegion old = data->mGeometry->ComputeInvalidationRegion();
-        nsIntRegion rgn = old.ScaleToOutsidePixels(paintedData->mXScale, paintedData->mYScale, paintedData->mAppUnitsPerDevPixel);
+        nsIntRegion rgn = old.ScaleToOutsidePixels(paintedData->mXScale,
+                                                   paintedData->mYScale,
+                                                   appUnitsPerDevPixel);
 
         if (data->mTransform) {
-          rgn = TransformWithNode(data->mTransform, rgn,
-                                  paintedData->mAppUnitsPerDevPixel);
+          rgn = data->mTransform->TransformRegion(rgn, appUnitsPerDevPixel);
         }
 
         rgn.MoveBy(-GetTranslationForPaintedLayer(t));
@@ -4123,7 +4034,7 @@ PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
   const mozilla::DisplayItemClip& clip = aItem->GetClip();
   nsRect area = clip.ApplyNonRoundedIntersection(aItem->Area());
   if (aTransform) {
-    area = TransformWithNode(aTransform, area, aState->mAppUnitsPerDevPixel);
+    area = aTransform->TransformRect(area, aState->mAppUnitsPerDevPixel);
   }
   const mozilla::gfx::CompositorHitTestInfo hitTestInfo = aItem->HitTestInfo();
 
@@ -4752,10 +4663,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       MOZ_ASSERT(transformNode);
 
       itemContent =
-        TransformWithNode(transformNode, itemContent, mAppUnitsPerDevPixel);
+        transformNode->TransformRect(itemContent,mAppUnitsPerDevPixel);
 
       itemDrawRect =
-        TransformWithNode(transformNode, itemDrawRect, mAppUnitsPerDevPixel);
+        transformNode->TransformRect(itemDrawRect, mAppUnitsPerDevPixel);
     }
 
 #ifdef DEBUG
@@ -4785,8 +4696,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       nsRect itemBuildingRect = item->GetBuildingRect();
 
       if (transformNode) {
-        itemBuildingRect = TransformWithNode(transformNode, itemBuildingRect,
-                                             mAppUnitsPerDevPixel);
+        itemBuildingRect =
+          transformNode->TransformRect(itemBuildingRect, mAppUnitsPerDevPixel);
       }
 
       itemVisibleRect = itemVisibleRect.Intersect(
