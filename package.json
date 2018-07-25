@@ -8,7 +8,7 @@
     "eslint-plugin-html": "4.0.3",
     "eslint-plugin-mozilla": "file:tools/lint/eslint/eslint-plugin-mozilla",
     "eslint-plugin-no-unsanitized": "3.0.2",
-    "eslint-plugin-react": "7.1.0",
+    "eslint-plugin-react": "7.10.0",
     "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js"
   },
   "devDependencies": {}
