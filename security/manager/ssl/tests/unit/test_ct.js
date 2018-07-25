@@ -11,7 +11,8 @@ const certdb  = Cc["@mozilla.org/security/x509certdb;1"]
 
 function expectCT(value) {
   return (securityInfo) => {
-    let sslStatus = securityInfo.SSLStatus;
+    let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                                .SSLStatus;
     Assert.equal(sslStatus.certificateTransparencyStatus, value,
                  "actual and expected CT status should match");
   };
