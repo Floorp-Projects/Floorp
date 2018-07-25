@@ -2214,6 +2214,16 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), filename());
         if (mode == XDR_DECODE && !xdr->hasOptions() && !setFilename(xdr->cx(), fn))
             return xdr->fail(JS::TranscodeResult_Throw);
+
+        // Note the content of sources decoded when recording or replaying.
+        if (mode == XDR_DECODE && hasSourceData() && mozilla::recordreplay::IsRecordingOrReplaying()) {
+            UncompressedSourceCache::AutoHoldEntry holder;
+            ScriptSource::PinnedChars chars(xdr->cx(), this, holder, 0, length());
+            if (!chars.get())
+                return xdr->fail(JS::TranscodeResult_Throw);
+            mozilla::recordreplay::NoteContentParse(this, filename(), "application/javascript",
+                                                    chars.get(), length());
+        }
     }
 
     return Ok();
@@ -3261,13 +3271,13 @@ js::PCToLineNumber(unsigned startLine, jssrcnote* notes, jsbytecode* code, jsbyt
 
         SrcNoteType type = SN_TYPE(sn);
         if (type == SRC_SETLINE) {
-            lineno = unsigned(GetSrcNoteOffset(sn, 0));
+            lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
             column = 0;
         } else if (type == SRC_NEWLINE) {
             lineno++;
             column = 0;
         } else if (type == SRC_COLSPAN) {
-            ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
+            ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, SrcNote::ColSpan::Span));
             MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
             column += colspan;
         }
@@ -3313,7 +3323,7 @@ js::LineNumberToPC(JSScript* script, unsigned target)
         offset += SN_DELTA(sn);
         SrcNoteType type = SN_TYPE(sn);
         if (type == SRC_SETLINE) {
-            lineno = unsigned(GetSrcNoteOffset(sn, 0));
+            lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
         } else if (type == SRC_NEWLINE) {
             lineno++;
         }
@@ -3332,7 +3342,7 @@ js::GetScriptLineExtent(JSScript* script)
     for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         SrcNoteType type = SN_TYPE(sn);
         if (type == SRC_SETLINE)
-            lineno = unsigned(GetSrcNoteOffset(sn, 0));
+            lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
         else if (type == SRC_NEWLINE)
             lineno++;
 

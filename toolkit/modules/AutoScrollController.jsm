@@ -177,8 +177,7 @@ class AutoScrollController {
     if (!content.performance)
       return;
 
-    let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    let domUtils = content.windowUtils;
     let scrollable = this._scrollable;
     if (scrollable instanceof Ci.nsIDOMWindow) {
       // getViewId() needs an element to operate on.

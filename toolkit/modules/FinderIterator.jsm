@@ -577,7 +577,7 @@ var FinderIterator = {
 
     // Casting `window.frames` to an Iterator doesn't work, so we're stuck with
     // a plain, old for-loop.
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let dwu = window.windowUtils;
     for (let i = 0, l = window.frames.length; i < l; ++i) {
       let frame = window.frames[i];
       // Don't count matches in hidden frames; get the frame element rect and

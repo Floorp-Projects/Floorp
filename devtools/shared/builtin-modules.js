@@ -233,6 +233,17 @@ defineLazyGetter(exports.modules, "Debugger", () => {
   return sandbox.Debugger;
 });
 
+defineLazyGetter(exports.modules, "RecordReplayControl", () => {
+  // addDebuggerToGlobal also adds the RecordReplayControl object.
+  const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
+  Cu.evalInSandbox(
+    "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
+    "addDebuggerToGlobal(this);",
+    sandbox
+  );
+  return sandbox.RecordReplayControl;
+});
+
 defineLazyGetter(exports.modules, "Timer", () => {
   const {setTimeout, clearTimeout} = require("resource://gre/modules/Timer.jsm");
   // Do not return Cu.import result, as DevTools loader would freeze Timer.jsm globals...

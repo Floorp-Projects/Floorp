@@ -119,8 +119,7 @@ async function getScrollbarSize() {
     gBrowser.selectedBrowser,
     {},
     function() {
-      const winUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils);
+      const winUtils = content.windowUtils;
       const scrollbarHeight = {};
       const scrollbarWidth = {};
       winUtils.getScrollbarSize(true, scrollbarWidth, scrollbarHeight);

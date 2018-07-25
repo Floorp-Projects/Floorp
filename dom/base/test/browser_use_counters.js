@@ -151,7 +151,7 @@ var check_use_counter_iframe = async function(file, use_counter_middlefix, check
     ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
-    let wu = content.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let wu = content.window.windowUtils;
 
     let iframe = content.document.getElementById('content');
     iframe.src = opts.file;
@@ -223,7 +223,7 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
       // Flush for the image.  It matters what order we do these in, so that
       // the image can propagate its use counters to the document prior to the
       // document reporting its use counters.
-      let wu = content.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let wu = content.window.windowUtils;
       wu.forceUseCounterFlush(img);
 
       // Flush for the main window.
@@ -280,7 +280,7 @@ var check_use_counter_direct = async function(file, use_counter_middlefix, xfail
       let listener = () => {
         removeEventListener("load", listener, true);
 
-        let wu = content.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let wu = content.window.windowUtils;
         wu.forceUseCounterFlush(content.document);
 
         setTimeout(resolve, 0);

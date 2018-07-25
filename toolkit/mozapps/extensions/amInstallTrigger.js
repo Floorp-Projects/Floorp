@@ -34,8 +34,7 @@ function CallbackObject(id, callback, mediator) {
 }
 
 function RemoteMediator(window) {
-  window.QueryInterface(Ci.nsIInterfaceRequestor);
-  let utils = window.getInterface(Ci.nsIDOMWindowUtils);
+  let utils = window.windowUtils;
   this._windowID = utils.currentInnerWindowID;
 
   this.mm = window

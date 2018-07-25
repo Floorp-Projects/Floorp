@@ -61,18 +61,14 @@ function removeAuthorSheet(win, style)
 function loadSheet(win, style, type)
 {
   var uri = gIOService.newURI(getUri(style));
-  var windowUtils = SpecialPowers.wrap(win)
-    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  var windowUtils = SpecialPowers.getDOMWindowUtils(win);
   windowUtils.loadSheet(uri, windowUtils[type]);
 }
 
 function removeSheet(win, style, type)
 {
   var uri = gIOService.newURI(getUri(style));
-  var windowUtils = SpecialPowers.wrap(win)
-    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  var windowUtils = SpecialPowers.getDOMWindowUtils(win);
   windowUtils.removeSheet(uri, windowUtils[type]);
 }
 

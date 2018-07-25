@@ -1749,7 +1749,7 @@ VARIABLES = {
         """),
 
     # IDL Generation.
-    'XPIDL_SOURCES': (StrictOrderingOnAppendList, list,
+    'XPIDL_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """XPCOM Interface Definition Files (xpidl).
 
         This is a list of files that define XPCOM interface definitions.

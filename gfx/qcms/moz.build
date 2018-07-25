@@ -25,10 +25,10 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 use_sse1 = False
 use_sse2 = False
 use_altivec = False
-if '86' in CONFIG['OS_TEST']:
+if CONFIG['INTEL_ARCHITECTURE']:
     use_sse2 = True
     if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-        if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
+        if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['CPU_ARCH'] != 'x86_64':
             use_sse1 = True
     else:
         use_sse1 = True

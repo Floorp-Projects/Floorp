@@ -72,8 +72,7 @@ async function getSystemInfo() {
   }
 
   if (win) {
-    const utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils);
+    const utils = win.windowUtils;
     dpi = utils.displayDPI;
     useragent = win.navigator.userAgent;
     width = win.screen.width;

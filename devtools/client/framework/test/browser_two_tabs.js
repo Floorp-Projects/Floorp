@@ -65,9 +65,7 @@ function checkGetTab() {
            if (gTab1.linkedBrowser.frameLoader.tabParent) {
              filter.tabId = gTab1.linkedBrowser.frameLoader.tabParent.tabId;
            } else {
-             const windowUtils = gTab1.linkedBrowser.contentWindow
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
+             const windowUtils = gTab1.linkedBrowser.contentWindow.windowUtils;
              filter.outerWindowID = windowUtils.outerWindowID;
            }
            return gClient.getTab(filter);

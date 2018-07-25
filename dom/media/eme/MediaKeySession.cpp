@@ -645,25 +645,25 @@ MediaKeySession::SetExpiration(double aExpiration)
 EventHandlerNonNull*
 MediaKeySession::GetOnkeystatuseschange()
 {
-  return GetEventHandler(nsGkAtoms::onkeystatuseschange, EmptyString());
+  return GetEventHandler(nsGkAtoms::onkeystatuseschange);
 }
 
 void
 MediaKeySession::SetOnkeystatuseschange(EventHandlerNonNull* aCallback)
 {
-  SetEventHandler(nsGkAtoms::onkeystatuseschange, EmptyString(), aCallback);
+  SetEventHandler(nsGkAtoms::onkeystatuseschange, aCallback);
 }
 
 EventHandlerNonNull*
 MediaKeySession::GetOnmessage()
 {
-  return GetEventHandler(nsGkAtoms::onmessage, EmptyString());
+  return GetEventHandler(nsGkAtoms::onmessage);
 }
 
 void
 MediaKeySession::SetOnmessage(EventHandlerNonNull* aCallback)
 {
-  SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
+  SetEventHandler(nsGkAtoms::onmessage, aCallback);
 }
 
 nsCString

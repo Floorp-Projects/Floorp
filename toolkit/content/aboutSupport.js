@@ -340,8 +340,7 @@ var snapshotFormatters = {
       delete data.info;
     }
 
-    let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
+    let windowUtils = window.windowUtils;
     let gpuProcessPid = windowUtils.gpuProcessPid;
 
     if (gpuProcessPid != -1) {

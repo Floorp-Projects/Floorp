@@ -2725,13 +2725,13 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_COLSPAN:
-            colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
+            colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, SrcNote::ColSpan::Span));
             if (!sp->jsprintf("%d", colspan))
                 return false;
             break;
 
           case SRC_SETLINE:
-            lineno = GetSrcNoteOffset(sn, 0);
+            lineno = GetSrcNoteOffset(sn, SrcNote::SetLine::Line);
             if (!sp->jsprintf(" lineno %u", lineno))
                 return false;
             break;
@@ -2757,16 +2757,26 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_WHILE:
-          case SRC_NEXTCASE:
             if (!sp->jsprintf(" offset %u", unsigned(GetSrcNoteOffset(sn, 0))))
                 return false;
+            break;
+
+          case SRC_NEXTCASE:
+            if (!sp->jsprintf(" next case offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::NextCase::NextCaseOffset))))
+            {
+                return false;
+            }
             break;
 
           case SRC_TABLESWITCH: {
             mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_TABLESWITCH);
-            if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" end offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::TableSwitch::EndOffset))))
+            {
                 return false;
+            }
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
@@ -2774,9 +2784,14 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
           case SRC_CONDSWITCH: {
             mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_CONDSWITCH);
-            if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" end offset %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::CondSwitch::EndOffset))))
+            {
                 return false;
-            if (unsigned caseOff = (unsigned) GetSrcNoteOffset(sn, 1)) {
+            }
+            if (unsigned caseOff =
+                unsigned(GetSrcNoteOffset(sn, SrcNote::CondSwitch::FirstCaseOffset)))
+            {
                 if (!sp->jsprintf(" first case offset %u", caseOff))
                     return false;
             }
@@ -2787,8 +2802,11 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 
           case SRC_TRY:
             MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
-            if (!sp->jsprintf(" offset to jump %u", unsigned(GetSrcNoteOffset(sn, 0))))
+            if (!sp->jsprintf(" offset to jump %u",
+                              unsigned(GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset))))
+            {
                 return false;
+            }
             break;
 
           case SRC_CLASS_SPAN: {
@@ -8645,6 +8663,8 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             jit::JitOptions.disableCacheIR = false;
         else if (strcmp(str, "off") == 0)
             jit::JitOptions.disableCacheIR = true;
+        else if (strcmp(str, "nobinary") == 0)
+            jit::JitOptions.disableCacheIRBinaryArith = true;
         else
             return OptionFailure("cache-ir-stubs", str);
     }
@@ -9199,8 +9219,9 @@ main(int argc, char** argv, char** envp)
 #endif
         || !op.addStringOption('\0', "spectre-mitigations", "on/off",
                                "Whether Spectre mitigations are enabled (default: off, on to enable)")
-        || !op.addStringOption('\0', "cache-ir-stubs", "on/off",
-                               "Use CacheIR stubs (default: on, off to disable)")
+        || !op.addStringOption('\0', "cache-ir-stubs", "on/off/nobinary",
+                               "Use CacheIR stubs (default: on, off to disable, nobinary to"
+                               "just disable binary arith)")
         || !op.addStringOption('\0', "ion-shared-stubs", "on/off",
                                "Use shared stubs (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",

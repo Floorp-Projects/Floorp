@@ -23,8 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1274663
       var windows = SpecialPowers.Services.ww.getWindowEnumerator();
       var windowutils;
       while (windows.hasMoreElements()) {
-        windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIDOMWindowUtils);
+        windowutils = windows.getNext().windowUtils;
       }
 
       const PAGE_WIDTH = 200;

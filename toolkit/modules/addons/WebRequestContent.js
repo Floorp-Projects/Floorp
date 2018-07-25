@@ -120,9 +120,7 @@ var ContentPolicy = {
     let mm = Services.cpmm;
 
     function getWindowId(window) {
-      return window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .outerWindowID;
+      return window.windowUtils.outerWindowID;
     }
 
     let node = loadInfo.loadingContext;

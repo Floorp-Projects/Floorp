@@ -71,7 +71,7 @@ struct NullPrincipalURIParams
 struct HostObjectURIParams
 {
   SimpleURIParams simpleParams;
-  OptionalPrincipalInfo principal;
+  bool revoked;
 };
 
 union URIParams

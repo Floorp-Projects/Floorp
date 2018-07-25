@@ -56,20 +56,13 @@ MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs)
 EventHandlerNonNull*
 MIDIInput::GetOnmidimessage()
 {
-  if (NS_IsMainThread()) {
-    return GetEventHandler(nsGkAtoms::onmidimessage, EmptyString());
-  }
-  return GetEventHandler(nullptr, NS_LITERAL_STRING("midimessage"));
+  return GetEventHandler(nsGkAtoms::onmidimessage);
 }
 
 void
 MIDIInput::SetOnmidimessage(EventHandlerNonNull* aCallback)
 {
-  if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::onmidimessage, EmptyString(), aCallback);
-  } else {
-    SetEventHandler(nullptr, NS_LITERAL_STRING("midimessage"), aCallback);
-  }
+  SetEventHandler(nsGkAtoms::onmidimessage, aCallback);
   if (mPort->ConnectionState() != MIDIPortConnectionState::Open) {
     mPort->SendOpen();
   }

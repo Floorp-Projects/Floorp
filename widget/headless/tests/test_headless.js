@@ -166,8 +166,7 @@ add_task(async function test_mouse_drag() {
   let left = rect.left;
   let top = rect.top;
 
-  let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+  let utils = contentWindow.windowUtils;
   utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
   utils.sendMouseEvent("mousemove", left, top, 0, 1, 0, false, 0, 0);
   // Wait for a turn of the event loop since the synthetic mouse event

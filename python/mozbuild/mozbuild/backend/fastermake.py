@@ -17,7 +17,7 @@ from mozbuild.frontend.data import (
     JARManifest,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
-    XPIDLFile,
+    XPIDLModule,
 )
 from mozbuild.makeutil import Makefile
 from mozbuild.util import OrderedDefaultDict
@@ -143,7 +143,7 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
             # faster backend.
             return False
 
-        elif isinstance(obj, XPIDLFile):
+        elif isinstance(obj, XPIDLModule):
             self._has_xpidl = True
             # We're not actually handling XPIDL files.
             return False

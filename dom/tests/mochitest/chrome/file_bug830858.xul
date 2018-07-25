@@ -24,8 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830858
     var b = document.getElementById("b");
     var win = b.contentWindow;
     var doc = win.document;
-    var wu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils);
+    var wu = win.windowUtils;
 
     var docListenerCalled = 0;
     doc.addEventListener("foo", function() { ++docListenerCalled; }, true);

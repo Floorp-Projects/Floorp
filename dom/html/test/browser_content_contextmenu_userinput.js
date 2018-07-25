@@ -33,8 +33,7 @@ add_task(async function() {
 
     let promiseCtxMenuClick = ContentTask.spawn(aBrowser, null, async function() {
       await new Promise(resolve => {
-        let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils);
+        let windowUtils = content.windowUtils;
         let menuitem = content.document.getElementById("menuitem");
         menuitem.addEventListener("click", function() {
           Assert.ok(windowUtils.isHandlingUserInput,

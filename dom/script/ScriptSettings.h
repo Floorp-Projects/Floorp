@@ -322,7 +322,10 @@ public:
                   const char *aReason,
                   bool aIsMainThread = NS_IsMainThread());
 
-  AutoEntryScript(JSObject* aObject, // Any object from the relevant global
+  // aObject can be any object from the relevant global. It must not be a
+  // cross-compartment wrapper because CCWs are not associated with a single
+  // global.
+  AutoEntryScript(JSObject* aObject,
                   const char *aReason,
                   bool aIsMainThread = NS_IsMainThread());
 

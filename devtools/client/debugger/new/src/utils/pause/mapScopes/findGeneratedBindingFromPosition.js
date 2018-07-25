@@ -3,16 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.findGeneratedBindingForStandardBinding = findGeneratedBindingForStandardBinding;
-exports.findGeneratedBindingForImportBinding = findGeneratedBindingForImportBinding;
-exports.findGeneratedBindingForNormalDeclaration = findGeneratedBindingForNormalDeclaration;
-exports.findGeneratedBindingForImportDeclaration = findGeneratedBindingForImportDeclaration;
+exports.findGeneratedReference = findGeneratedReference;
+exports.findGeneratedImportReference = findGeneratedImportReference;
+exports.findGeneratedImportDeclaration = findGeneratedImportDeclaration;
 
 var _locColumn = require("./locColumn");
 
 var _mappingContains = require("./mappingContains");
-
-var _getGeneratedLocationRanges = require("./getGeneratedLocationRanges");
 
 var _firefox = require("../../../client/firefox");
 
@@ -21,52 +18,9 @@ var _firefox = require("../../../client/firefox");
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
- * Find a simple 1-1 match of a binding in the original code to a binding
- * in the generated code.
- */
-async function findGeneratedBindingForStandardBinding(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
-  return await findGeneratedReference((await (0, _getGeneratedLocationRanges.getGeneratedLocationRanges)(generatedAstBindings, source, pos, bindingType, pos.type, sourceMaps)));
-}
-/**
- * Find a simple 1-1 match of a binding in the original code to an
- * expression in the generated code.
- */
-
-
-async function findGeneratedBindingForImportBinding(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
-  return await findGeneratedImportReference((await (0, _getGeneratedLocationRanges.getGeneratedLocationRanges)(generatedAstBindings, source, pos, bindingType, pos.type, sourceMaps)));
-}
-/**
- * Find a simple 1-1 match of a binding's declaration in the original code to a
- * binding in the generated code.
- */
-
-
-async function findGeneratedBindingForNormalDeclaration(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
-  return await findGeneratedReference((await (0, _getGeneratedLocationRanges.getGeneratedLocationRanges)(generatedAstBindings, source, pos.declaration, bindingType, pos.type, sourceMaps)));
-}
-/**
- * Find a simple 1-1 match of an import binding's declaration in the original
- * code to an expression in the generated code.
- */
-
-
-async function findGeneratedBindingForImportDeclaration(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
-  const importName = pos.importName;
-
-  if (typeof importName !== "string") {
-    // Should never happen, just keeping Flow happy.
-    return null;
-  }
-
-  return await findGeneratedImportDeclaration((await (0, _getGeneratedLocationRanges.getGeneratedLocationRanges)(generatedAstBindings, source, pos.declaration, bindingType, pos.type, sourceMaps)), importName);
-}
-/**
  * Given a mapped range over the generated source, attempt to resolve a real
  * binding descriptor that can be used to access the value.
  */
-
-
 async function findGeneratedReference(applicableBindings) {
   // We can adjust this number as we go, but these are a decent start as a
   // general heuristic to assume the bindings were bad or just map a chunk of

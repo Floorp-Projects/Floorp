@@ -224,17 +224,20 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
 {
     MOZ_ASSERT(kind_ == Kind::Cond);
 
-    if (state_ == State::Case) {
-        // Link the last JSOP_CASE's SRC_NEXTCASE to current JSOP_CASE or
-        // JSOP_DEFAULT for the benefit of IonBuilder.
-        if (!bce_->setSrcNoteOffset(caseNoteIndex_, 0, bce_->offset() - lastCaseOffset_))
-            return false;
-    }
-
     if (isDefault) {
         if (!bce_->emitJump(JSOP_DEFAULT, &condSwitchDefaultOffset_))
             return false;
         return true;
+    }
+
+    if (state_ == State::Case) {
+        // Link the last JSOP_CASE's SRC_NEXTCASE to current JSOP_CASE for the
+        // benefit of IonBuilder.
+        if (!bce_->setSrcNoteOffset(caseNoteIndex_, SrcNote::NextCase::NextCaseOffset,
+                                    bce_->offset() - lastCaseOffset_))
+        {
+            return false;
+        }
     }
 
     if (!bce_->newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex_))
@@ -392,8 +395,14 @@ SwitchEmitter::emitEnd()
     }
 
     // Set the SRC_SWITCH note's offset operand to tell end of switch.
-    if (!bce_->setSrcNoteOffset(noteIndex_, 0, bce_->lastNonJumpTargetOffset() - top_))
+    // This code is shared between table switch and cond switch.
+    static_assert(unsigned(SrcNote::TableSwitch::EndOffset) == unsigned(SrcNote::CondSwitch::EndOffset),
+                  "{TableSwitch,CondSwitch}::EndOffset should be same");
+    if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::TableSwitch::EndOffset,
+                                bce_->lastNonJumpTargetOffset() - top_))
+    {
         return false;
+    }
 
     if (kind_ == Kind::Table) {
         // Skip over the already-initialized switch bounds.

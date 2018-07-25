@@ -38,8 +38,7 @@ add_task(async function() {
     let bounds = closeIcon.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
 
@@ -68,8 +67,7 @@ add_task(async function() {
     let overlayTop = (overlayBounds.left + overlayBounds.right) / 2 ;
     let closeIconLeft = (closeIconBounds.left + closeIconBounds.right) / 2;
     let closeIconTop = (closeIconBounds.top + closeIconBounds.bottom) / 2;
-    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
+    let utils = content.windowUtils;
     // Simulate clicking on the close icon.
     utils.sendMouseEvent("mousedown", closeIconLeft, closeIconTop, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", closeIconLeft, closeIconTop, 0, 1, 0, false, 0, 0);

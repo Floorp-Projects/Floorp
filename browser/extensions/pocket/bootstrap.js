@@ -478,12 +478,12 @@ var PocketOverlay = {
   },
 
   addStyles(win) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
     utils.addSheet(this._cachedSheet, this._sheetType);
   },
 
   removeStyles(win) {
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let utils = win.windowUtils;
     utils.removeSheet(gPocketStyleURI, this._sheetType);
   }
 
