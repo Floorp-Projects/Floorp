@@ -18,6 +18,8 @@ HazardSummary = namedtuple('HazardSummary', [
 Callgraph = namedtuple('Callgraph', [
     'functionNames',
     'nameToId',
+    'mangledToUnmangled',
+    'unmangledToMangled',
     'calleesOf',
     'callersOf',
     'tags',
@@ -124,6 +126,8 @@ sixgill_bin = '{bindir}'
         data = Callgraph(
             functionNames=['dummy'],
             nameToId={},
+            mangledToUnmangled={},
+            unmangledToMangled={},
             calleesOf=defaultdict(list),
             callersOf=defaultdict(list),
             tags=defaultdict(set),
@@ -132,7 +136,8 @@ sixgill_bin = '{bindir}'
         )
 
         def lookup(id):
-            return data.functionNames[int(id)]
+            mangled = data.functionNames[int(id)]
+            return data.mangledToUnmangled.get(mangled, mangled)
 
         def add_call(caller, callee, limit):
             data.calleesOf[caller].append(callee)
@@ -143,10 +148,17 @@ sixgill_bin = '{bindir}'
         def process(line):
             if line.startswith('#'):
                 name = line.split(" ", 1)[1]
-                if '$' in name:
-                    name = name[name.index('$') + 1:]
                 data.nameToId[name] = len(data.functionNames)
                 data.functionNames.append(name)
+                return
+
+            if line.startswith('='):
+                m = re.match(r'^= (\d+) (.*)', line)
+                mangled = data.functionNames[int(m.group(1))]
+                unmangled = m.group(2)
+                data.nameToId[unmangled] = id
+                data.mangledToUnmangled[mangled] = unmangled
+                data.unmangledToMangled[unmangled] = mangled
                 return
 
             limit = 0

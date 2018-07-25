@@ -263,8 +263,11 @@ function isGTest(name)
 
 function ignoreGCFunction(mangled)
 {
-    assert(mangled in readableNames, mangled + " not in readableNames");
-    var fun = readableNames[mangled][0];
+    // Field calls will not be in readableNames
+    if (!(mangled in readableNames))
+        return false;
+
+    const fun = readableNames[mangled][0];
 
     if (fun in ignoreFunctions)
         return true;
@@ -394,6 +397,8 @@ function isOverridableField(initialCSU, csu, field)
     if (field == "GetIsMainThread")
         return false;
     if (field == "GetThreadFromPRThread")
+        return false;
+    if (field == "DocAddSizeOfIncludingThis")
         return false;
     if (field == "ConstructUbiNode")
         return false;
