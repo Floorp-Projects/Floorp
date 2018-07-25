@@ -71,7 +71,7 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
             defines = obj.defines or {}
             if defines:
                 defines = defines.defines
-           for path, files in obj.files.walk():
+            for path, files in obj.files.walk():
                 for f in files:
                     # For localized files we need to find the file from the locale directory.
                     if (localized and not isinstance(f, ObjDirPath) and ab_cd != 'en-US'):
@@ -133,7 +133,6 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                 self._manifest_entries[top_level].add(entry)
             self._manifest_entries[obj.path].add(str(obj.entry))
 
-        elif isinstance(obj, XPIDLModule):
         elif isinstance(obj, GeneratedFile):
             if obj.outputs:
                 first_output = mozpath.relpath(mozpath.join(obj.objdir, obj.outputs[0]), self.environment.topobjdir)
@@ -145,8 +144,7 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
             # faster backend.
             return False
 
-        elif isinstance(obj, XPIDLFile):
->>>>>>> merge rev
+        elif isinstance(obj, XPIDLModule):
             self._has_xpidl = True
             # We're not actually handling XPIDL files.
             return False
