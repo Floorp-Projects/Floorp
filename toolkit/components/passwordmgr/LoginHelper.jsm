@@ -741,33 +741,6 @@ var LoginHelper = {
     return logins.map(this.vanillaObjectToLogin);
   },
 
-  removeLegacySignonFiles() {
-    const {Constants, Path, File} = ChromeUtils.import("resource://gre/modules/osfile.jsm").OS;
-
-    const profileDir = Constants.Path.profileDir;
-    const defaultSignonFilePrefs = new Map([
-      ["signon.SignonFileName", "signons.txt"],
-      ["signon.SignonFileName2", "signons2.txt"],
-      ["signon.SignonFileName3", "signons3.txt"]
-    ]);
-    const toDeletes = new Set();
-
-    for (let [pref, val] of defaultSignonFilePrefs.entries()) {
-      toDeletes.add(Path.join(profileDir, val));
-
-      try {
-        let signonFile = Services.prefs.getCharPref(pref);
-
-        toDeletes.add(Path.join(profileDir, signonFile));
-        Services.prefs.clearUserPref(pref);
-      } catch (e) {}
-    }
-
-    for (let file of toDeletes) {
-      File.remove(file);
-    }
-  },
-
   /**
    * Returns true if the user has a master password set and false otherwise.
    */
