@@ -928,6 +928,9 @@ function scheduleTests(task_build, task_cert, test_base) {
   queue.scheduleTask(merge(no_cert_base, {
     name: "SDR tests", symbol: "SDR", tests: "sdr"
   }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Policy tests", symbol: "Policy", tests: "policy"
+  }));
 
   // Schedule tests that need certificates.
   let cert_base = merge(test_base, {parent: task_cert});

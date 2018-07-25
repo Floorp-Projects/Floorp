@@ -54,7 +54,7 @@ nss_mktemp(char *path)
 
 #define NSS_MAX_FLAG_SIZE sizeof("readOnly") + sizeof("noCertDB") +                                  \
                               sizeof("noModDB") + sizeof("forceOpen") + sizeof("passwordRequired") + \
-                              sizeof("optimizeSpace")
+                              sizeof("optimizeSpace") + sizeof("printPolicyFeedback")
 #define NSS_DEFAULT_MOD_NAME "NSS Internal Module"
 
 static char *
