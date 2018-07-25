@@ -78,10 +78,10 @@ add_task(async function() {
     let selectedTag = listItem.label;
 
     // Uncheck the tag.
-    let promiseNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged", (id, property) => property == "tags");
+    let promise = BrowserTestUtils.waitForEvent(tagsSelector,
+                                                "BookmarkTagsSelectorUpdated");
     EventUtils.synthesizeMouseAtCenter(listItem.firstChild, {});
-    await promiseNotification;
+    await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
 
     // The listbox is rebuilt, so we have to get the new element.
@@ -91,10 +91,10 @@ add_task(async function() {
     is(newItem.label, selectedTag, "Correct tag is still selected");
 
     // Check the tag.
-    promiseNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged", (id, property) => property == "tags");
+    promise = BrowserTestUtils.waitForEvent(tagsSelector,
+                                            "BookmarkTagsSelectorUpdated");
     EventUtils.synthesizeMouseAtCenter(newItem.firstChild, {});
-    await promiseNotification;
+    await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
   }
 
@@ -114,10 +114,10 @@ add_task(async function() {
     ok(listItem.hasAttribute("checked"), "Item is checked " + i);
 
     // Uncheck the tag.
-    let promiseNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged", (id, property) => property == "tags");
+    let promise = BrowserTestUtils.waitForEvent(tagsSelector,
+                                                "BookmarkTagsSelectorUpdated");
     EventUtils.synthesizeMouseAtCenter(listItem.firstChild, {});
-    await promiseNotification;
+    await promise;
 
     // The listbox is rebuilt, so we have to get the new element.
     let topItem = [...tagsSelector.children].find(e => e.label == topTag);
@@ -140,13 +140,9 @@ add_task(async function() {
 });
 
 function openTagSelector() {
-  // Wait for the tags selector to be open.
-  let promise = new Promise(resolve => {
-    let row = document.getElementById("editBMPanel_tagsSelectorRow");
-    row.addEventListener("DOMAttrModified", function onAttrModified() {
-      resolve();
-    }, {once: true});
-  });
+  let promise = BrowserTestUtils.waitForEvent(
+    document.getElementById("editBMPanel_tagsSelector"),
+    "BookmarkTagsSelectorUpdated");
   // Open the tags selector.
   document.getElementById("editBMPanel_tagsSelectorExpander").doCommand();
   return promise;
