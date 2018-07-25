@@ -160,7 +160,7 @@ function showSourceText(editor, source, symbols) {
       const mode = (0, _source.getMode)(source, symbols);
       const currentMode = editor.codeMirror.getOption("mode");
 
-      if (currentMode.name !== mode.name) {
+      if (currentMode.name != mode.name) {
         editor.setMode(mode);
       }
 
