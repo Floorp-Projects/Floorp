@@ -599,7 +599,7 @@ class TestSource(object):
         pass
 
     @classmethod
-    def group_metadata(self, state):
+    def group_metadata(cls, state):
         return {"scope": "/"}
 
     def group(self):
