@@ -173,7 +173,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
 
   async handleSubmit() {
     let creditCard = this._elements.fieldContainer.buildFormObject();
-    if (!this._elements.fieldContainer._elements.form.checkValidity()) {
+    if (!this._elements.fieldContainer._elements.form.reportValidity()) {
       return;
     }
 

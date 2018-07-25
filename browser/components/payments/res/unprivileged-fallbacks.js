@@ -26,7 +26,7 @@ var PaymentDialogUtils = {
     return `${address.name} (${address.guid})`;
   },
   isCCNumber(str) {
-    return str.length > 0;
+    return !!str.replace(/[-\s]/g, "").match(/^\d{9,}$/);
   },
   DEFAULT_REGION: "US",
   supportedCountries: ["US", "CA"],
