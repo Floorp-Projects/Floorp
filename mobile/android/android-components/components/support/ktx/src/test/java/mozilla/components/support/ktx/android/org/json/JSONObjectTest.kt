@@ -1,4 +1,4 @@
-package mozilla.components.support.ktx.kotlin
+package mozilla.components.support.ktx.android.org.json
 
 import org.json.JSONArray
 import org.json.JSONObject

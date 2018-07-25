@@ -5,7 +5,7 @@
 package mozilla.components.browser.search.suggestions
 
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.support.ktx.kotlin.asSequence
+import mozilla.components.support.ktx.android.org.json.asSequence
 import org.json.JSONArray
 import org.json.JSONObject
 

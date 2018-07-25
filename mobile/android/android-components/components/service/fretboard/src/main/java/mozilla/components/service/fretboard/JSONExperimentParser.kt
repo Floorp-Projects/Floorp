@@ -4,11 +4,11 @@
 
 package mozilla.components.service.fretboard
 
-import mozilla.components.support.ktx.kotlin.putIfNotNull
-import mozilla.components.support.ktx.kotlin.toList
-import mozilla.components.support.ktx.kotlin.tryGetInt
-import mozilla.components.support.ktx.kotlin.tryGetLong
-import mozilla.components.support.ktx.kotlin.tryGetString
+import mozilla.components.support.ktx.android.org.json.putIfNotNull
+import mozilla.components.support.ktx.android.org.json.toList
+import mozilla.components.support.ktx.android.org.json.tryGetInt
+import mozilla.components.support.ktx.android.org.json.tryGetLong
+import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
 
