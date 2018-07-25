@@ -799,7 +799,6 @@
                      autocompletesearchparam="enable-actions"
                      autocompletepopup="PopupAutoCompleteRichResult"
                      completeselectedindex="true"
-                     shrinkdelay="250"
                      tabscrolling="true"
                      newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
