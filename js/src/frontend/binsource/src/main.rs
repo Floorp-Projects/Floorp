@@ -871,13 +871,16 @@ impl CPPExporter {
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
 
-    BINJS_MOZ_TRY_DECL(result, parseSum{kind}(start, kind, fields));
+{call}
 
     MOZ_TRY(guard.done());
     return result;
 }}\n",
                 bnf = rendered_bnf,
-                kind = kind,
+                call = self.get_method_call("result", name,
+                                            "Sum", "start, kind, fields",
+                                            MethodCallKind::AlwaysDecl)
+                    .reindent("    "),
                 first_line = self.get_method_definition_start(name, "", "")
         ));
 
@@ -1084,7 +1087,7 @@ impl CPPExporter {
         result = {default_value};
     }} else {{
         const auto start = tokenizer_->offset();
-        MOZ_TRY_VAR(result, parseSum{contents}(start, kind, fields));
+{call}
     }}
     MOZ_TRY(guard.done());
 
@@ -1093,7 +1096,10 @@ impl CPPExporter {
 
 ",
                             first_line = self.get_method_definition_start(&parser.name, "", ""),
-                            contents = parser.elements.to_class_cases(),
+                            call = self.get_method_call("result", &parser.elements,
+                                                        "Sum", "start, kind, fields",
+                                                        MethodCallKind::AlwaysVar)
+                                .reindent("        "),
                             type_ok = type_ok,
                             default_value = default_value,
                             null = self.syntax.get_null_name().to_cpp_enum_case(),
