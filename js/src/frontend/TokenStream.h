@@ -185,6 +185,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
@@ -1087,6 +1088,27 @@ PeekCodePoint(const char16_t* const ptr, const char16_t* const end)
     }
 
     return PeekedCodePoint<char16_t>(c, len);
+}
+
+inline PeekedCodePoint<mozilla::Utf8Unit>
+PeekCodePoint(const mozilla::Utf8Unit* const ptr, const mozilla::Utf8Unit* const end)
+{
+    if (MOZ_UNLIKELY(ptr >= end))
+        return PeekedCodePoint<mozilla::Utf8Unit>::none();
+
+    const mozilla::Utf8Unit lead = ptr[0];
+    if (mozilla::IsAscii(lead))
+        return PeekedCodePoint<mozilla::Utf8Unit>(lead.toUint8(), 1);
+
+    const mozilla::Utf8Unit* afterLead = ptr + 1;
+    mozilla::Maybe<char32_t> codePoint = mozilla::DecodeOneUtf8CodePoint(lead, &afterLead, end);
+    if (codePoint.isNothing())
+        return PeekedCodePoint<mozilla::Utf8Unit>::none();
+
+    auto len = mozilla::AssertedCast<uint8_t>(mozilla::PointerRangeSize(ptr, afterLead));
+    MOZ_ASSERT(len <= 4);
+
+    return PeekedCodePoint<mozilla::Utf8Unit>(codePoint.value(), len);
 }
 
 // This is the low-level interface to the JS source code buffer.  It just gets

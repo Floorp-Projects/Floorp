@@ -198,6 +198,13 @@ public:
   // that other code.
 };
 
+/** Returns true iff |aUnit| is an ASCII value. */
+inline bool
+IsAscii(Utf8Unit aUnit)
+{
+  return IsAscii(aUnit.toUint8());
+}
+
 /**
  * Returns true if the given length-delimited memory consists of a valid UTF-8
  * string, false otherwise.
