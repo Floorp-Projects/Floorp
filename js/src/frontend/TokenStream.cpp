@@ -1608,15 +1608,16 @@ static const uint8_t firstCharKinds[] = {
 static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
               "Elements of firstCharKinds[] are too small");
 
+template<>
 void
-SpecializedTokenStreamCharsBase<char16_t>::infallibleConsumeRestOfSingleLineComment()
+SourceUnits<char16_t>::consumeRestOfSingleLineComment()
 {
-    while (MOZ_LIKELY(!this->sourceUnits.atEnd())) {
-        char16_t unit = this->sourceUnits.peekCodeUnit();
+    while (MOZ_LIKELY(!atEnd())) {
+        char16_t unit = peekCodeUnit();
         if (IsLineTerminator(unit))
             return;
 
-        this->sourceUnits.consumeKnownCodeUnit(unit);
+        consumeKnownCodeUnit(unit);
     }
 }
 
@@ -2207,9 +2208,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (matchCodeUnit('!')) {
                     if (matchCodeUnit('-')) {
                         if (matchCodeUnit('-')) {
-                            if (!consumeRestOfSingleLineComment())
-                                return false;
-
+                            this->sourceUnits.consumeRestOfSingleLineComment();
                             continue;
                         }
                         ungetCodeUnit('-');
@@ -2254,9 +2253,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     ungetCodeUnit(unit);
                 }
 
-                if (!consumeRestOfSingleLineComment())
-                    return false;
-
+                this->sourceUnits.consumeRestOfSingleLineComment();
                 continue;
             }
 
@@ -2313,9 +2310,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     !anyCharsAccess().flags.isDirtyLine)
                 {
                     if (matchCodeUnit('>')) {
-                        if (!consumeRestOfSingleLineComment())
-                            return false;
-
+                        this->sourceUnits.consumeRestOfSingleLineComment();
                         continue;
                     }
                 }

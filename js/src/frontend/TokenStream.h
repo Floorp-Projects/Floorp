@@ -1314,6 +1314,28 @@ class SourceUnits
     }
 
     /**
+     * Consume the rest of a single-line comment (but not the EOL/EOF that
+     * terminates it).
+     *
+     * If an encoding error is encountered -- possible only for UTF-8 because
+     * JavaScript's conception of UTF-16 encompasses any sequence of 16-bit
+     * code units -- valid code points prior to the encoding error are consumed
+     * and subsequent invalid code units are not consumed.  For example, given
+     * these UTF-8 code units:
+     *
+     *   'B'   'A'  'D'  ':'   <bad code unit sequence>
+     *   0x42  0x41 0x44 0x3A  0xD0 0x00 ...
+     *
+     * the first four code units are consumed, but 0xD0 and 0x00 are not
+     * consumed because 0xD0 encodes a two-byte lead unit but 0x00 is not a
+     * valid trailing code unit.
+     *
+     * It is expected that the caller will report such an encoding error when
+     * it attempts to consume the next code point.
+     */
+    void consumeRestOfSingleLineComment();
+
+    /**
      * The maximum radius of code around the location of an error that should
      * be included in a syntax error message -- this many code units to either
      * side.  The resulting window of data is then accordinngly trimmed so that
@@ -1563,13 +1585,6 @@ class SpecializedTokenStreamCharsBase<char16_t>
 
   protected:
     // These APIs are only usable by UTF-16-specific code.
-
-    /**
-     * Consume the rest of a single-line comment (but not the EOL/EOF that
-     * terminates it) -- infallibly because no 16-bit code unit sequence in a
-     * comment is an error.
-     */
-    void infallibleConsumeRestOfSingleLineComment();
 
     /**
      * Given |lead| already consumed, consume and return the code point encoded
@@ -1871,7 +1886,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
   protected:
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
-    using SpecializedCharsBase::infallibleConsumeRestOfSingleLineComment;
     using SpecializedCharsBase::infallibleGetNonAsciiCodePointDontNormalize;
     using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchLineTerminator;
@@ -1916,17 +1930,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      * This may change the current |sourceUnits| offset.
      */
     MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* codePoint);
-
-    /**
-     * Consume code points til EOL/EOF following the start of a single-line
-     * comment, without consuming the EOL/EOF.
-     */
-    MOZ_MUST_USE bool consumeRestOfSingleLineComment() {
-        // This operation is infallible for UTF-16 -- and this implementation
-        // approach lets the compiler boil away call-side fallibility handling.
-        infallibleConsumeRestOfSingleLineComment();
-        return true;
-    }
 };
 
 template<class AnyCharsAccess>
@@ -2023,7 +2026,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::badToken;
     // Deliberately don't |using| |charBuffer| because of bug 1472569.  :-(
     using CharsBase::consumeKnownCodeUnit;
-    using SpecializedChars::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
     using TokenStreamCharsShared::drainCharBufferIntoAtom;
     using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
