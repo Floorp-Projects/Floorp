@@ -393,13 +393,13 @@ imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 option('--enable-av1',
         help='Enable libaom for av1 video support')
 
-@depends('--enable-av1', target, milestone)
-def av1(value, target, milestone):
+@depends('--enable-av1', target)
+def av1(value, target):
     enabled = bool(value)
     if value.origin == 'default':
         if target.os == 'WINNT' and target.cpu == 'x86':
             enabled = False
-        elif milestone.is_nightly:
+        else:
             enabled = target.os != 'Android'
     if enabled:
         return True
