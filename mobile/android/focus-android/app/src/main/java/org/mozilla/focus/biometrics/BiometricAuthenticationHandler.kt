@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.biometrics
 
 import android.arch.lifecycle.Lifecycle
@@ -13,7 +17,13 @@ import android.support.annotation.RequiresApi
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat
 import android.support.v4.os.CancellationSignal
 import java.io.IOException
-import java.security.*
+import java.security.KeyStore
+import java.security.KeyStoreException
+import java.security.NoSuchAlgorithmException
+import java.security.NoSuchProviderException
+import java.security.UnrecoverableKeyException
+import java.security.InvalidKeyException
+import java.security.InvalidAlgorithmParameterException
 import java.security.cert.CertificateException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -24,7 +34,8 @@ import javax.crypto.SecretKey
 class BiometricAuthenticationHandler(
         private val context: Context) : FingerprintManagerCompat.AuthenticationCallback(), LifecycleObserver {
 
-    private var fingerprintManager = FingerprintManagerCompat.from(context)
+    private val fingerprintManager = FingerprintManagerCompat.from(context)
+
     private var cancellationSignal: CancellationSignal? = null
     private var selfCancelled = false
     private var keyStore: KeyStore? = null
@@ -54,9 +65,8 @@ class BiometricAuthenticationHandler(
 
         createKey(DEFAULT_KEY_NAME, false)
 
-        val defaultCipher: Cipher
-        try {
-            defaultCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+        val defaultCipher: Cipher = try {
+            Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
                     + KeyProperties.BLOCK_MODE_CBC + "/"
                     + KeyProperties.ENCRYPTION_PADDING_PKCS7)
         } catch (err: Exception) {
