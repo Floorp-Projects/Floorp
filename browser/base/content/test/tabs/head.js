@@ -89,8 +89,7 @@ async function play(tab, expectPlaying = true) {
 }
 
 function disable_non_test_mouse(disable) {
-  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
+  let utils = window.windowUtils;
   utils.disableNonTestMouseEvents(disable);
 }
 

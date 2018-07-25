@@ -40,8 +40,7 @@ Narrator.prototype = {
 
   get _treeWalker() {
     if (!this._treeWalkerRef) {
-      let wu = this._win.QueryInterface(
-        Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let wu = this._win.windowUtils;
       let nf = this._win.NodeFilter;
 
       let filter = {

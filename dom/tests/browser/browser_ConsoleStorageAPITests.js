@@ -39,8 +39,7 @@ add_task(async function()
           if (aTopic == "console-storage-cache-event") {
             apiCallCount++;
             if (apiCallCount == 4) {
-              let windowId = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+              let windowId = content.window.windowUtils.currentInnerWindowID;
 
               Services.obs.removeObserver(this, "console-storage-cache-event");
               ok(ConsoleAPIStorage.getEvents(windowId).length >= 4, "Some messages found in the storage service");

@@ -1439,10 +1439,10 @@ nsPresContext::UpdateViewportScrollbarStylesOverride()
 }
 
 bool
-nsPresContext::ElementWouldPropagateScrollbarStyles(Element* aElement)
+nsPresContext::ElementWouldPropagateScrollbarStyles(const Element& aElement)
 {
   MOZ_ASSERT(IsPaginated(), "Should only be called on paginated contexts");
-  if (aElement->GetParent() && !aElement->IsHTMLElement(nsGkAtoms::body)) {
+  if (aElement.GetParent() && !aElement.IsHTMLElement(nsGkAtoms::body)) {
     // We certainly won't be propagating from this element.
     return false;
   }
@@ -1453,7 +1453,7 @@ nsPresContext::ElementWouldPropagateScrollbarStyles(Element* aElement)
   // in practice we will make this call quite rarely, because we checked for all
   // the common cases above.
   ScrollbarStyles dummy(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO);
-  return GetPropagatedScrollbarStylesForViewport(this, &dummy) == aElement;
+  return GetPropagatedScrollbarStylesForViewport(this, &dummy) == &aElement;
 }
 
 void

@@ -60,9 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
   }
 
   function setZoomLevel(browser, zoom) {
-    browser.contentWindow.QueryInterface(
-      Ci.nsIInterfaceRequestor).getInterface(
-        Ci.nsIDOMWindowUtils).setResolutionAndScaleTo(zoom);
+    browser.contentWindow.windowUtils.setResolutionAndScaleTo(zoom);
   }
 
   // Track the tabs where the tests are happening.
@@ -95,8 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled.
-        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let utils = browser.contentWindow.windowUtils;
         let scrollX = {}, scrollY = {};
         utils.getScrollXY(false, scrollX, scrollY);
         is(scrollX.value, 0, "scrollX set correctly");
@@ -119,8 +116,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await promiseBrowserEvent(browser, "AboutReaderContentReady");
 
     // Check the scroll position.
-    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let utils = browser.contentWindow.windowUtils;
     let scrollX = {}, scrollY = {};
     utils.getScrollXY(false, scrollX, scrollY);
     is(scrollX.value, 0, "scrollX restored correctly");
@@ -145,8 +141,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled and zoomed.
-        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let utils = browser.contentWindow.windowUtils;
         let scrollX = {}, scrollY = {}, zoom = {};
         utils.getResolution(zoom);
         utils.getScrollXY(false, scrollX, scrollY);
@@ -189,8 +184,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await scroll;
 
     // Check the scroll position and zoom level.
-    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let utils = browser.contentWindow.windowUtils;
     let scrollX = {}, scrollY = {}, zoom = {};
     utils.getResolution(zoom);
     utils.getScrollXY(false, scrollX, scrollY);
@@ -232,8 +226,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled and zoomed.
-        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let utils = browser.contentWindow.windowUtils;
         let scrollX = {}, scrollY = {}, zoom = {};
         utils.getResolution(zoom);
         utils.getScrollXY(false, scrollX, scrollY);
@@ -265,8 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await promiseBrowserEvent(browser, "pageshow");
 
     // Check the scroll position and zoom level.
-    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let utils = browser.contentWindow.windowUtils;
     let scrollX = {}, scrollY = {}, zoom = {};
     utils.getResolution(zoom);
     utils.getScrollXY(false, scrollX, scrollY);

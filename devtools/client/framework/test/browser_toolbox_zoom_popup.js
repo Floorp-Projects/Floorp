@@ -28,8 +28,7 @@ add_task(async function() {
   const hostWindow = toolbox.win.parent;
   const originWidth = hostWindow.outerWidth;
   const originHeight = hostWindow.outerHeight;
-  const windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+  const windowUtils = toolbox.win.windowUtils;
 
   info("Waiting for the toolbox window will to be rendered with zoom x1.4");
   await waitUntil(() => {

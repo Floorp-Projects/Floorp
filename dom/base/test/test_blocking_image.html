@@ -19,8 +19,7 @@ function onLoad() {
   var iframe = document.createElement("iframe");
   iframe.onload = function () {
     info("iframe loaded");
-    var winUtils = iframe.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIDOMWindowUtils);
+    var winUtils = iframe.contentWindow.windowUtils;
     // load some styles at the agent level
     var css = `
       img:-moz-suppressed {

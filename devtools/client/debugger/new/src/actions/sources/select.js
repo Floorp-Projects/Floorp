@@ -108,7 +108,9 @@ function selectSource(sourceId) {
  */
 
 
-function selectLocation(location) {
+function selectLocation(location, {
+  checkPrettyPrint = true
+} = {}) {
   return async ({
     dispatch,
     getState,
@@ -145,7 +147,7 @@ function selectLocation(location) {
       return;
     }
 
-    if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), loadedSource.id) && (0, _source.shouldPrettyPrint)(loadedSource) && (0, _source.isMinified)(loadedSource)) {
+    if (checkPrettyPrint && _prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), loadedSource.id) && (0, _source.shouldPrettyPrint)(loadedSource) && (0, _source.isMinified)(loadedSource)) {
       await dispatch((0, _prettyPrint.togglePrettyPrint)(loadedSource.id));
       dispatch((0, _tabs.closeTab)(loadedSource.url));
     }
@@ -167,51 +169,9 @@ function selectLocation(location) {
 
 
 function selectSpecificLocation(location) {
-  return async ({
-    dispatch,
-    getState,
-    client
-  }) => {
-    const currentSource = (0, _selectors.getSelectedSource)(getState());
-
-    if (!client) {
-      // No connection, do nothing. This happens when the debugger is
-      // shut down too fast and it tries to display a default source.
-      return;
-    }
-
-    const source = (0, _selectors.getSource)(getState(), location.sourceId);
-
-    if (!source) {
-      // If there is no source we deselect the current selected source
-      return dispatch(clearSelectedLocation());
-    }
-
-    const activeSearch = (0, _selectors.getActiveSearch)(getState());
-
-    if (activeSearch !== "file") {
-      dispatch((0, _ui.closeActiveSearch)());
-    }
-
-    dispatch((0, _tabs.addTab)(source.url, 0));
-    dispatch(setSelectedLocation(source, location));
-    await dispatch((0, _loadSourceText.loadSourceText)(source));
-    const loadedSource = (0, _selectors.getSource)(getState(), source.id);
-
-    if (!loadedSource) {
-      return;
-    }
-
-    const sourceId = loadedSource.id;
-    dispatch((0, _ast.setSymbols)(sourceId));
-    dispatch((0, _ast.setOutOfScopeLocations)()); // If a new source is selected update the file search results
-
-    const newSource = (0, _selectors.getSelectedSource)(getState());
-
-    if (currentSource && currentSource !== newSource) {
-      dispatch((0, _ui.updateActiveFileSearch)());
-    }
-  };
+  return selectLocation(location, {
+    checkPrettyPrint: false
+  });
 }
 /**
  * @memberof actions/sources

@@ -37,9 +37,7 @@ add_task(async function() {
   }
 
   info("Test browser window");
-  let windowId = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .outerWindowID;
+  let windowId = window.windowUtils.outerWindowID;
   target = await targetFromURL(new URL("http://foo?type=window&id=" + windowId));
   is(target.url, window.location.href);
   is(target.isLocalTab, false);

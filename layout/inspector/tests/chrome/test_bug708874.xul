@@ -14,8 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=708874
 
 /** Test for Bug 708874 - API for locking pseudo-class state of an element **/
 
-var DOMWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils);
+var DOMWindowUtils = window.windowUtils;
 
 var defaultColor = "rgb(0, 0, 0)";
 var disabledColor = "rgb(40, 0, 0)";

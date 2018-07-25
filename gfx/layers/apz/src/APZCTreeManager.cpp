@@ -16,6 +16,7 @@
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/MouseEventBinding.h" // for MouseEvent constants
+#include "mozilla/dom/TabParent.h"      // for AreRecordReplayTabsActive
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/gfxVars.h"        // for gfxVars
 #include "mozilla/gfx/GPUParent.h"      // for GPUParent
@@ -1135,6 +1136,13 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   APZThreadUtils::AssertOnControllerThread();
+
+  // Ignore input events when there are active tabs that are recording or
+  // replaying. APZ does not work with the special layers constructed by
+  // the middleman processes being communicated with here.
+  if (dom::TabParent::AreRecordReplayTabsActive()) {
+    return nsEventStatus_eIgnore;
+  }
 
   // Use a RAII class for updating the focus sequence number of this event
   AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);

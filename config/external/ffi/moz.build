@@ -110,7 +110,7 @@ else:
             SOURCES += ['!win64.asm']
     elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':
         DEFINES['FFI_MMAP_EXEC_WRIT'] = True
-        if CONFIG['OS_TEST'] != 'x86_64':
+        if CONFIG['CPU_ARCH'] == 'x86':
             ffi_srcs = ('ffi.c', 'darwin.S', 'ffi64.c', 'darwin64.S',
                         'win32.S')
             DEFINES['SYMBOL_UNDERSCORE'] = True

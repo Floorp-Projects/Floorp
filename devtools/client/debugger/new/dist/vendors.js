@@ -876,212 +876,6 @@ exports.default = _Svg2.default;
 
 /***/ }),
 
-/***/ 1363:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(1367);
-const workerUtils = __webpack_require__(1368);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 1367:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-
-/***/ 1368:
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-WorkerDispatcher.prototype = {
-  start(url) {
-    this.worker = new Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method, { queue = false } = {}) {
-    const calls = [];
-    const push = args => {
-      return new Promise((resolve, reject) => {
-        if (queue && calls.length === 0) {
-          Promise.resolve().then(flush);
-        }
-
-        calls.push([args, resolve, reject]);
-
-        if (!queue) {
-          flush();
-        }
-      });
-    };
-
-    const flush = () => {
-      const items = calls.slice();
-      calls.length = 0;
-
-      const id = this.msgId++;
-      this.worker.postMessage({ id, method, calls: items.map(item => item[0]) });
-
-      const listener = ({ data: result }) => {
-        if (result.id !== id) {
-          return;
-        }
-
-        if (!this.worker) {
-          return;
-        }
-
-        this.worker.removeEventListener("message", listener);
-
-        result.results.forEach((resultData, i) => {
-          const [, resolve, reject] = items[i];
-
-          if (resultData.error) {
-            reject(resultData.error);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      };
-
-      this.worker.addEventListener("message", listener);
-    };
-
-    return (...args) => push(args);
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, calls } = msg.data;
-
-    Promise.all(calls.map(args => {
-      try {
-        const response = publicInterface[method].apply(undefined, args);
-        if (response instanceof Promise) {
-          return response.then(val => ({ response: val }),
-          // Error can't be sent via postMessage, so be sure to
-          // convert to string.
-          err => ({ error: err.toString() }));
-        } else {
-          return { response };
-        }
-      } catch (error) {
-        // Error can't be sent via postMessage, so be sure to convert to
-        // string.
-        return { error: error.toString() };
-      }
-    })).then(results => {
-      self.postMessage({ id, results });
-    });
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const intervalId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearInterval(intervalId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
-
-/***/ }),
-
 /***/ 1376:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -7370,6 +7164,219 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 
+/***/ 3651:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(3653);
+const workerUtils = __webpack_require__(3654);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 3653:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+
+/***/ 3654:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
+      return new Promise((resolve, reject) => {
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
+
+        calls.push([args, resolve, reject]);
+
+        if (!queue) {
+          flush();
+        }
+      });
+    };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
+
+      const id = this.msgId++;
+      this.worker.postMessage({
+        id,
+        method,
+        calls: items.map(item => item[0])
+      });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        }
+        return { response };
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
+      }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const timeoutId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearTimeout(timeoutId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+
 /***/ 366:
 /***/ (function(module, exports) {
 
@@ -8364,7 +8371,7 @@ var _devtoolsModules = __webpack_require__(1376);
 
 var devtoolsModules = _interopRequireWildcard(_devtoolsModules);
 
-var _devtoolsUtils = __webpack_require__(1363);
+var _devtoolsUtils = __webpack_require__(3651);
 
 var devtoolsUtils = _interopRequireWildcard(_devtoolsUtils);
 
@@ -8375,6 +8382,10 @@ var fuzzaldrinPlus = _interopRequireWildcard(_fuzzaldrinPlus);
 var _Transition = __webpack_require__(333);
 
 var transition = _interopRequireWildcard(_Transition);
+
+var _tabs = __webpack_require__(3762);
+
+var reactAriaComponentsTabs = _interopRequireWildcard(_tabs);
 
 var _reselect = __webpack_require__(993);
 
@@ -8411,9 +8422,27 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 
 // Modules imported without destructuring
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const vendored = exports.vendored = {
+  classnames: _classnames2.default,
+  "devtools-components": devtoolsComponents,
+  "devtools-config": devtoolsConfig,
+  "devtools-contextmenu": devtoolsContextmenu,
+  "devtools-environment": devtoolsEnvironment,
+  "devtools-modules": devtoolsModules,
+  "devtools-splitter": _devtoolsSplitter2.default,
+  "devtools-utils": devtoolsUtils,
+  "fuzzaldrin-plus": fuzzaldrinPlus,
+  "lodash-move": _lodashMove2.default,
+  "react-aria-components/src/tabs": reactAriaComponentsTabs,
+  "react-transition-group/Transition": transition,
+  reselect,
+  // Svg is required via relative paths, so the key is not imported path.
+  // See .babel/transform-mc.js
+  Svg: _Svg2.default,
+  url
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Vendors.js is a file used to bundle and expose all dependencies needed to run
@@ -8428,24 +8457,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  */
 
 // Modules imported with destructuring
-const vendored = exports.vendored = {
-  classnames: _classnames2.default,
-  "devtools-components": devtoolsComponents,
-  "devtools-config": devtoolsConfig,
-  "devtools-contextmenu": devtoolsContextmenu,
-  "devtools-environment": devtoolsEnvironment,
-  "devtools-modules": devtoolsModules,
-  "devtools-splitter": _devtoolsSplitter2.default,
-  "devtools-utils": devtoolsUtils,
-  "fuzzaldrin-plus": fuzzaldrinPlus,
-  "lodash-move": _lodashMove2.default,
-  "react-transition-group/Transition": transition,
-  reselect,
-  // Svg is required via relative paths, so the key is not imported path.
-  // See .babel/transform-mc.js
-  Svg: _Svg2.default,
-  url
-};
 
 /***/ }),
 
@@ -9254,6 +9265,425 @@ module.exports = {
   getUnicodeUrlPath,
   getUnicodeUrl
 };
+
+/***/ }),
+
+/***/ 3758:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _propTypes = __webpack_require__(3642);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _tab = __webpack_require__(3759);
+
+var _tab2 = _interopRequireDefault(_tab);
+
+var _tabList = __webpack_require__(3764);
+
+var _tabList2 = _interopRequireDefault(_tabList);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class TabList extends _react2.default.Component {
+  constructor(props) {
+    super(props);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.tabRefs = new Array(_react2.default.Children.count(props.children)).fill(0).map(_ => _react2.default.createRef());
+    this.handlers = this.getHandlers(props.vertical);
+  }
+
+  getHandlers(vertical) {
+    if (vertical) {
+      return {
+        ArrowDown: this.next.bind(this),
+        ArrowUp: this.previous.bind(this)
+      };
+    }
+    return {
+      ArrowLeft: this.previous.bind(this),
+      ArrowRight: this.next.bind(this)
+    };
+  }
+
+  wrapIndex(index) {
+    const count = _react2.default.Children.count(this.props.children);
+    return (index + count) % count;
+  }
+
+  handleKeyPress(event) {
+    const handler = this.handlers[event.key];
+    if (handler) {
+      handler();
+    }
+  }
+
+  previous() {
+    const newIndex = this.wrapIndex(this.props.activeIndex - 1);
+    this.props.onActivateTab(newIndex);
+  }
+
+  next() {
+    const newIndex = this.wrapIndex(this.props.activeIndex + 1);
+    this.props.onActivateTab(newIndex);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.activeIndex !== this.props.activeIndex) {
+      this.tabRefs[this.props.activeIndex].current.focus();
+    }
+  }
+
+  render() {
+    var _props = this.props;
+    const accessibleId = _props.accessibleId,
+          activeIndex = _props.activeIndex,
+          children = _props.children,
+          className = _props.className,
+          onActivateTab = _props.onActivateTab;
+
+
+    return _react2.default.createElement(
+      'ul',
+      { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
+      _react2.default.Children.map(children, (child, index) => {
+        if (child.type !== _tab2.default) {
+          throw new Error('Direct children of a <TabList> must be a <Tab>');
+        }
+
+        const active = index === activeIndex;
+        const tabRef = this.tabRefs[index];
+
+        return _react2.default.cloneElement(child, {
+          accessibleId: active ? accessibleId : undefined,
+          active,
+          tabRef,
+          onActivate: () => this.props.onActivateTab(index)
+        });
+      })
+    );
+  }
+}
+
+exports.default = TabList;
+TabList.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  activeIndex: _propTypes2.default.number,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  onActivateTab: _propTypes2.default.func,
+  vertical: _propTypes2.default.bool
+};
+
+TabList.defaultProps = {
+  accessibleId: undefined,
+  activeIndex: 0,
+  children: null,
+  className: _tabList2.default.container,
+  onActivateTab: () => {},
+  vertical: false
+};
+
+/***/ }),
+
+/***/ 3759:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = Tab;
+
+var _propTypes = __webpack_require__(3642);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _tab = __webpack_require__(3763);
+
+var _tab2 = _interopRequireDefault(_tab);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function Tab({
+  accessibleId,
+  active,
+  children,
+  className,
+  onActivate,
+  tabRef
+}) {
+  return _react2.default.createElement(
+    'li',
+    {
+      'aria-selected': active,
+      className: className,
+      id: accessibleId,
+      onClick: onActivate,
+      ref: tabRef,
+      role: 'tab',
+      tabIndex: active ? 0 : undefined
+    },
+    children
+  );
+}
+
+Tab.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  active: _propTypes2.default.bool,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  onActivate: _propTypes2.default.func,
+  tabRef: _propTypes2.default.object
+};
+
+Tab.defaultProps = {
+  accessibleId: undefined,
+  active: false,
+  className: _tab2.default.container,
+  onActivate: undefined,
+  tabRef: undefined
+};
+
+/***/ }),
+
+/***/ 3760:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = TabPanels;
+
+var _propTypes = __webpack_require__(3642);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function TabPanels({
+  accessibleId,
+  activeIndex,
+  children,
+  className,
+  hasFocusableContent
+}) {
+  return _react2.default.createElement(
+    'div',
+    {
+      'aria-labelledby': accessibleId,
+      role: 'tabpanel',
+      className: className,
+      tabIndex: hasFocusableContent ? undefined : 0
+    },
+    _react2.default.Children.toArray(children)[activeIndex]
+  );
+}
+
+TabPanels.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  activeIndex: _propTypes2.default.number,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  hasFocusableContent: _propTypes2.default.bool.isRequired
+};
+
+TabPanels.defaultProps = {
+  accessibleId: undefined,
+  activeIndex: 0,
+  className: null
+};
+
+/***/ }),
+
+/***/ 3762:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _tabList = __webpack_require__(3758);
+
+Object.defineProperty(exports, 'TabList', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabList).default;
+  }
+});
+
+var _tabPanels = __webpack_require__(3760);
+
+Object.defineProperty(exports, 'TabPanels', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabPanels).default;
+  }
+});
+
+var _tab = __webpack_require__(3759);
+
+Object.defineProperty(exports, 'Tab', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tab).default;
+  }
+});
+
+var _tabs = __webpack_require__(3765);
+
+Object.defineProperty(exports, 'Tabs', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabs).default;
+  }
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/***/ }),
+
+/***/ 3763:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 3764:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 3765:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _propTypes = __webpack_require__(3642);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _uniqueId = __webpack_require__(3766);
+
+var _uniqueId2 = _interopRequireDefault(_uniqueId);
+
+var _tabList = __webpack_require__(3758);
+
+var _tabList2 = _interopRequireDefault(_tabList);
+
+var _tabPanels = __webpack_require__(3760);
+
+var _tabPanels2 = _interopRequireDefault(_tabPanels);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Tabs extends _react2.default.Component {
+  constructor() {
+    super();
+    this.accessibleId = (0, _uniqueId2.default)();
+  }
+
+  render() {
+    var _props = this.props;
+    const activeIndex = _props.activeIndex,
+          children = _props.children,
+          className = _props.className,
+          onActivateTab = _props.onActivateTab;
+
+    const accessibleId = this.accessibleId;
+
+    return _react2.default.createElement(
+      'div',
+      { className: className },
+      _react2.default.Children.map(children, child => {
+        if (!child) {
+          return child;
+        }
+
+        switch (child.type) {
+          case _tabList2.default:
+            return _react2.default.cloneElement(child, { accessibleId, activeIndex, onActivateTab });
+          case _tabPanels2.default:
+            return _react2.default.cloneElement(child, { accessibleId, activeIndex });
+          default:
+            return child;
+        }
+      })
+    );
+  }
+}
+
+exports.default = Tabs;
+Tabs.propTypes = {
+  activeIndex: _propTypes2.default.number.isRequired,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  onActivateTab: _propTypes2.default.func
+};
+
+Tabs.defaultProps = {
+  children: null,
+  className: undefined,
+  onActivateTab: () => {}
+};
+
+/***/ }),
+
+/***/ 3766:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = uniqueId;
+let counter = 0;
+
+function uniqueId() {
+  counter++;
+  return `$rac$${counter}`;
+}
 
 /***/ }),
 

@@ -13,7 +13,6 @@ DIRS += [
 
 DevToolsModules(
     'ast.js',
-    'breakpoints.js',
     'coverage.js',
     'debuggee.js',
     'event-listeners.js',

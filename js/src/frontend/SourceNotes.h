@@ -34,6 +34,73 @@ namespace js {
  * NB: the js_SrcNoteSpec array in BytecodeEmitter.cpp is indexed by this
  * enum, so its initializers need to match the order here.
  */
+
+class SrcNote {
+  public:
+    // SRC_TABLESWITCH: Source note for JSOP_TABLESWITCH.
+    class TableSwitch {
+      public:
+        enum Fields {
+            // The offset of the end of switch (the first non-JumpTarget op
+            // after switch) from JSOP_TABLESWITCH.
+            EndOffset,
+            Count
+        };
+    };
+    // SRC_CONDSWITCH: Source note for JSOP_CONDSWITCH.
+    class CondSwitch {
+      public:
+        enum Fields {
+            // The offset of the end of switch (the first non-JumpTarget op
+            // after switch) from JSOP_CONDSWITCH.
+            EndOffset,
+
+            // The offset of JSOP_CASE for the first case from JSOP_CONDSWITCH.
+            FirstCaseOffset,
+            Count
+        };
+    };
+    // SRC_NEXTCASE: Source note for JSOP_CASE in a JSOP_CONDSWITCH.
+    class NextCase {
+      public:
+        enum Fields {
+            // Offset of the next JSOP_CASE from this JSOP_CASE.  This field is
+            // 0 if this is the last JSOP_CASE.
+            NextCaseOffset,
+            Count
+        };
+    };
+    // SRC_TRY: Source note for JSOP_TRY.
+    class Try {
+      public:
+        enum Fields {
+            // The offset of the JSOP_GOTO at the end of the try block from
+            // JSOP_TRY.
+            EndOfTryJumpOffset,
+            Count
+        };
+    };
+    // SRC_COLSPAN: Source note for arbitrary ops.
+    class ColSpan {
+      public:
+        enum Fields {
+            // The column span (the diff between the column corresponds to the
+            // current op and last known column).
+            Span,
+            Count
+        };
+    };
+    // SRC_SETLINE: Source note for arbitrary ops.
+    class SetLine {
+      public:
+        enum Fields {
+            // The file-absolute source line number of the current op.
+            Line,
+            Count
+        };
+    };
+};
+
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
@@ -50,20 +117,17 @@ namespace js {
     M(SRC_BREAK,        "break",       0)  /* JSOP_GOTO is a break. */                             \
     M(SRC_BREAK2LABEL,  "break2label", 0)  /* JSOP_GOTO for 'break label'. */                      \
     M(SRC_SWITCHBREAK,  "switchbreak", 0)  /* JSOP_GOTO is a break in a switch. */                 \
-    M(SRC_TABLESWITCH,  "tableswitch", 1)  /* JSOP_TABLESWITCH; offset points to end of switch. */ \
-    M(SRC_CONDSWITCH,   "condswitch",  2)  /* JSOP_CONDSWITCH; 1st offset points to end of switch, \
-                                              2nd points to first JSOP_CASE. */                    \
-    M(SRC_NEXTCASE,     "nextcase",    1)  /* Distance forward from one CASE in a CONDSWITCH to    \
-                                              the next. */                                         \
+    M(SRC_TABLESWITCH,  "tableswitch", SrcNote::TableSwitch::Count) \
+    M(SRC_CONDSWITCH,   "condswitch",  SrcNote::CondSwitch::Count) \
+    M(SRC_NEXTCASE,     "nextcase",    SrcNote::NextCase::Count) \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \
-    M(SRC_TRY,          "try",         1)  /* JSOP_TRY, offset points to goto at the end of the    \
-                                              try block. */                                        \
+    M(SRC_TRY,          "try",         SrcNote::Try::Count) \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
-    M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
+    M(SRC_COLSPAN,      "colspan",     SrcNote::ColSpan::Count) \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
-    M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
+    M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_UNUSED21,     "unused21",    0)  /* Unused. */                                           \
     M(SRC_UNUSED22,     "unused22",    0)  /* Unused. */                                           \
     M(SRC_UNUSED23,     "unused23",    0)  /* Unused. */                                           \

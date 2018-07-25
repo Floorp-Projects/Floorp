@@ -3,7 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.syncClientBreakpoint = syncClientBreakpoint;
+exports.syncBreakpointPromise = syncBreakpointPromise;
+exports.syncBreakpoint = syncBreakpoint;
 
 var _breakpoint = require("../../utils/breakpoint/index");
 
@@ -52,7 +53,7 @@ function createSyncData(id, pendingBreakpoint, location, generatedLocation, prev
 // and adding a new breakpoint
 
 
-async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pendingBreakpoint) {
+async function syncBreakpointPromise(getState, client, sourceMaps, sourceId, pendingBreakpoint) {
   (0, _breakpoint.assertPendingBreakpoint)(pendingBreakpoint);
   const source = (0, _selectors.getSource)(getState(), sourceId);
   const generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
@@ -116,4 +117,39 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   const originalText = (0, _source.getTextAtPosition)(source, newLocation);
   const text = (0, _source.getTextAtPosition)(generatedSource, newGeneratedLocation);
   return createSyncData(id, pendingBreakpoint, newLocation, newGeneratedLocation, previousLocation, text, originalText);
+}
+/**
+ * Syncing a breakpoint add breakpoint information that is stored, and
+ * contact the server for more data.
+ *
+ * @memberof actions/breakpoints
+ * @static
+ * @param {String} $1.sourceId String  value
+ * @param {PendingBreakpoint} $1.location PendingBreakpoint  value
+ */
+
+
+function syncBreakpoint(sourceId, pendingBreakpoint) {
+  return async ({
+    dispatch,
+    getState,
+    client,
+    sourceMaps
+  }) => {
+    const response = await syncBreakpointPromise(getState, client, sourceMaps, sourceId, pendingBreakpoint);
+
+    if (!response) {
+      return;
+    }
+
+    const {
+      breakpoint,
+      previousLocation
+    } = response;
+    return dispatch({
+      type: "SYNC_BREAKPOINT",
+      breakpoint,
+      previousLocation
+    });
+  };
 }

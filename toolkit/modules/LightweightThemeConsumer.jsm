@@ -138,9 +138,7 @@ LightweightThemeConsumer.prototype = {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
-    const { outerWindowID } = this._win
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils);
+    const { outerWindowID } = this._win.windowUtils;
 
     let parsedData = JSON.parse(aData);
     if (!parsedData) {

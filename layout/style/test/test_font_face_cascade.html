@@ -6,9 +6,7 @@
 let io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
   .getService(SpecialPowers.Ci.nsIIOService);
 
-let utils = SpecialPowers.wrap(window)
-  .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-  .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+let utils = SpecialPowers.getDOMWindowUtils(window);
 
 function load_sheet(sheet_text, level) {
   if (level != "AGENT_SHEET" && level != "USER_SHEET" && level != "AUTHOR_SHEET") {

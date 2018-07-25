@@ -1127,6 +1127,13 @@ class TestEmitterBasic(unittest.TestCase):
             reader = self.reader('xpidl-module-no-sources')
             self.read_topsrcdir(reader)
 
+    def test_xpidl_module_no_sources(self):
+        """Missing XPIDL_SOURCES should be rejected."""
+        with self.assertRaisesRegexp(SandboxValidationError, 'File .* '
+            'from XPIDL_SOURCES does not exist'):
+            reader = self.reader('missing-xpidl')
+            self.read_topsrcdir(reader)
+
     def test_missing_local_includes(self):
         """LOCAL_INCLUDES containing non-existent directories should be rejected."""
         with self.assertRaisesRegexp(SandboxValidationError, 'Path specified in '
