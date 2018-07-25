@@ -11,6 +11,9 @@ parser:
         ParseNode*
     default-value:
         nullptr
+    list:
+        append: |
+            result->appendWithoutOrderAssumption(item);
 
 # Rules for generating BinSource-auto.cpp
 cpp:
