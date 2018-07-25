@@ -133,7 +133,7 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             jssrcnote* sn = GetSrcNote(gsn, script_, pc);
             MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
 
-            jsbytecode* endOfTry = pc + GetSrcNoteOffset(sn, 0);
+            jsbytecode* endOfTry = pc + GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset);
             MOZ_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
 
             jsbytecode* afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
