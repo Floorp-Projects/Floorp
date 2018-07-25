@@ -12,12 +12,14 @@ ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const ATTR_CODE_MAX_LENGTH = 200;
 const ATTR_CODE_KEYS_REGEX = /^source|medium|campaign|content$/;
 const ATTR_CODE_VALUE_REGEX = /[a-zA-Z0-9_%\\-\\.\\(\\)]*/;
 const ATTR_CODE_FIELD_SEPARATOR = "%26"; // URL-encoded &
 const ATTR_CODE_KEY_VALUE_SEPARATOR = "%3D"; // URL-encoded =
+const ATTR_CODE_KEYS = ["source", "medium", "campaign", "content"];
 
 let gCachedAttrData = null;
 
@@ -65,6 +67,10 @@ var AttributionCode = {
    * Returns a promise that fulfills with an object containing the parsed
    * attribution data if the code could be read and is valid,
    * or an empty object otherwise.
+   *
+   * On windows the attribution service converts utm_* keys, removing "utm_".
+   * On OSX the attributions are set directly on download and retain "utm_".  We
+   * strip "utm_" while retrieving the params.
    */
   getAttrDataAsync() {
     return (async function() {
@@ -72,18 +78,38 @@ var AttributionCode = {
         return gCachedAttrData;
       }
 
-      let code = "";
-      try {
-        let bytes = await OS.File.read(getAttributionFile().path);
-        let decoder = new TextDecoder();
-        code = decoder.decode(bytes);
-      } catch (ex) {
-        // The attribution file may already have been deleted,
-        // or it may have never been installed at all;
-        // failure to open or read it isn't an error.
+      gCachedAttrData = {};
+      if (AppConstants.platform == "win") {
+        try {
+          let bytes = await OS.File.read(getAttributionFile().path);
+          let decoder = new TextDecoder();
+          let code = decoder.decode(bytes);
+          gCachedAttrData = parseAttributionCode(code);
+        } catch (ex) {
+          // The attribution file may already have been deleted,
+          // or it may have never been installed at all;
+          // failure to open or read it isn't an error.
+        }
+      } else if (AppConstants.platform == "macosx") {
+        try {
+          let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
+          let attributionSvc = Cc["@mozilla.org/mac-attribution;1"]
+                                  .getService(Ci.nsIMacAttributionService);
+          let referrer = attributionSvc.getReferrerUrl(appPath);
+          let params = new URL(referrer).searchParams;
+          for (let key of ATTR_CODE_KEYS) {
+            let utm_key = `utm_${key}`;
+            if (params.has(utm_key)) {
+              let value = params.get(utm_key);
+              if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
+                gCachedAttrData[key] = value;
+              }
+            }
+          }
+        } catch (ex) {
+          // No attributions
+        }
       }
-
-      gCachedAttrData = parseAttributionCode(code);
       return gCachedAttrData;
     })();
   },
