@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["RemoteSecurityUI"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 function RemoteSecurityUI() {
     this._secInfo = null;
     this._state = 0;

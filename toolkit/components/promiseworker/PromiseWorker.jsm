@@ -19,8 +19,6 @@
 
 var EXPORTED_SYMBOLS = ["BasePromiseWorker"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 

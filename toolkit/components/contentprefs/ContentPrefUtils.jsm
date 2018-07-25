@@ -14,9 +14,6 @@ var EXPORTED_SYMBOLS = [
   "_methodsCallableFromChild",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function ContentPref(domain, name, value) {
   this.domain = domain;
   this.name = name;

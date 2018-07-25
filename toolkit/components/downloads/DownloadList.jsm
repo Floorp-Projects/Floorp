@@ -14,8 +14,6 @@ var EXPORTED_SYMBOLS = [
   "DownloadSummary",
 ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 /**
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
