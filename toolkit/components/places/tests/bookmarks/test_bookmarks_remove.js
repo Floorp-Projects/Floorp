@@ -130,7 +130,7 @@ add_task(async function remove_bookmark_orphans() {
                                                  title: "a bookmark" });
   checkBookmarkObject(bm1);
   PlacesUtils.annotations.setItemAnnotation((await PlacesUtils.promiseItemId(bm1.guid)),
-                                            "testanno", "testvalue", 0, 0);
+                                            "testanno", "testvalue", 0, PlacesUtils.annotations.EXPIRE_NEVER);
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
 

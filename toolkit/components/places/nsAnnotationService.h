@@ -43,14 +43,13 @@ private:
 } // namespace places
 } // namespace mozilla
 
+
 class nsAnnotationService final : public nsIAnnotationService
-                                , public nsIObserver
                                 , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANNOTATIONSERVICE
-  NS_DECL_NSIOBSERVER
 
   nsAnnotationService();
 
@@ -87,7 +86,6 @@ protected:
   RefPtr<mozilla::places::Database> mDB;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
-  bool mHasSessionAnnotations;
 
   static nsAnnotationService* gAnnotationService;
 

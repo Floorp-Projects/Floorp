@@ -81,18 +81,22 @@ talos:
     - talos-h2
 
 raptor:
-    - raptor-firefox-tp6
-    - raptor-firefox-speedometer
-    - raptor-firefox-stylebench
-    - raptor-firefox-sunspider
-    - raptor-firefox-motionmark-htmlsuite
-    - raptor-firefox-motionmark-animometer
-    - raptor-firefox-webaudio
-    - raptor-chrome-tp6
-    - raptor-chrome-speedometer
-    - raptor-chrome-stylebench
-    - raptor-chrome-sunspider
-    - raptor-chrome-webaudio
+    - raptor-tp6-firefox
+    - raptor-tp6-chrome
+    - raptor-speedometer-firefox
+    - raptor-speedometer-chrome
+    - raptor-stylebench-firefox
+    - raptor-stylebench-chrome
+    - raptor-motionmark-htmlsuite-firefox
+    - raptor-motionmark-htmlsuite-chrome
+    - raptor-motionmark-animometer-firefox
+    - raptor-motionmark-animometer-chrome
+    - raptor-webaudio-firefox
+    - raptor-webaudio-chrome
+    - raptor-gdocs-firefox
+    - raptor-gdocs-chrome
+    - raptor-sunspider-firefox
+    - raptor-sunspider-chrome
 
 awsy:
     - awsy

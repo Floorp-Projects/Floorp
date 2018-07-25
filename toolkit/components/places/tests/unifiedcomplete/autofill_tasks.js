@@ -341,6 +341,38 @@ function addAutofillTasks(origins) {
     await cleanup();
   });
 
+  // "https://ex" should *not* match http://example.com/, even if the latter is
+  // more frecent and both could be autofilled.
+  add_task(async function httpsPrefixShouldNotMatchMoreFrecentHTTP() {
+    await PlacesTestUtils.addVisits([{
+      uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    }, {
+      uri: "http://" + url,
+    }, {
+      uri: "https://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    }, {
+      uri: "http://otherpage",
+    }]);
+    await check_autocomplete({
+      search: "https://" + search,
+      autofilled: "https://" + url,
+      completed: "https://" + url,
+      matches: [{
+        value: "https://" + url,
+        comment: "https://" + comment,
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: "http://" + url,
+        comment: "test visit for http://" + url,
+        style: ["favicon"],
+      }],
+    });
+    await cleanup();
+  });
+
   // Autofill should respond to frecency changes.
   add_task(async function frecency() {
     // Start with an http visit.  It should be completed.

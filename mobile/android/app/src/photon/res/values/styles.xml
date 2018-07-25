@@ -13,17 +13,17 @@
     -->
     <style name="Widget"/>
 
-    <style name="Widget.BaseButton" parent="android:style/Widget.Button"/>
+    <style name="Widget.BaseButton" parent="@android:style/Widget.Button"/>
 
-    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.DropDownItem"/>
+    <style name="Widget.BaseDropDownItem" parent="@android:style/Widget.DropDownItem"/>
 
-    <style name="Widget.BaseEditText" parent="android:style/Widget.EditText"/>
+    <style name="Widget.BaseEditText" parent="@android:style/Widget.EditText"/>
 
-    <style name="Widget.BaseListView" parent="android:style/Widget.ListView"/>
+    <style name="Widget.BaseListView" parent="@android:style/Widget.ListView"/>
 
-    <style name="Widget.BaseGridView" parent="android:style/Widget.GridView"/>
+    <style name="Widget.BaseGridView" parent="@android:style/Widget.GridView"/>
 
-    <style name="Widget.BaseTextView" parent="android:style/Widget.TextView"/>
+    <style name="Widget.BaseTextView" parent="@android:style/Widget.TextView"/>
 
     <!--
         Application styles. All customizations that are not specific
@@ -75,7 +75,7 @@
         <item name="android:ellipsize">marquee</item>
     </style>
 
-    <style name="Widget.Spinner" parent="android:style/Widget.Spinner">
+    <style name="Widget.Spinner" parent="@android:style/Widget.Spinner">
         <item name="android:minWidth">@dimen/doorhanger_input_width</item>
     </style>
 

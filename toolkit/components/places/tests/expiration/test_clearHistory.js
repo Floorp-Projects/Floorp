@@ -34,10 +34,6 @@ add_task(async function test_historyClear() {
     as.setItemAnnotation(id, "persist", "test", 0, as.EXPIRE_NEVER);
     // Will persist because the page is bookmarked.
     as.setPageAnnotation(pageURI, "persist", "test", 0, as.EXPIRE_NEVER);
-    // All EXPIRE_SESSION annotations are expected to expire on clear history.
-    as.setItemAnnotation(id, "expire_session", "test", 0, as.EXPIRE_SESSION);
-    as.setPageAnnotation(pageURI, "expire_session", "test", 0, as.EXPIRE_SESSION);
-    // Annotations with timed policy will expire regardless bookmarked status.
   }
 
   // Add some visited page and annotations for each.
@@ -47,21 +43,12 @@ add_task(async function test_historyClear() {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     await PlacesTestUtils.addVisits({ uri: pageURI });
     as.setPageAnnotation(pageURI, "expire", "test", 0, as.EXPIRE_NEVER);
-    as.setPageAnnotation(pageURI, "expire_session", "test", 0, as.EXPIRE_SESSION);
   }
 
   // Expire all visits for the bookmarks
   await PlacesUtils.history.clear();
 
-  for (let anno of ["expire_session", "expire"]) {
-    let pages = await getPagesWithAnnotation(anno);
-    Assert.equal(pages.length, 0);
-  }
-
-  for (let anno of ["expire_session", "expire"]) {
-    let items = await getItemsWithAnnotation(anno);
-    Assert.equal(items.length, 0);
-  }
+  Assert.equal((await getPagesWithAnnotation("expire")).length, 0);
 
   let pages = await getPagesWithAnnotation("persist");
   Assert.equal(pages.length, 5);

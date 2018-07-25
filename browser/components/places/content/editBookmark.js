@@ -233,7 +233,7 @@ var gEditItemOverlay = {
     if (showOrCollapse("tagsRow", isURI || bulkTagging, "tags"))
       this._initTagsField();
     else if (!this._element("tagsSelectorRow").collapsed)
-      this.toggleTagsSelector();
+      this.toggleTagsSelector().catch(Cu.reportError);
 
     // Folder picker.
     // Technically we should check that the item is not moveable, but that's
@@ -435,7 +435,7 @@ var gEditItemOverlay = {
       // Hide the tag selector if it was previously visible.
       var tagsSelectorRow = this._element("tagsSelectorRow");
       if (!tagsSelectorRow.collapsed)
-        this.toggleTagsSelector();
+        this.toggleTagsSelector().catch(Cu.reportError);
     }
 
     if (this._observersAdded) {
@@ -741,7 +741,7 @@ var gEditItemOverlay = {
     folderItem.doCommand();
   },
 
-  _rebuildTagsSelectorList() {
+  async _rebuildTagsSelectorList() {
     let tagsSelector = this._element("tagsSelector");
     let tagsSelectorRow = this._element("tagsSelectorRow");
     if (tagsSelectorRow.collapsed)
@@ -756,10 +756,10 @@ var gEditItemOverlay = {
     }
 
     let tagsInField = this._getTagsArrayFromTagsInputField();
-    let allTags = PlacesUtils.tagging.allTags;
+    let allTags = await PlacesUtils.bookmarks.fetchTags();
     let fragment = document.createDocumentFragment();
-    for (var i = 0; i < allTags.length; i++) {
-      let tag = allTags[i];
+    for (let i = 0; i < allTags.length; i++) {
+      let tag = allTags[i].name;
       let elt = document.createElement("richlistitem");
       elt.appendChild(document.createElement("image"));
       let label = document.createElement("label");
@@ -778,9 +778,11 @@ var gEditItemOverlay = {
       tagsSelector.selectedIndex = selectedIndex;
       tagsSelector.ensureIndexIsVisible(selectedIndex);
     }
+    let event = new CustomEvent("BookmarkTagsSelectorUpdated", { bubbles: true });
+    tagsSelector.dispatchEvent(event);
   },
 
-  toggleTagsSelector() {
+  async toggleTagsSelector() {
     var tagsSelector = this._element("tagsSelector");
     var tagsSelectorRow = this._element("tagsSelectorRow");
     var expander = this._element("tagsSelectorExpander");
@@ -789,7 +791,7 @@ var gEditItemOverlay = {
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
       tagsSelectorRow.collapsed = false;
-      this._rebuildTagsSelectorList();
+      await this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("mousedown", this);
@@ -934,7 +936,7 @@ var gEditItemOverlay = {
       this._initTagsField();
       // Any tags change should be reflected in the tags selector.
       if (this._element("tagsSelector")) {
-        this._rebuildTagsSelectorList();
+        await this._rebuildTagsSelectorList();
       }
     }
   },

@@ -318,7 +318,7 @@ public class AnimatedProgressBar extends ThemedProgressBar {
                                    int duration,
                                    @InterpolatorRes int itplId) {
         if (isWrap) {
-            final Interpolator interpolator = (itplId > 0)
+            final Interpolator interpolator = (itplId != 0)
                     ? AnimationUtils.loadInterpolator(getContext(), itplId)
                     : null;
             return new ShiftDrawable(original, duration, interpolator);

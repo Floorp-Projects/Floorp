@@ -801,19 +801,15 @@ var clear = async function(db) {
                               EXCEPT
                               SELECT icon_id FROM moz_icons_to_pages
                             )`);
+    await db.executeCached(`DELETE FROM moz_icons
+                            WHERE root = 1
+                              AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+                              AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
 
     // Expire annotations.
-    await db.execute(`DELETE FROM moz_items_annos WHERE expiration = :expire_session`,
-                     { expire_session: Ci.nsIAnnotationService.EXPIRE_SESSION });
-    await db.execute(`DELETE FROM moz_annos WHERE id in (
-                        SELECT a.id FROM moz_annos a
-                        LEFT JOIN moz_places h ON a.place_id = h.id
-                        WHERE h.id IS NULL
-                           OR expiration = :expire_session
-                           OR (expiration = :expire_with_history
-                               AND h.last_visit_date ISNULL)
-                      )`, { expire_session: Ci.nsIAnnotationService.EXPIRE_SESSION,
-                            expire_with_history: Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY });
+    await db.execute(`DELETE FROM moz_annos WHERE NOT EXISTS (
+                        SELECT 1 FROM moz_places WHERE id = place_id
+                      )`);
 
     // Expire inputhistory.
     await db.execute(`DELETE FROM moz_inputhistory WHERE place_id IN (
@@ -894,6 +890,10 @@ var cleanupPages = async function(db, pages) {
                             EXCEPT
                             SELECT icon_id FROM moz_icons_to_pages
                           )`);
+  await db.executeCached(`DELETE FROM moz_icons
+                          WHERE root = 1
+                            AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+                            AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
 
   await db.execute(`DELETE FROM moz_annos
                     WHERE place_id IN ( ${ idsList } )`);

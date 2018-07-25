@@ -679,7 +679,7 @@ add_task(async function test_pullChanges_tags() {
   info("Rename tag folder using Bookmarks.setItemTitle");
   {
     PlacesUtils.bookmarks.setItemTitle(tagFolderId, "sneaky");
-    deepEqual(PlacesUtils.tagging.allTags, ["sneaky"],
+    deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), ["sneaky"],
       "Tagging service should update cache with new title");
     let changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(Object.keys(changes).sort(),
@@ -694,7 +694,7 @@ add_task(async function test_pullChanges_tags() {
       guid: tagFolderGuid,
       title: "tricky",
     });
-    deepEqual(PlacesUtils.tagging.allTags, ["tricky"],
+    deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), ["tricky"],
       "Tagging service should update cache after updating tag folder");
     let changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(Object.keys(changes).sort(),
@@ -1358,7 +1358,7 @@ add_task(async function test_insert_tags_whitespace() {
 
   PlacesUtils.tagging.untagURI(uri("https://example.org"), ["untrimmed", "taggy"]);
   PlacesUtils.tagging.untagURI(uri("https://example.net"), ["taggy"]);
-  deepEqual(PlacesUtils.tagging.allTags, [], "Should clean up all tags");
+  deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), [], "Should clean up all tags");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -1423,7 +1423,7 @@ add_task(async function test_insert_tag_query() {
     ok(!params.has("type"), "Should not preserve query type");
     ok(!params.has("folder"), "Should not preserve folder");
     equal(params.get("tag"), "nonexisting", "Should add tag");
-    deepEqual(PlacesUtils.tagging.allTags, ["taggy"],
+    deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), ["taggy"],
               "The nonexisting tag should not be added");
   }
 
@@ -1443,7 +1443,7 @@ add_task(async function test_insert_tag_query() {
     ok(!params.has("folder"), "Should not preserve folder");
     equal(params.get("maxResults"), "15", "Should preserve additional params");
     equal(params.get("tag"), "taggy", "Should add tag");
-    deepEqual(PlacesUtils.tagging.allTags, ["taggy"],
+    deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), ["taggy"],
               "Should not duplicate existing tags");
   }
 
@@ -1451,7 +1451,7 @@ add_task(async function test_insert_tag_query() {
 
   info("Removing the tag should clean up the tag folder");
   PlacesUtils.tagging.untagURI(uri("https://mozilla.org"), null);
-  deepEqual(PlacesUtils.tagging.allTags, [],
+  deepEqual((await PlacesUtils.bookmarks.fetchTags()).map(t => t.name), [],
     "Should remove tag folder once last item is untagged");
 
   await PlacesUtils.bookmarks.eraseEverything();

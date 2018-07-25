@@ -224,7 +224,9 @@ android.libraryVariants.all { variant ->
     def javadoc = task "javadoc${name.capitalize()}"(type: Javadoc) {
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
-        classpath = files(variant.javaCompile.classpath.files)
+        doFirst {
+            classpath = files(variant.javaCompile.classpath.files)
+        }
 
         source = files(variant.javaCompile.source)
         exclude '**/R.java', '**/BuildConfig.java'

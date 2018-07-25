@@ -107,18 +107,8 @@ const IDLE_TIMEOUT_SECONDS = 5 * 60;
 // expiration will be more aggressive, to bring back history to a saner size.
 const OVERLIMIT_PAGES_THRESHOLD = 1000;
 
+// Milliseconds in a day.
 const MSECS_PER_DAY = 86400000;
-const ANNOS_EXPIRE_POLICIES = [
-  { bind: "expire_days",
-    type: Ci.nsIAnnotationService.EXPIRE_DAYS,
-    time: 7 * 1000 * MSECS_PER_DAY },
-  { bind: "expire_weeks",
-    type: Ci.nsIAnnotationService.EXPIRE_WEEKS,
-    time: 30 * 1000 * MSECS_PER_DAY },
-  { bind: "expire_months",
-    type: Ci.nsIAnnotationService.EXPIRE_MONTHS,
-    time: 180 * 1000 * MSECS_PER_DAY },
-];
 
 // When we expire we can use these limits:
 // - SMALL for usual partial expirations, will expire a small chunk.
@@ -269,42 +259,6 @@ const EXPIRATION_QUERIES = {
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
-  // Expire page annotations based on expiration policy.
-  QUERY_EXPIRE_ANNOS_WITH_POLICY: {
-    sql: `DELETE FROM moz_annos
-          WHERE (expiration = :expire_days
-            AND :expire_days_time > MAX(lastModified, dateAdded))
-             OR (expiration = :expire_weeks
-            AND :expire_weeks_time > MAX(lastModified, dateAdded))
-             OR (expiration = :expire_months
-            AND :expire_months_time > MAX(lastModified, dateAdded))`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-
-  // Expire items annotations based on expiration policy.
-  QUERY_EXPIRE_ITEMS_ANNOS_WITH_POLICY: {
-    sql: `DELETE FROM moz_items_annos
-          WHERE (expiration = :expire_days
-            AND :expire_days_time > MAX(lastModified, dateAdded))
-             OR (expiration = :expire_weeks
-            AND :expire_weeks_time > MAX(lastModified, dateAdded))
-             OR (expiration = :expire_months
-            AND :expire_months_time > MAX(lastModified, dateAdded))`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-
-  // Expire page annotations based on expiration policy.
-  QUERY_EXPIRE_ANNOS_WITH_HISTORY: {
-    sql: `DELETE FROM moz_annos
-          WHERE expiration = :expire_with_history
-            AND NOT EXISTS (SELECT id FROM moz_historyvisits
-                            WHERE place_id = moz_annos.place_id LIMIT 1)`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
-             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-
   // Expire item annos without a corresponding item id.
   QUERY_EXPIRE_ITEMS_ANNOS: {
     sql: `DELETE FROM moz_items_annos WHERE id IN (
@@ -332,7 +286,9 @@ const EXPIRATION_QUERIES = {
 
   // Expire orphan inputhistory.
   QUERY_EXPIRE_INPUTHISTORY: {
-    sql: `DELETE FROM moz_inputhistory WHERE place_id IN (
+    sql: `DELETE FROM moz_inputhistory
+          WHERE place_id IN (SELECT p_id FROM expiration_notify)
+          AND place_id IN (
             SELECT i.place_id FROM moz_inputhistory i
             LEFT JOIN moz_places h ON h.id = i.place_id
             WHERE h.id IS NULL
@@ -552,8 +508,10 @@ nsPlacesExpiration.prototype = {
       // Adapt expiration aggressivity to the number of pages over the limit.
       let limit = overLimitPages > OVERLIMIT_PAGES_THRESHOLD ? LIMIT.LARGE
                                                              : LIMIT.SMALL;
-
-      this._expireWithActionAndLimit(action, limit);
+      // Run at the first idle, or after a minute, whatever comes first.
+      Services.tm.idleDispatchToMainThread(() => {
+        this._expireWithActionAndLimit(action, limit);
+      }, 60000);
     });
   },
 
@@ -935,17 +893,6 @@ nsPlacesExpiration.prototype = {
       case "QUERY_EXPIRE_ANNOS":
         // Each page may have multiple annos.
         params.limit_annos = baseLimit * EXPIRE_AGGRESSIVITY_MULTIPLIER;
-        break;
-      case "QUERY_EXPIRE_ANNOS_WITH_POLICY":
-      case "QUERY_EXPIRE_ITEMS_ANNOS_WITH_POLICY":
-        let microNow = Date.now() * 1000;
-        ANNOS_EXPIRE_POLICIES.forEach(function(policy) {
-          params[policy.bind] = policy.type;
-          params[policy.bind + "_time"] = microNow - policy.time;
-        });
-        break;
-      case "QUERY_EXPIRE_ANNOS_WITH_HISTORY":
-        params.expire_with_history = Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY;
         break;
       case "QUERY_EXPIRE_ITEMS_ANNOS":
         params.limit_annos = baseLimit;

@@ -374,11 +374,17 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
     if (StringBeginsWith(icon.host, NS_LITERAL_CSTRING("www."))) {
       icon.host.Cut(0, 4);
     }
-    nsAutoCString path;
-    rv = aFaviconURI->GetPathQueryRef(path);
-    if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
-      icon.rootIcon = 1;
-    }
+  }
+
+  // A root icon is when the icon and page have the same host and the path
+  // is just /favicon.ico. These icons are considered valid for the whole
+  // origin and expired with the origin through a trigger.
+  nsAutoCString path;
+  if (NS_SUCCEEDED(aFaviconURI->GetPathQueryRef(path)) &&
+      !icon.host.IsEmpty() &&
+      icon.host.Equals(page.host) &&
+      path.EqualsLiteral("/favicon.ico")) {
+    icon.rootIcon = 1;
   }
 
   // If the page url points to an image, the icon's url will be the same.
@@ -448,16 +454,14 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   iconData->fetchMode = FETCH_NEVER;
   nsresult rv = aFaviconURI->GetSpec(iconData->spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString path;
-  rv = aFaviconURI->GetPathQueryRef(path);
-  if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
-    iconData->rootIcon = 1;
-  }
   // URIs can arguably lack a host.
   Unused << aFaviconURI->GetHost(iconData->host);
   if (StringBeginsWith(iconData->host, NS_LITERAL_CSTRING("www."))) {
     iconData->host.Cut(0, 4);
   }
+
+  // Note we can't set rootIcon here, because don't know the page it will be
+  // associated with. We'll do that later in SetAndFetchFaviconForPage.
 
   IconPayload payload;
   payload.mimeType = aMimeType;

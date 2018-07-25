@@ -552,7 +552,7 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
   }
 
   if (!imageFrame->mImageRequest) {
-    return false;
+    return true;
   }
 
   uint32_t flags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;

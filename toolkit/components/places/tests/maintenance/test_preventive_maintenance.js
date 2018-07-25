@@ -894,13 +894,20 @@ tests.push({
 
   setup() {
     // Insert favicon entries
-    let stmt = mDBConn.createStatement("INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash) VALUES(:favicon_id, :url, hash(fixup_url(:url)))");
+    let stmt = mDBConn.createStatement("INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash, root) VALUES(:favicon_id, :url, hash(fixup_url(:url)), :root)");
     stmt.params.favicon_id = 1;
     stmt.params.url = "http://www1.mozilla.org/favicon.ico";
+    stmt.params.root = 0;
     stmt.execute();
     stmt.reset();
     stmt.params.favicon_id = 2;
     stmt.params.url = "http://www2.mozilla.org/favicon.ico";
+    stmt.params.root = 0;
+    stmt.execute();
+    stmt.reset();
+    stmt.params.favicon_id = 3;
+    stmt.params.url = "http://www3.mozilla.org/favicon.ico";
+    stmt.params.root = 1;
     stmt.execute();
     stmt.finalize();
     // Insert orphan page.
@@ -922,6 +929,10 @@ tests.push({
     stmt.reset();
     // Check that unused icon has been removed
     stmt.params.favicon_id = 2;
+    Assert.ok(!stmt.executeStep());
+    stmt.reset();
+    // Check that unused icon has been removed
+    stmt.params.favicon_id = 3;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
     // Check that the orphan page is gone.

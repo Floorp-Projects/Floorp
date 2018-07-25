@@ -1366,6 +1366,34 @@ var Bookmarks = Object.freeze({
   },
 
   /**
+   * Fetch all the existing tags, sorted alphabetically.
+   * @return {Promise} resolves to an array of objects representing tags, when
+   *         fetching is complete.
+   *         Each object looks like {
+   *           name: the name of the tag,
+   *           count: number of bookmarks with this tag
+   *         }
+   */
+  async fetchTags() {
+    // TODO: Once the tagging API is implemented in Bookmarks.jsm, we can cache
+    // the list of tags, instead of querying every time.
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(`
+      SELECT b.title AS name, count(*) AS count
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks p ON b.parent = p.id
+      JOIN moz_bookmarks c ON c.parent = b.id
+      WHERE p.guid = :tagsGuid
+      GROUP BY name
+      ORDER BY name COLLATE nocase ASC 
+    `, { tagsGuid: this.tagsGuid });
+    return rows.map(r => ({
+      name: r.getResultByName("name"),
+      count: r.getResultByName("count")
+    }));
+  },
+
+  /**
    * Reorders contents of a folder based on a provided array of GUIDs.
    *
    * @param parentGuid
