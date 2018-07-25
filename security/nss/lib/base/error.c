@@ -15,6 +15,10 @@
 #include <limits.h> /* for UINT_MAX */
 #include <string.h> /* for memmove */
 
+#if defined(__MINGW32__)
+#include <windows.h>
+#endif
+
 #define NSS_MAX_ERROR_STACK_COUNT 16 /* error codes */
 
 /*
@@ -65,7 +69,32 @@ static const PRCallOnceType error_call_again;
 static PRStatus
 error_once_function(void)
 {
+
+/*
+ * This #ifdef function is redundant. It performs the same thing as the
+ * else case.
+ *
+ * However, the MinGW version looks up the function from nss3's export
+ * table, and on MinGW _that_ behaves differently than passing a
+ * function pointer in a different module because MinGW has
+ * -mnop-fun-dllimport specified, which generates function thunks for
+ * cross-module calls. And when a module (like nssckbi) gets unloaded,
+ * and you try to call into that thunk (which is now missing) you'll
+ * crash. So we do this bit of ugly to avoid that crash. Fortunately
+ * this is the only place we've had to do this.
+ */
+#if defined(__MINGW32__)
+    HMODULE nss3 = GetModuleHandleW(L"nss3");
+    if (nss3) {
+        FARPROC freePtr = GetProcAddress(nss3, "PR_Free");
+        if (freePtr) {
+            return PR_NewThreadPrivateIndex(&error_stack_index, freePtr);
+        }
+    }
     return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free);
+#else
+    return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free);
+#endif
 }
 
 /*

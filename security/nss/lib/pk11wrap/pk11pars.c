@@ -194,7 +194,7 @@ typedef struct {
  *  This table should be merged with the SECOID table.
  */
 #define CIPHER_NAME(x) x, (sizeof(x) - 1)
-static const oidValDef algOptList[] = {
+static const oidValDef curveOptList[] = {
     /* Curves */
     { CIPHER_NAME("PRIME192V1"), SEC_OID_ANSIX962_EC_PRIME192V1,
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
@@ -316,7 +316,9 @@ static const oidValDef algOptList[] = {
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
     { CIPHER_NAME("SECT571R1"), SEC_OID_SECG_EC_SECT571R1,
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
+};
 
+static const oidValDef hashOptList[] = {
     /* Hashes */
     { CIPHER_NAME("MD2"), SEC_OID_MD2,
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
@@ -334,7 +336,9 @@ static const oidValDef algOptList[] = {
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
     { CIPHER_NAME("SHA512"), SEC_OID_SHA512,
       NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
+};
 
+static const oidValDef macOptList[] = {
     /* MACs */
     { CIPHER_NAME("HMAC-SHA1"), SEC_OID_HMAC_SHA1, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("HMAC-SHA224"), SEC_OID_HMAC_SHA224, NSS_USE_ALG_IN_SSL },
@@ -342,7 +346,9 @@ static const oidValDef algOptList[] = {
     { CIPHER_NAME("HMAC-SHA384"), SEC_OID_HMAC_SHA384, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("HMAC-SHA512"), SEC_OID_HMAC_SHA512, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("HMAC-MD5"), SEC_OID_HMAC_MD5, NSS_USE_ALG_IN_SSL },
+};
 
+static const oidValDef cipherOptList[] = {
     /* Ciphers */
     { CIPHER_NAME("AES128-CBC"), SEC_OID_AES_128_CBC, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("AES192-CBC"), SEC_OID_AES_192_CBC, NSS_USE_ALG_IN_SSL },
@@ -362,7 +368,9 @@ static const oidValDef algOptList[] = {
     { CIPHER_NAME("RC2"), SEC_OID_RC2_CBC, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("RC4"), SEC_OID_RC4, NSS_USE_ALG_IN_SSL },
     { CIPHER_NAME("IDEA"), SEC_OID_IDEA_CBC, NSS_USE_ALG_IN_SSL },
+};
 
+static const oidValDef kxOptList[] = {
     /* Key exchange */
     { CIPHER_NAME("RSA"), SEC_OID_TLS_RSA, NSS_USE_ALG_IN_SSL_KX },
     { CIPHER_NAME("RSA-EXPORT"), SEC_OID_TLS_RSA_EXPORT, NSS_USE_ALG_IN_SSL_KX },
@@ -374,6 +382,20 @@ static const oidValDef algOptList[] = {
     { CIPHER_NAME("ECDHE-RSA"), SEC_OID_TLS_ECDHE_RSA, NSS_USE_ALG_IN_SSL_KX },
     { CIPHER_NAME("ECDH-ECDSA"), SEC_OID_TLS_ECDH_ECDSA, NSS_USE_ALG_IN_SSL_KX },
     { CIPHER_NAME("ECDH-RSA"), SEC_OID_TLS_ECDH_RSA, NSS_USE_ALG_IN_SSL_KX },
+};
+
+typedef struct {
+    const oidValDef *list;
+    PRUint32 entries;
+    const char *description;
+} algListsDef;
+
+static const algListsDef algOptLists[] = {
+    { curveOptList, PR_ARRAY_SIZE(curveOptList), "ECC" },
+    { hashOptList, PR_ARRAY_SIZE(hashOptList), "HASH" },
+    { macOptList, PR_ARRAY_SIZE(macOptList), "MAC" },
+    { cipherOptList, PR_ARRAY_SIZE(cipherOptList), "CIPHER" },
+    { kxOptList, PR_ARRAY_SIZE(kxOptList), "OTHER-KX" },
 };
 
 static const optionFreeDef sslOptList[] = {
@@ -447,7 +469,8 @@ secmod_ArgGetSubValue(const char *cipher, char sep1, char sep2,
 }
 
 static PRUint32
-secmod_parsePolicyValue(const char *policyFlags, int policyLength)
+secmod_parsePolicyValue(const char *policyFlags, int policyLength,
+                        PRBool printPolicyFeedback)
 {
     const char *flag, *currentString;
     PRUint32 flags = 0;
@@ -456,6 +479,7 @@ secmod_parsePolicyValue(const char *policyFlags, int policyLength)
     for (currentString = policyFlags; currentString &&
                                       currentString < policyFlags + policyLength;) {
         int length;
+        PRBool unknown = PR_TRUE;
         flag = secmod_ArgGetSubValue(currentString, ',', ':', &length,
                                      &currentString);
         if (length == 0) {
@@ -467,8 +491,14 @@ secmod_parsePolicyValue(const char *policyFlags, int policyLength)
             if ((policy->name_size == length) &&
                 PORT_Strncasecmp(policy->name, flag, name_size) == 0) {
                 flags |= policy->flag;
+                unknown = PR_FALSE;
                 break;
             }
+        }
+        if (unknown && printPolicyFeedback) {
+            PR_SetEnv("NSS_POLICY_FAIL=1");
+            fprintf(stderr, "NSS-POLICY-FAIL %.*s: unknown value: %.*s\n",
+                    policyLength, policyFlags, length, flag);
         }
     }
     return flags;
@@ -476,32 +506,34 @@ secmod_parsePolicyValue(const char *policyFlags, int policyLength)
 
 /* allow symbolic names for values. The only ones currently defines or
  * SSL protocol versions. */
-static PRInt32
-secmod_getPolicyOptValue(const char *policyValue, int policyValueLength)
+static SECStatus
+secmod_getPolicyOptValue(const char *policyValue, int policyValueLength,
+                         PRInt32 *result)
 {
     PRInt32 val = atoi(policyValue);
     int i;
 
     if ((val != 0) || (*policyValue == '0')) {
-        return val;
+        *result = val;
+        return SECSuccess;
     }
     for (i = 0; i < PR_ARRAY_SIZE(sslOptList); i++) {
         if (policyValueLength == sslOptList[i].name_size &&
             PORT_Strncasecmp(sslOptList[i].name, policyValue,
                              sslOptList[i].name_size) == 0) {
-            val = sslOptList[i].option;
-            break;
+            *result = sslOptList[i].option;
+            return SECSuccess;
         }
     }
-    return val;
+    return SECFailure;
 }
 
 static SECStatus
-secmod_applyCryptoPolicy(const char *policyString,
-                         PRBool allow)
+secmod_applyCryptoPolicy(const char *policyString, PRBool allow,
+                         PRBool printPolicyFeedback)
 {
     const char *cipher, *currentString;
-    unsigned i;
+    unsigned i, j;
     SECStatus rv = SECSuccess;
     PRBool unknown;
 
@@ -526,56 +558,63 @@ secmod_applyCryptoPolicy(const char *policyString,
             /* disable or enable all options by default */
             PRUint32 value = 0;
             if (newValue) {
-                value = secmod_parsePolicyValue(&cipher[3] + 1, length - 3 - 1);
+                value = secmod_parsePolicyValue(&cipher[3] + 1, length - 3 - 1, printPolicyFeedback);
             }
-            for (i = 0; i < PR_ARRAY_SIZE(algOptList); i++) {
-                PRUint32 enable, disable;
-                if (!newValue) {
-                    value = algOptList[i].val;
+            for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
+                const algListsDef *algOptList = &algOptLists[i];
+                for (j = 0; j < algOptList->entries; j++) {
+                    PRUint32 enable, disable;
+                    if (!newValue) {
+                        value = algOptList->list[j].val;
+                    }
+                    if (allow) {
+                        enable = value;
+                        disable = 0;
+                    } else {
+                        enable = 0;
+                        disable = value;
+                    }
+                    NSS_SetAlgorithmPolicy(algOptList->list[j].oid, enable, disable);
                 }
-                if (allow) {
-                    enable = value;
-                    disable = 0;
-                } else {
-                    enable = 0;
-                    disable = value;
-                }
-                NSS_SetAlgorithmPolicy(algOptList[i].oid, enable, disable);
             }
             continue;
         }
 
-        for (i = 0; i < PR_ARRAY_SIZE(algOptList); i++) {
-            const oidValDef *algOpt = &algOptList[i];
-            unsigned name_size = algOpt->name_size;
-            PRBool newOption = PR_FALSE;
+        for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
+            const algListsDef *algOptList = &algOptLists[i];
+            for (j = 0; j < algOptList->entries; j++) {
+                const oidValDef *algOpt = &algOptList->list[j];
+                unsigned name_size = algOpt->name_size;
+                PRBool newOption = PR_FALSE;
 
-            if ((length >= name_size) && (cipher[name_size] == '/')) {
-                newOption = PR_TRUE;
-            }
-            if ((newOption || algOpt->name_size == length) &&
-                PORT_Strncasecmp(algOpt->name, cipher, name_size) == 0) {
-                PRUint32 value = algOpt->val;
-                PRUint32 enable, disable;
-                if (newOption) {
-                    value = secmod_parsePolicyValue(&cipher[name_size] + 1,
-                                                    length - name_size - 1);
+                if ((length >= name_size) && (cipher[name_size] == '/')) {
+                    newOption = PR_TRUE;
                 }
-                if (allow) {
-                    enable = value;
-                    disable = 0;
-                } else {
-                    enable = 0;
-                    disable = value;
+                if ((newOption || algOpt->name_size == length) &&
+                    PORT_Strncasecmp(algOpt->name, cipher, name_size) == 0) {
+                    PRUint32 value = algOpt->val;
+                    PRUint32 enable, disable;
+                    if (newOption) {
+                        value = secmod_parsePolicyValue(&cipher[name_size] + 1,
+                                                        length - name_size - 1,
+                                                        printPolicyFeedback);
+                    }
+                    if (allow) {
+                        enable = value;
+                        disable = 0;
+                    } else {
+                        enable = 0;
+                        disable = value;
+                    }
+                    rv = NSS_SetAlgorithmPolicy(algOpt->oid, enable, disable);
+                    if (rv != SECSuccess) {
+                        /* could not enable option */
+                        /* NSS_SetAlgorithPolicy should have set the error code */
+                        return SECFailure;
+                    }
+                    unknown = PR_FALSE;
+                    break;
                 }
-                rv = NSS_SetAlgorithmPolicy(algOpt->oid, enable, disable);
-                if (rv != SECSuccess) {
-                    /* could not enable option */
-                    /* NSS_SetAlgorithPolicy should have set the error code */
-                    return SECFailure;
-                }
-                unknown = PR_FALSE;
-                break;
             }
         }
         if (!unknown) {
@@ -588,9 +627,19 @@ secmod_applyCryptoPolicy(const char *policyString,
 
             if ((length > name_size) && cipher[name_size] == '=' &&
                 PORT_Strncasecmp(freeOpt->name, cipher, name_size) == 0) {
-                PRInt32 val = secmod_getPolicyOptValue(&cipher[name_size + 1],
-                                                       length - name_size - 1);
-
+                PRInt32 val;
+                const char *policyValue = &cipher[name_size + 1];
+                int policyValueLength = length - name_size - 1;
+                rv = secmod_getPolicyOptValue(policyValue, policyValueLength,
+                                              &val);
+                if (rv != SECSuccess) {
+                    if (printPolicyFeedback) {
+                        PR_SetEnv("NSS_POLICY_FAIL=1");
+                        fprintf(stderr, "NSS-POLICY-FAIL %.*s: unknown value: %.*s\n",
+                                length, cipher, policyValueLength, policyValue);
+                    }
+                    return SECFailure;
+                }
                 rv = NSS_OptionSet(freeOpt->option, val);
                 if (rv != SECSuccess) {
                     /* could not enable option */
@@ -603,12 +652,83 @@ secmod_applyCryptoPolicy(const char *policyString,
                 break;
             }
         }
+
+        if (unknown && printPolicyFeedback) {
+            PR_SetEnv("NSS_POLICY_FAIL=1");
+            fprintf(stderr, "NSS-POLICY-FAIL %s: unknown identifier: %.*s\n",
+                    allow ? "allow" : "disallow", length, cipher);
+        }
     }
     return rv;
 }
 
+static void
+secmod_sanityCheckCryptoPolicy(void)
+{
+    unsigned i, j;
+    SECStatus rv = SECSuccess;
+    unsigned num_kx_enabled = 0;
+    unsigned num_ssl_enabled = 0;
+    unsigned num_sig_enabled = 0;
+    unsigned enabledCount[PR_ARRAY_SIZE(algOptLists)];
+    const char *sWarn = "WARN";
+    const char *sInfo = "INFO";
+    PRBool haveWarning = PR_FALSE;
+
+    for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
+        const algListsDef *algOptList = &algOptLists[i];
+        enabledCount[i] = 0;
+        for (j = 0; j < algOptList->entries; j++) {
+            const oidValDef *algOpt = &algOptList->list[j];
+            PRUint32 value;
+            PRBool anyEnabled = PR_FALSE;
+            rv = NSS_GetAlgorithmPolicy(algOpt->oid, &value);
+            if (rv != SECSuccess) {
+                PR_SetEnv("NSS_POLICY_FAIL=1");
+                fprintf(stderr, "NSS-POLICY-FAIL: internal failure with NSS_GetAlgorithmPolicy at %u\n", i);
+                return;
+            }
+
+            if ((algOpt->val & NSS_USE_ALG_IN_SSL_KX) && (value & NSS_USE_ALG_IN_SSL_KX)) {
+                ++num_kx_enabled;
+                anyEnabled = PR_TRUE;
+                fprintf(stderr, "NSS-POLICY-INFO: %s is enabled for KX\n", algOpt->name);
+            }
+            if ((algOpt->val & NSS_USE_ALG_IN_SSL) && (value & NSS_USE_ALG_IN_SSL)) {
+                ++num_ssl_enabled;
+                anyEnabled = PR_TRUE;
+                fprintf(stderr, "NSS-POLICY-INFO: %s is enabled for SSL\n", algOpt->name);
+            }
+            if ((algOpt->val & NSS_USE_ALG_IN_CERT_SIGNATURE) && (value & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
+                ++num_sig_enabled;
+                anyEnabled = PR_TRUE;
+                fprintf(stderr, "NSS-POLICY-INFO: %s is enabled for CERT-SIGNATURE\n", algOpt->name);
+            }
+            if (anyEnabled) {
+                ++enabledCount[i];
+            }
+        }
+    }
+    fprintf(stderr, "NSS-POLICY-%s: NUMBER-OF-SSL-ALG-KX: %u\n", num_kx_enabled ? sInfo : sWarn, num_kx_enabled);
+    fprintf(stderr, "NSS-POLICY-%s: NUMBER-OF-SSL-ALG: %u\n", num_ssl_enabled ? sInfo : sWarn, num_ssl_enabled);
+    fprintf(stderr, "NSS-POLICY-%s: NUMBER-OF-CERT-SIG: %u\n", num_sig_enabled ? sInfo : sWarn, num_sig_enabled);
+    if (!num_kx_enabled || !num_ssl_enabled || !num_sig_enabled) {
+        haveWarning = PR_TRUE;
+    }
+    for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
+        const algListsDef *algOptList = &algOptLists[i];
+        fprintf(stderr, "NSS-POLICY-%s: NUMBER-OF-%s: %u\n", enabledCount[i] ? sInfo : sWarn, algOptList->description, enabledCount[i]);
+        if (!enabledCount[i]) {
+            haveWarning = PR_TRUE;
+        }
+    }
+    if (haveWarning) {
+        PR_SetEnv("NSS_POLICY_WARN=1");
+    }
+}
+
 static SECStatus
-secmod_parseCryptoPolicy(const char *policyConfig)
+secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback)
 {
     char *disallow, *allow;
     SECStatus rv;
@@ -623,16 +743,26 @@ secmod_parseCryptoPolicy(const char *policyConfig)
         return rv;
     }
     disallow = NSSUTIL_ArgGetParamValue("disallow", policyConfig);
-    rv = secmod_applyCryptoPolicy(disallow, PR_FALSE);
+    rv = secmod_applyCryptoPolicy(disallow, PR_FALSE, printPolicyFeedback);
     if (disallow)
         PORT_Free(disallow);
     if (rv != SECSuccess) {
         return rv;
     }
     allow = NSSUTIL_ArgGetParamValue("allow", policyConfig);
-    rv = secmod_applyCryptoPolicy(allow, PR_TRUE);
+    rv = secmod_applyCryptoPolicy(allow, PR_TRUE, printPolicyFeedback);
     if (allow)
         PORT_Free(allow);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+    if (printPolicyFeedback) {
+        /* This helps to distinguish configurations that don't contain any
+         * policy config= statement. */
+        PR_SetEnv("NSS_POLICY_LOADED=1");
+        fprintf(stderr, "NSS-POLICY-INFO: LOADED-SUCCESSFULLY\n");
+        secmod_sanityCheckCryptoPolicy();
+    }
     return rv;
 }
 
@@ -649,11 +779,16 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
     char *slotParams, *ciphers;
     /* pk11pars.h still does not have const char * interfaces */
     char *nssc = (char *)nss;
+    PRBool printPolicyFeedback = NSSUTIL_ArgHasFlag("flags", "printPolicyFeedback", nssc);
 
-    rv = secmod_parseCryptoPolicy(config);
+    rv = secmod_parseCryptoPolicy(config, printPolicyFeedback);
 
     /* do not load the module if policy parsing fails */
     if (rv != SECSuccess) {
+        if (printPolicyFeedback) {
+            PR_SetEnv("NSS_POLICY_FAIL=1");
+            fprintf(stderr, "NSS-POLICY-FAIL: policy config parsing failed, not loading module %s\n", moduleName);
+        }
         return NULL;
     }
 
@@ -1647,6 +1782,7 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
     SECMODModule *module = NULL;
     SECMODModule *oldModule = NULL;
     SECStatus rv;
+    PRBool forwardPolicyFeedback = PR_FALSE;
 
     /* initialize the underlying module structures */
     SECMOD_Init();
@@ -1659,6 +1795,7 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
     }
 
     module = SECMOD_CreateModuleEx(library, moduleName, parameters, nss, config);
+    forwardPolicyFeedback = NSSUTIL_ArgHasFlag("flags", "printPolicyFeedback", nss);
     if (library)
         PORT_Free(library);
     if (moduleName)
@@ -1721,7 +1858,15 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
                     rv = SECFailure;
                     break;
                 }
-                child = SECMOD_LoadModule(*index, module, PR_TRUE);
+                if (!forwardPolicyFeedback) {
+                    child = SECMOD_LoadModule(*index, module, PR_TRUE);
+                } else {
+                    /* Add printPolicyFeedback to the nss flags */
+                    char *specWithForwards =
+                        NSSUTIL_AddNSSFlagToModuleSpec(*index, "printPolicyFeedback");
+                    child = SECMOD_LoadModule(specWithForwards, module, PR_TRUE);
+                    PORT_Free(specWithForwards);
+                }
                 if (!child)
                     break;
                 if (child->isCritical && !child->loaded) {

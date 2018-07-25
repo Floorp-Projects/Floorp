@@ -97,7 +97,7 @@ e.g. `NSS_TESTS=ssl_gtests ./all.sh` or by changing into the according directory
 and running the bash script there `cd ssl_gtests && ./ssl_gtests.sh`.  The
 following tests are available:
 
-    cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ec gtests ssl_gtests bogo
+    cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ec gtests ssl_gtests bogo policy
 
 To make tests run faster it's recommended to set `NSS_CYCLES=standard` to run
 only the standard cycle.

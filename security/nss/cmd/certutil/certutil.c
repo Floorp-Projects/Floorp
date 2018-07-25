@@ -856,41 +856,59 @@ SECItemToHex(const SECItem *item, char *dst)
 }
 
 static const char *const keyTypeName[] = {
-    "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec", "rsaPss"
+    "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec", "rsaPss", "rsaOaep"
 };
 
 #define MAX_CKA_ID_BIN_LEN 20
 #define MAX_CKA_ID_STR_LEN 40
+
+/* output human readable key ID in buffer, which should have at least
+ * MAX_CKA_ID_STR_LEN + 3 octets (quotations and a null terminator) */
+static void
+formatPrivateKeyID(SECKEYPrivateKey *privkey, char *buffer)
+{
+    SECItem *ckaID;
+
+    ckaID = PK11_GetLowLevelKeyIDForPrivateKey(privkey);
+    if (!ckaID) {
+        strcpy(buffer, "(no CKA_ID)");
+    } else if (ItemIsPrintableASCII(ckaID)) {
+        int len = PR_MIN(MAX_CKA_ID_STR_LEN, ckaID->len);
+        buffer[0] = '"';
+        memcpy(buffer + 1, ckaID->data, len);
+        buffer[1 + len] = '"';
+        buffer[2 + len] = '\0';
+    } else {
+        /* print ckaid in hex */
+        SECItem idItem = *ckaID;
+        if (idItem.len > MAX_CKA_ID_BIN_LEN)
+            idItem.len = MAX_CKA_ID_BIN_LEN;
+        SECItemToHex(&idItem, buffer);
+    }
+    SECITEM_ZfreeItem(ckaID, PR_TRUE);
+}
 
 /* print key number, key ID (in hex or ASCII), key label (nickname) */
 static SECStatus
 PrintKey(PRFileDesc *out, const char *nickName, int count,
          SECKEYPrivateKey *key, void *pwarg)
 {
-    SECItem *ckaID;
     char ckaIDbuf[MAX_CKA_ID_STR_LEN + 4];
+    CERTCertificate *cert;
+    KeyType keyType;
 
     pwarg = NULL;
-    ckaID = PK11_GetLowLevelKeyIDForPrivateKey(key);
-    if (!ckaID) {
-        strcpy(ckaIDbuf, "(no CKA_ID)");
-    } else if (ItemIsPrintableASCII(ckaID)) {
-        int len = PR_MIN(MAX_CKA_ID_STR_LEN, ckaID->len);
-        ckaIDbuf[0] = '"';
-        memcpy(ckaIDbuf + 1, ckaID->data, len);
-        ckaIDbuf[1 + len] = '"';
-        ckaIDbuf[2 + len] = '\0';
-    } else {
-        /* print ckaid in hex */
-        SECItem idItem = *ckaID;
-        if (idItem.len > MAX_CKA_ID_BIN_LEN)
-            idItem.len = MAX_CKA_ID_BIN_LEN;
-        SECItemToHex(&idItem, ckaIDbuf);
-    }
 
+    formatPrivateKeyID(key, ckaIDbuf);
+    cert = PK11_GetCertFromPrivateKey(key);
+    if (cert) {
+        keyType = CERT_GetCertKeyType(&cert->subjectPublicKeyInfo);
+        CERT_DestroyCertificate(cert);
+    } else {
+        keyType = key->keyType;
+    }
     PR_fprintf(out, "<%2d> %-8.8s %-42.42s %s\n", count,
-               keyTypeName[key->keyType], ckaIDbuf, nickName);
-    SECITEM_ZfreeItem(ckaID, PR_TRUE);
+               keyTypeName[keyType], ckaIDbuf, nickName);
 
     return SECSuccess;
 }
@@ -1002,7 +1020,7 @@ ListKeys(PK11SlotInfo *slot, const char *nickName, int index,
 }
 
 static SECStatus
-DeleteKey(char *nickname, secuPWData *pwdata)
+DeleteCertAndKey(char *nickname, secuPWData *pwdata)
 {
     SECStatus rv;
     CERTCertificate *cert;
@@ -1027,6 +1045,61 @@ DeleteKey(char *nickname, secuPWData *pwdata)
         SECU_PrintError("problem deleting private key \"%s\"\n", nickname);
     }
     CERT_DestroyCertificate(cert);
+    PK11_FreeSlot(slot);
+    return rv;
+}
+
+static SECKEYPrivateKey *
+findPrivateKeyByID(PK11SlotInfo *slot, const char *ckaID, secuPWData *pwarg)
+{
+    PORTCheapArenaPool arena;
+    SECItem ckaIDItem = { 0 };
+    SECKEYPrivateKey *privkey = NULL;
+    SECStatus rv;
+
+    if (PK11_NeedLogin(slot)) {
+        rv = PK11_Authenticate(slot, PR_TRUE, pwarg);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "could not authenticate to token %s.",
+                            PK11_GetTokenName(slot));
+            return NULL;
+        }
+    }
+
+    if (0 == PL_strncasecmp("0x", ckaID, 2)) {
+        ckaID += 2; /* skip leading "0x" */
+    }
+    PORT_InitCheapArena(&arena, DER_DEFAULT_CHUNKSIZE);
+    if (SECU_HexString2SECItem(&arena.arena, &ckaIDItem, ckaID)) {
+        privkey = PK11_FindKeyByKeyID(slot, &ckaIDItem, pwarg);
+    }
+    PORT_DestroyCheapArena(&arena);
+    return privkey;
+}
+
+static SECStatus
+DeleteKey(SECKEYPrivateKey *privkey, secuPWData *pwarg)
+{
+    SECStatus rv;
+    PK11SlotInfo *slot;
+
+    slot = PK11_GetSlotFromPrivateKey(privkey);
+    if (PK11_NeedLogin(slot)) {
+        rv = PK11_Authenticate(slot, PR_TRUE, pwarg);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "could not authenticate to token %s.",
+                            PK11_GetTokenName(slot));
+            return SECFailure;
+        }
+    }
+
+    rv = PK11_DeleteTokenPrivateKey(privkey, PR_TRUE);
+    if (rv != SECSuccess) {
+        char ckaIDbuf[MAX_CKA_ID_STR_LEN + 4];
+        formatPrivateKeyID(privkey, ckaIDbuf);
+        SECU_PrintError("problem deleting private key \"%s\"\n", ckaIDbuf);
+    }
+
     PK11_FreeSlot(slot);
     return rv;
 }
@@ -1100,7 +1173,9 @@ PrintSyntax()
         "\t\t [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -E -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n",
         progName);
-    FPS "\t%s -F -n nickname [-d certdir] [-P dbprefix]\n",
+    FPS "\t%s -F -n cert-name [-d certdir] [-P dbprefix]\n",
+        progName);
+    FPS "\t%s -F -k key-id [-d certdir] [-P dbprefix]\n",
         progName);
     FPS "\t%s -G -n key-name [-h token-name] [-k rsa] [-g key-size] [-y exp]\n"
         "\t\t [-f pwfile] [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
@@ -1390,6 +1465,8 @@ luF(enum usage_level ul, const char *command)
         return;
     FPS "%-20s The nickname of the key to delete\n",
         "   -n cert-name");
+    FPS "%-20s The key id of the key to delete, obtained using -K\n",
+        "   -k key-id");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
         "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
@@ -2944,10 +3021,9 @@ certutil_main(int argc, char **argv, PRBool initialize)
         readOnly = !certutil.options[opt_RW].activated;
     }
 
-    /*  -A, -D, -F, -M, -S, -V, and all require -n  */
+    /*  -A, -D, -M, -S, -V, and all require -n  */
     if ((certutil.commands[cmd_AddCert].activated ||
          certutil.commands[cmd_DeleteCert].activated ||
-         certutil.commands[cmd_DeleteKey].activated ||
          certutil.commands[cmd_DumpChain].activated ||
          certutil.commands[cmd_ModifyCertTrust].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated ||
@@ -3031,6 +3107,16 @@ certutil_main(int argc, char **argv, PRBool initialize)
                    "%s --rename: specify an old nickname (-n) and\n"
                    "   a new nickname (--new-n).\n",
                    progName);
+        return 255;
+    }
+
+    /* Delete needs a nickname or a key ID */
+    if (certutil.commands[cmd_DeleteKey].activated &&
+        !(certutil.options[opt_Nickname].activated || keysource)) {
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: specify a nickname (-n) or\n"
+                   "   a key ID (-k).\n",
+                   commandToRun, progName);
         return 255;
     }
 
@@ -3396,7 +3482,19 @@ certutil_main(int argc, char **argv, PRBool initialize)
     }
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
-        rv = DeleteKey(name, &pwdata);
+        if (certutil.options[opt_Nickname].activated) {
+            rv = DeleteCertAndKey(name, &pwdata);
+        } else {
+            privkey = findPrivateKeyByID(slot, keysource, &pwdata);
+            if (!privkey) {
+                SECU_PrintError(progName, "%s is not a key-id", keysource);
+                rv = SECFailure;
+            } else {
+                rv = DeleteKey(privkey, &pwdata);
+                /* already destroyed by PK11_DeleteTokenPrivateKey */
+                privkey = NULL;
+            }
+        }
         goto shutdown;
     }
     /*  Modify trust attribute for cert (-M)  */
@@ -3468,30 +3566,8 @@ certutil_main(int argc, char **argv, PRBool initialize)
             if (keycert) {
                 privkey = PK11_FindKeyByDERCert(slot, keycert, &pwdata);
             } else {
-                PLArenaPool *arena = NULL;
-                SECItem keyidItem = { 0 };
-                char *keysourcePtr = keysource;
                 /* Interpret keysource as CKA_ID */
-                if (PK11_NeedLogin(slot)) {
-                    rv = PK11_Authenticate(slot, PR_TRUE, &pwdata);
-                    if (rv != SECSuccess) {
-                        SECU_PrintError(progName, "could not authenticate to token %s.",
-                                        PK11_GetTokenName(slot));
-                        return SECFailure;
-                    }
-                }
-                if (0 == PL_strncasecmp("0x", keysource, 2)) {
-                    keysourcePtr = keysource + 2; // skip leading "0x"
-                }
-                arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-                if (!arena) {
-                    SECU_PrintError(progName, "unable to allocate arena");
-                    return SECFailure;
-                }
-                if (SECU_HexString2SECItem(arena, &keyidItem, keysourcePtr)) {
-                    privkey = PK11_FindKeyByKeyID(slot, &keyidItem, &pwdata);
-                }
-                PORT_FreeArena(arena, PR_FALSE);
+                privkey = findPrivateKeyByID(slot, keysource, &pwdata);
             }
 
             if (!privkey) {

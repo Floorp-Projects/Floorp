@@ -1,0 +1,19 @@
+# col 1: expected return value of nss-policy-check
+# col 2: policy config statement, using _ instead of space
+# col 3: an extended regular expression, expected to match the output
+# col 4: description of the test
+#
+0 disallow=ALL_allow=HMAC-SHA256:HMAC-SHA1:HMAC-SHA384:HMAC-SHA512:SECP256R1:SECP384R1:SECP521R1:aes256-gcm:chacha20-poly1305:aes256-cbc:camellia256-cbc:aes128-gcm:aes128-cbc:camellia128-cbc:SHA256:SHA384:SHA512:SHA1:ECDHE-RSA:ECDHE-ECDSA:RSA:DHE-RSA:tls-version-min=tls1.0:dtls-version-min=dtls1.0:DH-MIN=1023:DSA-MIN=2048:RSA-MIN=2048 NSS-POLICY-INFO.*LOADED-SUCCESSFULLY Standard policy
+0 disallow=ALL_allow=HMAC-SHA1:HMAC-SHA256:HMAC-SHA384:HMAC-SHA512:SECP256R1:SECP384R1:SECP521R1:aes256-gcm:chacha20-poly1305:aes256-cbc:camellia256-cbc:aes128-gcm:aes128-cbc:camellia128-cbc:des-ede3-cbc:rc4:SHA256:SHA384:SHA512:SHA1:ECDHE-RSA:ECDHE-ECDSA:RSA:DHE-RSA:DHE-DSS:tls-version-min=tls1.0:dtls-version-min=tls1.0:DH-MIN=1023:DSA-MIN=1023:RSA-MIN=1023 NSS-POLICY-INFO.*LOADED-SUCCESSFULLY Legacy policy
+0 disallow=ALL_allow=HMAC-SHA256:HMAC-SHA384:HMAC-SHA512:SECP384R1:SECP521R1:aes256-gcm:chacha20-poly1305:SHA384:SHA512:ECDHE-RSA:ECDHE-ECDSA:RSA:DHE-RSA:tls-version-min=tls1.2:dtls-version-min=dtls1.2:DH-MIN=3072:DSA-MIN=3072:RSA-MIN=3072 NSS-POLICY-INFO.*LOADED-SUCCESSFULLY Reduced policy
+2 disallow=ALL_allow=dtls-version-min=:dtls-version-max= NSS-POLICY-FAIL Missing value
+2 disallow=ALL_allow=RSA-MIN=whatever NSS-POLICY-FAIL Invalid value
+2 disallow=ALL_allow=flower NSS-POLICY-FAIL Invalid identifier
+1 disallow=all NSS-POLICY-WARN.*NUMBER-OF-CERT-SIG disallow all
+1 disallow=ALL_allow=HMAC-SHA256:HMAC-SHA384:HMAC-SHA512:SECP384R1:SECP521R1:aes256-gcm:chacha20-poly1305:ECDHE-RSA:ECDHE-ECDSA:RSA:DHE-RSA:tls-version-min=tls1.2:dtls-version-min=dtls1.2:DH-MIN=3072:DSA-MIN=3072:RSA-MIN=3072 NSS-POLICY-WARN.*NUMBER-OF-HASH No Hashes
+1 disallow=ALL_allow=tls-version-min=0:tls-version-max=0 NSS-POLICY-WARN.*NUMBER-OF-TLS-VERSIONS All TLS versions disabled
+1 disallow=ALL_allow=dtls-version-min=0:dtls-version-max=0 NSS-POLICY-WARN.*NUMBER-OF-DTLS-VERSIONS All DTLS versions disabled
+1 disallow=ALL_allow=tls-version-min=tls1.2:tls-version-max=tls1.1 NSS-POLICY-WARN.*NUMBER-OF-TLS-VERSIONS Invalid range of TLS versions
+1 disallow=ALL_allow=dtls-version-min=tls1.2:dtls-version-max=tls1.1 NSS-POLICY-WARN.*NUMBER-OF-DTLS-VERSIONS Invalid range of DTLS versions
+1 disallow=ALL_allow=tls-version-min=tls1.1:tls-version-max=tls1.2 NSS-POLICY-INFO.*NUMBER-OF-TLS-VERSIONS Valid range of TLS versions
+1 disallow=ALL_allow=dtls-version-min=tls1.1:dtls-version-max=tls1.2 NSS-POLICY-INFO.*NUMBER-OF-DTLS-VERSIONS Valid range of DTLS versions
