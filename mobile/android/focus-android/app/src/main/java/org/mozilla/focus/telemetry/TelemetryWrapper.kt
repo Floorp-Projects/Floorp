@@ -66,6 +66,7 @@ object TelemetryWrapper {
     private object Category {
         val ACTION = "action"
         val ERROR = "error"
+        val HISTOGRAM = "histogram"
     }
 
     private object Method {
@@ -169,7 +170,6 @@ object TelemetryWrapper {
         val SOURCE = "source"
         val SUCCESS = "success"
         val ERROR_CODE = "error_code"
-        val HISTOGRAM = "histogram"
     }
 
     enum class BrowserContextMenuValue {
@@ -324,12 +324,11 @@ object TelemetryWrapper {
     fun stopSession() {
         TelemetryHolder.get().recordSessionEnd()
 
-        val histogramEvent = TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.BROWSER)
-        val histogramAsJSONObject = JSONObject()
+        val histogramEvent = TelemetryEvent.create(Category.HISTOGRAM, Method.FOREGROUND, Object.BROWSER)
         for (bucketIndex in histogram.indices) {
-            histogramAsJSONObject.put((bucketIndex * BUCKET_SIZE_MS).toString(), histogram[bucketIndex])
+            histogramEvent.extra((bucketIndex * BUCKET_SIZE_MS).toString(), histogram[bucketIndex].toString())
         }
-        histogramEvent.extra(Extra.HISTOGRAM, histogramAsJSONObject.toString()).queue()
+        histogramEvent.queue()
 
         // Clear histogram array after queueing it
         histogram = IntArray(HISTOGRAM_SIZE)
