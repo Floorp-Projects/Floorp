@@ -1292,16 +1292,18 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
             continue;
         }
 
-        int32_t codePoint;
-        if (!getCodePoint(&codePoint))
-            return false;
-
-        if (unicode::IsSpaceOrBOM2(codePoint)) {
-            ungetNonAsciiNormalizedCodePoint(codePoint);
+        // This ignores encoding errors: subsequent caller-side code to
+        // handle the remaining source text in the comment will do so.
+        PeekedCodePoint<CharT> peeked = this->sourceUnits.peekCodePoint();
+        if (peeked.isNone() || unicode::IsSpaceOrBOM2(peeked.codePoint()))
             break;
-        }
 
-        if (!appendCodePointToCharBuffer(codePoint))
+        MOZ_ASSERT(!IsLineTerminator(peeked.codePoint()),
+                   "!IsSpaceOrBOM2 must imply !IsLineTerminator or else we'll "
+                   "fail to maintain line-info/flags for EOL");
+        this->sourceUnits.consumeKnownCodePoint(peeked);
+
+        if (!appendCodePointToCharBuffer(peeked.codePoint()))
             return false;
     } while (true);
 
