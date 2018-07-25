@@ -6,20 +6,27 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.support.v14.preference.SwitchPreference
 import android.support.v7.preference.PreferenceFragmentCompat
-import android.widget.Toast
 import com.jakewharton.processphoenix.ProcessPhoenix
 import org.mozilla.focus.R
+import org.mozilla.focus.web.Config
+
+private const val RENDERER_PREFERENCE_KEY = "renderer_preference"
 
 class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
 
-    var rendererPreferenceChanged = false
+    private var rendererPreferenceChanged = false
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
+        val enginePref: SwitchPreference? = preferenceManager
+                .findPreference(RENDERER_PREFERENCE_KEY) as SwitchPreference?
+        enginePref?.isChecked = preferenceManager.sharedPreferences
+                .getBoolean(RENDERER_PREFERENCE_KEY, Config.DEFAULT_NEW_RENDERER)
     }
 
     override fun onResume() {
@@ -31,7 +38,6 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         if (rendererPreferenceChanged) {
-            Toast.makeText(activity, "Restarting renderer", Toast.LENGTH_LONG).show()
             val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity?.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
         }
@@ -39,7 +45,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(), SharedPreference
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
-            "renderer_preference" -> {
+            RENDERER_PREFERENCE_KEY -> {
                 rendererPreferenceChanged = true
             }
         }
