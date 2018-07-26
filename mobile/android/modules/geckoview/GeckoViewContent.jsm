@@ -258,6 +258,12 @@ class GeckoViewContent extends GeckoViewModule {
           aCallback = undefined;
         }
       },
+
+      onCurrentSelection() {
+      },
+
+      onHighlightFinished() {
+      },
     };
 
     finder.caseSensitive = !!aData.matchCase;
@@ -301,21 +307,18 @@ class GeckoViewContent extends GeckoViewModule {
     }
 
     this._matchDisplayOptions = aData;
-    finder.onHighlightAllChange(!!aData.highlightAll);
     finder.onModalHighlightChange(!!aData.dimPage);
+    finder.onHighlightAllChange(!!aData.highlightAll);
 
     if (!finder.searchString) {
       return;
     }
-    if (!aData.highlightAll && !aData.dimPage && !aData.drawOutline) {
-      finder.highlighter.highlight(false);
+    if (!aData.highlightAll && !aData.dimPage) {
+      finder.highlight(false);
       return;
     }
     const linksOnly = this._finderListener &&
                       this._finderListener.response.linksOnly;
-    finder.highlighter.highlight(true,
-                                 finder.searchString,
-                                 linksOnly,
-                                 !!aData.drawOutline);
+    finder.highlight(true, finder.searchString, linksOnly, !!aData.drawOutline);
   }
 }
