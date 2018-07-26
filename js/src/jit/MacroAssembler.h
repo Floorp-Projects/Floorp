@@ -1158,6 +1158,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfInlineTypedObject(Register obj, Register scratch, Label* label);
 
+    void branchIfNotSimdObject(Register obj, Register scratch, SimdType simdType, Label* label);
+
     inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
     inline void branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label);
@@ -1373,6 +1375,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void canonicalizeFloat(FloatRegister reg);
     inline void canonicalizeFloatIfDeterministic(FloatRegister reg);
+
+    inline void canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
+        DEFINED_ON(x86_shared);
 
   public:
     // ========================================================================
@@ -2148,7 +2153,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegister dest, Register temp, Label* fail,
-                            bool canonicalizeDoubles = true);
+                            bool canonicalizeDoubles = true, unsigned numElems = 0);
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, const ValueOperand& dest, bool allowDouble,
@@ -2175,8 +2180,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex& dest);
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address& dest);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex& dest,
+                                unsigned numElems = 0);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address& dest,
+                                unsigned numElems = 0);
 
     void memoryBarrierBefore(const Synchronization& sync);
     void memoryBarrierAfter(const Synchronization& sync);

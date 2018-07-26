@@ -1,3 +1,4 @@
+SIMD/nursery-overflow.js
 asm.js/testBug1117235.js
 asm.js/testParallelCompile.js
 auto-regress/bug653395.js

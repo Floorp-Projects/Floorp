@@ -9050,7 +9050,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
-                            Synchronization::Full());
+                            /*numSimdExprs=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicCmpXchg32Regs regs(this, type, viewType);
@@ -9106,7 +9106,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
-                            Synchronization::Load());
+                            /*numSimdElems=*/ 0, Synchronization::Load());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
         return loadCommon(&access, type);
@@ -9150,7 +9150,7 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
-                            Synchronization::Full());
+                            /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicRMW32Regs regs(this, type, viewType, op);
@@ -9213,7 +9213,7 @@ BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType)
         return true;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
-                            Synchronization::Store());
+                            /*numSimdElems=*/ 0, Synchronization::Store());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
         return storeCommon(&access, type);
@@ -9241,7 +9241,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
 
     AccessCheck check;
     MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
-                            Synchronization::Full());
+                            /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
         PopAtomicXchg32Regs regs(this, type, viewType);
