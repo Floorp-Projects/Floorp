@@ -387,6 +387,8 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
                             Operand dstAddr)
 {
     if (value->isConstant()) {
+        MOZ_ASSERT(!access.isSimd());
+
         masm.memoryBarrierBefore(access.sync());
 
         const MConstant* mir = value->toConstant();
@@ -409,6 +411,10 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
           case Scalar::Int64:
           case Scalar::Float32:
           case Scalar::Float64:
+          case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
+          case Scalar::Int32x4:
           case Scalar::Uint8Clamped:
           case Scalar::MaxTypedArrayViewType:
             MOZ_CRASH("unexpected array type");
@@ -493,6 +499,7 @@ CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     const LDefinition* out = ins->output();
 
     Scalar::Type accessType = mir->access().type();
+    MOZ_ASSERT(!Scalar::isSimdType(accessType));
 
     Operand srcAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
@@ -514,6 +521,7 @@ CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     const LAllocation* value = ins->value();
 
     Scalar::Type accessType = mir->access().type();
+    MOZ_ASSERT(!Scalar::isSimdType(accessType));
 
     canonicalizeIfDeterministic(accessType, value);
 

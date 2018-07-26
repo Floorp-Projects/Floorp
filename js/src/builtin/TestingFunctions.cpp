@@ -3980,7 +3980,12 @@ static bool
 IsSimdAvailable(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(cx->jitSupportsSimd()));
+#if defined(JS_CODEGEN_NONE) || !defined(ENABLE_SIMD)
+    bool available = false;
+#else
+    bool available = cx->jitSupportsSimd();
+#endif
+    args.rval().set(BooleanValue(available));
     return true;
 }
 
