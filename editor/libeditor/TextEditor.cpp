@@ -1932,7 +1932,7 @@ TextEditor::InsertWithQuotationsAsSubAction(const nsAString& aQuotedText)
   if (cancel) {
     return NS_OK; // Rules canceled the operation.
   }
-  MOZ_ASSERT(handled, "WillDoAction() shouldn't handle in this case");
+  MOZ_ASSERT(!handled, "WillDoAction() shouldn't handle in this case");
   if (!handled) {
     // TODO: Use InsertTextAsSubAction() when bug 1467796 is fixed.
     rv = InsertTextAsAction(quotedStuff);
