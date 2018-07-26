@@ -11,6 +11,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
@@ -21,10 +23,15 @@ function LightweightThemeConsumer(aDocument) {
 
 LightweightThemeConsumer.prototype = {
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "lightweight-theme-styling-update")
-      this._update(JSON.parse(aData));
-    else if (aTopic == "lightweight-theme-apply")
+    if (aTopic == "lightweight-theme-styling-update") {
+      let parsedData = JSON.parse(aData);
+      if (!parsedData) {
+        parsedData = { theme: null };
+      }
+      this._update(parsedData.theme);
+    } else if (aTopic == "lightweight-theme-apply") {
       this._update(LightweightThemeManager.currentThemeForDisplay);
+    }
   },
 
   destroy: function() {
@@ -34,10 +41,10 @@ LightweightThemeConsumer.prototype = {
   },
 
   _update: function(aData) {
-    if (!aData)
-      aData = { headerURL: "", footerURL: "", textcolor: "", accentcolor: "" };
-
-    let active = !!aData.headerURL;
+    let active = aData && aData.id !== DEFAULT_THEME_ID;
+    if (!aData) {
+      aData = {};
+    }
 
     let msg = active ? { type: "LightweightTheme:Update", data: aData } :
                        { type: "LightweightTheme:Disable" };
