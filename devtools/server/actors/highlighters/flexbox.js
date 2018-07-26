@@ -45,7 +45,6 @@ const FLEXBOX_CONTAINER_PATTERN_HEIGHT = 14; // px
 const FLEXBOX_JUSTIFY_CONTENT_PATTERN_WIDTH = 7; // px
 const FLEXBOX_JUSTIFY_CONTENT_PATTERN_HEIGHT = 7; // px
 const FLEXBOX_CONTAINER_PATTERN_LINE_DISH = [5, 3]; // px
-const BASIS_FILL_COLOR = "rgb(109, 184, 255, 0.4)";
 
 /**
  * Cached used by `FlexboxHighlighter.getFlexContainerPattern`.
@@ -66,9 +65,6 @@ const JUSTIFY_CONTENT = "justify-content";
  * - showAlignment(isShown)
  *     @param  {Boolean} isShown
  *     Shows the alignment in the flexbox highlighter.
- * - showFlexBasis(isShown)
- *     @param  {Boolean} isShown
- *     Shows the flex basis in the flexbox highlighter.
  */
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -296,10 +292,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.alignItemsValue = this.computedStyle.alignItems;
     const newAlignItems = this.alignItemsValue;
 
-    const oldFlexBasis = this.flexBasis;
-    this.flexBasis = this.computedStyle.flexBasis;
-    const newFlexBasis = this.flexBasis;
-
     const oldFlexDirection = this.flexDirection;
     this.flexDirection = this.computedStyle.flexDirection;
     const newFlexDirection = this.flexDirection;
@@ -315,7 +307,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     return hasMoved ||
            hasFlexDataChanged ||
            oldAlignItems !== newAlignItems ||
-           oldFlexBasis !== newFlexBasis ||
            oldFlexDirection !== newFlexDirection ||
            oldFlexWrap !== newFlexWrap ||
            oldJustifyContent !== newJustifyContent;
@@ -324,7 +315,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   _hide() {
     this.alignItemsValue = null;
     this.computedStyle = null;
-    this.flexBasis = null;
     this.flexData = null;
     this.flexDirection = null;
     this.flexWrap = null;
@@ -542,28 +532,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.restore();
   }
 
-  /**
-   * Renders the flex basis for a given flex item.
-   */
-  renderFlexItemBasis(flexItem, left, top, right, bottom, boundsWidth) {
-    if (!this.options.showFlexBasis || !this.computedStyle) {
-      return;
-    }
-
-    let basis = this.flexBasis;
-
-    if (basis.endsWith("px")) {
-      right = Math.round(left + parseFloat(basis));
-    } else if (basis.endsWith("%")) {
-      basis = parseFloat(basis) / 100 * boundsWidth;
-      right = Math.round(left + basis);
-    }
-
-    this.ctx.fillStyle = BASIS_FILL_COLOR;
-    drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-    this.ctx.fill();
-  }
-
   renderFlexItems() {
     if (!this.flexData || !this.currentQuads.content || !this.currentQuads.content[0]) {
       return;
@@ -600,8 +568,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
         clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
         drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
         this.ctx.stroke();
-
-        this.renderFlexItemBasis(flexItem.node, left, top, right, bottom, bounds.width);
       }
     }
 
