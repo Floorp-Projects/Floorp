@@ -266,7 +266,7 @@ class TupBackend(CommonBackend):
         self._gtests = '$(MOZ_OBJ_ROOT)/<gtest>'
         self._default_group = '$(MOZ_OBJ_ROOT)/<default>'
 
-        self._rust_outputs = set()
+        self._rust_cmds = set()
 
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
@@ -800,13 +800,13 @@ class TupBackend(CommonBackend):
             invocation['full-deps'] = set(inputs)
             invocation['full-deps'].update(invocation['outputs'])
 
-            output_key = tuple(outputs)
-            if output_key not in self._rust_outputs:
+            cmd_key = ' '.join(command)
+            if cmd_key not in self._rust_cmds:
+                self._rust_cmds.add(cmd_key)
                 # The two rust libraries in the tree share many prerequisites,
                 # so we need to prune common dependencies and therefore build
                 # all rust from the same Tupfile.
                 rust_backend_file = self._get_backend_file('toolkit/library/rust')
-                self._rust_outputs.add(output_key)
                 rust_backend_file.rule(
                     command,
                     inputs=sorted(inputs),
@@ -817,7 +817,6 @@ class TupBackend(CommonBackend):
                 )
 
                 for dst, link in invocation['links'].iteritems():
-                    self._rust_outputs.add(output_key)
                     rust_backend_file.symlink_rule(link, dst, self._rust_libs)
 
         for val in enumerate(invocations):
