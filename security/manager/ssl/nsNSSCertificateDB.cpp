@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
