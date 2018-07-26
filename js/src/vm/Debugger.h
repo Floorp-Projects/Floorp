@@ -535,6 +535,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     typedef DebuggerWeakMap<JSScript*> ScriptWeakMap;
     ScriptWeakMap scripts;
 
+    using LazyScriptWeakMap = DebuggerWeakMap<LazyScript*>;
+    LazyScriptWeakMap lazyScripts;
+
     /* The map from debuggee source script objects to their Debugger.Source instances. */
     typedef DebuggerWeakMap<JSObject*, true> SourceWeakMap;
     SourceWeakMap sources;
@@ -1115,6 +1118,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * a script in a debuggee realm.
      */
     JSObject* wrapScript(JSContext* cx, HandleScript script);
+
+    JSObject* wrapLazyScript(JSContext* cx, Handle<LazyScript*> script);
 
     /*
      * Return the Debugger.Script object for |wasmInstance| (the toplevel
