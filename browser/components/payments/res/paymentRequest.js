@@ -11,7 +11,6 @@
 /* import-globals-from unprivileged-fallbacks.js */
 
 var paymentRequest = {
-  _nextMessageID: 1,
   domReadyPromise: null,
 
   init() {
@@ -55,23 +54,15 @@ var paymentRequest = {
     }
   },
 
-  /**
-   * @param {string} messageType
-   * @param {[object]} detail
-   * @returns {number} message ID to be able to identify a reply (where applicable).
-   */
   sendMessageToChrome(messageType, detail = {}) {
-    let messageID = this._nextMessageID++;
-    log.debug("sendMessageToChrome:", messageType, messageID, detail);
+    log.debug("sendMessageToChrome:", messageType, detail);
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
         messageType,
-        messageID,
       }, detail),
     });
     document.dispatchEvent(event);
-    return messageID;
   },
 
   toggleDebuggingConsole() {
@@ -152,14 +143,14 @@ var paymentRequest = {
 
       if (shippingRequested) {
         Object.assign(state["address-page"], {
-          selectedStateKey: ["selectedShippingAddress"],
           title: paymentDialog.dataset.shippingAddressTitleAdd,
         });
+        state.page.selectedStateKey = ["selectedShippingAddress"];
       } else {
         Object.assign(state["address-page"], {
-          selectedStateKey: ["basic-card-page", "billingAddressGUID"],
           title: paymentDialog.dataset.billingAddressTitleAdd,
         });
+        state.page.selectedStateKey = ["basic-card-page", "billingAddressGUID"];
       }
     } else if (!hasSavedCards) {
       state.page = {
@@ -198,30 +189,21 @@ var paymentRequest = {
    * @param {string} collectionName The autofill collection that record belongs to.
    * @param {object} record The autofill record to add/update
    * @param {string} [guid] The guid of the autofill record to update
-   * @returns {Promise} when the update response is received
    */
-  updateAutofillRecord(collectionName, record, guid) {
-    return new Promise((resolve, reject) => {
-      let messageID = this.sendMessageToChrome("updateAutofillRecord", {
-        collectionName,
-        guid,
-        record,
-      });
-
-      window.addEventListener("paymentChromeToContent", function onMsg({detail}) {
-        if (detail.messageType != "updateAutofillRecord:Response"
-            || detail.messageID != messageID) {
-          return;
-        }
-        log.debug("updateAutofillRecord: response:", detail);
-        window.removeEventListener("paymentChromeToContent", onMsg);
-        document.querySelector("payment-dialog").setStateFromParent(detail.stateChange);
-        if (detail.error) {
-          reject(detail);
-        } else {
-          resolve(detail);
-        }
-      });
+  updateAutofillRecord(collectionName, record, guid, {
+    errorStateChange,
+    preserveOldProperties,
+    selectedStateKey,
+    successStateChange,
+  }) {
+    this.sendMessageToChrome("updateAutofillRecord", {
+      collectionName,
+      guid,
+      record,
+      errorStateChange,
+      preserveOldProperties,
+      selectedStateKey,
+      successStateChange,
     });
   },
 

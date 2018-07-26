@@ -498,13 +498,8 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
       if (!field) {
         ok(false, `${key} field not found`);
       }
-      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
-      field.value = "";
-      field.focus();
-      // cc-exp-* fields are numbers so convert to strings and pad left with 0
-      EventUtils.synthesizeKey(val.toString().padStart(2, "0"), {}, content.window);
+      field.value = val;
     }
-
     let persistCheckbox = content.document.querySelector(options.checkboxSelector);
     // only touch the checked state if explicitly told to in the options
     if (options.hasOwnProperty("isTemporary")) {

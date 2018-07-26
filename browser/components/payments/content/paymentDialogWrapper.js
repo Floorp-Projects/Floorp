@@ -560,52 +560,69 @@ var paymentDialogWrapper = {
     window.close();
   },
 
-  async onUpdateAutofillRecord(collectionName, record, guid, messageID) {
-    let responseMessage = {
-      guid,
-      messageID,
-      stateChange: {},
-    };
-    try {
-      if (collectionName == "creditCards" && !guid && !record.isTemporary) {
-        // We need to be logged in so we can encrypt the credit card number and
-        // that's only supported when we're adding a new record.
-        // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
-        // APIs are refactored to be async functions (bug 1399367).
-        if (!await MasterPassword.ensureLoggedIn()) {
-          throw new Error("User canceled master password entry");
-        }
+  async onUpdateAutofillRecord(collectionName, record, guid, {
+    errorStateChange,
+    preserveOldProperties,
+    selectedStateKey,
+    successStateChange,
+  }) {
+    if (collectionName == "creditCards" && !guid && !record.isTemporary) {
+      // We need to be logged in so we can encrypt the credit card number and
+      // that's only supported when we're adding a new record.
+      // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+      // APIs are refactored to be async functions (bug 1399367).
+      if (!await MasterPassword.ensureLoggedIn()) {
+        Cu.reportError("User canceled master password entry");
+        return;
       }
+    }
+    let isTemporary = record.isTemporary;
+    let collection = isTemporary ? this.temporaryStore[collectionName] :
+                                   formAutofillStorage[collectionName];
 
-      let isTemporary = record.isTemporary;
-      let collection = isTemporary ? this.temporaryStore[collectionName] :
-                                     formAutofillStorage[collectionName];
-
+    try {
       if (guid) {
-        let preserveOldProperties = true;
         await collection.update(guid, record, preserveOldProperties);
       } else {
-        responseMessage.guid = await collection.add(record);
+        guid = await collection.add(record);
       }
 
       if (isTemporary && collectionName == "addresses") {
         // there will be no formautofill-storage-changed event to update state
         // so add updated collection here
-        Object.assign(responseMessage.stateChange, {
+        Object.assign(successStateChange, {
           tempAddresses: this.temporaryStore.addresses.getAll(),
         });
       }
       if (isTemporary && collectionName == "creditCards") {
         // there will be no formautofill-storage-changed event to update state
         // so add updated collection here
-        Object.assign(responseMessage.stateChange, {
+        Object.assign(successStateChange, {
           tempBasicCards: this.temporaryStore.creditCards.getAll(),
         });
       }
+
+      // Select the new record
+      if (selectedStateKey) {
+        if (selectedStateKey.length == 1) {
+          Object.assign(successStateChange, {
+            [selectedStateKey[0]]: guid,
+          });
+        } else if (selectedStateKey.length == 2) {
+          // Need to keep properties like preserveFieldValues from getting removed.
+          let subObj = Object.assign({}, successStateChange[selectedStateKey[0]]);
+          subObj[selectedStateKey[1]] = guid;
+          Object.assign(successStateChange, {
+            [selectedStateKey[0]]: subObj,
+          });
+        } else {
+          throw new Error(`selectedStateKey not supported: '${selectedStateKey}'`);
+        }
+      }
+
+      this.sendMessageToContent("updateState", successStateChange);
     } catch (ex) {
-      responseMessage.error = true;
-    } finally {
-      this.sendMessageToContent("updateAutofillRecord:Response", responseMessage);
+      this.sendMessageToContent("updateState", errorStateChange);
     }
   },
 
@@ -678,7 +695,12 @@ var paymentDialogWrapper = {
         break;
       }
       case "updateAutofillRecord": {
-        this.onUpdateAutofillRecord(data.collectionName, data.record, data.guid, data.messageID);
+        this.onUpdateAutofillRecord(data.collectionName, data.record, data.guid, {
+          errorStateChange: data.errorStateChange,
+          preserveOldProperties: data.preserveOldProperties,
+          selectedStateKey: data.selectedStateKey,
+          successStateChange: data.successStateChange,
+        });
         break;
       }
     }
