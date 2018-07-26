@@ -174,6 +174,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
                 counter++
             }
+
+            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                counter++
+            }
         })
 
         assertThat("Callback count should be correct", counter, equalTo(1))
@@ -239,6 +243,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
             override fun onSecurityChange(session: GeckoSession,
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
+                counter++
+            }
+
+            override fun onProgressChange(session: GeckoSession, progress: Int) {
                 counter++
             }
         })
