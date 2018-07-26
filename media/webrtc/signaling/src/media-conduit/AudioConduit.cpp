@@ -374,16 +374,6 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
   CSFLogDebug(LOGTAG,  "%s this=%p", __FUNCTION__, this);
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZ_WIDGET_ANDROID
-  JavaVM* jvm = mozilla::jni::GetVM();
-  jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
-
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
-    CSFLogError(LOGTAG, "%s Unable to set Android objects", __FUNCTION__);
-    return kMediaConduitSessionNotInited;
-  }
-#endif
-
   if(!(mPtrVoEBase = webrtc::VoEBase::GetInterface(GetVoiceEngine())))
   {
     CSFLogError(LOGTAG, "%s Unable to initialize VoEBase", __FUNCTION__);
