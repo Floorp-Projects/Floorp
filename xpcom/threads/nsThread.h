@@ -176,8 +176,11 @@ protected:
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
+  friend class nsThreadManager;
+
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
+  static void ClearThreadList();
 
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
@@ -210,6 +213,8 @@ protected:
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
+
+  bool mHasTLSEntry = false;
 
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;
