@@ -528,8 +528,7 @@ PLDHashTable::ComputeKeyHash(const void* aKey) const
 {
   MOZ_ASSERT(mEntryStore.Get());
 
-  PLDHashNumber keyHash = mOps->hashKey(aKey);
-  keyHash *= kGoldenRatio;
+  PLDHashNumber keyHash = mozilla::ScrambleHashCode(mOps->hashKey(aKey));
 
   // Avoid 0 and 1 hash codes, they indicate free and removed entries.
   if (keyHash < 2) {

@@ -618,7 +618,7 @@ class OrderedHashTable
 
   public:
     HashNumber prepareHash(const Lookup& l) const {
-        return ScrambleHashCode(Ops::hash(l, hcs));
+        return mozilla::ScrambleHashCode(Ops::hash(l, hcs));
     }
 
   private:
