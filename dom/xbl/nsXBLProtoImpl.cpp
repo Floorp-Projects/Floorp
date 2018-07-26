@@ -218,6 +218,10 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   JS::Rooted<JSObject*> value(cx, &v.toObject());
   JSAutoRealm ar2(cx, value);
 
+  // We passed aAllowWrapping = false to nsContentUtils::WrapNative so we
+  // should not have a wrapper.
+  MOZ_ASSERT(!js::IsWrapper(value));
+
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
