@@ -643,3 +643,13 @@ devtools.main:
       active: Comma separated list of active filters.
       inactive: Comma separated list of inactive filters.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  jump_to_definition:
+    objects: ["webconsole"]
+    bug_numbers: [1463101]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
