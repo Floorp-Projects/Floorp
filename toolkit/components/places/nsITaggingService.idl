@@ -72,13 +72,6 @@ interface nsITaggingService : nsISupports
    * Retrieves all tags used to tag URIs in the data-base (sorted by name).
    */
   readonly attribute nsIVariant allTags;
-
-  /**
-   * Whether any tags exist.
-   *
-   * @note This is faster than allTags.length, since doesn't need to sort tags.
-   */
-  readonly attribute boolean hasTags;
 };
 
 %{C++

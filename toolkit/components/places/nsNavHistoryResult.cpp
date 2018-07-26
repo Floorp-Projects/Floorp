@@ -1878,17 +1878,6 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
     return NS_OK;
   }
 
-  // For tag containers query we must check if we have any tag
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT) {
-    nsCOMPtr<nsITaggingService> tagging =
-      do_GetService(NS_TAGGINGSERVICE_CONTRACTID);
-    if (tagging) {
-      bool hasTags;
-      *aHasChildren = NS_SUCCEEDED(tagging->GetHasTags(&hasTags)) && hasTags;
-    }
-    return NS_OK;
-  }
-
   // For history containers query we must check if we have any history
   if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
       resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
@@ -1899,15 +1888,18 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
     return NS_OK;
   }
 
-  //XXX: For other containers queries we must:
-  // 1. If it's open, just check mChildren for containers
-  // 2. Else null the view (keep it in a var), open container, check mChildren
-  //    for containers, close container, reset the view
+  // TODO (Bug 1477934): We don't have a good synchronous way to fetch whether
+  // we have tags or not, to properly reply to the hasChildren request on the
+  // tags root. Potentially we could pass this information when we create the
+  // container.
 
+  // If the container is open and populated, this is trivial.
   if (mContentsValid) {
     *aHasChildren = (mChildren.Count() > 0);
     return NS_OK;
   }
+
+  // Fallback to assume we have children.
   *aHasChildren = true;
   return NS_OK;
 }
