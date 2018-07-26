@@ -2,9 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "resource://devtools/client/themes/variables.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/App.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/RuntimesPane.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/runtime/RuntimeItem.css";
+
+:root {
+  --runtime-item-icon-color: var(--grey-30);
+  --runtime-item-selected-color: var(--blue-55);
+}
 
 html, body {
   margin: 0;

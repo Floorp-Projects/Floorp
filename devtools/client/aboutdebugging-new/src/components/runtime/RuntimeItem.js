@@ -15,19 +15,21 @@ class RuntimeItem extends PureComponent {
   static get propTypes() {
     return {
       icon: PropTypes.string.isRequired,
+      isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { icon, name } = this.props;
+    const { icon, isSelected, name } = this.props;
 
     return dom.li(
       {
-        className: "runtime-item",
+        className: "runtime-item" + (isSelected ? " runtime-item--selected" : ""),
       },
       dom.img({
-        className: "runtime-item__icon",
+        className: "runtime-item__icon" +
+                   (isSelected ? " runtime-item__icon--selected" : ""),
         src: icon,
       }),
       name
