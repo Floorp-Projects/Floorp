@@ -338,6 +338,10 @@ release-beetmover-signed-langpacks
 ----------------------------------
 Publishes signed langpacks to archive.mozilla.org
 
+release-beetmover-signed-langpacks-checksums
+--------------------------------------------
+Publishes signed langpacks to archive.mozilla.org
+
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
