@@ -1828,7 +1828,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
             // |restoreNextRawCharAddress| undoes all gets, and this function
             // doesn't update line/column info.
             char32_t cp;
-            if (!getNonAsciiCodePointDontNormalize(unit, &cp))
+            if (!getNonAsciiCodePointDontNormalize(toCharT(unit), &cp))
                 return false;
 
             codePoint = cp;
@@ -2151,7 +2151,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
         MOZ_ASSERT(!this->isAsciiCodePoint(lead));
 
         char32_t codePoint;
-        if (!this->getNonAsciiCodePointDontNormalize(lead, &codePoint))
+        if (!this->getNonAsciiCodePointDontNormalize(this->toCharT(lead), &codePoint))
             return false;
 
         if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
