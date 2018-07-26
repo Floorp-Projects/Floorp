@@ -104,6 +104,15 @@ add_task(async function test_storage_local_idb_backend_from_tab() {
 async function test_storage_local_call_from_destroying_context() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
+      let numberOfChanges = 0;
+      browser.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName !== "local") {
+          browser.test.fail(`Received unexpected storage changes for "${areaName}"`);
+        }
+
+        numberOfChanges++;
+      });
+
       browser.test.onMessage.addListener(async ({msg, values}) => {
         switch (msg) {
           case "storage-set": {
@@ -114,6 +123,10 @@ async function test_storage_local_call_from_destroying_context() {
           case "storage-get": {
             const res = await browser.storage.local.get();
             browser.test.sendMessage("storage-get:done", res);
+            break;
+          }
+          case "storage-changes": {
+            browser.test.sendMessage("storage-changes-count", numberOfChanges);
             break;
           }
           default:
@@ -135,10 +148,8 @@ async function test_storage_local_call_from_destroying_context() {
       "tab.js"() {
         browser.test.log("Extension tab - calling storage.local API method");
         // Call the storage.local API from a tab that is going to be quickly closed.
-        browser.storage.local.get({}).then(() => {
-          // This call should never be reached (because the tab should have been
-          // destroyed in the meantime).
-          browser.test.fail("Extension tab - Unexpected storage.local promise resolved");
+        browser.storage.local.set({
+          "test-key-from-destroying-context": "testvalue2",
         });
         // Navigate away from the extension page, so that the storage.local API call will be unable
         // to send the call to the caller context (because it has been destroyed in the meantime).
@@ -154,17 +165,25 @@ async function test_storage_local_call_from_destroying_context() {
   const url = await extension.awaitMessage("ext-page-url");
 
   let contentPage = await ExtensionTestUtils.loadContentPage(url, {extension});
-  let expectedData = {"test-key": "test-value"};
+  let expectedBackgroundPageData = {"test-key-from-background-page": "test-value"};
+  let expectedTabData = {"test-key-from-destroying-context": "testvalue2"};
 
   info("Call storage.local.set from the background page and wait it to be completed");
-  extension.sendMessage({msg: "storage-set", values: expectedData});
+  extension.sendMessage({msg: "storage-set", values: expectedBackgroundPageData});
   await extension.awaitMessage("storage-set:done");
 
   info("Call storage.local.get from the background page and wait it to be completed");
   extension.sendMessage({msg: "storage-get"});
   let res = await extension.awaitMessage("storage-get:done");
 
-  Assert.deepEqual(res, expectedData, "Got the expected data set in the storage.local backend");
+  Assert.deepEqual(res, {
+    ...expectedBackgroundPageData,
+    ...expectedTabData,
+  }, "Got the expected data set in the storage.local backend");
+
+  extension.sendMessage({msg: "storage-changes"});
+  equal(await extension.awaitMessage("storage-changes-count"), 2,
+        "Got the expected number of storage.onChanged event received");
 
   contentPage.close();
 
