@@ -26,12 +26,6 @@ interface XULDocument : Document {
 
   readonly attribute XULCommandDispatcher? commandDispatcher;
 
-  NodeList getElementsByAttribute(DOMString name,
-                                  [TreatNullAs=EmptyString] DOMString value);
-  [Throws]
-  NodeList getElementsByAttributeNS(DOMString? namespaceURI, DOMString name,
-                                    [TreatNullAs=EmptyString] DOMString value);
-
   [Throws]
   void addBroadcastListenerFor(Element broadcaster, Element observer,
                                DOMString attr);
