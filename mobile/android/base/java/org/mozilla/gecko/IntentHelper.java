@@ -232,12 +232,12 @@ public final class IntentHelper implements BundleEventListener {
         return shareIntent;
     }
 
-    public static Intent getTabSwitchIntent(final Tab tab) {
+    public static Intent getTabSwitchIntent(final int tabId) {
         final Intent intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
         intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
-        intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
+        intent.putExtra(INTENT_EXTRA_TAB_ID, tabId);
         intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
         return intent;
     }
