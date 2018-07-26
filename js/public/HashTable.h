@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -1253,8 +1254,7 @@ class HashTable : private AllocPolicy
 
     // The default initial capacity is 32 (enough to hold 16 elements), but it
     // can be as low as 4.
-    static const unsigned sMinCapacityLog2 = 2;
-    static const unsigned sMinCapacity  = 1 << sMinCapacityLog2;
+    static const unsigned sMinCapacity  = 4;
     static const unsigned sMaxInit      = JS_BIT(CAP_BITS - 1);
     static const unsigned sMaxCapacity  = JS_BIT(CAP_BITS);
     static const unsigned sHashBits     = mozilla::tl::BitSize<HashNumber>::value;
@@ -1361,14 +1361,10 @@ class HashTable : private AllocPolicy
         if (newCapacity < sMinCapacity)
             newCapacity = sMinCapacity;
 
-        // FIXME: use JS_CEILING_LOG2 when PGO stops crashing (bug 543034).
-        uint32_t roundUp = sMinCapacity, roundUpLog2 = sMinCapacityLog2;
-        while (roundUp < newCapacity) {
-            roundUp <<= 1;
-            ++roundUpLog2;
-        }
+        // Round up capacity to next power-of-two.
+        uint32_t log2 = mozilla::CeilingLog2(newCapacity);
+        newCapacity = 1u << log2;
 
-        newCapacity = roundUp;
         MOZ_ASSERT(newCapacity >= length);
         MOZ_ASSERT(newCapacity <= sMaxCapacity);
 
@@ -1376,7 +1372,7 @@ class HashTable : private AllocPolicy
         if (!table)
             return false;
 
-        setTableSizeLog2(roundUpLog2);
+        setTableSizeLog2(log2);
         METER(memset(&stats, 0, sizeof(stats)));
         return true;
     }
