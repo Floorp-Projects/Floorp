@@ -4,7 +4,7 @@ codespell:
     include:
         - browser/base/content/docs/
         - browser/branding/
-        - browser/extensions/activity-stream/prerendered/locales/en-US/
+        - browser/components/newtab/prerendered/locales/en-US/
         - browser/extensions/formautofill/locales/en-US/
         - browser/extensions/onboarding/locales/en-US/
         - browser/extensions/pocket/locale/en-US/
