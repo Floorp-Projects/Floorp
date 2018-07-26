@@ -1254,10 +1254,10 @@ class HashTable : private AllocPolicy
 
     // The default initial capacity is 32 (enough to hold 16 elements), but it
     // can be as low as 4.
-    static const unsigned sMinCapacity  = 4;
-    static const unsigned sMaxInit      = JS_BIT(CAP_BITS - 1);
-    static const unsigned sMaxCapacity  = JS_BIT(CAP_BITS);
-    static const unsigned sHashBits     = mozilla::tl::BitSize<HashNumber>::value;
+    static const uint32_t sMinCapacity  = 4;
+    static const uint32_t sMaxInit      = JS_BIT(CAP_BITS - 1);
+    static const uint32_t sMaxCapacity  = JS_BIT(CAP_BITS);
+    static const uint32_t sHashBits     = mozilla::tl::BitSize<HashNumber>::value;
 
     // Hash-table alpha is conceptually a fraction, but to avoid floating-point
     // math we implement it as a ratio of integers.
@@ -1269,7 +1269,7 @@ class HashTable : private AllocPolicy
     static const HashNumber sRemovedKey = Entry::sRemovedKey;
     static const HashNumber sCollisionBit = Entry::sCollisionBit;
 
-    void setTableSizeLog2(unsigned sizeLog2)
+    void setTableSizeLog2(uint32_t sizeLog2)
     {
         hashShift = sHashBits - sizeLog2;
     }
@@ -1402,7 +1402,7 @@ class HashTable : private AllocPolicy
 
     DoubleHash hash2(HashNumber curKeyHash) const
     {
-        unsigned sizeLog2 = sHashBits - hashShift;
+        uint32_t sizeLog2 = sHashBits - hashShift;
         DoubleHash dh = {
             ((curKeyHash << sizeLog2) >> hashShift) | 1,
             (HashNumber(1) << sizeLog2) - 1
@@ -1448,7 +1448,7 @@ class HashTable : private AllocPolicy
     // restriction but we will live with that for now because it's enabled so
     // rarely.)
     MOZ_ALWAYS_INLINE Entry&
-    lookup(const Lookup& l, HashNumber keyHash, unsigned collisionBit) const
+    lookup(const Lookup& l, HashNumber keyHash, uint32_t collisionBit) const
     {
         MOZ_ASSERT(isLiveHash(keyHash));
         MOZ_ASSERT(!(keyHash & sCollisionBit));
