@@ -1906,7 +1906,7 @@ function getStacktraceElements(props, preview) {
     // Result:
     // ["scriptLocation:2:100", "scriptLocation", "2", "100"]
     const locationParts = location.match(/^(.*):(\d+):(\d+)$/);
-    if (props.onViewSourceInDebugger && location && !IGNORED_SOURCE_URLS.includes(locationParts[1]) && locationParts) {
+    if (props.onViewSourceInDebugger && location && locationParts && !IGNORED_SOURCE_URLS.includes(locationParts[1])) {
       let [, url, line, column] = locationParts;
       onLocationClick = e => {
         // Don't trigger ObjectInspector expand/collapse.
