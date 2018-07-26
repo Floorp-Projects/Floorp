@@ -460,6 +460,8 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(JSTracer
                                                                         JSObject**, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(JSTracer*, JSObject*,
                                                                         JSScript**, const char*);
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(JSTracer*, JSObject*,
+                                                                          LazyScript**, const char*);
 
 void
 js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<Value>* dst,
