@@ -64,22 +64,18 @@ mochitest-harness:
                 max-run-time: 3600
     run:
         using: run-task
-        use-artifacts:
-            build:
-                - target.tar.bz2
-                - target.common.tests.zip
-                - target.mochitest.tests.zip
         command: >
             source /builds/worker/scripts/xvfb.sh &&
             start_xvfb '1600x1200x24' 0 &&
-            cd $USE_ARTIFACT_PATH/build &&
-            tar -xf target.tar.bz2 &&
-            unzip -q -d tests target.common.tests.zip &&
-            unzip -q -d tests target.mochitest.tests.zip &&
-            export GECKO_BINARY_PATH=$USE_ARTIFACT_PATH/build/firefox/firefox &&
-            export TEST_HARNESS_ROOT=$USE_ARTIFACT_PATH/build/tests &&
+            export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
+            export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
             cd /builds/worker/checkouts/gecko &&
             ./mach python-test --python 2 --subsuite mochitest
+    fetches:
+        build:
+            - target.tar.bz2
+            - target.common.tests.zip>tests
+            - target.mochitest.tests.zip>tests
     when:
         files-changed:
             - 'testing/mochitest/**'
@@ -181,22 +177,18 @@ reftest-harness:
                 max-run-time: 3600
     run:
         using: run-task
-        use-artifacts:
-            build:
-                - target.tar.bz2
-                - target.common.tests.zip
-                - target.reftest.tests.zip
         command: >
             source /builds/worker/scripts/xvfb.sh &&
             start_xvfb '1600x1200x24' 0 &&
-            cd $USE_ARTIFACT_PATH/build &&
-            tar -xf target.tar.bz2 &&
-            unzip -q -d tests target.common.tests.zip &&
-            unzip -q -d tests target.reftest.tests.zip &&
-            export GECKO_BINARY_PATH=$USE_ARTIFACT_PATH/build/firefox/firefox &&
-            export TEST_HARNESS_ROOT=$USE_ARTIFACT_PATH/build/tests &&
+            export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
+            export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
             cd /builds/worker/checkouts/gecko &&
             ./mach python-test --python 2 --subsuite reftest
+    fetches:
+        build:
+            - target.tar.bz2
+            - target.common.tests.zip>tests
+            - target.reftest.tests.zip>tests
     when:
         files-changed:
             - 'layout/tools/reftest/**'
