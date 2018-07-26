@@ -113,7 +113,6 @@ public class CustomTabsActivity extends AppCompatActivity
         doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
 
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
-        updateProgress(10);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
         final ActionBar actionBar = getSupportActionBar();
@@ -586,7 +585,6 @@ public class CustomTabsActivity extends AppCompatActivity
     public void onLocationChange(GeckoSession session, String url) {
         mCurrentUrl = url;
         updateActionBar();
-        updateProgress(60);
     }
 
     @Override
@@ -653,18 +651,21 @@ public class CustomTabsActivity extends AppCompatActivity
         mCanStop = true;
         updateActionBar();
         updateCanStop();
-        updateProgress(20);
     }
 
     @Override
     public void onPageStop(GeckoSession session, boolean success) {
         mCanStop = false;
         updateCanStop();
-        updateProgress(100);
     }
 
     @Override
     public void onProgressChange(GeckoSession session, int progress) {
+        if (progress == 100) {
+            mCanStop = false;
+            updateCanStop();
+        }
+        updateProgress(progress);
     }
 
     @Override
