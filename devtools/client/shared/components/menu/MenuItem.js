@@ -7,85 +7,132 @@
 
 // A command in a menu.
 
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button, li, span } = dom;
 
-const MenuItem = props => {
-  const attr = {
-    className: "command"
-  };
+class MenuItem extends PureComponent {
+  static get propTypes() {
+    return {
+      // An optional keyboard shortcut to display next to the item.
+      // (This does not actually register the event listener for the key.)
+      accelerator: PropTypes.string,
 
-  if (props.id) {
-    attr.id = props.id;
+      // A tri-state value that may be true/false if item should be checkable,
+      // and undefined otherwise.
+      checked: PropTypes.bool,
+
+      // Any additional classes to assign to the button specified as
+      // a space-separated string.
+      className: PropTypes.string,
+
+      // An optional ID to be assigned to the item.
+      id: PropTypes.string,
+
+      // The item label.
+      label: PropTypes.string.isRequired,
+
+      // An optional callback to be invoked when the item is selected.
+      onClick: PropTypes.func,
+
+      // URL of the icon to associate with the MenuItem. (Optional)
+      //
+      //   e.g. chrome://devtools/skim/image/foo.svg
+      //
+      // This may also be set in CSS using the --menuitem-icon-image variable.
+      // Note that in this case, the variable should specify the CSS <image> to
+      // use, not simply the URL (e.g.
+      // "url(chrome://devtools/skim/image/foo.svg)").
+      icon: PropTypes.string,
+    };
   }
 
-  if (props.className) {
-    attr.className += " " + props.className;
+  constructor(props) {
+    super(props);
+    this.labelRef = createRef();
   }
 
-  if (props.icon) {
-    attr.className += " iconic";
-    attr.style = { "--menuitem-icon-image": "url(" + props.icon + ")" };
-  }
-
-  if (props.onClick) {
-    attr.onClick = props.onClick;
-  }
-
-  if (typeof props.checked !== "undefined") {
-    attr.role = "menuitemcheckbox";
-    if (props.checked) {
-      attr["aria-checked"] = true;
+  componentDidMount() {
+    if (!this.labelRef.current) {
+      return;
     }
-  } else {
-    attr.role = "menuitem";
+
+    // Pre-fetch any backgrounds specified for the item.
+    const win = this.labelRef.current.ownerDocument.defaultView;
+    this.preloadCallback = win.requestIdleCallback(() => {
+      this.preloadCallback = null;
+      if (!this.labelRef.current) {
+        return;
+      }
+
+      const backgrounds = win
+        .getComputedStyle(this.labelRef.current, ":before")
+        .getCSSImageURLs("background-image");
+      for (const background of backgrounds) {
+        const image = new Image();
+        image.src = background;
+      }
+    });
   }
 
-  const textLabel = span({ className: "label" }, props.label);
-  const children = [textLabel];
+  componentWillUnmount() {
+    if (!this.labelRef.current || !this.preloadCallback) {
+      return;
+    }
 
-  if (typeof props.accelerator !== "undefined") {
-    const acceleratorLabel = span(
-      { className: "accelerator" },
-      props.accelerator
+    const win = this.labelRef.current.ownerDocument.defaultView;
+    win.cancelIdleCallback(this.preloadCallback);
+    this.preloadCallback = null;
+  }
+
+  render() {
+    const attr = {
+      className: "command",
+    };
+
+    if (this.props.id) {
+      attr.id = this.props.id;
+    }
+
+    if (this.props.className) {
+      attr.className += " " + this.props.className;
+    }
+
+    if (this.props.icon) {
+      attr.className += " iconic";
+      attr.style = { "--menuitem-icon-image": "url(" + this.props.icon + ")" };
+    }
+
+    if (this.props.onClick) {
+      attr.onClick = this.props.onClick;
+    }
+
+    if (typeof this.props.checked !== "undefined") {
+      attr.role = "menuitemcheckbox";
+      if (this.props.checked) {
+        attr["aria-checked"] = true;
+      }
+    } else {
+      attr.role = "menuitem";
+    }
+
+    const textLabel = span(
+      { className: "label", ref: this.labelRef },
+      this.props.label
     );
-    children.push(acceleratorLabel);
+    const children = [textLabel];
+
+    if (typeof this.props.accelerator !== "undefined") {
+      const acceleratorLabel = span(
+        { className: "accelerator" },
+        this.props.accelerator
+      );
+      children.push(acceleratorLabel);
+    }
+
+    return li({ className: "menuitem" }, button(attr, children));
   }
-
-  return li({ className: "menuitem" }, button(attr, children));
-};
-
-MenuItem.propTypes = {
-  // An optional keyboard shortcut to display next to the item.
-  // (This does not actually register the event listener for the key.)
-  accelerator: PropTypes.string,
-
-  // A tri-state value that may be true/false if item should be checkable, and
-  // undefined otherwise.
-  checked: PropTypes.bool,
-
-  // Any additional classes to assign to the button specified as
-  // a space-separated string.
-  className: PropTypes.string,
-
-  // An optional ID to be assigned to the item.
-  id: PropTypes.string,
-
-  // The item label.
-  label: PropTypes.string.isRequired,
-
-  // An optional callback to be invoked when the item is selected.
-  onClick: PropTypes.func,
-
-  // URL of the icon to associate with the MenuItem. (Optional)
-  //
-  //   e.g. chrome://devtools/skim/image/foo.svg
-  //
-  // This may also be set in CSS using the --menuitem-icon-image variable.
-  // Note that in this case, the variable should specify the CSS <image> to use,
-  // not simply the URL (e.g. "url(chrome://devtools/skim/image/foo.svg)").
-  icon: PropTypes.string,
-};
+}
 
 module.exports = MenuItem;
