@@ -1,3 +1,18 @@
+# 0.16.1 (2018-07-26)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180724100046 (2018.07.24, 1e5fa52a612e8985e12212d1950a732954e00e45)
+    * Beta: 62.0b9 (d7ab2f3df0840cdb8557659afd46f61afa310379)
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **service-telemetry**: Allow up to 200 extras in event pings.
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.16...v0.16.1), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/17?closed=1)
+
 # 0.16 (2018-07-25)
 
 * Compiled against:
