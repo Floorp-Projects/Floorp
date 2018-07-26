@@ -1911,6 +1911,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         document.getAnonymousElementByAttribute(this, "anonid", "footer");
       </field>
 
+      <field name="shrinkDelay" readonly="true">
+        250
+      </field>
+
       <field name="oneOffSearchButtons" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "one-off-search-buttons");
@@ -2193,6 +2197,83 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
         ]]></body>
+      </method>
+
+      <method name="adjustHeight">
+        <body>
+          <![CDATA[
+          // If we were going to shrink later, cancel that for now:
+          if (this._shrinkTimeout) {
+            clearTimeout(this._shrinkTimeout);
+            this._shrinkTimeout = null;
+          }
+          let lastRowCount = this._lastRowCount;
+          // Figure out how many rows to show
+          let rows = this.richlistbox.childNodes;
+          this._lastRowCount = rows.length;
+          let numRows = Math.min(this.matchCount, this.maxRows, rows.length);
+
+          // If we're going from 0 to non-0 rows, we might need to remove
+          // the height attribute to allow the popup to size. The attribute
+          // is set from XUL popup management code.
+          if (!lastRowCount && rows.length) {
+            this.removeAttribute("height");
+          }
+
+          // Default the height to 0 if we have no rows to show
+          let height = 0;
+          if (numRows) {
+            if (!this._rowHeight) {
+              window.promiseDocumentFlushed(() => {
+                if (window.closed) {
+                  return;
+                }
+                this._rowHeight = rows[0].getBoundingClientRect().height;
+                let style = window.getComputedStyle(this.richlistbox);
+
+                let paddingTop = parseInt(style.paddingTop) || 0;
+                let paddingBottom = parseInt(style.paddingBottom) || 0;
+                this._rlbPadding = paddingTop + paddingBottom;
+                // Then re-run - but don't dirty layout from inside this callback.
+                window.requestAnimationFrame(() => this.adjustHeight());
+              });
+              return;
+            }
+
+            // Calculate the height to have the first row to last row shown
+            height = (this._rowHeight * numRows) + this._rlbPadding;
+          }
+
+          let animate = this.getAttribute("dontanimate") != "true";
+          let currentHeight =
+            parseFloat(this.richlistbox.getAttribute("height"), 10) ||
+            parseFloat(this.richlistbox.style.height, 10) ||
+            0; // It's possible we get here when we haven't set height on the richlistbox
+               // yet, which means parseFloat will return NaN. It should return 0 instead.
+          if (height > currentHeight) {
+            // Grow immediately.
+            if (animate) {
+              this.richlistbox.removeAttribute("height");
+              this.richlistbox.style.height = height + "px";
+            } else {
+              this.richlistbox.style.removeProperty("height");
+              this.richlistbox.height = height;
+            }
+          } else if (height < currentHeight) { // Don't shrink if height matches exactly
+            // Delay shrinking to avoid flicker.
+            this._shrinkTimeout = setTimeout(() => {
+              this._collapseUnusedItems();
+              if (animate) {
+                this.richlistbox.removeAttribute("height");
+                this.richlistbox.style.height = height + "px";
+              } else {
+                this.richlistbox.style.removeProperty("height");
+                this.richlistbox.height = height;
+              }
+            }, this.shrinkDelay);
+          }
+          ]]>
+        </body>
       </method>
 
       <method name="_showSearchSuggestionsNotification">
