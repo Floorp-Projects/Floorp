@@ -989,6 +989,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     // according to the bit depth.
     // So we will scale the YUV values by this amount.
     config.SetColorMultiplier(pow(2, paddingBits));
+    config.SetTextureTarget(effectYCbCr->mTexture->AsSourceOGL()->GetTextureTarget());
     break;
   }
   case EffectTypes::NV12:
@@ -1487,6 +1488,11 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       sourceY->BindTexture(LOCAL_GL_TEXTURE0, effectYCbCr->mSamplingFilter);
       sourceCb->BindTexture(LOCAL_GL_TEXTURE1, effectYCbCr->mSamplingFilter);
       sourceCr->BindTexture(LOCAL_GL_TEXTURE2, effectYCbCr->mSamplingFilter);
+
+      if (config.mFeatures & ENABLE_TEXTURE_RECT) {
+        // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
+        program->SetCbCrTexCoordMultiplier(sourceCb->GetSize().width, sourceCb->GetSize().height);
+      }
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetTextureTransform(Matrix4x4());
