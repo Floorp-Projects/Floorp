@@ -68,10 +68,6 @@ var _FrameworkComponent = require("./FrameworkComponent");
 
 var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
 
-var _ReactComponentStack = require("./ReactComponentStack");
-
-var _ReactComponentStack2 = _interopRequireDefault(_ReactComponentStack);
-
 var _Scopes = require("./Scopes");
 
 var _Scopes2 = _interopRequireDefault(_Scopes);
@@ -181,17 +177,6 @@ class SecondaryPanes extends _react.Component {
     };
   }
 
-  getComponentStackItem() {
-    return {
-      header: L10N.getStr("components.header"),
-      component: _react2.default.createElement(_ReactComponentStack2.default, null),
-      opened: _prefs.prefs.componentStackVisible,
-      onToggle: opened => {
-        _prefs.prefs.componentStackVisible = opened;
-      }
-    };
-  }
-
   getComponentItem() {
     const {
       extra: {
@@ -292,11 +277,7 @@ class SecondaryPanes extends _react.Component {
       items.push(this.getCallStackItem());
 
       if (this.props.horizontal) {
-        if (extra && extra.react) {
-          if (_prefs.features.componentStack && extra.react.componentStack.length > 1) {
-            items.push(this.getComponentStackItem());
-          }
-
+        if (_prefs.features.componentPane && extra && extra.react) {
           items.push(this.getComponentItem());
         }
 
@@ -338,7 +319,7 @@ class SecondaryPanes extends _react.Component {
 
     items.push(this.getWatchItem());
 
-    if (extra && extra.react) {
+    if (_prefs.features.componentPane && extra && extra.react) {
       items.push(this.getComponentItem());
     }
 

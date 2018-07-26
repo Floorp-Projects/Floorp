@@ -198,6 +198,13 @@ public:
   // that other code.
 };
 
+/** Returns true iff |aUnit| is an ASCII value. */
+inline bool
+IsAscii(Utf8Unit aUnit)
+{
+  return IsAscii(aUnit.toUint8());
+}
+
 /**
  * Returns true if the given length-delimited memory consists of a valid UTF-8
  * string, false otherwise.
@@ -208,6 +215,16 @@ public:
  */
 extern MFBT_API bool
 IsValidUtf8(const void* aCodeUnits, size_t aCount);
+
+/**
+ * Returns true iff |aUnit| is a UTF-8 trailing code unit matching the pattern
+ * 0b10xx'xxxx.
+ */
+inline bool
+IsTrailingUnit(Utf8Unit aUnit)
+{
+  return (aUnit.toUint8() & 0b1100'0000) == 0b1000'0000;
+}
 
 /**
  * Given |aLeadUnit| that is a non-ASCII code unit, a pointer to an |Iter aIter|
@@ -292,11 +309,11 @@ DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
   }
 
   for (uint8_t i = 0; i < remaining; i++) {
-    uint8_t unit = Utf8Unit(*(*aIter)++).toUint8();
+    const Utf8Unit unit(*(*aIter)++);
 
     // Every non-leading code unit in properly encoded UTF-8 has its high
     // bit set and the next-highest bit unset.
-    if (MOZ_UNLIKELY((unit & 0b1100'0000) != 0b1000'0000)) {
+    if (MOZ_UNLIKELY(!IsTrailingUnit(unit))) {
       uint8_t unitsObserved = i + 1 + 1;
       *aIter -= unitsObserved;
       aOnBadTrailingUnit(unitsObserved);
@@ -305,7 +322,7 @@ DecodeOneUtf8CodePointInline(const Utf8Unit aLeadUnit,
 
     // The code point being encoded is the concatenation of all the
     // unconstrained bits.
-    n = (n << 6) | (unit & 0b0011'1111);
+    n = (n << 6) | (unit.toUint8() & 0b0011'1111);
   }
 
   // UTF-16 surrogates and values outside the Unicode range are invalid.

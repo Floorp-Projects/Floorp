@@ -11,6 +11,7 @@
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
 #include "js/Proxy.h"
+#include "js/Wrapper.h"
 
 #include "nsAtom.h"
 #include "nsISupports.h"
@@ -84,6 +85,8 @@ bool IsContentXBLCompartment(JS::Compartment* compartment);
 bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
 
+bool IsInSandboxCompartment(JSObject* obj);
+
 // Return a raw XBL scope object corresponding to contentScope, which must
 // be an object whose global is a DOM window.
 //
@@ -103,8 +106,9 @@ GetXBLScope(JSContext* cx, JSObject* contentScope);
 inline JSObject*
 GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj)
 {
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
     if (IsInContentXBLScope(obj))
-        return js::GetGlobalForObjectCrossCompartment(obj);
+        return JS::GetNonCCWObjectGlobal(obj);
     return GetXBLScope(cx, obj);
 }
 

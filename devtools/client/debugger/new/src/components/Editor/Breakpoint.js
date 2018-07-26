@@ -44,11 +44,11 @@ function makeMarker(isDisabled) {
   return bp;
 }
 
-class Breakpoint extends _react.Component {
-  constructor() {
-    super();
+class Breakpoint extends _react.PureComponent {
+  constructor(...args) {
+    var _temp;
 
-    this.addBreakpoint = () => {
+    return _temp = super(...args), this.addBreakpoint = () => {
       const {
         breakpoint,
         editor,
@@ -75,7 +75,7 @@ class Breakpoint extends _react.Component {
       } else {
         editor.codeMirror.removeLineClass(line, "line", "has-condition");
       }
-    };
+    }, _temp;
   }
 
   componentDidMount() {

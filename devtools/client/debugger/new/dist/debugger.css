@@ -55,8 +55,6 @@
 
 .shortcuts-content {
   padding: 15px;
-  -moz-column-width: 250px;
-  -webkit-column-width: 250px;
   column-width: 250px;
   cursor: default;
 }

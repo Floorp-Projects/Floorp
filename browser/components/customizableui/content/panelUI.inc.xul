@@ -217,7 +217,6 @@
                          label="&trackingProtection.title;"/>
           <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-tp-toggle"
-                         class="subviewkeynav"
                          enabled="false"
                          oncommand="TrackingProtection.onGlobalToggleCommand();" />
         </toolbaritem>

@@ -1241,7 +1241,7 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkStyleContext* style)
 {
     gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
-    int draw_focus_outline_only = state->depressed; // NS_THEME_FOCUS_OUTLINE
+    int draw_focus_outline_only = state->depressed; // StyleAppearance::FocusOutline
 
     if (draw_focus_outline_only) {
         // Inflate the given 'rect' with the focus outline size.

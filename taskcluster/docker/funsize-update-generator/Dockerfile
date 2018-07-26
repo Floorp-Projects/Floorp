@@ -12,7 +12,7 @@ RUN apt-get update -q && \
     python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
     apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
-COPY requirements.txt /tmp/
+COPY Pipfile Pipfile.lock /
 
 RUN locale-gen en_CA.UTF-8
 ENV LANG en_CA.UTF-8
@@ -26,7 +26,7 @@ RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Install it like this saves us almost 200M.
 RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3"
-RUN pip install -r /tmp/requirements.txt
+RUN pip install pipenv
 
 # scripts
 RUN mkdir /home/worker/bin
@@ -42,5 +42,8 @@ ENV           HOME          /home/worker
 ENV           SHELL         /bin/bash
 ENV           USER          worker
 ENV           LOGNAME       worker
+
+# This is done after setting environment variables to make sure the virtualenv is created in the right place.
+RUN pipenv install
 
 CMD ["/runme.sh"]

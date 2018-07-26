@@ -655,17 +655,13 @@ class NativeCallbackDelegateSupport final :
     {
         MOZ_ASSERT(NS_IsMainThread());
 
-        // Use the same compartment as the wrapped JS object if possible,
-        // otherwise use either the attached window's compartment or a default
-        // compartment.
-        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(mCallback));
+        // Use either the attached window's realm or a default realm.
 
         dom::AutoJSAPI jsapi;
-        if (!wrappedJS && mWindow) {
+        if (mWindow) {
             NS_ENSURE_TRUE_VOID(jsapi.Init(mWindow->GetCurrentInnerWindow()));
         } else {
-            NS_ENSURE_TRUE_VOID(jsapi.Init(wrappedJS ?
-                    wrappedJS->GetJSObject() : xpc::PrivilegedJunkScope()));
+            NS_ENSURE_TRUE_VOID(jsapi.Init(xpc::PrivilegedJunkScope()));
         }
 
         JS::RootedValue data(jsapi.cx());

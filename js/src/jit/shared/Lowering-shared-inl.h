@@ -374,9 +374,6 @@ IsCompatibleLIRCoercion(MIRType to, MIRType from)
         (from == MIRType::Int32 || from == MIRType::Boolean)) {
         return true;
     }
-    // SIMD types can be coerced with from*Bits operators.
-    if (IsSimdType(to) && IsSimdType(from))
-        return true;
     return false;
 }
 

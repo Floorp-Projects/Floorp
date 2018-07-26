@@ -10,6 +10,7 @@
 
 #include <utility>
 
+#include "jslibmath.h"
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 
@@ -1997,6 +1998,47 @@ CacheIRCompiler::emitDoubleMulResult()
 
     return true;
 }
+bool
+CacheIRCompiler::emitDoubleDivResult()
+{
+    AutoOutputRegister output(*this);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    masm.divDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitDoubleModResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.PushRegsInMask(save);
+
+
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::NumberMod),
+                     MoveOp::DOUBLE);
+    masm.storeCallFloatResult(FloatReg0);
+
+    LiveRegisterSet ignore;
+    ignore.add(FloatReg0);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
 
 bool
 CacheIRCompiler::emitInt32AddResult()
@@ -2058,6 +2100,69 @@ CacheIRCompiler::emitInt32MulResult()
     EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
     return true;
 }
+
+bool
+CacheIRCompiler::emitInt32DivResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister rem(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Prevent division by 0.
+    masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
+
+    // Prevent negative 0 and -2147483648 / -1.
+    masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+
+    Label notZero;
+    masm.branch32(Assembler::NotEqual, lhs, Imm32(0), &notZero);
+    masm.branchTest32(Assembler::Signed, rhs, rhs, failure->label());
+    masm.bind(&notZero);
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.flexibleDivMod32(rhs, lhs, rem, false, volatileRegs);
+
+    // A remainder implies a double result.
+    masm.branchTest32(Assembler::NonZero, rem, rem, failure->label());
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32ModResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Modulo takes the sign of the dividend; don't handle negative dividends here.
+    masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
+
+    // Negative divisor (could be fixed with abs)
+    masm.branchTest32(Assembler::Signed, rhs, rhs, failure->label());
+
+    // x % 0 results in NaN
+    masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
+
+    // Prevent negative 0 and -2147483648 / -1.
+    masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.flexibleRemainder32(rhs, lhs, false, volatileRegs);
+
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
 bool
 CacheIRCompiler::emitInt32BitOrResult()
 {
@@ -2097,7 +2202,71 @@ CacheIRCompiler::emitInt32BitAndResult()
 
     return true;
 }
+bool
+CacheIRCompiler::emitInt32LeftShiftResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
 
+
+    //Mask shift amount as specified by 12.9.3.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleLshift32(rhs, lhs);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32RightShiftResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    //Mask shift amount as specified by 12.9.4.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleRshift32Arithmetic(rhs, lhs);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32URightShiftResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+    bool allowDouble = reader.readBool();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    //Mask shift amount as specified by 12.9.4.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleRshift32(rhs, lhs);
+    Label intDone,floatDone;
+    if (allowDouble) {
+        Label toUint;
+        masm.branchTest32(Assembler::Signed, lhs, lhs, &toUint);
+        masm.jump(&intDone);
+
+        masm.bind(&toUint);
+        masm.convertUInt32ToDouble(lhs, ScratchDoubleReg);
+        masm.boxDouble(ScratchDoubleReg, output.valueReg(), ScratchDoubleReg);
+        masm.jump(&floatDone);
+    } else {
+        masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
+    }
+    masm.bind(&intDone);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+    masm.bind(&floatDone);
+    return true;
+}
 
 bool
 CacheIRCompiler::emitInt32NegationResult()

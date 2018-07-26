@@ -1690,12 +1690,13 @@ public:
     return IsThemed(StyleDisplay(), aTransparencyState);
   }
   bool IsThemed(const nsStyleDisplay* aDisp,
-                  nsITheme::Transparency* aTransparencyState = nullptr) const {
-    nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
-    if (!aDisp->mAppearance)
+                nsITheme::Transparency* aTransparencyState = nullptr) const {
+    if (!aDisp->HasAppearance()) {
       return false;
+    }
+    nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
     nsPresContext* pc = PresContext();
-    nsITheme *theme = pc->GetTheme();
+    nsITheme* theme = pc->GetTheme();
     if(!theme ||
        !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance))
       return false;

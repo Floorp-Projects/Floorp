@@ -326,7 +326,6 @@ nsContentUtils::sUserInteractionObserver = nullptr;
 uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
 uint32_t nsContentUtils::sCookiesLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
-uint32_t nsContentUtils::sCookiesBehavior = nsICookieService::BEHAVIOR_ACCEPT;
 
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
@@ -688,10 +687,6 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sCookiesLifetimePolicy,
                                "network.cookie.lifetimePolicy",
                                nsICookieService::ACCEPT_NORMALLY);
-
-  Preferences::AddUintVarCache(&sCookiesBehavior,
-                               "network.cookie.cookieBehavior",
-                               nsICookieService::BEHAVIOR_ACCEPT);
 
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled", false);
@@ -8783,7 +8778,7 @@ nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
                                               uint32_t* aBehavior)
 {
   *aLifetimePolicy = sCookiesLifetimePolicy;
-  *aBehavior = sCookiesBehavior;
+  *aBehavior = StaticPrefs::network_cookie_cookieBehavior();
 
   // Any permissions set for the given principal will override our default
   // settings from preferences.

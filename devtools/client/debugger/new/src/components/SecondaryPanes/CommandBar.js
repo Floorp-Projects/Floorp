@@ -149,11 +149,11 @@ class CommandBar extends _react.Component {
       canRewind
     } = this.props;
 
-    if (canRewind) {
-      return;
-    }
-
     if (isPaused) {
+      if (canRewind) {
+        return null;
+      }
+
       return (0, _CommandBarButton.debugBtn)(() => this.resume(), "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume")));
     }
 
@@ -179,7 +179,7 @@ class CommandBar extends _react.Component {
     }
 
     const isDisabled = !isPaused;
-    return [(0, _CommandBarButton.debugBtn)(this.props.rewind, "rewind", "active", "Rewind Execution"), (0, _CommandBarButton.debugBtn)(() => this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume"))), _react2.default.createElement("div", {
+    return [(0, _CommandBarButton.debugBtn)(this.props.rewind, "rewind", "active", "Rewind Execution"), (0, _CommandBarButton.debugBtn)(this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume"))), _react2.default.createElement("div", {
       key: "divider-1",
       className: "divider"
     }), (0, _CommandBarButton.debugBtn)(this.props.reverseStepOver, "reverseStepOver", "active", "Reverse step over"), (0, _CommandBarButton.debugBtn)(this.props.stepOver, "stepOver", "active", L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")), isDisabled), _react2.default.createElement("div", {

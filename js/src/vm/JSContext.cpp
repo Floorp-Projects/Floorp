@@ -39,6 +39,12 @@
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
+#ifdef JS_SIMULATOR_ARM64
+# include "jit/arm64/vixl/Simulator-vixl.h"
+#endif
+#ifdef JS_SIMULATOR_ARM
+# include "jit/arm/Simulator-arm.h"
+#endif
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
 #include "util/Windows.h"
