@@ -17,6 +17,8 @@ const { createFactory } =
 const { render, unmountComponentAtNode } =
   require("devtools/client/shared/vendor/react-dom");
 
+const ThisFirefox = require("./src/runtimes/this-firefox");
+
 const App = createFactory(require("./src/components/App"));
 
 const AboutDebugging = {
@@ -27,7 +29,8 @@ const AboutDebugging = {
       return;
     }
 
-    render(App(), this.mount);
+    const thisFirefox = new ThisFirefox();
+    render(App({ thisFirefox }), this.mount);
   },
 
   destroy() {
