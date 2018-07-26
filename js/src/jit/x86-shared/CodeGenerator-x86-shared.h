@@ -51,31 +51,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         }
     };
 
-    // Additional bounds check for vector Float to Int conversion, when the
-    // undefined pattern is seen. Might imply a bailout.
-    class OutOfLineSimdFloatToIntCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
-    {
-        Register temp_;
-        FloatRegister input_;
-        LInstruction* ins_;
-        wasm::BytecodeOffset bytecodeOffset_;
-
-      public:
-        OutOfLineSimdFloatToIntCheck(Register temp, FloatRegister input, LInstruction *ins,
-                                     wasm::BytecodeOffset bytecodeOffset)
-          : temp_(temp), input_(input), ins_(ins), bytecodeOffset_(bytecodeOffset)
-        {}
-
-        Register temp() const { return temp_; }
-        FloatRegister input() const { return input_; }
-        LInstruction* ins() const { return ins_; }
-        wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
-
-        void accept(CodeGeneratorX86Shared* codegen) override {
-            codegen->visitOutOfLineSimdFloatToIntCheck(this);
-        }
-    };
-
     NonAssertingLabel deoptLabel_;
 
     Operand ToOperand(const LAllocation& a);
@@ -173,14 +148,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
-    void emitSimdExtractLane8x16(FloatRegister input, Register output, unsigned lane,
-                                 SimdSign signedness);
-    void emitSimdExtractLane16x8(FloatRegister input, Register output, unsigned lane,
-                                 SimdSign signedness);
-    void emitSimdExtractLane32x4(FloatRegister input, Register output, unsigned lane);
-
-    template <class T, class Reg> void visitSimdGeneralShuffle(LSimdGeneralShuffleBase* lir, Reg temp);
-
     void generateInvalidateEpilogue();
 
     void canonicalizeIfDeterministic(Scalar::Type type, const LAllocation* value);
@@ -193,7 +160,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitModOverflowCheck(ModOverflowCheck* ool);
     void visitReturnZero(ReturnZero* ool);
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
-    void visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIntCheck* ool);
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
 };

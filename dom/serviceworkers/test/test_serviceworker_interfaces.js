@@ -57,7 +57,6 @@ var ecmaGlobals =
     "RegExp",
     "Set",
     {name: "SharedArrayBuffer", disabled: true},
-    {name: "SIMD", nightly: true},
     "String",
     "Symbol",
     "SyntaxError",

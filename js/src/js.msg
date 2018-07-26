@@ -321,7 +321,6 @@ MSG_DEF(JSMSG_STMT_AFTER_RETURN,       0, JSEXN_WARN, "unreachable code after re
 MSG_DEF(JSMSG_STRICT_CODE_WITH,        0, JSEXN_SYNTAXERR, "strict mode code may not contain 'with' statements")
 MSG_DEF(JSMSG_STRICT_NON_SIMPLE_PARAMS, 1, JSEXN_SYNTAXERR, "\"use strict\" not allowed in function with {0} parameter")
 MSG_DEF(JSMSG_TEMPLSTR_UNTERM_EXPR,    0, JSEXN_SYNTAXERR, "missing } in template string")
-MSG_DEF(JSMSG_SIMD_NOT_A_VECTOR,       2, JSEXN_TYPEERR, "expecting a SIMD {0} object as argument {1}")
 MSG_DEF(JSMSG_TOO_MANY_CASES,          0, JSEXN_INTERNALERR, "too many switch cases")
 MSG_DEF(JSMSG_TOO_MANY_CATCH_VARS,     0, JSEXN_SYNTAXERR, "too many catch variables")
 MSG_DEF(JSMSG_TOO_MANY_CON_ARGS,       0, JSEXN_SYNTAXERR, "too many constructor arguments")
@@ -351,6 +350,13 @@ MSG_DEF(JSMSG_COMPUTED_NAME_IN_PATTERN,0, JSEXN_SYNTAXERR, "computed property na
 MSG_DEF(JSMSG_DEFAULT_IN_PATTERN,      0, JSEXN_SYNTAXERR, "destructuring defaults aren't supported in this destructuring declaration")
 MSG_DEF(JSMSG_BAD_NEWTARGET,           0, JSEXN_SYNTAXERR, "new.target only allowed within functions")
 MSG_DEF(JSMSG_ESCAPED_KEYWORD,         0, JSEXN_SYNTAXERR, "keywords must be written literally, without embedded escapes")
+
+// UTF-8 source text encoding errors
+MSG_DEF(JSMSG_BAD_LEADING_UTF8_UNIT,   1, JSEXN_SYNTAXERR, "{0} byte doesn't begin a valid UTF-8 code point")
+MSG_DEF(JSMSG_NOT_ENOUGH_CODE_UNITS,   4, JSEXN_SYNTAXERR, "{0} byte in UTF-8 must be followed by {1} bytes, but {2} byte{3} present")
+MSG_DEF(JSMSG_BAD_TRAILING_UTF8_UNIT,  1, JSEXN_SYNTAXERR, "bad trailing UTF-8 byte {0} doesn't match the pattern 0b10xxxxxx")
+MSG_DEF(JSMSG_FORBIDDEN_UTF8_CODE_POINT,2,JSEXN_SYNTAXERR, "{0} isn't a valid code point because {1}")
+MSG_DEF(JSMSG_BAD_CODE_UNITS,          1, JSEXN_NOTE, "the code units comprising this invalid code point were: {0}")
 
 // asm.js
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,       1, JSEXN_TYPEERR, "asm.js type error: {0}")
@@ -529,15 +535,13 @@ MSG_DEF(JSMSG_UNTERM_CLASS,            0, JSEXN_SYNTAXERR, "unterminated charact
 MSG_DEF(JSMSG_DEFAULT_LOCALE_ERROR,    0, JSEXN_ERR, "internal error getting the default locale")
 MSG_DEF(JSMSG_NO_SUCH_SELF_HOSTED_PROP,1, JSEXN_ERR, "No such property on self-hosted object: {0}")
 
-// Typed object / SIMD
+// Typed object
 MSG_DEF(JSMSG_INVALID_PROTOTYPE,       0, JSEXN_TYPEERR, "prototype field is not an object")
 MSG_DEF(JSMSG_TYPEDOBJECT_BAD_ARGS,    0, JSEXN_TYPEERR, "invalid arguments")
 MSG_DEF(JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX, 0, JSEXN_RANGEERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED, 0, JSEXN_TYPEERR, "handle unattached")
 MSG_DEF(JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS, 0, JSEXN_RANGEERR, "invalid field descriptor")
 MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG,     0, JSEXN_ERR, "Type is too large to allocate")
-MSG_DEF(JSMSG_SIMD_FAILED_CONVERSION,  0, JSEXN_RANGEERR, "SIMD conversion loses precision")
-MSG_DEF(JSMSG_SIMD_TO_NUMBER,          0, JSEXN_TYPEERR, "can't convert SIMD value to number")
 
 // Array
 MSG_DEF(JSMSG_TOO_LONG_ARRAY,         0, JSEXN_TYPEERR, "Too long array")

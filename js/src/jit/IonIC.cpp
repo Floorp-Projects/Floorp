@@ -579,6 +579,14 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         if (!MulValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
+      case JSOP_DIV:
+        if (!DivValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      case JSOP_MOD:
+        if (!ModValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
       case JSOP_BITOR: {
         int32_t result;
         if (!BitOr(cx, lhs, rhs, &result))

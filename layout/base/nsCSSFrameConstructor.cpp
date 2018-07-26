@@ -105,7 +105,7 @@
 #include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 #include "DetailsFrame.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 
 #ifdef MOZ_XUL
 #include "nsIPopupContainer.h"
@@ -3703,10 +3703,10 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
 
   // radio and checkbox inputs with appearance:none should be constructed
   // by display type.  (Note that we're not checking that appearance is
-  // not (respectively) NS_THEME_RADIO and NS_THEME_CHECKBOX.)
+  // not (respectively) StyleAppearance::Radio and StyleAppearance::Checkbox.)
   if ((controlType == NS_FORM_INPUT_CHECKBOX ||
        controlType == NS_FORM_INPUT_RADIO) &&
-      aStyle.StyleDisplay()->mAppearance == NS_THEME_NONE) {
+      !aStyle.StyleDisplay()->HasAppearance()) {
     return nullptr;
   }
 

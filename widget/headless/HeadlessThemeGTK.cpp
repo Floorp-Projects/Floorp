@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HeadlessThemeGTK.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsIFrame.h"
 
 
@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HeadlessThemeGTK, nsNativeTheme, nsITheme)
 NS_IMETHODIMP
 HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       uint8_t aWidgetType,
+                                       WidgetType aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -25,83 +25,83 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
 
 LayoutDeviceIntMargin
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType)
+                                  WidgetType aWidgetType)
 {
   LayoutDeviceIntMargin result;
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBARBUTTON:
+    case StyleAppearance::Button:
+    case StyleAppearance::Toolbarbutton:
       result.top = 6;
       result.right = 7;
       result.bottom = 6;
       result.left = 7;
       break;
-    case NS_THEME_FOCUS_OUTLINE:
-    case NS_THEME_NUMBER_INPUT:
-    case NS_THEME_TEXTFIELD:
+    case StyleAppearance::FocusOutline:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::Textfield:
       result.top = 5;
       result.right = 7;
       result.bottom = 5;
       result.left = 7;
       break;
-    case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZERPANEL:
-    case NS_THEME_LISTBOX:
-    case NS_THEME_TREEVIEW:
-    case NS_THEME_TREEHEADERSORTARROW:
-    case NS_THEME_PROGRESSBAR:
-    case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_SPINNER_UPBUTTON:
-    case NS_THEME_SPINNER_DOWNBUTTON:
-    case NS_THEME_SPINNER_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_MENUPOPUP:
-    case NS_THEME_GTK_INFO_BAR:
+    case StyleAppearance::Statusbarpanel:
+    case StyleAppearance::Resizerpanel:
+    case StyleAppearance::Listbox:
+    case StyleAppearance::Treeview:
+    case StyleAppearance::Treeheadersortarrow:
+    case StyleAppearance::Progressbar:
+    case StyleAppearance::ProgressbarVertical:
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
+    case StyleAppearance::SpinnerTextfield:
+    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Menupopup:
+    case StyleAppearance::MozGtkInfoBar:
       result.top = 1;
       result.right = 1;
       result.bottom = 1;
       result.left = 1;
       break;
-    case NS_THEME_TREEHEADERCELL:
+    case StyleAppearance::Treeheadercell:
       result.top = 5;
       result.right = 7;
       result.bottom = 6;
       result.left = 6;
       break;
-    case NS_THEME_TAB:
+    case StyleAppearance::Tab:
       result.top = 4;
       result.right = 7;
       result.bottom = 2;
       result.left = 7;
       break;
-    case NS_THEME_TOOLTIP:
+    case StyleAppearance::Tooltip:
       result.top = 6;
       result.right = 6;
       result.bottom = 6;
       result.left = 6;
       break;
-    case NS_THEME_MENULIST:
+    case StyleAppearance::Menulist:
       result.top = 6;
       result.right = 22;
       result.bottom = 6;
       result.left = 7;
       break;
-    case NS_THEME_MENULIST_BUTTON:
+    case StyleAppearance::MenulistButton:
       result.top = 1;
       result.right = 1;
       result.bottom = 1;
       result.left = 0;
       break;
-    case NS_THEME_MENULIST_TEXTFIELD:
+    case StyleAppearance::MenulistTextfield:
       result.top = 1;
       result.right = 0;
       result.bottom = 1;
       result.left = 1;
       break;
-    case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM:
-    case NS_THEME_RADIOMENUITEM:
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::Checkmenuitem:
+    case StyleAppearance::Radiomenuitem:
       if (IsRegularMenuItem(aFrame)) {
         break;
       }
@@ -110,39 +110,41 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       result.bottom = 3;
       result.left = 5;
       break;
+    default:
+      break;
   }
   return result;
 }
 
 bool
 HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
-                                   nsIFrame* aFrame, uint8_t aWidgetType,
+                                   nsIFrame* aFrame, WidgetType aWidgetType,
                                    LayoutDeviceIntMargin* aResult)
 {
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
-    case NS_THEME_RADIO:
-    case NS_THEME_CHECKBOX:
-    case NS_THEME_TOOLBARBUTTON:
-    case NS_THEME_DUALBUTTON:
-    case NS_THEME_TOOLBARBUTTON_DROPDOWN:
-    case NS_THEME_BUTTON_ARROW_UP:
-    case NS_THEME_BUTTON_ARROW_DOWN:
-    case NS_THEME_BUTTON_ARROW_NEXT:
-    case NS_THEME_BUTTON_ARROW_PREVIOUS:
-    case NS_THEME_TAB_SCROLL_ARROW_BACK:
-    case NS_THEME_TAB_SCROLL_ARROW_FORWARD:
-    case NS_THEME_MENULIST_BUTTON:
-    case NS_THEME_RANGE_THUMB:
-    case NS_THEME_BUTTON_FOCUS:
+    case StyleAppearance::Radio:
+    case StyleAppearance::Checkbox:
+    case StyleAppearance::Toolbarbutton:
+    case StyleAppearance::Dualbutton:
+    case StyleAppearance::ToolbarbuttonDropdown:
+    case StyleAppearance::ButtonArrowUp:
+    case StyleAppearance::ButtonArrowDown:
+    case StyleAppearance::ButtonArrowNext:
+    case StyleAppearance::ButtonArrowPrevious:
+    case StyleAppearance::TabScrollArrowBack:
+    case StyleAppearance::TabScrollArrowForward:
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::RangeThumb:
+    case StyleAppearance::ButtonFocus:
       aResult->top = 0;
       aResult->right = 0;
       aResult->bottom = 0;
       aResult->left = 0;
       return true;
-    case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM:
-    case NS_THEME_RADIOMENUITEM:
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::Checkmenuitem:
+    case StyleAppearance::Radiomenuitem:
       if (!IsRegularMenuItem(aFrame)) {
         return false;
       }
@@ -151,6 +153,8 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->bottom = 3;
       aResult->left = 5;
       return true;
+    default:
+      break;
   }
   return false;
 }
@@ -158,7 +162,7 @@ HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
 
 NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                       nsIFrame* aFrame, uint8_t aWidgetType,
+                                       nsIFrame* aFrame, WidgetType aWidgetType,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable)
 {
@@ -167,7 +171,7 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {
-    case NS_THEME_SPLITTER:
+    case StyleAppearance::Splitter:
       if (IsHorizontal(aFrame)) {
         aResult->width = 6;
         aResult->height = 0;
@@ -177,127 +181,129 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       }
       *aIsOverridable = false;
       break;
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBARBUTTON:
+    case StyleAppearance::Button:
+    case StyleAppearance::Toolbarbutton:
       aResult->width = 14;
       aResult->height = 12;
       break;
-    case NS_THEME_RADIO:
-    case NS_THEME_CHECKBOX:
+    case StyleAppearance::Radio:
+    case StyleAppearance::Checkbox:
       aResult->width = 18;
       aResult->height = 18;
       break;
-    case NS_THEME_TOOLBARBUTTON_DROPDOWN:
-    case NS_THEME_BUTTON_ARROW_UP:
-    case NS_THEME_BUTTON_ARROW_DOWN:
-    case NS_THEME_BUTTON_ARROW_NEXT:
-    case NS_THEME_BUTTON_ARROW_PREVIOUS:
-    case NS_THEME_RESIZER:
+    case StyleAppearance::ToolbarbuttonDropdown:
+    case StyleAppearance::ButtonArrowUp:
+    case StyleAppearance::ButtonArrowDown:
+    case StyleAppearance::ButtonArrowNext:
+    case StyleAppearance::ButtonArrowPrevious:
+    case StyleAppearance::Resizer:
       aResult->width = 15;
       aResult->height = 15;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SEPARATOR:
+    case StyleAppearance::Separator:
       aResult->width = 12;
       aResult->height = 0;
       break;
-    case NS_THEME_TREETWISTY:
-    case NS_THEME_TREETWISTYOPEN:
+    case StyleAppearance::Treetwisty:
+    case StyleAppearance::Treetwistyopen:
       aResult->width = 8;
       aResult->height = 8;
       *aIsOverridable = false;
       break;
-    case NS_THEME_TREEHEADERCELL:
+    case StyleAppearance::Treeheadercell:
       aResult->width = 13;
       aResult->height = 11;
       break;
-    case NS_THEME_TREEHEADERSORTARROW:
-    case NS_THEME_SPINNER_UPBUTTON:
-    case NS_THEME_SPINNER_DOWNBUTTON:
+    case StyleAppearance::Treeheadersortarrow:
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
       aResult->width = 14;
       aResult->height = 13;
       break;
-    case NS_THEME_TAB_SCROLL_ARROW_BACK:
-    case NS_THEME_TAB_SCROLL_ARROW_FORWARD:
+    case StyleAppearance::TabScrollArrowBack:
+    case StyleAppearance::TabScrollArrowForward:
       aResult->width = 16;
       aResult->height = 16;
       *aIsOverridable = false;
       break;
-    case NS_THEME_INNER_SPIN_BUTTON:
-    case NS_THEME_SPINNER:
+    case StyleAppearance::InnerSpinButton:
+    case StyleAppearance::Spinner:
       aResult->width = 14;
       aResult->height = 26;
       break;
-    case NS_THEME_NUMBER_INPUT:
-    case NS_THEME_TEXTFIELD:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::Textfield:
       aResult->width = 0;
       aResult->height = 12;
       break;
-    case NS_THEME_SCROLLBAR_HORIZONTAL:
+    case StyleAppearance::ScrollbarHorizontal:
       aResult->width = 31;
       aResult->height = 10;
       break;
-    case NS_THEME_SCROLLBAR_VERTICAL:
+    case StyleAppearance::ScrollbarVertical:
       aResult->width = 10;
       aResult->height = 31;
       break;
-    case NS_THEME_SCROLLBARBUTTON_UP:
-    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
       aResult->width = 10;
       aResult->height = 13;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBARBUTTON_LEFT:
-    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
       aResult->width = 13;
       aResult->height = 10;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case StyleAppearance::ScrollbarthumbHorizontal:
       aResult->width = 31;
       aResult->height = 10;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case StyleAppearance::ScrollbarthumbVertical:
       aResult->width = 10;
       aResult->height = 31;
       *aIsOverridable = false;
       break;
-    case NS_THEME_MENULIST:
+    case StyleAppearance::Menulist:
       aResult->width = 44;
       aResult->height = 27;
       break;
-    case NS_THEME_MENULIST_BUTTON:
+    case StyleAppearance::MenulistButton:
       aResult->width = 29;
       aResult->height = 28;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCALETHUMB_HORIZONTAL:
-    case NS_THEME_RANGE_THUMB:
+    case StyleAppearance::ScalethumbHorizontal:
+    case StyleAppearance::RangeThumb:
       aResult->width = 14;
       aResult->height = 18;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCALETHUMB_VERTICAL:
+    case StyleAppearance::ScalethumbVertical:
       aResult->width = 18;
       aResult->height = 13;
       *aIsOverridable = false;
       break;
-    case NS_THEME_RANGE:
+    case StyleAppearance::Range:
       aResult->width = 14;
       aResult->height = 18;
       break;
-    case NS_THEME_MENUSEPARATOR:
+    case StyleAppearance::Menuseparator:
       aResult->width = 0;
       aResult->height = 8;
       *aIsOverridable = false;
+      break;
+    default:
       break;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
+HeadlessThemeGTK::WidgetStateChanged(nsIFrame* aFrame, WidgetType aWidgetType,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
@@ -321,107 +327,109 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 NS_IMETHODIMP_(bool)
 HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      uint8_t aWidgetType)
+                                      WidgetType aWidgetType)
 {
   switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_RADIO:
-    case NS_THEME_CHECKBOX:
-    case NS_THEME_FOCUS_OUTLINE:
-    case NS_THEME_TOOLBOX:
-    case NS_THEME_TOOLBAR:
-    case NS_THEME_TOOLBARBUTTON:
-    case NS_THEME_DUALBUTTON:
-    case NS_THEME_TOOLBARBUTTON_DROPDOWN:
-    case NS_THEME_BUTTON_ARROW_UP:
-    case NS_THEME_BUTTON_ARROW_DOWN:
-    case NS_THEME_BUTTON_ARROW_NEXT:
-    case NS_THEME_BUTTON_ARROW_PREVIOUS:
-    case NS_THEME_SEPARATOR:
-    case NS_THEME_TOOLBARGRIPPER:
-    case NS_THEME_SPLITTER:
-    case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZERPANEL:
-    case NS_THEME_RESIZER:
-    case NS_THEME_LISTBOX:
-    case NS_THEME_TREEVIEW:
-    case NS_THEME_TREETWISTY:
-    case NS_THEME_TREEHEADERCELL:
-    case NS_THEME_TREEHEADERSORTARROW:
-    case NS_THEME_TREETWISTYOPEN:
-    case NS_THEME_PROGRESSBAR:
-    case NS_THEME_PROGRESSCHUNK:
-    case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_PROGRESSCHUNK_VERTICAL:
-    case NS_THEME_TAB:
-    case NS_THEME_TABPANELS:
-    case NS_THEME_TAB_SCROLL_ARROW_BACK:
-    case NS_THEME_TAB_SCROLL_ARROW_FORWARD:
-    case NS_THEME_TOOLTIP:
-    case NS_THEME_INNER_SPIN_BUTTON:
-    case NS_THEME_SPINNER:
-    case NS_THEME_SPINNER_UPBUTTON:
-    case NS_THEME_SPINNER_DOWNBUTTON:
-    case NS_THEME_SPINNER_TEXTFIELD:
-    case NS_THEME_NUMBER_INPUT:
-    case NS_THEME_SCROLLBAR_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_VERTICAL:
-    case NS_THEME_SCROLLBARBUTTON_UP:
-    case NS_THEME_SCROLLBARBUTTON_DOWN:
-    case NS_THEME_SCROLLBARBUTTON_LEFT:
-    case NS_THEME_SCROLLBARBUTTON_RIGHT:
-    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBARTRACK_VERTICAL:
-    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
-    case NS_THEME_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_MENULIST:
-    case NS_THEME_MENULIST_TEXT:
-    case NS_THEME_MENULIST_TEXTFIELD:
-    case NS_THEME_SCALE_HORIZONTAL:
-    case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALETHUMB_HORIZONTAL:
-    case NS_THEME_SCALETHUMB_VERTICAL:
-    case NS_THEME_RANGE:
-    case NS_THEME_RANGE_THUMB:
-    case NS_THEME_CHECKBOX_CONTAINER:
-    case NS_THEME_RADIO_CONTAINER:
-    case NS_THEME_CHECKBOX_LABEL:
-    case NS_THEME_RADIO_LABEL:
-    case NS_THEME_BUTTON_FOCUS:
-    case NS_THEME_WINDOW:
-    case NS_THEME_DIALOG:
-    case NS_THEME_MENUBAR:
-    case NS_THEME_MENUPOPUP:
-    case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM:
-    case NS_THEME_RADIOMENUITEM:
-    case NS_THEME_MENUSEPARATOR:
-    case NS_THEME_MENUARROW:
-    case NS_THEME_GTK_INFO_BAR:
+    case StyleAppearance::Button:
+    case StyleAppearance::Radio:
+    case StyleAppearance::Checkbox:
+    case StyleAppearance::FocusOutline:
+    case StyleAppearance::Toolbox:
+    case StyleAppearance::Toolbar:
+    case StyleAppearance::Toolbarbutton:
+    case StyleAppearance::Dualbutton:
+    case StyleAppearance::ToolbarbuttonDropdown:
+    case StyleAppearance::ButtonArrowUp:
+    case StyleAppearance::ButtonArrowDown:
+    case StyleAppearance::ButtonArrowNext:
+    case StyleAppearance::ButtonArrowPrevious:
+    case StyleAppearance::Separator:
+    case StyleAppearance::Toolbargripper:
+    case StyleAppearance::Splitter:
+    case StyleAppearance::Statusbar:
+    case StyleAppearance::Statusbarpanel:
+    case StyleAppearance::Resizerpanel:
+    case StyleAppearance::Resizer:
+    case StyleAppearance::Listbox:
+    case StyleAppearance::Treeview:
+    case StyleAppearance::Treetwisty:
+    case StyleAppearance::Treeheadercell:
+    case StyleAppearance::Treeheadersortarrow:
+    case StyleAppearance::Treetwistyopen:
+    case StyleAppearance::Progressbar:
+    case StyleAppearance::Progresschunk:
+    case StyleAppearance::ProgressbarVertical:
+    case StyleAppearance::ProgresschunkVertical:
+    case StyleAppearance::Tab:
+    case StyleAppearance::Tabpanels:
+    case StyleAppearance::TabScrollArrowBack:
+    case StyleAppearance::TabScrollArrowForward:
+    case StyleAppearance::Tooltip:
+    case StyleAppearance::InnerSpinButton:
+    case StyleAppearance::Spinner:
+    case StyleAppearance::SpinnerUpbutton:
+    case StyleAppearance::SpinnerDownbutton:
+    case StyleAppearance::SpinnerTextfield:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+    case StyleAppearance::ScrollbartrackHorizontal:
+    case StyleAppearance::ScrollbartrackVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::Textfield:
+    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Menulist:
+    case StyleAppearance::MenulistText:
+    case StyleAppearance::MenulistTextfield:
+    case StyleAppearance::ScaleHorizontal:
+    case StyleAppearance::ScaleVertical:
+    case StyleAppearance::ScalethumbHorizontal:
+    case StyleAppearance::ScalethumbVertical:
+    case StyleAppearance::Range:
+    case StyleAppearance::RangeThumb:
+    case StyleAppearance::CheckboxContainer:
+    case StyleAppearance::RadioContainer:
+    case StyleAppearance::CheckboxLabel:
+    case StyleAppearance::RadioLabel:
+    case StyleAppearance::ButtonFocus:
+    case StyleAppearance::Window:
+    case StyleAppearance::Dialog:
+    case StyleAppearance::Menubar:
+    case StyleAppearance::Menupopup:
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::Checkmenuitem:
+    case StyleAppearance::Radiomenuitem:
+    case StyleAppearance::Menuseparator:
+    case StyleAppearance::Menuarrow:
+    case StyleAppearance::MozGtkInfoBar:
       return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
-    case NS_THEME_MENULIST_BUTTON:
+    case StyleAppearance::MenulistButton:
       return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
               !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+    default:
+      break;
   }
   return false;
 }
 
 NS_IMETHODIMP_(bool)
-HeadlessThemeGTK::WidgetIsContainer(uint8_t aWidgetType)
+HeadlessThemeGTK::WidgetIsContainer(WidgetType aWidgetType)
 {
-    if (aWidgetType == NS_THEME_MENULIST_BUTTON ||
-        aWidgetType == NS_THEME_RADIO ||
-        aWidgetType == NS_THEME_RANGE_THUMB ||
-        aWidgetType == NS_THEME_CHECKBOX ||
-        aWidgetType == NS_THEME_TAB_SCROLL_ARROW_BACK ||
-        aWidgetType == NS_THEME_TAB_SCROLL_ARROW_FORWARD ||
-        aWidgetType == NS_THEME_BUTTON_ARROW_UP ||
-        aWidgetType == NS_THEME_BUTTON_ARROW_DOWN ||
-        aWidgetType == NS_THEME_BUTTON_ARROW_NEXT ||
-        aWidgetType == NS_THEME_BUTTON_ARROW_PREVIOUS) {
+    if (aWidgetType == StyleAppearance::MenulistButton ||
+        aWidgetType == StyleAppearance::Radio ||
+        aWidgetType == StyleAppearance::RangeThumb ||
+        aWidgetType == StyleAppearance::Checkbox ||
+        aWidgetType == StyleAppearance::TabScrollArrowBack ||
+        aWidgetType == StyleAppearance::TabScrollArrowForward ||
+        aWidgetType == StyleAppearance::ButtonArrowUp ||
+        aWidgetType == StyleAppearance::ButtonArrowDown ||
+        aWidgetType == StyleAppearance::ButtonArrowNext ||
+        aWidgetType == StyleAppearance::ButtonArrowPrevious) {
 
     return false;
   }
@@ -429,11 +437,11 @@ HeadlessThemeGTK::WidgetIsContainer(uint8_t aWidgetType)
 }
 
 bool
-HeadlessThemeGTK::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
+HeadlessThemeGTK::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
 {
-   if (aWidgetType == NS_THEME_MENULIST ||
-       aWidgetType == NS_THEME_BUTTON ||
-       aWidgetType == NS_THEME_TREEHEADERCELL) {
+   if (aWidgetType == StyleAppearance::Menulist ||
+       aWidgetType == StyleAppearance::Button ||
+       aWidgetType == StyleAppearance::Treeheadercell) {
     return true;
   }
   return false;

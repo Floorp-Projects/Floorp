@@ -213,14 +213,6 @@
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
-/* Override OSX-specific toolkit findbar button styles */
-.findbar-button {
-  background: none;
-  box-shadow: none;
-  border: none;
-  color: inherit;
-}
-
 /* On Mac, native buttons keep their full opacity when they become disabled
  * and only the glyph or text on top of them becomes less opaque. */
 :root:not([customizing]) #back-button[disabled="true"] {

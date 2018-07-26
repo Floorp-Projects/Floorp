@@ -20,6 +20,7 @@ namespace mozilla {
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
   : mResultPrincipalURIIsSome(false)
+  , mKeepResultPrincipalURIIfSet(false)
   , mLoadReplace(false)
   , mInheritPrincipal(false)
   , mPrincipalIsExplicit(false)
@@ -82,6 +83,18 @@ void
 nsDocShellLoadInfo::SetResultPrincipalURIIsSome(bool aIsSome)
 {
   mResultPrincipalURIIsSome = aIsSome;
+}
+
+bool
+nsDocShellLoadInfo::KeepResultPrincipalURIIfSet() const
+{
+  return mKeepResultPrincipalURIIfSet;
+}
+
+void
+nsDocShellLoadInfo::SetKeepResultPrincipalURIIfSet(bool aKeep)
+{
+  mKeepResultPrincipalURIIfSet = aKeep;
 }
 
 bool

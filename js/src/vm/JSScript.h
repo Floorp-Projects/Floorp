@@ -1374,6 +1374,10 @@ class JSScript : public js::gc::TenuredCell
         return sourceEnd_;
     }
 
+    uint32_t sourceLength() const {
+        return sourceEnd_ - sourceStart_;
+    }
+
     uint32_t toStringStart() const {
         return toStringStart_;
     }
@@ -2346,6 +2350,9 @@ class LazyScript : public gc::TenuredCell
         return function_;
     }
 
+    JS::Compartment* compartment() const;
+    Realm* realm() const;
+
     void initScript(JSScript* script);
 
     JSScript* maybeScript() {
@@ -2526,6 +2533,9 @@ class LazyScript : public gc::TenuredCell
     }
     uint32_t sourceEnd() const {
         return sourceEnd_;
+    }
+    uint32_t sourceLength() const {
+        return sourceEnd_ - sourceStart_;
     }
     uint32_t toStringStart() const {
         return toStringStart_;

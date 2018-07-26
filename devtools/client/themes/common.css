@@ -755,12 +755,24 @@ checkbox:-moz-focusring {
   width: 15px;
   height: 100%;
 
+  padding: 0;
+  border: none;
   border-inline-start: 1px solid var(--theme-splitter-color);
 
   background: var(--theme-tab-toolbar-background);
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-photon-icon-color);
+}
+
+.all-tabs-menu:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.all-tabs-menu:hover:active {
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .devtools-tab-line {
@@ -770,7 +782,7 @@ checkbox:-moz-focusring {
   width: 100%;
   height: 2px;
   background: transparent;
-  transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }

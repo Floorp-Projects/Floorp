@@ -1801,6 +1801,14 @@ public:
   // @param aCount The number of elements to remove.
   void RemoveElementsAt(index_type aStart, size_type aCount);
 
+private:
+  // Remove a range of elements from this array, but do not check that
+  // the range is in bounds.
+  // @param aStart The starting index of the elements to remove.
+  // @param aCount The number of elements to remove.
+  void RemoveElementsAtUnsafe(index_type aStart, size_type aCount);
+
+public:
   // A variation on the RemoveElementsAt method defined above.
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
 
@@ -1894,7 +1902,7 @@ public:
       return false;
     }
 
-    RemoveElementAt(i);
+    RemoveElementsAtUnsafe(i, 1);
     return true;
   }
 
@@ -1917,7 +1925,7 @@ public:
   {
     index_type index = IndexOfFirstElementGt(aItem, aComp);
     if (index > 0 && aComp.Equals(ElementAt(index - 1), aItem)) {
-      RemoveElementAt(index - 1);
+      RemoveElementsAtUnsafe(index - 1, 1);
       return true;
     }
     return false;
@@ -2200,6 +2208,13 @@ nsTArray_Impl<E, Alloc>::RemoveElementsAt(index_type aStart, size_type aCount)
     InvalidArrayIndex_CRASH(aStart, Length());
   }
 
+  RemoveElementsAtUnsafe(aStart, aCount);
+}
+
+template<typename E, class Alloc>
+void
+nsTArray_Impl<E, Alloc>::RemoveElementsAtUnsafe(index_type aStart, size_type aCount)
+{
   DestructRange(aStart, aCount);
   this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
                                             sizeof(elem_type),

@@ -8,6 +8,7 @@
 
 #include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
+#include "jit/MoveEmitter.h"
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -279,6 +280,143 @@ void
 MacroAssembler::comment(const char* msg)
 {
     masm.comment(msg);
+}
+
+class MOZ_RAII ScopedMoveResolution
+{
+    MacroAssembler& masm_;
+    MoveResolver& resolver_;
+
+  public:
+    explicit ScopedMoveResolution(MacroAssembler& masm)
+      : masm_(masm),
+        resolver_(masm.moveResolver())
+    {
+
+    }
+
+    void addMove(Register src, Register dest) {
+        if (src != dest)
+            masm_.propagateOOM(resolver_.addMove(MoveOperand(src), MoveOperand(dest), MoveOp::GENERAL));
+    }
+
+    ~ScopedMoveResolution() {
+        masm_.propagateOOM(resolver_.resolve());
+        if (masm_.oom())
+            return;
+
+        resolver_.sortMemoryToMemoryMoves();
+
+        MoveEmitter emitter(masm_);
+        emitter.emit(resolver_);
+        emitter.finish();
+    }
+
+};
+
+// This operation really consists of five phases, in order to enforce the restriction that
+// on x86_shared, srcDest must be eax and edx will be clobbered.
+//
+//     Input: { rhs, lhsOutput }
+//
+//  [PUSH] Preserve registers
+//  [MOVE] Generate moves to specific registers
+//
+//  [DIV] Input: { regForRhs, EAX }
+//  [DIV] extend EAX into EDX
+//  [DIV] x86 Division operator
+//  [DIV] Ouptut: { EAX, EDX }
+//
+//  [MOVE] Move specific registers to outputs
+//  [POP] Restore registers
+//
+//    Output: { lhsOutput, remainderOutput }
+void
+MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput, Register remOutput,
+                                      bool isUnsigned, const LiveRegisterSet&)
+{
+    // Currently this helper can't handle this situation.
+    MOZ_ASSERT(lhsOutput != rhs);
+    MOZ_ASSERT(lhsOutput != remOutput);
+
+    // Choose a register that is not edx, or eax to hold the rhs;
+    // ebx is chosen arbitrarily, and will be preserved if necessary. 
+    Register regForRhs = (rhs == eax || rhs == edx) ? ebx : rhs;
+
+    // Add registers we will be clobbering as live, but
+    // also remove the set we do not restore.
+    LiveRegisterSet preserve;
+    preserve.add(edx);
+    preserve.add(eax);
+    preserve.add(regForRhs);
+
+    preserve.takeUnchecked(lhsOutput);
+    preserve.takeUnchecked(remOutput);
+
+    PushRegsInMask(preserve);
+
+    // Marshal Registers For operation
+    {
+        ScopedMoveResolution resolution(*this);
+        resolution.addMove(rhs, regForRhs);
+        resolution.addMove(lhsOutput, eax);
+    }
+    if (oom())
+        return;
+
+    // Sign extend eax into edx to make (edx:eax): idiv/udiv are 64-bit.
+    if (isUnsigned) {
+        mov(ImmWord(0), edx);
+        udiv(regForRhs);
+    } else {
+        cdq();
+        idiv(regForRhs);
+    }
+
+    {
+        ScopedMoveResolution resolution(*this);
+        resolution.addMove(eax, lhsOutput);
+        resolution.addMove(edx, remOutput);
+    }
+    if (oom())
+        return;
+
+    PopRegsInMask(preserve);
+}
+
+void
+MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
+                                   const LiveRegisterSet& volatileLiveRegs)
+{
+    // Choose an arbitrary register that isn't eax, edx, rhs or srcDest;
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.takeUnchecked(eax);
+    regs.takeUnchecked(edx);
+    regs.takeUnchecked(rhs);
+    regs.takeUnchecked(srcDest);
+
+    Register remOut = regs.takeAny();
+    push(remOut);
+    flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
+    pop(remOut);
+}
+
+void
+MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
+                                    const LiveRegisterSet& volatileLiveRegs)
+{
+    // Choose an arbitrary register that isn't eax, edx, rhs or srcDest
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.takeUnchecked(eax);
+    regs.takeUnchecked(edx);
+    regs.takeUnchecked(rhs);
+    regs.takeUnchecked(srcDest);
+
+    Register remOut = regs.takeAny();
+    push(remOut);
+    flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
+    mov(remOut, srcDest);
+    pop(remOut);
 }
 
 // ===============================================================

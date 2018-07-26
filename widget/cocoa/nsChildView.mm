@@ -38,7 +38,7 @@
 #include "nsIFile.h"
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsIWidgetListener.h"
 #include "nsIPresShell.h"
 #include "nsIScreen.h"

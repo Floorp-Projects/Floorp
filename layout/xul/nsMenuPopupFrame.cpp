@@ -41,7 +41,7 @@
 #include "nsISound.h"
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
-#include "nsThemeConstants.h"
+#include "nsStyleConsts.h"
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -359,12 +359,13 @@ nsMenuPopupFrame::GetShadowStyle()
     return shadow;
 
   switch (StyleDisplay()->mAppearance) {
-    case NS_THEME_TOOLTIP:
+    case StyleAppearance::Tooltip:
       return NS_STYLE_WINDOW_SHADOW_TOOLTIP;
-    case NS_THEME_MENUPOPUP:
+    case StyleAppearance::Menupopup:
       return NS_STYLE_WINDOW_SHADOW_MENU;
+    default:
+      return NS_STYLE_WINDOW_SHADOW_DEFAULT;
   }
-  return NS_STYLE_WINDOW_SHADOW_DEFAULT;
 }
 
 NS_IMETHODIMP nsXULPopupShownEvent::Run()

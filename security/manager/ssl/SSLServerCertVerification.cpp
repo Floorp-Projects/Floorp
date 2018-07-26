@@ -122,6 +122,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsISocketProvider.h"
 #include "nsIThreadPool.h"
+#include "nsNetUtil.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"

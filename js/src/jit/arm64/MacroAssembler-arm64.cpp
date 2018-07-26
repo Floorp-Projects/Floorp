@@ -319,10 +319,6 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
-      case Scalar::Float32x4:
-      case Scalar::Int32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
         MOZ_CRASH("unexpected array type");
     }
 
@@ -371,10 +367,6 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
       case Scalar::Float64:
         Str(SelectFPReg(valany, val64, 64), dstAddr);
         break;
-      case Scalar::Float32x4:
-      case Scalar::Int32x4:
-      case Scalar::Int8x16:
-      case Scalar::Int16x8:
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
@@ -1858,6 +1850,40 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
                            Register value, const Address& mem, Register temp)
 {
     atomicEffectOp(arrayType, sync, op, value, mem, temp);
+}
+
+void
+MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
+                                   const LiveRegisterSet&)
+{
+    quotient32(rhs, srcDest, isUnsigned);
+}
+
+void
+MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
+                                    const LiveRegisterSet&)
+{
+    remainder32(rhs, srcDest, isUnsigned);
+}
+
+void
+MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
+                                 bool isUnsigned, const LiveRegisterSet&)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    ARMRegister scratch = temps.AcquireW();
+    ARMRegister src = temps.AcquireW();
+
+    // Preserve src for remainder computation
+    Mov(src, ARMRegister(srcDest, 32));
+
+    if (isUnsigned)
+        Udiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    else
+        Sdiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    //Compute remainder
+    Mul(scratch, ARMRegister(srcDest, 32), ARMRegister(rhs, 32));
+    Sub(ARMRegister(remOutput, 32), src, scratch);
 }
 
 // ========================================================================

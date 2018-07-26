@@ -263,6 +263,7 @@ using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::Swap;
 using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 using JS::AutoGCRooter;
 
@@ -1415,7 +1416,7 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
         gcMaxNurseryBytes_ = value;
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        highFrequencyThreshold_ = mozilla::TimeDuration::FromMilliseconds(value);
+        highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT: {
         uint64_t newLimit = (uint64_t)value * 1024 * 1024;
@@ -1571,7 +1572,7 @@ GCSchedulingTunables::GCSchedulingTunables()
     allocThresholdFactorAvoidInterrupt_(TuningDefaults::AllocThresholdFactorAvoidInterrupt),
     zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
     dynamicHeapGrowthEnabled_(TuningDefaults::DynamicHeapGrowthEnabled),
-    highFrequencyThreshold_(mozilla::TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
+    highFrequencyThreshold_(TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
     highFrequencyLowLimitBytes_(TuningDefaults::HighFrequencyLowLimitBytes),
     highFrequencyHighLimitBytes_(TuningDefaults::HighFrequencyHighLimitBytes),
     highFrequencyHeapGrowthMax_(TuningDefaults::HighFrequencyHeapGrowthMax),
@@ -1623,7 +1624,7 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
         highFrequencyThreshold_ =
-            mozilla::TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
+            TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
         setHighFrequencyLowLimit(TuningDefaults::HighFrequencyLowLimitBytes);
@@ -2124,7 +2125,7 @@ GCRuntime::shouldCompact()
     // if we are currently animating, unless the user is inactive or we're
     // responding to memory pressure.
 
-    static const auto oneSecond = mozilla::TimeDuration::FromSeconds(1);
+    static const auto oneSecond = TimeDuration::FromSeconds(1);
 
     if (invocationKind != GC_SHRINK || !isCompactingGCEnabled())
         return false;
@@ -2138,7 +2139,7 @@ GCRuntime::shouldCompact()
     const auto &lastAnimationTime = rt->lastAnimationTime.ref();
     return !isIncremental
         || lastAnimationTime.IsNull()
-        || lastAnimationTime + oneSecond < mozilla::TimeStamp::Now();
+        || lastAnimationTime + oneSecond < TimeStamp::Now();
 }
 
 bool
@@ -3234,6 +3235,16 @@ ArenaLists::queueForegroundThingsForSweep()
     gcScriptArenasToUpdate = arenaListsToSweep(AllocKind::SCRIPT);
 }
 
+TimeStamp SliceBudget::unlimitedDeadline;
+
+void
+SliceBudget::Init()
+{
+    MOZ_ASSERT(!unlimitedDeadline);
+    uint64_t oneYearsInSeconds = 365 * 24 * 60 * 60;
+    unlimitedDeadline = ReallyNow() + TimeDuration::FromSeconds(100 * oneYearsInSeconds);
+}
+
 SliceBudget::SliceBudget()
   : timeBudget(UnlimitedTimeBudget), workBudget(UnlimitedWorkBudget)
 {
@@ -3247,7 +3258,7 @@ SliceBudget::SliceBudget(TimeBudget time)
         makeUnlimited();
     } else {
         // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
-        deadline = ReallyNow() + mozilla::TimeDuration::FromMilliseconds(time.budget);
+        deadline = ReallyNow() + TimeDuration::FromMilliseconds(time.budget);
         counter = CounterReset;
     }
 }
@@ -3258,7 +3269,7 @@ SliceBudget::SliceBudget(WorkBudget work)
     if (work.budget < 0) {
         makeUnlimited();
     } else {
-        deadline = mozilla::TimeStamp();
+        deadline = TimeStamp();
         counter = work.budget;
     }
 }
@@ -4046,10 +4057,10 @@ GCRuntime::purgeRuntime()
 }
 
 bool
-GCRuntime::shouldPreserveJITCode(Realm* realm, const mozilla::TimeStamp &currentTime,
+GCRuntime::shouldPreserveJITCode(Realm* realm, const TimeStamp &currentTime,
                                  JS::gcreason::Reason reason, bool canAllocateMoreCode)
 {
-    static const auto oneSecond = mozilla::TimeDuration::FromSeconds(1);
+    static const auto oneSecond = TimeDuration::FromSeconds(1);
 
     if (cleanUpEverything)
         return false;

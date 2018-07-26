@@ -3572,14 +3572,14 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
       case JSOP_ADD:
       case JSOP_SUB:
       case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
         // If not disabled, prefer the cache IR stub.
         if (!JitOptions.disableCacheIRBinaryArith) {
             stub = MBinaryCache::New(alloc(), left, right);
             break;
         }
         MOZ_FALLTHROUGH;
-      case JSOP_DIV:
-      case JSOP_MOD:
       case JSOP_POW:
         stub = MBinarySharedStub::New(alloc(), left, right);
         break;
@@ -7902,11 +7902,6 @@ IonBuilder::getElemTryTypedObject(bool* emitted, MDefinition* obj, MDefinition* 
         return Ok();
 
     switch (elemPrediction.kind()) {
-      case type::Simd:
-        // FIXME (bug 894105): load into a MIRType::float32x4 etc
-        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
-        return Ok();
-
       case type::Struct:
       case type::Array:
         return getElemTryComplexElemOfTypedObject(emitted,
@@ -8964,11 +8959,6 @@ IonBuilder::setElemTryTypedObject(bool* emitted, MDefinition* obj,
         return Ok();
 
     switch (elemPrediction.kind()) {
-      case type::Simd:
-        // FIXME (bug 894105): store a MIRType::float32x4 etc
-        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
-        return Ok();
-
       case type::Reference:
         return setElemTryReferenceElemOfTypedObject(emitted, obj, index,
                                                     objPrediction, value, elemPrediction);
@@ -10596,10 +10586,6 @@ IonBuilder::getPropTryTypedObject(bool* emitted,
         return Ok();
 
     switch (fieldPrediction.kind()) {
-      case type::Simd:
-        // FIXME (bug 894104): load into a MIRType::float32x4 etc
-        return Ok();
-
       case type::Struct:
       case type::Array:
         return getPropTryComplexPropOfTypedObject(emitted,
@@ -11742,10 +11728,6 @@ IonBuilder::setPropTryTypedObject(bool* emitted, MDefinition* obj,
         return Ok();
 
     switch (fieldPrediction.kind()) {
-      case type::Simd:
-        // FIXME (bug 894104): store into a MIRType::float32x4 etc
-        return Ok();
-
       case type::Reference:
         return setPropTryReferencePropOfTypedObject(emitted, obj, fieldOffset,
                                                     value, fieldPrediction, name);
