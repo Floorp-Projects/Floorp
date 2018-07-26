@@ -8,7 +8,6 @@ package org.mozilla.gecko.updater;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,9 +30,9 @@ import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoUpdateReceiver;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.updater.UpdateServiceHelper.AutoDownloadPolicy;
 import org.mozilla.gecko.updater.UpdateServiceHelper.CheckUpdateResult;
@@ -235,7 +234,8 @@ public class Updater {
                 .setContentIntent(pendingIntent);
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         NotificationManagerCompat.from(context)
@@ -277,7 +277,8 @@ public class Updater {
             builder.setContentIntent(contentIntent);
 
             if (!AppConstants.Versions.preO) {
-                builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+                builder.setChannelId(NotificationHelper.getInstance(context)
+                        .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
             }
 
             notificationManager.notify(notificationId, builder.build());
@@ -318,7 +319,8 @@ public class Updater {
             builder.setContentIntent(contentIntent);
 
             if (!AppConstants.Versions.preO) {
-                builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+                builder.setChannelId(NotificationHelper.getInstance(context)
+                        .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
             }
 
             notificationManager.notify(notificationId, builder.build());
@@ -472,7 +474,8 @@ public class Updater {
                 .setDeleteIntent(deleteIntent);
 
         if (!AppConstants.Versions.preO) {
-            notifBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            notifBuilder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         notifBuilder.setProgress(100, 0, true);
@@ -494,7 +497,8 @@ public class Updater {
         builder.setContentIntent(contentIntent);
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         notificationManager.notify(notificationId, builder.build());

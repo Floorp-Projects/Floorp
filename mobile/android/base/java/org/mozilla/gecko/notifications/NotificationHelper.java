@@ -5,7 +5,10 @@
 
 package org.mozilla.gecko.notifications;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,7 +26,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -35,7 +38,9 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class NotificationHelper implements BundleEventListener {
     public static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
@@ -78,6 +83,26 @@ public final class NotificationHelper implements BundleEventListener {
 
     private final Context mContext;
 
+
+    public enum Channel {
+        /**
+         * Default notification channel.
+         */
+        DEFAULT,
+        /**
+         * Mozilla Location Services notification channel.
+         */
+        MLS
+    }
+
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>() {{
+        final String DEFAULT_CHANNEL_TAG = "default-notification-channel";
+        put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
+
+        final String MLS_CHANNEL_TAG     = "mls-notification-channel";
+        put(Channel.MLS, MLS_CHANNEL_TAG);
+    }};
+
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
     // Will not include ongoing or persistent notifications that are tied to Gecko's lifecycle.
     private SimpleArrayMap<String, GeckoBundle> mClearableNotifications;
@@ -98,6 +123,11 @@ public final class NotificationHelper implements BundleEventListener {
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "Notification:Show",
             "Notification:Hide");
+
+        if (!AppConstants.Versions.preO) {
+            initNotificationChannels();
+        }
+
         mInitialized = true;
     }
 
@@ -111,6 +141,44 @@ public final class NotificationHelper implements BundleEventListener {
             sInstance = new NotificationHelper(context.getApplicationContext());
         }
         return sInstance;
+    }
+
+    private void initNotificationChannels() {
+        for (Channel mozChannel : mDefinedNotificationChannels.keySet()) {
+            createChannel(mozChannel);
+        }
+    }
+
+    @TargetApi(26)
+    private void createChannel(Channel definedChannel) {
+        final NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = notificationManager.getNotificationChannel(mDefinedNotificationChannels.get(definedChannel));
+
+        if (channel == null) {
+            switch (definedChannel) {
+                case MLS: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.mls_notification_channel), NotificationManager.IMPORTANCE_LOW);
+                }
+                break;
+
+                case DEFAULT:
+
+                default: {
+                    channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
+                            mContext.getString(R.string.default_notification_channel), NotificationManager.IMPORTANCE_HIGH);
+                }
+                break;
+            }
+
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @TargetApi(26)
+    public NotificationChannel getNotificationChannel(Channel definedChannel) {
+        final NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        return notificationManager.getNotificationChannel(mDefinedNotificationChannels.get(definedChannel));
     }
 
     @Override // BundleEventListener
@@ -252,7 +320,7 @@ public final class NotificationHelper implements BundleEventListener {
         }
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(getNotificationChannel(Channel.DEFAULT).getId());
         }
 
         final boolean ongoing = message.getBoolean(ONGOING_ATTR);

@@ -22,10 +22,10 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.notifications.NotificationHelper;
 
 /**
  * A JobIntentService that displays a notification for a tab sent to this device.
@@ -69,7 +69,8 @@ public class TabReceivedService extends JobIntentService {
         builder.setContentIntent(contentIntent);
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(this)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         // Trigger "heads-up" notification mode on supported Android versions.

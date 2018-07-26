@@ -23,10 +23,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -255,7 +255,8 @@ public class TabQueueHelper {
                                                      .setContentIntent(pendingIntent);
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
