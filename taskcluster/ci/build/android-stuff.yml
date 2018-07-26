@@ -37,6 +37,7 @@ android-test/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/base/**"
@@ -79,6 +80,7 @@ android-test-ccov/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     fetches:
         fetch:
             - grcov-linux-x86_64
@@ -125,6 +127,7 @@ android-lint/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"
@@ -178,6 +181,7 @@ android-checkstyle/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/**/checkstyle.xml"
@@ -227,6 +231,7 @@ android-findbugs/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"
@@ -271,6 +276,7 @@ android-geckoview-docs/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
+        - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"

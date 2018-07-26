@@ -244,6 +244,7 @@ def make_job_description(config, jobs):
             task['toolchains'] = [
                 'linux64-libdmg',
                 'linux64-hfsplus',
+                'linux64-node',
             ]
         yield task
 
