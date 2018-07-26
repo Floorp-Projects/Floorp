@@ -82,7 +82,7 @@ const TESTCASES = [
     description: "Trigger credit card saving",
     formValue: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "5105105105105100",
       "cc-exp-month": 12,
       "cc-exp-year": 2000,
     },
@@ -94,7 +94,7 @@ const TESTCASES = [
           guid: null,
           record: {
             "cc-name": "John Doe",
-            "cc-number": "1234567812345678",
+            "cc-number": "5105105105105100",
             "cc-exp-month": 12,
             "cc-exp-year": 2000,
           },
@@ -110,7 +110,7 @@ const TESTCASES = [
       "country": "USA",
       "tel": "1-650-903-0800",
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "5105105105105100",
       "cc-exp-month": 12,
       "cc-exp-year": 2000,
     },
@@ -133,7 +133,7 @@ const TESTCASES = [
           guid: null,
           record: {
             "cc-name": "John Doe",
-            "cc-number": "1234567812345678",
+            "cc-number": "5105105105105100",
             "cc-exp-month": 12,
             "cc-exp-year": 2000,
           },
