@@ -48,6 +48,7 @@ DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
   , mSnapshotLock(make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock"))
   , mUsedCommandListsSincePurge(0)
+  , mTransformedGlyphsSinceLastPurge(0)
   , mComplexBlendsWithListInList(0)
   , mDeviceSeq(0)
 {
@@ -164,6 +165,9 @@ DrawTargetD2D1::IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity
 // are expensive though, especially relatively when little work is done, so
 // we try to reduce the amount of times we execute these purges.
 static const uint32_t kPushedLayersBeforePurge = 25;
+// Rendering glyphs with different transforms causes the glyph cache to grow
+// very large (see bug 1474883) so we must call EndDraw every so often.
+static const uint32_t kTransformedGlyphsBeforePurge = 1000;
 
 void
 DrawTargetD2D1::Flush()
@@ -730,6 +734,10 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
     mDC->DrawGlyphRun(D2D1::Point2F(), &autoRun, brush);
   }
 
+  if (mTransform.HasNonTranslation()) {
+    mTransformedGlyphsSinceLastPurge += aBuffer.mNumGlyphs;
+  }
+
   if (needsRepushedLayers) {
     PopClipsFromDC(mDC);
 
@@ -1285,7 +1293,8 @@ void
 DrawTargetD2D1::FlushInternal(bool aHasDependencyMutex /* = false */)
 {
   if (IsDeviceContextValid()) {
-    if ((mUsedCommandListsSincePurge >= kPushedLayersBeforePurge) &&
+    if ((mUsedCommandListsSincePurge >= kPushedLayersBeforePurge ||
+         mTransformedGlyphsSinceLastPurge >= kTransformedGlyphsBeforePurge) &&
       mPushedLayers.size() == 1) {
       // It's important to pop all clips as otherwise layers can forget about
       // their clip when doing an EndDraw. When we have layers pushed we cannot
@@ -1293,6 +1302,7 @@ DrawTargetD2D1::FlushInternal(bool aHasDependencyMutex /* = false */)
       // layers pushed.
       PopAllClips();
       mUsedCommandListsSincePurge = 0;
+      mTransformedGlyphsSinceLastPurge = 0;
       mDC->EndDraw();
       mDC->BeginDraw();
     }
