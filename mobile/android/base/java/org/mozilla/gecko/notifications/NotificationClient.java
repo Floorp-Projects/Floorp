@@ -20,7 +20,6 @@ import android.support.v4.app.NotificationManagerCompat;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
@@ -156,7 +155,8 @@ public final class NotificationClient implements NotificationListener {
                         .setSummaryText(host));
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(mContext)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         // Fetch icon.
@@ -237,7 +237,8 @@ public final class NotificationClient implements NotificationListener {
                 .setProgress((int) progressMax, (int) progress, false);
 
         if (!AppConstants.Versions.preO) {
-            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            notificationBuilder.setChannelId(NotificationHelper.getInstance(mContext)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         notification = notificationBuilder.build();

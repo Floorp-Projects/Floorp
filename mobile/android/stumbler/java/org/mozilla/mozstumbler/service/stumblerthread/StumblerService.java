@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.Prefs;
 import org.mozilla.mozstumbler.service.stumblerthread.blocklist.WifiBlockListInterface;
@@ -144,7 +144,9 @@ public class StumblerService extends PersistentIntentService
     @SuppressLint("NewApi")
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!AppConstants.Versions.preO) {
-            final Notification notification = new NotificationCompat.Builder(this, GeckoApplication.getMLSNotificationChannel().getId())
+            final Notification notification = new NotificationCompat.Builder(this,
+                    NotificationHelper.getInstance(this)
+                            .getNotificationChannel(NotificationHelper.Channel.MLS).getId())
                     .setSmallIcon(R.drawable.ic_status_logo)
                     .setContentTitle(getString(R.string.datareporting_stumbler_notification_title))
                     .setContentIntent(createContentIntent())

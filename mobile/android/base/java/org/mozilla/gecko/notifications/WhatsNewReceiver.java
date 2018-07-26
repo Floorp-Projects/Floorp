@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.notifications;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -15,7 +14,6 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -71,7 +69,8 @@ public class WhatsNewReceiver extends BroadcastReceiver {
                 .setDeleteIntent(getDeleteIntent(context));
 
         if (!AppConstants.Versions.preO) {
-            notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            notificationBuilder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         final int notificationID = EXTRA_WHATSNEW_NOTIFICATION.hashCode();

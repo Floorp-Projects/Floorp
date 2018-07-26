@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.text.style.StyleSpan;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
 public class DataReportingNotification {
@@ -109,7 +110,8 @@ public class DataReportingNotification {
                                         .setTicker(tickerText);
 
             if (!AppConstants.Versions.preO) {
-                notificationBuilder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+                notificationBuilder.setChannelId(NotificationHelper.getInstance(context)
+                        .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
             }
 
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.support.v7.app.NotificationCompat;
 
+import org.mozilla.gecko.notifications.NotificationHelper;
+
 // Utility methods for entering/exiting guest mode.
 public final class GuestSession {
     private static final String LOGTAG = "GeckoGuestSession";
@@ -34,7 +36,8 @@ public final class GuestSession {
                .setContentIntent(getNotificationIntent(context));
 
         if (!AppConstants.Versions.preO) {
-            builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+            builder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         final NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

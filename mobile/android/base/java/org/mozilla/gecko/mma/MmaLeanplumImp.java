@@ -25,9 +25,9 @@ import com.leanplum.internal.Constants;
 import com.leanplum.internal.LeanplumInternal;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.firstrun.PanelConfig;
+import org.mozilla.gecko.notifications.NotificationHelper;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -92,7 +92,8 @@ public class MmaLeanplumImp implements MmaInterface {
                 builder.setSmallIcon(iconResId);
                 builder.setDefaults(Notification.DEFAULT_SOUND);
                 if (!AppConstants.Versions.preO) {
-                    builder.setChannelId(GeckoApplication.getDefaultNotificationChannel().getId());
+                    builder.setChannelId(NotificationHelper.getInstance(builder.mContext)
+                            .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
                 }
             }
         });
