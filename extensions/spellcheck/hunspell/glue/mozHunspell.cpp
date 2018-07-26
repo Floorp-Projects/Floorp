@@ -207,43 +207,6 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
   return NS_OK;
 }
 
-NS_IMETHODIMP mozHunspell::GetLanguage(char16_t **aLanguage)
-{
-  NS_ENSURE_ARG_POINTER(aLanguage);
-
-  if (mDictionary.IsEmpty())
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aLanguage = ToNewUnicode(mLanguage);
-  return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonalDictionary)
-{
-  NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
-
-  *aProvidesPersonalDictionary = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
-{
-  NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
-
-  *aProvidesWordUtils = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozHunspell::GetName(char16_t * *aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozHunspell::GetCopyright(char16_t * *aCopyright)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP mozHunspell::GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary)
 {
   *aPersonalDictionary = mPersonalDictionary;
