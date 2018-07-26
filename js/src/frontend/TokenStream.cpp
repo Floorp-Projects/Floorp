@@ -1494,13 +1494,13 @@ template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* codePoint)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
 
     int32_t unit = getCodeUnit();
     if (unit != 'u') {
         // NOTE: |unit| may be EOF here.
         ungetCodeUnit(unit);
-        MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+        MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
         return 0;
     }
 
@@ -1517,7 +1517,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* cod
     // NOTE: |unit| may be EOF here, so this ungets either one or two units.
     ungetCodeUnit(unit);
     ungetCodeUnit('u');
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1525,7 +1525,7 @@ template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchExtendedUnicodeEscape(uint32_t* codePoint)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '{');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('{'));
 
     int32_t unit = getCodeUnit();
 
@@ -1556,7 +1556,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchExtendedUnicodeEscape(uint3
     }
 
     this->sourceUnits.unskipCodeUnits(gotten);
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1572,7 +1572,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32
         this->sourceUnits.unskipCodeUnits(length);
     }
 
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return 0;
 }
 
@@ -1588,7 +1588,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t
         this->sourceUnits.unskipCodeUnits(length);
     }
 
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '\\');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('\\'));
     return false;
 }
 
@@ -2143,7 +2143,7 @@ template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, TokenKind* out)
 {
-    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == '/');
+    MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == CharT('/'));
     this->charBuffer.clear();
 
     auto ProcessNonAsciiCodePoint = [this](int32_t lead) {
@@ -2788,8 +2788,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
         // Unicode separators aren't end-of-line in template or (as of
         // recently) string literals, so this assertion doesn't allow them.
         MOZ_ASSERT(this->sourceUnits.atEnd() ||
-                   this->sourceUnits.peekCodeUnit() == '\r' ||
-                   this->sourceUnits.peekCodeUnit() == '\n',
+                   this->sourceUnits.peekCodeUnit() == CharT('\r') ||
+                   this->sourceUnits.peekCodeUnit() == CharT('\n'),
                    "must be parked at EOF or EOL to call this function");
 
         // The various errors reported here include language like "in a ''
