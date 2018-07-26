@@ -7,6 +7,7 @@
 #include "DOMPrefs.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -74,6 +75,12 @@ DOMPrefs::DumpEnabled()
   return true;
 }
 #endif
+
+/* static */ bool
+DOMPrefs::SchedulerTimingEnabled()
+{
+  return mozilla::StaticPrefs::dom_performance_enable_scheduler_timing();
+}
 
 #include "DOMPrefsInternal.h"
 
