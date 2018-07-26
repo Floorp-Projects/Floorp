@@ -84,6 +84,15 @@
   color: var(--theme-selection-color);
 }
 
+.devtools-shader-tooltip-container .devtools-tooltip-simple-text {
+  color: var(--theme-content-color1);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.devtools-shader-tooltip-container .devtools-tooltip-simple-text:last-child {
+  border-bottom: 0;
+}
+
 /* Responsive sidebar */
 
 @media (max-width: 700px) {
