@@ -42,6 +42,15 @@ interface nsIDocShellLoadInfo : nsISupports
     attribute boolean resultPrincipalURIIsSome;
 
     /**
+     * If a refresh is caused by http-equiv="refresh" we want to set
+     * aResultPrincipalURI, but we do not want to overwrite a channel's
+     * ResultPrincipalURI, if it has already been set on the channel by a
+     * protocol handler.
+     * In other cases we want to force rewrite, e.g. Reload.
+     */
+    attribute boolean keepResultPrincipalURIIfSet;
+
+    /**
      * loadReplace flag to be passed to nsIDocShell.internalLoad.
      */
     attribute boolean loadReplace;

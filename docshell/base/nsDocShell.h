@@ -518,6 +518,7 @@ private: // member functions
   nsresult DoURILoad(nsIURI* aURI,
                      nsIURI* aOriginalURI,
                      mozilla::Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+                     bool aKeepResultPrincipalURIIfSet,
                      bool aLoadReplace,
                      bool aLoadFromExternal,
                      bool aForceAllowDataURI,
