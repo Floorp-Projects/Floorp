@@ -1257,8 +1257,8 @@ class HashTable : private AllocPolicy
     // The default initial capacity is 32 (enough to hold 16 elements), but it
     // can be as low as 4.
     static const uint32_t sMinCapacity  = 4;
-    static const uint32_t sMaxInit      = JS_BIT(CAP_BITS - 1);
-    static const uint32_t sMaxCapacity  = JS_BIT(CAP_BITS);
+    static const uint32_t sMaxInit      = 1u << (CAP_BITS - 1);
+    static const uint32_t sMaxCapacity  = 1u << CAP_BITS;
 
     // Hash-table alpha is conceptually a fraction, but to avoid floating-point
     // math we implement it as a ratio of integers.
@@ -1554,7 +1554,7 @@ class HashTable : private AllocPolicy
         Entry* oldTable = table;
         uint32_t oldCap = capacity();
         uint32_t newLog2 = js::kHashNumberBits - hashShift + deltaLog2;
-        uint32_t newCapacity = JS_BIT(newLog2);
+        uint32_t newCapacity = 1u << newLog2;
         if (MOZ_UNLIKELY(newCapacity > sMaxCapacity)) {
             if (reportFailure)
                 this->reportAllocOverflow();
@@ -1792,7 +1792,7 @@ class HashTable : private AllocPolicy
     uint32_t capacity() const
     {
         MOZ_ASSERT(table);
-        return JS_BIT(js::kHashNumberBits - hashShift);
+        return 1u << (js::kHashNumberBits - hashShift);
     }
 
     Generation generation() const
