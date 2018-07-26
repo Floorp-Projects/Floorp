@@ -33,22 +33,22 @@ interface mozIPersonalDictionary : nsISupports {
   /**
    * Check a unicode string
    */
-  boolean check(in wstring word, in wstring lang);
+  boolean check(in AString word);
 
   /**
    * Add a word to the personal dictionary
    */
-  void addWord(in wstring word, in wstring lang);
+  void addWord(in AString word);
 
   /**
    * Remove a word from the personal dictionary
    */
-  void removeWord(in wstring word, in wstring lang);
+  void removeWord(in AString word);
 
   /**
    * Add a word to the ignore all list
    */
-  void ignoreWord(in wstring word);
+  void ignoreWord(in AString word);
 
   /**
    * Clear the ignore list
