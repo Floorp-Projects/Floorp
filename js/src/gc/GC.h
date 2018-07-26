@@ -112,6 +112,8 @@ IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback);
 
 typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* script,
                                       const JS::AutoRequireNoGC& nogc);
+typedef void (*IterateLazyScriptCallback)(JSRuntime* rt, void* data, LazyScript* lazyScript,
+                                          const JS::AutoRequireNoGC& nogc);
 
 /*
  * Invoke scriptCallback on every in-use script for the given realm or for all
@@ -119,6 +121,9 @@ typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* scrip
  */
 extern void
 IterateScripts(JSContext* cx, JS::Realm* realm, void* data, IterateScriptCallback scriptCallback);
+extern void
+IterateLazyScripts(JSContext* cx, JS::Realm* realm, void* data,
+                   IterateLazyScriptCallback lazyScriptCallback);
 
 JS::Realm*
 NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& options);
