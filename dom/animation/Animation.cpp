@@ -234,7 +234,11 @@ Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline)
 void
 Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
-  if (aNewStartTime == mStartTime) {
+  // Return early if the start time will not change. However, if we
+  // are pending, then setting the start time to any value
+  // including the current value has the effect of aborting
+  // pending tasks so we should not return early in that case.
+  if (!Pending() && aNewStartTime == mStartTime) {
     return;
   }
 
