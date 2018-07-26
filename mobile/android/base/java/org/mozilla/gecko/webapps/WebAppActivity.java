@@ -9,6 +9,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -175,6 +176,15 @@ public class WebAppActivity extends AppCompatActivity
         updateFromManifest();
 
         mGeckoSession.loadUri(mManifest.getStartUri().toString());
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (mPromptService != null) {
+            mPromptService.changePromptOrientation(newConfig.orientation);
+        }
     }
 
     private void fallbackToFennec(String message) {

@@ -2185,6 +2185,11 @@ public abstract class GeckoApp extends GeckoActivity
                 mFormAssistPopup.hide();
             refreshChrome();
         }
+
+        if (mPromptService != null) {
+            mPromptService.changePromptOrientation(newConfig.orientation);
+        }
+
         super.onConfigurationChanged(newConfig);
     }
 
