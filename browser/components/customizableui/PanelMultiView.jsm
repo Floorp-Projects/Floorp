@@ -1364,9 +1364,12 @@ var PanelView = class extends AssociatedToNode {
    */
   _getNavigableElements() {
     let buttons = Array.from(this.node.querySelectorAll(
-      ".subviewbutton:not([disabled]), .subviewkeynav:not([disabled])"));
+      "button,toolbarbutton,menulist,.text-link"));
     let dwu = this._dwu;
     return buttons.filter(button => {
+      if (button.hasAttribute("disabled")) {
+        return false;
+      }
       let bounds = dwu.getBoundsWithoutFlushing(button);
       return bounds.width > 0 && bounds.height > 0;
     });
