@@ -36,6 +36,10 @@ protected:
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   bool mResultPrincipalURIIsSome;
+  bool mKeepResultPrincipalURIIfSet; // if http-equiv="refresh" cause reload we
+                                     // do not want to replace
+                                     // ResultPrinicpalURI if it was already
+                                     // set.
   bool mLoadReplace;
   bool mInheritPrincipal;
   bool mPrincipalIsExplicit;

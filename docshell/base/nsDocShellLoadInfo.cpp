@@ -64,6 +64,7 @@ SetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
   : mResultPrincipalURIIsSome(false)
+  , mKeepResultPrincipalURIIfSet(false)
   , mLoadReplace(false)
   , mInheritPrincipal(false)
   , mPrincipalIsExplicit(false)
@@ -152,6 +153,21 @@ nsDocShellLoadInfo::SetResultPrincipalURIIsSome(bool aIsSome)
   mResultPrincipalURIIsSome = aIsSome;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::GetKeepResultPrincipalURIIfSet(bool* aKeep)
+{
+  *aKeep = mKeepResultPrincipalURIIfSet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::SetKeepResultPrincipalURIIfSet(bool aKeep)
+{
+  mKeepResultPrincipalURIIfSet = aKeep;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDocShellLoadInfo::GetLoadReplace(bool* aLoadReplace)
