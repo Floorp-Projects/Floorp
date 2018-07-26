@@ -8069,7 +8069,6 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     options.setIsRunOnce(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)
-           .setCanLazilyParse(false)
            .setIntroductionType("debugger eval")
            .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
     RootedScript callerScript(cx, frame && frame.hasScript() ? frame.script() : nullptr);
