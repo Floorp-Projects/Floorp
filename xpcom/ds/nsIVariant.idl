@@ -12,7 +12,7 @@
 #include "xptinfo.h"
 
 // This enum class used to be a const-only XPIDL interface, containing literal
-// integer descriptions of the different fields. Instead, it now directly o
+// integer descriptions of the different fields. Instead, it now directly
 // references the nsXPTTypeTag variants VTYPE_ are intended to match.
 struct nsIDataType
 {
