@@ -145,13 +145,6 @@ Animation::SetEffectNoUpdate(AnimationEffect* aEffect)
   bool wasRelevant = mIsRelevant;
 
   if (mEffect) {
-    if (!aEffect) {
-      // If the new effect is null, call ResetPendingTasks before clearing
-      // mEffect since ResetPendingTasks needs it to get the appropriate
-      // PendingAnimationTracker.
-      ResetPendingTasks();
-    }
-
     // We need to notify observers now because once we set mEffect to null
     // we won't be able to find the target element to notify.
     if (mIsRelevant) {
