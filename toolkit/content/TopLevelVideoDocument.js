@@ -9,7 +9,16 @@ let videoElement = document.getElementsByTagName("video")[0];
 
 // Redirect focus to the video element whenever the document receives
 // focus.
-document.addEventListener("focus", () => videoElement.focus(), true);
+document.addEventListener("focus", (e) => {
+  // We don't want to retarget focus if it goes to the controls in
+  // the video element. Because they're anonymous content, the target
+  // will be the video element in that case. Avoid calling .focus()
+  // for those events:
+  if (e.target == videoElement) {
+    return;
+  }
+  videoElement.focus();
+}, true);
 
 // Handle fullscreen mode
 document.addEventListener("keypress", ev => {
