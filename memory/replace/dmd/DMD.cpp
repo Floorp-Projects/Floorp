@@ -30,18 +30,17 @@
 #endif
 
 #include "nscore.h"
-#include "mozilla/StackWalk.h"
-
-#include "js/HashTable.h"
-#include "js/Vector.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StackWalk.h"
+#include "mozilla/Vector.h"
 
 // CodeAddressService is defined entirely in the header, so this does not make
 // DMD depend on XPCOM's object file.
@@ -96,8 +95,8 @@ static malloc_table_t gMallocTable;
 //
 // - Direct allocations (the easy case).
 //
-// - Indirect allocations in js::{Vector,HashSet,HashMap} -- this class serves
-//   as their AllocPolicy.
+// - Indirect allocations in mozilla::{Vector,HashSet,HashMap} -- this class
+//   serves as their AllocPolicy.
 //
 // - Other indirect allocations (e.g. MozStackWalk) -- see the comments on
 //   Thread::mBlockIntercepts and in replace_malloc for how these work.
@@ -162,7 +161,6 @@ public:
     return p;
   }
 
-  // This realloc_ is the one we use for direct reallocs within DMD.
   static void* realloc_(void* aPtr, size_t aNewSize)
   {
     void* p = gMallocTable.realloc(aPtr, aNewSize);
@@ -170,7 +168,6 @@ public:
     return p;
   }
 
-  // This realloc_ is required for this to be a JS container AllocPolicy.
   template <typename T>
   static T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
   {
@@ -621,7 +618,7 @@ private:
   {
       typedef const char* Lookup;
 
-      static uint32_t hash(const char* const& aS)
+      static mozilla::HashNumber hash(const char* const& aS)
       {
           return HashString(aS);
       }
@@ -632,7 +629,8 @@ private:
       }
   };
 
-  typedef js::HashSet<const char*, StringHasher, InfallibleAllocPolicy> StringHashSet;
+  typedef mozilla::HashSet<const char*, StringHasher, InfallibleAllocPolicy>
+          StringHashSet;
 
   StringHashSet mSet;
 };
@@ -693,7 +691,7 @@ public:
 
   typedef StackTrace* Lookup;
 
-  static uint32_t hash(const StackTrace* const& aSt)
+  static mozilla::HashNumber hash(const StackTrace* const& aSt)
   {
     return mozilla::HashBytes(aSt->mPcs, aSt->Size());
   }
@@ -717,19 +715,21 @@ private:
   }
 };
 
-typedef js::HashSet<StackTrace*, StackTrace, InfallibleAllocPolicy>
+typedef mozilla::HashSet<StackTrace*, StackTrace, InfallibleAllocPolicy>
         StackTraceTable;
 static StackTraceTable* gStackTraceTable = nullptr;
 
-typedef js::HashSet<const StackTrace*, js::DefaultHasher<const StackTrace*>,
-                    InfallibleAllocPolicy>
+typedef mozilla::HashSet<const StackTrace*,
+                         mozilla::DefaultHasher<const StackTrace*>,
+                         InfallibleAllocPolicy>
         StackTraceSet;
 
-typedef js::HashSet<const void*, js::DefaultHasher<const void*>,
-                    InfallibleAllocPolicy>
+typedef mozilla::HashSet<const void*, mozilla::DefaultHasher<const void*>,
+                         InfallibleAllocPolicy>
         PointerSet;
-typedef js::HashMap<const void*, uint32_t, js::DefaultHasher<const void*>,
-                    InfallibleAllocPolicy>
+typedef mozilla::HashMap<const void*, uint32_t,
+                         mozilla::DefaultHasher<const void*>,
+                         InfallibleAllocPolicy>
         PointerIdMap;
 
 // We won't GC the stack trace table until it this many elements.
@@ -992,7 +992,7 @@ public:
 
   typedef const void* Lookup;
 
-  static uint32_t hash(const void* const& aPtr)
+  static mozilla::HashNumber hash(const void* const& aPtr)
   {
     return mozilla::HashGeneric(aPtr);
   }
@@ -1004,7 +1004,8 @@ public:
 };
 
 // A table of live blocks where the lookup key is the block address.
-typedef js::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy> LiveBlockTable;
+typedef mozilla::HashSet<LiveBlock, LiveBlock, InfallibleAllocPolicy>
+        LiveBlockTable;
 static LiveBlockTable* gLiveBlockTable = nullptr;
 
 class AggregatedLiveBlockHashPolicy
@@ -1012,7 +1013,7 @@ class AggregatedLiveBlockHashPolicy
 public:
   typedef const LiveBlock* const Lookup;
 
-  static uint32_t hash(const LiveBlock* const& aB)
+  static mozilla::HashNumber hash(const LiveBlock* const& aB)
   {
     return gOptions->IsDarkMatterMode()
          ? mozilla::HashGeneric(aB->ReqSize(),
@@ -1041,8 +1042,8 @@ public:
 
 // A table of live blocks where the lookup key is everything but the block
 // address. For aggregating similar live blocks at output time.
-typedef js::HashMap<const LiveBlock*, size_t, AggregatedLiveBlockHashPolicy,
-                    InfallibleAllocPolicy>
+typedef mozilla::HashMap<const LiveBlock*, size_t,
+                         AggregatedLiveBlockHashPolicy, InfallibleAllocPolicy>
         AggregatedLiveBlockTable;
 
 // A freed heap block.
@@ -1088,7 +1089,7 @@ public:
 
   typedef DeadBlock Lookup;
 
-  static uint32_t hash(const DeadBlock& aB)
+  static mozilla::HashNumber hash(const DeadBlock& aB)
   {
     return mozilla::HashGeneric(aB.ReqSize(),
                                 aB.SlopSize(),
@@ -1105,7 +1106,7 @@ public:
 
 // For each unique DeadBlock value we store a count of how many actual dead
 // blocks have that value.
-typedef js::HashMap<DeadBlock, size_t, DeadBlock, InfallibleAllocPolicy>
+typedef mozilla::HashMap<DeadBlock, size_t, DeadBlock, InfallibleAllocPolicy>
         DeadBlockTable;
 static DeadBlockTable* gDeadBlockTable = nullptr;
 
