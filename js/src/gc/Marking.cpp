@@ -2005,10 +2005,7 @@ MarkStack::SavedValueArray::SavedValueArray(JSObject* obj, size_t indexArg, Heap
 {}
 
 MarkStack::MarkStack(size_t maxCapacity)
-  : stack_(nullptr)
-  , tos_(nullptr)
-  , end_(nullptr)
-  , baseCapacity_(0)
+  : topIndex_(0)
   , maxCapacity_(maxCapacity)
 #ifdef DEBUG
   , iteratorCount_(0)
@@ -2017,50 +2014,46 @@ MarkStack::MarkStack(size_t maxCapacity)
 
 MarkStack::~MarkStack()
 {
+    MOZ_ASSERT(isEmpty());
     MOZ_ASSERT(iteratorCount_ == 0);
-    js_free(stack_);
 }
 
 bool
 MarkStack::init(JSGCMode gcMode)
 {
-    setBaseCapacity(gcMode);
+    MOZ_ASSERT(isEmpty());
 
-    MOZ_ASSERT(!stack_);
-    auto newStack = js_pod_malloc<TaggedPtr>(baseCapacity_);
-    if (!newStack)
-        return false;
-
-    setStack(newStack, 0, baseCapacity_);
-    return true;
-}
-
-inline void
-MarkStack::setStack(TaggedPtr* stack, size_t tosIndex, size_t capacity)
-{
-    MOZ_ASSERT(iteratorCount_ == 0);
-    stack_ = stack;
-    tos_ = stack + tosIndex;
-    end_ = stack + capacity;
+    return setCapacityForMode(gcMode);
 }
 
 void
-MarkStack::setBaseCapacity(JSGCMode mode)
+MarkStack::setGCMode(JSGCMode gcMode)
 {
+    // Ignore failure to resize the stack and keep using the existing stack.
+    mozilla::Unused << setCapacityForMode(gcMode);
+}
+
+bool
+MarkStack::setCapacityForMode(JSGCMode mode)
+{
+    size_t capacity;
+
     switch (mode) {
       case JSGC_MODE_GLOBAL:
       case JSGC_MODE_ZONE:
-        baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
         break;
       case JSGC_MODE_INCREMENTAL:
-        baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+        capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
         break;
       default:
         MOZ_CRASH("bad gc mode");
     }
 
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
+    if (capacity > maxCapacity_)
+        capacity = maxCapacity_;
+
+    return stack().resize(capacity);
 }
 
 void
@@ -2068,11 +2061,19 @@ MarkStack::setMaxCapacity(size_t maxCapacity)
 {
     MOZ_ASSERT(maxCapacity != 0);
     MOZ_ASSERT(isEmpty());
-    maxCapacity_ = maxCapacity;
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
 
-    reset();
+    maxCapacity_ = maxCapacity;
+    if (capacity() > maxCapacity_) {
+        // If the realloc fails, just keep using the existing stack; it's
+        // not ideal but better than failing.
+        mozilla::Unused << stack().resize(maxCapacity_);
+    }
+}
+
+inline MarkStack::TaggedPtr*
+MarkStack::topPtr()
+{
+    return &stack()[topIndex_];
 }
 
 inline bool
@@ -2081,8 +2082,8 @@ MarkStack::pushTaggedPtr(Tag tag, Cell* ptr)
     if (!ensureSpace(1))
         return false;
 
-    MOZ_ASSERT(tos_ < end_);
-    *tos_++ = TaggedPtr(tag, ptr);
+    *topPtr() = TaggedPtr(tag, ptr);
+    topIndex_++;
     return true;
 }
 
@@ -2113,9 +2114,9 @@ MarkStack::push(const ValueArray& array)
     if (!ensureSpace(ValueArrayWords))
         return false;
 
-    *reinterpret_cast<ValueArray*>(tos_.ref()) = array;
-    tos_ += ValueArrayWords;
-    MOZ_ASSERT(tos_ <= end_);
+    *reinterpret_cast<ValueArray*>(topPtr()) = array;
+    topIndex_ += ValueArrayWords;
+    MOZ_ASSERT(position() <= capacity());
     MOZ_ASSERT(peekTag() == ValueArrayTag);
     return true;
 }
@@ -2128,9 +2129,9 @@ MarkStack::push(const SavedValueArray& array)
     if (!ensureSpace(ValueArrayWords))
         return false;
 
-    *reinterpret_cast<SavedValueArray*>(tos_.ref()) = array;
-    tos_ += ValueArrayWords;
-    MOZ_ASSERT(tos_ <= end_);
+    *reinterpret_cast<SavedValueArray*>(topPtr()) = array;
+    topIndex_ += ValueArrayWords;
+    MOZ_ASSERT(position() <= capacity());
     MOZ_ASSERT(peekTag() == SavedValueArrayTag);
     return true;
 }
@@ -2138,8 +2139,7 @@ MarkStack::push(const SavedValueArray& array)
 inline const MarkStack::TaggedPtr&
 MarkStack::peekPtr() const
 {
-    MOZ_ASSERT(!isEmpty());
-    return tos_[-1];
+    return stack()[topIndex_ - 1];
 }
 
 inline MarkStack::Tag
@@ -2153,8 +2153,8 @@ MarkStack::popPtr()
 {
     MOZ_ASSERT(!isEmpty());
     MOZ_ASSERT(!TagIsArrayTag(peekTag()));
-    tos_--;
-    return *tos_;
+    topIndex_--;
+    return *topPtr();
 }
 
 inline MarkStack::ValueArray
@@ -2163,8 +2163,8 @@ MarkStack::popValueArray()
     MOZ_ASSERT(peekTag() == ValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    tos_ -= ValueArrayWords;
-    const auto& array = *reinterpret_cast<ValueArray*>(tos_.ref());
+    topIndex_ -= ValueArrayWords;
+    const auto& array = *reinterpret_cast<ValueArray*>(topPtr());
     CheckValueArray(array);
     return array;
 }
@@ -2175,36 +2175,16 @@ MarkStack::popSavedValueArray()
     MOZ_ASSERT(peekTag() == SavedValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    tos_ -= ValueArrayWords;
-    const auto& array = *reinterpret_cast<SavedValueArray*>(tos_.ref());
+    topIndex_ -= ValueArrayWords;
+    const auto& array = *reinterpret_cast<SavedValueArray*>(topPtr());
     CheckSavedValueArray(array);
     return array;
-}
-
-void
-MarkStack::reset()
-{
-    if (capacity() == baseCapacity_) {
-        // No size change; keep the current stack.
-        setStack(stack_, 0, baseCapacity_);
-        return;
-    }
-
-    MOZ_ASSERT(baseCapacity_ != 0);
-    auto newStack = js_pod_realloc<TaggedPtr>(stack_, capacity(), baseCapacity_);
-    if (!newStack) {
-        // If the realloc fails, just keep using the existing stack; it's
-        // not ideal but better than failing.
-        newStack = stack_;
-        baseCapacity_ = capacity();
-    }
-    setStack(newStack, 0, baseCapacity_);
 }
 
 inline bool
 MarkStack::ensureSpace(size_t count)
 {
-    if ((tos_ + count) <= end_)
+    if ((topIndex_ + count) <= capacity())
         return !js::oom::ShouldFailWithOOM();
 
     return enlarge(count);
@@ -2217,34 +2197,19 @@ MarkStack::enlarge(size_t count)
     if (newCapacity < capacity() + count)
         return false;
 
-    size_t tosIndex = position();
-
     MOZ_ASSERT(newCapacity != 0);
-    auto newStack = js_pod_realloc<TaggedPtr>(stack_, capacity(), newCapacity);
-    if (!newStack)
-        return false;
-
-    setStack(newStack, tosIndex, newCapacity);
-    return true;
-}
-
-void
-MarkStack::setGCMode(JSGCMode gcMode)
-{
-    // The mark stack won't be resized until the next call to reset(), but
-    // that will happen at the end of the next GC.
-    setBaseCapacity(gcMode);
+    return stack().resize(newCapacity);
 }
 
 size_t
 MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(stack_);
+    return stack().sizeOfExcludingThis(mallocSizeOf);
 }
 
-MarkStackIter::MarkStackIter(const MarkStack& stack)
+MarkStackIter::MarkStackIter(MarkStack& stack)
   : stack_(stack),
-    pos_(stack.tos_)
+    pos_(stack.position())
 {
 #ifdef DEBUG
     stack.iteratorCount_++;
@@ -2262,7 +2227,7 @@ MarkStackIter::~MarkStackIter()
 inline size_t
 MarkStackIter::position() const
 {
-    return pos_ - stack_.stack_;
+    return pos_;
 }
 
 inline bool
@@ -2275,7 +2240,7 @@ inline MarkStack::TaggedPtr
 MarkStackIter::peekPtr() const
 {
     MOZ_ASSERT(!done());
-    return pos_[-1];
+    return stack_.stack()[pos_ - 1];
 }
 
 inline MarkStack::Tag
@@ -2290,7 +2255,8 @@ MarkStackIter::peekValueArray() const
     MOZ_ASSERT(peekTag() == MarkStack::ValueArrayTag);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    const auto& array = *reinterpret_cast<MarkStack::ValueArray*>(pos_ - ValueArrayWords);
+    const MarkStack::TaggedPtr* ptr = &stack_.stack()[pos_ - ValueArrayWords];
+    const auto& array = *reinterpret_cast<const MarkStack::ValueArray*>(ptr);
     CheckValueArray(array);
     return array;
 }
@@ -2327,7 +2293,8 @@ MarkStackIter::saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind
     MOZ_ASSERT(peekPtr().asValueArrayObject() == obj);
     MOZ_ASSERT(position() >= ValueArrayWords);
 
-    auto& array = *reinterpret_cast<MarkStack::SavedValueArray*>(pos_ - ValueArrayWords);
+    MarkStack::TaggedPtr* ptr = &stack_.stack()[pos_ - ValueArrayWords];
+    auto& array = *reinterpret_cast<MarkStack::SavedValueArray*>(ptr);
     array = MarkStack::SavedValueArray(obj, index, kind);
     CheckSavedValueArray(array);
     MOZ_ASSERT(peekTag() == MarkStack::SavedValueArrayTag);
@@ -2389,7 +2356,7 @@ GCMarker::stop()
 #endif
 
     /* Free non-ballast stack memory. */
-    stack.reset();
+    stack.clear();
     AutoEnterOOMUnsafeRegion oomUnsafe;
     for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
         if (!zone->gcWeakKeys().clear())
@@ -2402,7 +2369,7 @@ GCMarker::reset()
 {
     color = MarkColor::Black;
 
-    stack.reset();
+    stack.clear();
     MOZ_ASSERT(isMarkStackEmpty());
 
     while (unmarkedArenaStackTop) {
@@ -2583,7 +2550,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
 #ifdef DEBUG
 Zone*
-GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
+GCMarker::stackContainsCrossZonePointerTo(const Cell* target)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
