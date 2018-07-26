@@ -9,27 +9,28 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
-import android.util.Log;
 
 public class PromptService implements BundleEventListener {
     private static final String LOGTAG = "GeckoPromptService";
 
-    private final Context mContext;
-    private final EventDispatcher mDispatcher;
+    private final Context context;
+    private final EventDispatcher dispatcher;
+    private Prompt currentPrompt;
+    private int currentOrientation;
 
     public PromptService(final Context context, final EventDispatcher dispatcher) {
-        mContext = context;
-        mDispatcher = dispatcher;
-        mDispatcher.registerUiThreadListener(this,
+        this.context = context;
+        this.currentOrientation = context.getResources().getConfiguration().orientation;
+        this.dispatcher = dispatcher;
+        this.dispatcher.registerUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }
 
     public void destroy() {
-        mDispatcher.unregisterUiThreadListener(this,
+        dispatcher.unregisterUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }
@@ -38,13 +39,20 @@ public class PromptService implements BundleEventListener {
     @Override
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
-        Prompt p;
-        p = new Prompt(mContext, new Prompt.PromptCallback() {
+        currentPrompt = new Prompt(context, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(final GeckoBundle result) {
                 callback.sendSuccess(result);
+                currentPrompt = null;
             }
         });
-        p.show(message);
+        currentPrompt.show(message);
+    }
+
+    public void changePromptOrientation(int newOrientation) {
+        if (currentPrompt != null && currentOrientation != newOrientation) {
+            currentPrompt.resetLayout();
+        }
+        currentOrientation = newOrientation;
     }
 }
