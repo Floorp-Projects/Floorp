@@ -164,6 +164,8 @@ class MarkStack
 
     void setGCMode(JSGCMode gcMode);
 
+    void poisonUnused();
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   private:
@@ -175,6 +177,8 @@ class MarkStack
 
     /* Grow the stack, ensuring there is space for at least count elements. */
     MOZ_MUST_USE bool enlarge(size_t count);
+
+    MOZ_MUST_USE bool resize(size_t newCapacity);
 
     TaggedPtr* topPtr();
 

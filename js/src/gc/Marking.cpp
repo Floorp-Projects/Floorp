@@ -1842,6 +1842,9 @@ GCMarker::saveValueRanges()
             iter.nextPtr();
         }
     }
+
+    // This is also a convenient point to poison unused stack memory.
+    stack.poisonUnused();
 }
 
 bool
@@ -2053,7 +2056,7 @@ MarkStack::setCapacityForMode(JSGCMode mode)
     if (capacity > maxCapacity_)
         capacity = maxCapacity_;
 
-    return stack().resize(capacity);
+    return resize(capacity);
 }
 
 void
@@ -2066,7 +2069,7 @@ MarkStack::setMaxCapacity(size_t maxCapacity)
     if (capacity() > maxCapacity_) {
         // If the realloc fails, just keep using the existing stack; it's
         // not ideal but better than failing.
-        mozilla::Unused << stack().resize(maxCapacity_);
+        mozilla::Unused << resize(maxCapacity_);
     }
 }
 
@@ -2197,8 +2200,30 @@ MarkStack::enlarge(size_t count)
     if (newCapacity < capacity() + count)
         return false;
 
+    return resize(newCapacity);
+}
+
+bool
+MarkStack::resize(size_t newCapacity)
+{
     MOZ_ASSERT(newCapacity != 0);
-    return stack().resize(newCapacity);
+    if (!stack().resize(newCapacity))
+        return false;
+
+    poisonUnused();
+    return true;
+}
+
+inline void
+MarkStack::poisonUnused()
+{
+    static_assert((JS_FRESH_MARK_STACK_PATTERN & TagMask) > LastTag,
+                  "The mark stack poison pattern must not look like a valid tagged pointer");
+
+    JS_POISON(&stack()[topIndex_],
+              JS_FRESH_MARK_STACK_PATTERN,
+              stack().capacity() - topIndex_,
+              MemCheckKind::MakeUndefined);
 }
 
 size_t
