@@ -285,11 +285,7 @@ PasswordStore.prototype = {
     this._log.trace("Adding login for " + record.hostname);
     this._log.trace("httpRealm: " + JSON.stringify(login.httpRealm) + "; " +
                     "formSubmitURL: " + JSON.stringify(login.formSubmitURL));
-    try {
-      Services.logins.addLogin(login);
-    } catch (ex) {
-      this._log.error(`Adding record ${record.id} resulted in exception`, ex);
-    }
+    Services.logins.addLogin(login);
   },
 
   async remove(record) {
@@ -317,11 +313,7 @@ PasswordStore.prototype = {
       return;
     }
 
-    try {
-      Services.logins.modifyLogin(loginItem, newinfo);
-    } catch (ex) {
-      this._log.debug(`Modifying record ${record.id} resulted in exception; not modifying`, ex);
-    }
+    Services.logins.modifyLogin(loginItem, newinfo);
   },
 
   async wipe() {

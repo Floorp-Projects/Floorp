@@ -18,7 +18,9 @@ window.onload = function(){
   anim2.effect = effect;
   anim1.effect = effect;
 
-  Promise.all([anim1.ready, anim2.ready]).then(function() {
+  // anim1, since it doesn't have a timeline, will remain pause-pending,
+  // so just wait on anim2.
+  anim2.ready.then(() => {
     document.documentElement.classList.remove("reftest-wait");
   });
 };
