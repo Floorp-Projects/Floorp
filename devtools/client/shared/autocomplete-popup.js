@@ -76,6 +76,18 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   }
   this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
 
+  // We need to retrieve the item padding in order to correct the offset of the popup.
+  const paddingPropertyName = "--autocomplete-item-padding-inline";
+  const listPadding = this._document.defaultView
+    .getComputedStyle(this._list)
+    .getPropertyValue(paddingPropertyName)
+    .replace("px", "");
+
+  this._listPadding = 0;
+  if (!Number.isNaN(Number(listPadding))) {
+    this._listPadding = Number(listPadding);
+  }
+
   this._tooltip.setContent(this._list, { height: Infinity });
 
   this.onClick = this.onClick.bind(this);
@@ -133,8 +145,12 @@ AutocompletePopup.prototype = {
     // Retrieve the anchor's document active element to add accessibility metadata.
     this._activeElement = anchor.ownerDocument.activeElement;
 
+    // We want the autocomplete items to be perflectly lined-up with the string the
+    // user entered, so we need to remove the left-padding and the left-border from
+    // the xOffset.
+    const leftBorderSize = 1;
     this._tooltip.show(anchor, {
-      x: xOffset,
+      x: xOffset - this._listPadding - leftBorderSize,
       y: yOffset,
       position: this.position,
     });
@@ -206,6 +222,7 @@ AutocompletePopup.prototype = {
     this._document = null;
     this._list = null;
     this._tooltip = null;
+    this._listPadding = null;
   },
 
   /**
