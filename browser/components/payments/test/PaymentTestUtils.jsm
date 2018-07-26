@@ -172,7 +172,6 @@ var PaymentTestUtils = {
       let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
       let {page} = requestStore.getState();
       let button = content.document.querySelector(`#${page.id} button.primary`);
-      ok(!button.disabled, "Primary button should not be disabled when clicking it");
       button.click();
     },
 

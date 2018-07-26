@@ -327,10 +327,6 @@ class AutofillRecords {
       }
     } else if (!recordToSave.deleted) {
       this._normalizeRecord(recordToSave);
-      // _normalizeRecord shouldn't do any validation (throw) because in the
-      // `update` case it is called with partial records whereas
-      // `_validateFields` is called with a complete one.
-      this._validateFields(recordToSave);
 
       recordToSave.guid = this._generateGUID();
       recordToSave.version = this.version;
@@ -441,13 +437,6 @@ class AutofillRecords {
     if (!hasValidField) {
       throw new Error("Record contains no valid field.");
     }
-
-    // _normalizeRecord above is called with the `record` argument provided to
-    // `update` which may not contain all resulting fields when
-    // `preserveOldProperties` is used. This means we need to validate for
-    // missing fields after we compose the record (`recordFound`) with the stored
-    // record like we do in the loop above.
-    this._validateFields(recordFound);
 
     recordFound.timeLastModified = Date.now();
     let syncMetadata = this._getSyncMetaData(recordFound);
@@ -1231,28 +1220,8 @@ class AutofillRecords {
   // An interface to be inherited.
   computeFields(record) {}
 
-  /**
-  * An interface to be inherited to mutate the argument to normalize it.
-  *
-  * @param {object} partialRecord containing the record passed by the consumer of
-  *                               storage and in the case of `update` with
-  *                               `preserveOldProperties` will only include the
-  *                               properties that the user is changing so the
-  *                               lack of a field doesn't mean that the record
-  *                               won't have that field.
-  */
-  _normalizeFields(partialRecord) {}
-
-  /**
-   * An interface to be inherited to validate that the complete record is
-   * consistent and isn't missing required fields. Overrides should throw for
-   * invalid records.
-   *
-   * @param {object} record containing the complete record that would be stored
-   *                        if this doesn't throw due to an error.
-   * @throws
-   */
-  _validateFields(record) {}
+  // An interface to be inherited.
+  _normalizeFields(record) {}
 
   // An interface to be inherited.
   mergeIfPossible(guid, record, strict) {}
@@ -1610,7 +1579,7 @@ class CreditCards extends AutofillRecords {
     if (creditCard["cc-number"]) {
       let card = new CreditCard({number: creditCard["cc-number"]});
       creditCard["cc-number"] = card.number;
-      if (!card.isValidNumber()) {
+      if (!creditCard["cc-number"]) {
         delete creditCard["cc-number"];
       }
     }
@@ -1633,12 +1602,6 @@ class CreditCards extends AutofillRecords {
       delete creditCard["cc-exp-year"];
     }
     delete creditCard["cc-exp"];
-  }
-
-  _validateFields(creditCard) {
-    if (!creditCard["cc-number"]) {
-      throw new Error("Missing/invalid cc-number");
-    }
   }
 
   /**
