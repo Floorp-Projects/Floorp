@@ -8,17 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_capture/android/device_info_android.h"
+#include "modules/video_capture/android/device_info_android.h"
 
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <vector>
 
-#include "webrtc/modules/utility/include/helpers_android.h"
-#include "webrtc/modules/video_capture/android/video_capture_android.h"
-#include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/trace.h"
+#include "rtc_base/logging.h"
+#include "modules/utility/include/helpers_android.h"
+#include "modules/video_capture/android/video_capture_android.h"
 
 #include "mozilla/jni/Utils.h"
 
@@ -141,8 +140,7 @@ void DeviceInfoAndroid::BuildDeviceList() {
       || orientationField == NULL
       || frontFacingField == NULL
       || nameField == NULL) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                 "%s: Failed to get field Id.", __FUNCTION__);
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": Failed to get field Id.";
     return;
   }
 
@@ -265,8 +263,7 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
       cap.width = size.first;
       cap.height = size.second;
       cap.maxFPS = mfpsRange.second / 1000;
-      cap.expectedCaptureDelay = kExpectedCaptureDelay;
-      cap.rawType = kVideoNV21;
+      cap.videoType = VideoType::kNV21;
       _captureCapabilities.push_back(cap);
     }
   }
@@ -293,13 +290,13 @@ void DeviceInfoAndroid::GetMFpsRange(const char* deviceUniqueIdUTF8,
   }
   int desired_mfps = max_fps_to_match * 1000;
   int best_diff_mfps = 0;
-  LOG(LS_INFO) << "Search for best target mfps " << desired_mfps;
+  RTC_LOG(LS_INFO) << "Search for best target mfps " << desired_mfps;
   // Search for best fps range with preference shifted to constant fps modes.
   for (size_t i = 0; i < info->mfpsRanges.size(); ++i) {
     int diff_mfps = abs(info->mfpsRanges[i].first - desired_mfps) +
         abs(info->mfpsRanges[i].second - desired_mfps) +
         (info->mfpsRanges[i].second - info->mfpsRanges[i].first) / 2;
-    LOG(LS_INFO) << "Fps range " << info->mfpsRanges[i].first << ":" <<
+    RTC_LOG(LS_INFO) << "Fps range " << info->mfpsRanges[i].first << ":" <<
         info->mfpsRanges[i].second << ". Distance: " << diff_mfps;
     if (i == 0 || diff_mfps < best_diff_mfps) {
       best_diff_mfps = diff_mfps;
