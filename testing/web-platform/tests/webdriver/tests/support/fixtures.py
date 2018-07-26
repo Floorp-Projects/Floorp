@@ -19,6 +19,7 @@ default_script_timeout = 30
 default_page_load_timeout = 300
 default_implicit_wait_timeout = 0
 
+default_window_size = (800, 600)
 
 _current_session = None
 _custom_session = False
@@ -72,7 +73,7 @@ def cleanup_session(session):
         This also includes bringing it out of maximized, minimized,
         or fullscreened state.
         """
-        session.window.size = (800, 600)
+        session.window.size = default_window_size
 
     @ignore_exceptions
     def _restore_windows(session):
@@ -212,6 +213,9 @@ def session(capabilities, configuration, request):
     except webdriver.error.SessionNotCreatedException:
         if not _current_session.session_id:
             raise
+
+    # Enforce a fixed default window size
+    _current_session.window.size = default_window_size
 
     yield _current_session
 
