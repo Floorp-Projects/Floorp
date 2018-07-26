@@ -1277,15 +1277,17 @@ window._gBrowser = {
     return this._setTabLabel(aTab, title, { isContentTitle });
   },
 
-  _setTabLabel(aTab, aLabel, aOptions) {
+  _setTabLabel(aTab, aLabel, {
+    beforeTabOpen,
+    isContentTitle,
+  } = {}) {
     if (!aLabel) {
       return false;
     }
 
     aTab._fullLabel = aLabel;
 
-    aOptions = aOptions || {};
-    if (!aOptions.isContentTitle) {
+    if (!isContentTitle) {
       // Remove protocol and "www."
       if (!("_regex_shortenURLForTabLabel" in this)) {
         this._regex_shortenURLForTabLabel = /^[^:]+:\/\/(?:www\.)?/;
@@ -1293,7 +1295,7 @@ window._gBrowser = {
       aLabel = aLabel.replace(this._regex_shortenURLForTabLabel, "");
     }
 
-    aTab._labelIsContentTitle = aOptions.isContentTitle;
+    aTab._labelIsContentTitle = isContentTitle;
 
     if (aTab.getAttribute("label") == aLabel) {
       return false;
@@ -1307,7 +1309,7 @@ window._gBrowser = {
 
     // Dispatch TabAttrModified event unless we're setting the label
     // before the TabOpen event was dispatched.
-    if (!aOptions.beforeTabOpen) {
+    if (!beforeTabOpen) {
       this._tabAttrModified(aTab, ["label"]);
     }
 
