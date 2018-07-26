@@ -10,7 +10,17 @@
 }
 
 .runtime-item__icon {
+  fill: var(--runtime-item-icon-color);
   height: 24px;
   margin-inline-end: 9px;
   width: 24px;
+  -moz-context-properties: fill;
+}
+
+.runtime-item--selected {
+  color: var(--runtime-item-selected-color);
+}
+
+.runtime-item__icon--selected {
+  fill: var(--runtime-item-selected-color);
 }
