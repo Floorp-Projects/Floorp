@@ -346,7 +346,8 @@ static int compareEntries(const void* lhsVoid, const void* rhsVoid) {
 }
 
 // A hash map mapping from C strings to counts.
-using CStringCountMap = HashMap<const char*, CountBasePtr, CStringHasher, SystemAllocPolicy>;
+using CStringCountMap =
+    HashMap<const char*, CountBasePtr, mozilla::CStringHasher, SystemAllocPolicy>;
 
 // Convert a HashMap into an object with each key one of the entries from the
 // map and each value the associated count's report. For use during census
@@ -897,7 +898,7 @@ ByAllocationStack::report(JSContext* cx, CountBase& countBase, MutableHandleValu
 
 #ifdef DEBUG
     // Check that nothing rehashes our table while we hold pointers into it.
-    Generation generation = count.table.generation();
+    mozilla::Generation generation = count.table.generation();
 #endif
 
     // Build a vector of pointers to entries; sort by total; and then use
@@ -959,11 +960,11 @@ class ByFilename : public CountType {
         using Lookup = UniqueCString;
 
         static js::HashNumber hash(const Lookup& lookup) {
-            return CStringHasher::hash(lookup.get());
+            return mozilla::CStringHasher::hash(lookup.get());
         }
 
         static bool match(const UniqueCString& key, const Lookup& lookup) {
-            return CStringHasher::match(key.get(), lookup.get());
+            return mozilla::CStringHasher::match(key.get(), lookup.get());
         }
     };
 
