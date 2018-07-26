@@ -75,6 +75,7 @@ import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.Source;
 import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.Features;
 import org.mozilla.focus.utils.StatusBarUtils;
@@ -1387,13 +1388,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         if (numberOfMatches > 0) {
-            // We don't want the presentation of the activeMatchOrdinal to be zero indexed. So let's
-            // increment it by one.
             findInPageNext.setColorFilter(getResources().getColor(R.color.photonWhite));
             findInPageNext.setAlpha(1.0F);
             findInPagePrevious.setColorFilter(getResources().getColor(R.color.photonWhite));
             findInPagePrevious.setAlpha(1.0F);
-            activeMatchOrdinal++;
+            // We don't want the presentation of the activeMatchOrdinal to be zero indexed. So let's
+            // increment it by one for WebView.
+            if (!AppConstants.isGeckoBuild(context)) {
+                activeMatchOrdinal++;
+            }
             final String visibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
             final String accessibleString = String.format(context.getString(R.string.find_in_page_result), activeMatchOrdinal, numberOfMatches);
 
