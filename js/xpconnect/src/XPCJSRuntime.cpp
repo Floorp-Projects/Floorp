@@ -215,6 +215,7 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c)
     , isWebExtensionContentScript(false)
     , allowCPOWs(false)
     , isContentXBLCompartment(false)
+    , isSandboxCompartment(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , wasNuked(false)
@@ -489,6 +490,16 @@ bool
 IsInContentXBLScope(JSObject* obj)
 {
     return IsContentXBLCompartment(js::GetObjectCompartment(obj));
+}
+
+bool
+IsInSandboxCompartment(JSObject* obj)
+{
+    JS::Compartment* comp = js::GetObjectCompartment(obj);
+
+    // We always eagerly create compartment privates for sandbox compartments.
+    CompartmentPrivate* priv = CompartmentPrivate::Get(comp);
+    return priv && priv->isSandboxCompartment;
 }
 
 bool
