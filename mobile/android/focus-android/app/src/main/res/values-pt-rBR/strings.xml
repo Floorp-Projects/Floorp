@@ -57,7 +57,7 @@
   <string name="preference_autocomplete_add_title">URL a adicionar</string>
   <string name="preference_autocomplete_add_hint">Cole ou digite o URL</string>
   <string name="preference_autocomplete_add_example2">Exemplo: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Exemplo: exemplo.com</string>
+  <string name="preference_autocomplete_add_example">Exemplo: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Novo URL personalizado adicionado.</string>
   <string name="preference_autocomplete_menu_remove">Remover</string>
   <string name="preference_autocomplete_action_remove_content_description">Remover</string>
@@ -100,7 +100,7 @@
   <string name="search_add_manually_name_hint">Nome do mecanismo de pesquisa</string>
   <string name="search_add_manually_string">Termo de pesquisa a ser usado</string>
   <string name="search_add_manually_save">Salvar</string>
-  <string name="search_add_manually_example">Exemplo: exemplo.com/search/?q= %s</string>
+  <string name="search_add_manually_example">Exemplo: example.com/search/?q= %s</string>
   <string name="search_add_confirmation">Novo mecanismo de pesquisa adicionado.</string>
   <string name="search_add_error_empty_name">Digite o nome do mecanismo de pesquisa</string>
   <string name="search_add_error_duplicate_name">Um mecanismo de pesquisa instalado já está usando esse nome.</string>

@@ -146,7 +146,7 @@
   <string name="error_unsupportedprotocol_title">Man xk\'oxomax ta le kemriqonib\'al</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Wene rajawaxik kajeqeb\'a\' jun chi cholwach.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Man utz ta xub\'an le chajital t\'iqonem</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Wa\' wene kuya\' k\'eyowal ruk\' le suk\'manem rech kempatanel, on wene are jun le kraj kukoj rib\' chi kempatane.l</li>.</ul>"\n  "<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">We utz ub\'anom le at\'iqonem ruk\' we kempatanel le ub\'anom kanoq, le k\'axk\'olil wene xa ch\'ikital uq\'ijol, chi\'l utz kanb\'an chi jumul pa jutz\'it.</li>\n]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Wa\' wene kuya\' k\'eyowal ruk\' le suk\'manem rech kempatanel, on wene are jun le kraj kukoj rib\' chi kempatane.l</li>"\n  "<li>We utz ub\'anom le at\'iqonem ruk\' we kempatanel le ub\'anom kanoq, le k\'axk\'olil wene xa ch\'ikital uq\'ijol, chi\'l utz kanb\'an chi jumul pa jutz\'it.</li>\n</ul>]]></string>
   <string name="error_generic_title">Amalay</string>
   <string name="error_generic_message">Jas na k\'u che man kojkowin taj kqaya\' uchuq\'ab\' we uxaq wuj.</string>
   <string name="contextmenu_link_share">Ukomone\'xik kemwiqb\'al</string>

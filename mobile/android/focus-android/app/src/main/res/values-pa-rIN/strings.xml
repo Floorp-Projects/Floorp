@@ -51,6 +51,7 @@
   <string name="preference_category_data_choices">ਡਾਟਾ ਚੋਣਾਂ</string>
   <string name="preference_autocomplete_title_remove">ਕਸਟਮ URL ਹਟਾਓ</string>
   <string name="preference_autocomplete_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
+  <string name="preference_autocomplete_custom_summary">ਕਸਟਮ ਸਵੈਪੂਰਾ URL ਜੋੜੋ ਅਤੇ ਪ੍ਰਬੰਧਿਤ ਕਰੋ।</string>
   <string name="preference_autocomplete_add_title">ਜੋੜਨ ਲਈ URL</string>
   <string name="preference_autocomplete_add_hint">URL ਪੇਸਟ ਕਰੋ ਜਾਂ ਦਾਖਲ ਕਰੋ</string>
   <string name="preference_autocomplete_add_example2">ਉਦਾਹਰਨ: mozilla.org</string>
@@ -63,4 +64,36 @@
   <string name="preference_language_systemdefault">ਸਿਸਟਮ ਮੂਲ</string>
   <string name="preference_category_privacy">ਪਰਦੇਦਾਰੀ</string>
   <string name="preference_privacy_block_ads">ਬਲਾਕ ਵਿਗਿਆਪਨ ਟਰੈਕਰਜ</string>
+  <string name="preference_privacy_block_analytics">ਵਿਸ਼ਲੇਸ਼ਣ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_content">ਹੋਰ ਸਮੱਗਰੀ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_category_cookies">ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_should_block_cookies_no_option">ਨਹੀਂ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ ਤੀਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ਹਾਂ</string>
+  <string name="preference_privacy_secure_mode">ਭੇਤ</string>
+  <string name="preference_privacy_stealth_summary">ਐਪ ਸਵਿਚ ਕਰਦੇ ਸਮੇਂ ਵੈੱਬ ਪੇਜ ਛਪਾਓ</string>
+  <string name="preference_category_performance">ਕਾਰਗੁਜ਼ਾਰੀ</string>
+  <string name="preference_performance_block_webfonts">ਵੈੱਬ ਅੱਖਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_performance_block_webfonts_summary">ਨਤੀਜੇ ਵਜੋਂ ਆਈਕਾਨ ਜਾਂ ਚਿੱਤਰ ਲਾਪਤਾ ਹੋ ਸਕਦੇ ਹਨ</string>
+  <string name="preference_performance_block_javascript">JavaScript ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_default_browser2">%1$s ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+  <string name="preference_category_mozilla">ਮੋਜ਼ੀਲਾ</string>
+  <string name="preference_mozilla_telemetry2">ਵਰਤੋਂ ਸਬੰਧੀ ਡੇਟਾ ਭੇਜੋ</string>
+  <string name="preference_mozilla_telemetry_summary">ਹੋਰ ਜਾਣੋ</string>
+  <string name="preference_mozilla_telemetry_summary2">ਮੌਜ਼ਿਲਾ ਭਰਪੂਰ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ ਕਿ ਸਿਰਫ ਉਹੀ ਕੁੱਝ ਇਕੱਠਾ ਕੀਤਾ ਜਾਵੇ ਜੋ ਕਿ %1$s ਨੂੰ ਹਰੇਕ ਲਈ ਮੁਹੱਈਆ ਕਰਾਉਣ ਅਤੇ ਹੋਰ ਸੁਧਾਰਨ ਲਈ ਲੋੜੀਂਦਾ ਹੋਵੇ।</string>
+  <string name="preference_privacy_notice">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+  <string name="preference_about">%1$s ਦੇ ਬਾਰੇ</string>
+  <string name="preference_search_installed_search_engines">ਇੰਸਟਾਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ</string>
+  <string name="preference_search_restore">ਮੂਲ ਖੋਜ ਇੰਜਣ ਨੂੰ ਮੁੜ-ਸਟੋਰ ਕਰੋ</string>
+  <string name="preference_search_add2">+ਹੋਰ ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
+  <string name="preference_search_remove_title">ਖੋਜ ਇੰਜਣਾਂ ਨੂੰ ਹਟਾਓ</string>
+  <string name="preference_search_remove">ਹਟਾਓ</string>
+  <string name="action_option_add_search_engine">ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
+  <string name="search_add_manually_name_hint">ਖੋਜ ਇੰਜਣ ਨਾਂਮ</string>
+  <string name="search_add_manually_string">ਵਰਤਣ ਲਈ ਖੋਜ ਸਟ੍ਰਿੰਗ</string>
+  <string name="search_add_manually_save">ਸੰਭਾਲੋ</string>
+  <string name="search_add_manually_example">ਉਦਾਹਰਨ: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">ਨਵਾਂ ਖੋਜ ਇੰਜਣ ਜੋੜਿਆ ਗਿਆ।</string>
+  <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂਮ ਦਰਜ ਕਰੋ</string>
 </resources>
