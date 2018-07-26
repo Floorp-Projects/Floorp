@@ -131,10 +131,6 @@
       <property name="searchCount" readonly="true"
                 onget="this.initSearchNames(); return this.mSearchNames.length;"/>
 
-      <field name="shrinkDelay" readonly="true">
-        parseInt(this.getAttribute("shrinkdelay")) || 0
-      </field>
-
       <property name="PrivateBrowsingUtils" readonly="true">
         <getter><![CDATA[
           let module = {};
@@ -657,7 +653,6 @@
       <field name="mInput">null</field>
       <field name="mPopupOpen">false</field>
       <field name="_currentIndex">0</field>
-      <field name="_rlbAnimated">false</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -826,16 +821,14 @@
           this.richlistbox.collapsed = (this.matchCount == 0);
 
           // Update the richlistbox height.
-          if (this._adjustHeightTimeout) {
-            clearTimeout(this._adjustHeightTimeout);
-          }
-          if (this._shrinkTimeout) {
-            clearTimeout(this._shrinkTimeout);
+          if (this._adjustHeightRAFToken) {
+            cancelAnimationFrame(this._adjustHeightRAFToken);
+            this._adjustHeightRAFToken = null;
           }
 
           if (this.mPopupOpen) {
             delete this._adjustHeightOnPopupShown;
-            this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+            this._adjustHeightRAFToken = requestAnimationFrame(() => this.adjustHeight());
           } else {
             this._adjustHeightOnPopupShown = true;
           }
@@ -896,29 +889,15 @@
           let rows = this.richlistbox.childNodes;
           let numRows = Math.min(this.matchCount, this.maxRows, rows.length);
 
-          this.removeAttribute("height");
-
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
             let firstRowRect = rows[0].getBoundingClientRect();
             if (this._rlbPadding == undefined) {
               let style = window.getComputedStyle(this.richlistbox);
-
-              let transition = style.transitionProperty;
-              this._rlbAnimated = transition && transition != "none";
-
               let paddingTop = parseInt(style.paddingTop) || 0;
               let paddingBottom = parseInt(style.paddingBottom) || 0;
               this._rlbPadding = paddingTop + paddingBottom;
-            }
-
-            if (numRows > this.maxRows) {
-              // Set a fixed max-height to avoid flicker when growing the panel.
-              let lastVisibleRowRect = rows[this.maxRows - 1].getBoundingClientRect();
-              let visibleHeight = lastVisibleRowRect.bottom - firstRowRect.top;
-              this.richlistbox.style.maxHeight =
-                visibleHeight + this._rlbPadding + "px";
             }
 
             // The class `forceHandleUnderflow` is for the item might need to
@@ -936,31 +915,12 @@
                      this._rlbPadding;
           }
 
-          let animate = this._rlbAnimated &&
-                        this.getAttribute("dontanimate") != "true";
           let currentHeight = this.richlistbox.getBoundingClientRect().height;
-          if (height > currentHeight) {
-            // Grow immediately.
-            if (animate) {
-              this.richlistbox.removeAttribute("height");
-              this.richlistbox.style.height = height + "px";
-            } else {
-              this.richlistbox.style.removeProperty("height");
-              this.richlistbox.height = height;
-            }
-          } else {
-            // Delay shrinking to avoid flicker.
-            this._shrinkTimeout = setTimeout(() => {
-              this._collapseUnusedItems();
-              if (animate) {
-                this.richlistbox.removeAttribute("height");
-                this.richlistbox.style.height = height + "px";
-              } else {
-                this.richlistbox.style.removeProperty("height");
-                this.richlistbox.height = height;
-              }
-            }, this.mInput.shrinkDelay);
+          if (height <= currentHeight) {
+            this._collapseUnusedItems();
           }
+          this.richlistbox.style.removeProperty("height");
+          this.richlistbox.height = height;
           ]]>
         </body>
       </method>
