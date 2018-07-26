@@ -90,7 +90,7 @@ browser/extensions/pdfjs/content/web**
 browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
 # Activity Stream has incompatible eslintrc. `npm run lint` from its directory
-browser/extensions/activity-stream/**
+browser/components/newtab/**
 # The only file in browser/locales/ is pre-processed.
 browser/locales/**
 # imported from chromium
