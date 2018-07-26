@@ -165,6 +165,8 @@ _Components and libraries to interact with backend services._
 
 _Supporting components with generic helper code._
 
+* ⚪ [**Base**](components/support/base/README.md) - Base component containing building blocks for components.
+
 * 🔵 [**Ktx**](components/support/ktx/README.md) - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
 * ⚪ [**Test**](components/support/test/README.md) - A collection of helpers for testing components.

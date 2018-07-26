@@ -6,9 +6,9 @@ package mozilla.components.browser.session
 
 import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.support.utils.observer.Consumable
-import mozilla.components.support.utils.observer.Observable
-import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 import java.util.UUID
 import kotlin.properties.Delegates
 

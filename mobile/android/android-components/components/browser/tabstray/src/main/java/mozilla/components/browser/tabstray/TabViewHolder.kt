@@ -13,7 +13,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.utils.observer.Observable
+import mozilla.components.support.base.observer.Observable
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.

@@ -1,4 +1,4 @@
-package mozilla.components.support.utils.observer
+package mozilla.components.support.base.observer
 
 import android.arch.lifecycle.LifecycleOwner
 import android.view.View

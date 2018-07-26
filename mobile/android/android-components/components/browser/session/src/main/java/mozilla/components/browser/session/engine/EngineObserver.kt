@@ -8,7 +8,7 @@ import android.os.Environment
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.utils.observer.Consumable
+import mozilla.components.support.base.observer.Consumable
 
 internal class EngineObserver(val session: Session) : EngineSession.Observer {
 

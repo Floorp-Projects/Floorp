@@ -11,11 +11,8 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.build['minSdkVersion']
         targetSdkVersion rootProject.ext.build['targetSdkVersion']
-    }
 
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -24,25 +21,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 dependencies {
-    implementation project(':concept-engine')
-    implementation project(':support-ktx')
-    implementation project(':support-utils')
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
-    testImplementation project(':support-test')
+    // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
+    api "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
+
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
 }
 
-archivesBaseName = "engine-system"
+archivesBaseName = "base"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'engine-system',
-        'Engine implementation based on the system\'s WebView.')
+        'base',
+        'Base component containing building blocks for components.')

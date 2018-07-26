@@ -9,8 +9,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.utils.observer.Observable
-import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * RecyclerView adapter implementation to display a list/grid of tabs.

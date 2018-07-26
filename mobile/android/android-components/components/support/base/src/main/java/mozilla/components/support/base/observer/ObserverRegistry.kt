@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, you can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.support.utils.observer
+package mozilla.components.support.base.observer
 
 import android.arch.lifecycle.GenericLifecycleObserver
 import android.arch.lifecycle.Lifecycle
@@ -64,9 +64,9 @@ class ObserverRegistry<T> : Observable<T> {
         register(observer)
 
         val viewObserver = ViewBoundObserver(
-            view,
-            registry = this,
-            observer = observer)
+                view,
+                registry = this,
+                observer = observer)
 
         viewObservers[observer] = viewObserver
 
@@ -142,6 +142,10 @@ class ObserverRegistry<T> : Observable<T> {
         }
     }
 
+    /**
+     * View.OnAttachStateChangeListener implementation to automatically unregister an observer if
+     * the bound view gets detached.
+     */
     private class ViewBoundObserver<T>(
         private val view: View,
         private val registry: ObserverRegistry<T>,

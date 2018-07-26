@@ -96,6 +96,8 @@ dependencies {
 
     implementation project(':ui-autocomplete')
 
+    implementation project(':support-utils')
+
     nightlyImplementation project(':browser-engine-gecko-nightly')
     nightlyArmImplementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.geckoNightly['version']}"
     nightlyX86Implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.geckoNightly['version']}"

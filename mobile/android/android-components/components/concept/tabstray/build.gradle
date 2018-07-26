@@ -23,6 +23,7 @@ android {
 
 dependencies {
     implementation project(':browser-session')
+    implementation project(':support-base')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 }

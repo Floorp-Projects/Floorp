@@ -9,7 +9,7 @@ import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.utils.observer.Consumable
+import mozilla.components.support.base.observer.Consumable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

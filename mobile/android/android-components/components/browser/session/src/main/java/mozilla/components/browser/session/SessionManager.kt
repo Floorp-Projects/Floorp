@@ -7,8 +7,8 @@ package mozilla.components.browser.session
 import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.utils.observer.Observable
-import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * This class provides access to a centralized registry of all active sessions.

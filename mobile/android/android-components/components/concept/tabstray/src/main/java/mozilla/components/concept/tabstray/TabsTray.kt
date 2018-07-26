@@ -6,7 +6,7 @@ package mozilla.components.concept.tabstray
 
 import android.view.View
 import mozilla.components.browser.session.Session
-import mozilla.components.support.utils.observer.Observable
+import mozilla.components.support.base.observer.Observable
 
 /**
  * Generic interface for components that provide "tabs tray" functionality.

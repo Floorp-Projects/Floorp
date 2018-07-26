@@ -10,7 +10,7 @@ import android.widget.TextView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.test.mock
-import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.support.base.observer.ObserverRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

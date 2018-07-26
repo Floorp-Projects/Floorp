@@ -5,8 +5,8 @@
 package mozilla.components.concept.engine
 
 import android.support.annotation.CallSuper
-import mozilla.components.support.utils.observer.Observable
-import mozilla.components.support.utils.observer.ObserverRegistry
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * Class representing a single engine session.
