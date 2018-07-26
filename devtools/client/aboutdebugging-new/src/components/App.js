@@ -6,8 +6,17 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const ThisFirefox = require("../runtimes/this-firefox");
 
 class App extends PureComponent {
+  static get propTypes() {
+    return {
+      thisFirefox: PropTypes.instanceOf(ThisFirefox).isRequired,
+    };
+  }
+
   render() {
     return dom.div(
       {
