@@ -271,6 +271,7 @@ public class GeckoSession extends LayerSession
             new String[]{
                 "GeckoView:PageStart",
                 "GeckoView:PageStop",
+                "GeckoView:ProgressChanged",
                 "GeckoView:SecurityChanged"
             }
         ) {
@@ -285,6 +286,9 @@ public class GeckoSession extends LayerSession
                 } else if ("GeckoView:PageStop".equals(event)) {
                     delegate.onPageStop(GeckoSession.this,
                                         message.getBoolean("success"));
+                } else if ("GeckoView:ProgressChanged".equals(event)) {
+                    delegate.onProgressChange(GeckoSession.this,
+                                              message.getInt("progress"));
                 } else if ("GeckoView:SecurityChanged".equals(event)) {
                     final GeckoBundle identity = message.getBundle("identity");
                     delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
@@ -1885,6 +1889,13 @@ public class GeckoSession extends LayerSession
         * @param success Whether the page loaded successfully or an error occurred.
         */
         void onPageStop(GeckoSession session, boolean success);
+
+        /**
+         * Page loading has progressed.
+         * @param session GeckoSession that initiated the callback.
+         * @param progress Current page load progress value [0, 100].
+         */
+        void onProgressChange(GeckoSession session, int progress);
 
         /**
         * The security status has been updated.

@@ -84,6 +84,9 @@ class Callbacks private constructor() {
         override fun onPageStop(session: GeckoSession, success: Boolean) {
         }
 
+        override fun onProgressChange(session: GeckoSession, progress: Int) {
+        }
+
         override fun onSecurityChange(session: GeckoSession, securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
         }
     }

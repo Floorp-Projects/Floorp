@@ -334,6 +334,7 @@ function startup() {
     name: "GeckoViewProgress",
     onEnable: {
       resource: "resource://gre/modules/GeckoViewProgress.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewProgressContent.js",
     },
   }, {
     name: "GeckoViewScroll",
