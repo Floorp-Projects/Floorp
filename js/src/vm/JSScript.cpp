@@ -4247,6 +4247,18 @@ LazyScript::initScript(JSScript* script)
     script_.set(script);
 }
 
+JS::Compartment*
+LazyScript::compartment() const
+{
+    return function_->compartment();
+}
+
+Realm*
+LazyScript::realm() const
+{
+    return function_->realm();
+}
+
 void
 LazyScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript)
 {
