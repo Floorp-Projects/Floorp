@@ -1514,8 +1514,12 @@ window._gBrowser = {
     }
   },
 
-  updateBrowserRemoteness(aBrowser, aShouldBeRemote, aOptions) {
-    aOptions = aOptions || {};
+  updateBrowserRemoteness(aBrowser, aShouldBeRemote, {
+    newFrameloader,
+    opener,
+    remoteType,
+    sameProcessAsFrameLoader,
+  } = {}) {
     let isRemote = aBrowser.getAttribute("remote") == "true";
 
     if (!gMultiProcessBrowser && aShouldBeRemote) {
@@ -1524,26 +1528,26 @@ window._gBrowser = {
     }
 
     // Default values for remoteType
-    if (!aOptions.remoteType) {
-      aOptions.remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
+    if (!remoteType) {
+      remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
     }
 
     // If we are passed an opener, we must be making the browser non-remote, and
     // if the browser is _currently_ non-remote, we need the openers to match,
     // because it is already too late to change it.
-    if (aOptions.opener) {
+    if (opener) {
       if (aShouldBeRemote) {
         throw new Error("Cannot set an opener on a browser which should be remote!");
       }
-      if (!isRemote && aBrowser.contentWindow.opener != aOptions.opener) {
+      if (!isRemote && aBrowser.contentWindow.opener != opener) {
         throw new Error("Cannot change opener on an already non-remote browser!");
       }
     }
 
     // Abort if we're not going to change anything
-    let currentRemoteType = aBrowser.getAttribute("remoteType");
-    if (isRemote == aShouldBeRemote && !aOptions.newFrameloader &&
-        (!isRemote || currentRemoteType == aOptions.remoteType)) {
+    let oldRemoteType = aBrowser.getAttribute("remoteType");
+    if (isRemote == aShouldBeRemote && !newFrameloader &&
+        (!isRemote || oldRemoteType == remoteType)) {
       return false;
     }
 
@@ -1569,23 +1573,20 @@ window._gBrowser = {
     // We'll be creating a new listener, so destroy the old one.
     listener.destroy();
 
+    let oldDroppedLinkHandler = aBrowser.droppedLinkHandler;
+    let oldSameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
     let oldUserTypedValue = aBrowser.userTypedValue;
     let hadStartedLoad = aBrowser.didStartLoadSinceLastUserTyping();
 
     // Make sure the browser is destroyed so it unregisters from observer notifications
     aBrowser.destroy();
 
-    // Make sure to restore the original droppedLinkHandler and
-    // sameProcessAsFrameLoader.
-    let droppedLinkHandler = aBrowser.droppedLinkHandler;
-    let sameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
-
     // Change the "remote" attribute.
     let parent = aBrowser.parentNode;
     aBrowser.remove();
     if (aShouldBeRemote) {
       aBrowser.setAttribute("remote", "true");
-      aBrowser.setAttribute("remoteType", aOptions.remoteType);
+      aBrowser.setAttribute("remoteType", remoteType);
     } else {
       aBrowser.setAttribute("remote", "false");
       aBrowser.removeAttribute("remoteType");
@@ -1593,19 +1594,19 @@ window._gBrowser = {
 
     // NB: This works with the hack in the browser constructor that
     // turns this normal property into a field.
-    if (aOptions.sameProcessAsFrameLoader) {
-      // Always set sameProcessAsFrameLoader when passed in aOptions.
-      aBrowser.sameProcessAsFrameLoader = aOptions.sameProcessAsFrameLoader;
-    } else if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+    if (sameProcessAsFrameLoader) {
+      // Always set sameProcessAsFrameLoader when passed in explicitly.
+      aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+    } else if (!aShouldBeRemote || oldRemoteType == remoteType) {
       // Only copy existing sameProcessAsFrameLoader when not switching
       // remote type otherwise it would stop the switch.
-      aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
+      aBrowser.sameProcessAsFrameLoader = oldSameProcessAsFrameLoader;
     }
 
-    if (aOptions.opener) {
+    if (opener) {
       // Set the opener window on the browser, such that when the frame
       // loader is created the opener is set correctly.
-      aBrowser.presetOpenerWindow(aOptions.opener);
+      aBrowser.presetOpenerWindow(opener);
     }
 
     parent.appendChild(aBrowser);
@@ -1615,7 +1616,7 @@ window._gBrowser = {
       aBrowser.urlbarChangeTracker.startedLoad();
     }
 
-    aBrowser.droppedLinkHandler = droppedLinkHandler;
+    aBrowser.droppedLinkHandler = oldDroppedLinkHandler;
 
     // Switching a browser's remoteness will create a new frameLoader.
     // As frameLoaders start out with an active docShell we have to
@@ -1680,18 +1681,18 @@ window._gBrowser = {
     if (!gMultiProcessBrowser)
       return this.updateBrowserRemoteness(aBrowser, false);
 
-    let currentRemoteType = aBrowser.getAttribute("remoteType") || null;
+    let oldRemoteType = aBrowser.getAttribute("remoteType") || null;
 
     aOptions.remoteType =
       E10SUtils.getRemoteTypeForURI(aURL,
         gMultiProcessBrowser,
-        currentRemoteType,
+        oldRemoteType,
         aBrowser.currentURI);
 
     // If this URL can't load in the current browser then flip it to the
     // correct type.
-    if (currentRemoteType != aOptions.remoteType ||
-      aOptions.newFrameloader) {
+    if (oldRemoteType != aOptions.remoteType ||
+        aOptions.newFrameloader) {
       let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
       return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
     }
