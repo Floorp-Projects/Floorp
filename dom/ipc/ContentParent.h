@@ -682,6 +682,14 @@ public:
 
   static bool IsInputEventQueueSupported();
 
+  virtual mozilla::ipc::IPCResult RecvAttachBrowsingContext(
+    const BrowsingContextId& aParentContextId,
+    const BrowsingContextId& aContextId,
+    const nsString& aName) override;
+
+  virtual mozilla::ipc::IPCResult RecvDetachBrowsingContext(
+    const BrowsingContextId& aContextId) override;
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
