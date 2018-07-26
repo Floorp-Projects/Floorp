@@ -271,7 +271,7 @@ treechildren::-moz-tree-twisty {
   fill-opacity: 1;
 }
 
-treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(close) {
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
   list-style-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
 }
 
