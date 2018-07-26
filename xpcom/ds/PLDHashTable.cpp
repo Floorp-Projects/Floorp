@@ -193,7 +193,7 @@ PLDHashTable::HashShift(uint32_t aEntrySize, uint32_t aLength)
   }
 
   // Compute the hashShift value.
-  return kHashBits - log2;
+  return kPLDHashNumberBits - log2;
 }
 
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -272,7 +272,7 @@ void
 PLDHashTable::Hash2(PLDHashNumber aHash0,
                     uint32_t& aHash2Out, uint32_t& aSizeMaskOut) const
 {
-  uint32_t sizeLog2 = kHashBits - mHashShift;
+  uint32_t sizeLog2 = kPLDHashNumberBits - mHashShift;
   uint32_t sizeMask = (PLDHashNumber(1) << sizeLog2) - 1;
   aSizeMaskOut = sizeMask;
 
@@ -477,7 +477,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   MOZ_ASSERT(mEntryStore.Get());
 
   // Look, but don't touch, until we succeed in getting new entry store.
-  int32_t oldLog2 = kHashBits - mHashShift;
+  int32_t oldLog2 = kPLDHashNumberBits - mHashShift;
   int32_t newLog2 = oldLog2 + aDeltaLog2;
   uint32_t newCapacity = 1u << newLog2;
   if (newCapacity > kMaxCapacity) {
@@ -495,7 +495,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   }
 
   // We can't fail from here on, so update table parameters.
-  mHashShift = kHashBits - newLog2;
+  mHashShift = kPLDHashNumberBits - newLog2;
   mRemovedCount = 0;
 
   // Assign the new entry store to table.
@@ -699,7 +699,7 @@ PLDHashTable::ShrinkIfAppropriate()
     uint32_t log2;
     BestCapacity(mEntryCount, &capacity, &log2);
 
-    int32_t deltaLog2 = log2 - (kHashBits - mHashShift);
+    int32_t deltaLog2 = log2 - (kPLDHashNumberBits - mHashShift);
     MOZ_ASSERT(deltaLog2 <= 0);
 
     (void) ChangeTable(deltaLog2);
