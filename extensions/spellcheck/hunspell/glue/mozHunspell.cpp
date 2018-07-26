@@ -128,44 +128,43 @@ mozHunspell::~mozHunspell()
   delete mHunspell;
 }
 
-NS_IMETHODIMP mozHunspell::GetDictionary(char16_t **aDictionary)
+NS_IMETHODIMP
+mozHunspell::GetDictionary(nsAString& aDictionary)
 {
-  NS_ENSURE_ARG_POINTER(aDictionary);
-
-  *aDictionary = ToNewUnicode(mDictionary);
-  return *aDictionary ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aDictionary = mDictionary;
+  return NS_OK;
 }
 
 /* set the Dictionary.
  * This also Loads the dictionary and initializes the converter using the dictionaries converter
  */
-NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
+NS_IMETHODIMP
+mozHunspell::SetDictionary(const nsAString& aDictionary)
 {
-  NS_ENSURE_ARG_POINTER(aDictionary);
-
-  if (nsDependentString(aDictionary).IsEmpty()) {
+  if (aDictionary.IsEmpty()) {
     delete mHunspell;
     mHunspell = nullptr;
     mDictionary.Truncate();
     mAffixFileName.Truncate();
-    mLanguage.Truncate();
     mDecoder = nullptr;
     mEncoder = nullptr;
 
     return NS_OK;
   }
 
-  nsIURI* affFile = mDictionaries.GetWeak(nsDependentString(aDictionary));
-  if (!affFile)
+  nsIURI* affFile = mDictionaries.GetWeak(aDictionary);
+  if (!affFile) {
     return NS_ERROR_FILE_NOT_FOUND;
+  }
 
   nsAutoCString dictFileName, affFileName;
 
   nsresult rv = affFile->GetSpec(affFileName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mAffixFileName.Equals(affFileName.get()))
+  if (mAffixFileName.Equals(affFileName)) {
     return NS_OK;
+  }
 
   dictFileName = affFileName;
   int32_t dotPos = dictFileName.RFindChar('.');
@@ -195,53 +194,7 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
   mEncoder = encoding->NewEncoder();
   mDecoder = encoding->NewDecoderWithoutBOMHandling();
 
-  int32_t pos = mDictionary.FindChar('-');
-  if (pos == -1)
-    pos = mDictionary.FindChar('_');
-
-  if (pos == -1)
-    mLanguage.Assign(mDictionary);
-  else
-    mLanguage = Substring(mDictionary, 0, pos);
-
   return NS_OK;
-}
-
-NS_IMETHODIMP mozHunspell::GetLanguage(char16_t **aLanguage)
-{
-  NS_ENSURE_ARG_POINTER(aLanguage);
-
-  if (mDictionary.IsEmpty())
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aLanguage = ToNewUnicode(mLanguage);
-  return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonalDictionary)
-{
-  NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
-
-  *aProvidesPersonalDictionary = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
-{
-  NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
-
-  *aProvidesWordUtils = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozHunspell::GetName(char16_t * *aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP mozHunspell::GetCopyright(char16_t * *aCopyright)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP mozHunspell::GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary)
@@ -361,7 +314,7 @@ mozHunspell::DictionariesChanged(bool aNotifyChildProcesses)
   // Check if the current dictionary is still available.
   // If not, try to replace it with another dictionary of the same language.
   if (!mDictionary.IsEmpty()) {
-    nsresult rv = SetDictionary(mDictionary.get());
+    nsresult rv = SetDictionary(mDictionary);
     if (NS_SUCCEEDED(rv))
       return;
   }
@@ -369,7 +322,7 @@ mozHunspell::DictionariesChanged(bool aNotifyChildProcesses)
   // If the current dictionary has gone, and we don't have a good replacement,
   // set no current dictionary.
   if (!mDictionary.IsEmpty()) {
-    SetDictionary(EmptyString().get());
+    SetDictionary(EmptyString());
   }
 }
 
@@ -428,21 +381,22 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
 }
 
 nsresult
-mozHunspell::ConvertCharset(const char16_t* aStr, std::string* aDst)
+mozHunspell::ConvertCharset(const nsAString& aStr, std::string& aDst)
 {
-  NS_ENSURE_ARG_POINTER(aDst);
-  NS_ENSURE_TRUE(mEncoder, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mEncoder)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  auto src = MakeStringSpan(aStr);
+  auto src = MakeSpan(aStr.BeginReading(), aStr.Length());
   CheckedInt<size_t> needed =
     mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(src.Length());
   if (!needed.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aDst->resize(needed.value());
+  aDst.resize(needed.value());
 
-  char* dstPtr = &aDst->operator[](0);
+  char* dstPtr = &aDst[0];
   auto dst = MakeSpan(reinterpret_cast<uint8_t*>(dstPtr), needed.value());
 
   uint32_t result;
@@ -455,7 +409,7 @@ mozHunspell::ConvertCharset(const char16_t* aStr, std::string* aDst)
   if (result != kInputEmpty) {
     return NS_ERROR_UENC_NOMAPPING;
   }
-  aDst->resize(written);
+  aDst.resize(written);
   mEncoder->Encoding()->NewEncoderInto(*mEncoder);
   return NS_OK;
 }
@@ -472,35 +426,43 @@ mozHunspell::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-NS_IMETHODIMP mozHunspell::Check(const char16_t *aWord, bool *aResult)
+NS_IMETHODIMP
+mozHunspell::Check(const nsAString& aWord, bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(aWord);
-  NS_ENSURE_ARG_POINTER(aResult);
+  if (NS_WARN_IF(!aResult)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   NS_ENSURE_TRUE(mHunspell, NS_ERROR_FAILURE);
 
   std::string charsetWord;
-  nsresult rv = ConvertCharset(aWord, &charsetWord);
+  nsresult rv = ConvertCharset(aWord, charsetWord);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = mHunspell->spell(charsetWord);
 
   if (!*aResult && mPersonalDictionary)
-    rv = mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
+    rv = mPersonalDictionary->Check(aWord, aResult);
 
   return rv;
 }
 
-NS_IMETHODIMP mozHunspell::Suggest(const char16_t *aWord, char16_t ***aSuggestions, uint32_t *aSuggestionCount)
+NS_IMETHODIMP
+mozHunspell::Suggest(const nsAString& aWord, char16_t*** aSuggestions,
+                     uint32_t* aSuggestionCount)
 {
-  NS_ENSURE_ARG_POINTER(aSuggestions);
-  NS_ENSURE_ARG_POINTER(aSuggestionCount);
+  if (NS_WARN_IF(!aSuggestions)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (NS_WARN_IF(!aSuggestionCount)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   NS_ENSURE_TRUE(mHunspell, NS_ERROR_FAILURE);
 
   nsresult rv;
   *aSuggestionCount = 0;
 
   std::string charsetWord;
-  rv = ConvertCharset(aWord, &charsetWord);
+  rv = ConvertCharset(aWord, charsetWord);
   NS_ENSURE_SUCCESS(rv, rv);
 
   std::vector<std::string> suggestions = mHunspell->suggest(charsetWord);

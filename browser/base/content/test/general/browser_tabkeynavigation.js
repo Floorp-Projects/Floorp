@@ -12,8 +12,10 @@ add_task(async function test() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage2);
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
-  // Kill the animation for simpler test.
-  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["toolkit.cosmeticAnimations.enabled", false],
+    ["browser.ctrlTab.recentlyUsedOrder", false],
+  ]});
 
   gBrowser.selectedTab = tab1;
   browser1.focus();
@@ -151,6 +153,4 @@ add_task(async function test() {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
-
-    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
 });

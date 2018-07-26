@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = [ "TranslationContentHandler" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "LanguageDetector",
   "resource:///modules/translation/LanguageDetector.jsm");
 

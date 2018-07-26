@@ -2,23 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+'''
+Like :py:mod:`os.path`, with a reduced set of functions, and with normalized
+path separators (always use forward slashes).
+Also contains a few additional utilities not found in :py:mod:`os.path`.
+'''
+
 from __future__ import absolute_import
 
 import posixpath
 import os
 import re
 
-'''
-Like os.path, with a reduced set of functions, and with normalized path
-separators (always use forward slashes).
-Also contains a few additional utilities not found in os.path.
-'''
-
 
 def normsep(path):
     '''
     Normalize path separators, by using forward slashes instead of whatever
-    os.sep is.
+    :py:const:`os.sep` is.
     '''
     if os.sep != '/':
         path = path.replace(os.sep, '/')
@@ -67,17 +67,19 @@ def splitext(path):
 def split(path):
     '''
     Return the normalized path as a list of its components.
-        split('foo/bar/baz') returns ['foo', 'bar', 'baz']
+
+        ``split('foo/bar/baz')`` returns ``['foo', 'bar', 'baz']``
     '''
     return normsep(path).split('/')
 
 
 def basedir(path, bases):
     '''
-    Given a list of directories (bases), return which one contains the given
+    Given a list of directories (`bases`), return which one contains the given
     path. If several matches are found, the deepest base directory is returned.
-        basedir('foo/bar/baz', ['foo', 'baz', 'foo/bar']) returns 'foo/bar'
-        ('foo' and 'foo/bar' both match, but 'foo/bar' is the deepest match)
+
+    ``basedir('foo/bar/baz', ['foo', 'baz', 'foo/bar'])`` returns ``'foo/bar'``
+    (`'foo'` and `'foo/bar'` both match, but `'foo/bar'` is the deepest match)
     '''
     path = normsep(path)
     bases = [normsep(b) for b in bases]
@@ -96,30 +98,46 @@ def match(path, pattern):
     Return whether the given path matches the given pattern.
     An asterisk can be used to match any string, including the null string, in
     one part of the path:
-        'foo' matches '*', 'f*' or 'fo*o'
+
+        ``foo`` matches ``*``, ``f*`` or ``fo*o``
+
     However, an asterisk matching a subdirectory may not match the null string:
-        'foo/bar' does *not* match 'foo/*/bar'
+
+        ``foo/bar`` does *not* match ``foo/*/bar``
+
     If the pattern matches one of the ancestor directories of the path, the
     patch is considered matching:
-        'foo/bar' matches 'foo'
+
+        ``foo/bar`` matches ``foo``
+
     Two adjacent asterisks can be used to match files and zero or more
     directories and subdirectories.
-        'foo/bar' matches 'foo/**/bar', or '**/bar'
+
+        ``foo/bar`` matches ``foo/**/bar``, or ``**/bar``
     '''
     if not pattern:
         return True
     if pattern not in re_cache:
-        p = re.escape(pattern)
-        p = re.sub(r'(^|\\\/)\\\*\\\*\\\/', r'\1(?:.+/)?', p)
-        p = re.sub(r'(^|\\\/)\\\*\\\*$', r'(?:\1.+)?', p)
-        p = p.replace(r'\*', '[^/]*') + '(?:/.*)?$'
+        last_end = 0
+        p = ''
+        for m in re.finditer(r'(?:(^|/)\*\*(/|$))|(?P<star>\*)', pattern):
+            if m.start() > last_end:
+                p += re.escape(pattern[last_end:m.start()])
+            if m.group('star'):
+                p += '[^/]*'
+            elif m.group(2):
+                p += re.escape(m.group(1)) + r'(?:.+%s)?' % m.group(2)
+            else:
+                p += r'(?:%s.+)?' % re.escape(m.group(1))
+            last_end = m.end()
+        p += re.escape(pattern[last_end:]) + '(?:/.*)?$'
         re_cache[pattern] = re.compile(p)
     return re_cache[pattern].match(path) is not None
 
 
 def rebase(oldbase, base, relativepath):
     '''
-    Return relativepath relative to base instead of oldbase.
+    Return `relativepath` relative to `base` instead of `oldbase`.
     '''
     if base == oldbase:
         return relativepath

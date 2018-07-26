@@ -37,7 +37,11 @@ function WebConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
 
   this.telemetry = new Telemetry();
 
-  store = configureStore(this.hud);
+  store = configureStore(this.hud, {
+    // We may not have access to the toolbox (e.g. in the browser console).
+    sessionId: this.toolbox && this.toolbox.sessionId || -1,
+    telemetry: this.telemetry,
+  });
 }
 
 WebConsoleOutputWrapper.prototype = {

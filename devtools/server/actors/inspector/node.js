@@ -204,7 +204,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Normal counting misses ::before/::after.  Also, some anonymous children
     // may ultimately be skipped, so we have to consult with the walker.
-    if (numChildren === 0 || hasAnonChildren || isShadowHost(this.rawNode)) {
+    if (numChildren === 0 || hasAnonChildren || isShadowHost(this.rawNode) ||
+      isShadowAnonymous(this.rawNode)) {
       numChildren = this.walker.countChildren(this);
     }
 

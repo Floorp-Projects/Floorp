@@ -7,10 +7,8 @@
 
 var EXPORTED_SYMBOLS = [ "ContentPrefServiceChild" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ContentPrefStore.jsm");
 
 // We only need one bit of information out of the context.
 function contextArg(context) {

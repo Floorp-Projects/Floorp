@@ -5,7 +5,6 @@
 "use strict";
 
 ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
 ChromeUtils.defineModuleGetter(this, "PreferenceRollouts", "resource://normandy/lib/PreferenceRollouts.jsm");
 ChromeUtils.defineModuleGetter(this, "PrefUtils", "resource://normandy/lib/PrefUtils.jsm");

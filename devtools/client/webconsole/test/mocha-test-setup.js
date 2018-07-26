@@ -75,7 +75,9 @@ requireHacker.global_hook("default", (path, module) => {
     case "devtools/client/webconsole/utils/context-menu":
       return "{}";
     case "devtools/client/shared/telemetry":
-      return `module.exports = function() {}`;
+      return `module.exports = function() {
+        this.recordEvent = () => {};
+      }`;
     case "devtools/shared/event-emitter":
       return `module.exports = require("devtools-modules/src/utils/event-emitter")`;
     case "devtools/client/shared/unicode-url":

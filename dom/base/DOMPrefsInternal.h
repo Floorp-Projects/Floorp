@@ -59,6 +59,7 @@ DOM_WEBIDL_PREF(WebkitBlinkDirectoryPickerEnabled)
 DOM_WEBIDL_PREF(NetworkInformationEnabled)
 DOM_WEBIDL_PREF(FetchObserverEnabled)
 DOM_WEBIDL_PREF(PerformanceObserverEnabled)
+DOM_WEBIDL_PREF(SchedulerTimingEnabled)
 
 DOM_UINT32_PREF(WorkerCancelingTimeoutMillis,
                 "dom.worker.canceling.timeoutMilliseconds",

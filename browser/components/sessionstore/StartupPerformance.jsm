@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["StartupPerformance"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",

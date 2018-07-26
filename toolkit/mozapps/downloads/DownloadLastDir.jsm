@@ -30,9 +30,7 @@ const nsIFile = Ci.nsIFile;
 
 var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let nonPrivateLoadContext = Cc["@mozilla.org/loadcontext;1"].
                               createInstance(Ci.nsILoadContext);

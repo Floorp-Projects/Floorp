@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PrivacyFilter"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
 ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 

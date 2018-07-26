@@ -1688,7 +1688,7 @@ static unsigned long gNeverChange;
 
 extern "C" {
 
-size_t
+size_t __attribute__((used))
 RecordReplayInterceptObjCMessage(MessageArguments* aArguments)
 {
   if (AreThreadEventsPassedThrough()) {

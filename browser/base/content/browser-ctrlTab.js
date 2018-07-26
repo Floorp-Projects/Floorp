@@ -220,7 +220,7 @@ var ctrlTab = {
     }
   },
 
-  prefName: "browser.ctrlTab.previews",
+  prefName: "browser.ctrlTab.recentlyUsedOrder",
   readPref: function ctrlTab_readPref() {
     var enable =
       Services.prefs.getBoolPref(this.prefName) &&
@@ -465,48 +465,52 @@ var ctrlTab = {
     }
   },
 
-  onKeyPress: function ctrlTab_onKeyPress(event) {
-    var isOpen = this.isOpen;
-
-    if (isOpen) {
-      event.preventDefault();
-      event.stopPropagation();
+  onKeyDown(event) {
+    if (event.keyCode != event.DOM_VK_TAB ||
+        !event.ctrlKey ||
+        event.altKey ||
+        event.metaKey) {
+      return;
     }
 
-    switch (event.keyCode) {
-      case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !event.metaKey) {
-          if (isOpen) {
-            this.advanceFocus(!event.shiftKey);
-          } else if (!event.shiftKey) {
-            event.preventDefault();
-            event.stopPropagation();
-            let tabs = gBrowser.visibleTabs;
-            if (tabs.length > 2) {
-              this.open();
-            } else if (tabs.length == 2) {
-              let index = tabs[0].selected ? 1 : 0;
-              gBrowser.selectedTab = tabs[index];
-            }
-          }
-        }
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.isOpen) {
+      this.advanceFocus(!event.shiftKey);
+    } else if (!event.shiftKey) {
+      let tabs = gBrowser.visibleTabs;
+      if (tabs.length > 2) {
+        this.open();
+      } else if (tabs.length == 2) {
+        let index = tabs[0].selected ? 1 : 0;
+        gBrowser.selectedTab = tabs[index];
+      }
+    }
+  },
+
+  onKeyPress(event) {
+    if (!this.isOpen ||
+        !event.ctrlKey) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.keyCode == event.DOM_VK_DELETE) {
+      this.remove(this.selected);
+      return;
+    }
+
+    switch (event.charCode) {
+      case this.keys.close:
+        this.remove(this.selected);
         break;
-      default:
-        if (isOpen && event.ctrlKey) {
-          if (event.keyCode == event.DOM_VK_DELETE) {
-            this.remove(this.selected);
-            break;
-          }
-          switch (event.charCode) {
-            case this.keys.close:
-              this.remove(this.selected);
-              break;
-            case this.keys.find:
-            case this.keys.selectAll:
-              this.showAllTabs();
-              break;
-          }
-        }
+      case this.keys.find:
+      case this.keys.selectAll:
+        this.showAllTabs();
+        break;
     }
   },
 
@@ -561,6 +565,9 @@ var ctrlTab = {
         if (this.isOpen)
           this.removeClosingTabFromUI(event.target);
         break;
+      case "keydown":
+        this.onKeyDown(event);
+        break;
       case "keypress":
         this.onKeyPress(event);
         break;
@@ -606,6 +613,11 @@ var ctrlTab = {
     tabContainer[toggleEventListener]("TabSelect", this);
     tabContainer[toggleEventListener]("TabClose", this);
 
+    if (enable) {
+      Services.els.addSystemEventListener(document, "keydown", this, false);
+    } else {
+      Services.els.removeSystemEventListener(document, "keydown", this, false);
+    }
     document[toggleEventListener]("keypress", this);
     gBrowser.tabbox.handleCtrlTab = !enable;
 

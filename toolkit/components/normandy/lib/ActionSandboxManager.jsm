@@ -6,7 +6,6 @@
 
 ChromeUtils.import("resource://normandy/lib/NormandyDriver.jsm");
 ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm");
-ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 
 var EXPORTED_SYMBOLS = ["ActionSandboxManager"];
 

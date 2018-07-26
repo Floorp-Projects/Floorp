@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["FormAutoCompleteResult"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 function FormAutoCompleteResult(searchString,
                                 searchResult,
                                 defaultIndex,

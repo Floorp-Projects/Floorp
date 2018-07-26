@@ -18,9 +18,7 @@
 
   <xsl:template match="/">
     <div id="top">
-      <style>
-        @import url("chrome://global/content/xml/XMLPrettyPrint.css");
-      </style>
+      <link rel="stylesheet" href="chrome://global/content/xml/XMLPrettyPrint.css"/>
       <div id="header" dir="&locale.dir;">
         <p>
           &xml.nostylesheet;

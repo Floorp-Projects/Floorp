@@ -3,11 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 from compare_locales.checks import getChecker
 from compare_locales.parser import getParser, Parser, DTDEntity
 from compare_locales.paths import File
+import six
+from six.moves import range
 
 
 class BaseHelper(unittest.TestCase):
@@ -35,22 +39,22 @@ class BaseHelper(unittest.TestCase):
 
 class TestProperties(BaseHelper):
     file = File('foo.properties', 'foo.properties')
-    refContent = '''some = value
+    refContent = b'''some = value
 '''
 
     def testGood(self):
-        self._test('''some = localized''',
+        self._test(b'''some = localized''',
                    tuple())
 
     def testMissedEscape(self):
-        self._test(r'''some = \u67ood escape, bad \escape''',
+        self._test(br'''some = \u67ood escape, bad \escape''',
                    (('warning', 20, r'unknown escape sequence, \e',
                      'escape'),))
 
 
 class TestPlurals(BaseHelper):
     file = File('foo.properties', 'foo.properties')
-    refContent = '''\
+    refContent = b'''\
 # LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
 # See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
 # #1 number of files
@@ -59,7 +63,7 @@ downloadsTitleFiles=#1 file - Downloads;#1 files - #2
 '''
 
     def testGood(self):
-        self._test('''\
+        self._test(b'''\
 # LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
 # See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
 # #1 number of files
@@ -69,7 +73,7 @@ downloadsTitleFiles=#1 file - Downloads;#1 files - #2;#1 filers
                    tuple())
 
     def testNotUsed(self):
-        self._test('''\
+        self._test(b'''\
 # LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
 # See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
 # #1 number of files
@@ -80,7 +84,7 @@ downloadsTitleFiles=#1 file - Downloads;#1 files - Downloads;#1 filers
                      'plural'),))
 
     def testNotDefined(self):
-        self._test('''\
+        self._test(b'''\
 # LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
 # See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
 # #1 number of files
@@ -92,7 +96,7 @@ downloadsTitleFiles=#1 file - Downloads;#1 files - #2;#1 #3
 
 class TestPluralForms(BaseHelper):
     file = File('foo.properties', 'foo.properties', locale='en-GB')
-    refContent = '''\
+    refContent = b'''\
 # LOCALIZATION NOTE (downloadsTitleFiles): Semi-colon list of plural forms.
 # See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
 # #1 number of files
@@ -101,19 +105,19 @@ downloadsTitleFiles=#1 file;#1 files
 '''
 
     def test_matching_forms(self):
-        self._test('''\
+        self._test(b'''\
 downloadsTitleFiles=#1 fiiilee;#1 fiiilees
 ''',
                    tuple())
 
     def test_lacking_forms(self):
-        self._test('''\
+        self._test(b'''\
 downloadsTitleFiles=#1 fiiilee
 ''',
                    (('warning', 0, 'expecting 2 plurals, found 1', 'plural'),))
 
     def test_excess_forms(self):
-        self._test('''\
+        self._test(b'''\
 downloadsTitleFiles=#1 fiiilee;#1 fiiilees;#1 fiiilees
 ''',
                    (('warning', 0, 'expecting 2 plurals, found 3', 'plural'),))
@@ -121,7 +125,7 @@ downloadsTitleFiles=#1 fiiilee;#1 fiiilees;#1 fiiilees
 
 class TestDTDs(BaseHelper):
     file = File('foo.dtd', 'foo.dtd')
-    refContent = '''<!ENTITY foo "This is &apos;good&apos;">
+    refContent = b'''<!ENTITY foo "This is &apos;good&apos;">
 <!ENTITY width "10ch">
 <!ENTITY style "width: 20ch; height: 280px;">
 <!ENTITY minStyle "min-height: 50em;">
@@ -131,105 +135,106 @@ class TestDTDs(BaseHelper):
 '''
 
     def testWarning(self):
-        self._test('''<!ENTITY foo "This is &not; good">
+        self._test(b'''<!ENTITY foo "This is &not; good">
 ''',
                    (('warning', (0, 0), 'Referencing unknown entity `not`',
                      'xmlparse'),))
         # make sure we only handle translated entity references
-        self._test(u'''<!ENTITY foo "This is &ƞǿŧ; good">
+        self._test('''<!ENTITY foo "This is &ƞǿŧ; good">
 '''.encode('utf-8'),
-            (('warning', (0, 0), u'Referencing unknown entity `ƞǿŧ`',
+            (('warning', (0, 0), 'Referencing unknown entity `ƞǿŧ`',
               'xmlparse'),))
 
     def testErrorFirstLine(self):
-        self._test('''<!ENTITY foo "This is </bad> stuff">
+        self._test(b'''<!ENTITY foo "This is </bad> stuff">
 ''',
                    (('error', (1, 10), 'mismatched tag', 'xmlparse'),))
 
     def testErrorSecondLine(self):
-        self._test('''<!ENTITY foo "This is
+        self._test(b'''<!ENTITY foo "This is
   </bad>
 stuff">
 ''',
                    (('error', (2, 4), 'mismatched tag', 'xmlparse'),))
 
     def testKeyErrorSingleAmpersand(self):
-        self._test('''<!ENTITY some.key "&">
+        self._test(b'''<!ENTITY some.key "&">
 ''',
                    (('error', (1, 1), 'not well-formed (invalid token)',
                      'xmlparse'),))
 
     def testXMLEntity(self):
-        self._test('''<!ENTITY foo "This is &quot;good&quot;">
+        self._test(b'''<!ENTITY foo "This is &quot;good&quot;">
 ''',
                    tuple())
 
     def testPercentEntity(self):
-        self._test('''<!ENTITY formatPercent "Another 100&#037;">
+        self._test(b'''<!ENTITY formatPercent "Another 100&#037;">
 ''',
                    tuple())
-        self._test('''<!ENTITY formatPercent "Bad 100% should fail">
+        self._test(b'''<!ENTITY formatPercent "Bad 100% should fail">
 ''',
                    (('error', (0, 32), 'not well-formed (invalid token)',
                      'xmlparse'),))
 
     def testNoNumber(self):
-        self._test('''<!ENTITY ftd "foo">''',
+        self._test(b'''<!ENTITY ftd "foo">''',
                    (('warning', 0, 'reference is a number', 'number'),))
 
     def testNoLength(self):
-        self._test('''<!ENTITY width "15miles">''',
+        self._test(b'''<!ENTITY width "15miles">''',
                    (('error', 0, 'reference is a CSS length', 'css'),))
 
     def testNoStyle(self):
-        self._test('''<!ENTITY style "15ch">''',
+        self._test(b'''<!ENTITY style "15ch">''',
                    (('error', 0, 'reference is a CSS spec', 'css'),))
-        self._test('''<!ENTITY style "junk">''',
+        self._test(b'''<!ENTITY style "junk">''',
                    (('error', 0, 'reference is a CSS spec', 'css'),))
 
     def testStyleWarnings(self):
-        self._test('''<!ENTITY style "width:15ch">''',
+        self._test(b'''<!ENTITY style "width:15ch">''',
                    (('warning', 0, 'height only in reference', 'css'),))
-        self._test('''<!ENTITY style "width:15em;height:200px;">''',
+        self._test(b'''<!ENTITY style "width:15em;height:200px;">''',
                    (('warning', 0, "units for width don't match (em != ch)",
                      'css'),))
 
     def testNoWarning(self):
-        self._test('''<!ENTITY width "12em">''', tuple())
-        self._test('''<!ENTITY style "width:12ch;height:200px;">''', tuple())
-        self._test('''<!ENTITY ftd "0">''', tuple())
+        self._test(b'''<!ENTITY width "12em">''', tuple())
+        self._test(b'''<!ENTITY style "width:12ch;height:200px;">''', tuple())
+        self._test(b'''<!ENTITY ftd "0">''', tuple())
 
 
 class TestEntitiesInDTDs(BaseHelper):
     file = File('foo.dtd', 'foo.dtd')
-    refContent = '''<!ENTITY short "This is &brandShortName;">
+    refContent = b'''<!ENTITY short "This is &brandShortName;">
 <!ENTITY shorter "This is &brandShorterName;">
 <!ENTITY ent.start "Using &brandShorterName; start to">
 <!ENTITY ent.end " end">
 '''
 
     def testOK(self):
-        self._test('''<!ENTITY ent.start "Mit &brandShorterName;">''', tuple())
+        self._test(b'''<!ENTITY ent.start "Mit &brandShorterName;">''',
+                   tuple())
 
     def testMismatch(self):
-        self._test('''<!ENTITY ent.start "Mit &brandShortName;">''',
+        self._test(b'''<!ENTITY ent.start "Mit &brandShortName;">''',
                    (('warning', (0, 0),
                      'Entity brandShortName referenced, '
                      'but brandShorterName used in context',
                      'xmlparse'),))
 
     def testAcross(self):
-        self._test('''<!ENTITY ent.end "Mit &brandShorterName;">''',
+        self._test(b'''<!ENTITY ent.end "Mit &brandShorterName;">''',
                    tuple())
 
     def testAcrossWithMismatch(self):
         '''If we could tell that ent.start and ent.end are one string,
         we should warn. Sadly, we can't, so this goes without warning.'''
-        self._test('''<!ENTITY ent.end "Mit &brandShortName;">''',
+        self._test(b'''<!ENTITY ent.end "Mit &brandShortName;">''',
                    tuple())
 
     def testUnknownWithRef(self):
-        self._test('''<!ENTITY ent.start "Mit &foopy;">''',
+        self._test(b'''<!ENTITY ent.start "Mit &foopy;">''',
                    (('warning',
                      (0, 0),
                      'Referencing unknown entity `foopy` '
@@ -238,7 +243,7 @@ class TestEntitiesInDTDs(BaseHelper):
                      'xmlparse'),))
 
     def testUnknown(self):
-        self._test('''<!ENTITY ent.end "Mit &foopy;">''',
+        self._test(b'''<!ENTITY ent.end "Mit &foopy;">''',
                    (('warning',
                      (0, 0),
                      'Referencing unknown entity `foopy`'
@@ -252,10 +257,10 @@ class TestAndroid(unittest.TestCase):
     Make sure we're hitting our extra rules only if
     we're passing in a DTD file in the embedding/android module.
     """
-    apos_msg = u"Apostrophes in Android DTDs need escaping with \\' or " + \
-               u"\\u0027, or use \u2019, or put string in quotes."
-    quot_msg = u"Quotes in Android DTDs need escaping with \\\" or " + \
-               u"\\u0022, or put string in apostrophes."
+    apos_msg = "Apostrophes in Android DTDs need escaping with \\' or " + \
+               "\\u0027, or use \u2019, or put string in quotes."
+    quot_msg = "Quotes in Android DTDs need escaping with \\\" or " + \
+               "\\u0022, or put string in apostrophes."
 
     def getNext(self, v):
         ctx = Parser.Context(v)
@@ -263,6 +268,8 @@ class TestAndroid(unittest.TestCase):
             ctx, '', (0, len(v)), (), (0, len(v)))
 
     def getDTDEntity(self, v):
+        if isinstance(v, six.binary_type):
+            v = v.decode('utf-8')
         v = v.replace('"', '&quot;')
         ctx = Parser.Context('<!ENTITY foo "%s">' % v)
         return DTDEntity(
@@ -286,7 +293,7 @@ class TestAndroid(unittest.TestCase):
                          (('warning', (0, 0),
                            'Referencing unknown entity `ref`', 'xmlparse'),))
         # no report on stray ampersand or quote, if not completely quoted
-        for i in xrange(3):
+        for i in range(3):
             # make sure we're catching unescaped apostrophes,
             # try 0..5 backticks
             l10n = self.getDTDEntity("\\"*(2*i) + "'")
@@ -337,12 +344,12 @@ class TestAndroid(unittest.TestCase):
                          (('error', 2, self.quot_msg, 'android'),))
 
         # broken unicode escape
-        l10n = self.getDTDEntity("Some broken \u098 unicode")
+        l10n = self.getDTDEntity(b"Some broken \u098 unicode")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          (('error', 12, 'truncated \\uXXXX escape',
                            'android'),))
         # broken unicode escape, try to set the error off
-        l10n = self.getDTDEntity(u"\u9690"*14+"\u006"+"  "+"\u0064")
+        l10n = self.getDTDEntity("\u9690"*14+"\\u006"+"  "+"\\u0064")
         self.assertEqual(tuple(checker.check(ref, l10n)),
                          (('error', 14, 'truncated \\uXXXX escape',
                            'android'),))
@@ -396,7 +403,7 @@ class TestAndroid(unittest.TestCase):
     def test_entities_across_dtd(self):
         f = File("browser/strings.dtd", "strings.dtd", "browser")
         p = getParser(f.file)
-        p.readContents('<!ENTITY other "some &good.ref;">')
+        p.readContents(b'<!ENTITY other "some &good.ref;">')
         ref = p.parse()
         checker = getChecker(f)
         checker.set_reference(ref[0])

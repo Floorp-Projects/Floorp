@@ -353,8 +353,8 @@
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
-        <radio value="false" data-l10n-id="do-not-track-option-default"/>
         <radio value="true" data-l10n-id="do-not-track-option-always"/>
+        <radio value="false" data-l10n-id="do-not-track-option-default"/>
       </radiogroup>
     </vbox>
   </vbox>

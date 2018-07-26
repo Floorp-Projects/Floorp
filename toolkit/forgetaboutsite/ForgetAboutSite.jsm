@@ -5,8 +5,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 

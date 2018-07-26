@@ -25,32 +25,7 @@ interface mozISpellCheckingEngine : nsISupports {
    * If the dictionary is changed to no dictionary (the empty string), an
    * observer is allowed to set another dictionary before it returns.
    */
-  attribute wstring dictionary;
-
-  /**
-   * The language this spellchecker is using when checking
-   */
-  readonly attribute wstring language;
-
-  /**
-   * Does the engine provide its own personal dictionary?
-   */
-  readonly attribute boolean providesPersonalDictionary;
-
-  /**
-   * Does the engine provide its own word utils?
-   */
-  readonly attribute boolean providesWordUtils;
-
-  /**
-   * The name of the engine
-   */
-  readonly attribute wstring name;
-
-  /** 
-   * a string indicating the copyright of the engine
-   */
-  readonly attribute wstring copyright;
+  attribute AString dictionary;
 
   /**
    * the personal dictionary
@@ -65,12 +40,13 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * check a word
    */
-  boolean check(in wstring word);
+  boolean check(in AString word);
 
   /**
    * get a list of suggestions for a misspelled word
    */
-  void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out uint32_t count);
+  void suggest(in AString word, [array, size_is(count)] out wstring suggestions,
+               out uint32_t count);
 
   /**
    * Load dictionaries from the specified dir

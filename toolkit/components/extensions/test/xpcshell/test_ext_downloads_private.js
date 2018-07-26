@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Downloads.jsm");
-
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
 

@@ -63,7 +63,7 @@ class TestMergeDTD(unittest.TestCase):
 <!ENTITY mainWindow.privatebrowsing "(Private Browsing)">
 """)
 
-        self.assertMultiLineEqual(
+        self.assertEqual(
             merge_channels(self.name, *channels), b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -116,7 +116,7 @@ class TestMergeDTD(unittest.TestCase):
 <!ENTITY warning_no_serviceworkers "No Service Workers registered.">
 """)
 
-        self.assertMultiLineEqual(
+        self.assertEqual(
             merge_channels(self.name, *channels), b"""\
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
