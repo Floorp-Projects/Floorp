@@ -918,6 +918,7 @@ WEBIDL_FILES = [
     'VideoStreamTrack.webidl',
     'VideoTrack.webidl',
     'VideoTrackList.webidl',
+    'VisualViewport.webidl',
     'VRDisplay.webidl',
     'VRDisplayEvent.webidl',
     'VRServiceTest.webidl',
