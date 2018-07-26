@@ -11,6 +11,13 @@ const Runtime = require("./runtime");
  * opened about:debugging.
  */
 class ThisFirefox extends Runtime {
+  getIcon() {
+    return "chrome://devtools/skin/images/firefox-logo-glyph.svg";
+  }
+
+  getName() {
+    return "This Firefox";
+  }
 }
 
 module.exports = ThisFirefox;
