@@ -20,11 +20,12 @@
   <form id="form" autocomplete="off">
     <label>
       <span data-localization="cardNumber"/>
-      <input id="cc-number" type="text"/>
+      <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
+      <input id="cc-number" type="text" required="required" minlength="9" pattern="[- 0-9]+"/>
     </label>
     <label>
       <span data-localization="nameOnCard"/>
-      <input id="cc-name" type="text"/>
+      <input id="cc-name" type="text" required="required"/>
     </label>
     <div>
       <span data-localization="cardExpires"/>

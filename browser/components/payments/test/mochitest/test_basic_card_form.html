@@ -96,15 +96,21 @@ add_task(async function test_saveButton() {
   display.appendChild(form);
   await asyncElementRendered();
 
+  ok(form.saveButton.disabled, "Save button should initially be disabled");
   form.form.querySelector("#cc-number").focus();
-  sendString("4111111111111111");
+  sendString("4111 1111-1111 1111");
   form.form.querySelector("#cc-name").focus();
+  // Check .disabled after .focus() so that it's after both "input" and "change" events.
+  ok(form.saveButton.disabled, "Save button should still be disabled without a name");
   sendString("J. Smith");
   form.form.querySelector("#cc-exp-month").focus();
   sendString("11");
   form.form.querySelector("#cc-exp-year").focus();
   let year = (new Date()).getFullYear().toString();
   sendString(year);
+  form.saveButton.focus();
+  ok(!form.saveButton.disabled,
+     "Save button should be enabled since the required fields are filled");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
   is(form.saveButton.textContent, "Save", "Check label");
@@ -127,7 +133,7 @@ add_task(async function test_saveButton() {
       "cc-exp-month": "11",
       "cc-exp-year": year,
       "cc-name": "J. Smith",
-      "cc-number": "4111111111111111",
+      "cc-number": "4111 1111-1111 1111",
       "billingAddressGUID": "",
     },
     selectedStateKey: ["selectedPaymentCard"],

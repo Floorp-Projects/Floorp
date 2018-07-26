@@ -179,15 +179,20 @@ add_task(async function test_addInvalidCreditCard() {
 
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
+    EventUtils.synthesizeKey("test name", {}, win);
+    EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#save"), {}, win);
 
     is(win.document.querySelector("form").checkValidity(), false, "cc-number is invalid");
     SimpleTest.requestFlakyTimeout("Ensure the window remains open after save attempt");
     setTimeout(() => {
       win.removeEventListener("unload", unloadHandler);
+      info("closing");
       win.close();
     }, 500);
   });
+  info("closed");
   let creditCards = await getCreditCards();
 
   is(creditCards.length, 0, "Credit card storage is empty");
