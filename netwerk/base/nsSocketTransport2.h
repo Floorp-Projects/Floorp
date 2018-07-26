@@ -150,6 +150,13 @@ public:
     // connected to the given Unix domain address. We can only create
     // unlayered, simple, stream sockets.
     nsresult InitWithFilename(const char *filename);
+
+    // This method instructs the socket transport to open a socket
+    // connected to the given Unix domain address that includes abstract
+    // socket address. If using abstract socket address, first character of
+    // name parameter has to be \0.
+    // We can only create unlayered, simple, stream sockets.
+    nsresult InitWithName(const char *name, size_t len);
 #endif
 
     // nsASocketHandler methods:

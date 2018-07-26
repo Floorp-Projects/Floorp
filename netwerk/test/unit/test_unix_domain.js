@@ -5,6 +5,9 @@ var CC = Components.Constructor;
 const UnixServerSocket = CC("@mozilla.org/network/server-socket;1",
                             "nsIServerSocket",
                             "initWithFilename");
+const UnixAbstractServerSocket = CC("@mozilla.org/network/server-socket;1",
+                                    "nsIServerSocket",
+                                    "initWithAbstractAddress");
 
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
                                  "nsIScriptableInputStream",
@@ -27,16 +30,24 @@ function run_test()
     return;
   }
 
-  add_test(test_echo);
-  add_test(test_name_too_long);
-  add_test(test_no_directory);
-  add_test(test_no_such_socket);
-  add_test(test_address_in_use);
-  add_test(test_file_in_way);
-  add_test(test_create_permission);
-  add_test(test_connect_permission);
-  add_test(test_long_socket_name);
-  add_test(test_keep_when_offline);
+  // The xpcshell temp directory on Android doesn't seem to let us create
+  // Unix domain sockets. (Perhaps it's a FAT filesystem?)
+  if (mozinfo.os != "android") {
+    add_test(test_echo);
+    add_test(test_name_too_long);
+    add_test(test_no_directory);
+    add_test(test_no_such_socket);
+    add_test(test_address_in_use);
+    add_test(test_file_in_way);
+    add_test(test_create_permission);
+    add_test(test_connect_permission);
+    add_test(test_long_socket_name);
+    add_test(test_keep_when_offline);
+  }
+
+  if (mozinfo.os == "android" || mozinfo.os == "linux") {
+    add_test(test_abstract_address_socket);
+  }
 
   run_next_test();
 }
@@ -542,4 +553,52 @@ function test_keep_when_offline()
 
     run_next_test();
   }
+}
+
+function test_abstract_address_socket()
+{
+  const socketname = "abstractsocket";
+  let server = new UnixAbstractServerSocket(socketname, -1);
+  server.asyncListen({
+    onSocketAccepted: (aServ, aTransport) => {
+      let serverInput = aTransport.openInputStream(0, 0, 0)
+                        .QueryInterface(Ci.nsIAsyncInputStream);
+      let serverOutput = aTransport.openOutputStream(0, 0, 0);
+
+      serverInput.asyncWait(aStream => {
+        info("called test_abstract_address_socket's onSocketAccepted's onInputStreamReady");
+
+        // Receive data from the client, and send back a response.
+        let serverScriptableInput = new ScriptableInputStream(serverInput);
+        Assert.equal(serverScriptableInput.readBytes(9), "ping ping");
+        serverOutput.write("pong", 4);
+
+      }, 0, 0, threadManager.currentThread);
+    },
+    onStopListening: (aServ, aTransport) => {
+    },
+  });
+
+  let client = socketTransportService
+               .createUnixDomainAbstractAddressTransport(socketname);
+  Assert.equal(client.host, socketname);
+  Assert.equal(client.port, 0);
+  let clientInput = client.openInputStream(0, 0, 0)
+                    .QueryInterface(Ci.nsIAsyncInputStream);
+  let clientOutput = client.openOutputStream(0, 0, 0);
+
+  clientOutput.write("ping ping", 9);
+
+  clientInput.asyncWait(aStream => {
+    let clientScriptInput = new ScriptableInputStream(clientInput);
+    let available = clientScriptInput.available();
+    if (available) {
+      Assert.equal(clientScriptInput.readBytes(4), "pong");
+
+      client.close(Cr.NS_OK);
+      server.close(Cr.NS_OK);
+
+      run_next_test();
+    }
+  }, 0, 0, threadManager.currentThread);
 }
