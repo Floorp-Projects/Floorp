@@ -100,6 +100,8 @@ class MarkStack
         JSObject* asValueArrayObject() const;
         JSObject* asSavedValueArrayObject() const;
         JSRope* asTempRope() const;
+
+        void assertValid() const;
     };
 
     struct ValueArray
