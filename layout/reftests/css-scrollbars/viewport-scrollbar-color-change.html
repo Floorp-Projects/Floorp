@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+  html {
+    overflow: scroll;
+    scrollbar-face-color: green;
+    scrollbar-track-color: green;
+  }
+  html.reftest-wait {
+    scrollbar-face-color: red;
+    scrollbar-track-color: red;
+  }
+</style>
+<div style="width: 200vw; height: 200vh"></div>
+<script>
+  window.addEventListener("MozAfterPaint", function() {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+</script>

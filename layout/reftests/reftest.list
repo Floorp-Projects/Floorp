@@ -124,6 +124,9 @@ include css-submit-invalid/reftest.list
 # css text-overflow
 include text-overflow/reftest.list
 
+# css scrollbars
+include css-scrollbars/reftest.list
+
 # css selectors
 include css-selectors/reftest.list
 
