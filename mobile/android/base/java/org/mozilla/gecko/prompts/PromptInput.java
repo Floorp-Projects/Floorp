@@ -18,6 +18,7 @@ import org.mozilla.gecko.widget.FocusableTimePicker;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.text.Html;
 import android.text.InputType;
@@ -42,7 +43,7 @@ public abstract class PromptInput {
     protected final String mLabel;
     protected final String mType;
     protected final String mId;
-    protected final String mValue;
+    protected String mValue;
     protected final String mMinValue;
     protected final String mMaxValue;
     protected OnChangeListener mListener;
@@ -117,7 +118,7 @@ public abstract class PromptInput {
             input.setRawInputType(Configuration.KEYBOARD_12KEY);
             input.setInputType(InputType.TYPE_CLASS_NUMBER |
                                InputType.TYPE_NUMBER_FLAG_SIGNED);
-            return input;
+            return inputLayout;
         }
     }
 
@@ -139,7 +140,7 @@ public abstract class PromptInput {
 
     public static class CheckboxInput extends PromptInput {
         public static final String INPUT_TYPE = "checkbox";
-        private final boolean mChecked;
+        private boolean mChecked;
 
         public CheckboxInput(GeckoBundle obj) {
             super(obj);
@@ -160,6 +161,13 @@ public abstract class PromptInput {
         public Object getValue() {
             CheckBox checkbox = (CheckBox)mView;
             return checkbox.isChecked() ? Boolean.TRUE : Boolean.FALSE;
+        }
+
+        @Override
+        public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+            if (userInput.containsKey(mId)) {
+                mChecked = (Boolean) userInput.get(mId);
+            }
         }
     }
 
@@ -284,7 +292,7 @@ public abstract class PromptInput {
     public static class MenulistInput extends PromptInput {
         public static final String INPUT_TYPE = "menulist";
         private final String[] mListitems;
-        private final int mSelected;
+        private int mSelected;
 
         public Spinner spinner;
         public AllCapsTextView textView;
@@ -329,6 +337,13 @@ public abstract class PromptInput {
         public Object getValue() {
             return spinner.getSelectedItemPosition();
         }
+
+        @Override
+        public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+            if (userInput.containsKey(mId)) {
+                mSelected = (Integer) userInput.get(mId);
+            }
+        }
     }
 
     public static class LabelInput extends PromptInput {
@@ -345,6 +360,11 @@ public abstract class PromptInput {
             mView = view;
             return mView;
         }
+
+        @Override
+        public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+            // No user input to save
+        }
     }
 
     public PromptInput(GeckoBundle obj) {
@@ -355,6 +375,12 @@ public abstract class PromptInput {
         mValue = obj.getString("value", "");
         mMaxValue = obj.getString("max", "");
         mMinValue = obj.getString("min", "");
+    }
+
+    public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+        if (userInput.containsKey(mId)) {
+            mValue = (String) userInput.get(mId);
+        }
     }
 
     public void putInBundle(final GeckoBundle bundle) {

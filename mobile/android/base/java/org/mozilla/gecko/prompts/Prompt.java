@@ -5,18 +5,13 @@
 
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +21,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.ArrayList;
 
@@ -49,6 +50,11 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
     private int mTabId = Tabs.INVALID_TAB_ID;
     private Object mPreviousInputValue = null;
+
+    private String currentTitle;
+    private String currentText;
+    private PromptListItem[] currentListItems;
+    private int currentChoiceMode;
 
     public Prompt(Context context, PromptCallback callback) {
         this(context);
@@ -125,15 +131,57 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
     }
 
-    public void show(String title, String text, PromptListItem[] listItems, int choiceMode) {
+    public void show(@NonNull final String title, @NonNull final String text,
+                     @NonNull final PromptListItem[] listItems, final int choiceMode) {
+        saveInputDetails(title, text, listItems, choiceMode);
+
+        if (createPrompt(title, text, listItems, choiceMode)) {
+            tryShowingInputPrompt();
+        }
+    }
+
+    public void resetLayout() {
+        if (mDialog != null && mDialog.isShowing()) {
+            mDialog.dismiss();
+
+            final GeckoBundle currentUserInput = new GeckoBundle();
+            addInputValues(currentUserInput);
+
+            for (PromptInput input : mInputs) {
+                input.saveCurrentInput(currentUserInput);
+            }
+
+            if (createPrompt(currentTitle, currentText, currentListItems, currentChoiceMode)) {
+                // If the dialog for this Prompt was shown before it's safe to show again
+                // and avoid the superfluous tryShowingInputPrompt()
+                mDialog.show();
+            }
+        }
+    }
+
+    private void saveInputDetails(@NonNull final String title, @NonNull final String text,
+                                  @NonNull final PromptListItem[] listItems, final int choiceMode) {
+        currentTitle = title;
+        currentText = text;
+        currentListItems = listItems;
+        currentChoiceMode = choiceMode;
+    }
+
+    private boolean createPrompt(@NonNull final String title, @NonNull final String text,
+                                 @NonNull final PromptListItem[] listItems, final int choiceMode) {
         ThreadUtils.assertOnUiThread();
 
         try {
             create(title, text, listItems, choiceMode);
         } catch (IllegalStateException ex) {
             Log.i(LOGTAG, "Error building dialog", ex);
-            return;
+            return false;
         }
+        return true;
+    }
+
+    private void tryShowingInputPrompt() {
+        ThreadUtils.assertOnUiThread();
 
         if (mTabId != Tabs.INVALID_TAB_ID) {
             Tabs.registerOnTabsChangedListener(this);

@@ -11,6 +11,7 @@ import org.mozilla.gecko.widget.BasicColorPicker;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -19,14 +20,11 @@ public class ColorPickerInput extends PromptInput {
     public static final String LOGTAG = "GeckoColorPickerInput";
 
     private static final boolean mShowAdvancedButton = true;
-    private final int mInitialColor;
+    private int mInitialColor;
 
     public ColorPickerInput(GeckoBundle obj) {
         super(obj);
-        String init = obj.getString("value");
-        mInitialColor = Color.rgb(Integer.parseInt(init.substring(1, 3), 16),
-                                  Integer.parseInt(init.substring(3, 5), 16),
-                                  Integer.parseInt(init.substring(5, 7), 16));
+        mInitialColor = getColorCode(obj.getString("value"));
     }
 
     @Override
@@ -55,5 +53,18 @@ public class ColorPickerInput extends PromptInput {
     @Override
     public boolean canApplyInputStyle() {
         return false;
+    }
+
+    @Override
+    public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
+        if (userInput != null && userInput.containsKey(mId)) {
+            mInitialColor = getColorCode((String) userInput.get(mId));
+        }
+    }
+
+    private int getColorCode(@NonNull final String color) {
+        return Color.rgb(Integer.parseInt(color.substring(1, 3), 16),
+                Integer.parseInt(color.substring(3, 5), 16),
+                Integer.parseInt(color.substring(5, 7), 16));
     }
 }
