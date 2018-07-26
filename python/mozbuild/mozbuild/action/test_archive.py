@@ -222,6 +222,12 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'base': 'testing/web-platform/tests/tools/third_party',
+            'pattern': '**',
+            'dest': 'tools/wpt_third_party',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'base': 'python/mozterm',
             'pattern': '**',
             'dest': 'tools/mozterm',
