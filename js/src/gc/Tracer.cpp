@@ -445,6 +445,13 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
             break;
           }
 
+          case JS::TraceKind::LazyScript:
+          {
+            LazyScript* script = static_cast<LazyScript*>(thing);
+            snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
+            break;
+          }
+
           case JS::TraceKind::String:
           {
             *buf++ = ' ';
