@@ -40,6 +40,8 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
+#include "js/HashTable.h"
+
 namespace js {
 
 namespace detail {

@@ -1053,18 +1053,26 @@ FillArgumentsFromArraylike(JSContext* cx, Args& args, const Arraylike& arraylike
     return true;
 }
 
+} // namespace js
+
+namespace mozilla {
+
 template <>
-struct DefaultHasher<AbstractFramePtr> {
-    typedef AbstractFramePtr Lookup;
+struct DefaultHasher<js::AbstractFramePtr> {
+    typedef js::AbstractFramePtr Lookup;
 
     static js::HashNumber hash(const Lookup& key) {
         return mozilla::HashGeneric(key.raw());
     }
 
-    static bool match(const AbstractFramePtr& k, const Lookup& l) {
+    static bool match(const js::AbstractFramePtr& k, const Lookup& l) {
         return k == l;
     }
 };
+
+} // namespace mozilla
+
+namespace js {
 
 /*****************************************************************************/
 

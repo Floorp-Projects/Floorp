@@ -44,6 +44,7 @@ EXPORTS.mozilla = [
     'FStream.h',
     'GuardObjects.h',
     'HashFunctions.h',
+    'HashTable.h',
     'IntegerPrintfMacros.h',
     'IntegerRange.h',
     'IntegerTypeTraits.h',
