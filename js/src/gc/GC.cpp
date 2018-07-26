@@ -3234,6 +3234,16 @@ ArenaLists::queueForegroundThingsForSweep()
     gcScriptArenasToUpdate = arenaListsToSweep(AllocKind::SCRIPT);
 }
 
+mozilla::TimeStamp SliceBudget::unlimitedDeadline;
+
+void
+SliceBudget::Init()
+{
+    MOZ_ASSERT(!unlimitedDeadline);
+    uint64_t oneYearsInSeconds = 365 * 24 * 60 * 60;
+    unlimitedDeadline = ReallyNow() + mozilla::TimeDuration::FromSeconds(100 * oneYearsInSeconds);
+}
+
 SliceBudget::SliceBudget()
   : timeBudget(UnlimitedTimeBudget), workBudget(UnlimitedWorkBudget)
 {
