@@ -958,7 +958,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   // and defining it as a property on the XBL scope's global. This works fine,
   // but we need to make sure never to assume that the the reflector and
   // prototype are same-compartment with the bound document.
-  JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(obj));
 
   // We never store class objects in add-on scopes.
   JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScopeOrGlobal(cx, global));
