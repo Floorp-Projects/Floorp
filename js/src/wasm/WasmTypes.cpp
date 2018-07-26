@@ -107,8 +107,8 @@ Val::writePayload(uint8_t* dst) const
 void
 Val::trace(JSTracer* trc)
 {
-    if (type_.isValid() && type_ == ValType::AnyRef && u.ptr_)
-        TraceManuallyBarrieredEdge(trc, &u.ptr_, "wasm anyref global");
+    if (type_.isValid() && type_.isRefOrAnyRef() && u.ptr_)
+        TraceManuallyBarrieredEdge(trc, &u.ptr_, "wasm ref/anyref global");
 }
 
 bool
