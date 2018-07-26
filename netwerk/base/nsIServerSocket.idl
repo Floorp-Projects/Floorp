@@ -151,6 +151,24 @@ interface nsIServerSocket : nsISupports
                           in long aBacklog);
 
     /**
+     * initWithAbstractAddress
+     *
+     * This mehtod is a flavor of initWithFilename method. This initializes
+     * a UNIX domain socket that uses abstract socket address.
+     * This socket type is only supported on Linux and Android.
+     *
+     * On systems that don't support this type's UNIX domain sockets at all,
+     * this returns NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED.
+     *
+     * @param aName
+     *        The abstract socket address which the socket should be created.
+     * @param aBacklog
+     *        The maximum length the queue of pending connections may grow to.
+     */
+    void initWithAbstractAddress(in AUTF8String aName,
+                                 in long aBacklog);
+
+    /**
      * close
      *
      * This method closes a server socket.  This does not affect already
