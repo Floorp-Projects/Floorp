@@ -12,10 +12,18 @@ namespace gfx {
 
 CaptureCommandList::~CaptureCommandList()
 {
+  Clear();
+}
+
+void
+CaptureCommandList::Clear()
+{
   for (iterator iter(*this); !iter.Done(); iter.Next()) {
     DrawingCommand* cmd = iter.Get();
     cmd->~DrawingCommand();
   }
+  mLastCommand = nullptr;
+  mStorage.clear();
 }
 
 } // namespace gfx

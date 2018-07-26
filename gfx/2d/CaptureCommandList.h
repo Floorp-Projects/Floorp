@@ -64,6 +64,17 @@ public:
     return Append<T>();
   }
 
+  template <typename T>
+  bool BufferWillAlloc() const {
+    return mStorage.size() + sizeof(uint32_t) + sizeof(T) > mStorage.capacity();
+  }
+
+  size_t BufferCapacity() const {
+    return mStorage.capacity();
+  }
+
+  void Clear();
+
   class iterator
   {
   public:
