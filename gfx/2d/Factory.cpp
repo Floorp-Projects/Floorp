@@ -452,6 +452,12 @@ Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT
 }
 
 already_AddRefed<DrawTargetCapture>
+Factory::CreateCaptureDrawTargetForTarget(gfx::DrawTarget* aTarget, size_t aFlushBytes)
+{
+  return MakeAndAddRef<DrawTargetCaptureImpl>(aTarget, aFlushBytes);
+}
+
+already_AddRefed<DrawTargetCapture>
 Factory::CreateCaptureDrawTarget(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
 {
   return MakeAndAddRef<DrawTargetCaptureImpl>(aBackend, aSize, aFormat);

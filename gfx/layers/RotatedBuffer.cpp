@@ -83,10 +83,7 @@ RotatedBuffer::BeginCapture()
 
   MOZ_ASSERT(!mCapture);
   MOZ_ASSERT(target);
-  mCapture =
-    Factory::CreateCaptureDrawTarget(target->GetBackendType(),
-                                     target->GetSize(),
-                                     target->GetFormat());
+  mCapture = Factory::CreateCaptureDrawTargetForTarget(target, gfxPrefs::LayersOMTPCaptureLimit());
 }
 
 RefPtr<gfx::DrawTargetCapture>
