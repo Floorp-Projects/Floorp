@@ -99,7 +99,7 @@ public:
   void LoadDictionaryList(bool aNotifyChildProcesses);
 
   // helper method for converting a word to the charset of the dictionary
-  nsresult ConvertCharset(const char16_t* aStr, std::string* aDst);
+  nsresult ConvertCharset(const nsAString& aStr, std::string& aDst);
 
   NS_DECL_NSIMEMORYREPORTER
 
@@ -115,7 +115,6 @@ protected:
   // Hashtable matches dictionary name to .aff file
   nsInterfaceHashtable<nsStringHashKey, nsIURI> mDictionaries;
   nsString  mDictionary;
-  nsString  mLanguage;
   nsCString mAffixFileName;
 
   // dynamic dirs used to search for dictionaries

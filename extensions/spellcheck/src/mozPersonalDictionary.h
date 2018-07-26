@@ -51,8 +51,8 @@ protected:
   nsCOMPtr<nsIFile> mFile;
   mozilla::Monitor mMonitor;
   mozilla::Monitor mMonitorSave;
-  nsTHashtable<nsUnicharPtrHashKey> mDictionaryTable;
-  nsTHashtable<nsUnicharPtrHashKey> mIgnoreTable;
+  nsTHashtable<nsStringHashKey> mDictionaryTable;
+  nsTHashtable<nsStringHashKey> mIgnoreTable;
 
 private:
   /* wait for the asynchronous load of the dictionary to be completed */

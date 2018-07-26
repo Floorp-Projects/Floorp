@@ -25,7 +25,7 @@ interface mozISpellCheckingEngine : nsISupports {
    * If the dictionary is changed to no dictionary (the empty string), an
    * observer is allowed to set another dictionary before it returns.
    */
-  attribute wstring dictionary;
+  attribute AString dictionary;
 
   /**
    * the personal dictionary
@@ -40,12 +40,13 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * check a word
    */
-  boolean check(in wstring word);
+  boolean check(in AString word);
 
   /**
    * get a list of suggestions for a misspelled word
    */
-  void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out uint32_t count);
+  void suggest(in AString word, [array, size_is(count)] out wstring suggestions,
+               out uint32_t count);
 
   /**
    * Load dictionaries from the specified dir
