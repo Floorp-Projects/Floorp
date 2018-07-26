@@ -112,6 +112,7 @@ namespace jit {
     _(CreateThisWithTemplate)                   \
     _(Lambda)                                   \
     _(LambdaArrow)                              \
+    _(SimdBox)                                  \
     _(ObjectState)                              \
     _(ArrayState)                               \
     _(SetArrayLength)                           \
@@ -685,6 +686,17 @@ class RNewCallObject final : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_NUM_OP_(NewCallObject, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RSimdBox final : public RInstruction
+{
+  private:
+    uint8_t type_;
+
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(SimdBox, 1)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };

@@ -407,7 +407,9 @@ struct MaybeReadFallback
     }
 };
 
+
 class RResumePoint;
+class RSimdBox;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
@@ -469,6 +471,7 @@ class SnapshotIterator
     void warnUnreadableAllocation();
 
   private:
+    friend class RSimdBox;
     const FloatRegisters::RegisterContent* floatAllocationPointer(const RValueAllocation& a) const;
 
   public:

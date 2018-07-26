@@ -21,6 +21,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRSpewer.h"
 #include "jit/CodeGenerator.h"
+#include "jit/EagerSimdUnbox.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
 #include "jit/FoldLinearArithConstants.h"
@@ -443,6 +444,17 @@ JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const
     }
 }
 
+void
+JitRealm::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
+{
+    while (simdTemplatesToBarrier) {
+        auto type = PopNextBitmaskValue<SimdType>(&simdTemplatesToBarrier);
+        const ReadBarrieredObject& tpl = simdTemplateObjects_[type];
+        MOZ_ASSERT(tpl);
+        tpl.get();
+    }
+}
+
 bool
 JitZone::init(JSContext* cx)
 {
@@ -636,6 +648,11 @@ JitRealm::sweep(JS::Realm* realm)
     for (ReadBarrieredJitCode& stub : stubs_) {
         if (stub && IsAboutToBeFinalized(&stub))
             stub.set(nullptr);
+    }
+
+    for (ReadBarrieredObject& obj : simdTemplateObjects_) {
+        if (obj && IsAboutToBeFinalized(&obj))
+            obj.set(nullptr);
     }
 }
 
@@ -1464,6 +1481,17 @@ OptimizeMIR(MIRGenerator* mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Apply types"))
+            return false;
+    }
+
+    if (!JitOptions.disableRecoverIns && mir->optimizationInfo().eagerSimdUnboxEnabled()) {
+        AutoTraceLog log(logger, TraceLogger_EagerSimdUnbox);
+        if (!EagerSimdUnbox(mir, graph))
+            return false;
+        gs.spewPass("Eager Simd Unbox");
+        AssertGraphCoherency(graph);
+
+        if (mir->shouldCancel("Eager Simd Unbox"))
             return false;
     }
 
