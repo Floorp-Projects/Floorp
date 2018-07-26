@@ -77,8 +77,7 @@
     <caption><label data-l10n-id="tabs-group-header"/></caption>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
-              preference="browser.ctrlTab.recentlyUsedOrder"
-              oncommand="Services.prefs.clearUserPref('browser.ctrlTab.migrated');"/>
+              preference="browser.ctrlTab.previews"/>
 
     <checkbox id="linkTargeting" data-l10n-id="open-new-link-as-tabs"
               preference="browser.link.open_newwindow"
