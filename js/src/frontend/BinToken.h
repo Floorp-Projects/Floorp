@@ -274,7 +274,7 @@ const size_t BINKIND_LIMIT = 183;
  * (sorted by alphabetical order)
  */
 #define FOR_EACH_BIN_FIELD(F) \
-    F(Offset, "_offset") \
+    F(Skip, "_skip") \
     F(Alternate, "alternate") \
     F(Arguments, "arguments") \
     F(Binding, "binding") \
