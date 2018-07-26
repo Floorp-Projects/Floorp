@@ -555,15 +555,6 @@
   overflow-x: hidden;
 }
 
-#searchbox-panel-listbox .autocomplete-item > .initial-value {
-  max-width: 130px;
-  margin-left: 15px;
-}
-
-#searchbox-panel-listbox .autocomplete-item > .autocomplete-value {
-  max-width: 150px;
-}
-
 /* Tooltip: Image tooltip */
 
 .devtools-tooltip-image-broken {
